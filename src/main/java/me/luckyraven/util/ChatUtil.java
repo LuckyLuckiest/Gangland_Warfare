@@ -1,0 +1,55 @@
+package me.luckyraven.util;
+
+import me.luckyraven.Gangland;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.plugin.PluginDescriptionFile;
+import org.jetbrains.annotations.NotNull;
+
+public final class ChatUtil {
+
+	public static String replaceColorCodes(String message, String replaceWith) {
+		return message.replace("§", "&").replaceAll("&[0-9a-fk-o]|&r", replaceWith);
+	}
+
+	public static String color(String message) {
+		return ChatColor.translateAlternateColorCodes('&', message);
+	}
+
+	public static void consoleColor(String message) {
+		Bukkit.getConsoleSender().sendMessage(color(message));
+	}
+
+	public static String plural(int amount) {
+		return amount > 1 ? "s" : "";
+	}
+
+	public static String capitalize(@NotNull String text) {
+		return text.substring(0, 1).toUpperCase() + text.substring(1);
+	}
+
+	public static String unicodeCharacters(String position) {
+		return String.valueOf(Character.toChars(Integer.parseInt(position, 16)));
+	}
+
+	public static void startUpMessage() {
+		PluginDescriptionFile pdf = Gangland.getInstance().getDescription();
+		consoleColor(getPrefix(pdf));
+		consoleColor("\t&8Author&7: " + pdf.getAuthors());
+		consoleColor("\t&8Version&7: &5(&6" + pdf.getVersion() + "&5)");
+		consoleColor(getPrefix(pdf));
+	}
+
+	public static String getPrefix(PluginDescriptionFile pdf) {
+		return color("&8-[\t&6" + pdf.getName() + "\t&8]-");
+	}
+
+	public static String getFilePrefix(PluginDescriptionFile pdf) {
+		return color("&8-[\t&6" + pdf.getName() + " &cFiles\t&8]-");
+	}
+
+	public static String removeSymbol(String message) {
+		return message.replaceAll("[^a-zA-Z\\d\\s]", "");
+	}
+
+}

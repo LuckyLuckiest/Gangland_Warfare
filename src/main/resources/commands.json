@@ -1,0 +1,278 @@
+{
+	"general": {
+		"usage": "/glw help",
+		"description": "Shows main help page."
+	},
+	"general_page": {
+		"usage": "/glw help <page>",
+		"description": "Shows the specified page in general menu."
+	},
+	"uuid": {
+		"usage": "/glw uuid",
+		"description": "Shows your uuid."
+	},
+	"reload": {
+		"usage": "/glw reload",
+		"description": "Show reload help page."
+	},
+	"reload_all": {
+		"usage": "/glw reload all",
+		"description": "Reloads the whole server."
+	},
+	"reload_plugin": {
+		"usage": "/glw reload plugin",
+		"description": "Reloads the plugin."
+	},
+	"reload_files": {
+		"usage": "/glw reload files",
+		"description": "Reloads the files."
+	},
+	"reload_scoreboard": {
+		"usage": "/glw reload scoreboard",
+		"description": "Reloads the scoreboard."
+	},
+	"economy": {
+		"usage": "/glw economy",
+		"description": "Shows economy help page."
+	},
+	"economy_add": {
+		"usage": "/glw economy deposit <amount>",
+		"description": "Deposits the amount value."
+	},
+	"economy_take": {
+		"usage": "/glw economy withdraw <amount>",
+		"description": "Withdraws the amount value."
+	},
+	"economy_set": {
+		"usage": "/glw economy set <amount>",
+		"description": "Sets amount value."
+	},
+	"economy_reset": {
+		"usage": "/glw economy reset",
+		"description": "Resets account balance."
+	},
+	"balance": {
+		"usage": "/glw balance",
+		"description": "Shows account balance."
+	},
+	"balance_others": {
+		"usage": "/glw balance <name>",
+		"description": "Shows the specified player account balance."
+	},
+	"bank": {
+		"usage": "/glw bank",
+		"description": "Shows bank help page."
+	},
+	"bank_help": {
+		"usage": "/glw bank help <page>",
+		"description": "Shows bank help page."
+	},
+	"bank_create": {
+		"usage": "/glw bank create <name>",
+		"description": "Creates a bank with the specified name."
+	},
+	"bank_remove": {
+		"usage": "/glw bank remove",
+		"description": "Removes current bank."
+	},
+	"bank_add": {
+		"usage": "/glw bank deposit <amount>",
+		"description": "Deposits the amount value to the bank."
+	},
+	"bank_take": {
+		"usage": "/glw bank withdraw <amount>",
+		"description": "Withdraws the amount value from the bank."
+	},
+	"bank_set": {
+		"usage": "/glw bank set <amount>",
+		"description": "Sets the amount value to the bank."
+	},
+	"bank_reset": {
+		"usage": "/glw bank reset",
+		"description": "Resets the bank balance."
+	},
+	"bank_balance": {
+		"usage": "/glw bank balance",
+		"description": "Shows bank balance."
+	},
+	"spawn": {
+		"usage": "/glw spawn",
+		"description": "Teleports to default spawn."
+	},
+	"spawn_set": {
+		"usage": "/glw spawn set <type>",
+		"description": "Sets the spawn location of the specified name."
+	},
+	"spawn_tp": {
+		"usage": "/glw spawn <type>",
+		"description": "Teleports to the specified spawn."
+	},
+	"spawn_remove": {
+		"usage": "/glw spawn remove <type>",
+		"description": "Removes the specified spawn location."
+	},
+	"spawn_list": {
+		"usage": "/glw spawn list",
+		"description": "Shows all the available spawns."
+	},
+	"warp": {
+		"usage": "/glw warp",
+		"description": "Shows warp help page."
+	},
+	"warp_tp": {
+		"usage": "/glw warp <name>",
+		"description": "Teleports to the specified warp."
+	},
+	"warp_set": {
+		"usage": "/glw warp set <name>",
+		"description": "Sets the warp location of the specified name."
+	},
+	"warp_remove": {
+		"usage": "/glw warp remove <name>",
+		"description": "Removes the specified warp location."
+	},
+	"warp_list": {
+		"usage": "/glw warp list",
+		"description": "Shows all the available warps."
+	},
+	"kit": {
+		"usage": "/glw kit",
+		"description": "Shows kit help page."
+	},
+	"kit_item": {
+		"usage": "/glw kit <name>",
+		"description": "Gives the user a kit."
+	},
+	"kit_create": {
+		"usage": "/glw kit create <name>",
+		"description": "Creates a kit using current inventory."
+	},
+	"kit_remove": {
+		"usage": "/glw kit delete <name>",
+		"description": "Deletes the kit with the specified name."
+	},
+	"kit_list": {
+		"usage": "/glw kit list",
+		"description": "Shows all available kits."
+	},
+	"clear_drops": {
+		"usage": "/glw cleardrops",
+		"description": "Clears server drops."
+	},
+	"dealer": {
+		"usage": "/glw dealer",
+		"description": "Shows dealer help page."
+	},
+	"dealer_create": {
+		"usage": "/glw dealer create",
+		"description": "Creates a dealer in the current location."
+	},
+	"dealer_remove": {
+		"usage": "/glw dealer remove <id>",
+		"description": "Removes the specified dealer by id."
+	},
+	"gang": {
+		"usage": "/glw gang",
+		"description": "Shows gang help page."
+	},
+	"gang_help": {
+		"usage": "/glw gang help <page>",
+		"description": "Shows gang help page."
+	},
+	"gang_create": {
+		"usage": "/glw gang create <name>",
+		"description": "Creates a gang with the specified name."
+	},
+	"gang_remove": {
+		"usage": "/glw gang delete",
+		"description": "Deletes current gang."
+	},
+	"gang_economy_add": {
+		"usage": "/glw gang economy deposit <amount>",
+		"description": "Deposits the amount value to the gang."
+	},
+	"gang_economy_take": {
+		"usage": "/glw gang economy withdraw <amount>",
+		"description": "Withdraws the amount value from the gang."
+	},
+	"gang_balance": {
+		"usage": "/glw gang balance",
+		"description": "Shows gang balance."
+	},
+	"gang_stats": {
+		"usage": "/glw gang stats",
+		"description": "Shows gang information."
+	},
+	"gang_change_name": {
+		"usage": "/glw gang name <name>",
+		"description": "Changes current gang name."
+	},
+	"gang_add_player": {
+		"usage": "/glw gang add <name>",
+		"description": "Adds the player to the gang."
+	},
+	"gang_remove_player": {
+		"usage": "/glw gang kick <name>",
+		"description": "Kicks the player from the gang."
+	},
+	"gang_leave": {
+		"usage": "/glw gang leave",
+		"description": "Leaves the current gang."
+	},
+	"gang_rank_set": {
+		"usage": "/glw gang set <type> <name>",
+		"description": "Sets the player to the assigned type in the gang."
+	},
+	"gang_rank_set_owner": {
+		"usage": "/glw gang set owner <name>",
+		"description": "Sets the player to the Owner of the gang."
+	},
+	"gang_rank_set_chief": {
+		"usage": "/glw gang set chief <name>",
+		"description": "Sets the player to the Chief of the gang."
+	},
+	"gang_rank_set_member": {
+		"usage": "/glw gang set member <name>",
+		"description": "Sets the player to a member in the gang."
+	},
+	"gang_rank_promote": {
+		"usage": "/glw gang promote <name>",
+		"description": "Promotes the player to the next rank."
+	},
+	"gang_rank_demote": {
+		"usage": "/glw gang demote <name>",
+		"description": "Demotes the player to the previous rank."
+	},
+	"safe_wand": {
+		"usage": "/glw safewand",
+		"description": "Gives the player a safe wand."
+	},
+	"weapons": {
+		"usage": "/glw weapon give <name> <type>",
+		"description": "Gives the player the specified weapon."
+	},
+	"weapons_list": {
+		"usage": "/glw weapon list",
+		"description": "Shows all the available weapons."
+	},
+	"ammunition": {
+		"usage": "/glw ammo give <name> <type> <amount>",
+		"description": "Gives the player the specified ammo."
+	},
+	"ammunition_list": {
+		"usage": "/glw ammo list",
+		"description": "Shows all the available ammo."
+	},
+	"wanted": {
+		"usage": "/glw wanted",
+		"description": "Shows the current level."
+	},
+	"wanted_set": {
+		"usage": "/glw wanted set <amount>",
+		"description": "Sets wanted level."
+	},
+	"resource_pack": {
+		"usage": "/glw resource",
+		"description": "Downloads the resource pack to the user."
+	}
+}

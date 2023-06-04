@@ -1,0 +1,47 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     / ________/      \_____   _____/      / __ \         | #
+# |    | /                     | |           / /  \ \        | #
+# |    | |  _______            | |          / /____\ \       | #
+# |    | |  \_____ \           | |         / ________ \      | #
+# |    | \_______/ ||          | |        / /        \ \     | #
+# |     \__________/           |_|       /_/          \_\    | #
+# |                                                          | #
+# |                    File: settings.yml                    | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+
+# +----------------------------------+
+# |      Settings Configuration      |
+# +----------------------------------+
+
+# +---------------+ #
+# | Update Config | #
+# +---------------+ #
+
+# If you have faced any problem with the file you can create a new one by changing [Config_Version] to a different
+# number, but when a new update comes out with a new configuration file(s), [Config_Version] will change resulting
+# in a new file(s) for that new version while saving old files with a suffix -old to indicate they are old.
+## | WARNING |
+# BY CHANGING [Config_Version] YOU WILL NEED TO CHANGE LINKED FILES TO IT [Config_Version] TOO JUST TO AVOID ERRORS.
+# THIS OPTION IS EXPERIMENTAL AND WILL TAKE SOME TIME TILL I FIGURE A SOLUTION FOR IT!
+# CHANGE IT IF YOU KNOW WHAT YOU ARE DOING!
+Config_Version: 0
+# We recommend to leave it true so people that got the permission will receive an update message.
+Show_Update: true # This will work next update. An update will release immediately.
+
+# +-----------------+ #
+# | Language Config | #
+# +-----------------+ #
+Language: en
+
+# +-----------------+ #
+# | Database Config | #
+# +-----------------+ #
+Database:
+   host: localhost
+   port: 3308
+   database: db
+   user: root
+   password: root

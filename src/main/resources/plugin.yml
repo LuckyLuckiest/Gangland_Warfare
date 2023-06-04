@@ -1,0 +1,14 @@
+name: Gangland_Warfare
+version: '${project.version}'
+main: me.luckyraven.Gangland
+database: true
+api-version: 1.13
+depend: [NBTAPI]
+softdepend: [PlaceholderAPI]
+author: LuckyRaven
+description: '${project.description}'
+
+commands:
+   glw:
+      description: Gangland warfare main command.
+      permission: gangland.command.main
