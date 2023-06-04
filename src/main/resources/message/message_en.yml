@@ -207,7 +207,7 @@ Weapons:
    Not_Valid_Ammo: "&cInvalid ammunition type &3{ARGS}&c."
    Not_Valid_Weapon: "&cInvalid weapon type &3{ARGS}&c."
    Not_Valid_Amount: "&cInvalid amount."
-   Killed_Player: "&7{KILLER} &c%gun% &7%victim%"
+   Killed_Player: "&7%killer% &c%gun% &7%victim%"
    Gun_Not_In_Inventory: "You don't have the gun in your inventory!"
    Gun_Bought: "You just bought &8(&b%gun%&8)&7 for &a%money_symbol%%amount%&7."
    Gun_Sold: "You just sold &8(&b%gun%&8)&7 for &a%money_symbol%%amount%&7."
