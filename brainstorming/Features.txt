@@ -1,0 +1,63 @@
+Features:
+	1)	Weapons
+	2)	Phone
+	3)	Economy
+	4)	Police
+	5)	Bounty
+	6)	Wanted Levels
+	7)	Safe
+	8)	Dealer
+	9)	Gang
+	10)	Level system
+
+Weapons:
+	Can be created from a text file
+	Customizable
+
+Phone:
+	Activate bounty on other players
+	Activities (Mini missions)
+	Teleport - taxi
+	Display player info
+	Not throwable
+
+Economy:
+	Need to link with Vault plugin
+	Have custom economy by the plugin
+
+Police:
+	Zombies leather armor
+	Holds a baton
+	Randomly spawn
+	Attacks when you have a wanted level
+
+Bounty:
+	Bounty amount increases to a set level
+	If the time runs out you receive the bounty payment
+	If a player kills you they receive double bounty payment
+
+Wanted Level:
+	Has 5 stars
+	When you have a wanted level of 3+ stars you get a bounty
+
+Safe:
+	They are scattered in the world
+	Set by admins as safes
+	A player can crack the safe using a tool
+	They receive money and/or weapons
+
+Dealer:
+ 	Two types of dealers:
+ 	1) Acts as black market dealer, that sells forbiden items
+ 	2) Normal dealer that sells items
+
+Gang:
+	A boss, captain, and members
+	Their own balance
+	Have challenges
+	Alliances
+	Toggle friendly fire
+
+Level System:
+	Have a level
+	xp system

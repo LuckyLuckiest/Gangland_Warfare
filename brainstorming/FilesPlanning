@@ -1,0 +1,32 @@
+When the user joins the server, the following is created
+	-	User<T> is initialized
+	-	Default rank of 0
+	-	Default balance of 0
+	-	Default of false gang
+	-	Default of false bank
+	-	Default of false in bounty
+
+In database the specified tables will have this specific contents.
+- Player:
+	- uuid (primary key)
+	- balance
+	- rank
+	- gang status
+	- bank status
+	- bounty status
+- Bank:
+	- bank id (primary key)
+	- name
+	- balance
+- Gang:
+	- gang id (primary key)
+	- name
+	- balance
+	- members
+	- description
+	- alias
+	- bounty
+
+There will multiple yaml files for saving data.
+- Dealer:
+- Safes:

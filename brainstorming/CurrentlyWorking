@@ -1,0 +1,24 @@
+0.0.1-DEV: (DONE)
+	- Command
+	- Data management
+	- File management
+	- Listener manager
+	- Chat and reload utils
+	- Simple wanted
+	- User interface
+	- Ranks
+	- Economy
+	- Accounts
+
+0.0.2-DEV:
+	- messages file
+	- wanted level
+	- bounty
+	- phone
+	- level system
+
+0.0.3-DEV:
+	- Database system
+	- Economy system
+    - Bank
+    - Gang
