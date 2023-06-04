@@ -24,7 +24,7 @@ public class LanguageLoader {
 			gangland.getLogger().warning("Unhandled error (language picker): " + exception.getMessage());
 			Set<String>   files     = getMessageFiles();
 			StringBuilder languages = new StringBuilder();
-			String[] nam = files.toArray(new String[0]);
+			String[]      nam       = files.toArray(new String[0]);
 
 			for (int i = 0; i < files.size(); i++) {
 				String file = nam[i];
@@ -49,7 +49,7 @@ public class LanguageLoader {
 			// Checks for the file in system
 			if (gangland.getDataFolder().exists() && file.exists()) inputStream = new FileInputStream(file);
 				// Checks for the file in resources
-			else inputStream = gangland.getResource(fileLoc);
+			else inputStream = gangland.getResource(fileLoc.replace("\\", "/"));
 
 			if (inputStream == null) throw new FileNotFoundException(
 					String.format("message_%s.yml is not registered!", lang));
