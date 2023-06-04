@@ -1,0 +1,12 @@
+@startuml
+class Wanted {
+-user
+-level
+-wanted
++init()
++getLevel()
++setLevel()
++isWanted()
+}
+
+@enduml

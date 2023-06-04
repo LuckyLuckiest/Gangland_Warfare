@@ -1,0 +1,87 @@
+@startuml
+
+Weapon *-- WeaponManager
+Weapon <.. ProjectileHandler
+Weapon <.. ReloadHandler
+Weapon *-- ProjectileType
+Weapon *-- ReloadType
+
+WeaponManager <.. ProjectileHandler
+WeaponManager <.. ReloadHandler
+
+WeaponData <.. WeaponManager
+
+BukkitRunnable <-- ProjectileHandler
+BukkitRunnable <-- ReloadHandler
+
+class Weapon {
+-name
+-recoil
+-category
+-projectileSound
+-projectileDamage
+-projectileSpeed
+-projectileAmount
+-projectileDistance
+-projectileCooldown
+-projectileParticle
+-ammoAmount
+-ammoCooldown
+-ammoRemoveAmount
+-ammoType
+-reloadSound
+-reloadType
+-scopeLevel
+-isScoped
+}
+
+class WeaponManager {
+-playerTimer
++getWeaponItem()
++getWeapon()
++hasWeapon()
++isWeapon()
++getCategory()
++getWeaponId()
++getAmmoItem()
++getCurrentAmmo()
++removeAmmo()
++addAmmo()
++isHeadShot()
++unScopeWeapon()
+}
+
+class WeaponData {
++getConfig()
++fileExists()
++remove()
++removeAll()
++reload()
++save()
+}
+
+class ProjectileHandler {
+-weaponManager
+-weapon
+-user
+-projectileAmount
++run()
+}
+
+enum ProjectileType {
++interact()
+}
+
+class ReloadHandler {
+-weaponManager
+-weapon
+-user
+-playerTimer
++run()
+-hasAmmo()
+}
+
+enum ReloadType {
++reload()
+}
+@enduml
