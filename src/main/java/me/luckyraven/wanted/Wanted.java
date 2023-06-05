@@ -10,13 +10,15 @@ public class Wanted {
 	private @Getter
 	final           User<?> user;
 	private @Getter int     level;
-
 	private @Getter
-	@Setter boolean wanted;
+	@Setter         int     maxLevel;
+	private @Getter
+	@Setter         boolean wanted;
 
 	public Wanted(@NotNull User<?> user) {
 		this.user = user;
 		this.level = 0;
+		this.maxLevel = 5;
 		this.wanted = false;
 	}
 
@@ -26,10 +28,15 @@ public class Wanted {
 	}
 
 	public void setLevel(int level) {
-		if (level < 0) level = 0;
-		else if (level > 5) level = 5;
-		this.level = level;
+		this.level = Math.max(0, Math.min(level, maxLevel));
 		this.wanted = this.level > 0;
+	}
+
+	public String getLevelStr() {
+		StringBuilder builder = new StringBuilder(maxLevel);
+		builder.append("★".repeat(level));
+		builder.append("☆".repeat(Math.max(0, maxLevel - builder.length())));
+		return builder.toString();
 	}
 
 }
