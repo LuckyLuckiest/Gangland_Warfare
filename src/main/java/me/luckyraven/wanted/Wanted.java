@@ -10,6 +10,7 @@ public class Wanted {
 	private @Getter
 	final           User<?> user;
 	private @Getter int     level;
+	private @Setter int     increments;
 	private @Getter
 	@Setter         int     maxLevel;
 	private @Getter
@@ -18,6 +19,7 @@ public class Wanted {
 	public Wanted(@NotNull User<?> user) {
 		this.user = user;
 		this.level = 0;
+		this.increments = 1;
 		this.maxLevel = 5;
 		this.wanted = false;
 	}
@@ -30,6 +32,10 @@ public class Wanted {
 	public void setLevel(int level) {
 		this.level = Math.max(0, Math.min(level, maxLevel));
 		this.wanted = this.level > 0;
+	}
+
+	public void incrementLevel() {
+		setLevel(increments);
 	}
 
 	public String getLevelStr() {
