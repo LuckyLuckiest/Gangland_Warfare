@@ -2,6 +2,7 @@ package me.luckyraven;
 
 import lombok.Getter;
 import me.luckyraven.command.data.InformationManager;
+import me.luckyraven.data.user.UserManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.logging.Logger;
@@ -11,6 +12,7 @@ public final class Gangland extends JavaPlugin {
 	private static Gangland instance;
 
 	private @Getter InformationManager informationManager;
+	private @Getter UserManager        userManager;
 	private @Getter Initializer        initializer;
 
 	private @Getter
@@ -25,6 +27,8 @@ public final class Gangland extends JavaPlugin {
 	public void onLoad() {
 		informationManager = new InformationManager();
 		informationManager.processCommands();
+
+		userManager = new UserManager();
 	}
 
 	@Override
