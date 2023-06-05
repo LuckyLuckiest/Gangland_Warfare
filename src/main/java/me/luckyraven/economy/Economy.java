@@ -1,6 +1,6 @@
-package me.luckyraven.data.economy;
+package me.luckyraven.economy;
 
-import me.luckyraven.data.User;
+import me.luckyraven.data.user.User;
 
 /**
  * The type Economy.

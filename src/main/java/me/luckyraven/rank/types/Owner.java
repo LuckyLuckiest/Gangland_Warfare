@@ -1,10 +1,10 @@
-package me.luckyraven.data.rank.types;
+package me.luckyraven.rank.types;
 
-import me.luckyraven.data.rank.RankAttribute;
+import me.luckyraven.rank.Rank;
 
 import java.util.List;
 
-public class Owner extends RankAttribute {
+public class Owner extends Rank {
 
 	public Owner() {
 		super("Owner");

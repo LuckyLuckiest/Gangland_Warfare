@@ -1,33 +1,33 @@
-package me.luckyraven.data.rank;
+package me.luckyraven.rank;
 
 import lombok.Getter;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public class Rank {
+public class RankManager {
 
 	private @Getter
-	final List<RankAttribute> ranks;
+	final List<Rank> ranks;
 
-	public Rank() {
+	public RankManager() {
 		ranks = new LinkedList<>();
 	}
 
-	public Rank(List<RankAttribute> ranks) {
+	public RankManager(List<Rank> ranks) {
 		this.ranks = ranks;
 	}
 
-	public <E extends RankAttribute> void add(E element) {
+	public <E extends Rank> void add(E element) {
 		ranks.add(element);
 	}
 
-	public <E extends RankAttribute> void remove(E element) {
+	public <E extends Rank> void remove(E element) {
 		ranks.remove(element);
 	}
 
-	public RankAttribute get(int id) {
-		for (RankAttribute rank : ranks)
+	public Rank get(int id) {
+		for (Rank rank : ranks)
 			if (rank.match(id)) return rank;
 		return null;
 	}

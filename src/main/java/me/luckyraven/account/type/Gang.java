@@ -1,8 +1,8 @@
-package me.luckyraven.data.account.types;
+package me.luckyraven.account.type;
 
 import lombok.Getter;
-import me.luckyraven.data.User;
-import me.luckyraven.data.account.Account;
+import me.luckyraven.data.user.User;
+import me.luckyraven.account.Account;
 
 import java.util.Date;
 import java.util.Set;
@@ -37,7 +37,7 @@ public class Gang extends Account<Integer, Set<User<?>>> {
 
 	@Override
 	public String toString() {
-		return "ID:" + getId() + ", name=" + name + ", created=" + created;
+		return String.format("ID=%d,name=%s,created=%s", getId(), name, created);
 	}
 
 }

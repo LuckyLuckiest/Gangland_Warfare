@@ -1,30 +1,30 @@
-package me.luckyraven.data.rank;
+package me.luckyraven.rank;
 
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class RankAttribute {
+public class Rank {
 
 	private static int          ID = 0;
 	private @Getter
 	final          int          usedId;
 	private @Getter
 	final          String       name;
-	private @Getter
-	final          List<String> permissions;
+	private final  List<String> permissions;
 
 	{
 		this.usedId = ID++;
 	}
 
-	public RankAttribute(String name) {
+	public Rank(String name) {
 		this.name = name;
 		this.permissions = new LinkedList<>();
 	}
 
-	public RankAttribute(String name, List<String> permissions) {
+	public Rank(String name, List<String> permissions) {
 		this.name = name;
 		this.permissions = permissions;
 	}
@@ -43,6 +43,10 @@ public class RankAttribute {
 
 	public boolean contain(String permission) {
 		return permissions.contains(permission);
+	}
+
+	public List<String> getPermissions() {
+		return new ArrayList<>(permissions);
 	}
 
 	@Override

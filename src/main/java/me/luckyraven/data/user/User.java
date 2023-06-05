@@ -1,9 +1,8 @@
-package me.luckyraven.data;
+package me.luckyraven.data.user;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.data.rank.RankAttribute;
-import org.bukkit.entity.Player;
+import me.luckyraven.rank.Rank;
 
 /**
  * Handles all users registered data, either online or offline.
@@ -21,19 +20,9 @@ public class User<T> {
 	private @Getter
 	@Setter boolean hasBank, hasGang;
 	private @Getter
-	@Setter int           gangId;
+	@Setter int  gangId;
 	private @Getter
-	@Setter RankAttribute rank;
-
-	{
-		this.kills = 0;
-		this.deaths = 0;
-		this.mobKills = 0;
-		this.balance = 0D;
-		hasBank = false;
-		hasGang = false;
-		gangId = -1;
-	}
+	@Setter Rank rank;
 
 	/**
 	 * Instantiates a new Database.
@@ -42,6 +31,13 @@ public class User<T> {
 	 */
 	public User(T user) {
 		this.user = user;
+		this.kills = 0;
+		this.deaths = 0;
+		this.mobKills = 0;
+		this.balance = 0D;
+		hasBank = false;
+		hasGang = false;
+		gangId = -1;
 	}
 
 	/**

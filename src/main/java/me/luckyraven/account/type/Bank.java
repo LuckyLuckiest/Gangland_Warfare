@@ -1,7 +1,7 @@
-package me.luckyraven.data.account.types;
+package me.luckyraven.account.type;
 
-import me.luckyraven.data.User;
-import me.luckyraven.data.account.Account;
+import me.luckyraven.data.user.User;
+import me.luckyraven.account.Account;
 
 import java.util.UUID;
 

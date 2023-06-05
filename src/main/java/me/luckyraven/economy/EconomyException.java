@@ -1,4 +1,4 @@
-package me.luckyraven.data.economy;
+package me.luckyraven.economy;
 
 import me.luckyraven.exception.PluginException;
 
