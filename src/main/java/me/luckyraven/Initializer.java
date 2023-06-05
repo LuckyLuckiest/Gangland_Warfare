@@ -4,14 +4,12 @@ import lombok.Getter;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.sub.SCBalance;
 import me.luckyraven.command.sub.SCHelp;
-import me.luckyraven.rank.RankManager;
-import me.luckyraven.rank.types.Member;
-import me.luckyraven.rank.types.Owner;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
+import me.luckyraven.rank.RankManager;
 
 import java.util.Objects;
 
@@ -24,16 +22,20 @@ public final class Initializer {
 	private @Getter
 	final           ListenerManager listenerManager;
 	private @Getter
-	final           CommandManager commandManager;
+	final           CommandManager  commandManager;
 	private @Getter
-	final           RankManager    rankManager;
-	private @Getter LanguageLoader languageLoader;
+	final           RankManager     rankManager;
+	private @Getter LanguageLoader  languageLoader;
 
 
 	public Initializer() {
 		// Files
 		fileManager = new FileManager();
 		files();
+
+		// Ranks
+		rankManager = new RankManager();
+		rankManager.processRanks();
 
 		// Events
 		listenerManager = new ListenerManager();
@@ -43,10 +45,6 @@ public final class Initializer {
 		// Commands
 		commandManager = new CommandManager();
 		commands();
-
-		// Ranks
-		rankManager = new RankManager();
-		ranks();
 	}
 
 	private void events() {
@@ -74,11 +72,6 @@ public final class Initializer {
 //		fileManager.addFile(new FileHandler("warp", "navigation", ".yml"));
 //		fileManager.addFile(new FileHandler("player_data", "data", ".db"));
 //		fileManager.addFile(new FileHandler("gang_data", "data", ".db"));
-	}
-
-	private void ranks() {
-		rankManager.add(new Owner());
-		rankManager.add(new Member());
 	}
 
 }
