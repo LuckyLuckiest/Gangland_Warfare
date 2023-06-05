@@ -21,7 +21,7 @@ public class LanguageLoader {
 		try {
 			message = loadMessage(fileManager);
 		} catch (IOException | InvalidConfigurationException exception) {
-			gangland.getLogger().warning("Unhandled error (language picker): " + exception.getMessage());
+			gangland.getLogger().warning("Unhandled error (language loader): " + exception.getMessage());
 			Set<String>   files     = getMessageFiles();
 			StringBuilder languages = new StringBuilder();
 			String[]      nam       = files.toArray(new String[0]);
@@ -87,7 +87,8 @@ public class LanguageLoader {
 				if (i++ != 0) files.add(name.substring(name.lastIndexOf("/") + 1));
 			}
 		} catch (IOException exception) {
-			System.out.println("File not found!");
+			gangland.getLogger().warning("Unexpected error (missing jar file): " + exception.getMessage() + "\n" +
+					                             "This error occurred since the plugin jar file is not in the plugins folder.");
 		}
 		return files;
 	}
