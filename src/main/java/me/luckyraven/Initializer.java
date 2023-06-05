@@ -4,9 +4,9 @@ import lombok.Getter;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.sub.SCBalance;
 import me.luckyraven.command.sub.SCHelp;
-import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.rank.types.Member;
-import me.luckyraven.data.rank.types.Owner;
+import me.luckyraven.rank.RankManager;
+import me.luckyraven.rank.types.Member;
+import me.luckyraven.rank.types.Owner;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
@@ -24,10 +24,10 @@ public final class Initializer {
 	private @Getter
 	final           ListenerManager listenerManager;
 	private @Getter
-	final           CommandManager  commandManager;
+	final           CommandManager commandManager;
 	private @Getter
-	final           Rank            rank;
-	private @Getter LanguageLoader  languageLoader;
+	final           RankManager    rankManager;
+	private @Getter LanguageLoader languageLoader;
 
 
 	public Initializer() {
@@ -45,7 +45,7 @@ public final class Initializer {
 		commands();
 
 		// Ranks
-		rank = new Rank();
+		rankManager = new RankManager();
 		ranks();
 	}
 
@@ -77,8 +77,8 @@ public final class Initializer {
 	}
 
 	private void ranks() {
-		rank.add(new Owner());
-		rank.add(new Member());
+		rankManager.add(new Owner());
+		rankManager.add(new Member());
 	}
 
 }

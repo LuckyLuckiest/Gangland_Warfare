@@ -2,7 +2,7 @@ package me.luckyraven.wanted;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.data.User;
+import me.luckyraven.data.user.User;
 import org.jetbrains.annotations.NotNull;
 
 public class Wanted {
@@ -14,13 +14,10 @@ public class Wanted {
 	private @Getter
 	@Setter boolean wanted;
 
-	{
-		this.level = 0;
-		this.wanted = false;
-	}
-
 	public Wanted(@NotNull User<?> user) {
 		this.user = user;
+		this.level = 0;
+		this.wanted = false;
 	}
 
 	public Wanted(@NotNull User<?> user, int level) {

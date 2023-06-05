@@ -1,7 +1,7 @@
 package me.luckyraven.listener.player;
 
-import me.luckyraven.data.User;
-import me.luckyraven.data.account.types.Gang;
+import me.luckyraven.data.user.User;
+import me.luckyraven.account.type.Gang;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

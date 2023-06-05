@@ -2,9 +2,9 @@ package me.luckyraven.command.sub;
 
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.data.CommandInformation;
-import me.luckyraven.data.User;
-import me.luckyraven.data.account.types.Player;
-import me.luckyraven.data.economy.Economy;
+import me.luckyraven.data.user.User;
+import me.luckyraven.account.type.Player;
+import me.luckyraven.economy.Economy;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
