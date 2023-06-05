@@ -3,6 +3,7 @@ package me.luckyraven.data.user;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.rank.Rank;
+import me.luckyraven.wanted.Wanted;
 
 /**
  * Handles all users registered data, either online or offline.
@@ -20,9 +21,12 @@ public class User<T> {
 	private @Getter
 	@Setter boolean hasBank, hasGang;
 	private @Getter
-	@Setter int  gangId;
+	@Setter int gangId;
+
 	private @Getter
-	@Setter Rank rank;
+	@Setter Rank   rank;
+	private @Getter
+	@Setter Wanted wanted;
 
 	/**
 	 * Instantiates a new Database.
@@ -35,9 +39,10 @@ public class User<T> {
 		this.deaths = 0;
 		this.mobKills = 0;
 		this.balance = 0D;
-		hasBank = false;
-		hasGang = false;
-		gangId = -1;
+		this.hasBank = false;
+		this.hasGang = false;
+		this.gangId = -1;
+		this.wanted = new Wanted(this);
 	}
 
 	/**
