@@ -1,0 +1,217 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     / ________/      \_____   _____/      / __ \         | #
+# |    | /                     | |           / /  \ \        | #
+# |    | |  _______            | |          / /____\ \       | #
+# |    | |  \_____ \           | |         / ________ \      | #
+# |    | \_______/ ||          | |        / /        \ \     | #
+# |     \__________/           |_|       /_/          \_\    | #
+# |                                                          | #
+# |                   File: message_es.yml                   | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+
+# +--------------------+
+# |      Messages      |
+# +--------------------+
+
+# If you have faced any problem with the file you can create a new one by changing [Config_Version] to a different
+# number, but when a new update comes out with a new configuration file(s), [Config_Version] will change resulting
+# in a new file(s) for that new version while saving old files with a suffix -old to indicate they are old.
+## | WARNING |
+# BY CHANGING [Config_Version] YOU WILL NEED TO CHANGE LINKED FILES TO IT [Config_Version] TOO JUST TO AVOID ERRORS.
+# THIS OPTION IS EXPERIMENTAL AND WILL TAKE SOME TIME TILL I FIGURE A SOLUTION FOR IT!
+# CHANGE IT IF YOU KNOW WHAT YOU ARE DOING!
+Config_Version: 0
+
+# We recommend adding space at the end of every prefix.
+# +-------------------------------------------------------------------------------+
+# |     Variables     :                   Description                             |
+# |  =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=  |
+# |  %%               : % sign.                                                   |
+# |  %n%              : New Line.                                                 |
+# |  %player%         : Gets player name.                                         |
+# |  %target%         : Gets target name.                                         |
+# |  %name%           : Name of the object.                                       |
+# |  %bank%           : Gets the bank name.                                       |
+# |  %command%        : Gets the unknown command.                                 |
+# |  %player_balance% : Gets player balance.                                      |
+# |  %target_balance% : Gets target balance.                                      |
+# |  %gang_balance%   : Gets the gang balance.                                    |
+# |  %amount%         : Gets the amount.                                          |
+# |  %gang%           : Gets the gang name.                                       |
+# |  %money_symbol%   : Gets the Settings.yml Money Symbol.                       |
+# |  %location%       : Location that is set in Spawn.yml or Warp.yml.            |
+# |  %list%           : Locations list set in Spawn.yml or Warp.yml.              |
+# |  %kit%            : Kit name that is set in Kit.yml.                          |
+# |  %world%          : Gets the world name.                                      |
+# |  %time%           : Gets the time set.                                        |
+# |  %time_unit%      : Gets the time unit.                                       |
+# |  %uuid%           : Gets the player UUID.                                     |
+# |  %ammo%           : Gets the ammo amount.                                     |
+# |  %weapon%         : Gets the weapon name.                                     |
+# |  =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=  |
+# +-------------------------------------------------------------------------------+
+# For Color Codes, check this website: http://minecraft.gamepedia.com/Formatting_codes
+# The following box is for [Date] and [Time]. The box will help you with figuring out the
+# common pattern letters used and make cool date and time formats.
+# The date and time is taken from the system calendar.
+# +-------------------------------------------------------------------------------+
+# |  =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=  |
+# |  y   :   year           (yy or yyyy)                                          |
+# |  M   :   month          (MM)                                                  |
+# |  d   :   day in month   (dd)                                                  |
+# |  h   :   hour (0-12)    (hh)                                                  |
+# |  H   :   hour (0-23)    (HH)                                                  |
+# |  a   :   am/pm marker   (a)                                                   |
+# |  m   :   minute in hour (mm)                                                  |
+# |  s   :   seconds        (ss)                                                  |
+# |  S   :   milliseconds   (SSS)                                                 |
+# |  z   :   time zone  text        (e.g. Pacific Standard Time...)               |
+# |  Z   :   time zone, time offset (e.g. -0800)                                  |
+# |  =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=  |
+# +-------------------------------------------------------------------------------+
+
+Commands:
+   Prefix: "&6GLW &8&l>>&7 "
+   Syntax:
+      Missing_Arguments: "&4Missing Arguments&7: "
+      Too_Much_Arguments: "&4Too Much Arguments&7: "
+      Wrong_Arguments: "&4Wrong Arguments&7: "
+      Page_Invalid: "&4Invalid Page&7: "
+      Doesnt_Exist: "&4Doesn't Exists&7: "
+   Weapons:
+      Gave_Ammo: "You gave &8(&c%amount%&8) &e%ammo% &7ammunition to &3%player%&7."
+      Gave_Weapon: "You gave a &8[&c%weapon%&8] &7weapon to &3%player%&7."
+   Economy:
+      Balance:
+         Player_Balance: "Your balance is: &b%money_symbol%%player_balance%"
+         Target_Balance: "&6%target%'s &7balance is: &b%money_symbol%%target_balance%"
+      Money:
+         Player_Money_Add: "&a%money_symbol%%amount% &7has been added to your account."
+         Target_Money_Add: "&a%money_symbol%%amount% &7has been added to &6%target%'s &7account."
+         Player_Money_Take: "&a%money_symbol%%amount% &7has been taken from your account."
+         Target_Money_Take: "&a%money_symbol%%amount% &7has been taken from &6%target%'s &7account."
+         Player_Money_Set: "Your account balance has been set to &a%money_symbol%%amount%&7."
+         Target_Money_Set: "&6%target%'s &7account balance has been set to &a%money_symbol%%amount%&7."
+         Player_Money_Reset: "Your account has been reset."
+         Target_Money_Reset: "&6%target%'s &7account has been reset."
+   Bank:
+      Player_Create_Bank: "You have created a bank account."
+      Player_Remove_Bank: "You have removed your bank account."
+      Created_Bank: "Created a new bank &8[&a%bank%&8]&7."
+      Removed_Bank: "Your bank account &8[&a%bank%&8] &7has been removed."
+      Balance:
+         Player_Balance: "Your bank balance is: &b%money_symbol%%player_balance%"
+         Target_Balance: "&6%target%'s &7 bank balance is: &b%money_symbol%%target_balance%"
+      Money:
+         Player_Money_Add: "&a%money_symbol%%amount% &7has been added to your bank account."
+         Target_Money_Add: "&a%money_symbol%%amount% &7has been added to &6%target%'s bank &7account."
+         Player_Money_Take: "&a%money_symbol%%amount% &7has been taken from your bank account."
+         Target_Money_Take: "&a%money_symbol%%amount% &7has been taken from &6%target%'s bank &7account."
+         Player_Money_Set: "Your bank's account balance has been set to &a%money_symbol%%amount%&7."
+         Target_Money_Set: "&6%target%'s &7bank account balance has been set to &a%money_symbol%%amount%&7."
+         Player_Money_Reset: "Your bank account has been reset."
+         Target_Money_Reset: "&6%target%'s &7bank account has been reset."
+   Gang:
+      Player_Create_Gang: "You have created a gang account."
+      Player_Remove_Gang: "You have removed your gang account."
+      Created_Gang: "Created a new gang &8[&a%gang%&8]&7."
+      Removed_Gang: "Your gang account &8[&a%gang%&8] &7has been removed."
+      Balance:
+         Player_Balance: "Your gang balance is: &b%money_symbol%%player_balance%"
+         Target_Balance: "&6%target%'s &7 gang balance is: &b%money_symbol%%target_balance%"
+      Money:
+         Player_Money_Add: "&a%money_symbol%%amount% &7has been added to your gang account."
+         Target_Money_Add: "&a%money_symbol%%amount% &7has been added to &6%target%'s gang &7account."
+         Player_Money_Take: "&a%money_symbol%%amount% &7has been taken from your bank account."
+         Target_Money_Take: "&a%money_symbol%%amount% &7has been taken from &6%target%'s bank &7account."
+
+Errors:
+   Prefix: "&4Error&7: "
+   Permissions:
+      Command: "&cYou don't have permission to perform this command!"
+      Kit: "&cYou don't have permission to use this kit!"
+      Spawn: "&cYou don't have permission to teleport to this spawn!"
+      Warp: "&cYou don't have permission to teleport to this warp!"
+      Sign: "&cYou don't have permission to use this sign!"
+      Other: "&cYou don't have permission to use this!"
+   Need_Player: "&cYou need to be a player to use this!"
+   Player_Not_Online: "&6%target% &7is not &conline&7!"
+   Invalid_Player: "&6%player% &7is not found!"
+   Cannot_Null: "Can not be &cnull&7!"
+   Must_Be_Numbers: "&a%command% &7must be numbers."
+   Inv_Full: "Your inventory is &cfull, &7please clear a &8slot &7to receive the item(s)."
+   Correct_Spawn: "You need to choose a &acorrect &5<&7type&5>&7."
+   Cannot_Exceed_Max: "You can't exceed the &cmaximum amount &7set."
+   Cannot_Take_Less_Than_Zero: "You can't take money less than &czero&7."
+   Cannot_Take_More_Than_Balance: "You can't take money more than your &cbalance&7."
+   Cannot_Set_Same_Balance: "You can't set money same to your &cbank balance&7."
+   Cannot_Create_Bank: "Insufficient funds to create a &cbank account&7."
+   Cannot_Create_Gang: "Insufficient funds to create a &cgang account&7."
+   Must_Create_Bank: "Must create a Bank to continue."
+   Must_Create_Gang: "Must create a Gang to continue."
+   Dont_Use_Symbol: "Please don't use symbol."
+   Cannot_Remove_Non_Existing_Spawn: "Can't remove spawn that doesn't exist."
+   Cannot_Remove_Non_Existing_Warp: "Can't remove warp that doesn't exist."
+   Cannot_Remove_Non_Existing_Kit: "Can't remove kit that doesn't exist."
+   Cannot_Find_World: "Couldn't find that &bworld&7."
+
+Information:
+   Prefix: "&8&l[&7Information&8&l]&7 "
+   Drops_Cleared: "All drops have been &ccleared &7in world: &b{WORLD}"
+   Drops_Time: "Drops will clear in &a%time% &7%time_unit%&8(&7s&8)&7."
+   Uuid: "Your UUID: &a%uuid%"
+   Uuid_Target: "&b%target%'s &7UUID: &a%uuid%"
+
+Spawn:
+   Set: "Spawn &a%location% &7has been set!"
+   Not_Set: "Spawn &a%location% &7has not been set!"
+   Removed: "Spawn &a%location% &7has been successfully removed!"
+   Player_Send_To_Spawn: "You have been send to &a%location%&7."
+   Player_Send_To_Spawn_Cooldown: "You will teleport to &a%location% &7in &b%time% &7%time_unit%&8(&7s&8)&7."
+   Target_Send_To_Spawn: "&8%target% &7has been send to &a%location%&7."
+   Target_Send_To_Spawn_Cooldown: "&8%target% &7will teleport to &a%location% &7in &b%time% &7%time_unit%&8(&7s&8)&7."
+   Need_Default: "Need to set default spawn!"
+   List: "Spawn Locations&8:|&7%list%&8."
+   List_Undefined: "Spawn list is &cinvaild&7."
+
+Warp:
+   Set: "Warp &a%location% &7has been set!"
+   Not_Set: "Warp &a%location% &7has not been set!"
+   Removed: "Warp &a%location% &7has been successfully removed!"
+   Player_Send_To_Warp: "You have been send to &a%location%&7."
+   Player_Send_To_Warp_Cooldown: "You will teleport to &a%location% &7in &b%time% &7%time_unit%&8(&7s&8)&7."
+   Target_Send_To_Warp: "&8%target% &7has been send to &a%location%&7."
+   Target_Send_To_Warp_Cooldown: "&8%target% &7will teleport to &a%location% &7in &b%time% &7%time_unit%&8(&7s&8)&7."
+   List_Undefined: "Warp list is &cinvalid&7."
+
+Kits:
+   Received: "You have received &b{KIT} &7kit."
+   Invalid: "&b{KIT} &7is not a valid kit!"
+   Removed: "Spawn &a{KIT} &7has been successfully removed!"
+   List_Undefined: "Kits list is &cinvalid&7."
+
+Safe:
+   Created: "Safe has been created, &b%name%&7."
+   Removed: "Safe has been removed, &b%name%&7."
+   Robbed: "You have robbed this safe and earned &a%money_symbol%%amount%&7."
+   Respawned: "A safe has respawned."
+
+Wanted_Level:
+   Not_Wanted: "You don't have a wanted level."
+   Paid: "Paid wanted level fees, totaling &a%money_symbol%%amount%&7."
+
+Weapons:
+   Not_Valid_Ammo: "&cInvalid ammunition type &3{ARGS}&c."
+   Not_Valid_Weapon: "&cInvalid weapon type &3{ARGS}&c."
+   Not_Valid_Amount: "&cInvalid amount."
+   Killed_Player: "&7%killer% &c%gun% &7%victim%"
+   Gun_Not_In_Inventory: "You don't have the gun in your inventory!"
+   Gun_Bought: "You just bought &8(&b%gun%&8)&7 for &a%money_symbol%%amount%&7."
+   Gun_Sold: "You just sold &8(&b%gun%&8)&7 for &a%money_symbol%%amount%&7."
+   Ammo_Not_In_Inventory: "You don't have the ammo in your inventory!"
+   Ammo_Bought: "You just bought &8(&b%ammo%&ex%amount_1%&8)&7 for &a%money_symbol%%amount_2%&7."
+   Ammo_Sold: "You just sold &8(&b%ammo%&ex%amount_1%&8)&7 for &a%money_symbol%%amount_2%&7."
+   Not_Enough_Ammo: "You don't have enough ammo to sell!"
