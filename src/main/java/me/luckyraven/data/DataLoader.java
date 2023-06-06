@@ -1,7 +1,7 @@
 package me.luckyraven.data;
 
-import me.luckyraven.Gangland;
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.logging.Level;
 
@@ -32,16 +32,15 @@ public abstract class DataLoader {
 	 *
 	 * @param disable disables the plugin upon finding an exception.
 	 */
-	public void load(boolean disable) {
+	public void load(JavaPlugin plugin, boolean disable) {
 		try {
 			loadData();
 			isLoaded = true;
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			Gangland gangland = Gangland.getInstance();
-			gangland.getLogger().log(Level.SEVERE,
-			                         "The plugin data has ran into a problem, please check the logs and report them to the developer.");
-			if (disable) Bukkit.getPluginManager().disablePlugin(gangland);
+			plugin.getLogger().log(Level.SEVERE,
+			                       "The plugin data has ran into a problem, please check the logs and report them to the developer.");
+			if (disable) Bukkit.getPluginManager().disablePlugin(plugin);
 		}
 	}
 
@@ -51,9 +50,9 @@ public abstract class DataLoader {
 	 *
 	 * @param disable disables the plugin upon finding an exception.
 	 */
-	public void tryAgain(boolean disable) {
+	public void tryAgain(JavaPlugin plugin, boolean disable) {
 		// TODO make this instruction run every 5 seconds, and increment accordingly to X times until it fails
-		while (!isLoaded) load(disable);
+		while (!isLoaded) load(plugin, disable);
 	}
 
 }

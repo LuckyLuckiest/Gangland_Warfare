@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 public final class ChatUtil {
@@ -32,8 +33,8 @@ public final class ChatUtil {
 		return String.valueOf(Character.toChars(Integer.parseInt(position, 16)));
 	}
 
-	public static void startUpMessage() {
-		PluginDescriptionFile pdf = Gangland.getInstance().getDescription();
+	public static void startUpMessage(JavaPlugin plugin) {
+		PluginDescriptionFile pdf = plugin.getDescription();
 		consoleColor(getPrefix(pdf));
 		consoleColor("\t&8Author&7: " + pdf.getAuthors());
 		consoleColor("\t&8Version&7: &5(&6" + pdf.getVersion() + "&5)");

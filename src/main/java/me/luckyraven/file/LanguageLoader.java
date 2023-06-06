@@ -1,27 +1,30 @@
 package me.luckyraven.file;
 
 import lombok.Getter;
-import me.luckyraven.Gangland;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class LanguageLoader {
 
-	private final   Gangland          gangland = Gangland.getInstance();
+	private final   JavaPlugin        plugin;
 	private @Getter YamlConfiguration message;
 
-	public LanguageLoader(FileManager fileManager) {
+	public LanguageLoader(JavaPlugin plugin, FileManager fileManager) {
+		this.plugin = plugin;
 		try {
 			message = loadMessage(fileManager);
 		} catch (IOException | InvalidConfigurationException exception) {
-			gangland.getLogger().warning("Unhandled error (language loader): " + exception.getMessage());
+			plugin.getLogger().warning("Unhandled error (language loader): " + exception.getMessage());
 			Set<String>   files     = getMessageFiles();
 			StringBuilder languages = new StringBuilder();
 			String[]      nam       = files.toArray(new String[0]);
@@ -31,7 +34,7 @@ public class LanguageLoader {
 				languages.append(file, file.lastIndexOf("_") + 1, file.lastIndexOf("."));
 				if (i < files.size() - 1) languages.append(", ");
 			}
-			gangland.getLogger().info(
+			plugin.getLogger().info(
 					"The plugin will crash when trying to print messages, please use languages from the list: " +
 							languages);
 		}
@@ -43,13 +46,13 @@ public class LanguageLoader {
 			String lang    = settings.getFileConfiguration().getString("Language");
 			String fileLoc = "message\\message_" + lang + ".yml";
 
-			File        file = new File(gangland.getDataFolder().getAbsolutePath() + "\\" + fileLoc);
+			File        file = new File(plugin.getDataFolder().getAbsolutePath() + "\\" + fileLoc);
 			InputStream inputStream;
 
 			// Checks for the file in system
-			if (gangland.getDataFolder().exists() && file.exists()) inputStream = new FileInputStream(file);
+			if (plugin.getDataFolder().exists() && file.exists()) inputStream = new FileInputStream(file);
 				// Checks for the file in resources
-			else inputStream = gangland.getResource(fileLoc.replace("\\", "/"));
+			else inputStream = plugin.getResource(fileLoc.replace("\\", "/"));
 
 			if (inputStream == null) throw new FileNotFoundException(
 					String.format("message_%s.yml is not registered!", lang));
@@ -64,11 +67,10 @@ public class LanguageLoader {
 	public Set<String> getMessageFiles() {
 		Set<String> files = new HashSet<>();
 		// jar location
-		String path = URLDecoder.decode(
-				gangland.getClass().getProtectionDomain().getCodeSource().getLocation().getPath(),
-				StandardCharsets.UTF_8);
+		String path = URLDecoder.decode(plugin.getClass().getProtectionDomain().getCodeSource().getLocation().getPath(),
+		                                StandardCharsets.UTF_8);
 
-		File   directory = new File(gangland.getDataFolder().getAbsolutePath() + "\\message");
+		File   directory = new File(plugin.getDataFolder().getAbsolutePath() + "\\message");
 		File[] con       = directory.listFiles();
 
 		if (con != null) for (File file : con) {
@@ -87,8 +89,8 @@ public class LanguageLoader {
 				if (i++ != 0) files.add(name.substring(name.lastIndexOf("/") + 1));
 			}
 		} catch (IOException exception) {
-			gangland.getLogger().warning("Unexpected error (missing jar file): " + exception.getMessage() + "\n" +
-					                             "This error occurred since the plugin jar file is not in the plugins folder.");
+			plugin.getLogger().warning("Unexpected error (missing jar file): " + exception.getMessage() + "\n" +
+					                           "This error occurred since the plugin jar file is not in the plugins folder.");
 		}
 		return files;
 	}

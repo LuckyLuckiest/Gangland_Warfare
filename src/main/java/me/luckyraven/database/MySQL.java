@@ -2,6 +2,7 @@ package me.luckyraven.database;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.file.FileHandler;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -17,8 +18,10 @@ public class MySQL implements Database {
 	private final FileHandler  fileHandler;
 	private final List<String> tableNames;
 	private       String       table;
+	private       JavaPlugin   plugin;
 
-	public MySQL(FileHandler fileHandler) {
+	public MySQL(JavaPlugin plugin, FileHandler fileHandler) {
+		this.plugin = plugin;
 		this.fileHandler = fileHandler;
 		this.name = fileHandler.getName();
 		this.table = null;
@@ -40,7 +43,7 @@ public class MySQL implements Database {
 			Class.forName("org.mysql.cj.jdbc.Driver");
 			connection = DriverManager.getConnection(url);
 		} catch (ClassNotFoundException exception) {
-			Gangland.getInstance().getLogger().warning("Cannot find JDBC library.");
+			plugin.getLogger().warning("Cannot find JDBC library.");
 			exception.printStackTrace();
 		}
 	}

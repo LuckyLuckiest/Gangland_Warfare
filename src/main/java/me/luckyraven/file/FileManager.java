@@ -1,7 +1,7 @@
 package me.luckyraven.file;
 
 import lombok.Getter;
-import me.luckyraven.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,10 +10,12 @@ import java.util.List;
 public class FileManager {
 
 	private @Getter
-	final List<FileHandler> files;
+	final         List<FileHandler> files;
+	private final JavaPlugin        plugin;
 
-	public FileManager() {
+	public FileManager(JavaPlugin plugin) {
 		files = new ArrayList<>();
+		this.plugin = plugin;
 	}
 
 	public void addFile(FileHandler file) {
@@ -21,7 +23,7 @@ public class FileManager {
 		try {
 			file.create();
 		} catch (IOException exception) {
-			Gangland.getInstance().getLogger().warning(
+			plugin.getLogger().warning(
 					String.format("Unable to create file %s.%s, reason: %s", file.getName(), file.getFileType(),
 					              exception.getMessage()));
 		}

@@ -2,11 +2,11 @@ package me.luckyraven.file;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.Gangland;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,15 +29,15 @@ public class FileHandler {
 
 	private @Getter boolean loaded;
 
-	private final Gangland gangland;
+	private final JavaPlugin plugin;
 
-	public FileHandler(String name, String fileType) {
-		this(name, "", fileType);
+	public FileHandler(JavaPlugin plugin, String name, String fileType) {
+		this(plugin, name, "", fileType);
 		this.directory = this.directory.substring(1);
 	}
 
-	public FileHandler(String name, String directory, String fileType) {
-		gangland = Gangland.getInstance();
+	public FileHandler(JavaPlugin plugin, String name, String directory, String fileType) {
+		this.plugin = plugin;
 		this.name = name;
 		this.fileType = fileType;
 		this.directory = directory + "\\" + name;
@@ -46,10 +46,10 @@ public class FileHandler {
 	}
 
 	public void create() throws IOException {
-		file = new File(gangland.getDataFolder(), directory + fileType);
+		file = new File(plugin.getDataFolder(), directory + fileType);
 		if (!file.exists()) {
 			file.getParentFile().mkdirs();
-			gangland.saveResource(directory + fileType, false);
+			plugin.saveResource(directory + fileType, false);
 		}
 		if (fileType.equals(".yml")) {
 			fileConfiguration = new YamlConfiguration();
@@ -72,19 +72,19 @@ public class FileHandler {
 	}
 
 	public void createNewFile() {
-		File oldFile = new File(gangland.getDataFolder(), directory + "-old" + fileType);
+		File oldFile = new File(plugin.getDataFolder(), directory + "-old" + fileType);
 		// TODO change renameTo to move
 		if (oldFile.exists()) {
 			File aOldFile;
 			int  i = 0;
-			do aOldFile = new File(gangland.getDataFolder(), directory + "-old (" + ++i + ")" + fileType);
+			do aOldFile = new File(plugin.getDataFolder(), directory + "-old (" + ++i + ")" + fileType);
 			while (aOldFile.exists());
 			file.renameTo(aOldFile);
 		} else file.renameTo(oldFile);
 		ChatUtil.consoleColor(
 				String.format("%s%s &cis an old build or corrupted&r, creating a new one.", name, fileType));
 		try {
-			gangland.saveResource(directory + fileType, false);
+			plugin.saveResource(directory + fileType, false);
 			fileConfiguration.load(file);
 			loaded = true;
 		} catch (IOException | InvalidConfigurationException ignored) {

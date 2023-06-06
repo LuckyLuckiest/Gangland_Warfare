@@ -39,14 +39,13 @@ public final class ReloadUtil {
 		if (!pluginFile.isFile()) {
 			for (File f : Objects.requireNonNull(pluginDir.listFiles()))
 				if (f.getName().endsWith(".jar")) try {
-					PluginDescriptionFile desc = Gangland.getInstance().getPluginLoader().getPluginDescription(f);
+					PluginDescriptionFile desc = plugin.getPluginLoader().getPluginDescription(f);
 					if (desc.getName().equalsIgnoreCase(plugin.getName())) {
 						pluginFile = f;
 						break;
 					}
 				} catch (InvalidDescriptionException exception) {
-					Gangland.getInstance().getLogger().warning(
-							"Could not find the file and failed to search descriptions.");
+					plugin.getLogger().warning("Could not find the file and failed to search descriptions.");
 					exception.printStackTrace();
 					return false;
 				}
@@ -55,9 +54,9 @@ public final class ReloadUtil {
 		try {
 			target = Bukkit.getPluginManager().loadPlugin(pluginFile);
 		} catch (InvalidDescriptionException exception) {
-			Gangland.getInstance().getLogger().warning("Invalid description.");
+			plugin.getLogger().warning("Invalid description.");
 		} catch (InvalidPluginException exception) {
-			Gangland.getInstance().getLogger().warning("Not a valid plugin.");
+			plugin.getLogger().warning("Not a valid plugin.");
 		}
 
 		assert target != null;
@@ -115,7 +114,7 @@ public final class ReloadUtil {
 				commands = (Map<String, Command>) knownCommandsField.get(commandMap);
 
 			} catch (NoSuchFieldException | IllegalAccessException exception) {
-				Gangland.getInstance().getLogger().log(Level.SEVERE, "Failed to unload the plugin.");
+				plugin.getLogger().log(Level.SEVERE, "Failed to unload the plugin.");
 			}
 
 		}
