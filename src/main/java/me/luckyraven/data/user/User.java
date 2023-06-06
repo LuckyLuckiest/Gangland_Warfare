@@ -98,4 +98,10 @@ public class User<T> {
 		return deaths == 0 ? 0D : kills / deaths;
 	}
 
+	@Override
+	public String toString() {
+		return String.format("User:{Data=%s, KD=%.2f, bal=%.2f, gangId=%d}", user, getKillDeathRatio(), balance,
+		                     gangId);
+	}
+
 }
