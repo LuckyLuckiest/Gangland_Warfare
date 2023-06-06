@@ -67,7 +67,8 @@ public class FileHandler {
 		if (fileConfiguration != null && file != null) try {
 			fileConfiguration.save(file);
 		} catch (IOException exception) {
-			ChatUtil.consoleColor(String.format("&cCould not&r save %s to %s: %s", name, file, exception.getMessage()));
+			plugin.getLogger().warning(
+					String.format("Could not save %s to %s: %s", name, file, exception.getMessage()));
 		}
 	}
 
@@ -81,8 +82,7 @@ public class FileHandler {
 			while (aOldFile.exists());
 			file.renameTo(aOldFile);
 		} else file.renameTo(oldFile);
-		ChatUtil.consoleColor(
-				String.format("%s%s &cis an old build or corrupted&r, creating a new one.", name, fileType));
+		plugin.getLogger().info(String.format("%s%s is an old build or corrupted, creating a new one", name, fileType));
 		try {
 			plugin.saveResource(directory + fileType, false);
 			fileConfiguration.load(file);
