@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public class WantedEvent extends Event implements Cancellable {
 
 	private static final HandlerList handler = new HandlerList();
-	private              boolean     cancel;
+	private              boolean     cancelled;
 	private @Getter
 	final                Player      player;
 	private @Getter
@@ -23,12 +23,12 @@ public class WantedEvent extends Event implements Cancellable {
 
 	@Override
 	public boolean isCancelled() {
-		return cancel;
+		return cancelled;
 	}
 
 	@Override
 	public void setCancelled(boolean cancel) {
-		this.cancel = cancel;
+		this.cancelled = cancel;
 	}
 
 	@NotNull
