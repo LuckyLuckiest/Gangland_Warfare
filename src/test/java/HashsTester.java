@@ -3,7 +3,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class HashsTest {
+public class HashsTester {
 
 	public static void main(String[] args) {
 		int capacity = 15, iterations = 200;
