@@ -6,6 +6,7 @@ import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.command.sub.SCBalance;
 import me.luckyraven.command.sub.SCHelp;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
@@ -30,6 +31,7 @@ public final class Initializer {
 
 	// on plugin enable
 	private @Getter FileManager     fileManager;
+	private @Getter DatabaseManager databaseManager;
 	private @Getter ListenerManager listenerManager;
 	private @Getter CommandManager  commandManager;
 	private @Getter RankManager     rankManager;
@@ -49,6 +51,10 @@ public final class Initializer {
 		// Files
 		fileManager = new FileManager(plugin);
 		files();
+
+		// Database
+		databaseManager = new DatabaseManager(plugin);
+		databaseManager.initializeDatabases();
 
 		// Ranks
 		rankManager = new RankManager();
@@ -83,7 +89,7 @@ public final class Initializer {
 	}
 
 	private void files() {
-		fileManager.addFile(new FileHandler(plugin, "settings", ".yml"));
+		fileManager.addFile(new FileHandler(plugin, "settings", ".yml"), true);
 
 		this.languageLoader = new LanguageLoader(plugin, fileManager);
 

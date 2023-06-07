@@ -1,56 +1,35 @@
 package me.luckyraven.database;
 
-import lombok.Getter;
-import me.luckyraven.database.types.MySQL;
-import me.luckyraven.database.types.SQLite;
-import me.luckyraven.file.FileManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
-public abstract class DatabaseManager {
+public class DatabaseManager {
 
-	public static final int MYSQL = 0, SQLITE = 1;
-	private final   JavaPlugin plugin;
-	private @Getter int        type;
-	private         Database   database;
+	private final List<DatabaseHandler> databases;
+	private final JavaPlugin            plugin;
 
-	public DatabaseManager(JavaPlugin plugin, FileManager fileManager, int type) throws SQLException {
+	public DatabaseManager(JavaPlugin plugin) {
+		databases = new ArrayList<>();
 		this.plugin = plugin;
-		setType(fileManager, type);
 	}
 
-	public abstract String fileName();
-
-	public abstract void tables() throws SQLException;
-
-	// Initialize database tables
-	public void initialize() {
-		try {
-			database.connect();
-			database.getConnection().setAutoCommit(false);
-			tables();
-			database.getConnection().commit();
-			database.disconnect();
-			plugin.getLogger().info("Connection to a database has been established!");
-		} catch (SQLException exception) {
-			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
-		}
+	public void addDatabase(DatabaseHandler database) {
+		databases.add(database);
 	}
 
-	public void setType(FileManager fileManager, int type) throws SQLException {
-		this.type = type;
-		switch (type) {
-			case MYSQL -> {
-				this.database = new MySQL(plugin, fileName());
-				this.database.initialize(fileManager);
-			}
-			case SQLITE -> {
-				this.database = new SQLite(plugin, fileName());
-				this.database.initialize(fileManager);
-			}
-			default -> throw new SQLException("Unknown database type");
-		}
+	public DatabaseHandler getDatabase(String name) {
+		for (DatabaseHandler database : databases) if (database.fileName().equalsIgnoreCase(name)) return database;
+		return null;
+	}
+
+	public void initializeDatabases() {
+		for (DatabaseHandler database : databases) database.initialize();
+	}
+
+	public List<DatabaseHandler> getDatabases() {
+		return new ArrayList<>(databases);
 	}
 
 }
