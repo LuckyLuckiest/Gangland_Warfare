@@ -39,7 +39,7 @@ public interface Database {
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	void createTable(String... values);
+	void createTable(String... values) throws SQLException;
 
 	/**
 	 * Deletes a table for the specified file.
@@ -47,7 +47,7 @@ public interface Database {
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	void deleteTable();
+	void deleteTable() throws SQLException;
 
 	/**
 	 * The connection that has been established between server and sqlite.
@@ -70,7 +70,7 @@ public interface Database {
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	void setTableName(String newName);
+	void setTableName(String newName) throws SQLException;
 
 	/**
 	 * Adds a column to the specified table
@@ -80,7 +80,7 @@ public interface Database {
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	void addColumn(String name, String value);
+	Database addColumn(String name, String value) throws SQLException;
 
 	/**
 	 * Inserts new data to the specified table. Need to know the information of the table to add, or it might throw
@@ -90,7 +90,7 @@ public interface Database {
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	void insert(String... values);
+	Database insert(String... values) throws SQLException;
 
 	/**
 	 * Selects data from the table specified and returns an array of objects from that table.
@@ -101,7 +101,7 @@ public interface Database {
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	Object[] select(String row, String... columns);
+	Object[] select(String row, String... columns) throws SQLException;
 
 	/**
 	 * Updates the value in the specified <i>row</i> in the database, additionally the <i>values</i> specified are used
@@ -112,7 +112,7 @@ public interface Database {
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	void update(String row, String... values);
+	Database update(String row, String... values) throws SQLException;
 
 	/**
 	 * Gets the total rows of the specified table.
@@ -121,7 +121,7 @@ public interface Database {
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	int totalRows();
+	int totalRows() throws SQLException;
 
 	/**
 	 * To delete all the data from the table leave <i><b>value</i></b> empty, and if yor specify the specified row using
@@ -131,7 +131,7 @@ public interface Database {
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	void delete(String value);
+	void delete(String value) throws SQLException;
 
 	/**
 	 * Executes a query that you wish to execute.
@@ -141,7 +141,7 @@ public interface Database {
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	ResultSet executeQuery(String statement);
+	ResultSet executeQuery(String statement) throws SQLException;
 
 	/**
 	 * Executes an update to table that you wish to execute.
@@ -150,7 +150,7 @@ public interface Database {
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	void executeUpdate(String statement);
+	Database executeUpdate(String statement) throws SQLException;
 
 	/**
 	 * Gets all the tables of the specified database.
