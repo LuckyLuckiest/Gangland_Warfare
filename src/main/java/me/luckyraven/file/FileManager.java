@@ -1,9 +1,11 @@
 package me.luckyraven.file;
 
 import lombok.Getter;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +39,32 @@ public class FileManager {
 	public boolean filesLoaded() {
 		for (FileHandler file : files) if (!file.isLoaded()) return false;
 		return true;
+	}
+
+	public void checkFileLoaded(String name) throws IOException {
+		FileHandler file = getFile(name);
+		if (file == null) throw new FileNotFoundException(String.format("%s does not exist!", name));
+		if (!file.isLoaded()) throw new IOException(String.format("%s file is not loaded!", name));
+	}
+
+	public YamlConfiguration loadFromResources(String resourceFile) throws IOException, InvalidConfigurationException {
+		checkFileLoaded("settings");
+
+		File        file = new File(plugin.getDataFolder().getAbsolutePath() + "\\" + resourceFile);
+		InputStream inputStream;
+
+		// Checks for the file in system
+		if (plugin.getDataFolder().exists() && file.exists()) inputStream = new FileInputStream(file);
+			// Checks for the file in resources
+		else inputStream = plugin.getResource(resourceFile.replace("\\", "/"));
+
+		if (inputStream == null) throw new FileNotFoundException(
+				String.format("%s is not registered!", resourceFile.substring(resourceFile.lastIndexOf("\\") + 1)));
+
+		YamlConfiguration yamlConfiguration = new YamlConfiguration();
+		yamlConfiguration.load(new InputStreamReader(inputStream));
+
+		return yamlConfiguration;
 	}
 
 }
