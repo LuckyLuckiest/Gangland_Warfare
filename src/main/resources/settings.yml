@@ -40,8 +40,17 @@ Language: en
 # | Database Config | #
 # +-----------------+ #
 Database:
-   host: localhost
-   port: 3308
-   database: db
-   user: root
-   password: root
+   # Specify which type of database to be used, [mysql, sqlite]
+   Type: mysql
+   MySQL:
+      Host: localhost
+      Port: 3306
+      Database: gangland
+      Username: root
+      Password: root
+   SQLite:
+      Something1: ""
+      Something2: ""
+      Something3: ""
+      Something4: ""
+      Something5: ""
