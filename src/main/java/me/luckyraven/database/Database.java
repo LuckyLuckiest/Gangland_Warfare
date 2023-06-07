@@ -86,11 +86,13 @@ public interface Database {
 	 * Inserts new data to the specified table. Need to know the information of the table to add, or it might throw
 	 * exceptions.
 	 *
-	 * @param values data types associated with names.
+	 * @param columns values applied to each specific column.
+	 * @param values  data types associated with names.
+	 * @param types   each column data type, use {@link java.sql.Types} to specify the data type.
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	Database insert(String... values) throws SQLException;
+	Database insert(String[] columns, Object[] values, int[] types) throws SQLException;
 
 	/**
 	 * Selects data from the table specified and returns an array of objects from that table.
@@ -131,7 +133,7 @@ public interface Database {
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	void delete(String value) throws SQLException;
+	Database delete(String value) throws SQLException;
 
 	/**
 	 * Executes a query that you wish to execute.
