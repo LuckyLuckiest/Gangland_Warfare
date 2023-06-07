@@ -9,7 +9,7 @@ When the user joins the server, the following is created
 In database the specified tables will have this specific contents.
 user:
 - Data:
-	- uuid (pk)		(\uuid\)
+	- uuid (pk)		(\str\)
 	- kills			(0)
 	- deaths		(0)
 	- mob_kills		(0)
@@ -17,27 +17,30 @@ user:
 	- bank status	(false)
 	- bounty price	(0.0)
 	- wanted level	(0)
-	- rank ???		(-)
 - Bank:
-	- bank id (pk)	(\uuid\)
-	- name			(\name\)
+	- bank id (pk)	(\str\)
+	- name			(\str\)
 	- balance		(0.0)
 - Account:
-	- uuid (pk)		(\uuid\)
+	- uuid (pk)		(\str\)
 	- balance		(0.0)
 	- gang_id		(-1)
 
 gang:
 - Data:
-	- gang id (pk)	(\uuid\)
-	- name			(\name\)
-	- description	(\description\)
-	- members		(List{})
+	- gang id (pk)	(\str\)
+	- name			(\str\)
+	- description	(\str\)
+	- members		(\str{,}\)
 	- bounty		(0.0)
-	- alias			(List{})
+	- alias			(\str{,}\)
 - Account:
 	- gang id (pk)	(\uuid\)
 	- balance		(0.0)
+
+safes:
+- Data:
+	- id (pk)		(\int\)
 
 There will multiple yaml files for saving data.
 - Dealer:
