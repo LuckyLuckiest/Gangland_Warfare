@@ -1,6 +1,5 @@
 package me.luckyraven.file;
 
-import lombok.Getter;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -11,17 +10,17 @@ import java.util.List;
 
 public class FileManager {
 
-	private @Getter
-	final         List<FileHandler> files;
+	private final List<FileHandler> files;
 	private final JavaPlugin        plugin;
 
 	public FileManager(JavaPlugin plugin) {
-		files = new ArrayList<>();
+		this.files = new ArrayList<>();
 		this.plugin = plugin;
 	}
 
-	public void addFile(FileHandler file) {
+	public void addFile(FileHandler file, boolean create) {
 		files.add(file);
+		if (!create) return;
 		try {
 			file.create();
 		} catch (IOException exception) {
@@ -65,6 +64,10 @@ public class FileManager {
 		yamlConfiguration.load(new InputStreamReader(inputStream));
 
 		return yamlConfiguration;
+	}
+
+	public List<FileHandler> getFiles() {
+		return new ArrayList<>(files);
 	}
 
 }
