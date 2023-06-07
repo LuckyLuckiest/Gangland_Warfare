@@ -1,11 +1,15 @@
 package me.luckyraven.database;
 
+import me.luckyraven.file.FileManager;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
 public interface Database {
+
+	void initialize(FileManager fileManager);
 
 	/**
 	 * Specify the name of the table that will be used to work on.
