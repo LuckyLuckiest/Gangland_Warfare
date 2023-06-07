@@ -8,16 +8,8 @@ public class EconomyException extends PluginException {
 		super();
 	}
 
-	public EconomyException(int token) {
-		super(token);
-	}
-
 	public EconomyException(String message) {
 		super(message);
-	}
-
-	public EconomyException(String message, int token) {
-		super(message, token);
 	}
 
 }
