@@ -41,27 +41,13 @@ public class LanguageLoader {
 	}
 
 	private YamlConfiguration loadMessage(FileManager manager) throws IOException, InvalidConfigurationException {
+		manager.checkFileLoaded("settings");
+
 		FileHandler settings = manager.getFile("settings");
-		if (settings.isLoaded()) {
-			String lang    = settings.getFileConfiguration().getString("Language");
-			String fileLoc = "message\\message_" + lang + ".yml";
+		String      lang     = settings.getFileConfiguration().getString("Language");
+		String      fileLoc  = "message\\message_" + lang + ".yml";
 
-			File        file = new File(plugin.getDataFolder().getAbsolutePath() + "\\" + fileLoc);
-			InputStream inputStream;
-
-			// Checks for the file in system
-			if (plugin.getDataFolder().exists() && file.exists()) inputStream = new FileInputStream(file);
-				// Checks for the file in resources
-			else inputStream = plugin.getResource(fileLoc.replace("\\", "/"));
-
-			if (inputStream == null) throw new FileNotFoundException(
-					String.format("message_%s.yml is not registered!", lang));
-
-			YamlConfiguration yamlConfiguration = new YamlConfiguration();
-			yamlConfiguration.load(new InputStreamReader(inputStream));
-
-			return yamlConfiguration;
-		} else throw new FileNotFoundException("Settings file is not loaded!");
+		return manager.loadFromResources(fileLoc);
 	}
 
 	public Set<String> getMessageFiles() {
