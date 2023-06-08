@@ -7,6 +7,7 @@ import me.luckyraven.file.FileManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
+import java.util.Map;
 
 public abstract class DatabaseHandler {
 
@@ -15,12 +16,12 @@ public abstract class DatabaseHandler {
 	private @Getter int        type;
 	private @Getter Database   database;
 
-	public DatabaseHandler(JavaPlugin plugin, FileManager fileManager, int type) throws SQLException {
+	public DatabaseHandler(JavaPlugin plugin, int type) {
 		this.plugin = plugin;
-		setType(fileManager, type);
+		setType(type);
 	}
 
-	public abstract String fileName();
+	public abstract Map<String, Object> credentials();
 
 	public abstract void tables() throws SQLException;
 
@@ -38,18 +39,18 @@ public abstract class DatabaseHandler {
 		}
 	}
 
-	public void setType(FileManager fileManager, int type) throws SQLException {
+	public void setType(int type) {
 		this.type = type;
 		switch (type) {
 			case MYSQL -> {
-				this.database = new MySQL(plugin, fileName());
-				this.database.initialize(fileManager);
+				this.database = new MySQL(plugin);
+				this.database.initialize(credentials(), "user");
 			}
 			case SQLITE -> {
-				this.database = new SQLite(plugin, fileName());
-				this.database.initialize(fileManager);
+				this.database = new SQLite(plugin);
+				this.database.initialize(credentials(), "user");
 			}
-			default -> throw new SQLException("Unknown database type");
+			default -> throw new IllegalArgumentException("Unknown database type");
 		}
 	}
 
