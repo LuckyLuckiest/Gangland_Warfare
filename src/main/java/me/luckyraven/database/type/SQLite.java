@@ -27,7 +27,7 @@ public class SQLite implements Database {
 	}
 
 	@Override
-	public void initialize(Map<String, Object> credentials, String schema) {
+	public void initialize(Map<String, Object> credentials, String schema) throws SQLException {
 		SQLiteConfig config = new SQLiteConfig();
 		dataSource = new SQLiteDataSource(config);
 
@@ -35,8 +35,8 @@ public class SQLite implements Database {
 	}
 
 	@Override
-	public void switchSchema(String schema) throws SQLException {
-
+	public boolean switchSchema(String schema) throws SQLException {
+		return false;
 	}
 
 	@Override
