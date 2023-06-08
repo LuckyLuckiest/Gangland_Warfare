@@ -6,7 +6,10 @@ import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.command.sub.SCBalance;
 import me.luckyraven.command.sub.SCHelp;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseManager;
+import me.luckyraven.database.sub.GangDatabase;
+import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
@@ -53,7 +56,8 @@ public final class Initializer {
 		files();
 
 		// Database
-		databaseManager = new DatabaseManager(plugin);
+		databaseManager = new DatabaseManager();
+		databases();
 		databaseManager.initializeDatabases();
 
 		// Ranks
@@ -100,6 +104,11 @@ public final class Initializer {
 //		fileManager.addFile(new FileHandler("warp", "navigation", ".yml"));
 //		fileManager.addFile(new FileHandler("player_data", "data", ".db"));
 //		fileManager.addFile(new FileHandler("gang_data", "data", ".db"));
+	}
+
+	private void databases() {
+		databaseManager.addDatabase(new UserDatabase(plugin, DatabaseHandler.MYSQL, fileManager));
+		databaseManager.addDatabase(new GangDatabase(plugin, DatabaseHandler.MYSQL));
 	}
 
 }
