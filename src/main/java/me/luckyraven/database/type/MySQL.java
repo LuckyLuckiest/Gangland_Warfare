@@ -165,11 +165,7 @@ public class MySQL implements Database {
 		}
 		query.append(");");
 
-		try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
-			statement.executeUpdate();
-		} catch (SQLException exception) {
-			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
-		}
+		executeUpdate(query.toString());
 	}
 
 	@Override
@@ -179,12 +175,8 @@ public class MySQL implements Database {
 
 		String query = "DROP TABLE IF EXISTS " + table + ";";
 
-		try (PreparedStatement statement = connection.prepareStatement(query)) {
-			statement.executeUpdate();
-			tableNames.remove(table);
-		} catch (SQLException exception) {
-			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
-		}
+		executeUpdate(query);
+		tableNames.remove(table);
 	}
 
 	@Override
@@ -200,17 +192,12 @@ public class MySQL implements Database {
 
 		String query = "ALTER TABLE " + table + " RENAME TO " + newName + ";";
 
-		try (PreparedStatement statement = connection.prepareStatement(query)) {
-			statement.executeUpdate();
-
-			for (int i = 0; i < tableNames.size(); i++)
-				if (tableNames.get(i).equalsIgnoreCase(table)) {
-					tableNames.set(i, newName);
-					break;
-				}
-		} catch (SQLException exception) {
-			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
-		}
+		executeUpdate(query);
+		for (int i = 0; i < tableNames.size(); i++)
+			if (tableNames.get(i).equalsIgnoreCase(table)) {
+				tableNames.set(i, newName);
+				break;
+			}
 	}
 
 	@Override
@@ -220,11 +207,8 @@ public class MySQL implements Database {
 
 		String query = "ALTER TABLE " + table + " ADD COLUMN " + name + " " + columType + ";";
 
-		try (PreparedStatement statement = connection.prepareStatement(query)) {
-			statement.executeUpdate();
-		} catch (SQLException exception) {
-			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
-		}
+		executeUpdate(query);
+
 		return this;
 	}
 
@@ -319,11 +303,7 @@ public class MySQL implements Database {
 		}
 		query.append(" WHERE ").append(row).append(";");
 
-		try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
-			statement.executeUpdate();
-		} catch (SQLException exception) {
-			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
-		}
+		executeUpdate(query.toString());
 
 		return this;
 	}
@@ -351,11 +331,7 @@ public class MySQL implements Database {
 		if (!column.isEmpty()) query.append(" WHERE ").append(column).append(" = ");
 		query.append(value).append(";");
 
-		try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
-			statement.executeUpdate();
-		} catch (SQLException exception) {
-			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
-		}
+		executeUpdate(query.toString());
 
 		return this;
 	}
