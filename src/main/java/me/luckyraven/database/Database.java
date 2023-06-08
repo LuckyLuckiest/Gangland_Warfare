@@ -9,16 +9,43 @@ import java.util.Map;
 public interface Database {
 
 	/**
-	 * Initializes the database.
+	 * Initialize the database according to the given credentials and the specific database.
+	 *
+	 * @param credentials to enter the database.
+	 * @param schema      the schema name to enter.
+	 * @throws SQLException the sql exception
 	 */
-	void initialize(Map<String, Object> credentials, String schema);
+	void initialize(Map<String, Object> credentials, String schema) throws SQLException;
 
-	void switchSchema(String schema) throws SQLException;
+	/**
+	 * Switch between schemas if the given schema is true.
+	 *
+	 * @param schema the schema
+	 * @throws SQLException the sql exception
+	 */
+	boolean switchSchema(String schema) throws SQLException;
 
+	/**
+	 * Schema exists boolean.
+	 *
+	 * @param schema the schema
+	 * @return the boolean
+	 */
 	boolean schemaExists(String schema);
 
+	/**
+	 * Create schema.
+	 *
+	 * @param name the name
+	 */
 	void createSchema(String name);
 
+	/**
+	 * Drop schema.
+	 *
+	 * @param name the name
+	 * @throws SQLException the sql exception
+	 */
 	void dropSchema(String name) throws SQLException;
 
 	/**
@@ -46,6 +73,7 @@ public interface Database {
 	 * Creates a table for the specified file.
 	 *
 	 * @param values gets an array of string values and executes a query.
+	 * @throws SQLException the sql exception
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
@@ -54,6 +82,7 @@ public interface Database {
 	/**
 	 * Deletes a table for the specified file.
 	 *
+	 * @throws SQLException the sql exception
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
@@ -70,6 +99,7 @@ public interface Database {
 	 * Changes the name of the table.
 	 *
 	 * @param newName new name of the table.
+	 * @throws SQLException the sql exception
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
@@ -89,6 +119,8 @@ public interface Database {
 	 *
 	 * @param name      name of the new column.
 	 * @param columType values that are used for this new column.
+	 * @return database instance
+	 * @throws SQLException the sql exception
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
@@ -112,6 +144,8 @@ public interface Database {
 	 * @param columns column names.
 	 * @param values  each value information.
 	 * @param types   each column data type, use {@link java.sql.Types} to specify the data type.
+	 * @return database instance
+	 * @throws SQLException the sql exception
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
@@ -134,9 +168,12 @@ public interface Database {
 	 *     database.disconnect();
 	 * </pre>
 	 *
-	 * @param row     the specific row for a value that you need.
-	 * @param columns which values you need information from.
+	 * @param row          the specific row for a value that you need.
+	 * @param placeholders placeholder values.
+	 * @param types        each placeholder type.
+	 * @param columns      which values you need information from.
 	 * @return array of objects according to the length of columns provided.
+	 * @throws SQLException the sql exception
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
@@ -157,6 +194,8 @@ public interface Database {
 	 *
 	 * @param row    the specific row that will be updated in the database.
 	 * @param values the specific columns that will be updated in the database.
+	 * @return database instance
+	 * @throws SQLException the sql exception
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
@@ -166,6 +205,7 @@ public interface Database {
 	 * Gets the total rows of the specified table.
 	 *
 	 * @return length of the table provided.
+	 * @throws SQLException the sql exception
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
@@ -177,6 +217,8 @@ public interface Database {
 	 *
 	 * @param column the specific column.
 	 * @param value  all data from the table or specific data.
+	 * @return database instance
+	 * @throws SQLException the sql exception
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
@@ -187,6 +229,7 @@ public interface Database {
 	 *
 	 * @param statement the statement provided needs SQLite experience.
 	 * @return returns the result found.
+	 * @throws SQLException the sql exception
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
@@ -196,13 +239,17 @@ public interface Database {
 	 * Executes an update to table that you wish to execute.
 	 *
 	 * @param statement the statement provided needs SQLite experience.
+	 * @throws SQLException the sql exception
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
 	void executeUpdate(String statement) throws SQLException;
 
 	/**
+	 * Execute a statement to the table.
 	 *
+	 * @param statement the statement
+	 * @throws SQLException the sql exception
 	 */
 	void executeStatement(String statement) throws SQLException;
 
