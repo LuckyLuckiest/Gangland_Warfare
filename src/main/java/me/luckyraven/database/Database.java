@@ -20,8 +20,10 @@ public interface Database {
 	/**
 	 * Switch between schemas if the given schema is true.
 	 *
-	 * @param schema the schema
+	 * @param schema the schema name to access.
 	 * @throws SQLException the sql exception
+	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
+	 * everything you commit and disconnect the database.
 	 */
 	boolean switchSchema(String schema) throws SQLException;
 
@@ -30,21 +32,27 @@ public interface Database {
 	 *
 	 * @param schema the schema
 	 * @return the boolean
+	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
+	 * everything you commit and disconnect the database.
 	 */
 	boolean schemaExists(String schema);
 
 	/**
 	 * Create schema.
 	 *
-	 * @param name the name
+	 * @param name the name of the new schema
+	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
+	 * everything you commit and disconnect the database.
 	 */
 	void createSchema(String name);
 
 	/**
 	 * Drop schema.
 	 *
-	 * @param name the name
+	 * @param name the name of the schema to drop.
 	 * @throws SQLException the sql exception
+	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
+	 * everything you commit and disconnect the database.
 	 */
 	void dropSchema(String name) throws SQLException;
 
@@ -227,7 +235,7 @@ public interface Database {
 	/**
 	 * Executes a query that you wish to execute.
 	 *
-	 * @param statement the statement provided needs SQLite experience.
+	 * @param statement the statement provided needs SQL experience.
 	 * @return returns the result found.
 	 * @throws SQLException the sql exception
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
@@ -238,7 +246,7 @@ public interface Database {
 	/**
 	 * Executes an update to table that you wish to execute.
 	 *
-	 * @param statement the statement provided needs SQLite experience.
+	 * @param statement the statement provided needs SQL experience.
 	 * @throws SQLException the sql exception
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
@@ -248,8 +256,10 @@ public interface Database {
 	/**
 	 * Execute a statement to the table.
 	 *
-	 * @param statement the statement
+	 * @param statement the statement provided needs SQL experience.
 	 * @throws SQLException the sql exception
+	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
+	 * everything you commit and disconnect the database.
 	 */
 	void executeStatement(String statement) throws SQLException;
 
@@ -261,4 +271,3 @@ public interface Database {
 	List<String> getTables();
 
 }
-
