@@ -33,12 +33,12 @@ public class MySQL implements Database {
 	}
 
 	@Override
-	public void initialize(Map<String, Object> credentials, String schema) {
+	public void initialize(Map<String, Object> credentials, String schema) throws SQLException {
 		this.host = (String) credentials.get("host");
 		this.port = (int) credentials.get("port");
-		this.database = schema;
 		this.username = (String) credentials.get("username");
 		this.password = (String) credentials.get("password");
+		this.database = schema;
 
 		HikariConfig config = new HikariConfig();
 
@@ -48,7 +48,11 @@ public class MySQL implements Database {
 		config.setUsername(username);
 		config.setPassword(password);
 
-		dataSource = new HikariDataSource(config);
+		try {
+			dataSource = new HikariDataSource(config);
+		} catch (Exception exception) {
+			throw new SQLException("Unable to create DataSource, " + exception.getMessage());
+		}
 
 		try {
 			connect();
@@ -61,25 +65,41 @@ public class MySQL implements Database {
 	}
 
 	@Override
-	public void switchSchema(String schema) throws SQLException {
+	public boolean switchSchema(String schema) throws SQLException {
 		if (!schemaExists(schema)) throw new SQLException("Schema specified doesn't exist");
 
+		try {
+			HikariConfig config = new HikariConfig();
+
+			String url = String.format("jdbc:mysql://%s:%d/%s", host, port, schema);
+
+			config.setJdbcUrl(url);
+			config.setUsername(username);
+			config.setPassword(password);
+
+			this.database = schema;
+
+			dataSource.close();
+
+			dataSource = new HikariDataSource(config);
+		} catch (Exception exception) {
+			plugin.getLogger().warning("Unable to switch DataSource, " + exception.getMessage());
+			return false;
+		}
+
+		return true;
 	}
 
 	@Override
 	public boolean schemaExists(String schema) {
 		boolean exists = false;
 		try {
-			connect();
-
 			Object[] schemas = table("INFORMATION_SCHEMA.SCHEMATA").select("SCHEMA_NAME = ?", new Object[]{schema},
 			                                                               new int[]{Types.VARCHAR},
 			                                                               new String[]{"COUNT(*)"});
 			if (schemas != null && schemas.length > 0) exists = (int) schemas[0] > 0;
 		} catch (SQLException exception) {
 			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
-		} finally {
-			disconnect();
 		}
 		return exists;
 	}
@@ -87,21 +107,15 @@ public class MySQL implements Database {
 	@Override
 	public void createSchema(String name) {
 		try {
-			connect();
-
 			executeStatement("CREATE DATABASE " + name);
 		} catch (SQLException exception) {
 			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
-		} finally {
-			disconnect();
 		}
 	}
 
 	@Override
 	public void dropSchema(String name) {
 		try {
-			connect();
-
 			executeStatement("DROP DATABASE " + name);
 		} catch (SQLException exception) {
 			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
