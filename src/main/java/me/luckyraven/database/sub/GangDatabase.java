@@ -1,28 +1,24 @@
 package me.luckyraven.database.sub;
 
 import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.file.FileManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
+import java.util.Map;
 
 public class GangDatabase extends DatabaseHandler {
-
-	private final FileManager fileManager;
-
-	public GangDatabase(JavaPlugin plugin, FileManager fileManager, int type) throws SQLException {
-		super(plugin, fileManager, type);
-		this.fileManager = fileManager;
+	
+	public GangDatabase(JavaPlugin plugin, int type) {
+		super(plugin, type);
 	}
 
 	@Override
-	public String fileName() {
-		return "gang";
+	public Map<String, Object> credentials() {
+		return null;
 	}
 
 	@Override
 	public void tables() throws SQLException {
-		getDatabase().initialize(fileManager);
 		// For time use this method 'julianday('now')'
 		getDatabase().table("data").createTable("id INT PRIMARY KEY NOT NULL", "name VARCHAR(16) NOT NULL",
 		                                        "description TEXT NOT NULL", "members LONGTEXT NOT NULL",
