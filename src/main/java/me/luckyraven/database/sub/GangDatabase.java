@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import java.util.Map;
 
 public class GangDatabase extends DatabaseHandler {
-	
+
 	public GangDatabase(JavaPlugin plugin, int type) {
 		super(plugin, type);
 	}
@@ -20,6 +20,7 @@ public class GangDatabase extends DatabaseHandler {
 	@Override
 	public void tables() throws SQLException {
 		// For time use this method 'julianday('now')'
+		getDatabase().createSchema("gang");
 		getDatabase().table("data").createTable("id INT PRIMARY KEY NOT NULL", "name VARCHAR(16) NOT NULL",
 		                                        "description TEXT NOT NULL", "members LONGTEXT NOT NULL",
 		                                        "bounty DOUBLE NOT NULL", "alias LONGTEXT NOT NULL",

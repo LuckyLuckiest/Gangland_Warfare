@@ -17,7 +17,7 @@ public class UserDatabase extends DatabaseHandler {
 	private final FileManager fileManager;
 
 	public UserDatabase(JavaPlugin plugin, int type, FileManager fileManager) {
-		super(plugin, type);
+		super(plugin, type, fileManager);
 		this.plugin = plugin;
 		this.fileManager = fileManager;
 	}
@@ -53,6 +53,7 @@ public class UserDatabase extends DatabaseHandler {
 
 	@Override
 	public void tables() throws SQLException {
+		getDatabase().createSchema("user");
 		getDatabase().table("data").createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "kills INT NOT NULL",
 		                                        "deaths INT NOT NULL", "mob_kills INT NOT NULL",
 		                                        "has_bank BOOLEAN NOT NULL", "has_gang BOOLEAN NOT NULL",
