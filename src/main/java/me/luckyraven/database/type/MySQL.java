@@ -3,13 +3,12 @@ package me.luckyraven.database.type;
 import com.google.common.base.Preconditions;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import lombok.Getter;
 import me.luckyraven.database.Database;
-import me.luckyraven.file.FileManager;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.IOException;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,44 +16,96 @@ import java.util.Map;
 
 public class MySQL implements Database {
 
-	private final JavaPlugin       plugin;
-	private final String           name;
-	private       Connection       connection;
-	private       String           table;
-	private final List<String>     tableNames;
-	private       HikariDataSource dataSource;
+	private final JavaPlugin   plugin;
+	private final List<String> tableNames;
 
-	public MySQL(JavaPlugin plugin, String name) {
+	private @Getter String host, database, username, password;
+	private @Getter int port;
+
+	private Connection       connection;
+	private String           table;
+	private HikariDataSource dataSource;
+
+	public MySQL(JavaPlugin plugin) {
 		this.plugin = plugin;
-		this.name = name;
 		this.table = null;
 		this.tableNames = new ArrayList<>();
 	}
 
 	@Override
-	public void initialize(FileManager manager) {
-		try {
-			manager.checkFileLoaded("settings");
-		} catch (IOException exception) {
-			plugin.getLogger().warning(exception.getMessage());
-			return;
-		}
-
-		FileConfiguration configuration = manager.getFile("settings").getFileConfiguration();
+	public void initialize(Map<String, Object> credentials, String schema) {
+		this.host = (String) credentials.get("host");
+		this.port = (int) credentials.get("port");
+		this.database = schema;
+		this.username = (String) credentials.get("username");
+		this.password = (String) credentials.get("password");
 
 		HikariConfig config = new HikariConfig();
 
-		String sDb = "Database.MySQL";
+		String url = String.format("jdbc:mysql://%s:%d/%s", host, port, database);
 
-		String builder = "jdbc:mysql://" + configuration.getString(sDb + ".Host");
-		builder += ":" + configuration.getString(sDb + ".Port");
-		builder += "/" + configuration.getString(sDb + ".Database");
-
-		config.setJdbcUrl(builder);
-		config.setUsername(configuration.getString(sDb + ".Username"));
-		config.setPassword(configuration.getString(sDb + ".Password"));
+		config.setJdbcUrl(url);
+		config.setUsername(username);
+		config.setPassword(password);
 
 		dataSource = new HikariDataSource(config);
+
+		try {
+			connect();
+			tableNames.addAll(getTableNames());
+		} catch (SQLException exception) {
+			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
+		} finally {
+			disconnect();
+		}
+	}
+
+	@Override
+	public void switchSchema(String schema) throws SQLException {
+		if (!schemaExists(schema)) throw new SQLException("Schema specified doesn't exist");
+
+	}
+
+	@Override
+	public boolean schemaExists(String schema) {
+		boolean exists = false;
+		try {
+			connect();
+
+			Object[] schemas = table("INFORMATION_SCHEMA.SCHEMATA").select("SCHEMA_NAME = ?", new Object[]{schema},
+			                                                               new int[]{Types.VARCHAR},
+			                                                               new String[]{"COUNT(*)"});
+			if (schemas != null && schemas.length > 0) exists = (int) schemas[0] > 0;
+		} catch (SQLException exception) {
+			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
+		} finally {
+			disconnect();
+		}
+		return exists;
+	}
+
+	@Override
+	public void createSchema(String name) {
+		try {
+			connect();
+
+			executeStatement("CREATE DATABASE " + name);
+		} catch (SQLException exception) {
+			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
+		} finally {
+			disconnect();
+		}
+	}
+
+	@Override
+	public void dropSchema(String name) {
+		try {
+			connect();
+
+			executeStatement("DROP DATABASE " + name);
+		} catch (SQLException exception) {
+			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
+		}
 	}
 
 	@Override
@@ -67,6 +118,7 @@ public class MySQL implements Database {
 
 	@Override
 	public void connect() throws SQLException {
+		Preconditions.checkNotNull(dataSource, "DataSource can't be null");
 		if (connection != null) throw new SQLException("There is a connection not closed");
 
 		connection = dataSource.getConnection();
@@ -74,12 +126,13 @@ public class MySQL implements Database {
 
 	@Override
 	public void disconnect() {
+		Preconditions.checkNotNull(dataSource, "DataSource can't be null");
 		Preconditions.checkNotNull(connection, "No connection established");
 
-		if (dataSource != null) {
-			dataSource.close();
-			table = null;
-		}
+		dataSource.close();
+		connection = null;
+		table = null;
+
 	}
 
 	@Override
@@ -91,7 +144,7 @@ public class MySQL implements Database {
 		tableNames.add(table);
 
 		// Building query string
-		StringBuilder query = new StringBuilder("CREATE TABLE IF NOT EXISTS ? (");
+		StringBuilder query = new StringBuilder("CREATE TABLE IF NOT EXISTS " + table + " (");
 		for (int i = 0; i < values.length; i++) {
 			query.append(values[i]);
 			if (i < values.length - 1) query.append(", ");
@@ -99,10 +152,9 @@ public class MySQL implements Database {
 		query.append(");");
 
 		try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
-			statement.setString(1, table);
 			statement.executeUpdate();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(exception.getMessage());
+			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
 		}
 	}
 
@@ -111,14 +163,13 @@ public class MySQL implements Database {
 		if (connection == null) throw new SQLException("There is no connection");
 		Preconditions.checkNotNull(table, "Invalid table");
 
-		String query = "DROP TABLE IF EXISTS ?;";
+		String query = "DROP TABLE IF EXISTS " + table + ";";
 
 		try (PreparedStatement statement = connection.prepareStatement(query)) {
-			statement.setString(1, table);
 			statement.executeUpdate();
 			tableNames.remove(table);
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(exception.getMessage());
+			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
 		}
 	}
 
@@ -128,21 +179,14 @@ public class MySQL implements Database {
 	}
 
 	@Override
-	public String getName() {
-		return name;
-	}
-
-	@Override
 	public void setTableName(String newName) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
 		Preconditions.checkNotNull(table, "Invalid table");
 		if (!tableNames.contains(table)) throw new SQLException("Table not found");
 
-		String query = "ALTER TABLE ? RENAME TO ?;";
+		String query = "ALTER TABLE " + table + " RENAME TO " + newName + ";";
 
 		try (PreparedStatement statement = connection.prepareStatement(query)) {
-			statement.setString(1, table);
-			statement.setString(2, newName);
 			statement.executeUpdate();
 
 			for (int i = 0; i < tableNames.size(); i++)
@@ -151,24 +195,21 @@ public class MySQL implements Database {
 					break;
 				}
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(exception.getMessage());
+			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
 		}
 	}
 
 	@Override
-	public Database addColumn(String name, String value) throws SQLException {
+	public Database addColumn(String name, String columType) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
 		Preconditions.checkNotNull(table, "Invalid table");
 
-		String query = "ALTER TABLE ? ADD COLUMN ? ?;";
+		String query = "ALTER TABLE " + table + " ADD COLUMN " + name + " " + columType + ";";
 
 		try (PreparedStatement statement = connection.prepareStatement(query)) {
-			statement.setString(1, table);
-			statement.setString(2, name);
-			statement.setString(3, value);
 			statement.executeUpdate();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(exception.getMessage());
+			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
 		}
 		return this;
 	}
@@ -183,8 +224,8 @@ public class MySQL implements Database {
 		Preconditions.checkArgument(columns.length == values.length && columns.length == types.length,
 		                            "Invalid columns, values, and types data parameters");
 
-		StringBuilder columnNames  = new StringBuilder("(");
-		StringBuilder placeholders = new StringBuilder("(");
+		StringBuilder columnNames  = new StringBuilder();
+		StringBuilder placeholders = new StringBuilder();
 		for (int i = 0; i < columns.length; i++) {
 			columnNames.append(columns[i]);
 			placeholders.append("?");
@@ -194,41 +235,28 @@ public class MySQL implements Database {
 				placeholders.append(", ");
 			}
 		}
-		columnNames.append(")");
-		placeholders.append(")");
 
-		String query = "INSERT INTO ? " + columnNames + " VALUES " + placeholders + ";";
+		String query = "INSERT INTO " + table + " (" + columnNames + ") VALUES (" + placeholders + ");";
 
 		try (PreparedStatement statement = connection.prepareStatement(query)) {
-			statement.setString(1, table);
-			for (int i = 0, index = i + 2; i < values.length; i++, index++) {
-				Object value = values[i];
-				int    type  = types[i];
-
-				if (value == null) statement.setNull(index, type);
-				else {
-					switch (type) {
-						case Types.INTEGER -> statement.setInt(index, (int) value);
-						case Types.BIGINT -> statement.setLong(index, (long) value);
-						case Types.DOUBLE -> statement.setDouble(index, (double) value);
-						case Types.BOOLEAN -> statement.setBoolean(index, (boolean) value);
-						default -> statement.setObject(index, value);
-					}
-				}
-			}
+			preparePlaceholderStatements(statement, values, types);
 			statement.executeUpdate();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(exception.getMessage());
+			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
 		}
 
 		return this;
 	}
 
 	@Override
-	public Object[] select(String row, String... columns) throws SQLException {
+	public Object[] select(String row, Object[] placeholders, int[] types, String[] columns) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
 		Preconditions.checkNotNull(table, "Invalid table");
 		Preconditions.checkNotNull(columns, "Missing columns");
+		Preconditions.checkNotNull(placeholders, "Missing placeholders");
+		Preconditions.checkNotNull(types, "Missing data types");
+		Preconditions.checkArgument(placeholders.length == types.length,
+		                            "Invalid placeholders, and types data parameters");
 
 		StringBuilder query = new StringBuilder("SELECT ");
 		for (int i = 0; i < columns.length; i++) {
@@ -236,13 +264,13 @@ public class MySQL implements Database {
 			if (i < columns.length - 1) query.append(", ");
 		}
 
-		query.append(" FROM ?");
-		if (!row.isEmpty()) query.append(" WHERE ?");
+		query.append(" FROM ").append(table);
+		if (!row.isEmpty()) query.append(" WHERE ").append(row);
 		query.append(";");
 
 		try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
-			statement.setString(1, table);
-			if (!row.isEmpty()) statement.setString(2, row);
+
+			if (!row.isEmpty()) preparePlaceholderStatements(statement, placeholders, types);
 
 			ResultSet    resultSet = statement.executeQuery();
 			List<Object> results   = new ArrayList<>();
@@ -259,7 +287,7 @@ public class MySQL implements Database {
 
 			return results.toArray();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(exception.getMessage());
+			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
 			return new Object[0];
 		}
 	}
@@ -270,19 +298,17 @@ public class MySQL implements Database {
 		Preconditions.checkNotNull(table, "Invalid table");
 		Preconditions.checkNotNull(values, "Missing data");
 
-		StringBuilder query = new StringBuilder("UPDATE ? SET ");
+		StringBuilder query = new StringBuilder("UPDATE " + table + " SET ");
 		for (int i = 0; i < values.length; i++) {
 			query.append(values[i]);
 			if (i < values.length - 1) query.append(", ");
 		}
-		query.append(" WHERE ?;");
+		query.append(" WHERE ").append(row).append(";");
 
 		try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
-			statement.setString(1, table);
-			statement.setString(2, row);
 			statement.executeUpdate();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(exception.getMessage());
+			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
 		}
 
 		return this;
@@ -291,28 +317,30 @@ public class MySQL implements Database {
 	@Override
 	public int totalRows() {
 		try {
-			Object[] result = select("", "COUNT(*)");
+			Object[] result = select("", new Object[]{}, new int[]{}, new String[]{"COUNT(*)"});
 			if (result.length > 0 && result[0] instanceof Number) {
 				return ((Number) result[0]).intValue();
 			}
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(exception.getMessage());
+			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
 		}
 		return 0;
 	}
 
 
 	@Override
-	public Database delete(String value) throws SQLException {
+	public Database delete(String column, String value) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
 		Preconditions.checkNotNull(table, "Invalid table");
 
-		String query = "DELETE FROM ? ?;";
-		try (PreparedStatement statement = connection.prepareStatement(query)) {
-			statement.setString(1, table);
-			statement.setString(2, value);
+		StringBuilder query = new StringBuilder("DELETE FROM " + table);
+		if (!column.isEmpty()) query.append(" WHERE ").append(column).append(" = ");
+		query.append(value).append(";");
+
+		try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
+			statement.executeUpdate();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(exception.getMessage());
+			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
 		}
 
 		return this;
@@ -324,32 +352,69 @@ public class MySQL implements Database {
 		Preconditions.checkNotNull(table, "Invalid table");
 
 		ResultSet resultSet = null;
-		try (Statement query = connection.createStatement()) {
-			resultSet = query.executeQuery(statement);
+		try (PreparedStatement query = connection.prepareStatement(statement)) {
+			resultSet = query.executeQuery();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(exception.getMessage());
+			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
 		}
 
 		return resultSet;
 	}
 
 	@Override
-	public Database executeUpdate(String statement) throws SQLException {
+	public void executeUpdate(String statement) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
 		Preconditions.checkNotNull(table, "Invalid table");
 
-		try (Statement query = connection.createStatement()) {
-			query.executeUpdate(statement);
+		try (PreparedStatement query = connection.prepareStatement(statement)) {
+			query.executeUpdate();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(exception.getMessage());
+			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
 		}
+	}
 
-		return this;
+	@Override
+	public void executeStatement(String statement) throws SQLException {
+		if (connection == null) throw new SQLException("There is no connection");
+		Preconditions.checkNotNull(table, "Invalid table");
+
+		try (PreparedStatement query = connection.prepareStatement(statement)) {
+			query.execute();
+		} catch (SQLException exception) {
+			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
+		}
 	}
 
 	@Override
 	public List<String> getTables() {
 		return new ArrayList<>(tableNames);
+	}
+
+	private void preparePlaceholderStatements(PreparedStatement statement, Object[] placeholders, int[] types)
+			throws SQLException {
+		for (int i = 0; i < placeholders.length; i++) {
+			Object value = placeholders[i];
+			int    type  = types[i];
+			int    index = i + 1;
+
+			if (value == null) statement.setNull(index, type);
+			else {
+				switch (type) {
+					case Types.INTEGER -> statement.setInt(index, (int) value);
+					case Types.BIGINT -> statement.setLong(index, (long) value);
+					case Types.FLOAT -> statement.setFloat(index, (float) value);
+					case Types.DOUBLE -> statement.setDouble(index, (double) value);
+					case Types.BOOLEAN -> statement.setBoolean(index, (boolean) value);
+					case Types.DATE, Types.TIME, Types.TIMESTAMP -> {
+						LocalDateTime dateTime  = (LocalDateTime) value;
+						Timestamp     timestamp = Timestamp.valueOf(dateTime);
+						statement.setTimestamp(index, timestamp);
+					}
+					case Types.VARCHAR, Types.LONGVARCHAR -> statement.setString(index, (String) value);
+					default -> statement.setObject(index, value);
+				}
+			}
+		}
 	}
 
 	private Map<String, Class<?>> getColumnTypes(ResultSet resultSet) throws SQLException {
@@ -371,33 +436,37 @@ public class MySQL implements Database {
 		return switch (columnType) {
 			case Types.INTEGER -> Integer.class;
 			case Types.BIGINT -> Long.class;
+			case Types.FLOAT -> Float.class;
 			case Types.DOUBLE -> Double.class;
 			case Types.BOOLEAN -> Boolean.class;
+			case Types.DATE, Types.TIME, Types.TIMESTAMP -> LocalDateTime.class;
 			default -> String.class;
 		};
 	}
 
 	private Object getValueFromResultSet(ResultSet resultSet, String columnName, Class<?> columnType)
 			throws SQLException {
-		Object value;
+		Object value = resultSet.getObject(columnName);
 
-		if (columnType.equals(Integer.class)) {
-			value = resultSet.getInt(columnName);
-		} else if (columnType.equals(Long.class)) {
-			value = resultSet.getLong(columnName);
-		} else if (columnType.equals(Double.class)) {
-			value = resultSet.getDouble(columnName);
-		} else if (columnType.equals(Boolean.class)) {
-			value = resultSet.getBoolean(columnName);
-		} else {
-			value = resultSet.getString(columnName);
-		}
-
-		if (resultSet.wasNull()) {
-			value = null;
-		}
+		if (resultSet.wasNull()) value = null;
+		else if (columnType.equals(LocalDateTime.class)) value = resultSet.getTimestamp(columnName).toLocalDateTime();
+		else value = columnType.cast(value);
 
 		return value;
+	}
+
+
+	private List<String> getTableNames() throws SQLException {
+		List<String> tableNames = new ArrayList<>();
+
+		DatabaseMetaData metaData = connection.getMetaData();
+		try (ResultSet resultSet = metaData.getTables(null, null, null, new String[]{"TABLE"})) {
+			while (resultSet.next()) {
+				String tableName = resultSet.getString("TABLE_NAME");
+				tableNames.add(tableName);
+			}
+		}
+		return tableNames;
 	}
 
 }

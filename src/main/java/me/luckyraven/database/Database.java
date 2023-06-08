@@ -1,15 +1,25 @@
 package me.luckyraven.database;
 
-import me.luckyraven.file.FileManager;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 public interface Database {
 
-	void initialize(FileManager fileManager);
+	/**
+	 * Initializes the database.
+	 */
+	void initialize(Map<String, Object> credentials, String schema);
+
+	void switchSchema(String schema) throws SQLException;
+
+	boolean schemaExists(String schema);
+
+	void createSchema(String name);
+
+	void dropSchema(String name) throws SQLException;
 
 	/**
 	 * Specify the name of the table that will be used to work on.
@@ -57,13 +67,6 @@ public interface Database {
 	Connection getConnection();
 
 	/**
-	 * Name of the database.
-	 *
-	 * @return gets the name of the database initialized.
-	 */
-	String getName();
-
-	/**
 	 * Changes the name of the table.
 	 *
 	 * @param newName new name of the table.
@@ -73,21 +76,41 @@ public interface Database {
 	void setTableName(String newName) throws SQLException;
 
 	/**
-	 * Adds a column to the specified table
+	 * Adds a column to the specified table.<br/><br/>
 	 *
-	 * @param name  name of the new column.
-	 * @param value values that are used for this new column.
+	 * <pre>
+	 *     Database database = new UserDatabase(...);
+	 *     database.connect();
+	 *
+	 *     database.table("data").addColumn("bounty", "DOUBLE");
+	 *
+	 *     database.disconnect();
+	 * </pre>
+	 *
+	 * @param name      name of the new column.
+	 * @param columType values that are used for this new column.
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	Database addColumn(String name, String value) throws SQLException;
+	Database addColumn(String name, String columType) throws SQLException;
 
 	/**
 	 * Inserts new data to the specified table. Need to know the information of the table to add, or it might throw
-	 * exceptions.
+	 * exceptions.<br/><br/>
 	 *
-	 * @param columns values applied to each specific column.
-	 * @param values  data types associated with names.
+	 * <pre>
+	 *     Database database = new UserDatabase(...);
+	 *     database.connect();
+	 *
+	 *     database.table("data").insert(new String[]{"name", "balance"},
+	 *                                   new Object[]{"xx", "20.0"},
+	 *                                   new int[]{Types.VARCHAR, Types.DOUBLE});
+	 *
+	 *     database.disconnect();
+	 * </pre>
+	 *
+	 * @param columns column names.
+	 * @param values  each value information.
 	 * @param types   each column data type, use {@link java.sql.Types} to specify the data type.
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
@@ -96,6 +119,20 @@ public interface Database {
 
 	/**
 	 * Selects data from the table specified and returns an array of objects from that table.
+	 * It is very important that the values to be inserted should have a placeholder of '?', and if
+	 * available they should be specified into the '{@code parameters}' parameter.<br/><br/>
+	 *
+	 * <pre>
+	 *     Database database = new UserDatabase(...);
+	 *     database.connect();
+	 *
+	 *     Object[] info = database.table("data").select("uuid = ?",
+	 *                                                   new Object[]{1},
+	 *                                                   new int[]{Types.INTEGER}
+	 *                                                   new String[]{"name", "balance"});
+	 *
+	 *     database.disconnect();
+	 * </pre>
 	 *
 	 * @param row     the specific row for a value that you need.
 	 * @param columns which values you need information from.
@@ -103,11 +140,20 @@ public interface Database {
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	Object[] select(String row, String... columns) throws SQLException;
+	Object[] select(String row, Object[] placeholders, int[] types, String[] columns) throws SQLException;
 
 	/**
 	 * Updates the value in the specified <i>row</i> in the database, additionally the <i>values</i> specified are used
-	 * to specify the column name to be specifically updated.
+	 * to specify the column name to be specifically updated.<br/><br/>
+	 *
+	 * <pre>
+	 *     Database database = new UserDatabase(...);
+	 *     database.connect();
+	 *
+	 *     database.table("data").update("uuid = xx", "name = user1", "balance = 20.0");
+	 *
+	 *     database.disconnect();
+	 * </pre>
 	 *
 	 * @param row    the specific row that will be updated in the database.
 	 * @param values the specific columns that will be updated in the database.
@@ -129,11 +175,12 @@ public interface Database {
 	 * To delete all the data from the table leave <i><b>value</i></b> empty, and if yor specify the specified row using
 	 * <i><b>WHERE column_name=value</b></i>.
 	 *
-	 * @param value all data from the table or specific data.
+	 * @param column the specific column.
+	 * @param value  all data from the table or specific data.
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	Database delete(String value) throws SQLException;
+	Database delete(String column, String value) throws SQLException;
 
 	/**
 	 * Executes a query that you wish to execute.
@@ -152,7 +199,12 @@ public interface Database {
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	Database executeUpdate(String statement) throws SQLException;
+	void executeUpdate(String statement) throws SQLException;
+
+	/**
+	 *
+	 */
+	void executeStatement(String statement) throws SQLException;
 
 	/**
 	 * Gets all the tables of the specified database.

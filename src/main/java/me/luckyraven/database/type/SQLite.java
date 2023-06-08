@@ -1,31 +1,64 @@
 package me.luckyraven.database.type;
 
 import me.luckyraven.database.Database;
-import me.luckyraven.file.FileManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.sqlite.SQLiteConfig;
+import org.sqlite.SQLiteDataSource;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class SQLite implements Database {
 
-	private final JavaPlugin plugin;
-	private final String     name;
+	private final JavaPlugin       plugin;
+	private       Connection       connection;
+	private       String           table;
+	private final List<String>     tableNames;
+	private       SQLiteDataSource dataSource;
 
-	public SQLite(JavaPlugin plugin, String name) {
+	public SQLite(JavaPlugin plugin) {
 		this.plugin = plugin;
-		this.name = name;
+		this.table = null;
+		this.tableNames = new ArrayList<>();
 	}
 
 	@Override
-	public void initialize(FileManager fileManager) {
+	public void initialize(Map<String, Object> credentials, String schema) {
+		SQLiteConfig config = new SQLiteConfig();
+		dataSource = new SQLiteDataSource(config);
+
+		dataSource.setUrl("jdbc:sqlite:");
+	}
+
+	@Override
+	public void switchSchema(String schema) throws SQLException {
+
+	}
+
+	@Override
+	public boolean schemaExists(String schema) {
+		return false;
+	}
+
+	@Override
+	public void createSchema(String name) {
+
+	}
+
+	@Override
+	public void dropSchema(String name) throws SQLException {
 
 	}
 
 	@Override
 	public Database table(String tableName) throws SQLException {
+		if (connection == null) throw new SQLException("There is no connection");
+
+		this.table = tableName;
 		return this;
 	}
 
@@ -40,32 +73,27 @@ public class SQLite implements Database {
 	}
 
 	@Override
-	public void createTable(String... values) {
+	public void createTable(String... values) throws SQLException {
 
 	}
 
 	@Override
-	public void deleteTable() {
+	public void deleteTable() throws SQLException {
 
 	}
 
 	@Override
 	public Connection getConnection() {
-		return null;
+		return connection;
 	}
 
 	@Override
-	public String getName() {
-		return null;
-	}
-
-	@Override
-	public void setTableName(String newName) {
+	public void setTableName(String newName) throws SQLException {
 
 	}
 
 	@Override
-	public Database addColumn(String name, String value) {
+	public Database addColumn(String name, String columType) throws SQLException {
 		return this;
 	}
 
@@ -75,39 +103,43 @@ public class SQLite implements Database {
 	}
 
 	@Override
-	public Object[] select(String row, String... columns) {
+	public Object[] select(String row, Object[] parameters, int[] types, String[] columns) throws SQLException {
 		return new Object[0];
 	}
 
 	@Override
-	public Database update(String row, String... values) {
+	public Database update(String row, String... values) throws SQLException {
 		return this;
 	}
 
 	@Override
-	public int totalRows() {
+	public int totalRows() throws SQLException {
 		return 0;
 	}
 
 	@Override
-	public Database delete(String value) {
-
+	public Database delete(String column, String value) throws SQLException {
 		return this;
 	}
 
 	@Override
-	public ResultSet executeQuery(String statement) {
+	public ResultSet executeQuery(String statement) throws SQLException {
 		return null;
 	}
 
 	@Override
-	public Database executeUpdate(String statement) {
-		return this;
+	public void executeUpdate(String statement) throws SQLException {
+
+	}
+
+	@Override
+	public void executeStatement(String statement) throws SQLException {
+
 	}
 
 	@Override
 	public List<String> getTables() {
-		return null;
+		return new ArrayList<>(tableNames);
 	}
 
 }
