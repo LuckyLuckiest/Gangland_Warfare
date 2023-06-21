@@ -1,6 +1,5 @@
 package me.luckyraven.util;
 
-import me.luckyraven.Gangland;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.PluginDescriptionFile;
