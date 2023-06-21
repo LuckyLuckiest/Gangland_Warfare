@@ -2,6 +2,7 @@ package me.luckyraven.database.sub;
 
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.file.FileManager;
+import me.luckyraven.util.UnhandledError;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class UserDatabase extends DatabaseHandler {
 
@@ -30,16 +32,15 @@ public class UserDatabase extends DatabaseHandler {
 			case DatabaseHandler.MYSQL -> {
 				try {
 					fileManager.checkFileLoaded("settings");
+
+					FileConfiguration settings = fileManager.getFile("settings").getFileConfiguration();
+
+					ConfigurationSection section = settings.getConfigurationSection("Database.MySQL");
+
+					for (String key : Objects.requireNonNull(section).getKeys(false)) map.put(key, section.get(key));
 				} catch (IOException exception) {
-					plugin.getLogger().warning("Unhandled error (files loader): " + exception.getMessage());
-				}
-				FileConfiguration settings = fileManager.getFile("settings").getFileConfiguration();
-
-				ConfigurationSection section = settings.getConfigurationSection("Database.MySQL");
-
-				for (String key : section.getKeys(false)) {
-					Object value = section.get(key);
-					map.put(key, value);
+					plugin.getLogger().warning(
+							UnhandledError.FILE_LOADER_ERROR.getMessage() + ": " + exception.getMessage());
 				}
 			}
 			case DatabaseHandler.SQLITE -> {

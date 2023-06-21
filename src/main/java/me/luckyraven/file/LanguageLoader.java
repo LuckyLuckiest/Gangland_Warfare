@@ -1,11 +1,13 @@
 package me.luckyraven.file;
 
 import lombok.Getter;
+import me.luckyraven.util.UnhandledError;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -24,7 +26,7 @@ public class LanguageLoader {
 		try {
 			message = loadMessage(fileManager);
 		} catch (IOException | InvalidConfigurationException exception) {
-			plugin.getLogger().warning("Unhandled error (language loader): " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR.getMessage() + ": " + exception.getMessage());
 			Set<String>   files     = getMessageFiles();
 			StringBuilder languages = new StringBuilder();
 			String[]      nam       = files.toArray(new String[0]);
@@ -75,8 +77,9 @@ public class LanguageLoader {
 				if (i++ != 0) files.add(name.substring(name.lastIndexOf("/") + 1));
 			}
 		} catch (IOException exception) {
-			plugin.getLogger().warning("Unexpected error (missing jar file): " + exception.getMessage() + "\n" +
-					                           "This error occurred since the plugin jar file is not in the plugins folder.");
+			plugin.getLogger().warning(
+					UnhandledError.MISSING_JAR_ERROR.getMessage() + ": " + exception.getMessage() + "\n" +
+							"This error occurred since the plugin jar file is not in the plugins folder.");
 		}
 		return files;
 	}

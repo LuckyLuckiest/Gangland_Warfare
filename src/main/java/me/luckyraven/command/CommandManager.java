@@ -1,6 +1,7 @@
 package me.luckyraven.command;
 
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.UnhandledError;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -56,7 +57,7 @@ public final class CommandManager implements CommandExecutor {
 				return false;
 			}
 		} catch (Exception exception) {
-			plugin.getLogger().warning("Unhandled error (commands): " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.COMMANDS_ERROR.getMessage() + ": " + exception.getMessage());
 			exception.printStackTrace();
 		}
 		return true;
@@ -84,7 +85,7 @@ public final class CommandManager implements CommandExecutor {
 			}
 			entry.getValue().help(sender, page);
 		} catch (IllegalArgumentException exception) {
-			plugin.getLogger().warning("Unhandled error (help): " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.HELP_ERROR.getMessage() + ": " + exception.getMessage());
 			exception.printStackTrace();
 		}
 	}

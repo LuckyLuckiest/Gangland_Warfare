@@ -4,6 +4,7 @@ import lombok.Getter;
 import me.luckyraven.database.type.MySQL;
 import me.luckyraven.database.type.SQLite;
 import me.luckyraven.file.FileManager;
+import me.luckyraven.util.UnhandledError;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -43,7 +44,7 @@ public abstract class DatabaseHandler {
 			database.getConnection().commit();
 			plugin.getLogger().info("Connection to database has been established!");
 		} catch (SQLException exception) {
-			plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
 			rollbackConnection();
 		} finally {
 			database.disconnect();
@@ -66,7 +67,7 @@ public abstract class DatabaseHandler {
 				try {
 					this.database.initialize(credentials(), "user");
 				} catch (SQLException exception) {
-					plugin.getLogger().warning("Unhandled error (sql): " + exception.getMessage());
+					plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
 					throw new RuntimeException(exception.getMessage());
 				}
 			}
@@ -79,7 +80,7 @@ public abstract class DatabaseHandler {
 			if (database.getConnection() != null) database.getConnection().rollback();
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(
-					"Unhandled error (sql): Failed to rollback database connection, " + exception.getMessage());
+					UnhandledError.SQL_ERROR.getMessage() + ": Failed to rollback database connection, " + exception.getMessage());
 		}
 	}
 
@@ -91,7 +92,7 @@ public abstract class DatabaseHandler {
 
 			if (settings.getBoolean("Database.SQLite.Backup")) setType(SQLITE);
 		} catch (IOException ioException) {
-			plugin.getLogger().warning("Unhandled error (file loader): " + ioException.getMessage());
+			plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR.getMessage() + ": " + ioException.getMessage());
 		}
 	}
 
