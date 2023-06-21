@@ -55,6 +55,8 @@ public final class Initializer {
 		fileManager = new FileManager(plugin);
 		files();
 
+		plugin.getLogger().info(fileManager.toString());
+
 		// Database
 		databaseManager = new DatabaseManager();
 		databases();
