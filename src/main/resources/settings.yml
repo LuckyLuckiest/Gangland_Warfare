@@ -12,9 +12,9 @@
 #  \                                                        /  #
 #   +------------------------------------------------------+   #
 
-# +----------------------------------+
-# |      Settings Configuration      |
-# +----------------------------------+
+# +----------------------------------+ #
+# |      Settings Configuration      | #
+# +----------------------------------+ #
 
 # +---------------+ #
 # | Update Config | #
@@ -34,6 +34,14 @@ Show_Update: true # This will work next update. An update will release immediate
 # +-----------------+ #
 # | Language Config | #
 # +-----------------+ #
+
+# Messages language type. You can create a custom language by simply creating a folder called 'message' and inside it
+# the language. You should respect the prefix of the file name, it should be message_xx.yml, and xx can be any letter
+# you prefer. To switch between the languages, you enter the xx values in 'Language' and it would load that
+# configuration.
+# Any faulty written language names entered this attribute 'Language', then the plugin would disable. To make the plugin
+# work just use any valid language. To get the list of the available languages, just enter an invalid name, and a
+# message of the available list suffix would be displayed.
 Language: en
 
 # +-----------------+ #
