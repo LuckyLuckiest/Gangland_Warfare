@@ -1,11 +1,15 @@
 package me.luckyraven.database;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * The interface Database.
+ */
 public interface Database {
 
 	/**
@@ -21,6 +25,7 @@ public interface Database {
 	 * Switch between schemas if the given schema is true.
 	 *
 	 * @param schema the schema name to access.
+	 * @return the boolean
 	 * @throws SQLException the sql exception
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
@@ -32,10 +37,11 @@ public interface Database {
 	 *
 	 * @param schema the schema
 	 * @return the boolean
+	 * @throws SQLException the sql exception
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	boolean schemaExists(String schema);
+	boolean schemaExists(String schema) throws SQLException;
 
 	/**
 	 * Create schema.
@@ -100,8 +106,9 @@ public interface Database {
 	 * The connection that has been established between server and sqlite.
 	 *
 	 * @return {@link Connection} to sqlite.
+	 * @throws SQLException the sql exception
 	 */
-	Connection getConnection();
+	Connection getConnection() throws SQLException;
 
 	/**
 	 * Changes the name of the table.
@@ -269,5 +276,121 @@ public interface Database {
 	 * @return a list of all tables names.
 	 */
 	List<String> getTables();
+
+	/**
+	 * Prepare placeholder statements by converting the placeholders into their appropriate data type.
+	 *
+	 * @param statement    the statement
+	 * @param placeholders the placeholders
+	 * @param types        the data types
+	 * @throws SQLException the sql exception
+	 */
+	default void preparePlaceholderStatements(PreparedStatement statement, Object[] placeholders, int[] types)
+			throws SQLException {
+		for (int i = 0; i < placeholders.length; i++) {
+			Object value = placeholders[i];
+			int    type  = types[i];
+			int    index = i + 1;
+
+			if (value == null) statement.setNull(index, type);
+			else {
+				switch (type) {
+					case Types.INTEGER -> statement.setInt(index, (int) value);
+					case Types.BIGINT -> statement.setLong(index, (long) value);
+					case Types.FLOAT -> statement.setFloat(index, (float) value);
+					case Types.DOUBLE -> statement.setDouble(index, (double) value);
+					case Types.BOOLEAN -> statement.setBoolean(index, (boolean) value);
+					case Types.DATE, Types.TIME, Types.TIMESTAMP -> {
+						LocalDateTime dateTime  = (LocalDateTime) value;
+						Timestamp     timestamp = Timestamp.valueOf(dateTime);
+						statement.setTimestamp(index, timestamp);
+					}
+					case Types.VARCHAR, Types.LONGVARCHAR -> statement.setString(index, (String) value);
+					default -> statement.setObject(index, value);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Gets the specified attribute data type from the current table.
+	 *
+	 * @param resultSet the result set
+	 * @return the column types
+	 * @throws SQLException the sql exception
+	 */
+	default Map<String, Class<?>> getColumnTypes(ResultSet resultSet) throws SQLException {
+		Map<String, Class<?>> columnTypes = new HashMap<>();
+		ResultSetMetaData     metaData    = resultSet.getMetaData();
+		int                   columnCount = metaData.getColumnCount();
+
+		for (int i = 1; i <= columnCount; i++) {
+			String   columnName = metaData.getColumnName(i);
+			int      columnType = metaData.getColumnType(i);
+			Class<?> javaType   = getJavaType(columnType);
+			columnTypes.put(columnName, javaType);
+		}
+
+		return columnTypes;
+	}
+
+	/**
+	 * Gets the java equivalent data type of the database used data types.
+	 *
+	 * @param columnType the column type
+	 * @return the java type
+	 */
+	default Class<?> getJavaType(int columnType) {
+		return switch (columnType) {
+			case Types.INTEGER -> Integer.class;
+			case Types.BIGINT -> Long.class;
+			case Types.FLOAT -> Float.class;
+			case Types.DOUBLE -> Double.class;
+			case Types.BOOLEAN -> Boolean.class;
+			case Types.DATE, Types.TIME, Types.TIMESTAMP -> LocalDateTime.class;
+			default -> String.class;
+		};
+	}
+
+	/**
+	 * Gets the value appropriate data type.
+	 *
+	 * @param resultSet  the result set
+	 * @param columnName the column name
+	 * @param columnType the column type
+	 * @return the value from result set
+	 * @throws SQLException the sql exception
+	 */
+	default Object getValueFromResultSet(ResultSet resultSet, String columnName, Class<?> columnType)
+			throws SQLException {
+		Object value = resultSet.getObject(columnName);
+
+		if (resultSet.wasNull()) value = null;
+		else if (columnType.equals(LocalDateTime.class)) value = resultSet.getTimestamp(columnName).toLocalDateTime();
+		else value = columnType.cast(value);
+
+		return value;
+	}
+
+
+	/**
+	 * Gets the database all table names.
+	 *
+	 * @param connection the connection
+	 * @return the table names
+	 * @throws SQLException the sql exception
+	 */
+	default List<String> getTableNames(Connection connection) throws SQLException {
+		List<String> tableNames = new ArrayList<>();
+
+		DatabaseMetaData metaData = connection.getMetaData();
+		try (ResultSet resultSet = metaData.getTables(null, null, null, new String[]{"TABLE"})) {
+			while (resultSet.next()) {
+				String tableName = resultSet.getString("TABLE_NAME");
+				tableNames.add(tableName);
+			}
+		}
+		return tableNames;
+	}
 
 }
