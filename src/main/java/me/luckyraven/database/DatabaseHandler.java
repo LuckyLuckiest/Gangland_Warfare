@@ -35,6 +35,7 @@ public abstract class DatabaseHandler {
 	public abstract void tables() throws SQLException;
 
 	public void initialize() {
+		if (database == null) return;
 		try {
 			database.connect();
 			database.getConnection().setAutoCommit(false);
@@ -47,7 +48,7 @@ public abstract class DatabaseHandler {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
 			rollbackConnection();
 		} finally {
-			database.disconnect();
+			if (database != null) database.disconnect();
 		}
 	}
 
@@ -59,6 +60,7 @@ public abstract class DatabaseHandler {
 				try {
 					this.database.initialize(credentials(), "user");
 				} catch (SQLException exception) {
+					this.database = null;
 					backup();
 				}
 			}
@@ -67,6 +69,7 @@ public abstract class DatabaseHandler {
 				try {
 					this.database.initialize(credentials(), "user");
 				} catch (SQLException exception) {
+					this.database = null;
 					plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
 					throw new RuntimeException(exception.getMessage());
 				}
@@ -85,16 +88,20 @@ public abstract class DatabaseHandler {
 		}
 	}
 
-	private void backup() {
+	private boolean backup() {
 		try {
 			fileManager.checkFileLoaded("settings");
 
 			FileConfiguration settings = fileManager.getFile("settings").getFileConfiguration();
 
-			if (settings.getBoolean("Database.SQLite.Backup")) setType(SQLITE);
-		} catch (IOException ioException) {
-			plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR.getMessage() + ": " + ioException.getMessage());
+			// Temporarily disable SQLITE until the implementation is done
+//			if (settings.getBoolean("Database.SQLite.Backup")) setType(SQLITE);
+
+			return true;
+		} catch (IOException exception) {
+			plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR.getMessage() + ": " + exception.getMessage());
 		}
+		return false;
 	}
 
 }

@@ -9,9 +9,7 @@ import me.luckyraven.util.UnhandledError;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -50,16 +48,21 @@ public class MySQL implements Database {
 		config.setPassword(password);
 
 		try {
+			// check if there is a connection to the database
+			Connection conn = DriverManager.getConnection(url, username, password);
+			conn.close();
+
 			dataSource = new HikariDataSource(config);
-		} catch (Exception exception) {
+		} catch (SQLException exception) {
 			throw new SQLException("Unable to create DataSource, " + exception.getMessage());
 		}
 
 		try {
 			connect();
-			tableNames.addAll(getTableNames());
+			tableNames.addAll(getTableNames(connection));
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			throw exception;
 		} finally {
 			disconnect();
 		}
@@ -68,6 +71,7 @@ public class MySQL implements Database {
 	@Override
 	public boolean switchSchema(String schema) throws SQLException {
 		if (!schemaExists(schema)) throw new SQLException("Schema specified doesn't exist");
+		if (dataSource == null) throw new SQLException("DataSource is null");
 
 		try {
 			HikariConfig config = new HikariConfig();
@@ -78,12 +82,15 @@ public class MySQL implements Database {
 			config.setUsername(username);
 			config.setPassword(password);
 
-			this.database = schema;
-
 			dataSource.close();
 
+			// Check if there is a connection to the database
+			Connection conn = DriverManager.getConnection(url, username, password);
+			conn.close();
+
+			this.database = schema;
 			dataSource = new HikariDataSource(config);
-		} catch (Exception exception) {
+		} catch (SQLException exception) {
 			plugin.getLogger().warning("Unable to switch DataSource, " + exception.getMessage());
 			return false;
 		}
@@ -92,7 +99,7 @@ public class MySQL implements Database {
 	}
 
 	@Override
-	public boolean schemaExists(String schema) {
+	public boolean schemaExists(String schema) throws SQLException {
 		boolean exists = false;
 		try {
 			Object[] schemas = table("INFORMATION_SCHEMA.SCHEMATA").select("SCHEMA_NAME = ?", new Object[]{schema},
@@ -101,6 +108,7 @@ public class MySQL implements Database {
 			if (schemas != null && schemas.length > 0) exists = (int) schemas[0] > 0;
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			throw exception;
 		}
 		return exists;
 	}
@@ -180,7 +188,9 @@ public class MySQL implements Database {
 	}
 
 	@Override
-	public Connection getConnection() {
+	public Connection getConnection() throws SQLException {
+		if (connection == null) throw new SQLException("No connection established");
+
 		return connection;
 	}
 
@@ -378,85 +388,6 @@ public class MySQL implements Database {
 	@Override
 	public List<String> getTables() {
 		return new ArrayList<>(tableNames);
-	}
-
-	private void preparePlaceholderStatements(PreparedStatement statement, Object[] placeholders, int[] types)
-			throws SQLException {
-		for (int i = 0; i < placeholders.length; i++) {
-			Object value = placeholders[i];
-			int    type  = types[i];
-			int    index = i + 1;
-
-			if (value == null) statement.setNull(index, type);
-			else {
-				switch (type) {
-					case Types.INTEGER -> statement.setInt(index, (int) value);
-					case Types.BIGINT -> statement.setLong(index, (long) value);
-					case Types.FLOAT -> statement.setFloat(index, (float) value);
-					case Types.DOUBLE -> statement.setDouble(index, (double) value);
-					case Types.BOOLEAN -> statement.setBoolean(index, (boolean) value);
-					case Types.DATE, Types.TIME, Types.TIMESTAMP -> {
-						LocalDateTime dateTime  = (LocalDateTime) value;
-						Timestamp     timestamp = Timestamp.valueOf(dateTime);
-						statement.setTimestamp(index, timestamp);
-					}
-					case Types.VARCHAR, Types.LONGVARCHAR -> statement.setString(index, (String) value);
-					default -> statement.setObject(index, value);
-				}
-			}
-		}
-	}
-
-	private Map<String, Class<?>> getColumnTypes(ResultSet resultSet) throws SQLException {
-		Map<String, Class<?>> columnTypes = new HashMap<>();
-		ResultSetMetaData     metaData    = resultSet.getMetaData();
-		int                   columnCount = metaData.getColumnCount();
-
-		for (int i = 1; i <= columnCount; i++) {
-			String   columnName = metaData.getColumnName(i);
-			int      columnType = metaData.getColumnType(i);
-			Class<?> javaType   = getJavaType(columnType);
-			columnTypes.put(columnName, javaType);
-		}
-
-		return columnTypes;
-	}
-
-	private Class<?> getJavaType(int columnType) {
-		return switch (columnType) {
-			case Types.INTEGER -> Integer.class;
-			case Types.BIGINT -> Long.class;
-			case Types.FLOAT -> Float.class;
-			case Types.DOUBLE -> Double.class;
-			case Types.BOOLEAN -> Boolean.class;
-			case Types.DATE, Types.TIME, Types.TIMESTAMP -> LocalDateTime.class;
-			default -> String.class;
-		};
-	}
-
-	private Object getValueFromResultSet(ResultSet resultSet, String columnName, Class<?> columnType)
-			throws SQLException {
-		Object value = resultSet.getObject(columnName);
-
-		if (resultSet.wasNull()) value = null;
-		else if (columnType.equals(LocalDateTime.class)) value = resultSet.getTimestamp(columnName).toLocalDateTime();
-		else value = columnType.cast(value);
-
-		return value;
-	}
-
-
-	private List<String> getTableNames() throws SQLException {
-		List<String> tableNames = new ArrayList<>();
-
-		DatabaseMetaData metaData = connection.getMetaData();
-		try (ResultSet resultSet = metaData.getTables(null, null, null, new String[]{"TABLE"})) {
-			while (resultSet.next()) {
-				String tableName = resultSet.getString("TABLE_NAME");
-				tableNames.add(tableName);
-			}
-		}
-		return tableNames;
 	}
 
 }
