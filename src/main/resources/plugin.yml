@@ -2,7 +2,7 @@ name: Gangland_Warfare
 version: '${project.version}'
 main: me.luckyraven.Gangland
 database: true
-api-version: 1.13
+api-version: 1.19
 depend: [NBTAPI]
 softdepend: [PlaceholderAPI]
 author: LuckyRaven
