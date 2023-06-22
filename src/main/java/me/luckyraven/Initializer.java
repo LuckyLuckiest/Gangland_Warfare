@@ -55,8 +55,6 @@ public final class Initializer {
 		fileManager = new FileManager(plugin);
 		files();
 
-		plugin.getLogger().info(fileManager.toString());
-
 		// Database
 		databaseManager = new DatabaseManager();
 		databases();
@@ -104,13 +102,16 @@ public final class Initializer {
 //		fileManager.addFile(new FileHandler("ammunition", ".yml"));
 //		fileManager.addFile(new FileHandler("spawn", "navigation", ".yml"));
 //		fileManager.addFile(new FileHandler("warp", "navigation", ".yml"));
-//		fileManager.addFile(new FileHandler("player_data", "data", ".db"));
-//		fileManager.addFile(new FileHandler("gang_data", "data", ".db"));
 	}
 
 	private void databases() {
-		databaseManager.addDatabase(new UserDatabase(plugin, DatabaseHandler.MYSQL, fileManager));
-		databaseManager.addDatabase(new GangDatabase(plugin, DatabaseHandler.MYSQL));
+		UserDatabase userDatabase = new UserDatabase(plugin, fileManager);
+		userDatabase.setType(DatabaseHandler.MYSQL);
+		databaseManager.addDatabase(userDatabase);
+
+		GangDatabase gangDatabase = new GangDatabase(plugin, fileManager);
+		gangDatabase.setType(DatabaseHandler.MYSQL);
+//		databaseManager.addDatabase(gangDatabase);
 	}
 
 }
