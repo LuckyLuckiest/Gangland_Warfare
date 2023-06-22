@@ -1,5 +1,6 @@
 package me.luckyraven.file;
 
+import me.luckyraven.util.UnhandledError;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -25,7 +26,7 @@ public class FileManager {
 			file.create();
 		} catch (IOException exception) {
 			plugin.getLogger().warning(
-					String.format("Unable to create file %s.%s, reason: %s", file.getName(), file.getFileType(),
+					String.format(UnhandledError.FILE_CREATE_ERROR + " %s.%s: %s", file.getName(), file.getFileType(),
 					              exception.getMessage()));
 		}
 	}
