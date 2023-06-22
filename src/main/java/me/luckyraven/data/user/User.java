@@ -15,9 +15,7 @@ public class User<T> {
 	private @Getter
 	final   T      user;
 	private @Getter
-	@Setter double kills, deaths, mobKills;
-	private @Getter
-	@Setter double  balance;
+	@Setter double kills, deaths, mobKills, balance;
 	private @Getter
 	@Setter boolean hasBank, hasGang;
 	private @Getter

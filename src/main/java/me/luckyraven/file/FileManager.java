@@ -47,6 +47,7 @@ public class FileManager {
 	}
 
 	public YamlConfiguration loadFromResources(String resourceFile) throws IOException, InvalidConfigurationException {
+		// tightly coupled to settings file
 		checkFileLoaded("settings");
 
 		File        file = new File(plugin.getDataFolder().getAbsolutePath() + "\\" + resourceFile);

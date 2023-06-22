@@ -2,6 +2,7 @@ package me.luckyraven.file;
 
 import lombok.Getter;
 import me.luckyraven.util.UnhandledError;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -37,12 +38,14 @@ public class LanguageLoader {
 				if (i < files.size() - 1) languages.append(", ");
 			}
 			plugin.getLogger().info(
-					"The plugin will crash when trying to print messages, please use languages from the list: " +
+					"Disabling plugin, reason: unidentifiable message file. Please use languages from the list: " +
 							languages);
+			Bukkit.getServer().getPluginManager().disablePlugin(plugin);
 		}
 	}
 
 	private YamlConfiguration loadMessage(FileManager manager) throws IOException, InvalidConfigurationException {
+		// tightly couple to settings file
 		manager.checkFileLoaded("settings");
 
 		FileHandler settings = manager.getFile("settings");

@@ -38,8 +38,8 @@ public abstract class DataLoader {
 			isLoaded = true;
 		} catch (Exception exception) {
 			exception.printStackTrace();
-			plugin.getLogger().log(Level.SEVERE,
-			                       "The plugin data has ran into a problem, please check the logs and report them to the developer.");
+			plugin.getLogger().severe(
+					"The plugin data has ran into a problem, please check the logs and report them to the developer.");
 			if (disable) Bukkit.getPluginManager().disablePlugin(plugin);
 		}
 	}

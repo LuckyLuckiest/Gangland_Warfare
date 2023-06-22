@@ -28,4 +28,8 @@ public class Player extends Account<UUID, User<?>> {
 		getBukkitPlayer().sendMessage(ChatUtil.color(message));
 	}
 
+	public User<?> getUser() {
+		return getValue();
+	}
+
 }
