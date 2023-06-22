@@ -111,7 +111,7 @@ public final class Initializer {
 
 		GangDatabase gangDatabase = new GangDatabase(plugin, fileManager);
 		gangDatabase.setType(DatabaseHandler.MYSQL);
-//		databaseManager.addDatabase(gangDatabase);
+		databaseManager.addDatabase(gangDatabase);
 	}
 
 }
