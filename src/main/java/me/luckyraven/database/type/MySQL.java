@@ -165,8 +165,7 @@ public class MySQL implements Database {
 
 		tableNames.add(table);
 
-		// Building query string
-		StringBuilder query = new StringBuilder("CREATE TABLE IF NOT EXISTS " + table + " (");
+		StringBuilder query = new StringBuilder("CREATE TABLE IF NOT EXISTS ").append(table).append(" (");
 		for (int i = 0; i < values.length; i++) {
 			query.append(values[i]);
 			if (i < values.length - 1) query.append(", ");
@@ -208,6 +207,8 @@ public class MySQL implements Database {
 				tableNames.set(i, newName);
 				break;
 			}
+
+		table = newName;
 	}
 
 	@Override
