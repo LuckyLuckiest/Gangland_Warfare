@@ -15,11 +15,11 @@ import java.util.Objects;
 
 public class UserDatabase extends DatabaseHandler {
 
-	private final JavaPlugin  plugin;
+	private final JavaPlugin plugin;
 	private final FileManager fileManager;
 
-	public UserDatabase(JavaPlugin plugin, int type, FileManager fileManager) {
-		super(plugin, type, fileManager);
+	public UserDatabase(JavaPlugin plugin, FileManager fileManager) {
+		super(plugin, fileManager);
 		this.plugin = plugin;
 		this.fileManager = fileManager;
 	}
@@ -37,7 +37,8 @@ public class UserDatabase extends DatabaseHandler {
 
 					ConfigurationSection section = settings.getConfigurationSection("Database.MySQL");
 
-					for (String key : Objects.requireNonNull(section).getKeys(false)) map.put(key, section.get(key));
+					for (String key : Objects.requireNonNull(section).getKeys(false))
+						map.put(key.toLowerCase(), section.get(key));
 				} catch (IOException exception) {
 					plugin.getLogger().warning(
 							UnhandledError.FILE_LOADER_ERROR.getMessage() + ": " + exception.getMessage());

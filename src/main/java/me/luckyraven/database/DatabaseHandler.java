@@ -7,6 +7,7 @@ import me.luckyraven.file.FileManager;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -20,13 +21,12 @@ public abstract class DatabaseHandler {
 	private @Getter int         type;
 	private @Getter Database    database;
 
-	public DatabaseHandler(JavaPlugin plugin, int type) {
+	public DatabaseHandler(JavaPlugin plugin) {
 		this.plugin = plugin;
-		setType(type);
 	}
 
-	public DatabaseHandler(JavaPlugin plugin, int type, FileManager fileManager) {
-		this(plugin, type);
+	public DatabaseHandler(JavaPlugin plugin, @NotNull FileManager fileManager) {
+		this(plugin);
 		this.fileManager = fileManager;
 	}
 
@@ -80,7 +80,8 @@ public abstract class DatabaseHandler {
 			if (database.getConnection() != null) database.getConnection().rollback();
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(
-					UnhandledError.SQL_ERROR.getMessage() + ": Failed to rollback database connection, " + exception.getMessage());
+					UnhandledError.SQL_ERROR.getMessage() + ": Failed to rollback database connection, " +
+							exception.getMessage());
 		}
 	}
 
