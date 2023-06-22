@@ -19,7 +19,7 @@ public class GangDatabase extends DatabaseHandler {
 	private final FileManager fileManager;
 
 	public GangDatabase(JavaPlugin plugin, FileManager fileManager) {
-		super(plugin);
+		super(plugin, fileManager);
 		this.plugin = plugin;
 		this.fileManager = fileManager;
 	}
