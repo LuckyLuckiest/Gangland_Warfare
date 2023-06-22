@@ -48,7 +48,7 @@ public abstract class CommandHandler {
 			return;
 		}
 		if (user && !(sender instanceof Player)) {
-			plugin.getLogger().info("Need to be executed from a player.");
+			plugin.getLogger().info("Need to be executed as a player.");
 			return;
 		}
 		onExecute(sender, command, args);
