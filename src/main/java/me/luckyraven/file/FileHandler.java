@@ -2,7 +2,7 @@ package me.luckyraven.file;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.UnhandledError;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -10,6 +10,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 public class FileHandler {
 
@@ -47,10 +49,12 @@ public class FileHandler {
 
 	public void create() throws IOException {
 		file = new File(plugin.getDataFolder(), directory + fileType);
+
 		if (!file.exists()) {
 			file.getParentFile().mkdirs();
 			plugin.saveResource(directory + fileType, false);
 		}
+
 		if (fileType.equals(".yml")) {
 			fileConfiguration = new YamlConfiguration();
 			try {
@@ -67,22 +71,36 @@ public class FileHandler {
 		if (fileConfiguration != null && file != null) try {
 			fileConfiguration.save(file);
 		} catch (IOException exception) {
-			plugin.getLogger().warning(
-					String.format("Could not save %s to %s: %s", name, file, exception.getMessage()));
+			plugin.getLogger().warning(String.format(UnhandledError.FILE_SAVE_ERROR + " %s to %s: %s", name, file,
+			                                         exception.getMessage()));
 		}
 	}
 
 	public void createNewFile() {
 		File oldFile = new File(plugin.getDataFolder(), directory + "-old" + fileType);
-		// TODO change renameTo to move
+
 		if (oldFile.exists()) {
 			File aOldFile;
 			int  i = 0;
 			do aOldFile = new File(plugin.getDataFolder(), directory + "-old (" + ++i + ")" + fileType);
 			while (aOldFile.exists());
-			file.renameTo(aOldFile);
-		} else file.renameTo(oldFile);
+			try {
+				Files.move(file.toPath(), aOldFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			} catch (IOException exception) {
+				plugin.getLogger().warning(
+						String.format(UnhandledError.FILE_EDIT_ERROR.getMessage() + " %s to %s: %s", aOldFile.getName(),
+						              file.getName(), exception.getMessage()));
+			}
+		} else try {
+			Files.move(file.toPath(), oldFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException exception) {
+			plugin.getLogger().warning(
+					String.format(UnhandledError.FILE_EDIT_ERROR.getMessage() + " %s to %s: %s", oldFile.getName(),
+					              file.getName(), exception.getMessage()));
+		}
+
 		plugin.getLogger().info(String.format("%s%s is an old build or corrupted, creating a new one", name, fileType));
+
 		try {
 			plugin.saveResource(directory + fileType, false);
 			fileConfiguration.load(file);
