@@ -32,7 +32,7 @@ public abstract class DatabaseHandler {
 
 	public abstract Map<String, Object> credentials();
 
-	public abstract void createSchema();
+	public abstract void createSchema() throws SQLException, IOException;
 
 	public abstract void createTables() throws SQLException;
 
@@ -41,15 +41,18 @@ public abstract class DatabaseHandler {
 	public void initialize() {
 		if (database == null) return;
 
-		createSchema();
 
 		try {
 			database.connect();
 
+			createSchema();
 			createTables();
 
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			rollbackConnection();
+		} catch (IOException exception) {
+			plugin.getLogger().warning(UnhandledError.FILE_CREATE_ERROR + ": " + exception.getMessage());
 			rollbackConnection();
 		} finally {
 			if (database != null) database.disconnect();
@@ -71,23 +74,30 @@ public abstract class DatabaseHandler {
 					this.database.initialize(credentials, schema);
 				} catch (SQLException exception) {
 					this.database = null;
-					backup();
-					plugin.getLogger().info(
-							String.format("Unable to connect to MySQL, switching to SQLite for '%s' database", schema));
+					useSQLite(schema);
 				}
 			}
 			case SQLITE -> {
 				this.database = new SQLite(plugin);
-				createSchema();
 
 				StringBuilder schemaLoc = new StringBuilder(plugin.getDataFolder().getAbsolutePath());
 				schemaLoc.append("\\").append(getSchema()).append(".db");
 
 				try {
+					createSchema();
+
 					this.database.initialize(credentials, schemaLoc.toString());
 				} catch (SQLException exception) {
 					this.database = null;
+
 					plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+
+					throw new RuntimeException(exception.getMessage());
+				} catch (IOException exception) {
+					this.database = null;
+
+					plugin.getLogger().warning(UnhandledError.FILE_CREATE_ERROR + ": " + exception.getMessage());
+
 					throw new RuntimeException(exception.getMessage());
 				}
 			}
@@ -105,13 +115,16 @@ public abstract class DatabaseHandler {
 		}
 	}
 
-	private void backup() {
+	private void useSQLite(String schema) {
 		try {
 			fileManager.checkFileLoaded("settings");
 
 			FileConfiguration settings = fileManager.getFile("settings").getFileConfiguration();
 
-			if (settings.getBoolean("Database.SQLite.Backup")) setType(SQLITE);
+			if (settings.getBoolean("Database.SQLite.Failed_MySQL")) {
+				setType(SQLITE);
+				plugin.getLogger().info(String.format("Referring to a backup for '%s' database", schema));
+			}
 
 		} catch (IOException exception) {
 			plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR.getMessage() + ": " + exception.getMessage());
