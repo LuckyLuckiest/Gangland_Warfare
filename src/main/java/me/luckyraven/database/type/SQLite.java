@@ -2,6 +2,7 @@ package me.luckyraven.database.type;
 
 import com.google.common.base.Preconditions;
 import me.luckyraven.database.Database;
+import me.luckyraven.file.FileHandler;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.sqlite.SQLiteConfig;
@@ -38,7 +39,15 @@ public class SQLite implements Database {
 
 		dataSource.setUrl("jdbc:sqlite:" + schema);
 
-		tableNames.addAll(getTableNames(connection));
+		try {
+			connect();
+			tableNames.addAll(getTableNames(connection));
+		} catch (SQLException exception) {
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			throw exception;
+		} finally {
+			disconnect();
+		}
 	}
 
 	@Override
@@ -67,9 +76,10 @@ public class SQLite implements Database {
 
 	@Override
 	public void createSchema(String name) {
-		File file = new File(name + ".db");
+		FileHandler file = new FileHandler(plugin, name, "db");
+
 		try {
-			if (!file.exists()) file.createNewFile();
+			file.create(false);
 		} catch (IOException exception) {
 			plugin.getLogger().warning(UnhandledError.FILE_CREATE_ERROR.getMessage() + ": " + exception.getMessage());
 		}
@@ -77,7 +87,7 @@ public class SQLite implements Database {
 
 	@Override
 	public void dropSchema(String name) throws SQLException {
-		File file = new File(name);
+		File file = new File(plugin.getDataFolder(), name + ".db");
 		if (file.exists()) if (!file.delete()) throw new SQLException("Failed to drop schema: " + name);
 	}
 
