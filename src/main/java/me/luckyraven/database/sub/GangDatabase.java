@@ -17,11 +17,13 @@ public class GangDatabase extends DatabaseHandler {
 
 	private final JavaPlugin  plugin;
 	private final FileManager fileManager;
+	private       String      schema;
 
 	public GangDatabase(JavaPlugin plugin, FileManager fileManager) {
 		super(plugin, fileManager);
 		this.plugin = plugin;
 		this.fileManager = fileManager;
+		this.schema = "gang";
 	}
 
 	@Override
@@ -44,9 +46,7 @@ public class GangDatabase extends DatabaseHandler {
 							UnhandledError.FILE_LOADER_ERROR.getMessage() + ": " + exception.getMessage());
 				}
 			}
-			case DatabaseHandler.SQLITE -> {
-
-			}
+			case DatabaseHandler.SQLITE -> this.schema = "database\\" + this.schema;
 			default -> throw new IllegalArgumentException("Unknown database type");
 		}
 
@@ -54,14 +54,23 @@ public class GangDatabase extends DatabaseHandler {
 	}
 
 	@Override
-	public void tables() throws SQLException {
+	public void createSchema() {
+		getDatabase().createSchema(schema);
+	}
+
+	@Override
+	public void createTables() throws SQLException {
 		// For time use this method 'julianday('now')'
-		getDatabase().createSchema("gang");
 		getDatabase().table("data").createTable("id INT PRIMARY KEY NOT NULL", "name VARCHAR(16) NOT NULL",
 		                                        "description TEXT NOT NULL", "members LONGTEXT NOT NULL",
 		                                        "bounty DOUBLE NOT NULL", "alias LONGTEXT NOT NULL",
 		                                        "created DATE NOT NULL");
 		getDatabase().table("account").createTable("id INT PRIMARY KEY NOT NULL", "balance DOUBLE NOT NULL");
+	}
+
+	@Override
+	public String getSchema() {
+		return schema;
 	}
 
 }

@@ -15,13 +15,15 @@ import java.util.Objects;
 
 public class UserDatabase extends DatabaseHandler {
 
-	private final JavaPlugin plugin;
+	private final JavaPlugin  plugin;
 	private final FileManager fileManager;
+	private       String      schema;
 
 	public UserDatabase(JavaPlugin plugin, FileManager fileManager) {
 		super(plugin, fileManager);
 		this.plugin = plugin;
 		this.fileManager = fileManager;
+		this.schema = "user";
 	}
 
 	@Override
@@ -44,9 +46,7 @@ public class UserDatabase extends DatabaseHandler {
 							UnhandledError.FILE_LOADER_ERROR.getMessage() + ": " + exception.getMessage());
 				}
 			}
-			case DatabaseHandler.SQLITE -> {
-
-			}
+			case DatabaseHandler.SQLITE -> this.schema = "database\\" + this.schema;
 			default -> throw new IllegalArgumentException("Unknown database type");
 		}
 
@@ -54,8 +54,12 @@ public class UserDatabase extends DatabaseHandler {
 	}
 
 	@Override
-	public void tables() throws SQLException {
-		getDatabase().createSchema("user");
+	public void createSchema() {
+		getDatabase().createSchema(schema);
+	}
+
+	@Override
+	public void createTables() throws SQLException {
 		getDatabase().table("data").createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "kills INT NOT NULL",
 		                                        "deaths INT NOT NULL", "mob_kills INT NOT NULL",
 		                                        "has_bank BOOLEAN NOT NULL", "has_gang BOOLEAN NOT NULL",
@@ -64,6 +68,11 @@ public class UserDatabase extends DatabaseHandler {
 		                                        "balance DOUBLE NOT NULL");
 		getDatabase().table("account").createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "balance DOUBLE NOT NULL",
 		                                           "gang_id INT NOT NULL");
+	}
+
+	@Override
+	public String getSchema() {
+		return schema;
 	}
 
 }
