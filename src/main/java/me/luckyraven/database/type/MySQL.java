@@ -92,7 +92,6 @@ public class MySQL implements Database {
 			dataSource = new HikariDataSource(config);
 		} catch (SQLException exception) {
 			plugin.getLogger().warning("Unable to switch DataSource, " + exception.getMessage());
-			return false;
 		}
 
 		return true;
@@ -114,20 +113,22 @@ public class MySQL implements Database {
 	}
 
 	@Override
-	public void createSchema(String name) {
+	public void createSchema(String name) throws SQLException {
 		try {
 			executeStatement("CREATE DATABASE " + name);
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			throw exception;
 		}
 	}
 
 	@Override
-	public void dropSchema(String name) {
+	public void dropSchema(String name) throws SQLException {
 		try {
 			executeStatement("DROP DATABASE " + name);
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			throw exception;
 		}
 	}
 
@@ -352,11 +353,12 @@ public class MySQL implements Database {
 		if (connection == null) throw new SQLException("There is no connection");
 		Preconditions.checkNotNull(table, "Invalid table");
 
-		ResultSet resultSet = null;
+		ResultSet resultSet;
 		try (PreparedStatement query = connection.prepareStatement(statement)) {
 			resultSet = query.executeQuery();
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			throw exception;
 		}
 
 		return resultSet;
@@ -371,6 +373,7 @@ public class MySQL implements Database {
 			query.executeUpdate();
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			throw exception;
 		}
 	}
 
@@ -383,6 +386,7 @@ public class MySQL implements Database {
 			query.execute();
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			throw exception;
 		}
 	}
 

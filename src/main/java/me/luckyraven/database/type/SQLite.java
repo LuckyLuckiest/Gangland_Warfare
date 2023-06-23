@@ -42,6 +42,8 @@ public class SQLite implements Database {
 		try {
 			connect();
 			tableNames.addAll(getTableNames(connection));
+
+			if (dataSource.getConnection() == null) throw new SQLException("Failed to establish a valid connection");
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
 			throw exception;
@@ -75,13 +77,14 @@ public class SQLite implements Database {
 	}
 
 	@Override
-	public void createSchema(String name) {
+	public void createSchema(String name) throws IOException {
 		FileHandler file = new FileHandler(plugin, name, "db");
 
 		try {
 			file.create(false);
 		} catch (IOException exception) {
 			plugin.getLogger().warning(UnhandledError.FILE_CREATE_ERROR.getMessage() + ": " + exception.getMessage());
+			throw exception;
 		}
 	}
 
@@ -317,11 +320,12 @@ public class SQLite implements Database {
 		if (connection == null) throw new SQLException("There is no connection");
 		Preconditions.checkNotNull(table, "Invalid table");
 
-		ResultSet resultSet = null;
+		ResultSet resultSet;
 		try (PreparedStatement query = connection.prepareStatement(statement)) {
 			resultSet = query.executeQuery();
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			throw exception;
 		}
 
 		return resultSet;
@@ -336,6 +340,7 @@ public class SQLite implements Database {
 			query.executeUpdate();
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			throw exception;
 		}
 	}
 
@@ -348,6 +353,7 @@ public class SQLite implements Database {
 			query.execute();
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			throw exception;
 		}
 	}
 
