@@ -59,3 +59,5 @@ Database:
    SQLite:
       # Will create a backup if the type is mysql
       Backup: true
+      # Will use SQLite if unable to connect to MySQL
+      Failed_MySQL: true
