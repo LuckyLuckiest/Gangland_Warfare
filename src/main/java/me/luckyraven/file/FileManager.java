@@ -23,7 +23,7 @@ public class FileManager {
 		files.add(file);
 		if (!create) return;
 		try {
-			file.create();
+			file.create(true);
 		} catch (IOException exception) {
 			plugin.getLogger().warning(
 					String.format(UnhandledError.FILE_CREATE_ERROR + " %s.%s: %s", file.getName(), file.getFileType(),
