@@ -54,7 +54,7 @@ public class UserDatabase extends DatabaseHandler {
 	}
 
 	@Override
-	public void createSchema() {
+	public void createSchema() throws SQLException, IOException {
 		getDatabase().createSchema(schema);
 	}
 
