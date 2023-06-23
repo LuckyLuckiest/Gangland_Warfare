@@ -35,24 +35,35 @@ public class FileHandler {
 
 	public FileHandler(JavaPlugin plugin, String name, String fileType) {
 		this(plugin, name, "", fileType);
-		this.directory = this.directory.substring(1);
 	}
 
 	public FileHandler(JavaPlugin plugin, String name, String directory, String fileType) {
 		this.plugin = plugin;
 		this.name = name;
-		this.fileType = fileType;
-		this.directory = directory + "\\" + name;
+		this.fileType = fileType.startsWith(".") ? fileType : "." + fileType;
+		this.directory = directory.isEmpty() ? name : directory + "\\" + name;
 		this.loaded = false;
 		this.configVersion = 0;
 	}
 
-	public void create() throws IOException {
+	public void create(boolean inJar) throws IOException {
 		file = new File(plugin.getDataFolder(), directory + fileType);
 
 		if (!file.exists()) {
 			file.getParentFile().mkdirs();
-			plugin.saveResource(directory + fileType, false);
+			if (plugin.getResource(directory + fileType) != null && inJar) plugin.saveResource(directory + fileType,
+			                                                                                   false);
+			else {
+				int dir = file.getName().lastIndexOf("\\");
+
+				if (dir != -1) {
+					File folder = new File(plugin.getDataFolder(), file.getName().substring(0, dir));
+
+					// create a new folder
+					if (!folder.exists()) folder.mkdir();
+				}
+				file.createNewFile();
+			}
 		}
 
 		if (fileType.equals(".yml")) {
@@ -65,6 +76,10 @@ public class FileHandler {
 				loaded = false;
 			}
 		}
+	}
+
+	public void delete() throws IOException {
+		if (file != null && file.exists()) if (!file.delete()) throw new IOException("File not deleted");
 	}
 
 	public void save() {
@@ -109,6 +124,7 @@ public class FileHandler {
 			loaded = false;
 		}
 	}
+
 
 	public String getDirectory() {
 		return file.getAbsolutePath();
