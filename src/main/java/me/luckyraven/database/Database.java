@@ -1,5 +1,6 @@
 package me.luckyraven.database;
 
+import java.io.IOException;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -47,10 +48,12 @@ public interface Database {
 	 * Create schema.
 	 *
 	 * @param name the name of the new schema
+	 * @throws SQLException the sql exception
+	 * @throws IOException  if the program failed to create a file
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	void createSchema(String name);
+	void createSchema(String name) throws SQLException, IOException;
 
 	/**
 	 * Drop schema.
@@ -220,11 +223,10 @@ public interface Database {
 	 * Gets the total rows of the specified table.
 	 *
 	 * @return length of the table provided.
-	 * @throws SQLException the sql exception
 	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
 	 * everything you commit and disconnect the database.
 	 */
-	int totalRows() throws SQLException;
+	int totalRows();
 
 	/**
 	 * To delete all the data from the table leave <i><b>value</i></b> empty, and if yor specify the specified row using
