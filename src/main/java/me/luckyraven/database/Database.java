@@ -106,9 +106,9 @@ public interface Database {
 	void deleteTable() throws SQLException;
 
 	/**
-	 * The connection that has been established between server and sqlite.
+	 * The connection that has been established between server and sql.
 	 *
-	 * @return {@link Connection} to sqlite.
+	 * @return {@link Connection} to sql.
 	 * @throws SQLException the sql exception
 	 */
 	Connection getConnection() throws SQLException;
