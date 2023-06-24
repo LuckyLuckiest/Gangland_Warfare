@@ -1,6 +1,5 @@
 package me.luckyraven.util;
 
-import me.luckyraven.Gangland;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.PluginCommand;
@@ -14,7 +13,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URLClassLoader;
 import java.util.*;
-import java.util.logging.Level;
 
 public final class ReloadUtil {
 
@@ -83,41 +81,39 @@ public final class ReloadUtil {
 
 		boolean reloadListeners = true;
 
-		if (pluginManager != null) {
 
-			pluginManager.disablePlugin(plugin);
+		pluginManager.disablePlugin(plugin);
+
+		try {
+
+			Field pluginsField = Bukkit.getPluginManager().getClass().getDeclaredField("plugins");
+			pluginsField.setAccessible(true);
+			plugins = (List<Plugin>) pluginsField.get(pluginManager);
+
+			Field lookupNamesField = Bukkit.getPluginManager().getClass().getDeclaredField("lookupNames");
+			lookupNamesField.setAccessible(true);
+			names = (Map<String, Plugin>) lookupNamesField.get(pluginManager);
 
 			try {
-
-				Field pluginsField = Bukkit.getPluginManager().getClass().getDeclaredField("plugins");
-				pluginsField.setAccessible(true);
-				plugins = (List<Plugin>) pluginsField.get(pluginManager);
-
-				Field lookupNamesField = Bukkit.getPluginManager().getClass().getDeclaredField("lookupNames");
-				lookupNamesField.setAccessible(true);
-				names = (Map<String, Plugin>) lookupNamesField.get(pluginManager);
-
-				try {
-					Field listenersField = Bukkit.getPluginManager().getClass().getDeclaredField("listeners");
-					listenersField.setAccessible(true);
-					listeners = (Map<Event, SortedSet<RegisteredListener>>) listenersField.get(pluginManager);
-				} catch (Exception e) {
-					reloadListeners = false;
-				}
-
-				Field commandMapField = Bukkit.getPluginManager().getClass().getDeclaredField("commandMap");
-				commandMapField.setAccessible(true);
-				commandMap = (SimpleCommandMap) commandMapField.get(pluginManager);
-
-				Field knownCommandsField = SimpleCommandMap.class.getDeclaredField("knownCommands");
-				knownCommandsField.setAccessible(true);
-				commands = (Map<String, Command>) knownCommandsField.get(commandMap);
-
-			} catch (NoSuchFieldException | IllegalAccessException exception) {
-				plugin.getLogger().log(Level.SEVERE, "Failed to unload the plugin.");
+				Field listenersField = Bukkit.getPluginManager().getClass().getDeclaredField("listeners");
+				listenersField.setAccessible(true);
+				listeners = (Map<Event, SortedSet<RegisteredListener>>) listenersField.get(pluginManager);
+			} catch (Exception e) {
+				reloadListeners = false;
 			}
 
+			Field commandMapField = Bukkit.getPluginManager().getClass().getDeclaredField("commandMap");
+			commandMapField.setAccessible(true);
+			commandMap = (SimpleCommandMap) commandMapField.get(pluginManager);
+
+			Field knownCommandsField = SimpleCommandMap.class.getDeclaredField("knownCommands");
+			knownCommandsField.setAccessible(true);
+			commands = (Map<String, Command>) knownCommandsField.get(commandMap);
+
+		} catch (NoSuchFieldException | IllegalAccessException exception) {
+			plugin.getLogger().severe("Failed to unload the plugin.");
 		}
+
 
 		pluginManager.disablePlugin(plugin);
 
@@ -126,12 +122,9 @@ public final class ReloadUtil {
 		if (names != null) names.remove(name);
 
 		if (listeners != null && reloadListeners) for (SortedSet<RegisteredListener> set : listeners.values())
-			for (Iterator<RegisteredListener> it = set.iterator(); it.hasNext(); ) {
-				RegisteredListener value = it.next();
-				if (value.getPlugin() == plugin) it.remove();
-			}
+			set.removeIf(value -> value.getPlugin() == plugin);
 
-		if (commandMap != null)
+		if (commandMap != null && commands != null)
 			for (Iterator<Map.Entry<String, Command>> it = commands.entrySet().iterator(); it.hasNext(); ) {
 				Map.Entry<String, Command> entry = it.next();
 				if (entry.getValue() instanceof PluginCommand c) if (c.getPlugin() == plugin) {
