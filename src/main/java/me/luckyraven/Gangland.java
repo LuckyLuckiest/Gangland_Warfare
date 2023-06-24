@@ -1,6 +1,7 @@
 package me.luckyraven;
 
 import lombok.Getter;
+import me.luckyraven.database.DatabaseManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class Gangland extends JavaPlugin {
@@ -19,7 +20,8 @@ public final class Gangland extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
-		// Plugin shutdown logic
+		DatabaseManager databaseManager = initializer.getDatabaseManager();
+		if (!databaseManager.getDatabases().isEmpty()) databaseManager.closeConnections();
 	}
 
 }
