@@ -24,14 +24,6 @@ public class InputStreamTester {
 	public static YamlConfiguration processData(InputStream data) throws IOException, InvalidConfigurationException {
 		YamlConfiguration yamlConfig = new YamlConfiguration();
 		yamlConfig.load(new InputStreamReader(data));
-//		Map<String, String> map = new HashMap<>();
-//		Scanner file = new Scanner(data);
-//		while (file.hasNextLine()) {
-//			String line = file.nextLine();
-//			if (line.startsWith("#") || line.isEmpty()) continue;
-//			System.out.println(line);
-//		}
-//		return map;
 		return yamlConfig;
 	}
 
