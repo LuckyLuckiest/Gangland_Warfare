@@ -39,26 +39,17 @@ public abstract class DatabaseHandler {
 	public abstract String getSchema();
 
 	public void initialize() {
-		if (database == null) return;
+		DatabaseHelper helper = new DatabaseHelper(plugin, this);
 
-		try {
-			database.connect();
-
-			createSchema();
-			createTables();
-
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
-			rollbackConnection();
-		} catch (IOException exception) {
-			plugin.getLogger().warning(UnhandledError.FILE_CREATE_ERROR.getMessage() + ": " + exception.getMessage());
-		} finally {
+		helper.runQueries(connection -> {
 			try {
-				if (database != null && database.getConnection() != null && type != MYSQL) database.disconnect();
-			} catch (SQLException exception) {
-				plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+				createSchema();
+				createTables();
+			} catch (IOException exception) {
+				plugin.getLogger().warning(
+						UnhandledError.FILE_CREATE_ERROR.getMessage() + ": " + exception.getMessage());
 			}
-		}
+		});
 	}
 
 	public void setType(int type) {
@@ -105,16 +96,6 @@ public abstract class DatabaseHandler {
 				}
 			}
 			default -> throw new IllegalArgumentException("Unknown database type");
-		}
-	}
-
-	public void rollbackConnection() {
-		try {
-			if (database != null && database.getConnection() != null) database.getConnection().rollback();
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(
-					UnhandledError.SQL_ERROR.getMessage() + ": Failed to rollback database connection, " +
-							exception.getMessage());
 		}
 	}
 
