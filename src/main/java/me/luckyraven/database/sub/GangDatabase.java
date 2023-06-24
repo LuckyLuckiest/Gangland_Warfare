@@ -56,6 +56,10 @@ public class GangDatabase extends DatabaseHandler {
 	@Override
 	public void createSchema() throws SQLException, IOException {
 		getDatabase().createSchema(schema);
+
+		// Switch the schema only when using mysql, because it needs to create the schema from the connection
+		// then change the jdbc url to the new database
+		if (getType() == MYSQL) getDatabase().switchSchema(schema);
 	}
 
 	@Override
