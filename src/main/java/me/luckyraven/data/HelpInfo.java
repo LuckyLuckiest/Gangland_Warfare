@@ -68,13 +68,13 @@ public final class HelpInfo {
 		sender.sendMessage("");
 		sender.sendMessage(header);
 		sender.sendMessage("");
-		for (int line = 0; line < breaks; line++)
-			try {
-				int index = (page - 1) * breaks + line;
-				sender.sendMessage(commandDesign(list.get(index).toString()));
-			} catch (IndexOutOfBoundsException ignored) {
-				break;
-			}
+
+		int stop = Math.min(breaks, size());
+
+		for (int line = 0; line < stop; line++) {
+			int index = (page - 1) * breaks + line;
+			sender.sendMessage(commandDesign(list.get(index).toString()));
+		}
 		sender.sendMessage("");
 	}
 
