@@ -23,7 +23,7 @@
 # BY CHANGING [Config_Version] YOU WILL NEED TO CHANGE LINKED FILES TO IT [Config_Version] TOO JUST TO AVOID ERRORS.
 # THIS OPTION IS EXPERIMENTAL AND WILL TAKE SOME TIME TILL I FIGURE A SOLUTION FOR IT!
 # CHANGE IT IF YOU KNOW WHAT YOU ARE DOING!
-Config_Version: 0
+Config_Version: '${project.version}'
 
 # We recommend adding space at the end of every prefix.
 # +-------------------------------------------------------------------------------+

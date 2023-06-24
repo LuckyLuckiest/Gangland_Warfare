@@ -27,7 +27,7 @@
 # BY CHANGING [Config_Version] YOU WILL NEED TO CHANGE LINKED FILES TO IT [Config_Version] TOO JUST TO AVOID ERRORS.
 # THIS OPTION IS EXPERIMENTAL AND WILL TAKE SOME TIME TILL I FIGURE A SOLUTION FOR IT!
 # CHANGE IT IF YOU KNOW WHAT YOU ARE DOING!
-Config_Version: 0
+Config_Version: '${project.version}'
 # We recommend to leave it true so people that got the permission will receive an update message.
 Show_Update: true # This will work next update. An update will release immediately.
 
@@ -55,7 +55,7 @@ Database:
       Host: localhost
       Port: 3306
       Username: root
-      Password: ""
+      Password: ''
    SQLite:
       # Will create a backup if the type is mysql
       Backup: true

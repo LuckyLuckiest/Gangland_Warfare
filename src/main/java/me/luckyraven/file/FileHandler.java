@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Objects;
 
 public class FileHandler {
 
@@ -27,7 +28,7 @@ public class FileHandler {
 	private final String fileType;
 
 	private @Getter
-	@Setter int configVersion;
+	@Setter String configVersion;
 
 	private @Getter boolean loaded;
 
@@ -43,7 +44,7 @@ public class FileHandler {
 		this.fileType = fileType.startsWith(".") ? fileType : "." + fileType;
 		this.directory = directory.isEmpty() ? name : directory + "\\" + name;
 		this.loaded = false;
-		this.configVersion = 0;
+		this.configVersion = plugin.getDescription().getVersion();
 	}
 
 	public void create(boolean inJar) throws IOException {
@@ -71,7 +72,7 @@ public class FileHandler {
 			try {
 				fileConfiguration.load(file);
 				loaded = true;
-				if (fileConfiguration.getInt("Config_Version") != configVersion) createNewFile();
+				if (!Objects.equals(fileConfiguration.getString("Config_Version"), configVersion)) createNewFile();
 			} catch (InvalidConfigurationException exception) {
 				loaded = false;
 			}
