@@ -10,12 +10,14 @@
 	- Economy
 	- Accounts
 
-0.0.2-DEV:
+0.0.2-DEV: (DONE)
 	- messages file
 	- wanted level
 	- Database system
 
 0.0.3-DEV:
+	- loading player data and saving it
+	- when using mysql, save the data into sqlite
 	- bounty
 	- phone
 	- level system

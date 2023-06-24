@@ -14,6 +14,10 @@ Weapons:
 	Can be created from a text file
 	Customizable
 
+	- ChatGPT suggestion:
+	Consider adding a variety of weapon types, such as melee weapons, firearms, explosives, and special abilities.
+    Introduce a weapon upgrade system that allows players to enhance their weapons with attachments or modifications.
+
 Phone:
 	Activate bounty on other players
 	Activities (Mini missions)
@@ -21,9 +25,17 @@ Phone:
 	Display player info
 	Not throwable
 
+	- ChatGPT suggestion:
+	Expand the activities section to include a wide range of mini-missions, challenges, and side quests, providing players with diverse gameplay options.
+    Implement a messaging system that allows players to communicate with each other and form alliances or rivalries.
+
 Economy:
 	Need to link with Vault plugin
 	Have custom economy by the plugin
+
+	- ChatGPT suggestion:
+	Introduce a player-driven economy where players can create and run their own businesses, trade resources, or participate in a stock market.
+    Incorporate a crafting system that allows players to create and sell items, fostering a player-driven market.
 
 Police:
 	Zombies leather armor
@@ -31,14 +43,27 @@ Police:
 	Randomly spawn
 	Attacks when you have a wanted level
 
+	- ChatGPT suggestion:
+	Include different types of police units with varying levels of difficulty and equipment.
+    Implement a system where players can bribe or deceive the police to reduce their wanted level or avoid confrontations.
+
 Bounty:
 	Bounty amount increases to a set level
 	If the time runs out you receive the bounty payment
 	If a player kills you they receive double bounty payment
 
+	- ChatGPT suggestion:
+	Introduce a leaderboard or ranking system to showcase players with the highest bounties.
+    Add an option for players to place bounties on specific items or achievements, encouraging competitive gameplay.
+
 Wanted Level:
 	Has 5 stars
 	When you have a wanted level of 3+ stars you get a bounty
+	Each level has specific requirements to be achieved (e.g. killing x players)
+
+	- ChatGPT suggestion:
+	Expand the wanted level system to include more diverse and challenging requirements for each level, creating a sense of progression and accomplishment.
+    Implement additional consequences for higher wanted levels, such as increased police presence or bounties from other players.
 
 Safe:
 	They are scattered in the world
@@ -46,18 +71,36 @@ Safe:
 	A player can crack the safe using a tool
 	They receive money and/or weapons
 
+	- ChatGPT suggestion:
+	Include rare and valuable items or exclusive weapons that can only be obtained by cracking safes.
+    Introduce a lock picking mechanic that requires skill or mini-games to crack the safes.
+
 Dealer:
  	Two types of dealers:
- 	1) Acts as black market dealer, that sells forbiden items
- 	2) Normal dealer that sells items
+ 	1) Acts as black market dealer, that sells forbidden items
+ 	2) Normal shopkeeper that sells normal items
+
+ 	- ChatGPT suggestion:
+ 	Expand the black market dealer's inventory to include unique and powerful items that are not available elsewhere.
+    Implement a reputation system for normal shopkeepers, where players can earn discounts or exclusive access based on their relationship with the dealer.
 
 Gang:
 	A boss, captain, and members
+	Custom ranks by config
 	Their own balance
 	Have challenges
 	Alliances
 	Toggle friendly fire
 
+	- ChatGPT suggestion:
+	Allow players to create their own custom gang symbols, logos, or emblems.
+    Implement gang wars or turf battles, where gangs can fight for control over certain areas or resources.
+
 Level System:
 	Have a level
 	xp system
+	rewards for each level
+
+	- ChatGPT suggestion:
+	Include special rewards for reaching specific milestone levels, such as unlocking new areas, exclusive missions, or unique abilities.
+    Introduce leaderboards or achievements tied to the level system, encouraging players to compete and showcase their progress.
