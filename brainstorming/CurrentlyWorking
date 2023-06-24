@@ -13,12 +13,14 @@
 0.0.2-DEV:
 	- messages file
 	- wanted level
-	- Database system (finish SQLite before travel)
+	- Database system
+
+0.0.3-DEV:
 	- bounty
 	- phone
 	- level system
 
-0.0.3-DEV:
+0.0.4-DEV:
 	- Economy system
     - Bank
     - Gang
