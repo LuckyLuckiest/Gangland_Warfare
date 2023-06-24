@@ -6,15 +6,18 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DatabaseManager {
 
 	private final List<DatabaseHandler> databases;
+	private final JavaPlugin            plugin;
 
-	public DatabaseManager() {
+	public DatabaseManager(JavaPlugin plugin) {
 		databases = new ArrayList<>();
+		this.plugin = plugin;
 	}
 
 	public void addDatabase(DatabaseHandler database) {
@@ -41,6 +44,16 @@ public class DatabaseManager {
 		} catch (IOException exception) {
 			plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR.getMessage() + ": " + exception.getMessage());
 		}
+	}
+
+	public void closeConnections() {
+		for (DatabaseHandler database : databases)
+			try {
+				if (database.getDatabase() != null && database.getDatabase().getConnection() != null)
+					database.getDatabase().disconnect();
+			} catch (SQLException exception) {
+				plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			}
 	}
 
 	public List<DatabaseHandler> getDatabases() {
