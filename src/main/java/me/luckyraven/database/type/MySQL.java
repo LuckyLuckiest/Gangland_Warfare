@@ -9,6 +9,7 @@ import me.luckyraven.util.UnhandledError;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.*;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +22,9 @@ public class MySQL implements Database {
 	private @Getter String host, database, username, password;
 	private @Getter int port;
 
-	private Connection       connection;
-	private String           table;
+	private Connection connection;
+	private String     table;
+
 	private HikariDataSource dataSource;
 
 	public MySQL(JavaPlugin plugin) {
@@ -41,11 +43,22 @@ public class MySQL implements Database {
 
 		HikariConfig config = new HikariConfig();
 
-		String url = String.format("jdbc:mysql://%s:%d/%s", host, port, database);
+		String url = String.format("jdbc:mysql://%s:%d/", host, port);
 
 		config.setJdbcUrl(url);
 		config.setUsername(username);
 		config.setPassword(password);
+
+		config.setDriverClassName("com.mysql.jdbc.Driver");
+
+		config.addDataSourceProperty("cachePrepStmts", "true");
+		config.addDataSourceProperty("prepStmtCacheSize", "250");
+		config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+
+		config.setMaximumPoolSize(10);
+		config.setMinimumIdle(5);
+		config.setMaxLifetime(Duration.ofMinutes(30).toMillis());
+		config.setConnectionTimeout(Duration.ofSeconds(30).toMillis());
 
 		try {
 			// check if there is a connection to the database
@@ -56,16 +69,6 @@ public class MySQL implements Database {
 		} catch (SQLException exception) {
 			throw new SQLException("Unable to create DataSource, " + exception.getMessage());
 		}
-
-		try {
-			connect();
-			tableNames.addAll(getTableNames(connection));
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
-			throw exception;
-		} finally {
-			disconnect();
-		}
 	}
 
 	@Override
@@ -73,20 +76,31 @@ public class MySQL implements Database {
 		if (!schemaExists(schema)) throw new SQLException("Schema specified doesn't exist");
 		if (dataSource == null) throw new SQLException("DataSource is null");
 
+		HikariConfig config = new HikariConfig();
+
+		String url = String.format("jdbc:mysql://%s:%d/%s", host, port, schema);
+
+		config.setJdbcUrl(url);
+		config.setUsername(username);
+		config.setPassword(password);
+
+		config.setDriverClassName("com.mysql.jdbc.Driver");
+
+		config.addDataSourceProperty("cachePrepStmts", "true");
+		config.addDataSourceProperty("prepStmtCacheSize", "250");
+		config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+
+		config.setMaximumPoolSize(10);
+		config.setMinimumIdle(5);
+		config.setMaxLifetime(Duration.ofMinutes(30).toMillis());
+		config.setConnectionTimeout(Duration.ofSeconds(30).toMillis());
+
 		try {
-			HikariConfig config = new HikariConfig();
-
-			String url = String.format("jdbc:mysql://%s:%d/%s", host, port, schema);
-
-			config.setJdbcUrl(url);
-			config.setUsername(username);
-			config.setPassword(password);
-
-			dataSource.close();
-
 			// Check if there is a connection to the database
 			Connection conn = DriverManager.getConnection(url, username, password);
 			conn.close();
+
+			disconnect();
 
 			this.database = schema;
 			dataSource = new HikariDataSource(config);
@@ -94,28 +108,35 @@ public class MySQL implements Database {
 			plugin.getLogger().warning("Unable to switch DataSource, " + exception.getMessage());
 		}
 
+		try {
+			connect();
+			tableNames.addAll(getTableNames(connection));
+		} catch (SQLException exception) {
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			throw exception;
+		}
+
 		return true;
 	}
 
 	@Override
 	public boolean schemaExists(String schema) throws SQLException {
-		boolean exists = false;
-		try {
-			Object[] schemas = table("INFORMATION_SCHEMA.SCHEMATA").select("SCHEMA_NAME = ?", new Object[]{schema},
-			                                                               new int[]{Types.VARCHAR},
-			                                                               new String[]{"COUNT(*)"});
-			if (schemas != null && schemas.length > 0) exists = (int) schemas[0] > 0;
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
-			throw exception;
+		if (connection == null) throw new SQLException("No connection established");
+
+		ResultSet resultSet = connection.getMetaData().getCatalogs();
+
+		while (resultSet.next()) {
+			String existingSchema = resultSet.getString("TABLE_CAT");
+			if (existingSchema.equalsIgnoreCase(schema)) return true;
 		}
-		return exists;
+
+		return false;
 	}
 
 	@Override
 	public void createSchema(String name) throws SQLException {
 		try {
-			executeStatement("CREATE DATABASE " + name);
+			executeStatement("CREATE DATABASE IF NOT EXISTS " + name);
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
 			throw exception;
@@ -125,7 +146,7 @@ public class MySQL implements Database {
 	@Override
 	public void dropSchema(String name) throws SQLException {
 		try {
-			executeStatement("DROP DATABASE " + name);
+			executeStatement("DROP DATABASE IF EXISTS " + name);
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
 			throw exception;
@@ -351,7 +372,6 @@ public class MySQL implements Database {
 	@Override
 	public ResultSet executeQuery(String statement) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
 
 		ResultSet resultSet;
 		try (PreparedStatement query = connection.prepareStatement(statement)) {
@@ -367,7 +387,6 @@ public class MySQL implements Database {
 	@Override
 	public void executeUpdate(String statement) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
 
 		try (PreparedStatement query = connection.prepareStatement(statement)) {
 			query.executeUpdate();
@@ -380,7 +399,6 @@ public class MySQL implements Database {
 	@Override
 	public void executeStatement(String statement) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
 
 		try (PreparedStatement query = connection.prepareStatement(statement)) {
 			query.execute();
