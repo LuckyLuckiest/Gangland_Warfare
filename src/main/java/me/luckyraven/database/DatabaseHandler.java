@@ -41,7 +41,6 @@ public abstract class DatabaseHandler {
 	public void initialize() {
 		if (database == null) return;
 
-
 		try {
 			database.connect();
 
@@ -52,10 +51,13 @@ public abstract class DatabaseHandler {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
 			rollbackConnection();
 		} catch (IOException exception) {
-			plugin.getLogger().warning(UnhandledError.FILE_CREATE_ERROR + ": " + exception.getMessage());
-			rollbackConnection();
+			plugin.getLogger().warning(UnhandledError.FILE_CREATE_ERROR.getMessage() + ": " + exception.getMessage());
 		} finally {
-			if (database != null) database.disconnect();
+			try {
+				if (database != null && database.getConnection() != null && type != MYSQL) database.disconnect();
+			} catch (SQLException exception) {
+				plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			}
 		}
 	}
 
@@ -96,7 +98,8 @@ public abstract class DatabaseHandler {
 				} catch (IOException exception) {
 					this.database = null;
 
-					plugin.getLogger().warning(UnhandledError.FILE_CREATE_ERROR + ": " + exception.getMessage());
+					plugin.getLogger().warning(
+							UnhandledError.FILE_CREATE_ERROR.getMessage() + ": " + exception.getMessage());
 
 					throw new RuntimeException(exception.getMessage());
 				}
@@ -107,7 +110,7 @@ public abstract class DatabaseHandler {
 
 	public void rollbackConnection() {
 		try {
-			if (database.getConnection() != null) database.getConnection().rollback();
+			if (database != null && database.getConnection() != null) database.getConnection().rollback();
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(
 					UnhandledError.SQL_ERROR.getMessage() + ": Failed to rollback database connection, " +
@@ -123,7 +126,7 @@ public abstract class DatabaseHandler {
 
 			if (settings.getBoolean("Database.SQLite.Failed_MySQL")) {
 				setType(SQLITE);
-				plugin.getLogger().info(String.format("Referring to a backup for '%s' database", schema));
+				plugin.getLogger().info(String.format("Referring to SQLite for '%s' database", schema));
 			}
 
 		} catch (IOException exception) {
