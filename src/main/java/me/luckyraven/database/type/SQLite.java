@@ -119,7 +119,7 @@ public class SQLite implements Database {
 		try {
 			connection.close();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
 		}
 
 		connection = null;
@@ -318,7 +318,6 @@ public class SQLite implements Database {
 	@Override
 	public ResultSet executeQuery(String statement) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
 
 		ResultSet resultSet;
 		try (PreparedStatement query = connection.prepareStatement(statement)) {
@@ -334,7 +333,6 @@ public class SQLite implements Database {
 	@Override
 	public void executeUpdate(String statement) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
 
 		try (PreparedStatement query = connection.prepareStatement(statement)) {
 			query.executeUpdate();
@@ -347,7 +345,6 @@ public class SQLite implements Database {
 	@Override
 	public void executeStatement(String statement) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
 
 		try (PreparedStatement query = connection.prepareStatement(statement)) {
 			query.execute();

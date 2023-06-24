@@ -79,15 +79,16 @@ public class FileHandler {
 	}
 
 	public void delete() throws IOException {
-		if (file != null && file.exists()) if (!file.delete()) throw new IOException("File not deleted");
+		if (file != null && file.exists() && !file.delete()) throw new IOException("File not deleted");
 	}
 
 	public void save() {
 		if (fileConfiguration != null && file != null) try {
 			fileConfiguration.save(file);
 		} catch (IOException exception) {
-			plugin.getLogger().warning(String.format(UnhandledError.FILE_SAVE_ERROR + " %s to %s: %s", name, file,
-			                                         exception.getMessage()));
+			plugin.getLogger().warning(
+					String.format(UnhandledError.FILE_SAVE_ERROR.getMessage() + " %s to %s: %s", name, file,
+					              exception.getMessage()));
 		}
 	}
 
