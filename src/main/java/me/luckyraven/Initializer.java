@@ -95,6 +95,7 @@ public final class Initializer {
 		}
 	}
 
+	@SuppressWarnings("CommentedOutCode")
 	private void files() {
 		fileManager.addFile(new FileHandler(plugin, "settings", ".yml"), true);
 

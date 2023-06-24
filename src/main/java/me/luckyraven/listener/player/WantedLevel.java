@@ -6,6 +6,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 
 public class WantedLevel implements Listener {
 
+	@SuppressWarnings("EmptyMethod")
 	@EventHandler
 	public void onPlayerKillEvent(PlayerDeathEvent event) {
 
