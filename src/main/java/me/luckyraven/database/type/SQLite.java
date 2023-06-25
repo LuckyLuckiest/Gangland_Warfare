@@ -10,10 +10,7 @@ import org.sqlite.SQLiteDataSource;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -156,9 +153,7 @@ public class SQLite implements Database {
 	}
 
 	@Override
-	public Connection getConnection() throws SQLException {
-		if (connection == null) throw new SQLException("No connection established");
-
+	public Connection getConnection() {
 		return connection;
 	}
 
@@ -357,6 +352,24 @@ public class SQLite implements Database {
 	@Override
 	public List<String> getTables() {
 		return new ArrayList<>(tableNames);
+	}
+
+	@Override
+	public List<String> getColumns() throws SQLException {
+		if (connection == null) throw new SQLException("There is no connection");
+		Preconditions.checkNotNull(table, "Invalid table");
+
+		List<String> columns = new ArrayList<>();
+		String       query   = "PRAGMA table_info(" + table + ");";
+
+		try (ResultSet resultSet = executeQuery(query)) {
+			while (resultSet.next()) columns.add(resultSet.getString("name"));
+		} catch (SQLException exception) {
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			throw exception;
+		}
+
+		return columns;
 	}
 
 }

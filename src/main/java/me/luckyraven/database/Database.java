@@ -109,9 +109,8 @@ public interface Database {
 	 * The connection that has been established between server and sql.
 	 *
 	 * @return {@link Connection} to sql.
-	 * @throws SQLException the sql exception
 	 */
-	Connection getConnection() throws SQLException;
+	Connection getConnection();
 
 	/**
 	 * Changes the name of the table.
@@ -280,6 +279,13 @@ public interface Database {
 	List<String> getTables();
 
 	/**
+	 * Gets all the columns of the specified table.
+	 *
+	 * @return a list of all columns names.
+	 */
+	List<String> getColumns() throws SQLException;
+
+	/**
 	 * Prepare placeholder statements by converting the placeholders into their appropriate data type.
 	 *
 	 * @param statement    the statement
@@ -297,17 +303,20 @@ public interface Database {
 			if (value == null) statement.setNull(index, type);
 			else {
 				switch (type) {
+					case Types.TINYINT -> statement.setByte(index, (byte) value);
+					case Types.SMALLINT -> statement.setShort(index, (short) value);
 					case Types.INTEGER -> statement.setInt(index, (int) value);
 					case Types.BIGINT -> statement.setLong(index, (long) value);
-					case Types.FLOAT -> statement.setFloat(index, (float) value);
-					case Types.DOUBLE -> statement.setDouble(index, (double) value);
+					case Types.FLOAT, Types.REAL -> statement.setFloat(index, (float) value);
+					case Types.DOUBLE, Types.NUMERIC -> statement.setDouble(index, (double) value);
 					case Types.BOOLEAN -> statement.setBoolean(index, (boolean) value);
 					case Types.DATE, Types.TIME, Types.TIMESTAMP -> {
 						LocalDateTime dateTime  = (LocalDateTime) value;
 						Timestamp     timestamp = Timestamp.valueOf(dateTime);
 						statement.setTimestamp(index, timestamp);
 					}
-					case Types.VARCHAR, Types.LONGVARCHAR -> statement.setString(index, (String) value);
+					case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR ->
+							statement.setString(index, String.valueOf(value));
 					default -> statement.setObject(index, value);
 				}
 			}
@@ -344,11 +353,13 @@ public interface Database {
 	 */
 	default Class<?> getJavaType(int columnType) {
 		return switch (columnType) {
+			case Types.TINYINT -> Byte.class;
+			case Types.SMALLINT -> Short.class;
 			case Types.INTEGER -> Integer.class;
 			case Types.BIGINT -> Long.class;
-			case Types.FLOAT -> Float.class;
-			case Types.DOUBLE -> Double.class;
-			case Types.BOOLEAN -> Boolean.class;
+			case Types.FLOAT, Types.REAL -> Float.class;
+			case Types.DOUBLE, Types.NUMERIC -> Double.class;
+			case Types.BOOLEAN, Types.BIT -> Boolean.class;
 			case Types.DATE, Types.TIME, Types.TIMESTAMP -> LocalDateTime.class;
 			default -> String.class;
 		};
