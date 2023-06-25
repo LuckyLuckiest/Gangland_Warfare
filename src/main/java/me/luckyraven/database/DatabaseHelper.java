@@ -4,7 +4,6 @@ import me.luckyraven.util.UnhandledError;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 
 public class DatabaseHelper {
@@ -19,28 +18,56 @@ public class DatabaseHelper {
 		this.database = databaseHandler.getDatabase();
 	}
 
+	/**
+	 * Takes care of connecting to the database and disconnecting from it.
+	 * Because this plugin uses HikariCP, it will not disconnect the HikariPool until the plugin is disabled.
+	 * <br/>
+	 * <pre>
+	 *     DatabaseHelper helper = new DatabaseHelper(plugin, handler);
+	 *     helper.runQueries(database -> {
+	 *         database.table("data")
+	 *                 .createTable("name TEXT", "age INT");
+	 *
+	 *         database.table("data")
+	 *                 .insert(new String[]{"name", "age"},
+	 *                         new Object[]{"User", 20},
+	 *                         new int[]{Types.VARCHAR, Types.INTEGER});
+	 *     });
+	 * </pre>
+	 *
+	 * @param queryRunnable using the functional interface {@link QueryRunnable} to execute operations for a database.
+	 */
 	public void runQueries(QueryRunnable queryRunnable) {
 		if (database == null) return;
 
+		boolean exceptionCaught = false;
+
 		try {
-			database.connect();
-			queryRunnable.run(database.getConnection());
+			if (database.getConnection() == null) database.connect();
+			queryRunnable.run(database);
 		} catch (SQLException exception) {
+			exceptionCaught = true;
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
-			rollbackConnection();
+			exception.printStackTrace();
+		} catch (Exception exception) {
+			exceptionCaught = true;
+			plugin.getLogger().warning(UnhandledError.ERROR.getMessage() + ": " + exception.getMessage());
+			exception.printStackTrace();
 		} finally {
-			try {
-				if (database.getConnection() != null && databaseHandler.getType() != DatabaseHandler.MYSQL)
-					database.disconnect();
-			} catch (SQLException exception) {
-				plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
-			}
+			if (exceptionCaught) rollbackConnection();
+			if (database.getConnection() != null && databaseHandler.getType() != DatabaseHandler.MYSQL)
+				database.disconnect();
 		}
 	}
 
 	public void rollbackConnection() {
 		try {
-			if (database != null && database.getConnection() != null) database.getConnection().rollback();
+			if (database != null && database.getConnection() != null) {
+				database.getConnection().setAutoCommit(false);
+				database.getConnection().rollback();
+				database.getConnection().commit();
+				database.getConnection().setAutoCommit(true);
+			}
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(
 					UnhandledError.SQL_ERROR.getMessage() + ": Failed to rollback database connection, " +
@@ -48,9 +75,10 @@ public class DatabaseHelper {
 		}
 	}
 
+	@FunctionalInterface
 	public interface QueryRunnable {
 
-		void run(Connection connection) throws SQLException;
+		void run(Database database) throws SQLException;
 
 	}
 
