@@ -1,12 +1,12 @@
 package me.luckyraven.command;
 
+import me.luckyraven.Gangland;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -19,10 +19,10 @@ import static me.luckyraven.util.ChatUtil.color;
 public final class CommandManager implements CommandExecutor {
 
 	private final Map<String, CommandHandler> commands;
-	private final JavaPlugin                  plugin;
+	private final Gangland                    gangland;
 
-	public CommandManager(JavaPlugin plugin) {
-		this.plugin = plugin;
+	public CommandManager(Gangland gangland) {
+		this.gangland = gangland;
 		this.commands = new HashMap<>();
 	}
 
@@ -31,6 +31,7 @@ public final class CommandManager implements CommandExecutor {
 	                         @NotNull String[] args) {
 		try {
 			if (!sender.hasPermission("gangland.command.main")) {
+				gangland.getInitializer().getLanguageLoader().getMessage().getString("Errors.Permissions.Command");
 //				sender.sendMessage(MessagesAddons.NOPERM_CMD);
 				return true;
 			}
@@ -57,7 +58,7 @@ public final class CommandManager implements CommandExecutor {
 				return false;
 			}
 		} catch (Exception exception) {
-			plugin.getLogger().warning(UnhandledError.COMMANDS_ERROR.getMessage() + ": " + exception.getMessage());
+			gangland.getLogger().warning(UnhandledError.COMMANDS_ERROR.getMessage() + ": " + exception.getMessage());
 			exception.printStackTrace();
 		}
 		return true;
@@ -85,14 +86,14 @@ public final class CommandManager implements CommandExecutor {
 			}
 			entry.getValue().help(sender, page);
 		} catch (IllegalArgumentException exception) {
-			plugin.getLogger().warning(UnhandledError.HELP_ERROR.getMessage() + ": " + exception.getMessage());
+			gangland.getLogger().warning(UnhandledError.HELP_ERROR.getMessage() + ": " + exception.getMessage());
 			exception.printStackTrace();
 		}
 	}
 
 
 	public void show(CommandSender cs) {
-		PluginDescriptionFile pdf = plugin.getDescription();
+		PluginDescriptionFile pdf = gangland.getDescription();
 		cs.sendMessage("");
 		cs.sendMessage(color("&8--&6=&7&oGangland Warfare&6=&8--"));
 
