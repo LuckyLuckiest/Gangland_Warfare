@@ -15,6 +15,8 @@ public enum UnhandledError {
 	COMMANDS_ERROR("commands"),
 
 	HELP_ERROR("help"),
+
+	ERROR("unchecked"),
 	;
 
 	private final @Getter String message;
