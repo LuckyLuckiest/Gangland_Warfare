@@ -11,8 +11,8 @@ import java.util.Set;
 
 public class ListenerManager {
 
-	private @Getter
-	final         Set<Listener> listeners;
+	@Getter
+	private final Set<Listener> listeners;
 	private final JavaPlugin    plugin;
 
 	public ListenerManager(JavaPlugin plugin) {

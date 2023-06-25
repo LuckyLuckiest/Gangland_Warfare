@@ -7,18 +7,17 @@ import java.util.Map;
 
 public class Account<K, V> {
 
-	private @Getter
-	final K key;
-
-	private @Getter
-	final V value;
-
-	private @Getter
-	final Map<K, V> account = new HashMap<>();
+	@Getter
+	private final K         key;
+	@Getter
+	private final V         value;
+	@Getter
+	private final Map<K, V> account;
 
 	public Account(K key, V value) {
 		this.key = key;
 		this.value = value;
+		this.account = new HashMap<>();
 	}
 
 	public boolean hasAccount(K key) {

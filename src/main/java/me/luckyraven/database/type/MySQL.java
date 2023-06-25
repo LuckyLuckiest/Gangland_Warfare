@@ -19,8 +19,10 @@ public class MySQL implements Database {
 	private final JavaPlugin   plugin;
 	private final List<String> tableNames;
 
-	private @Getter String host, database, username, password;
-	private @Getter int port;
+	@Getter
+	private String host, database, username, password;
+	@Getter
+	private int port;
 
 	private Connection connection;
 	private String     table;
@@ -209,9 +211,7 @@ public class MySQL implements Database {
 	}
 
 	@Override
-	public Connection getConnection() throws SQLException {
-		if (connection == null) throw new SQLException("No connection established");
-
+	public Connection getConnection() {
 		return connection;
 	}
 
@@ -411,6 +411,23 @@ public class MySQL implements Database {
 	@Override
 	public List<String> getTables() {
 		return new ArrayList<>(tableNames);
+	}
+
+	@Override
+	public List<String> getColumns() throws SQLException {
+		if (connection == null) throw new SQLException("There is no connection");
+		Preconditions.checkNotNull(table, "Invalid table");
+
+		List<String> columns = new ArrayList<>();
+
+		try (ResultSet resultSet = connection.getMetaData().getColumns(database, null, table, null)) {
+			while (resultSet.next()) columns.add(resultSet.getString("COLUMN_NAME"));
+		} catch (SQLException exception) {
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			throw exception;
+		}
+
+		return columns;
 	}
 
 }

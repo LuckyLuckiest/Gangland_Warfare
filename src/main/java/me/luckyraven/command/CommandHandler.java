@@ -15,17 +15,17 @@ import java.util.Set;
 
 public abstract class CommandHandler {
 
-	private @Getter
-	final String      label;
-	private @Getter
-	final Set<String> alias;
-	private @Getter
-	final String      permission;
-	private @Getter
-	final boolean     user;
+	@Getter
+	private final String      label;
+	@Getter
+	private final Set<String> alias;
+	@Getter
+	private final String      permission;
+	@Getter
+	private final boolean     user;
+	@Getter
+	private final HelpInfo    helpInfo;
 
-	private @Getter
-	final         HelpInfo   helpInfo;
 	private final JavaPlugin plugin;
 
 	public CommandHandler(JavaPlugin plugin, String label, boolean user, String... alias) {

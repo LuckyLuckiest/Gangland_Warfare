@@ -16,23 +16,23 @@ import java.util.Objects;
 
 public class FileHandler {
 
-	private @Getter FileConfiguration fileConfiguration;
 
-	private File file;
+	@Getter
+	private final String     name;
+	private final String     fileType;
+	private final JavaPlugin plugin;
 
-	private @Getter
-	final String name;
-
+	private File   file;
 	private String directory;
 
-	private final String fileType;
+	@Getter
+	private FileConfiguration fileConfiguration;
+	@Getter
+	@Setter
+	private String            configVersion;
+	@Getter
+	private boolean           loaded;
 
-	private @Getter
-	@Setter String configVersion;
-
-	private @Getter boolean loaded;
-
-	private final JavaPlugin plugin;
 
 	public FileHandler(JavaPlugin plugin, String name, String fileType) {
 		this(plugin, name, "", fileType);

@@ -30,10 +30,10 @@ public final class Initializer {
 	private final JavaPlugin plugin;
 
 	// on plugin load
-	private @Getter
-	final InformationManager  informationManager;
-	private @Getter
-	final UserManager<Player> userManager;
+	@Getter
+	private final InformationManager  informationManager;
+	@Getter
+	private final UserManager<Player> userManager;
 
 	// on plugin enable
 	private @Getter FileManager     fileManager;
@@ -59,7 +59,7 @@ public final class Initializer {
 		files();
 
 		// Database
-		databaseManager = new DatabaseManager(plugin);
+		databaseManager = new DatabaseManager();
 		databases();
 		databaseManager.initializeDatabases();
 
@@ -73,8 +73,10 @@ public final class Initializer {
 		listenerManager.registerEvents();
 
 		// Commands
-		commandManager = new CommandManager(plugin);
-		commands();
+		if (plugin instanceof Gangland) {
+			commandManager = new CommandManager((Gangland) plugin);
+			commands();
+		}
 	}
 
 	private void events() {

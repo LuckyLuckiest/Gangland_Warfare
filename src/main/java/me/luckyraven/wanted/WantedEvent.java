@@ -11,10 +11,10 @@ public class WantedEvent extends Event implements Cancellable {
 
 	private static final HandlerList handler = new HandlerList();
 	private              boolean     cancelled;
-	private @Getter
-	final                Player      player;
-	private @Getter
-	final                Wanted      wanted;
+	@Getter
+	private final        Player      player;
+	@Getter
+	private final        Wanted      wanted;
 
 	public WantedEvent(Player player) {
 		this.player = player;

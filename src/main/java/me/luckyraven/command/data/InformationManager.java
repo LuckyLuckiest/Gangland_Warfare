@@ -13,8 +13,8 @@ import java.util.Objects;
 
 public class InformationManager {
 
-	private @Getter
-	final Map<String, CommandInformation> commands;
+	@Getter
+	private final Map<String, CommandInformation> commands;
 
 	public InformationManager() {
 		commands = new HashMap<>();

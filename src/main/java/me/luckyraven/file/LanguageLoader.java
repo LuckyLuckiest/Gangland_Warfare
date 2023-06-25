@@ -19,8 +19,10 @@ import java.util.jar.JarFile;
 
 public class LanguageLoader {
 
-	private final   JavaPlugin        plugin;
-	private @Getter YamlConfiguration message;
+	private final JavaPlugin plugin;
+
+	@Getter
+	private YamlConfiguration message;
 
 	public LanguageLoader(JavaPlugin plugin, FileManager fileManager) {
 		this.plugin = plugin;

@@ -2,8 +2,12 @@ package me.luckyraven.data.user;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.account.Account;
 import me.luckyraven.rank.Rank;
 import me.luckyraven.wanted.Wanted;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Handles all users registered data, either online or offline.
@@ -12,19 +16,28 @@ import me.luckyraven.wanted.Wanted;
  */
 public class User<T> {
 
-	private @Getter
-	final   T      user;
-	private @Getter
-	@Setter double kills, deaths, mobKills, balance;
-	private @Getter
-	@Setter boolean hasBank, hasGang;
-	private @Getter
-	@Setter int gangId;
+	@Getter
+	private final T user;
 
-	private @Getter
-	@Setter Rank   rank;
-	private @Getter
-	@Setter Wanted wanted;
+	private final List<Account<?, ?>> linkedAccounts;
+
+	@Getter
+	@Setter
+	private int kills, deaths, mobKills, gangId;
+	@Getter
+	@Setter
+	private double balance, bounty;
+	@Getter
+	@Setter
+	private boolean hasBank;
+
+	@Getter
+	@Setter
+	private Rank   rank;
+	@Getter
+	@Setter
+	private Wanted wanted;
+
 
 	/**
 	 * Instantiates a new Database.
@@ -37,10 +50,11 @@ public class User<T> {
 		this.deaths = 0;
 		this.mobKills = 0;
 		this.balance = 0D;
+		this.bounty = 0D;
 		this.hasBank = false;
-		this.hasGang = false;
 		this.gangId = -1;
 		this.wanted = new Wanted(this);
+		this.linkedAccounts = new ArrayList<>();
 	}
 
 	/**
@@ -52,16 +66,14 @@ public class User<T> {
 	 * @param mobKills the mob kills
 	 * @param balance  the balance
 	 * @param hasBank  the has bank
-	 * @param hasGang  the has gang
 	 */
-	public User(T user, int kills, int deaths, int mobKills, double balance, boolean hasBank, boolean hasGang) {
+	public User(T user, int kills, int deaths, int mobKills, double balance, boolean hasBank) {
 		this(user);
 		this.kills = kills;
 		this.deaths = deaths;
 		this.mobKills = mobKills;
 		this.balance = balance;
 		this.hasBank = hasBank;
-		this.hasGang = hasGang;
 	}
 
 	/**
@@ -73,18 +85,19 @@ public class User<T> {
 	 * @param mobKills the mob kills
 	 * @param balance  the balance
 	 * @param hasBank  the has bank
-	 * @param hasGang  the has gang
 	 * @param gangId   the gang id
 	 */
-	public User(T user, int kills, int deaths, int mobKills, double balance, boolean hasBank, boolean hasGang,
-	            int gangId) {
-		this(user, kills, deaths, mobKills, balance, hasBank, hasGang);
+	public User(T user, int kills, int deaths, int mobKills, double balance, boolean hasBank, int gangId) {
+		this(user, kills, deaths, mobKills, balance, hasBank);
 		this.gangId = gangId;
 	}
 
 	public void resetGang() {
-		this.hasGang = false;
 		this.gangId = -1;
+	}
+
+	public boolean inGang() {
+		return this.gangId != -1;
 	}
 
 	/**
@@ -93,7 +106,15 @@ public class User<T> {
 	 * @return the kd ratio
 	 */
 	public double getKillDeathRatio() {
-		return deaths == 0 ? 0D : kills / deaths;
+		return deaths == 0 ? 0D : (double) kills / deaths;
+	}
+
+	public void addAccount(Account<?, ?> account) {
+		linkedAccounts.add(account);
+	}
+
+	public List<Account<?, ?>> getLinkedAccounts() {
+		return new ArrayList<>(linkedAccounts);
 	}
 
 	@Override

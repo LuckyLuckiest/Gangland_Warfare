@@ -16,10 +16,14 @@ import java.util.Map;
 public abstract class DatabaseHandler {
 
 	public static final int MYSQL = 0, SQLITE = 1;
-	private final   JavaPlugin  plugin;
-	private         FileManager fileManager;
-	private @Getter int         type;
-	private @Getter Database    database;
+
+	private final JavaPlugin plugin;
+
+	private FileManager fileManager;
+	@Getter
+	private int         type;
+	@Getter
+	private Database    database;
 
 	public DatabaseHandler(JavaPlugin plugin) {
 		this.plugin = plugin;
@@ -41,7 +45,7 @@ public abstract class DatabaseHandler {
 	public void initialize() {
 		DatabaseHelper helper = new DatabaseHelper(plugin, this);
 
-		helper.runQueries(connection -> {
+		helper.runQueries(db -> {
 			try {
 				createSchema();
 				createTables();
@@ -61,8 +65,8 @@ public abstract class DatabaseHandler {
 			case MYSQL -> {
 				this.database = new MySQL(plugin);
 
-				String schema = getSchema().lastIndexOf("\\") != -1 ? getSchema().substring(
-						getSchema().lastIndexOf("\\") + 1) : getSchema();
+				String schema = getSchemaName();
+
 				try {
 					this.database.initialize(credentials, schema);
 				} catch (SQLException exception) {
@@ -113,6 +117,11 @@ public abstract class DatabaseHandler {
 		} catch (IOException exception) {
 			plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR.getMessage() + ": " + exception.getMessage());
 		}
+	}
+
+	public String getSchemaName() {
+		return getSchema().lastIndexOf("\\") != -1 ? getSchema().substring(
+				getSchema().lastIndexOf("\\") + 1) : getSchema();
 	}
 
 }

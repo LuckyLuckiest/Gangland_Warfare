@@ -8,12 +8,14 @@ import java.util.List;
 
 public class Rank {
 
-	private static int          ID = 0;
-	private @Getter
-	final          int          usedId;
-	private @Getter
-	final          String       name;
-	private final  List<String> permissions;
+	private static int ID = 0;
+
+	@Getter
+	private final int    usedId;
+	@Getter
+	private final String name;
+
+	private final List<String> permissions;
 
 	{
 		this.usedId = ID++;

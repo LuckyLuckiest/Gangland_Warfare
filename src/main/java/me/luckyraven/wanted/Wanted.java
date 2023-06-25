@@ -7,14 +7,18 @@ import org.jetbrains.annotations.NotNull;
 
 public class Wanted {
 
-	private @Getter
-	final           User<?> user;
-	private @Getter int     level;
-	private @Setter int     increments;
-	private @Getter
-	@Setter         int     maxLevel;
-	private @Getter
-	@Setter         boolean wanted;
+	@Getter
+	private final User<?> user;
+	@Getter
+	private       int     level;
+	@Setter
+	private       int     increments;
+	@Getter
+	@Setter
+	private       int     maxLevel;
+	@Getter
+	@Setter
+	private       boolean wanted;
 
 	public Wanted(@NotNull User<?> user) {
 		this.user = user;

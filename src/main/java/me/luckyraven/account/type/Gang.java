@@ -1,6 +1,7 @@
 package me.luckyraven.account.type;
 
 import lombok.Getter;
+import lombok.Setter;
 import me.luckyraven.data.user.User;
 import me.luckyraven.account.Account;
 
@@ -9,22 +10,27 @@ import java.util.Set;
 
 public class Gang extends Account<Integer, Set<User<?>>> {
 
-	private @Getter
-	final String name;
+	@Getter
+	private final Set<Gang> alias;
 
-	private @Getter
-	final Date created;
+	@Getter
+	@Setter
+	private String name, description;
+	@Getter
+	@Setter
+	private double bounty, balance;
+	@Getter
+	@Setter
+	private Date created;
 
 	public Gang(int id, Set<User<?>> users, String name) {
 		super(id, users);
 		this.name = name;
+		this.description = "Conquering the hood";
 		this.created = new Date();
-	}
-
-	public Gang(int id, Set<User<?>> users, String name, Date date) {
-		super(id, users);
-		this.name = name;
-		this.created = date;
+		this.bounty = 0D;
+		this.balance = 0D;
+		this.alias = null;
 	}
 
 	public int getId() {
@@ -37,7 +43,8 @@ public class Gang extends Account<Integer, Set<User<?>>> {
 
 	@Override
 	public String toString() {
-		return String.format("ID=%d,name=%s,created=%s", getId(), name, created);
+		return String.format("ID=%d,name=%s,description=%s,members=%s,created=%s,bounty=%.2f,alias=%s", getId(), name,
+		                     description, getGroup(), created, bounty, alias);
 	}
 
 }
