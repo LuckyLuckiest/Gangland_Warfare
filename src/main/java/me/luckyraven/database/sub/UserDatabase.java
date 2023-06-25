@@ -66,8 +66,8 @@ public class UserDatabase extends DatabaseHandler {
 	public void createTables() throws SQLException {
 		getDatabase().table("data").createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "kills INT NOT NULL",
 		                                        "deaths INT NOT NULL", "mob_kills INT NOT NULL",
-		                                        "has_bank BOOLEAN NOT NULL", "has_gang BOOLEAN NOT NULL",
-		                                        "bounty DOUBLE NOT NULL", "date_joined DATE NOT NULL");
+		                                        "has_bank BOOLEAN NOT NULL", "bounty DOUBLE NOT NULL",
+		                                        "date_joined DATE NOT NULL");
 		getDatabase().table("bank").createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "name TEXT NOT NULL",
 		                                        "balance DOUBLE NOT NULL");
 		getDatabase().table("account").createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "balance DOUBLE NOT NULL",

@@ -65,7 +65,7 @@ public class GangDatabase extends DatabaseHandler {
 	@Override
 	public void createTables() throws SQLException {
 		// For time use this method 'julianday('now')'
-		getDatabase().table("data").createTable("id INT PRIMARY KEY NOT NULL", "name VARCHAR(16) NOT NULL",
+		getDatabase().table("data").createTable("id INT PRIMARY KEY NOT NULL", "name CHAR(16) NOT NULL",
 		                                        "description TEXT NOT NULL", "members LONGTEXT NOT NULL",
 		                                        "bounty DOUBLE NOT NULL", "alias LONGTEXT NOT NULL",
 		                                        "created DATE NOT NULL");
