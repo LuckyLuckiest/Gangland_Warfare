@@ -1,9 +1,11 @@
 package me.luckyraven;
 
 import lombok.Getter;
+import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.command.sub.SCBalance;
+import me.luckyraven.command.sub.SCDebug;
 import me.luckyraven.command.sub.SCHelp;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
@@ -38,6 +40,7 @@ public final class Initializer {
 	// on plugin enable
 	private @Getter FileManager     fileManager;
 	private @Getter DatabaseManager databaseManager;
+	private @Getter GangManager     gangManager;
 	private @Getter ListenerManager listenerManager;
 	private @Getter CommandManager  commandManager;
 	private @Getter RankManager     rankManager;
@@ -63,6 +66,14 @@ public final class Initializer {
 		databases();
 		databaseManager.initializeDatabases();
 
+		// Gang manager
+		gangManager = new GangManager(plugin);
+		for (DatabaseHandler handler : databaseManager.getDatabases())
+			if (handler instanceof GangDatabase) {
+				gangManager.initialize((GangDatabase) handler);
+				break;
+			}
+
 		// Ranks
 		rankManager = new RankManager();
 		rankManager.processRanks();
@@ -73,8 +84,8 @@ public final class Initializer {
 		listenerManager.registerEvents();
 
 		// Commands
-		if (plugin instanceof Gangland) {
-			commandManager = new CommandManager((Gangland) plugin);
+		if (plugin instanceof Gangland gangland) {
+			commandManager = new CommandManager(gangland);
 			commands();
 		}
 	}
@@ -90,10 +101,11 @@ public final class Initializer {
 		// initial command
 		Objects.requireNonNull(plugin.getCommand("glw")).setExecutor(commandManager);
 
-		if (plugin instanceof Gangland) {
+		if (plugin instanceof Gangland gangland) {
 			// sub commands
-			commandManager.addCommand(new SCBalance((Gangland) plugin));
-			commandManager.addCommand(new SCHelp((Gangland) plugin));
+			commandManager.addCommand(new SCBalance(gangland));
+			commandManager.addCommand(new SCHelp(gangland));
+			commandManager.addCommand(new SCDebug(gangland));
 		}
 	}
 
