@@ -6,6 +6,7 @@ import me.luckyraven.util.UnhandledError;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,9 +31,9 @@ public final class CommandManager implements CommandExecutor {
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
 	                         @NotNull String[] args) {
 		try {
+			YamlConfiguration message = gangland.getInitializer().getLanguageLoader().getMessage();
 			if (!sender.hasPermission("gangland.command.main")) {
-				gangland.getInitializer().getLanguageLoader().getMessage().getString("Errors.Permissions.Command");
-//				sender.sendMessage(MessagesAddons.NOPERM_CMD);
+				message.getString("Errors.Permissions.Command");
 				return true;
 			}
 
@@ -47,14 +48,13 @@ public final class CommandManager implements CommandExecutor {
 				if (entry.getKey().equalsIgnoreCase(args[0]) || entry.getValue().getAlias().contains(
 						args[0].toLowerCase())) {
 					if (Arrays.stream(args).anyMatch("help"::equalsIgnoreCase)) onHelp(entry, sender, args);
-					else entry.getValue().runExecute(sender, command, args);
+					else entry.getValue().runExecute(sender, args);
 					match = true;
 				}
 
 			if (!match) {
-				sender.sendMessage();
-//				sender.sendMessage(
-//						setArguments(MessagesAddons.COMMAND_NOTEXISTS, "/" + label + " " + Arrays.asList(args)));
+				sender.sendMessage(setArguments(message.getString("Commands.Syntax.Doesnt_Exist"),
+				                                String.format("/%s %s", label, Arrays.asList(args))));
 				return false;
 			}
 		} catch (Exception exception) {
@@ -117,10 +117,6 @@ public final class CommandManager implements CommandExecutor {
 		                    .replace(" - ", " &c-&7 ")
 		                    .replaceAll("[\\[\\],]", ""));
 	}
-
-//		public static String setArguments(String arguments, CommandInformation commandInformationType) {
-//		return cc(arguments + design(commandInformationType.getUsage()));
-//	}
 
 	public static String setArguments(String arguments, String command) {
 		return color(arguments + commandDesign(command));
