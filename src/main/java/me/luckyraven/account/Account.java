@@ -1,6 +1,7 @@
 package me.luckyraven.account;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,9 +9,11 @@ import java.util.Map;
 public class Account<K, V> {
 
 	@Getter
-	private final K         key;
+	@Setter
+	private       K         key;
 	@Getter
-	private final V         value;
+	@Setter
+	private       V         value;
 	@Getter
 	private final Map<K, V> account;
 
