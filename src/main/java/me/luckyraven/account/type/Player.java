@@ -32,4 +32,9 @@ public class Player extends Account<UUID, User<?>> {
 		return getValue();
 	}
 
+	@Override
+	public String toString() {
+		return getValue().toString();
+	}
+
 }
