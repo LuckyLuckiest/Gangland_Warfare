@@ -4,11 +4,11 @@ import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.HelpInfo;
+import me.luckyraven.datastructure.Node;
+import me.luckyraven.datastructure.Tree;
 import me.luckyraven.util.ChatUtil;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -16,48 +16,64 @@ import java.util.Set;
 public abstract class CommandHandler {
 
 	@Getter
-	private final String      label;
+	private final String         label;
 	@Getter
-	private final Set<String> alias;
+	private final Set<String>    alias;
 	@Getter
-	private final String      permission;
+	private final String         permission;
 	@Getter
-	private final boolean     user;
+	private final boolean        user;
 	@Getter
-	private final HelpInfo    helpInfo;
+	private final HelpInfo       helpInfo;
+	@Getter
+	private final Argument       argument;
+	@Getter
+	private final Tree<Argument> argumentTree;
 
-	private final JavaPlugin plugin;
+	private final Gangland gangland;
 
-	public CommandHandler(JavaPlugin plugin, String label, boolean user, String... alias) {
-		this.plugin = plugin;
+	public CommandHandler(Gangland gangland, String label, boolean user, String... alias) {
+		this.gangland = gangland;
 		this.label = label.toLowerCase();
+
 		this.alias = new HashSet<>();
 		for (String s : alias) this.alias.add(s.toLowerCase());
+
 		this.permission = "gangland.command." + label;
 		this.user = user;
 		this.helpInfo = new HelpInfo();
+		this.argumentTree = new Tree<>();
+
+		String[] args = new String[alias.length + 1];
+		args[0] = label;
+		System.arraycopy(alias, 0, args, 1, args.length - 1);
+
+		this.argument = new Argument(args, argumentTree, this::onExecute);
+		this.argumentTree.addNode(this.argument.getNode());
+
+		initializeArguments();
 	}
 
-	public abstract void onExecute(CommandSender sender, Command command, String[] args);
+	protected abstract void onExecute(CommandSender commandSender, String[] arguments);
 
-	public abstract void help(CommandSender sender, int page);
+	protected abstract void initializeArguments();
 
-	public void runExecute(CommandSender sender, Command command, String[] args) {
+	protected abstract void help(CommandSender sender, int page);
+
+	public void runExecute(CommandSender sender, String[] args) {
 		if (!sender.hasPermission(permission)) {
 			sender.sendMessage(ChatUtil.color("&cError&8: &7Not permissible!"));
 			return;
 		}
 		if (user && !(sender instanceof Player)) {
-			plugin.getLogger().info("Need to be executed as a player.");
+			gangland.getLogger().info("Need to be executed as a player.");
 			return;
 		}
-		onExecute(sender, command, args);
+		argument.execute(sender, args);
 	}
 
 	public CommandInformation getCommandInformation(String info) {
-		if (plugin instanceof Gangland)
-			return ((Gangland) plugin).getInitializer().getInformationManager().getCommands().get(info);
-		return null;
+		return gangland.getInitializer().getInformationManager().getCommands().get(info);
 	}
 
 }
