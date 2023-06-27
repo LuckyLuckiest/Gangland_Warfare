@@ -1,37 +1,38 @@
 package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.account.type.Player;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.data.user.User;
-import me.luckyraven.economy.Economy;
-import org.bukkit.command.Command;
+import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 public final class SCBalance extends CommandHandler {
 
+	private final Gangland gangland;
+
 	public SCBalance(Gangland gangland) {
 		super(gangland, "balance", true, "bal");
+		this.gangland = gangland;
 		getHelpInfo().add(getCommandInformation("balance"));
 		getHelpInfo().add(getCommandInformation("balance_others"));
 	}
 
 	@Override
-	public void onExecute(CommandSender sender, Command command, String[] args) {
-		// Initialize the player as the sender, already checked if it was a bukkit player
-		org.bukkit.entity.Player pl = (org.bukkit.entity.Player) sender;
+	protected void onExecute(CommandSender commandSender, String[] arguments) {
+		Player player = (Player) commandSender;
 		// Initialize a user
-		User<org.bukkit.entity.Player> user = new User<>(pl);
-		// Initialize a player with their account
-		Player player = new Player(pl.getUniqueId(), user);
-		// Optional to call economy
-		Economy economy = new Economy(user);
-
-		player.sendMessage("&bBalance&7: &a$" + economy.getBalance());
+		User<Player> user = gangland.getInitializer().getUserManager().getUser(player);
+		player.sendMessage(ChatUtil.color("&bBalance&7: &a$" + user.getBalance()));
 	}
 
 	@Override
-	public void help(CommandSender sender, int page) {
+	protected void initializeArguments() {
+
+	}
+
+	@Override
+	protected void help(CommandSender sender, int page) {
 		getHelpInfo().displayHelp(sender, page, "Balance");
 	}
 

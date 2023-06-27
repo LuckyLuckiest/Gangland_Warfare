@@ -3,7 +3,6 @@ package me.luckyraven.command.sub;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.data.HelpInfo;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
 import java.util.Map;
@@ -25,16 +24,21 @@ public class SCHelp extends CommandHandler {
 	}
 
 	@Override
-	public void onExecute(CommandSender sender, Command command, String[] args) {
-		for (String arg : args)
+	protected void onExecute(CommandSender commandSender, String[] arguments) {
+		for (String arg : arguments)
 			if (getAlias().contains(arg)) {
-				help(sender, 1);
+				help(commandSender, 1);
 				break;
 			}
 	}
 
 	@Override
-	public void help(CommandSender sender, int page) {
+	protected void initializeArguments() {
+
+	}
+
+	@Override
+	protected void help(CommandSender sender, int page) {
 		getHelpInfo().displayHelp(sender, page, "Help");
 	}
 
