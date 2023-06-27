@@ -299,6 +299,9 @@ public class MySQL implements Database {
 		if (!row.isEmpty()) query.append(" WHERE ").append(row);
 		query.append(";");
 
+		List<String> cols = new ArrayList<>(List.of(columns));
+		if (columns.length == 1 && columns[0].equals("*")) cols = new ArrayList<>(getColumns());
+
 		try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
 
 			if (!row.isEmpty()) preparePlaceholderStatements(statement, placeholders, types);
@@ -309,7 +312,7 @@ public class MySQL implements Database {
 			Map<String, Class<?>> columnTypes = getColumnTypes(resultSet);
 
 			while (resultSet.next()) {
-				for (String column : columns) {
+				for (String column : cols) {
 					Class<?> columnType = columnTypes.get(column);
 					Object   value      = getValueFromResultSet(resultSet, column, columnType);
 					results.add(value);
@@ -324,12 +327,43 @@ public class MySQL implements Database {
 	}
 
 	@Override
+	public List<Object[]> selectAll() throws SQLException {
+		if (connection == null) throw new SQLException("There is no connection");
+		Preconditions.checkNotNull(table, "Invalid table");
+
+		String query = "SELECT * FROM " + table + ";";
+
+		try (PreparedStatement statement = connection.prepareStatement(query)) {
+			ResultSet      resultSet = statement.executeQuery();
+			List<Object[]> results   = new ArrayList<>();
+
+			Map<String, Class<?>> columnTypes = getColumnTypes(resultSet);
+			int                   columnCount = resultSet.getMetaData().getColumnCount();
+
+			while (resultSet.next()) {
+				Object[] row = new Object[columnCount];
+				for (int i = 1; i <= columnCount; i++) {
+					String   columnName = resultSet.getMetaData().getColumnName(i);
+					Class<?> columnType = columnTypes.get(columnName);
+					row[i - 1] = getValueFromResultSet(resultSet, columnName, columnType);
+				}
+				results.add(row);
+			}
+
+			return results;
+		} catch (SQLException exception) {
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			return new ArrayList<>();
+		}
+	}
+
+	@Override
 	public Database update(String row, String... values) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
 		Preconditions.checkNotNull(table, "Invalid table");
 		Preconditions.checkNotNull(values, "Missing data");
 
-		StringBuilder query = new StringBuilder("UPDATE " + table + " SET ");
+		StringBuilder query = new StringBuilder("UPDATE ").append(table).append(" SET ");
 		for (int i = 0; i < values.length; i++) {
 			query.append(values[i]);
 			if (i < values.length - 1) query.append(", ");
