@@ -17,12 +17,18 @@
 
 0.0.3-DEV:
 	- loading player data and saving it
+	- loading gang data and saving it
 	- when using mysql, save the data into sqlite
-	- bounty
-	- phone
-	- level system
+	- Bank
+    - Gang
 
 0.0.4-DEV:
-	- Economy system
-    - Bank
-    - Gang
+	- bounty
+	- Economy system (implement vault dependency)
+	- phone
+
+0.0.5-DEV:
+    - level system
+    - ranks system
+
+expected release on v0.1.0

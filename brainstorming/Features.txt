@@ -9,6 +9,11 @@ Features:
 	8)	Dealer
 	9)	Gang
 	10)	Level system
+	11)	Heist
+	12) Missions
+	13) Quest
+	14) Cars
+	15) Houses
 
 Weapons:
 	Can be created from a text file
