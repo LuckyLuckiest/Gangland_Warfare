@@ -3,10 +3,7 @@ package me.luckyraven.database;
 import java.io.IOException;
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * The interface Database.
@@ -28,8 +25,6 @@ public interface Database {
 	 * @param schema the schema name to access.
 	 * @return the boolean
 	 * @throws SQLException the sql exception
-	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
-	 * everything you commit and disconnect the database.
 	 */
 	boolean switchSchema(String schema) throws SQLException;
 
@@ -39,8 +34,6 @@ public interface Database {
 	 * @param schema the schema
 	 * @return the boolean
 	 * @throws SQLException the sql exception
-	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
-	 * everything you commit and disconnect the database.
 	 */
 	boolean schemaExists(String schema) throws SQLException;
 
@@ -50,8 +43,6 @@ public interface Database {
 	 * @param name the name of the new schema
 	 * @throws SQLException the sql exception
 	 * @throws IOException  if the program failed to create a file
-	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
-	 * everything you commit and disconnect the database.
 	 */
 	void createSchema(String name) throws SQLException, IOException;
 
@@ -60,8 +51,6 @@ public interface Database {
 	 *
 	 * @param name the name of the schema to drop.
 	 * @throws SQLException the sql exception
-	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
-	 * everything you commit and disconnect the database.
 	 */
 	void dropSchema(String name) throws SQLException;
 
@@ -91,8 +80,6 @@ public interface Database {
 	 *
 	 * @param values gets an array of string values and executes a query.
 	 * @throws SQLException the sql exception
-	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
-	 * everything you commit and disconnect the database.
 	 */
 	void createTable(String... values) throws SQLException;
 
@@ -100,8 +87,6 @@ public interface Database {
 	 * Deletes a table for the specified file.
 	 *
 	 * @throws SQLException the sql exception
-	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
-	 * everything you commit and disconnect the database.
 	 */
 	void deleteTable() throws SQLException;
 
@@ -117,8 +102,6 @@ public interface Database {
 	 *
 	 * @param newName new name of the table.
 	 * @throws SQLException the sql exception
-	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
-	 * everything you commit and disconnect the database.
 	 */
 	void setTableName(String newName) throws SQLException;
 
@@ -138,8 +121,6 @@ public interface Database {
 	 * @param columType values that are used for this new column.
 	 * @return database instance
 	 * @throws SQLException the sql exception
-	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
-	 * everything you commit and disconnect the database.
 	 */
 	Database addColumn(String name, String columType) throws SQLException;
 
@@ -163,8 +144,6 @@ public interface Database {
 	 * @param types   each column data type, use {@link java.sql.Types} to specify the data type.
 	 * @return database instance
 	 * @throws SQLException the sql exception
-	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
-	 * everything you commit and disconnect the database.
 	 */
 	Database insert(String[] columns, Object[] values, int[] types) throws SQLException;
 
@@ -191,10 +170,16 @@ public interface Database {
 	 * @param columns      which values you need information from.
 	 * @return array of objects according to the length of columns provided.
 	 * @throws SQLException the sql exception
-	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
-	 * everything you commit and disconnect the database.
 	 */
 	Object[] select(String row, Object[] placeholders, int[] types, String[] columns) throws SQLException;
+
+	/**
+	 * Selects all the rows from the table specified and returns a list of an array of objects from that table.
+	 *
+	 * @return a list of all the rows array
+	 * @throws SQLException the sql exception
+	 */
+	List<Object[]> selectAll() throws SQLException;
 
 	/**
 	 * Updates the value in the specified <i>row</i> in the database, additionally the <i>values</i> specified are used
@@ -213,8 +198,6 @@ public interface Database {
 	 * @param values the specific columns that will be updated in the database.
 	 * @return database instance
 	 * @throws SQLException the sql exception
-	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
-	 * everything you commit and disconnect the database.
 	 */
 	Database update(String row, String... values) throws SQLException;
 
@@ -222,8 +205,6 @@ public interface Database {
 	 * Gets the total rows of the specified table.
 	 *
 	 * @return length of the table provided.
-	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
-	 * everything you commit and disconnect the database.
 	 */
 	int totalRows();
 
@@ -235,8 +216,6 @@ public interface Database {
 	 * @param value  all data from the table or specific data.
 	 * @return database instance
 	 * @throws SQLException the sql exception
-	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
-	 * everything you commit and disconnect the database.
 	 */
 	Database delete(String column, String value) throws SQLException;
 
@@ -246,8 +225,6 @@ public interface Database {
 	 * @param statement the statement provided needs SQL experience.
 	 * @return returns the result found.
 	 * @throws SQLException the sql exception
-	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
-	 * everything you commit and disconnect the database.
 	 */
 	ResultSet executeQuery(String statement) throws SQLException;
 
@@ -256,8 +233,6 @@ public interface Database {
 	 *
 	 * @param statement the statement provided needs SQL experience.
 	 * @throws SQLException the sql exception
-	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
-	 * everything you commit and disconnect the database.
 	 */
 	void executeUpdate(String statement) throws SQLException;
 
@@ -266,8 +241,6 @@ public interface Database {
 	 *
 	 * @param statement the statement provided needs SQL experience.
 	 * @throws SQLException the sql exception
-	 * @implNote Make sure that you connect to the database and then specify the table name, then when you finish
-	 * everything you commit and disconnect the database.
 	 */
 	void executeStatement(String statement) throws SQLException;
 
@@ -404,6 +377,26 @@ public interface Database {
 			}
 		}
 		return tableNames;
+	}
+
+	/**
+	 * Creates a uniform way to create a list in the used sql.
+	 *
+	 * @param values information to use
+	 * @return values joined using a comma as delimiter
+	 */
+	default String createList(List<String> values) {
+		return String.join(",", values);
+	}
+
+	/**
+	 * Breaks down the list used by the uniform delimiter
+	 *
+	 * @param list values with delimiters
+	 * @return a list of data
+	 */
+	default List<String> getList(String list) {
+		return Arrays.asList(list.split(","));
 	}
 
 }
