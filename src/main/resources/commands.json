@@ -227,10 +227,6 @@
 		"usage": "/glw gang set owner <name>",
 		"description": "Sets the player to the Owner of the gang."
 	},
-	"gang_rank_set_chief": {
-		"usage": "/glw gang set chief <name>",
-		"description": "Sets the player to the Chief of the gang."
-	},
 	"gang_rank_set_member": {
 		"usage": "/glw gang set member <name>",
 		"description": "Sets the player to a member in the gang."
