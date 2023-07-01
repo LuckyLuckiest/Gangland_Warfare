@@ -119,7 +119,7 @@ public class GangManager {
 		gangs.add(gang);
 	}
 
-	public void remove(@NotNull Gang gang) {
+	public void remove(Gang gang) {
 		Preconditions.checkArgument(gang != null, "Gang can't be null!");
 
 		gangs.remove(gang);

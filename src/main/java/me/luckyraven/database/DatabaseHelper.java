@@ -22,18 +22,18 @@ public class DatabaseHelper {
 	 * Takes care of connecting to the database and disconnecting from it.
 	 * Because this plugin uses HikariCP, it will not disconnect the HikariPool until the plugin is disabled.
 	 * <br/>
-	 * <pre>
-	 *     DatabaseHelper helper = new DatabaseHelper(plugin, handler);
-	 *     helper.runQueries(database -> {
-	 *         database.table("data")
-	 *                 .createTable("name TEXT", "age INT");
+	 * <pre>{@code
+	 * DatabaseHelper helper = new DatabaseHelper(plugin, handler);
+	 * helper.runQueries(database -> {
+	 *     database.table("data")
+	 *             .createTable("name TEXT", "age INT");
 	 *
-	 *         database.table("data")
-	 *                 .insert(new String[]{"name", "age"},
-	 *                         new Object[]{"User", 20},
-	 *                         new int[]{Types.VARCHAR, Types.INTEGER});
-	 *     });
-	 * </pre>
+	 *     database.table("data")
+	 *             .insert(new String[]{"name", "age"},
+	 *                     new Object[]{"User", 20},
+	 *                     new int[]{Types.VARCHAR, Types.INTEGER});
+	 * });
+	 * }</pre>
 	 *
 	 * @param queryRunnable using the functional interface {@link QueryRunnable} to execute operations for a database.
 	 */

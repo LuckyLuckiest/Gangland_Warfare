@@ -62,7 +62,7 @@ public final class Initializer {
 		files();
 
 		// Database
-		databaseManager = new DatabaseManager();
+		databaseManager = new DatabaseManager(plugin);
 		databases();
 		databaseManager.initializeDatabases();
 

@@ -76,6 +76,13 @@ public interface Database {
 	void disconnect();
 
 	/**
+	 * Tests the connection of the sql database.
+	 *
+	 * @param url The database url link
+	 */
+	void testConnection(String url) throws SQLException;
+
+	/**
 	 * Creates a table for the specified file.
 	 *
 	 * @param values gets an array of string values and executes a query.
@@ -108,14 +115,14 @@ public interface Database {
 	/**
 	 * Adds a column to the specified table.<br/><br/>
 	 *
-	 * <pre>
-	 *     Database database = new UserDatabase(...);
-	 *     database.connect();
+	 * <pre>{@code
+	 * Database database = ...
+	 * database.connect();
 	 *
-	 *     database.table("data").addColumn("bounty", "DOUBLE");
+	 * database.table("data").addColumn("bounty", "DOUBLE");
 	 *
-	 *     database.disconnect();
-	 * </pre>
+	 * database.disconnect();
+	 * }</pre>
 	 *
 	 * @param name      name of the new column.
 	 * @param columType values that are used for this new column.
@@ -128,16 +135,16 @@ public interface Database {
 	 * Inserts new data to the specified table. Need to know the information of the table to add, or it might throw
 	 * exceptions.<br/><br/>
 	 *
-	 * <pre>
-	 *     Database database = new UserDatabase(...);
-	 *     database.connect();
+	 * <pre>{@code
+	 * Database database = ...
+	 * database.connect();
 	 *
-	 *     database.table("data").insert(new String[]{"name", "balance"},
-	 *                                   new Object[]{"xx", "20.0"},
-	 *                                   new int[]{Types.VARCHAR, Types.DOUBLE});
+	 * database.table("data").insert(new String[]{"name", "balance"},
+	 *                               new Object[]{"xx", "20.0"},
+	 *                               new int[]{Types.VARCHAR, Types.DOUBLE});
 	 *
-	 *     database.disconnect();
-	 * </pre>
+	 * database.disconnect();
+	 * }</pre>
 	 *
 	 * @param columns column names.
 	 * @param values  each value information.
@@ -152,17 +159,17 @@ public interface Database {
 	 * It is very important that the values to be inserted should have a placeholder of '?', and if
 	 * available they should be specified into the '{@code parameters}' parameter.<br/><br/>
 	 *
-	 * <pre>
-	 *     Database database = new UserDatabase(...);
-	 *     database.connect();
+	 * <pre>{@code
+	 * Database database = ...
+	 * database.connect();
 	 *
-	 *     Object[] info = database.table("data").select("uuid = ?",
-	 *                                                   new Object[]{1},
-	 *                                                   new int[]{Types.INTEGER}
-	 *                                                   new String[]{"name", "balance"});
+	 * Object[] info = database.table("data").select("uuid = ?",
+	 * 												 new Object[]{1},
+	 *                                               new int[]{Types.INTEGER}
+	 *                                               new String[]{"name", "balance"});
 	 *
-	 *     database.disconnect();
-	 * </pre>
+	 * database.disconnect();
+	 * }</pre>
 	 *
 	 * @param row          the specific row for a value that you need.
 	 * @param placeholders placeholder values.
@@ -185,14 +192,14 @@ public interface Database {
 	 * Updates the value in the specified <i>row</i> in the database, additionally the <i>values</i> specified are used
 	 * to specify the column name to be specifically updated.<br/><br/>
 	 *
-	 * <pre>
-	 *     Database database = new UserDatabase(...);
-	 *     database.connect();
+	 * <pre>{@code
+	 * Database database = ...
+	 * database.connect();
 	 *
-	 *     database.table("data").update("uuid = xx", "name = user1", "balance = 20.0");
+	 * database.table("data").update("uuid = xx", "name = user1", "balance = 20.0");
 	 *
-	 *     database.disconnect();
-	 * </pre>
+	 * database.disconnect();
+	 * }</pre>
 	 *
 	 * @param row    the specific row that will be updated in the database.
 	 * @param values the specific columns that will be updated in the database.
