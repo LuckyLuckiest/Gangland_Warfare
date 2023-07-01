@@ -63,9 +63,7 @@ public class MySQL implements Database {
 		config.setConnectionTimeout(Duration.ofSeconds(30).toMillis());
 
 		try {
-			// check if there is a connection to the database
-			Connection conn = DriverManager.getConnection(url, username, password);
-			conn.close();
+			testConnection(url);
 
 			dataSource = new HikariDataSource(config);
 		} catch (SQLException exception) {
@@ -98,9 +96,7 @@ public class MySQL implements Database {
 		config.setConnectionTimeout(Duration.ofSeconds(30).toMillis());
 
 		try {
-			// Check if there is a connection to the database
-			Connection conn = DriverManager.getConnection(url, username, password);
-			conn.close();
+			testConnection(url);
 
 			disconnect();
 
@@ -179,6 +175,12 @@ public class MySQL implements Database {
 		dataSource.close();
 		connection = null;
 		table = null;
+	}
+
+	@Override
+	public void testConnection(String url) throws SQLException {
+		Connection conn = DriverManager.getConnection(url, username, password);
+		conn.close();
 	}
 
 	@Override
