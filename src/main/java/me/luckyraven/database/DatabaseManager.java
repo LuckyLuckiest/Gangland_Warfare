@@ -12,9 +12,11 @@ import java.util.List;
 public class DatabaseManager {
 
 	private final List<DatabaseHandler> databases;
+	private final JavaPlugin plugin;
 
-	public DatabaseManager() {
-		databases = new ArrayList<>();
+	public DatabaseManager(JavaPlugin plugin) {
+		this.plugin = plugin;
+		this.databases = new ArrayList<>();
 	}
 
 	public void addDatabase(DatabaseHandler database) {
@@ -25,17 +27,26 @@ public class DatabaseManager {
 		for (DatabaseHandler database : databases) database.initialize();
 	}
 
-	public void startBackup(JavaPlugin plugin, FileManager fileManager, String db, boolean mysqlConn) {
+	public void startBackup(JavaPlugin plugin, FileManager fileManager, String db) {
 		try {
 			// tightly coupled to settings
 			fileManager.checkFileLoaded("settings");
 
 			FileConfiguration settings = fileManager.getFile("settings").getFileConfiguration();
 
-			if (settings.getBoolean("Database.SQLite.Backup") && mysqlConn) {
-				// TODO create a backup
+			if (settings.getBoolean("Database.SQLite.Backup")) {
+				for (DatabaseHandler handler : databases) {
+					switch (handler.getType()) {
+						case DatabaseHandler.MYSQL -> {
+							// TODO create a backup from mysql to sqlite
+						}
+						case DatabaseHandler.SQLITE -> {
+							// TODO create a backup from sqlite to mysql
+						}
+					}
+				}
 
-				plugin.getLogger().info(String.format("Start a backup for '%s' database", db));
+				plugin.getLogger().info(String.format("Backup done for '%s' database", db));
 			}
 
 		} catch (IOException exception) {
@@ -43,10 +54,12 @@ public class DatabaseManager {
 		}
 	}
 
-	public void closeConnections() {
+	public void closeConnections(FileManager fileManager) {
 		for (DatabaseHandler database : databases)
-			if (database.getDatabase() != null && database.getDatabase().getConnection() != null)
+			if (database.getDatabase() != null && database.getDatabase().getConnection() != null){
+				startBackup(plugin, fileManager, database.getSchemaName());
 				database.getDatabase().disconnect();
+			}
 	}
 
 	public List<DatabaseHandler> getDatabases() {
