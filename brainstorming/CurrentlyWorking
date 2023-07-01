@@ -16,11 +16,14 @@
 	- Database system
 
 0.0.3-DEV:
-	- loading player data and saving it
-	- loading gang data and saving it
-	- when using mysql, save the data into sqlite
-	- Bank
-    - Gang
+	- loading player data
+	- saving player data using database helper
+	- loading gang data
+	- creating gang data using commands
+	- saving gang data using database helper
+	- when using mysql, save the data into sqlite (using backup)
+	- Bank, creating and saving to banks using commands
+	- Including the economy system as linker to user
 
 0.0.4-DEV:
 	- bounty
