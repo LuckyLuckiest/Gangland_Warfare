@@ -22,7 +22,7 @@ public final class Gangland extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		DatabaseManager databaseManager = initializer.getDatabaseManager();
-		if (!databaseManager.getDatabases().isEmpty()) databaseManager.closeConnections();
+		if (!databaseManager.getDatabases().isEmpty()) databaseManager.closeConnections(initializer.getFileManager());
 	}
 
 }
