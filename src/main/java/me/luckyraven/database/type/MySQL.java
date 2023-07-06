@@ -272,7 +272,7 @@ public class MySQL implements Database {
 		String query = "INSERT INTO " + table + " (" + columnNames + ") VALUES (" + placeholders + ");";
 
 		try (PreparedStatement statement = connection.prepareStatement(query)) {
-			preparePlaceholderStatements(statement, values, types);
+			preparePlaceholderStatements(statement, values, types, 0);
 			statement.executeUpdate();
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
@@ -285,11 +285,13 @@ public class MySQL implements Database {
 	public Object[] select(String row, Object[] placeholders, int[] types, String[] columns) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
 		Preconditions.checkNotNull(table, "Invalid table");
-		Preconditions.checkNotNull(columns, "Missing columns");
+		Preconditions.checkNotNull(row, "Missing row");
+		int count = (int) row.chars().filter(c -> c == '?').count();
 		Preconditions.checkNotNull(placeholders, "Missing placeholders");
 		Preconditions.checkNotNull(types, "Missing data types");
-		Preconditions.checkArgument(placeholders.length == types.length,
+		Preconditions.checkArgument(count == placeholders.length && count == types.length,
 		                            "Invalid placeholders, and types data parameters");
+		Preconditions.checkNotNull(columns, "Missing columns");
 
 		StringBuilder query = new StringBuilder("SELECT ");
 		for (int i = 0; i < columns.length; i++) {
@@ -306,7 +308,7 @@ public class MySQL implements Database {
 
 		try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
 
-			if (!row.isEmpty()) preparePlaceholderStatements(statement, placeholders, types);
+			if (!row.isEmpty()) preparePlaceholderStatements(statement, placeholders, types, 0);
 
 			ResultSet    resultSet = statement.executeQuery();
 			List<Object> results   = new ArrayList<>();
@@ -360,19 +362,39 @@ public class MySQL implements Database {
 	}
 
 	@Override
-	public Database update(String row, String... values) throws SQLException {
+	public Database update(String row, Object[] rowPlaceholders, int[] rowTypes, String[] columns,
+	                       Object[] colPlaceholders, int[] colTypes) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
 		Preconditions.checkNotNull(table, "Invalid table");
-		Preconditions.checkNotNull(values, "Missing data");
+
+		Preconditions.checkNotNull(row, "Missing row");
+		int count = (int) row.chars().filter(c -> c == '?').count();
+		Preconditions.checkNotNull(rowPlaceholders, "Missing row placeholders");
+		Preconditions.checkNotNull(rowTypes, "Missing row types");
+		Preconditions.checkArgument(count == rowPlaceholders.length && count == rowTypes.length,
+		                            "Invalid row placeholders, and types data parameters");
+
+		Preconditions.checkNotNull(columns, "Missing columns");
+		Preconditions.checkNotNull(colPlaceholders, "Missing columns placeholders");
+		Preconditions.checkNotNull(colTypes, "Missing columns types");
+		Preconditions.checkArgument(columns.length == colPlaceholders.length && columns.length == colTypes.length,
+		                            "Invalid columns placeholders, and types data parameters");
 
 		StringBuilder query = new StringBuilder("UPDATE ").append(table).append(" SET ");
-		for (int i = 0; i < values.length; i++) {
-			query.append(values[i]);
-			if (i < values.length - 1) query.append(", ");
+		for (int i = 0; i < columns.length; i++) {
+			query.append(columns[i]).append(" = ?");
+			if (i < columns.length - 1) query.append(", ");
 		}
 		query.append(" WHERE ").append(row).append(";");
 
-		executeUpdate(query.toString());
+		try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
+			preparePlaceholderStatements(statement, colPlaceholders, colTypes, 0);
+			if (!row.isEmpty()) preparePlaceholderStatements(statement, rowPlaceholders, rowTypes, columns.length);
+
+			statement.executeUpdate();
+		} catch (SQLException exception) {
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+		}
 
 		return this;
 	}

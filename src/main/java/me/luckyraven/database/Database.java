@@ -79,6 +79,7 @@ public interface Database {
 	 * Tests the connection of the sql database.
 	 *
 	 * @param url The database url link
+	 * @throws SQLException the sql exception
 	 */
 	void testConnection(String url) throws SQLException;
 
@@ -122,7 +123,7 @@ public interface Database {
 	 * database.table("data").addColumn("bounty", "DOUBLE");
 	 *
 	 * database.disconnect();
-	 * }</pre>
+	 * }*</pre>
 	 *
 	 * @param name      name of the new column.
 	 * @param columType values that are used for this new column.
@@ -144,7 +145,7 @@ public interface Database {
 	 *                               new int[]{Types.VARCHAR, Types.DOUBLE});
 	 *
 	 * database.disconnect();
-	 * }</pre>
+	 * }*</pre>
 	 *
 	 * @param columns column names.
 	 * @param values  each value information.
@@ -169,7 +170,7 @@ public interface Database {
 	 *                                               new String[]{"name", "balance"});
 	 *
 	 * database.disconnect();
-	 * }</pre>
+	 * }*</pre>
 	 *
 	 * @param row          the specific row for a value that you need.
 	 * @param placeholders placeholder values.
@@ -196,17 +197,27 @@ public interface Database {
 	 * Database database = ...
 	 * database.connect();
 	 *
-	 * database.table("data").update("uuid = xx", "name = user1", "balance = 20.0");
+	 * database.table("data").update("id = ?",
+	 *                               new Object[]{1},
+	 *                               new int[]{Types.INTEGER},
+	 *                               new String[]{"name", "balance"},
+	 *                               new Object[]{"xx", 20D},
+	 *                               new int[]{Types.VARCHAR, Types.DOUBLE});
 	 *
 	 * database.disconnect();
-	 * }</pre>
+	 * }*</pre>
 	 *
-	 * @param row    the specific row that will be updated in the database.
-	 * @param values the specific columns that will be updated in the database.
+	 * @param row             the specific row that will be updated in the database
+	 * @param rowPlaceholders the row placeholders
+	 * @param rowTypes        the row data types
+	 * @param columns         the columns
+	 * @param colPlaceholders the columns placeholders
+	 * @param colTypes        the columns data types
 	 * @return database instance
 	 * @throws SQLException the sql exception
 	 */
-	Database update(String row, String... values) throws SQLException;
+	Database update(String row, Object[] rowPlaceholders, int[] rowTypes, String[] columns, Object[] colPlaceholders,
+	                int[] colTypes) throws SQLException;
 
 	/**
 	 * Gets the total rows of the specified table.
@@ -262,6 +273,7 @@ public interface Database {
 	 * Gets all the columns of the specified table.
 	 *
 	 * @return a list of all columns names.
+	 * @throws SQLException the sql exception
 	 */
 	List<String> getColumns() throws SQLException;
 
@@ -271,34 +283,33 @@ public interface Database {
 	 * @param statement    the statement
 	 * @param placeholders the placeholders
 	 * @param types        the data types
+	 * @param startPos     the start pos
 	 * @throws SQLException the sql exception
 	 */
-	default void preparePlaceholderStatements(PreparedStatement statement, Object[] placeholders, int[] types)
-			throws SQLException {
+	default void preparePlaceholderStatements(PreparedStatement statement, Object[] placeholders, int[] types,
+	                                          int startPos) throws SQLException {
 		for (int i = 0; i < placeholders.length; i++) {
 			Object value = placeholders[i];
 			int    type  = types[i];
-			int    index = i + 1;
+			int    index = startPos + i + 1;
 
 			if (value == null) statement.setNull(index, type);
-			else {
-				switch (type) {
-					case Types.TINYINT -> statement.setByte(index, (byte) value);
-					case Types.SMALLINT -> statement.setShort(index, (short) value);
-					case Types.INTEGER -> statement.setInt(index, (int) value);
-					case Types.BIGINT -> statement.setLong(index, (long) value);
-					case Types.FLOAT, Types.REAL -> statement.setFloat(index, (float) value);
-					case Types.DOUBLE, Types.NUMERIC -> statement.setDouble(index, (double) value);
-					case Types.BOOLEAN -> statement.setBoolean(index, (boolean) value);
-					case Types.DATE, Types.TIME, Types.TIMESTAMP -> {
-						LocalDateTime dateTime  = (LocalDateTime) value;
-						Timestamp     timestamp = Timestamp.valueOf(dateTime);
-						statement.setTimestamp(index, timestamp);
-					}
-					case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR ->
-							statement.setString(index, String.valueOf(value));
-					default -> statement.setObject(index, value);
+			else switch (type) {
+				case Types.TINYINT -> statement.setByte(index, (byte) value);
+				case Types.SMALLINT -> statement.setShort(index, (short) value);
+				case Types.INTEGER -> statement.setInt(index, (int) value);
+				case Types.BIGINT -> statement.setLong(index, (long) value);
+				case Types.FLOAT, Types.REAL -> statement.setFloat(index, (float) value);
+				case Types.DOUBLE, Types.NUMERIC -> statement.setDouble(index, (double) value);
+				case Types.BOOLEAN -> statement.setBoolean(index, (boolean) value);
+				case Types.DATE, Types.TIME, Types.TIMESTAMP -> {
+					LocalDateTime dateTime  = (LocalDateTime) value;
+					Timestamp     timestamp = Timestamp.valueOf(dateTime);
+					statement.setTimestamp(index, timestamp);
 				}
+				case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR ->
+						statement.setString(index, String.valueOf(value));
+				default -> statement.setObject(index, value);
 			}
 		}
 	}
@@ -360,7 +371,10 @@ public interface Database {
 
 		if (resultSet.wasNull()) value = null;
 		else if (columnType.equals(LocalDateTime.class)) value = resultSet.getTimestamp(columnName).toLocalDateTime();
-		else value = columnType.cast(value);
+		else if (columnType.equals(Boolean.class)) {
+			int intValue = resultSet.getInt(columnName);
+			value = intValue != 0;
+		} else value = columnType.cast(value);
 
 		return value;
 	}
