@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import static me.luckyraven.util.ChatUtil.color;
 
@@ -50,6 +51,7 @@ public final class CommandManager implements CommandExecutor {
 					if (Arrays.stream(args).anyMatch("help"::equalsIgnoreCase)) onHelp(entry, sender, args);
 					else entry.getValue().runExecute(sender, args);
 					match = true;
+					break;
 				}
 
 			if (!match) {
@@ -74,20 +76,23 @@ public final class CommandManager implements CommandExecutor {
 
 	private void onHelp(Map.Entry<String, CommandHandler> entry, CommandSender sender, String[] args) {
 		if (entry.getValue().getHelpInfo().size() == 0) return;
+
+		// Get the page number if it exists
+		int page = 1;
+		int index = IntStream.range(0, args.length - 1)
+		                     .filter(i -> args[i].equalsIgnoreCase("help"))
+		                     .findFirst()
+		                     .orElse(-1);
+		if (index != -1) try {
+			page = Integer.parseInt(args[index + 1]);
+		} catch (NumberFormatException | ArrayIndexOutOfBoundsException ignored) {
+		}
+
+		// display the help of the command (if mentioned)
 		try {
-			int page = 1;
-			if (args.length > 2) try {
-				for (int i = 0; i < args.length; i++)
-					if (args[i].equalsIgnoreCase("help")) {
-						page = Integer.parseInt(args[i + 1]);
-						break;
-					}
-			} catch (NumberFormatException ignored) {
-			}
 			entry.getValue().help(sender, page);
 		} catch (IllegalArgumentException exception) {
-			gangland.getLogger().warning(UnhandledError.HELP_ERROR.getMessage() + ": " + exception.getMessage());
-			exception.printStackTrace();
+			ChatUtil.errorMessage(exception.getMessage());
 		}
 	}
 

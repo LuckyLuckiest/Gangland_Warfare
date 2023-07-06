@@ -61,7 +61,7 @@
 	},
 	"bank": {
 		"usage": "/glw bank",
-		"description": "Shows bank help page."
+		"description": "Shows current bank stats or help page."
 	},
 	"bank_help": {
 		"usage": "/glw bank help <page>",
@@ -71,25 +71,17 @@
 		"usage": "/glw bank create <name>",
 		"description": "Creates a bank with the specified name."
 	},
-	"bank_remove": {
-		"usage": "/glw bank remove",
-		"description": "Removes current bank."
+	"bank_delete": {
+		"usage": "/glw bank delete",
+		"description": "Deletes current bank."
 	},
-	"bank_add": {
+	"bank_deposit": {
 		"usage": "/glw bank deposit <amount>",
 		"description": "Deposits the amount value to the bank."
 	},
-	"bank_take": {
+	"bank_withdraw": {
 		"usage": "/glw bank withdraw <amount>",
 		"description": "Withdraws the amount value from the bank."
-	},
-	"bank_set": {
-		"usage": "/glw bank set <amount>",
-		"description": "Sets the amount value to the bank."
-	},
-	"bank_reset": {
-		"usage": "/glw bank reset",
-		"description": "Resets the bank balance."
 	},
 	"bank_balance": {
 		"usage": "/glw bank balance",
@@ -173,7 +165,7 @@
 	},
 	"gang": {
 		"usage": "/glw gang",
-		"description": "Shows gang help page."
+		"description": "Shows current gang stats or help page."
 	},
 	"gang_help": {
 		"usage": "/glw gang help <page>",
@@ -187,11 +179,11 @@
 		"usage": "/glw gang delete",
 		"description": "Deletes current gang."
 	},
-	"gang_economy_add": {
+	"gang_economy_deposit": {
 		"usage": "/glw gang economy deposit <amount>",
 		"description": "Deposits the amount value to the gang."
 	},
-	"gang_economy_take": {
+	"gang_economy_withdraw": {
 		"usage": "/glw gang economy withdraw <amount>",
 		"description": "Withdraws the amount value from the gang."
 	},
@@ -199,19 +191,19 @@
 		"usage": "/glw gang balance",
 		"description": "Shows gang balance."
 	},
-	"gang_stats": {
-		"usage": "/glw gang stats",
-		"description": "Shows gang information."
-	},
 	"gang_change_name": {
 		"usage": "/glw gang name <name>",
 		"description": "Changes current gang name."
 	},
-	"gang_add_player": {
-		"usage": "/glw gang add <name>",
-		"description": "Adds the player to the gang."
+	"gang_change_desc": {
+		"usage": "/glw gang description <desc>",
+		"description": "Changes current gang description."
 	},
-	"gang_remove_player": {
+	"gang_invite_player": {
+		"usage": "/glw gang invite <name>",
+		"description": "Invites the player to the gang."
+	},
+	"gang_kick_player": {
 		"usage": "/glw gang kick <name>",
 		"description": "Kicks the player from the gang."
 	},
@@ -220,8 +212,8 @@
 		"description": "Leaves the current gang."
 	},
 	"gang_rank_set": {
-		"usage": "/glw gang set <type> <name>",
-		"description": "Sets the player to the assigned type in the gang."
+		"usage": "/glw gang set <rank> <name>",
+		"description": "Sets the player to the assigned rank in the gang."
 	},
 	"gang_rank_set_owner": {
 		"usage": "/glw gang set owner <name>",
@@ -230,6 +222,10 @@
 	"gang_rank_set_member": {
 		"usage": "/glw gang set member <name>",
 		"description": "Sets the player to a member in the gang."
+	},
+	"gang_ranks": {
+		"usage": "/glw gang ranks",
+		"description": "Displays the gangs available ranks"
 	},
 	"gang_rank_promote": {
 		"usage": "/glw gang promote <name>",

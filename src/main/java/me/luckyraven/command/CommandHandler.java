@@ -2,6 +2,7 @@ package me.luckyraven.command;
 
 import lombok.Getter;
 import me.luckyraven.Gangland;
+import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.HelpInfo;
 import me.luckyraven.datastructure.Tree;
@@ -10,6 +11,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public abstract class CommandHandler {
@@ -29,7 +31,7 @@ public abstract class CommandHandler {
 	@Getter
 	private final Tree<Argument> argumentTree;
 
-	private final Gangland gangland;
+	private final  Gangland          gangland;
 
 	public CommandHandler(Gangland gangland, String label, boolean user, String... alias) {
 		this.gangland = gangland;
@@ -48,31 +50,40 @@ public abstract class CommandHandler {
 		System.arraycopy(alias, 0, args, 1, args.length - 1);
 
 		this.argument = new Argument(args, argumentTree, this::onExecute);
-		this.argumentTree.addNode(this.argument.getNode());
+		this.argumentTree.add(argument.getNode());
 
-		initializeArguments();
+		initializeArguments(gangland);
 	}
 
 	protected abstract void onExecute(CommandSender commandSender, String[] arguments);
 
-	protected abstract void initializeArguments();
+	protected abstract void initializeArguments(Gangland gangland);
 
 	protected abstract void help(CommandSender sender, int page);
 
 	public void runExecute(CommandSender sender, String[] args) {
+		// sender has the permission
 		if (!sender.hasPermission(permission)) {
 			sender.sendMessage(ChatUtil.color("&cError&8: &7Not permissible!"));
 			return;
 		}
+
+		// check if the user should be a Player
 		if (user && !(sender instanceof Player)) {
 			gangland.getLogger().info("Need to be executed as a player.");
 			return;
 		}
+
+		// execute if all checks out
 		argument.execute(sender, args);
 	}
 
+	public Map<String, CommandInformation> getCommands() {
+		return gangland.getInitializer().getInformationManager().getCommands();
+	}
+
 	public CommandInformation getCommandInformation(String info) {
-		return gangland.getInitializer().getInformationManager().getCommands().get(info);
+		return getCommands().get(info);
 	}
 
 }
