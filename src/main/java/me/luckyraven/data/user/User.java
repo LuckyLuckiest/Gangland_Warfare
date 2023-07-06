@@ -27,7 +27,6 @@ public class User<T> {
 	@Getter
 	@Setter
 	private double balance, bounty;
-	@Getter
 	@Setter
 	private boolean hasBank;
 
@@ -96,8 +95,12 @@ public class User<T> {
 		this.gangId = -1;
 	}
 
-	public boolean inGang() {
+	public boolean hasGang() {
 		return this.gangId != -1;
+	}
+
+	public boolean hasBank() {
+		return hasBank;
 	}
 
 	/**
