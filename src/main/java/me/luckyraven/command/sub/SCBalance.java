@@ -27,7 +27,7 @@ public final class SCBalance extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments() {
+	protected void initializeArguments(Gangland gangland) {
 
 	}
 

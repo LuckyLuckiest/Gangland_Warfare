@@ -2,10 +2,9 @@ package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
-import me.luckyraven.data.HelpInfo;
 import org.bukkit.command.CommandSender;
 
-import java.util.Map;
+import java.util.stream.Collectors;
 
 public class SCHelp extends CommandHandler {
 
@@ -13,14 +12,14 @@ public class SCHelp extends CommandHandler {
 		super(gangland, "help", false, "general", "?");
 		getHelpInfo().add(getCommandInformation("general"));
 		getHelpInfo().add(getCommandInformation("general_page"));
-		HelpInfo info;
-		for (Map.Entry<String, CommandHandler> entry : gangland.getInitializer()
-		                                                       .getCommandManager()
-		                                                       .getCommands()
-		                                                       .entrySet()) {
-			info = entry.getValue().getHelpInfo();
-			for (int i = 0; i < info.size(); i++) getHelpInfo().add(info.getInformation(i));
-		}
+
+		getHelpInfo().addAll(gangland.getInitializer()
+		                             .getCommandManager()
+		                             .getCommands()
+		                             .values()
+		                             .stream()
+		                             .flatMap(entry -> entry.getHelpInfo().getList().stream())
+		                             .collect(Collectors.toList()));
 	}
 
 	@Override
@@ -33,7 +32,7 @@ public class SCHelp extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments() {
+	protected void initializeArguments(Gangland gangland) {
 
 	}
 

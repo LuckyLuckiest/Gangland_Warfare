@@ -2,8 +2,8 @@ package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.account.gang.Gang;
-import me.luckyraven.command.Argument;
 import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.argument.Argument;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import org.bukkit.command.CommandSender;
@@ -11,11 +11,8 @@ import org.bukkit.entity.Player;
 
 public class SCDebug extends CommandHandler {
 
-	private final Gangland gangland;
-
 	public SCDebug(Gangland gangland) {
 		super(gangland, "debug", false);
-		this.gangland = gangland;
 	}
 
 	@Override
@@ -24,7 +21,7 @@ public class SCDebug extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments() {
+	protected void initializeArguments(Gangland gangland) {
 		// user data
 		Argument userData = new Argument(new String[]{"user-data"}, getArgumentTree(), (sender, args) -> {
 			if (sender instanceof Player player) {
