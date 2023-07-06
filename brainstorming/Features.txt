@@ -109,3 +109,48 @@ Level System:
 	- ChatGPT suggestion:
 	Include special rewards for reaching specific milestone levels, such as unlocking new areas, exclusive missions, or unique abilities.
     Introduce leaderboards or achievements tied to the level system, encouraging players to compete and showcase their progress.
+
+Heist:
+	Players can plan and execute heists on various targets
+	Requires coordination and strategy
+	Rewards can include large sums of money, valuable items, or unique abilities
+
+	- ChatGPT suggestion:
+	Introduce a variety of heist scenarios, each with its own set of challenges and objectives, offering players a diverse range of gameplay experiences.
+	Allow players to recruit and assemble a team for heists, each member with their own specialized skills or roles.
+
+Missions:
+	Offered by NPCs or available through the phone
+	Diverse objectives, such as assassinations, deliveries, or reconnaissance
+	Rewards include money, experience, and reputation
+
+	- ChatGPT suggestion:
+	Implement branching mission paths or multiple approaches to complete missions, providing players with choices that affect the outcome or reward.
+	Include mission difficulty levels or scaling, allowing players to undertake more challenging missions as they progress.
+
+Quest:
+	Longer and more complex objectives
+	Can involve multiple stages or require collaboration with other players
+	Rewards can include unique items, exclusive abilities, or story progression
+
+	- ChatGPT suggestion:
+	Introduce an overarching questline or storyline that unfolds gradually, providing players with a compelling narrative and purpose.
+	Include quest chains or series that require players to complete multiple interconnected quests, creating a sense of progression and continuity.
+
+Cars:
+	Various types of vehicles available for purchase or theft
+	Customization options for appearance and performance upgrades
+	Players can engage in races or use vehicles for transportation and combat
+
+	- ChatGPT suggestion:
+	Include a wide range of vehicle models, from sports cars to motorcycles, trucks, and helicopters, catering to different play styles and preferences.
+	Implement a vehicle modification system that allows players to enhance their vehicles with armor, weapons, or unique abilities.
+
+Houses:
+	Players can own and decorate houses
+	Serve as a safe zone and storage for items
+	Can be upgraded or expanded over time
+
+	- ChatGPT suggestion:
+	Include different types of houses or properties, ranging from apartments to mansions, each with its own unique features or benefits.
+	Implement a social feature that allows players to visit and interact with each other's houses, fostering a sense of community and personalization.
