@@ -4,9 +4,7 @@ import lombok.Getter;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.data.InformationManager;
-import me.luckyraven.command.sub.SCBalance;
-import me.luckyraven.command.sub.SCDebug;
-import me.luckyraven.command.sub.SCHelp;
+import me.luckyraven.command.sub.*;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseManager;
@@ -15,6 +13,7 @@ import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
+import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
 import me.luckyraven.listener.player.RemoveAccount;
@@ -45,6 +44,8 @@ public final class Initializer {
 	private @Getter CommandManager  commandManager;
 	private @Getter RankManager     rankManager;
 	private @Getter LanguageLoader  languageLoader;
+	// Addons
+	private @Getter MessageAddon    messageAddon;
 
 
 	public Initializer(JavaPlugin plugin) {
@@ -60,6 +61,11 @@ public final class Initializer {
 		// Files
 		fileManager = new FileManager(plugin);
 		files();
+
+		// Addons
+		if (plugin instanceof Gangland gangland) {
+			messageAddon = new MessageAddon(gangland, fileManager);
+		}
 
 		// Database
 		databaseManager = new DatabaseManager(plugin);
@@ -88,6 +94,7 @@ public final class Initializer {
 			commandManager = new CommandManager(gangland);
 			commands();
 		}
+
 	}
 
 	private void events() {
@@ -101,11 +108,15 @@ public final class Initializer {
 		// initial command
 		Objects.requireNonNull(plugin.getCommand("glw")).setExecutor(commandManager);
 
+		// sub commands
 		if (plugin instanceof Gangland gangland) {
-			// sub commands
 			commandManager.addCommand(new SCBalance(gangland));
-			commandManager.addCommand(new SCHelp(gangland));
 			commandManager.addCommand(new SCDebug(gangland));
+			commandManager.addCommand(new SCGang(gangland));
+			commandManager.addCommand(new SCBank(gangland));
+
+			// Needs to be the final command to add all the help info
+			commandManager.addCommand(new SCHelp(gangland));
 		}
 	}
 
