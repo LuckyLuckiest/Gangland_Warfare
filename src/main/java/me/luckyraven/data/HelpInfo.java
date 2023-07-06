@@ -33,6 +33,10 @@ public final class HelpInfo {
 		list.add(element);
 	}
 
+	public void addAll(List<CommandInformation> elements) {
+		list.addAll(elements);
+	}
+
 	public void remove(CommandInformation element) {
 		list.remove(element);
 	}
@@ -43,6 +47,10 @@ public final class HelpInfo {
 
 	public CommandInformation getInformation(int index) {
 		return list.get(index);
+	}
+
+	public List<CommandInformation> getList() {
+		return new ArrayList<>(list);
 	}
 
 	/**
@@ -69,12 +77,11 @@ public final class HelpInfo {
 		sender.sendMessage(header);
 		sender.sendMessage("");
 
-		int stop = Math.min(breaks, size());
+		int startIndex = (page - 1) * breaks;
+		int endIndex   = Math.min(startIndex + breaks, size());
 
-		for (int line = 0; line < stop; line++) {
-			int index = (page - 1) * breaks + line;
+		for (int index = startIndex; index < endIndex; index++)
 			sender.sendMessage(commandDesign(list.get(index).toString()));
-		}
 		sender.sendMessage("");
 	}
 
