@@ -102,7 +102,7 @@ public final class CreateAccount implements Listener {
 				config = database.table("data");
 				columns = config.getColumns().toArray(new String[0]);
 
-				// check for bank table
+				// check for data table
 				Object[] dataInfo = config.select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
 				                                  new int[]{Types.CHAR}, new String[]{"*"});
 				// create player data into database
@@ -112,7 +112,7 @@ public final class CreateAccount implements Listener {
 					LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
 					config.insert(columns, new Object[]{
 							user.getUser().getUniqueId(), user.getKills(), user.getDeaths(), user.getMobKills(),
-							user.isHasBank(), user.getBounty(), localDateTime
+							user.hasBank(), user.getBounty(), localDateTime
 					}, new int[]{
 							Types.CHAR, Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.BOOLEAN, Types.DOUBLE,
 							Types.DATE
