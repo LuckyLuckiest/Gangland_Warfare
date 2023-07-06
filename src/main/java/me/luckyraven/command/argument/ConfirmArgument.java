@@ -1,0 +1,35 @@
+package me.luckyraven.command.argument;
+
+import lombok.Getter;
+import lombok.Setter;
+import me.luckyraven.datastructure.Tree;
+import me.luckyraven.util.ChatUtil;
+import org.bukkit.command.CommandSender;
+
+public class ConfirmArgument extends Argument {
+
+	@Getter
+	@Setter
+	private boolean confirmed;
+
+	public ConfirmArgument(Tree<Argument> tree) {
+		super("confirm", tree);
+		this.confirmed = false;
+	}
+
+	public ConfirmArgument(Tree<Argument> tree, ArgumentAction action) {
+		super("confirm", tree, action);
+		this.confirmed = false;
+	}
+
+	@Override
+	public void executeArgument(CommandSender sender, String[] args) {
+		if (!confirmed) {
+			sender.sendMessage(ChatUtil.errorMessage("Need to execute the initial statement to use this argument."));
+			return;
+		}
+		this.confirmed = false;
+		super.executeArgument(sender, args);
+	}
+
+}
