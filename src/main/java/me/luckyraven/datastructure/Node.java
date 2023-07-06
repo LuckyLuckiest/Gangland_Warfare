@@ -27,6 +27,11 @@ public class Node<T> {
 		children.add(child);
 	}
 
+	public void add(int index, Node<T> child) {
+		child.setParent(this);
+		children.add(index, child);
+	}
+
 	public void addAll(List<Node<T>> children) {
 		for (Node<T> child : children)
 			child.setParent(this);

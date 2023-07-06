@@ -22,7 +22,7 @@ public class Tree<E> {
 		else root.add(newNode);
 	}
 
-	public void addNode(Node<E> node) {
+	public void add(Node<E> node) {
 		if (root == null) root = node;
 		else root.add(node);
 	}
