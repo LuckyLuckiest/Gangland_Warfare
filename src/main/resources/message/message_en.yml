@@ -36,8 +36,7 @@ Config_Version: '${project.version}'
 # |  %name%           : Name of the object.                                       |
 # |  %bank%           : Gets the bank name.                                       |
 # |  %command%        : Gets the unknown command.                                 |
-# |  %player_balance% : Gets player balance.                                      |
-# |  %target_balance% : Gets target balance.                                      |
+# |  %balance%        : Gets the user balance.                                    |
 # |  %gang_balance%   : Gets the gang balance.                                    |
 # |  %amount%         : Gets the amount.                                          |
 # |  %gang%           : Gets the gang name.                                       |
@@ -73,6 +72,22 @@ Config_Version: '${project.version}'
 # |  =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=  |
 # +-------------------------------------------------------------------------------+
 
+Normal:
+   Format:
+      Date: "dd/MM/yyyy"
+      Time: "hh:mm:ss a"
+   Prefix: "&8&l[&7G&fT&7A&8&l]&7 "
+   Entity_Drop_Money: "&a%money_symbol%%amount% &7has been added for killing &c%entity%&7."
+
+Time_Unit:
+   Second: "second"
+   Minute: "minute"
+   Hour: "hour"
+   Day: "day"
+   Week: "week"
+   Month: "month"
+   Year: "year"
+
 Commands:
    Prefix: "&6GLW &8&l>>&7 "
    Syntax:
@@ -80,14 +95,14 @@ Commands:
       Too_Much_Arguments: "&4Too Much Arguments&7: "
       Wrong_Arguments: "&4Wrong Arguments&7: "
       Page_Invalid: "&4Invalid Page&7: "
-      Doesnt_Exist: "&4Doesn't Exists&7: "
+      Doesnt_Exist: "&4Doesn't Exist&7: "
    Weapons:
       Gave_Ammo: "You gave &8(&c%amount%&8) &e%ammo% &7ammunition to &3%player%&7."
       Gave_Weapon: "You gave a &8[&c%weapon%&8] &7weapon to &3%player%&7."
    Economy:
       Balance:
-         Player_Balance: "Your balance is: &b%money_symbol%%player_balance%"
-         Target_Balance: "&6%target%'s &7balance is: &b%money_symbol%%target_balance%"
+         Player_Balance: "Your balance is: &b%money_symbol%%balance%"
+         Target_Balance: "&6%target%'s &7balance is: &b%money_symbol%%balance%"
       Money:
          Player_Money_Add: "&a%money_symbol%%amount% &7has been added to your account."
          Target_Money_Add: "&a%money_symbol%%amount% &7has been added to &6%target%'s &7account."
@@ -99,12 +114,14 @@ Commands:
          Target_Money_Reset: "&6%target%'s &7account has been reset."
    Bank:
       Player_Create_Bank: "You have created a bank account."
+      Create_Bank_Fee: "The fee for creating a new bank account is &a%money_symbol%%amount%&7."
       Player_Remove_Bank: "You have removed your bank account."
       Created_Bank: "Created a new bank &8[&a%bank%&8]&7."
       Removed_Bank: "Your bank account &8[&a%bank%&8] &7has been removed."
+      Have_Bank: "You already have a bank."
       Balance:
-         Player_Balance: "Your bank balance is: &b%money_symbol%%player_balance%"
-         Target_Balance: "&6%target%'s &7 bank balance is: &b%money_symbol%%target_balance%"
+         Player_Balance: "Your bank balance is: &b%money_symbol%%balance%"
+         Target_Balance: "&6%target%'s &7 bank balance is: &b%money_symbol%%balance%"
       Money:
          Player_Money_Add: "&a%money_symbol%%amount% &7has been added to your bank account."
          Target_Money_Add: "&a%money_symbol%%amount% &7has been added to &6%target%'s bank &7account."
@@ -120,8 +137,8 @@ Commands:
       Created_Gang: "Created a new gang &8[&a%gang%&8]&7."
       Removed_Gang: "Your gang account &8[&a%gang%&8] &7has been removed."
       Balance:
-         Player_Balance: "Your gang balance is: &b%money_symbol%%player_balance%"
-         Target_Balance: "&6%target%'s &7 gang balance is: &b%money_symbol%%target_balance%"
+         Player_Balance: "Your gang balance is: &b%money_symbol%%balance%"
+         Target_Balance: "&6%target%'s &7 gang balance is: &b%money_symbol%%balance%"
       Money:
          Player_Money_Add: "&a%money_symbol%%amount% &7has been added to your gang account."
          Target_Money_Add: "&a%money_symbol%%amount% &7has been added to &6%target%'s gang &7account."

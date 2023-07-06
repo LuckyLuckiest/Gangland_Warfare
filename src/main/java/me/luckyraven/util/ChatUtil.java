@@ -1,10 +1,13 @@
 package me.luckyraven.util;
 
+import me.luckyraven.file.configuration.MessageAddon;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 public final class ChatUtil {
 
@@ -50,6 +53,26 @@ public final class ChatUtil {
 
 	public static String removeSymbol(String message) {
 		return message.replaceAll("[^a-zA-Z\\d\\s]", "");
+	}
+
+	public static String prefixMessage(String message) {
+		Objects.requireNonNull(message);
+		return color(MessageAddon.PREFIX + message);
+	}
+
+	public static String commandMessage(String message) {
+		Objects.requireNonNull(message);
+		return color(MessageAddon.COMMAND_PREFIX + message);
+	}
+
+	public static String errorMessage(String message) {
+		Objects.requireNonNull(message);
+		return color(MessageAddon.ERROR_PREFIX + message);
+	}
+
+	public static String informationMessage(String message) {
+		Objects.requireNonNull(message);
+		return color(MessageAddon.INFORMATION_PREFIX + message);
 	}
 
 }
