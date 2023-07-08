@@ -5,6 +5,7 @@ import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.data.user.User;
 import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -26,7 +27,8 @@ public final class SCBalance extends CommandHandler {
 		// Initialize a user
 		User<Player> user = gangland.getInitializer().getUserManager().getUser(player);
 		player.sendMessage(ChatUtil.color("&6" + player.getName() + "&7 balance:"));
-		player.sendMessage(ChatUtil.color("&a$" + MessageAddon.formatDouble(user.getBalance())));
+		player.sendMessage(
+				ChatUtil.color("&a" + SettingAddon.getMoneySymbol() + MessageAddon.formatDouble(user.getBalance())));
 	}
 
 	@Override
