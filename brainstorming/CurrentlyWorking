@@ -19,18 +19,20 @@
 	- loading player data
 	- saving player data using database helper
 	- loading gang data
+	- Bank, creating and saving to banks using commands
+	- Economy, depositing and withdrawing commands
+
+0.0.4-DEV:
 	- creating gang data using commands
 	- saving gang data using database helper
 	- when using mysql, save the data into sqlite (using backup)
-	- Bank, creating and saving to banks using commands
-	- Including the economy system as linker to user
 
-0.0.4-DEV:
+0.0.5-DEV:
 	- bounty
 	- Economy system (implement vault dependency)
 	- phone
 
-0.0.5-DEV:
+0.0.6-DEV:
     - level system
     - ranks system
 
