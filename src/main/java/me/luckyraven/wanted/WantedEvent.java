@@ -1,7 +1,7 @@
 package me.luckyraven.wanted;
 
 import lombok.Getter;
-import me.luckyraven.account.type.Player;
+import me.luckyraven.data.user.User;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -12,13 +12,13 @@ public class WantedEvent extends Event implements Cancellable {
 	private static final HandlerList handler = new HandlerList();
 	private              boolean     cancelled;
 	@Getter
-	private final        Player      player;
+	private final        User<?>     user;
 	@Getter
 	private final        Wanted      wanted;
 
-	public WantedEvent(Player player) {
-		this.player = player;
-		this.wanted = player.getValue().getWanted();
+	public WantedEvent(User<?> user) {
+		this.user = user;
+		this.wanted = user.getWanted();
 	}
 
 	@Override
