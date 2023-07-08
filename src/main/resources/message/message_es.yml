@@ -113,24 +113,23 @@ Commands:
          Player_Money_Reset: "Your account has been reset."
          Target_Money_Reset: "&6%target%'s &7account has been reset."
    Bank:
-      Player_Create_Bank: "You have created a bank account."
-      Create_Bank_Fee: "The fee for creating a new bank account is &a%money_symbol%%amount%&7."
-      Player_Remove_Bank: "You have removed your bank account."
-      Created_Bank: "Created a new bank &8[&a%bank%&8]&7."
-      Removed_Bank: "Your bank account &8[&a%bank%&8] &7has been removed."
+      Create:
+         Created_Bank: "Created a new bank &8[&a%bank%&8]&7."
+         Bank_Fee: "The fee for creating a new bank account is &a%money_symbol%%amount%&7."
+         Confirm_Timer: "You have &a%timer%&7 seconds to confirm the account."
+      Remove:
+         Removed_Bank: "Your bank account &8[&a%bank%&8]&7 has been removed."
+         Confirm_Timer: "You have &a%timer%&7 seconds to confirm deleting the account."
       Have_Bank: "You already have a bank."
       Balance:
          Player_Balance: "Your bank balance is: &b%money_symbol%%balance%"
          Target_Balance: "&6%target%'s &7 bank balance is: &b%money_symbol%%balance%"
       Money:
-         Player_Money_Add: "&a%money_symbol%%amount% &7has been added to your bank account."
-         Target_Money_Add: "&a%money_symbol%%amount% &7has been added to &6%target%'s bank &7account."
-         Player_Money_Take: "&a%money_symbol%%amount% &7has been taken from your bank account."
-         Target_Money_Take: "&a%money_symbol%%amount% &7has been taken from &6%target%'s bank &7account."
-         Player_Money_Set: "Your bank's account balance has been set to &a%money_symbol%%amount%&7."
-         Target_Money_Set: "&6%target%'s &7bank account balance has been set to &a%money_symbol%%amount%&7."
-         Player_Money_Reset: "Your bank account has been reset."
-         Target_Money_Reset: "&6%target%'s &7bank account has been reset."
+         Player_Money_Add: "&a%money_symbol%%amount% &7has been deposited from your account to your bank account."
+         Target_Money_Add: "&a%money_symbol%%amount% &7has been deposited from &6%target%'s&7 account to his bank 
+         account."
+         Player_Money_Take: "&a%money_symbol%%amount% &7has been withdrawn from your bank account into your account."
+         Target_Money_Take: "&a%money_symbol%%amount% &7has been withdrawn from &6%target%'s &7bank account."
    Gang:
       Player_Create_Gang: "You have created a gang account."
       Player_Remove_Gang: "You have removed your gang account."
@@ -165,10 +164,12 @@ Errors:
    Cannot_Take_Less_Than_Zero: "You can't take money less than &czero&7."
    Cannot_Take_More_Than_Balance: "You can't take money more than your &cbalance&7."
    Cannot_Set_Same_Balance: "You can't set money same to your &cbank balance&7."
-   Cannot_Create_Bank: "Insufficient funds to create a &cbank account&7."
-   Cannot_Create_Gang: "Insufficient funds to create a &cgang account&7."
-   Must_Create_Bank: "Must create a Bank to continue."
-   Must_Create_Gang: "Must create a Gang to continue."
+   Bank:
+      Must_Create_Bank: "Must create a Bank to continue."
+      Cannot_Create_Bank: "Insufficient funds to create a &cbank account&7."
+   Gang:
+      Must_Create_Gang: "Must create a Gang to continue."
+      Cannot_Create_Gang: "Insufficient funds to create a &cgang account&7."
    Dont_Use_Symbol: "Please don't use symbol."
    Cannot_Remove_Non_Existing_Spawn: "Can't remove spawn that doesn't exist."
    Cannot_Remove_Non_Existing_Warp: "Can't remove warp that doesn't exist."
