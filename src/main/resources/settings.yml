@@ -23,10 +23,6 @@
 # If you have faced any problem with the file you can create a new one by changing [Config_Version] to a different
 # number, but when a new update comes out with a new configuration file(s), [Config_Version] will change resulting
 # in a new file(s) for that new version while saving old files with a suffix -old to indicate they are old.
-## | WARNING |
-# BY CHANGING [Config_Version] YOU WILL NEED TO CHANGE LINKED FILES TO IT [Config_Version] TOO JUST TO AVOID ERRORS.
-# THIS OPTION IS EXPERIMENTAL AND WILL TAKE SOME TIME TILL I FIGURE A SOLUTION FOR IT!
-# CHANGE IT IF YOU KNOW WHAT YOU ARE DOING!
 Config_Version: '${project.version}'
 # We recommend to leave it true so people that got the permission will receive an update message.
 Show_Update: true # This will work next update. An update will release immediately.
@@ -93,7 +89,7 @@ Gang_Account:
    # When a player wants to create a gang account they are required to pay a fee.
    # Set it to 0, and the requirement is lifted.
    Create_Cost: 100_000
-   # [Maximum_Balance] is the maximum amount of money the gang can have.
+   # Set the maximum gang money.
    Maximum_Balance: 100_000_000_000
-   # If you want to allow gang names to be duplicated then enable [Name_Duplicates].
+   # Allow duplicate names.
    Name_Duplicates: false
