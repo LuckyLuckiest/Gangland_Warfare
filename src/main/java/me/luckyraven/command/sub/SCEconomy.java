@@ -78,6 +78,7 @@ public class SCEconomy extends CommandHandler {
 
 				for (Player player : players) {
 					User<Player> user = userManager.getUser(player);
+
 					switch (args[1].toLowerCase()) {
 						case "deposit", "add" -> {
 							value = Math.min(user.getBalance() + argAmount, SettingAddon.getPlayerMaxBalance());
@@ -106,9 +107,11 @@ public class SCEconomy extends CommandHandler {
 			}
 		});
 
-		Argument specifier = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<amount>"));
-		});
+		Argument specifier = new OptionalArgument(new String[]{"@a", "@r", "@p", "@me"}, getArgumentTree(),
+		                                          (argument, sender, args) -> {
+			                                          sender.sendMessage(CommandManager.setArguments(
+					                                          MessageAddon.ARGUMENTS_MISSING, "<amount>"));
+		                                          });
 
 		specifier.setExecuteOnPass(
 				(sender, args) -> collectSpecifiers(specifiers, sender, args.length > 2 ? args[2] : null));
@@ -119,26 +122,31 @@ public class SCEconomy extends CommandHandler {
 		withdraw.addSubArgument(new Argument(specifier));
 		set.addSubArgument(new Argument(specifier));
 
-
 		// glw economy reset
-		Argument reset = new Argument("reset", getArgumentTree());
+		Argument reset = new Argument("reset", getArgumentTree(), (argument, sender, args) -> {
+			String specifierStr = args.length > 2 ? args[2] : "@me";
 
-		reset.setExecuteOnPass((sender, args) -> {
-			collectSpecifiers(specifiers, sender, args.length > 2 ? args[2] : null);
-
-			if (args[2].equalsIgnoreCase("@me") && !(sender instanceof Player)) {
+			if (specifierStr.equalsIgnoreCase("@me") && !(sender instanceof Player)) {
 				sender.sendMessage(MessageAddon.NOT_PLAYER);
 				return;
 			}
 
-			for (List<Player> players : specifiers.values().stream().map(Supplier::get).toList())
-				for (User<Player> user : players.stream().map(userManager::getUser).toList()) {
-					user.setBalance(0D);
-					user.getUser().sendMessage(MessageAddon.PLAYER_MONEY_RESET);
-				}
+			List<Player> players = specifiers.get(specifierStr).get();
+
+			for (Player player : players) {
+				User<Player> user = userManager.getUser(player);
+
+				user.setBalance(0D);
+				moneyInDatabase(player, 0D);
+				user.getUser().sendMessage(MessageAddon.PLAYER_MONEY_RESET);
+			}
 		});
 
-		Argument resetSpecifier = new OptionalArgument(getArgumentTree());
+		reset.setExecuteOnPass(
+				(sender, args) -> collectSpecifiers(specifiers, sender, args.length > 2 ? args[2] : null));
+
+		Argument resetSpecifier = new OptionalArgument(new String[]{"@a", "@r", "@p", "@me"}, getArgumentTree(),
+		                                               (argument, sender, args) -> reset.executeArgument(sender, args));
 
 		reset.addSubArgument(resetSpecifier);
 
