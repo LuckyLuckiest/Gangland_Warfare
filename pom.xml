@@ -6,7 +6,7 @@
 
     <groupId>gangland_warfare</groupId>
     <artifactId>gangland_warfare</artifactId>
-    <version>0.0.3-DEV</version>
+    <version>0.0.4-DEV</version>
     <packaging>jar</packaging>
 
     <name>Gangland_Warfare</name>
