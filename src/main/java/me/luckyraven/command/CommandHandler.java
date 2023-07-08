@@ -98,7 +98,8 @@ public abstract class CommandHandler implements TabCompleter {
 
 		if (arg == null) return null;
 
-		return arg.getNode().getChildren().stream().map(Node::getData).map(Argument::toString).toList();
+		return arg.getNode().getChildren().stream().map(Node::getData).map(Argument::getArgumentsString).flatMap(
+				List::stream).toList();
 	}
 
 	private Argument findArgument(String[] args) {
