@@ -13,7 +13,6 @@ import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -67,7 +66,7 @@ public class SCEconomy extends CommandHandler {
 			String specifier = args[2].startsWith("@") ? args[2].toLowerCase() : "@" + args[2];
 
 			if (specifier.equalsIgnoreCase("@me") && !(sender instanceof Player)) {
-				sender.sendMessage(ChatUtil.color(MessageAddon.NOT_PLAYER));
+				sender.sendMessage(MessageAddon.NOT_PLAYER);
 				return;
 			}
 
