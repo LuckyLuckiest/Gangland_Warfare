@@ -14,6 +14,7 @@ import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
 import me.luckyraven.listener.player.RemoveAccount;
@@ -45,6 +46,7 @@ public final class Initializer {
 	private @Getter RankManager     rankManager;
 	private @Getter LanguageLoader  languageLoader;
 	// Addons
+	private @Getter SettingAddon    settingAddon;
 	private @Getter MessageAddon    messageAddon;
 
 
@@ -64,7 +66,8 @@ public final class Initializer {
 
 		// Addons
 		if (plugin instanceof Gangland gangland) {
-			messageAddon = new MessageAddon(gangland, fileManager);
+			settingAddon = new SettingAddon(fileManager);
+			messageAddon = new MessageAddon(gangland);
 		}
 
 		// Database
@@ -114,6 +117,8 @@ public final class Initializer {
 			commandManager.addCommand(new SCDebug(gangland));
 			commandManager.addCommand(new SCGang(gangland));
 			commandManager.addCommand(new SCBank(gangland));
+			commandManager.addCommand(new SCEconomy(gangland));
+			commandManager.addCommand(new SCTesting(gangland));
 
 			// Needs to be the final command to add all the help info
 			commandManager.addCommand(new SCHelp(gangland));
