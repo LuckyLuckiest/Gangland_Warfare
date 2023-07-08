@@ -47,9 +47,6 @@ public final class CreateAccount implements Listener {
 				break;
 			}
 
-		me.luckyraven.account.type.Player pl = new me.luckyraven.account.type.Player(player.getUniqueId(), user);
-		user.addAccount(pl);
-
 		// Add the user to user manager group
 		userManager.add(user);
 	}
