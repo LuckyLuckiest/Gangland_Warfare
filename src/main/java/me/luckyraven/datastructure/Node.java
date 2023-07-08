@@ -6,7 +6,7 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Node<T> {
+public class Node<T> implements Cloneable {
 
 	@Getter
 	private final List<Node<T>> children;
@@ -20,6 +20,11 @@ public class Node<T> {
 	public Node(T data) {
 		this.data = data;
 		this.children = new ArrayList<>();
+	}
+
+	public Node(T data, List<Node<T>> children) {
+		this(data);
+		addAll(children);
 	}
 
 	public void add(Node<T> child) {
@@ -45,6 +50,15 @@ public class Node<T> {
 	@Override
 	public String toString() {
 		return String.format("[data=%s,parent=%s]", data, parent == null ? "null" : parent.getData());
+	}
+
+	@Override
+	public Node<T> clone() {
+		try {
+			return (Node<T>) super.clone();
+		} catch (CloneNotSupportedException exception) {
+			throw new RuntimeException(exception);
+		}
 	}
 
 }
