@@ -6,24 +6,20 @@ import me.luckyraven.datastructure.Node;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-public class Argument implements TabCompleter, Cloneable {
+public class Argument implements Cloneable {
 
 	@Getter
 	private final String[]       arguments;
 	@Getter
 	private final Node<Argument> node;
+	private final Tree<Argument> tree;
 
-	private final Tree<Argument>                                 tree;
 	private final TriConsumer<Argument, CommandSender, String[]> action;
 
 	@Setter
@@ -63,8 +59,10 @@ public class Argument implements TabCompleter, Cloneable {
 	}
 
 	public void execute(CommandSender sender, String[] args) {
-		Argument[] modifiedArg = Arrays.stream(args).map(arg -> createArgumentInstance(arg, tree)).toArray(
-				Argument[]::new);
+		Argument[] modifiedArg = Arrays.stream(args).map(arg -> {
+			if (arg.toLowerCase().contains("confirm")) return new ConfirmArgument(tree);
+			return new Argument(arg, tree);
+		}).toArray(Argument[]::new);
 
 		try {
 			Argument arg = traverseList(modifiedArg, sender, args);
@@ -85,11 +83,6 @@ public class Argument implements TabCompleter, Cloneable {
 		} catch (Exception exception) {
 			sender.sendMessage(ChatUtil.errorMessage(exception.getMessage()));
 		}
-	}
-
-	private Argument createArgumentInstance(String arg, Tree<Argument> tree) {
-		if (arg.toLowerCase().contains("confirm")) return new ConfirmArgument(tree);
-		return new Argument(arg, tree);
 	}
 
 	public void executeArgument(CommandSender sender, String[] args) {
@@ -120,13 +113,6 @@ public class Argument implements TabCompleter, Cloneable {
 		}
 
 		return null;
-	}
-
-	@Nullable
-	@Override
-	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
-	                                  @NotNull String[] args) {
-		return Arrays.stream(arguments).toList();
 	}
 
 	@Override
