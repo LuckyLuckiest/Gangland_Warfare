@@ -17,7 +17,7 @@ public class ConfirmArgument extends Argument {
 		this.confirmed = false;
 	}
 
-	public ConfirmArgument(Tree<Argument> tree, ArgumentAction action) {
+	public ConfirmArgument(Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action) {
 		super("confirm", tree, action);
 		this.confirmed = false;
 	}

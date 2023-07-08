@@ -1,6 +1,7 @@
 package me.luckyraven.command.argument;
 
 import me.luckyraven.datastructure.Tree;
+import org.bukkit.command.CommandSender;
 
 public class OptionalArgument extends Argument {
 
@@ -8,7 +9,7 @@ public class OptionalArgument extends Argument {
 		super("?", tree);
 	}
 
-	public OptionalArgument(Tree<Argument> tree, ArgumentAction action) {
+	public OptionalArgument(Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action) {
 		super("?", tree, action);
 	}
 
