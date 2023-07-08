@@ -46,6 +46,21 @@ public class Tree<E> {
 		return getNumberOfDescendants(root) + 1;
 	}
 
+	public int height() {
+		return height(root);
+	}
+
+	private int height(Node<E> node) {
+		if (node == null) return 0;
+
+		int maxHeight = 0;
+		for (Node<E> child : node.getChildren()) {
+			int childHeight = height(child);
+			maxHeight = Math.max(maxHeight, childHeight);
+		}
+		return maxHeight + 1;
+	}
+
 	public E traverseLastValid(E[] list) {
 		return traverseLastValid(root, list, 0, null);
 	}
@@ -80,20 +95,26 @@ public class Tree<E> {
 		return null;
 	}
 
+	public E find(E key) {
+		Node<E> found = findNode(root, key);
+		if (found == null) return null;
+		return found.getData();
+	}
+
 	private Node<E> findNode(Node<E> node, E key) {
 		if (node == null) return null;
+
 		if (node.getData().equals(key)) return node;
-		else {
-			Node<E> found;
-			for (Node<E> child : node.getChildren()) {
-				found = findNode(child, key);
-				if (found != null) return found;
-			}
+
+		Node<E> found;
+		for (Node<E> child : node.getChildren()) {
+			found = findNode(child, key);
+			if (found != null) return found;
 		}
 		return null;
 	}
 
-	private List<Node<E>> getAllNodes() {
+	public List<Node<E>> getAllNodes() {
 		List<Node<E>> nodes = new ArrayList<>();
 		buildTreeInfo(root, nodes);
 		return nodes;
