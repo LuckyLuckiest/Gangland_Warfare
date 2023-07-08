@@ -15,12 +15,15 @@ import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import java.sql.Types;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -44,16 +47,18 @@ public class SCBank extends CommandHandler {
 	}
 
 	@Override
-	protected void onExecute(CommandSender commandSender, String[] arguments) {
+	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		Player       player = (Player) commandSender;
 		User<Player> user   = gangland.getInitializer().getUserManager().getUser(player);
 
 		if (user.hasBank()) {
 			for (Account<?, ?> account : user.getLinkedAccounts())
 				if (account instanceof Bank bank) {
-					player.sendMessage(ChatUtil.color(String.format("&7%s &3bank information", player.getName())));
-					player.sendMessage(ChatUtil.color(String.format("&7Name&8:&7 %s", bank.getName())));
-					player.sendMessage(ChatUtil.color(String.format("&7Balance&8:&7 %.2f", bank.getBalance())));
+					player.sendMessage(ChatUtil.color(String.format("&6%s&7 bank information", player.getName()),
+					                                  String.format("&7%-10s&8: &a%s", "Name", bank.getName()),
+					                                  String.format("&7%-10s&8: &a%s%s", "Balance",
+					                                                SettingAddon.getMoneySymbol(),
+					                                                MessageAddon.formatDouble(bank.getBalance()))));
 					break;
 				}
 		} else help(commandSender, 1);
@@ -66,7 +71,7 @@ public class SCBank extends CommandHandler {
 
 		// create bank
 		// glw bank create name
-		Argument create = new Argument("create", getArgumentTree(), (sender, args) -> {
+		Argument create = new Argument("create", getArgumentTree(), (argument, sender, args) -> {
 			Player player = (Player) sender;
 			if (userManager.getUser(player).hasBank()) {
 				player.sendMessage(MessageAddon.HAVE_BANK);
@@ -76,14 +81,19 @@ public class SCBank extends CommandHandler {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<name>"));
 		});
 
-		AtomicReference<String> createBankName = new AtomicReference<>("");
+		HashMap<User<?>, AtomicReference<String>> createBankName = new HashMap<>();
 
-		ConfirmArgument confirmCreate = new ConfirmArgument(getArgumentTree(), (sender, args) -> {
+		ConfirmArgument confirmCreate = new ConfirmArgument(getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
 			if (user.hasBank()) {
 				player.sendMessage(MessageAddon.HAVE_BANK);
+				return;
+			}
+
+			if (user.getBalance() <= SettingAddon.getBankCreateFee()) {
+				player.sendMessage(MessageAddon.CANNOT_CREATE_BANK);
 				return;
 			}
 
@@ -94,25 +104,34 @@ public class SCBank extends CommandHandler {
 					helper.runQueries(database -> {
 						database.table("bank").update("uuid = ?", new Object[]{player.getUniqueId()},
 						                              new int[]{Types.CHAR}, new String[]{"name"},
-						                              new Object[]{createBankName.get()}, new int[]{Types.VARCHAR});
+						                              new Object[]{createBankName.get(user).get()},
+						                              new int[]{Types.VARCHAR});
 						database.table("data").update("uuid = ?", new Object[]{player.getUniqueId()},
 						                              new int[]{Types.CHAR}, new String[]{"has_bank"},
 						                              new Object[]{true}, new int[]{Types.BOOLEAN});
+						user.setBalance(user.getBalance() - SettingAddon.getBankCreateFee());
+						database.table("account").update("uuid = ?", new Object[]{player.getUniqueId()},
+						                                 new int[]{Types.CHAR}, new String[]{"balance"},
+						                                 new Object[]{user.getBalance()}, new int[]{Types.DOUBLE});
 					});
 
-					player.sendMessage(MessageAddon.CREATED_BANK.replace("%bank%", createBankName.get()));
+					player.sendMessage(MessageAddon.BANK_CREATED.replace("%bank%", createBankName.get(user).get()));
 					user.setHasBank(true);
 					break;
 				}
-			for (Account<?, ?> account : user.getLinkedAccounts())
-				if (account instanceof Bank bank) bank.setName(createBankName.get());
 
-			createBankName.set("");
+			for (Account<?, ?> account : user.getLinkedAccounts())
+				if (account instanceof Bank bank) {
+					bank.setName(createBankName.get(user).get());
+					break;
+				}
+
+			createBankName.remove(user);
 		});
 
 		create.addSubArgument(confirmCreate);
 
-		Argument createName = new OptionalArgument(getArgumentTree(), (sender, args) -> {
+		Argument createName = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -121,12 +140,24 @@ public class SCBank extends CommandHandler {
 				return;
 			}
 
-			createBankName.set(args[2]);
+			if (confirmCreate.isConfirmed()) return;
+
+			createBankName.put(user, new AtomicReference<>(args[2]));
 
 			// Need to notify the player and give access to confirm
 			player.sendMessage(MessageAddon.BANK_CREATE_FEE);
 			player.sendMessage(ChatUtil.color(MessageAddon.confirmCommand(new String[]{"bank", "create"})));
 			confirmCreate.setConfirmed(true);
+
+			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+				sender.sendMessage(
+						MessageAddon.BANK_CREATE_CONFIRM.replace("%timer%", String.valueOf(time.getDuration())));
+			}, null, time -> {
+				confirmCreate.setConfirmed(false);
+				createBankName.remove(user);
+			});
+
+			timer.start();
 		});
 
 		create.addSubArgument(createName);
@@ -134,21 +165,15 @@ public class SCBank extends CommandHandler {
 
 		// delete bank
 		// glw bank delete
-		Argument delete = new Argument("delete", getArgumentTree(), (sender, args) -> {
-			Player player = (Player) sender;
+		HashMap<User<?>, AtomicReference<String>> deleteBankName = new HashMap<>();
 
-			User<Player> user = userManager.getUser(player);
-			if (!user.hasBank()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_BANK);
-				return;
-			}
+		ConfirmArgument confirmDelete = new ConfirmArgument(getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
 
-			// retrieve the name
-			String bankName = "";
 			for (Account<?, ?> account : user.getLinkedAccounts())
 				if (account instanceof Bank bank) {
-					user.setBalance(user.getBalance() + bank.getBalance());
-					bankName = bank.getName();
+					user.setBalance(user.getBalance() + bank.getBalance() + SettingAddon.getBankCreateFee() / 2);
 
 					bank.setName("");
 					bank.setBalance(0D);
@@ -167,17 +192,55 @@ public class SCBank extends CommandHandler {
 						database.table("data").update("uuid = ?", new Object[]{player.getUniqueId()},
 						                              new int[]{Types.CHAR}, new String[]{"has_bank"},
 						                              new Object[]{false}, new int[]{Types.BOOLEAN});
+						database.table("account").update("uuid = ?", new Object[]{player.getUniqueId()},
+						                                 new int[]{Types.CHAR}, new String[]{"balance"},
+						                                 new Object[]{user.getBalance()}, new int[]{Types.DOUBLE});
 					});
 
-					player.sendMessage(MessageAddon.REMOVED_BANK.replace("%bank%", bankName));
+					player.sendMessage(MessageAddon.BANK_REMOVED.replace("%bank%", deleteBankName.get(user).get()));
 					user.setHasBank(false);
 					break;
 				}
+
+			deleteBankName.remove(user);
 		});
+
+		Argument delete = new Argument("delete", getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasBank()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_BANK);
+				return;
+			}
+
+			if (confirmDelete.isConfirmed()) return;
+
+			for (Account<?, ?> account : user.getLinkedAccounts())
+				if (account instanceof Bank bank) {
+					deleteBankName.put(user, new AtomicReference<>(bank.getName()));
+					break;
+				}
+
+			player.sendMessage(ChatUtil.color(MessageAddon.confirmCommand(new String[]{"bank", "delete"})));
+			confirmDelete.setConfirmed(true);
+
+			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+				sender.sendMessage(
+						MessageAddon.BANK_REMOVE_CONFIRM.replace("%timer%", String.valueOf(time.getDuration())));
+			}, null, time -> {
+				confirmDelete.setConfirmed(false);
+				deleteBankName.remove(user);
+			});
+
+			timer.start();
+		});
+
+		delete.addSubArgument(confirmDelete);
 
 		// deposit money to bank
 		// glw bank deposit 10
-		Argument deposit = new Argument("deposit", getArgumentTree(), (sender, args) -> {
+		Argument deposit = new Argument(new String[]{"deposit", "add"}, getArgumentTree(), (argument, sender, args) -> {
 			Player player = (Player) sender;
 
 			User<Player> user = userManager.getUser(player);
@@ -189,62 +252,54 @@ public class SCBank extends CommandHandler {
 			sender.sendMessage(CommandManager.setArguments(
 					Objects.requireNonNull(message.getString("Commands.Syntax.Missing_Arguments")), "<amount>"));
 		});
-
-		Argument depositAmount = new OptionalArgument(getArgumentTree(), (sender, args) -> {
-			Player player = (Player) sender;
-
-			User<Player> user = userManager.getUser(player);
-			if (!user.hasBank()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_BANK);
-				return;
-			}
-
-			try {
-				double amount = Double.parseDouble(args[2]);
-				for (Account<?, ?> account : user.getLinkedAccounts())
-					if (account instanceof Bank bank) {
-						processMoney(user, player, bank, user.getBalance(), amount, user.getBalance() + amount,
-						             user.getBalance() - amount);
-						break;
-					}
-			} catch (NumberFormatException exception) {
-				player.sendMessage(MessageAddon.MUSTBE_NUMBER);
-			}
-		});
-
-		deposit.addSubArgument(depositAmount);
 
 		// withdraw money from bank
 		// glw bank withdraw 10
-		Argument withdraw = new Argument("withdraw", getArgumentTree(), (sender, args) -> {
-			Player player = (Player) sender;
+		Argument withdraw = new Argument(new String[]{"withdraw", "take"}, getArgumentTree(),
+		                                 (argument, sender, args) -> {
+			                                 Player player = (Player) sender;
 
-			User<Player> user = userManager.getUser(player);
-			if (!user.hasBank()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_BANK);
-				return;
-			}
+			                                 User<Player> user = userManager.getUser(player);
+			                                 if (!user.hasBank()) {
+				                                 player.sendMessage(MessageAddon.MUST_CREATE_BANK);
+				                                 return;
+			                                 }
 
-			sender.sendMessage(CommandManager.setArguments(
-					Objects.requireNonNull(message.getString("Commands.Syntax.Missing_Arguments")), "<amount>"));
-		});
+			                                 sender.sendMessage(CommandManager.setArguments(Objects.requireNonNull(
+					                                                                                message.getString("Commands.Syntax.Missing_Arguments")),
+			                                                                                "<amount>"));
+		                                 });
 
-		Argument withdrawAmount = new OptionalArgument(getArgumentTree(), (sender, args) -> {
-			Player player = (Player) sender;
+		Argument amount = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
 
-			User<Player> user = userManager.getUser(player);
 			if (!user.hasBank()) {
 				player.sendMessage(MessageAddon.MUST_CREATE_BANK);
 				return;
 			}
 
 			try {
-				double amount = Double.parseDouble(args[2]);
+				double argAmount = Double.parseDouble(args[2]);
 
 				for (Account<?, ?> account : user.getLinkedAccounts())
 					if (account instanceof Bank bank) {
-						processMoney(user, player, bank, bank.getBalance(), amount, user.getBalance() - amount,
-						             user.getBalance() + amount);
+						switch (args[1].toLowerCase()) {
+							case "deposit", "add" -> {
+								processMoney(user, player, bank, user.getBalance(), argAmount,
+								             bank.getBalance() + argAmount, user.getBalance() - argAmount,
+								             MessageAddon.BANK_PLAYER_MONEY_ADD.replace("%amount%",
+								                                                        MessageAddon.formatDouble(
+										                                                        argAmount)));
+							}
+							case "withdraw", "take" -> {
+								processMoney(user, player, bank, bank.getBalance(), argAmount,
+								             bank.getBalance() - argAmount, user.getBalance() + argAmount,
+								             MessageAddon.BANK_PLAYER_MONEY_TAKE.replace("%amount%",
+								                                                         MessageAddon.formatDouble(
+										                                                         argAmount)));
+							}
+						}
 						break;
 					}
 			} catch (NumberFormatException exception) {
@@ -252,11 +307,12 @@ public class SCBank extends CommandHandler {
 			}
 		});
 
-		withdraw.addSubArgument(withdrawAmount);
+		deposit.addSubArgument(amount);
+		withdraw.addSubArgument(amount);
 
 		// balance of gang
 		// glw bank balance
-		Argument balance = new Argument(new String[]{"balance", "bal"}, getArgumentTree(), (sender, args) -> {
+		Argument balance = new Argument(new String[]{"balance", "bal"}, getArgumentTree(), (argument, sender, args) -> {
 			Player player = (Player) sender;
 
 			User<Player> user = userManager.getUser(player);
@@ -286,7 +342,7 @@ public class SCBank extends CommandHandler {
 	}
 
 	private void processMoney(User<Player> user, Player player, Bank bank, double check, double amount, double inBank,
-	                          double inAccount) {
+	                          double inAccount, String message) {
 		if (check == 0D) player.sendMessage(MessageAddon.CANNOT_TAKE_LESSTHANZERO);
 		else if (amount > check) player.sendMessage(MessageAddon.CANNOT_TAKE_MORETHANBALANCE);
 		else {
@@ -294,6 +350,7 @@ public class SCBank extends CommandHandler {
 			bank.setBalance(inBank);
 
 			moneyInDatabase(player, inBank, inAccount);
+			player.sendMessage(message);
 		}
 	}
 
