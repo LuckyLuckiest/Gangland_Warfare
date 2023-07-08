@@ -123,6 +123,9 @@ public final class Initializer {
 			// Needs to be the final command to add all the help info
 			commandManager.addCommand(new SCHelp(gangland));
 		}
+
+		Objects.requireNonNull(plugin.getCommand("glw")).setTabCompleter(
+				commandManager.getCommands().values().stream().toList().get(0));
 	}
 
 	@SuppressWarnings("CommentedOutCode")
