@@ -3,15 +3,13 @@ package me.luckyraven.command;
 import me.luckyraven.Gangland;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.UnhandledError;
-import org.bukkit.Bukkit;
-import org.bukkit.command.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -70,41 +68,6 @@ public final class CommandManager implements CommandExecutor {
 
 	public void addCommand(CommandHandler sub) {
 		commands.put(sub.getLabel(), sub);
-
-		PluginCommand pluginCommand = createPluginCommand(sub.getLabel());
-
-		if (pluginCommand != null) {
-			pluginCommand.setExecutor(this);
-			pluginCommand.setTabCompleter(sub.getArgument());
-
-			registerCommand(pluginCommand);
-		}
-	}
-
-	private PluginCommand createPluginCommand(String label) {
-		try {
-			Constructor<PluginCommand> constructor = PluginCommand.class.getDeclaredConstructor(String.class,
-			                                                                                    Plugin.class);
-			constructor.setAccessible(true);
-			return constructor.newInstance(label, gangland);
-		} catch (Exception exception) {
-			gangland.getLogger().warning(UnhandledError.ERROR + ": " + exception.getMessage());
-			exception.printStackTrace();
-		}
-		return null;
-	}
-
-	private void registerCommand(PluginCommand pluginCommand) {
-		try {
-			Field commandMapField = Bukkit.getServer().getClass().getDeclaredField("commandMap");
-			commandMapField.setAccessible(true);
-			CommandMap commandMap = (CommandMap) commandMapField.get(Bukkit.getServer());
-
-			commandMap.register(pluginCommand.getLabel(), pluginCommand);
-		} catch (Exception exception) {
-			gangland.getLogger().warning(UnhandledError.ERROR + ": " + exception.getMessage());
-			exception.printStackTrace();
-		}
 	}
 
 	public Map<String, CommandHandler> getCommands() {
