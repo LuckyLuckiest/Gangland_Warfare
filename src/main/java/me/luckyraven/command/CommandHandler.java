@@ -55,7 +55,7 @@ public abstract class CommandHandler {
 		initializeArguments(gangland);
 	}
 
-	protected abstract void onExecute(CommandSender commandSender, String[] arguments);
+	protected abstract void onExecute(Argument argument, CommandSender commandSender, String[] arguments);
 
 	protected abstract void initializeArguments(Gangland gangland);
 

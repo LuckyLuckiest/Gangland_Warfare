@@ -6,37 +6,50 @@ import me.luckyraven.datastructure.Node;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
+import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiConsumer;
 
-public class Argument {
+public class Argument implements TabCompleter, Cloneable {
 
 	@Getter
 	private final String[]       arguments;
 	@Getter
 	private final Node<Argument> node;
 
-	private final Tree<Argument> tree;
-	private final ArgumentAction action;
+	private final Tree<Argument>                                 tree;
+	private final TriConsumer<Argument, CommandSender, String[]> action;
 
 	@Setter
-	private ArgumentAction executeOnPass;
+	private BiConsumer<CommandSender, String[]> executeOnPass;
 
 	public Argument(String argument, Tree<Argument> tree) {
 		this(argument, tree, null);
 	}
 
-	public Argument(String argument, Tree<Argument> tree, ArgumentAction action) {
+	public Argument(String argument, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action) {
 		this(new String[]{argument}, tree, action);
 	}
 
-	public Argument(String[] arguments, Tree<Argument> tree, ArgumentAction action) {
+	public Argument(String[] arguments, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action) {
 		this.arguments = arguments;
 		this.tree = tree;
 		this.node = new Node<>(this);
 		this.action = action;
+	}
+
+	public Argument(Argument other) {
+		this.arguments = other.arguments.clone();
+		this.node = other.getNode().clone();
+		this.tree = other.tree;
+		this.action = other.action;
+		this.executeOnPass = other.executeOnPass;
 	}
 
 	public void addSubArgument(Argument argument) {
@@ -53,21 +66,25 @@ public class Argument {
 		Argument[] modifiedArg = Arrays.stream(args).map(arg -> createArgumentInstance(arg, tree)).toArray(
 				Argument[]::new);
 
-		Argument arg = traverseList(modifiedArg, sender, args);
+		try {
+			Argument arg = traverseList(modifiedArg, sender, args);
 
-		if (arg == null) {
-			StringBuilder invalidArg = new StringBuilder(MessageAddon.ARGUMENTS_WRONG);
-			Argument      lastValid  = tree.traverseLastValid(modifiedArg);
-			if (lastValid != null) {
-				for (int i = 0; i < args.length; i++)
-					if (Arrays.stream(lastValid.arguments).anyMatch(args[i]::equalsIgnoreCase)) {
-						invalidArg.append(args[i + 1]);
+			if (arg == null) {
+				StringBuilder invalidArg = new StringBuilder(MessageAddon.ARGUMENTS_WRONG);
+				Argument      lastValid  = tree.traverseLastValid(modifiedArg);
+				if (lastValid != null) {
+					for (int i = 0; i < args.length; i++)
+						if (Arrays.stream(lastValid.arguments).anyMatch(args[i]::equalsIgnoreCase)) {
+							invalidArg.append(args[i + 1]);
 
-						sender.sendMessage(invalidArg.toString());
-						break;
-					}
-			} else sender.sendMessage(invalidArg.append(args[0]).toString());
-		} else arg.executeArgument(sender, args);
+							sender.sendMessage(invalidArg.toString());
+							break;
+						}
+				} else sender.sendMessage(invalidArg.append(args[0]).toString());
+			} else arg.executeArgument(sender, args);
+		} catch (Exception exception) {
+			sender.sendMessage(ChatUtil.errorMessage(exception.getMessage()));
+		}
 	}
 
 	private Argument createArgumentInstance(String arg, Tree<Argument> tree) {
@@ -76,12 +93,12 @@ public class Argument {
 	}
 
 	public void executeArgument(CommandSender sender, String[] args) {
-		if (this.action != null) this.action.execute(sender, args);
+		if (this.action != null) this.action.accept(this, sender, args);
 		else sender.sendMessage(ChatUtil.errorMessage("Not implemented method!"));
 	}
 
 	void executeOnPass(CommandSender sender, String[] args) {
-		if (executeOnPass != null) executeOnPass.execute(sender, args);
+		if (executeOnPass != null) executeOnPass.accept(sender, args);
 	}
 
 	private Argument traverseList(Argument[] list, CommandSender sender, String[] args) {
@@ -91,22 +108,25 @@ public class Argument {
 	private <T extends Argument> T traverseList(Node<T> node, Argument[] list, int index, OptionalArgument dummy,
 	                                            CommandSender sender, String[] args) {
 		if (node == null || index >= list.length) return null;
+		if (!node.getData().equals(list[index]) && !node.getData().equals(dummy)) return null;
 
-		if (node.getData().equals(dummy)) return node.getData();
-
-		if (!node.getData().equals(list[index])) return null;
+		node.getData().executeOnPass(sender, args);
 
 		if (index == list.length - 1) return node.getData();
 
 		for (Node<T> child : node.getChildren()) {
 			T result = traverseList(child, list, index + 1, dummy, sender, args);
-			if (result != null) {
-				result.executeOnPass(sender, args);
-				return result;
-			}
+			if (result != null) return result;
 		}
 
 		return null;
+	}
+
+	@Nullable
+	@Override
+	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
+	                                  @NotNull String[] args) {
+		return Arrays.stream(arguments).toList();
 	}
 
 	@Override
@@ -119,8 +139,17 @@ public class Argument {
 	}
 
 	@Override
+	public Argument clone() {
+		try {
+			return (Argument) super.clone();
+		} catch (CloneNotSupportedException exception) {
+			throw new RuntimeException(exception);
+		}
+	}
+
+	@Override
 	public String toString() {
-		return String.format("[%s]", arguments[0]);
+		return arguments[0];
 	}
 
 }
