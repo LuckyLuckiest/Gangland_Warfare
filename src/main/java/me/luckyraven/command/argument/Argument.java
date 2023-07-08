@@ -133,6 +133,10 @@ public class Argument implements Cloneable {
 		}
 	}
 
+	public List<String> getArgumentsString() {
+		return List.of(toString());
+	}
+
 	@Override
 	public String toString() {
 		return arguments[0];
