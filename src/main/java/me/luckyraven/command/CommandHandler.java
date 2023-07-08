@@ -3,18 +3,25 @@ package me.luckyraven.command;
 import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.argument.ConfirmArgument;
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.HelpInfo;
+import me.luckyraven.datastructure.Node;
 import me.luckyraven.datastructure.Tree;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.file.configuration.MessageAddon;
+import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-public abstract class CommandHandler {
+public abstract class CommandHandler implements TabCompleter {
+
+	@Getter
+	private static final Map<String, Tree<Argument>> treeMap = new HashMap<>();
 
 	@Getter
 	private final String         label;
@@ -31,7 +38,7 @@ public abstract class CommandHandler {
 	@Getter
 	private final Tree<Argument> argumentTree;
 
-	private final  Gangland          gangland;
+	private final Gangland gangland;
 
 	public CommandHandler(Gangland gangland, String label, boolean user, String... alias) {
 		this.gangland = gangland;
@@ -53,6 +60,8 @@ public abstract class CommandHandler {
 		this.argumentTree.add(argument.getNode());
 
 		initializeArguments(gangland);
+
+		treeMap.put(this.label, this.argumentTree);
 	}
 
 	protected abstract void onExecute(Argument argument, CommandSender commandSender, String[] arguments);
@@ -64,18 +73,47 @@ public abstract class CommandHandler {
 	public void runExecute(CommandSender sender, String[] args) {
 		// sender has the permission
 		if (!sender.hasPermission(permission)) {
-			sender.sendMessage(ChatUtil.color("&cError&8: &7Not permissible!"));
+			sender.sendMessage(MessageAddon.NOPERM_CMD);
 			return;
 		}
 
 		// check if the user should be a Player
 		if (user && !(sender instanceof Player)) {
-			gangland.getLogger().info("Need to be executed as a player.");
+			sender.sendMessage(MessageAddon.NOT_PLAYER);
 			return;
 		}
 
 		// execute if all checks out
 		argument.execute(sender, args);
+	}
+
+	@Nullable
+	@Override
+	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
+	                                  @NotNull String[] args) {
+
+		if (args.length == 1) return treeMap.keySet().stream().toList();
+
+		Argument arg = findArgument(args);
+
+		if (arg == null) return null;
+
+		return arg.getNode().getChildren().stream().map(Node::getData).map(Argument::toString).toList();
+	}
+
+	private Argument findArgument(String[] args) {
+		Argument[] modifiedArg = new Argument[args.length];
+		for (Tree<Argument> tree : treeMap.values()) {
+			for (int i = 0; i < args.length; i++) {
+				String arg = args[i];
+				if (arg.toLowerCase().contains("confirm")) modifiedArg[i] = new ConfirmArgument(tree);
+				else modifiedArg[i] = new Argument(arg, tree);
+			}
+
+			Argument found = tree.traverseLastValid(modifiedArg);
+			if (found != null) return found;
+		}
+		return null;
 	}
 
 	public Map<String, CommandInformation> getCommands() {
