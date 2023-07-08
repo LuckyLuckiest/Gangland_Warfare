@@ -35,21 +35,25 @@
 		"usage": "/glw economy",
 		"description": "Shows economy help page."
 	},
+	"economy_help": {
+		"usage": "/glw economy help <page>",
+		"description": "Shows economy help page."
+	},
 	"economy_add": {
-		"usage": "/glw economy deposit <amount>",
-		"description": "Deposits the amount value."
+		"usage": "/glw economy deposit <specifier> <amount>",
+		"description": "Deposits the amount value to a user."
 	},
 	"economy_take": {
-		"usage": "/glw economy withdraw <amount>",
-		"description": "Withdraws the amount value."
+		"usage": "/glw economy withdraw <specifier> <amount>",
+		"description": "Withdraws the amount value from the user."
 	},
 	"economy_set": {
-		"usage": "/glw economy set <amount>",
-		"description": "Sets amount value."
+		"usage": "/glw economy set <specifier> <amount>",
+		"description": "Sets amount value for the user."
 	},
 	"economy_reset": {
-		"usage": "/glw economy reset",
-		"description": "Resets account balance."
+		"usage": "/glw economy reset <specifier>",
+		"description": "Resets account balance for the user."
 	},
 	"balance": {
 		"usage": "/glw balance",
