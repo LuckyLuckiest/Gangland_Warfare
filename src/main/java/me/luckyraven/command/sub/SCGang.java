@@ -1,8 +1,8 @@
 package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
 import org.bukkit.command.CommandSender;
 
@@ -16,7 +16,7 @@ public class SCGang extends CommandHandler {
 		super(gangland, "gang", false);
 
 		List<CommandInformation> list = getCommands().entrySet()
-		                                             .stream()
+		                                             .parallelStream()
 		                                             .filter(entry -> entry.getKey().startsWith("gang"))
 		                                             .sorted(Map.Entry.comparingByKey())
 		                                             .map(Map.Entry::getValue)
@@ -25,7 +25,7 @@ public class SCGang extends CommandHandler {
 	}
 
 	@Override
-	protected void onExecute(CommandSender commandSender, String[] arguments) {
+	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		// displays the stats of the gang
 		// TODO
 		getCommands().keySet().stream().filter(commandInformation -> commandInformation.startsWith("gang")).forEach(
@@ -35,47 +35,47 @@ public class SCGang extends CommandHandler {
 	@Override
 	protected void initializeArguments(Gangland gangland) {
 		// create gang
-		Argument create = new Argument(new String[]{"create"}, getArgumentTree(), (sender, args) -> {
+		Argument create = new Argument(new String[]{"create"}, getArgumentTree(), (argument, sender, args) -> {
 
 		});
 
 		// delete gang
-		Argument delete = new Argument(new String[]{"delete"}, getArgumentTree(), (sender, args) -> {
+		Argument delete = new Argument(new String[]{"delete"}, getArgumentTree(), (argument, sender, args) -> {
 
 		});
 
 		// add user to gang
-		Argument addUser = new Argument(new String[]{"add"}, getArgumentTree(), (sender, args) -> {
+		Argument addUser = new Argument(new String[]{"add"}, getArgumentTree(), (argument, sender, args) -> {
 
 		});
 
 		// remove user from gang
-		Argument removeUser = new Argument(new String[]{"kick"}, getArgumentTree(), (sender, args) -> {
+		Argument removeUser = new Argument(new String[]{"kick"}, getArgumentTree(), (argument, sender, args) -> {
 
 		});
 
 		// promote user in gang
-		Argument promoteUser = new Argument(new String[]{"promote"}, getArgumentTree(), (sender, args) -> {
+		Argument promoteUser = new Argument(new String[]{"promote"}, getArgumentTree(), (argument, sender, args) -> {
 
 		});
 
 		// demote user in gang
-		Argument demoteUser = new Argument(new String[]{"demote"}, getArgumentTree(), (sender, args) -> {
+		Argument demoteUser = new Argument(new String[]{"demote"}, getArgumentTree(), (argument, sender, args) -> {
 
 		});
 
 		// deposit money to gang
-		Argument deposit = new Argument(new String[]{"deposit"}, getArgumentTree(), (sender, args) -> {
+		Argument deposit = new Argument(new String[]{"deposit"}, getArgumentTree(), (argument, sender, args) -> {
 
 		});
 
 		// withdraw money from gang
-		Argument withdraw = new Argument(new String[]{"withdraw"}, getArgumentTree(), (sender, args) -> {
+		Argument withdraw = new Argument(new String[]{"withdraw"}, getArgumentTree(), (argument, sender, args) -> {
 
 		});
 
 		// balance of gang
-		Argument balance = new Argument(new String[]{"balance", "bal"}, getArgumentTree(), (sender, args) -> {
+		Argument balance = new Argument(new String[]{"balance", "bal"}, getArgumentTree(), (argument, sender, args) -> {
 
 		});
 
