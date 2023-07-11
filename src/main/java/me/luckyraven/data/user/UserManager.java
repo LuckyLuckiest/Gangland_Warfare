@@ -3,34 +3,35 @@ package me.luckyraven.data.user;
 import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class UserManager<T> {
 
-	private final Set<User<T>> users;
+	private final Map<T, User<T>> users;
 
 	public UserManager() {
-		users = new HashSet<>();
+		users = new HashMap<>();
 	}
 
 	public void add(User<T> user) {
-		users.add(user);
+		users.put(user.getUser(), user);
 	}
 
 	public void remove(@NotNull User<T> user) {
 		Preconditions.checkArgument(user != null, "User can't be null!");
 
-		users.remove(user);
+		users.remove(user.getUser());
 	}
 
 	public boolean contains(User<T> user) {
-		return users.contains(user);
+		if (user == null) return false;
+		return users.containsKey(user.getUser());
 	}
 
 	public User<T> getUser(T userPred) {
-		for (User<T> user : users) if (user.getUser().equals(userPred)) return user;
-		return null;
+		return users.get(userPred);
 	}
 
 	public int size() {
@@ -42,8 +43,15 @@ public class UserManager<T> {
 	 *
 	 * @return new HashSet of users
 	 */
-	public Set<User<?>> getUsers() {
-		return new HashSet<>(users);
+	public Map<T, User<T>> getUsers() {
+		return new HashMap<>(users);
+	}
+
+	@Override
+	public String toString() {
+		Map<T, User<T>> userMap = users;
+		List<String>    users   = userMap.values().stream().map(User::toString).toList();
+		return "users=" + users;
 	}
 
 }
