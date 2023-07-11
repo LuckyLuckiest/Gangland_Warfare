@@ -40,6 +40,8 @@ public abstract class DatabaseHandler {
 
 	public abstract void createTables() throws SQLException;
 
+	public abstract void insertInitialData() throws SQLException;
+
 	public abstract String getSchema();
 
 	public void initialize() {
@@ -54,6 +56,8 @@ public abstract class DatabaseHandler {
 						UnhandledError.FILE_CREATE_ERROR.getMessage() + ": " + exception.getMessage());
 			}
 		});
+
+		helper.runQueries(db -> insertInitialData());
 	}
 
 	public void setType(int type) {
@@ -120,8 +124,8 @@ public abstract class DatabaseHandler {
 	}
 
 	public String getSchemaName() {
-		return getSchema().lastIndexOf("\\") != -1 ? getSchema().substring(
-				getSchema().lastIndexOf("\\") + 1) : getSchema();
+		return getSchema().lastIndexOf("\\") != -1 ? getSchema().substring(getSchema().lastIndexOf("\\") + 1)
+		                                           : getSchema();
 	}
 
 }
