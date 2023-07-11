@@ -270,5 +270,37 @@
 	"resource_pack": {
 		"usage": "/glw resource",
 		"description": "Downloads the resource pack to the user."
+	},
+	"rank": {
+		"usage": "/glw rank",
+		"description": "Shows ranks help page."
+	},
+	"rank_help": {
+		"usage": "/glw rank help <page>",
+		"description": "Shows ranks help page."
+	},
+	"rank_create": {
+		"usage": "/glw rank create <name>",
+		"description": "Creates a new rank with the specified name."
+	},
+	"rank_delete": {
+		"usage": "/glw rank delete <name>",
+		"description": "Deletes the specified rank."
+	},
+	"rank_list": {
+		"usage": "/glw rank list",
+		"description": "Displays all the available ranks."
+	},
+	"rank_add_permission": {
+		"usage": "/glw rank permission add <name> <permission>",
+		"description": "Adds the permission to the specified rank."
+	},
+	"rank_remove_permission": {
+		"usage": "/glw rank permission remove <name> <permission>",
+		"description": "Removes the permission from the specified rank."
+	},
+	"rank_info": {
+		"usage": "/glw rank info <name>",
+		"description": "Gives all the information about the specified rank."
 	}
 }

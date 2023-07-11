@@ -1,60 +1,95 @@
 package me.luckyraven.rank;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import me.luckyraven.Gangland;
+import me.luckyraven.database.Database;
+import me.luckyraven.database.DatabaseHelper;
+import me.luckyraven.database.sub.RankDatabase;
 
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.sql.Types;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 
 public class RankManager {
 
-	private final List<Rank> ranks;
+	private final Map<Integer, Rank> ranks;
+	private final Gangland           gangland;
 
-	public RankManager() {
-		ranks = new LinkedList<>();
+	public RankManager(Gangland gangland) {
+		this.gangland = gangland;
+		ranks = new HashMap<>();
 	}
 
-	public RankManager(List<Rank> ranks) {
-		this.ranks = ranks;
+	public void initialize(RankDatabase rankDatabase) {
+		DatabaseHelper helper = new DatabaseHelper(gangland, rankDatabase);
+
+		helper.runQueries(database -> {
+			List<Object[]> rowsData = database.table("data").selectAll();
+
+			// data information
+			for (Object[] result : rowsData) {
+				int          id          = (int) result[0];
+				String       name        = String.valueOf(result[1]);
+				List<String> permissions = database.getList(String.valueOf(result[2]));
+
+				Rank rank = new Rank(name, permissions);
+
+				ranks.put(id, rank);
+			}
+		});
 	}
 
-	public void processRanks() {
-		JsonElement jsonElement = JsonParser.parseReader(
-				new InputStreamReader(Objects.requireNonNull(Gangland.class.getResourceAsStream("/ranks.json"))));
-		JsonObject jsonObject = jsonElement.getAsJsonObject();
-		JsonObject ind;
-		JsonArray  permsArray;
-		for (String property : jsonObject.keySet()) {
-			ind = jsonObject.get(property).getAsJsonObject();
-			permsArray = ind.get("permissions").getAsJsonArray();
-			List<String> perms = new ArrayList<>();
-			for (JsonElement elem : permsArray) perms.add(elem.getAsString());
-			add(new Rank(property, perms));
-		}
+	public void add(Rank rank) {
+		ranks.put(rank.getUsedId(), rank);
 	}
 
-	public void add(Rank element) {
-		ranks.add(element);
-	}
-
-	public void remove(Rank element) {
-		ranks.remove(element);
+	public void remove(Rank rank) {
+		ranks.remove(rank.getUsedId());
 	}
 
 	public Rank get(int id) {
-		for (Rank rank : ranks)
-			if (rank.match(id)) return rank;
+		return ranks.get(id);
+	}
+
+	public Rank get(String name) {
+		for (Rank rank : ranks.values())
+			if (rank.getName().equalsIgnoreCase(name)) return rank;
 		return null;
 	}
 
-	public List<Rank> getRanks() {
-		return new ArrayList<>(ranks);
+	public void refactorIds(RankDatabase rankDatabase) {
+		DatabaseHelper helper = new DatabaseHelper(gangland, rankDatabase);
+
+		helper.runQueries(database -> {
+			Database config = database.table("data");
+
+			List<Object[]> rowsData = config.selectAll();
+
+			// remove all the data from the table
+			config.delete("", "");
+
+			int tempId = 1;
+			for (Object[] result : rowsData) {
+				int id = (int) result[0];
+
+				Rank rank = ranks.get(id);
+				ranks.remove(rank.getUsedId());
+
+				rank.setUsedId(tempId);
+				ranks.put(tempId, rank);
+
+				database.insert(new String[]{"id", "name", "permissions"},
+				                new Object[]{rank.getUsedId(), rank.getName(), rank.getPermissions()},
+				                new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR});
+
+				tempId++;
+			}
+		});
+	}
+
+	public Map<Integer, Rank> getRanks() {
+		return Collections.unmodifiableMap(ranks);
 	}
 
 	@Override

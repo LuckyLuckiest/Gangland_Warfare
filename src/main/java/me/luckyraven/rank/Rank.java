@@ -1,49 +1,45 @@
 package me.luckyraven.rank;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class Rank {
 
-	private static int ID = 0;
-
+	@Setter
+	private static int          ID = 0;
 	@Getter
-	private final int    usedId;
+	private final  String       name;
+	private final  List<String> permissions;
 	@Getter
-	private final String name;
-
-	private final List<String> permissions;
-
-	{
-		this.usedId = ID++;
-	}
+	@Setter
+	private        int          usedId;
 
 	public Rank(String name) {
-		this.name = name;
-		this.permissions = new LinkedList<>();
+		this(name, new ArrayList<>());
 	}
 
 	public Rank(String name, List<String> permissions) {
 		this.name = name;
 		this.permissions = permissions;
+		this.usedId = ++ID;
 	}
 
 	public boolean match(int id) {
 		return id == usedId;
 	}
 
-	public void add(String permission) {
+	public void addPermission(String permission) {
 		permissions.add(permission);
 	}
 
-	public void remove(String permission) {
+	public void removePermission(String permission) {
 		permissions.remove(permission);
 	}
 
-	public boolean contain(String permission) {
+	public boolean contains(String permission) {
 		return permissions.contains(permission);
 	}
 
@@ -53,7 +49,7 @@ public class Rank {
 
 	@Override
 	public String toString() {
-		return String.format("RankInfo{id=%d, name='%s', permissions=%s}", usedId, name, permissions);
+		return String.format("[id=%d, name='%s', permissions=%s]", usedId, name, permissions);
 	}
 
 }
