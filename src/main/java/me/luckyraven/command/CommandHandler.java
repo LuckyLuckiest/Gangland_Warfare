@@ -21,7 +21,7 @@ import java.util.*;
 public abstract class CommandHandler implements TabCompleter {
 
 	@Getter
-	private static final Map<String, Tree<Argument>> treeMap = new HashMap<>();
+	private static final Map<String, CommandHandler> treeMap = new HashMap<>();
 
 	@Getter
 	private final String         label;
@@ -61,7 +61,7 @@ public abstract class CommandHandler implements TabCompleter {
 
 		initializeArguments(gangland);
 
-		treeMap.put(this.label, this.argumentTree);
+		treeMap.put(this.label, this);
 	}
 
 	protected abstract void onExecute(Argument argument, CommandSender commandSender, String[] arguments);
@@ -91,10 +91,13 @@ public abstract class CommandHandler implements TabCompleter {
 	@Override
 	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
 	                                  @NotNull String[] args) {
+		List<CommandHandler> commandHandlers = new ArrayList<>();
+		for (CommandHandler handler : treeMap.values())
+			if (sender.hasPermission(handler.getPermission())) commandHandlers.add(handler);
 
-		if (args.length == 1) return treeMap.keySet().stream().toList();
+		if (args.length == 1) return commandHandlers.stream().map(CommandHandler::getLabel).toList();
 
-		Argument arg = findArgument(args);
+		Argument arg = findArgument(args, commandHandlers);
 
 		if (arg == null) return null;
 
@@ -102,9 +105,9 @@ public abstract class CommandHandler implements TabCompleter {
 				List::stream).toList();
 	}
 
-	private Argument findArgument(String[] args) {
+	private Argument findArgument(String[] args, List<CommandHandler> commandHandlers) {
 		Argument[] modifiedArg = new Argument[args.length];
-		for (Tree<Argument> tree : treeMap.values()) {
+		for (Tree<Argument> tree : commandHandlers.stream().map(CommandHandler::getArgumentTree).toList()) {
 			for (int i = 0; i < args.length; i++) {
 				String arg = args[i];
 				if (arg.toLowerCase().contains("confirm")) modifiedArg[i] = new ConfirmArgument(tree);
