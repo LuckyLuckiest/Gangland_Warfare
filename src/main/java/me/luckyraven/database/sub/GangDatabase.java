@@ -1,7 +1,9 @@
 package me.luckyraven.database.sub;
 
+import me.luckyraven.account.gang.Gang;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.file.FileManager;
+import me.luckyraven.rank.Rank;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -9,9 +11,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.sql.Types;
+import java.util.*;
 
 public class GangDatabase extends DatabaseHandler {
 
@@ -64,7 +65,6 @@ public class GangDatabase extends DatabaseHandler {
 
 	@Override
 	public void createTables() throws SQLException {
-		// For time use this method 'julianday('now')'
 		getDatabase().table("data").createTable("id INT PRIMARY KEY NOT NULL", "name CHAR(16) NOT NULL",
 		                                        "description TEXT NOT NULL", "members LONGTEXT NOT NULL",
 		                                        "bounty DOUBLE NOT NULL", "alias LONGTEXT NOT NULL",
@@ -73,8 +73,44 @@ public class GangDatabase extends DatabaseHandler {
 	}
 
 	@Override
+	public void insertInitialData() throws SQLException {
+
+	}
+
+	@Override
 	public String getSchema() {
 		return schema;
+	}
+
+	public void updateDataTable(Gang gang) throws SQLException {
+		List<String> tempMembers = new ArrayList<>();
+
+		for (Map.Entry<UUID, Rank> entry : gang.getGroup().entrySet())
+			tempMembers.add(entry.getKey() + ":" + entry.getValue().getName());
+
+		String members = getDatabase().createList(tempMembers);
+
+		List<String> tempAlias = new ArrayList<>();
+
+		for (Gang alias : gang.getAlias())
+			tempAlias.add(String.valueOf(alias.getId()));
+
+		String alias = getDatabase().createList(tempAlias);
+
+		getDatabase().table("data").update("id = ?", new Object[]{gang.getId()}, new int[]{Types.INTEGER},
+		                                   new String[]{"name", "description", "members", "bounty", "alias", "created"},
+		                                   new Object[]{
+				                                   gang.getName(), gang.getDescription(), members, gang.getBounty(),
+				                                   alias, gang.getCreated()
+		                                   }, new int[]{
+						Types.CHAR, Types.VARCHAR, Types.VARCHAR, Types.DOUBLE, Types.VARCHAR, Types.DATE
+				});
+	}
+
+	public void updateAccountTable(Gang gang) throws SQLException {
+		getDatabase().table("account").update("id = ?", new Object[]{gang.getId()}, new int[]{Types.INTEGER},
+		                                      new String[]{"balance"}, new Object[]{gang.getBalance()},
+		                                      new int[]{Types.DOUBLE});
 	}
 
 }
