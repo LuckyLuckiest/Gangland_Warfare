@@ -9,6 +9,7 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.database.sub.GangDatabase;
+import me.luckyraven.database.sub.RankDatabase;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
@@ -75,17 +76,23 @@ public final class Initializer {
 		databases();
 		databaseManager.initializeDatabases();
 
-		// Gang manager
-		gangManager = new GangManager(plugin);
-		for (DatabaseHandler handler : databaseManager.getDatabases())
-			if (handler instanceof GangDatabase) {
-				gangManager.initialize((GangDatabase) handler);
-				break;
-			}
+		if (plugin instanceof Gangland gangland) {
+			// Rank manager
+			rankManager = new RankManager(gangland);
+			for (DatabaseHandler handler : databaseManager.getDatabases())
+				if (handler instanceof RankDatabase rankDatabase) {
+					rankManager.initialize(rankDatabase);
+					break;
+				}
 
-		// Ranks
-		rankManager = new RankManager();
-		rankManager.processRanks();
+			// Gang manager
+			gangManager = new GangManager(gangland);
+			for (DatabaseHandler handler : databaseManager.getDatabases())
+				if (handler instanceof GangDatabase gangDatabase) {
+					gangManager.initialize(gangDatabase);
+					break;
+				}
+		}
 
 		// Events
 		listenerManager = new ListenerManager(plugin);
@@ -95,7 +102,7 @@ public final class Initializer {
 		// Commands
 		if (plugin instanceof Gangland gangland) {
 			commandManager = new CommandManager(gangland);
-			commands();
+			commands(gangland);
 		}
 
 	}
@@ -107,22 +114,24 @@ public final class Initializer {
 		}
 	}
 
-	private void commands() {
+	private void commands(Gangland gangland) {
 		// initial command
 		Objects.requireNonNull(plugin.getCommand("glw")).setExecutor(commandManager);
 
 		// sub commands
-		if (plugin instanceof Gangland gangland) {
-			commandManager.addCommand(new SCBalance(gangland));
-			commandManager.addCommand(new SCDebug(gangland));
-			commandManager.addCommand(new SCGang(gangland));
-			commandManager.addCommand(new SCBank(gangland));
-			commandManager.addCommand(new SCEconomy(gangland));
-			commandManager.addCommand(new SCTesting(gangland));
+		// default plugin commands
+		commandManager.addCommand(new SCBalance(gangland));
+		commandManager.addCommand(new SCGang(gangland));
+		commandManager.addCommand(new SCBank(gangland));
+		commandManager.addCommand(new SCEconomy(gangland));
+		commandManager.addCommand(new SCRank(gangland));
 
-			// Needs to be the final command to add all the help info
-			commandManager.addCommand(new SCHelp(gangland));
-		}
+		// debug commands
+		commandManager.addCommand(new SCDebug(gangland));
+		commandManager.addCommand(new SCTesting(gangland));
+
+		// Needs to be the final command to add all the help info
+		commandManager.addCommand(new SCHelp(gangland));
 
 		Objects.requireNonNull(plugin.getCommand("glw")).setTabCompleter(
 				commandManager.getCommands().values().stream().toList().get(0));
@@ -163,6 +172,10 @@ public final class Initializer {
 		GangDatabase gangDatabase = new GangDatabase(plugin, fileManager);
 		gangDatabase.setType(type);
 		databaseManager.addDatabase(gangDatabase);
+
+		RankDatabase rankDatabase = new RankDatabase(plugin, fileManager);
+		rankDatabase.setType(type);
+		databaseManager.addDatabase(rankDatabase);
 	}
 
 }
