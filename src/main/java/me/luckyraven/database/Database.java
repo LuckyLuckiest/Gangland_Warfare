@@ -417,7 +417,7 @@ public interface Database {
 	 * @return a list of data
 	 */
 	default List<String> getList(String list) {
-		return Arrays.asList(list.split(","));
+		return new ArrayList(Arrays.stream(list.split(",")).toList());
 	}
 
 }
