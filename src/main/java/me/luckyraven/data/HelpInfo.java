@@ -4,6 +4,7 @@ import me.luckyraven.command.data.CommandInformation;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static me.luckyraven.command.CommandManager.commandDesign;
@@ -50,7 +51,7 @@ public final class HelpInfo {
 	}
 
 	public List<CommandInformation> getList() {
-		return new ArrayList<>(list);
+		return Collections.unmodifiableList(list);
 	}
 
 	/**
