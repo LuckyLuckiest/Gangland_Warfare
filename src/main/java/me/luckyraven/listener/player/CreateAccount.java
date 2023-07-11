@@ -51,7 +51,7 @@ public final class CreateAccount implements Listener {
 		userManager.add(user);
 	}
 
-	private void initializeUserData(User<Player> user, DatabaseHelper helper) {
+	public void initializeUserData(User<Player> user, DatabaseHelper helper) {
 		helper.runQueries(database -> {
 			try {
 				// <--------------- Account Info --------------->
