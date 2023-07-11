@@ -19,11 +19,13 @@ public class Argument implements Cloneable {
 	@Getter
 	private final Node<Argument> node;
 	private final Tree<Argument> tree;
+	@Getter
+	private final String         permission;
 
 	private final TriConsumer<Argument, CommandSender, String[]> action;
-
+	@Getter
 	@Setter
-	private BiConsumer<CommandSender, String[]> executeOnPass;
+	private       BiConsumer<CommandSender, String[]>            executeOnPass;
 
 	public Argument(String argument, Tree<Argument> tree) {
 		this(argument, tree, null);
@@ -34,9 +36,20 @@ public class Argument implements Cloneable {
 	}
 
 	public Argument(String[] arguments, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action) {
+		this(arguments, tree, action, "");
+	}
+
+	public Argument(String argument, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action,
+	                String permission) {
+		this(new String[]{argument}, tree, action, permission);
+	}
+
+	public Argument(String[] arguments, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action,
+	                String permission) {
 		this.arguments = arguments;
 		this.tree = tree;
 		this.node = new Node<>(this);
+		this.permission = permission;
 		this.action = action;
 	}
 
@@ -44,6 +57,7 @@ public class Argument implements Cloneable {
 		this.arguments = other.arguments.clone();
 		this.node = other.getNode().clone();
 		this.tree = other.tree;
+		this.permission = other.permission;
 		this.action = other.action;
 		this.executeOnPass = other.executeOnPass;
 	}
@@ -102,6 +116,11 @@ public class Argument implements Cloneable {
 	                                            CommandSender sender, String[] args) {
 		if (node == null || index >= list.length) return null;
 		if (!node.getData().equals(list[index]) && !node.getData().equals(dummy)) return null;
+
+		if (!sender.hasPermission(node.getData().getPermission())) {
+			sender.sendMessage(MessageAddon.NOPERM_CMD);
+			return null;
+		}
 
 		node.getData().executeOnPass(sender, args);
 
