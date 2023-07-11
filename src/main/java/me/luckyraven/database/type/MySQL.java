@@ -419,8 +419,8 @@ public class MySQL implements Database {
 		Preconditions.checkNotNull(table, "Invalid table");
 
 		StringBuilder query = new StringBuilder("DELETE FROM " + table);
-		if (!column.isEmpty()) query.append(" WHERE ").append(column).append(" = ");
-		query.append(value).append(";");
+		if (!column.isEmpty()) query.append(" WHERE ").append(column).append(" = ").append(value);
+		query.append(";");
 
 		executeUpdate(query.toString());
 
