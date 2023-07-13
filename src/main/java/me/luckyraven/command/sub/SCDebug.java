@@ -23,7 +23,7 @@ public class SCDebug extends CommandHandler {
 	@Override
 	protected void initializeArguments(Gangland gangland) {
 		// user data
-		Argument userData = new Argument(new String[]{"user-data"}, getArgumentTree(), (argument, sender, args) -> {
+		Argument userData = new Argument("user-data", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
 				UserManager<Player> userManager = gangland.getInitializer().getUserManager();
 
@@ -41,8 +41,8 @@ public class SCDebug extends CommandHandler {
 		});
 
 		// gang data
-		Argument gangData = new Argument(new String[]{"gang-data"}, getArgumentTree(), (argument, sender, args) -> {
-			for (Gang gang : gangland.getInitializer().getGangManager().getGangs())
+		Argument gangData = new Argument("gang-data", getArgumentTree(), (argument, sender, args) -> {
+			for (Gang gang : gangland.getInitializer().getGangManager().getGangs().values())
 				sender.sendMessage(gang.toString());
 		});
 
