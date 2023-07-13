@@ -58,11 +58,33 @@ Database:
       # Will use SQLite if unable to connect to MySQL
       Failed_MySQL: true
 
+# +---------------+#
+# | Gang Settings |#
+# +---------------+#
+Gang:
+   Use: true
+   # Allow duplicate gang names.
+   Name_Duplicates: false
+   # Hierarchy of ranks
+   Rank:
+      # The initial rank
+      Head: "member"
+      # The final rank
+      Tail: "owner"
+   Account:
+      # When a player create a gang account his account will have the amount of money that you set.
+      First_Balance: 0
+      # When a player wants to create a gang account they are required to pay a fee.
+      # Set it to 0, and the requirement is lifted.
+      Create_Cost: 100_000
+      # Sets the maximum gang money.
+      Maximum_Balance: 100_000_000_000
+
 # +------------------+ #
 # | Economy Settings | #
 # +------------------+ #
 
-# [Money_Symbol] used as {MONEY_SYMBOL} prefix.
+# [Money_Symbol] used as %money_symbol% prefix.
 Money_Symbol: '$'
 Balance_Format:
    Use: true
@@ -82,14 +104,3 @@ Bank_Account:
    Create_Cost: 5_000
    # [Maximum_Balance] is the maximum amount of money the bank can have.
    Maximum_Balance: 1_000_000_000
-# [Gang_Account] is for the player account.
-Gang_Account:
-   # When a player create a gang account his account will have the amount of money that you set.
-   First_Balance: 0
-   # When a player wants to create a gang account they are required to pay a fee.
-   # Set it to 0, and the requirement is lifted.
-   Create_Cost: 100_000
-   # Set the maximum gang money.
-   Maximum_Balance: 100_000_000_000
-   # Allow duplicate names.
-   Name_Duplicates: false
