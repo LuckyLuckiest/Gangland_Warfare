@@ -17,6 +17,8 @@ public final class ChatUtil {
 	}
 
 	public static String color(String message) {
+		Objects.requireNonNull(message);
+		message = message.replace("%n%", "\n").replace("%money_symbol%", SettingAddon.getMoneySymbol());
 		return ChatColor.translateAlternateColorCodes('&', message);
 	}
 
@@ -63,26 +65,18 @@ public final class ChatUtil {
 	}
 
 	public static String prefixMessage(String message) {
-		Objects.requireNonNull(message);
-		message = message.replace("%money_symbol%", SettingAddon.getMoneySymbol());
 		return color(MessageAddon.PREFIX + message);
 	}
 
 	public static String commandMessage(String message) {
-		Objects.requireNonNull(message);
-		message = message.replace("%money_symbol%", SettingAddon.getMoneySymbol());
 		return color(MessageAddon.COMMAND_PREFIX + message);
 	}
 
 	public static String errorMessage(String message) {
-		Objects.requireNonNull(message);
-		message = message.replace("%money_symbol%", SettingAddon.getMoneySymbol());
 		return color(MessageAddon.ERROR_PREFIX + message);
 	}
 
 	public static String informationMessage(String message) {
-		Objects.requireNonNull(message);
-		message = message.replace("%money_symbol%", SettingAddon.getMoneySymbol());
 		return color(MessageAddon.INFORMATION_PREFIX + message);
 	}
 
