@@ -84,6 +84,13 @@ public interface Database {
 	void testConnection(String url) throws SQLException;
 
 	/**
+	 * Checks if the class handles coonection pool.
+	 *
+	 * @return boolean value.
+	 */
+	boolean handlesConnectionPool();
+
+	/**
 	 * Creates a table for the specified file.
 	 *
 	 * @param values gets an array of string values and executes a query.

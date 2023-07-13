@@ -184,6 +184,11 @@ public class MySQL implements Database {
 	}
 
 	@Override
+	public boolean handlesConnectionPool() {
+		return true;
+	}
+
+	@Override
 	public void createTable(String... values) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
 		Preconditions.checkNotNull(table, "Invalid table");
