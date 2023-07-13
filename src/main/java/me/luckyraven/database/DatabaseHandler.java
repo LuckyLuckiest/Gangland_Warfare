@@ -52,8 +52,7 @@ public abstract class DatabaseHandler {
 				createSchema();
 				createTables();
 			} catch (IOException exception) {
-				plugin.getLogger().warning(
-						UnhandledError.FILE_CREATE_ERROR.getMessage() + ": " + exception.getMessage());
+				plugin.getLogger().warning(UnhandledError.FILE_CREATE_ERROR + ": " + exception.getMessage());
 			}
 		});
 
@@ -91,14 +90,13 @@ public abstract class DatabaseHandler {
 				} catch (SQLException exception) {
 					this.database = null;
 
-					plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+					plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 
 					throw new RuntimeException(exception.getMessage());
 				} catch (IOException exception) {
 					this.database = null;
 
-					plugin.getLogger().warning(
-							UnhandledError.FILE_CREATE_ERROR.getMessage() + ": " + exception.getMessage());
+					plugin.getLogger().warning(UnhandledError.FILE_CREATE_ERROR + ": " + exception.getMessage());
 
 					throw new RuntimeException(exception.getMessage());
 				}
@@ -119,7 +117,7 @@ public abstract class DatabaseHandler {
 			}
 
 		} catch (IOException exception) {
-			plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR + ": " + exception.getMessage());
 		}
 	}
 

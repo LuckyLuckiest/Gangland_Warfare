@@ -20,9 +20,9 @@ import java.util.Objects;
 
 public class RankDatabase extends DatabaseHandler {
 
-	private final JavaPlugin plugin;
+	private final JavaPlugin  plugin;
 	private final FileManager fileManager;
-	private       String schema;
+	private       String      schema;
 
 	public RankDatabase(JavaPlugin plugin, FileManager fileManager) {
 		super(plugin, fileManager);
@@ -47,8 +47,7 @@ public class RankDatabase extends DatabaseHandler {
 					for (String key : Objects.requireNonNull(section).getKeys(false))
 						map.put(key.toLowerCase(), section.get(key));
 				} catch (IOException exception) {
-					plugin.getLogger().warning(
-							UnhandledError.FILE_LOADER_ERROR.getMessage() + ": " + exception.getMessage());
+					plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR + ": " + exception.getMessage());
 				}
 			}
 			case DatabaseHandler.SQLITE -> this.schema = "database\\" + this.schema;

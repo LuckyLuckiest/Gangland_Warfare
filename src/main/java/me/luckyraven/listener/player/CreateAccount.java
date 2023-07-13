@@ -124,7 +124,7 @@ public final class CreateAccount implements Listener {
 					user.setBounty((double) dataInfo[5]);
 				}
 			} catch (SQLException exception) {
-				gangland.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+				gangland.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 
 				exception.printStackTrace();
 			}

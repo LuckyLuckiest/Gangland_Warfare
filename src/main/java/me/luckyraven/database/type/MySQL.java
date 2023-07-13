@@ -110,7 +110,7 @@ public class MySQL implements Database {
 			connect();
 			tableNames.addAll(getTableNames(connection));
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 			throw exception;
 		}
 
@@ -136,7 +136,7 @@ public class MySQL implements Database {
 		try {
 			executeStatement("CREATE DATABASE IF NOT EXISTS " + name);
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 			throw exception;
 		}
 	}
@@ -146,7 +146,7 @@ public class MySQL implements Database {
 		try {
 			executeStatement("DROP DATABASE IF EXISTS " + name);
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 			throw exception;
 		}
 	}
@@ -280,7 +280,7 @@ public class MySQL implements Database {
 			preparePlaceholderStatements(statement, values, types, 0);
 			statement.executeUpdate();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 		}
 
 		return this;
@@ -330,7 +330,7 @@ public class MySQL implements Database {
 
 			return results.toArray();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 			return new Object[0];
 		}
 	}
@@ -361,7 +361,7 @@ public class MySQL implements Database {
 
 			return results;
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 			return new ArrayList<>();
 		}
 	}
@@ -398,7 +398,7 @@ public class MySQL implements Database {
 
 			statement.executeUpdate();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 		}
 
 		return this;
@@ -412,7 +412,7 @@ public class MySQL implements Database {
 				return ((Number) result[0]).intValue();
 			}
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 		}
 		return 0;
 	}
@@ -440,7 +440,7 @@ public class MySQL implements Database {
 		try (PreparedStatement query = connection.prepareStatement(statement)) {
 			resultSet = query.executeQuery();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 			throw exception;
 		}
 
@@ -454,7 +454,7 @@ public class MySQL implements Database {
 		try (PreparedStatement query = connection.prepareStatement(statement)) {
 			query.executeUpdate();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 			throw exception;
 		}
 	}
@@ -466,7 +466,7 @@ public class MySQL implements Database {
 		try (PreparedStatement query = connection.prepareStatement(statement)) {
 			query.execute();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 			throw exception;
 		}
 	}
@@ -486,7 +486,7 @@ public class MySQL implements Database {
 		try (ResultSet resultSet = connection.getMetaData().getColumns(database, null, table, null)) {
 			while (resultSet.next()) columns.add(resultSet.getString("COLUMN_NAME"));
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 			throw exception;
 		}
 

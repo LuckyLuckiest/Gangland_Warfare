@@ -28,6 +28,18 @@ public final class CommandManager implements CommandExecutor {
 		this.commands = new HashMap<>();
 	}
 
+	public static String commandDesign(String command) {
+		return color(command.replace("/glw", "&6/glw&7")
+		                    .replace("<", "&5<&7")
+		                    .replace(">", "&5>&7")
+		                    .replace(" - ", " &c-&7 ")
+		                    .replaceAll("[\\[\\],]", ""));
+	}
+
+	public static String setArguments(String arguments, String command) {
+		return color(arguments + commandDesign(command));
+	}
+
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
 	                         @NotNull String[] args) {
@@ -60,7 +72,7 @@ public final class CommandManager implements CommandExecutor {
 				return false;
 			}
 		} catch (Exception exception) {
-			gangland.getLogger().warning(UnhandledError.COMMANDS_ERROR.getMessage() + ": " + exception.getMessage());
+			gangland.getLogger().warning(UnhandledError.COMMANDS_ERROR + ": " + exception.getMessage());
 			exception.printStackTrace();
 		}
 		return true;
@@ -96,7 +108,6 @@ public final class CommandManager implements CommandExecutor {
 		}
 	}
 
-
 	public void show(CommandSender cs) {
 		PluginDescriptionFile pdf = gangland.getDescription();
 		cs.sendMessage("");
@@ -113,18 +124,6 @@ public final class CommandManager implements CommandExecutor {
 		cs.sendMessage(color("&7Version&8: &b" + pdf.getVersion()));
 		cs.sendMessage(color("&7Type &6/glw help &7to start."));
 		cs.sendMessage("");
-	}
-
-	public static String commandDesign(String command) {
-		return color(command.replace("/glw", "&6/glw&7")
-		                    .replace("<", "&5<&7")
-		                    .replace(">", "&5>&7")
-		                    .replace(" - ", " &c-&7 ")
-		                    .replaceAll("[\\[\\],]", ""));
-	}
-
-	public static String setArguments(String arguments, String command) {
-		return color(arguments + commandDesign(command));
 	}
 
 }

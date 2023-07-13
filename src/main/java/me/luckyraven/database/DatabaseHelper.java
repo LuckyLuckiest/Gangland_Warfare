@@ -47,11 +47,11 @@ public class DatabaseHelper {
 			queryRunnable.run(database);
 		} catch (SQLException exception) {
 			exceptionCaught = true;
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 			exception.printStackTrace();
 		} catch (Exception exception) {
 			exceptionCaught = true;
-			plugin.getLogger().warning(UnhandledError.ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.ERROR + ": " + exception.getMessage());
 			exception.printStackTrace();
 		} finally {
 			if (exceptionCaught) rollbackConnection();
@@ -69,8 +69,7 @@ public class DatabaseHelper {
 			}
 		} catch (SQLException exception) {
 			plugin.getLogger().warning(
-					UnhandledError.SQL_ERROR.getMessage() + ": Failed to rollback database connection, " +
-							exception.getMessage());
+					UnhandledError.SQL_ERROR + ": Failed to rollback database connection, " + exception.getMessage());
 		}
 	}
 

@@ -109,7 +109,7 @@ public class SQLite implements Database {
 		try {
 			file.create(false);
 		} catch (IOException exception) {
-			plugin.getLogger().warning(UnhandledError.FILE_CREATE_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.FILE_CREATE_ERROR + ": " + exception.getMessage());
 			throw exception;
 		}
 	}
@@ -254,7 +254,7 @@ public class SQLite implements Database {
 			preparePlaceholderStatements(statement, values, types, 0);
 			statement.executeUpdate();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 		}
 
 		return this;
@@ -304,7 +304,7 @@ public class SQLite implements Database {
 
 			return results.toArray();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 			return new Object[0];
 		}
 	}
@@ -335,7 +335,7 @@ public class SQLite implements Database {
 
 			return results;
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 			return new ArrayList<>();
 		}
 	}
@@ -372,7 +372,7 @@ public class SQLite implements Database {
 
 			statement.executeUpdate();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 		}
 
 		return this;
@@ -386,7 +386,7 @@ public class SQLite implements Database {
 				return ((Number) result[0]).intValue();
 			}
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 		}
 		return 0;
 	}
@@ -414,7 +414,7 @@ public class SQLite implements Database {
 		try (PreparedStatement query = connection.prepareStatement(statement)) {
 			resultSet = query.executeQuery();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 			throw exception;
 		}
 
@@ -428,7 +428,7 @@ public class SQLite implements Database {
 		try (PreparedStatement query = connection.prepareStatement(statement)) {
 			query.executeUpdate();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 			throw exception;
 		}
 	}
@@ -440,7 +440,7 @@ public class SQLite implements Database {
 		try (PreparedStatement query = connection.prepareStatement(statement)) {
 			query.execute();
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 			throw exception;
 		}
 	}
@@ -462,7 +462,7 @@ public class SQLite implements Database {
 		     ResultSet resultSet = statement.executeQuery()) {
 			while (resultSet.next()) columns.add(resultSet.getString("name"));
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 			throw exception;
 		}
 

@@ -43,8 +43,7 @@ public class GangDatabase extends DatabaseHandler {
 					for (String key : Objects.requireNonNull(section).getKeys(false))
 						map.put(key.toLowerCase(), section.get(key));
 				} catch (IOException exception) {
-					plugin.getLogger().warning(
-							UnhandledError.FILE_LOADER_ERROR.getMessage() + ": " + exception.getMessage());
+					plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR + ": " + exception.getMessage());
 				}
 			}
 			case DatabaseHandler.SQLITE -> this.schema = "database\\" + this.schema;

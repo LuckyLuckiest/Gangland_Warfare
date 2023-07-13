@@ -26,8 +26,8 @@ public class FileManager {
 			file.create(true);
 		} catch (IOException exception) {
 			plugin.getLogger().warning(
-					String.format(UnhandledError.FILE_CREATE_ERROR.getMessage() + " %s.%s: %s", file.getName(),
-					              file.getFileType(), exception.getMessage()));
+					String.format(UnhandledError.FILE_CREATE_ERROR + " %s.%s: %s", file.getName(), file.getFileType(),
+					              exception.getMessage()));
 		}
 	}
 

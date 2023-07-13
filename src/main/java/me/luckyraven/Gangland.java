@@ -53,7 +53,7 @@ public final class Gangland extends JavaPlugin {
 			}
 
 		if (createAccount == null) {
-			getLogger().warning(UnhandledError.ERROR.getMessage() + ": Unable to find CreateAccount class.");
+			getLogger().warning(UnhandledError.ERROR + ": Unable to find CreateAccount class.");
 			return;
 		}
 
@@ -65,7 +65,7 @@ public final class Gangland extends JavaPlugin {
 			}
 
 		if (databaseHandler == null) {
-			getLogger().warning(UnhandledError.ERROR.getMessage() + ": Unable to find UserDatabase class.");
+			getLogger().warning(UnhandledError.ERROR + ": Unable to find UserDatabase class.");
 			return;
 		}
 

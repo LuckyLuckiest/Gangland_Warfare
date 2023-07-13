@@ -162,7 +162,7 @@ public final class Initializer {
 				case "sqlite" -> type = DatabaseHandler.SQLITE;
 			}
 		} catch (IOException exception) {
-			plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR + ": " + exception.getMessage());
 		}
 
 		UserDatabase userDatabase = new UserDatabase(plugin, fileManager);

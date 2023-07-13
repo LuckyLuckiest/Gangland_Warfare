@@ -87,9 +87,8 @@ public class FileHandler {
 		if (fileConfiguration != null && file != null) try {
 			fileConfiguration.save(file);
 		} catch (IOException exception) {
-			plugin.getLogger().warning(
-					String.format(UnhandledError.FILE_SAVE_ERROR.getMessage() + " %s to %s: %s", name, file,
-					              exception.getMessage()));
+			plugin.getLogger().warning(String.format(UnhandledError.FILE_SAVE_ERROR + " %s to %s: %s", name, file,
+			                                         exception.getMessage()));
 		}
 	}
 
@@ -105,15 +104,15 @@ public class FileHandler {
 				Files.move(file.toPath(), aOldFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 			} catch (IOException exception) {
 				plugin.getLogger().warning(
-						String.format(UnhandledError.FILE_EDIT_ERROR.getMessage() + " %s to %s: %s", aOldFile.getName(),
+						String.format(UnhandledError.FILE_EDIT_ERROR + " %s to %s: %s", aOldFile.getName(),
 						              file.getName(), exception.getMessage()));
 			}
 		} else try {
 			Files.move(file.toPath(), oldFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException exception) {
 			plugin.getLogger().warning(
-					String.format(UnhandledError.FILE_EDIT_ERROR.getMessage() + " %s to %s: %s", oldFile.getName(),
-					              file.getName(), exception.getMessage()));
+					String.format(UnhandledError.FILE_EDIT_ERROR + " %s to %s: %s", oldFile.getName(), file.getName(),
+					              exception.getMessage()));
 		}
 
 		plugin.getLogger().info(String.format("%s%s is an old build or corrupted, creating a new one", name, fileType));

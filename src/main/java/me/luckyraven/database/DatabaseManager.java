@@ -50,7 +50,7 @@ public class DatabaseManager {
 			}
 
 		} catch (IOException exception) {
-			plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR.getMessage() + ": " + exception.getMessage());
+			plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR + ": " + exception.getMessage());
 		}
 	}
 
