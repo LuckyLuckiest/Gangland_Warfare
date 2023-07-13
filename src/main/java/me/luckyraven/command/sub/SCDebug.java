@@ -1,11 +1,13 @@
 package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.account.Account;
 import me.luckyraven.account.gang.Gang;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.rank.Rank;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -29,12 +31,10 @@ public class SCDebug extends CommandHandler {
 
 				User<Player> user = userManager.getUser(player);
 
-				player.sendMessage(user.getLinkedAccounts().toString());
-				player.sendMessage(user.getUser().toString());
-				player.sendMessage(String.valueOf(user.getBalance()));
-				player.sendMessage(String.valueOf(user.getKillDeathRatio()));
-				player.sendMessage(String.valueOf(user.getGangId()));
+				for (Account<?, ?> account : user.getLinkedAccounts())
+					sender.sendMessage(account.toString());
 
+				player.sendMessage(user.toString());
 			} else {
 				sender.sendMessage("Does nothing yet!");
 			}
@@ -46,9 +46,16 @@ public class SCDebug extends CommandHandler {
 				sender.sendMessage(gang.toString());
 		});
 
+		// rank data
+		Argument rankData = new Argument("rank-data", getArgumentTree(), (argument, sender, args) -> {
+			for (Rank rank : gangland.getInitializer().getRankManager().getRanks().values())
+				sender.sendMessage(rank.toString());
+		});
+
 		// add sub arguments
 		getArgument().addSubArgument(userData);
 		getArgument().addSubArgument(gangData);
+		getArgument().addSubArgument(rankData);
 	}
 
 	@Override
