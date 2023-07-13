@@ -15,7 +15,7 @@
 	- wanted level
 	- Database system
 
-0.0.3-DEV:
+0.0.3-DEV: (DONE)
 	- loading player data
 	- saving player data using database helper
 	- loading gang data
@@ -23,16 +23,19 @@
 	- Economy, depositing and withdrawing commands
 
 0.0.4-DEV:
+	- creating and managing ranks using commands
+	- handling ranks in a database
+	- ranks hierarchy to easily promote and demote users
 	- creating gang data using commands
 	- saving gang data using database helper
-	- when using mysql, save the data into sqlite (using backup)
 
 0.0.5-DEV:
+	- when using mysql, save the data into sqlite (using backup)
 	- bounty
-	- Economy system (implement vault dependency)
 	- phone
 
 0.0.6-DEV:
+	- Economy system (implement vault dependency)
     - level system
     - ranks system
 
