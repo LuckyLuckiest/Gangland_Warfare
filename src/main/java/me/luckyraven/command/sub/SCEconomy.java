@@ -48,19 +48,20 @@ public class SCEconomy extends CommandHandler {
 		// glw economy deposit
 		Argument deposit = new Argument(new String[]{"deposit", "add"}, getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<specifier>"));
-		});
+		}, getPermission() + ".deposit");
 
 
 		// glw economy withdraw
 		Argument withdraw = new Argument(new String[]{"withdraw", "take"}, getArgumentTree(),
 		                                 (argument, sender, args) -> sender.sendMessage(
 				                                 CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING,
-				                                                             "<specifier>")));
+				                                                             "<specifier>")),
+		                                 getPermission() + ".withdraw");
 
 		// glw economy set
 		Argument set = new Argument("set", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<specifier>"));
-		});
+		}, getPermission() + ".set");
 
 		Argument amount = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			String specifier = args[2].startsWith("@") ? args[2].toLowerCase() : "@" + args[2];
@@ -103,7 +104,7 @@ public class SCEconomy extends CommandHandler {
 					moneyInDatabase(player, value);
 				}
 			} catch (NumberFormatException exception) {
-				sender.sendMessage(MessageAddon.MUSTBE_NUMBER);
+				sender.sendMessage(MessageAddon.MUSTBE_NUMBER.replace("%command%", args[3]));
 			}
 		});
 
@@ -140,7 +141,7 @@ public class SCEconomy extends CommandHandler {
 				moneyInDatabase(player, 0D);
 				user.getUser().sendMessage(MessageAddon.PLAYER_MONEY_RESET);
 			}
-		});
+		}, getPermission() + ".reset");
 
 		reset.setExecuteOnPass(
 				(sender, args) -> collectSpecifiers(specifiers, sender, args.length > 2 ? args[2] : null));
