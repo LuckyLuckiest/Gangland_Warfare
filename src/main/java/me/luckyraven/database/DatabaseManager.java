@@ -12,7 +12,7 @@ import java.util.List;
 public class DatabaseManager {
 
 	private final List<DatabaseHandler> databases;
-	private final JavaPlugin plugin;
+	private final JavaPlugin            plugin;
 
 	public DatabaseManager(JavaPlugin plugin) {
 		this.plugin = plugin;
@@ -55,11 +55,13 @@ public class DatabaseManager {
 	}
 
 	public void closeConnections(FileManager fileManager) {
-		for (DatabaseHandler database : databases)
-			if (database.getDatabase() != null && database.getDatabase().getConnection() != null){
-				startBackup(plugin, fileManager, database.getSchemaName());
-				database.getDatabase().disconnect();
+		for (DatabaseHandler databaseHandler : databases) {
+			Database database = databaseHandler.getDatabase();
+			if (database != null && database.getConnection() != null) {
+				startBackup(plugin, fileManager, databaseHandler.getSchemaName());
+				database.disconnect();
 			}
+		}
 	}
 
 	public List<DatabaseHandler> getDatabases() {
