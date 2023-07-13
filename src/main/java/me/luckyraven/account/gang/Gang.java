@@ -3,10 +3,12 @@ package me.luckyraven.account.gang;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.account.Account;
+import me.luckyraven.rank.Rank;
 
+import java.time.Instant;
 import java.util.*;
 
-public class Gang extends Account<Integer, Set<UUID>> {
+public class Gang extends Account<Integer, Map<UUID, Rank>> {
 
 	@Getter
 	private final Set<Gang> alias;
@@ -19,18 +21,18 @@ public class Gang extends Account<Integer, Set<UUID>> {
 	private double bounty, balance;
 	@Getter
 	@Setter
-	private Date created;
+	private long created;
 
 	public Gang() {
 		super(null, null);
 
 		Random random = new Random();
-		setKey(random.nextInt(999999));
-		setValue(new HashSet<>());
+		setKey(random.nextInt(999_999));
+		setValue(new HashMap<>());
 
 		this.name = null;
 		this.description = "Conquering the hood";
-		this.created = new Date();
+		this.created = Instant.now().toEpochMilli();
 		this.bounty = 0D;
 		this.balance = 0D;
 		this.alias = new HashSet<>();
@@ -39,15 +41,15 @@ public class Gang extends Account<Integer, Set<UUID>> {
 	public Gang(int id) {
 		this();
 		setKey(id);
-		setValue(new HashSet<>());
+		setValue(new HashMap<>());
 	}
 
-	public Gang(int id, Set<UUID> users) {
+	public Gang(int id, Map<UUID, Rank> users) {
 		this(id);
 		setValue(users);
 	}
 
-	public Gang(int id, Set<UUID> users, String name) {
+	public Gang(int id, Map<UUID, Rank> users, String name) {
 		this(id, users);
 		this.name = name;
 	}
@@ -60,12 +62,24 @@ public class Gang extends Account<Integer, Set<UUID>> {
 		setKey(id);
 	}
 
-	public Set<UUID> getGroup() {
+	public Map<UUID, Rank> getGroup() {
 		return super.getValue();
 	}
 
-	public void setGroup(Set<UUID> users) {
+	public void setGroup(Map<UUID, Rank> users) {
 		setValue(users);
+	}
+
+	public Date getDateCreated() {
+		return new Date(created);
+	}
+
+	public Rank getUserRank(UUID user) {
+		return getGroup().get(user);
+	}
+
+	public void setUserRank(UUID user, Rank rank) {
+		getGroup().replace(user, rank);
 	}
 
 	@Override
