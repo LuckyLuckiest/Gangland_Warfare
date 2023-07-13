@@ -55,8 +55,7 @@ public class DatabaseHelper {
 			exception.printStackTrace();
 		} finally {
 			if (exceptionCaught) rollbackConnection();
-			if (database.getConnection() != null && databaseHandler.getType() != DatabaseHandler.MYSQL)
-				database.disconnect();
+			if (database.getConnection() != null && !database.handlesConnectionPool()) database.disconnect();
 		}
 	}
 
