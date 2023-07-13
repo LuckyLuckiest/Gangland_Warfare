@@ -10,6 +10,7 @@ import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.RankDatabase;
+import me.luckyraven.datastructure.Node;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.rank.Rank;
 import me.luckyraven.rank.RankManager;
@@ -51,7 +52,8 @@ public class SCRank extends CommandHandler {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<name>"));
 		}, getPermission() + ".create");
 
-		HashMap<CommandSender, AtomicReference<String>> createRankName = new HashMap<>();
+		HashMap<CommandSender, AtomicReference<String>> createRankName  = new HashMap<>();
+		HashMap<CommandSender, CountdownTimer>          createRankTimer = new HashMap<>();
 
 		ConfirmArgument confirmCreate = new ConfirmArgument(getArgumentTree(), (argument, sender, args) -> {
 			Rank rank = new Rank(createRankName.get(sender).get());
@@ -62,9 +64,11 @@ public class SCRank extends CommandHandler {
 
 					helper.runQueries(database -> {
 						String permissions = database.createList(rank.getPermissions());
-						database.table("data").insert(new String[]{"id", "name", "permissions"},
-						                              new Object[]{rank.getUsedId(), rank.getName(), permissions},
-						                              new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR});
+						database.table("data").insert(new String[]{"id", "name", "permissions", "parent"},
+						                              new Object[]{rank.getUsedId(), rank.getName(), permissions, ""},
+						                              new int[]{
+								                              Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR
+						                              });
 					});
 
 					break;
@@ -73,6 +77,12 @@ public class SCRank extends CommandHandler {
 			sender.sendMessage(MessageAddon.RANK_CREATED.replace("%rank%", rank.getName()));
 			rankManager.add(rank);
 			createRankName.remove(sender);
+
+			CountdownTimer timer = createRankTimer.get(sender);
+			if (timer != null) {
+				if (!timer.isCancelled()) timer.cancel();
+				createRankTimer.remove(sender);
+			}
 		});
 
 		create.addSubArgument(confirmCreate);
@@ -100,6 +110,7 @@ public class SCRank extends CommandHandler {
 			});
 
 			timer.start();
+			createRankTimer.put(sender, timer);
 		});
 
 		create.addSubArgument(createName);
@@ -110,7 +121,8 @@ public class SCRank extends CommandHandler {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<name>"));
 		});
 
-		HashMap<CommandSender, AtomicReference<String>> deleteRankName = new HashMap<>();
+		HashMap<CommandSender, AtomicReference<String>> deleteRankName  = new HashMap<>();
+		HashMap<CommandSender, CountdownTimer>          deleteRankTimer = new HashMap<>();
 
 		ConfirmArgument confirmDelete = new ConfirmArgument(getArgumentTree(), (argument, sender, args) -> {
 			Rank rank = rankManager.get(deleteRankName.get(sender).get());
@@ -120,17 +132,25 @@ public class SCRank extends CommandHandler {
 					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
 					helper.runQueries(database -> {
+						rankManager.remove(rank);
 						database.table("data").delete("id", String.valueOf(rank.getUsedId()));
 					});
 
 					// important to refactor the ids, so they are in the correct id order
+					sender.sendMessage(ChatUtil.informationMessage("Refactoring IDs..."));
 					rankManager.refactorIds(rankDatabase);
+					sender.sendMessage(ChatUtil.informationMessage("Refactoring done"));
 					break;
 				}
 
 			sender.sendMessage(MessageAddon.RANK_REMOVED.replace("%rank%", rank.getName()));
-			rankManager.remove(rank);
 			deleteRankName.remove(sender);
+
+			CountdownTimer timer = deleteRankTimer.get(sender);
+			if (timer != null) {
+				if (!timer.isCancelled()) timer.cancel();
+				deleteRankTimer.remove(sender);
+			}
 		});
 
 		delete.addSubArgument(confirmDelete);
@@ -158,6 +178,7 @@ public class SCRank extends CommandHandler {
 			});
 
 			timer.start();
+			deleteRankTimer.put(sender, timer);
 		});
 
 		delete.addSubArgument(deleteName);
@@ -261,24 +282,120 @@ public class SCRank extends CommandHandler {
 				return;
 			}
 
-			StringBuilder builder = new StringBuilder();
-
+			StringBuilder permBuilder = new StringBuilder();
 			for (int i = 0; i < rank.getPermissions().size(); i++) {
-				builder.append(rank.getPermissions().get(i));
-				if (i < rank.getPermissions().size() - 1) builder.append(", ");
+				permBuilder.append(rank.getPermissions().get(i));
+				if (i < rank.getPermissions().size() - 1) permBuilder.append(", ");
 			}
 
-			sender.sendMessage(MessageAddon.RANK_INFO_PRIMARY.replace("%rank%", rank.getName()));
-			sender.sendMessage(MessageAddon.RANK_INFO_SECONDARY.replace("%permissions%", builder.toString()));
+			StringBuilder parentBuilder = new StringBuilder();
+			for (int i = 0; i < rank.getNode().getChildren().size(); i++) {
+				parentBuilder.append(rank.getNode().getChildren().get(i).getData().getName());
+				if (i < rank.getNode().getChildren().size() - 1) parentBuilder.append(", ");
+			}
+
+			sender.sendMessage(MessageAddon.RANK_INFO_PRIMARY.replace("%rank%", rank.getName())
+			                                                 .replace("%id%", String.valueOf(rank.getUsedId()))
+			                                                 .replace("%parent%", parentBuilder.toString()));
+			sender.sendMessage(MessageAddon.RANK_INFO_SECONDARY.replace("%permissions%", permBuilder.toString()));
 		});
 
 		info.addSubArgument(infoName);
+
+		// glw rank parent <add/remove> <name> <parent>
+		Argument parent = new Argument("parent", getArgumentTree(), (argument, sender, args) -> {
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<add/remove>"));
+		});
+
+		Argument parentStr = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+			Rank rank = rankManager.get(args[3]);
+
+			if (rank == null) {
+				sender.sendMessage(MessageAddon.INVALID_RANK);
+				return;
+			}
+
+			Rank childRank = rankManager.get(args[4]);
+
+			if (childRank == null) {
+				sender.sendMessage(MessageAddon.INVALID_PARENT);
+				return;
+			}
+
+			switch (args[2].toLowerCase()) {
+				case "add" -> {
+					if (rank.getNode().getChildren().contains(childRank.getNode())) {
+						sender.sendMessage(MessageAddon.RANK_EXISTS);
+						return;
+					}
+					rank.getNode().add(childRank.getNode());
+					sender.sendMessage(MessageAddon.RANK_PARENT_ADDED.replace("%parent%", childRank.getName())
+					                                                 .replace("%rank%", rank.getName()));
+				}
+
+				case "remove" -> {
+					if (!rank.getNode().getChildren().contains(childRank.getNode())) {
+						sender.sendMessage(MessageAddon.INVALID_PARENT);
+						return;
+					}
+					rank.getNode().remove(childRank.getNode());
+					sender.sendMessage(MessageAddon.RANK_PARENT_REMOVED.replace("%parent%", childRank.getName())
+					                                                   .replace("%rank%", rank.getName()));
+				}
+			}
+
+			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+				if (handler instanceof RankDatabase rankDatabase) {
+					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+					helper.runQueries(database -> {
+						rankDatabase.updateDataTable(rank);
+					});
+					break;
+				}
+		});
+
+		Argument parentName = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<parent>"));
+		});
+
+		parentName.addSubArgument(parentStr);
+
+		Argument addParent = new Argument("add", getArgumentTree(), (argument, sender, args) -> {
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<name>"));
+		});
+
+		Argument removeParent = new Argument("remove", getArgumentTree(), (argument, sender, args) -> {
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<name>"));
+		});
+
+		parent.addSubArgument(addParent);
+		parent.addSubArgument(removeParent);
+
+		addParent.addSubArgument(parentName);
+		removeParent.addSubArgument(parentName);
+
+		// glw rank traverse
+		Argument traverseTree = new Argument("traverse", getArgumentTree(), (argument, sender, args) -> {
+			StringBuilder builder = new StringBuilder();
+			List<Rank>    ranks   = rankManager.getRankTree().getAllNodes().stream().map(Node::getData).toList();
+
+			for (int i = 0; i < ranks.size(); i++) {
+				builder.append(ranks.get(i).getName());
+				if (i < ranks.size() - 1) builder.append(" -> ");
+			}
+
+			sender.sendMessage(builder.toString());
+		});
+
+		getArgument().addSubArgument(traverseTree);
 
 		getArgument().addSubArgument(create);
 		getArgument().addSubArgument(delete);
 		getArgument().addSubArgument(list);
 		getArgument().addSubArgument(permission);
 		getArgument().addSubArgument(info);
+		getArgument().addSubArgument(parent);
 	}
 
 	@Override
