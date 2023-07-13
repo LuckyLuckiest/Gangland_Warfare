@@ -2,7 +2,9 @@ package me.luckyraven.database.sub;
 
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHandler;
+import me.luckyraven.datastructure.Node;
 import me.luckyraven.file.FileManager;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.rank.Rank;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.configuration.ConfigurationSection;
@@ -18,9 +20,9 @@ import java.util.Objects;
 
 public class RankDatabase extends DatabaseHandler {
 
-	private final JavaPlugin  plugin;
+	private final JavaPlugin plugin;
 	private final FileManager fileManager;
-	private       String      schema;
+	private       String schema;
 
 	public RankDatabase(JavaPlugin plugin, FileManager fileManager) {
 		super(plugin, fileManager);
@@ -68,22 +70,29 @@ public class RankDatabase extends DatabaseHandler {
 	@Override
 	public void createTables() throws SQLException {
 		getDatabase().table("data").createTable("id INT PRIMARY KEY NOT NULL", "name TEXT NOT NULL",
-		                                        "permissions LONGTEXT NOT NULL");
+		                                        "permissions LONGTEXT NOT NULL", "parent LONGTEXT");
 	}
 
 	@Override
 	public void insertInitialData() throws SQLException {
 		Database dataTable = getDatabase().table("data");
 
-		Object[] ownerRow = dataTable.select("id = ?", new Object[]{1}, new int[]{Types.INTEGER}, new String[]{"*"});
-		if (ownerRow.length == 0) dataTable.insert(new String[]{"id", "name", "permissions"},
-		                                           new Object[]{1, "owner", ""},
-		                                           new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR});
+		String head = SettingAddon.getGangRankHead(), tail = SettingAddon.getGangRankTail();
 
-		Object[] memberRow = dataTable.select("id = ?", new Object[]{2}, new int[]{Types.INTEGER}, new String[]{"*"});
-		if (memberRow.length == 0) dataTable.insert(new String[]{"id", "name", "permissions"},
-		                                            new Object[]{2, "member", ""},
-		                                            new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR});
+		Object[] tailRow = dataTable.select("name = ?", new Object[]{tail}, new int[]{Types.VARCHAR},
+		                                    new String[]{"*"});
+		int rows = dataTable.totalRows() + 1;
+		if (tailRow.length == 0) dataTable.insert(new String[]{"id", "name", "permissions", "parent"},
+		                                          new Object[]{rows, tail, "", ""}, new int[]{
+						Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR
+				});
+
+		Object[] headRow = dataTable.select("name = ?", new Object[]{head}, new int[]{Types.VARCHAR},
+		                                    new String[]{"*"});
+		if (headRow.length == 0) dataTable.insert(new String[]{"id", "name", "permissions", "parent"},
+		                                          new Object[]{rows + 1, head, "", tail}, new int[]{
+						Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR
+				});
 	}
 
 	@Override
@@ -93,10 +102,16 @@ public class RankDatabase extends DatabaseHandler {
 
 	public void updateDataTable(Rank rank) throws SQLException {
 		String permissions = getDatabase().createList(rank.getPermissions());
+		String children = getDatabase().createList(rank.getNode()
+		                                               .getChildren()
+		                                               .stream()
+		                                               .map(Node::getData)
+		                                               .map(Rank::getName)
+		                                               .toList());
 		getDatabase().table("data").update("id = ?", new Object[]{rank.getUsedId()}, new int[]{Types.INTEGER},
-		                                   new String[]{"name", "permissions"},
-		                                   new Object[]{rank.getName(), permissions},
-		                                   new int[]{Types.VARCHAR, Types.VARCHAR});
+		                                   new String[]{"name", "permissions", "parent"},
+		                                   new Object[]{rank.getName(), permissions, children},
+		                                   new int[]{Types.VARCHAR, Types.VARCHAR, Types.VARCHAR});
 	}
 
 }
