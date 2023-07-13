@@ -2,6 +2,7 @@ package me.luckyraven.datastructure;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +17,7 @@ public class Tree<E> {
 		this.root = null;
 	}
 
-	public void add(E obj) {
+	public void add(@NotNull E obj) {
 		Node<E> newNode = new Node<>(obj);
 		if (root == null) root = newNode;
 		else root.add(newNode);
