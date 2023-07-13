@@ -131,10 +131,14 @@ Commands:
          Player_Money_Take: "&a%money_symbol%%amount% &7has been withdrawn from your bank account into your account."
          Target_Money_Take: "&a%money_symbol%%amount% &7has been withdrawn from &6%target%'s &7bank account."
    Gang:
-      Player_Create_Gang: "You have created a gang account."
-      Player_Remove_Gang: "You have removed your gang account."
-      Created_Gang: "Created a new gang &8[&a%gang%&8]&7."
-      Removed_Gang: "Your gang account &8[&a%gang%&8] &7has been removed."
+      Create:
+         Created_Gang: "Created a new gang &8[&a%gang%&8]&7."
+         Gang_Fee: "The fee for creating a new gang account is $a%money_symbol%%amount%&7."
+         Confirm_Timer: "You have &a%timer%&7 seconds to confirm the account."
+      Remove:
+         Removed_Gang: "Your gang account &8[&a%gang%&8] &7has been removed."
+         Confirm_Timer: "You have &a%timer%&7 seconds to confirm deleting the account."
+      Have_Gang: "You already have a gang."
       Balance:
          Player_Balance: "Your gang balance is: &b%money_symbol%%balance%"
          Target_Balance: "&6%target%'s &7 gang balance is: &b%money_symbol%%balance%"
@@ -143,6 +147,25 @@ Commands:
          Target_Money_Add: "&a%money_symbol%%amount% &7has been added to &6%target%'s gang &7account."
          Player_Money_Take: "&a%money_symbol%%amount% &7has been taken from your bank account."
          Target_Money_Take: "&a%money_symbol%%amount% &7has been taken from &6%target%'s bank &7account."
+   Rank:
+      Create:
+         Created_Rank: "Created a new rank &8[&a%rank%&8]&7."
+         Confirm_Timer: "You have &a%timer%&7 seconds to confirm the rank."
+      Remove:
+         Removed_Rank: "Rank &8[&a%rank%&8]&7 has been removed successfully."
+         Confirm_Timer: "You have &a%timer%&7 seconds to confirm deleting the rank."
+      Rank_Exists: "This rank is already created!"
+      Permission:
+         Add: "You have added &8[&a%permission%&8]&7 to &8[&a%rank%&8]&7 rank."
+         Remove: "You have removed &8[&a%permission%&8]&7 from &8[&a%rank%&8]&7 rank."
+      List:
+         Primary: "All the ranks:"
+         Secondary: "%ranks%"
+      Info:
+         Primary: "&8[&a%rank%&8]&7 information%n%&7ID&8: &b%id%%n%&7Parent&8: &b%parent%"
+         Secondary: "&7Permissions&8:%n%&7%permissions%"
+      Parent:
+         Added_Parent: "Added &8[&e%parent%&8]&7 to &8[&a%rank%&8]&7."
 
 Errors:
    Prefix: "&4Error&7: "
@@ -170,6 +193,10 @@ Errors:
    Gang:
       Must_Create_Gang: "Must create a Gang to continue."
       Cannot_Create_Gang: "Insufficient funds to create a &cgang account&7."
+   Rank:
+      Invalid_Rank: "This rank doesn't exist."
+      Invalid_Permission: "This permission doesn't exist."
+      Invalid_Parent: "This parent doesn't exist."
    Dont_Use_Symbol: "Please don't use symbol."
    Cannot_Remove_Non_Existing_Spawn: "Can't remove spawn that doesn't exist."
    Cannot_Remove_Non_Existing_Warp: "Can't remove warp that doesn't exist."
