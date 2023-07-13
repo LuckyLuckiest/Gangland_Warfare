@@ -21,9 +21,11 @@ public class SettingAddon {
 	private static double bankInitialBalance, bankCreateFee, bankMaxBalance;
 
 	@Getter
-	private static double gangInitialBalance, gangCreateFee, gangMaxBalance;
+	private static boolean gangUse, gangNameDuplicates;
 	@Getter
-	private static boolean gangNameDuplicates;
+	private static String gangRankHead, gangRankTail;
+	@Getter
+	private static double gangInitialBalance, gangCreateFee, gangMaxBalance;
 
 	public SettingAddon(FileManager fileManager) {
 		settings = fileManager.getFile("settings").getFileConfiguration();
@@ -43,10 +45,13 @@ public class SettingAddon {
 		bankCreateFee = settings.getDouble("Bank_Account.Create_Cost");
 		bankMaxBalance = settings.getDouble("Bank_Account.Maximum_Balance");
 
-		gangInitialBalance = settings.getDouble("Gang_Account.First_Balance");
-		gangCreateFee = settings.getDouble("Gang_Account.Create_Cost");
-		gangMaxBalance = settings.getDouble("Gang_Account.Maximum_Balance");
-		gangNameDuplicates = settings.getBoolean("Gang_Account.Name_Duplicates");
+		gangUse = settings.getBoolean("Gang.Use");
+		gangNameDuplicates = settings.getBoolean("Gang.Name_Duplicates");
+		gangRankHead = settings.getString("Gang.Rank.Head");
+		gangRankTail = settings.getString("Gang.Rank.Tail");
+		gangInitialBalance = settings.getDouble("Gang.Account.First_Balance");
+		gangCreateFee = settings.getDouble("Gang.Account.Create_Cost");
+		gangMaxBalance = settings.getDouble("Gang.Account.Maximum_Balance");
 	}
 
 }
