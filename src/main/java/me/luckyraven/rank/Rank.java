@@ -2,6 +2,7 @@ package me.luckyraven.rank;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.datastructure.Node;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +15,8 @@ public class Rank {
 	private final  String       name;
 	private final  List<String> permissions;
 	@Getter
+	private final  Node<Rank>   node;
+	@Getter
 	@Setter
 	private        int          usedId;
 
@@ -24,6 +27,7 @@ public class Rank {
 	public Rank(String name, List<String> permissions) {
 		this.name = name;
 		this.permissions = permissions;
+		this.node = new Node<>(this);
 		this.usedId = ++ID;
 	}
 
