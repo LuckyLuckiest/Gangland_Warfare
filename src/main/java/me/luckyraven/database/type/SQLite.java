@@ -1,27 +1,30 @@
 package me.luckyraven.database.type;
 
 import com.google.common.base.Preconditions;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import me.luckyraven.database.Database;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.sqlite.SQLiteConfig;
-import org.sqlite.SQLiteDataSource;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class SQLite implements Database {
 
-	private final JavaPlugin       plugin;
-	private final List<String>     tableNames;
-	private       Connection       connection;
-	private       String           table;
-	private       SQLiteDataSource dataSource;
+	private final JavaPlugin   plugin;
+	private final List<String> tableNames;
+
+	private Connection connection;
+	private String     table;
+
+	private HikariDataSource dataSource;
 
 	public SQLite(JavaPlugin plugin) {
 		this.plugin = plugin;
@@ -31,30 +34,56 @@ public class SQLite implements Database {
 
 	@Override
 	public void initialize(Map<String, Object> credentials, String schema) throws SQLException {
-		SQLiteConfig config = new SQLiteConfig();
-		dataSource = new SQLiteDataSource(config);
+		HikariConfig config = new HikariConfig();
 
-		dataSource.setUrl("jdbc:sqlite:" + schema);
+		String url = "jdbc:sqlite:" + schema;
 
-		try {
-			connect();
-			tableNames.addAll(getTableNames(connection));
+		config.setJdbcUrl(url);
 
-			if (dataSource.getConnection() == null) throw new SQLException("Failed to establish a valid connection");
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
-			throw exception;
-		} finally {
-			disconnect();
-		}
+		config.setDriverClassName("org.sqlite.JDBC");
+
+		config.addDataSourceProperty("cachePrepStmts", "true");
+		config.addDataSourceProperty("prepStmtCacheSize", "250");
+		config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+
+		config.setMaximumPoolSize(10);
+		config.setMinimumIdle(5);
+		config.setMaxLifetime(Duration.ofMinutes(30).toMillis());
+		config.setConnectionTimeout(Duration.ofSeconds(30).toMillis());
+
+//			testConnection(schema);
+
+		this.dataSource = new HikariDataSource(config);
+
 	}
 
 	@Override
 	public boolean switchSchema(String schema) throws SQLException {
 		if (!schemaExists(schema)) throw new SQLException("Schema specified doesn't exist");
-		if (connection == null) throw new SQLException("No connection established");
+		if (dataSource == null) throw new SQLException("DataSource is null");
 
-		connection.setSchema(schema);
+		HikariConfig config = new HikariConfig();
+
+		String url = "jdbc:sqlite:" + schema;
+
+		config.setJdbcUrl(url);
+
+		config.setDriverClassName("org.sqlite.JDBC");
+
+		config.addDataSourceProperty("cachePrepStmts", "true");
+		config.addDataSourceProperty("prepStmtCacheSize", "250");
+		config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+
+		config.setMaximumPoolSize(10);
+		config.setMinimumIdle(5);
+		config.setMaxLifetime(Duration.ofMinutes(30).toMillis());
+		config.setConnectionTimeout(Duration.ofSeconds(30).toMillis());
+
+//			testConnection(schema);
+
+		disconnect();
+
+		this.dataSource = new HikariDataSource(config);
 
 		return true;
 	}
@@ -102,7 +131,6 @@ public class SQLite implements Database {
 	@Override
 	public void connect() throws SQLException {
 		Preconditions.checkNotNull(dataSource, "DataSource can't be null");
-
 		if (connection != null) throw new SQLException("There is a connection not closed");
 
 		connection = dataSource.getConnection();
@@ -113,31 +141,25 @@ public class SQLite implements Database {
 		Preconditions.checkNotNull(dataSource, "DataSource can't be null");
 		Preconditions.checkNotNull(connection, "No connection established");
 
-		try {
-			connection.close();
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR.getMessage() + ": " + exception.getMessage());
-		}
-
+		dataSource.close();
 		connection = null;
 		table = null;
 	}
 
+	@Deprecated
 	@Override
 	public void testConnection(String url) throws SQLException {
 		File file = new File(url);
 
 		if (!file.exists()) throw new SQLException("Database not found!");
 
-		try {
-			Class.forName("org.sqlite.JDBC");
+		Connection conn = DriverManager.getConnection(url);
+		conn.close();
+	}
 
-			Connection conn = DriverManager.getConnection(url);
-
-			conn.close();
-		} catch (ClassNotFoundException exception) {
-			throw new RuntimeException(exception);
-		}
+	@Override
+	public boolean handlesConnectionPool() {
+		return true;
 	}
 
 	@Override
