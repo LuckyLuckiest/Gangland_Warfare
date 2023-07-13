@@ -27,14 +27,15 @@ public class MessageAddon {
 	public static String NOPERM_CMD, NOPERM_KIT, NOPERM_SPAWN, NOPERM_WARP, NOPERM_SIGN, NOPERM_OTHER, NOT_PLAYER, NOT_ONLINE, INVALID_PLAYER, CANNOT_NULL, MUSTBE_NUMBER, INV_FULL, CORRECT_SPAWN, CANNOT_EXCEED_MAX, CANNOT_TAKE_LESSTHANZERO, CANNOT_TAKE_MORETHANBALANCE, CANNOT_SET_SAMEBALANCE, CANNOT_CREATE_BANK, CANNOT_CREATE_GANG, MUST_CREATE_BANK, MUST_CREATE_GANG, DONT_USE_SYMBOL, CANNOT_REMOVE_NONEXIST_SPAWN, CANNOT_REMOVE_NONEXIST_WARP, CANNOT_REMOVE_NONEXIST_KIT, CANNOT_FIND_WORLD;
 	public static String PLAYER_BALANCE, TARGET_BALANCE, PLAYER_MONEY_ADD, PLAYER_MONEY_TAKE, PLAYER_MONEY_SET, PLAYER_MONEY_RESET, TARGET_MONEY_ADD, TARGET_MONEY_TAKE, TARGET_MONEY_SET, TARGET_MONEY_RESET;
 	// Bank Message
-	public static String BANK_PLAYER_CREATE, BANK_CREATE_FEE, BANK_CREATED, BANK_CREATE_CONFIRM;
+	public static String BANK_CREATE_FEE, BANK_CREATED, BANK_CREATE_CONFIRM;
 	public static String BANK_REMOVED, BANK_REMOVE_CONFIRM, HAVE_BANK;
 	// Bank Balance Message
 	public static String BANK_PLAYER_BALANCE, BANK_TARGET_BALANCE;
 	// Bank Money Message
 	public static String BANK_PLAYER_MONEY_ADD, BANK_PLAYER_MONEY_TAKE, BANK_TARGET_MONEY_ADD, BANK_TARGET_MONEY_TAKE;
 	// Gang Message
-	public static String GANG_PLAYER_CREATE, GANG_PLAYER_REMOVE, CREATED_GANG, REMOVED_GANG;
+	public static String GANG_CREATED, GANG_CREATE_FEE, GANG_CREATE_CONFIRM;
+	public static String GANG_REMOVED, GANG_REMOVE_CONFIRM, HAVE_GANG;
 	// Gang Balance Message
 	public static String GANG_PLAYER_BALANCE, GANG_TARGET_BALANCE;
 	// Gang Money Message
@@ -51,6 +52,15 @@ public class MessageAddon {
 	public static String NOT_WANTED, PAID_WANTEDLEVEL;
 	// Weapons Command Message
 	public static String NOT_VALID_AMMO, NOT_VALID_WEAPON, NOT_VALID_AMOUNT, GIVE_AMMO, GIVE_WEAPON, KILLED_PLAYER_DEATH_MESSAGE, GUN_NOT_INV, GUN_BOUGHT, GUN_SOLD, AMMO_NOT_INV, AMMO_BOUGHT, AMMO_SOLD, NOT_ENOUGH_AMMO;
+	// Ranks Command Message
+	public static String RANK_EXISTS;
+	public static String RANK_CREATED, RANK_CREATE_CONFIRM;
+	public static String RANK_REMOVED, RANK_REMOVE_CONFIRM;
+	public static String RANK_PERMISSION_ADD, RANK_PERMISSION_REMOVE;
+	public static String RANK_LIST_PRIMARY, RANK_LIST_SECONDARY;
+	public static String RANK_INFO_PRIMARY, RANK_INFO_SECONDARY;
+	public static String RANK_PARENT_ADDED, RANK_PARENT_REMOVED;
+	public static String INVALID_RANK, INVALID_PERMISSION, INVALID_PARENT;
 	private static YamlConfiguration message;
 	private static FileConfiguration setting;
 
@@ -109,6 +119,33 @@ public class MessageAddon {
 		ARGUMENTS_WRONG = commandMessage(message.getString(syntax + "Wrong_Arguments"));
 		PAGE_INVALID = commandMessage(message.getString(syntax + "Page_Invalid"));
 
+		String rankCommandMessage = commandMessage + "Rank.";
+		RANK_EXISTS = commandMessage(message.getString(rankCommandMessage + "Rank_Exists"));
+
+		String rankCreate = rankCommandMessage + "Create.";
+		RANK_CREATED = commandMessage(message.getString(rankCreate + "Created_Rank"));
+		RANK_CREATE_CONFIRM = commandMessage(message.getString(rankCreate + "Confirm_Timer"));
+
+		String rankRemove = rankCommandMessage + "Remove.";
+		RANK_REMOVED = commandMessage(message.getString(rankRemove + "Removed_Rank"));
+		RANK_REMOVE_CONFIRM = commandMessage(message.getString(rankRemove + "Confirm_Timer"));
+
+		String rankPermission = rankCommandMessage + "Permission.";
+		RANK_PERMISSION_ADD = commandMessage(message.getString(rankPermission + "Add"));
+		RANK_PERMISSION_REMOVE = commandMessage(message.getString(rankPermission + "Remove"));
+
+		String rankList = rankCommandMessage + "List.";
+		RANK_LIST_PRIMARY = commandMessage(message.getString(rankList + "Primary"));
+		RANK_LIST_SECONDARY = color(message.getString(rankList + "Secondary"));
+
+		String rankInfo = rankCommandMessage + "Info.";
+		RANK_INFO_PRIMARY = commandMessage(message.getString(rankInfo + "Primary"));
+		RANK_INFO_SECONDARY = color(message.getString(rankInfo + "Secondary"));
+
+		String rankParent = rankCommandMessage + "Parent.";
+		RANK_PARENT_ADDED = commandMessage(message.getString(rankParent + "Added_Parent"));
+		RANK_PARENT_REMOVED = commandMessage(message.getString(rankParent + "Removed_Parent"));
+
 		String errorMessage = "Errors.";
 		ERROR_PREFIX = color(Objects.requireNonNull(message.getString(errorMessage + "Prefix")));
 
@@ -139,6 +176,11 @@ public class MessageAddon {
 		String errorGang = errorMessage + "Gang.";
 		MUST_CREATE_GANG = errorMessage(message.getString(errorGang + "Must_Create_Gang"));
 		CANNOT_CREATE_GANG = errorMessage(message.getString(errorGang + "Cannot_Create_Gang"));
+
+		String errorRank = errorMessage + "Rank.";
+		INVALID_RANK = errorMessage(message.getString(errorRank + "Invalid_Rank"));
+		INVALID_PERMISSION = errorMessage(message.getString(errorRank + "Invalid_Permission"));
+		INVALID_PARENT = errorMessage(message.getString(errorRank + "Invalid_Parent"));
 
 		DONT_USE_SYMBOL = errorMessage(message.getString(errorMessage + "Dont_Use_Symbol"));
 		CANNOT_REMOVE_NONEXIST_SPAWN = errorMessage(
@@ -186,10 +228,16 @@ public class MessageAddon {
 		BANK_TARGET_MONEY_TAKE = commandMessage(message.getString(bankMoneyMessage + "Target_Money_Take"));
 
 		String gangMessage = commandMessage + "Gang.";
-		GANG_PLAYER_CREATE = commandMessage(message.getString(gangMessage + "Player_Create_Gang"));
-		GANG_PLAYER_REMOVE = commandMessage(message.getString(gangMessage + "Player_Remove_Gang"));
-		CREATED_GANG = commandMessage(message.getString(gangMessage + "Created_Gang"));
-		REMOVED_GANG = commandMessage(message.getString(gangMessage + "Removed_Gang"));
+		String gangCreate  = gangMessage + "Create.";
+		GANG_CREATED = commandMessage(message.getString(gangCreate + "Created_Gang"));
+		GANG_CREATE_FEE = commandMessage(message.getString(gangCreate + "Gang_Fee"));
+		GANG_CREATE_CONFIRM = commandMessage(message.getString(gangCreate + "Confirm_Timer"));
+
+		String gangRemove = gangMessage + "Remove.";
+		GANG_REMOVED = commandMessage(message.getString(gangRemove + "Removed_Gang"));
+		GANG_REMOVE_CONFIRM = commandMessage(message.getString(gangRemove + "Confirm_Timer"));
+
+		HAVE_GANG = commandMessage(message.getString(gangMessage + "Have_Gang"));
 
 		String gangBalanceMessage = gangMessage + "Balance.";
 		GANG_PLAYER_BALANCE = commandMessage(message.getString(gangBalanceMessage + "Player_Balance"));
