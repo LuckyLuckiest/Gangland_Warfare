@@ -116,6 +116,10 @@ public class User<T> {
 		linkedAccounts.add(account);
 	}
 
+	public void removeAccount(Account<?, ?> account) {
+		linkedAccounts.remove(account);
+	}
+
 	public List<Account<?, ?>> getLinkedAccounts() {
 		return new ArrayList<>(linkedAccounts);
 	}
