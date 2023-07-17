@@ -184,11 +184,11 @@
 		"description": "Deletes current gang."
 	},
 	"gang_economy_deposit": {
-		"usage": "/glw gang economy deposit <amount>",
+		"usage": "/glw gang deposit <amount>",
 		"description": "Deposits the amount value to the gang."
 	},
 	"gang_economy_withdraw": {
-		"usage": "/glw gang economy withdraw <amount>",
+		"usage": "/glw gang withdraw <amount>",
 		"description": "Withdraws the amount value from the gang."
 	},
 	"gang_balance": {
@@ -216,16 +216,8 @@
 		"description": "Leaves the current gang."
 	},
 	"gang_rank_set": {
-		"usage": "/glw gang set <rank> <name>",
+		"usage": "/glw gang set <player> <rank> <name>",
 		"description": "Sets the player to the assigned rank in the gang."
-	},
-	"gang_rank_set_owner": {
-		"usage": "/glw gang set owner <name>",
-		"description": "Sets the player to the Owner of the gang."
-	},
-	"gang_rank_set_member": {
-		"usage": "/glw gang set member <name>",
-		"description": "Sets the player to a member in the gang."
 	},
 	"gang_ranks": {
 		"usage": "/glw gang ranks",
