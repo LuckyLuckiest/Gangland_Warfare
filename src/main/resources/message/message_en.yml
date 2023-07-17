@@ -76,7 +76,7 @@ Normal:
    Format:
       Date: "dd/MM/yyyy"
       Time: "hh:mm:ss a"
-   Prefix: "&8&l[&7G&fT&7A&8&l]&7 "
+   Prefix: "&8&l[&7G&fL&7W&8&l]&7 "
    Entity_Drop_Money: "&a%money_symbol%%amount% &7has been added for killing &c%entity%&7."
 
 Time_Unit:
@@ -101,17 +101,17 @@ Commands:
       Gave_Weapon: "You gave a &8[&c%weapon%&8] &7weapon to &3%player%&7."
    Economy:
       Balance:
-         Player_Balance: "Your balance is: &b%money_symbol%%balance%"
-         Target_Balance: "&6%target%'s &7balance is: &b%money_symbol%%balance%"
+         Player: "Your balance is: &b%money_symbol%%balance%"
+         Target: "&6%target%'s &7balance is: &b%money_symbol%%balance%"
       Money:
-         Player_Money_Add: "&a%money_symbol%%amount% &7has been added to your account."
-         Target_Money_Add: "&a%money_symbol%%amount% &7has been added to &6%target%'s &7account."
-         Player_Money_Take: "&a%money_symbol%%amount% &7has been taken from your account."
-         Target_Money_Take: "&a%money_symbol%%amount% &7has been taken from &6%target%'s &7account."
-         Player_Money_Set: "Your account balance has been set to &a%money_symbol%%amount%&7."
-         Target_Money_Set: "&6%target%'s &7account balance has been set to &a%money_symbol%%amount%&7."
-         Player_Money_Reset: "Your account has been reset."
-         Target_Money_Reset: "&6%target%'s &7account has been reset."
+         Player_Add: "&a%money_symbol%%amount% &7has been added to your account."
+         Player_Take: "&a%money_symbol%%amount% &7has been taken from your account."
+         Player_Set: "Your account balance has been set to &a%money_symbol%%amount%&7."
+         Player_Reset: "Your account has been reset."
+         Target_Add: "&a%money_symbol%%amount% &7has been added to &6%target%'s &7account."
+         Target_Take: "&a%money_symbol%%amount% &7has been taken from &6%target%'s &7account."
+         Target_Set: "&6%target%'s &7account balance has been set to &a%money_symbol%%amount%&7."
+         Target_Reset: "&6%target%'s &7account has been reset."
    Bank:
       Create:
          Created_Bank: "Created a new bank &8[&a%bank%&8]&7."
@@ -122,31 +122,27 @@ Commands:
          Confirm_Timer: "You have &a%timer%&7 seconds to confirm deleting the account."
       Have_Bank: "You already have a bank."
       Balance:
-         Player_Balance: "Your bank balance is: &b%money_symbol%%balance%"
-         Target_Balance: "&6%target%'s &7 bank balance is: &b%money_symbol%%balance%"
+         Player: "Your bank balance is: &b%money_symbol%%balance%"
+         Target: "&6%target%'s &7 bank balance is: &b%money_symbol%%balance%"
       Money:
-         Player_Money_Add: "&a%money_symbol%%amount% &7has been deposited from your account to your bank account."
-         Target_Money_Add: "&a%money_symbol%%amount% &7has been deposited from &6%target%'s&7 account to his bank 
+         Player_Add: "&a%money_symbol%%amount% &7has been deposited from your account to your bank account."
+         Player_Take: "&a%money_symbol%%amount% &7has been withdrawn from your bank account into your account."
+         Target_Add: "&a%money_symbol%%amount% &7has been deposited from &6%target%'s&7 account to his bank 
          account."
-         Player_Money_Take: "&a%money_symbol%%amount% &7has been withdrawn from your bank account into your account."
-         Target_Money_Take: "&a%money_symbol%%amount% &7has been withdrawn from &6%target%'s &7bank account."
+         Target_Take: "&a%money_symbol%%amount% &7has been withdrawn from &6%target%'s &7bank account."
    Gang:
       Create:
          Created_Gang: "Created a new gang &8[&a%gang%&8]&7."
-         Gang_Fee: "The fee for creating a new gang account is $a%money_symbol%%amount%&7."
+         Gang_Fee: "The fee for creating a new gang account is &a%money_symbol%%amount%&7."
          Confirm_Timer: "You have &a%timer%&7 seconds to confirm the account."
       Remove:
-         Removed_Gang: "Your gang account &8[&a%gang%&8] &7has been removed."
+         Removed_Gang: "Gang account &8[&a%gang%&8] &7has been removed."
          Confirm_Timer: "You have &a%timer%&7 seconds to confirm deleting the account."
       Have_Gang: "You already have a gang."
-      Balance:
-         Player_Balance: "Your gang balance is: &b%money_symbol%%balance%"
-         Target_Balance: "&6%target%'s &7 gang balance is: &b%money_symbol%%balance%"
+      Balance: "Gang balance is: &b%money_symbol%%balance%"
       Money:
-         Player_Money_Add: "&a%money_symbol%%amount% &7has been added to your gang account."
-         Target_Money_Add: "&a%money_symbol%%amount% &7has been added to &6%target%'s gang &7account."
-         Player_Money_Take: "&a%money_symbol%%amount% &7has been taken from your bank account."
-         Target_Money_Take: "&a%money_symbol%%amount% &7has been taken from &6%target%'s bank &7account."
+         Add: "&6%player%&7 has deposited &a%money_symbol%%amount% &7to the gang account."
+         Take: "&6%player%&7 has withdrawn &a%money_symbol%%amount% &7from the gang account."
    Rank:
       Create:
          Created_Rank: "Created a new rank &8[&a%rank%&8]&7."
@@ -165,8 +161,27 @@ Commands:
          Primary: "&8[&a%rank%&8]&7 information%n%&7ID&8: &b%id%%n%&7Parent&8: &b%parent%"
          Secondary: "&7Permissions&8:%n%&7%permissions%"
       Parent:
-         Added_Parent: "Added &8[&e%parent%&8]&7 to &8[&a%rank%&8]&7."
-         Removed_Parent: "Removed &8[&e%parent%&8]&7 from &8[&a%rank%&8]&7."
+         Add: "Added &8[&e%parent%&8]&7 to &8[&a%rank%&8]&7."
+         Remove: "Removed &8[&e%parent%&8]&7 from &8[&a%rank%&8]&7."
+   Teleportation:
+      Player:
+         Sent: "You have been sent to &a%location%&7."
+         Cooldown: "You will teleport to &a%location% &7in &b%time% &7%time_unit%&8(&7s&8)&7."
+      Target:
+         Sent: "&8%target% &7has been sent to &a%location%&7."
+         Cooldown: "&8%target% &7will teleport to &a%location% &7in &b%time% &7%time_unit%&8(&7s&8)&7."
+   Spawn:
+      Created: "Spawn &a%location% &7has been set!"
+      Removed: "Spawn &a%location% &7has been successfully removed!"
+      List:
+         Primary: "Spawn Locations&8:"
+         Secondary: "&7%list%"
+   Warp:
+      Created: "Warp &a%location% &7has been set!"
+      Removed: "Warp &a%location% &7has been successfully removed!"
+      List:
+         Primary: "Warp Locations&8:"
+         Secondary: "&7%list%"
 
 Errors:
    Prefix: "&4Error&7: "
@@ -177,66 +192,54 @@ Errors:
       Warp: "&cYou don't have permission to teleport to this warp!"
       Sign: "&cYou don't have permission to use this sign!"
       Other: "&cYou don't have permission to use this!"
-   Need_Player: "&cYou need to be a player to use this!"
-   Player_Not_Online: "&6%target% &7is not &conline&7!"
-   Invalid_Player: "&6%player% &7is not found!"
-   Cannot_Null: "Can not be &cnull&7!"
-   Must_Be_Numbers: "&a%command% &7must be numbers."
-   Inv_Full: "Your inventory is &cfull, &7please clear a &8slot &7to receive the item(s)."
-   Correct_Spawn: "You need to choose a &acorrect &5<&7type&5>&7."
-   Cannot_Exceed_Max: "You can't exceed the &cmaximum amount &7set."
-   Cannot_Take_Less_Than_Zero: "You can't take money less than &czero&7."
-   Cannot_Take_More_Than_Balance: "You can't take money more than your &cbalance&7."
-   Cannot_Set_Same_Balance: "You can't set money same to your &cbank balance&7."
+   Player:
+      Not_Player: "&cYou need to be a player to use this!"
+      Player_Not_Found: "&6%player% &7is not found!"
+      Inv_Full: "Your inventory is &cfull, &7please clear a &8slot &7to receive the item(s)."
+   Kit:
+      Not_Found: "Can't remove kit that doesn't exist."
+   Economy:
+      Cannot_Exceed_Max: "You can't exceed the &cmaximum amount &7set."
+      Cannot_Take_More_Than_Balance: "You can't take money more than your &cbalance&7."
+      Cannot_Take_Less_Than_Zero: "You can't take money less than &czero&7."
    Bank:
-      Must_Create_Bank: "Must create a Bank to continue."
-      Cannot_Create_Bank: "Insufficient funds to create a &cbank account&7."
+      Must_Create: "Must create a Bank to continue."
+      Cannot_Create: "Insufficient funds to create a &cbank account&7."
    Gang:
-      Must_Create_Gang: "Must create a Gang to continue."
-      Cannot_Create_Gang: "Insufficient funds to create a &cgang account&7."
+      Must_Create: "Must create a Gang to continue."
+      Cannot_Create: "Insufficient funds to create a &cgang account&7."
+      Not_Owner: "Not the &b%tail%&7 of the gang."
+      Duplicate_Names: "&e%gang%&7 already exists, try another name."
    Rank:
-      Invalid_Rank: "This rank doesn't exist."
+      Invalid: "This rank doesn't exist."
       Invalid_Permission: "This permission doesn't exist."
       Invalid_Parent: "This parent doesn't exist."
+   Teleportation:
+      Spawn:
+         Not_Found: "Can't remove spawn that doesn't exist."
+         Correct_Type: "You need to choose a &acorrect &5<&7type&5>&7."
+         Need_Default: "Need to set a default spawn!"
+         List_Undefined: "Spawn list is &cinvaild&7."
+      Warp:
+         Not_Found: "Can't remove warp that doesn't exist."
+         List_Undefined: "Warp list is &cinvalid&7."
+      World:
+         Not_Found: "Couldn't find that &bworld&7."
+   Cannot_Null: "Can not be &cnull&7!"
+   Must_Be_Numbers: "&a%command% &7must be numbers."
    Dont_Use_Symbol: "Please don't use symbol."
-   Cannot_Remove_Non_Existing_Spawn: "Can't remove spawn that doesn't exist."
-   Cannot_Remove_Non_Existing_Warp: "Can't remove warp that doesn't exist."
-   Cannot_Remove_Non_Existing_Kit: "Can't remove kit that doesn't exist."
-   Cannot_Find_World: "Couldn't find that &bworld&7."
 
 Information:
    Prefix: "&8&l[&7Information&8&l]&7 "
-   Drops_Cleared: "All drops have been &ccleared &7in world: &b{WORLD}"
-   Drops_Time: "Drops will clear in &a%time% &7%time_unit%&8(&7s&8)&7."
-   Uuid: "Your UUID: &a%uuid%"
-   Uuid_Target: "&b%target%'s &7UUID: &a%uuid%"
-
-Spawn:
-   Set: "Spawn &a%location% &7has been set!"
-   Not_Set: "Spawn &a%location% &7has not been set!"
-   Removed: "Spawn &a%location% &7has been successfully removed!"
-   Player_Send_To_Spawn: "You have been send to &a%location%&7."
-   Player_Send_To_Spawn_Cooldown: "You will teleport to &a%location% &7in &b%time% &7%time_unit%&8(&7s&8)&7."
-   Target_Send_To_Spawn: "&8%target% &7has been send to &a%location%&7."
-   Target_Send_To_Spawn_Cooldown: "&8%target% &7will teleport to &a%location% &7in &b%time% &7%time_unit%&8(&7s&8)&7."
-   Need_Default: "Need to set default spawn!"
-   List: "Spawn Locations&8:|&7%list%&8."
-   List_Undefined: "Spawn list is &cinvaild&7."
-
-Warp:
-   Set: "Warp &a%location% &7has been set!"
-   Not_Set: "Warp &a%location% &7has not been set!"
-   Removed: "Warp &a%location% &7has been successfully removed!"
-   Player_Send_To_Warp: "You have been send to &a%location%&7."
-   Player_Send_To_Warp_Cooldown: "You will teleport to &a%location% &7in &b%time% &7%time_unit%&8(&7s&8)&7."
-   Target_Send_To_Warp: "&8%target% &7has been send to &a%location%&7."
-   Target_Send_To_Warp_Cooldown: "&8%target% &7will teleport to &a%location% &7in &b%time% &7%time_unit%&8(&7s&8)&7."
-   List_Undefined: "Warp list is &cinvalid&7."
+   Drops_Cleared: "All drops have been &ccleared &7in world: &b%world%"
+   Drops_Timer: "Drops will clear in &a%time% &7%time_unit%&8(&7s&8)&7."
+   Gang:
+      Kicked: "You have been kicked from the gang!"
 
 Kits:
-   Received: "You have received &b{KIT} &7kit."
-   Invalid: "&b{KIT} &7is not a valid kit!"
-   Removed: "Spawn &a{KIT} &7has been successfully removed!"
+   Received: "You have received &b%kit% &7kit."
+   Removed: "Spawn &a%kit% &7has been successfully removed!"
+   Invalid: "&b%kit% &7is not a valid kit!"
    List_Undefined: "Kits list is &cinvalid&7."
 
 Safe:
@@ -250,8 +253,8 @@ Wanted_Level:
    Paid: "Paid wanted level fees, totaling &a%money_symbol%%amount%&7."
 
 Weapons:
-   Not_Valid_Ammo: "&cInvalid ammunition type &3{ARGS}&c."
-   Not_Valid_Weapon: "&cInvalid weapon type &3{ARGS}&c."
+   Not_Valid_Ammo: "&cInvalid ammunition type &3%args%&c."
+   Not_Valid_Weapon: "&cInvalid weapon type &3%args%&c."
    Not_Valid_Amount: "&cInvalid amount."
    Killed_Player: "&7%killer% &c%gun% &7%victim%"
    Gun_Not_In_Inventory: "You don't have the gun in your inventory!"
