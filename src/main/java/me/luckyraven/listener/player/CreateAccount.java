@@ -1,6 +1,7 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.type.Bank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
@@ -9,6 +10,7 @@ import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.database.sub.UserDatabase;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -41,6 +43,8 @@ public final class CreateAccount implements Listener {
 		Player       player = event.getPlayer();
 		User<Player> user   = new User<>(player);
 
+		user.setBalance(SettingAddon.getPlayerInitialBalance());
+
 		for (DatabaseHandler handler : databaseManager.getDatabases())
 			if (handler instanceof UserDatabase) {
 				initializeUserData(user, new DatabaseHelper(gangland, handler));
@@ -71,6 +75,11 @@ public final class CreateAccount implements Listener {
 				else {
 					user.setBalance((double) accountInfo[1]);
 					user.setGangId((int) accountInfo[2]);
+
+					if (user.hasGang()) {
+						Gang gang = gangland.getInitializer().getGangManager().getGang(user.getGangId());
+						user.addAccount(gang);
+					}
 				}
 
 				// <--------------- Bank Info --------------->
