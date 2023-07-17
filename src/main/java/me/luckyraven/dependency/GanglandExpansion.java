@@ -4,7 +4,7 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -46,8 +46,8 @@ public class GanglandExpansion extends PlaceholderExpansion {
 
 		if (user == null) return null;
 
-		if (params.equalsIgnoreCase("balance")) return MessageAddon.formatDouble(user.getBalance());
-		if (params.equalsIgnoreCase("bounty")) return MessageAddon.formatDouble(user.getBounty());
+		if (params.equalsIgnoreCase("balance")) return SettingAddon.formatDouble(user.getBalance());
+		if (params.equalsIgnoreCase("bounty")) return SettingAddon.formatDouble(user.getBounty());
 		if (params.equalsIgnoreCase("mob_kills")) return String.valueOf(user.getMobKills());
 		if (params.equalsIgnoreCase("kd")) return String.valueOf(user.getKillDeathRatio());
 		if (params.equalsIgnoreCase("kills")) return String.valueOf(user.getKills());
