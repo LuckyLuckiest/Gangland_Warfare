@@ -8,6 +8,7 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 public final class ChatUtil {
@@ -23,9 +24,7 @@ public final class ChatUtil {
 	}
 
 	public static String[] color(String... messages) {
-		String[] strings = messages.clone();
-		for (int i = 0; i < strings.length; ++i) strings[i] = color(strings[i]);
-		return strings;
+		return Arrays.stream(messages).map(ChatUtil::color).toArray(String[]::new);
 	}
 
 	public static void consoleColor(String message) {
@@ -62,6 +61,11 @@ public final class ChatUtil {
 
 	public static String removeSymbol(String message) {
 		return message.replaceAll("[^a-zA-Z\\d\\s]*", "");
+	}
+
+	public static String confirmCommand(String[] args) {
+		return color(
+				"&cYou need to confirm using &e/glw " + String.join(" ", args) + " confirm &cto execute the command.");
 	}
 
 	public static String prefixMessage(String message) {
