@@ -6,7 +6,9 @@ import me.luckyraven.datastructure.Node;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.permissions.Permission;
 
 import java.util.Arrays;
 import java.util.List;
@@ -51,6 +53,11 @@ public class Argument implements Cloneable {
 		this.node = new Node<>(this);
 		this.permission = permission;
 		this.action = action;
+
+		if (!permission.isEmpty()) {
+			Permission perm = new Permission(this.permission);
+			Bukkit.getPluginManager().addPermission(perm);
+		}
 	}
 
 	public Argument(Argument other) {
@@ -82,7 +89,7 @@ public class Argument implements Cloneable {
 			Argument arg = traverseList(modifiedArg, sender, args);
 
 			if (arg == null) {
-				StringBuilder invalidArg = new StringBuilder(MessageAddon.ARGUMENTS_WRONG);
+				StringBuilder invalidArg = new StringBuilder(MessageAddon.ARGUMENTS_WRONG.toString());
 				Argument      lastValid  = tree.traverseLastValid(modifiedArg);
 				if (lastValid != null) {
 					for (int i = 0; i < args.length; i++)
@@ -95,7 +102,8 @@ public class Argument implements Cloneable {
 				} else sender.sendMessage(invalidArg.append(args[0]).toString());
 			} else arg.executeArgument(sender, args);
 		} catch (Exception exception) {
-			sender.sendMessage(ChatUtil.errorMessage(exception.getMessage()));
+			sender.sendMessage(exception.getMessage());
+			exception.printStackTrace();
 		}
 	}
 
@@ -118,7 +126,7 @@ public class Argument implements Cloneable {
 		if (!node.getData().equals(list[index]) && !node.getData().equals(dummy)) return null;
 
 		if (!sender.hasPermission(node.getData().getPermission())) {
-			sender.sendMessage(MessageAddon.NOPERM_CMD);
+			sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
 			return null;
 		}
 
@@ -152,13 +160,13 @@ public class Argument implements Cloneable {
 		}
 	}
 
-	public List<String> getArgumentsString() {
-		return List.of(toString());
-	}
-
 	@Override
 	public String toString() {
 		return arguments[0];
+	}
+
+	public List<String> getArgumentsString() {
+		return List.of(toString());
 	}
 
 }
