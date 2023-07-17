@@ -230,101 +230,7 @@ public class SCGang extends CommandHandler {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
 		}, getPermission() + ".withdraw");
 
-		Argument amount = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
-				return;
-			}
-
-			try {
-				double argAmount = Double.parseDouble(args[2]);
-				Gang   gang      = gangManager.getGang(user.getGangId());
-
-				double rate   = SettingAddon.getGangContributionRate();
-				int    length = String.valueOf((int) rate).length() - 1;
-				double round  = Math.pow(10, length);
-
-				double contribution = Math.round(argAmount / rate * round) / round;
-
-				double prevValue = gang.getContribution().get(user.getUser().getUniqueId());
-
-				List<User<Player>> users = new ArrayList<>();
-
-				for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-					User<Player> onUser = userManager.getUser(onlinePlayer);
-					if (onUser.hasGang() && onUser.getGangId() == gang.getId()) users.add(onUser);
-				}
-
-				switch (args[1].toLowerCase()) {
-					case "deposit" -> {
-						if (user.getBalance() < argAmount) {
-							player.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
-							return;
-						} else if (gang.getBalance() + argAmount >= SettingAddon.getGangMaxBalance()) {
-							player.sendMessage(MessageAddon.CANNOT_EXCEED_MAXIMUM.toString());
-							return;
-						}
-
-						user.setBalance(user.getBalance() - argAmount);
-						gang.setBalance(gang.getBalance() + argAmount);
-						gang.getContribution().put(user.getUser().getUniqueId(), contribution + prevValue);
-						for (User<Player> gangUser : users) {
-							gangUser.getUser().sendMessage(MessageAddon.GANG_MONEY_DEPOSIT.toString()
-							                                                              .replace("%player%",
-							                                                                       player.getName())
-							                                                              .replace("%amount%",
-							                                                                       SettingAddon.formatDouble(
-									                                                                       argAmount)));
-						}
-						player.sendMessage(ChatUtil.color("&a+" + contribution));
-					}
-
-					case "withdraw" -> {
-						if (gang.getBalance() < argAmount) {
-							player.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
-							return;
-						}
-
-						user.setBalance(user.getBalance() + argAmount);
-						gang.setBalance(gang.getBalance() - argAmount);
-						// the user can get to negative value
-						gang.getContribution().put(user.getUser().getUniqueId(), contribution - prevValue);
-						for (User<Player> gangUser : users) {
-							gangUser.getUser().sendMessage(MessageAddon.GANG_MONEY_WITHDRAW.toString()
-							                                                               .replace("%player%",
-							                                                                        player.getName())
-							                                                               .replace("%amount%",
-							                                                                        SettingAddon.formatDouble(
-									                                                                        argAmount)));
-						}
-						player.sendMessage(ChatUtil.color("&c-" + contribution));
-					}
-				}
-
-				// update database
-				for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
-					if (handler instanceof UserDatabase userDatabase) {
-						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-						helper.runQueries(database -> userDatabase.updateAccountTable(user));
-					}
-
-					if (handler instanceof GangDatabase gangDatabase) {
-						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-						helper.runQueries(database -> {
-							gangDatabase.updateAccountTable(gang);
-							gangDatabase.updateDataTable(gang);
-						});
-					}
-				}
-			} catch (NumberFormatException exception) {
-				player.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
-			}
-		});
+		Argument amount = gangEconomyAmount(userManager, gangManager);
 
 		deposit.addSubArgument(amount);
 		withdraw.addSubArgument(amount);
@@ -716,6 +622,106 @@ public class SCGang extends CommandHandler {
 		delete.addSubArgument(confirmDelete);
 
 		return delete;
+	}
+
+	private Argument gangEconomyAmount(UserManager<Player> userManager, GangManager gangManager) {
+		Argument amount = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			try {
+				double argAmount = Double.parseDouble(args[2]);
+				Gang   gang      = gangManager.getGang(user.getGangId());
+
+				double rate   = SettingAddon.getGangContributionRate();
+				int    length = String.valueOf((int) rate).length() - 1;
+				double round  = Math.pow(10, length);
+
+				double contribution = Math.round(argAmount / rate * round) / round;
+
+				double prevValue = gang.getContribution().get(user.getUser().getUniqueId());
+
+				List<User<Player>> users = new ArrayList<>();
+
+				for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+					User<Player> onUser = userManager.getUser(onlinePlayer);
+					if (onUser.hasGang() && onUser.getGangId() == gang.getId()) users.add(onUser);
+				}
+
+				switch (args[1].toLowerCase()) {
+					case "deposit" -> {
+						if (user.getBalance() < argAmount) {
+							player.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
+							return;
+						} else if (gang.getBalance() + argAmount >= SettingAddon.getGangMaxBalance()) {
+							player.sendMessage(MessageAddon.CANNOT_EXCEED_MAXIMUM.toString());
+							return;
+						}
+
+						user.setBalance(user.getBalance() - argAmount);
+						gang.setBalance(gang.getBalance() + argAmount);
+						gang.getContribution().put(user.getUser().getUniqueId(), contribution + prevValue);
+						for (User<Player> gangUser : users) {
+							gangUser.getUser().sendMessage(MessageAddon.GANG_MONEY_DEPOSIT.toString()
+							                                                              .replace("%player%",
+							                                                                       player.getName())
+							                                                              .replace("%amount%",
+							                                                                       SettingAddon.formatDouble(
+									                                                                       argAmount)));
+						}
+						player.sendMessage(ChatUtil.color("&a+" + contribution));
+					}
+
+					case "withdraw" -> {
+						if (gang.getBalance() < argAmount) {
+							player.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
+							return;
+						}
+
+						user.setBalance(user.getBalance() + argAmount);
+						gang.setBalance(gang.getBalance() - argAmount);
+						// the user can get to negative value
+						gang.getContribution().put(user.getUser().getUniqueId(), contribution - prevValue);
+						for (User<Player> gangUser : users) {
+							gangUser.getUser().sendMessage(MessageAddon.GANG_MONEY_WITHDRAW.toString()
+							                                                               .replace("%player%",
+							                                                                        player.getName())
+							                                                               .replace("%amount%",
+							                                                                        SettingAddon.formatDouble(
+									                                                                        argAmount)));
+						}
+						player.sendMessage(ChatUtil.color("&c-" + contribution));
+					}
+				}
+
+				// update database
+				for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
+					if (handler instanceof UserDatabase userDatabase) {
+						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+						helper.runQueries(database -> userDatabase.updateAccountTable(user));
+					}
+
+					if (handler instanceof GangDatabase gangDatabase) {
+						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+						helper.runQueries(database -> {
+							gangDatabase.updateAccountTable(gang);
+							gangDatabase.updateDataTable(gang);
+						});
+					}
+				}
+			} catch (NumberFormatException exception) {
+				player.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
+			}
+		});
+
+		return amount;
 	}
 
 }
