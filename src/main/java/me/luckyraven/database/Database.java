@@ -130,7 +130,7 @@ public interface Database {
 	 * database.table("data").addColumn("bounty", "DOUBLE");
 	 *
 	 * database.disconnect();
-	 * }*</pre>
+	 * }</pre>
 	 *
 	 * @param name      name of the new column.
 	 * @param columType values that are used for this new column.
@@ -152,7 +152,7 @@ public interface Database {
 	 *                               new int[]{Types.VARCHAR, Types.DOUBLE});
 	 *
 	 * database.disconnect();
-	 * }*</pre>
+	 * }</pre>
 	 *
 	 * @param columns column names.
 	 * @param values  each value information.
@@ -177,7 +177,7 @@ public interface Database {
 	 *                                               new String[]{"name", "balance"});
 	 *
 	 * database.disconnect();
-	 * }*</pre>
+	 * }</pre>
 	 *
 	 * @param row          the specific row for a value that you need.
 	 * @param placeholders placeholder values.
@@ -212,7 +212,7 @@ public interface Database {
 	 *                               new int[]{Types.VARCHAR, Types.DOUBLE});
 	 *
 	 * database.disconnect();
-	 * }*</pre>
+	 * }</pre>
 	 *
 	 * @param row             the specific row that will be updated in the database
 	 * @param rowPlaceholders the row placeholders
