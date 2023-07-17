@@ -11,6 +11,9 @@ import me.luckyraven.rank.Rank;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SCDebug extends CommandHandler {
 
 	public SCDebug(Gangland gangland) {
@@ -53,9 +56,13 @@ public class SCDebug extends CommandHandler {
 		});
 
 		// add sub arguments
-		getArgument().addSubArgument(userData);
-		getArgument().addSubArgument(gangData);
-		getArgument().addSubArgument(rankData);
+		List<Argument> arguments = new ArrayList<>();
+
+		arguments.add(userData);
+		arguments.add(gangData);
+		arguments.add(rankData);
+
+		getArgument().addAllSubArguments(arguments);
 	}
 
 	@Override
