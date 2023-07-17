@@ -66,8 +66,8 @@ public class GangDatabase extends DatabaseHandler {
 	public void createTables() throws SQLException {
 		getDatabase().table("data").createTable("id INT PRIMARY KEY NOT NULL", "name CHAR(16) NOT NULL",
 		                                        "description TEXT NOT NULL", "members LONGTEXT NOT NULL",
-		                                        "bounty DOUBLE NOT NULL", "alias LONGTEXT NOT NULL",
-		                                        "created DATE NOT NULL");
+		                                        "contribution LONGTEXT NOT NULL", "bounty DOUBLE NOT NULL",
+		                                        "alias LONGTEXT NOT NULL", "created BIGINT NOT NULL");
 		getDatabase().table("account").createTable("id INT PRIMARY KEY NOT NULL", "balance DOUBLE NOT NULL");
 	}
 
@@ -89,6 +89,13 @@ public class GangDatabase extends DatabaseHandler {
 
 		String members = getDatabase().createList(tempMembers);
 
+		List<String> tempContributions = new ArrayList<>();
+
+		for (Map.Entry<UUID, Double> entry : gang.getContribution().entrySet())
+			tempContributions.add(entry.getKey() + ":" + entry.getValue());
+
+		String contributions = getDatabase().createList(tempContributions);
+
 		List<String> tempAlias = new ArrayList<>();
 
 		for (Gang alias : gang.getAlias())
@@ -96,14 +103,15 @@ public class GangDatabase extends DatabaseHandler {
 
 		String alias = getDatabase().createList(tempAlias);
 
-		getDatabase().table("data").update("id = ?", new Object[]{gang.getId()}, new int[]{Types.INTEGER},
-		                                   new String[]{"name", "description", "members", "bounty", "alias", "created"},
-		                                   new Object[]{
-				                                   gang.getName(), gang.getDescription(), members, gang.getBounty(),
-				                                   alias, gang.getCreated()
-		                                   }, new int[]{
-						Types.CHAR, Types.VARCHAR, Types.VARCHAR, Types.DOUBLE, Types.VARCHAR, Types.DATE
-				});
+		getDatabase().table("data").update("id = ?", new Object[]{gang.getId()}, new int[]{Types.INTEGER}, new String[]{
+				"name", "description", "members", "contribution", "bounty", "alias", "created"
+		}, new Object[]{
+				gang.getName(), gang.getDescription(), members, contributions, gang.getBounty(), alias,
+				gang.getCreated()
+		}, new int[]{
+				Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.LONGVARCHAR, Types.DOUBLE, Types.LONGVARCHAR,
+				Types.BIGINT
+		});
 	}
 
 	public void updateAccountTable(Gang gang) throws SQLException {

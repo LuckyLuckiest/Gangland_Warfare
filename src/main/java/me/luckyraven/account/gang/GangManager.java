@@ -8,8 +8,6 @@ import me.luckyraven.rank.Rank;
 import me.luckyraven.rank.RankManager;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -68,9 +66,15 @@ public class GangManager {
 						Collectors.toMap(data -> UUID.fromString(data[0]), data -> rankManager.get(data[1]),
 						                 (existingValue, newValue) -> newValue, HashMap::new));
 
-				double bounty = (double) result[4];
+				List<String> tempContributions = database.getList(String.valueOf(result[4]));
 
-				long created = ((LocalDateTime) result[6]).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+				Map<UUID, Double> contributions = tempContributions.stream().map(value -> value.split(":")).collect(
+						Collectors.toMap(data -> UUID.fromString(data[0]), data -> Double.parseDouble(data[1]),
+						                 (existingValue, newValue) -> newValue, HashMap::new));
+
+				double bounty = (double) result[5];
+
+				long created = (long) result[7];
 
 				Gang gang = gangsMap.get(id);
 
@@ -78,6 +82,7 @@ public class GangManager {
 					gang.setName(name);
 					gang.setDescription(description);
 					gang.setGroup(members);
+					gang.setContribution(contributions);
 					gang.setBounty(bounty);
 					gang.setCreated(created);
 				}
@@ -94,7 +99,7 @@ public class GangManager {
 
 			for (Object[] result : rowsData.get()) {
 				int    id        = (int) result[0];
-				String aliasList = String.valueOf(result[5]);
+				String aliasList = String.valueOf(result[6]);
 
 				if (aliasList != null && !aliasList.isEmpty()) {
 					List<String> aliases = database.getList(aliasList);

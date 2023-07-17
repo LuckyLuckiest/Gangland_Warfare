@@ -3,7 +3,9 @@ package me.luckyraven.account.gang;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.account.Account;
+import me.luckyraven.data.user.User;
 import me.luckyraven.rank.Rank;
+import org.bukkit.entity.Player;
 
 import java.time.Instant;
 import java.util.*;
@@ -15,7 +17,10 @@ public class Gang extends Account<Integer, Map<UUID, Rank>> {
 
 	@Getter
 	@Setter
-	private String name, description;
+	private Map<UUID, Double> contribution;
+	@Getter
+	@Setter
+	private String            name, description;
 	@Getter
 	@Setter
 	private double bounty, balance;
@@ -36,6 +41,7 @@ public class Gang extends Account<Integer, Map<UUID, Rank>> {
 		this.bounty = 0D;
 		this.balance = 0D;
 		this.alias = new HashSet<>();
+		this.contribution = new HashMap<>();
 	}
 
 	public Gang(int id) {
@@ -62,6 +68,20 @@ public class Gang extends Account<Integer, Map<UUID, Rank>> {
 		setKey(id);
 	}
 
+	public void addUser(User<Player> user, Rank rank) {
+		user.setGangId(this.getId());
+		setUserRank(user.getUser().getUniqueId(), rank);
+		contribution.put(user.getUser().getUniqueId(), 0D);
+		user.addAccount(this);
+	}
+
+	public void removeUser(User<Player> user) {
+		if (!getGroup().containsKey(user.getUser().getUniqueId())) return;
+		user.setGangId(-1);
+		user.removeAccount(this);
+		getGroup().remove(user.getUser().getUniqueId());
+	}
+
 	public Map<UUID, Rank> getGroup() {
 		return super.getValue();
 	}
@@ -79,7 +99,7 @@ public class Gang extends Account<Integer, Map<UUID, Rank>> {
 	}
 
 	public void setUserRank(UUID user, Rank rank) {
-		getGroup().replace(user, rank);
+		getGroup().put(user, rank);
 	}
 
 	@Override
