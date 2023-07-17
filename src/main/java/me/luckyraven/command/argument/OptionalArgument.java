@@ -3,6 +3,7 @@ package me.luckyraven.command.argument;
 import me.luckyraven.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class OptionalArgument extends Argument {
@@ -29,6 +30,7 @@ public class OptionalArgument extends Argument {
 
 	@Override
 	public List<String> getArgumentsString() {
+		if (getArguments().length > 1) return Arrays.stream(getArguments()).filter(arg -> !arg.equals("?")).toList();
 		return List.of(getArguments());
 	}
 
