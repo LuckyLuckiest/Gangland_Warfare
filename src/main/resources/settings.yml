@@ -79,6 +79,10 @@ Gang:
       Create_Cost: 100_000
       # Sets the maximum gang money.
       Maximum_Balance: 100_000_000_000
+      # The total amount of money deposit for 1 contribution.
+      # ex: deposit $1 -> 0.001
+      # ex: deposit $1000 -> 1
+      Contribution_Rate: 1_000
 
 # +------------------+ #
 # | Economy Settings | #
