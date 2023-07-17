@@ -5,7 +5,7 @@ database: true
 api-version: 1.19
 depend: [NBTAPI]
 softdepend: [PlaceholderAPI]
-author: LuckyRaven
+author: LuckyRaven10
 description: '${project.description}'
 
 commands:
