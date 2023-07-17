@@ -48,6 +48,7 @@ public abstract class CommandHandler implements TabCompleter {
 		for (String s : alias) this.alias.add(s.toLowerCase());
 
 		this.permission = "gangland.command." + label;
+
 		this.user = user;
 		this.helpInfo = new HelpInfo();
 		this.argumentTree = new Tree<>();
@@ -56,7 +57,7 @@ public abstract class CommandHandler implements TabCompleter {
 		args[0] = label;
 		System.arraycopy(alias, 0, args, 1, args.length - 1);
 
-		this.argument = new Argument(args, argumentTree, this::onExecute);
+		this.argument = new Argument(args, argumentTree, this::onExecute, this.permission);
 		this.argumentTree.add(argument.getNode());
 
 		initializeArguments(gangland);
@@ -73,13 +74,13 @@ public abstract class CommandHandler implements TabCompleter {
 	public void runExecute(CommandSender sender, String[] args) {
 		// sender has the permission
 		if (!sender.hasPermission(permission)) {
-			sender.sendMessage(MessageAddon.NOPERM_CMD);
+			sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
 			return;
 		}
 
 		// check if the user should be a Player
 		if (user && !(sender instanceof Player)) {
-			sender.sendMessage(MessageAddon.NOT_PLAYER);
+			sender.sendMessage(MessageAddon.NOT_PLAYER.toString());
 			return;
 		}
 
@@ -100,6 +101,8 @@ public abstract class CommandHandler implements TabCompleter {
 		Argument arg = findArgument(args, commandHandlers);
 
 		if (arg == null) return null;
+
+		// TODO if there was an optional argument then no need to get the last valid because it will never be equal
 
 		return arg.getNode().getChildren().stream().map(Node::getData).map(Argument::getArgumentsString).flatMap(
 				List::stream).toList();

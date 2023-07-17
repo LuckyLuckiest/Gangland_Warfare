@@ -1,6 +1,7 @@
 package me.luckyraven.command;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.command.Command;
@@ -67,7 +68,7 @@ public final class CommandManager implements CommandExecutor {
 				}
 
 			if (!match) {
-				sender.sendMessage(setArguments(message.getString("Commands.Syntax.Doesnt_Exist"),
+				sender.sendMessage(setArguments(MessageAddon.ARGUMENTS_DONT_EXIST.toString(),
 				                                String.format("/%s %s", label, Arrays.asList(args))));
 				return false;
 			}

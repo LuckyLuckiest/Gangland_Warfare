@@ -19,6 +19,7 @@ import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
 
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +50,7 @@ public class SCRank extends CommandHandler {
 
 		// glw rank create <name>
 		Argument create = new Argument("create", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<name>"));
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, getPermission() + ".create");
 
 		HashMap<CommandSender, AtomicReference<String>> createRankName  = new HashMap<>();
@@ -74,7 +75,7 @@ public class SCRank extends CommandHandler {
 					break;
 				}
 
-			sender.sendMessage(MessageAddon.RANK_CREATED.replace("%rank%", rank.getName()));
+			sender.sendMessage(MessageAddon.RANK_CREATED.toString().replace("%rank%", rank.getName()));
 			rankManager.add(rank);
 			createRankName.remove(sender);
 
@@ -91,19 +92,20 @@ public class SCRank extends CommandHandler {
 			Rank rank = rankManager.get(args[2]);
 
 			if (rank != null) {
-				sender.sendMessage(MessageAddon.RANK_EXISTS);
+				sender.sendMessage(MessageAddon.RANK_EXIST.toString());
 				return;
 			}
 
 			if (confirmCreate.isConfirmed()) return;
 
-			sender.sendMessage(ChatUtil.color(MessageAddon.confirmCommand(new String[]{"rank", "create"})));
+			sender.sendMessage(ChatUtil.confirmCommand(new String[]{"rank", "create"}));
 			confirmCreate.setConfirmed(true);
 			createRankName.put(sender, new AtomicReference<>(args[2]));
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
-				sender.sendMessage(
-						MessageAddon.RANK_CREATE_CONFIRM.replace("%timer%", String.valueOf(time.getDuration())));
+				sender.sendMessage(MessageAddon.RANK_CREATE_CONFIRM.toString()
+				                                                   .replace("%timer%",
+				                                                            String.valueOf(time.getDuration())));
 			}, null, time -> {
 				confirmCreate.setConfirmed(false);
 				createRankName.remove(sender);
@@ -118,7 +120,7 @@ public class SCRank extends CommandHandler {
 		// glw rank delete <name>
 		String[] delArr = new String[]{"delete", "remove"};
 		Argument delete = new Argument(delArr, getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<name>"));
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		});
 
 		HashMap<CommandSender, AtomicReference<String>> deleteRankName  = new HashMap<>();
@@ -143,7 +145,7 @@ public class SCRank extends CommandHandler {
 					break;
 				}
 
-			sender.sendMessage(MessageAddon.RANK_REMOVED.replace("%rank%", rank.getName()));
+			sender.sendMessage(MessageAddon.RANK_REMOVED.toString().replace("%rank%", rank.getName()));
 			deleteRankName.remove(sender);
 
 			CountdownTimer timer = deleteRankTimer.get(sender);
@@ -159,19 +161,20 @@ public class SCRank extends CommandHandler {
 			Rank rank = rankManager.get(args[2]);
 
 			if (rank == null) {
-				sender.sendMessage(MessageAddon.INVALID_RANK);
+				sender.sendMessage(MessageAddon.INVALID_RANK.toString());
 				return;
 			}
 
 			if (confirmDelete.isConfirmed()) return;
 
-			sender.sendMessage(ChatUtil.color(MessageAddon.confirmCommand(new String[]{"rank", "delete"})));
+			sender.sendMessage(ChatUtil.confirmCommand(new String[]{"rank", "delete"}));
 			confirmDelete.setConfirmed(true);
 			deleteRankName.put(sender, new AtomicReference<>(args[2]));
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
-				sender.sendMessage(
-						MessageAddon.RANK_REMOVE_CONFIRM.replace("%timer%", String.valueOf(time.getDuration())));
+				sender.sendMessage(MessageAddon.RANK_REMOVE_CONFIRM.toString()
+				                                                   .replace("%timer%",
+				                                                            String.valueOf(time.getDuration())));
 			}, null, time -> {
 				confirmDelete.setConfirmed(false);
 				deleteRankName.remove(sender);
@@ -185,7 +188,7 @@ public class SCRank extends CommandHandler {
 
 		// glw rank list
 		Argument list = new Argument("list", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(MessageAddon.RANK_LIST_PRIMARY);
+			sender.sendMessage(MessageAddon.RANK_LIST_PRIMARY.toString());
 
 			StringBuilder builder = new StringBuilder();
 			List<Rank>    ranks   = rankManager.getRanks().values().stream().toList();
@@ -195,13 +198,13 @@ public class SCRank extends CommandHandler {
 				if (i < ranks.size() - 1) builder.append(", ");
 			}
 
-			sender.sendMessage(MessageAddon.RANK_LIST_SECONDARY.replace("%ranks%", builder.toString()));
+			sender.sendMessage(MessageAddon.RANK_LIST_SECONDARY.toString().replace("%ranks%", builder.toString()));
 		});
 
 		// glw rank permission <add/remove> <name> <permission>
 		String[] permArr = {"permission", "perm"};
 		Argument permission = new Argument(permArr, getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<add/remove>"));
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<add/remove>"));
 		});
 
 		Argument perm = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
@@ -209,7 +212,7 @@ public class SCRank extends CommandHandler {
 			Rank rank = rankManager.get(args[3]);
 
 			if (rank == null) {
-				sender.sendMessage(MessageAddon.INVALID_RANK);
+				sender.sendMessage(MessageAddon.INVALID_RANK.toString());
 				return;
 			}
 
@@ -220,16 +223,16 @@ public class SCRank extends CommandHandler {
 				case "add" -> {
 					if (rank.contains("")) rank.removePermission("");
 					rank.addPermission(permString);
-					message = MessageAddon.RANK_PERMISSION_ADD.replace("%rank%", rank.getName()).replace("%permission%",
-					                                                                                     permString);
+					message = MessageAddon.RANK_PERMISSION_ADD.toString().replace("%rank%", rank.getName()).replace(
+							"%permission%", permString);
 				}
 				case "remove" -> {
 					if (!rank.contains(permString)) {
-						sender.sendMessage(MessageAddon.INVALID_PERMISSION);
+						sender.sendMessage(MessageAddon.INVALID_RANK_PERMISSION.toString());
 						return;
 					}
 					rank.removePermission(permString);
-					message = MessageAddon.RANK_PERMISSION_REMOVE.replace("%rank%", rank.getName()).replace(
+					message = MessageAddon.RANK_PERMISSION_REMOVE.toString().replace("%rank%", rank.getName()).replace(
 							"%permission%", permString);
 				}
 			}
@@ -250,17 +253,17 @@ public class SCRank extends CommandHandler {
 		});
 
 		Argument permName = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<permission>"));
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<permission>"));
 		});
 
 		permName.addSubArgument(perm);
 
 		Argument addPerm = new Argument("add", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<name>"));
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		});
 
 		Argument removePerm = new Argument("remove", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<name>"));
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		});
 
 		addPerm.addSubArgument(permName);
@@ -271,14 +274,14 @@ public class SCRank extends CommandHandler {
 
 		// glw rank info <name>
 		Argument info = new Argument("info", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<name>"));
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		});
 
 		Argument infoName = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			Rank rank = rankManager.get(args[2]);
 
 			if (rank == null) {
-				sender.sendMessage(MessageAddon.INVALID_RANK);
+				sender.sendMessage(MessageAddon.INVALID_RANK.toString());
 				return;
 			}
 
@@ -294,53 +297,57 @@ public class SCRank extends CommandHandler {
 				if (i < rank.getNode().getChildren().size() - 1) parentBuilder.append(", ");
 			}
 
-			sender.sendMessage(MessageAddon.RANK_INFO_PRIMARY.replace("%rank%", rank.getName())
+			sender.sendMessage(MessageAddon.RANK_INFO_PRIMARY.toString()
+			                                                 .replace("%rank%", rank.getName())
 			                                                 .replace("%id%", String.valueOf(rank.getUsedId()))
 			                                                 .replace("%parent%", parentBuilder.toString()));
-			sender.sendMessage(MessageAddon.RANK_INFO_SECONDARY.replace("%permissions%", permBuilder.toString()));
+			sender.sendMessage(
+					MessageAddon.RANK_INFO_SECONDARY.toString().replace("%permissions%", permBuilder.toString()));
 		});
 
 		info.addSubArgument(infoName);
 
 		// glw rank parent <add/remove> <name> <parent>
 		Argument parent = new Argument("parent", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<add/remove>"));
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<add/remove>"));
 		});
 
 		Argument parentStr = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			Rank rank = rankManager.get(args[3]);
 
 			if (rank == null) {
-				sender.sendMessage(MessageAddon.INVALID_RANK);
+				sender.sendMessage(MessageAddon.INVALID_RANK.toString());
 				return;
 			}
 
 			Rank childRank = rankManager.get(args[4]);
 
 			if (childRank == null) {
-				sender.sendMessage(MessageAddon.INVALID_PARENT);
+				sender.sendMessage(MessageAddon.INVALID_RANK_PARENT.toString());
 				return;
 			}
 
 			switch (args[2].toLowerCase()) {
 				case "add" -> {
 					if (rank.getNode().getChildren().contains(childRank.getNode())) {
-						sender.sendMessage(MessageAddon.RANK_EXISTS);
+						sender.sendMessage(MessageAddon.RANK_EXIST.toString());
 						return;
 					}
 					rank.getNode().add(childRank.getNode());
-					sender.sendMessage(MessageAddon.RANK_PARENT_ADDED.replace("%parent%", childRank.getName())
-					                                                 .replace("%rank%", rank.getName()));
+					sender.sendMessage(MessageAddon.RANK_PARENT_ADD.toString()
+					                                               .replace("%parent%", childRank.getName())
+					                                               .replace("%rank%", rank.getName()));
 				}
 
 				case "remove" -> {
 					if (!rank.getNode().getChildren().contains(childRank.getNode())) {
-						sender.sendMessage(MessageAddon.INVALID_PARENT);
+						sender.sendMessage(MessageAddon.INVALID_RANK_PARENT.toString());
 						return;
 					}
 					rank.getNode().remove(childRank.getNode());
-					sender.sendMessage(MessageAddon.RANK_PARENT_REMOVED.replace("%parent%", childRank.getName())
-					                                                   .replace("%rank%", rank.getName()));
+					sender.sendMessage(MessageAddon.RANK_PARENT_REMOVE.toString()
+					                                                  .replace("%parent%", childRank.getName())
+					                                                  .replace("%rank%", rank.getName()));
 				}
 			}
 
@@ -356,17 +363,17 @@ public class SCRank extends CommandHandler {
 		});
 
 		Argument parentName = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<parent>"));
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<parent>"));
 		});
 
 		parentName.addSubArgument(parentStr);
 
 		Argument addParent = new Argument("add", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<name>"));
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		});
 
 		Argument removeParent = new Argument("remove", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<name>"));
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		});
 
 		parent.addSubArgument(addParent);
@@ -390,12 +397,17 @@ public class SCRank extends CommandHandler {
 
 		getArgument().addSubArgument(traverseTree);
 
-		getArgument().addSubArgument(create);
-		getArgument().addSubArgument(delete);
-		getArgument().addSubArgument(list);
-		getArgument().addSubArgument(permission);
-		getArgument().addSubArgument(info);
-		getArgument().addSubArgument(parent);
+		// add sub arguments
+		List<Argument> arguments = new ArrayList<>();
+
+		arguments.add(create);
+		arguments.add(delete);
+		arguments.add(list);
+		arguments.add(permission);
+		arguments.add(info);
+		arguments.add(parent);
+
+		getArgument().addAllSubArguments(arguments);
 	}
 
 	@Override

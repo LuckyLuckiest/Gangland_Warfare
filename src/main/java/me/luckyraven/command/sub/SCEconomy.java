@@ -47,27 +47,27 @@ public class SCEconomy extends CommandHandler {
 
 		// glw economy deposit
 		Argument deposit = new Argument(new String[]{"deposit", "add"}, getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<specifier>"));
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<specifier>"));
 		}, getPermission() + ".deposit");
 
 
 		// glw economy withdraw
 		Argument withdraw = new Argument(new String[]{"withdraw", "take"}, getArgumentTree(),
 		                                 (argument, sender, args) -> sender.sendMessage(
-				                                 CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING,
+				                                 CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(),
 				                                                             "<specifier>")),
 		                                 getPermission() + ".withdraw");
 
 		// glw economy set
 		Argument set = new Argument("set", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING, "<specifier>"));
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<specifier>"));
 		}, getPermission() + ".set");
 
 		Argument amount = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			String specifier = args[2].startsWith("@") ? args[2].toLowerCase() : "@" + args[2];
 
 			if (specifier.equalsIgnoreCase("@me") && !(sender instanceof Player)) {
-				sender.sendMessage(MessageAddon.NOT_PLAYER);
+				sender.sendMessage(MessageAddon.NOT_PLAYER.toString());
 				return;
 			}
 
@@ -83,20 +83,23 @@ public class SCEconomy extends CommandHandler {
 					switch (args[1].toLowerCase()) {
 						case "deposit", "add" -> {
 							value = Math.min(user.getBalance() + argAmount, SettingAddon.getPlayerMaxBalance());
-							user.getUser().sendMessage(MessageAddon.PLAYER_MONEY_ADD.replace("%amount%",
-							                                                                 MessageAddon.formatDouble(
-									                                                                 argAmount)));
+							user.getUser().sendMessage(MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
+							                                                            .replace("%amount%",
+							                                                                     SettingAddon.formatDouble(
+									                                                                     argAmount)));
 						}
 						case "withdraw", "take" -> {
 							value = Math.max(user.getBalance() - argAmount, 0D);
-							user.getUser().sendMessage(MessageAddon.PLAYER_MONEY_TAKE.replace("%amount%",
-							                                                                  MessageAddon.formatDouble(
-									                                                                  argAmount)));
+							user.getUser().sendMessage(MessageAddon.WITHDRAW_MONEY_PLAYER.toString()
+							                                                             .replace("%amount%",
+							                                                                      SettingAddon.formatDouble(
+									                                                                      argAmount)));
 						}
 						case "set" -> {
 							value = Math.min(argAmount, SettingAddon.getPlayerMaxBalance());
-							user.getUser().sendMessage(MessageAddon.PLAYER_MONEY_SET.replace("%amount%",
-							                                                                 MessageAddon.formatDouble(
+							user.getUser().sendMessage(MessageAddon.SET_MONEY_PLAYER.toString()
+							                                                        .replace("%amount%",
+							                                                                 SettingAddon.formatDouble(
 									                                                                 argAmount)));
 						}
 					}
@@ -104,15 +107,14 @@ public class SCEconomy extends CommandHandler {
 					moneyInDatabase(player, value);
 				}
 			} catch (NumberFormatException exception) {
-				sender.sendMessage(MessageAddon.MUSTBE_NUMBER.replace("%command%", args[3]));
+				sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[3]));
 			}
 		});
 
-		Argument specifier = new OptionalArgument(new String[]{"@a", "@r", "@p", "@me"}, getArgumentTree(),
-		                                          (argument, sender, args) -> {
-			                                          sender.sendMessage(CommandManager.setArguments(
-					                                          MessageAddon.ARGUMENTS_MISSING, "<amount>"));
-		                                          });
+		String[] optionalSpecifier = {"@a", "@r", "@p", "@me", "@[<name>]"};
+		Argument specifier = new OptionalArgument(optionalSpecifier, getArgumentTree(), (argument, sender, args) -> {
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
+		});
 
 		specifier.setExecuteOnPass(
 				(sender, args) -> collectSpecifiers(specifiers, sender, args.length > 2 ? args[2] : null));
@@ -128,7 +130,7 @@ public class SCEconomy extends CommandHandler {
 			String specifierStr = args.length > 2 ? args[2] : "@me";
 
 			if (specifierStr.equalsIgnoreCase("@me") && !(sender instanceof Player)) {
-				sender.sendMessage(MessageAddon.NOT_PLAYER);
+				sender.sendMessage(MessageAddon.NOT_PLAYER.toString());
 				return;
 			}
 
@@ -139,22 +141,27 @@ public class SCEconomy extends CommandHandler {
 
 				user.setBalance(0D);
 				moneyInDatabase(player, 0D);
-				user.getUser().sendMessage(MessageAddon.PLAYER_MONEY_RESET);
+				user.getUser().sendMessage(MessageAddon.RESET_MONEY_PLAYER.toString());
 			}
 		}, getPermission() + ".reset");
 
 		reset.setExecuteOnPass(
 				(sender, args) -> collectSpecifiers(specifiers, sender, args.length > 2 ? args[2] : null));
 
-		Argument resetSpecifier = new OptionalArgument(new String[]{"@a", "@r", "@p", "@me"}, getArgumentTree(),
+		Argument resetSpecifier = new OptionalArgument(optionalSpecifier, getArgumentTree(),
 		                                               (argument, sender, args) -> reset.executeArgument(sender, args));
 
 		reset.addSubArgument(resetSpecifier);
 
-		getArgument().addSubArgument(deposit);
-		getArgument().addSubArgument(withdraw);
-		getArgument().addSubArgument(set);
-		getArgument().addSubArgument(reset);
+		// add sub arguments
+		List<Argument> arguments = new ArrayList<>();
+
+		arguments.add(deposit);
+		arguments.add(withdraw);
+		arguments.add(set);
+		arguments.add(reset);
+
+		getArgument().addAllSubArguments(arguments);
 	}
 
 	@Override
