@@ -207,6 +207,10 @@
 		"usage": "/glw gang invite <name>",
 		"description": "Invites the player to the gang."
 	},
+	"gang_invite_accept": {
+		"usage": "/glw gang accept",
+		"description": "Accept gang join invitation."
+	},
 	"gang_kick_player": {
 		"usage": "/glw gang kick <name>",
 		"description": "Kicks the player from the gang."
