@@ -1,12 +1,10 @@
 package me.luckyraven.account.gang;
 
-import com.google.common.base.Preconditions;
 import me.luckyraven.Gangland;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.rank.Rank;
 import me.luckyraven.rank.RankManager;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -120,10 +118,9 @@ public class GangManager {
 		gangs.put(gang.getId(), gang);
 	}
 
-	public void remove(@NotNull Gang gang) {
-		Preconditions.checkArgument(gang != null, "Gang can't be null!");
-
-		gangs.remove(gang.getId());
+	public boolean remove(Gang gang) {
+		Gang g = gangs.remove(gang.getId());
+		return g != null;
 	}
 
 	public boolean contains(Gang gang) {
@@ -139,7 +136,7 @@ public class GangManager {
 	}
 
 	public Map<Integer, Gang> getGangs() {
-		return new HashMap<>(gangs);
+		return Collections.unmodifiableMap(gangs);
 	}
 
 }
