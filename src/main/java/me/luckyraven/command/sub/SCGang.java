@@ -382,14 +382,22 @@ public class SCGang extends CommandHandler {
 			int          inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, InventoryGUI.MAX_SLOTS);
 			InventoryGUI members       = new InventoryGUI("&6&lGang members", inventorySize == 0 ? 9 : inventorySize);
 
-			// TODO add members
 			int i = 0;
 			for (Map.Entry<UUID, Rank> entry : gang.getGroup().entrySet()) {
-				ItemBuilder itemBuilder = new ItemBuilder(Material.PLAYER_HEAD);
-//				itemBuilder.;
+				// this will work if there were at most 45 members
+				// need to add compatibility if there were more than 45
+				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(entry.getKey());
+				Rank userRank = entry.getValue();
 
-				members.setItem(i, itemBuilder.build(), false);
+				ItemBuilder itemBuilder = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName("&b" + offlinePlayer.getName()).setLore(
+						new ArrayList<>(List.of("&7Rank:&e " + userRank.getName(), "&7Contribution:&e " + gang.getContribution().get(entry.getKey()))));
 
+				// change the skull nbt data (texture)
+				itemBuilder.modifyNBT(nbt -> {
+					nbt.setString("SkullOwner", offlinePlayer.getName());
+				});
+
+				members.setItem(i++, itemBuilder.build(), false);
 			}
 
 			members.open(user);
