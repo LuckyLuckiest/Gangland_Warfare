@@ -6,6 +6,7 @@ import me.luckyraven.account.Account;
 import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.bukkit.InventoryGUI;
+import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
@@ -115,7 +116,6 @@ public class SCGang extends CommandHandler {
 		// glw gang delete
 		Argument delete = gangDelete(userManager, gangManager, rankManager);
 
-
 		// add user to gang
 		// glw gang invite <name>
 		Argument addUser = new Argument(new String[]{"invite", "add"}, getArgumentTree(), (argument, sender, args) -> {
@@ -129,6 +129,95 @@ public class SCGang extends CommandHandler {
 
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, getPermission() + ".add_user");
+
+		HashMap<User<Player>, Gang>           playerInvite = new HashMap<>();
+		HashMap<User<Player>, CountdownTimer> inviteTimer  = new HashMap<>();
+
+		Argument inviteName = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			String targetStr = args[2];
+			Player target    = Bukkit.getPlayer(targetStr);
+
+			if (target == null) {
+				sender.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
+				return;
+			}
+
+			Gang         gang       = gangManager.getGang(user.getGangId());
+			User<Player> targetUser = userManager.getUser(target);
+
+			if (targetUser.hasGang()) {
+				sender.sendMessage(MessageAddon.TARGET_IN_GANG.toString().replace("%player%", targetStr));
+				return;
+			}
+
+			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+				player.sendMessage(MessageAddon.GANG_INVITE_PLAYER.toString().replace("%player%", targetStr));
+				target.sendMessage(MessageAddon.GANG_INVITE_TARGET.toString().replace("%gang%", gang.getName()));
+			}, null, time -> {
+				playerInvite.remove(targetUser);
+				inviteTimer.remove(targetUser);
+			});
+
+			timer.start();
+
+			playerInvite.put(targetUser, gang);
+			inviteTimer.put(targetUser, timer);
+		});
+
+		addUser.addSubArgument(inviteName);
+
+		Argument acceptInvite = new Argument("accept", getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!playerInvite.containsKey(user)) {
+				player.sendMessage(MessageAddon.NO_GANG_INVITATION.toString());
+				return;
+			}
+
+			if (user.hasGang()) {
+				player.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
+				return;
+			}
+
+			Gang gang = playerInvite.get(user);
+			Rank rank = rankManager.get(SettingAddon.getGangRankHead());
+
+			gang.addUser(user, rank);
+			// link account
+			user.setGangId(gang.getId());
+			user.addAccount(gang);
+			// update to database
+			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
+				if (handler instanceof GangDatabase gangDatabase) {
+					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+					helper.runQueries(database -> gangDatabase.updateDataTable(gang));
+				}
+
+				if (handler instanceof UserDatabase userDatabase) {
+					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+					helper.runQueries(database -> userDatabase.updateAccountTable(user));
+				}
+			}
+
+			playerInvite.remove(user);
+
+			CountdownTimer timer = inviteTimer.get(user);
+			if (timer != null) {
+				if (!timer.isCancelled()) timer.cancel();
+				inviteTimer.remove(user);
+			}
+		});
 
 		// remove user from gang
 		// glw gang kick <name>
@@ -144,21 +233,7 @@ public class SCGang extends CommandHandler {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, getPermission() + ".remove_user");
 
-		Argument invKickUser = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
-				return;
-			}
-
-			// TODO add/kick user process
-
-		});
-
-		addUser.addSubArgument(invKickUser);
-		removeUser.addSubArgument(invKickUser);
+		removeUser.addSubArgument(inviteName);
 
 		// promote user in gang
 		// glw gang promote <name>
@@ -262,14 +337,9 @@ public class SCGang extends CommandHandler {
 				return;
 			}
 
-			Gang         gang = gangManager.getGang(user.getGangId());
-			InventoryGUI gui  = new InventoryGUI("&6&l" + gang.getName() + "&r gang", 36);
+			Gang gang = gangManager.getGang(user.getGangId());
 
-			gui.setItem(0, Material.GOLD_BLOCK, "&bBalance", null, true, false);
-
-			gui.fillInventory();
-
-			gui.open(user);
+			openGangStat(user, gang);
 		});
 
 		// add sub arguments
@@ -278,6 +348,7 @@ public class SCGang extends CommandHandler {
 		arguments.add(create);
 		arguments.add(delete);
 		arguments.add(addUser);
+		arguments.add(acceptInvite);
 		arguments.add(removeUser);
 		arguments.add(promoteUser);
 		arguments.add(demoteUser);
@@ -294,13 +365,64 @@ public class SCGang extends CommandHandler {
 		getHelpInfo().displayHelp(sender, page, "Gang");
 	}
 
+	private void openGangStat(User<Player> user, Gang gang) {
+		InventoryGUI gui = new InventoryGUI("&6&l" + gang.getName() + "&r gang", 45);
+
+		gui.setItem(13, Material.CRAFTING_TABLE, "&bID", new ArrayList<>(List.of("&e" + gang.getId())), false, false);
+		gui.setItem(11, Material.GOLD_BLOCK, "&bBalance", new ArrayList<>(
+				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
+				                      SettingAddon.formatDouble(gang.getBalance())))), true, false);
+		gui.setItem(15, Material.PAPER, "&bDescription", new ArrayList<>(List.of("&e" + gang.getDescription())), false,
+		            false);
+		// this item should take you to another gui page
+		gui.setItem(19, Material.PLAYER_HEAD, "&bMembers", null, false, false, (inventory, item) -> {
+			inventory.close(user);
+
+			int          size          = gang.getGroup().size();
+			int          inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, InventoryGUI.MAX_SLOTS);
+			InventoryGUI members       = new InventoryGUI("&6&lGang members", inventorySize == 0 ? 9 : inventorySize);
+
+			// TODO add members
+			int i = 0;
+			for (Map.Entry<UUID, Rank> entry : gang.getGroup().entrySet()) {
+				ItemBuilder itemBuilder = new ItemBuilder(Material.PLAYER_HEAD);
+//				itemBuilder.;
+
+				members.setItem(i, itemBuilder.build(), false);
+
+			}
+
+			members.open(user);
+		}); gui.setItem(22, Material.BLAZE_ROD, "&bBounty", new ArrayList<>(
+				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
+				                      SettingAddon.formatDouble(gang.getBounty())))), true, false);
+		// this item should take you to another gangs page
+		gui.setItem(25, Material.REDSTONE, "&bAlias", null, false, false, (inventory, item) -> {
+			inventory.close(user);
+
+			int          size          = gang.getAlias().size();
+			int          inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, InventoryGUI.MAX_SLOTS);
+			InventoryGUI alias         = new InventoryGUI("&6&lGang alias", inventorySize == 0 ? 9 : inventorySize);
+
+			// TODO add alias gang
+
+			alias.open(user);
+		});
+		gui.setItem(31, Material.WRITABLE_BOOK, "&bCreated", new ArrayList<>(List.of("&e" + gang.getDateCreated())),
+		            true, false);
+
+		gui.fillInventory();
+
+		gui.open(user);
+	}
+
 	private Argument gangCreate(UserManager<Player> userManager, GangManager gangManager, RankManager rankManager) {
 		Argument create = new Argument("create", getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
 			if (user.hasGang()) {
-				player.sendMessage(MessageAddon.GANG_EXIST.toString());
+				player.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
 				return;
 			}
 
@@ -315,7 +437,7 @@ public class SCGang extends CommandHandler {
 			User<Player> user   = userManager.getUser(player);
 
 			if (user.hasGang()) {
-				player.sendMessage(MessageAddon.GANG_EXIST.toString());
+				player.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
 				return;
 			}
 
@@ -395,7 +517,7 @@ public class SCGang extends CommandHandler {
 			User<Player> user   = userManager.getUser(player);
 
 			if (user.hasGang()) {
-				player.sendMessage(MessageAddon.GANG_EXIST.toString());
+				player.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
 				return;
 			}
 
