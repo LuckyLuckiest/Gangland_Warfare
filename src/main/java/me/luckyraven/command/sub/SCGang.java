@@ -174,6 +174,7 @@ public class SCGang extends CommandHandler {
 
 		addUser.addSubArgument(inviteName);
 
+		// glw gang accept
 		Argument acceptInvite = new Argument("accept", getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
@@ -234,6 +235,12 @@ public class SCGang extends CommandHandler {
 		}, getPermission() + ".remove_user");
 
 		removeUser.addSubArgument(inviteName);
+
+		// leave the gang
+		// glw gang leave
+		Argument leave = new Argument("leave", getArgumentTree(), (argument, sender, args) -> {
+
+		});
 
 		// promote user in gang
 		// glw gang promote <name>
@@ -327,6 +334,23 @@ public class SCGang extends CommandHandler {
 			                                                     SettingAddon.formatDouble(gang.getBalance())));
 		}, getPermission() + ".balance");
 
+		// change gang name
+		// opens an anvil with a name-tag that can change the title
+		// glw gang name
+		Argument name = new Argument("name", getArgumentTree(), (argument, sender, args) -> {
+
+		});
+
+		// change gang description
+		// opens an anvil with a name-tag that can change the title
+		// glw gang desc
+		String[] descStr = {"desc", "description"};
+		Argument description = new Argument(descStr, getArgumentTree(), (argument, sender, args) -> {
+
+		});
+
+		// gang stats in gui
+		// glw gang stats
 		String[] statsStr = {"stats", "statistics"};
 		Argument stats = new Argument(statsStr, getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
@@ -347,14 +371,23 @@ public class SCGang extends CommandHandler {
 
 		arguments.add(create);
 		arguments.add(delete);
+
 		arguments.add(addUser);
 		arguments.add(acceptInvite);
+
 		arguments.add(removeUser);
+		arguments.add(leave);
+
 		arguments.add(promoteUser);
 		arguments.add(demoteUser);
+
 		arguments.add(deposit);
 		arguments.add(withdraw);
 		arguments.add(balance);
+
+		arguments.add(name);
+		arguments.add(description);
+
 		arguments.add(stats);
 
 		getArgument().addAllSubArguments(arguments);
@@ -368,43 +401,49 @@ public class SCGang extends CommandHandler {
 	private void openGangStat(User<Player> user, Gang gang) {
 		InventoryGUI gui = new InventoryGUI("&6&l" + gang.getName() + "&r gang", 45);
 
-		gui.setItem(13, Material.CRAFTING_TABLE, "&bID", new ArrayList<>(List.of("&e" + gang.getId())), false, false);
 		gui.setItem(11, Material.GOLD_BLOCK, "&bBalance", new ArrayList<>(
 				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
 				                      SettingAddon.formatDouble(gang.getBalance())))), true, false);
+		gui.setItem(13, Material.CRAFTING_TABLE, "&bID", new ArrayList<>(List.of("&e" + gang.getId())), false, false);
 		gui.setItem(15, Material.PAPER, "&bDescription", new ArrayList<>(List.of("&e" + gang.getDescription())), false,
 		            false);
 		// this item should take you to another gui page
-		gui.setItem(19, Material.PLAYER_HEAD, "&bMembers", null, false, false, (inventory, item) -> {
-			inventory.close(user);
+		gui.setItem(19, Material.PLAYER_HEAD, "&bMembers", new ArrayList<>(List.of("&e" + gang.getGroup().size())),
+		            false, false, (inventory, item) -> {
+					inventory.close(user);
 
-			int          size          = gang.getGroup().size();
-			int          inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, InventoryGUI.MAX_SLOTS);
-			InventoryGUI members       = new InventoryGUI("&6&lGang members", inventorySize == 0 ? 9 : inventorySize);
+					int size          = gang.getGroup().size();
+					int inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, InventoryGUI.MAX_SLOTS);
 
-			int i = 0;
-			for (Map.Entry<UUID, Rank> entry : gang.getGroup().entrySet()) {
-				// this will work if there were at most 45 members
-				// need to add compatibility if there were more than 45
-				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(entry.getKey());
-				Rank userRank = entry.getValue();
+					InventoryGUI members = new InventoryGUI("&6&lGang members", inventorySize == 0 ? 9 : inventorySize);
 
-				List<String> data = new ArrayList<>();
-				data.add("&7Rank:&e " + userRank.getName());
-				data.add("&7Contribution:&e " + gang.getContribution().get(entry.getKey()));
+					int i = 0;
+					for (Map.Entry<UUID, Rank> entry : gang.getGroup().entrySet()) {
+						// temporary measure for limited members
+						if (i >= inventorySize) break;
+						// this will work if there were at most 45 members
+						// need to add compatibility if there were more than 45
+						OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(entry.getKey());
+						Rank          userRank      = entry.getValue();
 
-				ItemBuilder itemBuilder = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName("&b" + offlinePlayer.getName()).setLore(data);
+						List<String> data = new ArrayList<>();
+						data.add("&7Rank:&e " + userRank.getName());
+						data.add("&7Contribution:&e " + gang.getContribution().get(entry.getKey()));
 
-				// change the skull nbt data (texture)
-				itemBuilder.modifyNBT(nbt -> {
-					nbt.setString("SkullOwner", offlinePlayer.getName());
+						ItemBuilder itemBuilder = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName(
+								"&b" + offlinePlayer.getName()).setLore(data);
+
+						// change the skull nbt data (texture)
+						itemBuilder.modifyNBT(nbt -> {
+							nbt.setString("SkullOwner", offlinePlayer.getName());
+						});
+
+						members.setItem(i++, itemBuilder.build(), false);
+					}
+
+					members.open(user);
 				});
-
-				members.setItem(i++, itemBuilder.build(), false);
-			}
-
-			members.open(user);
-		}); gui.setItem(22, Material.BLAZE_ROD, "&bBounty", new ArrayList<>(
+		gui.setItem(22, Material.BLAZE_ROD, "&bBounty", new ArrayList<>(
 				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
 				                      SettingAddon.formatDouble(gang.getBounty())))), true, false);
 		// this item should take you to another gangs page
