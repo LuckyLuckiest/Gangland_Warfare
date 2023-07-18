@@ -389,8 +389,11 @@ public class SCGang extends CommandHandler {
 				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(entry.getKey());
 				Rank userRank = entry.getValue();
 
-				ItemBuilder itemBuilder = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName("&b" + offlinePlayer.getName()).setLore(
-						new ArrayList<>(List.of("&7Rank:&e " + userRank.getName(), "&7Contribution:&e " + gang.getContribution().get(entry.getKey()))));
+				List<String> data = new ArrayList<>();
+				data.add("&7Rank:&e " + userRank.getName());
+				data.add("&7Contribution:&e " + gang.getContribution().get(entry.getKey()));
+
+				ItemBuilder itemBuilder = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName("&b" + offlinePlayer.getName()).setLore(data);
 
 				// change the skull nbt data (texture)
 				itemBuilder.modifyNBT(nbt -> {
