@@ -1,6 +1,7 @@
 package me.luckyraven.bukkit;
 
 import de.tr7zw.nbtapi.NBT;
+import de.tr7zw.nbtapi.iface.ReadableNBT;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -12,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 public class ItemBuilder {
 
@@ -86,6 +88,13 @@ public class ItemBuilder {
 	public ItemBuilder setDurability(short durability) {
 		NBT.modify(itemStack, nbt -> {
 			nbt.setShort("Damage", durability);
+		});
+		return this;
+	}
+
+	public ItemBuilder modifyNBT(BiConsumer<ReadableNBT, ItemMeta> nbtModifier) {
+		NBT.modify(itemStack, nbt -> {
+			nbt.modifyMeta(nbtModifier);
 		});
 		return this;
 	}
