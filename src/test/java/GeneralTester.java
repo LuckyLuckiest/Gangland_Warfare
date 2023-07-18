@@ -1,7 +1,12 @@
 public class GeneralTester {
 
 	public static void main(String[] args) {
-		System.out.printf("$%,.1f", 114_214_999.5);
+		int maxSlots = 54;
+		int size = 0;
+
+		int inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, maxSlots - 9);
+
+		System.out.println(inventorySize);
 	}
 
 }
