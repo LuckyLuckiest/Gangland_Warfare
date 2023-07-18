@@ -55,9 +55,16 @@ public enum MessageAddon {
 	                                                                                 Type.COMMAND), GANG_CREATE_CONFIRM(
 			"Commands.Gang.Create.Confirm_Timer", Type.COMMAND), GANG_REMOVED("Commands.Gang.Remove.Removed_Gang",
 	                                                                          Type.COMMAND), GANG_REMOVE_CONFIRM(
-			"Commands.Gang.Remove.Confirm_Timer", Type.COMMAND), GANG_EXIST("Commands.Gang.Have_Gang", Type.COMMAND),
-	GANG_BALANCE("Commands.Gang.Balance", Type.COMMAND), GANG_MONEY_DEPOSIT("Commands.Gang.Money.Add", Type.COMMAND),
-	GANG_MONEY_WITHDRAW("Commands.Gang.Money.Take", Type.COMMAND),
+			"Commands.Gang.Remove.Confirm_Timer", Type.COMMAND), PLAYER_IN_GANG(
+			"Commands.Gang.Available.Player_In_Gang", Type.COMMAND), TARGET_IN_GANG(
+			"Commands.Gang.Available.Target_In_Gang", Type.COMMAND), GANG_BALANCE("Commands.Gang.Balance",
+	                                                                              Type.COMMAND), GANG_MONEY_DEPOSIT(
+			"Commands.Gang.Money.Add", Type.COMMAND), GANG_MONEY_WITHDRAW("Commands.Gang.Money.Take", Type.COMMAND),
+	GANG_INVITE_PLAYER("Commands.Gang.Invite.Player", Type.COMMAND), GANG_INVITE_TARGET("Commands.Gang.Invite.Target",
+	                                                                                    Type.COMMAND),
+	GANG_INVITE_ACCEPT("Commands.Gang.Invite.Accept", Type.COMMAND), GANG_PLAYER_JOINED("Commands.Gang.Invite.Joined",
+	                                                                                    Type.COMMAND), GANG_LEAVE(
+			"Commands.Gang.Left", Type.COMMAND),
 
 	// commands - rank
 	RANK_CREATED("Commands.Rank.Create.Created_Rank", Type.COMMAND), RANK_CREATE_CONFIRM(
@@ -113,6 +120,7 @@ public enum MessageAddon {
 	MUST_CREATE_GANG("Errors.Gang.Must_Create", Type.ERROR), CANNOT_CREATE_GANG("Errors.Gang.Cannot_Create",
 	                                                                            Type.ERROR), NOT_OWNER(
 			"Errors.Gang.Not_Owner", Type.ERROR), DUPLICATE_GANG_NAME("Errors.Gang.Duplicate_Names", Type.ERROR),
+	NO_GANG_INVITATION("Errors.Gang.No_Invite", Type.ERROR),
 
 	// errors - rank
 	INVALID_RANK("Errors.Rank.Invalid", Type.ERROR), INVALID_RANK_PERMISSION("Errors.Rank.Invalid_Permission",

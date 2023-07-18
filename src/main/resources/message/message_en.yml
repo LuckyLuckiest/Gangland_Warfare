@@ -138,8 +138,16 @@ Commands:
       Remove:
          Removed_Gang: "Gang account &8[&a%gang%&8] &7has been removed."
          Confirm_Timer: "You have &a%timer%&7 seconds to confirm deleting the account."
-      Have_Gang: "You already have a gang."
+      Available:
+         Player_In_Gang: "You already have a gang."
+         Target_In_Gang: "&6%player%&7 already in a gang."
       Balance: "Gang balance is: &b%money_symbol%%balance%"
+      Invite:
+         Player: "You have invited &6%player%&7 to the gang."
+         Target: "You were invited to join &8[&a%gang%&8]&7."
+         Accept: "You have joined &8[&a%gang%&8]&7 gang."
+         Joined: "&6%player%&7 joined the gang."
+      Left: "You have left the gang."
       Money:
          Add: "&6%player%&7 has deposited &a%money_symbol%%amount% &7to the gang account."
          Take: "&6%player%&7 has withdrawn &a%money_symbol%%amount% &7from the gang account."
@@ -210,6 +218,7 @@ Errors:
       Cannot_Create: "Insufficient funds to create a &cgang account&7."
       Not_Owner: "Not the &b%tail%&7 of the gang."
       Duplicate_Names: "&e%gang%&7 already exists, try another name."
+      No_Invite: "You don't have an invitation to accept."
    Rank:
       Invalid: "This rank doesn't exist."
       Invalid_Permission: "This permission doesn't exist."
