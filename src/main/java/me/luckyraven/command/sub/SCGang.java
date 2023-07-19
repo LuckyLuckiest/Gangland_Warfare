@@ -5,7 +5,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.account.Account;
 import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
-import me.luckyraven.bukkit.InventoryGUI;
+import me.luckyraven.bukkit.gui.InventoryGUI;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.CommandManager;

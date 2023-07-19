@@ -16,7 +16,7 @@ import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.bukkit.InventoryGUI;
+import me.luckyraven.bukkit.gui.InventoryGUI;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
 import me.luckyraven.listener.player.RemoveAccount;
