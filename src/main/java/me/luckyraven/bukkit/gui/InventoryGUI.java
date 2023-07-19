@@ -1,6 +1,7 @@
-package me.luckyraven.bukkit;
+package me.luckyraven.bukkit.gui;
 
 import lombok.Getter;
+import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.data.user.User;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
