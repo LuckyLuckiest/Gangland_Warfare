@@ -135,7 +135,7 @@ Commands:
          Created_Gang: "Created a new gang &8[&a%gang%&8]&7."
          Gang_Fee: "The fee for creating a new gang account is &a%money_symbol%%amount%&7."
          Confirm_Timer: "You have &a%timer%&7 seconds to confirm the account."
-         Rename: "Changed gang name from %8[&d%old_gang%&8]&7 to &8[&e%gang%&8]&7."
+         Rename: "Changed gang name from &8[&d%old_gang%&8]&7 to &8[&e%gang%&8]&7."
       Remove:
          Removed_Gang: "Gang account &8[&a%gang%&8] &7has been removed."
          Confirm_Timer: "You have &a%timer%&7 seconds to confirm deleting the account."
