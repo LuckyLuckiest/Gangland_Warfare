@@ -312,23 +312,6 @@ public class SCGang extends CommandHandler {
 
 		}, getPermission() + ".change_description");
 
-		// gang stats in gui
-		// glw gang stats
-		String[] statsStr = {"stats", "statistics"};
-		Argument stats = new Argument(statsStr, getArgumentTree(), (argument, sender, args) -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
-				return;
-			}
-
-			Gang gang = gangManager.getGang(user.getGangId());
-
-			gangStat(user, userManager, gang);
-		});
-
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
 
@@ -350,8 +333,6 @@ public class SCGang extends CommandHandler {
 
 		arguments.add(name);
 		arguments.add(description);
-
-		arguments.add(stats);
 
 		getArgument().addAllSubArguments(arguments);
 	}
