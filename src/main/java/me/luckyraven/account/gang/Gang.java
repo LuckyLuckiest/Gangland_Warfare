@@ -4,7 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.account.Account;
 import me.luckyraven.data.user.User;
+import me.luckyraven.data.user.UserManager;
 import me.luckyraven.rank.Rank;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.time.Instant;
@@ -80,6 +82,7 @@ public class Gang extends Account<Integer, Map<UUID, Rank>> {
 		user.setGangId(-1);
 		user.removeAccount(this);
 		getGroup().remove(user.getUser().getUniqueId());
+		contribution.remove(user.getUser().getUniqueId());
 	}
 
 	public Map<UUID, Rank> getGroup() {
@@ -88,6 +91,17 @@ public class Gang extends Account<Integer, Map<UUID, Rank>> {
 
 	public void setGroup(Map<UUID, Rank> users) {
 		setValue(users);
+	}
+
+	public List<User<Player>> getOnlineMembers(UserManager<Player> userManager) {
+		List<User<Player>> users = new ArrayList<>();
+
+		for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+			User<Player> onUser = userManager.getUser(onlinePlayer);
+			if (onUser.hasGang() && onUser.getGangId() == this.getId()) users.add(onUser);
+		}
+
+		return users;
 	}
 
 	public Date getDateCreated() {
