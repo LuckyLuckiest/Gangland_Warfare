@@ -2,6 +2,7 @@ package me.luckyraven;
 
 import lombok.Getter;
 import me.luckyraven.account.gang.GangManager;
+import me.luckyraven.account.gang.MemberManager;
 import me.luckyraven.bukkit.gui.InventoryGUI;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.data.InformationManager;
@@ -19,6 +20,7 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
+import me.luckyraven.listener.player.GangMembersDamage;
 import me.luckyraven.listener.player.RemoveAccount;
 import me.luckyraven.rank.RankManager;
 import me.luckyraven.util.UnhandledError;
@@ -43,6 +45,7 @@ public final class Initializer {
 	private @Getter FileManager     fileManager;
 	private @Getter DatabaseManager databaseManager;
 	private @Getter GangManager     gangManager;
+	private @Getter MemberManager   memberManager;
 	private @Getter ListenerManager listenerManager;
 	private @Getter CommandManager  commandManager;
 	private @Getter RankManager     rankManager;
@@ -87,9 +90,11 @@ public final class Initializer {
 
 			// Gang manager
 			gangManager = new GangManager(gangland);
+			memberManager = new MemberManager(gangland);
 			for (DatabaseHandler handler : databaseManager.getDatabases())
 				if (handler instanceof GangDatabase gangDatabase) {
 					gangManager.initialize(gangDatabase);
+					memberManager.initialize(gangDatabase, gangManager, rankManager);
 					break;
 				}
 		}
@@ -108,9 +113,10 @@ public final class Initializer {
 	}
 
 	private void events() {
-		if (plugin instanceof Gangland) {
-			listenerManager.addEvent(new CreateAccount((Gangland) plugin));
-			listenerManager.addEvent(new RemoveAccount((Gangland) plugin));
+		if (plugin instanceof Gangland gangland) {
+			listenerManager.addEvent(new CreateAccount(gangland));
+			listenerManager.addEvent(new RemoveAccount(gangland));
+			listenerManager.addEvent(new GangMembersDamage(gangland));
 			listenerManager.addEvent(new InventoryGUI("dummy", 9));
 		}
 	}
