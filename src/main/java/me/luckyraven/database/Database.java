@@ -356,9 +356,10 @@ public interface Database {
 			case Types.INTEGER -> Integer.class;
 			case Types.BIGINT -> Long.class;
 			case Types.FLOAT, Types.REAL -> Float.class;
-			case Types.DOUBLE, Types.NUMERIC -> Double.class;
+			case Types.DOUBLE -> Double.class;
 			case Types.BOOLEAN, Types.BIT -> Boolean.class;
 			case Types.DATE, Types.TIME, Types.TIMESTAMP -> LocalDateTime.class;
+			case Types.NULL, Types.NUMERIC -> null;
 			default -> String.class;
 		};
 	}
