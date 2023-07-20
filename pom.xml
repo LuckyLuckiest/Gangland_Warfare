@@ -152,10 +152,10 @@
         </dependency>
 
         <!-- AnvilGUI -->
-        <dependency>
-            <groupId>net.wesjd</groupId>
-            <artifactId>anvilgui</artifactId>
-            <version>1.7.0-SNAPSHOT</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>net.wesjd</groupId>-->
+<!--            <artifactId>anvilgui</artifactId>-->
+<!--            <version>1.7.0-SNAPSHOT</version>-->
+<!--        </dependency>-->
     </dependencies>
 </project>
