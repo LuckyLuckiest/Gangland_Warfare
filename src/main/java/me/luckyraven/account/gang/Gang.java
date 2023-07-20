@@ -12,22 +12,13 @@ import org.bukkit.entity.Player;
 import java.time.Instant;
 import java.util.*;
 
-public class Gang extends Account<Integer, Map<UUID, Rank>> {
+@Getter
+@Setter
+public class Gang extends Account<Integer, List<Member>> {
 
-	@Getter
 	private final Set<Gang> alias;
-
-	@Getter
-	@Setter
-	private Map<UUID, Double> contribution;
-	@Getter
-	@Setter
-	private String            name, description;
-	@Getter
-	@Setter
+	private       String    name, displayName, color, description;
 	private double bounty, balance;
-	@Getter
-	@Setter
 	private long created;
 
 	public Gang() {
@@ -35,29 +26,29 @@ public class Gang extends Account<Integer, Map<UUID, Rank>> {
 
 		Random random = new Random();
 		setKey(random.nextInt(999_999));
-		setValue(new HashMap<>());
+		setValue(new ArrayList<>());
 
 		this.name = null;
+		this.displayName = "";
+		this.color = "";
 		this.description = "Conquering the hood";
 		this.created = Instant.now().toEpochMilli();
 		this.bounty = 0D;
 		this.balance = 0D;
 		this.alias = new HashSet<>();
-		this.contribution = new HashMap<>();
 	}
 
 	public Gang(int id) {
 		this();
 		setKey(id);
-		setValue(new HashMap<>());
 	}
 
-	public Gang(int id, Map<UUID, Rank> users) {
+	public Gang(int id, List<Member> users) {
 		this(id);
 		setValue(users);
 	}
 
-	public Gang(int id, Map<UUID, Rank> users, String name) {
+	public Gang(int id, List<Member> users, String name) {
 		this(id, users);
 		this.name = name;
 	}
@@ -70,26 +61,38 @@ public class Gang extends Account<Integer, Map<UUID, Rank>> {
 		setKey(id);
 	}
 
-	public void addUser(User<Player> user, Rank rank) {
+	public <T> void addMember(User<T> user, Member member, Rank rank) {
 		user.setGangId(this.getId());
-		setUserRank(user.getUser().getUniqueId(), rank);
-		contribution.put(user.getUser().getUniqueId(), 0D);
 		user.addAccount(this);
+		addMember(member, rank);
 	}
 
-	public void removeUser(User<Player> user) {
-		if (!getGroup().containsKey(user.getUser().getUniqueId())) return;
+	public void addMember(Member member, Rank rank) {
+		member.setGangId(this.getId());
+		member.setRank(rank);
+		getGroup().add(member);
+	}
+
+	public <T> void removeMember(User<T> user, Member member) {
+		if (!getGroup().contains(member)) return;
 		user.setGangId(-1);
 		user.removeAccount(this);
-		getGroup().remove(user.getUser().getUniqueId());
-		contribution.remove(user.getUser().getUniqueId());
+		removeMember(member);
 	}
 
-	public Map<UUID, Rank> getGroup() {
+	public void removeMember(Member member) {
+		if (!getGroup().contains(member)) return;
+		member.setGangId(-1);
+		member.setContribution(0D);
+		member.setRank(null);
+		getGroup().remove(member);
+	}
+
+	public List<Member> getGroup() {
 		return super.getValue();
 	}
 
-	public void setGroup(Map<UUID, Rank> users) {
+	public void setGroup(List<Member> users) {
 		setValue(users);
 	}
 
@@ -108,17 +111,9 @@ public class Gang extends Account<Integer, Map<UUID, Rank>> {
 		return new Date(created);
 	}
 
-	public Rank getUserRank(UUID user) {
-		return getGroup().get(user);
-	}
-
-	public void setUserRank(UUID user, Rank rank) {
-		getGroup().put(user, rank);
-	}
-
 	@Override
 	public String toString() {
-		return String.format("ID=%d,name=%s,description=%s,members=%s,created=%s,bounty=%.2f,alias=%s", getId(), name,
+		return String.format("ID=%d,name=%s,description=%s,members=%s,created=%s,bounty=%,.2f,alias=%s", getId(), name,
 		                     description, getGroup(), created, bounty, alias);
 	}
 
