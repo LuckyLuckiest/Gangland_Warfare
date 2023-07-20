@@ -1,9 +1,9 @@
 package me.luckyraven.database.sub;
 
 import me.luckyraven.account.gang.Gang;
+import me.luckyraven.account.gang.Member;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.file.FileManager;
-import me.luckyraven.rank.Rank;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -64,11 +64,14 @@ public class GangDatabase extends DatabaseHandler {
 
 	@Override
 	public void createTables() throws SQLException {
-		getDatabase().table("data").createTable("id INT PRIMARY KEY NOT NULL", "name CHAR(16) NOT NULL",
-		                                        "description TEXT NOT NULL", "members LONGTEXT NOT NULL",
-		                                        "contribution LONGTEXT NOT NULL", "bounty DOUBLE NOT NULL",
-		                                        "alias LONGTEXT NOT NULL", "created BIGINT NOT NULL");
-		getDatabase().table("account").createTable("id INT PRIMARY KEY NOT NULL", "balance DOUBLE NOT NULL");
+		getDatabase().table("data").createTable("id INT PRIMARY KEY UNIQUE NOT NULL", "name CHAR(16) NOT NULL",
+		                                        "display_name VARCHAR NOT NULL", "color VARCHAR NOT NULL",
+		                                        "description TEXT NOT NULL", "balance DOUBLE NOT NULL",
+		                                        "bounty DOUBLE NOT NULL", "alias LONGTEXT NOT NULL",
+		                                        "created BIGINT NOT NULL");
+		getDatabase().table("members").createTable("uuid CHAR(36) PRIMARY KEY UNIQUE NOT NULL",
+		                                           "gang_id INT REFERENCES data (id)", "contribution DOUBLE NOT NULL",
+		                                           "rank VARCHAR NOT NULL", "join_date BIGINT NOT NULL");
 	}
 
 	@Override
@@ -82,20 +85,6 @@ public class GangDatabase extends DatabaseHandler {
 	}
 
 	public void updateDataTable(Gang gang) throws SQLException {
-		List<String> tempMembers = new ArrayList<>();
-
-		for (Map.Entry<UUID, Rank> entry : gang.getGroup().entrySet())
-			tempMembers.add(entry.getKey() + ":" + entry.getValue().getName());
-
-		String members = getDatabase().createList(tempMembers);
-
-		List<String> tempContributions = new ArrayList<>();
-
-		for (Map.Entry<UUID, Double> entry : gang.getContribution().entrySet())
-			tempContributions.add(entry.getKey() + ":" + entry.getValue());
-
-		String contributions = getDatabase().createList(tempContributions);
-
 		List<String> tempAlias = new ArrayList<>();
 
 		for (Gang alias : gang.getAlias())
@@ -104,20 +93,24 @@ public class GangDatabase extends DatabaseHandler {
 		String alias = getDatabase().createList(tempAlias);
 
 		getDatabase().table("data").update("id = ?", new Object[]{gang.getId()}, new int[]{Types.INTEGER}, new String[]{
-				"name", "description", "members", "contribution", "bounty", "alias", "created"
+				"name", "display_name", "color", "description", "balance", "bounty", "alias", "created"
 		}, new Object[]{
-				gang.getName(), gang.getDescription(), members, contributions, gang.getBounty(), alias,
-				gang.getCreated()
+				gang.getName(), gang.getDisplayName(), gang.getColor(), gang.getDescription(), gang.getBalance(),
+				gang.getBounty(), alias, gang.getCreated()
 		}, new int[]{
-				Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.LONGVARCHAR, Types.DOUBLE, Types.LONGVARCHAR,
-				Types.BIGINT
+				Types.CHAR, Types.VARCHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.DOUBLE, Types.DOUBLE,
+				Types.LONGVARCHAR, Types.BIGINT
 		});
 	}
 
-	public void updateAccountTable(Gang gang) throws SQLException {
-		getDatabase().table("account").update("id = ?", new Object[]{gang.getId()}, new int[]{Types.INTEGER},
-		                                      new String[]{"balance"}, new Object[]{gang.getBalance()},
-		                                      new int[]{Types.DOUBLE});
+	public void updateMembersTable(Member member) throws SQLException {
+		getDatabase().table("members").update("uuid = ?", new Object[]{member.getUuid()}, new int[]{Types.CHAR},
+		                                      new String[]{"gang_id", "contribution", "rank", "join_date"},
+		                                      new Object[]{
+				                                      member.getGangId(), member.getContribution(),
+				                                      member.getRank() == null ? null : member.getRank().getName(),
+				                                      member.getGangJoinDate()
+		                                      }, new int[]{Types.INTEGER, Types.DOUBLE, Types.VARCHAR, Types.BIGINT});
 	}
 
 }
