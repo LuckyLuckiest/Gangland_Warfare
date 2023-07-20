@@ -196,8 +196,8 @@
 		"description": "Shows gang balance."
 	},
 	"gang_change_name": {
-		"usage": "/glw gang name",
-		"description": "Changes current gang name."
+		"usage": "/glw gang name <name>",
+		"description": "Changes the current gang name."
 	},
 	"gang_change_desc": {
 		"usage": "/glw gang desc",
@@ -219,10 +219,6 @@
 		"usage": "/glw gang leave",
 		"description": "Leaves the current gang."
 	},
-	"gang_rank_set": {
-		"usage": "/glw gang set <player> <rank> <name>",
-		"description": "Sets the player to the assigned rank in the gang."
-	},
 	"gang_rank_promote": {
 		"usage": "/glw gang promote <name>",
 		"description": "Promotes the player to the next rank."
@@ -230,6 +226,14 @@
 	"gang_rank_demote": {
 		"usage": "/glw gang demote <name>",
 		"description": "Demotes the player to the previous rank."
+	},
+	"gang_alias_request": {
+		"usage": "/glw gang alias request <id>",
+		"description": "Request alliances to the other gang."
+	},
+	"gang_alias_remove": {
+		"usage": "/glw gang alias abandon <id>",
+		"description": "Abandon alliances to that gang."
 	},
 	"safe_wand": {
 		"usage": "/glw safewand",
