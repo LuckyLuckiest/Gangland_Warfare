@@ -1,6 +1,8 @@
 package me.luckyraven;
 
 import lombok.Getter;
+import me.luckyraven.account.gang.Member;
+import me.luckyraven.account.gang.MemberManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
@@ -69,15 +71,23 @@ public final class Gangland extends JavaPlugin {
 			return;
 		}
 
-		UserManager<Player> userManager = initializer.getUserManager();
-		DatabaseHelper      helper      = new DatabaseHelper(this, databaseHandler);
-		for (Player player : Bukkit.getOnlinePlayers()) {
+		UserManager<Player> userManager   = initializer.getUserManager();
+		MemberManager       memberManager = initializer.getMemberManager();
+		DatabaseHelper      helper        = new DatabaseHelper(this, databaseHandler);
+
+		for (Player player : Bukkit.getOnlinePlayers())
 			if (!userManager.contains(userManager.getUser(player))) {
 				User<Player> newUser = new User<>(player);
 				createAccount.initializeUserData(newUser, helper);
 				userManager.add(newUser);
+
+				Member member = memberManager.getMember(player.getUniqueId());
+				if (member == null) {
+					Member newMember = new Member(player.getUniqueId());
+					createAccount.initializeMemberData(newMember, helper);
+					memberManager.add(newMember);
+				}
 			}
-		}
 	}
 
 }
