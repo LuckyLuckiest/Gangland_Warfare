@@ -135,14 +135,31 @@ Commands:
          Created_Gang: "Created a new gang &8[&a%gang%&8]&7."
          Gang_Fee: "The fee for creating a new gang account is &a%money_symbol%%amount%&7."
          Confirm_Timer: "You have &a%timer%&7 seconds to confirm the account."
+         Rename: "Changed gang name from %8[&d%old_gang%&8]&7 to &8[&e%gang%&8]&7."
       Remove:
          Removed_Gang: "Gang account &8[&a%gang%&8] &7has been removed."
          Confirm_Timer: "You have &a%timer%&7 seconds to confirm deleting the account."
-      Have_Gang: "You already have a gang."
+      Available:
+         Player_In_Gang: "You already have a gang."
+         Target_In_Gang: "&6%player%&7 already in a gang."
       Balance: "Gang balance is: &b%money_symbol%%balance%"
       Invite:
          Player: "You have invited &6%player%&7 to the gang."
          Target: "You were invited to join &8[&a%gang%&8]&7."
+         Accept: "You have joined &8[&a%gang%&8]&7 gang."
+         Joined: "&6%player%&7 joined the gang."
+      Promote:
+         Player_Success: "You have promoted &6%player%&7 to &e%rank%&7."
+         Target_Success: "You have been promoted to &e%rank%&7."
+         End: "Reached the last rank."
+      Demote:
+         Player_Success: "You have demoted &6%player%&7 to &e%rank%&7."
+         Target_Success: "You have been demoted to &e%rank%&7."
+         End: "Reached the initial rank."
+      Leave:
+         Left: "You have left the gang."
+         Owner_Rank: "Need to transfer the ownership to another user."
+         Kicked: "You have kicked &6%player%&7 from the gang."
       Money:
          Add: "&6%player%&7 has deposited &a%money_symbol%%amount% &7to the gang account."
          Take: "&6%player%&7 has withdrawn &a%money_symbol%%amount% &7from the gang account."
@@ -213,6 +230,9 @@ Errors:
       Cannot_Create: "Insufficient funds to create a &cgang account&7."
       Not_Owner: "Not the &b%tail%&7 of the gang."
       Duplicate_Names: "&e%gang%&7 already exists, try another name."
+      No_Invite: "You don't have an invitation to accept."
+      Same_Rank: "Can't perform actions to similar ranks."
+      Higher_Rank: "Can't perform actions to higher rank than yours."
    Rank:
       Invalid: "This rank doesn't exist."
       Invalid_Permission: "This permission doesn't exist."

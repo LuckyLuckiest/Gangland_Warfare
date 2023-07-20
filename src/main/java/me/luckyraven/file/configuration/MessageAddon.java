@@ -64,7 +64,15 @@ public enum MessageAddon {
 	                                                                                    Type.COMMAND),
 	GANG_INVITE_ACCEPT("Commands.Gang.Invite.Accept", Type.COMMAND), GANG_PLAYER_JOINED("Commands.Gang.Invite.Joined",
 	                                                                                    Type.COMMAND), GANG_LEAVE(
-			"Commands.Gang.Left", Type.COMMAND),
+			"Commands.Gang.Leave.Left", Type.COMMAND), GANG_TRANSFER_OWNERSHIP("Commands.Gang.Leave.Owner_Rank",
+	                                                                           Type.COMMAND),
+	GANG_PROMOTE_PLAYER_SUCCESS("Commands.Gang.Promote.Player_Success", Type.COMMAND), GANG_PROMOTE_TARGET_SUCCESS(
+			"Commands.Gang.Promote.Target_Success", Type.COMMAND), GANG_PROMOTE_END("Commands.Gang.Promote.End",
+	                                                                                Type.COMMAND),
+	GANG_DEMOTE_PLAYER_SUCCESS("Commands.Gang.Demote.Player_Success", Type.COMMAND), GANG_DEMOTE_TARGET_SUCCESS(
+			"Commands.Gang.Demote.Target_Success", Type.COMMAND), GANG_DEMOTE_END("Commands.Gang.Demote.End",
+	                                                                              Type.COMMAND), GANG_KICKED_TARGET(
+			"Commands.Gang.Leave.Kicked", Type.COMMAND), GANG_RENAME("Commands.Gang.Create.Rename", Type.COMMAND),
 
 	// commands - rank
 	RANK_CREATED("Commands.Rank.Create.Created_Rank", Type.COMMAND), RANK_CREATE_CONFIRM(
@@ -120,7 +128,8 @@ public enum MessageAddon {
 	MUST_CREATE_GANG("Errors.Gang.Must_Create", Type.ERROR), CANNOT_CREATE_GANG("Errors.Gang.Cannot_Create",
 	                                                                            Type.ERROR), NOT_OWNER(
 			"Errors.Gang.Not_Owner", Type.ERROR), DUPLICATE_GANG_NAME("Errors.Gang.Duplicate_Names", Type.ERROR),
-	NO_GANG_INVITATION("Errors.Gang.No_Invite", Type.ERROR),
+	NO_GANG_INVITATION("Errors.Gang.No_Invite", Type.ERROR), GANG_SAME_RANK_ACTION("Errors.Gang.Same_Rank", Type.ERROR),
+	GANG_HIGHER_RANK_ACTION("Errors.Gang.Higher_Rank", Type.ERROR),
 
 	// errors - rank
 	INVALID_RANK("Errors.Rank.Invalid", Type.ERROR), INVALID_RANK_PERMISSION("Errors.Rank.Invalid_Permission",
