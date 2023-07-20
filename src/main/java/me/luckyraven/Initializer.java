@@ -2,6 +2,7 @@ package me.luckyraven;
 
 import lombok.Getter;
 import me.luckyraven.account.gang.GangManager;
+import me.luckyraven.bukkit.gui.InventoryGUI;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.command.sub.*;
@@ -16,7 +17,6 @@ import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.bukkit.gui.InventoryGUI;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
 import me.luckyraven.listener.player.RemoveAccount;
@@ -126,6 +126,7 @@ public final class Initializer {
 		commandManager.addCommand(new SCBank(gangland));
 		commandManager.addCommand(new SCEconomy(gangland));
 		commandManager.addCommand(new SCRank(gangland));
+		commandManager.addCommand(new SCOption(gangland));
 
 		// debug commands
 		commandManager.addCommand(new SCDebug(gangland));
