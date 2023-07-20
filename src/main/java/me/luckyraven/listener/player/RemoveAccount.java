@@ -11,10 +11,10 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 public class RemoveAccount implements Listener {
 
-	private static UserManager<Player> userManager = null;
+	private final UserManager<Player> userManager;
 
 	public RemoveAccount(Gangland gangland) {
-		userManager = gangland.getInitializer().getUserManager();
+		this.userManager = gangland.getInitializer().getUserManager();
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
