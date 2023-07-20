@@ -31,15 +31,35 @@
 
 0.0.5-DEV:
 	- when using mysql, save the data into sqlite (using backup)
+	- Multiple inventory pages system
+	- Changing gang description using Anvil GUI
 	- bounty
 	- phone
 
 0.0.6-DEV:
 	- Economy system (implement vault dependency)
     - level system
-    - ranks system
+    - working permissions in ranks
+    - Gang settings
 
 0.0.7-DEV:
 	- Enhance wanted level
+	- Gang attacks
+	- Gang challenges
 
-expected release on v0.1.0
+0.0.8-DEV:
+	- Safes heist
+	- Purchasable houses
+	- Cars
+
+0.0.9-DEV:
+	- Fully functional Heist system
+	- Weapons
+
+0.1-DEV:
+	- Fixing bugs as much as possible
+
+0.1.1:
+	- Release the plugin
+
+expected release on v0.1.1
