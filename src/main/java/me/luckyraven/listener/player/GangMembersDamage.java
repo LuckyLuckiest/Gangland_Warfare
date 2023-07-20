@@ -1,0 +1,47 @@
+package me.luckyraven.listener.player;
+
+import me.luckyraven.Gangland;
+import me.luckyraven.account.gang.GangManager;
+import me.luckyraven.data.user.User;
+import me.luckyraven.data.user.UserManager;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+
+public class GangMembersDamage implements Listener {
+
+	private static UserManager<Player> userManager = null;
+	private static GangManager         gangManager = null;
+
+	public GangMembersDamage(Gangland gangland) {
+		if (userManager == null) userManager = gangland.getInitializer().getUserManager();
+		if (gangManager == null) gangManager = gangland.getInitializer().getGangManager();
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void onGangMemberHitMembers(EntityDamageByEntityEvent event) {
+		// checks for player-to-player damage
+		Player damager;
+		if (event.getDamager() instanceof Player player) damager = player;
+		else if (event.getDamager() instanceof Projectile projectile) {
+			if (projectile.getShooter() instanceof Player player) damager = player;
+			else return;
+		} else return;
+		if (!(event.getEntity() instanceof Player damaged)) return;
+
+		User<Player> userDamager = userManager.getUser(damager);
+		User<Player> userDamaged = userManager.getUser(damaged);
+
+		// checks if they are in a gang
+		if (!(userDamager.hasGang() && userDamaged.hasGang())) return;
+
+		// checks if they are in the same gang
+		if (userDamager.getGangId() != userDamaged.getGangId()) return;
+
+		event.setCancelled(true);
+	}
+
+}
