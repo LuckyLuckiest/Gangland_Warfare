@@ -5,6 +5,8 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ConfirmArgument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.command.sub.SCDebug;
+import me.luckyraven.command.sub.SCOption;
 import me.luckyraven.data.HelpInfo;
 import me.luckyraven.datastructure.Node;
 import me.luckyraven.datastructure.Tree;
@@ -21,7 +23,7 @@ import java.util.*;
 public abstract class CommandHandler implements TabCompleter {
 
 	@Getter
-	private static final Map<String, CommandHandler> treeMap = new HashMap<>();
+	private static final Map<String, CommandHandler> commandMap = new HashMap<>();
 
 	@Getter
 	private final String         label;
@@ -62,7 +64,7 @@ public abstract class CommandHandler implements TabCompleter {
 
 		initializeArguments(gangland);
 
-		treeMap.put(this.label, this);
+		commandMap.put(this.label, this);
 	}
 
 	protected abstract void onExecute(Argument argument, CommandSender commandSender, String[] arguments);
@@ -92,9 +94,17 @@ public abstract class CommandHandler implements TabCompleter {
 	@Override
 	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
 	                                  @NotNull String[] args) {
+		// commands according to user permission
 		List<CommandHandler> commandHandlers = new ArrayList<>();
-		for (CommandHandler handler : treeMap.values())
+
+		// classes that I don't want displayed in tab completion
+		List<Class<? extends CommandHandler>> filters = Arrays.asList(SCDebug.class, SCOption.class);
+
+		for (CommandHandler handler : commandMap.values()) {
+			if (filters.stream().anyMatch(filterClass -> filterClass.isInstance(handler))) continue;
+
 			if (sender.hasPermission(handler.getPermission())) commandHandlers.add(handler);
+		}
 
 		if (args.length == 1) return commandHandlers.stream().map(CommandHandler::getLabel).toList();
 
