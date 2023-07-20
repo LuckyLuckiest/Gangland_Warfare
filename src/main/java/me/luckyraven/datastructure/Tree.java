@@ -5,9 +5,11 @@ import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
-public class Tree<E> {
+public class Tree<E> implements Iterable<E> {
 
 	@Getter
 	@Setter
@@ -115,6 +117,18 @@ public class Tree<E> {
 		return null;
 	}
 
+	public boolean isDescendant(Node<E> ancestor, Node<E> descendant) {
+		if (ancestor == null || descendant == null || ancestor == descendant) return false;
+
+		return isDescendantRec(ancestor, descendant);
+	}
+
+	private boolean isDescendantRec(Node<E> ancestor, Node<E> descendant) {
+		for (Node<E> child : ancestor.getChildren())
+			if (child == descendant || isDescendantRec(child, descendant)) return true;
+		return false;
+	}
+
 	public List<Node<E>> getAllNodes() {
 		List<Node<E>> nodes = new ArrayList<>();
 		buildTreeInfo(root, nodes);
@@ -126,9 +140,38 @@ public class Tree<E> {
 		for (Node<E> child : node.getChildren()) buildTreeInfo(child, list);
 	}
 
+	@NotNull
+	@Override
+	public Iterator<E> iterator() {
+		return new TreeIterator();
+	}
+
 	@Override
 	public String toString() {
 		return getAllNodes().stream().map(Object::toString).toList().toString();
+	}
+
+	private class TreeIterator implements Iterator<E> {
+
+		private final List<Node<E>> nodes;
+		private       int           currentIndex;
+
+		private TreeIterator() {
+			this.nodes = getAllNodes();
+			this.currentIndex = 0;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return currentIndex < nodes.size();
+		}
+
+		@Override
+		public E next() {
+			if (!hasNext()) throw new NoSuchElementException("No more elements in the tree.");
+			return nodes.get(currentIndex++).getData();
+		}
+
 	}
 
 }
