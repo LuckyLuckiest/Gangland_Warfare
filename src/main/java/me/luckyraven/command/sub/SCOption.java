@@ -3,6 +3,8 @@ package me.luckyraven.command.sub;
 import me.luckyraven.Gangland;
 import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
+import me.luckyraven.account.gang.Member;
+import me.luckyraven.account.gang.MemberManager;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.OptionalArgument;
@@ -20,7 +22,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.Objects;
-import java.util.UUID;
 
 public class SCOption extends CommandHandler {
 
@@ -38,11 +39,12 @@ public class SCOption extends CommandHandler {
 
 	@Override
 	protected void initializeArguments(Gangland gangland) {
-		UserManager<Player> userManager = gangland.getInitializer().getUserManager();
-		GangManager         gangManager = gangland.getInitializer().getGangManager();
-		RankManager         rankManager = gangland.getInitializer().getRankManager();
+		UserManager<Player> userManager   = gangland.getInitializer().getUserManager();
+		MemberManager       memberManager = gangland.getInitializer().getMemberManager();
+		GangManager         gangManager   = gangland.getInitializer().getGangManager();
+		RankManager         rankManager   = gangland.getInitializer().getRankManager();
 
-		Argument gang = gangArgument(userManager, gangManager, rankManager);
+		Argument gang = gangArgument(userManager, memberManager, gangManager, rankManager);
 
 		getArgument().addSubArgument(gang);
 	}
@@ -52,7 +54,8 @@ public class SCOption extends CommandHandler {
 
 	}
 
-	private Argument gangArgument(UserManager<Player> userManager, GangManager gangManager, RankManager rankManager) {
+	private Argument gangArgument(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+	                              RankManager rankManager) {
 		Argument gang = new Argument("gang", getArgumentTree());
 
 		Argument rank = new Argument("rank", getArgumentTree());
@@ -63,8 +66,9 @@ public class SCOption extends CommandHandler {
 
 		// glw option gang rank <target> <rank>
 		Argument rankType = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
+			Player       player     = (Player) sender;
+			User<Player> user       = userManager.getUser(player);
+			Member       userMember = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
 				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
@@ -73,34 +77,34 @@ public class SCOption extends CommandHandler {
 
 			Gang userGang = gangManager.getGang(user.getGangId());
 
-			String targetStr  = args[3];
-			String rankStr    = args[4];
-			UUID   targetUuid = null;
-			for (UUID uuid : userGang.getGroup().keySet()) {
-				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+			String targetStr    = args[3];
+			String rankStr      = args[4];
+			Member targetMember = null;
+			for (Member member : userGang.getGroup()) {
+				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
 
 				if (!Objects.requireNonNull(offlinePlayer.getName()).equalsIgnoreCase(targetStr)) continue;
 
-				targetUuid = uuid;
+				targetMember = member;
 				break;
 			}
 
-			if (targetUuid == null) {
+			if (targetMember == null) {
 				player.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
 				return;
 			}
 
 			// only support promotion
 			// cannot promote more than your rank
-			if (userGang.getUserRank(player.getUniqueId()).equals(userGang.getUserRank(targetUuid))) {
+			if (userMember.getRank().equals(targetMember.getRank())) {
 				player.sendMessage(MessageAddon.GANG_SAME_RANK_ACTION.toString());
 				return;
 			}
 
 			Rank nextRank = rankManager.get(rankStr);
-			userGang.setUserRank(targetUuid, nextRank);
+			targetMember.setRank(nextRank);
 
-			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetUuid);
+			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
 			if (offlinePlayer.isOnline()) Objects.requireNonNull(offlinePlayer.getPlayer()).sendMessage(
 					MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString().replace("%rank%", nextRank.getName()));
 			player.sendMessage(MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString()
@@ -112,7 +116,8 @@ public class SCOption extends CommandHandler {
 				if (handler instanceof GangDatabase gangDatabase) {
 					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
-					helper.runQueries(database -> gangDatabase.updateDataTable(userGang));
+					Member finalTargetMember = targetMember;
+					helper.runQueries(database -> gangDatabase.updateMembersTable(finalTargetMember));
 					break;
 				}
 		});
