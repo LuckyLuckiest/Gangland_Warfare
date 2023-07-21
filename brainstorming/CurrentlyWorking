@@ -30,9 +30,11 @@
 	- saving gang data using database helper
 
 0.0.5-DEV:
+	- need to build component builder that would understand other sql languages
 	- when using mysql, save the data into sqlite (using backup)
 	- Multiple inventory pages system
 	- Changing gang description using Anvil GUI
+	- add a searching mechanism for gangs list (use GUIs)
 	- bounty
 	- phone
 
