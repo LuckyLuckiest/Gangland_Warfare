@@ -43,22 +43,27 @@ public class InventoryGUI implements Listener {
 	}
 
 	public void setItem(int slot, Material material, @Nullable String displayName, @Nullable List<String> lore,
+	                    boolean enchanted, boolean draggable) {
+		setItem(slot, material, displayName, lore, enchanted, draggable, null);
+	}
+
+	public void setItem(int slot, Material material, @Nullable String displayName, @Nullable List<String> lore,
 	                    boolean enchanted, boolean draggable, BiConsumer<InventoryGUI, ItemBuilder> clickable) {
 		ItemBuilder item = new ItemBuilder(material).setDisplayName(displayName).setLore(lore);
 
 		if (enchanted) item.addEnchantment(Enchantment.DURABILITY, 1);
 
-		setItem(slot, item.build(), draggable);
+		setItem(slot, item, draggable, clickable);
+	}
+
+	public void setItem(int slot, ItemBuilder itemBuilder, boolean draggable,
+	                    BiConsumer<InventoryGUI, ItemBuilder> clickable) {
+		setItem(slot, itemBuilder.build(), draggable);
 
 		if (clickable != null) {
 			clickableSlots.put(slot, clickable);
-			clickableItem.put(slot, item);
+			clickableItem.put(slot, itemBuilder);
 		}
-	}
-
-	public void setItem(int slot, Material material, @Nullable String displayName, @Nullable List<String> lore,
-	                    boolean enchanted, boolean draggable) {
-		setItem(slot, material, displayName, lore, enchanted, draggable, null);
 	}
 
 	public void setItem(int slot, ItemStack itemStack, boolean draggable) {
@@ -66,10 +71,36 @@ public class InventoryGUI implements Listener {
 		if (draggable) draggableSlots.add(slot);
 	}
 
+	public void setItem(int slot, ItemStack itemStack, boolean draggable,
+	                    BiConsumer<InventoryGUI, ItemBuilder> clickable) {
+		setItem(slot, new ItemBuilder(itemStack), draggable, clickable);
+	}
+
+	public void aroundSlot(int slot, Material material) {
+		ItemBuilder itemBuilder = new ItemBuilder(material);
+
+		ItemStack item = itemBuilder.setDisplayName(null).build();
+
+		// left-mid : 21 -> 21 - 9 = 12, 21 + 9
+		// mid      : 22 -> 22 - 9 = 13, 22 + 9
+		// right-mid: 23 -> 23 - 9 = 14, 23 + 9
+
+		int topLeft = slot - 10;
+
+		for (int i = topLeft; i < topLeft + 3; i++)
+			for (int j = i; j < i + 9 * 2 + 1; j += 9)
+				try {
+					if (j == slot) continue;
+
+					setItem(j, item, false);
+				} catch (ArrayIndexOutOfBoundsException ignored) {
+				}
+	}
+
 	public void fillInventory() {
 		ItemBuilder itemBuilder = new ItemBuilder(Material.BLACK_STAINED_GLASS_PANE);
 
-		ItemStack item = itemBuilder.setDisplayName("&k||||").build();
+		ItemStack item = itemBuilder.setDisplayName(null).build();
 
 		for (int i = 0; i < inventory.getSize(); i++) {
 			if (inventory.getItem(i) != null) continue;
