@@ -183,6 +183,18 @@
 		"usage": "/glw gang delete",
 		"description": "Deletes current gang."
 	},
+	"gang_display_name": {
+		"usage": "/glw gang display <name>",
+		"description": "Sets the display name of the gang."
+	},
+	"gang_display_remove": {
+		"usage": "/glw gang display remove",
+		"description": "Removes the display name of the gang."
+	},
+	"gang_color": {
+		"usage": "/glw gang color",
+		"description": "Select gang color."
+	},
 	"gang_economy_deposit": {
 		"usage": "/glw gang deposit <amount>",
 		"description": "Deposits the amount value to the gang."

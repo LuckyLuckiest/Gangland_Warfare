@@ -5,7 +5,10 @@ import lombok.Setter;
 import me.luckyraven.account.Account;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.rank.Rank;
+import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.color.Color;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -21,6 +24,21 @@ public class Gang extends Account<Integer, List<Member>> {
 	private double bounty, balance;
 	private long created;
 
+	public Gang(int id, List<Member> users, String name) {
+		this(id, users);
+		this.name = name;
+	}
+
+	public Gang(int id, List<Member> users) {
+		this(id);
+		setValue(users);
+	}
+
+	public Gang(int id) {
+		this();
+		setKey(id);
+	}
+
 	public Gang() {
 		super(null, null);
 
@@ -30,7 +48,7 @@ public class Gang extends Account<Integer, List<Member>> {
 
 		this.name = null;
 		this.displayName = "";
-		this.color = "";
+		this.color = Color.BLACK.name();
 		this.description = "Conquering the hood";
 		this.created = Instant.now().toEpochMilli();
 		this.bounty = 0D;
@@ -38,19 +56,10 @@ public class Gang extends Account<Integer, List<Member>> {
 		this.alias = new HashSet<>();
 	}
 
-	public Gang(int id) {
-		this();
-		setKey(id);
-	}
-
-	public Gang(int id, List<Member> users) {
-		this(id);
-		setValue(users);
-	}
-
-	public Gang(int id, List<Member> users, String name) {
-		this(id, users);
-		this.name = name;
+	public <T> void addMember(User<T> user, Member member, Rank rank) {
+		user.setGangId(this.getId());
+		user.addAccount(this);
+		addMember(member, rank);
 	}
 
 	public int getId() {
@@ -61,16 +70,18 @@ public class Gang extends Account<Integer, List<Member>> {
 		setKey(id);
 	}
 
-	public <T> void addMember(User<T> user, Member member, Rank rank) {
-		user.setGangId(this.getId());
-		user.addAccount(this);
-		addMember(member, rank);
-	}
-
 	public void addMember(Member member, Rank rank) {
 		member.setGangId(this.getId());
 		member.setRank(rank);
 		getGroup().add(member);
+	}
+
+	public List<Member> getGroup() {
+		return super.getValue();
+	}
+
+	public void setGroup(List<Member> users) {
+		setValue(users);
 	}
 
 	public <T> void removeMember(User<T> user, Member member) {
@@ -88,14 +99,6 @@ public class Gang extends Account<Integer, List<Member>> {
 		getGroup().remove(member);
 	}
 
-	public List<Member> getGroup() {
-		return super.getValue();
-	}
-
-	public void setGroup(List<Member> users) {
-		setValue(users);
-	}
-
 	public List<User<Player>> getOnlineMembers(UserManager<Player> userManager) {
 		List<User<Player>> users = new ArrayList<>();
 
@@ -109,6 +112,11 @@ public class Gang extends Account<Integer, List<Member>> {
 
 	public Date getDateCreated() {
 		return new Date(created);
+	}
+
+	public String getDisplayNameString() {
+		return displayName.isEmpty() ? this.name : ChatUtil.color(
+				this.displayName + "&c" + SettingAddon.getGangDisplayNameChar());
 	}
 
 	@Override

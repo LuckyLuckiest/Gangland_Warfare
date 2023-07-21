@@ -26,6 +26,9 @@ import me.luckyraven.rank.Rank;
 import me.luckyraven.rank.RankManager;
 import me.luckyraven.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.color.Color;
+import me.luckyraven.util.color.ColorUtil;
+import me.luckyraven.util.color.MaterialType;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.bukkit.Bukkit;
@@ -132,7 +135,8 @@ public class SCGang extends CommandHandler {
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
 				player.sendMessage(MessageAddon.GANG_INVITE_PLAYER.toString().replace("%player%", targetStr));
-				target.sendMessage(MessageAddon.GANG_INVITE_TARGET.toString().replace("%gang%", gang.getName()));
+				target.sendMessage(
+						MessageAddon.GANG_INVITE_TARGET.toString().replace("%gang%", gang.getDisplayNameString()));
 			}, null, time -> {
 				playerInvite.remove(targetUser);
 				inviteTimer.remove(targetUser);
@@ -174,7 +178,8 @@ public class SCGang extends CommandHandler {
 
 			member.setGangJoinDate(Instant.now().toEpochMilli());
 			gang.addMember(user, member, rank);
-			sender.sendMessage(MessageAddon.GANG_INVITE_ACCEPT.toString().replace("%gang%", gang.getName()));
+			sender.sendMessage(
+					MessageAddon.GANG_INVITE_ACCEPT.toString().replace("%gang%", gang.getDisplayNameString()));
 
 			// update to database
 			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
@@ -198,7 +203,7 @@ public class SCGang extends CommandHandler {
 				if (!timer.isCancelled()) timer.cancel();
 				inviteTimer.remove(user);
 			}
-		});
+		}, getPermission() + ".accept");
 
 		// remove user from gang
 		// glw gang kick <name>
@@ -317,7 +322,17 @@ public class SCGang extends CommandHandler {
 			// TODO work on Anvil GUI
 		}, getPermission() + ".change_description");
 
+		// gang alias
+		// glw gang alias <request/abandon> <id>
 		Argument alias = gangAlias(userManager, memberManager, gangManager);
+
+		// change gang display name
+		// glw gang display <name>
+		Argument display = gangDisplayName(userManager, gangManager);
+
+		// change gang color using gui
+		// glw gang color
+		Argument color = gangColor(userManager, gangManager);
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
@@ -342,6 +357,9 @@ public class SCGang extends CommandHandler {
 		arguments.add(description);
 
 		arguments.add(alias);
+
+		arguments.add(display);
+		arguments.add(color);
 
 		getArgument().addAllSubArguments(arguments);
 	}
@@ -423,7 +441,7 @@ public class SCGang extends CommandHandler {
 				}
 			}
 
-			player.sendMessage(MessageAddon.GANG_CREATED.toString().replace("%gang%", gang.getName()));
+			player.sendMessage(MessageAddon.GANG_CREATED.toString().replace("%gang%", gang.getDisplayNameString()));
 
 			createGangName.remove(user);
 
@@ -1183,14 +1201,14 @@ public class SCGang extends CommandHandler {
 							onlinePlayer.getUniqueId()).getGangId() == sending.getId()).toList().forEach(
 							pl -> pl.sendMessage(MessageAddon.GANG_ALIAS_SEND_REQUEST.toString()
 							                                                         .replace("%gang%",
-							                                                                  receiving.getName())));
+							                                                                  receiving.getDisplayNameString())));
 
 					// send a message to every member in receiving gang
 					Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
 							onlinePlayer.getUniqueId()).getGangId() == receiving.getId()).toList().forEach(
 							pl -> pl.sendMessage(MessageAddon.GANG_ALIAS_RECEIVE_REQUEST.toString()
 							                                                            .replace("%gang%",
-							                                                                     sending.getName())));
+							                                                                     sending.getDisplayNameString())));
 
 					gangsIdMap.put(receiving, sending);
 
@@ -1207,14 +1225,16 @@ public class SCGang extends CommandHandler {
 					// send a message to every member in the sending gang
 					Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
 							onlinePlayer.getUniqueId()).getGangId() == sending.getId()).toList().forEach(
-							pl -> pl.sendMessage(
-									MessageAddon.GANG_ALIAS_ABANDON.toString().replace("%gang%", receiving.getName())));
+							pl -> pl.sendMessage(MessageAddon.GANG_ALIAS_ABANDON.toString()
+							                                                    .replace("%gang%",
+							                                                             receiving.getDisplayNameString())));
 
 					// send a message to every member in receiving gang
 					Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
 							onlinePlayer.getUniqueId()).getGangId() == receiving.getId()).toList().forEach(
-							pl -> pl.sendMessage(
-									MessageAddon.GANG_ALIAS_ABANDON.toString().replace("%gang%", sending.getName())));
+							pl -> pl.sendMessage(MessageAddon.GANG_ALIAS_ABANDON.toString()
+							                                                    .replace("%gang%",
+							                                                             sending.getDisplayNameString())));
 
 					sending.getAlias().remove(receiving);
 					receiving.getAlias().remove(sending);
@@ -1272,12 +1292,12 @@ public class SCGang extends CommandHandler {
 			// send a message to every member in the sending gang
 			Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
 					onlinePlayer.getUniqueId()).getGangId() == sending.getId()).toList().forEach(pl -> pl.sendMessage(
-					MessageAddon.GANG_ALIAS_ACCEPT.toString().replace("%gang%", receiving.getName())));
+					MessageAddon.GANG_ALIAS_ACCEPT.toString().replace("%gang%", receiving.getDisplayNameString())));
 
 			// send a message to every member in receiving gang
 			Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
 					onlinePlayer.getUniqueId()).getGangId() == receiving.getId()).toList().forEach(pl -> pl.sendMessage(
-					MessageAddon.GANG_ALIAS_ACCEPT.toString().replace("%gang%", sending.getName())));
+					MessageAddon.GANG_ALIAS_ACCEPT.toString().replace("%gang%", sending.getDisplayNameString())));
 
 			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
 				if (handler instanceof GangDatabase gangDatabase) {
@@ -1329,12 +1349,12 @@ public class SCGang extends CommandHandler {
 			// send a message to every member in the sending gang
 			Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
 					onlinePlayer.getUniqueId()).getGangId() == sending.getId()).toList().forEach(pl -> pl.sendMessage(
-					MessageAddon.GANG_ALIAS_REJECT.toString().replace("%gang%", receiving.getName())));
+					MessageAddon.GANG_ALIAS_REJECT.toString().replace("%gang%", receiving.getDisplayNameString())));
 
 			// send a message to every member in receiving gang
 			Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
 					onlinePlayer.getUniqueId()).getGangId() == receiving.getId()).toList().forEach(pl -> pl.sendMessage(
-					MessageAddon.GANG_ALIAS_REJECT.toString().replace("%gang%", sending.getName())));
+					MessageAddon.GANG_ALIAS_REJECT.toString().replace("%gang%", sending.getDisplayNameString())));
 
 			gangsIdMap.remove(receiving);
 
@@ -1353,8 +1373,160 @@ public class SCGang extends CommandHandler {
 		return alias;
 	}
 
+	private Argument gangDisplayName(UserManager<Player> userManager, GangManager gangManager) {
+		Argument display = new Argument("display", getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+		}, getPermission() + ".display_name");
+
+		Argument displayName = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			String displayNameStr = args[2];
+			Gang   gang           = gangManager.getGang(user.getGangId());
+
+			gang.setDisplayName(displayNameStr);
+			player.sendMessage(MessageAddon.GANG_DISPLAY_SET.toString().replace("%display%", displayNameStr));
+
+			// update database
+			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+				if (handler instanceof GangDatabase gangDatabase) {
+					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+					helper.runQueries(database -> gangDatabase.updateDataTable(gang));
+					break;
+				}
+		});
+
+		// glw gang display remove
+		Argument removeDisplay = new Argument("remove", getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			Gang gang = gangManager.getGang(user.getGangId());
+
+			gang.setDisplayName("");
+			player.sendMessage(MessageAddon.GANG_DISPLAY_REMOVED.toString());
+
+			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+				if (handler instanceof GangDatabase gangDatabase) {
+					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+					helper.runQueries(database -> gangDatabase.updateDataTable(gang));
+					break;
+				}
+		});
+
+		display.addSubArgument(removeDisplay);
+		display.addSubArgument(displayName);
+
+		return display;
+	}
+
+	private Argument gangColor(UserManager<Player> userManager, GangManager gangManager) {
+		return new Argument("color", getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			Gang gang = gangManager.getGang(user.getGangId());
+
+			InventoryGUI colorGUI   = new InventoryGUI("&5&lChoose a color", 6 * 9);
+			InventoryGUI confirmGUI = new InventoryGUI("&4&lAre you sure?", 6 * 9);
+
+			int row = 2, column = 2;
+			for (Color color : Color.values()) {
+				String colorName = color.name();
+				String colorCode = color.getColorCode();
+
+				MaterialType type         = MaterialType.WOOL;
+				String       materialName = type.name();
+
+				Material material = ColorUtil.getMaterialByColor(colorName, materialName);
+
+				if (material != null) {
+					String name = colorCode + ChatUtil.capitalize(colorName.toLowerCase().replace("_", " ")) + " " +
+							ChatUtil.capitalize(materialName.toLowerCase().replace("_", " "));
+
+					ItemBuilder itemBuilder = new ItemBuilder(material).setDisplayName(name);
+
+					colorGUI.setItem((row - 1) * 9 + (column - 1), itemBuilder, false, (inventory, item) -> {
+						inventory.close(user);
+
+						confirmGUI.setItem(22, itemBuilder.build(), false);
+
+						Material mat = ColorUtil.getMaterialByColor(colorName, MaterialType.STAINED_GLASS_PANE.name());
+						confirmGUI.aroundSlot(22, mat);
+
+						confirmGUI.setItem(49, Material.GREEN_CONCRETE, "&aConfirm", null, false, false, (inv, it) -> {
+							inv.close(user);
+
+							// save the data in gang
+							gang.setColor(colorName);
+
+							// inform player
+							String colorSelected = ChatUtil.color(
+									colorCode + ChatUtil.capitalize(colorName.toLowerCase().replace("_", " ")));
+							player.sendMessage(
+									MessageAddon.GANG_COLOR_SET.toString().replace("%color%", colorSelected));
+
+							// update database
+							for (DatabaseHandler handler : gangland.getInitializer()
+							                                       .getDatabaseManager()
+							                                       .getDatabases())
+								if (handler instanceof GangDatabase gangDatabase) {
+									DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+									helper.runQueries(database -> gangDatabase.updateDataTable(gang));
+									break;
+								}
+						});
+
+						confirmGUI.fillInventory();
+
+						confirmGUI.open(user);
+					});
+
+					if (column % 8 == 0) {
+						column = 2;
+						row++;
+					} else column++;
+				}
+			}
+
+			colorGUI.setItem((6 - 1) * 9, Material.RED_CONCRETE, "&4Exit", null, false, false,
+			                 (inventory, item) -> inventory.close(user));
+
+			colorGUI.fillInventory();
+
+			colorGUI.open(user);
+		});
+	}
+
 	private void gangStat(User<Player> user, UserManager<Player> userManager, Gang gang) {
-		InventoryGUI gui = new InventoryGUI("&6&l" + gang.getName() + "&r gang", 45);
+		InventoryGUI gui = new InventoryGUI("&6&l" + gang.getDisplayNameString() + "&r gang", 5 * 9);
 
 		gui.setItem(11, Material.GOLD_BLOCK, "&bBalance", new ArrayList<>(
 				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
@@ -1406,11 +1578,10 @@ public class SCGang extends CommandHandler {
 		            (inventory, item) -> {
 			            inventory.close(user);
 
-			            int          size          = gang.getAlias().size();
-			            int          inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9,
-			                                                  InventoryGUI.MAX_SLOTS);
-			            InventoryGUI alias         = new InventoryGUI("&6&lGang alias",
-			                                                          inventorySize == 0 ? 9 : inventorySize);
+			            int size          = gang.getAlias().size();
+			            int inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, InventoryGUI.MAX_SLOTS);
+
+			            InventoryGUI alias = new InventoryGUI("&6&lGang alias", inventorySize == 0 ? 9 : inventorySize);
 
 			            int i = 0;
 			            for (Gang aliasGang : gang.getAlias()) {
@@ -1425,7 +1596,7 @@ public class SCGang extends CommandHandler {
 				            data.add("&7Created:&e " + sdf.format(aliasGang.getDateCreated()));
 
 				            ItemBuilder itemBuilder = new ItemBuilder(Material.REDSTONE).setDisplayName(
-						            "&b" + aliasGang.getName()).setLore(data);
+						            "&b" + aliasGang.getDisplayNameString()).setLore(data);
 
 				            alias.setItem(i++, itemBuilder.build(), false);
 			            }
