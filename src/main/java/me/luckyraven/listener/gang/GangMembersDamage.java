@@ -1,4 +1,4 @@
-package me.luckyraven.listener.player;
+package me.luckyraven.listener.gang;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.account.gang.Gang;
@@ -14,12 +14,12 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
 public class GangMembersDamage implements Listener {
 
-	private static UserManager<Player> userManager = null;
-	private static GangManager         gangManager = null;
+	private final UserManager<Player> userManager;
+	private final GangManager         gangManager;
 
 	public GangMembersDamage(Gangland gangland) {
-		if (userManager == null) userManager = gangland.getInitializer().getUserManager();
-		if (gangManager == null) gangManager = gangland.getInitializer().getGangManager();
+		this.userManager = gangland.getInitializer().getUserManager();
+		this.gangManager = gangland.getInitializer().getGangManager();
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
