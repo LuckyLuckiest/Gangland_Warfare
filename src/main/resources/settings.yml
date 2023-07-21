@@ -65,6 +65,7 @@ Gang:
    Use: true
    # Allow duplicate gang names.
    Name_Duplicates: false
+   Display_Name_Char: '*'
    # Hierarchy of ranks
    Rank:
       # The initial rank
