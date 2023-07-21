@@ -169,6 +169,12 @@ Commands:
       Money:
          Add: "&6%player%&7 has deposited &a%money_symbol%%amount% &7to the gang account."
          Take: "&6%player%&7 has withdrawn &a%money_symbol%%amount% &7from the gang account."
+      Display_Name:
+         Set: "New gang display name set to &8[&r%display%&8]&7."
+         Removed: "Gang display name has been removed."
+      Color:
+         Set: "Gang new color &8[%color%&8]&7 has been set."
+         Reset: "Gang color has been reset!"
    Rank:
       Create:
          Created_Rank: "Created a new rank &8[&a%rank%&8]&7."

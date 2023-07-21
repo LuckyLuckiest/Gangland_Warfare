@@ -77,7 +77,11 @@ public enum MessageAddon {
 			"Commands.Gang.Alias.Receive_Request", Type.COMMAND), GANG_ALIAS_ACCEPT(
 			"Commands.Gang.Alias.Accept_Request", Type.COMMAND), GANG_ALIAS_REJECT("Commands.Gang.Alias.Reject_Request",
 	                                                                               Type.COMMAND), GANG_ALIAS_ABANDON(
-			"Commands.Gang.Alias.Abandon", Type.COMMAND),
+			"Commands.Gang.Alias.Abandon", Type.COMMAND), GANG_DISPLAY_SET("Commands.Gang.Display_Name.Set",
+	                                                                       Type.COMMAND), GANG_DISPLAY_REMOVED(
+			"Commands.Gang.Display_Name.Removed", Type.COMMAND), GANG_COLOR_SET("Commands.Gang.Color.Set",
+	                                                                            Type.COMMAND), GANG_COLOR_RESET(
+			"Commands.Gang.Color.Reset", Type.COMMAND),
 
 	// commands - rank
 	RANK_CREATED("Commands.Rank.Create.Created_Rank", Type.COMMAND), RANK_CREATE_CONFIRM(
