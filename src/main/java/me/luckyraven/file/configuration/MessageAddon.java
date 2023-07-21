@@ -73,6 +73,11 @@ public enum MessageAddon {
 			"Commands.Gang.Demote.Target_Success", Type.COMMAND), GANG_DEMOTE_END("Commands.Gang.Demote.End",
 	                                                                              Type.COMMAND), GANG_KICKED_TARGET(
 			"Commands.Gang.Leave.Kicked", Type.COMMAND), GANG_RENAME("Commands.Gang.Create.Rename", Type.COMMAND),
+	GANG_ALIAS_SEND_REQUEST("Commands.Gang.Alias.Send_Request", Type.COMMAND), GANG_ALIAS_RECEIVE_REQUEST(
+			"Commands.Gang.Alias.Receive_Request", Type.COMMAND), GANG_ALIAS_ACCEPT(
+			"Commands.Gang.Alias.Accept_Request", Type.COMMAND), GANG_ALIAS_REJECT("Commands.Gang.Alias.Reject_Request",
+	                                                                               Type.COMMAND), GANG_ALIAS_ABANDON(
+			"Commands.Gang.Alias.Abandon", Type.COMMAND),
 
 	// commands - rank
 	RANK_CREATED("Commands.Rank.Create.Created_Rank", Type.COMMAND), RANK_CREATE_CONFIRM(
@@ -129,7 +134,8 @@ public enum MessageAddon {
 	                                                                            Type.ERROR), NOT_OWNER(
 			"Errors.Gang.Not_Owner", Type.ERROR), DUPLICATE_GANG_NAME("Errors.Gang.Duplicate_Names", Type.ERROR),
 	NO_GANG_INVITATION("Errors.Gang.No_Invite", Type.ERROR), GANG_SAME_RANK_ACTION("Errors.Gang.Same_Rank", Type.ERROR),
-	GANG_HIGHER_RANK_ACTION("Errors.Gang.Higher_Rank", Type.ERROR),
+	GANG_HIGHER_RANK_ACTION("Errors.Gang.Higher_Rank", Type.ERROR), GANG_DOESNT_EXIST("Errors.Gang.Doesnt_Exist",
+	                                                                                  Type.ERROR),
 
 	// errors - rank
 	INVALID_RANK("Errors.Rank.Invalid", Type.ERROR), INVALID_RANK_PERMISSION("Errors.Rank.Invalid_Permission",
@@ -152,7 +158,9 @@ public enum MessageAddon {
 	                                                                          Type.INFORMATION),
 
 	// information - gang
-	KICKED_FROM_GANG("Information.Gang.Kicked", Type.INFORMATION),
+	GANG_ALLIANCE_ALREADY_SENT("Information.Gang.Request_Already_Sent", Type.INFORMATION), ALREADY_ALLIED_GANG(
+			"Information.Gang.Already_Allied", Type.INFORMATION), KICKED_FROM_GANG("Information.Gang.Kicked",
+	                                                                               Type.INFORMATION),
 
 	// kits
 	KIT_RECEIVED("Kits.Received", Type.COMMAND), KIT_REMOVED("Kits.Removed", Type.COMMAND), KIT_INVALID("Kits.Invalid",

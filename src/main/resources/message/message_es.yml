@@ -148,6 +148,12 @@ Commands:
          Target: "You were invited to join &8[&a%gang%&8]&7."
          Accept: "You have joined &8[&a%gang%&8]&7 gang."
          Joined: "&6%player%&7 joined the gang."
+      Alias:
+         Send_Request: "Sent alliance request to &8[&e%gang%&8]&7."
+         Receive_Request: "Gang alliance was requested from &8[&e%gang%&8]&7."
+         Accept_Request: "Gang alliance with &8[&e%gang%&8]&7 was &aaccepted&7."
+         Reject_Request: "Gang alliance with &8[&e%gang%&8]&7 was &crejected&7."
+         Abandon: "Gang alliance was abandoned with &8[&e%gang%&8]&7."
       Promote:
          Player_Success: "You have promoted &6%player%&7 to &e%rank%&7."
          Target_Success: "You have been promoted to &e%rank%&7."
@@ -231,6 +237,7 @@ Errors:
       Not_Owner: "Not the &b%tail%&7 of the gang."
       Duplicate_Names: "&e%gang%&7 already exists, try another name."
       No_Invite: "You don't have an invitation to accept."
+      Doesnt_Exist: "That gang doesn't exist."
       Same_Rank: "Can't perform actions to similar ranks."
       Higher_Rank: "Can't perform actions to higher rank than yours."
    Rank:
@@ -257,6 +264,8 @@ Information:
    Drops_Cleared: "All drops have been &ccleared &7in world: &b%world%"
    Drops_Timer: "Drops will clear in &a%time% &7%time_unit%&8(&7s&8)&7."
    Gang:
+      Request_Already_Sent: "Gang alliance to that gang is already sent!"
+      Already_Allied: "Already allied with that gang."
       Kicked: "You have been kicked from the gang!"
 
 Kits:
