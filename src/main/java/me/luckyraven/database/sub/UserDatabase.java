@@ -95,7 +95,7 @@ public class UserDatabase extends DatabaseHandler {
 				}, new Object[]{
 						user.getKills(), user.getDeaths(), user.getMobKills(), user.hasBank(), user.getBounty(),
 						user.getUser().getFirstPlayed()
-				}, new int[]{Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.BOOLEAN, Types.DOUBLE, Types.DATE});
+				}, new int[]{Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.BOOLEAN, Types.DOUBLE, Types.BIGINT});
 	}
 
 	public void updateBankTable(User<Player> user) throws SQLException {
