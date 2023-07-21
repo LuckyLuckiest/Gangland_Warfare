@@ -23,7 +23,7 @@ public class SettingAddon {
 	@Getter
 	private static boolean gangUse, gangNameDuplicates;
 	@Getter
-	private static String gangRankHead, gangRankTail;
+	private static String gangRankHead, gangRankTail, gangDisplayNameChar;
 	@Getter
 	private static double gangInitialBalance, gangCreateFee, gangMaxBalance, gangContributionRate;
 
@@ -31,11 +31,6 @@ public class SettingAddon {
 		settings = fileManager.getFile("settings").getFileConfiguration();
 
 		initialize();
-	}
-
-	public static String formatDouble(double value) {
-		if (settings.getBoolean("Balance_Format.Use")) return String.format(balanceFormat, value);
-		return String.valueOf(value);
 	}
 
 	private void initialize() {
@@ -54,10 +49,16 @@ public class SettingAddon {
 		gangNameDuplicates = settings.getBoolean("Gang.Name_Duplicates");
 		gangRankHead = settings.getString("Gang.Rank.Head");
 		gangRankTail = settings.getString("Gang.Rank.Tail");
+		gangDisplayNameChar = Objects.requireNonNull(settings.getString("Gang.Display_Name_Char")).substring(0, 1);
 		gangInitialBalance = settings.getDouble("Gang.Account.First_Balance");
 		gangCreateFee = settings.getDouble("Gang.Account.Create_Cost");
 		gangMaxBalance = settings.getDouble("Gang.Account.Maximum_Balance");
 		gangContributionRate = settings.getDouble("Gang.Account.Contribution_Rate");
+	}
+
+	public static String formatDouble(double value) {
+		if (settings.getBoolean("Balance_Format.Use")) return String.format(balanceFormat, value);
+		return String.valueOf(value);
 	}
 
 }
