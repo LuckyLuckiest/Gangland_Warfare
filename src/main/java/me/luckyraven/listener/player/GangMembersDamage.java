@@ -1,6 +1,7 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
@@ -38,10 +39,13 @@ public class GangMembersDamage implements Listener {
 		// checks if they are in a gang
 		if (!(userDamager.hasGang() && userDamaged.hasGang())) return;
 
-		// checks if they are in the same gang
-		if (userDamager.getGangId() != userDamaged.getGangId()) return;
+		// checks if they are alias or in the same gang
+		Gang gang1 = gangManager.getGang(userDamager.getGangId());
+		Gang gang2 = gangManager.getGang(userDamaged.getGangId());
 
-		event.setCancelled(true);
+		if (gang1.getAlias().contains(gang2) || userDamager.getGangId() == userDamaged.getGangId()) event.setCancelled(
+				true);
+
 	}
 
 }
