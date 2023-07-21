@@ -36,6 +36,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 
 import java.sql.Types;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -313,8 +314,10 @@ public class SCGang extends CommandHandler {
 		// glw gang desc
 		String[] descStr = {"desc", "description"};
 		Argument description = new Argument(descStr, getArgumentTree(), (argument, sender, args) -> {
-
+			// TODO work on Anvil GUI
 		}, getPermission() + ".change_description");
+
+		Argument alias = gangAlias(userManager, memberManager, gangManager);
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
@@ -338,80 +341,14 @@ public class SCGang extends CommandHandler {
 		arguments.add(name);
 		arguments.add(description);
 
+		arguments.add(alias);
+
 		getArgument().addAllSubArguments(arguments);
 	}
 
 	@Override
 	protected void help(CommandSender sender, int page) {
 		getHelpInfo().displayHelp(sender, page, "Gang");
-	}
-
-	private void gangStat(User<Player> user, UserManager<Player> userManager, Gang gang) {
-		InventoryGUI gui = new InventoryGUI("&6&l" + gang.getName() + "&r gang", 45);
-
-		gui.setItem(11, Material.GOLD_BLOCK, "&bBalance", new ArrayList<>(
-				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
-				                      SettingAddon.formatDouble(gang.getBalance())))), true, false);
-		gui.setItem(13, Material.CRAFTING_TABLE, "&bID", new ArrayList<>(List.of("&e" + gang.getId())), false, false);
-		gui.setItem(15, Material.PAPER, "&bDescription", new ArrayList<>(List.of("&e" + gang.getDescription())), false,
-		            false);
-		// this item should take you to another gui page
-		gui.setItem(19, Material.PLAYER_HEAD, "&bMembers", new ArrayList<>(
-				            List.of("&a" + gang.getOnlineMembers(userManager).size() + "&7/&e" + gang.getGroup().size())), false,
-		            false, (inventory, item) -> {
-					inventory.close(user);
-
-					int size          = gang.getGroup().size();
-					int inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, InventoryGUI.MAX_SLOTS);
-
-					InventoryGUI members = new InventoryGUI("&6&lGang members", inventorySize == 0 ? 9 : inventorySize);
-
-					int i = 0;
-					for (Member member : gang.getGroup()) {
-						// temporary measure for limited members
-						if (i >= inventorySize) break;
-						// this will work if there were at most 45 members
-						// need to add compatibility if there were more than 45
-						OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
-						Rank          userRank      = member.getRank();
-
-						List<String> data = new ArrayList<>();
-						data.add("&7Rank:&e " + userRank.getName());
-						data.add("&7Contribution:&e " + member.getContribution());
-						data.add("&7Joined:&e " + member.gangJoinDate());
-
-						ItemBuilder itemBuilder = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName(
-								"&b" + offlinePlayer.getName()).setLore(data);
-
-						// change the skull nbt data (texture)
-						itemBuilder.modifyNBT(nbt -> nbt.setString("SkullOwner", offlinePlayer.getName()));
-
-						members.setItem(i++, itemBuilder.build(), false);
-					}
-
-					members.open(user);
-				});
-		gui.setItem(22, Material.BLAZE_ROD, "&bBounty", new ArrayList<>(
-				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
-				                      SettingAddon.formatDouble(gang.getBounty())))), true, false);
-		// this item should take you to another gangs page
-		gui.setItem(25, Material.REDSTONE, "&bAlias", null, false, false, (inventory, item) -> {
-			inventory.close(user);
-
-			int          size          = gang.getAlias().size();
-			int          inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, InventoryGUI.MAX_SLOTS);
-			InventoryGUI alias         = new InventoryGUI("&6&lGang alias", inventorySize == 0 ? 9 : inventorySize);
-
-			// TODO add alias gang
-
-			alias.open(user);
-		});
-		gui.setItem(31, Material.WRITABLE_BOOK, "&bCreated", new ArrayList<>(List.of("&e" + gang.getDateCreated())),
-		            true, false);
-
-		gui.fillInventory();
-
-		gui.open(user);
 	}
 
 	private Argument gangCreate(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
@@ -709,233 +646,6 @@ public class SCGang extends CommandHandler {
 		return delete;
 	}
 
-	private Argument gangEconomyAmount(UserManager<Player> userManager, MemberManager memberManager,
-	                                   GangManager gangManager) {
-		return new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-			Member       member = memberManager.getMember(player.getUniqueId());
-
-			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
-				return;
-			}
-
-			try {
-				double argAmount = Double.parseDouble(args[2]);
-				Gang   gang      = gangManager.getGang(user.getGangId());
-
-				double rate   = SettingAddon.getGangContributionRate();
-				int    length = String.valueOf((int) rate).length() - 1;
-				double round  = Math.pow(10, length);
-
-				double contribution = Math.round(argAmount / rate * round) / round;
-
-				List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
-
-				switch (args[1].toLowerCase()) {
-					case "deposit" -> {
-						if (user.getBalance() < argAmount) {
-							player.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
-							return;
-						} else if (gang.getBalance() + argAmount >= SettingAddon.getGangMaxBalance()) {
-							player.sendMessage(MessageAddon.CANNOT_EXCEED_MAXIMUM.toString());
-							return;
-						}
-
-						user.setBalance(user.getBalance() - argAmount);
-						gang.setBalance(gang.getBalance() + argAmount);
-						member.increaseContribution(contribution);
-						for (User<Player> gangUser : gangOnlineMembers) {
-							gangUser.getUser().sendMessage(MessageAddon.GANG_MONEY_DEPOSIT.toString()
-							                                                              .replace("%player%",
-							                                                                       player.getName())
-							                                                              .replace("%amount%",
-							                                                                       SettingAddon.formatDouble(
-									                                                                       argAmount)));
-						}
-						player.sendMessage(ChatUtil.color("&a+" + contribution));
-					}
-
-					case "withdraw" -> {
-						if (gang.getBalance() < argAmount) {
-							player.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
-							return;
-						}
-
-						user.setBalance(user.getBalance() + argAmount);
-						gang.setBalance(gang.getBalance() - argAmount);
-						// the user can get to negative value
-						member.decreaseContribution(contribution);
-						for (User<Player> gangUser : gangOnlineMembers) {
-							gangUser.getUser().sendMessage(MessageAddon.GANG_MONEY_WITHDRAW.toString()
-							                                                               .replace("%player%",
-							                                                                        player.getName())
-							                                                               .replace("%amount%",
-							                                                                        SettingAddon.formatDouble(
-									                                                                        argAmount)));
-						}
-						player.sendMessage(ChatUtil.color("&c-" + contribution));
-					}
-				}
-
-				// update database
-				for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
-					if (handler instanceof UserDatabase userDatabase) {
-						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-						helper.runQueries(database -> userDatabase.updateAccountTable(user));
-					}
-
-					if (handler instanceof GangDatabase gangDatabase) {
-						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-						helper.runQueries(database -> gangDatabase.updateMembersTable(member));
-					}
-				}
-			} catch (NumberFormatException exception) {
-				player.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
-			}
-		});
-	}
-
-	private Argument gangRankStatus(UserManager<Player> userManager, MemberManager memberManager,
-	                                GangManager gangManager, RankManager rankManager) {
-		return new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
-			Player       player     = (Player) sender;
-			User<Player> user       = userManager.getUser(player);
-			Member       userMember = memberManager.getMember(player.getUniqueId());
-
-			String forceRank = "gangland.command.gang.force_rank";
-			if (Bukkit.getPluginManager().getPermission(forceRank) == null) {
-				Permission permission = new Permission(forceRank);
-				Bukkit.getPluginManager().addPermission(permission);
-			}
-
-			boolean force = player.hasPermission(forceRank);
-
-			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
-				return;
-			}
-
-			Gang gang = gangManager.getGang(user.getGangId());
-
-			String targetStr    = args[2];
-			Member targetMember = null;
-			for (Member member : gang.getGroup()) {
-				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
-
-				if (!Objects.requireNonNull(offlinePlayer.getName()).equalsIgnoreCase(targetStr)) continue;
-
-				targetMember = member;
-				break;
-			}
-
-			if (targetMember == null) {
-				player.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
-				return;
-			}
-
-			// change the user rank by proceeding to the next node
-			Rank currentRank = targetMember.getRank();
-			switch (args[1].toLowerCase()) {
-				// in the case there are more than one child then give options to the promoter
-				case "promote" -> {
-					if (!force)
-						// cannot promote more than your rank
-						if (userMember.getRank().equals(targetMember.getRank())) {
-							player.sendMessage(MessageAddon.GANG_SAME_RANK_ACTION.toString());
-							return;
-						}
-
-					// navigate the ranks first
-					List<Rank> nextRanks = rankManager.getRankTree()
-					                                  .find(currentRank)
-					                                  .getNode()
-					                                  .getChildren()
-					                                  .stream()
-					                                  .map(Node::getData)
-					                                  .toList();
-
-					if (nextRanks.isEmpty()) {
-						player.sendMessage(MessageAddon.GANG_PROMOTE_END.toString());
-						return;
-					}
-
-					if (nextRanks.size() > 1) {
-						ComponentBuilder ranks = new ComponentBuilder();
-
-						for (int i = 0; i < nextRanks.size(); i++) {
-							String rank = nextRanks.get(i).getName();
-
-							ComponentBuilder sep = new ComponentBuilder(rank).event(
-									new ClickEvent(ClickEvent.Action.RUN_COMMAND,
-									               "/glw option gang rank " + targetStr + " " + rank));
-
-							ranks.append(sep.create());
-
-							if (i < nextRanks.size() - 1) ranks.append("  ");
-						}
-					} else {
-						OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
-						if (offlinePlayer.isOnline()) Objects.requireNonNull(offlinePlayer.getPlayer()).sendMessage(
-								MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString()
-								                                        .replace("%rank%", nextRanks.get(0).getName()));
-						player.sendMessage(MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString()
-						                                                           .replace("%player%", targetStr)
-						                                                           .replace("%rank%", nextRanks.get(0)
-						                                                                                       .getName()));
-
-						targetMember.setRank(nextRanks.get(0));
-					}
-				}
-
-				case "demote" -> {
-					// cannot demote higher rank
-					Node<Rank> playerRank = userMember.getRank().getNode();
-					Node<Rank> targetRank = targetMember.getRank().getNode();
-
-					if (!force)
-						// [player : Owner (descendant), target : Member (ancestor)] (Inverse)
-						if (!rankManager.getRankTree().isDescendant(targetRank, playerRank)) {
-							player.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
-							return;
-						}
-
-					Node<Rank> previousRankNode = currentRank.getNode().getParent();
-
-					if (previousRankNode == null) {
-						player.sendMessage(MessageAddon.GANG_DEMOTE_END.toString());
-						return;
-					}
-
-					Rank previousRank = previousRankNode.getData();
-
-					OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
-					if (offlinePlayer.isOnline()) Objects.requireNonNull(offlinePlayer.getPlayer()).sendMessage(
-							MessageAddon.GANG_DEMOTE_TARGET_SUCCESS.toString()
-							                                       .replace("%rank%", previousRank.getName()));
-					player.sendMessage(MessageAddon.GANG_DEMOTE_PLAYER_SUCCESS.toString()
-					                                                          .replace("%player%", targetStr)
-					                                                          .replace("%rank%",
-					                                                                   previousRank.getName()));
-					targetMember.setRank(previousRank);
-				}
-			}
-
-			// update database
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-				if (handler instanceof GangDatabase gangDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					Member finalTargetMember = targetMember;
-					helper.runQueries(database -> gangDatabase.updateMembersTable(finalTargetMember));
-					break;
-				}
-		});
-	}
-
 	private Argument gangKick(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
 	                          RankManager rankManager) {
 		return new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
@@ -1104,6 +814,233 @@ public class SCGang extends CommandHandler {
 		return leave;
 	}
 
+	private Argument gangRankStatus(UserManager<Player> userManager, MemberManager memberManager,
+	                                GangManager gangManager, RankManager rankManager) {
+		return new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+			Player       player     = (Player) sender;
+			User<Player> user       = userManager.getUser(player);
+			Member       userMember = memberManager.getMember(player.getUniqueId());
+
+			String forceRank = "gangland.command.gang.force_rank";
+			if (Bukkit.getPluginManager().getPermission(forceRank) == null) {
+				Permission permission = new Permission(forceRank);
+				Bukkit.getPluginManager().addPermission(permission);
+			}
+
+			boolean force = player.hasPermission(forceRank);
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			Gang gang = gangManager.getGang(user.getGangId());
+
+			String targetStr    = args[2];
+			Member targetMember = null;
+			for (Member member : gang.getGroup()) {
+				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
+
+				if (!Objects.requireNonNull(offlinePlayer.getName()).equalsIgnoreCase(targetStr)) continue;
+
+				targetMember = member;
+				break;
+			}
+
+			if (targetMember == null) {
+				player.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
+				return;
+			}
+
+			// change the user rank by proceeding to the next node
+			Rank currentRank = targetMember.getRank();
+			switch (args[1].toLowerCase()) {
+				// in the case there are more than one child then give options to the promoter
+				case "promote" -> {
+					if (!force)
+						// cannot promote more than your rank
+						if (userMember.getRank().equals(targetMember.getRank())) {
+							player.sendMessage(MessageAddon.GANG_SAME_RANK_ACTION.toString());
+							return;
+						}
+
+					// navigate the ranks first
+					List<Rank> nextRanks = rankManager.getRankTree()
+					                                  .find(currentRank)
+					                                  .getNode()
+					                                  .getChildren()
+					                                  .stream()
+					                                  .map(Node::getData)
+					                                  .toList();
+
+					if (nextRanks.isEmpty()) {
+						player.sendMessage(MessageAddon.GANG_PROMOTE_END.toString());
+						return;
+					}
+
+					if (nextRanks.size() > 1) {
+						ComponentBuilder ranks = new ComponentBuilder();
+
+						for (int i = 0; i < nextRanks.size(); i++) {
+							String rank = nextRanks.get(i).getName();
+
+							ComponentBuilder sep = new ComponentBuilder(rank).event(
+									new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+									               "/glw option gang rank " + targetStr + " " + rank));
+
+							ranks.append(sep.create());
+
+							if (i < nextRanks.size() - 1) ranks.append("  ");
+						}
+					} else {
+						OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
+						if (offlinePlayer.isOnline()) Objects.requireNonNull(offlinePlayer.getPlayer()).sendMessage(
+								MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString()
+								                                        .replace("%rank%", nextRanks.get(0).getName()));
+						player.sendMessage(MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString()
+						                                                           .replace("%player%", targetStr)
+						                                                           .replace("%rank%", nextRanks.get(0)
+						                                                                                       .getName()));
+
+						targetMember.setRank(nextRanks.get(0));
+					}
+				}
+
+				case "demote" -> {
+					// cannot demote higher rank
+					Node<Rank> playerRank = userMember.getRank().getNode();
+					Node<Rank> targetRank = targetMember.getRank().getNode();
+
+					if (!force)
+						// [player : Owner (descendant), target : Member (ancestor)] (Inverse)
+						if (!rankManager.getRankTree().isDescendant(targetRank, playerRank)) {
+							player.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
+							return;
+						}
+
+					Node<Rank> previousRankNode = currentRank.getNode().getParent();
+
+					if (previousRankNode == null) {
+						player.sendMessage(MessageAddon.GANG_DEMOTE_END.toString());
+						return;
+					}
+
+					Rank previousRank = previousRankNode.getData();
+
+					OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
+					if (offlinePlayer.isOnline()) Objects.requireNonNull(offlinePlayer.getPlayer()).sendMessage(
+							MessageAddon.GANG_DEMOTE_TARGET_SUCCESS.toString()
+							                                       .replace("%rank%", previousRank.getName()));
+					player.sendMessage(MessageAddon.GANG_DEMOTE_PLAYER_SUCCESS.toString()
+					                                                          .replace("%player%", targetStr)
+					                                                          .replace("%rank%",
+					                                                                   previousRank.getName()));
+					targetMember.setRank(previousRank);
+				}
+			}
+
+			// update database
+			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+				if (handler instanceof GangDatabase gangDatabase) {
+					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+					Member finalTargetMember = targetMember;
+					helper.runQueries(database -> gangDatabase.updateMembersTable(finalTargetMember));
+					break;
+				}
+		});
+	}
+
+	private Argument gangEconomyAmount(UserManager<Player> userManager, MemberManager memberManager,
+	                                   GangManager gangManager) {
+		return new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+			Member       member = memberManager.getMember(player.getUniqueId());
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			try {
+				double argAmount = Double.parseDouble(args[2]);
+				Gang   gang      = gangManager.getGang(user.getGangId());
+
+				double rate   = SettingAddon.getGangContributionRate();
+				int    length = String.valueOf((int) rate).length() - 1;
+				double round  = Math.pow(10, length);
+
+				double contribution = Math.round(argAmount / rate * round) / round;
+
+				List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
+
+				switch (args[1].toLowerCase()) {
+					case "deposit" -> {
+						if (user.getBalance() < argAmount) {
+							player.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
+							return;
+						} else if (gang.getBalance() + argAmount >= SettingAddon.getGangMaxBalance()) {
+							player.sendMessage(MessageAddon.CANNOT_EXCEED_MAXIMUM.toString());
+							return;
+						}
+
+						user.setBalance(user.getBalance() - argAmount);
+						gang.setBalance(gang.getBalance() + argAmount);
+						member.increaseContribution(contribution);
+						for (User<Player> gangUser : gangOnlineMembers) {
+							gangUser.getUser().sendMessage(MessageAddon.GANG_MONEY_DEPOSIT.toString()
+							                                                              .replace("%player%",
+							                                                                       player.getName())
+							                                                              .replace("%amount%",
+							                                                                       SettingAddon.formatDouble(
+									                                                                       argAmount)));
+						}
+						player.sendMessage(ChatUtil.color("&a+" + contribution));
+					}
+
+					case "withdraw" -> {
+						if (gang.getBalance() < argAmount) {
+							player.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
+							return;
+						}
+
+						user.setBalance(user.getBalance() + argAmount);
+						gang.setBalance(gang.getBalance() - argAmount);
+						// the user can get to negative value
+						member.decreaseContribution(contribution);
+						for (User<Player> gangUser : gangOnlineMembers) {
+							gangUser.getUser().sendMessage(MessageAddon.GANG_MONEY_WITHDRAW.toString()
+							                                                               .replace("%player%",
+							                                                                        player.getName())
+							                                                               .replace("%amount%",
+							                                                                        SettingAddon.formatDouble(
+									                                                                        argAmount)));
+						}
+						player.sendMessage(ChatUtil.color("&c-" + contribution));
+					}
+				}
+
+				// update database
+				for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
+					if (handler instanceof UserDatabase userDatabase) {
+						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+						helper.runQueries(database -> userDatabase.updateAccountTable(user));
+					}
+
+					if (handler instanceof GangDatabase gangDatabase) {
+						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+						helper.runQueries(database -> gangDatabase.updateMembersTable(member));
+					}
+				}
+			} catch (NumberFormatException exception) {
+				player.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
+			}
+		});
+	}
+
 	private Argument gangRename(UserManager<Player> userManager, GangManager gangManager) {
 		Argument name = new Argument("name", getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
@@ -1155,6 +1092,352 @@ public class SCGang extends CommandHandler {
 		name.addSubArgument(changeName);
 
 		return name;
+	}
+
+	private Argument gangAlias(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager) {
+		Argument alias = new Argument("alias", getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			sender.sendMessage(
+					CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<request/abandon>"));
+		}, getPermission() + ".alias");
+
+		// glw gang alias request <id>
+		Argument requestAlias = new Argument("request", getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<id>"));
+		}, alias.getPermission() + ".request");
+
+		// glw gang alias abandon <id>
+		Argument abandonAlias = new Argument("abandon", getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<id>"));
+		}, alias.getPermission() + ".abandon");
+
+		// key -> the gang requesting alliance with, value -> the gang sending the request
+		HashMap<Gang, Gang>           gangsIdMap       = new HashMap<>();
+		HashMap<Gang, CountdownTimer> gangRequestTimer = new HashMap<>();
+		Argument aliasId = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			String value = args[3];
+			int    id;
+			try {
+				id = Integer.parseInt(value);
+			} catch (NumberFormatException exception) {
+				player.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", value));
+				return;
+			}
+
+			// should not be null
+			Gang sending = gangManager.getGang(user.getGangId());
+			// can be null
+			Gang receiving = gangManager.getGang(id);
+
+			if (receiving == null) {
+				player.sendMessage(MessageAddon.GANG_DOESNT_EXIST.toString());
+				return;
+			}
+
+			switch (args[2].toLowerCase()) {
+				case "request" -> {
+					// check if they are allied before proceeding
+					if (receiving.getAlias().contains(sending)) {
+						player.sendMessage(MessageAddon.ALREADY_ALLIED_GANG.toString());
+						return;
+					}
+
+					if (gangsIdMap.containsKey(receiving)) {
+						player.sendMessage(MessageAddon.GANG_ALLIANCE_ALREADY_SENT.toString());
+						return;
+					}
+
+					// send a message to every member in the sending gang
+					Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
+							onlinePlayer.getUniqueId()).getGangId() == sending.getId()).toList().forEach(
+							pl -> pl.sendMessage(MessageAddon.GANG_ALIAS_SEND_REQUEST.toString()
+							                                                         .replace("%gang%",
+							                                                                  receiving.getName())));
+
+					// send a message to every member in receiving gang
+					Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
+							onlinePlayer.getUniqueId()).getGangId() == receiving.getId()).toList().forEach(
+							pl -> pl.sendMessage(MessageAddon.GANG_ALIAS_RECEIVE_REQUEST.toString()
+							                                                            .replace("%gang%",
+							                                                                     sending.getName())));
+
+					gangsIdMap.put(receiving, sending);
+
+					CountdownTimer timer = new CountdownTimer(gangland, 60, null, null, time -> {
+						gangsIdMap.remove(receiving);
+						gangRequestTimer.remove(receiving);
+					});
+
+					timer.start();
+					gangRequestTimer.put(receiving, timer);
+				}
+
+				case "abandon" -> {
+					// send a message to every member in the sending gang
+					Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
+							onlinePlayer.getUniqueId()).getGangId() == sending.getId()).toList().forEach(
+							pl -> pl.sendMessage(
+									MessageAddon.GANG_ALIAS_ABANDON.toString().replace("%gang%", receiving.getName())));
+
+					// send a message to every member in receiving gang
+					Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
+							onlinePlayer.getUniqueId()).getGangId() == receiving.getId()).toList().forEach(
+							pl -> pl.sendMessage(
+									MessageAddon.GANG_ALIAS_ABANDON.toString().replace("%gang%", sending.getName())));
+
+					sending.getAlias().remove(receiving);
+					receiving.getAlias().remove(sending);
+
+					for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+						if (handler instanceof GangDatabase gangDatabase) {
+							DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+							helper.runQueries(database -> {
+								gangDatabase.updateDataTable(sending);
+								gangDatabase.updateDataTable(receiving);
+							});
+							break;
+						}
+				}
+			}
+
+		});
+
+		requestAlias.addSubArgument(aliasId);
+		abandonAlias.addSubArgument(aliasId);
+
+		// glw gang alias accept
+		Argument aliasAccept = new Argument("accept", getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			Gang userGang = gangManager.getGang(user.getGangId());
+
+			// finds the key if it was similar to acceptor gang
+			Gang receiving = gangsIdMap.keySet().stream().filter(gang -> gang == userGang).findFirst().orElse(null);
+
+			if (receiving == null) {
+				player.sendMessage(MessageAddon.NO_GANG_INVITATION.toString());
+				return;
+			}
+
+			Gang sending = gangsIdMap.get(receiving);
+
+			// check if they are allied before proceeding
+			if (receiving.getAlias().contains(sending)) {
+				player.sendMessage(MessageAddon.ALREADY_ALLIED_GANG.toString());
+				return;
+			}
+
+			// add both alias
+			receiving.getAlias().add(sending);
+			sending.getAlias().add(receiving);
+
+			// send a message to every member in the sending gang
+			Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
+					onlinePlayer.getUniqueId()).getGangId() == sending.getId()).toList().forEach(pl -> pl.sendMessage(
+					MessageAddon.GANG_ALIAS_ACCEPT.toString().replace("%gang%", receiving.getName())));
+
+			// send a message to every member in receiving gang
+			Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
+					onlinePlayer.getUniqueId()).getGangId() == receiving.getId()).toList().forEach(pl -> pl.sendMessage(
+					MessageAddon.GANG_ALIAS_ACCEPT.toString().replace("%gang%", sending.getName())));
+
+			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+				if (handler instanceof GangDatabase gangDatabase) {
+					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+					helper.runQueries(database -> {
+						gangDatabase.updateDataTable(receiving);
+						gangDatabase.updateDataTable(sending);
+					});
+					break;
+				}
+
+			gangsIdMap.remove(receiving);
+
+			CountdownTimer timer = gangRequestTimer.get(receiving);
+			if (timer != null) {
+				if (!timer.isCancelled()) timer.cancel();
+				gangRequestTimer.remove(receiving);
+			}
+		}, alias.getPermission() + ".accept");
+
+		Argument aliasReject = new Argument("reject", getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			Gang userGang = gangManager.getGang(user.getGangId());
+
+			// finds the key if it was similar to acceptor gang
+			Gang receiving = gangsIdMap.keySet().stream().filter(gang -> gang == userGang).findFirst().orElse(null);
+
+			if (receiving == null) {
+				player.sendMessage(MessageAddon.NO_GANG_INVITATION.toString());
+				return;
+			}
+
+			Gang sending = gangsIdMap.get(receiving);
+
+			// check if they are allied before proceeding
+			if (receiving.getAlias().contains(sending)) {
+				player.sendMessage(MessageAddon.ALREADY_ALLIED_GANG.toString());
+				return;
+			}
+
+			// send a message to every member in the sending gang
+			Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
+					onlinePlayer.getUniqueId()).getGangId() == sending.getId()).toList().forEach(pl -> pl.sendMessage(
+					MessageAddon.GANG_ALIAS_REJECT.toString().replace("%gang%", receiving.getName())));
+
+			// send a message to every member in receiving gang
+			Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
+					onlinePlayer.getUniqueId()).getGangId() == receiving.getId()).toList().forEach(pl -> pl.sendMessage(
+					MessageAddon.GANG_ALIAS_REJECT.toString().replace("%gang%", sending.getName())));
+
+			gangsIdMap.remove(receiving);
+
+			CountdownTimer timer = gangRequestTimer.get(receiving);
+			if (timer != null) {
+				if (!timer.isCancelled()) timer.cancel();
+				gangRequestTimer.remove(receiving);
+			}
+		}, alias.getPermission() + ".reject");
+
+		alias.addSubArgument(requestAlias);
+		alias.addSubArgument(abandonAlias);
+		alias.addSubArgument(aliasAccept);
+		alias.addSubArgument(aliasReject);
+
+		return alias;
+	}
+
+	private void gangStat(User<Player> user, UserManager<Player> userManager, Gang gang) {
+		InventoryGUI gui = new InventoryGUI("&6&l" + gang.getName() + "&r gang", 45);
+
+		gui.setItem(11, Material.GOLD_BLOCK, "&bBalance", new ArrayList<>(
+				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
+				                      SettingAddon.formatDouble(gang.getBalance())))), true, false);
+		gui.setItem(13, Material.CRAFTING_TABLE, "&bID", new ArrayList<>(List.of("&e" + gang.getId())), false, false);
+		gui.setItem(15, Material.PAPER, "&bDescription", new ArrayList<>(List.of("&e" + gang.getDescription())), false,
+		            false);
+		// this item should take you to another gui page
+		gui.setItem(19, Material.PLAYER_HEAD, "&bMembers", new ArrayList<>(
+				            List.of("&a" + gang.getOnlineMembers(userManager).size() + "&7/&e" + gang.getGroup().size())), false,
+		            false, (inventory, item) -> {
+					inventory.close(user);
+
+					int size          = gang.getGroup().size();
+					int inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, InventoryGUI.MAX_SLOTS);
+
+					InventoryGUI members = new InventoryGUI("&6&lGang members", inventorySize == 0 ? 9 : inventorySize);
+
+					int i = 0;
+					for (Member member : gang.getGroup()) {
+						// temporary measure for limited members
+						if (i >= inventorySize) break;
+						// this will work if there were at most 45 members
+						// need to add compatibility if there were more than 45
+						OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
+						Rank          userRank      = member.getRank();
+
+						List<String> data = new ArrayList<>();
+						data.add("&7Rank:&e " + userRank.getName());
+						data.add("&7Contribution:&e " + member.getContribution());
+						data.add("&7Joined:&e " + member.gangJoinDate());
+
+						ItemBuilder itemBuilder = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName(
+								"&b" + offlinePlayer.getName()).setLore(data);
+
+						// change the skull nbt data (texture)
+						itemBuilder.modifyNBT(nbt -> nbt.setString("SkullOwner", offlinePlayer.getName()));
+
+						members.setItem(i++, itemBuilder.build(), false);
+					}
+
+					members.open(user);
+				});
+		gui.setItem(22, Material.BLAZE_ROD, "&bBounty", new ArrayList<>(
+				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
+				                      SettingAddon.formatDouble(gang.getBounty())))), true, false);
+		// this item should take you to another gangs page
+		gui.setItem(25, Material.REDSTONE, "&bAlias", List.of("&e" + gang.getAlias().size()), false, false,
+		            (inventory, item) -> {
+			            inventory.close(user);
+
+			            int          size          = gang.getAlias().size();
+			            int          inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9,
+			                                                  InventoryGUI.MAX_SLOTS);
+			            InventoryGUI alias         = new InventoryGUI("&6&lGang alias",
+			                                                          inventorySize == 0 ? 9 : inventorySize);
+
+			            int i = 0;
+			            for (Gang aliasGang : gang.getAlias()) {
+				            if (i >= inventorySize) break;
+
+				            List<String> data = new ArrayList<>();
+				            data.add("&7ID:&e " + aliasGang.getId());
+				            data.add(String.format("&7Members:&a %d&7/&e%d",
+				                                   aliasGang.getOnlineMembers(userManager).size(),
+				                                   aliasGang.getGroup().size()));
+				            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+				            data.add("&7Created:&e " + sdf.format(aliasGang.getDateCreated()));
+
+				            ItemBuilder itemBuilder = new ItemBuilder(Material.REDSTONE).setDisplayName(
+						            "&b" + aliasGang.getName()).setLore(data);
+
+				            alias.setItem(i++, itemBuilder.build(), false);
+			            }
+
+			            alias.open(user);
+		            });
+		gui.setItem(31, Material.WRITABLE_BOOK, "&bCreated", new ArrayList<>(List.of("&e" + gang.getDateCreated())),
+		            true, false);
+
+		gui.fillInventory();
+
+		gui.open(user);
 	}
 
 }
