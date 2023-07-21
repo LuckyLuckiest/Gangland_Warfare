@@ -22,7 +22,7 @@
 	- Bank, creating and saving to banks using commands
 	- Economy, depositing and withdrawing commands
 
-0.0.4-DEV:
+0.0.4-DEV: (DONE)
 	- creating and managing ranks using commands
 	- handling ranks in a database
 	- ranks hierarchy to easily promote and demote users
