@@ -19,8 +19,9 @@ import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.listener.ListenerManager;
+import me.luckyraven.listener.gang.GangMembersDamage;
 import me.luckyraven.listener.player.CreateAccount;
-import me.luckyraven.listener.player.GangMembersDamage;
+import me.luckyraven.listener.player.EntityDamage;
 import me.luckyraven.listener.player.RemoveAccount;
 import me.luckyraven.rank.RankManager;
 import me.luckyraven.util.UnhandledError;
@@ -112,38 +113,6 @@ public final class Initializer {
 
 	}
 
-	private void events() {
-		if (plugin instanceof Gangland gangland) {
-			listenerManager.addEvent(new CreateAccount(gangland));
-			listenerManager.addEvent(new RemoveAccount(gangland));
-			listenerManager.addEvent(new GangMembersDamage(gangland));
-			listenerManager.addEvent(new InventoryGUI("dummy", 9));
-		}
-	}
-
-	private void commands(Gangland gangland) {
-		// initial command
-		Objects.requireNonNull(plugin.getCommand("glw")).setExecutor(commandManager);
-
-		// sub commands
-		// default plugin commands
-		commandManager.addCommand(new SCBalance(gangland));
-		commandManager.addCommand(new SCGang(gangland));
-		commandManager.addCommand(new SCBank(gangland));
-		commandManager.addCommand(new SCEconomy(gangland));
-		commandManager.addCommand(new SCRank(gangland));
-		commandManager.addCommand(new SCOption(gangland));
-
-		// debug commands
-		commandManager.addCommand(new SCDebug(gangland));
-
-		// Needs to be the final command to add all the help info
-		commandManager.addCommand(new SCHelp(gangland));
-
-		Objects.requireNonNull(plugin.getCommand("glw")).setTabCompleter(
-				commandManager.getCommands().values().stream().toList().get(0));
-	}
-
 	@SuppressWarnings("CommentedOutCode")
 	private void files() {
 		fileManager.addFile(new FileHandler(plugin, "settings", ".yml"), true);
@@ -183,6 +152,39 @@ public final class Initializer {
 		RankDatabase rankDatabase = new RankDatabase(plugin, fileManager);
 		rankDatabase.setType(type);
 		databaseManager.addDatabase(rankDatabase);
+	}
+
+	private void events() {
+		if (plugin instanceof Gangland gangland) {
+			listenerManager.addEvent(new CreateAccount(gangland));
+			listenerManager.addEvent(new RemoveAccount(gangland));
+			listenerManager.addEvent(new GangMembersDamage(gangland));
+			listenerManager.addEvent(new EntityDamage(gangland));
+			listenerManager.addEvent(new InventoryGUI("dummy", 9));
+		}
+	}
+
+	private void commands(Gangland gangland) {
+		// initial command
+		Objects.requireNonNull(plugin.getCommand("glw")).setExecutor(commandManager);
+
+		// sub commands
+		// default plugin commands
+		commandManager.addCommand(new SCBalance(gangland));
+		commandManager.addCommand(new SCGang(gangland));
+		commandManager.addCommand(new SCBank(gangland));
+		commandManager.addCommand(new SCEconomy(gangland));
+		commandManager.addCommand(new SCRank(gangland));
+		commandManager.addCommand(new SCOption(gangland));
+
+		// debug commands
+		commandManager.addCommand(new SCDebug(gangland));
+
+		// Needs to be the final command to add all the help info
+		commandManager.addCommand(new SCHelp(gangland));
+
+		Objects.requireNonNull(plugin.getCommand("glw")).setTabCompleter(
+				commandManager.getCommands().values().stream().toList().get(0));
 	}
 
 }
