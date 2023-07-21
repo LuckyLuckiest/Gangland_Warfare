@@ -6,14 +6,14 @@
 
     <groupId>gangland_warfare</groupId>
     <artifactId>gangland_warfare</artifactId>
-    <version>0.0.4-DEV</version>
+    <version>0.0.5-DEV</version>
     <packaging>jar</packaging>
 
     <name>Gangland_Warfare</name>
     <description>Rival gangs battling for control in minecraft. GTA recoded plugin.</description>
     <developers>
         <developer>
-            <name>LuckyRaven</name>
+            <name>LuckyRaven10</name>
         </developer>
     </developers>
 
