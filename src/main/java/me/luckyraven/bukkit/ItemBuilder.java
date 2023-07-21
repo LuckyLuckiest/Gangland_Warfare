@@ -19,12 +19,17 @@ public class ItemBuilder {
 
 	private final ItemStack itemStack;
 
+	public ItemBuilder(ItemStack itemStack) {
+		this.itemStack = itemStack;
+	}
+
 	public ItemBuilder(Material material) {
 		this.itemStack = new ItemStack(material);
 	}
 
 	public ItemBuilder setDisplayName(@Nullable String displayName) {
 		if (displayName == null) displayName = "";
+		if (displayName.isEmpty()) displayName = "&0|";
 		@Nullable String finalDisplayName = displayName;
 		NBT.modify(itemStack, nbt -> {
 			nbt.modifyMeta((readableNBT, itemMeta) -> itemMeta.setDisplayName(ChatUtil.color(finalDisplayName)));
