@@ -4,6 +4,7 @@ import lombok.Getter;
 import me.luckyraven.file.FileManager;
 import org.bukkit.configuration.file.FileConfiguration;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public class SettingAddon {
@@ -21,6 +22,11 @@ public class SettingAddon {
 	private static double bankInitialBalance, bankCreateFee, bankMaxBalance;
 
 	@Getter
+	private static double bountyInitialValue, bountyMultiple, bountyMaxValue;
+	@Getter
+	private static int bountyTimeInterval;
+
+	@Getter
 	private static boolean gangUse, gangNameDuplicates;
 	@Getter
 	private static String gangRankHead, gangRankTail, gangDisplayNameChar;
@@ -28,9 +34,19 @@ public class SettingAddon {
 	private static double gangInitialBalance, gangCreateFee, gangMaxBalance, gangContributionRate;
 
 	public SettingAddon(FileManager fileManager) {
-		settings = fileManager.getFile("settings").getFileConfiguration();
+		try {
+			fileManager.checkFileLoaded("settings");
+			settings = Objects.requireNonNull(fileManager.getFile("settings")).getFileConfiguration();
 
-		initialize();
+			initialize();
+		} catch (IOException exception) {
+			throw new RuntimeException(exception);
+		}
+	}
+
+	public static String formatDouble(double value) {
+		if (settings.getBoolean("Balance_Format.Use")) return String.format(balanceFormat, value);
+		return String.valueOf(value);
 	}
 
 	private void initialize() {
@@ -45,6 +61,11 @@ public class SettingAddon {
 		bankCreateFee = settings.getDouble("Bank_Account.Create_Cost");
 		bankMaxBalance = settings.getDouble("Bank_Account.Maximum_Balance");
 
+		bountyInitialValue = settings.getDouble("Bounty.Kill_Value");
+		bountyMultiple = settings.getDouble("Bounty.Multiple");
+		bountyTimeInterval = settings.getInt("Bounty.Time");
+		bountyMaxValue = settings.getDouble("Bounty.Limit");
+
 		gangUse = settings.getBoolean("Gang.Use");
 		gangNameDuplicates = settings.getBoolean("Gang.Name_Duplicates");
 		gangRankHead = settings.getString("Gang.Rank.Head");
@@ -54,11 +75,6 @@ public class SettingAddon {
 		gangCreateFee = settings.getDouble("Gang.Account.Create_Cost");
 		gangMaxBalance = settings.getDouble("Gang.Account.Maximum_Balance");
 		gangContributionRate = settings.getDouble("Gang.Account.Contribution_Rate");
-	}
-
-	public static String formatDouble(double value) {
-		if (settings.getBoolean("Balance_Format.Use")) return String.format(balanceFormat, value);
-		return String.valueOf(value);
 	}
 
 }

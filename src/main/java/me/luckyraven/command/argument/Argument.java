@@ -21,13 +21,12 @@ public class Argument implements Cloneable {
 	@Getter
 	private final Node<Argument> node;
 	private final Tree<Argument> tree;
+	TriConsumer<Argument, CommandSender, String[]> action;
 	@Getter
-	private final String         permission;
-
-	private final TriConsumer<Argument, CommandSender, String[]> action;
+	private String                              permission;
 	@Getter
 	@Setter
-	private       BiConsumer<CommandSender, String[]>            executeOnPass;
+	private BiConsumer<CommandSender, String[]> executeOnPass;
 
 	public Argument(String argument, Tree<Argument> tree) {
 		this(argument, tree, null);
@@ -51,13 +50,9 @@ public class Argument implements Cloneable {
 		this.arguments = arguments;
 		this.tree = tree;
 		this.node = new Node<>(this);
-		this.permission = permission;
 		this.action = action;
 
-		if (!permission.isEmpty()) {
-			Permission perm = new Permission(this.permission);
-			Bukkit.getPluginManager().addPermission(perm);
-		}
+		setPermission(permission);
 	}
 
 	public Argument(Argument other) {
@@ -67,6 +62,15 @@ public class Argument implements Cloneable {
 		this.permission = other.permission;
 		this.action = other.action;
 		this.executeOnPass = other.executeOnPass;
+	}
+
+	public void setPermission(String permission) {
+		this.permission = permission;
+
+		if (!permission.isEmpty()) {
+			Permission perm = new Permission(this.permission);
+			Bukkit.getPluginManager().addPermission(perm);
+		}
 	}
 
 	public void addSubArgument(Argument argument) {

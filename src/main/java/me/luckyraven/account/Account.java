@@ -6,16 +6,13 @@ import lombok.Setter;
 import java.util.HashMap;
 import java.util.Map;
 
+@Getter
+@Setter
 public class Account<K, V> {
 
-	@Getter
-	@Setter
-	private       K         key;
-	@Getter
-	@Setter
-	private       V         value;
-	@Getter
 	private final Map<K, V> account;
+	private       K         key;
+	private       V         value;
 
 	public Account(K key, V value) {
 		this.key = key;
