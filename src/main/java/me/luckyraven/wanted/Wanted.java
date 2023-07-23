@@ -3,12 +3,13 @@ package me.luckyraven.wanted;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.data.user.User;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public class Wanted {
 
 	@Getter
-	private final User<?> user;
+	private final User<Player> user;
 	@Getter
 	private       int     level;
 	@Setter
@@ -20,17 +21,17 @@ public class Wanted {
 	@Setter
 	private       boolean wanted;
 
-	public Wanted(@NotNull User<?> user) {
+	public Wanted(@NotNull User<Player> user, int level) {
+		this(user);
+		setLevel(level);
+	}
+
+	public Wanted(@NotNull User<Player> user) {
 		this.user = user;
 		this.level = 0;
 		this.increments = 1;
 		this.maxLevel = 5;
 		this.wanted = false;
-	}
-
-	public Wanted(@NotNull User<?> user, int level) {
-		this(user);
-		setLevel(level);
 	}
 
 	public void setLevel(int level) {
