@@ -54,7 +54,7 @@ public final class CreateAccount implements Listener {
 				initializeUserData(user, new DatabaseHelper(gangland, handler));
 				break;
 			}
-		// Add the user to user manager group
+		// Add the user to a user manager group
 		userManager.add(user);
 
 		// need to check if the user already registered
@@ -149,10 +149,10 @@ public final class CreateAccount implements Listener {
 				Bounty bounty = user.getBounty();
 				bounty.setAmount((double) dataInfo[5]);
 
-				if (bounty.hasBounty()) {
+				if (bounty.hasBounty() && SettingAddon.isBountyTimerEnable()) {
 					BountyEvent bountyEvent = new BountyEvent(user);
 
-					if (bounty.getAmount() < SettingAddon.getBountyMaxValue()) {
+					if (bounty.getAmount() < SettingAddon.getBountyTimerMax()) {
 						RepeatingTimer repeatingTimer = bounty.createTimer(gangland,
 						                                                   SettingAddon.getBountyTimeInterval(),
 						                                                   timer -> bountyExecutor(user, bountyEvent,
@@ -194,9 +194,9 @@ public final class CreateAccount implements Listener {
 		Bounty bounty    = user.getBounty();
 		double oldAmount = bounty.getAmount();
 
-		if (bounty.getAmount() >= SettingAddon.getBountyMaxValue()) timer.stop();
+		if (bounty.getAmount() >= SettingAddon.getBountyTimerMax()) timer.stop();
 		else {
-			double amount = oldAmount * SettingAddon.getBountyMultiple();
+			double amount = oldAmount * SettingAddon.getBountyTimerMultiple();
 			bountyEvent.setAmountApplied(amount - oldAmount);
 
 			// call the event

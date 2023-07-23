@@ -52,7 +52,7 @@ public class EntityDamage implements Listener {
 
 			user.setKills(user.getKills() + 1);
 
-			// when the attacked user has a bounty
+			// when does the attacked user have a bounty
 			if (deadUser.getBounty().hasBounty()) {
 				double amount = deadUser.getBounty().getAmount();
 
@@ -64,23 +64,25 @@ public class EntityDamage implements Listener {
 				// TODO change the values when there is a level system
 				// the start value would be the player level
 				Bounty userBounty = user.getBounty();
-				double currentBounty = user.getBounty().getAmount() == 0D ? SettingAddon.getBountyInitialValue() /
-						SettingAddon.getBountyMultiple() : user.getBounty().getAmount();
 
 				BountyEvent bountyEvent = new BountyEvent(user);
-				if (userBounty.getRepeatingTimer() == null) {
-					if (userBounty.getAmount() < SettingAddon.getBountyMaxValue()) {
+				if (userBounty.getRepeatingTimer() == null && SettingAddon.isBountyTimerEnable()) {
+					if (userBounty.getAmount() < SettingAddon.getBountyTimerMax()) {
 						// create a timer and start it
 						userBounty.createTimer(gangland, SettingAddon.getBountyTimeInterval(),
 						                       timer -> bountyExecutor(user, bountyEvent, timer)).start();
 					}
 				} else {
-					double amount = currentBounty * SettingAddon.getBountyMultiple();
-					bountyEvent.setAmountApplied(amount - currentBounty);
+					double eachKill = SettingAddon.getBountyEachKillValue();
+					double amount   = eachKill + userBounty.getAmount();
 
-					gangland.getServer().getPluginManager().callEvent(bountyEvent);
+					if (amount <= SettingAddon.getBountyMaxKill()) {
+						bountyEvent.setAmountApplied(eachKill);
 
-					if (!bountyEvent.isCancelled()) user.getBounty().setAmount(amount);
+						gangland.getServer().getPluginManager().callEvent(bountyEvent);
+
+						if (!bountyEvent.isCancelled()) user.getBounty().setAmount(amount);
+					}
 				}
 
 				// change wanted level
@@ -93,12 +95,12 @@ public class EntityDamage implements Listener {
 
 	private void bountyExecutor(User<Player> user, BountyEvent bountyEvent, RepeatingTimer timer) {
 		Bounty userBounty = user.getBounty();
-		double currentBounty = user.getBounty().getAmount() == 0D ? SettingAddon.getBountyInitialValue() /
-				SettingAddon.getBountyMultiple() : user.getBounty().getAmount();
+		double currentBounty = user.getBounty().getAmount() == 0D ? SettingAddon.getBountyEachKillValue() /
+				SettingAddon.getBountyTimerMultiple() : user.getBounty().getAmount();
 
-		if (userBounty.getAmount() >= SettingAddon.getBountyMaxValue()) timer.stop();
+		if (userBounty.getAmount() >= SettingAddon.getBountyTimerMax()) timer.stop();
 		else {
-			double amount = currentBounty * SettingAddon.getBountyMultiple();
+			double amount = currentBounty * SettingAddon.getBountyTimerMultiple();
 			bountyEvent.setAmountApplied(amount - currentBounty);
 
 			// call the event
