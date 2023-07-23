@@ -1,4 +1,4 @@
-package me.luckyraven.command.sub;
+package me.luckyraven.command.sub.gang;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.account.gang.Gang;
@@ -42,13 +42,12 @@ import java.sql.Types;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 
-public class SCGang extends CommandHandler {
+public class GangCommand extends CommandHandler {
 
 	private final Gangland gangland;
 
-	public SCGang(Gangland gangland) {
+	public GangCommand(Gangland gangland) {
 		super(gangland, "gang", true);
 		this.gangland = gangland;
 
@@ -85,11 +84,13 @@ public class SCGang extends CommandHandler {
 
 		// create gang
 		// glw gang create <name>
-		Argument create = gangCreate(userManager, memberManager, gangManager, rankManager);
+		Argument create = new GangCreateCommand(gangland, getArgumentTree(), userManager, memberManager, gangManager,
+		                                        rankManager);
 
 		// delete gang
 		// glw gang delete
-		Argument delete = gangDelete(userManager, memberManager, gangManager, rankManager);
+		Argument delete = new GangDeleteCommand(gangland, getArgumentTree(), userManager, memberManager, gangManager,
+		                                        rankManager);
 
 		// add user to gang
 		// glw gang invite <name>
@@ -367,301 +368,6 @@ public class SCGang extends CommandHandler {
 	@Override
 	protected void help(CommandSender sender, int page) {
 		getHelpInfo().displayHelp(sender, page, "Gang");
-	}
-
-	private Argument gangCreate(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                            RankManager rankManager) {
-		Argument create = new Argument("create", getArgumentTree(), (argument, sender, args) -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (user.hasGang()) {
-				player.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
-				return;
-			}
-
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
-		}, getPermission() + ".create");
-
-		HashMap<User<Player>, AtomicReference<String>> createGangName  = new HashMap<>();
-		HashMap<CommandSender, CountdownTimer>         createGangTimer = new HashMap<>();
-
-		ConfirmArgument confirmCreate = new ConfirmArgument(getArgumentTree(), (argument, sender, args) -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-			Member       member = memberManager.getMember(player.getUniqueId());
-
-			if (user.hasGang()) {
-				player.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
-				return;
-			}
-
-			if (user.getBalance() < SettingAddon.getGangCreateFee()) {
-				player.sendMessage(MessageAddon.CANNOT_CREATE_GANG.toString());
-				return;
-			}
-
-			Gang   gang   = new Gang();
-			Random random = new Random();
-			do gang.setId(random.nextInt(999_999));
-			while (gangManager.contains(gang));
-
-			member.setGangJoinDate(Instant.now().toEpochMilli());
-			gang.addMember(user, member, rankManager.get(SettingAddon.getGangRankTail()));
-			gang.setName(createGangName.get(user).get());
-			gang.setBalance(SettingAddon.getGangInitialBalance());
-
-			gangManager.add(gang);
-
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
-				if (handler instanceof UserDatabase userDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> {
-						user.setBalance(user.getBalance() - SettingAddon.getGangCreateFee());
-						userDatabase.updateAccountTable(user);
-					});
-				}
-				if (handler instanceof GangDatabase gangDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> {
-						database.table("data").insert(new String[]{
-								"id", "name", "display_name", "color", "description", "balance", "bounty", "alias",
-								"created"
-						}, new Object[]{
-								gang.getId(), gang.getName(), gang.getDisplayName(), gang.getColor(),
-								gang.getDescription(), gang.getBalance(), gang.getBounty(), "", gang.getCreated()
-						}, new int[]{
-								Types.INTEGER, Types.CHAR, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.DOUBLE,
-								Types.DOUBLE, Types.LONGVARCHAR, Types.BIGINT
-						});
-						gangDatabase.updateMembersTable(member);
-					});
-				}
-			}
-
-			player.sendMessage(MessageAddon.GANG_CREATED.toString().replace("%gang%", gang.getDisplayNameString()));
-
-			createGangName.remove(user);
-
-			CountdownTimer timer = createGangTimer.get(sender);
-			if (timer != null) {
-				if (!timer.isCancelled()) timer.cancel();
-				createGangTimer.remove(sender);
-			}
-		});
-
-		create.addSubArgument(confirmCreate);
-
-		Argument createName = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (user.hasGang()) {
-				player.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
-				return;
-			}
-
-			if (confirmCreate.isConfirmed()) return;
-
-			AtomicReference<String> name = new AtomicReference<>(args[2]);
-
-			if (!SettingAddon.isGangNameDuplicates()) for (Gang gang : gangManager.getGangs().values())
-				if (gang.getName().equalsIgnoreCase(name.get())) {
-					player.sendMessage(MessageAddon.DUPLICATE_GANG_NAME.toString().replace("%gang%", name.get()));
-					return;
-				}
-
-			createGangName.put(user, name);
-
-			// Need to notify the player and give access to confirm
-			player.sendMessage(MessageAddon.GANG_CREATE_FEE.toString()
-			                                               .replace("%amount%", SettingAddon.formatDouble(
-					                                               SettingAddon.getGangCreateFee())));
-			player.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "create"}));
-			confirmCreate.setConfirmed(true);
-
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> sender.sendMessage(
-					MessageAddon.GANG_CREATE_CONFIRM.toString().replace("%timer%", String.valueOf(time.getDuration()))),
-			                                          null, time -> {
-				confirmCreate.setConfirmed(false);
-				createGangName.remove(user);
-				createGangTimer.remove(sender);
-			});
-
-			timer.start();
-			createGangTimer.put(sender, timer);
-		});
-
-		create.addSubArgument(createName);
-
-		return create;
-	}
-
-	private Argument gangDelete(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                            RankManager rankManager) {
-		String[]                                       delArr          = {"delete", "remove"};
-		HashMap<User<Player>, AtomicReference<String>> deleteGangName  = new HashMap<>();
-		HashMap<CommandSender, CountdownTimer>         deleteGangTimer = new HashMap<>();
-
-		ConfirmArgument confirmDelete = new ConfirmArgument(getArgumentTree(), (argument, sender, args) -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-			Member       member = memberManager.getMember(player.getUniqueId());
-
-			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
-				return;
-			}
-
-			// check if the player is the owner
-			if (!member.getRank().match(rankManager.get(SettingAddon.getGangRankTail()).getUsedId())) {
-				player.sendMessage(MessageAddon.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
-				return;
-			}
-
-			Gang gang = gangManager.getGang(user.getGangId());
-
-			// need to get all the users, even if they are not online
-			// change the data directly from the database, and collect the online players ONLY!
-			List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
-			List<Member>       members           = new ArrayList<>(gang.getGroup());
-
-			double total = gang.getGroup().stream().mapToDouble(Member::getContribution).sum();
-			// get the contribution frequency for each user, and return that frequency according to the current balance
-
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
-				// change the gang id for all the members
-				if (handler instanceof UserDatabase userDatabase) {
-					// change the online users gang id
-					for (User<Player> gangUser : gangOnlineMembers) {
-						Member mem = memberManager.getMember(gangUser.getUser().getUniqueId());
-						gang.removeMember(gangUser, mem);
-						// distribute the balance according to the contribution
-						double freq    = mem.getContribution();
-						double balance = gang.getBalance();
-						double amount  = Math.round(total) == 0 ? 0 : freq / total * balance;
-						gang.setBalance(balance - amount);
-						gangUser.setBalance(gangUser.getBalance() + amount);
-
-						// inform the online users
-						gangUser.getUser().sendMessage(MessageAddon.KICKED_FROM_GANG.toString(),
-						                               MessageAddon.GANG_REMOVED.toString()
-						                                                        .replace("%gang%",
-						                                                                 deleteGangName.get(user)
-						                                                                               .get()),
-						                               MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
-						                                                                .replace("%amount%",
-						                                                                         SettingAddon.formatDouble(
-								                                                                         amount)));
-						// update the database
-						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-						helper.runQueries(database -> userDatabase.updateAccountTable(gangUser));
-					}
-					// change the others gang id
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> {
-						List<Object[]> allUsers = database.table("account").selectAll();
-						List<Object[]> gangUsers = allUsers.parallelStream()
-						                                   .filter(obj -> Arrays.stream(obj)
-						                                                        .anyMatch(o -> o.toString()
-						                                                                        .equals(String.valueOf(
-								                                                                        gang.getId()))))
-						                                   .toList();
-
-						for (Object[] data : gangUsers) {
-							UUID   uuid = UUID.fromString(String.valueOf(data[0]));
-							Member mem  = memberManager.getMember(uuid);
-
-							double balance = (double) data[1];
-							double freq    = mem.getContribution();
-							double gangBal = gang.getBalance();
-							double amount  = Math.round(total) == 0 ? 0 : freq / total * gangBal;
-
-							gang.setBalance(gangBal - amount);
-
-							database.table("account").update("uuid = ?", new Object[]{uuid.toString()},
-							                                 new int[]{Types.CHAR}, new String[]{"balance", "gang_id"},
-							                                 new Object[]{balance + amount, -1},
-							                                 new int[]{Types.DOUBLE, Types.INTEGER});
-						}
-					});
-
-					helper.runQueries(database -> {
-						double amount = SettingAddon.getGangCreateFee() / 4;
-						user.setBalance(user.getBalance() + amount);
-						player.sendMessage(MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
-						                                                    .replace("%amount%",
-						                                                             SettingAddon.formatDouble(
-								                                                             amount)));
-						userDatabase.updateAccountTable(user);
-					});
-				}
-
-				if (handler instanceof GangDatabase gangDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> {
-						database.table("data").delete("id", String.valueOf(gang.getId()));
-
-						for (Member mem : members)
-							gangDatabase.updateMembersTable(mem);
-					});
-				}
-			}
-
-			gangManager.remove(gang);
-			deleteGangName.remove(user);
-			CountdownTimer timer = deleteGangTimer.get(sender);
-			if (timer != null) {
-				if (!timer.isCancelled()) timer.cancel();
-				deleteGangTimer.remove(sender);
-			}
-		});
-
-		Argument delete = new Argument(delArr, getArgumentTree(), (argument, sender, args) -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-			Member       member = memberManager.getMember(player.getUniqueId());
-
-			if (!user.hasGang()) {
-				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
-				return;
-			}
-
-			// check if the player is the owner
-			if (!member.getRank().match(rankManager.get(SettingAddon.getGangRankTail()).getUsedId())) {
-				player.sendMessage(MessageAddon.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
-				return;
-			}
-
-			if (confirmDelete.isConfirmed()) return;
-
-			confirmDelete.setConfirmed(true);
-			player.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "delete"}));
-
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> sender.sendMessage(
-					MessageAddon.GANG_REMOVE_CONFIRM.toString().replace("%timer%", String.valueOf(time.getDuration()))),
-			                                          null, time -> {
-				confirmDelete.setConfirmed(false);
-				deleteGangName.remove(user);
-				deleteGangTimer.remove(sender);
-			});
-
-			timer.start();
-
-			Gang gang = gangManager.getGang(user.getGangId());
-
-			deleteGangName.put(user, new AtomicReference<>(gang.getName()));
-			deleteGangTimer.put(sender, timer);
-		}, getPermission() + ".delete");
-
-		delete.addSubArgument(confirmDelete);
-
-		return delete;
 	}
 
 	private Argument gangKick(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,

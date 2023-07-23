@@ -9,11 +9,11 @@ import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public final class SCBalance extends CommandHandler {
+public final class BalanceCommand extends CommandHandler {
 
 	private final Gangland gangland;
 
-	public SCBalance(Gangland gangland) {
+	public BalanceCommand(Gangland gangland) {
 		super(gangland, "balance", true, "bal");
 		this.gangland = gangland;
 		getHelpInfo().add(getCommandInformation("balance"));

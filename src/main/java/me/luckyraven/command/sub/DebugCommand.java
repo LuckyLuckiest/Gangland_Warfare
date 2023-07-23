@@ -14,9 +14,9 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SCDebug extends CommandHandler {
+public class DebugCommand extends CommandHandler {
 
-	public SCDebug(Gangland gangland) {
+	public DebugCommand(Gangland gangland) {
 		super(gangland, "debug", false);
 	}
 

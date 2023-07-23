@@ -25,9 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class SCRank extends CommandHandler {
+public class RankCommand extends CommandHandler {
 
-	public SCRank(Gangland gangland) {
+	public RankCommand(Gangland gangland) {
 		super(gangland, "rank", false);
 
 		List<CommandInformation> list = getCommands().entrySet()

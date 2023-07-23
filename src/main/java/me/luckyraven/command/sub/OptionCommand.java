@@ -23,11 +23,11 @@ import org.bukkit.entity.Player;
 
 import java.util.Objects;
 
-public class SCOption extends CommandHandler {
+public class OptionCommand extends CommandHandler {
 
 	private final Gangland gangland;
 
-	public SCOption(Gangland gangland) {
+	public OptionCommand(Gangland gangland) {
 		super(gangland, "option", false);
 		this.gangland = gangland;
 	}

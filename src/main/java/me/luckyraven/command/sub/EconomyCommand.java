@@ -21,11 +21,11 @@ import java.sql.Types;
 import java.util.*;
 import java.util.function.Supplier;
 
-public class SCEconomy extends CommandHandler {
+public class EconomyCommand extends CommandHandler {
 
 	private final Gangland gangland;
 
-	public SCEconomy(Gangland gangland) {
+	public EconomyCommand(Gangland gangland) {
 		super(gangland, "economy", false, "eco");
 		this.gangland = gangland;
 

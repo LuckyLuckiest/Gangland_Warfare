@@ -7,9 +7,9 @@ import org.bukkit.command.CommandSender;
 
 import java.util.stream.Collectors;
 
-public class SCHelp extends CommandHandler {
+public class HelpCommand extends CommandHandler {
 
-	public SCHelp(Gangland gangland) {
+	public HelpCommand(Gangland gangland) {
 		super(gangland, "help", false, "general", "?");
 		getHelpInfo().add(getCommandInformation("general"));
 		getHelpInfo().add(getCommandInformation("general_page"));

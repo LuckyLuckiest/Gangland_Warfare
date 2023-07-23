@@ -27,11 +27,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class SCBank extends CommandHandler {
+public class BankCommand extends CommandHandler {
 
 	private final Gangland gangland;
 
-	public SCBank(Gangland gangland) {
+	public BankCommand(Gangland gangland) {
 		super(gangland, "bank", true);
 		this.gangland = gangland;
 
