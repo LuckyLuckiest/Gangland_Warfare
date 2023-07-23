@@ -4,6 +4,7 @@ import me.luckyraven.util.UnhandledError;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ public class FileManager {
 		}
 	}
 
+	@Nullable
 	public FileHandler getFile(String fileName) {
 		for (FileHandler file : files) if (file.getName().equalsIgnoreCase(fileName)) return file;
 		return null;
