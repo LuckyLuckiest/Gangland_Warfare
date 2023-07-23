@@ -3,6 +3,7 @@ package me.luckyraven.datastructure;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -98,6 +99,7 @@ public class Tree<E> implements Iterable<E> {
 		return null;
 	}
 
+	@Nullable
 	public E find(E key) {
 		Node<E> found = findNode(root, key);
 		if (found == null) return null;
