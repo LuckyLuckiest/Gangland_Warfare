@@ -214,6 +214,10 @@ Commands:
       List:
          Primary: "Warp Locations&8:"
          Secondary: "&7%list%"
+   Bounty:
+      Current: "Bounty amount: &c%money_symbol%%bounty%"
+      Increment: "&4&lBounty &c+%bounty%"
+      Clear: "Your bounty was cleared!"
 
 Errors:
    Prefix: "&4Error&7: "

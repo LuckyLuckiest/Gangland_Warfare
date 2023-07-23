@@ -112,6 +112,13 @@ public enum MessageAddon {
 	WARP_LIST_PRIMARY("Commands.Warp.List.Primary", Type.OTHER), WARP_LIST_SECONDARY("Commands.Warp.List.Secondary",
 	                                                                                 Type.OTHER),
 
+	// commands - bounty
+	BOUNTY_CURRENT("Commands.Bounty.Current", Type.COMMAND), BOUNTY_INCREMENT("Commands.Bounty.Increment",
+	                                                                          Type.OTHER), BOUNTY_CLEAR(
+			"Commands.Bounty.Clear", Type.COMMAND), BOUNTY_LIFTED("Commands.Bounty.Lifted", Type.COMMAND),
+	BOUNTY_PLAYER_LIFT("Commands.Bounty.Player_Lift", Type.COMMAND), BOUNTY_SET("Commands.Bounty.Bounty_Set",
+	                                                                            Type.COMMAND),
+
 	// errors - permissions
 	COMMAND_NO_PERM("Errors.Permissions.Command", Type.ERROR), KIT_NO_PERM("Errors.Permissions.Kit", Type.ERROR),
 	SPAWN_NO_PERM("Errors.Permissions.Spawn", Type.ERROR), WARP_NO_PERM("Errors.Permissions.Warp", Type.ERROR),
@@ -154,6 +161,10 @@ public enum MessageAddon {
 			"Errors.Teleportation.Warp.Not_Found", Type.ERROR), WORLD_NOT_FOUND("Errors.Teleportation.World.Not_Found",
 	                                                                            Type.ERROR),
 
+	// errors - bounty
+	NO_BOUNTY("Errors.Bounty.No_Bounty", Type.ERROR), NO_USER_SET_BOUNTY("Errors.Bounty.User_Set_Bounty", Type.ERROR),
+
+	// errors - others
 	CANNOT_BE_NULL("Errors.Cannot_Null", Type.ERROR), MUST_BE_NUMBERS("Errors.Must_Be_Numbers", Type.ERROR),
 	DONT_USE_SYMBOL("Errors.Dont_Use_Symbol", Type.ERROR),
 
@@ -222,4 +233,5 @@ public enum MessageAddon {
 enum Type {
 
 	PREFIX, COMMAND, ERROR, INFORMATION, OTHER
+
 }

@@ -214,6 +214,13 @@ Commands:
       List:
          Primary: "Warp Locations&8:"
          Secondary: "&7%list%"
+   Bounty:
+      Current: "Bounty &c%money_symbol%%bounty%"
+      Bounty_Set: "You have a bounty on your head!"
+      Increment: "&4&lBounty &c+%bounty%"
+      Player_Lift: "You have lifted &a%money_symbol%%amount%&7 from &6%player%&7."
+      Lifted: "&a%money_symbol%%amount%&7 has been lifted from your bounty.%n%&4&lBounty &c%money_symbol%%bounty%"
+      Clear: "Your bounty was cleared!"
 
 Errors:
    Prefix: "&4Error&7: "
@@ -261,6 +268,9 @@ Errors:
          List_Undefined: "Warp list is &cinvalid&7."
       World:
          Not_Found: "Couldn't find that &bworld&7."
+   Bounty:
+      No_Bounty: "This player doesn't have a bounty."
+      User_Set_Bounty: "You didn't set a bounty for this player."
    Cannot_Null: "Can not be &cnull&7!"
    Must_Be_Numbers: "&a%command% &7must be numbers."
    Dont_Use_Symbol: "Please don't use symbol."
