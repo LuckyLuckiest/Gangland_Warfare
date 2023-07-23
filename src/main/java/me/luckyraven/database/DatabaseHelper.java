@@ -1,5 +1,6 @@
 package me.luckyraven.database;
 
+import lombok.Getter;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -9,6 +10,7 @@ import java.sql.SQLException;
 public class DatabaseHelper {
 
 	private final JavaPlugin      plugin;
+	@Getter
 	private final DatabaseHandler databaseHandler;
 	private final Database        database;
 
