@@ -58,6 +58,21 @@ Database:
       # Will use SQLite if unable to connect to MySQL
       Failed_MySQL: true
 
+# +---------------+ #
+# | Bounty Config | #
+# +---------------+ #
+Bounty:
+   # Enhance this by setting a limit for kill values
+   # Each kill is committed the value provided would be incremented to the bounty
+   Kill_Value: 5
+   # Enhance this by setting a limit for RepeatingTimer
+   # When the time hits a specific value, the multiplier is applied on the current value
+   Multiple: 2
+   # The time when the multiplier is applied on the amount
+   Time: 300
+   # The maximum value when the
+   Limit: 10000
+
 # +---------------+#
 # | Gang Settings |#
 # +---------------+#
