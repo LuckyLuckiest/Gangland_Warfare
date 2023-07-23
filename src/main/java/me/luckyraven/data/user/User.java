@@ -49,7 +49,7 @@ public class User<T> {
 	 * @param deaths   the deaths
 	 * @param mobKills the mob kills
 	 * @param balance  the balance
-	 * @param hasBank  the has bank
+	 * @param hasBank  they had a bank
 	 * @param gangId   the gang id
 	 */
 	public User(T user, int kills, int deaths, int mobKills, double balance, boolean hasBank, int gangId) {
@@ -65,7 +65,7 @@ public class User<T> {
 	 * @param deaths   the deaths
 	 * @param mobKills the mob kills
 	 * @param balance  the balance
-	 * @param hasBank  the has bank
+	 * @param hasBank  they had a bank
 	 */
 	public User(T user, int kills, int deaths, int mobKills, double balance, boolean hasBank) {
 		this(user);
@@ -90,7 +90,7 @@ public class User<T> {
 		this.hasBank = false;
 		this.gangId = -1;
 		this.bounty = new Bounty();
-		this.wanted = new Wanted(this);
+		this.wanted = new Wanted();
 		this.linkedAccounts = new ArrayList<>();
 	}
 
@@ -119,7 +119,7 @@ public class User<T> {
 	}
 
 	/**
-	 * Gets kills/deaths ratio of the user.
+	 * Gets a kills/deaths ratio of the user.
 	 *
 	 * @return the kd ratio
 	 */
@@ -129,8 +129,7 @@ public class User<T> {
 
 	@Override
 	public String toString() {
-		return String.format("User:{Data=%s, KD=%.2f, bal=%.2f, gangId=%d}", user, getKillDeathRatio(), balance,
-		                     gangId);
+		return String.format("User:{Data=%s,KD=%.2f,bal=%.2f,gangId=%d}", user, getKillDeathRatio(), balance, gangId);
 	}
 
 }
