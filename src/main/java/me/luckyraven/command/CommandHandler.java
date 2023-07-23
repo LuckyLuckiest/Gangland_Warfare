@@ -5,8 +5,8 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ConfirmArgument;
 import me.luckyraven.command.data.CommandInformation;
-import me.luckyraven.command.sub.SCDebug;
-import me.luckyraven.command.sub.SCOption;
+import me.luckyraven.command.sub.DebugCommand;
+import me.luckyraven.command.sub.OptionCommand;
 import me.luckyraven.data.HelpInfo;
 import me.luckyraven.datastructure.Node;
 import me.luckyraven.datastructure.Tree;
@@ -98,7 +98,7 @@ public abstract class CommandHandler implements TabCompleter {
 		List<CommandHandler> commandHandlers = new ArrayList<>();
 
 		// classes that I don't want displayed in tab completion
-		List<Class<? extends CommandHandler>> filters = Arrays.asList(SCDebug.class, SCOption.class);
+		List<Class<? extends CommandHandler>> filters = Arrays.asList(DebugCommand.class, OptionCommand.class);
 
 		for (CommandHandler handler : commandMap.values()) {
 			if (filters.stream().anyMatch(filterClass -> filterClass.isInstance(handler))) continue;
