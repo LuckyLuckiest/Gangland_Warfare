@@ -93,8 +93,8 @@ public class UserDatabase extends DatabaseHandler {
 		                                   new int[]{Types.CHAR}, new String[]{
 						"kills", "deaths", "mob_kills", "has_bank", "bounty", "date_joined"
 				}, new Object[]{
-						user.getKills(), user.getDeaths(), user.getMobKills(), user.hasBank(), user.getBounty(),
-						user.getUser().getFirstPlayed()
+						user.getKills(), user.getDeaths(), user.getMobKills(), user.hasBank(),
+						user.getBounty().getAmount(), user.getUser().getFirstPlayed()
 				}, new int[]{Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.BOOLEAN, Types.DOUBLE, Types.BIGINT});
 	}
 

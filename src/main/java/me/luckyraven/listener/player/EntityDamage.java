@@ -1,11 +1,16 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.bounty.Bounty;
+import me.luckyraven.bounty.BountyEvent;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.UserDatabase;
+import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.timer.RepeatingTimer;
+import me.luckyraven.util.ChatUtil;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -14,6 +19,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.jetbrains.annotations.Nullable;
 
 public class EntityDamage implements Listener {
 
@@ -40,29 +46,95 @@ public class EntityDamage implements Listener {
 		User<Player> user = userManager.getUser(damager.getPlayer());
 
 		// check if it was a player or a mob
-		if (event.getEntity() instanceof Player) user.setKills(user.getKills() + 1);
-		else user.setMobKills(user.getMobKills() + 1);
+		User<Player> deadUser = null;
+		if (event.getEntity() instanceof Player player) {
+			deadUser = userManager.getUser(player);
 
-		updateDatabase(user);
+			user.setKills(user.getKills() + 1);
+
+			// when the attacked user has a bounty
+			if (deadUser.getBounty().hasBounty()) {
+				double amount = deadUser.getBounty().getAmount();
+
+				user.setBalance(user.getBalance() + amount);
+				deadUser.getBounty().resetBounty();
+
+				user.getUser().sendMessage(ChatUtil.color("&a+" + amount));
+			} else {
+				// TODO change the values when there is a level system
+				// the start value would be the player level
+				Bounty userBounty = user.getBounty();
+				double currentBounty = user.getBounty().getAmount() == 0D ? SettingAddon.getBountyInitialValue() /
+						SettingAddon.getBountyMultiple() : user.getBounty().getAmount();
+
+				BountyEvent bountyEvent = new BountyEvent(user);
+				if (userBounty.getRepeatingTimer() == null) {
+					if (userBounty.getAmount() < SettingAddon.getBountyMaxValue()) {
+						// create a timer and start it
+						userBounty.createTimer(gangland, SettingAddon.getBountyTimeInterval(),
+						                       timer -> bountyExecutor(user, bountyEvent, timer)).start();
+					}
+				} else {
+					double amount = currentBounty * SettingAddon.getBountyMultiple();
+					bountyEvent.setAmountApplied(amount - currentBounty);
+
+					gangland.getServer().getPluginManager().callEvent(bountyEvent);
+
+					if (!bountyEvent.isCancelled()) user.getBounty().setAmount(amount);
+				}
+
+				// change wanted level
+
+			}
+		} else user.setMobKills(user.getMobKills() + 1);
+
+		updateDatabase(user, deadUser);
 	}
 
-	private void updateDatabase(User<Player> user) {
+	private void bountyExecutor(User<Player> user, BountyEvent bountyEvent, RepeatingTimer timer) {
+		Bounty userBounty = user.getBounty();
+		double currentBounty = user.getBounty().getAmount() == 0D ? SettingAddon.getBountyInitialValue() /
+				SettingAddon.getBountyMultiple() : user.getBounty().getAmount();
+
+		if (userBounty.getAmount() >= SettingAddon.getBountyMaxValue()) timer.stop();
+		else {
+			double amount = currentBounty * SettingAddon.getBountyMultiple();
+			bountyEvent.setAmountApplied(amount - currentBounty);
+
+			// call the event
+			gangland.getServer().getPluginManager().callEvent(bountyEvent);
+
+			if (!bountyEvent.isCancelled())
+				// change the value
+				userBounty.setAmount(amount);
+
+			updateDatabase(user, null);
+		}
+	}
+
+	private void updateDatabase(User<Player> user, @Nullable User<Player> otherUser) {
 		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
 			if (handler instanceof UserDatabase userDatabase) {
 				DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
-				helper.runQueries(database -> userDatabase.updateDataTable(user));
+				helper.runQueries(database -> {
+					userDatabase.updateDataTable(user);
+					userDatabase.updateAccountTable(user);
+					if (otherUser != null) {
+						userDatabase.updateDataTable(otherUser);
+						userDatabase.updateAccountTable(otherUser);
+					}
+				});
 				break;
 			}
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onPlayerDeath(PlayerDeathEvent event) {
-		Player       player = event.getEntity();
-		User<Player> user   = userManager.getUser(player);
+		User<Player> user = userManager.getUser(event.getEntity());
 
 		user.setDeaths(user.getDeaths() + 1);
-		updateDatabase(user);
+		updateDatabase(user, null);
 	}
 
 }

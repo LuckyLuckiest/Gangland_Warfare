@@ -310,5 +310,21 @@
 	"rank_info": {
 		"usage": "/glw rank info <name>",
 		"description": "Gives all the information about the specified rank."
+	},
+	"bounty": {
+		"usage": "/glw bounty",
+		"description": "Shows the current bounty or help menu."
+	},
+	"bounty_help": {
+		"usage": "/glw bounty help <page>",
+		"description": "Shows bounty help page."
+	},
+	"bounty_set": {
+		"usage": "/glw bounty set <player> <amount>",
+		"description": "Sets a bounty on the player head."
+	},
+	"bounty_remove": {
+		"usage": "/glw bounty remove <player>",
+		"description": "Removes the bounty you set."
 	}
 }

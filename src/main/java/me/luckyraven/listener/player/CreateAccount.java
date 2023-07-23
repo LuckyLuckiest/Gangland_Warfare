@@ -5,6 +5,8 @@ import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.Member;
 import me.luckyraven.account.gang.MemberManager;
 import me.luckyraven.account.type.Bank;
+import me.luckyraven.bounty.Bounty;
+import me.luckyraven.bounty.BountyEvent;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.Database;
@@ -14,6 +16,7 @@ import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.rank.RankManager;
+import me.luckyraven.timer.RepeatingTimer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -142,7 +145,23 @@ public final class CreateAccount implements Listener {
 				user.setDeaths((int) dataInfo[2]);
 				user.setMobKills((int) dataInfo[3]);
 				user.setHasBank((boolean) dataInfo[4]);
-				user.setBounty((double) dataInfo[5]);
+
+				Bounty bounty = user.getBounty();
+				bounty.setAmount((double) dataInfo[5]);
+
+				if (bounty.hasBounty()) {
+					BountyEvent bountyEvent = new BountyEvent(user);
+
+					if (bounty.getAmount() < SettingAddon.getBountyMaxValue()) {
+						RepeatingTimer repeatingTimer = bounty.createTimer(gangland,
+						                                                   SettingAddon.getBountyTimeInterval(),
+						                                                   timer -> bountyExecutor(user, bountyEvent,
+						                                                                           timer, helper));
+
+						repeatingTimer.start();
+					}
+
+				}
 			}
 		});
 	}
@@ -168,6 +187,31 @@ public final class CreateAccount implements Listener {
 				member.setGangJoinDate((long) membersInfo[4]);
 			}
 		});
+	}
+
+	private void bountyExecutor(User<Player> user, BountyEvent bountyEvent, RepeatingTimer timer,
+	                            DatabaseHelper helper) {
+		Bounty bounty    = user.getBounty();
+		double oldAmount = bounty.getAmount();
+
+		if (bounty.getAmount() >= SettingAddon.getBountyMaxValue()) timer.stop();
+		else {
+			double amount = oldAmount * SettingAddon.getBountyMultiple();
+			bountyEvent.setAmountApplied(amount - oldAmount);
+
+			// call the event
+			gangland.getServer().getPluginManager().callEvent(bountyEvent);
+
+			if (!bountyEvent.isCancelled())
+				// change the amount
+				bounty.setAmount(amount);
+
+			// update the database
+			UserDatabase   userDatabase = (UserDatabase) helper.getDatabaseHandler();
+			DatabaseHelper help         = new DatabaseHelper(gangland, userDatabase);
+
+			help.runQueries(db -> userDatabase.updateDataTable(user));
+		}
 	}
 
 }

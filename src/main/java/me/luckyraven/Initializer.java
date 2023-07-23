@@ -7,6 +7,7 @@ import me.luckyraven.bukkit.gui.InventoryGUI;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.command.sub.*;
+import me.luckyraven.command.sub.gang.GangCommand;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseManager;
@@ -20,6 +21,7 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.gang.GangMembersDamage;
+import me.luckyraven.listener.player.BountyIncrease;
 import me.luckyraven.listener.player.CreateAccount;
 import me.luckyraven.listener.player.EntityDamage;
 import me.luckyraven.listener.player.RemoveAccount;
@@ -160,6 +162,7 @@ public final class Initializer {
 			listenerManager.addEvent(new RemoveAccount(gangland));
 			listenerManager.addEvent(new GangMembersDamage(gangland));
 			listenerManager.addEvent(new EntityDamage(gangland));
+			listenerManager.addEvent(new BountyIncrease());
 			listenerManager.addEvent(new InventoryGUI("dummy", 9));
 		}
 	}
@@ -170,18 +173,19 @@ public final class Initializer {
 
 		// sub commands
 		// default plugin commands
-		commandManager.addCommand(new SCBalance(gangland));
-		commandManager.addCommand(new SCGang(gangland));
-		commandManager.addCommand(new SCBank(gangland));
-		commandManager.addCommand(new SCEconomy(gangland));
-		commandManager.addCommand(new SCRank(gangland));
-		commandManager.addCommand(new SCOption(gangland));
+		commandManager.addCommand(new BalanceCommand(gangland));
+		commandManager.addCommand(new GangCommand(gangland));
+		commandManager.addCommand(new BankCommand(gangland));
+		commandManager.addCommand(new EconomyCommand(gangland));
+		commandManager.addCommand(new RankCommand(gangland));
+		commandManager.addCommand(new BountyCommand(gangland));
 
 		// debug commands
-		commandManager.addCommand(new SCDebug(gangland));
+		commandManager.addCommand(new DebugCommand(gangland));
+		commandManager.addCommand(new OptionCommand(gangland));
 
 		// Needs to be the final command to add all the help info
-		commandManager.addCommand(new SCHelp(gangland));
+		commandManager.addCommand(new HelpCommand(gangland));
 
 		Objects.requireNonNull(plugin.getCommand("glw")).setTabCompleter(
 				commandManager.getCommands().values().stream().toList().get(0));
