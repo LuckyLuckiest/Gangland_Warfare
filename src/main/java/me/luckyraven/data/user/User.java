@@ -3,6 +3,7 @@ package me.luckyraven.data.user;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.account.Account;
+import me.luckyraven.bounty.Bounty;
 import me.luckyraven.rank.Rank;
 import me.luckyraven.wanted.Wanted;
 
@@ -10,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Handles all users registered data, either online or offline.
+ * Handles all users registered data, only for online users.
  *
  * @param <T> type of the user
  */
@@ -26,10 +27,12 @@ public class User<T> {
 	private int kills, deaths, mobKills, gangId;
 	@Getter
 	@Setter
-	private double balance, bounty;
+	private double  balance;
 	@Setter
 	private boolean hasBank;
 
+	@Getter
+	private Bounty bounty;
 	@Getter
 	@Setter
 	private Rank   rank;
@@ -41,19 +44,17 @@ public class User<T> {
 	/**
 	 * Instantiates a new Database.
 	 *
-	 * @param user the user
+	 * @param user     the user
+	 * @param kills    the kills
+	 * @param deaths   the deaths
+	 * @param mobKills the mob kills
+	 * @param balance  the balance
+	 * @param hasBank  the has bank
+	 * @param gangId   the gang id
 	 */
-	public User(T user) {
-		this.user = user;
-		this.kills = 0;
-		this.deaths = 0;
-		this.mobKills = 0;
-		this.balance = 0D;
-		this.bounty = 0D;
-		this.hasBank = false;
-		this.gangId = -1;
-		this.wanted = new Wanted(this);
-		this.linkedAccounts = new ArrayList<>();
+	public User(T user, int kills, int deaths, int mobKills, double balance, boolean hasBank, int gangId) {
+		this(user, kills, deaths, mobKills, balance, hasBank);
+		this.gangId = gangId;
 	}
 
 	/**
@@ -78,17 +79,19 @@ public class User<T> {
 	/**
 	 * Instantiates a new Database.
 	 *
-	 * @param user     the user
-	 * @param kills    the kills
-	 * @param deaths   the deaths
-	 * @param mobKills the mob kills
-	 * @param balance  the balance
-	 * @param hasBank  the has bank
-	 * @param gangId   the gang id
+	 * @param user the user
 	 */
-	public User(T user, int kills, int deaths, int mobKills, double balance, boolean hasBank, int gangId) {
-		this(user, kills, deaths, mobKills, balance, hasBank);
-		this.gangId = gangId;
+	public User(T user) {
+		this.user = user;
+		this.kills = 0;
+		this.deaths = 0;
+		this.mobKills = 0;
+		this.balance = 0D;
+		this.hasBank = false;
+		this.gangId = -1;
+		this.bounty = new Bounty();
+		this.wanted = new Wanted(this);
+		this.linkedAccounts = new ArrayList<>();
 	}
 
 	public void resetGang() {
@@ -103,15 +106,6 @@ public class User<T> {
 		return hasBank;
 	}
 
-	/**
-	 * Gets kills/deaths ratio of the user.
-	 *
-	 * @return the kd ratio
-	 */
-	public double getKillDeathRatio() {
-		return deaths == 0 ? 0D : (double) kills / deaths;
-	}
-
 	public void addAccount(Account<?, ?> account) {
 		linkedAccounts.add(account);
 	}
@@ -122,6 +116,15 @@ public class User<T> {
 
 	public List<Account<?, ?>> getLinkedAccounts() {
 		return new ArrayList<>(linkedAccounts);
+	}
+
+	/**
+	 * Gets kills/deaths ratio of the user.
+	 *
+	 * @return the kd ratio
+	 */
+	public double getKillDeathRatio() {
+		return deaths == 0 ? 0D : (double) kills / deaths;
 	}
 
 	@Override
