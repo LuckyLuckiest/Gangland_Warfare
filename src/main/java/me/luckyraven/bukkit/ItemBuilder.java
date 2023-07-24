@@ -111,4 +111,8 @@ public class ItemBuilder {
 		return itemStack;
 	}
 
+	public boolean hasNBTTag(String tag) {
+		return NBT.itemStackToNBT(itemStack).hasTag(tag);
+	}
+
 }
