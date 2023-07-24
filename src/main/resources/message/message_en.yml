@@ -234,7 +234,7 @@ Errors:
    Player:
       Not_Player: "&cYou need to be a player to use this!"
       Player_Not_Found: "&6%player% &7is not found!"
-      Inv_Full: "Your inventory is &cfull, &7please clear a &8slot &7to receive the item(s)."
+      Inv_Full: "Your inventory is &cfull&7, please clear a slot to receive the item(s)."
    Kit:
       Not_Found: "Can't remove kit that doesn't exist."
    Economy:
