@@ -79,6 +79,7 @@ Bounty:
 # | Phone Config | #
 # +--------------+ #
 Phone:
+   Item: "redstone"
    # The slots are from 0-8, and they are in the hot-bar only.
    Slot: 8
    # If the item was movable

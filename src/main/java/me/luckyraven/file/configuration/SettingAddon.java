@@ -31,6 +31,13 @@ public class SettingAddon {
 	private static int bountyTimeInterval;
 
 	@Getter
+	private static String phoneItem;
+	@Getter
+	private static int phoneSlot;
+	@Getter
+	private static boolean phoneMovable, phoneDroppable;
+
+	@Getter
 	private static boolean gangEnable, gangNameDuplicates;
 	@Getter
 	private static String gangRankHead, gangRankTail, gangDisplayNameChar;
@@ -71,6 +78,11 @@ public class SettingAddon {
 		bountyTimerMultiple = settings.getDouble("Bounty.Repeating_Timer.Multiple");
 		bountyTimeInterval = settings.getInt("Bounty.Repeating_Timer.Time");
 		bountyTimerMax = settings.getDouble("Bounty.Repeating_Timer.Max");
+
+		phoneItem = settings.getString("Phone.Item");
+		phoneSlot = settings.getInt("Phone.Slot");
+		phoneMovable = settings.getBoolean("Phone.Movable");
+		phoneDroppable = settings.getBoolean("Phone.Droppable");
 
 		gangEnable = settings.getBoolean("Gang.Enable");
 		gangNameDuplicates = settings.getBoolean("Gang.Name_Duplicates");
