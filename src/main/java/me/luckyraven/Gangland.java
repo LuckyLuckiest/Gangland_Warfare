@@ -17,6 +17,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class Gangland extends JavaPlugin {
 
@@ -42,7 +44,12 @@ public final class Gangland extends JavaPlugin {
 	}
 
 	private void dependencyHandler() {
-		if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) new GanglandExpansion(this).register();
+		// required dependencies
+		requiredDependency("NBTAPI", null);
+
+		// soft dependencies
+		softDependency("PlaceholderAPI", () -> new GanglandExpansion(this).register());
+		softDependency("Vault", null);
 	}
 
 	private void userInitialize() {
@@ -88,6 +95,18 @@ public final class Gangland extends JavaPlugin {
 					memberManager.add(newMember);
 				}
 			}
+	}
+
+	private void requiredDependency(@NotNull String name, @Nullable Runnable runnable) {
+		if (Bukkit.getPluginManager().getPlugin(name) == null) {
+			getLogger().warning(name + " is a required dependency!");
+			if (runnable != null) runnable.run();
+			getPluginLoader().disablePlugin(this);
+		}
+	}
+
+	private void softDependency(@NotNull String name, @Nullable Runnable runnable) {
+		if (Bukkit.getPluginManager().getPlugin(name) != null) if (runnable != null) runnable.run();
 	}
 
 }
