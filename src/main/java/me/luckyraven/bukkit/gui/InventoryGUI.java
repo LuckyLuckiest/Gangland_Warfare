@@ -25,13 +25,15 @@ public class InventoryGUI implements Listener {
 
 	public static final  int                MAX_SLOTS     = 54;
 	private static final List<InventoryGUI> inventoryGUIs = new ArrayList<>();
-	private final        Inventory          inventory;
-	@Getter
-	private final        int                size;
-	private final        List<Integer>      draggableSlots;
 
+	@Getter
+	private final int                                                 size;
+	private final List<Integer>                                       draggableSlots;
 	private final Map<Integer, BiConsumer<InventoryGUI, ItemBuilder>> clickableSlots;
 	private final Map<Integer, ItemBuilder>                           clickableItem;
+
+	@Getter
+	private Inventory inventory;
 
 	public InventoryGUI(String title, int size) {
 		this.inventory = Bukkit.createInventory(null, size, ChatUtil.color(title));
@@ -40,6 +42,13 @@ public class InventoryGUI implements Listener {
 		this.clickableItem = new HashMap<>();
 		this.size = size;
 		inventoryGUIs.add(this);
+	}
+
+	public void rename(String name) {
+		ItemStack[] contents = inventory.getContents();
+
+		inventory = Bukkit.createInventory(null, size, ChatUtil.color(name));
+		inventory.setContents(contents);
 	}
 
 	public void setItem(int slot, Material material, @Nullable String displayName, @Nullable List<String> lore,
