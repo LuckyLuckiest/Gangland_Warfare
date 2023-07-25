@@ -21,10 +21,7 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.gang.GangMembersDamage;
-import me.luckyraven.listener.player.BountyIncrease;
-import me.luckyraven.listener.player.CreateAccount;
-import me.luckyraven.listener.player.EntityDamage;
-import me.luckyraven.listener.player.RemoveAccount;
+import me.luckyraven.listener.player.*;
 import me.luckyraven.rank.RankManager;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -163,6 +160,9 @@ public final class Initializer {
 			listenerManager.addEvent(new GangMembersDamage(gangland));
 			listenerManager.addEvent(new EntityDamage(gangland));
 			listenerManager.addEvent(new BountyIncrease());
+			listenerManager.addEvent(new PhoneItem());
+
+			// inventory gui test double listener
 			listenerManager.addEvent(new InventoryGUI("dummy", 9));
 		}
 	}
@@ -183,6 +183,7 @@ public final class Initializer {
 		// debug commands
 		commandManager.addCommand(new DebugCommand(gangland));
 		commandManager.addCommand(new OptionCommand(gangland));
+		commandManager.addCommand(new ReadNBTCommand(gangland));
 
 		// Needs to be the final command to add all the help info
 		commandManager.addCommand(new HelpCommand(gangland));
