@@ -111,8 +111,21 @@ public class ItemBuilder {
 		return itemStack;
 	}
 
+	public void addTag(String tag, String value) {
+		modifyNBT(nbt -> nbt.setString(tag, value));
+	}
+
 	public boolean hasNBTTag(String tag) {
-		return NBT.itemStackToNBT(itemStack).hasTag(tag);
+		String value = NBT.get(itemStack, nbt -> nbt.getString(tag));
+
+		if (value == null) return false;
+
+		return !value.isEmpty();
+	}
+
+	@Override
+	public String toString() {
+		return NBT.itemStackToNBT(itemStack).toString();
 	}
 
 }
