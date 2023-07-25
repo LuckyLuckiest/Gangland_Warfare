@@ -1,0 +1,34 @@
+The page will have a next and previous
+The page will also have a back options
+
+To achieve that we can simply introduce the linked list prev and next nodes
+
+There is another case where you are in a page with multiple linked list cases
+Thus I can think about hashing them and using chaining, basically hash maps
+
+Page 1:
+ - Node 1.1
+ - GOTO page a
+ - GOTO page b
+ - GOTO page c
+
+Page a:
+ - Node a.1
+ - Node a.2
+ - Node a.3
+ - GOTO page d
+
+Page b:
+ - GOTO page b
+ - GOTO page c
+ - Node b.1
+ - Node b.2
+
+...
+
+Thus to achieve that there are nodes which will point to heads, let us say linked lists
+Each node (item) has a next, the previous statement can be either dynamic OR linked to the last occurrence
+
+Let us think about it in this sense;
+
+For faster inventory checks, use Map<NamespaceKey, InventoryGUI>
