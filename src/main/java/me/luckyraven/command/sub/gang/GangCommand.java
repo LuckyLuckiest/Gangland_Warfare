@@ -1159,8 +1159,8 @@ public class GangCommand extends CommandHandler {
 
 			Gang gang = gangManager.getGang(user.getGangId());
 
-			InventoryGUI colorGUI   = new InventoryGUI("&5&lChoose a color", 6 * 9);
-			InventoryGUI confirmGUI = new InventoryGUI("&4&lAre you sure?", 6 * 9);
+			InventoryGUI colorGUI   = new InventoryGUI("&5&lChoose a color", InventoryGUI.MAX_SLOTS);
+			InventoryGUI confirmGUI = new InventoryGUI("&4&lAre you sure?", InventoryGUI.MAX_SLOTS);
 
 			int row = 2, column = 2;
 			for (Color color : Color.values()) {
