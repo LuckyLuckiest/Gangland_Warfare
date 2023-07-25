@@ -81,8 +81,8 @@ public class SettingAddon {
 
 		phoneItem = settings.getString("Phone.Item");
 		phoneSlot = settings.getInt("Phone.Slot");
-		phoneMovable = settings.getBoolean("Phone.Movable");
-		phoneDroppable = settings.getBoolean("Phone.Droppable");
+		phoneMovable = !settings.getBoolean("Phone.Movable");
+		phoneDroppable = !settings.getBoolean("Phone.Droppable");
 
 		gangEnable = settings.getBoolean("Gang.Enable");
 		gangNameDuplicates = settings.getBoolean("Gang.Name_Duplicates");
