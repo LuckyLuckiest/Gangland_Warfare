@@ -323,9 +323,9 @@ public class GangCommand extends CommandHandler {
 			// TODO work on Anvil GUI
 		}, getPermission() + ".change_description");
 
-		// gang alias
-		// glw gang alias <request/abandon> <id>
-		Argument alias = gangAlias(userManager, memberManager, gangManager);
+		// gang ally
+		// glw gang ally <request/abandon> <id>
+		Argument ally = gangAlly(userManager, memberManager, gangManager);
 
 		// change gang display name
 		// glw gang display <name>
@@ -357,7 +357,7 @@ public class GangCommand extends CommandHandler {
 		arguments.add(name);
 		arguments.add(description);
 
-		arguments.add(alias);
+		arguments.add(ally);
 
 		arguments.add(display);
 		arguments.add(color);
@@ -818,8 +818,8 @@ public class GangCommand extends CommandHandler {
 		return name;
 	}
 
-	private Argument gangAlias(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager) {
-		Argument alias = new Argument("alias", getArgumentTree(), (argument, sender, args) -> {
+	private Argument gangAlly(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager) {
+		Argument ally = new Argument("ally", getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -830,10 +830,10 @@ public class GangCommand extends CommandHandler {
 
 			sender.sendMessage(
 					CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<request/abandon>"));
-		}, getPermission() + ".alias");
+		}, getPermission() + ".ally");
 
-		// glw gang alias request <id>
-		Argument requestAlias = new Argument("request", getArgumentTree(), (argument, sender, args) -> {
+		// glw gang ally request <id>
+		Argument requestAlly = new Argument("request", getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -843,10 +843,10 @@ public class GangCommand extends CommandHandler {
 			}
 
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<id>"));
-		}, alias.getPermission() + ".request");
+		}, ally.getPermission() + ".request");
 
-		// glw gang alias abandon <id>
-		Argument abandonAlias = new Argument("abandon", getArgumentTree(), (argument, sender, args) -> {
+		// glw gang ally abandon <id>
+		Argument abandonAlly = new Argument("abandon", getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -856,12 +856,12 @@ public class GangCommand extends CommandHandler {
 			}
 
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<id>"));
-		}, alias.getPermission() + ".abandon");
+		}, ally.getPermission() + ".abandon");
 
 		// key -> the gang requesting alliance with, value -> the gang sending the request
 		HashMap<Gang, Gang>           gangsIdMap       = new HashMap<>();
 		HashMap<Gang, CountdownTimer> gangRequestTimer = new HashMap<>();
-		Argument aliasId = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+		Argument allyId = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -892,7 +892,7 @@ public class GangCommand extends CommandHandler {
 			switch (args[2].toLowerCase()) {
 				case "request" -> {
 					// check if they are allied before proceeding
-					if (receiving.getAlias().contains(sending)) {
+					if (receiving.getAlly().contains(sending)) {
 						player.sendMessage(MessageAddon.ALREADY_ALLIED_GANG.toString());
 						return;
 					}
@@ -905,16 +905,16 @@ public class GangCommand extends CommandHandler {
 					// send a message to every member in the sending gang
 					Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
 							onlinePlayer.getUniqueId()).getGangId() == sending.getId()).toList().forEach(
-							pl -> pl.sendMessage(MessageAddon.GANG_ALIAS_SEND_REQUEST.toString()
-							                                                         .replace("%gang%",
-							                                                                  receiving.getDisplayNameString())));
+							pl -> pl.sendMessage(MessageAddon.GANG_ALLY_SEND_REQUEST.toString()
+							                                                        .replace("%gang%",
+							                                                                 receiving.getDisplayNameString())));
 
 					// send a message to every member in receiving gang
 					Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
 							onlinePlayer.getUniqueId()).getGangId() == receiving.getId()).toList().forEach(
-							pl -> pl.sendMessage(MessageAddon.GANG_ALIAS_RECEIVE_REQUEST.toString()
-							                                                            .replace("%gang%",
-							                                                                     sending.getDisplayNameString())));
+							pl -> pl.sendMessage(MessageAddon.GANG_ALLY_RECEIVE_REQUEST.toString()
+							                                                           .replace("%gang%",
+							                                                                    sending.getDisplayNameString())));
 
 					gangsIdMap.put(receiving, sending);
 
@@ -931,19 +931,19 @@ public class GangCommand extends CommandHandler {
 					// send a message to every member in the sending gang
 					Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
 							onlinePlayer.getUniqueId()).getGangId() == sending.getId()).toList().forEach(
-							pl -> pl.sendMessage(MessageAddon.GANG_ALIAS_ABANDON.toString()
-							                                                    .replace("%gang%",
-							                                                             receiving.getDisplayNameString())));
+							pl -> pl.sendMessage(MessageAddon.GANG_ALLY_ABANDON.toString()
+							                                                   .replace("%gang%",
+							                                                            receiving.getDisplayNameString())));
 
 					// send a message to every member in receiving gang
 					Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
 							onlinePlayer.getUniqueId()).getGangId() == receiving.getId()).toList().forEach(
-							pl -> pl.sendMessage(MessageAddon.GANG_ALIAS_ABANDON.toString()
-							                                                    .replace("%gang%",
-							                                                             sending.getDisplayNameString())));
+							pl -> pl.sendMessage(MessageAddon.GANG_ALLY_ABANDON.toString()
+							                                                   .replace("%gang%",
+							                                                            sending.getDisplayNameString())));
 
-					sending.getAlias().remove(receiving);
-					receiving.getAlias().remove(sending);
+					sending.getAlly().remove(receiving);
+					receiving.getAlly().remove(sending);
 
 					for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
 						if (handler instanceof GangDatabase gangDatabase) {
@@ -960,11 +960,11 @@ public class GangCommand extends CommandHandler {
 
 		});
 
-		requestAlias.addSubArgument(aliasId);
-		abandonAlias.addSubArgument(aliasId);
+		requestAlly.addSubArgument(allyId);
+		abandonAlly.addSubArgument(allyId);
 
-		// glw gang alias accept
-		Argument aliasAccept = new Argument("accept", getArgumentTree(), (argument, sender, args) -> {
+		// glw gang ally accept
+		Argument allyAccept = new Argument("accept", getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -986,24 +986,24 @@ public class GangCommand extends CommandHandler {
 			Gang sending = gangsIdMap.get(receiving);
 
 			// check if they are allied before proceeding
-			if (receiving.getAlias().contains(sending)) {
+			if (receiving.getAlly().contains(sending)) {
 				player.sendMessage(MessageAddon.ALREADY_ALLIED_GANG.toString());
 				return;
 			}
 
-			// add both alias
-			receiving.getAlias().add(sending);
-			sending.getAlias().add(receiving);
+			// add both ally
+			receiving.getAlly().add(sending);
+			sending.getAlly().add(receiving);
 
 			// send a message to every member in the sending gang
 			Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
 					onlinePlayer.getUniqueId()).getGangId() == sending.getId()).toList().forEach(pl -> pl.sendMessage(
-					MessageAddon.GANG_ALIAS_ACCEPT.toString().replace("%gang%", receiving.getDisplayNameString())));
+					MessageAddon.GANG_ALLY_ACCEPT.toString().replace("%gang%", receiving.getDisplayNameString())));
 
 			// send a message to every member in receiving gang
 			Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
 					onlinePlayer.getUniqueId()).getGangId() == receiving.getId()).toList().forEach(pl -> pl.sendMessage(
-					MessageAddon.GANG_ALIAS_ACCEPT.toString().replace("%gang%", sending.getDisplayNameString())));
+					MessageAddon.GANG_ALLY_ACCEPT.toString().replace("%gang%", sending.getDisplayNameString())));
 
 			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
 				if (handler instanceof GangDatabase gangDatabase) {
@@ -1023,9 +1023,9 @@ public class GangCommand extends CommandHandler {
 				if (!timer.isCancelled()) timer.cancel();
 				gangRequestTimer.remove(receiving);
 			}
-		}, alias.getPermission() + ".accept");
+		}, ally.getPermission() + ".accept");
 
-		Argument aliasReject = new Argument("reject", getArgumentTree(), (argument, sender, args) -> {
+		Argument allyReject = new Argument("reject", getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -1047,7 +1047,7 @@ public class GangCommand extends CommandHandler {
 			Gang sending = gangsIdMap.get(receiving);
 
 			// check if they are allied before proceeding
-			if (receiving.getAlias().contains(sending)) {
+			if (receiving.getAlly().contains(sending)) {
 				player.sendMessage(MessageAddon.ALREADY_ALLIED_GANG.toString());
 				return;
 			}
@@ -1055,12 +1055,12 @@ public class GangCommand extends CommandHandler {
 			// send a message to every member in the sending gang
 			Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
 					onlinePlayer.getUniqueId()).getGangId() == sending.getId()).toList().forEach(pl -> pl.sendMessage(
-					MessageAddon.GANG_ALIAS_REJECT.toString().replace("%gang%", receiving.getDisplayNameString())));
+					MessageAddon.GANG_ALLY_REJECT.toString().replace("%gang%", receiving.getDisplayNameString())));
 
 			// send a message to every member in receiving gang
 			Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
 					onlinePlayer.getUniqueId()).getGangId() == receiving.getId()).toList().forEach(pl -> pl.sendMessage(
-					MessageAddon.GANG_ALIAS_REJECT.toString().replace("%gang%", sending.getDisplayNameString())));
+					MessageAddon.GANG_ALLY_REJECT.toString().replace("%gang%", sending.getDisplayNameString())));
 
 			gangsIdMap.remove(receiving);
 
@@ -1069,14 +1069,14 @@ public class GangCommand extends CommandHandler {
 				if (!timer.isCancelled()) timer.cancel();
 				gangRequestTimer.remove(receiving);
 			}
-		}, alias.getPermission() + ".reject");
+		}, ally.getPermission() + ".reject");
 
-		alias.addSubArgument(requestAlias);
-		alias.addSubArgument(abandonAlias);
-		alias.addSubArgument(aliasAccept);
-		alias.addSubArgument(aliasReject);
+		ally.addSubArgument(requestAlly);
+		ally.addSubArgument(abandonAlly);
+		ally.addSubArgument(allyAccept);
+		ally.addSubArgument(allyReject);
 
-		return alias;
+		return ally;
 	}
 
 	private Argument gangDisplayName(UserManager<Player> userManager, GangManager gangManager) {
@@ -1281,35 +1281,35 @@ public class GangCommand extends CommandHandler {
 				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
 				                      SettingAddon.formatDouble(gang.getBounty())))), true, false);
 		// TODO this item should take you to another gang page
-		gui.setItem(25, Material.REDSTONE, "&bAlias", List.of("&e" + gang.getAlias().size()), false, false,
+		gui.setItem(25, Material.REDSTONE, "&bAlly", List.of("&e" + gang.getAlly().size()), false, false,
 		            (inventory, item) -> {
 			            inventory.close(user);
 
-			            int size          = gang.getAlias().size();
+			            int size          = gang.getAlly().size();
 			            int inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, Inventory.MAX_SLOTS);
 
-			            Inventory alias = new Inventory(gangland, "&6&lGang alias",
-			                                            inventorySize == 0 ? 9 : inventorySize);
+			            Inventory ally = new Inventory(gangland, "&6&lGang ally",
+			                                           inventorySize == 0 ? 9 : inventorySize);
 
 			            int i = 0;
-			            for (Gang aliasGang : gang.getAlias()) {
+			            for (Gang allyGang : gang.getAlly()) {
 				            if (i >= inventorySize) break;
 
 				            List<String> data = new ArrayList<>();
-				            data.add("&7ID:&e " + aliasGang.getId());
+				            data.add("&7ID:&e " + allyGang.getId());
 				            data.add(String.format("&7Members:&a %d&7/&e%d",
-				                                   aliasGang.getOnlineMembers(userManager).size(),
-				                                   aliasGang.getGroup().size()));
+				                                   allyGang.getOnlineMembers(userManager).size(),
+				                                   allyGang.getGroup().size()));
 				            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-				            data.add("&7Created:&e " + sdf.format(aliasGang.getDateCreated()));
+				            data.add("&7Created:&e " + sdf.format(allyGang.getDateCreated()));
 
 				            ItemBuilder itemBuilder = new ItemBuilder(Material.REDSTONE).setDisplayName(
-						            "&b" + aliasGang.getDisplayNameString()).setLore(data);
+						            "&b" + allyGang.getDisplayNameString()).setLore(data);
 
-				            alias.setItem(i++, itemBuilder.build(), false);
+				            ally.setItem(i++, itemBuilder.build(), false);
 			            }
 
-			            alias.open(user);
+			            ally.open(user);
 		            });
 		gui.setItem(31, Material.WRITABLE_BOOK, "&bCreated", new ArrayList<>(List.of("&e" + gang.getDateCreated())),
 		            true, false);

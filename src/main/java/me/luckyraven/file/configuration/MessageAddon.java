@@ -73,15 +73,14 @@ public enum MessageAddon {
 			"Commands.Gang.Demote.Target_Success", Type.COMMAND), GANG_DEMOTE_END("Commands.Gang.Demote.End",
 	                                                                              Type.COMMAND), GANG_KICKED_TARGET(
 			"Commands.Gang.Leave.Kicked", Type.COMMAND), GANG_RENAME("Commands.Gang.Create.Rename", Type.COMMAND),
-	GANG_ALIAS_SEND_REQUEST("Commands.Gang.Alias.Send_Request", Type.COMMAND), GANG_ALIAS_RECEIVE_REQUEST(
-			"Commands.Gang.Alias.Receive_Request", Type.COMMAND), GANG_ALIAS_ACCEPT(
-			"Commands.Gang.Alias.Accept_Request", Type.COMMAND), GANG_ALIAS_REJECT("Commands.Gang.Alias.Reject_Request",
-	                                                                               Type.COMMAND), GANG_ALIAS_ABANDON(
-			"Commands.Gang.Alias.Abandon", Type.COMMAND), GANG_DISPLAY_SET("Commands.Gang.Display_Name.Set",
-	                                                                       Type.COMMAND), GANG_DISPLAY_REMOVED(
-			"Commands.Gang.Display_Name.Removed", Type.COMMAND), GANG_COLOR_SET("Commands.Gang.Color.Set",
-	                                                                            Type.COMMAND), GANG_COLOR_RESET(
-			"Commands.Gang.Color.Reset", Type.COMMAND),
+	GANG_ALLY_SEND_REQUEST("Commands.Gang.Ally.Send_Request", Type.COMMAND), GANG_ALLY_RECEIVE_REQUEST(
+			"Commands.Gang.Ally.Receive_Request", Type.COMMAND), GANG_ALLY_ACCEPT("Commands.Gang.Ally.Accept_Request",
+	                                                                              Type.COMMAND), GANG_ALLY_REJECT(
+			"Commands.Gang.Ally.Reject_Request", Type.COMMAND), GANG_ALLY_ABANDON("Commands.Gang.Ally.Abandon",
+	                                                                              Type.COMMAND), GANG_DISPLAY_SET(
+			"Commands.Gang.Display_Name.Set", Type.COMMAND), GANG_DISPLAY_REMOVED("Commands.Gang.Display_Name.Removed",
+	                                                                              Type.COMMAND), GANG_COLOR_SET(
+			"Commands.Gang.Color.Set", Type.COMMAND), GANG_COLOR_RESET("Commands.Gang.Color.Reset", Type.COMMAND),
 
 	// commands - rank
 	RANK_CREATED("Commands.Rank.Create.Created_Rank", Type.COMMAND), RANK_CREATE_CONFIRM(

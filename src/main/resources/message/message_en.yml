@@ -148,8 +148,8 @@ Commands:
          Target: "You were invited to join &8[&a%gang%&8]&7."
          Accept: "You have joined &8[&a%gang%&8]&7 gang."
          Joined: "&6%player%&7 joined the gang."
-      Alias:
-         Send_Request: "Sent alliance request to &8[&e%gang%&8]&7."
+      Ally:
+         Send_Request: "Sent an alliance request to &8[&e%gang%&8]&7."
          Receive_Request: "Gang alliance was requested from &8[&e%gang%&8]&7."
          Accept_Request: "Gang alliance with &8[&e%gang%&8]&7 was &aaccepted&7."
          Reject_Request: "Gang alliance with &8[&e%gang%&8]&7 was &crejected&7."

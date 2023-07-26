@@ -19,7 +19,7 @@ import java.util.*;
 @Setter
 public class Gang extends Account<Integer, List<Member>> {
 
-	private final Set<Gang> alias;
+	private final Set<Gang> ally;
 	private       String    name, displayName, color, description;
 	private double bounty, balance;
 	private long created;
@@ -53,7 +53,7 @@ public class Gang extends Account<Integer, List<Member>> {
 		this.created = Instant.now().toEpochMilli();
 		this.bounty = 0D;
 		this.balance = 0D;
-		this.alias = new HashSet<>();
+		this.ally = new HashSet<>();
 	}
 
 	public <T> void addMember(User<T> user, Member member, Rank rank) {
@@ -122,7 +122,7 @@ public class Gang extends Account<Integer, List<Member>> {
 	@Override
 	public String toString() {
 		return String.format("ID=%d,name=%s,description=%s,members=%s,created=%s,bounty=%,.2f,alias=%s", getId(), name,
-		                     description, getGroup(), created, bounty, alias);
+		                     description, getGroup(), created, bounty, ally);
 	}
 
 }

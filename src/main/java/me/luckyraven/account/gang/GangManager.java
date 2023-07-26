@@ -81,7 +81,7 @@ public class GangManager {
 						Set<Gang> aliasSet = aliases.stream()
 						                            .map(aliasId -> gangsMap.get(Integer.parseInt(aliasId)))
 						                            .collect(Collectors.toSet());
-						gang.getAlias().addAll(aliasSet);
+						gang.getAlly().addAll(aliasSet);
 					}
 				}
 			}

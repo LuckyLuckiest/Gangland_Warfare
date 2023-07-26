@@ -239,11 +239,11 @@
 		"usage": "/glw gang demote <name>",
 		"description": "Demotes the player to the previous rank."
 	},
-	"gang_alias_request": {
-		"usage": "/glw gang alias request <id>",
+	"gang_ally_request": {
+		"usage": "/glw gang ally request <id>",
 		"description": "Request alliances to the other gang."
 	},
-	"gang_alias_remove": {
+	"gang_ally_remove": {
 		"usage": "/glw gang alias abandon <id>",
 		"description": "Abandon alliances to that gang."
 	},

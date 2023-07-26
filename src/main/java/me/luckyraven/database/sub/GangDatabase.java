@@ -87,7 +87,7 @@ public class GangDatabase extends DatabaseHandler {
 	public void updateDataTable(Gang gang) throws SQLException {
 		List<String> tempAlias = new ArrayList<>();
 
-		for (Gang alias : gang.getAlias())
+		for (Gang alias : gang.getAlly())
 			tempAlias.add(String.valueOf(alias.getId()));
 
 		String alias = getDatabase().createList(tempAlias);
