@@ -157,9 +157,9 @@ public class Tree<E> implements Iterable<E> {
 
 		@Getter
 		private final List<Node<T>> children;
-
 		@Getter
-		private T       data;
+		private final T             data;
+
 		@Getter
 		@Setter
 		private Node<T> parent;
