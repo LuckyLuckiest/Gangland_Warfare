@@ -6,7 +6,7 @@ import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.account.gang.Member;
 import me.luckyraven.account.gang.MemberManager;
 import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.bukkit.gui.InventoryGUI;
+import me.luckyraven.bukkit.inventory.Inventory;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
@@ -19,7 +19,7 @@ import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.UserDatabase;
-import me.luckyraven.datastructure.Node;
+import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.rank.Rank;
@@ -400,8 +400,8 @@ public class GangCommand extends CommandHandler {
 				return;
 			}
 
-			Node<Rank> playerRank = userMember.getRank().getNode();
-			Node<Rank> targetRank = targetMember.getRank().getNode();
+			Tree.Node<Rank> playerRank = userMember.getRank().getNode();
+			Tree.Node<Rank> targetRank = targetMember.getRank().getNode();
 
 			if (!rankManager.getRankTree().isDescendant(targetRank, playerRank)) {
 				player.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
@@ -594,7 +594,7 @@ public class GangCommand extends CommandHandler {
 					                                  .getNode()
 					                                  .getChildren()
 					                                  .stream()
-					                                  .map(Node::getData)
+					                                  .map(Tree.Node::getData)
 					                                  .toList();
 
 					if (nextRanks.isEmpty()) {
@@ -632,8 +632,8 @@ public class GangCommand extends CommandHandler {
 
 				case "demote" -> {
 					// cannot demote higher rank
-					Node<Rank> playerRank = userMember.getRank().getNode();
-					Node<Rank> targetRank = targetMember.getRank().getNode();
+					Tree.Node<Rank> playerRank = userMember.getRank().getNode();
+					Tree.Node<Rank> targetRank = targetMember.getRank().getNode();
 
 					if (!force)
 						// [player : Owner (descendant), target : Member (ancestor)] (Inverse)
@@ -642,7 +642,7 @@ public class GangCommand extends CommandHandler {
 							return;
 						}
 
-					Node<Rank> previousRankNode = currentRank.getNode().getParent();
+					Tree.Node<Rank> previousRankNode = currentRank.getNode().getParent();
 
 					if (previousRankNode == null) {
 						player.sendMessage(MessageAddon.GANG_DEMOTE_END.toString());
@@ -1159,8 +1159,8 @@ public class GangCommand extends CommandHandler {
 
 			Gang gang = gangManager.getGang(user.getGangId());
 
-			InventoryGUI colorGUI   = new InventoryGUI("&5&lChoose a color", InventoryGUI.MAX_SLOTS);
-			InventoryGUI confirmGUI = new InventoryGUI("&4&lAre you sure?", InventoryGUI.MAX_SLOTS);
+			Inventory colorGUI   = new Inventory(gangland, "&5&lChoose a color", Inventory.MAX_SLOTS);
+			Inventory confirmGUI = new Inventory(gangland, "&4&lAre you sure?", Inventory.MAX_SLOTS);
 
 			int row = 2, column = 2;
 			for (Color color : Color.values()) {
@@ -1232,7 +1232,7 @@ public class GangCommand extends CommandHandler {
 	}
 
 	private void gangStat(User<Player> user, UserManager<Player> userManager, Gang gang) {
-		InventoryGUI gui = new InventoryGUI("&6&l" + gang.getDisplayNameString() + "&r gang", 5 * 9);
+		Inventory gui = new Inventory(gangland, "&6&l" + gang.getDisplayNameString() + "&r gang", 5 * 9);
 
 		gui.setItem(11, Material.GOLD_BLOCK, "&bBalance", new ArrayList<>(
 				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
@@ -1240,16 +1240,17 @@ public class GangCommand extends CommandHandler {
 		gui.setItem(13, Material.CRAFTING_TABLE, "&bID", new ArrayList<>(List.of("&e" + gang.getId())), false, false);
 		gui.setItem(15, Material.PAPER, "&bDescription", new ArrayList<>(List.of("&e" + gang.getDescription())), false,
 		            false);
-		// this item should take you to another gui page
+		// TODO this item should take you to another gui page
 		gui.setItem(19, Material.PLAYER_HEAD, "&bMembers", new ArrayList<>(
 				            List.of("&a" + gang.getOnlineMembers(userManager).size() + "&7/&e" + gang.getGroup().size())), false,
 		            false, (inventory, item) -> {
 					inventory.close(user);
 
 					int size          = gang.getGroup().size();
-					int inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, InventoryGUI.MAX_SLOTS);
+					int inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, Inventory.MAX_SLOTS);
 
-					InventoryGUI members = new InventoryGUI("&6&lGang members", inventorySize == 0 ? 9 : inventorySize);
+					Inventory members = new Inventory(gangland, "&6&lGang members",
+					                                  inventorySize == 0 ? 9 : inventorySize);
 
 					int i = 0;
 					for (Member member : gang.getGroup()) {
@@ -1279,15 +1280,16 @@ public class GangCommand extends CommandHandler {
 		gui.setItem(22, Material.BLAZE_ROD, "&bBounty", new ArrayList<>(
 				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
 				                      SettingAddon.formatDouble(gang.getBounty())))), true, false);
-		// this item should take you to another gangs page
+		// TODO this item should take you to another gang page
 		gui.setItem(25, Material.REDSTONE, "&bAlias", List.of("&e" + gang.getAlias().size()), false, false,
 		            (inventory, item) -> {
 			            inventory.close(user);
 
 			            int size          = gang.getAlias().size();
-			            int inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, InventoryGUI.MAX_SLOTS);
+			            int inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, Inventory.MAX_SLOTS);
 
-			            InventoryGUI alias = new InventoryGUI("&6&lGang alias", inventorySize == 0 ? 9 : inventorySize);
+			            Inventory alias = new Inventory(gangland, "&6&lGang alias",
+			                                            inventorySize == 0 ? 9 : inventorySize);
 
 			            int i = 0;
 			            for (Gang aliasGang : gang.getAlias()) {

@@ -5,7 +5,6 @@ import me.luckyraven.Gangland;
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.RankDatabase;
-import me.luckyraven.datastructure.Node;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.SettingAddon;
 
@@ -32,8 +31,8 @@ public class RankManager {
 		DatabaseHelper helper = new DatabaseHelper(gangland, rankDatabase);
 
 		helper.runQueries(database -> {
-			Map<Node<Rank>, List<String>> nodeMap  = new HashMap<>();
-			List<Object[]>                rowsData = database.table("data").selectAll();
+			Map<Tree.Node<Rank>, List<String>> nodeMap  = new HashMap<>();
+			List<Object[]>                     rowsData = database.table("data").selectAll();
 
 			// data information
 			for (Object[] result : rowsData) {
@@ -69,9 +68,10 @@ public class RankManager {
 			// reasons for calling tail is because it is the final rank the user will have
 			// because of the structure of the tree, there can be multiple parents (will call it children because of the inverse nature)
 			// the children of that node makes the tree diverse so the user can choose 1 node for the specified tree, this creates
-			// tree diversity. From this concept each node can have unique perks and diverse to their specified node OR
-			// return back to a single node unique node which continues the list.
-			// example:        user
+			// tree diversity.
+			// From this concept, each node can have unique perks and diverse to their specified node OR
+			// return back to a single unique node which continues the list.
+			// Example:        user
 			//                /   \
 			//          peasant  member
 			//            /  \     /
@@ -79,19 +79,19 @@ public class RankManager {
 			//                 ...
 
 			// the tree is built in reverse
-			for (Map.Entry<Node<Rank>, List<String>> entry : nodeMap.entrySet()) {
-				Node<Rank>   parent   = entry.getKey();
-				List<String> children = entry.getValue();
+			for (Map.Entry<Tree.Node<Rank>, List<String>> entry : nodeMap.entrySet()) {
+				Tree.Node<Rank> parent   = entry.getKey();
+				List<String>    children = entry.getValue();
 
 				if (!children.isEmpty()) for (String child : children) {
-					Node<Rank> childNode = findChildNode(nodeMap, child);
+					Tree.Node<Rank> childNode = findChildNode(nodeMap, child);
 					if (childNode != null) parent.add(childNode);
 				}
 			}
 		});
 	}
 
-	private Node<Rank> findChildNode(Map<Node<Rank>, List<String>> nodeMap, String child) {
+	private Tree.Node<Rank> findChildNode(Map<Tree.Node<Rank>, List<String>> nodeMap, String child) {
 		return nodeMap.keySet()
 		              .stream()
 		              .filter(node -> node.getData().getName().equalsIgnoreCase(child))
@@ -112,9 +112,7 @@ public class RankManager {
 	}
 
 	public Rank get(String name) {
-		for (Rank rank : ranks.values())
-			if (rank.getName().equalsIgnoreCase(name)) return rank;
-		return null;
+		return ranks.values().stream().filter(rank -> rank.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
 	}
 
 	public void refactorIds(RankDatabase rankDatabase) {
@@ -142,7 +140,7 @@ public class RankManager {
 				String children = database.createList(rank.getNode()
 				                                          .getChildren()
 				                                          .stream()
-				                                          .map(Node::getData)
+				                                          .map(Tree.Node::getData)
 				                                          .map(Rank::getName)
 				                                          .toList());
 

@@ -1,5 +1,5 @@
-import me.luckyraven.datastructure.Node;
 import me.luckyraven.datastructure.Tree;
+import me.luckyraven.datastructure.Tree.Node;
 
 import java.util.Arrays;
 
@@ -9,12 +9,12 @@ public class TreeTester {
 		// Create the tree
 		Tree<String> tree = new Tree<>();
 		tree.add("cmd");
-		Node<String> child1 = new Node<>("child1");
-		Node<String> child2 = new Node<>("child2");
-		Node<String> child3 = new Node<>("child3");
-		Node<String> child4 = new Node<>("child4");
-		Node<String> child5 = new Node<>("child5");
-		Node<String> child6 = new Node<>("child6");
+		var child1 = new Node<>("child1");
+		var child2 = new Node<>("child2");
+		var child3 = new Node<>("child3");
+		var child4 = new Node<>("child4");
+		var child5 = new Node<>("child5");
+		var child6 = new Node<>("child6");
 
 		tree.getRoot().addAll(Arrays.asList(child1, child2, child3));
 		child1.add(child4);

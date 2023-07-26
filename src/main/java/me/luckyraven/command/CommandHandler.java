@@ -9,7 +9,6 @@ import me.luckyraven.command.sub.DebugCommand;
 import me.luckyraven.command.sub.OptionCommand;
 import me.luckyraven.command.sub.ReadNBTCommand;
 import me.luckyraven.data.HelpInfo;
-import me.luckyraven.datastructure.Node;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import org.bukkit.command.Command;
@@ -116,7 +115,7 @@ public abstract class CommandHandler implements TabCompleter {
 
 		// TODO if there was an optional argument then no need to get the last valid because it will never be equal
 
-		return arg.getNode().getChildren().stream().map(Node::getData).map(Argument::getArgumentsString).flatMap(
+		return arg.getNode().getChildren().stream().map(Tree.Node::getData).map(Argument::getArgumentsString).flatMap(
 				List::stream).toList();
 	}
 

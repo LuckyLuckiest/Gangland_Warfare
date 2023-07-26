@@ -2,7 +2,6 @@ package me.luckyraven.command.argument;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.datastructure.Node;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
@@ -17,10 +16,10 @@ import java.util.function.BiConsumer;
 public class Argument implements Cloneable {
 
 	@Getter
-	private final String[]       arguments;
+	private final String[]            arguments;
 	@Getter
-	private final Node<Argument> node;
-	private final Tree<Argument> tree;
+	private final Tree.Node<Argument> node;
+	private final Tree<Argument>      tree;
 	TriConsumer<Argument, CommandSender, String[]> action;
 	@Getter
 	private String                              permission;
@@ -49,7 +48,7 @@ public class Argument implements Cloneable {
 	                String permission) {
 		this.arguments = arguments;
 		this.tree = tree;
-		this.node = new Node<>(this);
+		this.node = new Tree.Node<>(this);
 		this.action = action;
 
 		setPermission(permission);
@@ -124,7 +123,7 @@ public class Argument implements Cloneable {
 		return traverseList(tree.getRoot(), list, 0, new OptionalArgument(tree), sender, args);
 	}
 
-	private <T extends Argument> T traverseList(Node<T> node, Argument[] list, int index, OptionalArgument dummy,
+	private <T extends Argument> T traverseList(Tree.Node<T> node, Argument[] list, int index, OptionalArgument dummy,
 	                                            CommandSender sender, String[] args) {
 		if (node == null || index >= list.length) return null;
 		if (!node.getData().equals(list[index]) && !node.getData().equals(dummy)) return null;
@@ -138,7 +137,7 @@ public class Argument implements Cloneable {
 
 		if (index == list.length - 1) return node.getData();
 
-		for (Node<T> child : node.getChildren()) {
+		for (Tree.Node<T> child : node.getChildren()) {
 			T result = traverseList(child, list, index + 1, dummy, sender, args);
 			if (result != null) return result;
 		}

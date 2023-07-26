@@ -10,7 +10,7 @@ import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.RankDatabase;
-import me.luckyraven.datastructure.Node;
+import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.rank.Rank;
 import me.luckyraven.rank.RankManager;
@@ -385,7 +385,7 @@ public class RankCommand extends CommandHandler {
 		// glw rank traverse
 		Argument traverseTree = new Argument("traverse", getArgumentTree(), (argument, sender, args) -> {
 			StringBuilder builder = new StringBuilder();
-			List<Rank>    ranks   = rankManager.getRankTree().getAllNodes().stream().map(Node::getData).toList();
+			List<Rank>    ranks   = rankManager.getRankTree().getAllNodes().stream().map(Tree.Node::getData).toList();
 
 			for (int i = 0; i < ranks.size(); i++) {
 				builder.append(ranks.get(i).getName());

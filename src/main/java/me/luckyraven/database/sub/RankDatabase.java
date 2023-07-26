@@ -2,7 +2,7 @@ package me.luckyraven.database.sub;
 
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.datastructure.Node;
+import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.rank.Rank;
@@ -104,7 +104,7 @@ public class RankDatabase extends DatabaseHandler {
 		String children = getDatabase().createList(rank.getNode()
 		                                               .getChildren()
 		                                               .stream()
-		                                               .map(Node::getData)
+		                                               .map(Tree.Node::getData)
 		                                               .map(Rank::getName)
 		                                               .toList());
 		getDatabase().table("data").update("id = ?", new Object[]{rank.getUsedId()}, new int[]{Types.INTEGER},
