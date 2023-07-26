@@ -1,13 +1,16 @@
 package me.luckyraven.bukkit.inventory;
 
+import me.luckyraven.Gangland;
+
 import java.util.LinkedList;
 
-public class MultiInventory {
+public class MultiInventory extends Inventory {
 
 	private final LinkedList<Inventory> guis;
 	private       int                   currentPage;
 
-	public MultiInventory() {
+	public MultiInventory(Gangland gangland, String title, int size) {
+		super(gangland, title, size);
 		this.guis = new LinkedList<>();
 		this.currentPage = 0;
 	}
