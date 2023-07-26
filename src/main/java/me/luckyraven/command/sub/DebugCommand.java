@@ -3,6 +3,8 @@ package me.luckyraven.command.sub;
 import me.luckyraven.Gangland;
 import me.luckyraven.account.Account;
 import me.luckyraven.account.gang.Gang;
+import me.luckyraven.bukkit.inventory.Inventory;
+import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.data.user.User;
@@ -55,12 +57,38 @@ public class DebugCommand extends CommandHandler {
 				sender.sendMessage(rank.toString());
 		});
 
+		// multi inventory
+		Argument multiInv = new Argument("multi-inv", getArgumentTree(), (argument, sender, args) -> {
+			if (sender instanceof Player player) {
+				MultiInventory mainInventory = new MultiInventory(gangland, "Main Inventory", Inventory.MAX_SLOTS);
+				Inventory      inventory1    = new Inventory(gangland, "Inventory 1", Inventory.MAX_SLOTS);
+				Inventory      inventory2    = new Inventory(gangland, "Inventory 2", Inventory.MAX_SLOTS);
+				Inventory      inventory3    = new Inventory(gangland, "Inventory 3", Inventory.MAX_SLOTS);
+				Inventory      inventory4    = new Inventory(gangland, "Inventory 4", Inventory.MAX_SLOTS);
+
+				mainInventory.addPage(player, inventory1);
+				mainInventory.addPage(player, inventory2);
+				mainInventory.addPage(player, inventory3);
+				mainInventory.addPage(player, inventory4);
+
+				for (Inventory inv : mainInventory.getInventories())
+					inv.fillInventory();
+
+				mainInventory.removePage(inventory2);
+
+				mainInventory.open(player);
+			} else {
+				sender.sendMessage("How will you see the inventory?");
+			}
+		});
+
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
 
 		arguments.add(userData);
 		arguments.add(gangData);
 		arguments.add(rankData);
+		arguments.add(multiInv);
 
 		getArgument().addAllSubArguments(arguments);
 	}
