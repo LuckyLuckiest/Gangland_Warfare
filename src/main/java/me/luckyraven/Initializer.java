@@ -3,7 +3,7 @@ package me.luckyraven;
 import lombok.Getter;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.account.gang.MemberManager;
-import me.luckyraven.bukkit.gui.InventoryGUI;
+import me.luckyraven.bukkit.inventory.Inventory;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.command.sub.*;
@@ -56,7 +56,7 @@ public final class Initializer {
 
 	public Initializer(JavaPlugin plugin) {
 		this.plugin = plugin;
-		// If at any instance these data failed to load then the plugin will not function
+		// If at any instance these data failed to load, then the plugin will not function
 		informationManager = new InformationManager();
 		informationManager.processCommands();
 
@@ -163,7 +163,7 @@ public final class Initializer {
 			listenerManager.addEvent(new PhoneItem());
 
 			// inventory gui test double listener
-			listenerManager.addEvent(new InventoryGUI("dummy", 9));
+			listenerManager.addEvent(new Inventory(gangland, "dummy", 9));
 		}
 	}
 

@@ -1,20 +1,21 @@
 package me.luckyraven.phone;
 
 import lombok.Getter;
+import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.bukkit.gui.InventoryGUI;
+import me.luckyraven.bukkit.inventory.Inventory;
 import me.luckyraven.data.user.User;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public class Phone {
 
 	@Getter
-	private final String       name;
-	private final InventoryGUI inventory;
-	private final ItemBuilder  item;
+	private final String      name;
+	private final Inventory   inventory;
+	private final ItemBuilder item;
 
 	@Getter
 	private String displayName;
@@ -22,7 +23,7 @@ public class Phone {
 	public Phone(String name) {
 		this.name = name;
 		this.displayName = name;
-		this.inventory = new InventoryGUI(displayName, InventoryGUI.MAX_SLOTS);
+		this.inventory = new Inventory(JavaPlugin.getPlugin(Gangland.class), displayName, Inventory.MAX_SLOTS);
 		this.item = new ItemBuilder(getPhoneMaterial());
 
 		populateInventory();
@@ -33,6 +34,8 @@ public class Phone {
 		this.displayName = displayName;
 	}
 
+
+
 	public void openInventory(User<Player> user) {
 		inventory.open(user);
 	}
@@ -41,7 +44,7 @@ public class Phone {
 		inventory.close(user);
 	}
 
-	public Inventory getInventory() {
+	public org.bukkit.inventory.Inventory getInventory() {
 		return inventory.getInventory();
 	}
 
