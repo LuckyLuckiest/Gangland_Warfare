@@ -2,6 +2,7 @@ package me.luckyraven.bukkit;
 
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteItemNBT;
+import de.tr7zw.nbtapi.iface.ReadWriteNBT;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -13,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 public class ItemBuilder {
@@ -29,19 +31,19 @@ public class ItemBuilder {
 
 	public ItemBuilder setDisplayName(@Nullable String displayName) {
 		if (displayName == null) displayName = "";
-		if (displayName.isEmpty()) displayName = "&0|";
+		if (displayName.isEmpty()) displayName = " ";
+
 		@Nullable String finalDisplayName = displayName;
-		NBT.modify(itemStack, nbt -> {
-			nbt.modifyMeta((readableNBT, itemMeta) -> itemMeta.setDisplayName(ChatUtil.color(finalDisplayName)));
-		});
+
+		modifyNBT(nbt -> nbt.modifyMeta(
+				(readableNBT, itemMeta) -> itemMeta.setDisplayName(ChatUtil.color(finalDisplayName))));
 		return this;
 	}
 
 	public ItemBuilder setLore(String... lore) {
 		List<String> loreList = new ArrayList<>(Arrays.stream(lore).map(ChatUtil::color).toList());
-		NBT.modify(itemStack, nbt -> {
-			nbt.modifyMeta((readableNBT, itemMeta) -> itemMeta.setLore(loreList));
-		});
+
+		modifyNBT(nbt -> nbt.modifyMeta((readableNBT, itemMeta) -> itemMeta.setLore(loreList)));
 		return this;
 	}
 
@@ -49,51 +51,38 @@ public class ItemBuilder {
 		List<String> loreList;
 		if (lore == null) loreList = new ArrayList<>();
 		else loreList = new ArrayList<>(lore.stream().map(ChatUtil::color).toList());
-		NBT.modify(itemStack, nbt -> {
-			nbt.modifyMeta((readableNBT, itemMeta) -> itemMeta.setLore(loreList));
-		});
+
+		modifyNBT(nbt -> nbt.modifyMeta((readableNBT, itemMeta) -> itemMeta.setLore(loreList)));
 		return this;
 	}
 
 	public ItemBuilder addEnchantment(Enchantment enchantment, int level) {
-		NBT.modify(itemStack, nbt -> {
-			nbt.modifyMeta((readableNBT, itemMeta) -> itemMeta.addEnchant(enchantment, level, true));
-		});
+		modifyNBT(nbt -> nbt.modifyMeta((readableNBT, itemMeta) -> itemMeta.addEnchant(enchantment, level, true)));
 		return this;
 	}
 
 	public ItemBuilder addItemFlags(ItemFlag... flags) {
-		NBT.modify(itemStack, nbt -> {
-			nbt.modifyMeta((readableNBT, itemMeta) -> itemMeta.addItemFlags(flags));
-		});
+		modifyNBT(nbt -> nbt.modifyMeta((readableNBT, itemMeta) -> itemMeta.addItemFlags(flags)));
 		return this;
 	}
 
 	public ItemBuilder setUnbreakable(boolean unbreakable) {
-		NBT.modify(itemStack, nbt -> {
-			nbt.setBoolean("Unbreakable", unbreakable);
-		});
+		modifyNBT(nbt -> nbt.setBoolean("Unbreakable", unbreakable));
 		return this;
 	}
 
 	public ItemBuilder setCustomModelData(int customModelData) {
-		NBT.modify(itemStack, nbt -> {
-			nbt.setInteger("CustomModelData", customModelData);
-		});
+		modifyNBT(nbt -> nbt.setInteger("CustomModelData", customModelData));
 		return this;
 	}
 
 	public ItemBuilder setAmount(int amount) {
-		NBT.modify(itemStack, nbt -> {
-			nbt.setInteger("Count", amount);
-		});
+		modifyNBT(nbt -> nbt.setInteger("Count", amount));
 		return this;
 	}
 
 	public ItemBuilder setDurability(short durability) {
-		NBT.modify(itemStack, nbt -> {
-			nbt.setShort("Damage", durability);
-		});
+		modifyNBT(nbt -> nbt.setShort("Damage", durability));
 		return this;
 	}
 
@@ -104,6 +93,21 @@ public class ItemBuilder {
 
 	public ItemBuilder setItemMeta(ItemMeta itemMeta) {
 		itemStack.setItemMeta(itemMeta);
+		return this;
+	}
+
+	public ItemBuilder customHead(String base64) {
+		if (itemStack.getType() != Material.PLAYER_HEAD) return this;
+
+		modifyNBT(nbt -> {
+			ReadWriteNBT skullOwnerCompound = nbt.getOrCreateCompound("SkullOwner");
+
+			skullOwnerCompound.setUUID("Id", UUID.randomUUID());
+
+			skullOwnerCompound.getOrCreateCompound("Properties").getCompoundList("textures").addCompound().setString(
+					"Value", base64);
+		});
+
 		return this;
 	}
 
