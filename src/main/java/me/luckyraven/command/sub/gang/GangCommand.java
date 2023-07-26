@@ -333,7 +333,7 @@ public class GangCommand extends CommandHandler {
 
 		// change gang color using gui
 		// glw gang color
-		Argument color = gangColor(userManager, gangManager);
+		Argument color = new GangColorCommand(gangland, getArgumentTree(), userManager, gangManager);
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
@@ -1145,90 +1145,6 @@ public class GangCommand extends CommandHandler {
 		display.addSubArgument(displayName);
 
 		return display;
-	}
-
-	private Argument gangColor(UserManager<Player> userManager, GangManager gangManager) {
-		return new Argument("color", getArgumentTree(), (argument, sender, args) -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (!user.hasGang()) {
-				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
-				return;
-			}
-
-			Gang gang = gangManager.getGang(user.getGangId());
-
-			Inventory colorGUI   = new Inventory(gangland, "&5&lChoose a color", Inventory.MAX_SLOTS);
-			Inventory confirmGUI = new Inventory(gangland, "&4&lAre you sure?", Inventory.MAX_SLOTS);
-
-			int row = 2, column = 2;
-			for (Color color : Color.values()) {
-				String colorName = color.name();
-				String colorCode = color.getColorCode();
-
-				MaterialType type         = MaterialType.WOOL;
-				String       materialName = type.name();
-
-				Material material = ColorUtil.getMaterialByColor(colorName, materialName);
-
-				if (material != null) {
-					String name = colorCode + ChatUtil.capitalize(colorName.toLowerCase().replace("_", " ")) + " " +
-							ChatUtil.capitalize(materialName.toLowerCase().replace("_", " "));
-
-					ItemBuilder itemBuilder = new ItemBuilder(material).setDisplayName(name);
-
-					colorGUI.setItem((row - 1) * 9 + (column - 1), itemBuilder, false, (inventory, item) -> {
-						inventory.close(user);
-
-						confirmGUI.setItem(22, itemBuilder.build(), false);
-
-						Material mat = ColorUtil.getMaterialByColor(colorName, MaterialType.STAINED_GLASS_PANE.name());
-						confirmGUI.aroundSlot(22, mat);
-
-						confirmGUI.setItem(49, Material.GREEN_CONCRETE, "&aConfirm", null, false, false, (inv, it) -> {
-							inv.close(user);
-
-							// save the data in gang
-							gang.setColor(colorName);
-
-							// inform player
-							String colorSelected = ChatUtil.color(
-									colorCode + ChatUtil.capitalize(colorName.toLowerCase().replace("_", " ")));
-							player.sendMessage(
-									MessageAddon.GANG_COLOR_SET.toString().replace("%color%", colorSelected));
-
-							// update database
-							for (DatabaseHandler handler : gangland.getInitializer()
-							                                       .getDatabaseManager()
-							                                       .getDatabases())
-								if (handler instanceof GangDatabase gangDatabase) {
-									DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-									helper.runQueries(database -> gangDatabase.updateDataTable(gang));
-									break;
-								}
-						});
-
-						confirmGUI.fillInventory();
-
-						confirmGUI.open(user);
-					});
-
-					if (column % 8 == 0) {
-						column = 2;
-						row++;
-					} else column++;
-				}
-			}
-
-			colorGUI.setItem((6 - 1) * 9, Material.RED_CONCRETE, "&4Exit", null, false, false,
-			                 (inventory, item) -> inventory.close(user));
-
-			colorGUI.fillInventory();
-
-			colorGUI.open(user);
-		});
 	}
 
 	private void gangStat(User<Player> user, UserManager<Player> userManager, Gang gang) {
