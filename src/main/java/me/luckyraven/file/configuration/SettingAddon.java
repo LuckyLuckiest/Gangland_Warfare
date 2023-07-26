@@ -31,9 +31,9 @@ public class SettingAddon {
 	private static int bountyTimeInterval;
 
 	@Getter
-	private static String phoneItem;
+	private static String  phoneItem;
 	@Getter
-	private static int phoneSlot;
+	private static int     phoneSlot;
 	@Getter
 	private static boolean phoneMovable, phoneDroppable;
 

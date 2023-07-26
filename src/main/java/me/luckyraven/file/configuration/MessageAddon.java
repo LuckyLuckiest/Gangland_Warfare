@@ -113,9 +113,8 @@ public enum MessageAddon {
 	                                                                                 Type.OTHER),
 
 	// commands - bounty
-	BOUNTY_CURRENT("Commands.Bounty.Current", Type.COMMAND), BOUNTY_INCREMENT("Commands.Bounty.Increment",
-	                                                                          Type.OTHER), BOUNTY_CLEAR(
-			"Commands.Bounty.Clear", Type.COMMAND), BOUNTY_LIFTED("Commands.Bounty.Lifted", Type.COMMAND),
+	BOUNTY_CURRENT("Commands.Bounty.Current", Type.COMMAND), BOUNTY_INCREMENT("Commands.Bounty.Increment", Type.OTHER),
+	BOUNTY_CLEAR("Commands.Bounty.Clear", Type.COMMAND), BOUNTY_LIFTED("Commands.Bounty.Lifted", Type.COMMAND),
 	BOUNTY_PLAYER_LIFT("Commands.Bounty.Player_Lift", Type.COMMAND), BOUNTY_SET("Commands.Bounty.Bounty_Set",
 	                                                                            Type.COMMAND),
 
