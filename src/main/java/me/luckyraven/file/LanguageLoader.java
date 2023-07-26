@@ -47,7 +47,7 @@ public class LanguageLoader {
 	}
 
 	private YamlConfiguration loadMessage(FileManager manager) throws IOException, InvalidConfigurationException {
-		// tightly couple to settings file
+		// tight couple to settings file
 		manager.checkFileLoaded("settings");
 
 		FileHandler settings = manager.getFile("settings");
