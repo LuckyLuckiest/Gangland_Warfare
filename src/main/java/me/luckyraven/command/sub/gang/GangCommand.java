@@ -26,9 +26,6 @@ import me.luckyraven.rank.Rank;
 import me.luckyraven.rank.RankManager;
 import me.luckyraven.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.color.Color;
-import me.luckyraven.util.color.ColorUtil;
-import me.luckyraven.util.color.MaterialType;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.bukkit.Bukkit;
@@ -1160,7 +1157,7 @@ public class GangCommand extends CommandHandler {
 		gui.setItem(19, Material.PLAYER_HEAD, "&bMembers", new ArrayList<>(
 				            List.of("&a" + gang.getOnlineMembers(userManager).size() + "&7/&e" + gang.getGroup().size())), false,
 		            false, (inventory, item) -> {
-					inventory.close(user);
+					inventory.close(user.getUser());
 
 					int size          = gang.getGroup().size();
 					int inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, Inventory.MAX_SLOTS);
@@ -1191,7 +1188,7 @@ public class GangCommand extends CommandHandler {
 						members.setItem(i++, itemBuilder.build(), false);
 					}
 
-					members.open(user);
+					members.open(user.getUser());
 				});
 		gui.setItem(22, Material.BLAZE_ROD, "&bBounty", new ArrayList<>(
 				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
@@ -1199,7 +1196,7 @@ public class GangCommand extends CommandHandler {
 		// TODO this item should take you to another gang page
 		gui.setItem(25, Material.REDSTONE, "&bAlly", List.of("&e" + gang.getAlly().size()), false, false,
 		            (inventory, item) -> {
-			            inventory.close(user);
+			            inventory.close(user.getUser());
 
 			            int size          = gang.getAlly().size();
 			            int inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, Inventory.MAX_SLOTS);
@@ -1225,14 +1222,14 @@ public class GangCommand extends CommandHandler {
 				            ally.setItem(i++, itemBuilder.build(), false);
 			            }
 
-			            ally.open(user);
+			            ally.open(user.getUser());
 		            });
 		gui.setItem(31, Material.WRITABLE_BOOK, "&bCreated", new ArrayList<>(List.of("&e" + gang.getDateCreated())),
 		            true, false);
 
 		gui.fillInventory();
 
-		gui.open(user);
+		gui.open(user.getUser());
 	}
 
 }

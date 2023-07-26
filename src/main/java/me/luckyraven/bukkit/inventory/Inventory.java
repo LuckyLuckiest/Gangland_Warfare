@@ -1,8 +1,8 @@
 package me.luckyraven.bukkit.inventory;
 
+import com.google.common.base.Preconditions;
 import lombok.Getter;
 import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.data.user.User;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -14,9 +14,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 public class Inventory implements Listener {
@@ -37,7 +41,7 @@ public class Inventory implements Listener {
 
 	public Inventory(JavaPlugin plugin, String title, int size) {
 		this.plugin = plugin;
-		this.title = new NamespacedKey(plugin, title);
+		this.title = new NamespacedKey(plugin, titleRefactor(title));
 		this.size = size;
 
 		this.inventory = Bukkit.createInventory(null, size, ChatUtil.color(title));
@@ -57,8 +61,24 @@ public class Inventory implements Listener {
 		// remove the old inventory
 		INVENTORIES.remove(title);
 
-		this.title = new NamespacedKey(plugin, name);
+		this.title = new NamespacedKey(plugin, titleRefactor(name));
 		INVENTORIES.put(this.title, this);
+	}
+
+	private String titleRefactor(@NotNull String title) {
+		Preconditions.checkNotNull(title, "Title can't be null");
+
+		String pattern = "[^a-z0-9/._-]";
+
+		String value = title.replaceAll(" ", "_");
+
+		int count = (int) value.chars().filter(c -> c == '&').count();
+		for (int i = 0; i < count; i++) {
+			int index = value.indexOf('&');
+			value = value.substring(0, index) + value.substring(index + 2);
+		}
+
+		return value.replaceAll(pattern, "");
 	}
 
 	public void setItem(int slot, Material material, @Nullable String displayName, @Nullable List<String> lore,
@@ -83,6 +103,14 @@ public class Inventory implements Listener {
 			clickableSlots.put(slot, clickable);
 			clickableItem.put(slot, itemBuilder);
 		}
+	}
+
+	public void removeItem(int slot) {
+		inventory.setItem(slot, null);
+
+		draggableSlots.remove((Integer) slot);
+		clickableSlots.remove(slot);
+		clickableItem.remove(slot);
 	}
 
 	public void setItem(int slot, ItemStack itemStack, boolean draggable) {
@@ -128,12 +156,12 @@ public class Inventory implements Listener {
 		}
 	}
 
-	public void open(User<Player> user) {
-		user.getUser().openInventory(inventory);
+	public void open(Player player) {
+		player.openInventory(inventory);
 	}
 
-	public void close(User<Player> user) {
-		user.getUser().closeInventory();
+	public void close(Player player) {
+		player.closeInventory();
 	}
 
 	@EventHandler

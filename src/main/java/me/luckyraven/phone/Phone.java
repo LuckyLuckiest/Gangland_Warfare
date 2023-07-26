@@ -4,7 +4,6 @@ import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.Inventory;
-import me.luckyraven.data.user.User;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -36,12 +35,12 @@ public class Phone {
 
 
 
-	public void openInventory(User<Player> user) {
-		inventory.open(user);
+	public void openInventory(Player player) {
+		inventory.open(player);
 	}
 
-	public void closeInventory(User<Player> user) {
-		inventory.close(user);
+	public void closeInventory(Player player) {
+		inventory.close(player);
 	}
 
 	public org.bukkit.inventory.Inventory getInventory() {
@@ -55,7 +54,11 @@ public class Phone {
 	}
 
 	private void populateInventory() {
+		// TODO
+	}
 
+	public void addPhoneToInventory() {
+		// TODO
 	}
 
 }

@@ -73,7 +73,7 @@ public class GangColorCommand extends SubArgument {
 					ItemBuilder itemBuilder = new ItemBuilder(material).setDisplayName(name);
 
 					colorGUI.setItem((row - 1) * 9 + (column - 1), itemBuilder, false, (inventory, item) -> {
-						inventory.close(user);
+						inventory.close(player);
 
 						confirmGUI.setItem(22, itemBuilder.build(), false);
 
@@ -81,7 +81,7 @@ public class GangColorCommand extends SubArgument {
 						confirmGUI.aroundSlot(22, mat);
 
 						confirmGUI.setItem(49, Material.GREEN_CONCRETE, "&aConfirm", null, false, false, (inv, it) -> {
-							inv.close(user);
+							inv.close(player);
 
 							// save the data in gang
 							gang.setColor(colorName);
@@ -106,7 +106,7 @@ public class GangColorCommand extends SubArgument {
 
 						confirmGUI.fillInventory();
 
-						confirmGUI.open(user);
+						confirmGUI.open(player);
 					});
 
 					if (column % 8 == 0) {
@@ -117,11 +117,11 @@ public class GangColorCommand extends SubArgument {
 			}
 
 			colorGUI.setItem((6 - 1) * 9, Material.RED_CONCRETE, "&4Exit", null, false, false,
-			                 (inventory, item) -> inventory.close(user));
+			                 (inventory, item) -> inventory.close(player));
 
 			colorGUI.fillInventory();
 
-			colorGUI.open(user);
+			colorGUI.open(player);
 		};
 	}
 
