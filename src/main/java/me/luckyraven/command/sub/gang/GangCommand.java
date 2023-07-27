@@ -7,6 +7,7 @@ import me.luckyraven.account.gang.Member;
 import me.luckyraven.account.gang.MemberManager;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.Inventory;
+import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
@@ -1159,8 +1160,56 @@ public class GangCommand extends CommandHandler {
 		            false, (inventory, item) -> {
 					inventory.close(user.getUser());
 
-					int size          = gang.getGroup().size();
-					int inventorySize = Math.min((int) Math.ceil((double) size / 9) * 9, Inventory.MAX_SLOTS);
+					int maxRows    = 4;
+					int maxColumns = 7;
+					int amount     = gang.getGroup().size();
+
+					int perPage = maxColumns * maxRows;
+					int pages   = (int) Math.ceil((double) amount / perPage);
+
+					int finalPage   = amount + 9 * 2 + (int) Math.ceil((double) amount / maxColumns) * 2;
+					int initialPage = pages == 1 ? finalPage : Inventory.MAX_SLOTS;
+
+					int inventorySize = (int) Math.ceil((double) initialPage / 9) * 9;
+
+					String         name  = "&6&lGang members&r (%d/%d)";
+					// the first page
+					MultiInventory multi = new MultiInventory(gangland, String.format(name, 1, pages), inventorySize);
+
+					// need to fill the first page
+
+					// the other pages
+
+					// the inventory size of the other pages is determined according to which page is reached
+					// it can be that the page reached is the final page which means the finalPage calculation is
+					// applied to it
+
+					// need to fill the other pages
+
+					// the other pages
+					for (int i = 0; i < pages - 1; i++) {
+						Inventory inv = new Inventory(gangland, String.format(name, i + 2, pages), initialPage);
+
+						for (int j = i; j < perPage + i; j++) {
+							Member        member        = gang.getGroup().get(j);
+							OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
+							Rank          userRank      = member.getRank();
+
+							List<String> data = new ArrayList<>();
+							data.add("&7rank:&e " + userRank.getName());
+							data.add("&7Contribution:&e " + member.getContribution());
+							data.add("&7Joined:&e " + member.gangJoinDate());
+
+							ItemBuilder itemBuilder = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName(
+									"&b" + offlinePlayer.getName()).setLore(data);
+
+							itemBuilder.modifyNBT(nbt -> nbt.setString("SkullOwner", offlinePlayer.getName()));
+
+//							inv.setItem();
+						}
+
+						multi.addPage(user.getUser(), inv);
+					}
 
 					Inventory members = new Inventory(gangland, "&6&lGang members",
 					                                  inventorySize == 0 ? 9 : inventorySize);
