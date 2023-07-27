@@ -42,15 +42,8 @@ public class MultiInventory extends Inventory {
 			if (inventories.size() > 1) {
 				Inventory nextInventory = inventories.get(next);
 				nextInventory.removeItem(nextInventory.getSize() - 9);
-//				addNextPageItem(player, );
 			}
 		} else if (current == inventories.size() - 1) {
-			Inventory prevInventory = inventories.get(prev);
-			prevInventory.removeItem(prevInventory.getSize() - 1);
-		} else {
-			Inventory nextInventory = inventories.get(next);
-			nextInventory.removeItem(nextInventory.getSize() - 9);
-
 			Inventory prevInventory = inventories.get(prev);
 			prevInventory.removeItem(prevInventory.getSize() - 1);
 		}
