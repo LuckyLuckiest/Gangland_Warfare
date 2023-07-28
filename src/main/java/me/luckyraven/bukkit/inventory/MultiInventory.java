@@ -3,6 +3,7 @@ package me.luckyraven.bukkit.inventory;
 import me.luckyraven.bukkit.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.LinkedList;
@@ -19,6 +20,65 @@ public class MultiInventory extends Inventory {
 		this.currentPage = 0;
 
 		this.inventories.add(this);
+	}
+
+	public static MultiInventory dynamicMultiInventory(JavaPlugin plugin, List<ItemStack> items, String name,
+	                                                   Player player) {
+		int maxRows    = 4;
+		int maxColumns = 7;
+		int amount     = items.size();
+
+		int perPage = maxColumns * maxRows;
+		int pages   = (int) Math.ceil((double) amount / perPage);
+
+		int remainingAmount = amount % perPage;
+		int finalPage       = remainingAmount + 9 * 2 + (int) Math.ceil((double) remainingAmount / 9);
+		int initialPage     = pages == 1 ? finalPage : Inventory.MAX_SLOTS;
+
+		String modifiedName = name + "&r (%d/%d)";
+		// the first page
+		MultiInventory multi  = new MultiInventory(plugin, String.format(modifiedName, 1, pages), initialPage);
+		int            row    = 2;
+		int            column = 2;
+		for (int i = 0; i < items.size() && row % 6 != 0; i++) {
+			multi.setItem((row - 1) * 9 + (column - 1), items.get(i), false);
+
+			if (column % 8 == 0) {
+				column = 2;
+				++row;
+			} else ++column;
+		}
+		multi.createBoarder();
+
+		// the other pages
+
+		// the inventory size of the other pages is determined according to which page is reached
+		// it can be that the page reached is the final page that means the finalPage calculation is
+		// applied to it
+
+		// need to fill the other pages
+		for (int i = 1; i < pages; i++) {
+			int size = i == pages - 1 ? finalPage : initialPage;
+
+			Inventory inv = new Inventory(plugin, String.format(modifiedName, i + 1, pages), size);
+
+			row = 2;
+			column = 2;
+			int startIndex = i * perPage;
+			int endIndex   = Math.min(startIndex + perPage, items.size());
+			for (int j = startIndex; j < endIndex && row % 6 != 0; j++) {
+				inv.setItem((row - 1) * 9 + (column - 1), items.get(j), false);
+
+				if (column % 8 == 0) {
+					column = 2;
+					++row;
+				} else ++column;
+			}
+			inv.createBoarder();
+			multi.addPage(player, inv);
+		}
+
+		return multi;
 	}
 
 	public void addPage(Player player, Inventory gui) {
