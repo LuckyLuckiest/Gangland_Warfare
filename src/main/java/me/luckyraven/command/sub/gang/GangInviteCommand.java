@@ -1,24 +1,180 @@
 package me.luckyraven.command.sub.gang;
 
+import me.luckyraven.Gangland;
+import me.luckyraven.account.gang.Gang;
+import me.luckyraven.account.gang.GangManager;
+import me.luckyraven.account.gang.Member;
+import me.luckyraven.account.gang.MemberManager;
+import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
+import me.luckyraven.data.user.User;
+import me.luckyraven.data.user.UserManager;
+import me.luckyraven.database.DatabaseHandler;
+import me.luckyraven.database.DatabaseHelper;
+import me.luckyraven.database.sub.GangDatabase;
+import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.datastructure.Tree;
+import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.rank.Rank;
+import me.luckyraven.rank.RankManager;
+import me.luckyraven.timer.CountdownTimer;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
 
 class GangInviteCommand extends SubArgument {
 
-	GangInviteCommand(Tree<Argument> tree) {
+	private final Gangland                              gangland;
+	private final Tree<Argument>                        tree;
+	private final UserManager<Player>                   userManager;
+	private final MemberManager                         memberManager;
+	private final GangManager                           gangManager;
+	private final RankManager                           rankManager;
+	private final HashMap<User<Player>, Gang>           playerInvite;
+	private final HashMap<User<Player>, CountdownTimer> inviteTimer;
+
+	GangInviteCommand(Gangland gangland, Tree<Argument> tree, UserManager<Player> userManager,
+	                  MemberManager memberManager, GangManager gangManager, RankManager rankManager) {
 		super(new String[]{"invite", "add"}, tree);
 
 		setPermission(getPermission() + ".add_user");
 
-		// TODO 
+		this.gangland = gangland;
+		this.tree = tree;
+
+		this.userManager = userManager;
+		this.memberManager = memberManager;
+		this.gangManager = gangManager;
+		this.rankManager = rankManager;
+
+		this.playerInvite = new HashMap<>();
+		this.inviteTimer = new HashMap<>();
+
+		gangInvite();
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
-		return null;
+		return (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+
+		};
+	}
+
+	private void gangInvite() {
+		Argument inviteName = new OptionalArgument(tree, (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			String targetStr = args[2];
+			Player target    = Bukkit.getPlayer(targetStr);
+
+			if (target == null) {
+				sender.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
+				return;
+			}
+
+			Gang         gang       = gangManager.getGang(user.getGangId());
+			User<Player> targetUser = userManager.getUser(target);
+
+			if (targetUser.hasGang()) {
+				sender.sendMessage(MessageAddon.TARGET_IN_GANG.toString().replace("%player%", targetStr));
+				return;
+			}
+
+			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+				player.sendMessage(MessageAddon.GANG_INVITE_PLAYER.toString().replace("%player%", targetStr));
+				target.sendMessage(
+						MessageAddon.GANG_INVITE_TARGET.toString().replace("%gang%", gang.getDisplayNameString()));
+			}, null, time -> {
+				playerInvite.remove(targetUser);
+				inviteTimer.remove(targetUser);
+			});
+
+			timer.start();
+
+			playerInvite.put(targetUser, gang);
+			inviteTimer.put(targetUser, timer);
+		});
+
+		this.addSubArgument(inviteName);
+	}
+
+	public Argument gangAccept() {
+		return new Argument("accept", tree, (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!playerInvite.containsKey(user)) {
+				player.sendMessage(MessageAddon.NO_GANG_INVITATION.toString());
+				return;
+			}
+
+			if (user.hasGang()) {
+				player.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
+				return;
+			}
+
+			Gang   gang   = playerInvite.get(user);
+			Member member = memberManager.getMember(player.getUniqueId());
+			Rank   rank   = rankManager.get(SettingAddon.getGangRankHead());
+
+			// broadcast in gang join of the player
+			// don't broadcast to the joined member
+			List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
+			for (User<Player> onUser : gangOnlineMembers)
+				onUser.getUser().sendMessage(
+						MessageAddon.GANG_PLAYER_JOINED.toString().replace("%player%", user.getUser().getName()));
+
+			member.setGangJoinDate(Instant.now().toEpochMilli());
+			gang.addMember(user, member, rank);
+			sender.sendMessage(
+					MessageAddon.GANG_INVITE_ACCEPT.toString().replace("%gang%", gang.getDisplayNameString()));
+
+			// update to database
+			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
+				if (handler instanceof GangDatabase gangDatabase) {
+					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+					helper.runQueries(database -> gangDatabase.updateMembersTable(member));
+				}
+
+				if (handler instanceof UserDatabase userDatabase) {
+					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+					helper.runQueries(database -> userDatabase.updateAccountTable(user));
+				}
+			}
+
+			playerInvite.remove(user);
+
+			CountdownTimer timer = inviteTimer.get(user);
+			if (timer != null) {
+				if (!timer.isCancelled()) timer.cancel();
+				inviteTimer.remove(user);
+			}
+		}, getPermission() + ".accept");
 	}
 
 }

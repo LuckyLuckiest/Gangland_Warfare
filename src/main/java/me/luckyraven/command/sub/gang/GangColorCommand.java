@@ -111,8 +111,8 @@ public class GangColorCommand extends SubArgument {
 
 					if (column % 8 == 0) {
 						column = 2;
-						row++;
-					} else column++;
+						++row;
+					} else ++column;
 				}
 			}
 
