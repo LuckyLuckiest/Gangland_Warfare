@@ -3,17 +3,22 @@ package me.luckyraven.command.sub;
 import me.luckyraven.Gangland;
 import me.luckyraven.account.Account;
 import me.luckyraven.account.gang.Gang;
-import me.luckyraven.bukkit.inventory.Inventory;
 import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.rank.Rank;
+import me.luckyraven.util.color.Color;
+import me.luckyraven.util.color.ColorUtil;
+import me.luckyraven.util.color.MaterialType;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DebugCommand extends CommandHandler {
@@ -60,23 +65,23 @@ public class DebugCommand extends CommandHandler {
 		// multi inventory
 		Argument multiInv = new Argument("multi-inv", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
-				MultiInventory mainInventory = new MultiInventory(gangland, "Main Inventory", Inventory.MAX_SLOTS);
-				Inventory      inventory1    = new Inventory(gangland, "Inventory 1", Inventory.MAX_SLOTS);
-				Inventory      inventory2    = new Inventory(gangland, "Inventory 2", Inventory.MAX_SLOTS);
-				Inventory      inventory3    = new Inventory(gangland, "Inventory 3", Inventory.MAX_SLOTS);
-				Inventory      inventory4    = new Inventory(gangland, "Inventory 4", Inventory.MAX_SLOTS);
 
-				mainInventory.addPage(player, inventory1);
-				mainInventory.addPage(player, inventory2);
-				mainInventory.addPage(player, inventory3);
-				mainInventory.addPage(player, inventory4);
+				List<ItemStack> items = new ArrayList<>();
 
-				for (Inventory inv : mainInventory.getInventories())
-					inv.fillInventory();
+				for (Color color : Color.values()) {
+					for (MaterialType type : MaterialType.values()) {
+						items.add(new ItemStack(ColorUtil.getMaterialByColor(color.name(), type.name())));
+					}
+				}
 
-				mainInventory.removePage(inventory2);
+				List<Material> swords = Arrays.stream(Material.values()).filter(
+						material -> material.name().contains("SWORD")).toList();
 
-				mainInventory.open(player);
+				items.addAll(swords.stream().map(ItemStack::new).toList());
+
+				MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, items, "&6Debug items", player);
+
+				multi.open(player);
 			} else {
 				sender.sendMessage("How will you see the inventory?");
 			}
