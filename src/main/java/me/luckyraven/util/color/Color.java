@@ -2,6 +2,7 @@ package me.luckyraven.util.color;
 
 import lombok.Getter;
 
+@Getter
 public enum Color {
 
 	WHITE("&f"), LIGHT_GRAY("&7"), GRAY("&8"), BLACK("&0"),
@@ -14,7 +15,6 @@ public enum Color {
 
 	PURPLE("&5"), MAGENTA("&5"), PINK("&d");
 
-	@Getter
 	private final String colorCode;
 
 	Color(String colorCode) {
