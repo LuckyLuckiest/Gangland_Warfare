@@ -42,9 +42,11 @@ public class Inventory implements Listener {
 	public Inventory(JavaPlugin plugin, String title, int size) {
 		this.plugin = plugin;
 		this.title = new NamespacedKey(plugin, titleRefactor(title));
-		this.size = size;
 
-		this.inventory = Bukkit.createInventory(null, size, ChatUtil.color(title));
+		int realSize = factorOfNine(size);
+		this.size = Math.min(realSize, MAX_SLOTS);
+
+		this.inventory = Bukkit.createInventory(null, this.size, ChatUtil.color(title));
 		this.draggableSlots = new ArrayList<>();
 		this.clickableSlots = new HashMap<>();
 		this.clickableItem = new HashMap<>();
@@ -52,10 +54,14 @@ public class Inventory implements Listener {
 		INVENTORIES.put(this.title, this);
 	}
 
+	private int factorOfNine(int value) {
+		return (int) Math.ceil((double) value / 9) * 9;
+	}
+
 	public void rename(String name) {
 		ItemStack[] contents = inventory.getContents();
 
-		inventory = Bukkit.createInventory(null, size, ChatUtil.color(name));
+		inventory = Bukkit.createInventory(null, this.size, ChatUtil.color(name));
 		inventory.setContents(contents);
 
 		// remove the old inventory
@@ -142,6 +148,23 @@ public class Inventory implements Listener {
 					setItem(j, item, false);
 				} catch (ArrayIndexOutOfBoundsException ignored) {
 				}
+	}
+
+	public void createBoarder() {
+		ItemBuilder itemBuilder = new ItemBuilder(Material.BLACK_STAINED_GLASS_PANE);
+
+		ItemStack item = itemBuilder.setDisplayName(null).build();
+
+		int rows = inventory.getSize() / 9;
+
+		for (int i = 0; i < inventory.getSize(); i++) {
+			int row = i / 9;
+
+			if (row == 0 || row == rows - 1 || i % 9 == 0 || i % 9 == 8) {
+				if (inventory.getItem(i) != null) continue;
+				inventory.setItem(i, item);
+			}
+		}
 	}
 
 	public void fillInventory() {
