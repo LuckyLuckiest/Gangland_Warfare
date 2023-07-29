@@ -37,9 +37,10 @@ public class MultiInventory extends Inventory {
 
 		String modifiedName = name + "&r (%d/%d)";
 		// the first page
-		MultiInventory multi  = new MultiInventory(plugin, String.format(modifiedName, 1, pages), initialPage);
-		int            row    = 2;
-		int            column = 2;
+		MultiInventory multi = new MultiInventory(plugin, java.lang.String.format(modifiedName, 1, pages), initialPage);
+
+		int row    = 2;
+		int column = 2;
 		for (int i = 0; i < items.size() && row % 6 != 0; i++) {
 			multi.setItem((row - 1) * 9 + (column - 1), items.get(i), false);
 
@@ -60,7 +61,7 @@ public class MultiInventory extends Inventory {
 		for (int i = 1; i < pages; i++) {
 			int size = i == pages - 1 ? finalPage : initialPage;
 
-			Inventory inv = new Inventory(plugin, String.format(modifiedName, i + 1, pages), size);
+			Inventory inv = new Inventory(plugin, java.lang.String.format(modifiedName, i + 1, pages), size);
 
 			row = 2;
 			column = 2;
@@ -86,6 +87,8 @@ public class MultiInventory extends Inventory {
 
 		// next page -> gui
 		addNextPageItem(player, lastPage);
+		// home page
+		addHomePageItem(player, gui);
 		// prev page -> lastPage
 		addPreviousPageItem(player, gui);
 
@@ -158,6 +161,21 @@ public class MultiInventory extends Inventory {
 
 			// open the new inventory
 			previousPage().open(player);
+		});
+	}
+
+	private void addHomePageItem(Player player, Inventory linkedInventory) {
+		ItemBuilder item = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName(
+				"&cBack to " + this.getTitle().getKey());
+		String arrow = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=";
+
+		item.customHead(arrow);
+		linkedInventory.setItem(linkedInventory.getSize() - 5, item.build(), false, (inventory, itemBuilder) -> {
+			// close the old inventory
+			linkedInventory.close(player);
+
+			// open the new inventory
+			homePage().open(player);
 		});
 	}
 
