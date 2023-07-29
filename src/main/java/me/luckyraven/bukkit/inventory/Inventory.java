@@ -37,6 +37,7 @@ public class Inventory implements Listener {
 
 	@Getter
 	private org.bukkit.inventory.Inventory inventory;
+	@Getter
 	private NamespacedKey                  title;
 
 	public Inventory(JavaPlugin plugin, String title, int size) {
