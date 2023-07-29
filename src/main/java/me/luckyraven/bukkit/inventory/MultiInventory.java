@@ -37,7 +37,7 @@ public class MultiInventory extends Inventory {
 
 		String modifiedName = name + "&r (%d/%d)";
 		// the first page
-		MultiInventory multi = new MultiInventory(plugin, java.lang.String.format(modifiedName, 1, pages), initialPage);
+		MultiInventory multi = new MultiInventory(plugin, String.format(modifiedName, 1, pages), initialPage);
 
 		int row    = 2;
 		int column = 2;
@@ -61,7 +61,7 @@ public class MultiInventory extends Inventory {
 		for (int i = 1; i < pages; i++) {
 			int size = i == pages - 1 ? finalPage : initialPage;
 
-			Inventory inv = new Inventory(plugin, java.lang.String.format(modifiedName, i + 1, pages), size);
+			Inventory inv = new Inventory(plugin, String.format(modifiedName, i + 1, pages), size);
 
 			row = 2;
 			column = 2;
