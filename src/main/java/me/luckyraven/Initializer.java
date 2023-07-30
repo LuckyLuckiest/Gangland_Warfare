@@ -23,12 +23,9 @@ import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.gang.GangMembersDamage;
 import me.luckyraven.listener.player.*;
 import me.luckyraven.rank.RankManager;
-import me.luckyraven.util.UnhandledError;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.IOException;
 import java.util.Objects;
 
 public final class Initializer {
@@ -127,17 +124,10 @@ public final class Initializer {
 
 	private void databases() {
 		int type = -1;
-		try {
-			fileManager.checkFileLoaded("settings");
 
-			FileConfiguration settings = fileManager.getFile("settings").getFileConfiguration();
-
-			switch (Objects.requireNonNull(settings.getString("Database.Type")).toLowerCase()) {
-				case "mysql" -> type = DatabaseHandler.MYSQL;
-				case "sqlite" -> type = DatabaseHandler.SQLITE;
-			}
-		} catch (IOException exception) {
-			plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR + ": " + exception.getMessage());
+		switch (SettingAddon.getDatabaseType()) {
+			case "mysql" -> type = DatabaseHandler.MYSQL;
+			case "sqlite" -> type = DatabaseHandler.SQLITE;
 		}
 
 		UserDatabase userDatabase = new UserDatabase(plugin, fileManager);
