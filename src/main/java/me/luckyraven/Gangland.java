@@ -20,9 +20,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@Getter
 public final class Gangland extends JavaPlugin {
 
-	@Getter
 	private Initializer initializer;
 
 	@Override
@@ -33,7 +33,7 @@ public final class Gangland extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		DatabaseManager databaseManager = initializer.getDatabaseManager();
-		if (!databaseManager.getDatabases().isEmpty()) databaseManager.closeConnections(initializer.getFileManager());
+		if (!databaseManager.getDatabases().isEmpty()) databaseManager.closeConnections();
 	}
 
 	@Override
@@ -98,11 +98,11 @@ public final class Gangland extends JavaPlugin {
 	}
 
 	private void requiredDependency(@NotNull String name, @Nullable Runnable runnable) {
-		if (Bukkit.getPluginManager().getPlugin(name) == null) {
-			getLogger().warning(name + " is a required dependency!");
-			if (runnable != null) runnable.run();
-			getPluginLoader().disablePlugin(this);
-		}
+		if (Bukkit.getPluginManager().getPlugin(name) != null) return;
+
+		getLogger().warning(name + " is a required dependency!");
+		if (runnable != null) runnable.run();
+		getPluginLoader().disablePlugin(this);
 	}
 
 	private void softDependency(@NotNull String name, @Nullable Runnable runnable) {
