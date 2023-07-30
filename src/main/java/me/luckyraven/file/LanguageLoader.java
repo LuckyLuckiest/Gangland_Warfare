@@ -1,6 +1,7 @@
 package me.luckyraven.file;
 
 import lombok.Getter;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -47,12 +48,8 @@ public class LanguageLoader {
 	}
 
 	private YamlConfiguration loadMessage(FileManager manager) throws IOException, InvalidConfigurationException {
-		// tight couple to settings file
-		manager.checkFileLoaded("settings");
-
-		FileHandler settings = manager.getFile("settings");
-		String      lang     = settings.getFileConfiguration().getString("Language");
-		String      fileLoc  = "message\\message_" + lang + ".yml";
+		String lang    = SettingAddon.getLanguagePicked();
+		String fileLoc = "message\\message_" + lang + ".yml";
 
 		return manager.loadFromResources(fileLoc);
 	}
