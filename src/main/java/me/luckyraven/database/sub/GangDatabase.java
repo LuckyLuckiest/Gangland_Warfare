@@ -21,7 +21,7 @@ public class GangDatabase extends DatabaseHandler {
 	private       String      schema;
 
 	public GangDatabase(JavaPlugin plugin, FileManager fileManager) {
-		super(plugin, fileManager);
+		super(plugin);
 		this.plugin = plugin;
 		this.fileManager = fileManager;
 		this.schema = "gang";

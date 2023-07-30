@@ -25,7 +25,7 @@ public class UserDatabase extends DatabaseHandler {
 	private       String      schema;
 
 	public UserDatabase(JavaPlugin plugin, FileManager fileManager) {
-		super(plugin, fileManager);
+		super(plugin);
 		this.plugin = plugin;
 		this.fileManager = fileManager;
 		this.schema = "user";

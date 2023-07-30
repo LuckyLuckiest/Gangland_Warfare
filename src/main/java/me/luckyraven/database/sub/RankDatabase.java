@@ -25,7 +25,7 @@ public class RankDatabase extends DatabaseHandler {
 	private       String      schema;
 
 	public RankDatabase(JavaPlugin plugin, FileManager fileManager) {
-		super(plugin, fileManager);
+		super(plugin);
 		this.plugin = plugin;
 		this.fileManager = fileManager;
 		this.schema = "rank";

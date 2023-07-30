@@ -3,11 +3,9 @@ package me.luckyraven.database;
 import lombok.Getter;
 import me.luckyraven.database.type.MySQL;
 import me.luckyraven.database.type.SQLite;
-import me.luckyraven.file.FileManager;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.UnhandledError;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -19,19 +17,13 @@ public abstract class DatabaseHandler {
 
 	private final JavaPlugin plugin;
 
-	private FileManager fileManager;
 	@Getter
-	private int         type;
+	private int      type;
 	@Getter
-	private Database    database;
+	private Database database;
 
 	public DatabaseHandler(JavaPlugin plugin) {
 		this.plugin = plugin;
-	}
-
-	public DatabaseHandler(JavaPlugin plugin, @NotNull FileManager fileManager) {
-		this(plugin);
-		this.fileManager = fileManager;
 	}
 
 	public abstract Map<String, Object> credentials();
@@ -106,19 +98,10 @@ public abstract class DatabaseHandler {
 	}
 
 	private void useSQLite(String schema) {
-		try {
-			fileManager.checkFileLoaded("settings");
+		if (!SettingAddon.isSqliteFailedMysql()) return;
 
-			FileConfiguration settings = fileManager.getFile("settings").getFileConfiguration();
-
-			if (settings.getBoolean("Database.SQLite.Failed_MySQL")) {
-				setType(SQLITE);
-				plugin.getLogger().info(String.format("Referring to SQLite for '%s' database", schema));
-			}
-
-		} catch (IOException exception) {
-			plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR + ": " + exception.getMessage());
-		}
+		setType(SQLITE);
+		plugin.getLogger().info(String.format("Referring to SQLite for '%s' database", schema));
 	}
 
 	public String getSchemaName() {
