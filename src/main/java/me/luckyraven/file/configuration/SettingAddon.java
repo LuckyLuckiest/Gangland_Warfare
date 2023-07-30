@@ -13,6 +13,18 @@ public class SettingAddon {
 	private static FileConfiguration settings;
 
 	@Getter
+	private static String languagePicked;
+
+	@Getter
+	private static String databaseType;
+	@Getter
+	private static String mysqlHost, mysqlUsername, mysqlPassword;
+	@Getter
+	private static int     mysqlPort;
+	@Getter
+	private static boolean sqliteBackup, sqliteFailedMysql;
+
+	@Getter
 	private static String moneySymbol, balanceFormat;
 
 	@Getter
@@ -61,6 +73,16 @@ public class SettingAddon {
 	}
 
 	private void initialize() {
+		languagePicked = settings.getString("Language");
+
+		databaseType = settings.getString("Database.Type");
+		mysqlHost = settings.getString("Database.MySQL.Host");
+		mysqlUsername = settings.getString("Database.MySQL.Username");
+		mysqlPassword = settings.getString("Database.MySQL.Password");
+		mysqlPort = settings.getInt("Database.MySQL.Port");
+		sqliteBackup = settings.getBoolean("Database.SQLite.Backup");
+		sqliteFailedMysql = settings.getBoolean("Database.SQLite.Failed_MySQL");
+
 		moneySymbol = Objects.requireNonNull(settings.getString("Money_Symbol")).substring(0, 1);
 
 		balanceFormat = settings.getString("Balance_Format.Format");
