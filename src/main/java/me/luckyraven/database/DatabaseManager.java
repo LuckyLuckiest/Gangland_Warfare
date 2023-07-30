@@ -38,6 +38,7 @@ public class DatabaseManager {
 						// TODO create a backup from sqlite to mysql
 						// save all the databases data in a map, name: data
 						// check if there can be a connection
+						// add all the data from the map to the sqlite connection
 					}
 				}
 			}
