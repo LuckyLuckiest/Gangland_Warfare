@@ -58,6 +58,14 @@ Database:
       # Will use SQLite if unable to connect to MySQL
       Failed_MySQL: true
 
+# +------------------+ #
+# | Inventory Config | #
+# +------------------+ #
+Inventory:
+   Fill:
+      Item: BLACK_STAINED_GLASS_PANE
+      Name: " "
+
 # +---------------+ #
 # | Bounty Config | #
 # +---------------+ #

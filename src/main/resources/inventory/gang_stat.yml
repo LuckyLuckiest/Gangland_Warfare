@@ -1,0 +1,49 @@
+stat:
+  open:
+    cmd: /glw gang
+  size: 45
+  name: "&6&l%gang%&r gang"
+  type: inventory
+  slots:
+    11:
+      item: GOLD_BLOCK
+      name: "&bBalance"
+      lore:
+        - "&e%money_symbol%%balance%"
+      enchanted: true
+    13:
+      item: CRAFTING_TABLE
+      name: "&bID"
+      lore:
+        - "&e%gang_id%"
+    15:
+      item: PAPER
+      name: "&bDescription"
+      lore:
+        - "&e%gang_desc%"
+    19:
+      item: PLAYER_HEAD
+      name: "&bMembers"
+      lore:
+        - "&a%gang_online-members_size%&7/&e%gang_members_size%"
+      onclick:
+        inv: users_stat
+    22:
+      item: GOLD_INGOT
+      name: "&bBounty"
+      lore:
+        - "&e%money_symbol%%gang_bounty%"
+      enchanted: true
+    25:
+      item: REDSTONE
+      name: "&bAlly"
+      lore:
+        - "&e%gang_ally_size%"
+      onclick:
+        inv: alliance_stat
+    31:
+      item: WRITABLE_BOOK
+      name: "&bCreated"
+      lore:
+        - "&e%gang_date-created%"
+      enchanted: true
