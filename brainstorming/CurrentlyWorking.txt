@@ -61,7 +61,8 @@
 	- Gang spawn and home.
 
 0.1-DEV:
-	- Fixing bugs as much as possible
+	- Add features registration, to enable specific features (e.g., gang, bounty, etc...) or not.
+	- Fixing bugs as much as possible.
 
 0.1.1:
 	- Release the plugin
