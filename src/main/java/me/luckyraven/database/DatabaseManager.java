@@ -62,7 +62,12 @@ public class DatabaseManager {
 		for (String table : handler.getDatabase().getTables()) {
 			Database config = handler.getDatabase().table(table);
 
-			List<Object[]> info = config.selectAll();
+			List<Object[]> info = new ArrayList<>();
+			try {
+				info.addAll(config.selectAll());
+			} catch (SQLException ignored) {
+			}
+
 			if (!info.isEmpty()) data.put(table, config.selectAll());
 		}
 
