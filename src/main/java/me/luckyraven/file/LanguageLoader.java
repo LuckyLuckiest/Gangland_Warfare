@@ -40,7 +40,7 @@ public class LanguageLoader {
 				if (i < files.size() - 1) languages.append(", ");
 			}
 			plugin.getLogger().info(
-					"Disabling plugin, reason: unidentifiable message file. Please use languages from the list: " +
+					"Disabling plugin, reason: unidentifiable message file.\nPlease use languages from the list: " +
 							languages);
 			Bukkit.getServer().getPluginManager().disablePlugin(plugin);
 		}
