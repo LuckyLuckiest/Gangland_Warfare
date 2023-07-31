@@ -39,13 +39,14 @@
 	- phone
 
 0.0.6-DEV:
+    - Add custom inventories in YAML files
 	- Economy system (implement vault dependency)
     - level system
-    - working permissions in ranks
     - Gang settings
 
 0.0.7-DEV:
 	- Enhance wanted level
+    - working permissions in ranks
 	- Gang attacks
 	- Gang challenges
 
@@ -57,6 +58,8 @@
 0.0.9-DEV:
 	- Fully functional Heist system
 	- Weapons
+	- Warps and spawns
+	- Gang spawn and homes
 
 0.1-DEV:
 	- Fixing bugs as much as possible
