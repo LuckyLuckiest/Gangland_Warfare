@@ -9,15 +9,14 @@ import java.util.List;
 
 public class Rank {
 
+	private static @Setter int ID = 0;
 
-	private static @Setter int             ID = 0;
-	private final @Getter  String          name;
-	private final @Getter  Tree.Node<Rank> node;
-	private final          List<String>    permissions;
+	private final @Getter String          name;
+	private final @Getter Tree.Node<Rank> node;
+	private final         List<String>    permissions;
 
-	@Getter
-	@Setter
-	private int usedId;
+	private @Getter
+	@Setter int usedId;
 
 	public Rank(String name) {
 		this(name, new ArrayList<>());
