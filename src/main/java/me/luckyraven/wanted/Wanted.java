@@ -5,7 +5,6 @@ import lombok.Setter;
 
 public class Wanted {
 
-
 	private @Getter int level;
 	private @Setter int increments;
 
