@@ -130,7 +130,8 @@ public interface Database {
 	 * database.table("data").addColumn("bounty", "DOUBLE");
 	 *
 	 * database.disconnect();
-	 * }</pre>
+	 * }
+	 * </pre>
 	 *
 	 * @param name      name of the new column.
 	 * @param columType values that are used for this new column.
@@ -152,7 +153,8 @@ public interface Database {
 	 *                               new int[]{Types.VARCHAR, Types.DOUBLE});
 	 *
 	 * database.disconnect();
-	 * }</pre>
+	 * }
+	 * </pre>
 	 *
 	 * @param columns column names.
 	 * @param values  each value information.
@@ -177,7 +179,8 @@ public interface Database {
 	 *                                               new String[]{"name", "balance"});
 	 *
 	 * database.disconnect();
-	 * }</pre>
+	 * }
+	 * </pre>
 	 *
 	 * @param row          the specific row for a value that you need.
 	 * @param placeholders placeholder values.
@@ -212,7 +215,8 @@ public interface Database {
 	 *                               new int[]{Types.VARCHAR, Types.DOUBLE});
 	 *
 	 * database.disconnect();
-	 * }</pre>
+	 * }
+	 * </pre>
 	 *
 	 * @param row             the specific row that will be updated in the database
 	 * @param rowPlaceholders the row placeholders
@@ -284,7 +288,14 @@ public interface Database {
 	 */
 	List<String> getColumns() throws SQLException;
 
-	List<Integer> getColumnsDataType(String... columns) throws SQLException;
+	/**
+	 * Gets columns data type.
+	 *
+	 * @param columns the columns
+	 * @return the columns data type
+	 * @throws SQLException the sql exception
+	 */
+	List<Integer> getColumnsDataType(String[] columns) throws SQLException;
 
 	/**
 	 * Prepare placeholder statements by converting the placeholders into their appropriate data type.
@@ -366,6 +377,12 @@ public interface Database {
 		};
 	}
 
+	/**
+	 * Gets column type.
+	 *
+	 * @param columnType the column type
+	 * @return the column type
+	 */
 	default int getColumnType(Class<?> columnType) {
 		if (columnType == null) return Types.NULL;
 		if (columnType.equals(Byte.class)) return Types.TINYINT;
