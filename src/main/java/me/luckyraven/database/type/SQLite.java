@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import me.luckyraven.database.Database;
 import me.luckyraven.file.FileHandler;
-import me.luckyraven.util.UnhandledError;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -248,8 +247,6 @@ public class SQLite implements Database {
 		try (PreparedStatement statement = connection.prepareStatement(query)) {
 			preparePlaceholderStatements(statement, values, types, 0);
 			statement.executeUpdate();
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 		}
 
 		return this;
@@ -281,7 +278,6 @@ public class SQLite implements Database {
 		if (columns.length == 1 && columns[0].equals("*")) cols = new ArrayList<>(getColumns());
 
 		try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
-
 			if (!row.isEmpty()) preparePlaceholderStatements(statement, placeholders, types, 0);
 
 			ResultSet    resultSet = statement.executeQuery();
@@ -298,9 +294,6 @@ public class SQLite implements Database {
 			}
 
 			return results.toArray();
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
-			return new Object[0];
 		}
 	}
 
@@ -329,9 +322,6 @@ public class SQLite implements Database {
 			}
 
 			return results;
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
-			return new ArrayList<>();
 		}
 	}
 
@@ -366,22 +356,16 @@ public class SQLite implements Database {
 			if (!row.isEmpty()) preparePlaceholderStatements(statement, rowPlaceholders, rowTypes, columns.length);
 
 			statement.executeUpdate();
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 		}
 
 		return this;
 	}
 
 	@Override
-	public int totalRows() {
-		try {
-			Object[] result = select("", new Object[]{}, new int[]{}, new String[]{"COUNT(*)"});
-			if (result.length > 0 && result[0] instanceof Number) {
-				return ((Number) result[0]).intValue();
-			}
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
+	public int totalRows() throws SQLException {
+		Object[] result = select("", new Object[]{}, new int[]{}, new String[]{"COUNT(*)"});
+		if (result.length > 0 && result[0] instanceof Number) {
+			return ((Number) result[0]).intValue();
 		}
 		return 0;
 	}

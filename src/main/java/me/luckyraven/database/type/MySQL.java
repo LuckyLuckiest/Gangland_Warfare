@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.Getter;
 import me.luckyraven.database.Database;
-import me.luckyraven.util.UnhandledError;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.*;
@@ -103,7 +102,7 @@ public class MySQL implements Database {
 			this.database = schema;
 			dataSource = new HikariDataSource(config);
 		} catch (SQLException exception) {
-			plugin.getLogger().warning("Unable to switch DataSource, " + exception.getMessage());
+			throw new SQLException("Unable to switch DataSource, " + exception.getMessage());
 		}
 
 		connect();
@@ -264,8 +263,6 @@ public class MySQL implements Database {
 		try (PreparedStatement statement = connection.prepareStatement(query)) {
 			preparePlaceholderStatements(statement, values, types, 0);
 			statement.executeUpdate();
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 		}
 
 		return this;
@@ -314,9 +311,6 @@ public class MySQL implements Database {
 			}
 
 			return results.toArray();
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
-			return new Object[0];
 		}
 	}
 
@@ -345,9 +339,6 @@ public class MySQL implements Database {
 			}
 
 			return results;
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
-			return new ArrayList<>();
 		}
 	}
 
@@ -382,22 +373,16 @@ public class MySQL implements Database {
 			if (!row.isEmpty()) preparePlaceholderStatements(statement, rowPlaceholders, rowTypes, columns.length);
 
 			statement.executeUpdate();
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 		}
 
 		return this;
 	}
 
 	@Override
-	public int totalRows() {
-		try {
-			Object[] result = select("", new Object[]{}, new int[]{}, new String[]{"COUNT(*)"});
-			if (result.length > 0 && result[0] instanceof Number) {
-				return ((Number) result[0]).intValue();
-			}
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
+	public int totalRows() throws SQLException {
+		Object[] result = select("", new Object[]{}, new int[]{}, new String[]{"COUNT(*)"});
+		if (result.length > 0 && result[0] instanceof Number) {
+			return ((Number) result[0]).intValue();
 		}
 		return 0;
 	}
