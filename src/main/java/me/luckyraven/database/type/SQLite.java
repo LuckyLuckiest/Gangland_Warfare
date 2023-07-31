@@ -106,12 +106,7 @@ public class SQLite implements Database {
 	public void createSchema(String name) throws IOException {
 		FileHandler file = new FileHandler(plugin, name, "db");
 
-		try {
-			file.create(false);
-		} catch (IOException exception) {
-			plugin.getLogger().warning(UnhandledError.FILE_CREATE_ERROR + ": " + exception.getMessage());
-			throw exception;
-		}
+		file.create(false);
 	}
 
 	@Override
@@ -405,20 +400,12 @@ public class SQLite implements Database {
 		return this;
 	}
 
-	@Deprecated
 	@Override
 	public ResultSet executeQuery(String statement) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
 
-		ResultSet resultSet;
-		try (PreparedStatement query = connection.prepareStatement(statement)) {
-			resultSet = query.executeQuery();
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
-			throw exception;
-		}
-
-		return resultSet;
+		PreparedStatement query = connection.prepareStatement(statement);
+		return query.executeQuery();
 	}
 
 	@Override
@@ -427,9 +414,6 @@ public class SQLite implements Database {
 
 		try (PreparedStatement query = connection.prepareStatement(statement)) {
 			query.executeUpdate();
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
-			throw exception;
 		}
 	}
 
@@ -439,9 +423,6 @@ public class SQLite implements Database {
 
 		try (PreparedStatement query = connection.prepareStatement(statement)) {
 			query.execute();
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
-			throw exception;
 		}
 	}
 
@@ -461,16 +442,13 @@ public class SQLite implements Database {
 		try (PreparedStatement statement = connection.prepareStatement(query);
 		     ResultSet resultSet = statement.executeQuery()) {
 			while (resultSet.next()) columns.add(resultSet.getString("name"));
-		} catch (SQLException exception) {
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
-			throw exception;
 		}
 
 		return columns;
 	}
 
 	@Override
-	public List<Integer> getColumnsDataType(String... columns) throws SQLException {
+	public List<Integer> getColumnsDataType(String[] columns) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
 		Preconditions.checkNotNull(table, "Invalid table");
 
