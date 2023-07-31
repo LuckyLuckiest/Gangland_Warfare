@@ -38,7 +38,7 @@ public final class Initializer {
 	@Getter
 	private final UserManager<Player> userManager;
 	@Getter
-	private final FileManager     fileManager;
+	private final FileManager         fileManager;
 
 	// on plugin enable
 	private @Getter DatabaseManager databaseManager;
@@ -58,25 +58,24 @@ public final class Initializer {
 		informationManager = new InformationManager();
 		informationManager.processCommands();
 
+		// User manager
 		userManager = new UserManager<>();
 
+		// File
 		fileManager = new FileManager(plugin);
 		files();
 	}
 
 	public void postInitialize() {
-		// Addons
-		if (plugin instanceof Gangland gangland) {
-			settingAddon = new SettingAddon(fileManager);
-			MessageAddon.setPlugin(gangland);
-		}
-
 		// Database
 		databaseManager = new DatabaseManager(plugin);
 		databases();
 		databaseManager.initializeDatabases();
 
 		if (plugin instanceof Gangland gangland) {
+			// Addons
+			MessageAddon.setPlugin(gangland);
+
 			// Rank manager
 			rankManager = new RankManager(gangland);
 			for (DatabaseHandler handler : databaseManager.getDatabases())
@@ -112,6 +111,7 @@ public final class Initializer {
 	@SuppressWarnings("CommentedOutCode")
 	private void files() {
 		fileManager.addFile(new FileHandler(plugin, "settings", ".yml"), true);
+		settingAddon = new SettingAddon(fileManager);
 
 		this.languageLoader = new LanguageLoader(plugin, fileManager);
 
