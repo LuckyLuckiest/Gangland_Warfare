@@ -7,8 +7,7 @@ import java.util.NoSuchElementException;
 public class LinkedList<E extends Comparable<E>> {
 
 	private Node<E> head, tail;
-	@Getter
-	private int size;
+	private @Getter int size;
 
 	public LinkedList() {
 		this.head = this.tail = null;

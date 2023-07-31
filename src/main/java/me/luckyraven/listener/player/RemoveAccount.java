@@ -24,7 +24,7 @@ public class RemoveAccount implements Listener {
 
 		RepeatingTimer bountyTimer = user.getBounty().getRepeatingTimer();
 		if (bountyTimer != null) bountyTimer.stop();
-		// Remove the user from user manager group
+		// Remove the user from a user manager group
 		userManager.remove(user);
 	}
 

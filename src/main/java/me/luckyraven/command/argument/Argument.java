@@ -15,17 +15,16 @@ import java.util.function.BiConsumer;
 
 public class Argument implements Cloneable {
 
-	@Getter
-	private final String[]            arguments;
-	@Getter
-	private final Tree.Node<Argument> node;
-	private final Tree<Argument>      tree;
+	private final @Getter String[]            arguments;
+	private final @Getter Tree.Node<Argument> node;
+
+	private final Tree<Argument> tree;
+
 	TriConsumer<Argument, CommandSender, String[]> action;
-	@Getter
-	private String                              permission;
-	@Getter
-	@Setter
-	private BiConsumer<CommandSender, String[]> executeOnPass;
+
+	private @Getter String                              permission;
+	private @Getter
+	@Setter         BiConsumer<CommandSender, String[]> executeOnPass;
 
 	public Argument(String argument, Tree<Argument> tree) {
 		this(argument, tree, null);

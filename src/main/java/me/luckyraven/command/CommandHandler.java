@@ -20,27 +20,19 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+@Getter
 public abstract class CommandHandler implements TabCompleter {
 
-	@Getter
 	private static final Map<String, CommandHandler> commandMap = new HashMap<>();
 
-	@Getter
 	private final String         label;
-	@Getter
 	private final Set<String>    alias;
-	@Getter
 	private final String         permission;
-	@Getter
 	private final boolean        user;
-	@Getter
 	private final HelpInfo       helpInfo;
-	@Getter
 	private final Argument       argument;
-	@Getter
 	private final Tree<Argument> argumentTree;
-
-	private final Gangland gangland;
+	private final Gangland       gangland;
 
 	public CommandHandler(Gangland gangland, String label, boolean user, String... alias) {
 		this.gangland = gangland;

@@ -9,15 +9,14 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
+@Getter
 public class PhoneInventoryEvent extends Event implements Cancellable {
 
-	private static final HandlerList  handler = new HandlerList();
-	@Getter
-	private final        User<Player> user;
-	@Getter
-	private final        Phone        phone;
-	@Getter
-	private final        Inventory    inventory;
+	private static final HandlerList handler = new HandlerList();
+
+	private final User<Player> user;
+	private final Phone        phone;
+	private final Inventory    inventory;
 
 	private boolean cancelled;
 

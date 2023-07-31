@@ -14,11 +14,9 @@ public class Bounty {
 
 	private final Map<CommandSender, Double> userSetBounty;
 
-	@Getter
-	@Setter
-	private double         amount;
-	@Getter
-	private RepeatingTimer repeatingTimer;
+	private @Getter
+	@Setter         double         amount;
+	private @Getter RepeatingTimer repeatingTimer;
 
 	public Bounty() {
 		this.amount = 0D;

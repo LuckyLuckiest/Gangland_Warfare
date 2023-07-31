@@ -17,10 +17,9 @@ public abstract class DatabaseHandler {
 
 	private final JavaPlugin plugin;
 
-	@Getter
-	private int      type;
-	@Getter
-	private Database database;
+
+	private @Getter int      type;
+	private @Getter Database database;
 
 	public DatabaseHandler(JavaPlugin plugin) {
 		this.plugin = plugin;
@@ -58,7 +57,7 @@ public abstract class DatabaseHandler {
 
 		switch (type) {
 			case MYSQL -> {
-				this.database = new MySQL(plugin);
+				this.database = new MySQL();
 
 				String schema = getSchema();
 

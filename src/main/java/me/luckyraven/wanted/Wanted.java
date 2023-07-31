@@ -5,10 +5,10 @@ import lombok.Setter;
 
 public class Wanted {
 
-	@Getter
-	private int     level;
-	@Setter
-	private int     increments;
+
+	private @Getter int level;
+	private @Setter int increments;
+
 	@Getter
 	@Setter
 	private int     maxLevel;

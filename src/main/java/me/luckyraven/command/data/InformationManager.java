@@ -11,9 +11,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+@Getter
 public class InformationManager {
 
-	@Getter
 	private final Map<String, CommandInformation> commands;
 
 	public InformationManager() {

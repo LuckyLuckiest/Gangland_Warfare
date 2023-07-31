@@ -11,13 +11,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class Phone {
 
-	@Getter
-	private final String      name;
-	private final Inventory   inventory;
-	private final ItemBuilder item;
 
-	@Getter
-	private String displayName;
+	private final @Getter String      name;
+	private final         Inventory   inventory;
+	private final         ItemBuilder item;
+
+
+	private @Getter String displayName;
 
 	public Phone(String name) {
 		this.name = name;
@@ -32,7 +32,6 @@ public class Phone {
 		inventory.rename(displayName);
 		this.displayName = displayName;
 	}
-
 
 
 	public void openInventory(Player player) {

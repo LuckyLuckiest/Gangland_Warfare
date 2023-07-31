@@ -10,8 +10,7 @@ public class CountdownTimer extends BukkitRunnable {
 
 	private final JavaPlugin               plugin;
 	private final Consumer<CountdownTimer> duringTimer, beforeTimer, afterTimer;
-	@Getter
-	private final int duration;
+	private final @Getter int duration;
 
 	@Getter
 	private int        timeLeft;

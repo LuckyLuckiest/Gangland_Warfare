@@ -18,8 +18,8 @@ public class RankManager {
 
 	private final Map<Integer, Rank> ranks;
 	private final Gangland           gangland;
-	@Getter
-	private final Tree<Rank>         rankTree;
+
+	private final @Getter Tree<Rank> rankTree;
 
 	public RankManager(Gangland gangland) {
 		this.gangland = gangland;

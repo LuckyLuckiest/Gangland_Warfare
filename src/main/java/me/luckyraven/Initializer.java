@@ -33,12 +33,9 @@ public final class Initializer {
 	private final JavaPlugin plugin;
 
 	// on plugin load
-	@Getter
-	private final InformationManager  informationManager;
-	@Getter
-	private final UserManager<Player> userManager;
-	@Getter
-	private final FileManager         fileManager;
+	private final @Getter InformationManager  informationManager;
+	private final @Getter UserManager<Player> userManager;
+	private final @Getter FileManager         fileManager;
 
 	// on plugin enable
 	private @Getter DatabaseManager databaseManager;

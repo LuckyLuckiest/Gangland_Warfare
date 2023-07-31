@@ -17,28 +17,23 @@ import java.util.List;
  */
 public class User<T> {
 
-	@Getter
-	private final T user;
+
+	private final @Getter T user;
 
 	private final List<Account<?, ?>> linkedAccounts;
 
-	@Getter
-	@Setter
-	private int kills, deaths, mobKills, gangId;
-	@Getter
-	@Setter
-	private double  balance;
-	@Setter
-	private boolean hasBank;
+	private @Getter
+	@Setter int kills, deaths, mobKills, gangId;
+	private @Getter
+	@Setter double balance;
+	private @Setter boolean hasBank;
 
-	@Getter
-	private Bounty bounty;
-	@Getter
-	@Setter
-	private Rank   rank;
-	@Getter
-	@Setter
-	private Wanted wanted;
+	private @Getter Bounty bounty;
+
+	private @Getter
+	@Setter Rank   rank;
+	private @Getter
+	@Setter Wanted wanted;
 
 
 	/**

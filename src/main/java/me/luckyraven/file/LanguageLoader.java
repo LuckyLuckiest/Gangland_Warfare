@@ -22,8 +22,7 @@ public class LanguageLoader {
 
 	private final JavaPlugin plugin;
 
-	@Getter
-	private YamlConfiguration message;
+	private @Getter YamlConfiguration message;
 
 	public LanguageLoader(JavaPlugin plugin, FileManager fileManager) {
 		this.plugin = plugin;

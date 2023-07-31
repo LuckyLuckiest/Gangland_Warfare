@@ -10,12 +10,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class WantedEvent extends Event implements Cancellable {
 
-	private static final HandlerList  handler = new HandlerList();
-	@Getter
-	private final        User<Player> user;
-	@Getter
-	private final        Wanted       wanted;
-	private              boolean      cancelled;
+	private static final HandlerList handler = new HandlerList();
+
+	private final @Getter User<Player> user;
+	private final @Getter Wanted       wanted;
+
+	private boolean cancelled;
 
 	public WantedEvent(User<Player> user) {
 		this.user = user;

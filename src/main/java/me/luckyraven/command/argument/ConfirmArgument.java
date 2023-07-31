@@ -6,10 +6,10 @@ import me.luckyraven.datastructure.Tree;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
 
+@Getter
+@Setter
 public class ConfirmArgument extends Argument {
 
-	@Getter
-	@Setter
 	private boolean confirmed;
 
 	public ConfirmArgument(Tree<Argument> tree) {

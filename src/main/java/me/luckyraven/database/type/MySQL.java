@@ -3,9 +3,7 @@ package me.luckyraven.database.type;
 import com.google.common.base.Preconditions;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.Getter;
 import me.luckyraven.database.Database;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.*;
 import java.time.Duration;
@@ -15,21 +13,16 @@ import java.util.Map;
 
 public class MySQL implements Database {
 
-	private final JavaPlugin   plugin;
 	private final List<String> tableNames;
 
-	@Getter
 	private String host, database, username, password;
-	@Getter
-	private int port;
-
+	private int        port;
 	private Connection connection;
 	private String     table;
 
 	private HikariDataSource dataSource;
 
-	public MySQL(JavaPlugin plugin) {
-		this.plugin = plugin;
+	public MySQL() {
 		this.table = null;
 		this.tableNames = new ArrayList<>();
 	}

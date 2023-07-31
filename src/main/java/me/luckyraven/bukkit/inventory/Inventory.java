@@ -29,17 +29,14 @@ public class Inventory implements Listener {
 	public static final  int                           MAX_SLOTS   = 54;
 	private static final Map<NamespacedKey, Inventory> INVENTORIES = new HashMap<>();
 
-	@Getter
-	private final int                                              size;
-	private final List<Integer>                                    draggableSlots;
-	private final Map<Integer, BiConsumer<Inventory, ItemBuilder>> clickableSlots;
-	private final Map<Integer, ItemBuilder>                        clickableItem;
-	private final JavaPlugin                                       plugin;
+	private final @Getter int                                              size;
+	private final         List<Integer>                                    draggableSlots;
+	private final         Map<Integer, BiConsumer<Inventory, ItemBuilder>> clickableSlots;
+	private final         Map<Integer, ItemBuilder>                        clickableItem;
+	private final         JavaPlugin                                       plugin;
 
-	@Getter
-	private org.bukkit.inventory.Inventory inventory;
-	@Getter
-	private NamespacedKey                  title;
+	private @Getter org.bukkit.inventory.Inventory inventory;
+	private @Getter NamespacedKey                  title;
 
 	public Inventory(JavaPlugin plugin, String title, int size) {
 		this.plugin = plugin;
