@@ -37,9 +37,10 @@ public final class Initializer {
 	private final InformationManager  informationManager;
 	@Getter
 	private final UserManager<Player> userManager;
+	@Getter
+	private final FileManager     fileManager;
 
 	// on plugin enable
-	private @Getter FileManager     fileManager;
 	private @Getter DatabaseManager databaseManager;
 	private @Getter GangManager     gangManager;
 	private @Getter MemberManager   memberManager;
@@ -58,13 +59,12 @@ public final class Initializer {
 		informationManager.processCommands();
 
 		userManager = new UserManager<>();
+
+		fileManager = new FileManager(plugin);
+		files();
 	}
 
 	public void postInitialize() {
-		// Files
-		fileManager = new FileManager(plugin);
-		files();
-
 		// Addons
 		if (plugin instanceof Gangland gangland) {
 			settingAddon = new SettingAddon(fileManager);
@@ -118,8 +118,6 @@ public final class Initializer {
 //		fileManager.addFile(new FileHandler("scoreboard", ".yml"));
 //		fileManager.addFile(new FileHandler("kits", ".yml"));
 //		fileManager.addFile(new FileHandler("ammunition", ".yml"));
-//		fileManager.addFile(new FileHandler("spawn", "navigation", ".yml"));
-//		fileManager.addFile(new FileHandler("warp", "navigation", ".yml"));
 	}
 
 	private void databases() {
