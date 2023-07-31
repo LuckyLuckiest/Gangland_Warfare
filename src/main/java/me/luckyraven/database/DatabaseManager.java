@@ -27,6 +27,15 @@ public class DatabaseManager {
 		for (DatabaseHandler database : databases) database.initialize();
 	}
 
+	public void closeConnections() {
+		for (DatabaseHandler databaseHandler : databases) {
+			Database database = databaseHandler.getDatabase();
+			if (database != null && database.getConnection() != null) {
+				startBackup(plugin, databaseHandler).getDatabase().disconnect();
+			}
+		}
+	}
+
 	public DatabaseHandler startBackup(JavaPlugin plugin, DatabaseHandler handler) {
 		if (SettingAddon.isSqliteBackup()) try {
 			switch (handler.getType()) {
@@ -43,15 +52,6 @@ public class DatabaseManager {
 		return handler;
 	}
 
-	public void closeConnections() {
-		for (DatabaseHandler databaseHandler : databases) {
-			Database database = databaseHandler.getDatabase();
-			if (database != null && database.getConnection() != null) {
-				startBackup(plugin, databaseHandler).getDatabase().disconnect();
-			}
-		}
-	}
-
 	public List<DatabaseHandler> getDatabases() {
 		return new ArrayList<>(databases);
 	}
@@ -62,7 +62,8 @@ public class DatabaseManager {
 		for (String table : handler.getDatabase().getTables()) {
 			Database config = handler.getDatabase().table(table);
 
-			data.put(table, config.selectAll());
+			List<Object[]> info = config.selectAll();
+			if (!info.isEmpty()) data.put(table, config.selectAll());
 		}
 
 		// need to disable the database after gathering the information
