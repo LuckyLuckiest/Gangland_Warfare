@@ -235,7 +235,7 @@ public interface Database {
 	 *
 	 * @return length of the table provided.
 	 */
-	int totalRows();
+	int totalRows() throws SQLException;
 
 	/**
 	 * To delete all the data from the table leave <i><b>value</i></b> empty, and if yor specify the specified row using
