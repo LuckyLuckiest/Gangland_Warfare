@@ -15,11 +15,11 @@ import java.util.Map;
 
 public class RankDatabase extends DatabaseHandler {
 
-	private       String      schema;
+	private final String schema;
 
 	public RankDatabase(JavaPlugin plugin) {
 		super(plugin);
-		this.schema = "rank";
+		this.schema = "rank_tree";
 	}
 
 	@Override
@@ -33,7 +33,8 @@ public class RankDatabase extends DatabaseHandler {
 				map.put("port", SettingAddon.getMysqlPort());
 				map.put("username", SettingAddon.getMysqlUsername());
 			}
-			case DatabaseHandler.SQLITE -> this.schema = "database\\" + this.schema;
+			case DatabaseHandler.SQLITE -> {
+			}
 			default -> throw new IllegalArgumentException("Unknown database type");
 		}
 
@@ -42,11 +43,11 @@ public class RankDatabase extends DatabaseHandler {
 
 	@Override
 	public void createSchema() throws SQLException, IOException {
-		getDatabase().createSchema(schema);
+		getDatabase().createSchema(getSchema());
 
 		// Switch the schema only when using mysql, because it needs to create the schema from the connection
 		// then change the jdbc url to the new database
-		if (getType() == MYSQL) getDatabase().switchSchema(schema);
+		if (getType() == MYSQL) getDatabase().switchSchema(getSchema());
 	}
 
 	@Override
@@ -79,7 +80,11 @@ public class RankDatabase extends DatabaseHandler {
 
 	@Override
 	public String getSchema() {
-		return schema;
+		return switch (getType()) {
+			case DatabaseHandler.MYSQL -> schema;
+			case DatabaseHandler.SQLITE -> "database\\" + this.schema;
+			default -> null;
+		};
 	}
 
 	public void updateDataTable(Rank rank) throws SQLException {

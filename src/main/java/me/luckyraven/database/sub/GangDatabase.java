@@ -9,11 +9,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class GangDatabase extends DatabaseHandler {
 
-	private       String      schema;
+	private final String schema;
 
 	public GangDatabase(JavaPlugin plugin) {
 		super(plugin);
@@ -31,7 +34,8 @@ public class GangDatabase extends DatabaseHandler {
 				map.put("port", SettingAddon.getMysqlPort());
 				map.put("username", SettingAddon.getMysqlUsername());
 			}
-			case DatabaseHandler.SQLITE -> this.schema = "database\\" + this.schema;
+			case DatabaseHandler.SQLITE -> {
+			}
 			default -> throw new IllegalArgumentException("Unknown database type");
 		}
 
@@ -40,23 +44,24 @@ public class GangDatabase extends DatabaseHandler {
 
 	@Override
 	public void createSchema() throws SQLException, IOException {
-		getDatabase().createSchema(schema);
+		getDatabase().createSchema(getSchema());
 
 		// Switch the schema only when using mysql, because it needs to create the schema from the connection
 		// then change the jdbc url to the new database
-		if (getType() == MYSQL) getDatabase().switchSchema(schema);
+		if (getType() == MYSQL) getDatabase().switchSchema(getSchema());
 	}
 
 	@Override
 	public void createTables() throws SQLException {
-		getDatabase().table("data").createTable("id INT PRIMARY KEY UNIQUE NOT NULL", "name CHAR(16) NOT NULL",
-		                                        "display_name VARCHAR NOT NULL", "color VARCHAR NOT NULL",
+		getDatabase().table("data").createTable("id INT PRIMARY KEY NOT NULL", "name TEXT NOT NULL",
+		                                        "display_name TEXT NOT NULL", "color TEXT NOT NULL",
 		                                        "description TEXT NOT NULL", "balance DOUBLE NOT NULL",
 		                                        "bounty DOUBLE NOT NULL", "alias LONGTEXT NOT NULL",
 		                                        "created BIGINT NOT NULL");
-		getDatabase().table("members").createTable("uuid CHAR(36) PRIMARY KEY UNIQUE NOT NULL",
-		                                           "gang_id INT REFERENCES data (id)", "contribution DOUBLE NOT NULL",
-		                                           "rank VARCHAR NOT NULL", "join_date BIGINT NOT NULL");
+		getDatabase().table("members").createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "gang_id INT",
+		                                           "contribution DOUBLE NOT NULL", "position TEXT NOT NULL",
+		                                           "join_date BIGINT NOT NULL",
+		                                           "FOREIGN KEY (gang_id) REFERENCES data (id)");
 	}
 
 	@Override
@@ -66,7 +71,11 @@ public class GangDatabase extends DatabaseHandler {
 
 	@Override
 	public String getSchema() {
-		return schema;
+		return switch (getType()) {
+			case DatabaseHandler.MYSQL -> schema;
+			case DatabaseHandler.SQLITE -> "database\\" + this.schema;
+			default -> null;
+		};
 	}
 
 	public void updateDataTable(Gang gang) throws SQLException {
@@ -90,7 +99,7 @@ public class GangDatabase extends DatabaseHandler {
 
 	public void updateMembersTable(Member member) throws SQLException {
 		getDatabase().table("members").update("uuid = ?", new Object[]{member.getUuid()}, new int[]{Types.CHAR},
-		                                      new String[]{"gang_id", "contribution", "rank", "join_date"},
+		                                      new String[]{"gang_id", "contribution", "position", "join_date"},
 		                                      new Object[]{
 				                                      member.getGangId(), member.getContribution(),
 				                                      member.getRank() == null ? null : member.getRank().getName(),
