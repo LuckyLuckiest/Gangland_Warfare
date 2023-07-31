@@ -3,6 +3,7 @@ package me.luckyraven.bukkit.inventory;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
 import me.luckyraven.bukkit.ItemBuilder;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -152,15 +153,16 @@ public class Inventory implements Listener {
 	}
 
 	public void createBoarder() {
-		ItemBuilder itemBuilder = new ItemBuilder(Material.BLACK_STAINED_GLASS_PANE);
+		ItemBuilder itemBuilder = new ItemBuilder(getFillItem());
 
-		ItemStack item = itemBuilder.setDisplayName(null).build();
+		ItemStack item = itemBuilder.setDisplayName(SettingAddon.getInventoryFillName()).build();
 
 		int rows = inventory.getSize() / 9;
 
 		for (int i = 0; i < inventory.getSize(); i++) {
 			int row = i / 9;
 
+			// place items on the borders only
 			if (row == 0 || row == rows - 1 || i % 9 == 0 || i % 9 == 8) {
 				if (inventory.getItem(i) != null) continue;
 				inventory.setItem(i, item);
@@ -169,15 +171,20 @@ public class Inventory implements Listener {
 	}
 
 	public void fillInventory() {
-		ItemBuilder itemBuilder = new ItemBuilder(Material.BLACK_STAINED_GLASS_PANE);
+		ItemBuilder itemBuilder = new ItemBuilder(getFillItem());
 
-		ItemStack item = itemBuilder.setDisplayName(null).build();
+		ItemStack item = itemBuilder.setDisplayName(SettingAddon.getInventoryFillName()).build();
 
 		for (int i = 0; i < inventory.getSize(); i++) {
 			if (inventory.getItem(i) != null) continue;
 
 			inventory.setItem(i, item);
 		}
+	}
+
+	private Material getFillItem() {
+		Material item = Material.getMaterial(SettingAddon.getInventoryFillItem());
+		return item != null ? item : Material.BLACK_STAINED_GLASS_PANE;
 	}
 
 	public void open(Player player) {
