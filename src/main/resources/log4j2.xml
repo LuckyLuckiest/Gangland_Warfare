@@ -1,0 +1,7 @@
+<Configuration status="debug">
+    <Loggers>
+        <Logger name="com.zaxxer.hikari" level="error"/>
+        <Logger name="com.zaxxer.hikari.HikariConfig" level="error"/>
+        <Logger name="com.zaxxer.hikari.pool.HikariPool" level="error"/>
+    </Loggers>
+</Configuration>
