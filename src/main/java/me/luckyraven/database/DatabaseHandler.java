@@ -60,7 +60,7 @@ public abstract class DatabaseHandler {
 			case MYSQL -> {
 				this.database = new MySQL(plugin);
 
-				String schema = getSchemaName();
+				String schema = getSchema();
 
 				try {
 					this.database.initialize(credentials, schema);
@@ -106,7 +106,7 @@ public abstract class DatabaseHandler {
 				try {
 					enforceType(MYSQL);
 				} catch (RuntimeException exception) {
-					useSQLite(getSchemaName());
+					useSQLite(getSchema());
 				}
 			}
 			case SQLITE -> enforceType(SQLITE);
