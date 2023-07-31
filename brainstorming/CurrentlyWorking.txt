@@ -1,65 +1,64 @@
 0.0.1-DEV: (DONE)
-	- Command
-	- Data management
-	- File management
-	- Listener manager
-	- Chat and reload utils
-	- Simple wanted
-	- User interface
-	- Ranks
-	- Economy
-	- Accounts
+	- Command.
+	- Data management.
+	- File management.
+	- Listener manager.
+	- Chat and reload utils.
+	- Simple wanted.
+	- User interface.
+	- Ranks.
+	- Economy.
+	- Accounts.
 
 0.0.2-DEV: (DONE)
-	- messages file
-	- wanted level
-	- Database system
+	- Messages file.
+	- Wanted level.
+	- Database system.
 
 0.0.3-DEV: (DONE)
-	- loading player data
-	- saving player data using database helper
-	- loading gang data
-	- Bank, creating and saving to banks using commands
-	- Economy, depositing and withdrawing commands
+	- Loading player data.
+	- Saving player data using database helper.
+	- Loading gang data.
+	- Bank, creating and saving to banks using commands.
+	- Economy, depositing and withdrawing commands.
 
 0.0.4-DEV: (DONE)
-	- creating and managing ranks using commands
-	- handling ranks in a database
-	- ranks hierarchy to easily promote and demote users
-	- creating gang data using commands
-	- saving gang data using database helper
+	- Creating and managing ranks using commands.
+	- Handling ranks in a database.
+	- Ranks hierarchy to easily promote and demote users.
+	- Creating gang data using commands.
+	- Saving gang data using database helper.
 
 0.0.5-DEV:
-	- need to build component builder that would understand other sql languages
-	- when using mysql, save the data into sqlite (using backup)
-	- Multiple inventory pages system
-	- Changing gang description using Anvil GUI
-	- add a searching mechanism for gangs list (use GUIs)
-	- bounty
-	- phone
+	- When using mysql, save the data into sqlite (using backup).
+	- Multiple inventory pages system.
+	- Changing gang description using Sign GUI.
+	- Add a searching mechanism for a gang list (use GUIs).
+	- Bounty.
+	- Phone.
 
 0.0.6-DEV:
-    - Add custom inventories in YAML files
-	- Economy system (implement vault dependency)
-    - level system
-    - Gang settings
+    - Add custom inventories in YAML files.
+	- Economy system (implement vault dependency).
+    - Level system.
+    - Gang settings.
 
 0.0.7-DEV:
-	- Enhance wanted level
-    - working permissions in ranks
-	- Gang attacks
-	- Gang challenges
+	- Enhance wanted level.
+    - Working permissions in ranks.
+	- Gang attacks.
+	- Gang challenges.
 
 0.0.8-DEV:
-	- Safes heist
-	- Purchasable houses
-	- Cars
+	- Safes heist.
+	- Purchasable houses.
+	- Cars.
 
 0.0.9-DEV:
-	- Fully functional Heist system
-	- Weapons
-	- Warps and spawns
-	- Gang spawn and homes
+	- Fully functional Heist system.
+	- Weapons.
+	- Warps and spawns.
+	- Gang spawn and home.
 
 0.1-DEV:
 	- Fixing bugs as much as possible
