@@ -51,7 +51,7 @@ public abstract class DatabaseHandler {
 		helper.runQueries(db -> insertInitialData());
 	}
 
-	public void setType(int type) {
+	public void enforceType(int type) {
 		this.type = type;
 
 		Map<String, Object> credentials = credentials();
@@ -66,7 +66,8 @@ public abstract class DatabaseHandler {
 					this.database.initialize(credentials, schema);
 				} catch (SQLException exception) {
 					this.database = null;
-					useSQLite(schema);
+
+					throw new RuntimeException(exception.getMessage());
 				}
 			}
 			case SQLITE -> {
@@ -93,6 +94,22 @@ public abstract class DatabaseHandler {
 					throw new RuntimeException(exception.getMessage());
 				}
 			}
+			default -> throw new IllegalArgumentException("Unknown database type");
+		}
+	}
+
+	public void setType(int type) {
+		this.type = type;
+
+		switch (type) {
+			case MYSQL -> {
+				try {
+					enforceType(MYSQL);
+				} catch (RuntimeException exception) {
+					useSQLite(getSchemaName());
+				}
+			}
+			case SQLITE -> enforceType(SQLITE);
 			default -> throw new IllegalArgumentException("Unknown database type");
 		}
 	}
