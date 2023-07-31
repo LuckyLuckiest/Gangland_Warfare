@@ -20,8 +20,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.sql.SQLException;
-
 @Getter
 public final class Gangland extends JavaPlugin {
 
@@ -35,11 +33,7 @@ public final class Gangland extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		DatabaseManager databaseManager = initializer.getDatabaseManager();
-		if (!databaseManager.getDatabases().isEmpty()) try {
-			databaseManager.closeConnections();
-		} catch (SQLException exception) {
-			getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
-		}
+		if (!databaseManager.getDatabases().isEmpty()) databaseManager.closeConnections();
 	}
 
 	@Override
