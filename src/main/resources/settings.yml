@@ -70,6 +70,7 @@ Inventory:
 # | Bounty Config | #
 # +---------------+ #
 Bounty:
+   Enable: true
    Kill:
       # Each kill committed will be added on the total bounty amount.
       Each: 5
@@ -87,6 +88,7 @@ Bounty:
 # | Phone Config | #
 # +--------------+ #
 Phone:
+   Enable: true
    Item: REDSTONE
    # The slots are from 0-8, and they are in the hot-bar only.
    Slot: 8
