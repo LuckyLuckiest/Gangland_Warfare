@@ -3,10 +3,7 @@ package me.luckyraven.database.sub;
 import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.Member;
 import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.file.FileManager;
-import me.luckyraven.util.UnhandledError;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
+import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
@@ -16,14 +13,10 @@ import java.util.*;
 
 public class GangDatabase extends DatabaseHandler {
 
-	private final JavaPlugin  plugin;
-	private final FileManager fileManager;
 	private       String      schema;
 
-	public GangDatabase(JavaPlugin plugin, FileManager fileManager) {
+	public GangDatabase(JavaPlugin plugin) {
 		super(plugin);
-		this.plugin = plugin;
-		this.fileManager = fileManager;
 		this.schema = "gang";
 	}
 
@@ -33,18 +26,10 @@ public class GangDatabase extends DatabaseHandler {
 
 		switch (getType()) {
 			case DatabaseHandler.MYSQL -> {
-				try {
-					fileManager.checkFileLoaded("settings");
-
-					FileConfiguration settings = fileManager.getFile("settings").getFileConfiguration();
-
-					ConfigurationSection section = settings.getConfigurationSection("Database.MySQL");
-
-					for (String key : Objects.requireNonNull(section).getKeys(false))
-						map.put(key.toLowerCase(), section.get(key));
-				} catch (IOException exception) {
-					plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR + ": " + exception.getMessage());
-				}
+				map.put("host", SettingAddon.getMysqlHost());
+				map.put("password", SettingAddon.getMysqlPassword());
+				map.put("port", SettingAddon.getMysqlPort());
+				map.put("username", SettingAddon.getMysqlUsername());
 			}
 			case DatabaseHandler.SQLITE -> this.schema = "database\\" + this.schema;
 			default -> throw new IllegalArgumentException("Unknown database type");

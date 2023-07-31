@@ -4,10 +4,7 @@ import me.luckyraven.account.Account;
 import me.luckyraven.account.type.Bank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.file.FileManager;
-import me.luckyraven.util.UnhandledError;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
+import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -16,18 +13,13 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class UserDatabase extends DatabaseHandler {
 
-	private final JavaPlugin  plugin;
-	private final FileManager fileManager;
 	private       String      schema;
 
-	public UserDatabase(JavaPlugin plugin, FileManager fileManager) {
+	public UserDatabase(JavaPlugin plugin) {
 		super(plugin);
-		this.plugin = plugin;
-		this.fileManager = fileManager;
 		this.schema = "user";
 	}
 
@@ -37,18 +29,10 @@ public class UserDatabase extends DatabaseHandler {
 
 		switch (getType()) {
 			case DatabaseHandler.MYSQL -> {
-				try {
-					fileManager.checkFileLoaded("settings");
-
-					FileConfiguration settings = fileManager.getFile("settings").getFileConfiguration();
-
-					ConfigurationSection section = settings.getConfigurationSection("Database.MySQL");
-
-					for (String key : Objects.requireNonNull(section).getKeys(false))
-						map.put(key.toLowerCase(), section.get(key));
-				} catch (IOException exception) {
-					plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR + ": " + exception.getMessage());
-				}
+				map.put("host", SettingAddon.getMysqlHost());
+				map.put("password", SettingAddon.getMysqlPassword());
+				map.put("port", SettingAddon.getMysqlPort());
+				map.put("username", SettingAddon.getMysqlUsername());
 			}
 			case DatabaseHandler.SQLITE -> this.schema = "database\\" + this.schema;
 			default -> throw new IllegalArgumentException("Unknown database type");
