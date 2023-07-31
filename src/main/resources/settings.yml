@@ -51,9 +51,9 @@ Database:
       Host: localhost
       Port: 3306
       Username: root
-      Password: ''
+      Password: ""
    SQLite:
-      # Will create a backup if the type is mysql
+      # Will create a backup if the type is mysql or sqlite
       Backup: true
       # Will use SQLite if unable to connect to MySQL
       Failed_MySQL: true
