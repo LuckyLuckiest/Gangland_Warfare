@@ -12,9 +12,11 @@ public class SettingAddon {
 	@Getter
 	private static FileConfiguration settings;
 
+	// language picked
 	@Getter
 	private static String languagePicked;
 
+	// database configuration
 	@Getter
 	private static String databaseType;
 	@Getter
@@ -24,15 +26,18 @@ public class SettingAddon {
 	@Getter
 	private static boolean sqliteBackup, sqliteFailedMysql;
 
+	// inventory configuration
+	@Getter
+	private static String inventoryFillItem, inventoryFillName;
+
 	@Getter
 	private static String moneySymbol, balanceFormat;
-
 	@Getter
 	private static double playerInitialBalance, playerMaxBalance;
-
 	@Getter
 	private static double bankInitialBalance, bankCreateFee, bankMaxBalance;
 
+	// bounty configuration
 	@Getter
 	private static double bountyEachKillValue, bountyMaxKill;
 	@Getter
@@ -42,6 +47,7 @@ public class SettingAddon {
 	@Getter
 	private static int bountyTimeInterval;
 
+	// phone configuration
 	@Getter
 	private static String  phoneItem;
 	@Getter
@@ -49,6 +55,7 @@ public class SettingAddon {
 	@Getter
 	private static boolean phoneMovable, phoneDroppable;
 
+	// gang configuration
 	@Getter
 	private static boolean gangEnable, gangNameDuplicates;
 	@Getter
@@ -82,6 +89,9 @@ public class SettingAddon {
 		mysqlPort = settings.getInt("Database.MySQL.Port");
 		sqliteBackup = settings.getBoolean("Database.SQLite.Backup");
 		sqliteFailedMysql = settings.getBoolean("Database.SQLite.Failed_MySQL");
+
+		inventoryFillItem = settings.getString("Inventory.Fill.Item");
+		inventoryFillName = settings.getString("Inventory.Fill.Name");
 
 		moneySymbol = Objects.requireNonNull(settings.getString("Money_Symbol")).substring(0, 1);
 
