@@ -469,4 +469,35 @@ public class SQLite implements Database {
 		return columns;
 	}
 
+	@Override
+	public List<Integer> getColumnsDataType(String... columns) throws SQLException {
+		if (connection == null) throw new SQLException("There is no connection");
+		Preconditions.checkNotNull(table, "Invalid table");
+
+		StringBuilder query = new StringBuilder("SELECT ");
+		for (int i = 0; i < columns.length; i++) {
+			query.append(columns[i]);
+			if (i < columns.length - 1) query.append(", ");
+		}
+
+		query.append(" FROM ").append(table).append(";");
+
+		List<String> cols = new ArrayList<>(List.of(columns));
+		if (columns.length == 1 && columns[0].equals("*")) cols = new ArrayList<>(getColumns());
+
+		Map<String, Class<?>> columnTypes;
+
+		try (ResultSet resultSet = executeQuery(query.toString())) {
+			columnTypes = getColumnTypes(resultSet);
+		}
+
+		List<Integer> dataTypes = new ArrayList<>();
+		for (String columnName : cols) {
+			Class<?> columnType = columnTypes.get(columnName);
+			dataTypes.add(getColumnType(columnType));
+		}
+
+		return dataTypes;
+	}
+
 }

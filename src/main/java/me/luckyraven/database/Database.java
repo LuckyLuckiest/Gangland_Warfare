@@ -284,6 +284,8 @@ public interface Database {
 	 */
 	List<String> getColumns() throws SQLException;
 
+	List<Integer> getColumnsDataType(String... columns) throws SQLException;
+
 	/**
 	 * Prepare placeholder statements by converting the placeholders into their appropriate data type.
 	 *
@@ -362,6 +364,19 @@ public interface Database {
 			case Types.NULL, Types.NUMERIC -> null;
 			default -> String.class;
 		};
+	}
+
+	default int getColumnType(Class<?> columnType) {
+		if (columnType == null) return Types.NULL;
+		if (columnType.equals(Byte.class)) return Types.TINYINT;
+		if (columnType.equals(Short.class)) return Types.SMALLINT;
+		if (columnType.equals(Integer.class)) return Types.INTEGER;
+		if (columnType.equals(Long.class)) return Types.BIGINT;
+		if (columnType.equals(Float.class)) return Types.FLOAT;
+		if (columnType.equals(Double.class)) return Types.DOUBLE;
+		if (columnType.equals(Boolean.class)) return Types.BOOLEAN;
+		if (columnType.equals(LocalDateTime.class)) return Types.TIMESTAMP;
+		return Types.VARCHAR;
 	}
 
 	/**
