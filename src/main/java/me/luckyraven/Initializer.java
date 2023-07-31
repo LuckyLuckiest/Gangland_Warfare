@@ -130,15 +130,15 @@ public final class Initializer {
 			case "sqlite" -> type = DatabaseHandler.SQLITE;
 		}
 
-		UserDatabase userDatabase = new UserDatabase(plugin, fileManager);
+		UserDatabase userDatabase = new UserDatabase(plugin);
 		userDatabase.setType(type);
 		databaseManager.addDatabase(userDatabase);
 
-		GangDatabase gangDatabase = new GangDatabase(plugin, fileManager);
+		GangDatabase gangDatabase = new GangDatabase(plugin);
 		gangDatabase.setType(type);
 		databaseManager.addDatabase(gangDatabase);
 
-		RankDatabase rankDatabase = new RankDatabase(plugin, fileManager);
+		RankDatabase rankDatabase = new RankDatabase(plugin);
 		rankDatabase.setType(type);
 		databaseManager.addDatabase(rankDatabase);
 	}
