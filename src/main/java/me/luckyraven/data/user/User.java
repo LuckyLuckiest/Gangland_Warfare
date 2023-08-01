@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.account.Account;
 import me.luckyraven.bounty.Bounty;
+import me.luckyraven.phone.Phone;
 import me.luckyraven.rank.Rank;
 import me.luckyraven.wanted.Wanted;
 
@@ -25,7 +26,7 @@ public class User<T> {
 	private @Getter
 	@Setter int kills, deaths, mobKills, gangId;
 	private @Getter
-	@Setter double balance;
+	@Setter         double  balance;
 	private @Setter boolean hasBank;
 
 	private @Getter Bounty bounty;
@@ -34,7 +35,8 @@ public class User<T> {
 	@Setter Rank   rank;
 	private @Getter
 	@Setter Wanted wanted;
-
+	private @Getter
+	@Setter Phone  phone;
 
 	/**
 	 * Instantiates a new Database.
