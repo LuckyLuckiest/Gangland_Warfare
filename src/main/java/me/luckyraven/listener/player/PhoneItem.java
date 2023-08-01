@@ -1,28 +1,43 @@
 package me.luckyraven.listener.player;
 
-import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.Gangland;
+import me.luckyraven.data.user.User;
+import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.SettingAddon;
-import org.bukkit.Material;
+import me.luckyraven.phone.Phone;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 public class PhoneItem implements Listener {
 
-	@EventHandler(priority = EventPriority.LOWEST)
+	private final UserManager<Player> userManager;
+
+	public PhoneItem(Gangland gangland) {
+		this.userManager = gangland.getInitializer().getUserManager();
+	}
+
+	@EventHandler(priority = EventPriority.LOW)
 	public void onJoinGivePhone(PlayerJoinEvent event) {
 		// when the user joins, check if their inventory contains the specific nbt item
 		// if they don't have the item then add it to the inventory
 		Player player = event.getPlayer();
-		if (!hasPhone(player)) givePhoneItem(player);
+		Phone  phone  = new Phone(SettingAddon.getPhoneName());
+
+		if (!Phone.hasPhone(player)) phone.addPhoneToInventory(player);
+
+		User<Player> user = userManager.getUser(player);
+		user.setPhone(phone);
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -34,7 +49,7 @@ public class PhoneItem implements Listener {
 		ItemStack clickedItem      = event.getCurrentItem();
 
 		if (clickedItem == null || clickedItem.getType().name().contains("AIR") || clickedItem.getAmount() == 0) return;
-		if (clickedInventory.equals(event.getWhoClicked().getInventory())) if (!isPhoneItem(clickedItem)) return;
+		if (clickedInventory.equals(event.getWhoClicked().getInventory())) if (!Phone.isPhone(clickedItem)) return;
 		if (!SettingAddon.isPhoneMovable()) return;
 
 		event.setCancelled(true);
@@ -45,7 +60,16 @@ public class PhoneItem implements Listener {
 		ItemStack heldItem = event.getItem();
 
 		if (heldItem == null) return;
-		if (!isPhoneItem(heldItem)) return;
+		if (!Phone.isPhone(heldItem)) return;
+
+		Player       player = event.getPlayer();
+		User<Player> user   = userManager.getUser(player);
+		Phone        phone  = user.getPhone();
+
+		if (phone == null) return;
+
+		if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK)
+			phone.openInventory(player);
 
 		event.setCancelled(true);
 	}
@@ -54,54 +78,48 @@ public class PhoneItem implements Listener {
 	public void onPhoneItemDrop(PlayerDropItemEvent event) {
 		ItemStack droppedItem = event.getItemDrop().getItemStack();
 
-		if (!isPhoneItem(droppedItem)) return;
+		if (!Phone.isPhone(droppedItem)) return;
 		if (!SettingAddon.isPhoneDroppable()) return;
 
 		event.setCancelled(true);
 	}
 
-	private boolean hasPhone(Player player) {
-		Material    phoneItem = getPhoneMaterial();
-		ItemStack[] contents  = player.getInventory().getContents();
+	@EventHandler
+	public void beforePlayerDeath(EntityDamageEvent event) {
+		if (!(event.getEntity() instanceof Player player)) return;
 
-		for (ItemStack item : contents)
-			if (item != null && item.getType() == phoneItem) {
-				if (isPhoneItem(item)) return true;
-			}
+		double remainingHealth = player.getHealth() - event.getFinalDamage();
+		if (remainingHealth > 0) return;
 
-		return false;
+		if (!SettingAddon.isPhoneDroppable()) return;
+
+		User<Player> user = userManager.getUser(player);
+
+		if (Phone.hasPhone(player)) {
+			// locate where the item is and remove it
+			ItemStack[] contents = player.getInventory().getContents();
+
+			for (int i = 0; i < contents.length; i++)
+				if (contents[i] != null && Phone.isPhone(contents[i])) {
+					player.getInventory().setItem(i, null);
+					break;
+				}
+		}
+
+		user.setPhone(null);
 	}
 
-	private void givePhoneItem(Player player) {
-		Material phoneItem = getPhoneMaterial();
+	@EventHandler
+	public void onPlayerRespawn(PlayerRespawnEvent event) {
+		Player       player = event.getPlayer();
+		User<Player> user   = userManager.getUser(player);
 
-		ItemBuilder itemBuilder = new ItemBuilder(phoneItem).setDisplayName("&3Phone");
+		if (user.getPhone() == null && !Phone.hasPhone(player)) {
+			Phone phone = new Phone(SettingAddon.getPhoneName());
 
-		itemBuilder.addTag("uniquePhone", "phone");
-
-		if (!addItem(player, SettingAddon.getPhoneSlot(), itemBuilder.build())) player.sendMessage(
-				MessageAddon.INVENTORY_FULL.toString());
-	}
-
-	private boolean addItem(Player player, int slot, ItemStack itemStack) {
-		if (slot >= player.getInventory().getSize() || slot > 35) return false;
-
-		// TODO it places the item in armor slots
-		if (player.getInventory().getItem(slot) != null) return addItem(player, slot + 1, itemStack);
-		else player.getInventory().setItem(slot, itemStack);
-
-		return true;
-	}
-
-	private boolean isPhoneItem(ItemStack item) {
-		ItemBuilder itemCheck = new ItemBuilder(item);
-		return itemCheck.hasNBTTag("uniquePhone");
-	}
-
-	private Material getPhoneMaterial() {
-		Material phoneItem = Material.matchMaterial(SettingAddon.getPhoneItem());
-		if (phoneItem == null) return Material.REDSTONE;
-		return phoneItem;
+			phone.addPhoneToInventory(player);
+			user.setPhone(phone);
+		}
 	}
 
 }
