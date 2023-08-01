@@ -3,6 +3,7 @@ package me.luckyraven.database;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import javax.annotation.Nullable;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,13 +30,17 @@ public class DatabaseManager {
 
 	public void closeConnections() {
 		for (DatabaseHandler databaseHandler : databases) {
-			Database database = databaseHandler.getDatabase();
-			if (database != null && database.getConnection() != null) {
-				startBackup(plugin, databaseHandler).getDatabase().disconnect();
-			}
+			Database        database = databaseHandler.getDatabase();
+			DatabaseHandler backup   = null;
+
+			if (database != null && database.getConnection() != null) backup = startBackup(plugin, databaseHandler);
+
+			if (backup != null && backup.getDatabase() != null && backup.getDatabase().getConnection() != null)
+				backup.getDatabase().disconnect();
 		}
 	}
 
+	@Nullable
 	public DatabaseHandler startBackup(JavaPlugin plugin, DatabaseHandler handler) {
 		if (SettingAddon.isSqliteBackup()) try {
 			switch (handler.getType()) {
@@ -45,8 +50,14 @@ public class DatabaseManager {
 
 			plugin.getLogger().info(String.format("Backup done for '%s' database", handler.getSchemaName()));
 		} catch (Exception exception) {
+			String type = "";
+			switch (handler.getType()) {
+				case DatabaseHandler.MYSQL -> type = "MySQL";
+				case DatabaseHandler.SQLITE -> type = "SQLite";
+			}
+
 			plugin.getLogger().info(
-					String.format("Failed to create a backup for MySQL in '%s' database.", handler.getSchema()));
+					String.format("Failed to create a backup for '%s' in '%s' database.", type, handler.getSchema()));
 		}
 
 		return handler;
