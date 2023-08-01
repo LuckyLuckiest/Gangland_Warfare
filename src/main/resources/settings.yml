@@ -45,7 +45,7 @@ Language: en
 # +-----------------+ #
 Database:
    # Specify which type of database to be used, [mysql, sqlite]
-   Type: mysql
+   Type: sqlite
    MySQL:
       # Necessary credentials to enter your database
       Host: localhost
@@ -90,6 +90,7 @@ Bounty:
 Phone:
    Enable: true
    Item: REDSTONE
+   Name: "&3&k|| &rPhone &3&k||"
    # The slots are from 0-8, and they are in the hot-bar only.
    Slot: 8
    # If the item was movable
