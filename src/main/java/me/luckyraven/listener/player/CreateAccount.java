@@ -42,7 +42,8 @@ public final class CreateAccount implements Listener {
 		this.userManager = gangland.getInitializer().getUserManager();
 	}
 
-	@EventHandler(priority = EventPriority.HIGHEST)
+	// Need to create the account before any other event
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		Player       player = event.getPlayer();
 		User<Player> user   = new User<>(player);
@@ -68,8 +69,8 @@ public final class CreateAccount implements Listener {
 				initializeMemberData(newMember, new DatabaseHelper(gangland, handler));
 				break;
 			}
-		memberManager.add(newMember);
 
+		memberManager.add(newMember);
 	}
 
 	public void initializeUserData(User<Player> user, DatabaseHelper helper) {

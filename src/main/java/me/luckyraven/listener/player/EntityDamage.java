@@ -31,7 +31,7 @@ public class EntityDamage implements Listener {
 		this.userManager = gangland.getInitializer().getUserManager();
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler
 	public void onPlayerEntityDeath(EntityDamageByEntityEvent event) {
 		Player damager;
 		if (event.getDamager() instanceof Player player) damager = player;
