@@ -10,8 +10,10 @@ import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.dependency.GanglandExpansion;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
+import me.luckyraven.phone.Phone;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -84,7 +86,14 @@ public final class Gangland extends JavaPlugin {
 
 		for (Player player : Bukkit.getOnlinePlayers())
 			if (!userManager.contains(userManager.getUser(player))) {
+				Phone        phone   = new Phone(SettingAddon.getPhoneName());
 				User<Player> newUser = new User<>(player);
+
+				if (SettingAddon.isPhoneEnabled()) {
+					newUser.setPhone(phone);
+					if (!Phone.hasPhone(player)) phone.addPhoneToInventory(player);
+				}
+
 				createAccount.initializeUserData(newUser, helper);
 				userManager.add(newUser);
 
