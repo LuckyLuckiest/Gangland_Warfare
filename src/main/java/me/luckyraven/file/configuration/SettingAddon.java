@@ -30,6 +30,7 @@ public class SettingAddon {
 	@Getter
 	private static String inventoryFillItem, inventoryFillName;
 
+	// economy
 	@Getter
 	private static String moneySymbol, balanceFormat;
 	@Getter
@@ -49,7 +50,9 @@ public class SettingAddon {
 
 	// phone configuration
 	@Getter
-	private static String  phoneItem;
+	private static boolean phoneEnabled;
+	@Getter
+	private static String  phoneItem, phoneName;
 	@Getter
 	private static int     phoneSlot;
 	@Getter
@@ -80,8 +83,10 @@ public class SettingAddon {
 	}
 
 	private void initialize() {
+		// language picked
 		languagePicked = settings.getString("Language");
 
+		// database
 		databaseType = settings.getString("Database.Type");
 		mysqlHost = settings.getString("Database.MySQL.Host");
 		mysqlUsername = settings.getString("Database.MySQL.Username");
@@ -90,20 +95,20 @@ public class SettingAddon {
 		sqliteBackup = settings.getBoolean("Database.SQLite.Backup");
 		sqliteFailedMysql = settings.getBoolean("Database.SQLite.Failed_MySQL");
 
+		// inventory
 		inventoryFillItem = settings.getString("Inventory.Fill.Item");
 		inventoryFillName = settings.getString("Inventory.Fill.Name");
 
+		// economy
 		moneySymbol = Objects.requireNonNull(settings.getString("Money_Symbol")).substring(0, 1);
-
 		balanceFormat = settings.getString("Balance_Format.Format");
-
 		playerInitialBalance = settings.getDouble("Player_Account.First_Balance");
 		playerMaxBalance = settings.getDouble("Player_Account.Maximum_Balance");
-
 		bankInitialBalance = settings.getDouble("Bank_Account.First_Balance");
 		bankCreateFee = settings.getDouble("Bank_Account.Create_Cost");
 		bankMaxBalance = settings.getDouble("Bank_Account.Maximum_Balance");
 
+		// bounty
 		bountyEachKillValue = settings.getDouble("Bounty.Kill.Each");
 		bountyMaxKill = settings.getDouble("Bounty.Kill.Max");
 		bountyTimerEnable = settings.getBoolean("Bounty.Repeating_Timer.Enable");
@@ -111,11 +116,15 @@ public class SettingAddon {
 		bountyTimeInterval = settings.getInt("Bounty.Repeating_Timer.Time");
 		bountyTimerMax = settings.getDouble("Bounty.Repeating_Timer.Max");
 
+		// phone
+		phoneEnabled = settings.getBoolean("Phone.Enabled");
 		phoneItem = settings.getString("Phone.Item");
+		phoneName = settings.getString("Phone.Name");
 		phoneSlot = settings.getInt("Phone.Slot");
 		phoneMovable = !settings.getBoolean("Phone.Movable");
 		phoneDroppable = !settings.getBoolean("Phone.Droppable");
 
+		// gang
 		gangEnable = settings.getBoolean("Gang.Enable");
 		gangNameDuplicates = settings.getBoolean("Gang.Name_Duplicates");
 		gangRankHead = settings.getString("Gang.Rank.Head");
