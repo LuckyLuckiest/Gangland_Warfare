@@ -115,8 +115,10 @@ public class ItemBuilder {
 		return itemStack;
 	}
 
-	public void addTag(String tag, String value) {
+	public ItemBuilder addTag(String tag, String value) {
 		modifyNBT(nbt -> nbt.setString(tag, value));
+
+		return this;
 	}
 
 	public boolean hasNBTTag(String tag) {
