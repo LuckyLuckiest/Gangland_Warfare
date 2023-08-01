@@ -145,7 +145,7 @@ public final class Initializer {
 			listenerManager.addEvent(new GangMembersDamage(gangland));
 			listenerManager.addEvent(new EntityDamage(gangland));
 			listenerManager.addEvent(new BountyIncrease());
-			listenerManager.addEvent(new PhoneItem());
+			if (SettingAddon.isPhoneEnabled()) listenerManager.addEvent(new PhoneItem(gangland));
 
 			// inventory gui test double listener
 			listenerManager.addEvent(new Inventory(gangland, "dummy", 9));
