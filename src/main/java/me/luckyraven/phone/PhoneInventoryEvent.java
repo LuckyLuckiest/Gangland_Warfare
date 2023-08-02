@@ -20,9 +20,9 @@ public class PhoneInventoryEvent extends Event implements Cancellable {
 
 	private boolean cancelled;
 
-	public PhoneInventoryEvent(User<Player> user, Phone phone) {
+	public PhoneInventoryEvent(User<Player> user) {
 		this.user = user;
-		this.phone = phone;
+		this.phone = user.getPhone();
 		this.inventory = phone.getInventory();
 		this.cancelled = false;
 	}

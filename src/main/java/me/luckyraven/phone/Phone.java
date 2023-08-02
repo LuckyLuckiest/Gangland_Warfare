@@ -4,6 +4,7 @@ import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.Inventory;
+import me.luckyraven.data.user.User;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.Material;
@@ -17,14 +18,15 @@ public class Phone {
 	private final @Getter String      name;
 	private final         Inventory   inventory;
 	private final         ItemBuilder item;
-
+	private final         Gangland    gangland;
 
 	private @Getter String displayName;
 
 	public Phone(String name) {
 		this.name = name;
 		this.displayName = name;
-		this.inventory = new Inventory(JavaPlugin.getPlugin(Gangland.class), displayName, Inventory.MAX_SLOTS);
+		this.gangland = JavaPlugin.getPlugin(Gangland.class);
+		this.inventory = new Inventory(gangland, displayName, Inventory.MAX_SLOTS);
 		this.item = new ItemBuilder(getPhoneMaterial()).setDisplayName(displayName).addTag("uniqueItem", "phone");
 
 		populateInventory();
@@ -57,6 +59,13 @@ public class Phone {
 	}
 
 	public void openInventory(Player player) {
+		User<Player> user = gangland.getInitializer().getUserManager().getUser(player);
+
+		if (user != null) {
+			PhoneInventoryEvent event = new PhoneInventoryEvent(user);
+			gangland.getServer().getPluginManager().callEvent(event);
+		}
+
 		inventory.open(player);
 	}
 
