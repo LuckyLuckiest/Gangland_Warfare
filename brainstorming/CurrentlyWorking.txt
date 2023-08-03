@@ -37,34 +37,63 @@
 	- Bounty.
 	- Phone.
 
-0.0.6-DEV:
-    - Add custom inventories in YAML files.
-	- Economy system (implement vault dependency).
+0.0.61-DEV:
     - Level system.
-    - Gang settings.
-
-0.0.7-DEV:
-	- Enhance wanted level.
-    - Working permissions in ranks.
-	- Gang attacks.
-	- Gang challenges.
-
-0.0.8-DEV:
-	- Safes heist.
-	- Purchasable houses.
-	- Cars.
-
-0.0.9-DEV:
-	- Fully functional Heist system.
-	- Weapons.
+0.0.62-DEV:
+	- Economy system (implement vault dependency).
+0.0.63-DEV:
 	- Warps and spawns.
-	- Gang spawn and home.
+0.0.64-DEV:
+    - Gang settings.
+0.0.65-DEV:
+    - Add custom inventories in YAML files.
 
-0.1-DEV:
+0.0.71-DEV:
+	- Gang spawn and home.
+0.0.72-DEV:
+	- Enhance wanted level.
+0.0.73-DEV:
 	- Add features registration, to enable specific features (e.g., gang, bounty, etc...) or not.
+    - Working permissions in ranks.
+0.0.7-BETA:
+    - The release of the plugin
+
+... Before the end of the summer holidays ...
+
+0.0.74-DEV:
+    - Bug fixes for the previous features.
+0.0.75-DEV:
+    - Synchronization of "maps" to handle multiple players.
+    - Inventory interactions for multiple players.
+
+... Can release the plugin as a BETA version ...
+All the features afterward are updates that supposedly can be the roadmap
+
+0.0.81-DEV:
+	- Gang attacks.
+0.0.82-DEV:
+	- Gang challenges.
+0.0.83-DEV:
+	- Cars.
+0.0.8-BETA:
+    - Update the plugin.
+
+0.0.91-DEV:
+	- Safes heist.
+0.0.92-DEV:
+	- Purchasable houses.
+0.0.93-DEV:
+	- Fully functional Heist system.
+0.0.94-DEV:
+	- Weapons.
+0.0.9-BETA:
+    - Update the plugin.
+
+0.1-BETA:
 	- Fixing bugs as much as possible.
 
 0.1.1:
-	- Release the plugin
+	- Either end BETA and enter full release
+	- Or stick with dev and beta builds
 
 expected release on v0.1.1
