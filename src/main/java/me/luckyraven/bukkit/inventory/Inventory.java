@@ -37,9 +37,11 @@ public class Inventory implements Listener {
 
 	private @Getter org.bukkit.inventory.Inventory inventory;
 	private @Getter NamespacedKey                  title;
+	private @Getter String                         displayTitle;
 
 	public Inventory(JavaPlugin plugin, String title, int size) {
 		this.plugin = plugin;
+		this.displayTitle = title;
 		this.title = new NamespacedKey(plugin, titleRefactor(title));
 
 		int realSize = factorOfNine(size);
@@ -66,6 +68,7 @@ public class Inventory implements Listener {
 		// remove the old inventory
 		INVENTORIES.remove(title);
 
+		this.displayTitle = name;
 		this.title = new NamespacedKey(plugin, titleRefactor(name));
 		INVENTORIES.put(this.title, this);
 	}
@@ -75,7 +78,7 @@ public class Inventory implements Listener {
 
 		String pattern = "[^a-z0-9/._-]";
 
-		String value = title.replaceAll(" ", "_");
+		String value = title.toLowerCase().replaceAll(" ", "_");
 
 		int count = (int) value.chars().filter(c -> c == '&').count();
 		for (int i = 0; i < count; i++) {
