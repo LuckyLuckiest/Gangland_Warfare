@@ -81,6 +81,8 @@ public enum MessageAddon {
 			"Commands.Gang.Display_Name.Set", Type.COMMAND), GANG_DISPLAY_REMOVED("Commands.Gang.Display_Name.Removed",
 	                                                                              Type.COMMAND), GANG_COLOR_SET(
 			"Commands.Gang.Color.Set", Type.COMMAND), GANG_COLOR_RESET("Commands.Gang.Color.Reset", Type.COMMAND),
+	GANG_DESCRIPTION_CHANGE("Commands.Gang.Description.Change", Type.COMMAND), GANG_DESCRIPTION_NO_CHANGE(
+			"Commands.Gang.Description.Cancelled", Type.COMMAND),
 
 	// commands - rank
 	RANK_CREATED("Commands.Rank.Create.Created_Rank", Type.COMMAND), RANK_CREATE_CONFIRM(

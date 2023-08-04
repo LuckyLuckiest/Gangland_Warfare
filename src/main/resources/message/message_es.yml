@@ -148,8 +148,8 @@ Commands:
          Target: "You were invited to join &8[&a%gang%&8]&7."
          Accept: "You have joined &8[&a%gang%&8]&7 gang."
          Joined: "&6%player%&7 joined the gang."
-      Alias:
-         Send_Request: "Sent alliance request to &8[&e%gang%&8]&7."
+      Ally:
+         Send_Request: "Sent an alliance request to &8[&e%gang%&8]&7."
          Receive_Request: "Gang alliance was requested from &8[&e%gang%&8]&7."
          Accept_Request: "Gang alliance with &8[&e%gang%&8]&7 was &aaccepted&7."
          Reject_Request: "Gang alliance with &8[&e%gang%&8]&7 was &crejected&7."
@@ -175,6 +175,9 @@ Commands:
       Color:
          Set: "Gang new color &8[%color%&8]&7 has been set."
          Reset: "Gang color has been reset!"
+      Description:
+         Cancelled: "No changes made."
+         Change: "Changed gang description from &b\"%old_desc%\"&7 to &6\"%new_desc%\"&7."
    Rank:
       Create:
          Created_Rank: "Created a new rank &8[&a%rank%&8]&7."
@@ -215,8 +218,11 @@ Commands:
          Primary: "Warp Locations&8:"
          Secondary: "&7%list%"
    Bounty:
-      Current: "Bounty amount: &c%money_symbol%%bounty%"
+      Current: "Bounty &c%money_symbol%%bounty%"
+      Bounty_Set: "You have a bounty on your head!"
       Increment: "&4&lBounty &c+%bounty%"
+      Player_Lift: "You have lifted &a%money_symbol%%amount%&7 from &6%player%&7."
+      Lifted: "&a%money_symbol%%amount%&7 has been lifted from your bounty.%n%&4&lBounty &c%money_symbol%%bounty%"
       Clear: "Your bounty was cleared!"
 
 Errors:
@@ -231,7 +237,7 @@ Errors:
    Player:
       Not_Player: "&cYou need to be a player to use this!"
       Player_Not_Found: "&6%player% &7is not found!"
-      Inv_Full: "Your inventory is &cfull, &7please clear a &8slot &7to receive the item(s)."
+      Inv_Full: "Your inventory is &cfull&7, please clear a slot to receive the item(s)."
    Kit:
       Not_Found: "Can't remove kit that doesn't exist."
    Economy:
@@ -265,6 +271,9 @@ Errors:
          List_Undefined: "Warp list is &cinvalid&7."
       World:
          Not_Found: "Couldn't find that &bworld&7."
+   Bounty:
+      No_Bounty: "This player doesn't have a bounty."
+      User_Set_Bounty: "You didn't set a bounty for this player."
    Cannot_Null: "Can not be &cnull&7!"
    Must_Be_Numbers: "&a%command% &7must be numbers."
    Dont_Use_Symbol: "Please don't use symbol."

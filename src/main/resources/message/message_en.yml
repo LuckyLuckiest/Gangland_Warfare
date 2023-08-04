@@ -175,6 +175,9 @@ Commands:
       Color:
          Set: "Gang new color &8[%color%&8]&7 has been set."
          Reset: "Gang color has been reset!"
+      Description:
+         Cancelled: "No changes made."
+         Change: "Changed gang description from &b\"%old_desc%\"&7 to &6\"%new_desc%\"&7."
    Rank:
       Create:
          Created_Rank: "Created a new rank &8[&a%rank%&8]&7."
