@@ -24,6 +24,7 @@
 
     <build>
         <plugins>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -34,6 +35,7 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -42,8 +44,25 @@
                     <createDependencyReducedPom>false</createDependencyReducedPom>
                     <shadedArtifactAttached>true</shadedArtifactAttached>
                     <shadedClassifierName>shaded</shadedClassifierName>
-                    <minimizeJar>true</minimizeJar>
+<!--                    <minimizeJar>true</minimizeJar>-->
+
+                    <relocations>
+                        <relocation>
+                            <pattern>net.wesjd.anvilgui</pattern>
+                            <shadedPattern>src.main.java.me.luckyraven.anvilgui</shadedPattern>
+                        </relocation>
+                    </relocations>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludeDefaults>false</excludeDefaults>
+                            <includes>
+                                <include>src.main.java.me.luckyraven.anvilgui</include>
+                            </includes>
+                        </filter>
+                    </filters>
                 </configuration>
+
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -54,6 +73,7 @@
                 </executions>
             </plugin>
         </plugins>
+
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -187,10 +207,11 @@
         </dependency>
 
         <!-- AnvilGUI -->
-        <!--<dependency>-->
-        <!--    <groupId>net.wesjd</groupId>-->
-        <!--    <artifactId>anvilgui</artifactId>-->
-        <!--    <version>1.7.0-SNAPSHOT</version>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>net.wesjd</groupId>
+            <artifactId>anvilgui</artifactId>
+            <version>1.7.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 </project>
