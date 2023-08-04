@@ -1,7 +1,5 @@
 <Configuration status="debug">
     <Loggers>
-        <Logger name="com.zaxxer.hikari" level="error"/>
-        <Logger name="com.zaxxer.hikari.HikariConfig" level="error"/>
-        <Logger name="com.zaxxer.hikari.pool.HikariPool" level="error"/>
+        <Logger name="src.main.java.me.luckyraven.hikari" level="error"/>
     </Loggers>
 </Configuration>
