@@ -165,9 +165,8 @@ public class MultiInventory extends Inventory {
 	}
 
 	private void addHomePageItem(Player player, Inventory linkedInventory) {
-		ItemBuilder item = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName(
-				"&cBack to " + this.getTitle().getKey());
-		String arrow = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=";
+		ItemBuilder item  = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName("&cBack to " + this.getDisplayTitle());
+		String      arrow = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWUxNTZlYjVhZmZkZGYyMDg2MTdhYWI3YjQzMGZhZDlmMmM5OTFlYzJmMzgzMDRhMGMyMTNmMzFlNzZjYmJlNCJ9fX0=";
 
 		item.customHead(arrow);
 		linkedInventory.setItem(linkedInventory.getSize() - 5, item.build(), false, (inventory, itemBuilder) -> {
