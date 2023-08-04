@@ -38,20 +38,31 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.5.0</version>
                 <configuration>
                     <createDependencyReducedPom>false</createDependencyReducedPom>
                     <shadedArtifactAttached>true</shadedArtifactAttached>
                     <shadedClassifierName>shaded</shadedClassifierName>
-<!--                    <minimizeJar>true</minimizeJar>-->
 
                     <relocations>
                         <relocation>
                             <pattern>net.wesjd.anvilgui</pattern>
                             <shadedPattern>src.main.java.me.luckyraven.anvilgui</shadedPattern>
                         </relocation>
+
+                        <relocation>
+                            <pattern>com.zaxxer.hikari</pattern>
+                            <shadedPattern>src.main.java.me.luckyraven.hikari</shadedPattern>
+                        </relocation>
                     </relocations>
+
                     <filters>
                         <filter>
                             <artifact>*:*</artifact>
@@ -61,6 +72,8 @@
                             </includes>
                         </filter>
                     </filters>
+
+                <!--<minimizeJar>true</minimizeJar>-->
                 </configuration>
 
                 <executions>
