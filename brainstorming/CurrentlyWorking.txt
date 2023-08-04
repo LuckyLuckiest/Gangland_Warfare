@@ -34,6 +34,8 @@
 	- Multiple inventory pages system.
 	- Bounty.
 	- Phone.
+	- Changing gang description using Anvil GUI.
+	- Add a searching mechanism for a gang list (use GUIs).
 
 0.0.61-DEV:
     - Level system.
@@ -54,8 +56,6 @@
 	- Add features registration, to enable specific features (e.g., gang, bounty, etc...) or not.
     - Working permissions in ranks.
 0.0.7-BETA:
-	- Changing gang description using Sign GUI.
-	- Add a searching mechanism for a gang list (use GUIs).
     - The release of the plugin
 
 ... Before the end of the summer holidays ...
