@@ -196,12 +196,9 @@ public class GangCommand extends CommandHandler {
 		Argument name = new GangRenameCommand(gangland, getArgumentTree(), userManager, gangManager);
 
 		// change gang description
-		// opens an anvil with a name-tag that can change the title
+		// opens an anvil with a paper that can change the title
 		// glw gang desc
-		String[] descStr = {"desc", "description"};
-		Argument description = new Argument(descStr, getArgumentTree(), (argument, sender, args) -> {
-			// TODO work on Anvil GUI
-		}, getPermission() + ".change_description");
+		Argument description = new GangDescriptionCommand(gangland, getArgumentTree(), userManager, gangManager);
 
 		// gang ally
 		// glw gang ally <request/abandon> <id>
