@@ -92,22 +92,20 @@ public class DebugCommand extends CommandHandler {
 		// anvil gui
 		Argument anvil = new Argument("anvil", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
-				// this api doesn't work for 1.20_R1
-				new AnvilGUI.Builder().onClose(
-						stateSnapshot -> stateSnapshot.getPlayer().sendMessage("You closed the inventory.")).onClick(
-						(slot, stateSnapshot) -> {
-							if (slot != AnvilGUI.Slot.OUTPUT) {
-								return Collections.emptyList();
-							}
+				User<Player> user = gangland.getInitializer().getUserManager().getUser(player);
+				Gang         gang = gangland.getInitializer().getGangManager().getGang(user.getGangId());
 
-							if (stateSnapshot.getText().equalsIgnoreCase("you")) {
-								stateSnapshot.getPlayer().sendMessage("You have magical powers!");
-								return List.of(AnvilGUI.ResponseAction.close());
-							} else {
-								return List.of(AnvilGUI.ResponseAction.replaceInputText("Try again"));
-							}
-						}).preventClose().text("What is the meaning of life?").title("Enter your answer.").plugin(
-						gangland).open(player);
+				String text = "";
+				if (gang != null) text = gang.getDescription();
+
+				new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
+					if (slot != AnvilGUI.Slot.OUTPUT) {
+						return Collections.emptyList();
+					}
+
+					stateSnapshot.getPlayer().sendMessage(stateSnapshot.getText());
+					return List.of(AnvilGUI.ResponseAction.close());
+				}).text(text).title("Enter your answer.").plugin(gangland).open(player);
 			}
 		});
 
@@ -118,7 +116,7 @@ public class DebugCommand extends CommandHandler {
 		arguments.add(gangData);
 		arguments.add(rankData);
 		arguments.add(multiInv);
-//		arguments.add(anvil);
+		arguments.add(anvil);
 
 		getArgument().addAllSubArguments(arguments);
 	}
