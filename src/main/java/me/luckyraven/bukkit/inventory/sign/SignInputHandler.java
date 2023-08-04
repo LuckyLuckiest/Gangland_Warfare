@@ -1,13 +1,16 @@
 package me.luckyraven.bukkit.inventory.sign;
 
+import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class SignInputHandler implements Listener {
 
@@ -26,7 +29,16 @@ public class SignInputHandler implements Listener {
 
 	@EventHandler
 	public void onPlayerSignInteract(PlayerInteractEvent event) {
+		Player player = event.getPlayer();
 
+		if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+		if (!(Objects.requireNonNull(event.getClickedBlock()).getState() instanceof Sign sign)) return;
+		if (!signMap.containsKey(player)) return;
+
+		SignInputAction inputAction = signMap.get(player);
+		inputAction.onSignInput(player, sign.getLines());
+
+		event.setCancelled(true);
 	}
 
 	@EventHandler
@@ -35,7 +47,7 @@ public class SignInputHandler implements Listener {
 
 		if (!signMap.containsKey(player)) return;
 
-		SignInputAction input = signMap.get(player);
+		signMap.remove(player);
 	}
 
 }
