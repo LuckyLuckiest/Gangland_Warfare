@@ -32,8 +32,6 @@
 0.0.5-DEV:
 	- When using mysql, save the data into sqlite (using backup).
 	- Multiple inventory pages system.
-	- Changing gang description using Sign GUI.
-	- Add a searching mechanism for a gang list (use GUIs).
 	- Bounty.
 	- Phone.
 
@@ -56,6 +54,8 @@
 	- Add features registration, to enable specific features (e.g., gang, bounty, etc...) or not.
     - Working permissions in ranks.
 0.0.7-BETA:
+	- Changing gang description using Sign GUI.
+	- Add a searching mechanism for a gang list (use GUIs).
     - The release of the plugin
 
 ... Before the end of the summer holidays ...
