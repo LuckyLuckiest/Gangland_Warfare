@@ -78,7 +78,21 @@ public class Phone {
 	}
 
 	private void populateInventory() {
-		// TODO
+		// property
+
+		// bounties
+
+		// contacts
+
+		// gang
+
+		// missions
+
+		// kits
+
+		// account
+
+		inventory.fillInventory();
 	}
 
 	public void addPhoneToInventory(Player player) {
