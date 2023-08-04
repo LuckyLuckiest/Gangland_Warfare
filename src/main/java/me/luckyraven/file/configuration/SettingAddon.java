@@ -117,7 +117,7 @@ public class SettingAddon {
 		bountyTimerMax = settings.getDouble("Bounty.Repeating_Timer.Max");
 
 		// phone
-		phoneEnabled = settings.getBoolean("Phone.Enabled");
+		phoneEnabled = settings.getBoolean("Phone.Enable");
 		phoneItem = settings.getString("Phone.Item");
 		phoneName = settings.getString("Phone.Name");
 		phoneSlot = settings.getInt("Phone.Slot");
