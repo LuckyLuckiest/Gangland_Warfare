@@ -148,7 +148,9 @@ public final class Initializer {
 			if (SettingAddon.isPhoneEnabled()) listenerManager.addEvent(new PhoneItem(gangland));
 
 			// gang events
-			listenerManager.addEvent(new GangMembersDamage(gangland));
+			if (SettingAddon.isGangEnable()) {
+				listenerManager.addEvent(new GangMembersDamage(gangland));
+			}
 
 			// inventory gui test double listener
 			listenerManager.addEvent(new Inventory(gangland, "dummy", 9));
@@ -162,11 +164,14 @@ public final class Initializer {
 		// sub commands
 		// default plugin commands
 		commandManager.addCommand(new BalanceCommand(gangland));
-		commandManager.addCommand(new GangCommand(gangland));
 		commandManager.addCommand(new BankCommand(gangland));
 		commandManager.addCommand(new EconomyCommand(gangland));
 		commandManager.addCommand(new RankCommand(gangland));
 		commandManager.addCommand(new BountyCommand(gangland));
+		// gang commands
+		if (SettingAddon.isGangEnable()) {
+			commandManager.addCommand(new GangCommand(gangland));
+		}
 
 		// debug commands
 		commandManager.addCommand(new DebugCommand(gangland));
