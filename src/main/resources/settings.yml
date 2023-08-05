@@ -65,6 +65,9 @@ Inventory:
    Fill:
       Item: BLACK_STAINED_GLASS_PANE
       Name: " "
+   Line:
+      Item: WHITE_STAINED_GLASS_PANE
+      Name: " "
 
 # +---------------+ #
 # | Bounty Config | #
@@ -90,7 +93,7 @@ Bounty:
 Phone:
    Enable: true
    Item: REDSTONE
-   Name: "&3&k|| &rPhone &3&k||"
+   Name: "&6&k||| &rPhone &6&k|||"
    # The slots are from 0-8, and they are in the hot-bar only.
    Slot: 8
    # If the item was movable

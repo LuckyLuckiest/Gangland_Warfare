@@ -10,12 +10,12 @@ import java.util.Objects;
 public class SettingAddon {
 
 	@Getter
+	static String inventoryLineItem, inventoryLineName;
+	@Getter
 	private static FileConfiguration settings;
-
 	// language picked
 	@Getter
 	private static String languagePicked;
-
 	// database configuration
 	@Getter
 	private static String databaseType;
@@ -25,11 +25,9 @@ public class SettingAddon {
 	private static int     mysqlPort;
 	@Getter
 	private static boolean sqliteBackup, sqliteFailedMysql;
-
 	// inventory configuration
 	@Getter
 	private static String inventoryFillItem, inventoryFillName;
-
 	// economy
 	@Getter
 	private static String moneySymbol, balanceFormat;
@@ -98,6 +96,8 @@ public class SettingAddon {
 		// inventory
 		inventoryFillItem = settings.getString("Inventory.Fill.Item");
 		inventoryFillName = settings.getString("Inventory.Fill.Name");
+		inventoryLineItem = settings.getString("Inventory.Line.Item");
+		inventoryLineName = settings.getString("Inventory.Line.Name");
 
 		// economy
 		moneySymbol = Objects.requireNonNull(settings.getString("Money_Symbol")).substring(0, 1);

@@ -136,11 +136,42 @@ public class Inventory implements Listener {
 		for (int i = topLeft; i < topLeft + 3; i++)
 			for (int j = i; j < i + 9 * 2 + 1; j += 9)
 				try {
-					if (j == slot) continue;
+					if (inventory.getItem(j) != null || j == slot) continue;
 
 					setItem(j, item, false);
 				} catch (ArrayIndexOutOfBoundsException ignored) {
 				}
+	}
+
+	public void horizontalLine(int row) {
+		int rows = size / 9;
+		Preconditions.checkArgument(row > 0 && row < rows + 1,
+		                            String.format("Rows need to be between 1 and %d inclusive", rows));
+		ItemBuilder itemBuilder = new ItemBuilder(getLineItem());
+
+		ItemStack item = itemBuilder.setDisplayName(SettingAddon.getInventoryLineName()).build();
+
+		// always 9 slots
+		for (int i = 0; i < 9; i++) {
+			int slot = (row - 1) * 9 + i;
+			if (inventory.getItem(slot) != null) continue;
+			inventory.setItem(slot, item);
+		}
+	}
+
+	public void verticalLine(int column) {
+		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
+		ItemBuilder itemBuilder = new ItemBuilder(getLineItem());
+
+		ItemStack item = itemBuilder.setDisplayName(SettingAddon.getInventoryLineName()).build();
+
+		// from 1-6
+		int rows = size / 9;
+		for (int i = 0; i < rows; i++) {
+			int slot = (column - 1) + 9 * i;
+			if (inventory.getItem(slot) != null) continue;
+			inventory.setItem(slot, item);
+		}
 	}
 
 	public void createBoarder() {
@@ -176,6 +207,11 @@ public class Inventory implements Listener {
 	private Material getFillItem() {
 		Material item = Material.getMaterial(SettingAddon.getInventoryFillItem());
 		return item != null ? item : Material.BLACK_STAINED_GLASS_PANE;
+	}
+
+	private Material getLineItem() {
+		Material item = Material.getMaterial(SettingAddon.getInventoryLineItem());
+		return item != null ? item : Material.WHITE_STAINED_GLASS_PANE;
 	}
 
 	public void open(Player player) {
