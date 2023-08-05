@@ -4,8 +4,9 @@ import lombok.Getter;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.account.gang.MemberManager;
 import me.luckyraven.bukkit.inventory.Inventory;
-import me.luckyraven.bukkit.inventory.sign.SignInputHandler;
+import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.CommandManager;
+import me.luckyraven.command.CommandTabCompleter;
 import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.command.sub.*;
 import me.luckyraven.command.sub.gang.GangCommand;
@@ -119,12 +120,10 @@ public final class Initializer {
 	}
 
 	private void databases() {
-		int type = -1;
+		int type;
 
-		switch (SettingAddon.getDatabaseType()) {
-			case "mysql" -> type = DatabaseHandler.MYSQL;
-			case "sqlite" -> type = DatabaseHandler.SQLITE;
-		}
+		if (SettingAddon.getDatabaseType().equalsIgnoreCase("mysql")) type = DatabaseHandler.MYSQL;
+		else type = DatabaseHandler.SQLITE;
 
 		UserDatabase userDatabase = new UserDatabase(plugin);
 		userDatabase.setType(type);
@@ -141,13 +140,15 @@ public final class Initializer {
 
 	private void events() {
 		if (plugin instanceof Gangland gangland) {
+			// player events
 			listenerManager.addEvent(new CreateAccount(gangland));
 			listenerManager.addEvent(new RemoveAccount(gangland));
-			listenerManager.addEvent(new GangMembersDamage(gangland));
 			listenerManager.addEvent(new EntityDamage(gangland));
 			listenerManager.addEvent(new BountyIncrease());
 			if (SettingAddon.isPhoneEnabled()) listenerManager.addEvent(new PhoneItem(gangland));
-			listenerManager.addEvent(new SignInputHandler());
+
+			// gang events
+			listenerManager.addEvent(new GangMembersDamage(gangland));
 
 			// inventory gui test double listener
 			listenerManager.addEvent(new Inventory(gangland, "dummy", 9));
@@ -176,7 +177,7 @@ public final class Initializer {
 		commandManager.addCommand(new HelpCommand(gangland));
 
 		Objects.requireNonNull(plugin.getCommand("glw")).setTabCompleter(
-				commandManager.getCommands().values().stream().toList().get(0));
+				new CommandTabCompleter(CommandHandler.getCommandHandlerMap()));
 	}
 
 }
