@@ -24,11 +24,8 @@ import java.util.Map;
 
 public class BountyCommand extends CommandHandler {
 
-	private final Gangland gangland;
-
 	public BountyCommand(Gangland gangland) {
 		super(gangland, "bounty", false);
-		this.gangland = gangland;
 
 		List<CommandInformation> list = getCommands().entrySet().stream().filter(
 				entry -> entry.getKey().startsWith("bounty")).sorted(Map.Entry.comparingByKey()).map(
@@ -38,7 +35,7 @@ public class BountyCommand extends CommandHandler {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		UserManager<Player> userManager = gangland.getInitializer().getUserManager();
+		UserManager<Player> userManager = getGangland().getInitializer().getUserManager();
 
 		if (commandSender instanceof Player player) {
 			User<Player> user = userManager.getUser(player);
@@ -105,7 +102,7 @@ public class BountyCommand extends CommandHandler {
 						User<Player> userSender = userManager.getUser(senderPlayer);
 
 						userSender.setBalance(userSender.getBalance() + amount);
-						updateAccountDatabase(userSender);
+						updateAccountDatabase(gangland, userSender);
 						senderPlayer.sendMessage(MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
 						                                                          .replace("%amount%",
 						                                                                   SettingAddon.formatDouble(
@@ -119,7 +116,7 @@ public class BountyCommand extends CommandHandler {
 					                                                  .replace("%bounty%", SettingAddon.formatDouble(
 							                                                  userBounty.getAmount())));
 
-					updateDataDatabase(user);
+					updateDataDatabase(gangland, user);
 				}
 			}
 		});
@@ -162,7 +159,7 @@ public class BountyCommand extends CommandHandler {
 					return;
 				} else {
 					userSender.setBalance(userSender.getBalance() - value);
-					updateAccountDatabase(userSender);
+					updateAccountDatabase(gangland, userSender);
 					senderPlayer.sendMessage(MessageAddon.WITHDRAW_MONEY_PLAYER.toString()
 					                                                           .replace("%amount%",
 					                                                                    SettingAddon.formatDouble(
@@ -175,7 +172,7 @@ public class BountyCommand extends CommandHandler {
 			if (!bountyEvent.isCancelled()) {
 				userBounty.addBounty(sender, value);
 
-				updateDataDatabase(user);
+				updateDataDatabase(gangland, user);
 			}
 		});
 
@@ -193,7 +190,7 @@ public class BountyCommand extends CommandHandler {
 		getHelpInfo().displayHelp(sender, page, "Bounty");
 	}
 
-	private void updateAccountDatabase(User<Player> user) {
+	private void updateAccountDatabase(Gangland gangland, User<Player> user) {
 		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
 			if (handler instanceof UserDatabase userDatabase) {
 				DatabaseHelper helper = new DatabaseHelper(gangland, handler);
@@ -203,7 +200,7 @@ public class BountyCommand extends CommandHandler {
 			}
 	}
 
-	private void updateDataDatabase(User<Player> user) {
+	private void updateDataDatabase(Gangland gangland, User<Player> user) {
 		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
 			if (handler instanceof UserDatabase userDatabase) {
 				DatabaseHelper helper = new DatabaseHelper(gangland, handler);

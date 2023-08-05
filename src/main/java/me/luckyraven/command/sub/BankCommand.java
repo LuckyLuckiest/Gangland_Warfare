@@ -29,11 +29,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class BankCommand extends CommandHandler {
 
-	private final Gangland gangland;
-
 	public BankCommand(Gangland gangland) {
 		super(gangland, "bank", true);
-		this.gangland = gangland;
 
 		List<CommandInformation> list = getCommands().entrySet()
 		                                             .stream()
@@ -47,7 +44,7 @@ public class BankCommand extends CommandHandler {
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		Player       player = (Player) commandSender;
-		User<Player> user   = gangland.getInitializer().getUserManager().getUser(player);
+		User<Player> user   = getGangland().getInitializer().getUserManager().getUser(player);
 
 		if (user.hasBank()) {
 			for (Account<?, ?> account : user.getLinkedAccounts())
@@ -302,16 +299,16 @@ public class BankCommand extends CommandHandler {
 									player.sendMessage(MessageAddon.CANNOT_EXCEED_MAXIMUM.toString());
 									break;
 								}
-								processMoney(user, bank, user.getBalance(), argAmount, bank.getBalance() + argAmount,
-								             user.getBalance() - argAmount,
+								processMoney(gangland, user, bank, user.getBalance(), argAmount,
+								             bank.getBalance() + argAmount, user.getBalance() - argAmount,
 								             MessageAddon.BANK_MONEY_DEPOSIT_PLAYER.toString()
 								                                                   .replace("%amount%",
 								                                                            SettingAddon.formatDouble(
 										                                                            argAmount)));
 							}
 							case "withdraw", "take" -> {
-								processMoney(user, bank, bank.getBalance(), argAmount, bank.getBalance() - argAmount,
-								             user.getBalance() + argAmount,
+								processMoney(gangland, user, bank, bank.getBalance(), argAmount,
+								             bank.getBalance() - argAmount, user.getBalance() + argAmount,
 								             MessageAddon.BANK_MONEY_WITHDRAW_PLAYER.toString()
 								                                                    .replace("%amount%",
 								                                                             SettingAddon.formatDouble(
@@ -364,20 +361,20 @@ public class BankCommand extends CommandHandler {
 		getHelpInfo().displayHelp(sender, page, "Bank");
 	}
 
-	private void processMoney(User<Player> user, Bank bank, double check, double amount, double inBank,
-	                          double inAccount, String message) {
+	private void processMoney(Gangland gangland, User<Player> user, Bank bank, double check, double amount,
+	                          double inBank, double inAccount, String message) {
 		if (check == 0D) user.getUser().sendMessage(MessageAddon.CANNOT_TAKE_LESS_THAN_ZERO.toString());
 		else if (amount > check) user.getUser().sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 		else {
 			user.setBalance(inAccount);
 			bank.setBalance(inBank);
 
-			moneyInDatabase(user);
+			moneyInDatabase(gangland, user);
 			user.getUser().sendMessage(message);
 		}
 	}
 
-	private void moneyInDatabase(User<Player> user) {
+	private void moneyInDatabase(Gangland gangland, User<Player> user) {
 		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
 			if (handler instanceof UserDatabase userDatabase) {
 				DatabaseHelper helper = new DatabaseHelper(gangland, handler);

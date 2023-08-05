@@ -11,11 +11,8 @@ import org.bukkit.entity.Player;
 
 public final class BalanceCommand extends CommandHandler {
 
-	private final Gangland gangland;
-
 	public BalanceCommand(Gangland gangland) {
 		super(gangland, "balance", true, "bal");
-		this.gangland = gangland;
 		getHelpInfo().add(getCommandInformation("balance"));
 		getHelpInfo().add(getCommandInformation("balance_others"));
 	}
@@ -24,7 +21,7 @@ public final class BalanceCommand extends CommandHandler {
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		Player player = (Player) commandSender;
 		// Initialize a user
-		User<Player> user = gangland.getInitializer().getUserManager().getUser(player);
+		User<Player> user = getGangland().getInitializer().getUserManager().getUser(player);
 		player.sendMessage(ChatUtil.color("&6" + player.getName() + "&7 balance:"));
 		player.sendMessage(
 				ChatUtil.color("&a" + SettingAddon.getMoneySymbol() + SettingAddon.formatDouble(user.getBalance())));

@@ -25,11 +25,8 @@ import java.util.Objects;
 
 public class OptionCommand extends CommandHandler {
 
-	private final Gangland gangland;
-
 	public OptionCommand(Gangland gangland) {
 		super(gangland, "option", false);
-		this.gangland = gangland;
 	}
 
 	@Override
@@ -44,7 +41,7 @@ public class OptionCommand extends CommandHandler {
 		GangManager         gangManager   = gangland.getInitializer().getGangManager();
 		RankManager         rankManager   = gangland.getInitializer().getRankManager();
 
-		Argument gang = gangArgument(userManager, memberManager, gangManager, rankManager);
+		Argument gang = gangArgument(gangland, userManager, memberManager, gangManager, rankManager);
 
 		getArgument().addSubArgument(gang);
 	}
@@ -54,8 +51,8 @@ public class OptionCommand extends CommandHandler {
 
 	}
 
-	private Argument gangArgument(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                              RankManager rankManager) {
+	private Argument gangArgument(Gangland gangland, UserManager<Player> userManager, MemberManager memberManager,
+	                              GangManager gangManager, RankManager rankManager) {
 		Argument gang = new Argument("gang", getArgumentTree());
 
 		Argument rank = new Argument("rank", getArgumentTree());
@@ -82,6 +79,8 @@ public class OptionCommand extends CommandHandler {
 			Member targetMember = null;
 			for (Member member : userGang.getGroup()) {
 				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
+
+				if (offlinePlayer.getName() == null) continue;
 
 				if (!Objects.requireNonNull(offlinePlayer.getName()).equalsIgnoreCase(targetStr)) continue;
 

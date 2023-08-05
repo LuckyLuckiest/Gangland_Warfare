@@ -25,6 +25,8 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.rank.Rank;
 import me.luckyraven.rank.RankManager;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.color.ColorUtil;
+import me.luckyraven.util.color.MaterialType;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.bukkit.Bukkit;
@@ -43,11 +45,8 @@ import java.util.Objects;
 
 public class GangCommand extends CommandHandler {
 
-	private final Gangland gangland;
-
 	public GangCommand(Gangland gangland) {
 		super(gangland, "gang", true);
-		this.gangland = gangland;
 
 		List<CommandInformation> list = getCommands().entrySet()
 		                                             .parallelStream()
@@ -60,8 +59,8 @@ public class GangCommand extends CommandHandler {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		UserManager<Player> userManager = gangland.getInitializer().getUserManager();
-		GangManager         gangManager = gangland.getInitializer().getGangManager();
+		UserManager<Player> userManager = getGangland().getInitializer().getUserManager();
+		GangManager         gangManager = getGangland().getInitializer().getGangManager();
 
 		Player       player = (Player) commandSender;
 		User<Player> user   = userManager.getUser(player);
@@ -69,7 +68,7 @@ public class GangCommand extends CommandHandler {
 		if (user.hasGang()) {
 			Gang gang = gangManager.getGang(user.getGangId());
 
-			gangStat(user, userManager, gang);
+			gangStat(getGangland(), user, userManager, gang);
 		} else help(commandSender, 1);
 	}
 
@@ -136,7 +135,7 @@ public class GangCommand extends CommandHandler {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, getPermission() + ".demote_user");
 
-		Argument promDemoUser = gangRankStatus(userManager, memberManager, gangManager, rankManager);
+		Argument promDemoUser = gangRankStatus(gangland, userManager, memberManager, gangManager, rankManager);
 
 		promoteUser.addSubArgument(promDemoUser);
 		demoteUser.addSubArgument(promDemoUser);
@@ -169,7 +168,7 @@ public class GangCommand extends CommandHandler {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
 		}, getPermission() + ".withdraw");
 
-		Argument amount = gangEconomyAmount(userManager, memberManager, gangManager);
+		Argument amount = gangEconomyAmount(gangland, userManager, memberManager, gangManager);
 
 		deposit.addSubArgument(amount);
 		withdraw.addSubArgument(amount);
@@ -206,7 +205,7 @@ public class GangCommand extends CommandHandler {
 
 		// change gang display name
 		// glw gang display <name>
-		Argument display = gangDisplayName(userManager, gangManager);
+		Argument display = gangDisplayName(gangland, userManager, gangManager);
 
 		// change gang color using gui
 		// glw gang color
@@ -247,7 +246,7 @@ public class GangCommand extends CommandHandler {
 		getHelpInfo().displayHelp(sender, page, "Gang");
 	}
 
-	private Argument gangRankStatus(UserManager<Player> userManager, MemberManager memberManager,
+	private Argument gangRankStatus(Gangland gangland, UserManager<Player> userManager, MemberManager memberManager,
 	                                GangManager gangManager, RankManager rankManager) {
 		return new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			Player       player     = (Player) sender;
@@ -298,13 +297,12 @@ public class GangCommand extends CommandHandler {
 						}
 
 					// navigate the ranks first
-					List<Rank> nextRanks = rankManager.getRankTree()
-					                                  .find(currentRank)
-					                                  .getNode()
-					                                  .getChildren()
-					                                  .stream()
-					                                  .map(Tree.Node::getData)
-					                                  .toList();
+					List<Rank> nextRanks = Objects.requireNonNull(rankManager.getRankTree().find(currentRank))
+					                              .getNode()
+					                              .getChildren()
+					                              .stream()
+					                              .map(Tree.Node::getData)
+					                              .toList();
 
 					if (nextRanks.isEmpty()) {
 						player.sendMessage(MessageAddon.GANG_PROMOTE_END.toString());
@@ -384,7 +382,7 @@ public class GangCommand extends CommandHandler {
 		});
 	}
 
-	private Argument gangEconomyAmount(UserManager<Player> userManager, MemberManager memberManager,
+	private Argument gangEconomyAmount(Gangland gangland, UserManager<Player> userManager, MemberManager memberManager,
 	                                   GangManager gangManager) {
 		return new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
@@ -465,7 +463,10 @@ public class GangCommand extends CommandHandler {
 					if (handler instanceof GangDatabase gangDatabase) {
 						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
-						helper.runQueries(database -> gangDatabase.updateMembersTable(member));
+						helper.runQueries(database -> {
+							gangDatabase.updateDataTable(gang);
+							gangDatabase.updateMembersTable(member);
+						});
 					}
 				}
 			} catch (NumberFormatException exception) {
@@ -474,7 +475,7 @@ public class GangCommand extends CommandHandler {
 		});
 	}
 
-	private Argument gangDisplayName(UserManager<Player> userManager, GangManager gangManager) {
+	private Argument gangDisplayName(Gangland gangland, UserManager<Player> userManager, GangManager gangManager) {
 		Argument display = new Argument("display", getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
@@ -542,23 +543,45 @@ public class GangCommand extends CommandHandler {
 		return display;
 	}
 
-	private void gangStat(User<Player> user, UserManager<Player> userManager, Gang gang) {
+	private Material itemToBalance(Gang gang) {
+		double balance    = gang.getBalance();
+		double maxBalance = SettingAddon.getGangMaxBalance();
+
+		// 1 max balance
+		if (balance >= maxBalance) return Material.EMERALD_BLOCK;
+			// 3/4 max balance
+		else if (balance >= (double) 3 / 4 * maxBalance) return Material.DIAMOND_BLOCK;
+			// 1/2 max balance
+		else if (balance >= (double) 1 / 2 * maxBalance) return Material.GOLD_BLOCK;
+
+		// 1/4 max balance
+		return Material.IRON_BLOCK;
+	}
+
+	private void gangStat(Gangland gangland, User<Player> user, UserManager<Player> userManager, Gang gang) {
 		Inventory gui = new Inventory(gangland, "&6&l" + gang.getDisplayNameString() + "&r gang", 5 * 9);
 
-		gui.setItem(11, Material.GOLD_BLOCK, "&bBalance", new ArrayList<>(
+		// balance
+		Material material = itemToBalance(gang);
+
+		gui.setItem(11, material, "&bBalance", new ArrayList<>(
 				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
 				                      SettingAddon.formatDouble(gang.getBalance())))), true, false);
 
+		// id
 		gui.setItem(13, Material.CRAFTING_TABLE, "&bID", new ArrayList<>(List.of("&e" + gang.getId())), false, false);
 
+		// description
 		gui.setItem(15, Material.PAPER, "&bDescription", new ArrayList<>(List.of("&e" + gang.getDescription())), false,
-		            false);
+		            false, (inventory, items) -> {
+					user.getUser().performCommand(Argument.getArgumentSequence(
+							Objects.requireNonNull(getArgumentTree().find(new Argument("desc", getArgumentTree())))));
+				});
 
+		// members
 		gui.setItem(19, Material.PLAYER_HEAD, "&bMembers", new ArrayList<>(
 				            List.of("&a" + gang.getOnlineMembers(userManager).size() + "&7/&e" + gang.getGroup().size())), false,
 		            false, (inventory, item) -> {
-					inventory.close(user.getUser());
-
 					List<ItemStack> items = new ArrayList<>();
 					for (Member member : gang.getGroup()) {
 						OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
@@ -583,14 +606,14 @@ public class GangCommand extends CommandHandler {
 					multi.open(user.getUser());
 				});
 
+		// bounty
 		gui.setItem(22, Material.BLAZE_ROD, "&bBounty", new ArrayList<>(
 				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
 				                      SettingAddon.formatDouble(gang.getBounty())))), true, false);
 
+		// ally
 		gui.setItem(25, Material.REDSTONE, "&bAlly", List.of("&e" + gang.getAlly().size()), false, false,
 		            (inventory, item) -> {
-			            inventory.close(user.getUser());
-
 			            List<ItemStack> items = new ArrayList<>();
 			            for (Gang ally : gang.getAlly()) {
 				            List<String> data = new ArrayList<>();
@@ -611,8 +634,21 @@ public class GangCommand extends CommandHandler {
 
 			            multi.open(user.getUser());
 		            });
-		gui.setItem(31, Material.WRITABLE_BOOK, "&bCreated", new ArrayList<>(List.of("&e" + gang.getDateCreated())),
+
+		// date created
+		gui.setItem(29, Material.WRITABLE_BOOK, "&bCreated", new ArrayList<>(List.of("&e" + gang.getDateCreated())),
 		            true, false);
+
+		// color
+		gui.setItem(31, ColorUtil.getMaterialByColor(gang.getColor(), MaterialType.WOOL.name()), "&bColor",
+		            new ArrayList<>(List.of("&e" + gang.getColor().toLowerCase().replace("_", " "))), false, false,
+		            (inventory, item) -> {
+			            user.getUser().performCommand(Argument.getArgumentSequence(Objects.requireNonNull(
+					            getArgumentTree().find(new Argument("color", getArgumentTree())))));
+		            });
+
+		gui.setItem(33, ColorUtil.getMaterialByColor(gang.getColor(), MaterialType.BANNER.name()), "&bStatistics",
+		            new ArrayList<>(List.of("&eGang stats")), false, false);
 
 		gui.fillInventory();
 
