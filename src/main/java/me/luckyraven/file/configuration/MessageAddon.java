@@ -141,12 +141,13 @@ public enum MessageAddon {
 	                                                                            Type.ERROR),
 
 	// errors - gang
-	MUST_CREATE_GANG("Errors.Gang.Must_Create", Type.ERROR), CANNOT_CREATE_GANG("Errors.Gang.Cannot_Create",
-	                                                                            Type.ERROR), NOT_OWNER(
-			"Errors.Gang.Not_Owner", Type.ERROR), DUPLICATE_GANG_NAME("Errors.Gang.Duplicate_Names", Type.ERROR),
-	NO_GANG_INVITATION("Errors.Gang.No_Invite", Type.ERROR), GANG_SAME_RANK_ACTION("Errors.Gang.Same_Rank", Type.ERROR),
-	GANG_HIGHER_RANK_ACTION("Errors.Gang.Higher_Rank", Type.ERROR), GANG_DOESNT_EXIST("Errors.Gang.Doesnt_Exist",
-	                                                                                  Type.ERROR),
+	INVALID_GANG_NAME("Errors.Gang.Invalid_Name", Type.ERROR), MUST_CREATE_GANG("Errors.Gang.Must_Create", Type.ERROR),
+	CANNOT_CREATE_GANG("Errors.Gang.Cannot_Create", Type.ERROR), NOT_OWNER("Errors.Gang.Not_Owner", Type.ERROR),
+	DUPLICATE_GANG_NAME("Errors.Gang.Duplicate_Names", Type.ERROR), NO_GANG_INVITATION("Errors.Gang.No_Invite",
+	                                                                                   Type.ERROR),
+	GANG_SAME_RANK_ACTION("Errors.Gang.Same_Rank", Type.ERROR), GANG_HIGHER_RANK_ACTION("Errors.Gang.Higher_Rank",
+	                                                                                    Type.ERROR), GANG_DOESNT_EXIST(
+			"Errors.Gang.Doesnt_Exist", Type.ERROR),
 
 	// errors - rank
 	INVALID_RANK("Errors.Rank.Invalid", Type.ERROR), INVALID_RANK_PERMISSION("Errors.Rank.Invalid_Permission",

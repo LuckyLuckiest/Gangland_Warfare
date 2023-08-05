@@ -248,6 +248,7 @@ Errors:
       Must_Create: "Must create a Bank to continue."
       Cannot_Create: "Insufficient funds to create a &cbank account&7."
    Gang:
+      Invalid_Name: "Invalid gang name."
       Must_Create: "Must create a Gang to continue."
       Cannot_Create: "Insufficient funds to create a &cgang account&7."
       Not_Owner: "Not the &b%tail%&7 of the gang."
