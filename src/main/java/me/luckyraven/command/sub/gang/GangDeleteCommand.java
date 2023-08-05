@@ -60,6 +60,7 @@ class GangDeleteCommand extends SubArgument {
 		this.deleteGangTimer = new HashMap<>();
 
 		this.confirmDelete = gangDeleteConfirm();
+		this.addSubArgument(confirmDelete);
 	}
 
 	@Override
@@ -158,7 +159,7 @@ class GangDeleteCommand extends SubArgument {
 
 						helper.runQueries(database -> userDatabase.updateAccountTable(gangUser));
 					}
-					// change the others gang id
+					// change the others' gang id
 					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
 					helper.runQueries(database -> {
@@ -173,6 +174,7 @@ class GangDeleteCommand extends SubArgument {
 						for (Object[] data : gangUsers) {
 							UUID   uuid = UUID.fromString(String.valueOf(data[0]));
 							Member mem  = memberManager.getMember(uuid);
+							gang.removeMember(mem);
 
 							double balance = (double) data[1];
 							double freq    = mem.getContribution();
