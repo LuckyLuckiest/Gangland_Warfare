@@ -40,11 +40,10 @@ public class Gang extends Account<Integer, List<Member>> {
 	}
 
 	public Gang() {
-		super(null, null);
+		super(null, new ArrayList<>());
 
 		Random random = new Random();
 		setKey(random.nextInt(999_999));
-		setValue(new ArrayList<>());
 
 		this.name = null;
 		this.displayName = "";
