@@ -289,32 +289,35 @@ public class BankCommand extends CommandHandler {
 
 			try {
 				double argAmount = Double.parseDouble(args[2]);
+				String strArg    = "";
 
 				for (Account<?, ?> account : user.getLinkedAccounts())
 					if (account instanceof Bank bank) {
 						switch (args[1].toLowerCase()) {
 							case "deposit", "add" -> {
+								strArg = "deposit";
 								double inBank = bank.getBalance() + argAmount;
+
 								if (inBank > SettingAddon.getBankMaxBalance()) {
 									player.sendMessage(MessageAddon.CANNOT_EXCEED_MAXIMUM.toString());
 									break;
 								}
+
 								processMoney(gangland, user, bank, user.getBalance(), argAmount,
-								             bank.getBalance() + argAmount, user.getBalance() - argAmount,
-								             MessageAddon.BANK_MONEY_DEPOSIT_PLAYER.toString()
-								                                                   .replace("%amount%",
-								                                                            SettingAddon.formatDouble(
-										                                                            argAmount)));
+								             bank.getBalance() + argAmount, user.getBalance() - argAmount);
 							}
 							case "withdraw", "take" -> {
+								strArg = "withdraw";
 								processMoney(gangland, user, bank, bank.getBalance(), argAmount,
-								             bank.getBalance() - argAmount, user.getBalance() + argAmount,
-								             MessageAddon.BANK_MONEY_WITHDRAW_PLAYER.toString()
-								                                                    .replace("%amount%",
-								                                                             SettingAddon.formatDouble(
-										                                                             argAmount)));
+								             bank.getBalance() - argAmount, user.getBalance() + argAmount);
 							}
 						}
+
+						user.getUser().sendMessage(MessageAddon.valueOf(
+								                                       "BANK_MONEY_" + strArg.toUpperCase() + "_PLAYER")
+						                                       .toString()
+						                                       .replace("%amount%",
+						                                                SettingAddon.formatDouble(argAmount)));
 						break;
 					}
 			} catch (NumberFormatException exception) {
@@ -362,7 +365,7 @@ public class BankCommand extends CommandHandler {
 	}
 
 	private void processMoney(Gangland gangland, User<Player> user, Bank bank, double check, double amount,
-	                          double inBank, double inAccount, String message) {
+	                          double inBank, double inAccount) {
 		if (check == 0D) user.getUser().sendMessage(MessageAddon.CANNOT_TAKE_LESS_THAN_ZERO.toString());
 		else if (amount > check) user.getUser().sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 		else {
@@ -370,7 +373,6 @@ public class BankCommand extends CommandHandler {
 			bank.setBalance(inBank);
 
 			moneyInDatabase(gangland, user);
-			user.getUser().sendMessage(message);
 		}
 	}
 
