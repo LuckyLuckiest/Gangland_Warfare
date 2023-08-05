@@ -121,7 +121,7 @@ public class RankCommand extends CommandHandler {
 		String[] delArr = new String[]{"delete", "remove"};
 		Argument delete = new Argument(delArr, getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
-		});
+		}, getPermission() + ".delete");
 
 		HashMap<CommandSender, AtomicReference<String>> deleteRankName  = new HashMap<>();
 		HashMap<CommandSender, CountdownTimer>          deleteRankTimer = new HashMap<>();
@@ -199,13 +199,13 @@ public class RankCommand extends CommandHandler {
 			}
 
 			sender.sendMessage(MessageAddon.RANK_LIST_SECONDARY.toString().replace("%ranks%", builder.toString()));
-		});
+		}, getPermission() + ".list");
 
 		// glw rank permission <add/remove> <name> <permission>
 		String[] permArr = {"permission", "perm"};
 		Argument permission = new Argument(permArr, getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<add/remove>"));
-		});
+		}, getPermission() + ".permission");
 
 		Argument perm = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			// check if rank exists
@@ -260,11 +260,11 @@ public class RankCommand extends CommandHandler {
 
 		Argument addPerm = new Argument("add", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
-		});
+		}, permission.getPermission() + ".add");
 
 		Argument removePerm = new Argument("remove", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
-		});
+		}, permission.getPermission() + ".remove");
 
 		addPerm.addSubArgument(permName);
 		removePerm.addSubArgument(permName);
@@ -275,7 +275,7 @@ public class RankCommand extends CommandHandler {
 		// glw rank info <name>
 		Argument info = new Argument("info", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
-		});
+		}, getPermission() + ".info");
 
 		Argument infoName = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			Rank rank = rankManager.get(args[2]);
@@ -310,7 +310,7 @@ public class RankCommand extends CommandHandler {
 		// glw rank parent <add/remove> <name> <parent>
 		Argument parent = new Argument("parent", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<add/remove>"));
-		});
+		}, getPermission() + ".parent");
 
 		Argument parentStr = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			Rank rank = rankManager.get(args[3]);
@@ -370,11 +370,11 @@ public class RankCommand extends CommandHandler {
 
 		Argument addParent = new Argument("add", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
-		});
+		}, parent.getPermission() + ".add");
 
 		Argument removeParent = new Argument("remove", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
-		});
+		}, parent.getPermission() + ".remove");
 
 		parent.addSubArgument(addParent);
 		parent.addSubArgument(removeParent);
@@ -393,7 +393,7 @@ public class RankCommand extends CommandHandler {
 			}
 
 			sender.sendMessage(builder.toString());
-		});
+		}, getPermission() + ".traverse");
 
 		getArgument().addSubArgument(traverseTree);
 
