@@ -14,13 +14,13 @@ import java.util.Objects;
 public final class ChatUtil {
 
 	public static String replaceColorCodes(String message, String replaceWith) {
-		return message.replace("§", "&").replaceAll("&[0-9a-fk-o]|&r", replaceWith);
+		return message.replace("§", "&").replaceAll("&[0-9a-fA-Fk-oK-OrR]", replaceWith);
 	}
 
-	public static String color(String message) {
+	public static String color(final String message) {
 		Objects.requireNonNull(message);
-		message = message.replace("%n%", "\n").replace("%money_symbol%", SettingAddon.getMoneySymbol());
-		return ChatColor.translateAlternateColorCodes('&', message);
+		String value = message.replace("%n%", "\n").replace("%money_symbol%", SettingAddon.getMoneySymbol());
+		return ChatColor.translateAlternateColorCodes('&', value);
 	}
 
 	public static String[] color(String... messages) {
