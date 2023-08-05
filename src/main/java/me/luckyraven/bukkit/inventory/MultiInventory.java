@@ -39,16 +39,7 @@ public class MultiInventory extends Inventory {
 		// the first page
 		MultiInventory multi = new MultiInventory(plugin, String.format(modifiedName, 1, pages), initialPage);
 
-		int row    = 2;
-		int column = 2;
-		for (int i = 0; i < items.size() && row % 6 != 0; i++) {
-			multi.setItem((row - 1) * 9 + (column - 1), items.get(i), false);
-
-			if (column % 8 == 0) {
-				column = 2;
-				++row;
-			} else ++column;
-		}
+		addItems(multi, items, 0, items.size());
 		multi.createBoarder();
 
 		// the other pages
@@ -63,23 +54,29 @@ public class MultiInventory extends Inventory {
 
 			Inventory inv = new Inventory(plugin, String.format(modifiedName, i + 1, pages), size);
 
-			row = 2;
-			column = 2;
 			int startIndex = i * perPage;
 			int endIndex   = Math.min(startIndex + perPage, items.size());
-			for (int j = startIndex; j < endIndex && row % 6 != 0; j++) {
-				inv.setItem((row - 1) * 9 + (column - 1), items.get(j), false);
 
-				if (column % 8 == 0) {
-					column = 2;
-					++row;
-				} else ++column;
-			}
+			addItems(inv, items, startIndex, endIndex);
 			inv.createBoarder();
+
 			multi.addPage(player, inv);
 		}
 
 		return multi;
+	}
+
+	private static void addItems(Inventory inv, List<ItemStack> items, int startIndex, int endIndex) {
+		int row    = 2;
+		int column = 2;
+		for (int i = startIndex; i < endIndex && row % 6 != 0; i++) {
+			inv.setItem((row - 1) * 9 + (column - 1), items.get(i), false);
+
+			if (column % 8 == 0) {
+				column = 2;
+				++row;
+			} else ++column;
+		}
 	}
 
 	public void addPage(Player player, Inventory gui) {
