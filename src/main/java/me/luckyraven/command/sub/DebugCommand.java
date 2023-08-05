@@ -13,10 +13,12 @@ import me.luckyraven.util.color.Color;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
 import net.wesjd.anvilgui.AnvilGUI;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.permissions.Permission;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,7 +33,7 @@ public class DebugCommand extends CommandHandler {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		commandSender.sendMessage("Test");
+		getGangland().getInitializer().getCommandManager().show(commandSender);
 	}
 
 	@Override
@@ -109,6 +111,12 @@ public class DebugCommand extends CommandHandler {
 			}
 		});
 
+		Argument perm = new Argument("perms", getArgumentTree(), (argument, sender, args) -> {
+			String[] permissions = Bukkit.getPluginManager().getPermissions().stream().map(Permission::getName).filter(
+					name -> name.startsWith("gangland")).sorted().toArray(String[]::new);
+			sender.sendMessage(permissions);
+		});
+
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
 
@@ -117,6 +125,7 @@ public class DebugCommand extends CommandHandler {
 		arguments.add(rankData);
 		arguments.add(multiInv);
 		arguments.add(anvil);
+		arguments.add(perm);
 
 		getArgument().addAllSubArguments(arguments);
 	}
