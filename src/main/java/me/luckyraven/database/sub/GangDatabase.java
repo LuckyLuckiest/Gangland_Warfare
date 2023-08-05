@@ -58,10 +58,8 @@ public class GangDatabase extends DatabaseHandler {
 		                                        "description TEXT NOT NULL", "balance DOUBLE NOT NULL",
 		                                        "bounty DOUBLE NOT NULL", "alias LONGTEXT NOT NULL",
 		                                        "created BIGINT NOT NULL");
-		getDatabase().table("members").createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "gang_id INT",
-		                                           "contribution DOUBLE NOT NULL", "position TEXT NOT NULL",
-		                                           "join_date BIGINT NOT NULL",
-		                                           "FOREIGN KEY (gang_id) REFERENCES data (id)");
+		getDatabase().table("members").createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "gang_id INT NOT NULL",
+		                                           "contribution DOUBLE NOT NULL", "position TEXT", "join_date BIGINT");
 	}
 
 	@Override
