@@ -77,16 +77,7 @@ public class Inventory implements Listener {
 		Preconditions.checkNotNull(title, "Title can't be null");
 
 		String pattern = "[^a-z0-9/._-]";
-
-		String value = title.toLowerCase().replaceAll(" ", "_");
-
-		int count = (int) value.chars().filter(c -> c == '&').count();
-		for (int i = 0; i < count; i++) {
-			int index = value.indexOf('&');
-			value = value.substring(0, index) + value.substring(index + 2);
-		}
-
-		return value.replaceAll(pattern, "");
+		return ChatUtil.replaceColorCodes(title, "").replaceAll(" ", "_").toLowerCase().replaceAll(pattern, "");
 	}
 
 	public void setItem(int slot, Material material, @Nullable String displayName, @Nullable List<String> lore,
