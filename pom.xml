@@ -54,26 +54,16 @@
                     <relocations>
                         <relocation>
                             <pattern>net.wesjd.anvilgui</pattern>
-                            <shadedPattern>src.main.java.me.luckyraven.anvilgui</shadedPattern>
+                            <shadedPattern>me.luckyraven.anvilgui</shadedPattern>
                         </relocation>
 
                         <relocation>
                             <pattern>com.zaxxer.hikari</pattern>
-                            <shadedPattern>src.main.java.me.luckyraven.hikari</shadedPattern>
+                            <shadedPattern>me.luckyraven.hikari</shadedPattern>
                         </relocation>
                     </relocations>
 
-                    <filters>
-                        <filter>
-                            <artifact>*:*</artifact>
-                            <excludeDefaults>false</excludeDefaults>
-                            <includes>
-                                <include>src.main.java.me.luckyraven.anvilgui</include>
-                            </includes>
-                        </filter>
-                    </filters>
-
-                <!--<minimizeJar>true</minimizeJar>-->
+                    <!--<minimizeJar>true</minimizeJar>-->
                 </configuration>
 
                 <executions>
