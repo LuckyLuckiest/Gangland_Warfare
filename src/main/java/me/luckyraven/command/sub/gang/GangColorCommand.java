@@ -66,54 +66,49 @@ public class GangColorCommand extends SubArgument {
 
 				Material material = ColorUtil.getMaterialByColor(colorName, materialName);
 
-				if (material != null) {
-					String name = colorCode + ChatUtil.capitalize(colorName.toLowerCase().replace("_", " ")) + " " +
-							ChatUtil.capitalize(materialName.toLowerCase().replace("_", " "));
+				if (material == null) return;
 
-					ItemBuilder itemBuilder = new ItemBuilder(material).setDisplayName(name);
+				String name = colorCode + ChatUtil.capitalize(colorName.toLowerCase().replace("_", " ")) + " " +
+						ChatUtil.capitalize(materialName.toLowerCase().replace("_", " "));
 
-					colorGUI.setItem((row - 1) * 9 + (column - 1), itemBuilder, false, (inventory, item) -> {
-						inventory.close(player);
+				ItemBuilder itemBuilder = new ItemBuilder(material).setDisplayName(name);
 
-						confirmGUI.setItem(22, itemBuilder.build(), false);
+				colorGUI.setItem((row - 1) * 9 + (column - 1), itemBuilder, false, (inventory, item) -> {
+					confirmGUI.setItem(22, itemBuilder.build(), false);
 
-						Material mat = ColorUtil.getMaterialByColor(colorName, MaterialType.STAINED_GLASS_PANE.name());
-						confirmGUI.aroundSlot(22, mat);
+					Material mat = ColorUtil.getMaterialByColor(colorName, MaterialType.STAINED_GLASS_PANE.name());
+					confirmGUI.aroundSlot(22, mat);
 
-						confirmGUI.setItem(49, Material.GREEN_CONCRETE, "&aConfirm", null, false, false, (inv, it) -> {
-							inv.close(player);
+					confirmGUI.setItem(49, Material.GREEN_CONCRETE, "&aConfirm", null, false, false, (inv, it) -> {
+						// save the data in gang
+						gang.setColor(colorName);
 
-							// save the data in gang
-							gang.setColor(colorName);
+						// inform player
+						String colorSelected = ChatUtil.color(
+								colorCode + ChatUtil.capitalize(colorName.toLowerCase().replace("_", " ")));
+						player.sendMessage(MessageAddon.GANG_COLOR_SET.toString().replace("%color%", colorSelected));
 
-							// inform player
-							String colorSelected = ChatUtil.color(
-									colorCode + ChatUtil.capitalize(colorName.toLowerCase().replace("_", " ")));
-							player.sendMessage(
-									MessageAddon.GANG_COLOR_SET.toString().replace("%color%", colorSelected));
+						// update database
+						for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+							if (handler instanceof GangDatabase gangDatabase) {
+								DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
-							// update database
-							for (DatabaseHandler handler : gangland.getInitializer()
-							                                       .getDatabaseManager()
-							                                       .getDatabases())
-								if (handler instanceof GangDatabase gangDatabase) {
-									DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+								helper.runQueries(database -> gangDatabase.updateDataTable(gang));
+								break;
+							}
 
-									helper.runQueries(database -> gangDatabase.updateDataTable(gang));
-									break;
-								}
-						});
-
-						confirmGUI.fillInventory();
-
-						confirmGUI.open(player);
+						confirmGUI.close(player);
 					});
 
-					if (column % 8 == 0) {
-						column = 2;
-						++row;
-					} else ++column;
-				}
+					confirmGUI.fillInventory();
+
+					confirmGUI.open(player);
+				});
+
+				if (column % 8 == 0) {
+					column = 2;
+					++row;
+				} else ++column;
 			}
 
 			colorGUI.setItem((6 - 1) * 9, Material.RED_CONCRETE, "&4Exit", null, false, false,
