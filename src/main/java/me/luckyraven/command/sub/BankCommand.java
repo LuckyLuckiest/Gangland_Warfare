@@ -291,35 +291,39 @@ public class BankCommand extends CommandHandler {
 				double argAmount = Double.parseDouble(args[2]);
 				String strArg    = "";
 
+				Bank bank = null;
 				for (Account<?, ?> account : user.getLinkedAccounts())
-					if (account instanceof Bank bank) {
-						switch (args[1].toLowerCase()) {
-							case "deposit", "add" -> {
-								strArg = "deposit";
-								double inBank = bank.getBalance() + argAmount;
-
-								if (inBank > SettingAddon.getBankMaxBalance()) {
-									player.sendMessage(MessageAddon.CANNOT_EXCEED_MAXIMUM.toString());
-									break;
-								}
-
-								processMoney(gangland, user, bank, user.getBalance(), argAmount,
-								             bank.getBalance() + argAmount, user.getBalance() - argAmount);
-							}
-							case "withdraw", "take" -> {
-								strArg = "withdraw";
-								processMoney(gangland, user, bank, bank.getBalance(), argAmount,
-								             bank.getBalance() - argAmount, user.getBalance() + argAmount);
-							}
-						}
-
-						user.getUser().sendMessage(MessageAddon.valueOf(
-								                                       "BANK_MONEY_" + strArg.toUpperCase() + "_PLAYER")
-						                                       .toString()
-						                                       .replace("%amount%",
-						                                                SettingAddon.formatDouble(argAmount)));
+					if (account instanceof Bank) {
+						bank = (Bank) account;
 						break;
 					}
+
+				if (bank == null) throw new NullPointerException("Bank is null");
+
+				switch (args[1].toLowerCase()) {
+					case "deposit", "add" -> {
+						strArg = "deposit";
+						double inBank = bank.getBalance() + argAmount;
+
+						if (inBank > SettingAddon.getBankMaxBalance()) {
+							player.sendMessage(MessageAddon.CANNOT_EXCEED_MAXIMUM.toString());
+							break;
+						}
+
+						processMoney(gangland, user, bank, user.getBalance(), argAmount, bank.getBalance() + argAmount,
+						             user.getBalance() - argAmount);
+					}
+					case "withdraw", "take" -> {
+						strArg = "withdraw";
+						processMoney(gangland, user, bank, bank.getBalance(), argAmount, bank.getBalance() - argAmount,
+						             user.getBalance() + argAmount);
+					}
+				}
+
+				user.getUser().sendMessage(MessageAddon.valueOf("BANK_MONEY_" + strArg.toUpperCase() + "_PLAYER")
+				                                       .toString()
+				                                       .replace("%amount%", SettingAddon.formatDouble(argAmount)));
+
 			} catch (NumberFormatException exception) {
 				player.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
 			}
