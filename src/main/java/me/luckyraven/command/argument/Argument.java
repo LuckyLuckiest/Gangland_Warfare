@@ -9,7 +9,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.permissions.Permission;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -62,6 +64,23 @@ public class Argument implements Cloneable {
 		this.executeOnPass = other.executeOnPass;
 	}
 
+	public static String getArgumentSequence(Argument argument) {
+		List<String> sequence = new ArrayList<>();
+
+		getArgumentSequence(sequence, argument.getNode());
+
+		Collections.reverse(sequence);
+
+		return "glw " + String.join(" ", sequence) + " " + argument.getArguments()[0];
+	}
+
+	private static void getArgumentSequence(List<String> list, Tree.Node<Argument> node) {
+		if (node == null || node.getParent() == null) return;
+
+		list.add(node.getParent().getData().getArguments()[0]);
+		getArgumentSequence(list, node.getParent());
+	}
+
 	public void setPermission(String permission) {
 		this.permission = permission;
 
@@ -104,7 +123,8 @@ public class Argument implements Cloneable {
 				} else sender.sendMessage(invalidArg.append(args[0]).toString());
 			} else arg.executeArgument(sender, args);
 		} catch (Exception exception) {
-			sender.sendMessage(exception.getMessage());
+			if (exception.getMessage() != null) sender.sendMessage(exception.getMessage());
+			else sender.sendMessage("null");
 			exception.printStackTrace();
 		}
 	}
