@@ -1,0 +1,83 @@
+package me.luckyraven.command;
+
+import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.argument.ConfirmArgument;
+import me.luckyraven.command.sub.DebugCommand;
+import me.luckyraven.command.sub.OptionCommand;
+import me.luckyraven.command.sub.ReadNBTCommand;
+import me.luckyraven.datastructure.Tree;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+public class CommandTabCompleter implements TabCompleter {
+
+	private final Map<String, CommandHandler> commandMap;
+
+	// classes that I don't want displayed in tab completion
+	private final List<Class<? extends CommandHandler>> filters = Arrays.asList(DebugCommand.class, OptionCommand.class,
+	                                                                            ReadNBTCommand.class);
+
+	public CommandTabCompleter(Map<String, CommandHandler> commandMap) {
+		this.commandMap = commandMap;
+	}
+
+	@Nullable
+	@Override
+	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
+	                                  @NotNull String[] args) {
+		// commands according to user permission
+		List<CommandHandler> commandHandlers = new ArrayList<>();
+
+		for (CommandHandler handler : commandMap.values()) {
+			if (filters.stream().anyMatch(filterClass -> filterClass.isInstance(handler))) continue;
+
+			if (sender.hasPermission(handler.getPermission())) commandHandlers.add(handler);
+		}
+
+		if (args.length == 1) return collectedArguments(args, commandHandlers.stream()
+		                                                                     .map(CommandHandler::getLabel)
+		                                                                     .toList());
+
+		Argument arg = findArgument(args, commandHandlers);
+
+		if (arg == null) return null;
+
+		// TODO if there was an optional argument then no need to get the last valid because it will never be equal
+		return collectedArguments(args, arg.getNode().getChildren().stream().map(Tree.Node::getData).map(
+				Argument::getArgumentsString).flatMap(List::stream).toList());
+	}
+
+	private List<String> collectedArguments(String[] args, List<String> arguments) {
+		String lastArg = args[args.length - 1].toLowerCase();
+
+		if (lastArg.isEmpty()) return arguments;
+
+		return arguments.stream().filter(argString -> argString.toLowerCase().startsWith(lastArg)).toList();
+	}
+
+	private Argument findArgument(String[] args, List<CommandHandler> commandHandlers) {
+		Argument[] modifiedArg = new Argument[args.length];
+
+		for (Tree<Argument> tree : commandHandlers.stream().map(CommandHandler::getArgumentTree).toList()) {
+			for (int i = 0; i < args.length; i++) {
+				String arg = args[i];
+				if (arg.toLowerCase().contains("confirm")) modifiedArg[i] = new ConfirmArgument(tree);
+				else modifiedArg[i] = new Argument(arg, tree);
+			}
+
+			Argument found = tree.traverseLastValid(modifiedArg);
+			if (found != null) return found;
+		}
+
+		return null;
+	}
+
+}

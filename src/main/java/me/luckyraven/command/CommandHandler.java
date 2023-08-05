@@ -3,27 +3,22 @@ package me.luckyraven.command;
 import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.command.argument.ConfirmArgument;
 import me.luckyraven.command.data.CommandInformation;
-import me.luckyraven.command.sub.DebugCommand;
-import me.luckyraven.command.sub.OptionCommand;
-import me.luckyraven.command.sub.ReadNBTCommand;
 import me.luckyraven.data.HelpInfo;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @Getter
-public abstract class CommandHandler implements TabCompleter {
+public abstract class CommandHandler {
 
-	private static final Map<String, CommandHandler> commandMap = new HashMap<>();
+	private static final Map<String, CommandHandler> COMMAND_HANDLER_MAP = new HashMap<>();
 
 	private final String         label;
 	private final Set<String>    alias;
@@ -56,7 +51,11 @@ public abstract class CommandHandler implements TabCompleter {
 
 		initializeArguments(gangland);
 
-		commandMap.put(this.label, this);
+		COMMAND_HANDLER_MAP.put(this.label, this);
+	}
+
+	public static Map<String, CommandHandler> getCommandHandlerMap() {
+		return COMMAND_HANDLER_MAP;
 	}
 
 	protected abstract void onExecute(Argument argument, CommandSender commandSender, String[] arguments);
@@ -80,50 +79,6 @@ public abstract class CommandHandler implements TabCompleter {
 
 		// execute if all checks out
 		argument.execute(sender, args);
-	}
-
-	@Nullable
-	@Override
-	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
-	                                  @NotNull String[] args) {
-		// commands according to user permission
-		List<CommandHandler> commandHandlers = new ArrayList<>();
-
-		// classes that I don't want displayed in tab completion
-		List<Class<? extends CommandHandler>> filters = Arrays.asList(DebugCommand.class, OptionCommand.class,
-		                                                              ReadNBTCommand.class);
-
-		for (CommandHandler handler : commandMap.values()) {
-			if (filters.stream().anyMatch(filterClass -> filterClass.isInstance(handler))) continue;
-
-			if (sender.hasPermission(handler.getPermission())) commandHandlers.add(handler);
-		}
-
-		if (args.length == 1) return commandHandlers.stream().map(CommandHandler::getLabel).toList();
-
-		Argument arg = findArgument(args, commandHandlers);
-
-		if (arg == null) return null;
-
-		// TODO if there was an optional argument then no need to get the last valid because it will never be equal
-
-		return arg.getNode().getChildren().stream().map(Tree.Node::getData).map(Argument::getArgumentsString).flatMap(
-				List::stream).toList();
-	}
-
-	private Argument findArgument(String[] args, List<CommandHandler> commandHandlers) {
-		Argument[] modifiedArg = new Argument[args.length];
-		for (Tree<Argument> tree : commandHandlers.stream().map(CommandHandler::getArgumentTree).toList()) {
-			for (int i = 0; i < args.length; i++) {
-				String arg = args[i];
-				if (arg.toLowerCase().contains("confirm")) modifiedArg[i] = new ConfirmArgument(tree);
-				else modifiedArg[i] = new Argument(arg, tree);
-			}
-
-			Argument found = tree.traverseLastValid(modifiedArg);
-			if (found != null) return found;
-		}
-		return null;
 	}
 
 	public Map<String, CommandInformation> getCommands() {
