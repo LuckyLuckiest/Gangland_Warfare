@@ -11,15 +11,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class ItemBuilder {
 
-	private final ItemStack itemStack;
+	private static final Map<String, Object> SPECIAL_NBT = new HashMap<>();
+	private final        ItemStack           itemStack;
 
 	public ItemBuilder(ItemStack itemStack) {
 		this.itemStack = itemStack;
@@ -27,6 +25,10 @@ public class ItemBuilder {
 
 	public ItemBuilder(Material material) {
 		this.itemStack = new ItemStack(material);
+	}
+
+	public static Map<String, Object> getSpecialNBTs() {
+		return SPECIAL_NBT;
 	}
 
 	public ItemBuilder setDisplayName(@Nullable String displayName) {
@@ -115,8 +117,23 @@ public class ItemBuilder {
 		return itemStack;
 	}
 
-	public ItemBuilder addTag(String tag, String value) {
-		modifyNBT(nbt -> nbt.setString(tag, value));
+	public ItemBuilder addTag(String tag, Object value) {
+		if (value instanceof String) modifyNBT(nbt -> nbt.setString(tag, (String) value));
+		else if (value instanceof Byte) modifyNBT(nbt -> nbt.setByte(tag, (byte) value));
+		else if (value instanceof byte[]) modifyNBT(nbt -> nbt.setByteArray(tag, (byte[]) value));
+		else if (value instanceof Short) modifyNBT(nbt -> nbt.setShort(tag, (short) value));
+		else if (value instanceof Integer) modifyNBT(nbt -> nbt.setInteger(tag, (int) value));
+		else if (value instanceof int[]) modifyNBT(nbt -> nbt.setIntArray(tag, (int[]) value));
+		else if (value instanceof Long) modifyNBT(nbt -> nbt.setLong(tag, (long) value));
+		else if (value instanceof Double) modifyNBT(nbt -> nbt.setDouble(tag, (double) value));
+		else if (value instanceof Float) modifyNBT(nbt -> nbt.setFloat(tag, (float) value));
+		else if (value instanceof Boolean) modifyNBT(nbt -> nbt.setBoolean(tag, (boolean) value));
+		else if (value instanceof ItemStack) modifyNBT(nbt -> nbt.setItemStack(tag, (ItemStack) value));
+		else if (value instanceof ItemStack[]) modifyNBT(nbt -> nbt.setItemStackArray(tag, (ItemStack[]) value));
+		else if (value instanceof UUID) modifyNBT(nbt -> nbt.setUUID(tag, (UUID) value));
+		else if (value instanceof Enum) modifyNBT(nbt -> nbt.setEnum(tag, (Enum<?>) value));
+
+		SPECIAL_NBT.put(tag, value);
 
 		return this;
 	}
