@@ -13,9 +13,11 @@ import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.sql.Types;
 import java.util.*;
@@ -23,11 +25,8 @@ import java.util.function.Supplier;
 
 public class EconomyCommand extends CommandHandler {
 
-	private final Gangland gangland;
-
 	public EconomyCommand(Gangland gangland) {
 		super(gangland, "economy", false, "eco");
-		this.gangland = gangland;
 
 		List<CommandInformation> list = getCommands().entrySet().stream().filter(
 				entry -> entry.getKey().startsWith("economy")).sorted(Map.Entry.comparingByKey()).map(
@@ -74,6 +73,7 @@ public class EconomyCommand extends CommandHandler {
 			try {
 				double argAmount = Double.parseDouble(args[3]);
 				double value     = 0D;
+				String strValue  = "";
 
 				List<Player> players = specifiers.get(specifier).get();
 
@@ -83,28 +83,22 @@ public class EconomyCommand extends CommandHandler {
 					switch (args[1].toLowerCase()) {
 						case "deposit", "add" -> {
 							value = Math.min(user.getBalance() + argAmount, SettingAddon.getPlayerMaxBalance());
-							user.getUser().sendMessage(MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
-							                                                            .replace("%amount%",
-							                                                                     SettingAddon.formatDouble(
-									                                                                     argAmount)));
+							strValue = "deposit";
 						}
 						case "withdraw", "take" -> {
 							value = Math.max(user.getBalance() - argAmount, 0D);
-							user.getUser().sendMessage(MessageAddon.WITHDRAW_MONEY_PLAYER.toString()
-							                                                             .replace("%amount%",
-							                                                                      SettingAddon.formatDouble(
-									                                                                      argAmount)));
+							strValue = "withdraw";
 						}
 						case "set" -> {
 							value = Math.min(argAmount, SettingAddon.getPlayerMaxBalance());
-							user.getUser().sendMessage(MessageAddon.SET_MONEY_PLAYER.toString()
-							                                                        .replace("%amount%",
-							                                                                 SettingAddon.formatDouble(
-									                                                                 argAmount)));
+							strValue = "set";
 						}
 					}
+					user.getUser().sendMessage(MessageAddon.valueOf(strValue.toUpperCase() + "_MONEY_PLAYER")
+					                                       .toString()
+					                                       .replace("%amount%", SettingAddon.formatDouble(value)));
 					user.setBalance(value);
-					moneyInDatabase(player, value);
+					moneyInDatabase(gangland, player, value);
 				}
 			} catch (NumberFormatException exception) {
 				sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[3]));
@@ -116,8 +110,13 @@ public class EconomyCommand extends CommandHandler {
 			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
 		});
 
-		specifier.setExecuteOnPass(
-				(sender, args) -> collectSpecifiers(specifiers, sender, args.length > 2 ? args[2] : null));
+		specifier.setExecuteOnPass((sender, args) -> {
+			try {
+				collectSpecifiers(specifiers, sender, args.length > 2 ? args[2] : null);
+			} catch (IllegalArgumentException exception) {
+				sender.sendMessage(ChatUtil.errorMessage(exception.getMessage()));
+			}
+		});
 
 		specifier.addSubArgument(amount);
 
@@ -126,27 +125,7 @@ public class EconomyCommand extends CommandHandler {
 		set.addSubArgument(new Argument(specifier));
 
 		// glw economy reset
-		Argument reset = new Argument("reset", getArgumentTree(), (argument, sender, args) -> {
-			String specifierStr = args.length > 2 ? args[2] : "@me";
-
-			if (specifierStr.equalsIgnoreCase("@me") && !(sender instanceof Player)) {
-				sender.sendMessage(MessageAddon.NOT_PLAYER.toString());
-				return;
-			}
-
-			List<Player> players = specifiers.get(specifierStr).get();
-
-			for (Player player : players) {
-				User<Player> user = userManager.getUser(player);
-
-				user.setBalance(0D);
-				moneyInDatabase(player, 0D);
-				user.getUser().sendMessage(MessageAddon.RESET_MONEY_PLAYER.toString());
-			}
-		}, getPermission() + ".reset");
-
-		reset.setExecuteOnPass(
-				(sender, args) -> collectSpecifiers(specifiers, sender, args.length > 2 ? args[2] : null));
+		Argument reset = economyReset(gangland, specifiers, userManager);
 
 		Argument resetSpecifier = new OptionalArgument(optionalSpecifier, getArgumentTree(),
 		                                               (argument, sender, args) -> reset.executeArgument(sender, args));
@@ -167,6 +146,38 @@ public class EconomyCommand extends CommandHandler {
 	@Override
 	protected void help(CommandSender sender, int page) {
 		getHelpInfo().displayHelp(sender, page, "Economy");
+	}
+
+	@NotNull
+	private Argument economyReset(Gangland gangland, HashMap<String, Supplier<List<Player>>> specifiers,
+	                              UserManager<Player> userManager) {
+		Argument reset = new Argument("reset", getArgumentTree(), (argument, sender, args) -> {
+			String specifierStr = args.length > 2 ? args[2] : "@me";
+
+			if (specifierStr.equalsIgnoreCase("@me") && !(sender instanceof Player)) {
+				sender.sendMessage(MessageAddon.NOT_PLAYER.toString());
+				return;
+			}
+
+			List<Player> players = specifiers.get(specifierStr).get();
+
+			for (Player player : players) {
+				User<Player> user = userManager.getUser(player);
+
+				user.setBalance(0D);
+				moneyInDatabase(gangland, player, 0D);
+				user.getUser().sendMessage(MessageAddon.RESET_MONEY_PLAYER.toString());
+			}
+		}, getPermission() + ".reset");
+
+		reset.setExecuteOnPass((sender, args) -> {
+			try {
+				collectSpecifiers(specifiers, sender, args.length > 2 ? args[2] : null);
+			} catch (IllegalArgumentException exception) {
+				sender.sendMessage(ChatUtil.errorMessage(exception.getMessage()));
+			}
+		});
+		return reset;
 	}
 
 	private void collectSpecifiers(HashMap<String, Supplier<List<Player>>> specifiers, CommandSender sender,
@@ -233,7 +244,7 @@ public class EconomyCommand extends CommandHandler {
 		if (!players.isEmpty()) specifiers.put(target, () -> players);
 	}
 
-	private void moneyInDatabase(Player player, double amount) {
+	private void moneyInDatabase(Gangland gangland, Player player, double amount) {
 		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
 			if (handler instanceof UserDatabase) {
 				DatabaseHelper helper = new DatabaseHelper(gangland, handler);
