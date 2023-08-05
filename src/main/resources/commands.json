@@ -311,6 +311,10 @@
 		"usage": "/glw rank info <name>",
 		"description": "Gives all the information about the specified rank."
 	},
+	"rank_traverse": {
+		"usage": "/glw rank traverse",
+		"description": "Shows the next rank(s)."
+	},
 	"bounty": {
 		"usage": "/glw bounty",
 		"description": "Shows the current bounty or help menu."
