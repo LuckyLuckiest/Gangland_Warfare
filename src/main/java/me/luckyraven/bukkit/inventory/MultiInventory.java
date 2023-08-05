@@ -142,9 +142,6 @@ public class MultiInventory extends Inventory {
 
 		item.customHead(arrow);
 		linkedInventory.setItem(linkedInventory.getSize() - 1, item.build(), false, (inventory, itemBuilder) -> {
-			// close the old inventory
-			linkedInventory.close(player);
-
 			// open the new inventory
 			nextPage().open(player);
 		});
@@ -156,9 +153,6 @@ public class MultiInventory extends Inventory {
 
 		item.customHead(arrow);
 		linkedInventory.setItem(linkedInventory.getSize() - 9, item.build(), false, (inventory, itemBuilder) -> {
-			// close the old inventory
-			linkedInventory.close(player);
-
 			// open the new inventory
 			previousPage().open(player);
 		});
@@ -170,9 +164,6 @@ public class MultiInventory extends Inventory {
 
 		item.customHead(arrow);
 		linkedInventory.setItem(linkedInventory.getSize() - 5, item.build(), false, (inventory, itemBuilder) -> {
-			// close the old inventory
-			linkedInventory.close(player);
-
 			// open the new inventory
 			homePage().open(player);
 		});
