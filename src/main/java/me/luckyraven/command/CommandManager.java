@@ -7,7 +7,6 @@ import me.luckyraven.util.UnhandledError;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,10 +44,9 @@ public final class CommandManager implements CommandExecutor {
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
 	                         @NotNull String[] args) {
 		try {
-			YamlConfiguration message = gangland.getInitializer().getLanguageLoader().getMessage();
 			if (!sender.hasPermission("gangland.command.main")) {
-				message.getString("Errors.Permissions.Command");
-				return true;
+				sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
+				return false;
 			}
 
 			if (args.length == 0) {
@@ -75,6 +73,7 @@ public final class CommandManager implements CommandExecutor {
 		} catch (Exception exception) {
 			gangland.getLogger().warning(UnhandledError.COMMANDS_ERROR + ": " + exception.getMessage());
 			exception.printStackTrace();
+			return false;
 		}
 		return true;
 	}
