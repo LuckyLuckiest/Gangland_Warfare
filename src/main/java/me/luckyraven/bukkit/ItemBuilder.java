@@ -1,5 +1,6 @@
 package me.luckyraven.bukkit;
 
+import com.cryptomorin.xseries.XMaterial;
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteItemNBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
@@ -99,7 +100,7 @@ public class ItemBuilder {
 	}
 
 	public ItemBuilder customHead(String base64) {
-		if (itemStack.getType() != Material.PLAYER_HEAD) return this;
+		if (itemStack.getType() != XMaterial.PLAYER_HEAD.parseMaterial()) return this;
 
 		modifyNBT(nbt -> {
 			ReadWriteNBT skullOwnerCompound = nbt.getOrCreateCompound("SkullOwner");

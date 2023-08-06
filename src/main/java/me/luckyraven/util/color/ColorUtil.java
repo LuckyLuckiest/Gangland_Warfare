@@ -1,5 +1,6 @@
 package me.luckyraven.util.color;
 
+import com.cryptomorin.xseries.XMaterial;
 import org.bukkit.Material;
 
 import java.util.HashMap;
@@ -22,7 +23,7 @@ public class ColorUtil {
 				String materialName = type.name();
 
 				materialMap.put(colorName.toLowerCase() + "_" + materialName.toLowerCase(),
-				                Material.valueOf(colorName + "_" + materialName));
+				                XMaterial.valueOf(colorName + "_" + materialName).parseMaterial());
 			}
 		}
 	}

@@ -1,8 +1,8 @@
 package me.luckyraven.bukkit.inventory;
 
+import com.cryptomorin.xseries.XMaterial;
 import com.google.common.base.Preconditions;
 import me.luckyraven.bukkit.ItemBuilder;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -150,7 +150,7 @@ public class MultiInventory extends Inventory {
 	}
 
 	private void addNextPageItem(Player player, Inventory linkedInventory) {
-		ItemBuilder item  = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName("&a->");
+		ItemBuilder item  = new ItemBuilder(XMaterial.PLAYER_HEAD.parseMaterial()).setDisplayName("&a->");
 		String      arrow = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTYzMzlmZjJlNTM0MmJhMThiZGM0OGE5OWNjYTY1ZDEyM2NlNzgxZDg3ODI3MmY5ZDk2NGVhZDNiOGFkMzcwIn19fQ==";
 
 		item.customHead(arrow);
@@ -161,7 +161,7 @@ public class MultiInventory extends Inventory {
 	}
 
 	private void addPreviousPageItem(Player player, Inventory linkedInventory) {
-		ItemBuilder item  = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName("&c<-");
+		ItemBuilder item  = new ItemBuilder(XMaterial.PLAYER_HEAD.parseMaterial()).setDisplayName("&c<-");
 		String      arrow = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=";
 
 		item.customHead(arrow);
@@ -172,7 +172,7 @@ public class MultiInventory extends Inventory {
 	}
 
 	private void addHomePageItem(Player player, Inventory linkedInventory) {
-		ItemBuilder item = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName("&cBack to " + this.getDisplayTitle());
+		ItemBuilder item = new ItemBuilder(XMaterial.PLAYER_HEAD.parseMaterial()).setDisplayName("&cBack to " + this.getDisplayTitle());
 		String      home = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWUxNTZlYjVhZmZkZGYyMDg2MTdhYWI3YjQzMGZhZDlmMmM5OTFlYzJmMzgzMDRhMGMyMTNmMzFlNzZjYmJlNCJ9fX0=";
 
 		item.customHead(home);

@@ -1,5 +1,6 @@
 package me.luckyraven.command.sub.gang;
 
+import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.Gangland;
 import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
@@ -79,26 +80,31 @@ public class GangColorCommand extends SubArgument {
 					Material mat = ColorUtil.getMaterialByColor(colorName, MaterialType.STAINED_GLASS_PANE.name());
 					confirmGUI.aroundSlot(22, mat);
 
-					confirmGUI.setItem(49, Material.GREEN_CONCRETE, "&aConfirm", null, false, false, (inv, it) -> {
-						// save the data in gang
-						gang.setColor(colorName);
+					confirmGUI.setItem(49, XMaterial.GREEN_CONCRETE.parseMaterial(), "&aConfirm", null, false, false,
+					                   (inv, it) -> {
+						                   // save the data in gang
+						                   gang.setColor(colorName);
 
-						// inform player
-						String colorSelected = ChatUtil.color(
-								colorCode + ChatUtil.capitalize(colorName.toLowerCase().replace("_", " ")));
-						player.sendMessage(MessageAddon.GANG_COLOR_SET.toString().replace("%color%", colorSelected));
+						                   // inform player
+						                   String colorSelected = ChatUtil.color(colorCode + ChatUtil.capitalize(
+								                   colorName.toLowerCase().replace("_", " ")));
+						                   player.sendMessage(MessageAddon.GANG_COLOR_SET.toString()
+						                                                                 .replace("%color%",
+						                                                                          colorSelected));
 
-						// update database
-						for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-							if (handler instanceof GangDatabase gangDatabase) {
-								DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+						                   // update database
+						                   for (DatabaseHandler handler : gangland.getInitializer()
+						                                                          .getDatabaseManager()
+						                                                          .getDatabases())
+							                   if (handler instanceof GangDatabase gangDatabase) {
+								                   DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
-								helper.runQueries(database -> gangDatabase.updateDataTable(gang));
-								break;
-							}
+								                   helper.runQueries(database -> gangDatabase.updateDataTable(gang));
+								                   break;
+							                   }
 
-						confirmGUI.close(player);
-					});
+						                   confirmGUI.close(player);
+					                   });
 
 					confirmGUI.fillInventory();
 
@@ -111,7 +117,7 @@ public class GangColorCommand extends SubArgument {
 				} else ++column;
 			}
 
-			colorGUI.setItem((6 - 1) * 9, Material.RED_CONCRETE, "&4Exit", null, false, false,
+			colorGUI.setItem((6 - 1) * 9, XMaterial.RED_CONCRETE.parseMaterial(), "&4Exit", null, false, false,
 			                 (inventory, item) -> inventory.close(player));
 
 			colorGUI.fillInventory();

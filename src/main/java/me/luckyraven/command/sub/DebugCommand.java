@@ -1,5 +1,6 @@
 package me.luckyraven.command.sub;
 
+import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.Gangland;
 import me.luckyraven.account.Account;
 import me.luckyraven.account.gang.Gang;
@@ -20,10 +21,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.permissions.Permission;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class DebugCommand extends CommandHandler {
 
@@ -78,8 +76,8 @@ public class DebugCommand extends CommandHandler {
 					}
 				}
 
-				List<Material> swords = Arrays.stream(Material.values()).filter(
-						material -> material.name().contains("SWORD")).toList();
+				List<Material> swords = Arrays.stream(XMaterial.values()).map(XMaterial::parseMaterial).filter(
+						Objects::nonNull).filter(material -> material.name().contains("SWORD")).toList();
 
 				items.addAll(swords.stream().map(ItemStack::new).toList());
 

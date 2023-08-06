@@ -1,5 +1,6 @@
 package me.luckyraven.command.sub.gang;
 
+import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.Gangland;
 import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
@@ -548,14 +549,14 @@ public class GangCommand extends CommandHandler {
 		double maxBalance = SettingAddon.getGangMaxBalance();
 
 		// 1 max balance
-		if (balance >= maxBalance) return Material.EMERALD_BLOCK;
+		if (balance >= maxBalance) return XMaterial.EMERALD_BLOCK.parseMaterial();
 			// 3/4 max balance
-		else if (balance >= (double) 3 / 4 * maxBalance) return Material.DIAMOND_BLOCK;
+		else if (balance >= (double) 3 / 4 * maxBalance) return XMaterial.DIAMOND_BLOCK.parseMaterial();
 			// 1/2 max balance
-		else if (balance >= (double) 1 / 2 * maxBalance) return Material.GOLD_BLOCK;
+		else if (balance >= (double) 1 / 2 * maxBalance) return XMaterial.GOLD_BLOCK.parseMaterial();
 
 		// 1/4 max balance
-		return Material.IRON_BLOCK;
+		return XMaterial.IRON_BLOCK.parseMaterial();
 	}
 
 	private void gangStat(Gangland gangland, User<Player> user, UserManager<Player> userManager, Gang gang) {
@@ -569,17 +570,18 @@ public class GangCommand extends CommandHandler {
 				                      SettingAddon.formatDouble(gang.getBalance())))), true, false);
 
 		// id
-		gui.setItem(13, Material.CRAFTING_TABLE, "&bID", new ArrayList<>(List.of("&e" + gang.getId())), false, false);
+		gui.setItem(13, XMaterial.CRAFTING_TABLE.parseMaterial(), "&bID", new ArrayList<>(List.of("&e" + gang.getId())),
+		            false, false);
 
 		// description
-		gui.setItem(15, Material.PAPER, "&bDescription", new ArrayList<>(List.of("&e" + gang.getDescription())), false,
-		            false, (inventory, items) -> {
+		gui.setItem(15, XMaterial.PAPER.parseMaterial(), "&bDescription",
+		            new ArrayList<>(List.of("&e" + gang.getDescription())), false, false, (inventory, items) -> {
 					user.getUser().performCommand(Argument.getArgumentSequence(
 							Objects.requireNonNull(getArgumentTree().find(new Argument("desc", getArgumentTree())))));
 				});
 
 		// members
-		gui.setItem(19, Material.PLAYER_HEAD, "&bMembers", new ArrayList<>(
+		gui.setItem(19, XMaterial.PLAYER_HEAD.parseMaterial(), "&bMembers", new ArrayList<>(
 				            List.of("&a" + gang.getOnlineMembers(userManager).size() + "&7/&e" + gang.getGroup().size())), false,
 		            false, (inventory, item) -> {
 					List<ItemStack> items = new ArrayList<>();
@@ -592,7 +594,7 @@ public class GangCommand extends CommandHandler {
 						data.add("&7Contribution:&e " + member.getContribution());
 						data.add("&7Joined:&e " + member.gangJoinDate());
 
-						ItemBuilder itemBuilder = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName(
+						ItemBuilder itemBuilder = new ItemBuilder(XMaterial.PLAYER_HEAD.parseMaterial()).setDisplayName(
 								"&b" + offlinePlayer.getName()).setLore(data);
 
 						itemBuilder.modifyNBT(nbt -> nbt.setString("SkullOwner", offlinePlayer.getName()));
@@ -607,37 +609,37 @@ public class GangCommand extends CommandHandler {
 				});
 
 		// bounty
-		gui.setItem(22, Material.BLAZE_ROD, "&bBounty", new ArrayList<>(
+		gui.setItem(22, XMaterial.BLAZE_ROD.parseMaterial(), "&bBounty", new ArrayList<>(
 				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
 				                      SettingAddon.formatDouble(gang.getBounty())))), true, false);
 
 		// ally
-		gui.setItem(25, Material.REDSTONE, "&bAlly", List.of("&e" + gang.getAlly().size()), false, false,
-		            (inventory, item) -> {
-			            List<ItemStack> items = new ArrayList<>();
-			            for (Gang ally : gang.getAlly()) {
-				            List<String> data = new ArrayList<>();
-				            data.add("&7ID:&e " + ally.getId());
-				            data.add(String.format("&7Members:&a %d&7/&e%d", ally.getOnlineMembers(userManager).size(),
-				                                   ally.getGroup().size()));
-				            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-				            data.add("&7Created:&e " + sdf.format(ally.getDateCreated()));
+		gui.setItem(25, XMaterial.REDSTONE.parseMaterial(), "&bAlly", List.of("&e" + gang.getAlly().size()), false,
+		            false, (inventory, item) -> {
+					List<ItemStack> items = new ArrayList<>();
+					for (Gang ally : gang.getAlly()) {
+						List<String> data = new ArrayList<>();
+						data.add("&7ID:&e " + ally.getId());
+						data.add(String.format("&7Members:&a %d&7/&e%d", ally.getOnlineMembers(userManager).size(),
+						                       ally.getGroup().size()));
+						SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+						data.add("&7Created:&e " + sdf.format(ally.getDateCreated()));
 
-				            ItemBuilder itemBuilder = new ItemBuilder(Material.REDSTONE).setDisplayName(
-						            "&b" + ally.getDisplayNameString()).setLore(data);
+						ItemBuilder itemBuilder = new ItemBuilder(XMaterial.REDSTONE.parseMaterial()).setDisplayName(
+								"&b" + ally.getDisplayNameString()).setLore(data);
 
-				            items.add(itemBuilder.build());
-			            }
+						items.add(itemBuilder.build());
+					}
 
-			            MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, items, "&6&lGang Allies",
-			                                                                        user.getUser(), false, false);
+					MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, items, "&6&lGang Allies",
+					                                                            user.getUser(), false, false);
 
-			            multi.open(user.getUser());
-		            });
+					multi.open(user.getUser());
+				});
 
 		// date created
-		gui.setItem(29, Material.WRITABLE_BOOK, "&bCreated", new ArrayList<>(List.of("&e" + gang.getDateCreated())),
-		            true, false);
+		gui.setItem(29, XMaterial.WRITABLE_BOOK.parseMaterial(), "&bCreated",
+		            new ArrayList<>(List.of("&e" + gang.getDateCreated())), true, false);
 
 		// color
 		gui.setItem(31, ColorUtil.getMaterialByColor(gang.getColor(), MaterialType.WOOL.name()), "&bColor",

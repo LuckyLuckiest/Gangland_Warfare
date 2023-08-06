@@ -1,5 +1,6 @@
 package me.luckyraven.bukkit.inventory;
 
+import com.cryptomorin.xseries.XMaterial;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
 import me.luckyraven.bukkit.ItemBuilder;
@@ -245,13 +246,21 @@ public class Inventory implements Listener {
 	}
 
 	private Material getFillItem() {
-		Material item = Material.getMaterial(SettingAddon.getInventoryFillItem());
-		return item != null ? item : Material.BLACK_STAINED_GLASS_PANE;
+		Material item = XMaterial.matchXMaterial(SettingAddon.getInventoryFillItem())
+		                         .stream()
+		                         .toList()
+		                         .get(0)
+		                         .parseMaterial();
+		return item != null ? item : XMaterial.BLACK_STAINED_GLASS_PANE.parseMaterial();
 	}
 
 	private Material getLineItem() {
-		Material item = Material.getMaterial(SettingAddon.getInventoryLineItem());
-		return item != null ? item : Material.WHITE_STAINED_GLASS_PANE;
+		Material item = XMaterial.matchXMaterial(SettingAddon.getInventoryLineItem())
+		                         .stream()
+		                         .toList()
+		                         .get(0)
+		                         .parseMaterial();
+		return item != null ? item : XMaterial.WHITE_STAINED_GLASS_PANE.parseMaterial();
 	}
 
 	public void open(Player player) {
