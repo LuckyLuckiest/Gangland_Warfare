@@ -601,7 +601,7 @@ public class GangCommand extends CommandHandler {
 					}
 
 					MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, items, "&6&lGang Members",
-					                                                            user.getUser());
+					                                                            user.getUser(), false, false);
 
 					multi.open(user.getUser());
 				});
@@ -630,7 +630,7 @@ public class GangCommand extends CommandHandler {
 			            }
 
 			            MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, items, "&6&lGang Allies",
-			                                                                        user.getUser());
+			                                                                        user.getUser(), false, false);
 
 			            multi.open(user.getUser());
 		            });

@@ -173,7 +173,8 @@ public class Phone {
 				}
 
 				MultiInventory multiInventory = MultiInventory.dynamicMultiInventory(gangland, gangsItems,
-				                                                                     "&6&lGangs View", user.getUser());
+				                                                                     "&6&lGangs View", user.getUser(),
+				                                                                     false, true);
 
 				multiInventory.open(user.getUser());
 			});

@@ -83,7 +83,8 @@ public class DebugCommand extends CommandHandler {
 
 				items.addAll(swords.stream().map(ItemStack::new).toList());
 
-				MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, items, "&6Debug items", player);
+				MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, items, "&6Debug items", player,
+				                                                            false, false);
 
 				multi.open(player);
 			} else {
