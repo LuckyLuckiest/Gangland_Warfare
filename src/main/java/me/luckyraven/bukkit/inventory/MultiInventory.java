@@ -3,6 +3,7 @@ package me.luckyraven.bukkit.inventory;
 import com.cryptomorin.xseries.XMaterial;
 import com.google.common.base.Preconditions;
 import me.luckyraven.bukkit.ItemBuilder;
+import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -56,8 +57,9 @@ public class MultiInventory extends Inventory {
 
 		addItems(multi, items, 0, items.size(), staticItemsAllowed, staticItems);
 		InventoryAddons.createBoarder(multi);
-		// if there are static items column then create a line at column 2
-		if (staticItemsAllowed) InventoryAddons.verticalLine(multi, 2);
+		// if there is static items column, then create a line at column 2
+		if (staticItemsAllowed) InventoryAddons.verticalLine(multi, 2, InventoryAddons.getFillItem(),
+		                                                     SettingAddon.getInventoryFillName(), true);
 
 		// the other pages
 		for (int i = 1; i < pages; i++) {
@@ -70,8 +72,9 @@ public class MultiInventory extends Inventory {
 
 			addItems(inv, items, startIndex, endIndex, staticItemsAllowed, staticItems);
 			InventoryAddons.createBoarder(inv);
-			// if there are static items column then create a line at column 2
-			if (staticItemsAllowed) InventoryAddons.verticalLine(inv, 2);
+			// if there is static items column, then create a line at column 2
+			if (staticItemsAllowed) InventoryAddons.verticalLine(multi, 2, InventoryAddons.getFillItem(),
+			                                                     SettingAddon.getInventoryFillName(), true);
 
 			multi.addPage(player, inv);
 		}
@@ -85,7 +88,7 @@ public class MultiInventory extends Inventory {
 		int row        = 2;
 		int column     = 2 + additional;
 
-		InventoryAddons.verticalLine(inv, 1, staticItems);
+		if (staticItemsAllowed) InventoryAddons.verticalLine(inv, 1, staticItems);
 
 		for (int i = startIndex; i < endIndex && row % 6 != 0; i++) {
 			inv.setItem((row - 1) * 9 + (column - 1), items.get(i), false);

@@ -135,7 +135,7 @@ public class InventoryAddons {
 		}
 	}
 
-	private static Material getFillItem() {
+	public static Material getFillItem() {
 		Material item = XMaterial.matchXMaterial(SettingAddon.getInventoryFillItem())
 		                         .stream()
 		                         .toList()
@@ -144,7 +144,7 @@ public class InventoryAddons {
 		return item != null ? item : XMaterial.BLACK_STAINED_GLASS_PANE.parseMaterial();
 	}
 
-	private static Material getLineItem() {
+	public static Material getLineItem() {
 		Material item = XMaterial.matchXMaterial(SettingAddon.getInventoryLineItem())
 		                         .stream()
 		                         .toList()
