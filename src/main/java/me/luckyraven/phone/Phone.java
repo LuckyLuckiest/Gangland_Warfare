@@ -21,10 +21,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 
 public class Phone {
 
@@ -79,7 +78,9 @@ public class Phone {
 		PhoneInventoryEvent event = new PhoneInventoryEvent(user);
 		gangland.getServer().getPluginManager().callEvent(event);
 
-		populateInventory(user);
+		populateInventory(user, (inventory, item) -> {
+			inventory.open(player);
+		});
 		inventory.open(player);
 	}
 
@@ -104,7 +105,7 @@ public class Phone {
 		return true;
 	}
 
-	private void populateInventory(User<Player> user) {
+	private void populateInventory(User<Player> user, BiConsumer<Inventory, ItemBuilder> callback) {
 		// missions
 		inventory.setItem(11, XMaterial.DIAMOND.parseMaterial(), "&eMissions", null, false, false);
 
@@ -152,8 +153,8 @@ public class Phone {
 			newGang.setItem(23, XMaterial.BOOKSHELF.parseMaterial(), "&b&lSearch Gang", null, true, false,
 			                (inv, it) -> {
 				                // open a multi inventory that displays all the gangs
-				                List<Gang>      gangs      = gangManager.getGangs().values().stream().toList();
-				                List<ItemStack> gangsItems = new ArrayList<>();
+				                List<Gang> gangs = gangManager.getGangs().values().stream().toList();
+				                AtomicReference<List<ItemStack>> gangsItems = new AtomicReference<>(new ArrayList<>());
 
 				                for (Gang gang : gangs) {
 					                ItemBuilder itemBuilder = new ItemBuilder(
@@ -181,25 +182,52 @@ public class Phone {
 					                String finalName = name;
 					                itemBuilder.modifyNBT(nbt -> nbt.setString("SkullOwner", finalName));
 
-					                gangsItems.add(itemBuilder.build());
+					                gangsItems.get().add(itemBuilder.build());
 				                }
 
-				                List<ItemStack> sideItems = new ArrayList<>();
+								// need to use a list to save the location
+				                Map<ItemStack, BiConsumer<Inventory, ItemBuilder>> staticItems = new HashMap<>();
 
 				                // search
 				                ItemBuilder searchItem = new ItemBuilder(
 						                XMaterial.WRITABLE_BOOK.parseMaterial()).setDisplayName("&eSearch");
-				                sideItems.add(searchItem.build());
+				                staticItems.put(searchItem.build(), (currInv, itemBuilder) -> {
+					                // opens an anvil and enters the query
+					                new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
+						                String output = stateSnapshot.getText();
+
+						                if (output == null || output.isEmpty()) {
+							                return Collections.emptyList();
+						                }
+
+						                gangsItems.set(
+								                gangsItems.get()
+								                          .stream()
+								                          .filter(itemStack -> Objects.requireNonNull(
+										                                                      itemStack.getItemMeta())
+								                                                      .getDisplayName()
+								                                                      .contains(output))
+								                          .toList());
+
+						                callback.accept(currInv, itemBuilder);
+
+						                return List.of(AnvilGUI.ResponseAction.close());
+					                }).text("").title("Enter the query").plugin(gangland).open(user.getUser());
+
+					                // when done, close the anvil and change the items according to the query
+				                });
 				                // sort
 				                ItemBuilder sortItem = new ItemBuilder(XMaterial.GLOW_ITEM_FRAME.parseMaterial());
+				                staticItems.put(sortItem.build(), (currInv, itemBuilder) -> {
+					                // sorts the items according to the name
+				                });
 
 				                MultiInventory multiInventory = MultiInventory.dynamicMultiInventory(gangland,
-				                                                                                     gangsItems,
+				                                                                                     gangsItems.get(),
 				                                                                                     "&6&lGangs View",
 				                                                                                     user.getUser(),
 				                                                                                     true, true,
-				                                                                                     sideItems.toArray(
-						                                                                                     ItemStack[]::new));
+				                                                                                     staticItems);
 
 				                multiInventory.open(user.getUser());
 			                });
