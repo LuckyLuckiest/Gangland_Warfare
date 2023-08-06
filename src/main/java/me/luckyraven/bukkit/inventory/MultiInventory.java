@@ -8,8 +8,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import javax.annotation.Nullable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 public class MultiInventory extends Inventory {
 
@@ -26,10 +29,10 @@ public class MultiInventory extends Inventory {
 
 	public static MultiInventory dynamicMultiInventory(JavaPlugin plugin, List<ItemStack> items, String name,
 	                                                   Player player, boolean staticItemsAllowed, boolean fixedSize,
-	                                                   ItemStack... staticItems) {
+	                                                   @Nullable Map<ItemStack, BiConsumer<Inventory, ItemBuilder>> staticItems) {
 		if (staticItemsAllowed) {
-			Preconditions.checkArgument(staticItems != null, "No static items set");
-			Preconditions.checkArgument(staticItems.length <= 6, "Can't add more items than max rows");
+			Preconditions.checkNotNull(staticItems, "No static items set");
+			Preconditions.checkArgument(staticItems.size() <= 6, "Can't add more items than max rows");
 		}
 
 		int maxRows    = 4;
@@ -83,12 +86,16 @@ public class MultiInventory extends Inventory {
 	}
 
 	private static void addItems(Inventory inv, List<ItemStack> items, int startIndex, int endIndex,
-	                             boolean staticItemsAllowed, ItemStack... staticItems) {
+	                             boolean staticItemsAllowed,
+	                             @Nullable Map<ItemStack, BiConsumer<Inventory, ItemBuilder>> staticItems) {
 		int additional = staticItemsAllowed ? 1 : 0;
 		int row        = 2;
 		int column     = 2 + additional;
 
-		if (staticItemsAllowed) InventoryAddons.verticalLine(inv, 1, staticItems);
+		if (staticItemsAllowed) {
+			Preconditions.checkNotNull(staticItems, "No static items set");
+			verticalLine(inv, 1, staticItems);
+		}
 
 		for (int i = startIndex; i < endIndex && row % 6 != 0; i++) {
 			inv.setItem((row - 1) * 9 + (column - 1), items.get(i), false);
@@ -97,6 +104,25 @@ public class MultiInventory extends Inventory {
 				column = 2;
 				++row;
 			} else ++column;
+		}
+	}
+
+	private static void verticalLine(Inventory inventory, int column,
+	                                 Map<ItemStack, BiConsumer<Inventory, ItemBuilder>> staticItems) {
+		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
+
+		// from 1-6
+		int i = 0;
+		for (Map.Entry<ItemStack, BiConsumer<Inventory, ItemBuilder>> entry : staticItems.entrySet()) {
+			int slot = (column - 1) + 9 * i;
+
+			if (inventory.getInventory().getItem(slot) != null) continue;
+
+			if (i < staticItems.size()) inventory.setItem(slot, entry.getKey(), false, entry.getValue());
+			else inventory.getInventory().setItem(slot, new ItemBuilder(InventoryAddons.getLineItem()).setDisplayName(
+					SettingAddon.getInventoryLineName()).build());
+
+			++i;
 		}
 	}
 
