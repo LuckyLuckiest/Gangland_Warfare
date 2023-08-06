@@ -18,10 +18,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 public class Inventory implements Listener {
@@ -143,35 +140,78 @@ public class Inventory implements Listener {
 				}
 	}
 
-	public void horizontalLine(int row) {
+	public void horizontalLine(int row, ItemStack... items) {
 		int rows = size / 9;
 		Preconditions.checkArgument(row > 0 && row < rows + 1,
 		                            String.format("Rows need to be between 1 and %d inclusive", rows));
-		ItemBuilder itemBuilder = new ItemBuilder(getLineItem());
-
-		ItemStack item = itemBuilder.setDisplayName(SettingAddon.getInventoryLineName()).build();
 
 		// always 9 slots
+		int slot = (row - 1) * 9;
 		for (int i = 0; i < 9; i++) {
-			int slot = (row - 1) * 9 + i;
-			if (inventory.getItem(slot) != null) continue;
-			inventory.setItem(slot, item);
+
+			if (inventory.getItem(slot + i) != null) continue;
+
+			if (i < items.length) inventory.setItem(slot + i, items[i]);
+			else inventory.setItem(slot + i, new ItemBuilder(getLineItem()).setDisplayName(
+					SettingAddon.getInventoryLineName()).build());
 		}
 	}
 
-	public void verticalLine(int column) {
-		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
-		ItemBuilder itemBuilder = new ItemBuilder(getLineItem());
+	public void horizontalLine(int row, Material material, String name, boolean all) {
+		int rows = size / 9;
+		Preconditions.checkArgument(row > 0 && row < rows + 1,
+		                            String.format("Rows need to be between 1 and %d inclusive", rows));
+		ItemBuilder itemBuilder = new ItemBuilder(material);
+		ItemStack   item        = itemBuilder.setDisplayName(name).build();
 
-		ItemStack item = itemBuilder.setDisplayName(SettingAddon.getInventoryLineName()).build();
+		ItemStack[] items = {item};
+		if (all) {
+			items = new ItemStack[9];
+
+			Arrays.fill(items, item);
+		}
+
+		horizontalLine(row, items);
+	}
+
+	public void horizontalLine(int row) {
+		horizontalLine(row, getLineItem(), SettingAddon.getInventoryLineName(), true);
+	}
+
+	public void verticalLine(int column, ItemStack... items) {
+		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
 
 		// from 1-6
 		int rows = size / 9;
 		for (int i = 0; i < rows; i++) {
 			int slot = (column - 1) + 9 * i;
+
 			if (inventory.getItem(slot) != null) continue;
-			inventory.setItem(slot, item);
+
+			if (i < items.length) inventory.setItem(slot, items[i]);
+			else inventory.setItem(slot, new ItemBuilder(getLineItem()).setDisplayName(
+					SettingAddon.getInventoryLineName()).build());
 		}
+	}
+
+	public void verticalLine(int column, Material material, String name, boolean all) {
+		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
+
+		ItemBuilder itemBuilder = new ItemBuilder(material);
+		ItemStack   item        = itemBuilder.setDisplayName(name).build();
+
+		ItemStack[] items = {item};
+		if (all) {
+			items = new ItemStack[size / 9];
+
+			Arrays.fill(items, item);
+		}
+
+		verticalLine(column, items);
+	}
+
+	public void verticalLine(int column) {
+		verticalLine(column, getLineItem(), SettingAddon.getInventoryLineName(), true);
 	}
 
 	public void createBoarder() {
@@ -179,9 +219,9 @@ public class Inventory implements Listener {
 
 		ItemStack item = itemBuilder.setDisplayName(SettingAddon.getInventoryFillName()).build();
 
-		int rows = inventory.getSize() / 9;
+		int rows = size / 9;
 
-		for (int i = 0; i < inventory.getSize(); i++) {
+		for (int i = 0; i < size; i++) {
 			int row = i / 9;
 
 			// place items on the borders only
