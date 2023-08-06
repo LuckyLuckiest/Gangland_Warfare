@@ -6,6 +6,7 @@ import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.Inventory;
+import me.luckyraven.bukkit.inventory.InventoryAddons;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
@@ -78,7 +79,7 @@ public class GangColorCommand extends SubArgument {
 					confirmGUI.setItem(22, itemBuilder.build(), false);
 
 					Material mat = ColorUtil.getMaterialByColor(colorName, MaterialType.STAINED_GLASS_PANE.name());
-					confirmGUI.aroundSlot(22, mat);
+					InventoryAddons.aroundSlot(confirmGUI, 22, mat);
 
 					confirmGUI.setItem(49, XMaterial.GREEN_CONCRETE.parseMaterial(), "&aConfirm", null, false, false,
 					                   (inv, it) -> {
@@ -106,7 +107,7 @@ public class GangColorCommand extends SubArgument {
 						                   confirmGUI.close(player);
 					                   });
 
-					confirmGUI.fillInventory();
+					InventoryAddons.fillInventory(confirmGUI);
 
 					confirmGUI.open(player);
 				});
@@ -120,7 +121,7 @@ public class GangColorCommand extends SubArgument {
 			colorGUI.setItem((6 - 1) * 9, XMaterial.RED_CONCRETE.parseMaterial(), "&4Exit", null, false, false,
 			                 (inventory, item) -> inventory.close(player));
 
-			colorGUI.fillInventory();
+			InventoryAddons.fillInventory(colorGUI);
 
 			colorGUI.open(player);
 		};

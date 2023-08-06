@@ -8,6 +8,7 @@ import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.account.gang.Member;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.Inventory;
+import me.luckyraven.bukkit.inventory.InventoryAddons;
 import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.data.user.User;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -190,7 +191,7 @@ public class Phone {
 						                XMaterial.WRITABLE_BOOK.parseMaterial()).setDisplayName("&eSearch");
 				                sideItems.add(searchItem.build());
 				                // sort
-//				                ItemBuilder sortItem = new ItemBuilder(XMaterial.GLOW_ITEM_FRAME.parseMaterial());
+				                ItemBuilder sortItem = new ItemBuilder(XMaterial.GLOW_ITEM_FRAME.parseMaterial());
 
 				                MultiInventory multiInventory = MultiInventory.dynamicMultiInventory(gangland,
 				                                                                                     gangsItems,
@@ -203,12 +204,13 @@ public class Phone {
 				                multiInventory.open(user.getUser());
 			                });
 
-			newGang.verticalLine(2);
-			newGang.verticalLine(8);
-			newGang.horizontalLine(1);
-			newGang.horizontalLine(newGang.getSize() / 9);
+			InventoryAddons.verticalLine(newGang, 2);
+			InventoryAddons.verticalLine(newGang, 8);
 
-			newGang.fillInventory();
+			InventoryAddons.horizontalLine(newGang, 1);
+			InventoryAddons.horizontalLine(newGang, newGang.getSize() / 9);
+
+			InventoryAddons.fillInventory(newGang);
 
 			newGang.open(user.getUser());
 		});
@@ -235,10 +237,10 @@ public class Phone {
 			// show taxi services
 		});
 
-		inventory.verticalLine(2);
-		inventory.verticalLine(8);
+		InventoryAddons.verticalLine(inventory, 2);
+		InventoryAddons.verticalLine(inventory, 8);
 
-		inventory.fillInventory();
+		InventoryAddons.fillInventory(inventory);
 	}
 
 }

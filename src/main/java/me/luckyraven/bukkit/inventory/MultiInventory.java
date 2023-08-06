@@ -55,9 +55,9 @@ public class MultiInventory extends Inventory {
 		MultiInventory multi = new MultiInventory(plugin, String.format(modifiedName, 1, pages), initialPage);
 
 		addItems(multi, items, 0, items.size(), staticItemsAllowed, staticItems);
-		multi.createBoarder();
+		InventoryAddons.createBoarder(multi);
 		// if there are static items column then create a line at column 2
-		if (staticItemsAllowed) multi.verticalLine(2);
+		if (staticItemsAllowed) InventoryAddons.verticalLine(multi, 2);
 
 		// the other pages
 		for (int i = 1; i < pages; i++) {
@@ -69,9 +69,9 @@ public class MultiInventory extends Inventory {
 			int endIndex   = Math.min(startIndex + perPage, items.size());
 
 			addItems(inv, items, startIndex, endIndex, staticItemsAllowed, staticItems);
-			inv.createBoarder();
+			InventoryAddons.createBoarder(inv);
 			// if there are static items column then create a line at column 2
-			if (staticItemsAllowed) inv.verticalLine(2);
+			if (staticItemsAllowed) InventoryAddons.verticalLine(inv, 2);
 
 			multi.addPage(player, inv);
 		}
@@ -85,7 +85,7 @@ public class MultiInventory extends Inventory {
 		int row        = 2;
 		int column     = 2 + additional;
 
-		inv.verticalLine(1, staticItems);
+		InventoryAddons.verticalLine(inv, 1, staticItems);
 
 		for (int i = startIndex; i < endIndex && row % 6 != 0; i++) {
 			inv.setItem((row - 1) * 9 + (column - 1), items.get(i), false);
@@ -172,8 +172,9 @@ public class MultiInventory extends Inventory {
 	}
 
 	private void addHomePageItem(Player player, Inventory linkedInventory) {
-		ItemBuilder item = new ItemBuilder(XMaterial.PLAYER_HEAD.parseMaterial()).setDisplayName("&cBack to " + this.getDisplayTitle());
-		String      home = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWUxNTZlYjVhZmZkZGYyMDg2MTdhYWI3YjQzMGZhZDlmMmM5OTFlYzJmMzgzMDRhMGMyMTNmMzFlNzZjYmJlNCJ9fX0=";
+		ItemBuilder item = new ItemBuilder(XMaterial.PLAYER_HEAD.parseMaterial()).setDisplayName(
+				"&cBack to " + this.getDisplayTitle());
+		String home = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWUxNTZlYjVhZmZkZGYyMDg2MTdhYWI3YjQzMGZhZDlmMmM5OTFlYzJmMzgzMDRhMGMyMTNmMzFlNzZjYmJlNCJ9fX0=";
 
 		item.customHead(home);
 		linkedInventory.setItem(linkedInventory.getSize() - 5, item.build(), false, (inventory, itemBuilder) -> {

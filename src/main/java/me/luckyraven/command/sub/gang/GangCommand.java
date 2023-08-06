@@ -8,6 +8,7 @@ import me.luckyraven.account.gang.Member;
 import me.luckyraven.account.gang.MemberManager;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.Inventory;
+import me.luckyraven.bukkit.inventory.InventoryAddons;
 import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.CommandManager;
@@ -652,7 +653,7 @@ public class GangCommand extends CommandHandler {
 		gui.setItem(33, ColorUtil.getMaterialByColor(gang.getColor(), MaterialType.BANNER.name()), "&bStatistics",
 		            new ArrayList<>(List.of("&eGang stats")), false, false);
 
-		gui.fillInventory();
+		InventoryAddons.fillInventory(gui);
 
 		gui.open(user.getUser());
 	}
