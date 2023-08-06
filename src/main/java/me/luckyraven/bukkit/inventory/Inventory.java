@@ -17,7 +17,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 public class Inventory implements Listener {
@@ -138,7 +141,7 @@ public class Inventory implements Listener {
 
 		int rawSlot = event.getRawSlot();
 
-		inv.clickableSlots.getOrDefault(rawSlot, (i, item) -> {}).accept(this,
+		inv.clickableSlots.getOrDefault(rawSlot, (i, item) -> {}).accept(inv,
 		                                                                 inv.clickableItem.getOrDefault(rawSlot, null));
 		event.setCancelled(!inv.draggableSlots.contains(rawSlot));
 	}
