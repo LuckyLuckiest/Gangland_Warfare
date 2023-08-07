@@ -111,7 +111,6 @@ public class BankCommand extends CommandHandler {
 
 					helper.runQueries(database -> {
 						userDatabase.updateDataTable(user);
-						userDatabase.updateAccountTable(user);
 						userDatabase.updateBankTable(user);
 					});
 
@@ -194,7 +193,6 @@ public class BankCommand extends CommandHandler {
 
 					helper.runQueries(database -> {
 						userDatabase.updateDataTable(user);
-						userDatabase.updateAccountTable(user);
 						userDatabase.updateBankTable(user);
 					});
 
@@ -385,10 +383,7 @@ public class BankCommand extends CommandHandler {
 			if (handler instanceof UserDatabase userDatabase) {
 				DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
-				helper.runQueries(database -> {
-					userDatabase.updateBankTable(user);
-					userDatabase.updateAccountTable(user);
-				});
+				helper.runQueries(database -> userDatabase.updateBankTable(user));
 
 				break;
 			}

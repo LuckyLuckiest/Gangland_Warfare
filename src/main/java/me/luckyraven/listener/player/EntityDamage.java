@@ -121,11 +121,8 @@ public class EntityDamage implements Listener {
 
 				helper.runQueries(database -> {
 					userDatabase.updateDataTable(user);
-					userDatabase.updateAccountTable(user);
-					if (otherUser != null) {
-						userDatabase.updateDataTable(otherUser);
-						userDatabase.updateAccountTable(otherUser);
-					}
+					if (otherUser != null) userDatabase.updateDataTable(otherUser);
+
 				});
 				break;
 			}
