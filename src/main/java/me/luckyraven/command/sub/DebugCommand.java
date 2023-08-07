@@ -2,8 +2,10 @@ package me.luckyraven.command.sub;
 
 import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.Gangland;
-import me.luckyraven.account.Account;
 import me.luckyraven.account.gang.Gang;
+import me.luckyraven.account.gang.GangManager;
+import me.luckyraven.account.gang.Member;
+import me.luckyraven.account.gang.MemberManager;
 import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
@@ -38,24 +40,46 @@ public class DebugCommand extends CommandHandler {
 	protected void initializeArguments(Gangland gangland) {
 		// user data
 		Argument userData = new Argument("user-data", getArgumentTree(), (argument, sender, args) -> {
+			UserManager<Player> userManager = gangland.getInitializer().getUserManager();
 			if (sender instanceof Player player) {
-				UserManager<Player> userManager = gangland.getInitializer().getUserManager();
-
 				User<Player> user = userManager.getUser(player);
-
-				for (Account<?, ?> account : user.getLinkedAccounts())
-					sender.sendMessage(account.toString());
 
 				player.sendMessage(user.toString());
 			} else {
-				sender.sendMessage("Does nothing yet!");
+				for (User<Player> user : userManager.getUsers().values())
+					sender.sendMessage(user.toString());
 			}
 		});
 
 		// gang data
 		Argument gangData = new Argument("gang-data", getArgumentTree(), (argument, sender, args) -> {
-			for (Gang gang : gangland.getInitializer().getGangManager().getGangs().values())
-				sender.sendMessage(gang.toString());
+			UserManager<Player> userManager = gangland.getInitializer().getUserManager();
+			GangManager         gangManager = gangland.getInitializer().getGangManager();
+			if (sender instanceof Player player) {
+				User<Player> user = userManager.getUser(player);
+				if (user.hasGang()) {
+					Gang gang = gangManager.getGang(user.getGangId());
+
+					player.sendMessage(gang.toString());
+				} else {
+					player.sendMessage("Not in a gang...");
+				}
+			} else {
+				for (Gang gang : gangland.getInitializer().getGangManager().getGangs().values())
+					sender.sendMessage(gang.toString());
+			}
+		});
+
+		Argument memberData = new Argument("member-data", getArgumentTree(), (argument, sender, args) -> {
+			MemberManager memberManager = gangland.getInitializer().getMemberManager();
+			if (sender instanceof Player player) {
+				Member member = memberManager.getMember(player.getUniqueId());
+
+				player.sendMessage(member.toString());
+			} else {
+				for (Member member : memberManager.getMembers().values())
+					sender.sendMessage(member.toString());
+			}
 		});
 
 		// rank data
@@ -65,7 +89,7 @@ public class DebugCommand extends CommandHandler {
 		});
 
 		// multi inventory
-		Argument multiInv = new Argument("multi-inv", getArgumentTree(), (argument, sender, args) -> {
+		Argument multiInv = new Argument("multi", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
 
 				List<ItemStack> items = new ArrayList<>();
@@ -81,8 +105,8 @@ public class DebugCommand extends CommandHandler {
 
 				items.addAll(swords.stream().map(ItemStack::new).toList());
 
-				MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, items, "&6Debug items", player,
-				                                                            false, false, null);
+				MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, items, "&6Debug items", false,
+				                                                            false, null);
 
 				multi.open(player);
 			} else {
@@ -107,6 +131,8 @@ public class DebugCommand extends CommandHandler {
 					stateSnapshot.getPlayer().sendMessage(stateSnapshot.getText());
 					return List.of(AnvilGUI.ResponseAction.close());
 				}).text(text).title("Enter your answer.").plugin(gangland).open(player);
+			} else {
+				sender.sendMessage("How will you view the anvil inventory?");
 			}
 		});
 
@@ -120,6 +146,7 @@ public class DebugCommand extends CommandHandler {
 		List<Argument> arguments = new ArrayList<>();
 
 		arguments.add(userData);
+		arguments.add(memberData);
 		arguments.add(gangData);
 		arguments.add(rankData);
 		arguments.add(multiInv);
