@@ -27,9 +27,10 @@ public class BountyCommand extends CommandHandler {
 	public BountyCommand(Gangland gangland) {
 		super(gangland, "bounty", false);
 
-		List<CommandInformation> list = getCommands().entrySet().stream().filter(
+		List<CommandInformation> list = getCommands().entrySet().parallelStream().filter(
 				entry -> entry.getKey().startsWith("bounty")).sorted(Map.Entry.comparingByKey()).map(
 				Map.Entry::getValue).toList();
+
 		getHelpInfo().addAll(list);
 	}
 
@@ -195,7 +196,7 @@ public class BountyCommand extends CommandHandler {
 			if (handler instanceof UserDatabase userDatabase) {
 				DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
-				helper.runQueries(database -> userDatabase.updateAccountTable(user));
+				helper.runQueries(database -> userDatabase.updateDataTable(user));
 				break;
 			}
 	}

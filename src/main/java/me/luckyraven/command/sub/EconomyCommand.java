@@ -19,7 +19,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.sql.Types;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -28,9 +27,10 @@ public class EconomyCommand extends CommandHandler {
 	public EconomyCommand(Gangland gangland) {
 		super(gangland, "economy", false, "eco");
 
-		List<CommandInformation> list = getCommands().entrySet().stream().filter(
+		List<CommandInformation> list = getCommands().entrySet().parallelStream().filter(
 				entry -> entry.getKey().startsWith("economy")).sorted(Map.Entry.comparingByKey()).map(
 				Map.Entry::getValue).toList();
+
 		getHelpInfo().addAll(list);
 	}
 
@@ -98,7 +98,7 @@ public class EconomyCommand extends CommandHandler {
 					                                       .toString()
 					                                       .replace("%amount%", SettingAddon.formatDouble(value)));
 					user.setBalance(value);
-					moneyInDatabase(gangland, player, value);
+					moneyInDatabase(gangland, user);
 				}
 			} catch (NumberFormatException exception) {
 				sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[3]));
@@ -165,7 +165,7 @@ public class EconomyCommand extends CommandHandler {
 				User<Player> user = userManager.getUser(player);
 
 				user.setBalance(0D);
-				moneyInDatabase(gangland, player, 0D);
+				moneyInDatabase(gangland, user);
 				user.getUser().sendMessage(MessageAddon.RESET_MONEY_PLAYER.toString());
 			}
 		}, getPermission() + ".reset");
@@ -244,16 +244,12 @@ public class EconomyCommand extends CommandHandler {
 		if (!players.isEmpty()) specifiers.put(target, () -> players);
 	}
 
-	private void moneyInDatabase(Gangland gangland, Player player, double amount) {
+	private void moneyInDatabase(Gangland gangland, User<Player> user) {
 		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-			if (handler instanceof UserDatabase) {
+			if (handler instanceof UserDatabase userDatabase) {
 				DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
-				helper.runQueries(database -> {
-					database.table("account").update("uuid = ?", new Object[]{player.getUniqueId()},
-					                                 new int[]{Types.CHAR}, new String[]{"balance"},
-					                                 new Object[]{amount}, new int[]{Types.DOUBLE});
-				});
+				helper.runQueries(database -> userDatabase.updateDataTable(user));
 				break;
 			}
 	}
