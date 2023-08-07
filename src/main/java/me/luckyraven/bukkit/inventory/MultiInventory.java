@@ -1,6 +1,7 @@
 package me.luckyraven.bukkit.inventory;
 
 import com.cryptomorin.xseries.XMaterial;
+import com.cryptomorin.xseries.XSound;
 import com.google.common.base.Preconditions;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.file.configuration.SettingAddon;
@@ -12,15 +13,18 @@ import javax.annotation.Nullable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 
 public class MultiInventory extends Inventory {
 
+	private final JavaPlugin            plugin;
 	private final LinkedList<Inventory> inventories;
 	private       int                   currentPage;
 
 	public MultiInventory(JavaPlugin plugin, String title, int size) {
 		super(plugin, title, size);
+		this.plugin = plugin;
 		this.inventories = new LinkedList<>();
 		this.currentPage = 0;
 
@@ -83,6 +87,58 @@ public class MultiInventory extends Inventory {
 		}
 
 		return multi;
+	}
+
+	public void updateItems(List<ItemStack> items, Player player, boolean staticItemsAllowed,
+	                        @Nullable Map<ItemStack, BiConsumer<Inventory, ItemBuilder>> staticItems) {
+		if (inventories.isEmpty()) {
+			return; // No inventories to update
+		}
+
+		int maxRows    = 4;
+		int maxColumns = inventories.getFirst().getSize() / 9;
+
+		int perPage = maxColumns * maxRows;
+		int pages   = (int) Math.ceil((double) items.size() / perPage);
+
+		int remainingAmount = items.size() % perPage;
+		int finalPage       = remainingAmount + 9 * 2 + (int) Math.ceil((double) remainingAmount / 9);
+		int initialPage     = pages == 1 ? finalPage : Inventory.MAX_SLOTS;
+
+		int       inventoryIndex = 0;
+		Inventory firstPage      = inventories.getFirst();
+
+		// Update the first page with new items
+		firstPage.clear();
+		firstPage.rename(String.format("&r%s (%d/%d)", firstPage.getTitle(), 1, pages));
+		addItems(firstPage, items, 0, Math.min(perPage, items.size()), staticItemsAllowed, staticItems);
+
+		for (int i = 1; i < pages; i++) {
+			int       size = i == pages - 1 ? finalPage : initialPage;
+			Inventory inv;
+
+			if (i >= inventories.size()) {
+				// If there's no corresponding inventory for this page, create a new one
+				inv = new Inventory(plugin, String.format("&r%s (%d/%d)", firstPage.getTitle(), i + 1, pages), size);
+				addItems(inv, items, i * perPage, Math.min((i + 1) * perPage, items.size()), staticItemsAllowed,
+				         staticItems);
+				InventoryAddons.createBoarder(inv);
+				addPage(player, this);
+			} else {
+				// If there's already an inventory for this page, update its items and title
+				inv = inventories.get(i);
+				inv.clear();
+				inv.rename(String.format("&r%s (%d/%d)", firstPage.getTitle(), i + 1, pages));
+				addItems(inv, items, i * perPage, Math.min((i + 1) * perPage, items.size()), false, null);
+			}
+
+			inventoryIndex++;
+		}
+
+		// Remove any extra inventories if there were more pages before the update
+		while (inventories.size() > inventoryIndex + 1) {
+			removePage(inventories.getLast());
+		}
 	}
 
 	private static void addItems(Inventory inv, List<ItemStack> items, int startIndex, int endIndex,
@@ -184,6 +240,8 @@ public class MultiInventory extends Inventory {
 
 		item.customHead(arrow);
 		linkedInventory.setItem(linkedInventory.getSize() - 1, item.build(), false, (inventory, itemBuilder) -> {
+			player.playSound(player.getLocation(), Objects.requireNonNull(XSound.UI_BUTTON_CLICK.parseSound()), 0.5f,
+			                 0.5f);
 			// open the next inventory
 			nextPage().open(player);
 		});
@@ -195,6 +253,8 @@ public class MultiInventory extends Inventory {
 
 		item.customHead(arrow);
 		linkedInventory.setItem(linkedInventory.getSize() - 9, item.build(), false, (inventory, itemBuilder) -> {
+			player.playSound(player.getLocation(), Objects.requireNonNull(XSound.UI_BUTTON_CLICK.parseSound()), 0.5f,
+			                 0.5f);
 			// open the previous inventory
 			previousPage().open(player);
 		});
@@ -207,6 +267,8 @@ public class MultiInventory extends Inventory {
 
 		item.customHead(home);
 		linkedInventory.setItem(linkedInventory.getSize() - 5, item.build(), false, (inventory, itemBuilder) -> {
+			player.playSound(player.getLocation(), Objects.requireNonNull(XSound.UI_BUTTON_CLICK.parseSound()), 0.5f,
+			                 0.5f);
 			// open the home inventory
 			homePage().open(player);
 		});
