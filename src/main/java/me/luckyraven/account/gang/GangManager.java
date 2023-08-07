@@ -44,8 +44,9 @@ public class GangManager {
 				String color       = String.valueOf(result[3]);
 				String description = String.valueOf(result[4]);
 				double balance     = (double) result[5];
-				double bounty      = (double) result[6];
-				long   created     = (long) result[8];
+				double level       = (double) result[6];
+				double bounty      = (double) result[7];
+				long   created     = (long) result[9];
 
 				Gang gang = new Gang(id);
 
@@ -54,7 +55,8 @@ public class GangManager {
 				gang.setColor(color);
 				gang.setDescription(description);
 				gang.setBalance(balance);
-				gang.setBounty(bounty);
+				gang.getLevel().setAmount(level);
+				gang.getBounty().setAmount(bounty);
 				gang.setCreated(created);
 
 				gangsMap.put(id, gang);
@@ -71,7 +73,7 @@ public class GangManager {
 
 			for (Object[] result : rowsData.get()) {
 				int    id        = (int) result[0];
-				String aliasList = String.valueOf(result[7]);
+				String aliasList = String.valueOf(result[8]);
 
 				if (aliasList != null && !aliasList.isEmpty()) {
 					List<String> aliases = database.getList(aliasList);
