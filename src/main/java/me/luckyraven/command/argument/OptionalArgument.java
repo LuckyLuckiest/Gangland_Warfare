@@ -29,7 +29,7 @@ public class OptionalArgument extends Argument {
 	}
 
 	@Override
-	public List<String> getArgumentsString() {
+	public List<String> getArgumentString() {
 		if (getArguments().length > 1) return Arrays.stream(getArguments()).filter(arg -> !arg.equals("?")).toList();
 		return List.of(getArguments());
 	}

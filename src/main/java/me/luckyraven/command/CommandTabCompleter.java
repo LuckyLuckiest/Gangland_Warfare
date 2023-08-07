@@ -52,7 +52,7 @@ public class CommandTabCompleter implements TabCompleter {
 
 		// TODO if there was an optional argument then no need to get the last valid because it will never be equal
 		return collectedArguments(args, arg.getNode().getChildren().stream().map(Tree.Node::getData).map(
-				Argument::getArgumentsString).flatMap(List::stream).toList());
+				Argument::getArgumentString).flatMap(List::stream).toList());
 	}
 
 	private List<String> collectedArguments(String[] args, List<String> arguments) {
