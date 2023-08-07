@@ -4,26 +4,29 @@ import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
 import com.google.common.base.Preconditions;
 import me.luckyraven.bukkit.ItemBuilder;
+import me.luckyraven.command.argument.TriConsumer;
 import me.luckyraven.file.configuration.SettingAddon;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.function.BiConsumer;
 
 public class MultiInventory extends Inventory {
 
-	private final JavaPlugin            plugin;
-	private final LinkedList<Inventory> inventories;
-	private       int                   currentPage;
+	private static int                   ID = 0;
+	private final  JavaPlugin            plugin;
+	private final  LinkedList<Inventory> inventories;
+	private        int                   currentPage;
 
 	public MultiInventory(JavaPlugin plugin, String title, int size) {
-		super(plugin, title, size);
+		super(plugin, title, size, new NamespacedKey(plugin, titleRefactor(String.format("%s_%d", title, ++ID))));
 		this.plugin = plugin;
 		this.inventories = new LinkedList<>();
 		this.currentPage = 0;
@@ -32,8 +35,8 @@ public class MultiInventory extends Inventory {
 	}
 
 	public static MultiInventory dynamicMultiInventory(JavaPlugin plugin, List<ItemStack> items, String name,
-	                                                   Player player, boolean staticItemsAllowed, boolean fixedSize,
-	                                                   @Nullable Map<ItemStack, BiConsumer<Inventory, ItemBuilder>> staticItems) {
+	                                                   boolean staticItemsAllowed, boolean fixedSize,
+	                                                   @Nullable Map<ItemStack, TriConsumer<Player, Inventory, ItemBuilder>> staticItems) {
 		if (staticItemsAllowed) {
 			Preconditions.checkNotNull(staticItems, "No static items set");
 			Preconditions.checkArgument(staticItems.size() <= 6, "Can't add more items than max rows");
@@ -58,11 +61,10 @@ public class MultiInventory extends Inventory {
 			initialPage = Inventory.MAX_SLOTS;
 		}
 
-		String modifiedName = name + "&r (%d/%d)";
 		// the first page
-		MultiInventory multi = new MultiInventory(plugin, String.format(modifiedName, 1, pages), initialPage);
+		MultiInventory multi = new MultiInventory(plugin, name, initialPage);
 
-		addItems(multi, items, 0, items.size(), staticItemsAllowed, staticItems);
+		multi.addItems(multi, items, 0, items.size(), staticItemsAllowed, staticItems);
 		InventoryAddons.createBoarder(multi);
 		// if there is static items column, then create a line at column 2
 		if (staticItemsAllowed) InventoryAddons.verticalLine(multi, 2, InventoryAddons.getFillItem(),
@@ -72,25 +74,77 @@ public class MultiInventory extends Inventory {
 		for (int i = 1; i < pages; i++) {
 			int size = i == pages - 1 ? finalPage : initialPage;
 
-			Inventory inv = new Inventory(plugin, String.format(modifiedName, i + 1, pages), size);
+			Inventory inv = new Inventory(plugin, name, size,
+			                              new NamespacedKey(plugin, titleRefactor(String.format("%s_%d", name, ++ID))));
 
 			int startIndex = i * perPage;
 			int endIndex   = Math.min(startIndex + perPage, items.size());
 
-			addItems(inv, items, startIndex, endIndex, staticItemsAllowed, staticItems);
+			multi.addItems(inv, items, startIndex, endIndex, staticItemsAllowed, staticItems);
 			InventoryAddons.createBoarder(inv);
 			// if there is static items column, then create a line at column 2
-			if (staticItemsAllowed) InventoryAddons.verticalLine(multi, 2, InventoryAddons.getFillItem(),
+			if (staticItemsAllowed) InventoryAddons.verticalLine(inv, 2, InventoryAddons.getFillItem(),
 			                                                     SettingAddon.getInventoryFillName(), true);
 
-			multi.addPage(player, inv);
+			multi.addPage(inv);
 		}
 
 		return multi;
 	}
 
-	public void updateItems(List<ItemStack> items, Player player, boolean staticItemsAllowed,
-	                        @Nullable Map<ItemStack, BiConsumer<Inventory, ItemBuilder>> staticItems) {
+	private void addItems(Inventory inv, List<ItemStack> items, int startIndex, int endIndex,
+	                      boolean staticItemsAllowed,
+	                      @Nullable Map<ItemStack, TriConsumer<Player, Inventory, ItemBuilder>> staticItems) {
+		if (staticItemsAllowed) {
+			Preconditions.checkNotNull(staticItems, "No static items set");
+			Preconditions.checkArgument(staticItems.size() <= 6, "Can't add more items than max rows");
+		}
+
+		int additional = staticItemsAllowed ? 1 : 0;
+		int row        = 2;
+		int column     = 2 + additional;
+
+		if (staticItemsAllowed) verticalLine(inv, 1, staticItems);
+
+		for (int i = startIndex; i < endIndex && row % 6 != 0; i++) {
+			inv.setItem((row - 1) * 9 + (column - 1), items.get(i), false);
+
+			if (column % 8 == 0) {
+				column = 2;
+				++row;
+			} else ++column;
+		}
+	}
+
+	private void verticalLine(Inventory inventory, int column,
+	                          Map<ItemStack, TriConsumer<Player, Inventory, ItemBuilder>> staticItems) {
+		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
+
+		// from 1-6
+		int rows = inventory.getSize() / 9;
+
+		List<ItemStack>                                   items     = new ArrayList<>();
+		List<TriConsumer<Player, Inventory, ItemBuilder>> consumers = new ArrayList<>();
+
+		for (Map.Entry<ItemStack, TriConsumer<Player, Inventory, ItemBuilder>> entry : staticItems.entrySet()) {
+			items.add(entry.getKey());
+			consumers.add(entry.getValue());
+		}
+
+		for (int i = 0; i < rows; ++i) {
+			int slot = (column - 1) + 9 * i;
+
+			if (inventory.getInventory().getItem(slot) != null) continue;
+
+			if (i < staticItems.size()) inventory.setItem(slot, items.get(i), false, consumers.get(i));
+			else inventory.getInventory().setItem(slot, new ItemBuilder(InventoryAddons.getLineItem()).setDisplayName(
+					SettingAddon.getInventoryLineName()).build());
+
+		}
+	}
+
+	public void updateItems(List<ItemStack> items, boolean staticItemsAllowed,
+	                        @Nullable Map<ItemStack, TriConsumer<Player, Inventory, ItemBuilder>> staticItems) {
 		if (inventories.isEmpty()) {
 			return; // No inventories to update
 		}
@@ -110,8 +164,11 @@ public class MultiInventory extends Inventory {
 
 		// Update the first page with new items
 		firstPage.clear();
-		firstPage.rename(String.format("&r%s (%d/%d)", firstPage.getTitle(), 1, pages));
+
 		addItems(firstPage, items, 0, Math.min(perPage, items.size()), staticItemsAllowed, staticItems);
+		InventoryAddons.createBoarder(firstPage);
+		if (staticItemsAllowed) InventoryAddons.verticalLine(firstPage, 2, InventoryAddons.getFillItem(),
+		                                                     SettingAddon.getInventoryFillName(), true);
 
 		for (int i = 1; i < pages; i++) {
 			int       size = i == pages - 1 ? finalPage : initialPage;
@@ -119,18 +176,20 @@ public class MultiInventory extends Inventory {
 
 			if (i >= inventories.size()) {
 				// If there's no corresponding inventory for this page, create a new one
-				inv = new Inventory(plugin, String.format("&r%s (%d/%d)", firstPage.getTitle(), i + 1, pages), size);
+				inv = new Inventory(plugin, firstPage.getDisplayTitle(), size, new NamespacedKey(plugin, titleRefactor(
+						String.format("%s_%d", firstPage.getDisplayTitle(), ++ID))));
 				addItems(inv, items, i * perPage, Math.min((i + 1) * perPage, items.size()), staticItemsAllowed,
 				         staticItems);
-				InventoryAddons.createBoarder(inv);
-				addPage(player, this);
+				addPage(inv);
 			} else {
 				// If there's already an inventory for this page, update its items and title
 				inv = inventories.get(i);
 				inv.clear();
-				inv.rename(String.format("&r%s (%d/%d)", firstPage.getTitle(), i + 1, pages));
 				addItems(inv, items, i * perPage, Math.min((i + 1) * perPage, items.size()), false, null);
 			}
+			InventoryAddons.createBoarder(inv);
+			if (staticItemsAllowed) InventoryAddons.verticalLine(inv, 2, InventoryAddons.getFillItem(),
+			                                                     SettingAddon.getInventoryFillName(), true);
 
 			inventoryIndex++;
 		}
@@ -141,58 +200,12 @@ public class MultiInventory extends Inventory {
 		}
 	}
 
-	private static void addItems(Inventory inv, List<ItemStack> items, int startIndex, int endIndex,
-	                             boolean staticItemsAllowed,
-	                             @Nullable Map<ItemStack, BiConsumer<Inventory, ItemBuilder>> staticItems) {
-		int additional = staticItemsAllowed ? 1 : 0;
-		int row        = 2;
-		int column     = 2 + additional;
+	public void addPage(Inventory currentInv) {
+		Inventory lastInv = inventories.getLast();
 
-		if (staticItemsAllowed) {
-			Preconditions.checkNotNull(staticItems, "No static items set");
-			verticalLine(inv, 1, staticItems);
-		}
+		addNavigationButtons(currentInv, lastInv);
 
-		for (int i = startIndex; i < endIndex && row % 6 != 0; i++) {
-			inv.setItem((row - 1) * 9 + (column - 1), items.get(i), false);
-
-			if (column % 8 == 0) {
-				column = 2;
-				++row;
-			} else ++column;
-		}
-	}
-
-	private static void verticalLine(Inventory inventory, int column,
-	                                 Map<ItemStack, BiConsumer<Inventory, ItemBuilder>> staticItems) {
-		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
-
-		// from 1-6
-		int i = 0;
-		for (Map.Entry<ItemStack, BiConsumer<Inventory, ItemBuilder>> entry : staticItems.entrySet()) {
-			int slot = (column - 1) + 9 * i;
-
-			if (inventory.getInventory().getItem(slot) != null) continue;
-
-			if (i < staticItems.size()) inventory.setItem(slot, entry.getKey(), false, entry.getValue());
-			else inventory.getInventory().setItem(slot, new ItemBuilder(InventoryAddons.getLineItem()).setDisplayName(
-					SettingAddon.getInventoryLineName()).build());
-
-			++i;
-		}
-	}
-
-	public void addPage(Player player, Inventory gui) {
-		Inventory lastPage = inventories.getLast();
-
-		// next page -> gui
-		addNextPageItem(player, lastPage);
-		// home page
-		addHomePageItem(player, gui);
-		// prev page -> lastPage
-		addPreviousPageItem(player, gui);
-
-		inventories.addLast(gui);
+		inventories.addLast(currentInv);
 	}
 
 	public boolean removePage(Inventory gui) {
@@ -214,13 +227,13 @@ public class MultiInventory extends Inventory {
 	}
 
 	public Inventory nextPage() {
-		currentPage++;
+		++currentPage;
 		if (currentPage >= inventories.size()) currentPage = inventories.size() - 1;
 		return inventories.get(currentPage);
 	}
 
 	public Inventory previousPage() {
-		currentPage--;
+		--currentPage;
 		if (currentPage < 0) currentPage = 0;
 		return inventories.get(currentPage);
 	}
@@ -234,44 +247,71 @@ public class MultiInventory extends Inventory {
 		return inventories.getFirst();
 	}
 
-	private void addNextPageItem(Player player, Inventory linkedInventory) {
-		ItemBuilder item  = new ItemBuilder(XMaterial.PLAYER_HEAD.parseMaterial()).setDisplayName("&a->");
+	private void addNextPageItem(Inventory linkedInventory) {
+		ItemBuilder item  = createItemHead("&a->", String.format("&7(%d/%d)", currentPage + 1, inventories.size()));
 		String      arrow = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTYzMzlmZjJlNTM0MmJhMThiZGM0OGE5OWNjYTY1ZDEyM2NlNzgxZDg3ODI3MmY5ZDk2NGVhZDNiOGFkMzcwIn19fQ==";
 
 		item.customHead(arrow);
-		linkedInventory.setItem(linkedInventory.getSize() - 1, item.build(), false, (inventory, itemBuilder) -> {
-			player.playSound(player.getLocation(), Objects.requireNonNull(XSound.UI_BUTTON_CLICK.parseSound()), 0.5f,
-			                 0.5f);
-			// open the next inventory
-			nextPage().open(player);
-		});
+		linkedInventory.setItem(linkedInventory.getSize() - 1, item.build(), false,
+		                        (player, inventory, itemBuilder) -> {
+			                        // open the next inventory
+			                        nextPage().open(player);
+
+			                        buttonClickSound(player);
+		                        });
 	}
 
-	private void addPreviousPageItem(Player player, Inventory linkedInventory) {
-		ItemBuilder item  = new ItemBuilder(XMaterial.PLAYER_HEAD.parseMaterial()).setDisplayName("&c<-");
+	private void addPreviousPageItem(Inventory linkedInventory) {
+		ItemBuilder item  = createItemHead("&c<-");
 		String      arrow = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=";
 
 		item.customHead(arrow);
-		linkedInventory.setItem(linkedInventory.getSize() - 9, item.build(), false, (inventory, itemBuilder) -> {
-			player.playSound(player.getLocation(), Objects.requireNonNull(XSound.UI_BUTTON_CLICK.parseSound()), 0.5f,
-			                 0.5f);
-			// open the previous inventory
-			previousPage().open(player);
-		});
+		linkedInventory.setItem(linkedInventory.getSize() - 9, item.build(), false,
+		                        (player, inventory, itemBuilder) -> {
+			                        // open the previous inventory
+			                        previousPage().open(player);
+
+			                        buttonClickSound(player);
+		                        });
 	}
 
-	private void addHomePageItem(Player player, Inventory linkedInventory) {
-		ItemBuilder item = new ItemBuilder(XMaterial.PLAYER_HEAD.parseMaterial()).setDisplayName(
-				"&cBack to " + this.getDisplayTitle());
-		String home = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWUxNTZlYjVhZmZkZGYyMDg2MTdhYWI3YjQzMGZhZDlmMmM5OTFlYzJmMzgzMDRhMGMyMTNmMzFlNzZjYmJlNCJ9fX0=";
+	private void addHomePageItem(Inventory linkedInventory) {
+		ItemBuilder item = createItemHead("&cBack to " + this.getDisplayTitle());
+		String      home = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWUxNTZlYjVhZmZkZGYyMDg2MTdhYWI3YjQzMGZhZDlmMmM5OTFlYzJmMzgzMDRhMGMyMTNmMzFlNzZjYmJlNCJ9fX0=";
 
 		item.customHead(home);
-		linkedInventory.setItem(linkedInventory.getSize() - 5, item.build(), false, (inventory, itemBuilder) -> {
-			player.playSound(player.getLocation(), Objects.requireNonNull(XSound.UI_BUTTON_CLICK.parseSound()), 0.5f,
-			                 0.5f);
-			// open the home inventory
-			homePage().open(player);
-		});
+		linkedInventory.setItem(linkedInventory.getSize() - 5, item.build(), false,
+		                        (player, inventory, itemBuilder) -> {
+			                        // open the home inventory
+			                        homePage().open(player);
+
+			                        buttonClickSound(player);
+		                        });
+	}
+
+	private ItemBuilder createItemHead(String name, @Nullable String... lore) {
+		ItemBuilder item = new ItemBuilder(XMaterial.PLAYER_HEAD.parseMaterial()).setDisplayName(name);
+
+		if (lore != null) item.setLore(lore);
+
+		return item;
+	}
+
+	private void addNavigationButtons(Inventory currentInv, Inventory lastInv) {
+		// next page -> gui
+		addNextPageItem(lastInv);
+
+		// home page
+		addHomePageItem(currentInv);
+
+		// prev page -> lastPage
+		addPreviousPageItem(currentInv);
+	}
+
+	private void buttonClickSound(Player player) {
+		// sound
+		Sound sound = XSound.BLOCK_WOODEN_BUTTON_CLICK_ON.parseSound();
+		if (sound != null) player.playSound(player.getLocation(), sound, 1F, 1F);
 	}
 
 	public List<Inventory> getInventories() {
