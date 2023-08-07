@@ -121,6 +121,10 @@ public class Inventory implements Listener {
 		setItem(slot, new ItemBuilder(itemStack), draggable, clickable);
 	}
 
+	public void clear() {
+		inventory.clear();
+	}
+
 	public void open(Player player) {
 		player.openInventory(inventory);
 	}
