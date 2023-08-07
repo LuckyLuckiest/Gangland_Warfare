@@ -29,7 +29,7 @@
 	- Creating gang data using commands.
 	- Saving gang data using database helper.
 
-0.0.5-DEV:
+0.0.5-DEV: (DONE)
 	- When using mysql, save the data into sqlite (using backup).
 	- Multiple inventory pages system.
 	- Bounty.
