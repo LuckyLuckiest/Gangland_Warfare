@@ -153,7 +153,10 @@ public class Phone {
 			                  newGang.setItem(23, XMaterial.BOOKSHELF.parseMaterial(), "&b&lSearch Gang", null, true,
 			                                  false, (player1, inv, it) -> {
 						                  // open a multi inventory that displays all the gangs
-						                  List<Gang> gangs = gangManager.getGangs().values().stream().toList();
+						                  List<Gang>      gangs      = gangManager.getGangs()
+						                                                          .values()
+						                                                          .stream()
+						                                                          .toList();
 						                  List<ItemStack> gangsItems = new ArrayList<>();
 
 						                  for (Gang gang : gangs) {
@@ -166,10 +169,10 @@ public class Phone {
 
 							                  UUID uuid = gang.getGroup()
 							                                  .stream()
-							                                  .filter(member -> member.getRank()
-							                                                          .getName()
-							                                                          .equalsIgnoreCase(
-									                                                          SettingAddon.getGangRankTail()))
+							                                  .filter(member -> Objects.requireNonNull(member.getRank())
+							                                                           .getName()
+							                                                           .equalsIgnoreCase(
+									                                                           SettingAddon.getGangRankTail()))
 							                                  .findFirst()
 							                                  .map(Member::getUuid)
 							                                  .orElse(null);

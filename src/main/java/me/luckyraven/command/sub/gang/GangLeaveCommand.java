@@ -67,6 +67,8 @@ class GangLeaveCommand extends SubArgument {
 
 			// need to check if they were the owner or not
 			// if it was the owner, then they need to transfer the rank
+			if (member.getRank() == null) return;
+
 			if (member.getRank().match(rankManager.get(SettingAddon.getGangRankTail()).getUsedId())) {
 				player.sendMessage(MessageAddon.GANG_TRANSFER_OWNERSHIP.toString());
 				return;
@@ -102,12 +104,14 @@ class GangLeaveCommand extends SubArgument {
 
 			// need to check if they were the owner or not
 			// if it was the owner, then they need to transfer the rank
+			if (member.getRank() == null) return;
+
 			if (member.getRank().match(rankManager.get(SettingAddon.getGangRankTail()).getUsedId())) {
 				player.sendMessage(MessageAddon.GANG_TRANSFER_OWNERSHIP.toString());
 				return;
 			}
 
-			// if they were not the owner they can leave
+			// if they were not the owner, they can leave
 			// anyone leaving will not get a piece of the pie, thus the contribution would not be counted
 			gang.removeMember(user, member);
 			player.sendMessage(MessageAddon.GANG_LEAVE.toString());

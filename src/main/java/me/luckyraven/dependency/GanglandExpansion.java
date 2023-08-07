@@ -54,7 +54,8 @@ public class GanglandExpansion extends PlaceholderExpansion {
 
 		if (member != null) {
 			if (params.equalsIgnoreCase(userStr + "gang-id")) return String.valueOf(member.getGangId());
-			if (params.equalsIgnoreCase(userStr + "rank")) return member.getRank().getName();
+			if (params.equalsIgnoreCase(userStr + "rank"))
+				return member.getRank() == null ? "null" : member.getRank().getName();
 			if (params.equalsIgnoreCase(userStr + "contribution")) return SettingAddon.formatDouble(
 					member.getContribution());
 			if (params.equalsIgnoreCase(userStr + "gang-join-date")) return member.getGangJoinDateString();

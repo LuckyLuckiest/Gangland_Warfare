@@ -93,8 +93,10 @@ public class OptionCommand extends CommandHandler {
 				return;
 			}
 
+			if (userMember.getRank() == null) return;
 			// only support promotion
 			// cannot promote more than your rank
+
 			if (userMember.getRank().equals(targetMember.getRank())) {
 				player.sendMessage(MessageAddon.GANG_SAME_RANK_ACTION.toString());
 				return;

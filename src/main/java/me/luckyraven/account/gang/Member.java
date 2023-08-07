@@ -3,6 +3,7 @@ package me.luckyraven.account.gang;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.rank.Rank;
+import org.jetbrains.annotations.Nullable;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -17,10 +18,10 @@ public class Member {
 
 	private final UUID uuid;
 
-	private int    gangId;
-	private double contribution;
-	private Rank   rank;
-	private long   gangJoinDate;
+	private           int    gangId;
+	private           double contribution;
+	private @Nullable Rank   rank;
+	private           long   gangJoinDate;
 
 	/**
 	 * Instantiates a new Member.
@@ -67,8 +68,8 @@ public class Member {
 
 	@Override
 	public String toString() {
-		return String.format("Member:{uuid=%s,gangId=%d,contribution=%.2f,rank=%s,gangJoin=%s}", uuid, gangId, contribution,
-		                     rank.getName(), getGangJoinDateString());
+		return String.format("Member:{uuid=%s,gangId=%d,contribution=%.2f,rank=%s,gangJoin=%s}", uuid, gangId,
+		                     contribution, rank == null ? "null" : rank.getName(), getGangJoinDateString());
 	}
 
 }

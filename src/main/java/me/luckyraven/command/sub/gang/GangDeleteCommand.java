@@ -75,6 +75,8 @@ class GangDeleteCommand extends SubArgument {
 			}
 
 			// check if the player is the owner
+			if (member.getRank() == null) return;
+
 			if (!member.getRank().match(rankManager.get(SettingAddon.getGangRankTail()).getUsedId())) {
 				player.sendMessage(MessageAddon.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
 				return;
@@ -114,6 +116,8 @@ class GangDeleteCommand extends SubArgument {
 			}
 
 			// check if the player is the owner
+			if (member.getRank() == null) return;
+
 			if (!member.getRank().match(rankManager.get(SettingAddon.getGangRankTail()).getUsedId())) {
 				player.sendMessage(MessageAddon.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
 				return;

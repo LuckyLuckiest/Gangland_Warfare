@@ -102,8 +102,10 @@ class GangDemoteCommand extends SubArgument {
 			// change the user rank by proceeding to the next node
 			Rank currentRank = targetMember.getRank();
 			// cannot demote higher rank
+			if (currentRank == null || userMember.getRank() == null) return;
+
 			Tree.Node<Rank> playerRank = userMember.getRank().getNode();
-			Tree.Node<Rank> targetRank = targetMember.getRank().getNode();
+			Tree.Node<Rank> targetRank = currentRank.getNode();
 
 			if (!force)
 				// [player : Owner (descendant), target : Member (ancestor)] (Inverse)

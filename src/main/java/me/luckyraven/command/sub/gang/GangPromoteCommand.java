@@ -105,12 +105,15 @@ class GangPromoteCommand extends SubArgument {
 			// change the user rank by proceeding to the next node
 			Rank currentRank = targetMember.getRank();
 			// in the case there are more than one child then give options to the promoter
-			if (!force)
+			if (!force) {
+				if (userMember.getRank() == null) return;
+
 				// cannot promote more than your rank
 				if (userMember.getRank().equals(targetMember.getRank())) {
 					player.sendMessage(MessageAddon.GANG_SAME_RANK_ACTION.toString());
 					return;
 				}
+			}
 
 			// navigate the ranks first
 			List<Rank> nextRanks = Objects.requireNonNull(rankManager.getRankTree().find(currentRank))

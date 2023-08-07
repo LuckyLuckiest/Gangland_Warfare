@@ -226,9 +226,12 @@ public class GangCommand extends CommandHandler {
 					for (Member member : gang1.getGroup()) {
 						OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
 						Rank          userRank      = member.getRank();
+						String        rank          = "null";
+
+						if (userRank != null) rank = userRank.getName();
 
 						List<String> data = new ArrayList<>();
-						data.add("&7rank:&e " + userRank.getName());
+						data.add("&7rank:&e " + rank);
 						data.add("&7Contribution:&e " + member.getContribution());
 						data.add("&7Joined:&e " + member.getGangJoinDateString());
 
