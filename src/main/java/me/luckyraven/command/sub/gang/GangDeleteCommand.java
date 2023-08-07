@@ -42,11 +42,10 @@ class GangDeleteCommand extends SubArgument {
 
 	private final ConfirmArgument confirmDelete;
 
-	GangDeleteCommand(Gangland gangland, Tree<Argument> tree, UserManager<Player> userManager,
-	                  MemberManager memberManager, GangManager gangManager, RankManager rankManager) {
-		super(new String[]{"delete", "remove"}, tree);
-
-		setPermission(getPermission() + ".delete");
+	protected GangDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                            UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+	                            RankManager rankManager) {
+		super(new String[]{"delete", "remove"}, tree, "delete", parent);
 
 		this.gangland = gangland;
 		this.tree = tree;
@@ -122,7 +121,7 @@ class GangDeleteCommand extends SubArgument {
 
 			Gang gang = gangManager.getGang(user.getGangId());
 
-			// need to get all the users, even if they are not online
+			// need to get all the users, even if they are not online,
 			// change the data directly from the database, and collect the online players ONLY!
 			List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
 			List<Member>       members           = new ArrayList<>(gang.getGroup());
@@ -157,7 +156,7 @@ class GangDeleteCommand extends SubArgument {
 						// update the database
 						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
-						helper.runQueries(database -> userDatabase.updateAccountTable(gangUser));
+						helper.runQueries(database -> userDatabase.updateDataTable(gangUser));
 					}
 					// change the others' gang id
 					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
@@ -183,10 +182,10 @@ class GangDeleteCommand extends SubArgument {
 
 							gang.setBalance(gangBal - amount);
 
-							database.table("account").update("uuid = ?", new Object[]{uuid.toString()},
-							                                 new int[]{Types.CHAR}, new String[]{"balance", "gang_id"},
-							                                 new Object[]{balance + amount, -1},
-							                                 new int[]{Types.DOUBLE, Types.INTEGER});
+							database.table("data").update("uuid = ?", new Object[]{uuid.toString()},
+							                              new int[]{Types.CHAR}, new String[]{"balance", "gang_id"},
+							                              new Object[]{balance + amount, -1},
+							                              new int[]{Types.DOUBLE, Types.INTEGER});
 						}
 					});
 
@@ -197,7 +196,7 @@ class GangDeleteCommand extends SubArgument {
 						                                                    .replace("%amount%",
 						                                                             SettingAddon.formatDouble(
 								                                                             amount)));
-						userDatabase.updateAccountTable(user);
+						userDatabase.updateDataTable(user);
 					});
 				}
 

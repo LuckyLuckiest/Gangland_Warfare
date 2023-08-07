@@ -9,6 +9,7 @@ import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.*;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.GangDatabase;
@@ -37,11 +38,10 @@ class GangCreateCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
 
-	GangCreateCommand(Gangland gangland, Tree<Argument> tree, UserManager<Player> userManager,
-	                  MemberManager memberManager, GangManager gangManager, RankManager rankManager) {
-		super("create", tree);
-
-		setPermission(getPermission() + ".create");
+	protected GangCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                            UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+	                            RankManager rankManager) {
+		super("create", tree, parent);
 
 		this.gangland = gangland;
 		this.tree = tree;
@@ -90,7 +90,10 @@ class GangCreateCommand extends SubArgument {
 
 			Gang   gang   = new Gang();
 			Random random = new Random();
-			do gang.setId(random.nextInt(999_999));
+
+			// need only positive ids
+			// 2^31 possible ids
+			do gang.setId(random.nextInt(Integer.MAX_VALUE));
 			while (gangManager.contains(gang));
 
 			member.setGangJoinDate(Instant.now().toEpochMilli());
@@ -106,22 +109,22 @@ class GangCreateCommand extends SubArgument {
 
 					helper.runQueries(database -> {
 						user.setBalance(user.getBalance() - SettingAddon.getGangCreateFee());
-						userDatabase.updateAccountTable(user);
+						userDatabase.updateDataTable(user);
 					});
 				}
 				if (handler instanceof GangDatabase gangDatabase) {
 					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
 					helper.runQueries(database -> {
-						database.table("data").insert(new String[]{
-								"id", "name", "display_name", "color", "description", "balance", "bounty", "alias",
-								"created"
-						}, new Object[]{
+						Database config = database.table("data");
+
+						config.insert(config.getColumns().toArray(String[]::new), new Object[]{
 								gang.getId(), gang.getName(), gang.getDisplayName(), gang.getColor(),
-								gang.getDescription(), gang.getBalance(), gang.getBounty(), "", gang.getCreated()
+								gang.getDescription(), gang.getBalance(), gang.getLevel().getAmount(), gang.getBounty(),
+								"", gang.getCreated()
 						}, new int[]{
 								Types.INTEGER, Types.CHAR, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.DOUBLE,
-								Types.DOUBLE, Types.LONGVARCHAR, Types.BIGINT
+								Types.DOUBLE, Types.DOUBLE, Types.LONGVARCHAR, Types.BIGINT
 						});
 						gangDatabase.updateMembersTable(member);
 					});

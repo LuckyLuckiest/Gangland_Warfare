@@ -25,21 +25,21 @@ import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class GangColorCommand extends SubArgument {
+class GangColorCommand extends SubArgument {
 
 	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 
-	public GangColorCommand(Gangland gangland, Tree<Argument> tree, UserManager<Player> userManager,
-	                        GangManager gangManager) {
-		super("color", tree);
+	protected GangColorCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	                           GangManager gangManager) {
+		super("color", tree, parent);
+
+		setPermission(parent.getPermission() + ".color");
 
 		this.gangland = gangland;
 		this.userManager = userManager;
 		this.gangManager = gangManager;
-
-		setPermission(getPermission() + ".color");
 	}
 
 	@Override
@@ -53,10 +53,7 @@ public class GangColorCommand extends SubArgument {
 				return;
 			}
 
-			Gang gang = gangManager.getGang(user.getGangId());
-
-			Inventory colorGUI   = new Inventory(gangland, "&5&lChoose a color", Inventory.MAX_SLOTS);
-			Inventory confirmGUI = new Inventory(gangland, "&4&lAre you sure?", Inventory.MAX_SLOTS);
+			Inventory colorGUI = new Inventory(gangland, "&5&lChoose a color", Inventory.MAX_SLOTS);
 
 			int row = 2, column = 2;
 			for (Color color : Color.values()) {
@@ -75,23 +72,25 @@ public class GangColorCommand extends SubArgument {
 
 				ItemBuilder itemBuilder = new ItemBuilder(material).setDisplayName(name);
 
-				colorGUI.setItem((row - 1) * 9 + (column - 1), itemBuilder, false, (inventory, item) -> {
-					confirmGUI.setItem(22, itemBuilder.build(), false);
+				colorGUI.setItem((row - 1) * 9 + (column - 1), itemBuilder, false, (player1, inventory, item) -> {
+					Inventory confirmGUI = new Inventory(gangland, "&4&lAre you sure?", Inventory.MAX_SLOTS);
+					confirmGUI.setItem(22, item.build(), false);
 
 					Material mat = ColorUtil.getMaterialByColor(colorName, MaterialType.STAINED_GLASS_PANE.name());
 					InventoryAddons.aroundSlot(confirmGUI, 22, mat);
 
 					confirmGUI.setItem(49, XMaterial.GREEN_CONCRETE.parseMaterial(), "&aConfirm", null, false, false,
-					                   (inv, it) -> {
+					                   (player2, inv, it) -> {
+						                   Gang gang = gangManager.getGang(userManager.getUser(player2).getGangId());
 						                   // save the data in gang
 						                   gang.setColor(colorName);
 
 						                   // inform player
 						                   String colorSelected = ChatUtil.color(colorCode + ChatUtil.capitalize(
 								                   colorName.toLowerCase().replace("_", " ")));
-						                   player.sendMessage(MessageAddon.GANG_COLOR_SET.toString()
-						                                                                 .replace("%color%",
-						                                                                          colorSelected));
+						                   player2.sendMessage(MessageAddon.GANG_COLOR_SET.toString()
+						                                                                  .replace("%color%",
+						                                                                           colorSelected));
 
 						                   // update database
 						                   for (DatabaseHandler handler : gangland.getInitializer()
@@ -104,12 +103,12 @@ public class GangColorCommand extends SubArgument {
 								                   break;
 							                   }
 
-						                   confirmGUI.close(player);
+						                   inv.close(player2);
 					                   });
 
-					InventoryAddons.fillInventory(confirmGUI);
+					InventoryAddons.createBoarder(confirmGUI);
 
-					confirmGUI.open(player);
+					confirmGUI.open(player1);
 				});
 
 				if (column % 8 == 0) {
@@ -119,9 +118,9 @@ public class GangColorCommand extends SubArgument {
 			}
 
 			colorGUI.setItem((6 - 1) * 9, XMaterial.RED_CONCRETE.parseMaterial(), "&4Exit", null, false, false,
-			                 (inventory, item) -> inventory.close(player));
+			                 (player1, inventory, item) -> inventory.close(player1));
 
-			InventoryAddons.fillInventory(colorGUI);
+			InventoryAddons.createBoarder(colorGUI);
 
 			colorGUI.open(player);
 		};

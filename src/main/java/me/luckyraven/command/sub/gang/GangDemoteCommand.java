@@ -15,7 +15,6 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.GangDatabase;
-import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.rank.Rank;
@@ -25,11 +24,9 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.sql.Types;
 import java.util.Objects;
-import java.util.UUID;
 
-class GangKickCommand extends SubArgument {
+class GangDemoteCommand extends SubArgument {
 
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
@@ -38,9 +35,10 @@ class GangKickCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
 
-	protected GangKickCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
-	                          MemberManager memberManager, GangManager gangManager, RankManager rankManager) {
-		super("kick", tree, parent);
+	protected GangDemoteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                            UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+	                            RankManager rankManager) {
+		super("demote", tree, parent);
 
 		this.gangland = gangland;
 		this.tree = tree;
@@ -50,7 +48,7 @@ class GangKickCommand extends SubArgument {
 		this.gangManager = gangManager;
 		this.rankManager = rankManager;
 
-		gangKick();
+		this.addSubArgument(gangDemote());
 	}
 
 	@Override
@@ -68,11 +66,15 @@ class GangKickCommand extends SubArgument {
 		};
 	}
 
-	private void gangKick() {
-		Argument kickName = new OptionalArgument(tree, (argument, sender, args) -> {
+	private OptionalArgument gangDemote() {
+		return new OptionalArgument(tree, (argument, sender, args) -> {
 			Player       player     = (Player) sender;
 			User<Player> user       = userManager.getUser(player);
 			Member       userMember = memberManager.getMember(player.getUniqueId());
+
+			String forceRank = "gangland.command.gang.force_rank";
+
+			boolean force = player.hasPermission(forceRank);
 
 			if (!user.hasGang()) {
 				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
@@ -86,8 +88,6 @@ class GangKickCommand extends SubArgument {
 			for (Member member : gang.getGroup()) {
 				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
 
-				if (offlinePlayer.getName() == null) continue;
-
 				if (!Objects.requireNonNull(offlinePlayer.getName()).equalsIgnoreCase(targetStr)) continue;
 
 				targetMember = member;
@@ -99,57 +99,46 @@ class GangKickCommand extends SubArgument {
 				return;
 			}
 
+			// change the user rank by proceeding to the next node
+			Rank currentRank = targetMember.getRank();
+			// cannot demote higher rank
 			Tree.Node<Rank> playerRank = userMember.getRank().getNode();
 			Tree.Node<Rank> targetRank = targetMember.getRank().getNode();
 
-			if (!rankManager.getRankTree().isDescendant(targetRank, playerRank)) {
-				player.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
+			if (!force)
+				// [player : Owner (descendant), target : Member (ancestor)] (Inverse)
+				if (!rankManager.getRankTree().isDescendant(targetRank, playerRank)) {
+					player.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
+					return;
+				}
+
+			Tree.Node<Rank> previousRankNode = currentRank.getNode().getParent();
+
+			if (previousRankNode == null) {
+				player.sendMessage(MessageAddon.GANG_DEMOTE_END.toString());
 				return;
 			}
 
-			User<Player>  onlineTarget;
+			Rank previousRank = previousRankNode.getData();
+
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
-			if (offlinePlayer.isOnline()) onlineTarget = userManager.getUser(offlinePlayer.getPlayer());
-			else onlineTarget = null;
+			if (offlinePlayer.isOnline()) Objects.requireNonNull(offlinePlayer.getPlayer()).sendMessage(
+					MessageAddon.GANG_DEMOTE_TARGET_SUCCESS.toString().replace("%rank%", previousRank.getName()));
+			player.sendMessage(MessageAddon.GANG_DEMOTE_PLAYER_SUCCESS.toString()
+			                                                          .replace("%player%", targetStr)
+			                                                          .replace("%rank%", previousRank.getName()));
+			targetMember.setRank(previousRank);
 
-			if (onlineTarget != null) {
-				gang.removeMember(onlineTarget, targetMember);
-				onlineTarget.getUser().sendMessage(MessageAddon.KICKED_FROM_GANG.toString());
-			} else
-				// remove user gang data
-				gang.removeMember(targetMember);
-
-			// update the user account
-			// update the gang data
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
-				if (handler instanceof UserDatabase userDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					if (onlineTarget != null) helper.runQueries(database -> userDatabase.updateDataTable(onlineTarget));
-					else {
-						UUID finalTargetUuid = targetMember.getUuid();
-						helper.runQueries(database -> {
-							database.table("data").update("uuid = ?", new Object[]{finalTargetUuid},
-							                              new int[]{Types.VARCHAR}, new String[]{"gang_id"},
-							                              new Object[]{-1}, new int[]{Types.INTEGER});
-						});
-					}
-				}
-
+			// update database
+			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
 				if (handler instanceof GangDatabase gangDatabase) {
 					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
 					Member finalTargetMember = targetMember;
 					helper.runQueries(database -> gangDatabase.updateMembersTable(finalTargetMember));
+					break;
 				}
-			}
-
-			player.sendMessage(MessageAddon.GANG_KICKED_TARGET.toString()
-			                                                  .replace("%player%", Objects.requireNonNull(
-					                                                  offlinePlayer.getName())));
 		});
-
-		this.addSubArgument(kickName);
 	}
 
 }

@@ -15,20 +15,19 @@ import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
-import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-class GangRenameCommand extends SubArgument {
+class GangDisplayCommand extends SubArgument {
 
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 
-	protected GangRenameCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
-	                            UserManager<Player> userManager, GangManager gangManager) {
-		super("rename", tree, parent);
+	protected GangDisplayCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                             UserManager<Player> userManager, GangManager gangManager) {
+		super("display", tree, parent);
 
 		this.gangland = gangland;
 		this.tree = tree;
@@ -36,7 +35,7 @@ class GangRenameCommand extends SubArgument {
 		this.userManager = userManager;
 		this.gangManager = gangManager;
 
-		gangRename();
+		gangDisplay();
 	}
 
 	@Override
@@ -46,7 +45,7 @@ class GangRenameCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (!user.hasGang()) {
-				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -54,27 +53,23 @@ class GangRenameCommand extends SubArgument {
 		};
 	}
 
-	private void gangRename() {
-		Argument changeName = new OptionalArgument(tree, (argument, sender, args) -> {
+	private void gangDisplay() {
+		Argument displayName = new OptionalArgument(tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
 			if (!user.hasGang()) {
-				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
-			Gang   gang    = gangManager.getGang(user.getGangId());
-			String oldName = gang.getName();
-			String newName = args[2];
+			String displayNameStr = args[2];
+			Gang   gang           = gangManager.getGang(user.getGangId());
 
-			if (!SettingAddon.isGangNameDuplicates()) for (Gang checkGangName : gangManager.getGangs().values())
-				if (checkGangName.getName().equalsIgnoreCase(newName)) {
-					player.sendMessage(MessageAddon.DUPLICATE_GANG_NAME.toString().replace("%gang%", newName));
-					return;
-				}
+			gang.setDisplayName(displayNameStr);
+			player.sendMessage(MessageAddon.GANG_DISPLAY_SET.toString().replace("%display%", displayNameStr));
 
-			gang.setName(newName);
+			// update database
 			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
 				if (handler instanceof GangDatabase gangDatabase) {
 					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
@@ -82,14 +77,34 @@ class GangRenameCommand extends SubArgument {
 					helper.runQueries(database -> gangDatabase.updateDataTable(gang));
 					break;
 				}
-
-			for (User<Player> onlineMembers : gang.getOnlineMembers(userManager))
-				onlineMembers.getUser().sendMessage(MessageAddon.GANG_RENAME.toString()
-				                                                            .replace("%old_gang%", oldName)
-				                                                            .replace("%gang%", gang.getName()));
 		});
 
-		this.addSubArgument(changeName);
+		// glw gang display remove
+		Argument removeDisplay = new Argument("remove", tree, (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			Gang gang = gangManager.getGang(user.getGangId());
+
+			gang.setDisplayName("");
+			player.sendMessage(MessageAddon.GANG_DISPLAY_REMOVED.toString());
+
+			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+				if (handler instanceof GangDatabase gangDatabase) {
+					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+					helper.runQueries(database -> gangDatabase.updateDataTable(gang));
+					break;
+				}
+		});
+
+		this.addSubArgument(removeDisplay);
+		this.addSubArgument(displayName);
 	}
 
 }

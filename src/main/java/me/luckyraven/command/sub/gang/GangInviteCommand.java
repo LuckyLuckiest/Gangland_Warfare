@@ -41,11 +41,10 @@ class GangInviteCommand extends SubArgument {
 	private final HashMap<User<Player>, Gang>           playerInvite;
 	private final HashMap<User<Player>, CountdownTimer> inviteTimer;
 
-	GangInviteCommand(Gangland gangland, Tree<Argument> tree, UserManager<Player> userManager,
-	                  MemberManager memberManager, GangManager gangManager, RankManager rankManager) {
-		super(new String[]{"invite", "add"}, tree);
-
-		setPermission(getPermission() + ".add_user");
+	protected GangInviteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                            UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+	                            RankManager rankManager) {
+		super(new String[]{"invite", "add"}, tree, "invite", parent);
 
 		this.gangland = gangland;
 		this.tree = tree;
@@ -163,7 +162,7 @@ class GangInviteCommand extends SubArgument {
 				if (handler instanceof UserDatabase userDatabase) {
 					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
-					helper.runQueries(database -> userDatabase.updateAccountTable(user));
+					helper.runQueries(database -> userDatabase.updateDataTable(user));
 				}
 			}
 

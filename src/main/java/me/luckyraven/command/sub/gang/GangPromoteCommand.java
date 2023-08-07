@@ -15,21 +15,21 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.GangDatabase;
-import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.rank.Rank;
 import me.luckyraven.rank.RankManager;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.sql.Types;
+import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
-class GangKickCommand extends SubArgument {
+class GangPromoteCommand extends SubArgument {
 
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
@@ -38,9 +38,10 @@ class GangKickCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
 
-	protected GangKickCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
-	                          MemberManager memberManager, GangManager gangManager, RankManager rankManager) {
-		super("kick", tree, parent);
+	protected GangPromoteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                             UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+	                             RankManager rankManager) {
+		super("promote", tree, parent);
 
 		this.gangland = gangland;
 		this.tree = tree;
@@ -50,7 +51,7 @@ class GangKickCommand extends SubArgument {
 		this.gangManager = gangManager;
 		this.rankManager = rankManager;
 
-		gangKick();
+		this.addSubArgument(gangPromote());
 	}
 
 	@Override
@@ -68,11 +69,15 @@ class GangKickCommand extends SubArgument {
 		};
 	}
 
-	private void gangKick() {
-		Argument kickName = new OptionalArgument(tree, (argument, sender, args) -> {
+	private OptionalArgument gangPromote() {
+		return new OptionalArgument(tree, (argument, sender, args) -> {
 			Player       player     = (Player) sender;
 			User<Player> user       = userManager.getUser(player);
 			Member       userMember = memberManager.getMember(player.getUniqueId());
+
+			String forceRank = "gangland.command.gang.force_rank";
+
+			boolean force = player.hasPermission(forceRank);
 
 			if (!user.hasGang()) {
 				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
@@ -86,8 +91,6 @@ class GangKickCommand extends SubArgument {
 			for (Member member : gang.getGroup()) {
 				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
 
-				if (offlinePlayer.getName() == null) continue;
-
 				if (!Objects.requireNonNull(offlinePlayer.getName()).equalsIgnoreCase(targetStr)) continue;
 
 				targetMember = member;
@@ -99,57 +102,66 @@ class GangKickCommand extends SubArgument {
 				return;
 			}
 
-			Tree.Node<Rank> playerRank = userMember.getRank().getNode();
-			Tree.Node<Rank> targetRank = targetMember.getRank().getNode();
+			// change the user rank by proceeding to the next node
+			Rank currentRank = targetMember.getRank();
+			// in the case there are more than one child then give options to the promoter
+			if (!force)
+				// cannot promote more than your rank
+				if (userMember.getRank().equals(targetMember.getRank())) {
+					player.sendMessage(MessageAddon.GANG_SAME_RANK_ACTION.toString());
+					return;
+				}
 
-			if (!rankManager.getRankTree().isDescendant(targetRank, playerRank)) {
-				player.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
+			// navigate the ranks first
+			List<Rank> nextRanks = Objects.requireNonNull(rankManager.getRankTree().find(currentRank))
+			                              .getNode()
+			                              .getChildren()
+			                              .stream()
+			                              .map(Tree.Node::getData)
+			                              .toList();
+
+			if (nextRanks.isEmpty()) {
+				player.sendMessage(MessageAddon.GANG_PROMOTE_END.toString());
 				return;
 			}
 
-			User<Player>  onlineTarget;
-			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
-			if (offlinePlayer.isOnline()) onlineTarget = userManager.getUser(offlinePlayer.getPlayer());
-			else onlineTarget = null;
+			if (nextRanks.size() > 1) {
+				ComponentBuilder ranks = new ComponentBuilder();
 
-			if (onlineTarget != null) {
-				gang.removeMember(onlineTarget, targetMember);
-				onlineTarget.getUser().sendMessage(MessageAddon.KICKED_FROM_GANG.toString());
-			} else
-				// remove user gang data
-				gang.removeMember(targetMember);
+				for (int i = 0; i < nextRanks.size(); i++) {
+					String rank = nextRanks.get(i).getName();
 
-			// update the user account
-			// update the gang data
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
-				if (handler instanceof UserDatabase userDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+					ComponentBuilder sep = new ComponentBuilder(rank).event(
+							new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+							               "/glw option gang rank " + targetStr + " " + rank));
 
-					if (onlineTarget != null) helper.runQueries(database -> userDatabase.updateDataTable(onlineTarget));
-					else {
-						UUID finalTargetUuid = targetMember.getUuid();
-						helper.runQueries(database -> {
-							database.table("data").update("uuid = ?", new Object[]{finalTargetUuid},
-							                              new int[]{Types.VARCHAR}, new String[]{"gang_id"},
-							                              new Object[]{-1}, new int[]{Types.INTEGER});
-						});
-					}
+					ranks.append(sep.create());
+
+					if (i < nextRanks.size() - 1) ranks.append("  ");
 				}
+			} else {
+				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
+				if (offlinePlayer.isOnline()) Objects.requireNonNull(offlinePlayer.getPlayer()).sendMessage(
+						MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString()
+						                                        .replace("%rank%", nextRanks.get(0).getName()));
+				player.sendMessage(MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString()
+				                                                           .replace("%player%", targetStr)
+				                                                           .replace("%rank%",
+				                                                                    nextRanks.get(0).getName()));
 
+				targetMember.setRank(nextRanks.get(0));
+			}
+
+			// update database
+			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
 				if (handler instanceof GangDatabase gangDatabase) {
 					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
 					Member finalTargetMember = targetMember;
 					helper.runQueries(database -> gangDatabase.updateMembersTable(finalTargetMember));
+					break;
 				}
-			}
-
-			player.sendMessage(MessageAddon.GANG_KICKED_TARGET.toString()
-			                                                  .replace("%player%", Objects.requireNonNull(
-					                                                  offlinePlayer.getName())));
 		});
-
-		this.addSubArgument(kickName);
 	}
 
 }

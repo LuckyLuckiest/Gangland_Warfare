@@ -37,11 +37,9 @@ class GangLeaveCommand extends SubArgument {
 	private final HashMap<User<Player>, CountdownTimer> leaveTimer;
 	private final ConfirmArgument                       leaveConfirm;
 
-	GangLeaveCommand(Gangland gangland, Tree<Argument> tree, UserManager<Player> userManager,
-	                 MemberManager memberManager, GangManager gangManager, RankManager rankManager) {
-		super("leave", tree);
-
-		setPermission(getPermission() + ".leave");
+	protected GangLeaveCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	                           MemberManager memberManager, GangManager gangManager, RankManager rankManager) {
+		super("leave", tree, parent);
 
 		this.gangland = gangland;
 		this.tree = tree;
@@ -125,7 +123,7 @@ class GangLeaveCommand extends SubArgument {
 				if (handler instanceof UserDatabase userDatabase) {
 					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
-					helper.runQueries(database -> userDatabase.updateAccountTable(user));
+					helper.runQueries(database -> userDatabase.updateDataTable(user));
 				}
 			}
 

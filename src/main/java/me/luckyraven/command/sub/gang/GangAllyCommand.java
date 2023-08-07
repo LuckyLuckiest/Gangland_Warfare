@@ -31,11 +31,9 @@ class GangAllyCommand extends SubArgument {
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 
-	GangAllyCommand(Gangland gangland, Tree<Argument> tree, UserManager<Player> userManager,
-	                MemberManager memberManager, GangManager gangManager) {
-		super("ally", tree);
-
-		setPermission(getPermission() + ".ally");
+	protected GangAllyCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	                          MemberManager memberManager, GangManager gangManager) {
+		super("ally", tree, parent);
 
 		this.gangland = gangland;
 		this.tree = tree;

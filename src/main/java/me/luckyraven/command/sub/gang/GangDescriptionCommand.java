@@ -26,11 +26,9 @@ class GangDescriptionCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 
-	GangDescriptionCommand(Gangland gangland, Tree<Argument> tree, UserManager<Player> userManager,
-	                       GangManager gangManager) {
-		super(new String[]{"desc", "description"}, tree);
-
-		setPermission(getPermission() + ".description");
+	protected GangDescriptionCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                                 UserManager<Player> userManager, GangManager gangManager) {
+		super(new String[]{"desc", "description"}, tree, "description", parent);
 
 		this.gangland = gangland;
 
@@ -53,8 +51,9 @@ class GangDescriptionCommand extends SubArgument {
 
 			// display an anvil
 			new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
+				Gang   gang1  = gangManager.getGang(userManager.getUser(stateSnapshot.getPlayer()).getGangId());
 				String output = stateSnapshot.getText();
-				String old    = gang.getDescription();
+				String old    = gang1.getDescription();
 
 				// no change
 				if (output == null || output.isEmpty() || output.equals(old)) {
@@ -63,14 +62,14 @@ class GangDescriptionCommand extends SubArgument {
 				}
 
 				// change the gang description
-				gang.setDescription(output);
+				gang1.setDescription(output);
 
 				// update the database
 				for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
 					if (handler instanceof GangDatabase gangDatabase) {
 						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
-						helper.runQueries(database -> gangDatabase.updateDataTable(gang));
+						helper.runQueries(database -> gangDatabase.updateDataTable(gang1));
 
 						break;
 					}
