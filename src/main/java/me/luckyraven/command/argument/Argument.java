@@ -8,6 +8,7 @@ import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.permissions.Permission;
+import org.bukkit.plugin.PluginManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -84,10 +85,17 @@ public class Argument implements Cloneable {
 	public void setPermission(String permission) {
 		this.permission = permission;
 
-		if (!permission.isEmpty()) {
-			Permission perm = new Permission(this.permission);
-			Bukkit.getPluginManager().addPermission(perm);
-		}
+		addPermission(permission);
+	}
+
+	public void addPermission(String permission) {
+		if (permission.isEmpty()) return;
+
+		Permission    perm          = new Permission(permission);
+		PluginManager pluginManager = Bukkit.getPluginManager();
+
+		if (!pluginManager.getPermissions().stream().map(Permission::getName).toList().contains(permission))
+			pluginManager.addPermission(perm);
 	}
 
 	public void addSubArgument(Argument argument) {
@@ -187,7 +195,7 @@ public class Argument implements Cloneable {
 		return arguments[0];
 	}
 
-	public List<String> getArgumentsString() {
+	public List<String> getArgumentString() {
 		return List.of(toString());
 	}
 
