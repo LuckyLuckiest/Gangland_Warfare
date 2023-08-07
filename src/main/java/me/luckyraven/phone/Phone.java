@@ -153,8 +153,8 @@ public class Phone {
 			newGang.setItem(23, XMaterial.BOOKSHELF.parseMaterial(), "&b&lSearch Gang", null, true, false,
 			                (inv, it) -> {
 				                // open a multi inventory that displays all the gangs
-				                List<Gang> gangs = gangManager.getGangs().values().stream().toList();
-				                AtomicReference<List<ItemStack>> gangsItems = new AtomicReference<>(new ArrayList<>());
+				                List<Gang>      gangs      = gangManager.getGangs().values().stream().toList();
+				                List<ItemStack> gangsItems = new ArrayList<>();
 
 				                for (Gang gang : gangs) {
 					                ItemBuilder itemBuilder = new ItemBuilder(
@@ -182,11 +182,17 @@ public class Phone {
 					                String finalName = name;
 					                itemBuilder.modifyNBT(nbt -> nbt.setString("SkullOwner", finalName));
 
-					                gangsItems.get().add(itemBuilder.build());
+					                gangsItems.add(itemBuilder.build());
 				                }
 
-								// need to use a list to save the location
-				                Map<ItemStack, BiConsumer<Inventory, ItemBuilder>> staticItems = new HashMap<>();
+				                // need to use a list to save the location
+				                Map<ItemStack, BiConsumer<Inventory, ItemBuilder>> staticItems = new LinkedHashMap<>();
+				                MultiInventory multiInventory = MultiInventory.dynamicMultiInventory(gangland,
+				                                                                                     gangsItems,
+				                                                                                     "&6&lGangs View",
+				                                                                                     user.getUser(),
+				                                                                                     true, true,
+				                                                                                     staticItems);
 
 				                // search
 				                ItemBuilder searchItem = new ItemBuilder(
@@ -200,15 +206,12 @@ public class Phone {
 							                return Collections.emptyList();
 						                }
 
-						                gangsItems.set(
-								                gangsItems.get()
-								                          .stream()
-								                          .filter(itemStack -> Objects.requireNonNull(
-										                                                      itemStack.getItemMeta())
-								                                                      .getDisplayName()
-								                                                      .contains(output))
-								                          .toList());
+						                List<ItemStack> items = gangsItems.stream().filter(
+								                itemStack -> Objects.requireNonNull(itemStack.getItemMeta())
+								                                    .getDisplayName()
+								                                    .contains(output)).toList();
 
+						                multiInventory.updateItems(items, stateSnapshot.getPlayer(), true, staticItems);
 						                callback.accept(currInv, itemBuilder);
 
 						                return List.of(AnvilGUI.ResponseAction.close());
@@ -222,12 +225,9 @@ public class Phone {
 					                // sorts the items according to the name
 				                });
 
-				                MultiInventory multiInventory = MultiInventory.dynamicMultiInventory(gangland,
-				                                                                                     gangsItems.get(),
-				                                                                                     "&6&lGangs View",
-				                                                                                     user.getUser(),
-				                                                                                     true, true,
-				                                                                                     staticItems);
+				                // need to update because when initialized the process was not done accordingly
+				                // this way should be changed since you update the items after initialization
+				                multiInventory.updateItems(gangsItems, user.getUser(), true, staticItems);
 
 				                multiInventory.open(user.getUser());
 			                });
