@@ -84,11 +84,13 @@ public final class Gangland extends JavaPlugin {
 		MemberManager       memberManager = initializer.getMemberManager();
 		DatabaseHelper      helper        = new DatabaseHelper(this, databaseHandler);
 
-		for (Player player : Bukkit.getOnlinePlayers())
+		for (Player player : Bukkit.getOnlinePlayers()) {
+			// online users only
 			if (!userManager.contains(userManager.getUser(player))) {
 				Phone        phone   = new Phone(SettingAddon.getPhoneName());
 				User<Player> newUser = new User<>(player);
 
+				// add a phone item
 				if (SettingAddon.isPhoneEnabled()) {
 					newUser.setPhone(phone);
 					if (!Phone.hasPhone(player)) phone.addPhoneToInventory(player);
@@ -97,13 +99,16 @@ public final class Gangland extends JavaPlugin {
 				createAccount.initializeUserData(newUser, helper);
 				userManager.add(newUser);
 
-				Member member = memberManager.getMember(player.getUniqueId());
-				if (member == null) {
-					Member newMember = new Member(player.getUniqueId());
-					createAccount.initializeMemberData(newMember, helper);
-					memberManager.add(newMember);
-				}
 			}
+
+			// offline limited members
+			Member member = memberManager.getMember(player.getUniqueId());
+			if (member == null) {
+				Member newMember = new Member(player.getUniqueId());
+				createAccount.initializeMemberData(newMember, helper);
+				memberManager.add(newMember);
+			}
+		}
 	}
 
 	private void requiredDependency(@NotNull String name, @Nullable Runnable runnable) {
