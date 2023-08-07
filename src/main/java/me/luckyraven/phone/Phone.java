@@ -22,7 +22,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 
 public class Phone {
@@ -78,9 +77,7 @@ public class Phone {
 		PhoneInventoryEvent event = new PhoneInventoryEvent(user);
 		gangland.getServer().getPluginManager().callEvent(event);
 
-		populateInventory(user, (inventory, item) -> {
-			inventory.open(player);
-		});
+		populateInventory(user, (inventory, item) -> inventory.open(player));
 		inventory.open(player);
 	}
 
