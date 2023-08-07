@@ -9,6 +9,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Map;
 
 public abstract class DatabaseHandler {
@@ -17,15 +18,12 @@ public abstract class DatabaseHandler {
 
 	private final JavaPlugin plugin;
 
-
 	private @Getter int      type;
 	private @Getter Database database;
 
 	public DatabaseHandler(JavaPlugin plugin) {
 		this.plugin = plugin;
 	}
-
-	public abstract Map<String, Object> credentials();
 
 	public abstract void createSchema() throws SQLException, IOException;
 
@@ -34,6 +32,9 @@ public abstract class DatabaseHandler {
 	public abstract void insertInitialData() throws SQLException;
 
 	public abstract String getSchema();
+
+	// TODO work on a way that checks if the table values are similar or not,
+	//  if they are not just create the new columns with a default value attached if it was null
 
 	public void initialize() {
 		DatabaseHelper helper = new DatabaseHelper(plugin, this);
@@ -113,6 +114,11 @@ public abstract class DatabaseHandler {
 		}
 	}
 
+	public String getSchemaName() {
+		return getSchema().lastIndexOf("\\") != -1 ? getSchema().substring(getSchema().lastIndexOf("\\") + 1)
+		                                           : getSchema();
+	}
+
 	private void useSQLite(String schema) {
 		if (!SettingAddon.isSqliteFailedMysql()) return;
 
@@ -120,9 +126,23 @@ public abstract class DatabaseHandler {
 		plugin.getLogger().info(String.format("Referring to SQLite for '%s' database", schema));
 	}
 
-	public String getSchemaName() {
-		return getSchema().lastIndexOf("\\") != -1 ? getSchema().substring(getSchema().lastIndexOf("\\") + 1)
-		                                           : getSchema();
+	private Map<String, Object> credentials() {
+		Map<String, Object> map = new HashMap<>();
+
+		switch (getType()) {
+			case DatabaseHandler.MYSQL -> {
+				map.put("host", SettingAddon.getMysqlHost());
+				map.put("password", SettingAddon.getMysqlPassword());
+				map.put("port", SettingAddon.getMysqlPort());
+				map.put("username", SettingAddon.getMysqlUsername());
+			}
+			case DatabaseHandler.SQLITE -> {
+			}
+			default -> throw new IllegalArgumentException("Unknown database type");
+		}
+
+		return map;
 	}
+
 
 }

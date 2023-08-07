@@ -10,8 +10,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.HashMap;
-import java.util.Map;
 
 public class RankDatabase extends DatabaseHandler {
 
@@ -20,25 +18,6 @@ public class RankDatabase extends DatabaseHandler {
 	public RankDatabase(JavaPlugin plugin) {
 		super(plugin);
 		this.schema = "rank_tree";
-	}
-
-	@Override
-	public Map<String, Object> credentials() {
-		Map<String, Object> map = new HashMap<>();
-
-		switch (getType()) {
-			case DatabaseHandler.MYSQL -> {
-				map.put("host", SettingAddon.getMysqlHost());
-				map.put("password", SettingAddon.getMysqlPassword());
-				map.put("port", SettingAddon.getMysqlPort());
-				map.put("username", SettingAddon.getMysqlUsername());
-			}
-			case DatabaseHandler.SQLITE -> {
-			}
-			default -> throw new IllegalArgumentException("Unknown database type");
-		}
-
-		return map;
 	}
 
 	@Override
