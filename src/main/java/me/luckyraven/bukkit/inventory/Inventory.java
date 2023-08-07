@@ -3,6 +3,7 @@ package me.luckyraven.bukkit.inventory;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
 import me.luckyraven.bukkit.ItemBuilder;
+import me.luckyraven.command.argument.TriConsumer;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -21,27 +22,27 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 public class Inventory implements Listener {
 
-	public static final  int                           MAX_SLOTS   = 54;
-	private static final Map<NamespacedKey, Inventory> INVENTORIES = new HashMap<>();
+	public static final   int                           MAX_SLOTS   = 54;
+	private static final  Map<NamespacedKey, Inventory> INVENTORIES = new HashMap<>();
+	private final @Getter int                           size;
 
-	private final @Getter int                                              size;
-	private final         List<Integer>                                    draggableSlots;
-	private final         Map<Integer, BiConsumer<Inventory, ItemBuilder>> clickableSlots;
-	private final         Map<Integer, ItemBuilder>                        clickableItem;
-	private final         JavaPlugin                                       plugin;
+	private final Map<Integer, TriConsumer<Player, Inventory, ItemBuilder>> clickableSlots;
+
+	private final List<Integer>             draggableSlots;
+	private final Map<Integer, ItemBuilder> clickableItems;
+	private final JavaPlugin                plugin;
 
 	private @Getter org.bukkit.inventory.Inventory inventory;
 	private @Getter NamespacedKey                  title;
 	private @Getter String                         displayTitle;
 
-	public Inventory(JavaPlugin plugin, String title, int size) {
+	public Inventory(JavaPlugin plugin, String title, int size, NamespacedKey namespacedKey) {
 		this.plugin = plugin;
 		this.displayTitle = title;
-		this.title = new NamespacedKey(plugin, titleRefactor(title));
+		this.title = namespacedKey;
 
 		int realSize = factorOfNine(size);
 		this.size = Math.min(realSize, MAX_SLOTS);
@@ -49,9 +50,20 @@ public class Inventory implements Listener {
 		this.inventory = Bukkit.createInventory(null, this.size, ChatUtil.color(title));
 		this.draggableSlots = new ArrayList<>();
 		this.clickableSlots = new HashMap<>();
-		this.clickableItem = new HashMap<>();
+		this.clickableItems = new HashMap<>();
 
 		INVENTORIES.put(this.title, this);
+	}
+
+	public Inventory(JavaPlugin plugin, String title, int size) {
+		this(plugin, title, size, new NamespacedKey(plugin, titleRefactor(title)));
+	}
+
+	protected static String titleRefactor(@NotNull String title) {
+		Preconditions.checkNotNull(title, "Title can't be null");
+
+		String pattern = "[^a-z0-9/._-]";
+		return ChatUtil.replaceColorCodes(title, "").replaceAll(" ", "_").toLowerCase().replaceAll(pattern, "");
 	}
 
 	private int factorOfNine(int value) {
@@ -72,20 +84,13 @@ public class Inventory implements Listener {
 		INVENTORIES.put(this.title, this);
 	}
 
-	private String titleRefactor(@NotNull String title) {
-		Preconditions.checkNotNull(title, "Title can't be null");
-
-		String pattern = "[^a-z0-9/._-]";
-		return ChatUtil.replaceColorCodes(title, "").replaceAll(" ", "_").toLowerCase().replaceAll(pattern, "");
-	}
-
 	public void setItem(int slot, Material material, @Nullable String displayName, @Nullable List<String> lore,
 	                    boolean enchanted, boolean draggable) {
 		setItem(slot, material, displayName, lore, enchanted, draggable, null);
 	}
 
 	public void setItem(int slot, Material material, @Nullable String displayName, @Nullable List<String> lore,
-	                    boolean enchanted, boolean draggable, BiConsumer<Inventory, ItemBuilder> clickable) {
+	                    boolean enchanted, boolean draggable, TriConsumer<Player, Inventory, ItemBuilder> clickable) {
 		ItemBuilder item = new ItemBuilder(material).setDisplayName(displayName).setLore(lore);
 
 		if (enchanted) item.addEnchantment(Enchantment.DURABILITY, 1);
@@ -94,12 +99,12 @@ public class Inventory implements Listener {
 	}
 
 	public void setItem(int slot, ItemBuilder itemBuilder, boolean draggable,
-	                    BiConsumer<Inventory, ItemBuilder> clickable) {
+	                    TriConsumer<Player, Inventory, ItemBuilder> clickable) {
 		setItem(slot, itemBuilder.build(), draggable);
 
 		if (clickable != null) {
 			clickableSlots.put(slot, clickable);
-			clickableItem.put(slot, itemBuilder);
+			clickableItems.put(slot, itemBuilder);
 		}
 	}
 
@@ -108,7 +113,7 @@ public class Inventory implements Listener {
 
 		draggableSlots.remove((Integer) slot);
 		clickableSlots.remove(slot);
-		clickableItem.remove(slot);
+		clickableItems.remove(slot);
 	}
 
 	public void setItem(int slot, ItemStack itemStack, boolean draggable) {
@@ -117,7 +122,7 @@ public class Inventory implements Listener {
 	}
 
 	public void setItem(int slot, ItemStack itemStack, boolean draggable,
-	                    BiConsumer<Inventory, ItemBuilder> clickable) {
+	                    TriConsumer<Player, Inventory, ItemBuilder> clickable) {
 		setItem(slot, new ItemBuilder(itemStack), draggable, clickable);
 	}
 
@@ -143,10 +148,12 @@ public class Inventory implements Listener {
 
 		if (inv == null) return;
 
-		int rawSlot = event.getRawSlot();
+		int    rawSlot = event.getRawSlot();
+		Player player  = (Player) event.getWhoClicked();
 
-		inv.clickableSlots.getOrDefault(rawSlot, (i, item) -> {}).accept(inv,
-		                                                                 inv.clickableItem.getOrDefault(rawSlot, null));
+		inv.clickableSlots.getOrDefault(rawSlot, (pl, i, item) -> {}).accept(player, inv,
+		                                                                     inv.clickableItems.getOrDefault(rawSlot,
+		                                                                                                     null));
 		event.setCancelled(!inv.draggableSlots.contains(rawSlot));
 	}
 
