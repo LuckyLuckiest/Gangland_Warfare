@@ -33,15 +33,18 @@ public class Member {
 		this.contribution = 0D;
 	}
 
+	public Date getGangJoinDate() {
+		return new Date(gangJoinDate);
+	}
+
 	/**
 	 * Gang join date string format.
 	 *
 	 * @return the date in dd/MM/yyyy format
 	 */
-	public String gangJoinDate() {
-		Date             date = new Date(gangJoinDate);
-		SimpleDateFormat sdf  = new SimpleDateFormat("dd/MM/yyyy");
-		return sdf.format(date);
+	public String getGangJoinDateString() {
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		return sdf.format(getGangJoinDate());
 	}
 
 	/**
@@ -60,6 +63,12 @@ public class Member {
 	 */
 	public void decreaseContribution(double amount) {
 		this.contribution -= amount;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("Member:{uuid=%s,gangId=%d,contribution=%.2f,rank=%s,gangJoin=%s}", uuid, gangId, contribution,
+		                     rank.getName(), getGangJoinDateString());
 	}
 
 }

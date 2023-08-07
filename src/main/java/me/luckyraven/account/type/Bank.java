@@ -22,7 +22,7 @@ public class Bank extends Account<UUID, User<?>> {
 
 	@Override
 	public String toString() {
-		return String.format("uuid=%s,name=%s,balance=%.2f", getKey(), name, balance);
+		return String.format("Bank:{uuid=%s,name=%s,balance=%.2f}", getKey(), name, balance);
 	}
 
 }

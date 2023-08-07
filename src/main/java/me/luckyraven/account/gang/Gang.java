@@ -3,26 +3,35 @@ package me.luckyraven.account.gang;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.account.Account;
+import me.luckyraven.bounty.Bounty;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.level.Level;
 import me.luckyraven.rank.Rank;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.color.Color;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 
-@Getter
-@Setter
 public class Gang extends Account<Integer, List<Member>> {
 
-	private final Set<Gang> ally;
-	private       String    name, displayName, color, description;
-	private double bounty, balance;
-	private long created;
+
+	private final @Getter Set<Gang> ally;
+
+	private @Getter
+	@Setter String name, displayName, color, description;
+	private @Getter
+	@Setter double balance;
+	private @Getter
+	@Setter long   created;
+
+	private @Getter Level  level;
+	private @Getter Bounty bounty;
 
 	public Gang(int id, List<Member> users, String name) {
 		this(id, users);
@@ -47,11 +56,12 @@ public class Gang extends Account<Integer, List<Member>> {
 
 		this.name = null;
 		this.displayName = "";
-		this.color = Color.BLACK.name();
+		this.color = Color.LIGHT_BLUE.name();
 		this.description = "Conquering the hood";
 		this.created = Instant.now().toEpochMilli();
-		this.bounty = 0D;
 		this.balance = 0D;
+		this.bounty = new Bounty();
+		this.level = new Level();
 		this.ally = new HashSet<>();
 	}
 
@@ -113,15 +123,25 @@ public class Gang extends Account<Integer, List<Member>> {
 		return new Date(created);
 	}
 
+	public String getDateCreatedString() {
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		return sdf.format(getDateCreated());
+	}
+
 	public String getDisplayNameString() {
 		return displayName.isEmpty() ? this.name : ChatUtil.color(
 				this.displayName + "&c" + SettingAddon.getGangDisplayNameChar());
 	}
 
+	public String getAllyListString() {
+		return ally.stream().map(Gang::getDisplayNameString).toString();
+	}
+
 	@Override
 	public String toString() {
-		return String.format("ID=%d,name=%s,description=%s,members=%s,created=%s,bounty=%,.2f,alias=%s", getId(), name,
-		                     description, getGroup(), created, bounty, ally);
+		return String.format(
+				"Gang:{id=%d,name=%s,description=%s,members=%s,created=%s,balance=%,.2f,level=%.2f,bounty=%,.2f,ally=%s}",
+				getId(), name, description, getGroup(), created, balance, level.getAmount(), bounty.getAmount(), ally);
 	}
 
 }

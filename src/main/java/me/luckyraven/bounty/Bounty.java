@@ -63,4 +63,9 @@ public class Bounty {
 		return userSetBounty.containsKey(sender);
 	}
 
+	@Override
+	public String toString() {
+		return String.format("{amount=%.2f}", amount);
+	}
+
 }

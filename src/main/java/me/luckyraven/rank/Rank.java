@@ -51,7 +51,7 @@ public class Rank {
 
 	@Override
 	public String toString() {
-		return String.format("[id=%d, name='%s', permissions=%s]", usedId, name, permissions);
+		return String.format("{id=%d,name='%s',permissions=%s}", usedId, name, permissions);
 	}
 
 }

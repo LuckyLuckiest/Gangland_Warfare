@@ -4,8 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.account.Account;
 import me.luckyraven.bounty.Bounty;
+import me.luckyraven.level.Level;
 import me.luckyraven.phone.Phone;
-import me.luckyraven.rank.Rank;
 import me.luckyraven.wanted.Wanted;
 
 import java.util.ArrayList;
@@ -30,13 +30,11 @@ public class User<T> {
 	private @Setter boolean hasBank;
 
 	private @Getter Bounty bounty;
-
+	private @Getter Level  level;
 	private @Getter
-	@Setter Rank   rank;
+	@Setter         Wanted wanted;
 	private @Getter
-	@Setter Wanted wanted;
-	private @Getter
-	@Setter Phone  phone;
+	@Setter         Phone  phone;
 
 	/**
 	 * Instantiates a new Database.
@@ -86,31 +84,60 @@ public class User<T> {
 		this.balance = 0D;
 		this.hasBank = false;
 		this.gangId = -1;
+		this.level = new Level();
 		this.bounty = new Bounty();
 		this.wanted = new Wanted();
 		this.linkedAccounts = new ArrayList<>();
 	}
 
+	/**
+	 * Reset gang.
+	 */
 	public void resetGang() {
 		this.gangId = -1;
 	}
 
+	/**
+	 * Has gang boolean.
+	 *
+	 * @return the boolean
+	 */
 	public boolean hasGang() {
 		return this.gangId != -1;
 	}
 
+	/**
+	 * Has bank boolean.
+	 *
+	 * @return the boolean
+	 */
 	public boolean hasBank() {
 		return hasBank;
 	}
 
+	/**
+	 * Add account.
+	 *
+	 * @param account the account
+	 */
 	public void addAccount(Account<?, ?> account) {
 		linkedAccounts.add(account);
 	}
 
+	/**
+	 * Remove account.
+	 *
+	 * @param account the account
+	 */
 	public void removeAccount(Account<?, ?> account) {
 		linkedAccounts.remove(account);
 	}
 
+	/**
+	 * Gets linked accounts.
+	 *
+	 * @return the linked accounts
+	 */
 	public List<Account<?, ?>> getLinkedAccounts() {
 		return new ArrayList<>(linkedAccounts);
 	}
@@ -126,7 +153,8 @@ public class User<T> {
 
 	@Override
 	public String toString() {
-		return String.format("User:{Data=%s,KD=%.2f,bal=%.2f,gangId=%d}", user, getKillDeathRatio(), balance, gangId);
+		return String.format("User:{data=%s,kd=%.2f,balance=%,.2f,level=%.2f,gangId=%d}", user, getKillDeathRatio(),
+		                     balance, level.getAmount(), gangId);
 	}
 
 }
