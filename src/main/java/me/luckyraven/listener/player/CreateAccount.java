@@ -49,7 +49,7 @@ public final class CreateAccount implements Listener {
 		Player       player = event.getPlayer();
 		User<Player> user   = new User<>(player);
 
-		user.setBalance(SettingAddon.getPlayerInitialBalance());
+		user.setBalance(SettingAddon.getUserInitialBalance());
 
 		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
 			if (handler instanceof UserDatabase) {
