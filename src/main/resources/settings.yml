@@ -69,6 +69,24 @@ Inventory:
       Item: WHITE_STAINED_GLASS_PANE
       Name: " "
 
+# +-------------+ #
+# | User Config | #
+# +-------------+ #
+User:
+   Account:
+      # On Player Join his default account will have the amount of money that you set.
+      Initial_Balance: 0
+      # The maximum amount of money the player can have.
+      Maximum_Balance: 1_000_000
+   Level:
+      Maximum_Level: 100
+      Base_Amount: 1000
+      Exponential: 1.7
+      Skill:
+         Upgrade: 1
+         Cost: 500
+         Exponential: 1.8
+
 # +---------------+ #
 # | Bounty Config | #
 # +---------------+ #
@@ -79,6 +97,7 @@ Bounty:
       Each: 5
       # The maximum total amount after each kill committed.
       Max: 50_000
+   # This option is only for users
    Repeating_Timer:
       Enable: true
       # Each time the timer gets to the [Time] value, it would multiply the current amount to the multiple.
@@ -182,12 +201,6 @@ Money_Symbol: '$'
 Balance_Format:
    Enable: true
    Format: "%,.1f"
-# [Player_Account] is for the player account.
-Player_Account:
-   # On Player Join his default account will have the amount of money that you set.
-   First_Balance: 0
-   # [Maximum_Balance] is the maximum amount of money the player can have.
-   Maximum_Balance: 1_000_000
 # [Bank_Account] is for the player account.
 Bank_Account:
    # When a player creates a bank account, his account will have the amount of money that you set.

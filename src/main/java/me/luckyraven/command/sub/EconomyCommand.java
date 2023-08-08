@@ -82,7 +82,7 @@ public class EconomyCommand extends CommandHandler {
 
 					switch (args[1].toLowerCase()) {
 						case "deposit", "add" -> {
-							value = Math.min(user.getBalance() + argAmount, SettingAddon.getPlayerMaxBalance());
+							value = Math.min(user.getBalance() + argAmount, SettingAddon.getUserMaxBalance());
 							strValue = "deposit";
 						}
 						case "withdraw", "take" -> {
@@ -90,7 +90,7 @@ public class EconomyCommand extends CommandHandler {
 							strValue = "withdraw";
 						}
 						case "set" -> {
-							value = Math.min(argAmount, SettingAddon.getPlayerMaxBalance());
+							value = Math.min(argAmount, SettingAddon.getUserMaxBalance());
 							strValue = "set";
 						}
 					}

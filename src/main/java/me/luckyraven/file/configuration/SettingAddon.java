@@ -10,12 +10,12 @@ import java.util.Objects;
 public class SettingAddon {
 
 	@Getter
-	static String inventoryLineItem, inventoryLineName;
-	@Getter
 	private static FileConfiguration settings;
+
 	// language picked
 	@Getter
 	private static String languagePicked;
+
 	// database configuration
 	@Getter
 	private static String databaseType;
@@ -25,16 +25,29 @@ public class SettingAddon {
 	private static int     mysqlPort;
 	@Getter
 	private static boolean sqliteBackup, sqliteFailedMysql;
+
 	// inventory configuration
 	@Getter
-	private static String inventoryFillItem, inventoryFillName;
+	private static String inventoryFillItem, inventoryFillName, inventoryLineItem, inventoryLineName;
+
 	// economy
 	@Getter
 	private static String moneySymbol, balanceFormat;
 	@Getter
-	private static double playerInitialBalance, playerMaxBalance;
-	@Getter
 	private static double bankInitialBalance, bankCreateFee, bankMaxBalance;
+
+	// user configuration
+	@Getter
+	private static double userInitialBalance, userMaxBalance;
+	// user levels
+	@Getter
+	private static int userMaxLevel, userLevelBaseAmount;
+	@Getter
+	private static double userLevelExponential;
+	@Getter
+	private static int    userSkillUpgrade;
+	@Getter
+	private static double userSkillCost, userSkillExponential;
 
 	// bounty configuration
 	@Getter
@@ -102,11 +115,20 @@ public class SettingAddon {
 		// economy
 		moneySymbol = Objects.requireNonNull(settings.getString("Money_Symbol")).substring(0, 1);
 		balanceFormat = settings.getString("Balance_Format.Format");
-		playerInitialBalance = settings.getDouble("Player_Account.First_Balance");
-		playerMaxBalance = settings.getDouble("Player_Account.Maximum_Balance");
 		bankInitialBalance = settings.getDouble("Bank_Account.First_Balance");
 		bankCreateFee = settings.getDouble("Bank_Account.Create_Cost");
 		bankMaxBalance = settings.getDouble("Bank_Account.Maximum_Balance");
+
+		// user
+		userInitialBalance = settings.getDouble("User.Account.Initial_Balance");
+		userMaxBalance = settings.getDouble("User.Account.Maximum_Balance");
+		// user levels
+		userMaxLevel = settings.getInt("User.Level.Maximum_Level");
+		userLevelBaseAmount = settings.getInt("User.Level.Base_Amount");
+		userLevelExponential = settings.getDouble("User.Level.Exponential");
+		userSkillUpgrade = settings.getInt("User.Level.Skill.Upgrade");
+		userSkillCost = settings.getDouble("User.Level.Skill.Cost");
+		userSkillExponential = settings.getDouble("User.Level.Skill.Exponential");
 
 		// bounty
 		bountyEachKillValue = settings.getDouble("Bounty.Kill.Each");
