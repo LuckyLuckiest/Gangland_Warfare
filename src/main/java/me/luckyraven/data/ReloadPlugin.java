@@ -37,7 +37,10 @@ public class ReloadPlugin {
 	}
 
 	/**
-	 * Very important to run this method after {@link Initializer#postInitialize()} method.
+	 * Initializes the user and members data (effective for reloads).
+	 *
+	 * @implNote Very important to run this method after {@link ListenerManager}, {@link DatabaseManager},
+	 * {@link CreateAccount}, {@link UserDatabase}, and {@link GangDatabase} initialization.
 	 */
 	public void userInitialize(boolean resetCache) {
 		ListenerManager listenerManager = initializer.getListenerManager();
@@ -126,6 +129,14 @@ public class ReloadPlugin {
 				memberManager.add(newMember);
 			}
 		});
+	}
+
+	public void gangInitialize(boolean resetCache) {
+		// TODO
+	}
+
+	public void rankInitialize(boolean resetCache) {
+		// TODO
 	}
 
 }
