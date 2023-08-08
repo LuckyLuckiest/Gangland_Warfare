@@ -25,6 +25,10 @@ public class UserManager<T> {
 		users.remove(user.getUser());
 	}
 
+	public void clear() {
+		users.clear();
+	}
+
 	public boolean contains(User<T> user) {
 		if (user == null) return false;
 		return users.containsKey(user.getUser());

@@ -55,6 +55,10 @@ public class MemberManager {
 		return m != null;
 	}
 
+	public void clear() {
+		members.clear();
+	}
+
 	public boolean contains(Member member) {
 		return members.containsKey(member.getUuid());
 	}
