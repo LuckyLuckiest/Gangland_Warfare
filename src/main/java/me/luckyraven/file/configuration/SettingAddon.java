@@ -5,37 +5,38 @@ import me.luckyraven.file.FileManager;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class SettingAddon {
 
 	@Getter
-	private static FileConfiguration settings;
+	private static final Map<String, Object> settingsMap = new LinkedHashMap<>();
 
+	@Getter
+	private static FileConfiguration settings;
 	// language picked
 	@Getter
-	private static String languagePicked;
-
+	private static String            languagePicked;
 	// database configuration
 	@Getter
-	private static String databaseType;
+	private static String            databaseType;
 	@Getter
-	private static String mysqlHost, mysqlUsername, mysqlPassword;
+	private static String            mysqlHost, mysqlUsername, mysqlPassword;
 	@Getter
 	private static int     mysqlPort;
 	@Getter
 	private static boolean sqliteBackup, sqliteFailedMysql;
-
 	// inventory configuration
 	@Getter
 	private static String inventoryFillItem, inventoryFillName, inventoryLineItem, inventoryLineName;
-
 	// economy
 	@Getter
 	private static String moneySymbol, balanceFormat;
 	@Getter
 	private static double bankInitialBalance, bankCreateFee, bankMaxBalance;
-
 	// user configuration
 	@Getter
 	private static double userInitialBalance, userMaxBalance;
@@ -48,7 +49,6 @@ public class SettingAddon {
 	private static int    userSkillUpgrade;
 	@Getter
 	private static double userSkillCost, userSkillExponential;
-
 	// bounty configuration
 	@Getter
 	private static double bountyEachKillValue, bountyMaxKill;
@@ -57,8 +57,7 @@ public class SettingAddon {
 	@Getter
 	private static double  bountyTimerMultiple, bountyTimerMax;
 	@Getter
-	private static int bountyTimeInterval;
-
+	private static int     bountyTimeInterval;
 	// phone configuration
 	@Getter
 	private static boolean phoneEnabled;
@@ -68,7 +67,6 @@ public class SettingAddon {
 	private static int     phoneSlot;
 	@Getter
 	private static boolean phoneMovable, phoneDroppable;
-
 	// gang configuration
 	@Getter
 	private static boolean gangEnable, gangNameDuplicates;
@@ -156,6 +154,27 @@ public class SettingAddon {
 		gangCreateFee = settings.getDouble("Gang.Account.Create_Cost");
 		gangMaxBalance = settings.getDouble("Gang.Account.Maximum_Balance");
 		gangContributionRate = settings.getDouble("Gang.Account.Contribution_Rate");
+
+		addEachFieldReflection();
+	}
+
+	private void addEachFieldReflection() {
+		Field[] fields = this.getClass().getDeclaredFields();
+
+		for (Field field : fields) {
+			field.setAccessible(true);
+			try {
+				Object value = field.get(null);
+
+				settingsMap.put(field.getName(), value);
+			} catch (IllegalAccessException exception) {
+				exception.printStackTrace();
+			}
+		}
+
+		// need to remove the map in order to show the other values separately
+		settingsMap.remove("settingsMap");
+		settingsMap.remove("settings");
 	}
 
 }
