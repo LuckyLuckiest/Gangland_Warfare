@@ -25,7 +25,7 @@ public class ReloadCommand extends CommandHandler {
 		try {
 			fileManager.reloadFiles();
 			gangland.getReloadPlugin().addonsLoader();
-			gangland.getReloadPlugin().userInitialize();
+			gangland.getReloadPlugin().userInitialize(true);
 
 			commandSender.sendMessage(ChatUtil.commandMessage("&aReload has been completed."));
 		} catch (Exception exception) {

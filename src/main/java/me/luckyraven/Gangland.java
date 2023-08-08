@@ -33,7 +33,7 @@ public final class Gangland extends JavaPlugin {
 
 		dependencyHandler();
 
-		reloadPlugin.userInitialize();
+		reloadPlugin.userInitialize(false);
 	}
 
 	private void dependencyHandler() {
