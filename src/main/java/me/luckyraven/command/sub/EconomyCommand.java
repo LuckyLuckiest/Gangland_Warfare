@@ -78,25 +78,38 @@ public class EconomyCommand extends CommandHandler {
 				List<Player> players = specifiers.get(specifier).get();
 
 				for (Player player : players) {
-					User<Player> user = userManager.getUser(player);
+					User<Player> user         = userManager.getUser(player);
+					double       valueChanged = 0D;
 
 					switch (args[1].toLowerCase()) {
 						case "deposit", "add" -> {
+							if (user.getBalance() + argAmount <= SettingAddon.getUserMaxBalance())
+								valueChanged = argAmount;
+
 							value = Math.min(user.getBalance() + argAmount, SettingAddon.getUserMaxBalance());
 							strValue = "deposit";
 						}
 						case "withdraw", "take" -> {
+							if (argAmount > user.getBalance()) valueChanged = user.getBalance();
+							else if (user.getBalance() - argAmount > 0D) valueChanged = argAmount;
+
 							value = Math.max(user.getBalance() - argAmount, 0D);
 							strValue = "withdraw";
 						}
 						case "set" -> {
 							value = Math.min(argAmount, SettingAddon.getUserMaxBalance());
+
+							if (argAmount > SettingAddon.getUserMaxBalance())
+								valueChanged = SettingAddon.getUserMaxBalance();
+							else valueChanged = value;
+
 							strValue = "set";
 						}
 					}
 					user.getUser().sendMessage(MessageAddon.valueOf(strValue.toUpperCase() + "_MONEY_PLAYER")
 					                                       .toString()
-					                                       .replace("%amount%", SettingAddon.formatDouble(value)));
+					                                       .replace("%amount%",
+					                                                SettingAddon.formatDouble(valueChanged)));
 					user.setBalance(value);
 					moneyInDatabase(gangland, user);
 				}
