@@ -9,7 +9,6 @@ import me.luckyraven.account.gang.MemberManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.SettingAddon;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,7 +42,7 @@ public class GanglandExpansion extends PlaceholderExpansion {
 	}
 
 	@Override
-	public @Nullable String onRequest(OfflinePlayer player, @NotNull String params) {
+	public @Nullable String onPlaceholderRequest(Player player, @NotNull String params) {
 		UserManager<Player> userManager   = gangland.getInitializer().getUserManager();
 		MemberManager       memberManager = gangland.getInitializer().getMemberManager();
 		GangManager         gangManager   = gangland.getInitializer().getGangManager();
@@ -64,7 +63,7 @@ public class GanglandExpansion extends PlaceholderExpansion {
 		// for user
 		if (!player.isOnline()) return null;
 
-		User<Player> user = userManager.getUser((Player) player);
+		User<Player> user = userManager.getUser(player);
 
 		if (user != null) {
 			if (params.equalsIgnoreCase(userStr + "balance")) return SettingAddon.formatDouble(user.getBalance());
