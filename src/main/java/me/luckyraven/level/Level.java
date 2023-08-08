@@ -7,12 +7,24 @@ public class Level {
 
 	private @Getter
 	@Setter double amount;
+	private int    maxLevel;
+	private double baseAmount;
 
 	public Level() {
-		this.amount = 0D;
+		this(100, 0D);
 	}
 
-	// TODO
+	public Level(int maxLevel, double baseAmount) {
+		this.amount = 0D;
+		this.maxLevel = maxLevel;
+		this.baseAmount = baseAmount;
+	}
+
+	public void addExperience(double experience) {
+		if (amount + experience < 0) return;
+
+		amount += experience;
+	}
 
 	@Override
 	public String toString() {
