@@ -21,6 +21,7 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.rank.RankManager;
 import me.luckyraven.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.TimeUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -88,7 +89,8 @@ class GangDeleteCommand extends SubArgument {
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "delete"}));
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> sender.sendMessage(
-					MessageAddon.GANG_REMOVE_CONFIRM.toString().replace("%timer%", String.valueOf(time.getDuration()))),
+					MessageAddon.GANG_REMOVE_CONFIRM.toString()
+					                                .replace("%timer%", TimeUtil.formatTime(time.getDuration(), true))),
 			                                          null, time -> {
 				confirmDelete.setConfirmed(false);
 				deleteGangName.remove(user);

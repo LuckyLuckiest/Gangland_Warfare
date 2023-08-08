@@ -16,6 +16,7 @@ import me.luckyraven.rank.Rank;
 import me.luckyraven.rank.RankManager;
 import me.luckyraven.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.TimeUtil;
 import org.bukkit.command.CommandSender;
 
 import java.sql.Types;
@@ -105,7 +106,8 @@ public class RankCommand extends CommandHandler {
 			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
 				sender.sendMessage(MessageAddon.RANK_CREATE_CONFIRM.toString()
 				                                                   .replace("%timer%",
-				                                                            String.valueOf(time.getDuration())));
+				                                                            TimeUtil.formatTime(time.getDuration(),
+				                                                                                true)));
 			}, null, time -> {
 				confirmCreate.setConfirmed(false);
 				createRankName.remove(sender);
@@ -174,7 +176,8 @@ public class RankCommand extends CommandHandler {
 			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
 				sender.sendMessage(MessageAddon.RANK_REMOVE_CONFIRM.toString()
 				                                                   .replace("%timer%",
-				                                                            String.valueOf(time.getDuration())));
+				                                                            TimeUtil.formatTime(time.getDuration(),
+				                                                                                true)));
 			}, null, time -> {
 				confirmDelete.setConfirmed(false);
 				deleteRankName.remove(sender);

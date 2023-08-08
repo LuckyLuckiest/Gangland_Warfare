@@ -20,6 +20,7 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.rank.RankManager;
 import me.luckyraven.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.TimeUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -173,7 +174,8 @@ class GangCreateCommand extends SubArgument {
 			confirmCreate.setConfirmed(true);
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> sender.sendMessage(
-					MessageAddon.GANG_CREATE_CONFIRM.toString().replace("%timer%", String.valueOf(time.getDuration()))),
+					MessageAddon.GANG_CREATE_CONFIRM.toString()
+					                                .replace("%timer%", TimeUtil.formatTime(time.getDuration(), true))),
 			                                          null, time -> {
 				confirmCreate.setConfirmed(false);
 				createGangName.remove(user);

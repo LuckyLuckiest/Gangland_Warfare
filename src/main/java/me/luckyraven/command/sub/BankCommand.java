@@ -18,6 +18,7 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.TimeUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -151,7 +152,8 @@ public class BankCommand extends CommandHandler {
 			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
 				sender.sendMessage(MessageAddon.BANK_CREATE_CONFIRM.toString()
 				                                                   .replace("%timer%",
-				                                                            String.valueOf(time.getDuration())));
+				                                                            TimeUtil.formatTime(time.getDuration(),
+				                                                                                true)));
 			}, null, time -> {
 				confirmCreate.setConfirmed(false);
 				createBankName.remove(user);
@@ -234,7 +236,8 @@ public class BankCommand extends CommandHandler {
 			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
 				sender.sendMessage(MessageAddon.BANK_REMOVE_CONFIRM.toString()
 				                                                   .replace("%timer%",
-				                                                            String.valueOf(time.getDuration())));
+				                                                            TimeUtil.formatTime(time.getDuration(),
+				                                                                                true)));
 			}, null, time -> {
 				confirmDelete.setConfirmed(false);
 				deleteBankName.remove(user);
