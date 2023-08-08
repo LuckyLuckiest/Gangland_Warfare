@@ -1,6 +1,9 @@
 package me.luckyraven.command.sub;
 
 import com.cryptomorin.xseries.XMaterial;
+import me.clip.placeholderapi.PlaceholderAPIPlugin;
+import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import me.clip.placeholderapi.expansion.manager.LocalExpansionManager;
 import me.luckyraven.Gangland;
 import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
@@ -143,12 +146,23 @@ public class DebugCommand extends CommandHandler {
 			sender.sendMessage(permissions);
 		});
 
-		Argument settingOptions = new Argument(new String[]{"settings", "setting"}, getArgumentTree(),
-		                                       (argument, sender, args) -> {
-			                                       for (Map.Entry<String, Object> entry : SettingAddon.getSettingsMap()
-			                                                                                          .entrySet())
-				                                       sender.sendMessage(entry.getKey() + ": " + entry.getValue());
-		                                       });
+		String[] setOpt = {"settings", "setting"};
+		Argument settingOptions = new Argument(setOpt, getArgumentTree(), (argument, sender, args) -> {
+			for (Map.Entry<String, Object> entry : SettingAddon.getSettingsMap().entrySet())
+				sender.sendMessage(entry.getKey() + ": " + entry.getValue());
+		});
+
+		Argument placeholder = new Argument("placeholder", getArgumentTree(), (argument, sender, args) -> {
+			LocalExpansionManager expansionManager = PlaceholderAPIPlugin.getInstance().getLocalExpansionManager();
+
+			for (PlaceholderExpansion expansion : expansionManager.getExpansions()) {
+				String identifier = expansion.getIdentifier();
+
+				if (!identifier.equalsIgnoreCase("gangland")) continue;
+
+				sender.sendMessage(expansion.getPlaceholders().toArray(String[]::new));
+			}
+		});
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
@@ -161,6 +175,7 @@ public class DebugCommand extends CommandHandler {
 		arguments.add(anvil);
 		arguments.add(perm);
 		arguments.add(settingOptions);
+		arguments.add(placeholder);
 
 		getArgument().addAllSubArguments(arguments);
 	}
