@@ -94,6 +94,7 @@
                         <filter>
                             <artifact>*:*</artifact>
                             <excludes>
+                                <!-- XSeries -->
                                 <exclude>com/cryptomorin/xseries/XBiome*</exclude>
                                 <exclude>com/cryptomorin/xseries/XBlock*</exclude>
                                 <exclude>com/cryptomorin/xseries/XEnchantment*</exclude>
@@ -106,6 +107,9 @@
                                 <exclude>com/cryptomorin/xseries/SkullCacheListener*</exclude>
                                 <exclude>com/cryptomorin/xseries/particles/*</exclude>
                                 <exclude>com/cryptomorin/xseries/messages/*</exclude>
+
+                                <!-- FastBoard -->
+                                <exclude>fr/mrmicky/fastboard/adventure/*</exclude>
                             </excludes>
                         </filter>
                     </filters>
