@@ -16,13 +16,9 @@
 # |      Messages      |
 # +--------------------+
 
-# If you have faced any problem with the file you can create a new one by changing [Config_Version] to a different
+# If you have faced any problem with the file, you can create a new one by changing [Config_Version] to a different
 # number, but when a new update comes out with a new configuration file(s), [Config_Version] will change resulting
 # in a new file(s) for that new version while saving old files with a suffix -old to indicate they are old.
-## | WARNING |
-# BY CHANGING [Config_Version] YOU WILL NEED TO CHANGE LINKED FILES TO IT [Config_Version] TOO JUST TO AVOID ERRORS.
-# THIS OPTION IS EXPERIMENTAL AND WILL TAKE SOME TIME TILL I FIGURE A SOLUTION FOR IT!
-# CHANGE IT IF YOU KNOW WHAT YOU ARE DOING!
 Config_Version: '${project.version}'
 
 # We recommend adding space at the end of every prefix.
@@ -85,8 +81,6 @@ Time_Unit:
    Hour: "hour"
    Day: "day"
    Week: "week"
-   Month: "month"
-   Year: "year"
 
 Commands:
    Prefix: "&6GLW &8&l>>&7 "
@@ -116,10 +110,10 @@ Commands:
       Create:
          Created_Bank: "Created a new bank &8[&a%bank%&8]&7."
          Bank_Fee: "The fee for creating a new bank account is &a%money_symbol%%amount%&7."
-         Confirm_Timer: "You have &a%timer%&7 seconds to confirm the account."
+         Confirm_Timer: "You have &a%timer%&7 to confirm the account."
       Remove:
          Removed_Bank: "Your bank account &8[&a%bank%&8]&7 has been removed."
-         Confirm_Timer: "You have &a%timer%&7 seconds to confirm deleting the account."
+         Confirm_Timer: "You have &a%timer%&7 to confirm deleting the account."
       Have_Bank: "You already have a bank."
       Balance:
          Player: "Your bank balance is: &b%money_symbol%%balance%"
@@ -134,11 +128,11 @@ Commands:
       Create:
          Created_Gang: "Created a new gang &8[&a%gang%&8]&7."
          Gang_Fee: "The fee for creating a new gang account is &a%money_symbol%%amount%&7."
-         Confirm_Timer: "You have &a%timer%&7 seconds to confirm the account."
+         Confirm_Timer: "You have &a%timer%&7 to confirm the account."
          Rename: "Changed gang name from &8[&d%old_gang%&8]&7 to &8[&e%gang%&8]&7."
       Remove:
          Removed_Gang: "Gang account &8[&a%gang%&8] &7has been removed."
-         Confirm_Timer: "You have &a%timer%&7 seconds to confirm deleting the account."
+         Confirm_Timer: "You have &a%timer%&7 to confirm deleting the account."
       Available:
          Player_In_Gang: "You already have a gang."
          Target_In_Gang: "&6%player%&7 already in a gang."
@@ -181,10 +175,10 @@ Commands:
    Rank:
       Create:
          Created_Rank: "Created a new rank &8[&a%rank%&8]&7."
-         Confirm_Timer: "You have &a%timer%&7 seconds to confirm the rank."
+         Confirm_Timer: "You have &a%timer%&7 to confirm the rank."
       Remove:
          Removed_Rank: "Rank &8[&a%rank%&8]&7 has been removed successfully."
-         Confirm_Timer: "You have &a%timer%&7 seconds to confirm deleting the rank."
+         Confirm_Timer: "You have &a%timer%&7 to confirm deleting the rank."
       Rank_Exists: "This rank is already created!"
       Permission:
          Add: "You have added &8[&a%permission%&8]&7 to &8[&a%rank%&8]&7 rank."

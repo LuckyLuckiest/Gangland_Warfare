@@ -15,7 +15,7 @@ public enum MessageAddon {
 	DATE("Normal.Format.Date", Type.OTHER), TIME("Normal.Format.Time", Type.OTHER), SECOND("Time_Unit.Second",
 	                                                                                       Type.OTHER), MINUTE(
 			"Time_Unit.Minute", Type.OTHER), HOUR("Time_Unit.Hour", Type.OTHER), DAY("Time_Unit.Day", Type.OTHER), WEEK(
-			"Time_Unit.Week", Type.OTHER), MONTH("Time_Unit.Month", Type.OTHER), YEAR("Time_Unit.Year", Type.OTHER),
+			"Time_Unit.Week", Type.OTHER),
 
 	// commands - arguments
 	ARGUMENTS_MISSING("Commands.Syntax.Missing_Arguments", Type.COMMAND), ARGUMENTS_WRONG(
