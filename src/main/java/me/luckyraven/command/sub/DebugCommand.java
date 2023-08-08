@@ -11,6 +11,7 @@ import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.rank.Rank;
 import me.luckyraven.util.color.Color;
 import me.luckyraven.util.color.ColorUtil;
@@ -105,7 +106,7 @@ public class DebugCommand extends CommandHandler {
 
 				items.addAll(swords.stream().map(ItemStack::new).toList());
 
-				MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, items, "&6Debug items", false,
+				MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, items, "&6&lDebug items", false,
 				                                                            false, null);
 
 				multi.open(player);
@@ -142,6 +143,13 @@ public class DebugCommand extends CommandHandler {
 			sender.sendMessage(permissions);
 		});
 
+		Argument settingOptions = new Argument(new String[]{"settings", "setting"}, getArgumentTree(),
+		                                       (argument, sender, args) -> {
+			                                       for (Map.Entry<String, Object> entry : SettingAddon.getSettingsMap()
+			                                                                                          .entrySet())
+				                                       sender.sendMessage(entry.getKey() + ": " + entry.getValue());
+		                                       });
+
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
 
@@ -152,6 +160,7 @@ public class DebugCommand extends CommandHandler {
 		arguments.add(multiInv);
 		arguments.add(anvil);
 		arguments.add(perm);
+		arguments.add(settingOptions);
 
 		getArgument().addAllSubArguments(arguments);
 	}
