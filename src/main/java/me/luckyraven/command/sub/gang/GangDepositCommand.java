@@ -78,7 +78,7 @@ class GangDepositCommand extends SubArgument {
 				if (user.getBalance() < argAmount) {
 					player.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 					return;
-				} else if (gang.getBalance() + argAmount >= SettingAddon.getGangMaxBalance()) {
+				} else if (gang.getBalance() + argAmount > SettingAddon.getGangMaxBalance()) {
 					player.sendMessage(MessageAddon.CANNOT_EXCEED_MAXIMUM.toString());
 					return;
 				}
