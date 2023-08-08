@@ -49,6 +49,10 @@ public class FileManager {
 		if (!file.isLoaded()) throw new IOException(String.format("%s file is not loaded!", name));
 	}
 
+	public void reloadFiles() {
+		for (FileHandler file : files) file.reloadData();
+	}
+
 	public YamlConfiguration loadFromResources(String resourceFile) throws IOException, InvalidConfigurationException {
 		// tightly coupled to settings file
 		checkFileLoaded("settings");

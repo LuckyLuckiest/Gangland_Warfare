@@ -125,6 +125,13 @@ public class FileHandler {
 		}
 	}
 
+	public void reloadData() {
+		// throwing fileConfiguration
+		if (fileConfiguration != null) fileConfiguration = null;
+
+		// applying the value again
+		fileConfiguration = YamlConfiguration.loadConfiguration(file);
+	}
 
 	public String getDirectory() {
 		return file.getAbsolutePath();
