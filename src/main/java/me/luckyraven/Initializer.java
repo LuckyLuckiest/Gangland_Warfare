@@ -110,13 +110,18 @@ public final class Initializer {
 	@SuppressWarnings("CommentedOutCode")
 	private void files() {
 		fileManager.addFile(new FileHandler(plugin, "settings", ".yml"), true);
-		settingAddon = new SettingAddon(fileManager);
 
-		this.languageLoader = new LanguageLoader(plugin, fileManager);
+		addonsLoader();
 
 //		fileManager.addFile(new FileHandler("scoreboard", ".yml"));
 //		fileManager.addFile(new FileHandler("kits", ".yml"));
 //		fileManager.addFile(new FileHandler("ammunition", ".yml"));
+	}
+
+	public void addonsLoader() {
+		settingAddon = new SettingAddon(fileManager);
+
+		this.languageLoader = new LanguageLoader(plugin, fileManager);
 	}
 
 	private void databases() {
@@ -177,6 +182,7 @@ public final class Initializer {
 		commandManager.addCommand(new DebugCommand(gangland));
 		commandManager.addCommand(new OptionCommand(gangland));
 		commandManager.addCommand(new ReadNBTCommand(gangland));
+		commandManager.addCommand(new ReloadCommand(gangland));
 
 		// Needs to be the final command to add all the help info
 		commandManager.addCommand(new HelpCommand(gangland));
