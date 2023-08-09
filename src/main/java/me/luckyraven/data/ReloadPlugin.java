@@ -22,9 +22,6 @@ import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.util.List;
-import java.util.UUID;
-
 public class ReloadPlugin {
 
 	private final Gangland    gangland;
@@ -42,6 +39,7 @@ public class ReloadPlugin {
 	public void databaseInitialize(boolean resetCache) {
 		rankInitialize(resetCache);
 		gangInitialize(resetCache);
+		memberInitialize(resetCache);
 		userInitialize(resetCache);
 	}
 
@@ -91,10 +89,7 @@ public class ReloadPlugin {
 		MemberManager  memberManager = initializer.getMemberManager();
 		DatabaseHelper memberHelper  = new DatabaseHelper(gangland, memberHandler);
 
-		if (resetCache) {
-			userManager.clear();
-			memberManager.clear();
-		}
+		if (resetCache) userManager.clear();
 
 		for (Player player : Bukkit.getOnlinePlayers())
 			if (!userManager.contains(userManager.getUser(player))) {
@@ -117,27 +112,20 @@ public class ReloadPlugin {
 					memberManager.add(newMember);
 				}
 			}
+	}
 
-		if (!resetCache) return;
+	public void memberInitialize(boolean resetCache) {
+		RankManager   rankManager   = gangland.getInitializer().getRankManager();
+		GangManager   gangManager   = gangland.getInitializer().getGangManager();
+		MemberManager memberManager = gangland.getInitializer().getMemberManager();
 
-		memberHelper.runQueries(database -> {
-			// need to get the whole members first
-			List<Object[]> data = database.table("members").selectAll();
+		if (resetCache) memberManager.clear();
 
-			// iterate over them all
-			for (Object[] info : data) {
-				UUID   uuid   = UUID.fromString(String.valueOf(info[0]));
-				Member member = memberManager.getMember(uuid);
-
-				// check if they are already in the list
-				if (member != null) continue;
-
-				// if not, add them
-				Member newMember = new Member(uuid);
-				createAccount.initializeMemberData(newMember, memberHelper);
-				memberManager.add(newMember);
+		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+			if (handler instanceof GangDatabase gangDatabase) {
+				memberManager.initialize(gangDatabase, gangManager, rankManager);
+				break;
 			}
-		});
 	}
 
 	public void gangInitialize(boolean resetCache) {
