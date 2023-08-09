@@ -2,6 +2,7 @@ package me.luckyraven.data;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
+import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.account.gang.Member;
 import me.luckyraven.account.gang.MemberManager;
 import me.luckyraven.data.user.User;
@@ -10,11 +11,13 @@ import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.database.sub.GangDatabase;
+import me.luckyraven.database.sub.RankDatabase;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
 import me.luckyraven.phone.Phone;
+import me.luckyraven.rank.RankManager;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -36,11 +39,17 @@ public class ReloadPlugin {
 		initializer.addonsLoader();
 	}
 
+	public void databaseInitialize(boolean resetCache) {
+		rankInitialize(resetCache);
+		gangInitialize(resetCache);
+		userInitialize(resetCache);
+	}
+
 	/**
 	 * Initializes the user and members data (effective for reloads).
 	 *
 	 * @implNote Very important to run this method after {@link ListenerManager}, {@link DatabaseManager},
-	 * {@link CreateAccount}, {@link UserDatabase}, and {@link GangDatabase} initialization.
+	 * {@link CreateAccount}, {@link UserDatabase}, {@link RankDatabase}, and {@link GangDatabase} initialization.
 	 */
 	public void userInitialize(boolean resetCache) {
 		ListenerManager listenerManager = initializer.getListenerManager();
@@ -132,11 +141,27 @@ public class ReloadPlugin {
 	}
 
 	public void gangInitialize(boolean resetCache) {
-		// TODO
+		GangManager gangManager = gangland.getInitializer().getGangManager();
+
+		if (resetCache) gangManager.clear();
+
+		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+			if (handler instanceof GangDatabase gangDatabase) {
+				gangManager.initialize(gangDatabase);
+				break;
+			}
 	}
 
 	public void rankInitialize(boolean resetCache) {
-		// TODO
+		RankManager rankManager = gangland.getInitializer().getRankManager();
+
+		if (resetCache) rankManager.clear();
+
+		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+			if (handler instanceof RankDatabase rankDatabase) {
+				rankManager.initialize(rankDatabase);
+				break;
+			}
 	}
 
 }
