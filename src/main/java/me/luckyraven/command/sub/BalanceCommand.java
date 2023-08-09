@@ -57,7 +57,7 @@ public final class BalanceCommand extends CommandHandler {
 					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
 					helper.runQueries(database -> {
-						// get all the users data
+						// get all the user's data
 						List<Object[]> usersData = database.table("data").selectAll();
 
 						// get only the uuids
