@@ -103,8 +103,13 @@ public class RankManager {
 		ranks.put(rank.getUsedId(), rank);
 	}
 
-	public void remove(Rank rank) {
-		ranks.remove(rank.getUsedId());
+	public boolean remove(Rank rank) {
+		Rank r = ranks.remove(rank.getUsedId());
+		return r != null;
+	}
+
+	public void clear() {
+		ranks.clear();
 	}
 
 	public Rank get(int id) {

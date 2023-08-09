@@ -99,6 +99,10 @@ public class GangManager {
 		return g != null;
 	}
 
+	public void clear() {
+		gangs.clear();
+	}
+
 	public boolean contains(Gang gang) {
 		return gangs.containsKey(gang.getId());
 	}
