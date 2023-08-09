@@ -66,11 +66,13 @@ public final class BalanceCommand extends CommandHandler {
 								                 objects -> (double) objects[6]));
 
 						// iterate over all uuids and check if the name is similar to target
+						boolean found = false;
 						for (UUID uuid : uuids.keySet()) {
 							OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
 							if (offlinePlayer.getName() == null) continue;
 
 							if (offlinePlayer.getName().equalsIgnoreCase(target)) {
+								found = true;
 								sender.sendMessage(MessageAddon.BALANCE_TARGET.toString()
 								                                              .replace("%target%", target)
 								                                              .replace("%balance%",
@@ -80,6 +82,9 @@ public final class BalanceCommand extends CommandHandler {
 								break;
 							}
 						}
+
+						if (!found) sender.sendMessage(
+								MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", target));
 					});
 					break;
 				}
