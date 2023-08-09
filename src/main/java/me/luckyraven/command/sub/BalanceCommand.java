@@ -19,7 +19,6 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -51,7 +50,7 @@ public final class BalanceCommand extends CommandHandler {
 	protected void initializeArguments(Gangland gangland) {
 		Argument targetBalance = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			// get the target, validate if they are in the system
-			String target = args[2];
+			String target = args[1];
 
 			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
 				if (handler instanceof UserDatabase) {
