@@ -32,7 +32,7 @@ public class RankCommand extends CommandHandler {
 		super(gangland, "rank", false);
 
 		List<CommandInformation> list = getCommands().entrySet()
-		                                             .parallelStream()
+		                                             .stream()
 		                                             .filter(entry -> entry.getKey().startsWith("rank"))
 		                                             .sorted(Map.Entry.comparingByKey())
 		                                             .map(Map.Entry::getValue)

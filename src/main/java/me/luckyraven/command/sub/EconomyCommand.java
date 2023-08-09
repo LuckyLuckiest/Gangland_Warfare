@@ -27,7 +27,7 @@ public class EconomyCommand extends CommandHandler {
 	public EconomyCommand(Gangland gangland) {
 		super(gangland, "economy", false, "eco");
 
-		List<CommandInformation> list = getCommands().entrySet().parallelStream().filter(
+		List<CommandInformation> list = getCommands().entrySet().stream().filter(
 				entry -> entry.getKey().startsWith("economy")).sorted(Map.Entry.comparingByKey()).map(
 				Map.Entry::getValue).toList();
 

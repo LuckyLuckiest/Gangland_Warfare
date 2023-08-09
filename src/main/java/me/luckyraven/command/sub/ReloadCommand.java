@@ -3,12 +3,14 @@ package me.luckyraven.command.sub;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ReloadCommand extends CommandHandler {
 
@@ -18,6 +20,10 @@ public class ReloadCommand extends CommandHandler {
 		super(gangland, "reload", false, "rl");
 
 		this.gangland = gangland;
+		List<CommandInformation> list = getCommands().entrySet().stream().filter(
+				entry -> entry.getKey().startsWith("reload")).sorted(Map.Entry.comparingByKey()).map(
+				Map.Entry::getValue).toList();
+		getHelpInfo().addAll(list);
 	}
 
 	@Override
@@ -46,17 +52,22 @@ public class ReloadCommand extends CommandHandler {
 			reloadProcess(sender, "database", this::databaseReload);
 		});
 
+		Argument scoreboard = new Argument("scoreboard", getArgumentTree(), (argument, sender, args) -> {
+			sender.sendMessage("Not implemented yet!");
+		});
+
 		List<Argument> arguments = new ArrayList<>();
 
 		arguments.add(files);
 		arguments.add(data);
+		arguments.add(scoreboard);
 
 		getArgument().addAllSubArguments(arguments);
 	}
 
 	@Override
 	protected void help(CommandSender sender, int page) {
-
+		getHelpInfo().displayHelp(sender, page, "Reload");
 	}
 
 	private void reloadProcess(CommandSender sender, String process, Runnable runnable) {
@@ -72,9 +83,7 @@ public class ReloadCommand extends CommandHandler {
 	}
 
 	private void databaseReload() {
-		gangland.getReloadPlugin().userInitialize(true);
-		gangland.getReloadPlugin().gangInitialize(true);
-		gangland.getReloadPlugin().rankInitialize(true);
+		gangland.getReloadPlugin().databaseInitialize(true);
 	}
 
 }

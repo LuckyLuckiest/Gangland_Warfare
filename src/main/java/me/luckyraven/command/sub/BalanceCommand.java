@@ -3,18 +3,25 @@ package me.luckyraven.command.sub;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.user.User;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.List;
+import java.util.Map;
+
 public final class BalanceCommand extends CommandHandler {
 
 	public BalanceCommand(Gangland gangland) {
 		super(gangland, "balance", true, "bal");
-		getHelpInfo().add(getCommandInformation("balance"));
-		getHelpInfo().add(getCommandInformation("balance_others"));
+
+		List<CommandInformation> list = getCommands().entrySet().stream().filter(
+				entry -> entry.getKey().startsWith("balance")).sorted(Map.Entry.comparingByKey()).map(
+				Map.Entry::getValue).toList();
+		getHelpInfo().addAll(list);
 	}
 
 	@Override
