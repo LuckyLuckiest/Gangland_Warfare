@@ -22,6 +22,9 @@ import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+/**
+ * The type Reload plugin.
+ */
 public class ReloadPlugin {
 
 	private final Gangland    gangland;
@@ -32,10 +35,19 @@ public class ReloadPlugin {
 		this.initializer = gangland.getInitializer();
 	}
 
-	public void addonsLoader() {
+	/**
+	 * Reloads the files and they're linked addons.
+	 */
+	public void filesReload() {
+		gangland.getInitializer().getFileManager().reloadFiles();
 		initializer.addonsLoader();
 	}
 
+	/**
+	 * Properly and inorder initialize the database data.
+	 *
+	 * @param resetCache if old data needs to be cleared
+	 */
 	public void databaseInitialize(boolean resetCache) {
 		rankInitialize(resetCache);
 		gangInitialize(resetCache);
@@ -44,8 +56,9 @@ public class ReloadPlugin {
 	}
 
 	/**
-	 * Initializes the user and members data (effective for reloads).
+	 * Initializes the user and new members data (effective for reloads).
 	 *
+	 * @param resetCache if old data needs to be cleared
 	 * @implNote Very important to run this method after {@link ListenerManager}, {@link DatabaseManager},
 	 * {@link CreateAccount}, {@link UserDatabase}, {@link RankDatabase}, and {@link GangDatabase} initialization.
 	 */
@@ -114,6 +127,13 @@ public class ReloadPlugin {
 			}
 	}
 
+	/**
+	 * Initializes members' data (effective for reloads).
+	 *
+	 * @param resetCache if old data needs to be cleared
+	 * @implNote Very important to run this method after {@link DatabaseManager}, {@link RankManager},
+	 * {@link GangManager}, {@link UserDatabase}, {@link RankDatabase}, and {@link GangDatabase} initialization.
+	 */
 	public void memberInitialize(boolean resetCache) {
 		RankManager   rankManager   = gangland.getInitializer().getRankManager();
 		GangManager   gangManager   = gangland.getInitializer().getGangManager();
@@ -128,6 +148,13 @@ public class ReloadPlugin {
 			}
 	}
 
+	/**
+	 * Initializes the gang data (effective for reloads).
+	 *
+	 * @param resetCache if old data needs to be cleared
+	 * @implNote Very important to run this method after {@link DatabaseManager}, and {@link GangDatabase}
+	 * initialization.
+	 */
 	public void gangInitialize(boolean resetCache) {
 		GangManager gangManager = gangland.getInitializer().getGangManager();
 
@@ -140,6 +167,13 @@ public class ReloadPlugin {
 			}
 	}
 
+	/**
+	 * Initializes the rank data (effective for reloads).
+	 *
+	 * @param resetCache if old data needs to be cleared
+	 * @implNote Very important to run this method after {@link DatabaseManager}, and {@link RankDatabase}
+	 * initialization.
+	 */
 	public void rankInitialize(boolean resetCache) {
 		RankManager rankManager = gangland.getInitializer().getRankManager();
 
