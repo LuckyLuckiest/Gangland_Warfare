@@ -74,16 +74,15 @@ public final class HelpInfo {
 		if (page > maxPages) throw new IllegalArgumentException("Cannot exceed maximum allowed pages");
 		String header = color("&3Oo&3&m------&r &8&l[&bG&fL&bW&8&l]&7 " + title + " &8[&7" + page + "&5/&7" + maxPages +
 				                      "&8] &3&m------&3oO");
-		sender.sendMessage();
+		sender.sendMessage("");
 		sender.sendMessage(header);
-		sender.sendMessage();
+		sender.sendMessage("");
 
 		int startIndex = (page - 1) * breaks;
 		int endIndex   = Math.min(startIndex + breaks, size());
 
 		for (int index = startIndex; index < endIndex; index++)
 			sender.sendMessage(commandDesign(list.get(index).toString()));
-		sender.sendMessage();
 	}
 
 }
