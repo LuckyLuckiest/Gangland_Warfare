@@ -13,19 +13,19 @@
 	},
 	"reload": {
 		"usage": "/glw reload",
-		"description": "Show reload help page."
+		"description": "Reloads the whole plugin."
 	},
-	"reload_all": {
-		"usage": "/glw reload all",
-		"description": "Reloads the whole server."
-	},
-	"reload_plugin": {
-		"usage": "/glw reload plugin",
-		"description": "Reloads the plugin."
+	"reload_help": {
+		"usage": "/glw reload help",
+		"description": "Shows the reload help page."
 	},
 	"reload_files": {
 		"usage": "/glw reload files",
 		"description": "Reloads the files."
+	},
+	"reload_database": {
+		"usage": "/glw reload data",
+		"description": "Reloads the data related to the database."
 	},
 	"reload_scoreboard": {
 		"usage": "/glw reload scoreboard",
