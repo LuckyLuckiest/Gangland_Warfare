@@ -4,7 +4,6 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
-import me.luckyraven.file.FileManager;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
 
@@ -29,10 +28,7 @@ public class ReloadCommand extends CommandHandler {
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		reloadProcess(commandSender, "", () -> {
-			FileManager fileManager = gangland.getInitializer().getFileManager();
-
-			fileManager.reloadFiles();
-			gangland.getReloadPlugin().addonsLoader();
+			gangland.getReloadPlugin().filesReload();
 			databaseReload();
 		});
 	}
@@ -40,12 +36,7 @@ public class ReloadCommand extends CommandHandler {
 	@Override
 	protected void initializeArguments(Gangland gangland) {
 		Argument files = new Argument(new String[]{"files", "file"}, getArgumentTree(), (argument, sender, args) -> {
-			reloadProcess(sender, "files", () -> {
-				FileManager fileManager = gangland.getInitializer().getFileManager();
-
-				fileManager.reloadFiles();
-				gangland.getReloadPlugin().addonsLoader();
-			});
+			reloadProcess(sender, "files", () -> gangland.getReloadPlugin().filesReload());
 		});
 
 		Argument data = new Argument(new String[]{"database", "data"}, getArgumentTree(), (argument, sender, args) -> {
