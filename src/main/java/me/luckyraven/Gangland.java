@@ -29,11 +29,19 @@ public final class Gangland extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
+		// must initialize so the plugin works as normal
 		initializer.postInitialize();
 
+		// checks for dependencies
 		dependencyHandler();
 
+		// initializes users and members who joined and not registered in postInitialize
 		reloadPlugin.userInitialize(false);
+
+		// auto-save to database
+		PeriodicalUpdates periodicalUpdates = new PeriodicalUpdates(this, 5 * 60 * 20L);
+
+		periodicalUpdates.start();
 	}
 
 	private void dependencyHandler() {
