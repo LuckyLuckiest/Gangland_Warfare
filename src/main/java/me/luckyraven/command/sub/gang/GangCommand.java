@@ -95,25 +95,25 @@ public class GangCommand extends CommandHandler {
 
 		// promote user in gang
 		// glw gang promote <name>
-		Argument promoteUser = new GangPromoteCommand(gangland, getArgumentTree(), getArgument(), userManager,
-		                                              memberManager, gangManager, rankManager);
+		Argument promoteUser = new GangPromoteCommand(getArgumentTree(), getArgument(), userManager, memberManager,
+		                                              gangManager, rankManager);
 
 		// demote user in gang
 		// glw gang demote <name>
-		Argument demoteUser = new GangDemoteCommand(gangland, getArgumentTree(), getArgument(), userManager,
-		                                            memberManager, gangManager, rankManager);
+		Argument demoteUser = new GangDemoteCommand(getArgumentTree(), getArgument(), userManager, memberManager,
+		                                            gangManager, rankManager);
 
 		getArgument().addPermission("gangland.command.gang.force_rank");
 
 		// deposit money to gang
 		// glw gang deposit <amount>
-		Argument deposit = new GangDepositCommand(gangland, getArgumentTree(), getArgument(), userManager,
-		                                          memberManager, gangManager);
+		Argument deposit = new GangDepositCommand(getArgumentTree(), getArgument(), userManager, memberManager,
+		                                          gangManager);
 
 		// withdraw money from gang
 		// glw gang withdraw <amount>
-		Argument withdraw = new GangWithdrawCommand(gangland, getArgumentTree(), getArgument(), userManager,
-		                                            memberManager, gangManager);
+		Argument withdraw = new GangWithdrawCommand(getArgumentTree(), getArgument(), userManager, memberManager,
+		                                            gangManager);
 
 		// balance of gang
 		// glw gang balance
@@ -121,7 +121,7 @@ public class GangCommand extends CommandHandler {
 
 		// change gang name
 		// glw gang name <name>
-		Argument name = new GangRenameCommand(gangland, getArgumentTree(), getArgument(), userManager, gangManager);
+		Argument name = new GangRenameCommand(getArgumentTree(), getArgument(), userManager, gangManager);
 
 		// change gang description
 		// opens an anvil with a paper that can change the title
@@ -136,7 +136,7 @@ public class GangCommand extends CommandHandler {
 
 		// change gang display name
 		// glw gang display <name>
-		Argument display = new GangDisplayCommand(gangland, getArgumentTree(), getArgument(), userManager, gangManager);
+		Argument display = new GangDisplayCommand(getArgumentTree(), getArgument(), userManager, gangManager);
 
 		// change gang color using gui
 		// glw gang color
