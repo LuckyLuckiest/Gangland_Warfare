@@ -9,6 +9,7 @@ import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.account.gang.Member;
 import me.luckyraven.account.gang.MemberManager;
+import me.luckyraven.bukkit.inventory.Inventory;
 import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
@@ -22,6 +23,7 @@ import me.luckyraven.util.color.MaterialType;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -109,8 +111,8 @@ public class DebugCommand extends CommandHandler {
 
 				items.addAll(swords.stream().map(ItemStack::new).toList());
 
-				MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, items, "&6&lDebug items", false,
-				                                                            false, null);
+				MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, player, items, "&6&lDebug items",
+				                                                            false, false, null);
 
 				multi.open(player);
 			} else {
@@ -168,6 +170,11 @@ public class DebugCommand extends CommandHandler {
 			gangland.getPeriodicalUpdates().forceUpdate();
 		});
 
+		Argument inventoriesData = new Argument("inv-data", getArgumentTree(), (argument, sender, args) -> {
+			sender.sendMessage(
+					Inventory.getInventories().keySet().stream().map(NamespacedKey::getKey).toArray(String[]::new));
+		});
+
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
 
@@ -181,6 +188,7 @@ public class DebugCommand extends CommandHandler {
 		arguments.add(settingOptions);
 		arguments.add(placeholder);
 		arguments.add(updateData);
+		arguments.add(inventoriesData);
 
 		getArgument().addAllSubArguments(arguments);
 	}
