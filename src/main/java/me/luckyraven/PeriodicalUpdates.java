@@ -76,13 +76,13 @@ public class PeriodicalUpdates {
 		helper.runQueries(database -> {
 			for (User<Player> user : userManager.getUsers().values()) {
 				Object[] data = database.table("data").select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
-				                                              new int[]{Types.CHAR}, new String[]{"kills"});
+				                                              new int[]{Types.CHAR}, new String[]{"*"});
 
 				if (data.length == 0) userDatabase.insertDataTable(user);
 				else userDatabase.updateDataTable(user);
 
 				Object[] bank = database.table("bank").select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
-				                                              new int[]{Types.CHAR}, new String[]{"name"});
+				                                              new int[]{Types.CHAR}, new String[]{"*"});
 
 				if (bank.length == 0) userDatabase.insertBankTable(user);
 				else userDatabase.updateBankTable(user);
@@ -94,7 +94,7 @@ public class PeriodicalUpdates {
 		helper.runQueries(database -> {
 			for (Member member : memberManager.getMembers().values()) {
 				Object[] data = database.table("members").select("uuid = ?", new Object[]{member.getUuid()},
-				                                                 new int[]{Types.CHAR}, new String[]{"gang_id"});
+				                                                 new int[]{Types.CHAR}, new String[]{"*"});
 
 				if (data.length == 0) gangDatabase.insertMemberTable(member);
 				else gangDatabase.updateMembersTable(member);
@@ -106,7 +106,7 @@ public class PeriodicalUpdates {
 		helper.runQueries(database -> {
 			for (Gang gang : gangManager.getGangs().values()) {
 				Object[] data = database.table("data").select("id = ?", new Object[]{gang.getId()},
-				                                              new int[]{Types.INTEGER}, new String[]{"name"});
+				                                              new int[]{Types.INTEGER}, new String[]{"*"});
 
 				if (data.length == 0) gangDatabase.insertDataTable(gang);
 				else gangDatabase.updateDataTable(gang);
@@ -119,7 +119,7 @@ public class PeriodicalUpdates {
 			for (Rank rank : rankManager.getRankTree()) {
 				Object[] data = database.table("data").select("id = ?", new Object[]{rank.getUsedId()}, new int[]{
 						Types.INTEGER
-				}, new String[]{"name"});
+				}, new String[]{"*"});
 
 				if (data.length == 0) rankDatabase.insertDataTable(rank);
 				else rankDatabase.updateDataTable(rank);
