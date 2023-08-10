@@ -66,6 +66,7 @@ public class ReloadCommand extends CommandHandler {
 				String.format("&bReloading&7 the plugin%s%s...", process.isEmpty() ? "" : " ", process)));
 		try {
 			runnable.run();
+			gangland.getPeriodicalUpdates().forceUpdate();
 
 			sender.sendMessage(ChatUtil.commandMessage("&aReload has been completed."));
 		} catch (Exception exception) {

@@ -43,6 +43,15 @@ public class PeriodicalUpdates {
 		});
 	}
 
+	public void forceUpdate() {
+		gangland.getLogger().info("Force update...");
+		this.repeatingTimer.runTask();
+	}
+
+	public void stop() {
+		this.repeatingTimer.stop();
+	}
+
 	public void start() {
 		gangland.getLogger().info("Initialized auto-save...");
 		this.repeatingTimer.startAsync();

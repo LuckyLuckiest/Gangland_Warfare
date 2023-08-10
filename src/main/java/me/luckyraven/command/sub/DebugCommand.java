@@ -164,6 +164,10 @@ public class DebugCommand extends CommandHandler {
 			}
 		});
 
+		Argument updateData = new Argument("update-data", getArgumentTree(), (argument, sender, args) -> {
+			gangland.getPeriodicalUpdates().forceUpdate();
+		});
+
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
 
@@ -176,6 +180,7 @@ public class DebugCommand extends CommandHandler {
 		arguments.add(perm);
 		arguments.add(settingOptions);
 		arguments.add(placeholder);
+		arguments.add(updateData);
 
 		getArgument().addAllSubArguments(arguments);
 	}

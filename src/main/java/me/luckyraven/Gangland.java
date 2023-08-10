@@ -12,8 +12,9 @@ import org.jetbrains.annotations.Nullable;
 @Getter
 public final class Gangland extends JavaPlugin {
 
-	private Initializer  initializer;
-	private ReloadPlugin reloadPlugin;
+	private Initializer       initializer;
+	private ReloadPlugin      reloadPlugin;
+	private PeriodicalUpdates periodicalUpdates;
 
 	@Override
 	public void onLoad() {
@@ -23,6 +24,10 @@ public final class Gangland extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
+		// force save
+		this.periodicalUpdates.forceUpdate();
+		this.periodicalUpdates.stop();
+
 		DatabaseManager databaseManager = initializer.getDatabaseManager();
 		if (databaseManager != null && !databaseManager.getDatabases().isEmpty()) databaseManager.closeConnections();
 	}
@@ -39,7 +44,7 @@ public final class Gangland extends JavaPlugin {
 		reloadPlugin.userInitialize(false);
 
 		// auto-save to database
-		PeriodicalUpdates periodicalUpdates = new PeriodicalUpdates(this, 5 * 60 * 20L);
+		this.periodicalUpdates = new PeriodicalUpdates(this, 5 * 60 * 20L);
 
 		periodicalUpdates.start();
 	}
