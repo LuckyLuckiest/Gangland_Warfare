@@ -54,4 +54,10 @@ public class RepeatingTimer extends BukkitRunnable {
 		stopped = false;
 	}
 
+	public void startAsync() {
+		if (bukkitTask != null && !stopped) return;
+		this.bukkitTask = runTaskTimerAsynchronously(plugin, 0L, interval);
+		stopped = false;
+	}
+
 }
