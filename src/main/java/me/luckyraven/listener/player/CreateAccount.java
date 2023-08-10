@@ -188,7 +188,7 @@ public final class CreateAccount implements Listener {
 				member.setGangId(gangId);
 				member.setContribution(contribution);
 				member.setRank(rank);
-				member.setGangJoinDate(gangJoin);
+				member.setGangJoinDateLong(gangJoin);
 			}
 		});
 	}

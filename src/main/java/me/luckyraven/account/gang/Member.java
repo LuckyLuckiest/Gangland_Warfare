@@ -21,7 +21,7 @@ public class Member {
 	private           int    gangId;
 	private           double contribution;
 	private @Nullable Rank   rank;
-	private           long   gangJoinDate;
+	private           long   gangJoinDateLong;
 
 	/**
 	 * Instantiates a new Member.
@@ -35,7 +35,7 @@ public class Member {
 	}
 
 	public Date getGangJoinDate() {
-		return new Date(gangJoinDate);
+		return new Date(gangJoinDateLong);
 	}
 
 	/**

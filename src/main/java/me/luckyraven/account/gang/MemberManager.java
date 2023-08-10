@@ -36,7 +36,7 @@ public class MemberManager {
 				member.setGangId(id);
 				member.setContribution(contribution);
 				member.setRank(rank);
-				member.setGangJoinDate(joinedGang);
+				member.setGangJoinDateLong(joinedGang);
 
 				members.put(uuid, member);
 
