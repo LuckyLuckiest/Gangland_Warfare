@@ -36,7 +36,7 @@ public class UserDatabase extends DatabaseHandler {
 		                                        "deaths INT NOT NULL", "mob_kills INT NOT NULL", "gang_id INT NOT NULL",
 		                                        "has_bank BOOLEAN NOT NULL", "balance DOUBLE NOT NULL",
 		                                        "bounty DOUBLE NOT NULL", "level DOUBLE NOT NULL",
-		                                        "date_joined DATE NOT NULL");
+		                                        "date_joined BIGINT NOT NULL");
 		getDatabase().table("bank").createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "name TEXT NOT NULL",
 		                                        "balance DOUBLE NOT NULL");
 	}
