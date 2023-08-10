@@ -11,10 +11,6 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.GangDatabase;
-import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
@@ -115,21 +111,6 @@ class GangLeaveCommand extends SubArgument {
 			// anyone leaving will not get a piece of the pie, thus the contribution would not be counted
 			gang.removeMember(user, member);
 			player.sendMessage(MessageAddon.GANG_LEAVE.toString());
-
-			// update to database
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
-				if (handler instanceof GangDatabase gangDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> gangDatabase.updateMembersTable(member));
-				}
-
-				if (handler instanceof UserDatabase userDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> userDatabase.updateDataTable(user));
-				}
-			}
 
 			CountdownTimer timer = leaveTimer.get(user);
 			if (timer != null) {

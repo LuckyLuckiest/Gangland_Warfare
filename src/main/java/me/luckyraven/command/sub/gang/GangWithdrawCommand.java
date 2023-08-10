@@ -1,6 +1,5 @@
 package me.luckyraven.command.sub.gang;
 
-import me.luckyraven.Gangland;
 import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.account.gang.Member;
@@ -12,10 +11,6 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.GangDatabase;
-import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
@@ -27,18 +22,15 @@ import java.util.List;
 
 class GangWithdrawCommand extends SubArgument {
 
-	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 
-	protected GangWithdrawCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
-	                              UserManager<Player> userManager, MemberManager memberManager,
-	                              GangManager gangManager) {
+	protected GangWithdrawCommand(Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	                              MemberManager memberManager, GangManager gangManager) {
 		super("withdraw", tree, parent);
 
-		this.gangland = gangland;
 		this.tree = tree;
 
 		this.userManager = userManager;
@@ -105,24 +97,6 @@ class GangWithdrawCommand extends SubArgument {
 							                                                                        argAmount)));
 				}
 				player.sendMessage(ChatUtil.color("&c-" + contribution));
-
-				// update database
-				for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
-					if (handler instanceof UserDatabase userDatabase) {
-						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-						helper.runQueries(database -> userDatabase.updateDataTable(user));
-					}
-
-					if (handler instanceof GangDatabase gangDatabase) {
-						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-						helper.runQueries(database -> {
-							gangDatabase.updateDataTable(gang);
-							gangDatabase.updateMembersTable(member);
-						});
-					}
-				}
 			} catch (NumberFormatException exception) {
 				player.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
 			}

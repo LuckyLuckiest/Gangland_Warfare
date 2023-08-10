@@ -1,6 +1,5 @@
 package me.luckyraven.command.sub.gang;
 
-import me.luckyraven.Gangland;
 import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.command.CommandManager;
@@ -10,9 +9,6 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
@@ -21,16 +17,14 @@ import org.bukkit.entity.Player;
 
 class GangRenameCommand extends SubArgument {
 
-	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 
-	protected GangRenameCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
-	                            UserManager<Player> userManager, GangManager gangManager) {
+	protected GangRenameCommand(Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	                            GangManager gangManager) {
 		super("rename", tree, parent);
 
-		this.gangland = gangland;
 		this.tree = tree;
 
 		this.userManager = userManager;
@@ -75,13 +69,6 @@ class GangRenameCommand extends SubArgument {
 				}
 
 			gang.setName(newName);
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-				if (handler instanceof GangDatabase gangDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> gangDatabase.updateDataTable(gang));
-					break;
-				}
 
 			for (User<Player> onlineMembers : gang.getOnlineMembers(userManager))
 				onlineMembers.getUser().sendMessage(MessageAddon.GANG_RENAME.toString()

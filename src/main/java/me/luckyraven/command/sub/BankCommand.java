@@ -11,9 +11,6 @@ import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.timer.CountdownTimer;
@@ -105,19 +102,6 @@ public class BankCommand extends CommandHandler {
 					break;
 				}
 
-
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-				if (handler instanceof UserDatabase userDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, userDatabase);
-
-					helper.runQueries(database -> {
-						userDatabase.updateDataTable(user);
-						userDatabase.updateBankTable(user);
-					});
-
-					break;
-				}
-
 			player.sendMessage(MessageAddon.BANK_CREATED.toString().replace("%bank%", createBankName.get(user).get()));
 
 			createBankName.remove(user);
@@ -145,7 +129,9 @@ public class BankCommand extends CommandHandler {
 			createBankName.put(user, new AtomicReference<>(args[2]));
 
 			// Need to notify the player and give access to confirm
-			player.sendMessage(MessageAddon.BANK_CREATE_FEE.toString());
+			player.sendMessage(MessageAddon.BANK_CREATE_FEE.toString()
+			                                               .replace("%amount%", SettingAddon.formatDouble(
+					                                               SettingAddon.getBankCreateFee())));
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "create"}));
 			confirmCreate.setConfirmed(true);
 
@@ -186,18 +172,6 @@ public class BankCommand extends CommandHandler {
 
 					bank.setName("");
 					bank.setBalance(0D);
-					break;
-				}
-
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-				if (handler instanceof UserDatabase userDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> {
-						userDatabase.updateDataTable(user);
-						userDatabase.updateBankTable(user);
-					});
-
 					break;
 				}
 
@@ -311,12 +285,12 @@ public class BankCommand extends CommandHandler {
 							break;
 						}
 
-						processMoney(gangland, user, bank, user.getBalance(), argAmount, bank.getBalance() + argAmount,
+						processMoney(user, bank, user.getBalance(), argAmount, bank.getBalance() + argAmount,
 						             user.getBalance() - argAmount);
 					}
 					case "withdraw", "take" -> {
 						strArg = "withdraw";
-						processMoney(gangland, user, bank, bank.getBalance(), argAmount, bank.getBalance() - argAmount,
+						processMoney(user, bank, bank.getBalance(), argAmount, bank.getBalance() - argAmount,
 						             user.getBalance() + argAmount);
 					}
 				}
@@ -369,27 +343,14 @@ public class BankCommand extends CommandHandler {
 		getHelpInfo().displayHelp(sender, page, "Bank");
 	}
 
-	private void processMoney(Gangland gangland, User<Player> user, Bank bank, double check, double amount,
-	                          double inBank, double inAccount) {
+	private void processMoney(User<Player> user, Bank bank, double check, double amount, double inBank,
+	                          double inAccount) {
 		if (check == 0D) user.getUser().sendMessage(MessageAddon.CANNOT_TAKE_LESS_THAN_ZERO.toString());
 		else if (amount > check) user.getUser().sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 		else {
 			user.setBalance(inAccount);
 			bank.setBalance(inBank);
-
-			moneyInDatabase(gangland, user);
 		}
-	}
-
-	private void moneyInDatabase(Gangland gangland, User<Player> user) {
-		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-			if (handler instanceof UserDatabase userDatabase) {
-				DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-				helper.runQueries(database -> userDatabase.updateBankTable(user));
-
-				break;
-			}
 	}
 
 }

@@ -11,9 +11,6 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.timer.CountdownTimer;
@@ -173,17 +170,6 @@ class GangAllyCommand extends SubArgument {
 
 					sending.getAlly().remove(receiving);
 					receiving.getAlly().remove(sending);
-
-					for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-						if (handler instanceof GangDatabase gangDatabase) {
-							DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-							helper.runQueries(database -> {
-								gangDatabase.updateDataTable(sending);
-								gangDatabase.updateDataTable(receiving);
-							});
-							break;
-						}
 				}
 			}
 
@@ -233,17 +219,6 @@ class GangAllyCommand extends SubArgument {
 			Bukkit.getOnlinePlayers().stream().filter(onlinePlayer -> memberManager.getMember(
 					onlinePlayer.getUniqueId()).getGangId() == receiving.getId()).toList().forEach(pl -> pl.sendMessage(
 					MessageAddon.GANG_ALLY_ACCEPT.toString().replace("%gang%", sending.getDisplayNameString())));
-
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-				if (handler instanceof GangDatabase gangDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> {
-						gangDatabase.updateDataTable(receiving);
-						gangDatabase.updateDataTable(sending);
-					});
-					break;
-				}
 
 			gangsIdMap.remove(receiving);
 

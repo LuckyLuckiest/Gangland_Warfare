@@ -8,9 +8,6 @@ import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
@@ -111,7 +108,6 @@ public class EconomyCommand extends CommandHandler {
 					                                       .replace("%amount%",
 					                                                SettingAddon.formatDouble(valueChanged)));
 					user.setBalance(value);
-					moneyInDatabase(gangland, user);
 				}
 			} catch (NumberFormatException exception) {
 				sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[3]));
@@ -138,7 +134,7 @@ public class EconomyCommand extends CommandHandler {
 		set.addSubArgument(new Argument(specifier));
 
 		// glw economy reset
-		Argument reset = economyReset(gangland, specifiers, userManager);
+		Argument reset = economyReset(specifiers, userManager);
 
 		Argument resetSpecifier = new OptionalArgument(optionalSpecifier, getArgumentTree(),
 		                                               (argument, sender, args) -> reset.executeArgument(sender, args));
@@ -162,8 +158,7 @@ public class EconomyCommand extends CommandHandler {
 	}
 
 	@NotNull
-	private Argument economyReset(Gangland gangland, HashMap<String, Supplier<List<Player>>> specifiers,
-	                              UserManager<Player> userManager) {
+	private Argument economyReset(HashMap<String, Supplier<List<Player>>> specifiers, UserManager<Player> userManager) {
 		Argument reset = new Argument("reset", getArgumentTree(), (argument, sender, args) -> {
 			String specifierStr = args.length > 2 ? args[2] : "@me";
 
@@ -178,7 +173,6 @@ public class EconomyCommand extends CommandHandler {
 				User<Player> user = userManager.getUser(player);
 
 				user.setBalance(0D);
-				moneyInDatabase(gangland, user);
 				user.getUser().sendMessage(MessageAddon.RESET_MONEY_PLAYER.toString());
 			}
 		}, getPermission() + ".reset");
@@ -255,16 +249,6 @@ public class EconomyCommand extends CommandHandler {
 			}
 
 		if (!players.isEmpty()) specifiers.put(target, () -> players);
-	}
-
-	private void moneyInDatabase(Gangland gangland, User<Player> user) {
-		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-			if (handler instanceof UserDatabase userDatabase) {
-				DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-				helper.runQueries(database -> userDatabase.updateDataTable(user));
-				break;
-			}
 	}
 
 }

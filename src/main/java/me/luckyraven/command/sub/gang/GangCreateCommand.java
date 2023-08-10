@@ -9,11 +9,6 @@ import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.*;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.Database;
-import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.GangDatabase;
-import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
@@ -24,7 +19,6 @@ import me.luckyraven.util.TimeUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.sql.Types;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Random;
@@ -97,40 +91,13 @@ class GangCreateCommand extends SubArgument {
 			do gang.setId(random.nextInt(Integer.MAX_VALUE));
 			while (gangManager.contains(gang));
 
-			member.setGangJoinDate(Instant.now().toEpochMilli());
+			member.setGangJoinDateLong(Instant.now().toEpochMilli());
 			gang.addMember(user, member, rankManager.get(SettingAddon.getGangRankTail()));
 			gang.setName(createGangName.get(user).get());
 			gang.setBalance(SettingAddon.getGangInitialBalance());
+			user.setBalance(user.getBalance() - SettingAddon.getGangCreateFee());
 
 			gangManager.add(gang);
-
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
-				if (handler instanceof UserDatabase userDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> {
-						user.setBalance(user.getBalance() - SettingAddon.getGangCreateFee());
-						userDatabase.updateDataTable(user);
-					});
-				}
-				if (handler instanceof GangDatabase gangDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> {
-						Database config = database.table("data");
-
-						config.insert(config.getColumns().toArray(String[]::new), new Object[]{
-								gang.getId(), gang.getName(), gang.getDisplayName(), gang.getColor(),
-								gang.getDescription(), gang.getBalance(), gang.getLevel().getAmount(), gang.getBounty(),
-								"", gang.getCreated()
-						}, new int[]{
-								Types.INTEGER, Types.CHAR, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR, Types.DOUBLE,
-								Types.DOUBLE, Types.DOUBLE, Types.LONGVARCHAR, Types.BIGINT
-						});
-						gangDatabase.updateMembersTable(member);
-					});
-				}
-			}
 
 			player.sendMessage(MessageAddon.GANG_CREATED.toString().replace("%gang%", gang.getDisplayNameString()));
 

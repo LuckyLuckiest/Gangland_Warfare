@@ -10,9 +10,6 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import org.bukkit.command.CommandSender;
@@ -20,16 +17,14 @@ import org.bukkit.entity.Player;
 
 class GangDisplayCommand extends SubArgument {
 
-	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 
-	protected GangDisplayCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected GangDisplayCommand(Tree<Argument> tree, Argument parent,
 	                             UserManager<Player> userManager, GangManager gangManager) {
 		super("display", tree, parent);
 
-		this.gangland = gangland;
 		this.tree = tree;
 
 		this.userManager = userManager;
@@ -68,15 +63,6 @@ class GangDisplayCommand extends SubArgument {
 
 			gang.setDisplayName(displayNameStr);
 			player.sendMessage(MessageAddon.GANG_DISPLAY_SET.toString().replace("%display%", displayNameStr));
-
-			// update database
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-				if (handler instanceof GangDatabase gangDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> gangDatabase.updateDataTable(gang));
-					break;
-				}
 		});
 
 		// glw gang display remove
@@ -93,14 +79,6 @@ class GangDisplayCommand extends SubArgument {
 
 			gang.setDisplayName("");
 			player.sendMessage(MessageAddon.GANG_DISPLAY_REMOVED.toString());
-
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-				if (handler instanceof GangDatabase gangDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> gangDatabase.updateDataTable(gang));
-					break;
-				}
 		});
 
 		this.addSubArgument(removeDisplay);

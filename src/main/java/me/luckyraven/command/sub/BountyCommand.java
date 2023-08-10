@@ -10,9 +10,6 @@ import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.Bukkit;
@@ -103,7 +100,6 @@ public class BountyCommand extends CommandHandler {
 						User<Player> userSender = userManager.getUser(senderPlayer);
 
 						userSender.setBalance(userSender.getBalance() + amount);
-						updateAccountDatabase(gangland, userSender);
 						senderPlayer.sendMessage(MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
 						                                                          .replace("%amount%",
 						                                                                   SettingAddon.formatDouble(
@@ -117,7 +113,6 @@ public class BountyCommand extends CommandHandler {
 					                                                  .replace("%bounty%", SettingAddon.formatDouble(
 							                                                  userBounty.getAmount())));
 
-					updateDataDatabase(gangland, user);
 				}
 			}
 		});
@@ -160,7 +155,6 @@ public class BountyCommand extends CommandHandler {
 					return;
 				} else {
 					userSender.setBalance(userSender.getBalance() - value);
-					updateAccountDatabase(gangland, userSender);
 					senderPlayer.sendMessage(MessageAddon.WITHDRAW_MONEY_PLAYER.toString()
 					                                                           .replace("%amount%",
 					                                                                    SettingAddon.formatDouble(
@@ -173,7 +167,6 @@ public class BountyCommand extends CommandHandler {
 			if (!bountyEvent.isCancelled()) {
 				userBounty.addBounty(sender, value);
 
-				updateDataDatabase(gangland, user);
 			}
 		});
 
@@ -189,26 +182,6 @@ public class BountyCommand extends CommandHandler {
 	@Override
 	protected void help(CommandSender sender, int page) {
 		getHelpInfo().displayHelp(sender, page, "Bounty");
-	}
-
-	private void updateAccountDatabase(Gangland gangland, User<Player> user) {
-		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-			if (handler instanceof UserDatabase userDatabase) {
-				DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-				helper.runQueries(database -> userDatabase.updateDataTable(user));
-				break;
-			}
-	}
-
-	private void updateDataDatabase(Gangland gangland, User<Player> user) {
-		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-			if (handler instanceof UserDatabase userDatabase) {
-				DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-				helper.runQueries(database -> userDatabase.updateDataTable(user));
-				break;
-			}
 	}
 
 }

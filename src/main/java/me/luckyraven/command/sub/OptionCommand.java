@@ -10,9 +10,6 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.rank.Rank;
 import me.luckyraven.rank.RankManager;
@@ -41,7 +38,7 @@ public class OptionCommand extends CommandHandler {
 		GangManager         gangManager   = gangland.getInitializer().getGangManager();
 		RankManager         rankManager   = gangland.getInitializer().getRankManager();
 
-		Argument gang = gangArgument(gangland, userManager, memberManager, gangManager, rankManager);
+		Argument gang = gangArgument(userManager, memberManager, gangManager, rankManager);
 
 		getArgument().addSubArgument(gang);
 	}
@@ -51,8 +48,8 @@ public class OptionCommand extends CommandHandler {
 
 	}
 
-	private Argument gangArgument(Gangland gangland, UserManager<Player> userManager, MemberManager memberManager,
-	                              GangManager gangManager, RankManager rankManager) {
+	private Argument gangArgument(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+	                              RankManager rankManager) {
 		Argument gang = new Argument("gang", getArgumentTree());
 
 		Argument rank = new Argument("rank", getArgumentTree());
@@ -111,16 +108,6 @@ public class OptionCommand extends CommandHandler {
 			player.sendMessage(MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString()
 			                                                           .replace("%player%", targetStr)
 			                                                           .replace("%rank%", nextRank.getName()));
-
-			// update database
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-				if (handler instanceof GangDatabase gangDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					Member finalTargetMember = targetMember;
-					helper.runQueries(database -> gangDatabase.updateMembersTable(finalTargetMember));
-					break;
-				}
 		});
 
 		target.addSubArgument(rankType);

@@ -12,10 +12,6 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.GangDatabase;
-import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
@@ -146,25 +142,10 @@ class GangInviteCommand extends SubArgument {
 				onUser.getUser().sendMessage(
 						MessageAddon.GANG_PLAYER_JOINED.toString().replace("%player%", user.getUser().getName()));
 
-			member.setGangJoinDate(Instant.now().toEpochMilli());
+			member.setGangJoinDateLong(Instant.now().toEpochMilli());
 			gang.addMember(user, member, rank);
 			sender.sendMessage(
 					MessageAddon.GANG_INVITE_ACCEPT.toString().replace("%gang%", gang.getDisplayNameString()));
-
-			// update to database
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
-				if (handler instanceof GangDatabase gangDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> gangDatabase.updateMembersTable(member));
-				}
-
-				if (handler instanceof UserDatabase userDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> userDatabase.updateDataTable(user));
-				}
-			}
 
 			playerInvite.remove(user);
 

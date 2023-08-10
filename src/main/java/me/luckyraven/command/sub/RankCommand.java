@@ -240,18 +240,6 @@ public class RankCommand extends CommandHandler {
 				}
 			}
 
-			// compile it
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-				if (handler instanceof RankDatabase rankDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> {
-						rankDatabase.updateDataTable(rank);
-					});
-
-					break;
-				}
-
 			sender.sendMessage(message);
 		});
 
@@ -353,16 +341,6 @@ public class RankCommand extends CommandHandler {
 					                                                  .replace("%rank%", rank.getName()));
 				}
 			}
-
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-				if (handler instanceof RankDatabase rankDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					helper.runQueries(database -> {
-						rankDatabase.updateDataTable(rank);
-					});
-					break;
-				}
 		});
 
 		Argument parentName = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {

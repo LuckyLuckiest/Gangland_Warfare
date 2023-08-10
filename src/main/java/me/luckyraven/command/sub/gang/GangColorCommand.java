@@ -12,9 +12,6 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
@@ -91,17 +88,6 @@ class GangColorCommand extends SubArgument {
 						                   player2.sendMessage(MessageAddon.GANG_COLOR_SET.toString()
 						                                                                  .replace("%color%",
 						                                                                           colorSelected));
-
-						                   // update database
-						                   for (DatabaseHandler handler : gangland.getInitializer()
-						                                                          .getDatabaseManager()
-						                                                          .getDatabases())
-							                   if (handler instanceof GangDatabase gangDatabase) {
-								                   DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-								                   helper.runQueries(database -> gangDatabase.updateDataTable(gang));
-								                   break;
-							                   }
 
 						                   inv.close(player2);
 					                   });
