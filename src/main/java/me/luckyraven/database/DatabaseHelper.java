@@ -2,6 +2,7 @@ package me.luckyraven.database;
 
 import lombok.Getter;
 import me.luckyraven.util.UnhandledError;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -59,6 +60,10 @@ public class DatabaseHelper {
 			if (exceptionCaught) rollbackConnection();
 			if (database.getConnection() != null && !database.handlesConnectionPool()) database.disconnect();
 		}
+	}
+
+	public void runQueriesAsync(QueryRunnable queryRunnable) {
+		Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> runQueries(queryRunnable));
 	}
 
 	public void rollbackConnection() {
