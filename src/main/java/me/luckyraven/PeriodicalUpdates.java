@@ -26,6 +26,8 @@ public class PeriodicalUpdates {
 	public PeriodicalUpdates(Gangland gangland, long interval) {
 		this.gangland = gangland;
 		this.repeatingTimer = new RepeatingTimer(gangland, interval, (timer) -> {
+			long start = System.currentTimeMillis();
+
 			gangland.getLogger().info("Auto-saving...");
 			try {
 				updatingDatabase();
@@ -34,6 +36,10 @@ public class PeriodicalUpdates {
 				gangland.getLogger().warning("There was an issue auto-saving the data...");
 				exception.printStackTrace();
 			}
+
+			long end = System.currentTimeMillis();
+
+			gangland.getLogger().info(String.format("The process took %dms", end - start));
 		});
 	}
 
