@@ -15,17 +15,19 @@ public class RepeatingTimer extends BukkitRunnable {
 	@Getter
 	private long       interval;
 	private boolean    stopped;
+	private boolean    async;
 
 	public RepeatingTimer(JavaPlugin plugin, long interval, Consumer<RepeatingTimer> repeatingTask) {
 		this.plugin = plugin;
 		this.interval = interval;
 		this.repeatingTask = repeatingTask;
 		this.stopped = true;
+		this.async = false;
 	}
 
 	@Override
 	public void run() {
-		if (!stopped) repeatingTask.accept(this);
+		if (!stopped) runTask();
 		else cancel();
 	}
 
@@ -39,7 +41,8 @@ public class RepeatingTimer extends BukkitRunnable {
 		if (bukkitTask == null || stopped) return;
 
 		stop();
-		start();
+		if (async) startAsync();
+		else start();
 	}
 
 	public void stop() {
@@ -52,12 +55,18 @@ public class RepeatingTimer extends BukkitRunnable {
 		if (bukkitTask != null && !stopped) return;
 		this.bukkitTask = runTaskTimer(plugin, 0L, interval);
 		stopped = false;
+		this.async = false;
 	}
 
 	public void startAsync() {
 		if (bukkitTask != null && !stopped) return;
 		this.bukkitTask = runTaskTimerAsynchronously(plugin, 0L, interval);
 		stopped = false;
+		this.async = true;
+	}
+
+	public void runTask() {
+		repeatingTask.accept(this);
 	}
 
 }
