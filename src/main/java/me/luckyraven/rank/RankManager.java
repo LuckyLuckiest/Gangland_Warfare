@@ -110,6 +110,7 @@ public class RankManager {
 
 	public void clear() {
 		ranks.clear();
+		rankTree.clear();
 	}
 
 	public Rank get(int id) {

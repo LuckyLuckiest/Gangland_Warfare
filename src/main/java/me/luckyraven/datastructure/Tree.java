@@ -10,10 +10,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+@Getter
+@Setter
 public class Tree<E> implements Iterable<E> {
 
-	@Getter
-	@Setter
 	private Node<E> root;
 
 	public Tree() {
@@ -63,6 +63,10 @@ public class Tree<E> implements Iterable<E> {
 			maxHeight = Math.max(maxHeight, childHeight);
 		}
 		return maxHeight + 1;
+	}
+
+	public void clear() {
+		this.root = null;
 	}
 
 	public E traverseLastValid(E[] list) {
@@ -153,14 +157,12 @@ public class Tree<E> implements Iterable<E> {
 		return getAllNodes().stream().map(Object::toString).toList().toString();
 	}
 
+	@Getter
 	public static class Node<T> implements Cloneable {
 
-		@Getter
 		private final List<Node<T>> children;
-		@Getter
 		private final T             data;
 
-		@Getter
 		@Setter
 		private Node<T> parent;
 
