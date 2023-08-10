@@ -92,7 +92,7 @@ class GangColorCommand extends SubArgument {
 						                   inv.close(player2);
 					                   });
 
-					InventoryAddons.createBoarder(confirmGUI);
+					InventoryAddons.fillInventory(confirmGUI);
 
 					confirmGUI.open(player1);
 				});
