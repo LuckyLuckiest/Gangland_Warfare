@@ -106,7 +106,7 @@ public class DatabaseManager {
 				Database config = database.table(table);
 
 				String[]      columns         = config.getColumns().toArray(String[]::new);
-				List<Integer> columnsDataType = config.getColumnsDataType(new String[]{"*"});
+				List<Integer> columnsDataType = config.getColumnsDataType(columns);
 
 				int[] dataTypes = new int[columnsDataType.size()];
 				for (int i = 0; i < dataTypes.length; i++)
