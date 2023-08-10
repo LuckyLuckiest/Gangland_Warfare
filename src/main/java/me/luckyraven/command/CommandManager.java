@@ -32,7 +32,7 @@ public final class CommandManager implements CommandExecutor {
 		return color(command.replace("/glw", "&6/glw&7")
 		                    .replace("<", "&5<&7")
 		                    .replace(">", "&5>&7")
-		                    .replace(" - ", " &c-&7 ")
+		                    .replace(" - ", " &c-&r ")
 		                    .replaceAll("[\\[\\],]", ""));
 	}
 

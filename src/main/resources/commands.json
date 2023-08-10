@@ -244,7 +244,7 @@
 		"description": "Request alliances to the other gang."
 	},
 	"gang_ally_remove": {
-		"usage": "/glw gang alias abandon <id>",
+		"usage": "/glw gang ally abandon <id>",
 		"description": "Abandon alliances to that gang."
 	},
 	"safe_wand": {
