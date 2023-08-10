@@ -28,6 +28,7 @@ public class PeriodicalUpdates {
 		this.repeatingTimer = new RepeatingTimer(gangland, interval, (timer) -> {
 			long start = System.currentTimeMillis();
 
+			// auto-saving
 			gangland.getLogger().info("Auto-saving...");
 			try {
 				updatingDatabase();
@@ -36,6 +37,9 @@ public class PeriodicalUpdates {
 				gangland.getLogger().warning("There was an issue auto-saving the data...");
 				exception.printStackTrace();
 			}
+
+			// resetting player inventories
+			// TODO
 
 			long end = System.currentTimeMillis();
 
