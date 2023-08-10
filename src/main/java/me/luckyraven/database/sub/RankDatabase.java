@@ -66,6 +66,20 @@ public class RankDatabase extends DatabaseHandler {
 		};
 	}
 
+	public void insertDataTable(Rank rank) throws SQLException {
+		String permissions = getDatabase().createList(rank.getPermissions());
+		String children = getDatabase().createList(rank.getNode()
+		                                               .getChildren()
+		                                               .stream()
+		                                               .map(Tree.Node::getData)
+		                                               .map(Rank::getName)
+		                                               .toList());
+		Database database = getDatabase().table("data");
+		database.insert(database.getColumns().toArray(String[]::new),
+		                new Object[]{rank.getUsedId(), rank.getName(), permissions, children},
+		                new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR});
+	}
+
 	public void updateDataTable(Rank rank) throws SQLException {
 		String permissions = getDatabase().createList(rank.getPermissions());
 		String children = getDatabase().createList(rank.getNode()

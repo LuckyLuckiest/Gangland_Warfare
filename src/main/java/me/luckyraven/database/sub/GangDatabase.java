@@ -2,6 +2,7 @@ package me.luckyraven.database.sub;
 
 import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.Member;
+import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHandler;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -54,6 +55,24 @@ public class GangDatabase extends DatabaseHandler {
 		};
 	}
 
+	public void insertDataTable(Gang gang) throws SQLException {
+		List<String> tempAlias = new ArrayList<>();
+
+		for (Gang alias : gang.getAlly())
+			tempAlias.add(String.valueOf(alias.getId()));
+
+		String alias = getDatabase().createList(tempAlias);
+
+		Database database = getDatabase().table("data");
+		database.insert(database.getColumns().toArray(String[]::new), new Object[]{
+				gang.getId(), gang.getName(), gang.getDisplayName(), gang.getColor(), gang.getDescription(),
+				gang.getBalance(), gang.getLevel().getAmount(), gang.getBounty(), alias, gang.getCreated()
+		}, new int[]{
+				Types.INTEGER, Types.CHAR, Types.VARCHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.DOUBLE, Types.DOUBLE,
+				Types.DOUBLE, Types.LONGVARCHAR, Types.BIGINT
+		});
+	}
+
 	public void updateDataTable(Gang gang) throws SQLException {
 		List<String> tempAlias = new ArrayList<>();
 
@@ -71,6 +90,14 @@ public class GangDatabase extends DatabaseHandler {
 				Types.CHAR, Types.VARCHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.DOUBLE, Types.DOUBLE, Types.DOUBLE,
 				Types.LONGVARCHAR, Types.BIGINT
 		});
+	}
+
+	public void insertMemberTable(Member member) throws SQLException {
+		Database database = getDatabase().table("members");
+		database.insert(database.getColumns().toArray(String[]::new), new Object[]{
+				member.getUuid(), member.getGangId(), member.getContribution(),
+				member.getRank() == null ? null : member.getRank().getName(), member.getGangJoinDate()
+		}, new int[]{Types.CHAR, Types.INTEGER, Types.DOUBLE, Types.VARCHAR, Types.BIGINT});
 	}
 
 	public void updateMembersTable(Member member) throws SQLException {
