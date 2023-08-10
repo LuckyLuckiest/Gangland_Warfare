@@ -32,7 +32,7 @@ public class PhoneItem implements Listener {
 		// when the user joins, check if their inventory contains the specific nbt item
 		// if they don't have the item then add it to the inventory
 		Player player = event.getPlayer();
-		Phone  phone  = new Phone(SettingAddon.getPhoneName());
+		Phone  phone  = new Phone(player, SettingAddon.getPhoneName());
 
 		if (!Phone.hasPhone(player)) phone.addPhoneToInventory(player);
 
@@ -115,7 +115,7 @@ public class PhoneItem implements Listener {
 		User<Player> user   = userManager.getUser(player);
 
 		if (user.getPhone() == null && !Phone.hasPhone(player)) {
-			Phone phone = new Phone(SettingAddon.getPhoneName());
+			Phone phone = new Phone(player, SettingAddon.getPhoneName());
 
 			phone.addPhoneToInventory(player);
 			user.setPhone(phone);

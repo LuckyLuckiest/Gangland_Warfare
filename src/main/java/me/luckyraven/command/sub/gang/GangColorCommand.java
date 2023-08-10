@@ -5,7 +5,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.bukkit.inventory.Inventory;
+import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.inventory.InventoryAddons;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
@@ -50,7 +50,7 @@ class GangColorCommand extends SubArgument {
 				return;
 			}
 
-			Inventory colorGUI = new Inventory(gangland, "&5&lChoose a color", Inventory.MAX_SLOTS);
+			InventoryHandler colorGUI = new InventoryHandler(gangland, "&5&lChoose a color", InventoryHandler.MAX_SLOTS, player);
 
 			int row = 2, column = 2;
 			for (Color color : Color.values()) {
@@ -70,7 +70,7 @@ class GangColorCommand extends SubArgument {
 				ItemBuilder itemBuilder = new ItemBuilder(material).setDisplayName(name);
 
 				colorGUI.setItem((row - 1) * 9 + (column - 1), itemBuilder, false, (player1, inventory, item) -> {
-					Inventory confirmGUI = new Inventory(gangland, "&4&lAre you sure?", Inventory.MAX_SLOTS);
+					InventoryHandler confirmGUI = new InventoryHandler(gangland, "&4&lAre you sure?", InventoryHandler.MAX_SLOTS, player1);
 					confirmGUI.setItem(22, item.build(), false);
 
 					Material mat = ColorUtil.getMaterialByColor(colorName, MaterialType.STAINED_GLASS_PANE.name());

@@ -9,7 +9,7 @@ import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.account.gang.Member;
 import me.luckyraven.account.gang.MemberManager;
-import me.luckyraven.bukkit.inventory.Inventory;
+import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
@@ -172,7 +172,7 @@ public class DebugCommand extends CommandHandler {
 
 		Argument inventoriesData = new Argument("inv-data", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(
-					Inventory.getInventories().keySet().stream().map(NamespacedKey::getKey).toArray(String[]::new));
+					InventoryHandler.getInventories().keySet().stream().map(NamespacedKey::getKey).toArray(String[]::new));
 		});
 
 		// add sub arguments

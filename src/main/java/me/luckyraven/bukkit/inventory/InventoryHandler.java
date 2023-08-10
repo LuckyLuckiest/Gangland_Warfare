@@ -11,8 +11,11 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -23,27 +26,32 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-public class Inventory implements Listener {
+public class InventoryHandler implements Listener {
 
-	public static final   int                           MAX_SLOTS   = 54;
-	private static final  Map<NamespacedKey, Inventory> INVENTORIES = new HashMap<>();
-	private final @Getter int                           size;
+	public static final   int                                  MAX_SLOTS   = 54;
+	private static final  Map<NamespacedKey, InventoryHandler> INVENTORIES = new HashMap<>();
+	private static        int                                  ID          = 0;
+	private final @Getter int                                  size;
 
-	private final Map<Integer, TriConsumer<Player, Inventory, ItemBuilder>> clickableSlots;
+	private final Map<Integer, TriConsumer<Player, InventoryHandler, ItemBuilder>> clickableSlots;
 
 	private final List<Integer>             draggableSlots;
 	private final Map<Integer, ItemBuilder> clickableItems;
 	private final JavaPlugin                plugin;
 
-	private @Getter org.bukkit.inventory.Inventory inventory;
-	private @Getter NamespacedKey                  title;
-	private @Getter String                         displayTitle;
+	private @Getter Inventory     inventory;
+	private @Getter NamespacedKey title;
+	private @Getter String        displayTitle;
 
-	public Inventory(JavaPlugin plugin, String title, int size, NamespacedKey namespacedKey) {
+	public InventoryHandler(JavaPlugin plugin, String title, int size, @Nullable Player player,
+	                        NamespacedKey namespacedKey) {
 		this.plugin = plugin;
 		this.displayTitle = title;
-		this.title = namespacedKey;
+
+		String data = player == null ? "null_" + ID++ : player.getUniqueId().toString();
+		this.title = new NamespacedKey(plugin, namespacedKey.getKey() + "_" + data);
 
 		int realSize = factorOfNine(size);
 		this.size = Math.min(realSize, MAX_SLOTS);
@@ -56,8 +64,8 @@ public class Inventory implements Listener {
 		INVENTORIES.put(this.title, this);
 	}
 
-	public Inventory(JavaPlugin plugin, String title, int size) {
-		this(plugin, title, size, new NamespacedKey(plugin, titleRefactor(title)));
+	public InventoryHandler(JavaPlugin plugin, String title, int size, Player player) {
+		this(plugin, title, size, player, new NamespacedKey(plugin, titleRefactor(title)));
 	}
 
 	protected static String titleRefactor(@NotNull String title) {
@@ -65,6 +73,29 @@ public class Inventory implements Listener {
 
 		String pattern = "[^a-z0-9/._-]";
 		return ChatUtil.replaceColorCodes(title, "").replaceAll(" ", "_").toLowerCase().replaceAll(pattern, "");
+	}
+
+	public static Map<NamespacedKey, InventoryHandler> getInventories() {
+		return new HashMap<>(INVENTORIES);
+	}
+
+	public static void removeAllInventories(Player player) {
+		for (NamespacedKey key : getPlayerInventories(player).keySet())
+			removeInventory(key);
+	}
+
+	public static void removeInventory(NamespacedKey key) {
+		INVENTORIES.remove(key);
+	}
+
+	public static Map<NamespacedKey, InventoryHandler> getPlayerInventories(Player player) {
+		String uuid = player.getUniqueId().toString();
+		return INVENTORIES.entrySet().stream().filter(entry -> {
+			NamespacedKey key     = entry.getKey();
+			int           index   = key.getKey().lastIndexOf("_") + 1;
+			String        keyUuid = key.getKey().substring(index);
+			return keyUuid.equalsIgnoreCase(uuid);
+		}).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 
 	private int factorOfNine(int value) {
@@ -91,7 +122,8 @@ public class Inventory implements Listener {
 	}
 
 	public void setItem(int slot, Material material, @Nullable String displayName, @Nullable List<String> lore,
-	                    boolean enchanted, boolean draggable, TriConsumer<Player, Inventory, ItemBuilder> clickable) {
+	                    boolean enchanted, boolean draggable,
+	                    TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
 		ItemBuilder item = new ItemBuilder(material).setDisplayName(displayName).setLore(lore);
 
 		if (enchanted) {
@@ -102,7 +134,7 @@ public class Inventory implements Listener {
 	}
 
 	public void setItem(int slot, ItemBuilder itemBuilder, boolean draggable,
-	                    TriConsumer<Player, Inventory, ItemBuilder> clickable) {
+	                    TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
 		setItem(slot, itemBuilder.build(), draggable);
 
 		if (clickable != null) {
@@ -125,7 +157,7 @@ public class Inventory implements Listener {
 	}
 
 	public void setItem(int slot, ItemStack itemStack, boolean draggable,
-	                    TriConsumer<Player, Inventory, ItemBuilder> clickable) {
+	                    TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
 		setItem(slot, new ItemBuilder(itemStack), draggable, clickable);
 	}
 
@@ -139,6 +171,9 @@ public class Inventory implements Listener {
 
 	public void close(Player player) {
 		player.closeInventory();
+
+		// need to remove all inventory instances of that player
+		removeAllInventories(player);
 	}
 
 	@EventHandler
@@ -146,7 +181,7 @@ public class Inventory implements Listener {
 		org.bukkit.inventory.Inventory clickedInventory = event.getClickedInventory();
 		if (clickedInventory == null) return;
 
-		Inventory inv = INVENTORIES.values().stream().filter(
+		InventoryHandler inv = INVENTORIES.values().stream().filter(
 				inventory -> clickedInventory.equals(inventory.getInventory())).findFirst().orElse(null);
 
 		if (inv == null) return;
@@ -154,10 +189,20 @@ public class Inventory implements Listener {
 		int    rawSlot = event.getRawSlot();
 		Player player  = (Player) event.getWhoClicked();
 
-		inv.clickableSlots.getOrDefault(rawSlot, (pl, i, item) -> {}).accept(player, inv,
-		                                                                     inv.clickableItems.getOrDefault(rawSlot,
-		                                                                                                     null));
+		TriConsumer<Player, InventoryHandler, ItemBuilder> slots = inv.clickableSlots.getOrDefault(rawSlot,
+		                                                                                           (pl, i, item) -> {});
+		slots.accept(player, inv, inv.clickableItems.getOrDefault(rawSlot, null));
 		event.setCancelled(!inv.draggableSlots.contains(rawSlot));
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST)
+	public synchronized void onPlayerQuit(PlayerQuitEvent event) {
+		Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+			Player player = event.getPlayer();
+
+			// remove all the inventories of that player only
+			removeAllInventories(player);
+		});
 	}
 
 }

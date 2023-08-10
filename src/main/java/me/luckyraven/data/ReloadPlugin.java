@@ -106,7 +106,7 @@ public class ReloadPlugin {
 
 		for (Player player : Bukkit.getOnlinePlayers())
 			if (!userManager.contains(userManager.getUser(player))) {
-				Phone        phone   = new Phone(SettingAddon.getPhoneName());
+				Phone        phone   = new Phone(player, SettingAddon.getPhoneName());
 				User<Player> newUser = new User<>(player);
 
 				if (SettingAddon.isPhoneEnabled()) {

@@ -7,7 +7,7 @@ import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.account.gang.Member;
 import me.luckyraven.account.gang.MemberManager;
 import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.bukkit.inventory.Inventory;
+import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.inventory.InventoryAddons;
 import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
@@ -194,8 +194,9 @@ public class GangCommand extends CommandHandler {
 
 	private void gangStat(Gangland gangland, User<Player> user, UserManager<Player> userManager,
 	                      GangManager gangManager) {
-		Gang      gang = gangManager.getGang(user.getGangId());
-		Inventory gui  = new Inventory(gangland, "&6&l" + gang.getDisplayNameString() + "&r gang", 5 * 9);
+		Gang gang = gangManager.getGang(user.getGangId());
+		InventoryHandler gui = new InventoryHandler(gangland, "&6&l" + gang.getDisplayNameString() + "&r gang", 5 * 9,
+		                                            user.getUser());
 
 		// balance
 		Material material = itemToBalance(gang);
@@ -243,8 +244,8 @@ public class GangCommand extends CommandHandler {
 						items.add(itemBuilder.build());
 					}
 
-					MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, items, "&6&lGang Members",
-					                                                            false, false, null);
+					MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, player, items,
+					                                                            "&6&lGang Members", false, false, null);
 
 					multi.open(player);
 				});
@@ -273,8 +274,8 @@ public class GangCommand extends CommandHandler {
 						items.add(itemBuilder.build());
 					}
 
-					MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, items, "&6&lGang Allies",
-					                                                            false, false, null);
+					MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, player, items,
+					                                                            "&6&lGang Allies", false, false, null);
 
 					multi.open(player);
 				});

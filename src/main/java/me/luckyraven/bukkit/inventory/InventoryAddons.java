@@ -11,7 +11,7 @@ import java.util.Arrays;
 
 public class InventoryAddons {
 
-	public static void aroundSlot(Inventory inventory, int slot, Material material) {
+	public static void aroundSlot(InventoryHandler inventoryHandler, int slot, Material material) {
 		ItemBuilder itemBuilder = new ItemBuilder(material);
 		ItemStack   item        = itemBuilder.setDisplayName(null).build();
 
@@ -24,27 +24,27 @@ public class InventoryAddons {
 		for (int i = topLeft; i < topLeft + 3; i++)
 			for (int j = i; j < i + 9 * 2 + 1; j += 9)
 				try {
-					if (inventory.getInventory().getItem(j) != null || j == slot) continue;
+					if (inventoryHandler.getInventory().getItem(j) != null || j == slot) continue;
 
-					inventory.setItem(j, item, false);
+					inventoryHandler.setItem(j, item, false);
 				} catch (ArrayIndexOutOfBoundsException ignored) {
 				}
 	}
 
-	public static void fillInventory(Inventory inventory) {
+	public static void fillInventory(InventoryHandler inventoryHandler) {
 		ItemBuilder itemBuilder = new ItemBuilder(getFillItem());
 
 		ItemStack item = itemBuilder.setDisplayName(SettingAddon.getInventoryFillName()).build();
 
-		for (int i = 0; i < inventory.getSize(); i++) {
-			if (inventory.getInventory().getItem(i) != null) continue;
+		for (int i = 0; i < inventoryHandler.getSize(); i++) {
+			if (inventoryHandler.getInventory().getItem(i) != null) continue;
 
-			inventory.getInventory().setItem(i, item);
+			inventoryHandler.getInventory().setItem(i, item);
 		}
 	}
 
-	public static void horizontalLine(Inventory inventory, int row, ItemStack... items) {
-		int rows = inventory.getSize() / 9;
+	public static void horizontalLine(InventoryHandler inventoryHandler, int row, ItemStack... items) {
+		int rows = inventoryHandler.getSize() / 9;
 		Preconditions.checkArgument(row > 0 && row < rows + 1,
 		                            String.format("Rows need to be between 1 and %d inclusive", rows));
 
@@ -52,16 +52,16 @@ public class InventoryAddons {
 		int slot = (row - 1) * 9;
 		for (int i = 0; i < 9; i++) {
 
-			if (inventory.getInventory().getItem(slot + i) != null) continue;
+			if (inventoryHandler.getInventory().getItem(slot + i) != null) continue;
 
-			if (i < items.length) inventory.getInventory().setItem(slot + i, items[i]);
-			else inventory.getInventory().setItem(slot + i, new ItemBuilder(getLineItem()).setDisplayName(
+			if (i < items.length) inventoryHandler.getInventory().setItem(slot + i, items[i]);
+			else inventoryHandler.getInventory().setItem(slot + i, new ItemBuilder(getLineItem()).setDisplayName(
 					SettingAddon.getInventoryLineName()).build());
 		}
 	}
 
-	public static void horizontalLine(Inventory inventory, int row, Material material, String name, boolean all) {
-		int rows = inventory.getSize() / 9;
+	public static void horizontalLine(InventoryHandler inventoryHandler, int row, Material material, String name, boolean all) {
+		int rows = inventoryHandler.getSize() / 9;
 		Preconditions.checkArgument(row > 0 && row < rows + 1,
 		                            String.format("Rows need to be between 1 and %d inclusive", rows));
 		ItemBuilder itemBuilder = new ItemBuilder(material);
@@ -74,30 +74,30 @@ public class InventoryAddons {
 			Arrays.fill(items, item);
 		}
 
-		horizontalLine(inventory, row, items);
+		horizontalLine(inventoryHandler, row, items);
 	}
 
-	public static void horizontalLine(Inventory inventory, int row) {
-		horizontalLine(inventory, row, getLineItem(), SettingAddon.getInventoryLineName(), true);
+	public static void horizontalLine(InventoryHandler inventoryHandler, int row) {
+		horizontalLine(inventoryHandler, row, getLineItem(), SettingAddon.getInventoryLineName(), true);
 	}
 
-	public static void verticalLine(Inventory inventory, int column, ItemStack... items) {
+	public static void verticalLine(InventoryHandler inventoryHandler, int column, ItemStack... items) {
 		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
 
 		// from 1-6
-		int rows = inventory.getSize() / 9;
+		int rows = inventoryHandler.getSize() / 9;
 		for (int i = 0; i < rows; i++) {
 			int slot = (column - 1) + 9 * i;
 
-			if (inventory.getInventory().getItem(slot) != null) continue;
+			if (inventoryHandler.getInventory().getItem(slot) != null) continue;
 
-			if (i < items.length) inventory.getInventory().setItem(slot, items[i]);
-			else inventory.getInventory().setItem(slot, new ItemBuilder(getLineItem()).setDisplayName(
+			if (i < items.length) inventoryHandler.getInventory().setItem(slot, items[i]);
+			else inventoryHandler.getInventory().setItem(slot, new ItemBuilder(getLineItem()).setDisplayName(
 					SettingAddon.getInventoryLineName()).build());
 		}
 	}
 
-	public static void verticalLine(Inventory inventory, int column, Material material, String name, boolean all) {
+	public static void verticalLine(InventoryHandler inventoryHandler, int column, Material material, String name, boolean all) {
 		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
 
 		ItemBuilder itemBuilder = new ItemBuilder(material);
@@ -105,32 +105,32 @@ public class InventoryAddons {
 
 		ItemStack[] items = {item};
 		if (all) {
-			items = new ItemStack[inventory.getSize() / 9];
+			items = new ItemStack[inventoryHandler.getSize() / 9];
 
 			Arrays.fill(items, item);
 		}
 
-		verticalLine(inventory, column, items);
+		verticalLine(inventoryHandler, column, items);
 	}
 
-	public static void verticalLine(Inventory inventory, int column) {
-		verticalLine(inventory, column, getLineItem(), SettingAddon.getInventoryLineName(), true);
+	public static void verticalLine(InventoryHandler inventoryHandler, int column) {
+		verticalLine(inventoryHandler, column, getLineItem(), SettingAddon.getInventoryLineName(), true);
 	}
 
-	public static void createBoarder(Inventory inventory) {
+	public static void createBoarder(InventoryHandler inventoryHandler) {
 		ItemBuilder itemBuilder = new ItemBuilder(getFillItem());
 
 		ItemStack item = itemBuilder.setDisplayName(SettingAddon.getInventoryFillName()).build();
 
-		int rows = inventory.getSize() / 9;
+		int rows = inventoryHandler.getSize() / 9;
 
-		for (int i = 0; i < inventory.getSize(); i++) {
+		for (int i = 0; i < inventoryHandler.getSize(); i++) {
 			int row = i / 9;
 
 			// place items on the borders only
 			if (row == 0 || row == rows - 1 || i % 9 == 0 || i % 9 == 8) {
-				if (inventory.getInventory().getItem(i) != null) continue;
-				inventory.getInventory().setItem(i, item);
+				if (inventoryHandler.getInventory().getItem(i) != null) continue;
+				inventoryHandler.getInventory().setItem(i, item);
 			}
 		}
 	}

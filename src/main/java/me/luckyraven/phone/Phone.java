@@ -7,7 +7,7 @@ import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.account.gang.Member;
 import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.bukkit.inventory.Inventory;
+import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.inventory.InventoryAddons;
 import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.argument.TriConsumer;
@@ -26,18 +26,18 @@ import java.util.*;
 
 public class Phone {
 
-	private final @Getter String      name;
-	private final         Inventory   inventory;
-	private final         ItemBuilder item;
+	private final @Getter String           name;
+	private final         InventoryHandler inventoryHandler;
+	private final         ItemBuilder      item;
 	private final         Gangland    gangland;
 
 	private @Getter String displayName;
 
-	public Phone(String name) {
+	public Phone(Player player, String name) {
 		this.name = name;
 		this.displayName = name;
 		this.gangland = JavaPlugin.getPlugin(Gangland.class);
-		this.inventory = new Inventory(gangland, displayName, Inventory.MAX_SLOTS);
+		this.inventoryHandler = new InventoryHandler(gangland, displayName, InventoryHandler.MAX_SLOTS, player);
 		this.item = new ItemBuilder(getPhoneMaterial()).setDisplayName(displayName).addTag("uniqueItem", "phone");
 	}
 
@@ -66,7 +66,7 @@ public class Phone {
 	}
 
 	public void setDisplayName(String displayName) {
-		inventory.rename(displayName);
+		inventoryHandler.rename(displayName);
 		this.displayName = displayName;
 		this.item.setDisplayName(displayName);
 	}
@@ -78,15 +78,15 @@ public class Phone {
 		gangland.getServer().getPluginManager().callEvent(event);
 
 		populateInventory(user, (pl, inventory, item) -> inventory.open(pl));
-		inventory.open(player);
+		inventoryHandler.open(player);
 	}
 
 	public void closeInventory(Player player) {
-		inventory.close(player);
+		inventoryHandler.close(player);
 	}
 
-	public org.bukkit.inventory.Inventory getInventory() {
-		return inventory.getInventory();
+	public org.bukkit.inventory.Inventory getInventoryHandler() {
+		return inventoryHandler.getInventory();
 	}
 
 	public void addPhoneToInventory(Player player) {
@@ -102,16 +102,16 @@ public class Phone {
 		return true;
 	}
 
-	private void populateInventory(User<Player> user, TriConsumer<Player, Inventory, ItemBuilder> callback) {
+	private void populateInventory(User<Player> user, TriConsumer<Player, InventoryHandler, ItemBuilder> callback) {
 		// missions
-		inventory.setItem(11, XMaterial.DIAMOND.parseMaterial(), "&eMissions", null, false, false);
+		inventoryHandler.setItem(11, XMaterial.DIAMOND.parseMaterial(), "&eMissions", null, false, false);
 
 		// gang
 		GangManager gangManager = gangland.getInitializer().getGangManager();
-		inventory.setItem(13, XMaterial.CAULDRON.parseMaterial(), "&eGang", null, false, false,
-		                  (player, inventory, item) -> {
+		inventoryHandler.setItem(13, XMaterial.CAULDRON.parseMaterial(), "&eGang", null, false, false,
+		                         (player, inventory, item) -> {
 			                  // show create gang and search for gang
-			                  Inventory newGang = new Inventory(gangland, "&6&lGang", 5 * 9);
+			                  InventoryHandler newGang = new InventoryHandler(gangland, "&6&lGang", 5 * 9, user.getUser());
 
 			                  if (user.hasGang()) {
 				                  Gang gang = gangManager.getGang(user.getGangId());
@@ -153,10 +153,7 @@ public class Phone {
 			                  newGang.setItem(23, XMaterial.BOOKSHELF.parseMaterial(), "&b&lSearch Gang", null, true,
 			                                  false, (player1, inv, it) -> {
 						                  // open a multi inventory that displays all the gangs
-						                  List<Gang>      gangs      = gangManager.getGangs()
-						                                                          .values()
-						                                                          .stream()
-						                                                          .toList();
+						                  List<Gang> gangs = gangManager.getGangs().values().stream().toList();
 						                  List<ItemStack> gangsItems = new ArrayList<>();
 
 						                  for (Gang gang : gangs) {
@@ -190,8 +187,9 @@ public class Phone {
 						                  }
 
 						                  // need to use a list to save the location
-						                  Map<ItemStack, TriConsumer<Player, Inventory, ItemBuilder>> staticItems = new LinkedHashMap<>();
+						                  Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems = new LinkedHashMap<>();
 						                  MultiInventory multiInventory = MultiInventory.dynamicMultiInventory(gangland,
+						                                                                                       player1,
 						                                                                                       gangsItems,
 						                                                                                       "&6&lGangs View",
 						                                                                                       true,
@@ -216,7 +214,8 @@ public class Phone {
 										                                      .toLowerCase()
 										                                      .contains(output.toLowerCase())).toList();
 
-								                  multiInventory.updateItems(items, true, staticItems);
+								                  multiInventory.updateItems(items, stateSnapshot.getPlayer(), true,
+								                                             staticItems);
 								                  callback.accept(stateSnapshot.getPlayer(), currInv, itemBuilder);
 
 								                  return List.of(AnvilGUI.ResponseAction.close());
@@ -233,7 +232,7 @@ public class Phone {
 
 						                  // need to update because when initialized the process was not done accordingly,
 						                  // this way should be changed since you update the items after initialization
-						                  multiInventory.updateItems(gangsItems, true, staticItems);
+						                  multiInventory.updateItems(gangsItems, player1, true, staticItems);
 
 						                  multiInventory.open(player1);
 					                  });
@@ -250,32 +249,32 @@ public class Phone {
 		                  });
 
 		// property
-		inventory.setItem(15, XMaterial.FURNACE_MINECART.parseMaterial(), "&eProperty", null, false, false);
+		inventoryHandler.setItem(15, XMaterial.FURNACE_MINECART.parseMaterial(), "&eProperty", null, false, false);
 
 		// account
 		ItemBuilder itemBuilder = new ItemBuilder(XMaterial.PLAYER_HEAD.parseMaterial());
 		itemBuilder.setDisplayName("&eAccount").modifyNBT(nbt -> nbt.setString("SkullOwner", user.getUser().getName()));
 
-		inventory.setItem(38, itemBuilder.build(), false, (player, inventory, item) -> {
+		inventoryHandler.setItem(38, itemBuilder.build(), false, (player, inventory, item) -> {
 			// show player data
 		});
 
 		// bounties
-		inventory.setItem(40, XMaterial.NETHER_STAR.parseMaterial(), "&eBounties", null, false, false,
-		                  (player, inventory, item) -> {
+		inventoryHandler.setItem(40, XMaterial.NETHER_STAR.parseMaterial(), "&eBounties", null, false, false,
+		                         (player, inventory, item) -> {
 			                  // show current bounties and leaderboard
 		                  });
 
 		// contacts
-		inventory.setItem(42, XMaterial.BOOK.parseMaterial(), "&eContacts", null, false, false,
-		                  (player, inventory, item) -> {
+		inventoryHandler.setItem(42, XMaterial.BOOK.parseMaterial(), "&eContacts", null, false, false,
+		                         (player, inventory, item) -> {
 			                  // show taxi services
 		                  });
 
-		InventoryAddons.verticalLine(inventory, 2);
-		InventoryAddons.verticalLine(inventory, 8);
+		InventoryAddons.verticalLine(inventoryHandler, 2);
+		InventoryAddons.verticalLine(inventoryHandler, 8);
 
-		InventoryAddons.fillInventory(inventory);
+		InventoryAddons.fillInventory(inventoryHandler);
 	}
 
 }

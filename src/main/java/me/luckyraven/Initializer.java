@@ -3,7 +3,7 @@ package me.luckyraven;
 import lombok.Getter;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.account.gang.MemberManager;
-import me.luckyraven.bukkit.inventory.Inventory;
+import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.CommandTabCompleter;
@@ -158,7 +158,7 @@ public final class Initializer {
 			}
 
 			// inventory gui test double listener
-			listenerManager.addEvent(new Inventory(gangland, "dummy", 9));
+			listenerManager.addEvent(new InventoryHandler(gangland, "dummy", 9, null));
 		}
 	}
 
