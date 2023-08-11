@@ -54,7 +54,7 @@ public class DebugCommand extends CommandHandler {
 				player.sendMessage(convertToJson(user.toString()));
 			} else {
 				for (User<Player> user : userManager.getUsers().values())
-					sender.sendMessage(convertToJson(user.toString()));
+					sender.sendMessage(user.toString());
 			}
 		});
 
@@ -73,7 +73,7 @@ public class DebugCommand extends CommandHandler {
 				}
 			} else {
 				for (Gang gang : gangland.getInitializer().getGangManager().getGangs().values())
-					sender.sendMessage(convertToJson(gang.toString()));
+					sender.sendMessage(gang.toString());
 			}
 		});
 
@@ -85,7 +85,7 @@ public class DebugCommand extends CommandHandler {
 				player.sendMessage(convertToJson(member.toString()));
 			} else {
 				for (Member member : memberManager.getMembers().values())
-					sender.sendMessage(convertToJson(member.toString()));
+					sender.sendMessage(member.toString());
 			}
 		});
 
@@ -152,7 +152,7 @@ public class DebugCommand extends CommandHandler {
 		String[] setOpt = {"settings", "setting"};
 		Argument settingOptions = new Argument(setOpt, getArgumentTree(), (argument, sender, args) -> {
 			JsonFormatter jsonFormatter = new JsonFormatter();
-			convertToJson(jsonFormatter.createJson(SettingAddon.getSettingsMap()));
+			sender.sendMessage(convertToJson(jsonFormatter.createJson(SettingAddon.getSettingsMap())));
 		});
 
 		Argument placeholder = new Argument("placeholder", getArgumentTree(), (argument, sender, args) -> {
