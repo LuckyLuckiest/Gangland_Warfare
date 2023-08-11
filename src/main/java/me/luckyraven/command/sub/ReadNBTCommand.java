@@ -4,14 +4,14 @@ import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.datastructure.JsonFormatter;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class ReadNBTCommand extends CommandHandler {
 
@@ -26,16 +26,20 @@ public class ReadNBTCommand extends CommandHandler {
 		ItemStack itemHeld = player.getInventory().getItemInMainHand();
 		if (itemHeld.getType().name().toUpperCase().contains("AIR")) return;
 
-		ItemBuilder  itemBuilder = new ItemBuilder(itemHeld);
-		String       allNbt      = itemBuilder.toString();
-		List<String> unique      = new ArrayList<>();
+		ItemBuilder         itemBuilder = new ItemBuilder(itemHeld);
+		String              allNbt      = itemBuilder.toString();
+		Map<String, Object> unique      = new TreeMap<>();
 
 		for (Map.Entry<String, Object> entry : ItemBuilder.getSpecialNBTs().entrySet())
-			if (allNbt.contains(entry.getKey())) unique.add("&6" + entry.getKey() + ": &e" + entry.getValue());
+			if (allNbt.contains(entry.getKey())) unique.put(entry.getKey(), entry.getValue());
 
-		if (unique.isEmpty()) unique.add(allNbt);
+		JsonFormatter jsonFormatter = new JsonFormatter();
+		String        value;
 
-		player.sendMessage(ChatUtil.color(unique.toArray(String[]::new)));
+		if (unique.isEmpty()) value = allNbt;
+		else value = jsonFormatter.createJson(unique);
+
+		player.sendMessage(ChatUtil.color(jsonFormatter.formatToJson(value, " ".repeat(3))));
 	}
 
 	@Override
