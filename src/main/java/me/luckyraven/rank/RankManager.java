@@ -109,6 +109,7 @@ public class RankManager {
 	}
 
 	public void clear() {
+		Rank.setID(0);
 		ranks.clear();
 		rankTree.clear();
 	}
