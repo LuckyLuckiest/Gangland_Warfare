@@ -68,7 +68,7 @@ public class InventoryHandler implements Listener {
 		this(plugin, title, size, player, new NamespacedKey(plugin, titleRefactor(title)));
 	}
 
-	protected static String titleRefactor(@NotNull String title) {
+	public static String titleRefactor(@NotNull String title) {
 		Preconditions.checkNotNull(title, "Title can't be null");
 
 		String pattern = "[^a-z0-9/._-]";
