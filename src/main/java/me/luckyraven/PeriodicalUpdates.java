@@ -49,7 +49,13 @@ public class PeriodicalUpdates {
 			}
 
 			// resetting player inventories
-			removeInventories();
+			gangland.getLogger().info("Cache reset...");
+			try {
+				removeInventories();
+			} catch (Exception exception) {
+				gangland.getLogger().warning("There was an issue resetting the cache...");
+				exception.printStackTrace();
+			}
 
 			long end = System.currentTimeMillis();
 
