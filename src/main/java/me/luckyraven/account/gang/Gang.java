@@ -140,7 +140,7 @@ public class Gang extends Account<Integer, List<Member>> {
 	@Override
 	public String toString() {
 		return String.format(
-				"Gang:{id=%d,name=%s,description=%s,members=%s,created=%s,balance=%,.2f,level=%.2f,bounty=%,.2f,ally=%s}",
+				"Gang:{id=%d,name=%s,description=%s,members=%s,created=%s,balance=%.2f,level=%.2f,bounty=%,.2f,ally=%s}",
 				getId(), name, description, getGroup(), created, balance, level.getAmount(), bounty.getAmount(), ally);
 	}
 

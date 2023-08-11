@@ -153,7 +153,7 @@ public class User<T> {
 
 	@Override
 	public String toString() {
-		return String.format("User:{data=%s,kd=%.2f,balance=%,.2f,level=%.2f,gangId=%d}", user, getKillDeathRatio(),
+		return String.format("User:{data=%s,kd=%.2f,balance=%.2f,level=%.2f,gangId=%d}", user, getKillDeathRatio(),
 		                     balance, level.getAmount(), gangId);
 	}
 
