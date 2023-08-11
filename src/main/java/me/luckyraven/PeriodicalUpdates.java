@@ -4,6 +4,7 @@ import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.account.gang.Member;
 import me.luckyraven.account.gang.MemberManager;
+import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
@@ -11,12 +12,21 @@ import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.RankDatabase;
 import me.luckyraven.database.sub.UserDatabase;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.rank.Rank;
 import me.luckyraven.rank.RankManager;
 import me.luckyraven.timer.RepeatingTimer;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
 
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static me.luckyraven.bukkit.inventory.InventoryHandler.getPlayerInventories;
 
 public class PeriodicalUpdates {
 
@@ -39,7 +49,7 @@ public class PeriodicalUpdates {
 			}
 
 			// resetting player inventories
-			// TODO
+			removeInventories();
 
 			long end = System.currentTimeMillis();
 
@@ -129,6 +139,36 @@ public class PeriodicalUpdates {
 				else rankDatabase.updateDataTable(rank);
 			}
 		});
+	}
+
+	private void removeInventories() {
+		for (User<Player> user : gangland.getInitializer().getUserManager().getUsers().values())
+			if (!userViewingInventory(user)) {
+				// Returns all inventories except the phone inventory
+				Set<NamespacedKey> keys = getPlayerInventories(user.getUser()).keySet().stream().filter(
+						namespacedKey -> {
+							String name  = namespacedKey.getKey();
+							int    index = name.lastIndexOf("_");
+							return !name.substring(0, index).equalsIgnoreCase(
+									InventoryHandler.titleRefactor(SettingAddon.getPhoneName()));
+						}).collect(Collectors.toSet());
+
+				for (NamespacedKey key : keys)
+					InventoryHandler.removeInventory(key);
+			}
+	}
+
+	private boolean userViewingInventory(User<Player> user) {
+		List<InventoryType> inventoryTypes = new ArrayList<>();
+		inventoryTypes.add(InventoryType.ANVIL);
+		inventoryTypes.add(InventoryType.CHEST);
+		inventoryTypes.add(InventoryType.ENDER_CHEST);
+
+		for (InventoryType type : inventoryTypes)
+			if (user.getUser().getOpenInventory().getType() == type) return true;
+
+
+		return false;
 	}
 
 }
