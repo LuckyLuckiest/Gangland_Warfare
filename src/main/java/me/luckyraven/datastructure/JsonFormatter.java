@@ -9,7 +9,7 @@ public class JsonFormatter {
 		StringBuilder builder = new StringBuilder();
 		int           index   = 0, indentLevel = 0;
 
-		String modifiedFormat = format.replaceAll(": |, ", "").replaceAll("=", ":");
+		String modifiedFormat = format.replaceAll(": |=", ":").replaceAll(", ", ",");
 		while (index < modifiedFormat.length()) {
 			char c = modifiedFormat.charAt(index);
 
