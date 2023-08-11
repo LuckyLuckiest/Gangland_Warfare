@@ -15,6 +15,7 @@ import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.datastructure.JsonFormatter;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.rank.Rank;
 import me.luckyraven.util.color.Color;
@@ -50,10 +51,10 @@ public class DebugCommand extends CommandHandler {
 			if (sender instanceof Player player) {
 				User<Player> user = userManager.getUser(player);
 
-				player.sendMessage(user.toString());
+				player.sendMessage(convertToJson(user.toString()));
 			} else {
 				for (User<Player> user : userManager.getUsers().values())
-					sender.sendMessage(user.toString());
+					sender.sendMessage(convertToJson(user.toString()));
 			}
 		});
 
@@ -66,13 +67,13 @@ public class DebugCommand extends CommandHandler {
 				if (user.hasGang()) {
 					Gang gang = gangManager.getGang(user.getGangId());
 
-					player.sendMessage(gang.toString());
+					player.sendMessage(convertToJson(gang.toString()));
 				} else {
 					player.sendMessage("Not in a gang...");
 				}
 			} else {
 				for (Gang gang : gangland.getInitializer().getGangManager().getGangs().values())
-					sender.sendMessage(gang.toString());
+					sender.sendMessage(convertToJson(gang.toString()));
 			}
 		});
 
@@ -81,17 +82,17 @@ public class DebugCommand extends CommandHandler {
 			if (sender instanceof Player player) {
 				Member member = memberManager.getMember(player.getUniqueId());
 
-				player.sendMessage(member.toString());
+				player.sendMessage(convertToJson(member.toString()));
 			} else {
 				for (Member member : memberManager.getMembers().values())
-					sender.sendMessage(member.toString());
+					sender.sendMessage(convertToJson(member.toString()));
 			}
 		});
 
 		// rank data
 		Argument rankData = new Argument("rank-data", getArgumentTree(), (argument, sender, args) -> {
 			for (Rank rank : gangland.getInitializer().getRankManager().getRanks().values())
-				sender.sendMessage(rank.toString());
+				sender.sendMessage(convertToJson(rank.toString()));
 		});
 
 		// multi inventory
@@ -150,8 +151,8 @@ public class DebugCommand extends CommandHandler {
 
 		String[] setOpt = {"settings", "setting"};
 		Argument settingOptions = new Argument(setOpt, getArgumentTree(), (argument, sender, args) -> {
-			for (Map.Entry<String, Object> entry : SettingAddon.getSettingsMap().entrySet())
-				sender.sendMessage(entry.getKey() + ": " + entry.getValue());
+			JsonFormatter jsonFormatter = new JsonFormatter();
+			convertToJson(jsonFormatter.createJson(SettingAddon.getSettingsMap()));
 		});
 
 		Argument placeholder = new Argument("placeholder", getArgumentTree(), (argument, sender, args) -> {
@@ -171,8 +172,11 @@ public class DebugCommand extends CommandHandler {
 		});
 
 		Argument inventoriesData = new Argument("inv-data", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(
-					InventoryHandler.getInventories().keySet().stream().map(NamespacedKey::getKey).toArray(String[]::new));
+			sender.sendMessage(InventoryHandler.getInventories()
+			                                   .keySet()
+			                                   .stream()
+			                                   .map(NamespacedKey::getKey)
+			                                   .toArray(String[]::new));
 		});
 
 		// add sub arguments
@@ -196,6 +200,10 @@ public class DebugCommand extends CommandHandler {
 	@Override
 	public void help(CommandSender sender, int page) {
 
+	}
+
+	private String convertToJson(String input) {
+		return new JsonFormatter().formatToJson(input, " ".repeat(3));
 	}
 
 }
