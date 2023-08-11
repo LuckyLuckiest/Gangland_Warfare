@@ -79,9 +79,15 @@ User:
       # The maximum amount of money the player can have.
       Maximum_Balance: 1_000_000
    Level:
+      # The maximum level the player can have
       Maximum_Level: 100
+      # The base amount to be used in calculation
       Base_Amount: 1000
-      Exponential: 1.7
+      # {base} -> base amount
+      # {max} -> max amount
+      # {level} -> current level
+      # {exp} -> current exp
+      Formula: "{base} * {level} ^ 1.7"
       Skill:
          Upgrade: 1
          Cost: 500
