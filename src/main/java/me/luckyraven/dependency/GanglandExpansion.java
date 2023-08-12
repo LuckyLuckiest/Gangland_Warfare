@@ -77,7 +77,7 @@ public class GanglandExpansion extends PlaceholderExpansion {
 		if (user != null) {
 			if (params.equalsIgnoreCase(userStr + "balance")) return SettingAddon.formatDouble(user.getBalance());
 			if (params.equalsIgnoreCase(userStr + "level")) return SettingAddon.formatDouble(
-					user.getLevel().getAmount());
+					user.getLevel().getExperience());
 			if (params.equalsIgnoreCase(userStr + "bounty")) return SettingAddon.formatDouble(
 					user.getBounty().getAmount());
 			if (params.equalsIgnoreCase(userStr + "kd")) return String.valueOf(user.getKillDeathRatio());
@@ -98,7 +98,7 @@ public class GanglandExpansion extends PlaceholderExpansion {
 					gang.getBounty().getAmount());
 			if (params.equalsIgnoreCase(gangStr + "balance")) return SettingAddon.formatDouble(gang.getBalance());
 			if (params.equalsIgnoreCase(gangStr + "level")) return SettingAddon.formatDouble(
-					gang.getLevel().getAmount());
+					gang.getLevel().getExperience());
 			if (params.equalsIgnoreCase(gangStr + "created")) return gang.getDateCreatedString();
 			if (params.equalsIgnoreCase(gangStr + "ally-list")) return gang.getAllyListString();
 		}

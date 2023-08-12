@@ -59,7 +59,7 @@ public class UserDatabase extends DatabaseHandler {
 		Database database = getDatabase().table("data");
 		database.insert(database.getColumns().toArray(String[]::new), new Object[]{
 				user.getUser().getUniqueId(), user.getKills(), user.getDeaths(), user.getMobKills(), user.getGangId(),
-				user.hasBank(), user.getBalance(), user.getBounty().getAmount(), user.getLevel().getAmount(),
+				user.hasBank(), user.getBalance(), user.getBounty().getAmount(), user.getLevel().getExperience(),
 				user.getUser().getFirstPlayed()
 		}, new int[]{
 				Types.CHAR, Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.BOOLEAN, Types.DOUBLE,
@@ -74,7 +74,7 @@ public class UserDatabase extends DatabaseHandler {
 						"date_joined"
 				}, new Object[]{
 						user.getKills(), user.getDeaths(), user.getMobKills(), user.getGangId(), user.hasBank(),
-						user.getBalance(), user.getBounty().getAmount(), user.getLevel().getAmount(),
+						user.getBalance(), user.getBounty().getAmount(), user.getLevel().getExperience(),
 						user.getUser().getFirstPlayed()
 				}, new int[]{
 						Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.BOOLEAN, Types.DOUBLE,

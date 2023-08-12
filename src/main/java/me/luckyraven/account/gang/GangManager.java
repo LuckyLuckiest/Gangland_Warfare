@@ -55,7 +55,7 @@ public class GangManager {
 				gang.setColor(color);
 				gang.setDescription(description);
 				gang.setBalance(balance);
-				gang.getLevel().setAmount(level);
+				gang.getLevel().setExperience(level);
 				gang.getBounty().setAmount(bounty);
 				gang.setCreated(created);
 
