@@ -1,3 +1,5 @@
+package datastructure;
+
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.datastructure.Tree.Node;
 

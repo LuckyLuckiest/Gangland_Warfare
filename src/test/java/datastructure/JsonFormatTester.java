@@ -1,3 +1,5 @@
+package datastructure;
+
 import me.luckyraven.datastructure.JsonFormatter;
 
 import java.util.Map;

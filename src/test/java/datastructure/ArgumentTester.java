@@ -1,3 +1,5 @@
+package datastructure;
+
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.datastructure.Tree;
 
