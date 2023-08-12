@@ -37,11 +37,11 @@ public class SettingAddon {
 	// economy
 	@Getter
 	private static String moneySymbol, balanceFormat;
-	@Getter
-	private static double bankInitialBalance, bankCreateFee, bankMaxBalance;
 	// user configuration
 	@Getter
 	private static double userInitialBalance, userMaxBalance;
+	@Getter
+	private static double bankInitialBalance, bankCreateFee, bankMaxBalance;
 	// user levels
 	@Getter
 	private static int userMaxLevel, userLevelBaseAmount;
@@ -115,13 +115,13 @@ public class SettingAddon {
 		// economy
 		moneySymbol = Objects.requireNonNull(settings.getString("Money_Symbol")).substring(0, 1);
 		balanceFormat = settings.getString("Balance_Format.Format");
-		bankInitialBalance = settings.getDouble("Bank_Account.First_Balance");
-		bankCreateFee = settings.getDouble("Bank_Account.Create_Cost");
-		bankMaxBalance = settings.getDouble("Bank_Account.Maximum_Balance");
 
 		// user
 		userInitialBalance = settings.getDouble("User.Account.Initial_Balance");
 		userMaxBalance = settings.getDouble("User.Account.Maximum_Balance");
+		bankInitialBalance = settings.getDouble("User.Bank.Initial_Balance");
+		bankCreateFee = settings.getDouble("User.Bank.Create_Cost");
+		bankMaxBalance = settings.getDouble("User.Bank.Maximum_Balance");
 		// user levels
 		userMaxLevel = settings.getInt("User.Level.Maximum_Level");
 		userLevelBaseAmount = settings.getInt("User.Level.Base_Amount");
