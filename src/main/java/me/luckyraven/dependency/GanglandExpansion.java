@@ -13,6 +13,8 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
+
 public class GanglandExpansion extends PlaceholderExpansion {
 
 	private final Gangland gangland;
@@ -41,15 +43,21 @@ public class GanglandExpansion extends PlaceholderExpansion {
 		return true;
 	}
 
+	@Nullable
 	@Override
-	public @Nullable String onPlaceholderRequest(Player player, @NotNull String params) {
-		UserManager<Player> userManager   = gangland.getInitializer().getUserManager();
-		MemberManager       memberManager = gangland.getInitializer().getMemberManager();
-		GangManager         gangManager   = gangland.getInitializer().getGangManager();
+	public String onPlaceholderRequest(Player player, @NotNull String params) {
+		Object value = SettingAddon.getSettingsPlaceholder().entrySet().stream().filter(
+				entry -> entry.getKey().equalsIgnoreCase(params)).map(Map.Entry::getValue).findFirst().orElse(null);
+
+		if (value != null) {
+			if (value instanceof Double) return SettingAddon.formatDouble((double) value);
+			return String.valueOf(value);
+		}
 
 		// for member
-		Member member  = memberManager.getMember(player.getUniqueId());
-		String userStr = "user_";
+		MemberManager memberManager = gangland.getInitializer().getMemberManager();
+		Member        member        = memberManager.getMember(player.getUniqueId());
+		String        userStr       = "user_";
 
 		if (member != null) {
 			if (params.equalsIgnoreCase(userStr + "gang-id")) return String.valueOf(member.getGangId());
@@ -63,7 +71,8 @@ public class GanglandExpansion extends PlaceholderExpansion {
 		// for user
 		if (!player.isOnline()) return null;
 
-		User<Player> user = userManager.getUser(player);
+		UserManager<Player> userManager = gangland.getInitializer().getUserManager();
+		User<Player>        user        = userManager.getUser(player);
 
 		if (user != null) {
 			if (params.equalsIgnoreCase(userStr + "balance")) return SettingAddon.formatDouble(user.getBalance());
@@ -77,8 +86,10 @@ public class GanglandExpansion extends PlaceholderExpansion {
 			if (params.equalsIgnoreCase(userStr + "deaths")) return String.valueOf(user.getDeaths());
 
 			// for gang
-			Gang   gang    = gangManager.getGang(user.getGangId());
-			String gangStr = "gang_";
+			GangManager gangManager = gangland.getInitializer().getGangManager();
+			Gang        gang        = gangManager.getGang(user.getGangId());
+			String      gangStr     = "gang_";
+
 			if (params.equalsIgnoreCase(gangStr + "name")) return gang.getName();
 			if (params.equalsIgnoreCase(gangStr + "display-name")) return gang.getDisplayNameString();
 			if (params.equalsIgnoreCase(gangStr + "color")) return gang.getColor();
