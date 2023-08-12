@@ -7,10 +7,6 @@
 		"usage": "/glw help <page>",
 		"description": "Shows the specified page in general menu."
 	},
-	"uuid": {
-		"usage": "/glw uuid",
-		"description": "Shows your uuid."
-	},
 	"reload": {
 		"usage": "/glw reload",
 		"description": "Reloads the whole plugin."
@@ -150,10 +146,6 @@
 	"kit_list": {
 		"usage": "/glw kit list",
 		"description": "Shows all available kits."
-	},
-	"clear_drops": {
-		"usage": "/glw cleardrops",
-		"description": "Clears server drops."
 	},
 	"dealer": {
 		"usage": "/glw dealer",
@@ -330,5 +322,29 @@
 	"bounty_remove": {
 		"usage": "/glw bounty remove <player>",
 		"description": "Removes the bounty you set."
+	},
+	"level": {
+		"usage": "/glw level",
+		"description": "View your current level."
+	},
+	"level_help": {
+		"usage": "/glw level help <page>",
+		"description": "Get level help page."
+	},
+	"level_add_experience": {
+		"usage": "/glw level exp add <amount>",
+		"description": "Adds experience to your level."
+	},
+	"level_remove_experience": {
+		"usage": "/glw level exp remove <amount>",
+		"description": "Removes experience from your level."
+	},
+	"level_add_levels": {
+		"usage": "/glw level level add <amount>",
+		"description": "Adds levels."
+	},
+	"level_remove_levels": {
+		"usage": "/glw level exp remove <amount>",
+		"description": "Removes levels."
 	}
 }
