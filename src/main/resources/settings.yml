@@ -62,9 +62,11 @@ Database:
 # | Inventory Config | #
 # +------------------+ #
 Inventory:
+   # Inventory fill item and its name
    Fill:
       Item: BLACK_STAINED_GLASS_PANE
       Name: " "
+   # Inventory line item and its name
    Line:
       Item: WHITE_STAINED_GLASS_PANE
       Name: " "
@@ -73,21 +75,36 @@ Inventory:
 # | User Config | #
 # +-------------+ #
 User:
+   # The user balance account config
    Account:
       # On Player Join his default account will have the amount of money that you set.
       Initial_Balance: 0
       # The maximum amount of money the player can have.
-      Maximum_Balance: 1_000_000
+      Maximum_Balance: 10_000_000
+   # The user bank account config
+   Bank:
+      # When a player creates a bank account, his account will have the amount of money that you set.
+      Initial_Balance: 0
+      # When a player wants to create a bank account, they are required to pay a fee.
+      # Set it to 0, and the requirement is lifted.
+      Create_Cost: 5_000
+      # The maximum amount of money the player can have.
+      Maximum_Balance: 1_000_000_000
+   # The user level config
    Level:
-      # The maximum level the player can have
+      # The maximum level the player can have.
       Maximum_Level: 100
-      # The base amount to be used in calculation
+      # The base amount to be used in calculation.
       Base_Amount: 1000
-      # {base} -> base amount
-      # {max} -> max amount
-      # {level} -> current level
-      # {exp} -> current exp
-      Formula: "{base} * {level} ^ 1.7"
+
+      # This formula is used to calculate the levels linearly.
+      # It is possible to use mathematical functions; such as
+      # [neg: negation of the expression, logb: log base of x for y; logb(x, y), sin: sine function, etc...]
+      # Treat this string as a scientific calculator
+
+      # There are only four variables that can be used for the formula
+      # [base: base amount, max: maximum level, level: current level, exp: current experience]
+      Formula: "base * level ^ 1.5"
       Skill:
          Upgrade: 1
          Cost: 500
@@ -207,15 +224,6 @@ Money_Symbol: '$'
 Balance_Format:
    Enable: true
    Format: "%,.1f"
-# [Bank_Account] is for the player account.
-Bank_Account:
-   # When a player creates a bank account, his account will have the amount of money that you set.
-   First_Balance: 0
-   # When a player wants to create a bank account, they are required to pay a fee.
-   # Set it to 0, and the requirement is lifted.
-   Create_Cost: 5_000
-   # [Maximum_Balance] is the maximum amount of money the bank can have.
-   Maximum_Balance: 1_000_000_000
 Killing_Mob:
    Min: 0
    Max: 20
