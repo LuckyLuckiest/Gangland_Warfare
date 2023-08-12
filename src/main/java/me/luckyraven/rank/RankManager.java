@@ -151,9 +151,9 @@ public class RankManager {
 				                                          .map(Rank::getName)
 				                                          .toList());
 
-				database.insert(new String[]{"id", "name", "permissions", "parent"},
-				                new Object[]{rank.getUsedId(), rank.getName(), permissions, children},
-				                new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR});
+				config.insert(config.getColumns().toArray(String[]::new),
+				              new Object[]{rank.getUsedId(), rank.getName(), permissions, children},
+				              new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR});
 
 				tempId++;
 			}

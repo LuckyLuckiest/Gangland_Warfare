@@ -10,6 +10,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.List;
 
 public class RankDatabase extends DatabaseHandler {
 
@@ -44,14 +45,14 @@ public class RankDatabase extends DatabaseHandler {
 		Object[] tailRow = dataTable.select("name = ?", new Object[]{tail}, new int[]{Types.VARCHAR},
 		                                    new String[]{"*"});
 		int rows = dataTable.totalRows() + 1;
-		if (tailRow.length == 0) dataTable.insert(new String[]{"id", "name", "permissions", "parent"},
+		if (tailRow.length == 0) dataTable.insert(dataTable.getColumns().toArray(String[]::new),
 		                                          new Object[]{rows, tail, "", ""}, new int[]{
 						Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR
 				});
 
 		Object[] headRow = dataTable.select("name = ?", new Object[]{head}, new int[]{Types.VARCHAR},
 		                                    new String[]{"*"});
-		if (headRow.length == 0) dataTable.insert(new String[]{"id", "name", "permissions", "parent"},
+		if (headRow.length == 0) dataTable.insert(dataTable.getColumns().toArray(String[]::new),
 		                                          new Object[]{rows + 1, head, "", tail}, new int[]{
 						Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR
 				});
@@ -74,10 +75,17 @@ public class RankDatabase extends DatabaseHandler {
 		                                               .map(Tree.Node::getData)
 		                                               .map(Rank::getName)
 		                                               .toList());
-		Database database = getDatabase().table("data");
-		database.insert(database.getColumns().toArray(String[]::new),
-		                new Object[]{rank.getUsedId(), rank.getName(), permissions, children},
-		                new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR});
+
+		Database      config          = getDatabase().table("data");
+		List<String>  columnsTemp     = config.getColumns();
+		String[]      columns         = columnsTemp.subList(1, columnsTemp.size()).toArray(String[]::new);
+		List<Integer> columnsDataType = config.getColumnsDataType(columns);
+
+		int[] dataTypes = new int[columnsDataType.size()];
+		for (int i = 0; i < dataTypes.length; i++)
+			dataTypes[i] = columnsDataType.get(i);
+
+		config.insert(columns, new Object[]{rank.getUsedId(), rank.getName(), permissions, children}, dataTypes);
 	}
 
 	public void updateDataTable(Rank rank) throws SQLException {
@@ -88,10 +96,18 @@ public class RankDatabase extends DatabaseHandler {
 		                                               .map(Tree.Node::getData)
 		                                               .map(Rank::getName)
 		                                               .toList());
-		getDatabase().table("data").update("id = ?", new Object[]{rank.getUsedId()}, new int[]{Types.INTEGER},
-		                                   new String[]{"name", "permissions", "parent"},
-		                                   new Object[]{rank.getName(), permissions, children},
-		                                   new int[]{Types.VARCHAR, Types.VARCHAR, Types.VARCHAR});
+
+		Database      config          = getDatabase().table("data");
+		List<String>  columnsTemp     = config.getColumns();
+		String[]      columns         = columnsTemp.subList(1, columnsTemp.size()).toArray(String[]::new);
+		List<Integer> columnsDataType = config.getColumnsDataType(columns);
+
+		int[] dataTypes = new int[columnsDataType.size()];
+		for (int i = 0; i < dataTypes.length; i++)
+			dataTypes[i] = columnsDataType.get(i);
+
+		config.update("id = ?", new Object[]{rank.getUsedId()}, new int[]{Types.INTEGER}, columns,
+		              new Object[]{rank.getName(), permissions, children}, dataTypes);
 	}
 
 }

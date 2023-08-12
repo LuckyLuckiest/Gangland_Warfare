@@ -7,6 +7,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ConfirmArgument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.RankDatabase;
@@ -66,11 +67,11 @@ public class RankCommand extends CommandHandler {
 
 					helper.runQueries(database -> {
 						String permissions = database.createList(rank.getPermissions());
-						database.table("data").insert(new String[]{"id", "name", "permissions", "parent"},
-						                              new Object[]{rank.getUsedId(), rank.getName(), permissions, ""},
-						                              new int[]{
-								                              Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR
-						                              });
+
+						Database config = database.table("data");
+						config.insert(config.getColumns().toArray(String[]::new),
+						              new Object[]{rank.getUsedId(), rank.getName(), permissions, ""},
+						              new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR});
 					});
 
 					break;

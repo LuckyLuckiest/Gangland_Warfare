@@ -35,7 +35,7 @@ public class GangDatabase extends DatabaseHandler {
 		getDatabase().table("data").createTable("id INT PRIMARY KEY NOT NULL", "name TEXT NOT NULL",
 		                                        "display_name TEXT NOT NULL", "color TEXT NOT NULL",
 		                                        "description TEXT NOT NULL", "balance DOUBLE NOT NULL",
-		                                        "level DOUBLE NOT NUll", "bounty DOUBLE NOT NULL",
+		                                        "experience DOUBLE NOT NUll", "bounty DOUBLE NOT NULL",
 		                                        "ally LONGTEXT NOT NULL", "created BIGINT NOT NULL");
 		getDatabase().table("members").createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "gang_id INT NOT NULL",
 		                                           "contribution DOUBLE NOT NULL", "position TEXT", "join_date BIGINT");
@@ -66,7 +66,8 @@ public class GangDatabase extends DatabaseHandler {
 		Database database = getDatabase().table("data");
 		database.insert(database.getColumns().toArray(String[]::new), new Object[]{
 				gang.getId(), gang.getName(), gang.getDisplayName(), gang.getColor(), gang.getDescription(),
-				gang.getBalance(), gang.getLevel().getExperience(), gang.getBounty().getAmount(), alias, gang.getCreated()
+				gang.getBalance(), gang.getLevel().getExperience(), gang.getBounty().getAmount(), alias,
+				gang.getCreated()
 		}, new int[]{
 				Types.INTEGER, Types.CHAR, Types.VARCHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.DOUBLE, Types.DOUBLE,
 				Types.DOUBLE, Types.LONGVARCHAR, Types.BIGINT
@@ -81,15 +82,19 @@ public class GangDatabase extends DatabaseHandler {
 
 		String alias = getDatabase().createList(tempAlias);
 
-		getDatabase().table("data").update("id = ?", new Object[]{gang.getId()}, new int[]{Types.INTEGER}, new String[]{
-				"name", "display_name", "color", "description", "balance", "level", "bounty", "ally", "created"
-		}, new Object[]{
+		Database      config          = getDatabase().table("data");
+		List<String>  columnsTemp     = config.getColumns();
+		String[]      columns         = columnsTemp.subList(1, columnsTemp.size()).toArray(String[]::new);
+		List<Integer> columnsDataType = config.getColumnsDataType(columns);
+
+		int[] dataTypes = new int[columnsDataType.size()];
+		for (int i = 0; i < dataTypes.length; i++)
+			dataTypes[i] = columnsDataType.get(i);
+
+		config.update("id = ?", new Object[]{gang.getId()}, new int[]{Types.INTEGER}, columns, new Object[]{
 				gang.getName(), gang.getDisplayName(), gang.getColor(), gang.getDescription(), gang.getBalance(),
 				gang.getLevel().getExperience(), gang.getBounty().getAmount(), alias, gang.getCreated()
-		}, new int[]{
-				Types.CHAR, Types.VARCHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.DOUBLE, Types.DOUBLE, Types.DOUBLE,
-				Types.LONGVARCHAR, Types.BIGINT
-		});
+		}, dataTypes);
 	}
 
 	public void insertMemberTable(Member member) throws SQLException {
@@ -101,13 +106,19 @@ public class GangDatabase extends DatabaseHandler {
 	}
 
 	public void updateMembersTable(Member member) throws SQLException {
-		getDatabase().table("members").update("uuid = ?", new Object[]{member.getUuid()}, new int[]{Types.CHAR},
-		                                      new String[]{"gang_id", "contribution", "position", "join_date"},
-		                                      new Object[]{
-				                                      member.getGangId(), member.getContribution(),
-				                                      member.getRank() == null ? null : member.getRank().getName(),
-				                                      member.getGangJoinDateLong()
-		                                      }, new int[]{Types.INTEGER, Types.DOUBLE, Types.VARCHAR, Types.BIGINT});
+		Database      config          = getDatabase().table("members");
+		List<String>  columnsTemp     = config.getColumns();
+		String[]      columns         = columnsTemp.subList(1, columnsTemp.size()).toArray(String[]::new);
+		List<Integer> columnsDataType = config.getColumnsDataType(columns);
+
+		int[] dataTypes = new int[columnsDataType.size()];
+		for (int i = 0; i < dataTypes.length; i++)
+			dataTypes[i] = columnsDataType.get(i);
+
+		config.update("uuid = ?", new Object[]{member.getUuid()}, new int[]{Types.CHAR}, columns, new Object[]{
+				member.getGangId(), member.getContribution(),
+				member.getRank() == null ? null : member.getRank().getName(), member.getGangJoinDateLong()
+		}, dataTypes);
 	}
 
 }
