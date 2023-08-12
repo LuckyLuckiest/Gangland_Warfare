@@ -12,9 +12,9 @@ public class BountyIncrease implements Listener {
 
 	@EventHandler
 	public void onBountyIncrease(BountyEvent event) {
-		User<Player> user = event.getUser();
+		User<Player> user = event.getUserBounty();
 
-		if (!event.isCancelled()) {
+		if (user != null) if (!event.isCancelled()) {
 			user.getUser().sendMessage(MessageAddon.BOUNTY_INCREMENT.toString()
 			                                                        .replace("%bounty%", SettingAddon.formatDouble(
 					                                                        event.getAmountApplied())));

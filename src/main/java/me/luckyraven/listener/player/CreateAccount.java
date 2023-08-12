@@ -151,6 +151,7 @@ public final class CreateAccount implements Listener {
 
 				if (userBounty.hasBounty() && SettingAddon.isBountyTimerEnable()) {
 					BountyEvent bountyEvent = new BountyEvent(userBounty);
+					bountyEvent.setUserBounty(user);
 
 					if (userBounty.getAmount() < SettingAddon.getBountyTimerMax()) {
 						RepeatingTimer repeatingTimer = userBounty.createTimer(gangland,
