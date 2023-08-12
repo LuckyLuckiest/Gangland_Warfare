@@ -1,5 +1,7 @@
 package me.luckyraven.listener.player;
 
+import me.luckyraven.Gangland;
+import me.luckyraven.account.gang.Gang;
 import me.luckyraven.bounty.BountyEvent;
 import me.luckyraven.data.user.User;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -10,14 +12,27 @@ import org.bukkit.event.Listener;
 
 public class BountyIncrease implements Listener {
 
+	private final Gangland gangland;
+
+	public BountyIncrease(Gangland gangland) {
+		this.gangland = gangland;
+	}
+
 	@EventHandler
 	public void onBountyIncrease(BountyEvent event) {
 		User<Player> user = event.getUserBounty();
 
+		String bountyIncrement = MessageAddon.BOUNTY_INCREMENT.toString().replace("%bounty%", SettingAddon.formatDouble(
+				event.getAmountApplied()));
+
 		if (user != null) if (!event.isCancelled()) {
-			user.getUser().sendMessage(MessageAddon.BOUNTY_INCREMENT.toString()
-			                                                        .replace("%bounty%", SettingAddon.formatDouble(
-					                                                        event.getAmountApplied())));
+			user.getUser().sendMessage(bountyIncrement);
+		}
+
+		Gang gang = event.getGangBounty();
+		if (gang != null) if (!event.isCancelled()) {
+			for (User<Player> member : gang.getOnlineMembers(gangland.getInitializer().getUserManager()))
+				member.getUser().sendMessage(bountyIncrement);
 		}
 	}
 

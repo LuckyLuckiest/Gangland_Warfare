@@ -149,7 +149,7 @@ public final class Initializer {
 			listenerManager.addEvent(new CreateAccount(gangland));
 			listenerManager.addEvent(new RemoveAccount(gangland));
 			listenerManager.addEvent(new EntityDamage(gangland));
-			listenerManager.addEvent(new BountyIncrease());
+			listenerManager.addEvent(new BountyIncrease(gangland));
 			if (SettingAddon.isPhoneEnabled()) listenerManager.addEvent(new PhoneItem(gangland));
 
 			// gang events
