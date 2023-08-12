@@ -173,6 +173,7 @@ public final class Initializer {
 		commandManager.addCommand(new EconomyCommand(gangland));
 		commandManager.addCommand(new RankCommand(gangland));
 		commandManager.addCommand(new BountyCommand(gangland));
+		commandManager.addCommand(new LevelCommand(gangland));
 		// gang commands
 		if (SettingAddon.isGangEnable()) {
 			commandManager.addCommand(new GangCommand(gangland));
