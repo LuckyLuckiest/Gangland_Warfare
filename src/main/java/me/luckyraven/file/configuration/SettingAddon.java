@@ -13,7 +13,9 @@ import java.util.Objects;
 public class SettingAddon {
 
 	@Getter
-	private static final Map<String, Object> settingsMap = new LinkedHashMap<>();
+	private static final Map<String, Object> settingsMap         = new LinkedHashMap<>();
+	@Getter
+	private static final Map<String, Object> settingsPlaceholder = new LinkedHashMap<>();
 
 	@Getter
 	private static FileConfiguration settings;
@@ -44,7 +46,7 @@ public class SettingAddon {
 	@Getter
 	private static int userMaxLevel, userLevelBaseAmount;
 	@Getter
-	private static double userLevelExponential;
+	private static String userLevelFormula;
 	@Getter
 	private static int    userSkillUpgrade;
 	@Getter
@@ -123,7 +125,7 @@ public class SettingAddon {
 		// user levels
 		userMaxLevel = settings.getInt("User.Level.Maximum_Level");
 		userLevelBaseAmount = settings.getInt("User.Level.Base_Amount");
-		userLevelExponential = settings.getDouble("User.Level.Exponential");
+		userLevelFormula = settings.getString("User.Level.Formula");
 		userSkillUpgrade = settings.getInt("User.Level.Skill.Upgrade");
 		userSkillCost = settings.getDouble("User.Level.Skill.Cost");
 		userSkillExponential = settings.getDouble("User.Level.Skill.Exponential");
@@ -156,6 +158,7 @@ public class SettingAddon {
 		gangContributionRate = settings.getDouble("Gang.Account.Contribution_Rate");
 
 		addEachFieldReflection();
+		convertToPlaceholder();
 	}
 
 	private void addEachFieldReflection() {
@@ -174,7 +177,36 @@ public class SettingAddon {
 
 		// need to remove the map in order to show the other values separately
 		settingsMap.remove("settingsMap");
+		settingsMap.remove("settingsPlaceholder");
 		settingsMap.remove("settings");
+	}
+
+	private void convertToPlaceholder() {
+		for (Map.Entry<String, Object> entry : settingsMap.entrySet()) {
+			String        key         = entry.getKey();
+			Object        value       = entry.getValue();
+			StringBuilder modifiedKey = new StringBuilder();
+
+			int change = 0;
+			for (int i = 0; i < key.length(); i++) {
+				char c = key.charAt(i);
+
+				if (Character.isUpperCase(c)) {
+					modifiedKey.append(key, change, i).append("_").append(Character.toLowerCase(c));
+
+					char[] chars = key.toCharArray();
+
+					chars[i] = Character.toLowerCase(chars[i]);
+					key = String.valueOf(chars);
+
+					change = i + 1;
+				}
+			}
+
+			if (change <= key.length()) modifiedKey.append(key.substring(change));
+
+			settingsPlaceholder.put(modifiedKey.toString(), value);
+		}
 	}
 
 }

@@ -155,6 +155,13 @@ public class DebugCommand extends CommandHandler {
 			sender.sendMessage(convertToJson(jsonFormatter.createJson(SettingAddon.getSettingsMap())));
 		});
 
+		Argument setPlaceholder = new Argument("placeholder", getArgumentTree(), (argument, sender, args) -> {
+			JsonFormatter jsonFormatter = new JsonFormatter();
+			sender.sendMessage(convertToJson(jsonFormatter.createJson(SettingAddon.getSettingsPlaceholder())));
+		});
+
+		settingOptions.addSubArgument(setPlaceholder);
+
 		Argument placeholder = new Argument("placeholder", getArgumentTree(), (argument, sender, args) -> {
 			LocalExpansionManager expansionManager = PlaceholderAPIPlugin.getInstance().getLocalExpansionManager();
 
