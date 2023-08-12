@@ -43,8 +43,9 @@ public final class Gangland extends JavaPlugin {
 		// initializes users and members who joined and not registered in postInitialize
 		reloadPlugin.userInitialize(false);
 
-		// auto-save to database
-		this.periodicalUpdates = new PeriodicalUpdates(this, 5 * 60 * 20L);
+		// periodical updates each 10 minutes
+		int minutes = 10;
+		this.periodicalUpdates = new PeriodicalUpdates(this, minutes * 60 * 20L);
 
 		periodicalUpdates.start();
 	}
