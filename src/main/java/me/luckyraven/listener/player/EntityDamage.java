@@ -65,7 +65,7 @@ public class EntityDamage implements Listener {
 				// the start value would be the player level
 				Bounty userBounty = user.getBounty();
 
-				BountyEvent bountyEvent = new BountyEvent(user);
+				BountyEvent bountyEvent = new BountyEvent(userBounty);
 				if (userBounty.getRepeatingTimer() == null && SettingAddon.isBountyTimerEnable()) {
 					if (userBounty.getAmount() < SettingAddon.getBountyTimerMax()) {
 						// create a timer and start it

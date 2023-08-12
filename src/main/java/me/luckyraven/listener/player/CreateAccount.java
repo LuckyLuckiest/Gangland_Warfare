@@ -15,6 +15,7 @@ import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.level.Level;
 import me.luckyraven.rank.Rank;
 import me.luckyraven.rank.RankManager;
 import me.luckyraven.timer.RepeatingTimer;
@@ -113,7 +114,7 @@ public final class CreateAccount implements Listener {
 				dataTable.insert(dataColumns, new Object[]{
 						user.getUser().getUniqueId(), user.getKills(), user.getDeaths(), user.getMobKills(),
 						user.getGangId(), user.hasBank(), user.getBalance(), user.getBounty(),
-						user.getLevel().getAmount(), localDateTime
+						user.getLevel().getExperience(), localDateTime
 				}, new int[]{
 						Types.CHAR, Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.BOOLEAN,
 						Types.DOUBLE, Types.DOUBLE, Types.DOUBLE, Types.DATE
@@ -136,18 +137,20 @@ public final class CreateAccount implements Listener {
 				user.setGangId(gangId);
 				user.setHasBank(hasBank);
 				user.setBalance(balance);
-				user.getLevel().setAmount(level);
 
 				if (user.hasGang()) {
 					Gang gang = gangland.getInitializer().getGangManager().getGang(user.getGangId());
 					user.addAccount(gang);
 				}
 
+				Level userLevel = user.getLevel();
+				userLevel.setExperience(level);
+
 				Bounty userBounty = user.getBounty();
 				userBounty.setAmount(bounty);
 
 				if (userBounty.hasBounty() && SettingAddon.isBountyTimerEnable()) {
-					BountyEvent bountyEvent = new BountyEvent(user);
+					BountyEvent bountyEvent = new BountyEvent(userBounty);
 
 					if (userBounty.getAmount() < SettingAddon.getBountyTimerMax()) {
 						RepeatingTimer repeatingTimer = userBounty.createTimer(gangland,

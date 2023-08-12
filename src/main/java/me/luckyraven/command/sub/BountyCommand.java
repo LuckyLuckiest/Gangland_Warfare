@@ -137,7 +137,7 @@ public class BountyCommand extends CommandHandler {
 
 			User<Player> user        = userManager.getUser(player);
 			Bounty       userBounty  = user.getBounty();
-			BountyEvent  bountyEvent = new BountyEvent(user);
+			BountyEvent  bountyEvent = new BountyEvent(userBounty);
 
 			if (userBounty.size() == 0) player.sendMessage(MessageAddon.BOUNTY_SET.toString());
 
