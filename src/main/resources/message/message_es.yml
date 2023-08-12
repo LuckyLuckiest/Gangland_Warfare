@@ -30,28 +30,28 @@ Config_Version: '${project.version}'
 # |  %player%         : Gets player name.                                         |
 # |  %target%         : Gets target name.                                         |
 # |  %name%           : Name of the object.                                       |
-# |  %bank%           : Gets the bank name.                                       |
-# |  %command%        : Gets the unknown command.                                 |
-# |  %balance%        : Gets the user balance.                                    |
-# |  %gang_balance%   : Gets the gang balance.                                    |
+# |  %bank%           : Get the bank name.                                        |
+# |  %command%        : Get the unknown command.                                  |
+# |  %balance%        : Get the user balance.                                     |
+# |  %gang_balance%   : Get the gang balance.                                     |
 # |  %amount%         : Gets the amount.                                          |
-# |  %gang%           : Gets the gang name.                                       |
-# |  %money_symbol%   : Gets the Settings.yml Money Symbol.                       |
+# |  %gang%           : Get the gang name.                                        |
+# |  %money_symbol%   : Get the Settings.yml Money Symbol.                        |
 # |  %location%       : Location that is set in Spawn.yml or Warp.yml.            |
 # |  %list%           : Locations list set in Spawn.yml or Warp.yml.              |
 # |  %kit%            : Kit name that is set in Kit.yml.                          |
-# |  %world%          : Gets the world name.                                      |
-# |  %time%           : Gets the time set.                                        |
-# |  %time_unit%      : Gets the time unit.                                       |
-# |  %uuid%           : Gets the player UUID.                                     |
+# |  %world%          : Get the world name.                                       |
+# |  %time%           : Get the time set.                                         |
+# |  %time_unit%      : Get the time unit.                                        |
+# |  %uuid%           : Get the player UUID.                                      |
 # |  %ammo%           : Gets the ammo amount.                                     |
-# |  %weapon%         : Gets the weapon name.                                     |
+# |  %weapon%         : Get the weapon name.                                      |
 # |  =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=  |
 # +-------------------------------------------------------------------------------+
 # For Color Codes, check this website: http://minecraft.gamepedia.com/Formatting_codes
 # The following box is for [Date] and [Time]. The box will help you with figuring out the
 # common pattern letters used and make cool date and time formats.
-# The date and time is taken from the system calendar.
+# The date and time are taken from the system calendar.
 # +-------------------------------------------------------------------------------+
 # |  =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=  |
 # |  y   :   year           (yy or yyyy)                                          |
@@ -69,9 +69,6 @@ Config_Version: '${project.version}'
 # +-------------------------------------------------------------------------------+
 
 Normal:
-   Format:
-      Date: "dd/MM/yyyy"
-      Time: "hh:mm:ss a"
    Prefix: "&8&l[&7G&fL&7W&8&l]&7 "
    Entity_Drop_Money: "&a%money_symbol%%amount% &7has been added for killing &c%entity%&7."
 
@@ -218,6 +215,14 @@ Commands:
       Player_Lift: "You have lifted &a%money_symbol%%amount%&7 from &6%player%&7."
       Lifted: "&a%money_symbol%%amount%&7 has been lifted from your bounty.%n%&4&lBounty &c%money_symbol%%bounty%"
       Clear: "Your bounty was cleared!"
+   Level:
+      Experience:
+         Add: "Added &b%experience% exp to your level."
+         Remove: "Removed &b%experience% exp from your level."
+      Level:
+         Add: "Leveled Up &b%level% levels."
+         Remove: "Went down &b%level% levels."
+      Next: "Level: &f%level%&7/&b%max_level%%n%&7Experience: &f%experience%&7/&b%required_experience%"
 
 Errors:
    Prefix: "&4Error&7: "
@@ -275,8 +280,6 @@ Errors:
 
 Information:
    Prefix: "&8&l[&7Information&8&l]&7 "
-   Drops_Cleared: "All drops have been &ccleared &7in world: &b%world%"
-   Drops_Timer: "Drops will clear in &a%time% &7%time_unit%&8(&7s&8)&7."
    Gang:
       Request_Already_Sent: "Gang alliance to that gang is already sent!"
       Already_Allied: "Already allied with that gang."
@@ -310,3 +313,16 @@ Weapons:
    Ammo_Bought: "You just bought &8(&b%ammo%&ex%amount_1%&8)&7 for &a%money_symbol%%amount_2%&7."
    Ammo_Sold: "You just sold &8(&b%ammo%&ex%amount_1%&8)&7 for &a%money_symbol%%amount_2%&7."
    Not_Enough_Ammo: "You don't have enough ammo to sell!"
+
+Level:
+   Stats:
+      - ""
+      - "&7Player: &f%player%"
+      - "&7Level: &f%level%&7/&b%max_level%"
+      - "&7EXP: &f%experience%&7/&b%required_experience% &7[&f%percentage%%&7]"
+      - "&7[%progress_bar%&7]"
+      - ""
+   Meter:
+      Bar: "--------------------"
+      Complete_Color: "&b"
+      Incomplete_Color: "&f"

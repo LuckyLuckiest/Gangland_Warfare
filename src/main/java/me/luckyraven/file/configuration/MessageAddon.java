@@ -1,9 +1,10 @@
 package me.luckyraven.file.configuration;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.util.ChatUtil;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import static me.luckyraven.util.ChatUtil.*;
+import java.util.List;
 
 public enum MessageAddon {
 
@@ -119,6 +120,12 @@ public enum MessageAddon {
 	BOUNTY_PLAYER_LIFT("Commands.Bounty.Player_Lift", Type.COMMAND), BOUNTY_SET("Commands.Bounty.Bounty_Set",
 	                                                                            Type.COMMAND),
 
+	// commands - level
+	LEVEL_EXP_ADD("Commands.Level.Experience.Add", Type.COMMAND), LEVEL_EXP_REMOVE("Commands.Level.Experience.Remove",
+	                                                                               Type.COMMAND), LEVEL_ADD(
+			"Commands.Level.Level.Add", Type.COMMAND), LEVEL_REMOVE("Commands.Level.Level.Remove", Type.COMMAND),
+	LEVEL_NEXT("Commands.Level.Next", Type.COMMAND),
+
 	// errors - permissions
 	COMMAND_NO_PERM("Errors.Permissions.Command", Type.ERROR), KIT_NO_PERM("Errors.Permissions.Kit", Type.ERROR),
 	SPAWN_NO_PERM("Errors.Permissions.Spawn", Type.ERROR), WARP_NO_PERM("Errors.Permissions.Warp", Type.ERROR),
@@ -198,15 +205,27 @@ public enum MessageAddon {
 	GUN_SOLD("Weapons.Gun_Sold", Type.PREFIX), AMMO_NOT_IN_INVENTORY("Weapons.Ammo_Not_In_Inventory", Type.PREFIX),
 	AMMO_BOUGHT("Weapons.Ammo_Bought", Type.PREFIX), AMMO_SOLD("Weapons.Ammo_Sold", Type.PREFIX), NOT_ENOUGH_AMMO(
 			"Weapons.Not_Enough_Ammo", Type.PREFIX),
+
+	// level
+	LEVEL_STATS("Level.Stats", Type.OTHER, true), LEVEL_METER_BAR("Level.Meter.Bar", Type.NO_CHANGE),
+	LEVEL_COMPLETE_COLOR("Level.Meter.Complete_Color", Type.NO_CHANGE), LEVEL_INCOMPLETE_COLOR(
+			"Level.Meter.Incomplete_Color", Type.NO_CHANGE),
 	;
 
 	private static YamlConfiguration message;
 	private final  String            path;
 	private final  Type              type;
+	private        boolean           isList;
 
 	MessageAddon(String path, Type type) {
 		this.path = path;
 		this.type = type;
+		this.isList = false;
+	}
+
+	MessageAddon(String path, Type type, boolean isList) {
+		this(path, type);
+		this.isList = isList;
 	}
 
 	// Need to set the plugin inorder to run the messages
@@ -214,17 +233,32 @@ public enum MessageAddon {
 		message = gangland.getInitializer().getLanguageLoader().getMessage();
 	}
 
+	private String convertFromList(List<String> data) {
+		StringBuilder builder = new StringBuilder();
+
+		for (int i = 0; i < data.size(); i++) {
+			builder.append(data.get(i));
+
+			if (i < data.size() - 1) builder.append("\n");
+		}
+
+		return builder.toString();
+	}
+
 	@Override
 	public String toString() {
-		String data = message.getString(path);
+		String data;
+		if (isList) data = convertFromList(message.getStringList(path));
+		else data = message.getString(path);
 		String value;
 
 		switch (type) {
-			case PREFIX -> value = prefixMessage(data);
-			case COMMAND -> value = commandMessage(data);
-			case ERROR -> value = errorMessage(data);
-			case INFORMATION -> value = informationMessage(data);
-			default -> value = color(data);
+			case PREFIX -> value = ChatUtil.prefixMessage(data);
+			case COMMAND -> value = ChatUtil.commandMessage(data);
+			case ERROR -> value = ChatUtil.errorMessage(data);
+			case INFORMATION -> value = ChatUtil.informationMessage(data);
+			case OTHER -> value = ChatUtil.color(data);
+			default -> value = data;
 		}
 
 		return value;
@@ -233,6 +267,6 @@ public enum MessageAddon {
 
 enum Type {
 
-	PREFIX, COMMAND, ERROR, INFORMATION, OTHER
+	PREFIX, COMMAND, ERROR, INFORMATION, OTHER, NO_CHANGE
 
 }
