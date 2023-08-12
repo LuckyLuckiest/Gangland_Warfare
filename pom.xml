@@ -88,6 +88,11 @@
                             <pattern>fr.mrmicky.fastboard</pattern>
                             <shadedPattern>me.luckyraven.fastboard</shadedPattern>
                         </relocation>
+
+                        <relocation>
+                            <pattern>net.objecthunter.exp4j</pattern>
+                            <shadedPattern>me.luckyraven.exp4j</shadedPattern>
+                        </relocation>
                     </relocations>
 
                     <filters>
