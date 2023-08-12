@@ -340,11 +340,15 @@
 		"description": "Removes experience from your level."
 	},
 	"level_add_levels": {
-		"usage": "/glw level level add <amount>",
+		"usage": "/glw level add <amount>",
 		"description": "Adds levels."
 	},
 	"level_remove_levels": {
-		"usage": "/glw level exp remove <amount>",
+		"usage": "/glw level remove <amount>",
 		"description": "Removes levels."
+	},
+	"level_next": {
+		"usage": "/glw level next",
+		"description": "Shows statistics about the next level."
 	}
 }
