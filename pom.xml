@@ -221,6 +221,14 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- exp4j -->
+        <dependency>
+            <groupId>net.objecthunter</groupId>
+            <artifactId>exp4j</artifactId>
+            <version>0.4.8</version>
+            <scope>compile</scope>
+        </dependency>
+
         <!-- Compile level dependencies (end) -->
 
         <!-- Technical provided level dependencies (start) -->
