@@ -134,7 +134,7 @@ Bounty:
 # +--------------+ #
 Phone:
    Enable: true
-   Item: REDSTONE
+   Item: COMPASS
    Name: "&6&k||| &rPhone &6&k|||"
    # The slots are from 0-8, and they are in the hot-bar only.
    Slot: 8
