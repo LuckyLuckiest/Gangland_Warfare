@@ -51,7 +51,7 @@ class GangWithdrawCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
 		};
 	}
 

@@ -4,7 +4,6 @@ import me.luckyraven.Gangland;
 import me.luckyraven.bounty.Bounty;
 import me.luckyraven.bounty.BountyEvent;
 import me.luckyraven.command.CommandHandler;
-import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.data.CommandInformation;
@@ -12,6 +11,7 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -51,13 +51,13 @@ public class BountyCommand extends CommandHandler {
 		// Add bounty to a user
 		// glw bounty set <player> <amount>
 		Argument add = new Argument(new String[]{"set", "add"}, getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<player>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<player>"));
 		});
 
 		// Remove your set amount of bounty to a user
 		// glw bounty remove <player>
 		Argument remove = new Argument(new String[]{"remove", "clear"}, getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<player>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<player>"));
 		});
 
 		Argument playerName = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
@@ -73,7 +73,7 @@ public class BountyCommand extends CommandHandler {
 
 			switch (args[1].toLowerCase()) {
 				case "set", "add" -> sender.sendMessage(
-						CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
+						ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
 
 				case "remove", "clear" -> {
 					if (!user.getBounty().hasBounty()) {

@@ -2,7 +2,6 @@ package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
-import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.data.CommandInformation;
@@ -43,20 +42,19 @@ public class EconomyCommand extends CommandHandler {
 
 		// glw economy deposit
 		Argument deposit = new Argument(new String[]{"deposit", "add"}, getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<specifier>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<specifier>"));
 		}, getPermission() + ".deposit");
 
 
 		// glw economy withdraw
 		Argument withdraw = new Argument(new String[]{"withdraw", "take"}, getArgumentTree(),
 		                                 (argument, sender, args) -> sender.sendMessage(
-				                                 CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(),
-				                                                             "<specifier>")),
-		                                 getPermission() + ".withdraw");
+				                                 ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(),
+				                                                       "<specifier>")), getPermission() + ".withdraw");
 
 		// glw economy set
 		Argument set = new Argument("set", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<specifier>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<specifier>"));
 		}, getPermission() + ".set");
 
 		Argument amount = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
@@ -116,7 +114,7 @@ public class EconomyCommand extends CommandHandler {
 
 		String[] optionalSpecifier = {"@a", "@r", "@p", "@me", "@[<name>]"};
 		Argument specifier = new OptionalArgument(optionalSpecifier, getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
 		});
 
 		specifier.setExecuteOnPass((sender, args) -> {

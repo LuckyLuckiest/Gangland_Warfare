@@ -60,7 +60,7 @@ class GangCreateCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 

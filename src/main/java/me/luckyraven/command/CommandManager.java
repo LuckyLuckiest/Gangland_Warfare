@@ -28,18 +28,6 @@ public final class CommandManager implements CommandExecutor {
 		this.commands = new HashMap<>();
 	}
 
-	public static String commandDesign(String command) {
-		return color(command.replace("/glw", "&6/glw&7")
-		                    .replace("<", "&5<&7")
-		                    .replace(">", "&5>&7")
-		                    .replace(" - ", " &c-&r ")
-		                    .replaceAll("[\\[\\],]", ""));
-	}
-
-	public static String setArguments(String arguments, String command) {
-		return color(arguments + commandDesign(command));
-	}
-
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
 	                         @NotNull String[] args) {
@@ -66,7 +54,7 @@ public final class CommandManager implements CommandExecutor {
 				}
 
 			if (!match) {
-				sender.sendMessage(setArguments(MessageAddon.ARGUMENTS_DONT_EXIST.toString(),
+				sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_DONT_EXIST.toString(),
 				                                String.format("/%s %s", label, Arrays.asList(args))));
 				return false;
 			}

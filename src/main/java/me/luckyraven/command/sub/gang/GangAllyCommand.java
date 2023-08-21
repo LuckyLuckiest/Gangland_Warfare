@@ -4,7 +4,6 @@ import me.luckyraven.Gangland;
 import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.account.gang.MemberManager;
-import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.argument.SubArgument;
@@ -14,6 +13,7 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.timer.CountdownTimer;
+import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -53,8 +53,7 @@ class GangAllyCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(
-					CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<request/abandon>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<request/abandon>"));
 		};
 	}
 
@@ -68,7 +67,7 @@ class GangAllyCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<id>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<id>"));
 		}, this.getPermission() + ".request");
 
 		// glw gang ally abandon <id>
@@ -81,7 +80,7 @@ class GangAllyCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<id>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<id>"));
 		}, this.getPermission() + ".abandon");
 
 		// key -> the gang requesting alliance with, value -> the gang sending the request

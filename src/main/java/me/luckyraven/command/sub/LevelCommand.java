@@ -2,7 +2,6 @@ package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
-import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.data.CommandInformation;
@@ -86,15 +85,15 @@ public class LevelCommand extends CommandHandler {
 
 		String[] expArr = {"exp", "experience"};
 		Argument experience = new Argument(expArr, getArgumentTree(), (argument, sender, args) -> {
-			CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<add/remove>");
+			ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<add/remove>");
 		}, getPermission() + ".experience");
 
 		Argument expAdd = new Argument("add", getArgumentTree(), (argument, sender, args) -> {
-			CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>");
+			ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>");
 		}, experience.getPermission() + ".add");
 
 		Argument expRemove = new Argument("remove", getArgumentTree(), (argument, sender, args) -> {
-			CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>");
+			ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>");
 		}, experience.getPermission() + ".remove");
 
 		Argument expOptional = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
@@ -139,11 +138,11 @@ public class LevelCommand extends CommandHandler {
 		getArgument().addPermission(levelPerm);
 
 		Argument levelAdd = new Argument("add", getArgumentTree(), (argument, sender, args) -> {
-			CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>");
+			ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>");
 		}, levelPerm + ".add");
 
 		Argument levelRemove = new Argument("remove", getArgumentTree(), (argument, sender, args) -> {
-			CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>");
+			ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>");
 		}, levelPerm + ".remove");
 
 		Argument levelOptional = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {

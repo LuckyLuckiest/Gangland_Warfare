@@ -4,7 +4,6 @@ import me.luckyraven.Gangland;
 import me.luckyraven.account.Account;
 import me.luckyraven.account.type.Bank;
 import me.luckyraven.command.CommandHandler;
-import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ConfirmArgument;
 import me.luckyraven.command.argument.OptionalArgument;
@@ -72,7 +71,7 @@ public class BankCommand extends CommandHandler {
 				return;
 			}
 
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, getPermission() + ".create");
 
 		HashMap<User<Player>, AtomicReference<String>> createBankName  = new HashMap<>();
@@ -235,10 +234,10 @@ public class BankCommand extends CommandHandler {
 				return;
 			}
 
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
 		}, getPermission() + ".deposit");
 
-		// withdraw money from bank
+		// withdraw money from a bank
 		// glw bank withdraw 10
 		String[] withdrawArr = {"withdraw", "take"};
 		Argument withdraw = new Argument(withdrawArr, getArgumentTree(), (argument, sender, args) -> {
@@ -250,7 +249,7 @@ public class BankCommand extends CommandHandler {
 				return;
 			}
 
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
 		}, getPermission() + ".withdraw");
 
 		Argument amount = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {

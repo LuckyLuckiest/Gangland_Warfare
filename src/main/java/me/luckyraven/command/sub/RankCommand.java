@@ -2,7 +2,6 @@ package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
-import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ConfirmArgument;
 import me.luckyraven.command.argument.OptionalArgument;
@@ -52,7 +51,7 @@ public class RankCommand extends CommandHandler {
 
 		// glw rank create <name>
 		Argument create = new Argument("create", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, getPermission() + ".create");
 
 		HashMap<CommandSender, AtomicReference<String>> createRankName  = new HashMap<>();
@@ -123,7 +122,7 @@ public class RankCommand extends CommandHandler {
 		// glw rank delete <name>
 		String[] delArr = new String[]{"delete", "remove"};
 		Argument delete = new Argument(delArr, getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, getPermission() + ".delete");
 
 		HashMap<CommandSender, AtomicReference<String>> deleteRankName  = new HashMap<>();
@@ -208,7 +207,7 @@ public class RankCommand extends CommandHandler {
 		// glw rank permission <add/remove> <name> <permission>
 		String[] permArr = {"permission", "perm"};
 		Argument permission = new Argument(permArr, getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<add/remove>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<add/remove>"));
 		}, getPermission() + ".permission");
 
 		Argument perm = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
@@ -245,17 +244,17 @@ public class RankCommand extends CommandHandler {
 		});
 
 		Argument permName = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<permission>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<permission>"));
 		});
 
 		permName.addSubArgument(perm);
 
 		Argument addPerm = new Argument("add", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, permission.getPermission() + ".add");
 
 		Argument removePerm = new Argument("remove", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, permission.getPermission() + ".remove");
 
 		addPerm.addSubArgument(permName);
@@ -266,7 +265,7 @@ public class RankCommand extends CommandHandler {
 
 		// glw rank info <name>
 		Argument info = new Argument("info", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, getPermission() + ".info");
 
 		Argument infoName = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
@@ -301,7 +300,7 @@ public class RankCommand extends CommandHandler {
 
 		// glw rank parent <add/remove> <name> <parent>
 		Argument parent = new Argument("parent", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<add/remove>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<add/remove>"));
 		}, getPermission() + ".parent");
 
 		Argument parentStr = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
@@ -345,17 +344,17 @@ public class RankCommand extends CommandHandler {
 		});
 
 		Argument parentName = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<parent>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<parent>"));
 		});
 
 		parentName.addSubArgument(parentStr);
 
 		Argument addParent = new Argument("add", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, parent.getPermission() + ".add");
 
 		Argument removeParent = new Argument("remove", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(CommandManager.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, parent.getPermission() + ".remove");
 
 		parent.addSubArgument(addParent);
