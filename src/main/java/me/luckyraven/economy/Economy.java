@@ -1,21 +1,24 @@
 package me.luckyraven.economy;
 
 import me.luckyraven.data.user.User;
+import org.bukkit.OfflinePlayer;
 
 /**
  * The type Economy.
  */
 public class Economy {
 
-	private final User<?> user;
+	private final User<OfflinePlayer>                user;
+	private final net.milkbowl.vault.economy.Economy vaultEconomy;
 
 	/**
 	 * Instantiates a new Economy.
 	 *
 	 * @param user the type of account
 	 */
-	public Economy(User<?> user) {
+	public Economy(User<OfflinePlayer> user, net.milkbowl.vault.economy.Economy vaultEconomy) {
 		this.user = user;
+		this.vaultEconomy = vaultEconomy;
 	}
 
 	/**
@@ -24,6 +27,7 @@ public class Economy {
 	 * @return the balance
 	 */
 	public double getBalance() {
+		if (vaultEconomy != null) return vaultEconomy.getBalance(user.getUser());
 		return user.getBalance();
 	}
 
@@ -33,7 +37,8 @@ public class Economy {
 	 * @param amount the amount deposited
 	 */
 	public void deposit(double amount) {
-		user.setBalance(getBalance() + amount);
+		if (vaultEconomy != null) vaultEconomy.depositPlayer(user.getUser(), amount);
+		else user.setBalance(getBalance() + amount);
 	}
 
 	/**
@@ -43,7 +48,9 @@ public class Economy {
 	 */
 	public void withdraw(double amount) {
 		if (amount > getBalance()) throw new EconomyException("Amount exceeding balance");
-		user.setBalance(getBalance() - amount);
+
+		if (vaultEconomy != null) vaultEconomy.withdrawPlayer(user.getUser(), amount);
+		else user.setBalance(getBalance() - amount);
 	}
 
 }
