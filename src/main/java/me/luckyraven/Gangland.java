@@ -3,7 +3,8 @@ package me.luckyraven;
 import lombok.Getter;
 import me.luckyraven.data.ReloadPlugin;
 import me.luckyraven.database.DatabaseManager;
-import me.luckyraven.dependency.GanglandExpansion;
+import me.luckyraven.dependency.PlaceholderAPIExpansion;
+import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -44,8 +45,10 @@ public final class Gangland extends JavaPlugin {
 		reloadPlugin.userInitialize(false);
 
 		// periodical updates each 10 minutes
-		int minutes = 10;
-		this.periodicalUpdates = new PeriodicalUpdates(this, minutes * 60 * 20L);
+		int minutes = SettingAddon.getAutoSaveTime();
+
+		if (SettingAddon.isAutoSave()) this.periodicalUpdates = new PeriodicalUpdates(this, minutes * 60 * 20L);
+		else this.periodicalUpdates = new PeriodicalUpdates(this);
 
 		periodicalUpdates.start();
 	}
@@ -55,7 +58,7 @@ public final class Gangland extends JavaPlugin {
 		requiredDependency("NBTAPI", null);
 
 		// soft dependencies
-		softDependency("PlaceholderAPI", () -> new GanglandExpansion(this).register());
+		softDependency("PlaceholderAPI", () -> new PlaceholderAPIExpansion(this).register());
 		softDependency("Vault", null);
 	}
 

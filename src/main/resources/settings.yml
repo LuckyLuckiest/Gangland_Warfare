@@ -57,6 +57,12 @@ Database:
       Backup: true
       # Will use SQLite if unable to connect to MySQL
       Failed_MySQL: true
+   Auto_Save:
+      # Enable auto save
+      # If disabled, it would write to the database only when the player leaves or when the server closes
+      Enable: true
+      # Time to auto save in minutes
+      Time: 10
 
 # +------------------+ #
 # | Inventory Config | #
@@ -86,7 +92,7 @@ User:
       # When a player creates a bank account, his account will have the amount of money that you set.
       Initial_Balance: 0
       # When a player wants to create a bank account, they are required to pay a fee.
-      # Set it to 0, and the requirement is lifted.
+      # Set it to zero, and the requirement is lifted.
       Create_Cost: 5_000
       # The maximum amount of money the player can have.
       Maximum_Balance: 1_000_000_000
@@ -108,7 +114,17 @@ User:
       Skill:
          Upgrade: 1
          Cost: 500
-         Exponential: 1.8
+         Formula: "base * level ^ 1.8"
+   Death:
+      Enable: true
+      Money:
+         Command:
+            Enable: false
+            Executable: "/glw eco withdraw %player% 20"
+         Lose_Money: true
+         Formula: "balance * 0.15"
+      Respawn:
+         Enable: false
 
 # +---------------+ #
 # | Bounty Config | #
@@ -206,7 +222,7 @@ Gang:
       # When a player creates a gang account, his account will have the amount of money that you set.
       First_Balance: 0
       # When a player wants to create a gang account, they are required to pay a fee.
-      # Set it to 0, and the requirement is lifted.
+      # Set it to zero, and the requirement is lifted.
       Create_Cost: 100_000
       # Sets the maximum gang money.
       Maximum_Balance: 100_000_000_000
@@ -227,8 +243,3 @@ Balance_Format:
 Killing_Mob:
    Min: 0
    Max: 20
-Death:
-   Enable: true
-   Money:
-      Something: "..."
-      Something_: "..."

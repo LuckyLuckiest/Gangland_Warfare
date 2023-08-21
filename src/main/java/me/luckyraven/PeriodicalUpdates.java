@@ -31,50 +31,56 @@ import static me.luckyraven.bukkit.inventory.InventoryHandler.getPlayerInventori
 public class PeriodicalUpdates {
 
 	private final Gangland       gangland;
-	private final RepeatingTimer repeatingTimer;
+	private       RepeatingTimer repeatingTimer;
+
+	public PeriodicalUpdates(Gangland gangland) {
+		this.gangland = gangland;
+	}
 
 	public PeriodicalUpdates(Gangland gangland, long interval) {
-		this.gangland = gangland;
-		this.repeatingTimer = new RepeatingTimer(gangland, interval, (timer) -> {
-			long start = System.currentTimeMillis();
+		this(gangland);
+		this.repeatingTimer = new RepeatingTimer(gangland, interval, (timer) -> task());
+	}
 
-			// auto-saving
-			gangland.getLogger().info("Auto-saving...");
-			try {
-				updatingDatabase();
-				gangland.getLogger().info("Auto-save complete");
-			} catch (Exception exception) {
-				gangland.getLogger().warning("There was an issue auto-saving the data...");
-				exception.printStackTrace();
-			}
+	private void task() {
+		long start = System.currentTimeMillis();
 
-			// resetting player inventories
-			gangland.getLogger().info("Cache reset...");
-			try {
-				removeInventories();
-			} catch (Exception exception) {
-				gangland.getLogger().warning("There was an issue resetting the cache...");
-				exception.printStackTrace();
-			}
+		// auto-saving
+		gangland.getLogger().info("Saving...");
+		try {
+			updatingDatabase();
+			gangland.getLogger().info("Data save complete");
+		} catch (Exception exception) {
+			gangland.getLogger().warning("There was an issue saving the data...");
+			exception.printStackTrace();
+		}
 
-			long end = System.currentTimeMillis();
+		// resetting player inventories
+		gangland.getLogger().info("Cache reset...");
+		try {
+			removeInventories();
+		} catch (Exception exception) {
+			gangland.getLogger().warning("There was an issue resetting the cache...");
+			exception.printStackTrace();
+		}
 
-			gangland.getLogger().info(String.format("The process took %dms", end - start));
-		});
+		long end = System.currentTimeMillis();
+
+		gangland.getLogger().info(String.format("The process took %dms", end - start));
 	}
 
 	public void forceUpdate() {
 		gangland.getLogger().info("Force update...");
-		this.repeatingTimer.runTask();
+		task();
 	}
 
 	public void stop() {
-		this.repeatingTimer.stop();
+		if (this.repeatingTimer != null) this.repeatingTimer.stop();
 	}
 
 	public void start() {
 		gangland.getLogger().info("Initialized auto-save...");
-		this.repeatingTimer.startAsync();
+		if (this.repeatingTimer != null) this.repeatingTimer.startAsync();
 	}
 
 	private void updatingDatabase() {
