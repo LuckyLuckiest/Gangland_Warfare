@@ -1,6 +1,7 @@
 package me.luckyraven.file.configuration;
 
 import lombok.Getter;
+import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.FileManager;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -12,70 +13,47 @@ import java.util.Objects;
 
 public class SettingAddon {
 
-	@Getter
-	private static final Map<String, Object> settingsMap         = new LinkedHashMap<>();
-	@Getter
-	private static final Map<String, Object> settingsPlaceholder = new LinkedHashMap<>();
+	private static final @Getter Map<String, Object> settingsMap         = new LinkedHashMap<>();
+	private static final @Getter Map<String, Object> settingsPlaceholder = new LinkedHashMap<>();
 
-	@Getter
-	private static FileConfiguration settings;
+	private static @Getter FileConfiguration settings;
 	// language picked
-	@Getter
-	private static String            languagePicked;
+	private static @Getter String            languagePicked;
 	// database configuration
-	@Getter
-	private static String            databaseType;
-	@Getter
-	private static String            mysqlHost, mysqlUsername, mysqlPassword;
-	@Getter
-	private static int     mysqlPort;
-	@Getter
-	private static boolean sqliteBackup, sqliteFailedMysql;
+	private static @Getter String            databaseType;
+	private static @Getter String            mysqlHost, mysqlUsername, mysqlPassword;
+	private static @Getter int     mysqlPort;
+	private static @Getter boolean sqliteBackup, sqliteFailedMysql, autoSave;
+	private static @Getter int    autoSaveTime;
 	// inventory configuration
-	@Getter
-	private static String inventoryFillItem, inventoryFillName, inventoryLineItem, inventoryLineName;
+	private static @Getter String inventoryFillItem, inventoryFillName, inventoryLineItem, inventoryLineName;
 	// economy
-	@Getter
-	private static String moneySymbol, balanceFormat;
+	private static @Getter String moneySymbol, balanceFormat;
 	// user configuration
-	@Getter
-	private static double userInitialBalance, userMaxBalance;
-	@Getter
-	private static double bankInitialBalance, bankCreateFee, bankMaxBalance;
+	private static @Getter double userInitialBalance, userMaxBalance;
+	private static @Getter double bankInitialBalance, bankCreateFee, bankMaxBalance;
 	// user levels
-	@Getter
-	private static int userMaxLevel, userLevelBaseAmount;
-	@Getter
-	private static String userLevelFormula;
-	@Getter
-	private static int    userSkillUpgrade;
-	@Getter
-	private static double userSkillCost, userSkillExponential;
+	private static @Getter int userMaxLevel, userLevelBaseAmount;
+	private static @Getter String userLevelFormula;
+	private static @Getter int    userSkillUpgrade;
+	private static @Getter double userSkillCost, userSkillExponential;
+	// user death
+	private static @Getter boolean deathEnable, deathMoneyCommandEnable, deathLoseMoney;
+	private static @Getter String deathMoneyCommandExecutable, deathLoseMoneyFormula;
 	// bounty configuration
-	@Getter
-	private static double bountyEachKillValue, bountyMaxKill;
-	@Getter
-	private static boolean bountyTimerEnable;
-	@Getter
-	private static double  bountyTimerMultiple, bountyTimerMax;
-	@Getter
-	private static int     bountyTimeInterval;
+	private static @Getter double bountyEachKillValue, bountyMaxKill;
+	private static @Getter boolean bountyTimerEnable;
+	private static @Getter double  bountyTimerMultiple, bountyTimerMax;
+	private static @Getter int     bountyTimeInterval;
 	// phone configuration
-	@Getter
-	private static boolean phoneEnabled;
-	@Getter
-	private static String  phoneItem, phoneName;
-	@Getter
-	private static int     phoneSlot;
-	@Getter
-	private static boolean phoneMovable, phoneDroppable;
+	private static @Getter boolean phoneEnabled;
+	private static @Getter String  phoneItem, phoneName;
+	private static @Getter int     phoneSlot;
+	private static @Getter boolean phoneMovable, phoneDroppable;
 	// gang configuration
-	@Getter
-	private static boolean gangEnable, gangNameDuplicates;
-	@Getter
-	private static String gangRankHead, gangRankTail, gangDisplayNameChar;
-	@Getter
-	private static double gangInitialBalance, gangCreateFee, gangMaxBalance, gangContributionRate;
+	private static @Getter boolean gangEnable, gangNameDuplicates;
+	private static @Getter String gangRankHead, gangRankTail, gangDisplayNameChar;
+	private static @Getter double gangInitialBalance, gangCreateFee, gangMaxBalance, gangContributionRate;
 
 	public SettingAddon(FileManager fileManager) {
 		try {
@@ -84,7 +62,7 @@ public class SettingAddon {
 
 			initialize();
 		} catch (IOException exception) {
-			throw new RuntimeException(exception);
+			throw new PluginException(exception);
 		}
 	}
 
@@ -105,6 +83,8 @@ public class SettingAddon {
 		mysqlPort = settings.getInt("Database.MySQL.Port");
 		sqliteBackup = settings.getBoolean("Database.SQLite.Backup");
 		sqliteFailedMysql = settings.getBoolean("Database.SQLite.Failed_MySQL");
+		autoSave = settings.getBoolean("Database.Auto_Save.Enable");
+		autoSaveTime = settings.getInt("Database.Auto_Save.Time");
 
 		// inventory
 		inventoryFillItem = settings.getString("Inventory.Fill.Item");
@@ -129,6 +109,12 @@ public class SettingAddon {
 		userSkillUpgrade = settings.getInt("User.Level.Skill.Upgrade");
 		userSkillCost = settings.getDouble("User.Level.Skill.Cost");
 		userSkillExponential = settings.getDouble("User.Level.Skill.Exponential");
+		// user death
+		deathEnable = settings.getBoolean("User.Death.Enable");
+		deathMoneyCommandEnable = settings.getBoolean("User.Death.Money.Command.Enable");
+		deathMoneyCommandExecutable = settings.getString("User.Death.Money.Command.Executable");
+		deathLoseMoney = settings.getBoolean("User.Death.Lose_Money");
+		deathLoseMoneyFormula = settings.getString("User.Death.Money.Formula");
 
 		// bounty
 		bountyEachKillValue = settings.getDouble("Bounty.Kill.Each");

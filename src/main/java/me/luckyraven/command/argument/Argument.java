@@ -3,6 +3,7 @@ package me.luckyraven.command.argument;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.datastructure.Tree;
+import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
@@ -186,7 +187,7 @@ public class Argument implements Cloneable {
 		try {
 			return (Argument) super.clone();
 		} catch (CloneNotSupportedException exception) {
-			throw new RuntimeException(exception);
+			throw new PluginException(exception);
 		}
 	}
 

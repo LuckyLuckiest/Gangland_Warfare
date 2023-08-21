@@ -2,6 +2,7 @@ package me.luckyraven.datastructure;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.exception.PluginException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -199,9 +200,11 @@ public class Tree<E> implements Iterable<E> {
 		@Override
 		public Node<T> clone() {
 			try {
-				return (Node<T>) super.clone();
+				@SuppressWarnings("unchecked") Node<T> clonedNode = (Node<T>) super.clone();
+				
+				return clonedNode;
 			} catch (CloneNotSupportedException exception) {
-				throw new RuntimeException(exception);
+				throw new PluginException(exception);
 			}
 		}
 

@@ -3,6 +3,7 @@ package me.luckyraven.database;
 import lombok.Getter;
 import me.luckyraven.database.type.MySQL;
 import me.luckyraven.database.type.SQLite;
+import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -67,7 +68,7 @@ public abstract class DatabaseHandler {
 				} catch (SQLException exception) {
 					this.database = null;
 
-					throw new RuntimeException(exception.getMessage());
+					throw new PluginException(exception.getMessage(), exception);
 				}
 			}
 			case SQLITE -> {
@@ -85,13 +86,13 @@ public abstract class DatabaseHandler {
 
 					plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
 
-					throw new RuntimeException(exception.getMessage());
+					throw new PluginException(exception.getMessage(), exception);
 				} catch (IOException exception) {
 					this.database = null;
 
 					plugin.getLogger().warning(UnhandledError.FILE_CREATE_ERROR + ": " + exception.getMessage());
 
-					throw new RuntimeException(exception.getMessage());
+					throw new PluginException(exception.getMessage(), exception);
 				}
 			}
 			default -> throw new IllegalArgumentException("Unknown database type");
