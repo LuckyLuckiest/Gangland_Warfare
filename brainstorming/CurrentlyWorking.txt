@@ -37,7 +37,7 @@
 	- Changing gang description using Anvil GUI.
 	- Add a searching mechanism for a gang list (use GUIs).
 
-0.0.61-DEV:
+0.0.61-DEV: (DONE)
 	- Auto-save.
     - Level system.
     - Used to unlock items.
