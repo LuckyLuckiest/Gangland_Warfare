@@ -10,4 +10,12 @@ public class PluginException extends RuntimeException {
 		super(message);
 	}
 
+	public PluginException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public PluginException(Throwable cause) {
+		super(cause);
+	}
+
 }
