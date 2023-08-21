@@ -44,6 +44,7 @@
 0.0.62-DEV:
 	- Economy system (implement vault dependency).
 	- When the player dies, they are punished.
+	- Implement scoreboard (FastBoard)
 0.0.63-DEV:
 	- Warps and spawns.
 	- A Taxi system added to contacts in phone.
