@@ -15,11 +15,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
-public class GanglandExpansion extends PlaceholderExpansion {
+public class PlaceholderAPIExpansion extends PlaceholderExpansion {
 
 	private final Gangland gangland;
 
-	public GanglandExpansion(Gangland gangland) {
+	public PlaceholderAPIExpansion(Gangland gangland) {
 		this.gangland = gangland;
 	}
 
