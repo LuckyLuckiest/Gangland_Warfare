@@ -35,6 +35,8 @@ public class User<T> {
 	@Setter         Wanted wanted;
 	private @Getter
 	@Setter         Phone  phone;
+//	private @Getter
+//	@Setter         Economy economy;
 
 	/**
 	 * Instantiates a new Database.
