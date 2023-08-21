@@ -1,5 +1,6 @@
 package me.luckyraven.util;
 
+import com.google.common.base.Preconditions;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.Bukkit;
@@ -37,6 +38,19 @@ public final class ChatUtil {
 
 	public static String capitalize(@NotNull String text) {
 		return text.substring(0, 1).toUpperCase() + text.substring(1);
+	}
+
+	public static String center(@NotNull String text, int level) {
+		Preconditions.checkNotNull(text, "Text can't be null!");
+
+		if (text.length() >= level) return text;
+
+		int    length = text.length();
+		int    even   = length % 2 != 0 ? 1 : 0;
+		String prefix = " ".repeat(level / 2 - length / 2);
+		String suffix = " ".repeat(level / 2 - length / 2 - even);
+
+		return prefix + text + suffix;
 	}
 
 	public static String unicodeCharacters(String position) {
@@ -82,6 +96,18 @@ public final class ChatUtil {
 
 	public static String informationMessage(String message) {
 		return color(MessageAddon.INFORMATION_PREFIX + message);
+	}
+
+	public static String commandDesign(String command) {
+		return color(command.replace("/glw", "&6/glw&7")
+		                    .replace("<", "&5<&7")
+		                    .replace(">", "&5>&7")
+		                    .replace(" - ", " &c-&r ")
+		                    .replaceAll("[\\[\\],]", ""));
+	}
+
+	public static String setArguments(String arguments, String command) {
+		return color(arguments + ChatUtil.commandDesign(command));
 	}
 
 }
