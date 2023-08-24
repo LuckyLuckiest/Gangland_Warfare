@@ -101,7 +101,7 @@ User:
       # The maximum level the player can have.
       Maximum_Level: 100
       # The base amount to be used in calculation.
-      Base_Amount: 1000
+      Base_Amount: 1_000
 
       # This formula is used to calculate the levels linearly.
       # It is possible to use mathematical functions; such as
