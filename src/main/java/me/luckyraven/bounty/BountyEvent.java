@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.account.gang.Gang;
 import me.luckyraven.data.user.User;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -23,9 +23,9 @@ public class BountyEvent extends Event implements Cancellable {
 	private boolean cancelled;
 
 	@Nullable
-	private User<? extends OfflinePlayer> userBounty;
+	private User<Player> userBounty;
 	@Nullable
-	private Gang                          gangBounty;
+	private Gang         gangBounty;
 
 	public BountyEvent(Bounty bounty) {
 		this.bounty = bounty;
