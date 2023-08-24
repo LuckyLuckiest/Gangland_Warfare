@@ -46,11 +46,9 @@ public final class ChatUtil {
 		if (text.length() >= level) return text;
 
 		int    length = text.length();
-		int    even   = length % 2 != 0 ? 1 : 0;
-		String prefix = " ".repeat(level / 2 - length / 2);
-		String suffix = " ".repeat(level / 2 - length / 2 - even);
+		String prefix = " ".repeat((level - length) / 2);
 
-		return prefix + text + suffix;
+		return prefix + text;
 	}
 
 	public static String unicodeCharacters(String position) {
