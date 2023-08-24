@@ -78,7 +78,7 @@ public class RankDatabase extends DatabaseHandler {
 
 		Database      config          = getDatabase().table("data");
 		List<String>  columnsTemp     = config.getColumns();
-		String[]      columns         = columnsTemp.subList(1, columnsTemp.size()).toArray(String[]::new);
+		String[]      columns         = columnsTemp.toArray(String[]::new);
 		List<Integer> columnsDataType = config.getColumnsDataType(columns);
 
 		int[] dataTypes = new int[columnsDataType.size()];
