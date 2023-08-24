@@ -109,7 +109,7 @@ User:
       # Treat this string as a scientific calculator
 
       # There are only four variables that can be used for the formula
-      # [base: base amount, max: maximum level, level: current level, exp: current experience]
+      # [base: base amount, max: maximum level, level: current level, experience: current experience]
       Formula: "base * level ^ 1.5"
       Skill:
          Upgrade: 1
