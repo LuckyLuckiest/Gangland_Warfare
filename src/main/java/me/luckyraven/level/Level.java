@@ -9,16 +9,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Getter
+@Setter
 public class Level {
 
 	private final int    maxLevel;
 	private final double baseAmount;
 
-	@Setter
 	private double experience;
-	private int    level;
+	private int    levelValue;
 
-	@Setter
 	private String formula;
 
 	public Level() {
@@ -27,7 +26,7 @@ public class Level {
 
 	public Level(int maxLevel, double baseAmount) {
 		this.experience = 0D;
-		this.level = 0;
+		this.levelValue = 0;
 		this.maxLevel = maxLevel;
 		this.baseAmount = baseAmount;
 	}
@@ -43,26 +42,26 @@ public class Level {
 
 	public void removeExperience(double experience) {
 		this.experience = Math.max(this.experience - experience, 0);
-		handleLevelProgression();
 	}
 
 	public int nextLevel() {
-		return Math.min(level + 1, maxLevel);
+		return Math.min(levelValue + 1, maxLevel);
 	}
 
 	public int previousLevel() {
-		return Math.max(level - 1, 0);
+		return Math.max(levelValue - 1, 0);
 	}
 
 	public int addLevels(int levels) {
 		int counter = 0;
+
 		while (levels > 0) {
 			double requiredExp = experienceCalculation(nextLevel());
 			if (experience >= requiredExp) experience -= requiredExp;
 
 			if (counter >= maxLevel) break;
 
-			++level;
+			++levelValue;
 			--levels;
 			++counter;
 		}
@@ -70,19 +69,24 @@ public class Level {
 		return counter;
 	}
 
-	public void removeLevels(int levels) {
-		while (levels > 0 && level > 0) {
-			--level;
+	public int removeLevels(int levels) {
+		int counter = 0;
+
+		while (levels > 0 && levelValue > 0) {
+			--levelValue;
 			--levels;
+			++counter;
 		}
+
+		return counter;
 	}
 
 	private void handleLevelProgression() {
 		double nextLevelAmount = experienceCalculation(nextLevel());
 
-		while (level < maxLevel && experience >= nextLevelAmount) {
+		while (levelValue < maxLevel && experience >= nextLevelAmount) {
 			experience -= nextLevelAmount;
-			++level;
+			++levelValue;
 			nextLevelAmount = experienceCalculation(nextLevel());
 		}
 	}
@@ -105,7 +109,7 @@ public class Level {
 
 	@Override
 	public String toString() {
-		return String.format("{level=%d,experience=%.2f,max_level=%d}", level, experience, maxLevel);
+		return String.format("{level=%d,experience=%.2f,max_level=%d}", levelValue, experience, maxLevel);
 	}
 
 }
