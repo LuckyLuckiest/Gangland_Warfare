@@ -47,7 +47,7 @@ public class PlayerDeath implements Listener {
 
 		variables.put("balance", user.getEconomy().getBalance());
 		variables.put("level", (double) user.getLevel().getLevel());
-		variables.put("exp", user.getLevel().getExperience());
+		variables.put("experience", user.getLevel().getExperience());
 		variables.put("bounty", user.getBounty().getAmount());
 		variables.put("wanted", (double) user.getWanted().getLevel());
 
