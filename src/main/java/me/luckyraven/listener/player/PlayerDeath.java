@@ -34,11 +34,17 @@ public class PlayerDeath implements Listener {
 		// punish the player if they die
 		// take money from their balance (NOT THEIR BANK)
 		double deduct = amountDeduction(user);
+		String type;
 
-		user.getEconomy().withdraw(deduct);
+		if (SettingAddon.isDeathLoseMoney()) {
+			type = "&c-";
+			user.getEconomy().withdraw(deduct);
+		} else {
+			type = "&a+";
+			user.getEconomy().deposit(deduct);
+		}
 
 		// inform the player
-		String type = SettingAddon.isDeathLoseMoney() ? "&c-" : "&a+";
 		player.sendMessage(ChatUtil.color(type + deduct));
 	}
 

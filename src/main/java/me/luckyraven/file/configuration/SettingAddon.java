@@ -114,7 +114,7 @@ public class SettingAddon {
 		deathEnable = settings.getBoolean("User.Death.Enable");
 		deathMoneyCommandEnable = settings.getBoolean("User.Death.Money.Command.Enable");
 		deathMoneyCommandExecutable = settings.getString("User.Death.Money.Command.Executable");
-		deathLoseMoney = settings.getBoolean("User.Death.Lose_Money");
+		deathLoseMoney = !settings.getBoolean("User.Death.Lose_Money");
 		deathLoseMoneyFormula = settings.getString("User.Death.Money.Formula");
 
 		// bounty
