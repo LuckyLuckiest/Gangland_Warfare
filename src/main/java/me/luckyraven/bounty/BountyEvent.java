@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.account.gang.Gang;
 import me.luckyraven.data.user.User;
-import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -12,21 +12,20 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Getter
+@Setter
 public class BountyEvent extends Event implements Cancellable {
 
 	private static final HandlerList handler = new HandlerList();
 
 	private final Bounty bounty;
 
-	@Setter
-	private double       amountApplied;
-	private boolean      cancelled;
-	@Setter
+	private double  amountApplied;
+	private boolean cancelled;
+
 	@Nullable
-	private User<Player> userBounty;
-	@Setter
+	private User<? extends OfflinePlayer> userBounty;
 	@Nullable
-	private Gang         gangBounty;
+	private Gang                          gangBounty;
 
 	public BountyEvent(Bounty bounty) {
 		this.bounty = bounty;
