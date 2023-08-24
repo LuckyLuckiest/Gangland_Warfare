@@ -35,8 +35,9 @@ public class GangDatabase extends DatabaseHandler {
 		getDatabase().table("data").createTable("id INT PRIMARY KEY NOT NULL", "name TEXT NOT NULL",
 		                                        "display_name TEXT NOT NULL", "color TEXT NOT NULL",
 		                                        "description TEXT NOT NULL", "balance DOUBLE NOT NULL",
-		                                        "experience DOUBLE NOT NUll", "bounty DOUBLE NOT NULL",
-		                                        "ally LONGTEXT NOT NULL", "created BIGINT NOT NULL");
+		                                        "level INT NOT NULL", "experience DOUBLE NOT NUll",
+		                                        "bounty DOUBLE NOT NULL", "ally LONGTEXT NOT NULL",
+		                                        "created BIGINT NOT NULL");
 		getDatabase().table("members").createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "gang_id INT NOT NULL",
 		                                           "contribution DOUBLE NOT NULL", "position TEXT", "join_date BIGINT");
 	}
@@ -63,15 +64,20 @@ public class GangDatabase extends DatabaseHandler {
 
 		String alias = getDatabase().createList(tempAlias);
 
-		Database database = getDatabase().table("data");
-		database.insert(database.getColumns().toArray(String[]::new), new Object[]{
+		Database      config          = getDatabase().table("data");
+		List<String>  columnsTemp     = config.getColumns();
+		String[]      columns         = columnsTemp.toArray(String[]::new);
+		List<Integer> columnsDataType = config.getColumnsDataType(columns);
+
+		int[] dataTypes = new int[columnsDataType.size()];
+		for (int i = 0; i < dataTypes.length; i++)
+			dataTypes[i] = columnsDataType.get(i);
+
+		config.insert(columns, new Object[]{
 				gang.getId(), gang.getName(), gang.getDisplayName(), gang.getColor(), gang.getDescription(),
-				gang.getEconomy().getBalance(), gang.getLevel().getExperience(), gang.getBounty().getAmount(), alias,
-				gang.getCreated()
-		}, new int[]{
-				Types.INTEGER, Types.CHAR, Types.VARCHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.DOUBLE, Types.DOUBLE,
-				Types.DOUBLE, Types.LONGVARCHAR, Types.BIGINT
-		});
+				gang.getEconomy().getBalance(), gang.getLevel().getLevelValue(), gang.getLevel().getExperience(),
+				gang.getBounty().getAmount(), alias, gang.getCreated()
+		}, dataTypes);
 	}
 
 	public void updateDataTable(Gang gang) throws SQLException {
@@ -93,17 +99,25 @@ public class GangDatabase extends DatabaseHandler {
 
 		config.update("id = ?", new Object[]{gang.getId()}, new int[]{Types.INTEGER}, columns, new Object[]{
 				gang.getName(), gang.getDisplayName(), gang.getColor(), gang.getDescription(),
-				gang.getEconomy().getBalance(), gang.getLevel().getExperience(), gang.getBounty().getAmount(), alias,
-				gang.getCreated()
+				gang.getEconomy().getBalance(), gang.getLevel().getLevelValue(), gang.getLevel().getExperience(),
+				gang.getBounty().getAmount(), alias, gang.getCreated()
 		}, dataTypes);
 	}
 
 	public void insertMemberTable(Member member) throws SQLException {
-		Database database = getDatabase().table("members");
-		database.insert(database.getColumns().toArray(String[]::new), new Object[]{
+		Database      config          = getDatabase().table("members");
+		List<String>  columnsTemp     = config.getColumns();
+		String[]      columns         = columnsTemp.toArray(String[]::new);
+		List<Integer> columnsDataType = config.getColumnsDataType(columns);
+
+		int[] dataTypes = new int[columnsDataType.size()];
+		for (int i = 0; i < dataTypes.length; i++)
+			dataTypes[i] = columnsDataType.get(i);
+
+		config.insert(columns, new Object[]{
 				member.getUuid(), member.getGangId(), member.getContribution(),
 				member.getRank() == null ? null : member.getRank().getName(), member.getGangJoinDate()
-		}, new int[]{Types.CHAR, Types.INTEGER, Types.DOUBLE, Types.VARCHAR, Types.BIGINT});
+		}, dataTypes);
 	}
 
 	public void updateMembersTable(Member member) throws SQLException {

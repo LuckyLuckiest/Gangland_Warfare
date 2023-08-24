@@ -36,8 +36,8 @@ public class UserDatabase extends DatabaseHandler {
 		getDatabase().table("data").createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "kills INT NOT NULL",
 		                                        "deaths INT NOT NULL", "mob_kills INT NOT NULL", "gang_id INT NOT NULL",
 		                                        "has_bank BOOLEAN NOT NULL", "balance DOUBLE NOT NULL",
-		                                        "bounty DOUBLE NOT NULL", "experience DOUBLE NOT NULL",
-		                                        "date_joined BIGINT NOT NULL");
+		                                        "bounty DOUBLE NOT NULL", "level INT NOT NULL",
+		                                        "experience DOUBLE NOT NULL");
 		getDatabase().table("bank").createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "name TEXT NOT NULL",
 		                                        "balance DOUBLE NOT NULL");
 	}
@@ -59,7 +59,7 @@ public class UserDatabase extends DatabaseHandler {
 	public void insertDataTable(User<? extends OfflinePlayer> user) throws SQLException {
 		Database      config          = getDatabase().table("data");
 		List<String>  columnsTemp     = config.getColumns();
-		String[]      columns         = columnsTemp.subList(1, columnsTemp.size()).toArray(String[]::new);
+		String[]      columns         = columnsTemp.toArray(String[]::new);
 		List<Integer> columnsDataType = config.getColumnsDataType(columns);
 
 		int[] dataTypes = new int[columnsDataType.size()];
@@ -69,7 +69,7 @@ public class UserDatabase extends DatabaseHandler {
 		config.insert(columns, new Object[]{
 				user.getUser().getUniqueId(), user.getKills(), user.getDeaths(), user.getMobKills(), user.getGangId(),
 				user.isHasBank(), user.getEconomy().getBalance(), user.getBounty().getAmount(),
-				user.getLevel().getExperience(), user.getUser().getFirstPlayed()
+				user.getLevel().getLevelValue(), user.getLevel().getExperience()
 		}, dataTypes);
 	}
 
@@ -87,7 +87,7 @@ public class UserDatabase extends DatabaseHandler {
 		              new Object[]{
 				              user.getKills(), user.getDeaths(), user.getMobKills(), user.getGangId(), user.isHasBank(),
 				              user.getEconomy().getBalance(), user.getBounty().getAmount(),
-				              user.getLevel().getExperience(), user.getUser().getFirstPlayed()
+				              user.getLevel().getExperience()
 		              }, dataTypes);
 	}
 
@@ -96,7 +96,7 @@ public class UserDatabase extends DatabaseHandler {
 			if (account instanceof Bank bank) {
 				Database      config          = getDatabase().table("bank");
 				List<String>  columnsTemp     = config.getColumns();
-				String[]      columns         = columnsTemp.subList(1, columnsTemp.size()).toArray(String[]::new);
+				String[]      columns         = columnsTemp.toArray(String[]::new);
 				List<Integer> columnsDataType = config.getColumnsDataType(columns);
 
 				int[] dataTypes = new int[columnsDataType.size()];
