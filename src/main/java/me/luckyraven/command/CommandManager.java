@@ -55,12 +55,11 @@ public final class CommandManager implements CommandExecutor {
 
 			if (!match) {
 				sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_DONT_EXIST.toString(),
-				                                String.format("/%s %s", label, Arrays.asList(args))));
+				                                         String.format("/%s %s", label, Arrays.asList(args))));
 				return false;
 			}
 		} catch (Exception exception) {
-			gangland.getLogger().warning(UnhandledError.COMMANDS_ERROR + ": " + exception.getMessage());
-			exception.printStackTrace();
+			Gangland.getLog4jLogger().error(UnhandledError.COMMANDS_ERROR + ": " + exception.getMessage(), exception);
 			return false;
 		}
 		return true;

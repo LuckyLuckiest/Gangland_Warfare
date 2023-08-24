@@ -72,7 +72,7 @@ public class ReloadPlugin {
 		                                             .orElse(null);
 
 		if (createAccount == null) {
-			gangland.getLogger().warning(UnhandledError.ERROR + ": Unable to find CreateAccount class.");
+			Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find CreateAccount class.");
 			return;
 		}
 
@@ -83,7 +83,7 @@ public class ReloadPlugin {
 				null);
 
 		if (userHandler == null) {
-			gangland.getLogger().warning(UnhandledError.ERROR + ": Unable to find UserDatabase class.");
+			Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find UserDatabase class.");
 			return;
 		}
 
@@ -95,7 +95,7 @@ public class ReloadPlugin {
 				null);
 
 		if (memberHandler == null) {
-			gangland.getLogger().warning(UnhandledError.ERROR + ": Unable to find GangDatabase class.");
+			Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find GangDatabase class.");
 			return;
 		}
 

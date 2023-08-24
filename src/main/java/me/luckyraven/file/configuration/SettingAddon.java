@@ -1,6 +1,7 @@
 package me.luckyraven.file.configuration;
 
 import lombok.Getter;
+import me.luckyraven.Gangland;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.FileManager;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -157,7 +158,7 @@ public class SettingAddon {
 
 				settingsMap.put(field.getName(), value);
 			} catch (IllegalAccessException exception) {
-				exception.printStackTrace();
+				Gangland.getLog4jLogger().error(exception);
 			}
 		}
 

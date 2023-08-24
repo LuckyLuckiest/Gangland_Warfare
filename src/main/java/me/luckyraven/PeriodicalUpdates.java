@@ -17,6 +17,7 @@ import me.luckyraven.rank.Rank;
 import me.luckyraven.rank.RankManager;
 import me.luckyraven.timer.RepeatingTimer;
 import org.bukkit.NamespacedKey;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 
@@ -46,31 +47,29 @@ public class PeriodicalUpdates {
 		long start = System.currentTimeMillis();
 
 		// auto-saving
-		gangland.getLogger().info("Saving...");
+		Gangland.getLog4jLogger().info("Saving...");
 		try {
 			updatingDatabase();
-			gangland.getLogger().info("Data save complete");
+			Gangland.getLog4jLogger().info("Data save complete");
 		} catch (Exception exception) {
-			gangland.getLogger().warning("There was an issue saving the data...");
-			exception.printStackTrace();
+			Gangland.getLog4jLogger().error("There was an issue saving the data...");
 		}
 
 		// resetting player inventories
-		gangland.getLogger().info("Cache reset...");
+		Gangland.getLog4jLogger().info("Cache reset...");
 		try {
 			removeInventories();
 		} catch (Exception exception) {
-			gangland.getLogger().warning("There was an issue resetting the cache...");
-			exception.printStackTrace();
+			Gangland.getLog4jLogger().error("There was an issue resetting the cache...", exception);
 		}
 
 		long end = System.currentTimeMillis();
 
-		gangland.getLogger().info(String.format("The process took %dms", end - start));
+		Gangland.getLog4jLogger().info(String.format("The process took %dms", end - start));
 	}
 
 	public void forceUpdate() {
-		gangland.getLogger().info("Force update...");
+		Gangland.getLog4jLogger().info("Force update...");
 		task();
 	}
 
@@ -79,8 +78,10 @@ public class PeriodicalUpdates {
 	}
 
 	public void start() {
-		gangland.getLogger().info("Initialized auto-save...");
-		if (this.repeatingTimer != null) this.repeatingTimer.startAsync();
+		if (this.repeatingTimer != null) {
+			Gangland.getLog4jLogger().info("Initializing auto-save...");
+			this.repeatingTimer.startAsync();
+		}
 	}
 
 	private void updatingDatabase() {
@@ -88,19 +89,26 @@ public class PeriodicalUpdates {
 			DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
 			if (handler instanceof UserDatabase userDatabase) {
+				// online users
 				updateUserData(gangland.getInitializer().getUserManager(), helper, userDatabase);
+				// offline users
+				updateUserData(gangland.getInitializer().getOfflineUserManager(), helper, userDatabase);
 			} else if (handler instanceof GangDatabase gangDatabase) {
+				// gang data
 				updateGangData(gangland.getInitializer().getGangManager(), helper, gangDatabase);
+				// member data
 				updateMemberData(gangland.getInitializer().getMemberManager(), helper, gangDatabase);
 			} else if (handler instanceof RankDatabase rankDatabase) {
+				// rank info
 				updateRankData(gangland.getInitializer().getRankManager(), helper, rankDatabase);
 			}
 		}
 	}
 
-	private void updateUserData(UserManager<Player> userManager, DatabaseHelper helper, UserDatabase userDatabase) {
+	private void updateUserData(UserManager<? extends OfflinePlayer> userManager, DatabaseHelper helper,
+	                            UserDatabase userDatabase) {
 		helper.runQueries(database -> {
-			for (User<Player> user : userManager.getUsers().values()) {
+			for (User<? extends OfflinePlayer> user : userManager.getUsers().values()) {
 				Object[] data = database.table("data").select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
 				                                              new int[]{Types.CHAR}, new String[]{"*"});
 
