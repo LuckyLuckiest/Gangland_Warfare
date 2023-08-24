@@ -6,6 +6,7 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.ScientificCalculator;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -32,27 +33,39 @@ public class PlayerDeath implements Listener {
 		user.setDeaths(user.getDeaths() + 1);
 
 		// punish the player if they die
-		// take money from their balance (NOT THEIR BANK)
-		double deduct = amountDeduction(user);
-		String type;
+		if (user.getEconomy().getBalance() <= SettingAddon.getDeathThreshold()) return;
 
-		if (SettingAddon.isDeathLoseMoney()) {
-			type = "&c-";
-			user.getEconomy().withdraw(deduct);
+		if (SettingAddon.isDeathMoneyCommandEnable()) {
+			for (String executable : SettingAddon.getDeathMoneyCommandExecutables()) {
+				// TODO find a solution to placeholders, make it so that you have your custom placeholders, so everything is dynamic
+				String exec = executable.replace("/", "").replace("%player%", player.getName()).replace("%gang_id%",
+				                                                                                        String.valueOf(
+						                                                                                        user.getGangId()));
+				Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), exec);
+			}
 		} else {
-			type = "&a+";
-			user.getEconomy().deposit(deduct);
-		}
+			// take money from their balance (NOT THEIR BANK)
+			double deduct = amountDeduction(user);
+			String type;
 
-		// inform the player
-		player.sendMessage(ChatUtil.color(type + deduct));
+			if (SettingAddon.isDeathLoseMoney()) {
+				type = "&c-";
+				user.getEconomy().withdraw(deduct);
+			} else {
+				type = "&a+";
+				user.getEconomy().deposit(deduct);
+			}
+
+			// inform the player
+			player.sendMessage(ChatUtil.color(type + deduct));
+		}
 	}
 
 	private double amountDeduction(User<Player> user) {
 		Map<String, Double> variables = new HashMap<>();
 
 		variables.put("balance", user.getEconomy().getBalance());
-		variables.put("level", (double) user.getLevel().getLevel());
+		variables.put("level", (double) user.getLevel().getLevelValue());
 		variables.put("experience", user.getLevel().getExperience());
 		variables.put("bounty", user.getBounty().getAmount());
 		variables.put("wanted", (double) user.getWanted().getLevel());
