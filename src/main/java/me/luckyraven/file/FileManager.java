@@ -7,6 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,7 +70,7 @@ public class FileManager {
 				String.format("%s is not registered!", resourceFile.substring(resourceFile.lastIndexOf("\\") + 1)));
 
 		YamlConfiguration yamlConfiguration = new YamlConfiguration();
-		yamlConfiguration.load(new InputStreamReader(inputStream));
+		yamlConfiguration.load(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
 
 		return yamlConfiguration;
 	}

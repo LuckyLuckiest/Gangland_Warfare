@@ -9,7 +9,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
@@ -68,8 +71,9 @@ public class FileHandler {
 
 		if (fileType.equals(".yml")) {
 			fileConfiguration = new YamlConfiguration();
-			try {
-				fileConfiguration.load(file);
+			try (FileInputStream inputStream = new FileInputStream(file);
+			     InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+				fileConfiguration.load(reader);
 				loaded = true;
 				if (!Objects.equals(fileConfiguration.getString("Config_Version"), configVersion)) createNewFile();
 			} catch (InvalidConfigurationException exception) {
@@ -116,9 +120,10 @@ public class FileHandler {
 
 		plugin.getLogger().info(String.format("%s%s is an old build or corrupted, creating a new one", name, fileType));
 
-		try {
+		try (FileInputStream inputStream = new FileInputStream(file); InputStreamReader reader = new InputStreamReader(
+				inputStream, StandardCharsets.UTF_8)) {
 			plugin.saveResource(directory + fileType, false);
-			fileConfiguration.load(file);
+			fileConfiguration.load(reader);
 			loaded = true;
 		} catch (IOException | InvalidConfigurationException ignored) {
 			loaded = false;
