@@ -323,6 +323,6 @@ Level:
       - "&7[%progress_bar%&7]"
       - ""
    Meter:
-      Bar: "--------------------"
+      Bar: "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
       Complete_Color: "&b"
       Incomplete_Color: "&f"

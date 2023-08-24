@@ -217,11 +217,11 @@ Commands:
       Clear: "Your bounty was cleared!"
    Level:
       Experience:
-         Add: "Added &b%experience% exp to your level."
-         Remove: "Removed &b%experience% exp from your level."
+         Add: "Added &b%experience%&7 exp to your level."
+         Remove: "Removed &b%experience%&7 exp from your level."
       Level:
-         Add: "Leveled Up &b%level% levels."
-         Remove: "Went down &b%level% levels."
+         Add: "Leveled Up &b%level%&7 levels."
+         Remove: "Went down &b%level%&7 levels."
       Next: "Level: &f%level%&7/&b%max_level%%n%&7Experience: &f%experience%&7/&b%required_experience%"
 
 Errors:
@@ -323,6 +323,6 @@ Level:
       - "&7[%progress_bar%&7]"
       - ""
    Meter:
-      Bar: "--------------------"
+      Bar: "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"
       Complete_Color: "&b"
       Incomplete_Color: "&f"
