@@ -1,5 +1,0 @@
-<Configuration status="debug">
-    <Loggers>
-        <Logger name="src.main.java.me.luckyraven.hikari" level="error"/>
-    </Loggers>
-</Configuration>
