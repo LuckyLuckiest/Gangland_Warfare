@@ -7,6 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.SQLException;
+import java.util.logging.Level;
 
 public class DatabaseHelper {
 
@@ -50,12 +51,10 @@ public class DatabaseHelper {
 			queryRunnable.run(database);
 		} catch (SQLException exception) {
 			exceptionCaught = true;
-			plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
-			exception.printStackTrace();
+			plugin.getLogger().log(Level.WARNING, UnhandledError.SQL_ERROR + ": " + exception.getMessage(), exception);
 		} catch (Exception exception) {
 			exceptionCaught = true;
-			plugin.getLogger().warning(UnhandledError.ERROR + ": " + exception.getMessage());
-			exception.printStackTrace();
+			plugin.getLogger().log(Level.WARNING, UnhandledError.ERROR + ": " + exception.getMessage(), exception);
 		} finally {
 			if (exceptionCaught) rollbackConnection();
 			if (database.getConnection() != null && !database.handlesConnectionPool()) database.disconnect();

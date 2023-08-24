@@ -3,6 +3,8 @@ package me.luckyraven.data;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.logging.Level;
+
 /**
  * The type Data loader.
  */
@@ -35,9 +37,9 @@ public abstract class DataLoader {
 			loadData();
 			isLoaded = true;
 		} catch (Exception exception) {
-			exception.printStackTrace();
-			plugin.getLogger().severe(
-					"The plugin data has ran into a problem, please check the logs and report them to the developer.");
+			plugin.getLogger().log(Level.SEVERE,
+			                       "The plugin data has ran into a problem, please check the logs and report them to the developer.",
+			                       exception);
 			if (disable) Bukkit.getPluginManager().disablePlugin(plugin);
 		}
 	}
