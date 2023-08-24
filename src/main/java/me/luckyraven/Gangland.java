@@ -93,10 +93,12 @@ public final class Gangland extends JavaPlugin {
 	}
 
 	private void requiredDependency(@NotNull String name, @Nullable Runnable runnable) {
-		if (Bukkit.getPluginManager().getPlugin(name) != null) return;
+		if (Bukkit.getPluginManager().getPlugin(name) != null) {
+			if (runnable != null) runnable.run();
+			return;
+		}
 
 		log4jLogger.error(name + " is a required dependency!");
-		if (runnable != null) runnable.run();
 		getPluginLoader().disablePlugin(this);
 	}
 
