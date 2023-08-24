@@ -43,7 +43,7 @@ public class LevelCommand extends CommandHandler {
 		User<Player>        user        = userManager.getUser(player);
 
 		Level  level        = user.getLevel();
-		String currentLevel = String.valueOf(level.getLevel());
+		String currentLevel = String.valueOf(level.getLevelValue());
 		String maxLevel     = String.valueOf(level.getMaxLevel());
 
 		double exp = level.getExperience(), requiredExp = level.experienceCalculation(level.nextLevel()), percentage =
@@ -53,12 +53,12 @@ public class LevelCommand extends CommandHandler {
 		String requiredExperience = String.format("%.2f", requiredExp);
 		String percentageStr      = String.format("%.2f", percentage);
 
-		int           totalBars = MessageAddon.LEVEL_METER_BAR.toString().length();
+		int           totalBars = 20;
 		StringBuilder builder   = new StringBuilder(totalBars);
 
-		String bar            = String.valueOf(MessageAddon.LEVEL_METER_BAR.toString().charAt(0));
-		int    completeBars   = (int) (totalBars * (exp / requiredExp));
-		int    incompleteBars = totalBars - completeBars;
+		char bar            = MessageAddon.LEVEL_METER_BAR.toString().charAt(0);
+		int  completeBars   = (int) (totalBars * (exp / requiredExp));
+		int  incompleteBars = totalBars - completeBars;
 
 		for (int i = 0; i < completeBars; i++)
 			builder.append(MessageAddon.LEVEL_COMPLETE_COLOR).append("&l").append(bar);
@@ -109,23 +109,15 @@ public class LevelCommand extends CommandHandler {
 				return;
 			}
 
-			double expValue = user.getLevel().getLevel();
-
 			switch (args[2].toLowerCase()) {
-				case "add" -> {
-					user.getLevel().addExperience(argAmount);
-					expValue += user.getLevel().getExperience();
-				}
-				case "remove" -> {
-					user.getLevel().removeExperience(argAmount);
-					expValue -= user.getLevel().getExperience();
-				}
+				case "add" -> user.getLevel().addExperience(argAmount);
+				case "remove" -> user.getLevel().removeExperience(argAmount);
 			}
 
 			String type = args[2].toUpperCase();
 			player.sendMessage(MessageAddon.valueOf("LEVEL_EXP_" + type)
 			                               .toString()
-			                               .replace("%experience%", String.valueOf(expValue)));
+			                               .replace("%experience%", String.valueOf(argAmount)));
 		});
 
 		expAdd.addSubArgument(expOptional);
@@ -158,23 +150,17 @@ public class LevelCommand extends CommandHandler {
 				return;
 			}
 
-			int levelValue = user.getLevel().getLevel();
+			int levels = 0;
 
 			switch (args[1].toLowerCase()) {
-				case "add" -> {
-					user.getLevel().addLevels(argAmount);
-					levelValue += user.getLevel().getLevel();
-				}
-				case "remove" -> {
-					user.getLevel().removeLevels(argAmount);
-					levelValue -= user.getLevel().getLevel();
-				}
+				case "add" -> levels = user.getLevel().addLevels(argAmount);
+				case "remove" -> levels = user.getLevel().removeLevels(argAmount);
 			}
 
 			String type = args[1].toUpperCase();
 			player.sendMessage(MessageAddon.valueOf("LEVEL_" + type)
 			                               .toString()
-			                               .replace("%level%", String.valueOf(levelValue)));
+			                               .replace("%level%", String.valueOf(levels)));
 		});
 
 		levelAdd.addSubArgument(levelOptional);
@@ -185,7 +171,7 @@ public class LevelCommand extends CommandHandler {
 			User<Player> user   = userManager.getUser(player);
 
 			Level  level        = user.getLevel();
-			String currentLevel = String.valueOf(level.getLevel());
+			String currentLevel = String.valueOf(level.getLevelValue());
 			String maxLevel     = String.valueOf(level.getMaxLevel());
 
 			double expTemp = level.getExperience(), requiredExp = level.experienceCalculation(level.nextLevel());
