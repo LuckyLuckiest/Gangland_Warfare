@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.logging.Level;
 
 public class Argument implements Cloneable {
 
@@ -134,7 +135,8 @@ public class Argument implements Cloneable {
 		} catch (Exception exception) {
 			if (exception.getMessage() != null) sender.sendMessage(exception.getMessage());
 			else sender.sendMessage("null");
-			exception.printStackTrace();
+
+			Bukkit.getLogger().log(Level.WARNING, exception.getMessage(), exception);
 		}
 	}
 
