@@ -6,32 +6,31 @@ import me.luckyraven.account.Account;
 import me.luckyraven.bounty.Bounty;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.economy.EconomyHandler;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.level.Level;
 import me.luckyraven.rank.Rank;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.color.Color;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 
+@Getter
+@Setter
 public class Gang extends Account<Integer, List<Member>> {
 
+	private final Set<Gang>      ally;
+	private final Level          level;
+	private final Bounty         bounty;
+	private final EconomyHandler economy;
 
-	private final @Getter Set<Gang> ally;
-
-	private @Getter
-	@Setter String name, displayName, color, description;
-	private @Getter
-	@Setter double balance;
-	private @Getter
-	@Setter long   created;
-
-	private @Getter Level  level;
-	private @Getter Bounty bounty;
+	private String name, displayName, color, description;
+	private long created;
 
 	public Gang(int id, List<Member> users, String name) {
 		this(id, users);
@@ -59,13 +58,13 @@ public class Gang extends Account<Integer, List<Member>> {
 		this.color = Color.LIGHT_BLUE.name();
 		this.description = "Conquering the hood";
 		this.created = Instant.now().toEpochMilli();
-		this.balance = 0D;
+		this.economy = new EconomyHandler(null);
 		this.bounty = new Bounty();
 		this.level = new Level();
 		this.ally = new HashSet<>();
 	}
 
-	public <T> void addMember(User<T> user, Member member, Rank rank) {
+	public void addMember(User<? extends OfflinePlayer> user, Member member, Rank rank) {
 		user.setGangId(this.getId());
 		user.addAccount(this);
 		addMember(member, rank);
@@ -93,7 +92,7 @@ public class Gang extends Account<Integer, List<Member>> {
 		setValue(users);
 	}
 
-	public <T> void removeMember(User<T> user, Member member) {
+	public void removeMember(User<? extends OfflinePlayer> user, Member member) {
 		if (!getGroup().contains(member)) return;
 		user.setGangId(-1);
 		user.removeAccount(this);
@@ -141,7 +140,8 @@ public class Gang extends Account<Integer, List<Member>> {
 	public String toString() {
 		return String.format(
 				"Gang:{id=%d,name=%s,description=%s,members=%s,created=%s,balance=%.2f,level=%.2f,bounty=%,.2f,ally=%s}",
-				getId(), name, description, getGroup(), created, balance, level.getExperience(), bounty.getAmount(), ally);
+				getId(), name, description, getGroup(), created, economy.getBalance(), level.getExperience(),
+				bounty.getAmount(), ally);
 	}
 
 }
