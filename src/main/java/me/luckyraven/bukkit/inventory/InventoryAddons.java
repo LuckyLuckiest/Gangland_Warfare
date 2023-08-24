@@ -48,7 +48,7 @@ public class InventoryAddons {
 		Preconditions.checkArgument(row > 0 && row < rows + 1,
 		                            String.format("Rows need to be between 1 and %d inclusive", rows));
 
-		// always 9 slots
+		// always nine slots
 		int slot = (row - 1) * 9;
 		for (int i = 0; i < 9; i++) {
 
