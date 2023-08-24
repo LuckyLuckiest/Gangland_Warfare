@@ -26,11 +26,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.sql.Types;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
-
 
 public final class CreateAccount implements Listener {
 
@@ -53,8 +48,8 @@ public final class CreateAccount implements Listener {
 		user.getEconomy().setBalance(SettingAddon.getUserInitialBalance());
 
 		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-			if (handler instanceof UserDatabase) {
-				initializeUserData(user, new DatabaseHelper(gangland, handler));
+			if (handler instanceof UserDatabase userDatabase) {
+				initializeUserData(user, userDatabase);
 				break;
 			}
 		// Add the user to a user manager group
@@ -67,31 +62,27 @@ public final class CreateAccount implements Listener {
 
 		Member newMember = new Member(player.getUniqueId());
 		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-			if (handler instanceof GangDatabase) {
-				initializeMemberData(newMember, new DatabaseHelper(gangland, handler));
+			if (handler instanceof GangDatabase gangDatabase) {
+				initializeMemberData(newMember, gangDatabase);
 				break;
 			}
 
 		memberManager.add(newMember);
 	}
 
-	public void initializeUserData(User<Player> user, DatabaseHelper helper) {
+	public void initializeUserData(User<Player> user, UserDatabase userDatabase) {
+		DatabaseHelper helper = new DatabaseHelper(gangland, userDatabase);
+
 		helper.runQueries(database -> {
 			// <--------------- Bank Info --------------->
-			Database bankTable   = database.table("bank");
-			String[] bankColumns = bankTable.getColumns().toArray(String[]::new);
+			Database bankTable = database.table("bank");
 
 			// check for bank table
 			Object[] bankInfo = bankTable.select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
 			                                     new int[]{Types.CHAR}, new String[]{"*"});
 			Bank bank = new Bank(user, "");
 			// create player data into database
-			if (bankInfo.length == 0) {
-				bankTable.insert(bankColumns, new Object[]{
-						user.getUser().getUniqueId(), bank.getName(), bank.getEconomy().getBalance()
-				}, new int[]{Types.CHAR, Types.VARCHAR, Types.DOUBLE});
-			}
-			// use player data
+			if (bankInfo.length == 0) userDatabase.insertBankTable(user);
 			else {
 				String name    = String.valueOf(bankInfo[1]);
 				double balance = (double) bankInfo[2];
@@ -103,36 +94,23 @@ public final class CreateAccount implements Listener {
 			user.addAccount(bank);
 
 			// <--------------- Data Info --------------->
-			Database dataTable   = database.table("data");
-			String[] dataColumns = dataTable.getColumns().toArray(String[]::new);
+			Database dataTable = database.table("data");
 
 			// check for data table
 			Object[] dataInfo = dataTable.select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
 			                                     new int[]{Types.CHAR}, new String[]{"*"});
-			// create player data into database
-			if (dataInfo.length == 0) {
-				Date          joined        = new Date(user.getUser().getFirstPlayed());
-				Instant       instant       = joined.toInstant();
-				LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-				dataTable.insert(dataColumns, new Object[]{
-						user.getUser().getUniqueId(), user.getKills(), user.getDeaths(), user.getMobKills(),
-						user.getGangId(), user.isHasBank(), user.getEconomy().getBalance(), user.getBounty(),
-						user.getLevel().getExperience(), localDateTime
-				}, new int[]{
-						Types.CHAR, Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.BOOLEAN,
-						Types.DOUBLE, Types.DOUBLE, Types.DOUBLE, Types.DATE
-				});
-			}
-			// use player data
+			// create player data into a database
+			if (dataInfo.length == 0) userDatabase.insertDataTable(user);
 			else {
-				int     kills    = (int) dataInfo[1];
-				int     deaths   = (int) dataInfo[2];
-				int     mobKills = (int) dataInfo[3];
-				int     gangId   = (int) dataInfo[4];
-				boolean hasBank  = (boolean) dataInfo[5];
-				double  balance  = (double) dataInfo[6];
-				double  bounty   = (double) dataInfo[7];
-				double  level    = (double) dataInfo[8];
+				int     kills      = (int) dataInfo[1];
+				int     deaths     = (int) dataInfo[2];
+				int     mobKills   = (int) dataInfo[3];
+				int     gangId     = (int) dataInfo[4];
+				boolean hasBank    = (boolean) dataInfo[5];
+				double  balance    = (double) dataInfo[6];
+				double  bounty     = (double) dataInfo[7];
+				int     level      = (int) dataInfo[8];
+				double  experience = (double) dataInfo[9];
 
 				user.setKills(kills);
 				user.setDeaths(deaths);
@@ -147,44 +125,39 @@ public final class CreateAccount implements Listener {
 				}
 
 				Level userLevel = user.getLevel();
-				userLevel.setExperience(level);
+				userLevel.setLevelValue(level);
+				userLevel.setExperience(experience);
 
 				Bounty userBounty = user.getBounty();
 				userBounty.setAmount(bounty);
 
-				if (userBounty.hasBounty() && SettingAddon.isBountyTimerEnable()) {
-					BountyEvent bountyEvent = new BountyEvent(userBounty);
-					bountyEvent.setUserBounty(user);
+				if (!(userBounty.hasBounty() && SettingAddon.isBountyTimerEnable())) return;
 
-					if (userBounty.getAmount() < SettingAddon.getBountyTimerMax()) {
-						RepeatingTimer repeatingTimer = userBounty.createTimer(gangland,
-						                                                       SettingAddon.getBountyTimeInterval(),
-						                                                       timer -> bountyExecutor(user,
-						                                                                               bountyEvent,
-						                                                                               timer, helper));
+				BountyEvent bountyEvent = new BountyEvent(userBounty);
+				bountyEvent.setUserBounty(user);
 
-						repeatingTimer.start();
-					}
+				if (userBounty.getAmount() >= SettingAddon.getBountyTimerMax()) return;
 
-				}
+				RepeatingTimer repeatingTimer = userBounty.createTimer(gangland, SettingAddon.getBountyTimeInterval(),
+				                                                       timer -> bountyExecutor(user, bountyEvent, timer,
+				                                                                               helper));
+				repeatingTimer.start();
 			}
 		});
 	}
 
-	public void initializeMemberData(Member member, DatabaseHelper helper) {
+	public void initializeMemberData(Member member, GangDatabase gangDatabase) {
+		DatabaseHelper helper = new DatabaseHelper(gangland, gangDatabase);
+
 		helper.runQueries(database -> {
-			Database config  = database.table("members");
-			String[] columns = config.getColumns().toArray(String[]::new);
+			Database config = database.table("members");
 
 			Object[] memberInfo = config.select("uuid = ?", new Object[]{member.getUuid()}, new int[]{Types.CHAR},
 			                                    new String[]{"*"});
 
-			if (memberInfo.length == 0) {
-				config.insert(columns, new Object[]{
-						member.getUuid(), member.getGangId(), member.getContribution(), member.getRank(),
-						member.getGangJoinDate()
-				}, new int[]{Types.CHAR, Types.INTEGER, Types.DOUBLE, Types.VARCHAR, Types.BIGINT});
-			} else {
+			// create member data into a database
+			if (memberInfo.length == 0) gangDatabase.insertMemberTable(member);
+			else {
 				RankManager rankManager = gangland.getInitializer().getRankManager();
 
 				int    gangId       = (int) memberInfo[1];

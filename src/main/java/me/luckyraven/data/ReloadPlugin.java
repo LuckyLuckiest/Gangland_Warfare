@@ -8,7 +8,6 @@ import me.luckyraven.account.gang.MemberManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.RankDatabase;
@@ -78,7 +77,7 @@ public class ReloadPlugin {
 
 		DatabaseManager databaseManager = initializer.getDatabaseManager();
 
-		DatabaseHandler userHandler = databaseManager.getDatabases().stream().filter(
+		UserDatabase userHandler = databaseManager.getDatabases().stream().filter(
 				handler -> handler instanceof UserDatabase).map(handler -> (UserDatabase) handler).findFirst().orElse(
 				null);
 
@@ -88,9 +87,8 @@ public class ReloadPlugin {
 		}
 
 		UserManager<Player> userManager = initializer.getUserManager();
-		DatabaseHelper      userHelper  = new DatabaseHelper(gangland, userHandler);
 
-		DatabaseHandler memberHandler = databaseManager.getDatabases().stream().filter(
+		GangDatabase memberHandler = databaseManager.getDatabases().stream().filter(
 				handler -> handler instanceof GangDatabase).map(handler -> (GangDatabase) handler).findFirst().orElse(
 				null);
 
@@ -99,8 +97,7 @@ public class ReloadPlugin {
 			return;
 		}
 
-		MemberManager  memberManager = initializer.getMemberManager();
-		DatabaseHelper memberHelper  = new DatabaseHelper(gangland, memberHandler);
+		MemberManager memberManager = initializer.getMemberManager();
 
 		if (resetCache) userManager.clear();
 
@@ -114,14 +111,14 @@ public class ReloadPlugin {
 					if (!Phone.hasPhone(player)) phone.addPhoneToInventory(player);
 				}
 
-				createAccount.initializeUserData(newUser, userHelper);
+				createAccount.initializeUserData(newUser, userHandler);
 				userManager.add(newUser);
 
 				// this member doesn't have a gang because they are new
 				Member member = memberManager.getMember(player.getUniqueId());
 				if (member == null) {
 					Member newMember = new Member(player.getUniqueId());
-					createAccount.initializeMemberData(newMember, memberHelper);
+					createAccount.initializeMemberData(newMember, memberHandler);
 					memberManager.add(newMember);
 				}
 			}
