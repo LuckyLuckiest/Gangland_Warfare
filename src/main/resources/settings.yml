@@ -115,14 +115,29 @@ User:
          Upgrade: 1
          Cost: 500
          Formula: "base * level ^ 1.8"
+   # When the user dies
    Death:
       Enable: true
+      # Money related configuration upon death
       Money:
+         # Command used when the user dies
          Command:
+            # If the command was enabled, it would ignore the [Lose_Money] option.
             Enable: false
-            Executable: "/glw eco withdraw %player% 20"
+            # The server executes all the executables.
+            Executable:
+               - "/glw eco withdraw %player% 20"
+         # When the user dies, they will either lose or gain money according to the value set
          Lose_Money: true
+         # The formula used when calculating the value to lose/gain.
+
+         # There are only five variables that can be used for the formula
+         # [balance: current balance, level: current level, experience: current experience, bounty: current
+         #  withholding bounty, wanted: current wanted level]
+         # Be careful that some values might be equal to zero
          Formula: "balance * 0.15"
+         # The amount of money the user should at most have to not lose/gain money
+         Threshold: 1_000
       Respawn:
          Enable: false
 

@@ -9,6 +9,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -40,9 +41,11 @@ public class SettingAddon {
 	private static @Getter double userSkillCost, userSkillExponential;
 	// user death
 	private static @Getter boolean deathEnable, deathMoneyCommandEnable, deathLoseMoney;
-	private static @Getter String deathMoneyCommandExecutable, deathLoseMoneyFormula;
+	private static @Getter List<String> deathMoneyCommandExecutables;
+	private static @Getter String       deathLoseMoneyFormula;
+	private static @Getter double       deathThreshold;
 	// bounty configuration
-	private static @Getter double bountyEachKillValue, bountyMaxKill;
+	private static @Getter double       bountyEachKillValue, bountyMaxKill;
 	private static @Getter boolean bountyTimerEnable;
 	private static @Getter double  bountyTimerMultiple, bountyTimerMax;
 	private static @Getter int     bountyTimeInterval;
@@ -113,9 +116,10 @@ public class SettingAddon {
 		// user death
 		deathEnable = settings.getBoolean("User.Death.Enable");
 		deathMoneyCommandEnable = settings.getBoolean("User.Death.Money.Command.Enable");
-		deathMoneyCommandExecutable = settings.getString("User.Death.Money.Command.Executable");
+		deathMoneyCommandExecutables = settings.getStringList("User.Death.Money.Command.Executable");
 		deathLoseMoney = !settings.getBoolean("User.Death.Lose_Money");
 		deathLoseMoneyFormula = settings.getString("User.Death.Money.Formula");
+		deathThreshold = settings.getDouble("User.Death.Money.Threshold");
 
 		// bounty
 		bountyEachKillValue = settings.getDouble("Bounty.Kill.Each");
