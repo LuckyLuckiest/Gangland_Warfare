@@ -25,6 +25,7 @@ import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.gang.GangMembersDamage;
 import me.luckyraven.listener.player.*;
 import me.luckyraven.rank.RankManager;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -35,9 +36,10 @@ public final class Initializer {
 	private final JavaPlugin plugin;
 
 	// on plugin load
-	private final @Getter InformationManager  informationManager;
-	private final @Getter UserManager<Player> userManager;
-	private final @Getter FileManager         fileManager;
+	private final @Getter InformationManager         informationManager;
+	private final @Getter UserManager<Player>        userManager;
+	private final @Getter UserManager<OfflinePlayer> offlineUserManager;
+	private final @Getter FileManager                fileManager;
 
 	// on plugin enable
 	private @Getter DatabaseManager databaseManager;
@@ -59,6 +61,7 @@ public final class Initializer {
 
 		// User manager
 		userManager = new UserManager<>();
+		offlineUserManager = new UserManager<>();
 
 		// File
 		fileManager = new FileManager(plugin);
