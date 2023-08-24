@@ -78,10 +78,10 @@ public class PeriodicalUpdates {
 	}
 
 	public void start() {
-		if (this.repeatingTimer != null) {
-			Gangland.getLog4jLogger().info("Initializing auto-save...");
-			this.repeatingTimer.startAsync();
-		}
+		if (this.repeatingTimer == null) return;
+
+		Gangland.getLog4jLogger().info("Initializing auto-save...");
+		this.repeatingTimer.startAsync();
 	}
 
 	private void updatingDatabase() {
@@ -91,11 +91,16 @@ public class PeriodicalUpdates {
 			if (handler instanceof UserDatabase userDatabase) {
 				// online users
 				updateUserData(gangland.getInitializer().getUserManager(), helper, userDatabase);
+
 				// offline users
-				updateUserData(gangland.getInitializer().getOfflineUserManager(), helper, userDatabase);
+				UserManager<OfflinePlayer> offlineUserManager = gangland.getInitializer().getOfflineUserManager();
+
+				updateUserData(offlineUserManager, helper, userDatabase);
+				offlineUserManager.clear();
 			} else if (handler instanceof GangDatabase gangDatabase) {
 				// gang data
 				updateGangData(gangland.getInitializer().getGangManager(), helper, gangDatabase);
+
 				// member data
 				updateMemberData(gangland.getInitializer().getMemberManager(), helper, gangDatabase);
 			} else if (handler instanceof RankDatabase rankDatabase) {
