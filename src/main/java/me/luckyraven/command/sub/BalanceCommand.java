@@ -40,7 +40,7 @@ public final class BalanceCommand extends CommandHandler {
 			User<Player> user = getGangland().getInitializer().getUserManager().getUser(player);
 			player.sendMessage(ChatUtil.color("&6" + player.getName() + "&7 balance:"));
 			player.sendMessage(ChatUtil.color(
-					"&a" + SettingAddon.getMoneySymbol() + SettingAddon.formatDouble(user.getBalance())));
+					"&a" + SettingAddon.getMoneySymbol() + SettingAddon.formatDouble(user.getEconomy().getBalance())));
 		} else {
 			commandSender.sendMessage(ChatUtil.informationMessage("Balance are for registered users"));
 		}

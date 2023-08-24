@@ -43,14 +43,15 @@ public class BankCommand extends CommandHandler {
 		Player       player = (Player) commandSender;
 		User<Player> user   = getGangland().getInitializer().getUserManager().getUser(player);
 
-		if (user.hasBank()) {
+		if (user.isHasBank()) {
 			for (Account<?, ?> account : user.getLinkedAccounts())
 				if (account instanceof Bank bank) {
 					player.sendMessage(ChatUtil.color(String.format("&6%s&7 bank information", player.getName()),
 					                                  String.format("&7%s&8: &a%s", "Name", bank.getName()),
 					                                  String.format("&7%s&8: &a%s%s", "Balance",
 					                                                SettingAddon.getMoneySymbol(),
-					                                                SettingAddon.formatDouble(bank.getBalance()))));
+					                                                SettingAddon.formatDouble(
+							                                                bank.getEconomy().getBalance()))));
 					break;
 				}
 		} else help(commandSender, 1);
@@ -66,7 +67,7 @@ public class BankCommand extends CommandHandler {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
-			if (user.hasBank()) {
+			if (user.isHasBank()) {
 				player.sendMessage(MessageAddon.BANK_EXIST.toString());
 				return;
 			}
@@ -81,23 +82,23 @@ public class BankCommand extends CommandHandler {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
-			if (user.hasBank()) {
+			if (user.isHasBank()) {
 				player.sendMessage(MessageAddon.BANK_EXIST.toString());
 				return;
 			}
 
-			if (user.getBalance() < SettingAddon.getBankCreateFee()) {
+			if (user.getEconomy().getBalance() < SettingAddon.getBankCreateFee()) {
 				player.sendMessage(MessageAddon.CANNOT_CREATE_BANK.toString());
 				return;
 			}
 
-			user.setBalance(user.getBalance() - SettingAddon.getBankCreateFee());
+			user.getEconomy().withdraw(SettingAddon.getBankCreateFee());
 			user.setHasBank(true);
 
 			for (Account<?, ?> account : user.getLinkedAccounts())
 				if (account instanceof Bank bank) {
 					bank.setName(createBankName.get(user).get());
-					bank.setBalance(SettingAddon.getBankInitialBalance());
+					bank.getEconomy().setBalance(SettingAddon.getBankInitialBalance());
 					break;
 				}
 
@@ -118,7 +119,7 @@ public class BankCommand extends CommandHandler {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
-			if (user.hasBank()) {
+			if (user.isHasBank()) {
 				player.sendMessage(MessageAddon.BANK_EXIST.toString());
 				return;
 			}
@@ -159,18 +160,18 @@ public class BankCommand extends CommandHandler {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
-			if (!user.hasBank()) {
+			if (!user.isHasBank()) {
 				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
 
 			for (Account<?, ?> account : user.getLinkedAccounts())
 				if (account instanceof Bank bank) {
-					user.setBalance(user.getBalance() + bank.getBalance() + SettingAddon.getBankCreateFee() / 2);
+					user.getEconomy().deposit(bank.getEconomy().getBalance() + SettingAddon.getBankCreateFee() / 2);
 					user.setHasBank(false);
 
 					bank.setName("");
-					bank.setBalance(0D);
+					bank.getEconomy().setBalance(0D);
 					break;
 				}
 
@@ -190,7 +191,7 @@ public class BankCommand extends CommandHandler {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
-			if (!user.hasBank()) {
+			if (!user.isHasBank()) {
 				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
@@ -229,7 +230,7 @@ public class BankCommand extends CommandHandler {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
-			if (!user.hasBank()) {
+			if (!user.isHasBank()) {
 				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
@@ -244,7 +245,7 @@ public class BankCommand extends CommandHandler {
 			Player player = (Player) sender;
 
 			User<Player> user = userManager.getUser(player);
-			if (!user.hasBank()) {
+			if (!user.isHasBank()) {
 				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
@@ -256,7 +257,7 @@ public class BankCommand extends CommandHandler {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
-			if (!user.hasBank()) {
+			if (!user.isHasBank()) {
 				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
@@ -277,20 +278,21 @@ public class BankCommand extends CommandHandler {
 				switch (args[1].toLowerCase()) {
 					case "deposit", "add" -> {
 						strArg = "deposit";
-						double inBank = bank.getBalance() + argAmount;
+						double inBank = bank.getEconomy().getBalance() + argAmount;
 
 						if (inBank > SettingAddon.getBankMaxBalance()) {
 							player.sendMessage(MessageAddon.CANNOT_EXCEED_MAXIMUM.toString());
 							break;
 						}
 
-						processMoney(user, bank, user.getBalance(), argAmount, bank.getBalance() + argAmount,
-						             user.getBalance() - argAmount);
+						processMoney(user, bank, user.getEconomy().getBalance(), argAmount, inBank,
+						             user.getEconomy().getBalance() - argAmount);
 					}
 					case "withdraw", "take" -> {
 						strArg = "withdraw";
-						processMoney(user, bank, bank.getBalance(), argAmount, bank.getBalance() - argAmount,
-						             user.getBalance() + argAmount);
+						processMoney(user, bank, bank.getEconomy().getBalance(), argAmount,
+						             bank.getEconomy().getBalance() - argAmount,
+						             user.getEconomy().getBalance() + argAmount);
 					}
 				}
 
@@ -312,7 +314,7 @@ public class BankCommand extends CommandHandler {
 			Player player = (Player) sender;
 
 			User<Player> user = userManager.getUser(player);
-			if (!user.hasBank()) {
+			if (!user.isHasBank()) {
 				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
@@ -321,7 +323,7 @@ public class BankCommand extends CommandHandler {
 				if (account instanceof Bank bank) {
 					player.sendMessage(MessageAddon.BANK_BALANCE_PLAYER.toString()
 					                                                   .replace("%balance%", SettingAddon.formatDouble(
-							                                                   bank.getBalance())));
+							                                                   bank.getEconomy().getBalance())));
 				}
 		}, getPermission() + ".balance");
 
@@ -347,8 +349,8 @@ public class BankCommand extends CommandHandler {
 		if (check == 0D) user.getUser().sendMessage(MessageAddon.CANNOT_TAKE_LESS_THAN_ZERO.toString());
 		else if (amount > check) user.getUser().sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 		else {
-			user.setBalance(inAccount);
-			bank.setBalance(inBank);
+			user.getEconomy().setBalance(inAccount);
+			bank.getEconomy().setBalance(inBank);
 		}
 	}
 

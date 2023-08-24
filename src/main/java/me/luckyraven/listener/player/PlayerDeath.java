@@ -33,10 +33,9 @@ public class PlayerDeath implements Listener {
 
 		// punish the player if they die
 		// take money from their balance (NOT THEIR BANK)
-		double oldBalance = user.getBalance();
-		double deduct     = amountDeduction(user);
+		double deduct = amountDeduction(user);
 
-		user.setBalance(oldBalance - deduct);
+		user.getEconomy().withdraw(deduct);
 
 		// inform the player
 		String type = SettingAddon.isDeathLoseMoney() ? "&c-" : "&a+";
@@ -46,7 +45,7 @@ public class PlayerDeath implements Listener {
 	private double amountDeduction(User<Player> user) {
 		Map<String, Double> variables = new HashMap<>();
 
-		variables.put("balance", user.getBalance());
+		variables.put("balance", user.getEconomy().getBalance());
 		variables.put("level", (double) user.getLevel().getLevel());
 		variables.put("exp", user.getLevel().getExperience());
 		variables.put("bounty", user.getBounty().getAmount());

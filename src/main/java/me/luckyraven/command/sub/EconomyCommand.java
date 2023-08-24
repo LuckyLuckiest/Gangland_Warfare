@@ -78,17 +78,19 @@ public class EconomyCommand extends CommandHandler {
 
 					switch (args[1].toLowerCase()) {
 						case "deposit", "add" -> {
-							if (user.getBalance() + argAmount <= SettingAddon.getUserMaxBalance())
+							if (user.getEconomy().getBalance() + argAmount <= SettingAddon.getUserMaxBalance())
 								valueChanged = argAmount;
 
-							value = Math.min(user.getBalance() + argAmount, SettingAddon.getUserMaxBalance());
+							value = Math.min(user.getEconomy().getBalance() + argAmount,
+							                 SettingAddon.getUserMaxBalance());
 							strValue = "deposit";
 						}
 						case "withdraw", "take" -> {
-							if (argAmount > user.getBalance()) valueChanged = user.getBalance();
-							else if (user.getBalance() - argAmount > 0D) valueChanged = argAmount;
+							if (argAmount > user.getEconomy().getBalance())
+								valueChanged = user.getEconomy().getBalance();
+							else if (user.getEconomy().getBalance() - argAmount > 0D) valueChanged = argAmount;
 
-							value = Math.max(user.getBalance() - argAmount, 0D);
+							value = Math.max(user.getEconomy().getBalance() - argAmount, 0D);
 							strValue = "withdraw";
 						}
 						case "set" -> {
@@ -105,7 +107,7 @@ public class EconomyCommand extends CommandHandler {
 					                                       .toString()
 					                                       .replace("%amount%",
 					                                                SettingAddon.formatDouble(valueChanged)));
-					user.setBalance(value);
+					user.getEconomy().setBalance(value);
 				}
 			} catch (NumberFormatException exception) {
 				sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[3]));
@@ -170,7 +172,7 @@ public class EconomyCommand extends CommandHandler {
 			for (Player player : players) {
 				User<Player> user = userManager.getUser(player);
 
-				user.setBalance(0D);
+				user.getEconomy().setBalance(0D);
 				user.getUser().sendMessage(MessageAddon.RESET_MONEY_PLAYER.toString());
 			}
 		}, getPermission() + ".reset");

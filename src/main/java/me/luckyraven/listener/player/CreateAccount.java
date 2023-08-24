@@ -50,7 +50,7 @@ public final class CreateAccount implements Listener {
 		Player       player = event.getPlayer();
 		User<Player> user   = new User<>(player);
 
-		user.setBalance(SettingAddon.getUserInitialBalance());
+		user.getEconomy().setBalance(SettingAddon.getUserInitialBalance());
 
 		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
 			if (handler instanceof UserDatabase) {
@@ -84,17 +84,20 @@ public final class CreateAccount implements Listener {
 			// check for bank table
 			Object[] bankInfo = bankTable.select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
 			                                     new int[]{Types.CHAR}, new String[]{"*"});
-			Bank bank = new Bank(user.getUser().getUniqueId(), user, "");
+			Bank bank = new Bank(user, "");
 			// create player data into database
 			if (bankInfo.length == 0) {
 				bankTable.insert(bankColumns, new Object[]{
-						user.getUser().getUniqueId(), bank.getName(), bank.getBalance()
+						user.getUser().getUniqueId(), bank.getName(), bank.getEconomy().getBalance()
 				}, new int[]{Types.CHAR, Types.VARCHAR, Types.DOUBLE});
 			}
 			// use player data
 			else {
-				bank.setName(String.valueOf(bankInfo[1]));
-				bank.setBalance((double) bankInfo[2]);
+				String name    = String.valueOf(bankInfo[1]);
+				double balance = (double) bankInfo[2];
+
+				bank.setName(name);
+				bank.getEconomy().setBalance(balance);
 			}
 
 			user.addAccount(bank);
@@ -113,7 +116,7 @@ public final class CreateAccount implements Listener {
 				LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
 				dataTable.insert(dataColumns, new Object[]{
 						user.getUser().getUniqueId(), user.getKills(), user.getDeaths(), user.getMobKills(),
-						user.getGangId(), user.hasBank(), user.getBalance(), user.getBounty(),
+						user.getGangId(), user.isHasBank(), user.getEconomy().getBalance(), user.getBounty(),
 						user.getLevel().getExperience(), localDateTime
 				}, new int[]{
 						Types.CHAR, Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.INTEGER, Types.BOOLEAN,
@@ -136,7 +139,7 @@ public final class CreateAccount implements Listener {
 				user.setMobKills(mobKills);
 				user.setGangId(gangId);
 				user.setHasBank(hasBank);
-				user.setBalance(balance);
+				user.getEconomy().setBalance(balance);
 
 				if (user.hasGang()) {
 					Gang gang = gangland.getInitializer().getGangManager().getGang(user.getGangId());

@@ -144,10 +144,10 @@ class GangDeleteCommand extends SubArgument {
 						gang.removeMember(gangUser, mem);
 						// distribute the balance according to the contribution
 						double freq    = mem.getContribution();
-						double balance = gang.getBalance();
+						double balance = gang.getEconomy().getBalance();
 						double amount  = Math.round(total) == 0 ? 0 : freq / total * balance;
-						gang.setBalance(balance - amount);
-						gangUser.setBalance(gangUser.getBalance() + amount);
+						gang.getEconomy().withdraw(amount);
+						gangUser.getEconomy().deposit(amount);
 
 						// inform the online users
 						gangUser.getUser().sendMessage(MessageAddon.KICKED_FROM_GANG.toString(),
@@ -183,10 +183,10 @@ class GangDeleteCommand extends SubArgument {
 
 							double balance = (double) data[1];
 							double freq    = mem.getContribution();
-							double gangBal = gang.getBalance();
+							double gangBal = gang.getEconomy().getBalance();
 							double amount  = Math.round(total) == 0 ? 0 : freq / total * gangBal;
 
-							gang.setBalance(gangBal - amount);
+							gang.getEconomy().withdraw(amount);
 
 							database.table("data").update("uuid = ?", new Object[]{uuid.toString()},
 							                              new int[]{Types.CHAR}, new String[]{"balance", "gang_id"},
@@ -197,7 +197,7 @@ class GangDeleteCommand extends SubArgument {
 
 					helper.runQueries(database -> {
 						double amount = SettingAddon.getGangCreateFee() / 4;
-						user.setBalance(user.getBalance() + amount);
+						user.getEconomy().deposit(amount);
 						player.sendMessage(MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
 						                                                    .replace("%amount%",
 						                                                             SettingAddon.formatDouble(

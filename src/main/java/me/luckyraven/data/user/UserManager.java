@@ -1,13 +1,14 @@
 package me.luckyraven.data.user;
 
 import com.google.common.base.Preconditions;
+import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class UserManager<T> {
+public class UserManager<T extends OfflinePlayer> {
 
 	private final Map<T, User<T>> users;
 

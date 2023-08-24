@@ -50,7 +50,7 @@ public class EntityDamage implements Listener {
 			if (deadUser.getBounty().hasBounty()) {
 				double amount = deadUser.getBounty().getAmount();
 
-				user.setBalance(user.getBalance() + amount);
+				user.getEconomy().deposit(amount);
 				deadUser.getBounty().resetBounty();
 
 				user.getUser().sendMessage(ChatUtil.color("&a+" + amount));

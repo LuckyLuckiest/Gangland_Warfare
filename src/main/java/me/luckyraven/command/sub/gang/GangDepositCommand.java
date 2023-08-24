@@ -67,16 +67,16 @@ class GangDepositCommand extends SubArgument {
 
 				List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
 
-				if (user.getBalance() < argAmount) {
+				if (user.getEconomy().getBalance() < argAmount) {
 					player.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 					return;
-				} else if (gang.getBalance() + argAmount > SettingAddon.getGangMaxBalance()) {
+				} else if (gang.getEconomy().getBalance() + argAmount > SettingAddon.getGangMaxBalance()) {
 					player.sendMessage(MessageAddon.CANNOT_EXCEED_MAXIMUM.toString());
 					return;
 				}
 
-				user.setBalance(user.getBalance() - argAmount);
-				gang.setBalance(gang.getBalance() + argAmount);
+				user.getEconomy().withdraw(argAmount);
+				gang.getEconomy().deposit(argAmount);
 				member.increaseContribution(contribution);
 				for (User<Player> gangUser : gangOnlineMembers) {
 					gangUser.getUser().sendMessage(MessageAddon.GANG_MONEY_DEPOSIT.toString()

@@ -99,7 +99,7 @@ public class BountyCommand extends CommandHandler {
 					if (sender instanceof Player senderPlayer) {
 						User<Player> userSender = userManager.getUser(senderPlayer);
 
-						userSender.setBalance(userSender.getBalance() + amount);
+						userSender.getEconomy().deposit(amount);
 						senderPlayer.sendMessage(MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
 						                                                          .replace("%amount%",
 						                                                                   SettingAddon.formatDouble(
@@ -148,14 +148,14 @@ public class BountyCommand extends CommandHandler {
 			if (sender instanceof Player senderPlayer) {
 				User<Player> userSender = userManager.getUser(senderPlayer);
 
-				if (userSender.getBalance() == 0D) {
+				if (userSender.getEconomy().getBalance() == 0D) {
 					senderPlayer.sendMessage(MessageAddon.CANNOT_TAKE_LESS_THAN_ZERO.toString());
 					return;
-				} else if (userSender.getBalance() < value) {
+				} else if (userSender.getEconomy().getBalance() < value) {
 					senderPlayer.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 					return;
 				} else {
-					userSender.setBalance(userSender.getBalance() - value);
+					userSender.getEconomy().withdraw(value);
 					senderPlayer.sendMessage(MessageAddon.WITHDRAW_MONEY_PLAYER.toString()
 					                                                           .replace("%amount%",
 					                                                                    SettingAddon.formatDouble(

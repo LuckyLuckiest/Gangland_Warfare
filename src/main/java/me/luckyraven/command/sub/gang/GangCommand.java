@@ -7,8 +7,8 @@ import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.account.gang.Member;
 import me.luckyraven.account.gang.MemberManager;
 import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.inventory.InventoryAddons;
+import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
@@ -178,7 +178,7 @@ public class GangCommand extends CommandHandler {
 	}
 
 	private Material itemToBalance(Gang gang) {
-		double balance    = gang.getBalance();
+		double balance    = gang.getEconomy().getBalance();
 		double maxBalance = SettingAddon.getGangMaxBalance();
 
 		// 1 max balance
@@ -203,7 +203,7 @@ public class GangCommand extends CommandHandler {
 
 		gui.setItem(11, material, "&bBalance", new ArrayList<>(
 				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
-				                      SettingAddon.formatDouble(gang.getBalance())))), true, false);
+				                      SettingAddon.formatDouble(gang.getEconomy().getBalance())))), true, false);
 
 		// id
 		gui.setItem(13, XMaterial.CRAFTING_TABLE.parseMaterial(), "&bID", new ArrayList<>(List.of("&e" + gang.getId())),

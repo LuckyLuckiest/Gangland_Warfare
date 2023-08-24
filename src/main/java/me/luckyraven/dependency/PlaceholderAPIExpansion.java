@@ -75,7 +75,8 @@ public class PlaceholderAPIExpansion extends PlaceholderExpansion {
 		User<Player>        user        = userManager.getUser(player);
 
 		if (user != null) {
-			if (params.equalsIgnoreCase(userStr + "balance")) return SettingAddon.formatDouble(user.getBalance());
+			if (params.equalsIgnoreCase(userStr + "balance")) return SettingAddon.formatDouble(
+					user.getEconomy().getBalance());
 			if (params.equalsIgnoreCase(userStr + "level")) return SettingAddon.formatDouble(
 					user.getLevel().getExperience());
 			if (params.equalsIgnoreCase(userStr + "bounty")) return SettingAddon.formatDouble(
@@ -96,7 +97,8 @@ public class PlaceholderAPIExpansion extends PlaceholderExpansion {
 			if (params.equalsIgnoreCase(gangStr + "description")) return gang.getDescription();
 			if (params.equalsIgnoreCase(gangStr + "bounty")) return SettingAddon.formatDouble(
 					gang.getBounty().getAmount());
-			if (params.equalsIgnoreCase(gangStr + "balance")) return SettingAddon.formatDouble(gang.getBalance());
+			if (params.equalsIgnoreCase(gangStr + "balance")) return SettingAddon.formatDouble(
+					gang.getEconomy().getBalance());
 			if (params.equalsIgnoreCase(gangStr + "level")) return SettingAddon.formatDouble(
 					gang.getLevel().getExperience());
 			if (params.equalsIgnoreCase(gangStr + "created")) return gang.getDateCreatedString();

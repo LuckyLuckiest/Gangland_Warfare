@@ -5,7 +5,7 @@ import me.luckyraven.account.type.Bank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHandler;
-import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
@@ -56,7 +56,7 @@ public class UserDatabase extends DatabaseHandler {
 		};
 	}
 
-	public void insertDataTable(User<Player> user) throws SQLException {
+	public void insertDataTable(User<? extends OfflinePlayer> user) throws SQLException {
 		Database      config          = getDatabase().table("data");
 		List<String>  columnsTemp     = config.getColumns();
 		String[]      columns         = columnsTemp.subList(1, columnsTemp.size()).toArray(String[]::new);
@@ -68,12 +68,12 @@ public class UserDatabase extends DatabaseHandler {
 
 		config.insert(columns, new Object[]{
 				user.getUser().getUniqueId(), user.getKills(), user.getDeaths(), user.getMobKills(), user.getGangId(),
-				user.hasBank(), user.getBalance(), user.getBounty().getAmount(), user.getLevel().getExperience(),
-				user.getUser().getFirstPlayed()
+				user.isHasBank(), user.getEconomy().getBalance(), user.getBounty().getAmount(),
+				user.getLevel().getExperience(), user.getUser().getFirstPlayed()
 		}, dataTypes);
 	}
 
-	public void updateDataTable(User<Player> user) throws SQLException {
+	public void updateDataTable(User<? extends OfflinePlayer> user) throws SQLException {
 		Database      config          = getDatabase().table("data");
 		List<String>  columnsTemp     = config.getColumns();
 		String[]      columns         = columnsTemp.subList(1, columnsTemp.size()).toArray(String[]::new);
@@ -85,13 +85,13 @@ public class UserDatabase extends DatabaseHandler {
 
 		config.update("uuid = ?", new Object[]{user.getUser().getUniqueId()}, new int[]{Types.CHAR}, columns,
 		              new Object[]{
-				              user.getKills(), user.getDeaths(), user.getMobKills(), user.getGangId(), user.hasBank(),
-				              user.getBalance(), user.getBounty().getAmount(), user.getLevel().getExperience(),
-				              user.getUser().getFirstPlayed()
+				              user.getKills(), user.getDeaths(), user.getMobKills(), user.getGangId(), user.isHasBank(),
+				              user.getEconomy().getBalance(), user.getBounty().getAmount(),
+				              user.getLevel().getExperience(), user.getUser().getFirstPlayed()
 		              }, dataTypes);
 	}
 
-	public void insertBankTable(User<Player> user) throws SQLException {
+	public void insertBankTable(User<? extends OfflinePlayer> user) throws SQLException {
 		for (Account<?, ?> account : user.getLinkedAccounts())
 			if (account instanceof Bank bank) {
 				Database      config          = getDatabase().table("bank");
@@ -103,13 +103,14 @@ public class UserDatabase extends DatabaseHandler {
 				for (int i = 0; i < dataTypes.length; i++)
 					dataTypes[i] = columnsDataType.get(i);
 
-				config.insert(columns, new Object[]{user.getUser().getUniqueId(), bank.getName(), bank.getBalance()},
-				              dataTypes);
+				config.insert(columns, new Object[]{
+						user.getUser().getUniqueId(), bank.getName(), bank.getEconomy().getBalance()
+				}, dataTypes);
 				break;
 			}
 	}
 
-	public void updateBankTable(User<Player> user) throws SQLException {
+	public void updateBankTable(User<? extends OfflinePlayer> user) throws SQLException {
 		for (Account<?, ?> account : user.getLinkedAccounts())
 			if (account instanceof Bank bank) {
 				Database      config          = getDatabase().table("bank");
@@ -123,7 +124,7 @@ public class UserDatabase extends DatabaseHandler {
 
 				getDatabase().table("bank").update("uuid = ?", new Object[]{user.getUser().getUniqueId()},
 				                                   new int[]{Types.CHAR}, columns,
-				                                   new Object[]{bank.getName(), bank.getBalance()},
+				                                   new Object[]{bank.getName(), bank.getEconomy().getBalance()},
 				                                   dataTypes);
 				break;
 			}

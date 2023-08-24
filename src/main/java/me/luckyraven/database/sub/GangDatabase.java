@@ -66,7 +66,7 @@ public class GangDatabase extends DatabaseHandler {
 		Database database = getDatabase().table("data");
 		database.insert(database.getColumns().toArray(String[]::new), new Object[]{
 				gang.getId(), gang.getName(), gang.getDisplayName(), gang.getColor(), gang.getDescription(),
-				gang.getBalance(), gang.getLevel().getExperience(), gang.getBounty().getAmount(), alias,
+				gang.getEconomy().getBalance(), gang.getLevel().getExperience(), gang.getBounty().getAmount(), alias,
 				gang.getCreated()
 		}, new int[]{
 				Types.INTEGER, Types.CHAR, Types.VARCHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.DOUBLE, Types.DOUBLE,
@@ -92,8 +92,9 @@ public class GangDatabase extends DatabaseHandler {
 			dataTypes[i] = columnsDataType.get(i);
 
 		config.update("id = ?", new Object[]{gang.getId()}, new int[]{Types.INTEGER}, columns, new Object[]{
-				gang.getName(), gang.getDisplayName(), gang.getColor(), gang.getDescription(), gang.getBalance(),
-				gang.getLevel().getExperience(), gang.getBounty().getAmount(), alias, gang.getCreated()
+				gang.getName(), gang.getDisplayName(), gang.getColor(), gang.getDescription(),
+				gang.getEconomy().getBalance(), gang.getLevel().getExperience(), gang.getBounty().getAmount(), alias,
+				gang.getCreated()
 		}, dataTypes);
 	}
 

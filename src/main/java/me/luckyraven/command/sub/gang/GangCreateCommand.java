@@ -5,7 +5,6 @@ import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.account.gang.Member;
 import me.luckyraven.account.gang.MemberManager;
-import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.*;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
@@ -78,7 +77,7 @@ class GangCreateCommand extends SubArgument {
 				return;
 			}
 
-			if (user.getBalance() < SettingAddon.getGangCreateFee()) {
+			if (user.getEconomy().getBalance() < SettingAddon.getGangCreateFee()) {
 				player.sendMessage(MessageAddon.CANNOT_CREATE_GANG.toString());
 				return;
 			}
@@ -94,8 +93,8 @@ class GangCreateCommand extends SubArgument {
 			member.setGangJoinDateLong(Instant.now().toEpochMilli());
 			gang.addMember(user, member, rankManager.get(SettingAddon.getGangRankTail()));
 			gang.setName(createGangName.get(user).get());
-			gang.setBalance(SettingAddon.getGangInitialBalance());
-			user.setBalance(user.getBalance() - SettingAddon.getGangCreateFee());
+			gang.getEconomy().setBalance(SettingAddon.getGangInitialBalance());
+			user.getEconomy().withdraw(SettingAddon.getGangCreateFee());
 
 			gangManager.add(gang);
 

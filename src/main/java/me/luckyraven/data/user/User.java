@@ -4,9 +4,11 @@ import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.account.Account;
 import me.luckyraven.bounty.Bounty;
+import me.luckyraven.economy.EconomyHandler;
 import me.luckyraven.level.Level;
 import me.luckyraven.phone.Phone;
 import me.luckyraven.wanted.Wanted;
+import org.bukkit.OfflinePlayer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,27 +18,20 @@ import java.util.List;
  *
  * @param <T> type of the user
  */
-public class User<T> {
+@Getter
+public class User<T extends OfflinePlayer> {
 
 
-	private final @Getter T user;
-
+	private final T                   user;
 	private final List<Account<?, ?>> linkedAccounts;
+	private final Bounty              bounty;
+	private final Level               level;
+	private final Wanted              wanted;
+	private final EconomyHandler      economy;
 
-	private @Getter
-	@Setter int kills, deaths, mobKills, gangId;
-	private @Getter
-	@Setter         double  balance;
+	private @Setter int kills, deaths, mobKills, gangId;
 	private @Setter boolean hasBank;
-
-	private @Getter Bounty bounty;
-	private @Getter Level  level;
-	private @Getter
-	@Setter         Wanted wanted;
-	private @Getter
-	@Setter         Phone  phone;
-//	private @Getter
-//	@Setter         Economy economy;
+	private @Setter Phone   phone;
 
 	/**
 	 * Instantiates a new Database.
@@ -45,12 +40,11 @@ public class User<T> {
 	 * @param kills    the kills
 	 * @param deaths   the deaths
 	 * @param mobKills the mob kills
-	 * @param balance  the balance
 	 * @param hasBank  they had a bank
 	 * @param gangId   the gang id
 	 */
-	public User(T user, int kills, int deaths, int mobKills, double balance, boolean hasBank, int gangId) {
-		this(user, kills, deaths, mobKills, balance, hasBank);
+	public User(T user, int kills, int deaths, int mobKills, boolean hasBank, int gangId) {
+		this(user, kills, deaths, mobKills, hasBank);
 		this.gangId = gangId;
 	}
 
@@ -61,15 +55,13 @@ public class User<T> {
 	 * @param kills    the kills
 	 * @param deaths   the deaths
 	 * @param mobKills the mob kills
-	 * @param balance  the balance
 	 * @param hasBank  they had a bank
 	 */
-	public User(T user, int kills, int deaths, int mobKills, double balance, boolean hasBank) {
+	public User(T user, int kills, int deaths, int mobKills, boolean hasBank) {
 		this(user);
 		this.kills = kills;
 		this.deaths = deaths;
 		this.mobKills = mobKills;
-		this.balance = balance;
 		this.hasBank = hasBank;
 	}
 
@@ -83,13 +75,13 @@ public class User<T> {
 		this.kills = 0;
 		this.deaths = 0;
 		this.mobKills = 0;
-		this.balance = 0D;
 		this.hasBank = false;
 		this.gangId = -1;
+		this.linkedAccounts = new ArrayList<>();
 		this.level = new Level();
 		this.bounty = new Bounty();
 		this.wanted = new Wanted();
-		this.linkedAccounts = new ArrayList<>();
+		this.economy = new EconomyHandler(this);
 	}
 
 	/**
@@ -106,15 +98,6 @@ public class User<T> {
 	 */
 	public boolean hasGang() {
 		return this.gangId != -1;
-	}
-
-	/**
-	 * Has bank boolean.
-	 *
-	 * @return the boolean
-	 */
-	public boolean hasBank() {
-		return hasBank;
 	}
 
 	/**
@@ -156,7 +139,7 @@ public class User<T> {
 	@Override
 	public String toString() {
 		return String.format("User:{data=%s,kd=%.2f,balance=%.2f,level=%.2f,gangId=%d}", user, getKillDeathRatio(),
-		                     balance, level.getExperience(), gangId);
+		                     economy.getBalance(), level.getExperience(), gangId);
 	}
 
 }

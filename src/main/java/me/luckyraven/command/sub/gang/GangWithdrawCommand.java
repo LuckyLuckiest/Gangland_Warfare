@@ -4,7 +4,6 @@ import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
 import me.luckyraven.account.gang.Member;
 import me.luckyraven.account.gang.MemberManager;
-import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.argument.SubArgument;
@@ -79,13 +78,13 @@ class GangWithdrawCommand extends SubArgument {
 				List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
 
 
-				if (gang.getBalance() < argAmount) {
+				if (gang.getEconomy().getBalance() < argAmount) {
 					player.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 					return;
 				}
 
-				user.setBalance(user.getBalance() + argAmount);
-				gang.setBalance(gang.getBalance() - argAmount);
+				user.getEconomy().deposit(argAmount);
+				gang.getEconomy().withdraw(argAmount);
 				// the user can get to negative value
 				member.decreaseContribution(contribution);
 				for (User<Player> gangUser : gangOnlineMembers) {
