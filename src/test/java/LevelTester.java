@@ -104,7 +104,7 @@ public class LevelTester {
 				case 6 -> {
 					System.out.println();
 					System.out.println("Current stats");
-					System.out.println("Level: " + level.getLevel());
+					System.out.println("Level: " + level.getLevelValue());
 					System.out.println("Experience: " + level.getExperience());
 					System.out.println("Formula: " + level.getFormula());
 					System.out.println();
