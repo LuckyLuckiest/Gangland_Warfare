@@ -48,10 +48,10 @@ public class EconomyHandler {
 	public void setBalance(double amount) {
 		this.balance = amount;
 
-		if (useUserInfo() && vaultEconomy != null) {
-			vaultEconomy.withdrawPlayer(user.getUser(), vaultEconomy.getBalance(user.getUser()));
-			vaultEconomy.depositPlayer(user.getUser(), amount);
-		}
+		if (!(useUserInfo() && vaultEconomy != null)) return;
+
+		vaultEconomy.withdrawPlayer(user.getUser(), vaultEconomy.getBalance(user.getUser()));
+		vaultEconomy.depositPlayer(user.getUser(), amount);
 	}
 
 	/**
