@@ -73,6 +73,7 @@ public class User<T extends OfflinePlayer> {
 	 *
 	 * @param user the user
 	 */
+	@SuppressWarnings("unchecked")
 	public User(T user) {
 		this.user = user;
 		this.kills = 0;
