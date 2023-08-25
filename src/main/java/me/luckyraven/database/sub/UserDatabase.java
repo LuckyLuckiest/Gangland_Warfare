@@ -87,7 +87,7 @@ public class UserDatabase extends DatabaseHandler {
 		              new Object[]{
 				              user.getKills(), user.getDeaths(), user.getMobKills(), user.getGangId(), user.isHasBank(),
 				              user.getEconomy().getBalance(), user.getBounty().getAmount(),
-				              user.getLevel().getExperience()
+				              user.getLevel().getLevelValue(), user.getLevel().getExperience()
 		              }, dataTypes);
 	}
 
