@@ -1,6 +1,7 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.data.placeholder.PlaceholderHandler;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.ScientificCalculator;
@@ -18,9 +19,11 @@ import java.util.Map;
 
 public class PlayerDeath implements Listener {
 
+	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
 
 	public PlayerDeath(Gangland gangland) {
+		this.gangland = gangland;
 		this.userManager = gangland.getInitializer().getUserManager();
 	}
 
@@ -37,10 +40,9 @@ public class PlayerDeath implements Listener {
 
 		if (SettingAddon.isDeathMoneyCommandEnable()) {
 			for (String executable : SettingAddon.getDeathMoneyCommandExecutables()) {
-				// TODO find a solution to placeholders, make it so that you have your custom placeholders, so everything is dynamic
-				String exec = executable.replace("/", "").replace("%player%", player.getName()).replace("%gang_id%",
-				                                                                                        String.valueOf(
-						                                                                                        user.getGangId()));
+				PlaceholderHandler placeholder = gangland.getInitializer().getPlaceholder();
+
+				String exec = placeholder.replacePlaceholder(player, executable.replace("/", ""));
 				Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), exec);
 			}
 		} else {
