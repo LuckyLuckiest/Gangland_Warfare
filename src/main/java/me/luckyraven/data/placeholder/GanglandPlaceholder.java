@@ -65,7 +65,8 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (user != null) {
 			if (parameters.equalsIgnoreCase(userStr + "balance")) return SettingAddon.formatDouble(
 					user.getEconomy().getBalance());
-			if (parameters.equalsIgnoreCase(userStr + "level")) return SettingAddon.formatDouble(
+			if (parameters.equalsIgnoreCase(userStr + "level")) return String.valueOf(user.getLevel().getLevelValue());
+			if (parameters.equalsIgnoreCase(userStr + "experience")) return SettingAddon.formatDouble(
 					user.getLevel().getExperience());
 			if (parameters.equalsIgnoreCase(userStr + "bounty")) return SettingAddon.formatDouble(
 					user.getBounty().getAmount());
@@ -103,7 +104,8 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 					gang.getBounty().getAmount());
 			if (parameters.equalsIgnoreCase(gangStr + "balance")) return SettingAddon.formatDouble(
 					gang.getEconomy().getBalance());
-			if (parameters.equalsIgnoreCase(gangStr + "level")) return SettingAddon.formatDouble(
+			if (parameters.equalsIgnoreCase(gangStr + "level")) return String.valueOf(gang.getLevel().getExperience());
+			if (parameters.equalsIgnoreCase(gangStr + "experience")) return SettingAddon.formatDouble(
 					gang.getLevel().getExperience());
 			if (parameters.equalsIgnoreCase(gangStr + "created")) return gang.getDateCreatedString();
 			if (parameters.equalsIgnoreCase(gangStr + "ally-list")) return gang.getAllyListString();
