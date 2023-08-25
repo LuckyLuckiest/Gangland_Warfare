@@ -41,7 +41,7 @@
 	- Auto-save.
     - Level system.
     - Used to unlock items.
-0.0.62-DEV:
+0.0.62-DEV: (DONE)
 	- Economy system (implement vault dependency).
 	- When the player dies, they are punished.
 	- Implement scoreboard (FastBoard)
@@ -52,6 +52,7 @@
     - Gang settings.
 0.0.65-DEV:
     - Add custom inventories in YAML files.
+    - Add custom scoreboard in YAML files.
 
 0.0.71-DEV:
 	- Gang spawn and home.
