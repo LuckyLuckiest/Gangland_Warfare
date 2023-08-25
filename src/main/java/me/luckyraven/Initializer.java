@@ -9,7 +9,13 @@ import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.CommandTabCompleter;
 import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.command.sub.*;
+import me.luckyraven.command.sub.debug.DebugCommand;
+import me.luckyraven.command.sub.debug.OptionCommand;
+import me.luckyraven.command.sub.debug.ReadNBTCommand;
+import me.luckyraven.command.sub.ReloadCommand;
 import me.luckyraven.command.sub.gang.GangCommand;
+import me.luckyraven.data.placeholder.GanglandPlaceholder;
+import me.luckyraven.data.placeholder.replacer.Replacer;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseManager;
@@ -42,15 +48,16 @@ public final class Initializer {
 	private final @Getter FileManager                fileManager;
 
 	// on plugin enable
-	private @Getter DatabaseManager databaseManager;
-	private @Getter GangManager     gangManager;
-	private @Getter MemberManager   memberManager;
-	private @Getter ListenerManager listenerManager;
-	private @Getter CommandManager  commandManager;
-	private @Getter RankManager     rankManager;
-	private @Getter LanguageLoader  languageLoader;
+	private @Getter DatabaseManager     databaseManager;
+	private @Getter GangManager         gangManager;
+	private @Getter MemberManager       memberManager;
+	private @Getter ListenerManager     listenerManager;
+	private @Getter CommandManager      commandManager;
+	private @Getter RankManager         rankManager;
+	private @Getter LanguageLoader      languageLoader;
+	private @Getter GanglandPlaceholder placeholder;
 	// Addons
-	private @Getter SettingAddon    settingAddon;
+	private @Getter SettingAddon        settingAddon;
 
 
 	public Initializer(JavaPlugin plugin) {
@@ -106,6 +113,11 @@ public final class Initializer {
 		if (plugin instanceof Gangland gangland) {
 			commandManager = new CommandManager(gangland);
 			commands(gangland);
+		}
+
+		// Placeholder
+		if (plugin instanceof Gangland gangland) {
+			placeholder = new GanglandPlaceholder(gangland, Replacer.Closure.PERCENT);
 		}
 
 	}
