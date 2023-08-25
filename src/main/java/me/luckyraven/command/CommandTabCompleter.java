@@ -2,9 +2,9 @@ package me.luckyraven.command;
 
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ConfirmArgument;
-import me.luckyraven.command.sub.DebugCommand;
-import me.luckyraven.command.sub.OptionCommand;
-import me.luckyraven.command.sub.ReadNBTCommand;
+import me.luckyraven.command.sub.debug.DebugCommand;
+import me.luckyraven.command.sub.debug.OptionCommand;
+import me.luckyraven.command.sub.debug.ReadNBTCommand;
 import me.luckyraven.datastructure.Tree;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;

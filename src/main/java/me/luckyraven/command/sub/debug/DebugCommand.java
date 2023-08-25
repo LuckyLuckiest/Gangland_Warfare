@@ -1,9 +1,6 @@
-package me.luckyraven.command.sub;
+package me.luckyraven.command.sub.debug;
 
 import com.cryptomorin.xseries.XMaterial;
-import me.clip.placeholderapi.PlaceholderAPIPlugin;
-import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-import me.clip.placeholderapi.expansion.manager.LocalExpansionManager;
 import me.luckyraven.Gangland;
 import me.luckyraven.account.gang.Gang;
 import me.luckyraven.account.gang.GangManager;
@@ -13,6 +10,7 @@ import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.data.placeholder.PlaceholderHandler;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.JsonFormatter;
@@ -143,18 +141,21 @@ public class DebugCommand extends CommandHandler {
 			}
 		});
 
+		// permissions list
 		Argument perm = new Argument("perms", getArgumentTree(), (argument, sender, args) -> {
 			String[] permissions = Bukkit.getPluginManager().getPermissions().stream().map(Permission::getName).filter(
 					name -> name.startsWith("gangland")).sorted().toArray(String[]::new);
 			sender.sendMessage(permissions);
 		});
 
+		// all settings data
 		String[] setOpt = {"settings", "setting"};
 		Argument settingOptions = new Argument(setOpt, getArgumentTree(), (argument, sender, args) -> {
 			JsonFormatter jsonFormatter = new JsonFormatter();
 			sender.sendMessage(convertToJson(jsonFormatter.createJson(SettingAddon.getSettingsMap())));
 		});
 
+		// all settings placeholder
 		Argument setPlaceholder = new Argument("placeholder", getArgumentTree(), (argument, sender, args) -> {
 			JsonFormatter jsonFormatter = new JsonFormatter();
 			sender.sendMessage(convertToJson(jsonFormatter.createJson(SettingAddon.getSettingsPlaceholder())));
@@ -162,22 +163,26 @@ public class DebugCommand extends CommandHandler {
 
 		settingOptions.addSubArgument(setPlaceholder);
 
-		Argument placeholder = new Argument("placeholder", getArgumentTree(), (argument, sender, args) -> {
-			LocalExpansionManager expansionManager = PlaceholderAPIPlugin.getInstance().getLocalExpansionManager();
+		// testing placeholder
+		Argument placeholder = new Argument("placeholder-data", getArgumentTree(), (argument, sender, args) -> {
+			if (sender instanceof Player player) {
+				PlaceholderHandler handler = gangland.getInitializer().getPlaceholder();
 
-			for (PlaceholderExpansion expansion : expansionManager.getExpansions()) {
-				String identifier = expansion.getIdentifier();
+				String[] placeholders = {"%player%", "%info%", "%user_gang-id%"};
 
-				if (!identifier.equalsIgnoreCase("gangland")) continue;
-
-				sender.sendMessage(expansion.getPlaceholders().toArray(String[]::new));
+				Arrays.stream(placeholders).forEach(
+						string -> sender.sendMessage(string + " -> " + handler.replacePlaceholder(player, string)));
+			} else {
+				sender.sendMessage("Can't process non-player data.");
 			}
 		});
 
+		// force update data
 		Argument updateData = new Argument("update-data", getArgumentTree(), (argument, sender, args) -> {
 			gangland.getPeriodicalUpdates().forceUpdate();
 		});
 
+		// all-inventory name space key data
 		Argument inventoriesData = new Argument("inv-data", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(InventoryHandler.getInventories()
 			                                   .keySet()

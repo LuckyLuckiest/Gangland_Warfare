@@ -1,4 +1,4 @@
-package me.luckyraven.command.sub;
+package me.luckyraven.command.sub.debug;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.account.gang.Gang;
