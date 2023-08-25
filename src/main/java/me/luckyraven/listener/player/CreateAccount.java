@@ -55,6 +55,8 @@ public final class CreateAccount implements Listener {
 		// Add the user to a user manager group
 		userManager.add(user);
 
+		user.getScoreboard().start();
+
 		// need to check if the user already registered
 		Member member = memberManager.getMember(player.getUniqueId());
 

@@ -7,8 +7,10 @@ import me.luckyraven.bounty.Bounty;
 import me.luckyraven.economy.EconomyHandler;
 import me.luckyraven.level.Level;
 import me.luckyraven.phone.Phone;
+import me.luckyraven.scoreboard.Scoreboard;
 import me.luckyraven.wanted.Wanted;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +30,7 @@ public class User<T extends OfflinePlayer> {
 	private final Level               level;
 	private final Wanted              wanted;
 	private final EconomyHandler      economy;
+	private final Scoreboard          scoreboard;
 
 	private @Setter int kills, deaths, mobKills, gangId;
 	private @Setter boolean hasBank;
@@ -82,6 +85,8 @@ public class User<T extends OfflinePlayer> {
 		this.bounty = new Bounty();
 		this.wanted = new Wanted();
 		this.economy = new EconomyHandler(this);
+		if (user instanceof Player) this.scoreboard = new Scoreboard((User<Player>) this);
+		else this.scoreboard = null;
 	}
 
 	/**

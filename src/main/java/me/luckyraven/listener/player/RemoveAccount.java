@@ -26,6 +26,8 @@ public class RemoveAccount implements Listener {
 		if (bountyTimer != null) bountyTimer.stop();
 		// Remove the user from a user manager group
 		userManager.remove(user);
+
+		user.getScoreboard().end();
 	}
 
 }
