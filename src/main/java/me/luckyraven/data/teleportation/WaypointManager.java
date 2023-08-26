@@ -1,7 +1,6 @@
 package me.luckyraven.data.teleportation;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.data.rank.Rank;
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.WaypointDatabase;
@@ -115,7 +114,7 @@ public class WaypointManager {
 				tempId++;
 			}
 
-			Rank.setID(tempId - 1);
+			Waypoint.setID(tempId - 1);
 		});
 	}
 
