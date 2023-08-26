@@ -2,11 +2,11 @@ package me.luckyraven.command.sub.gang;
 
 import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.Gangland;
-import me.luckyraven.account.gang.Gang;
-import me.luckyraven.account.gang.GangManager;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.inventory.InventoryAddons;
+import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
@@ -30,9 +30,7 @@ class GangColorCommand extends SubArgument {
 
 	protected GangColorCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
 	                           GangManager gangManager) {
-		super("color", tree, parent);
-
-		setPermission(parent.getPermission() + ".color");
+		super(new String[]{"color"}, tree, "color", parent);
 
 		this.gangland = gangland;
 		this.userManager = userManager;
@@ -50,7 +48,8 @@ class GangColorCommand extends SubArgument {
 				return;
 			}
 
-			InventoryHandler colorGUI = new InventoryHandler(gangland, "&5&lChoose a color", InventoryHandler.MAX_SLOTS, player);
+			InventoryHandler colorGUI = new InventoryHandler(gangland, "&5&lChoose a color", InventoryHandler.MAX_SLOTS,
+			                                                 player);
 
 			int row = 2, column = 2;
 			for (Color color : Color.values()) {
@@ -70,7 +69,8 @@ class GangColorCommand extends SubArgument {
 				ItemBuilder itemBuilder = new ItemBuilder(material).setDisplayName(name);
 
 				colorGUI.setItem((row - 1) * 9 + (column - 1), itemBuilder, false, (player1, inventory, item) -> {
-					InventoryHandler confirmGUI = new InventoryHandler(gangland, "&4&lAre you sure?", InventoryHandler.MAX_SLOTS, player1);
+					InventoryHandler confirmGUI = new InventoryHandler(gangland, "&4&lAre you sure?",
+					                                                   InventoryHandler.MAX_SLOTS, player1);
 					confirmGUI.setItem(22, item.build(), false);
 
 					Material mat = ColorUtil.getMaterialByColor(colorName, MaterialType.STAINED_GLASS_PANE.name());

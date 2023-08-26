@@ -1,7 +1,7 @@
 package me.luckyraven.database.sub;
 
-import me.luckyraven.account.Account;
-import me.luckyraven.account.type.Bank;
+import me.luckyraven.data.account.Account;
+import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHandler;

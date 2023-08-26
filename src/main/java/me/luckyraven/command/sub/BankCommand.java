@@ -1,8 +1,8 @@
 package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.account.Account;
-import me.luckyraven.account.type.Bank;
+import me.luckyraven.data.account.Account;
+import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ConfirmArgument;

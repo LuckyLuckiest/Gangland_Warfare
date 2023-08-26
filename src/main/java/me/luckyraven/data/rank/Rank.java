@@ -1,4 +1,4 @@
-package me.luckyraven.rank;
+package me.luckyraven.data.rank;
 
 import lombok.Getter;
 import lombok.Setter;

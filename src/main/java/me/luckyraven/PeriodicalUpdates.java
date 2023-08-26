@@ -1,9 +1,9 @@
 package me.luckyraven;
 
-import me.luckyraven.account.gang.Gang;
-import me.luckyraven.account.gang.GangManager;
-import me.luckyraven.account.gang.Member;
-import me.luckyraven.account.gang.MemberManager;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
@@ -13,8 +13,8 @@ import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.RankDatabase;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.rank.Rank;
-import me.luckyraven.rank.RankManager;
+import me.luckyraven.data.rank.Rank;
+import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.timer.RepeatingTimer;
 import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;

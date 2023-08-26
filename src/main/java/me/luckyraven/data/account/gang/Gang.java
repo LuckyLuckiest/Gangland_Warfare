@@ -1,15 +1,15 @@
-package me.luckyraven.account.gang;
+package me.luckyraven.data.account.gang;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.account.Account;
+import me.luckyraven.data.account.Account;
 import me.luckyraven.bounty.Bounty;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.economy.EconomyHandler;
+import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.level.Level;
-import me.luckyraven.rank.Rank;
+import me.luckyraven.data.rank.Rank;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.color.Color;
 import org.bukkit.Bukkit;

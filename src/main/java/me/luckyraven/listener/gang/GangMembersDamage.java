@@ -1,8 +1,8 @@
 package me.luckyraven.listener.gang;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.account.gang.Gang;
-import me.luckyraven.account.gang.GangManager;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import org.bukkit.entity.Player;

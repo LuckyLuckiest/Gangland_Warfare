@@ -1,8 +1,8 @@
-package me.luckyraven.account.gang;
+package me.luckyraven.data.account.gang;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.rank.Rank;
+import me.luckyraven.data.rank.Rank;
 import org.jetbrains.annotations.Nullable;
 
 import java.text.SimpleDateFormat;

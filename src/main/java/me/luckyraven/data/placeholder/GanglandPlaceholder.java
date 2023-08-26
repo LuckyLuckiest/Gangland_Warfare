@@ -1,12 +1,12 @@
 package me.luckyraven.data.placeholder;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.account.Account;
-import me.luckyraven.account.gang.Gang;
-import me.luckyraven.account.gang.GangManager;
-import me.luckyraven.account.gang.Member;
-import me.luckyraven.account.gang.MemberManager;
-import me.luckyraven.account.type.Bank;
+import me.luckyraven.data.account.Account;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.data.placeholder.replacer.Replacer;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;

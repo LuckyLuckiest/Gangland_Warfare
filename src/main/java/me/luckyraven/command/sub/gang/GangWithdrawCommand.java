@@ -1,9 +1,9 @@
 package me.luckyraven.command.sub.gang;
 
-import me.luckyraven.account.gang.Gang;
-import me.luckyraven.account.gang.GangManager;
-import me.luckyraven.account.gang.Member;
-import me.luckyraven.account.gang.MemberManager;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.argument.SubArgument;

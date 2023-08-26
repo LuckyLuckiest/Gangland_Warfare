@@ -1,8 +1,8 @@
 package me.luckyraven;
 
 import lombok.Getter;
-import me.luckyraven.account.gang.GangManager;
-import me.luckyraven.account.gang.MemberManager;
+import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.CommandManager;
@@ -12,7 +12,6 @@ import me.luckyraven.command.sub.*;
 import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.OptionCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
-import me.luckyraven.command.sub.ReloadCommand;
 import me.luckyraven.command.sub.gang.GangCommand;
 import me.luckyraven.data.placeholder.GanglandPlaceholder;
 import me.luckyraven.data.placeholder.replacer.Replacer;
@@ -30,7 +29,7 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.gang.GangMembersDamage;
 import me.luckyraven.listener.player.*;
-import me.luckyraven.rank.RankManager;
+import me.luckyraven.data.rank.RankManager;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -45,9 +44,9 @@ public final class Initializer {
 	private final @Getter InformationManager         informationManager;
 	private final @Getter UserManager<Player>        userManager;
 	private final @Getter UserManager<OfflinePlayer> offlineUserManager;
-	private final @Getter FileManager                fileManager;
 
 	// on plugin enable
+	private @Getter FileManager         fileManager;
 	private @Getter DatabaseManager     databaseManager;
 	private @Getter GangManager         gangManager;
 	private @Getter MemberManager       memberManager;
@@ -69,13 +68,13 @@ public final class Initializer {
 		// User manager
 		userManager = new UserManager<>();
 		offlineUserManager = new UserManager<>();
-
-		// File
-		fileManager = new FileManager(plugin);
-		files();
 	}
 
 	public void postInitialize() {
+		// File
+		fileManager = new FileManager(plugin);
+		files();
+
 		// Database
 		databaseManager = new DatabaseManager(plugin);
 		databases();
@@ -166,6 +165,7 @@ public final class Initializer {
 			listenerManager.addEvent(new EntityDamage(gangland));
 			listenerManager.addEvent(new BountyIncrease(gangland));
 			listenerManager.addEvent(new PlayerDeath(gangland));
+			listenerManager.addEvent(new LevelUp(gangland));
 			if (SettingAddon.isPhoneEnabled()) listenerManager.addEvent(new PhoneItem(gangland));
 
 			// gang events

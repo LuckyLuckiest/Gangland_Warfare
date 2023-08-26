@@ -1,17 +1,17 @@
 package me.luckyraven.command.sub.gang;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.account.gang.Gang;
-import me.luckyraven.account.gang.GangManager;
-import me.luckyraven.account.gang.Member;
-import me.luckyraven.account.gang.MemberManager;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.command.argument.*;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.rank.RankManager;
+import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeUtil;

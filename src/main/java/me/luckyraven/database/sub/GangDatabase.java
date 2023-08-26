@@ -1,7 +1,7 @@
 package me.luckyraven.database.sub;
 
-import me.luckyraven.account.gang.Gang;
-import me.luckyraven.account.gang.Member;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHandler;
 import org.bukkit.plugin.java.JavaPlugin;

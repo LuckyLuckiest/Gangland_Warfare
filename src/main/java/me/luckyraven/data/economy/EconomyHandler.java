@@ -1,4 +1,4 @@
-package me.luckyraven.economy;
+package me.luckyraven.data.economy;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,4 +1,4 @@
-package me.luckyraven.account.gang;
+package me.luckyraven.data.account.gang;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.database.DatabaseHelper;

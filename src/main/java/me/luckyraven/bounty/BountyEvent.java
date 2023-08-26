@@ -2,7 +2,7 @@ package me.luckyraven.bounty;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.account.gang.Gang;
+import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.user.User;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;

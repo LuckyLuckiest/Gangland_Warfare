@@ -1,10 +1,10 @@
-package me.luckyraven.account.type;
+package me.luckyraven.data.account.type;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.account.Account;
+import me.luckyraven.data.account.Account;
 import me.luckyraven.data.user.User;
-import me.luckyraven.economy.EconomyHandler;
+import me.luckyraven.data.economy.EconomyHandler;
 import org.bukkit.OfflinePlayer;
 
 import java.util.UUID;

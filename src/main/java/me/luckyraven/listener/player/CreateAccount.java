@@ -1,10 +1,10 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.account.gang.Gang;
-import me.luckyraven.account.gang.Member;
-import me.luckyraven.account.gang.MemberManager;
-import me.luckyraven.account.type.Bank;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.bounty.Bounty;
 import me.luckyraven.bounty.BountyEvent;
 import me.luckyraven.data.user.User;
@@ -16,8 +16,8 @@ import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.level.Level;
-import me.luckyraven.rank.Rank;
-import me.luckyraven.rank.RankManager;
+import me.luckyraven.data.rank.Rank;
+import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.timer.RepeatingTimer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -84,7 +84,7 @@ public final class CreateAccount implements Listener {
 			                                     new int[]{Types.CHAR}, new String[]{"*"});
 			Bank bank = new Bank(user, "");
 			// create player data into database
-			if (bankInfo.length == 0) userDatabase.insertBankTable(user);
+			if (bankInfo.length == 0) if (!SettingAddon.isAutoSave()) userDatabase.insertBankTable(user);
 			else {
 				String name    = String.valueOf(bankInfo[1]);
 				double balance = (double) bankInfo[2];
@@ -102,7 +102,7 @@ public final class CreateAccount implements Listener {
 			Object[] dataInfo = dataTable.select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
 			                                     new int[]{Types.CHAR}, new String[]{"*"});
 			// create player data into a database
-			if (dataInfo.length == 0) userDatabase.insertDataTable(user);
+			if (dataInfo.length == 0) if (!SettingAddon.isAutoSave()) userDatabase.insertDataTable(user);
 			else {
 				int     kills      = (int) dataInfo[1];
 				int     deaths     = (int) dataInfo[2];
@@ -158,7 +158,7 @@ public final class CreateAccount implements Listener {
 			                                    new String[]{"*"});
 
 			// create member data into a database
-			if (memberInfo.length == 0) gangDatabase.insertMemberTable(member);
+			if (memberInfo.length == 0) if (!SettingAddon.isAutoSave()) gangDatabase.insertMemberTable(member);
 			else {
 				RankManager rankManager = gangland.getInitializer().getRankManager();
 
