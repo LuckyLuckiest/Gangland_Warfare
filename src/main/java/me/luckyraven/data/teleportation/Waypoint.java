@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 @Getter
 public class Waypoint {
 
-	protected static @Setter int ID = 0;
+	private static int ID = 0;
 
 	private final String name;
 
@@ -37,6 +37,10 @@ public class Waypoint {
 		this.cooldown = this.shield;
 		this.cost = this.radius = 0D;
 		this.usedId = ++ID;
+	}
+
+	protected static void setID(int id) {
+		Waypoint.ID = id;
 	}
 
 	public void setCoordinates(String world, double x, double y, double z, float yaw, float pitch) {

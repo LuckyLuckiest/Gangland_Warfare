@@ -9,7 +9,7 @@ import java.util.List;
 
 public class Rank {
 
-	private static @Setter int ID = 0;
+	private static int ID = 0;
 
 	private final @Getter String          name;
 	private final @Getter Tree.Node<Rank> node;
@@ -27,6 +27,10 @@ public class Rank {
 		this.permissions = permissions;
 		this.node = new Tree.Node<>(this);
 		this.usedId = ++ID;
+	}
+
+	protected static void setID(int id) {
+		Rank.ID = id;
 	}
 
 	public boolean match(int id) {
