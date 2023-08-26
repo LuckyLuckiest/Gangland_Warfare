@@ -2,12 +2,12 @@ package me.luckyraven.data.user;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.bukkit.scoreboard.Scoreboard;
 import me.luckyraven.data.account.Account;
-import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.data.economy.EconomyHandler;
+import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.phone.Phone;
-import me.luckyraven.bukkit.scoreboard.Scoreboard;
 import me.luckyraven.feature.wanted.Wanted;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -76,9 +76,7 @@ public class User<T extends OfflinePlayer> {
 	@SuppressWarnings("unchecked")
 	public User(T user) {
 		this.user = user;
-		this.kills = 0;
-		this.deaths = 0;
-		this.mobKills = 0;
+		this.kills = this.deaths = this.mobKills = 0;
 		this.hasBank = false;
 		this.gangId = -1;
 		this.linkedAccounts = new ArrayList<>();
