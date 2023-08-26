@@ -74,7 +74,7 @@ public class LevelTester {
 						amount = 0D;
 					}
 
-					level.addExperience(amount);
+					level.addExperience(amount, null);
 					System.out.printf("Added %.2f experience level.\n", amount);
 
 				}
