@@ -7,8 +7,8 @@ import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.RankDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.SettingAddon;
+import org.jetbrains.annotations.Nullable;
 
-import java.sql.Types;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -118,6 +118,7 @@ public class RankManager {
 		return ranks.get(id);
 	}
 
+	@Nullable
 	public Rank get(String name) {
 		return ranks.values().stream().filter(rank -> rank.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
 	}
@@ -143,17 +144,7 @@ public class RankManager {
 				rank.setUsedId(tempId);
 				ranks.put(tempId, rank);
 
-				String permissions = database.createList(rank.getPermissions());
-				String children = database.createList(rank.getNode()
-				                                          .getChildren()
-				                                          .stream()
-				                                          .map(Tree.Node::getData)
-				                                          .map(Rank::getName)
-				                                          .toList());
-
-				config.insert(config.getColumns().toArray(String[]::new),
-				              new Object[]{rank.getUsedId(), rank.getName(), permissions, children},
-				              new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR});
+				rankDatabase.insertDataTable(rank);
 
 				tempId++;
 			}
