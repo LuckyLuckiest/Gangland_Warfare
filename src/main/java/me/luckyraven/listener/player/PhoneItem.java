@@ -3,8 +3,8 @@ package me.luckyraven.listener.player;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.feature.phone.Phone;
+import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -21,9 +21,11 @@ import org.bukkit.inventory.ItemStack;
 
 public class PhoneItem implements Listener {
 
+	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
 
 	public PhoneItem(Gangland gangland) {
+		this.gangland = gangland;
 		this.userManager = gangland.getInitializer().getUserManager();
 	}
 
@@ -32,7 +34,7 @@ public class PhoneItem implements Listener {
 		// when the user joins, check if their inventory contains the specific nbt item
 		// if they don't have the item then add it to the inventory
 		Player player = event.getPlayer();
-		Phone  phone  = new Phone(player, SettingAddon.getPhoneName());
+		Phone  phone  = new Phone(gangland, player, SettingAddon.getPhoneName());
 
 		if (!Phone.hasPhone(player)) phone.addPhoneToInventory(player);
 
@@ -115,7 +117,7 @@ public class PhoneItem implements Listener {
 		User<Player> user   = userManager.getUser(player);
 
 		if (user.getPhone() == null && !Phone.hasPhone(player)) {
-			Phone phone = new Phone(player, SettingAddon.getPhoneName());
+			Phone phone = new Phone(gangland, player, SettingAddon.getPhoneName());
 
 			phone.addPhoneToInventory(player);
 			user.setPhone(phone);

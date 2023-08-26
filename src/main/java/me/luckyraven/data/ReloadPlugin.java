@@ -28,9 +28,11 @@ import org.bukkit.entity.Player;
  */
 public class ReloadPlugin {
 
+	private final Gangland    gangland;
 	private final Initializer initializer;
 
 	public ReloadPlugin(Gangland gangland) {
+		this.gangland = gangland;
 		this.initializer = gangland.getInitializer();
 	}
 
@@ -104,7 +106,7 @@ public class ReloadPlugin {
 
 		for (Player player : Bukkit.getOnlinePlayers())
 			if (!userManager.contains(userManager.getUser(player))) {
-				Phone        phone   = new Phone(player, SettingAddon.getPhoneName());
+				Phone        phone   = new Phone(gangland, player, SettingAddon.getPhoneName());
 				User<Player> newUser = new User<>(player);
 
 				if (SettingAddon.isPhoneEnabled()) {
