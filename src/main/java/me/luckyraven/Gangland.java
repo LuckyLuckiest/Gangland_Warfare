@@ -4,10 +4,10 @@ import com.google.common.base.Preconditions;
 import com.zaxxer.hikari.HikariConfig;
 import lombok.Getter;
 import me.luckyraven.data.ReloadPlugin;
+import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.permission.PermissionHandler;
 import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.dependency.PlaceholderAPIExpansion;
-import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.file.configuration.SettingAddon;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.logging.log4j.Level;
@@ -109,7 +109,10 @@ public final class Gangland extends JavaPlugin implements PermissionHandler {
 	}
 
 	private void softDependency(@NotNull String name, @Nullable Runnable runnable) {
-		if (Bukkit.getPluginManager().getPlugin(name) != null) if (runnable != null) runnable.run();
+		if (Bukkit.getPluginManager().getPlugin(name) != null) if (runnable != null) {
+			log4jLogger.info("Found " + name + ", linking...");
+			runnable.run();
+		}
 	}
 
 	@Override
