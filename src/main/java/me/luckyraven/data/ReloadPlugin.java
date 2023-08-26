@@ -5,6 +5,8 @@ import me.luckyraven.Initializer;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.rank.RankManager;
+import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
@@ -12,11 +14,11 @@ import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.RankDatabase;
 import me.luckyraven.database.sub.UserDatabase;
+import me.luckyraven.database.sub.WaypointDatabase;
+import me.luckyraven.feature.phone.Phone;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
-import me.luckyraven.feature.phone.Phone;
-import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -26,11 +28,9 @@ import org.bukkit.entity.Player;
  */
 public class ReloadPlugin {
 
-	private final Gangland    gangland;
 	private final Initializer initializer;
 
 	public ReloadPlugin(Gangland gangland) {
-		this.gangland = gangland;
 		this.initializer = gangland.getInitializer();
 	}
 
@@ -38,7 +38,7 @@ public class ReloadPlugin {
 	 * Reloads the files and they're linked addons.
 	 */
 	public void filesReload() {
-		gangland.getInitializer().getFileManager().reloadFiles();
+		initializer.getFileManager().reloadFiles();
 		initializer.addonsLoader();
 	}
 
@@ -52,6 +52,7 @@ public class ReloadPlugin {
 		gangInitialize(resetCache);
 		memberInitialize(resetCache);
 		userInitialize(resetCache);
+		waypointInitialize(resetCache);
 	}
 
 	/**
@@ -132,13 +133,13 @@ public class ReloadPlugin {
 	 * {@link GangManager}, {@link UserDatabase}, {@link RankDatabase}, and {@link GangDatabase} initialization.
 	 */
 	public void memberInitialize(boolean resetCache) {
-		RankManager   rankManager   = gangland.getInitializer().getRankManager();
-		GangManager   gangManager   = gangland.getInitializer().getGangManager();
-		MemberManager memberManager = gangland.getInitializer().getMemberManager();
+		RankManager   rankManager   = initializer.getRankManager();
+		GangManager   gangManager   = initializer.getGangManager();
+		MemberManager memberManager = initializer.getMemberManager();
 
 		if (resetCache) memberManager.clear();
 
-		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+		for (DatabaseHandler handler : initializer.getDatabaseManager().getDatabases())
 			if (handler instanceof GangDatabase gangDatabase) {
 				memberManager.initialize(gangDatabase, gangManager, rankManager);
 				break;
@@ -153,11 +154,11 @@ public class ReloadPlugin {
 	 * initialization.
 	 */
 	public void gangInitialize(boolean resetCache) {
-		GangManager gangManager = gangland.getInitializer().getGangManager();
+		GangManager gangManager = initializer.getGangManager();
 
 		if (resetCache) gangManager.clear();
 
-		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+		for (DatabaseHandler handler : initializer.getDatabaseManager().getDatabases())
 			if (handler instanceof GangDatabase gangDatabase) {
 				gangManager.initialize(gangDatabase);
 				break;
@@ -172,13 +173,32 @@ public class ReloadPlugin {
 	 * initialization.
 	 */
 	public void rankInitialize(boolean resetCache) {
-		RankManager rankManager = gangland.getInitializer().getRankManager();
+		RankManager rankManager = initializer.getRankManager();
 
 		if (resetCache) rankManager.clear();
 
-		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+		for (DatabaseHandler handler : initializer.getDatabaseManager().getDatabases())
 			if (handler instanceof RankDatabase rankDatabase) {
 				rankManager.initialize(rankDatabase);
+				break;
+			}
+	}
+
+	/**
+	 * Initializes the waypoint data (effective for reloads).
+	 *
+	 * @param resetCache if old data needs to be cleared
+	 * @implNote Very important to run this method after {@link DatabaseManager}, and {@link WaypointDatabase}
+	 * initialization.
+	 */
+	public void waypointInitialize(boolean resetCache) {
+		WaypointManager waypointManager = initializer.getWaypointManager();
+
+		if (resetCache) waypointManager.clear();
+
+		for (DatabaseHandler handler : initializer.getDatabaseManager().getDatabases())
+			if (handler instanceof WaypointDatabase waypointDatabase) {
+				waypointManager.initialize(waypointDatabase);
 				break;
 			}
 	}
