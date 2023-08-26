@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.datastructure.ScientificCalculator;
 import me.luckyraven.file.configuration.SettingAddon;
+import org.bukkit.Bukkit;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,13 +33,13 @@ public class Level {
 		this.baseAmount = baseAmount;
 	}
 
-	public void addExperience(double experience, boolean levelUp) {
+	public void addExperience(double experience, boolean levelUp, @Nullable LevelUpEvent event) {
 		this.experience += experience;
-		if (levelUp) handleLevelProgression();
+		if (levelUp) handleLevelProgression(event);
 	}
 
-	public void addExperience(double experience) {
-		addExperience(experience, true);
+	public void addExperience(double experience, @Nullable LevelUpEvent event) {
+		addExperience(experience, true, event);
 	}
 
 	public void removeExperience(double experience) {
@@ -61,7 +63,11 @@ public class Level {
 
 			if (counter >= maxLevel) break;
 
-			++levelValue;
+			LevelUpEvent event = new LevelUpEvent(this);
+			Bukkit.getPluginManager().callEvent(event);
+
+			if (!event.isCancelled()) ++levelValue;
+
 			--levels;
 			++counter;
 		}
@@ -81,12 +87,18 @@ public class Level {
 		return counter;
 	}
 
-	private void handleLevelProgression() {
+	private void handleLevelProgression(LevelUpEvent event) {
 		double nextLevelAmount = experienceCalculation(nextLevel());
 
 		while (levelValue < maxLevel && experience >= nextLevelAmount) {
 			experience -= nextLevelAmount;
-			++levelValue;
+
+			if (event != null) {
+				Bukkit.getPluginManager().callEvent(event);
+
+				if (!event.isCancelled()) ++levelValue;
+			} else ++levelValue;
+
 			nextLevelAmount = experienceCalculation(nextLevel());
 		}
 	}
