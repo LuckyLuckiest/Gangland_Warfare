@@ -30,6 +30,7 @@ public class LanguageLoader {
 			message = loadMessage(fileManager);
 		} catch (IOException | InvalidConfigurationException exception) {
 			plugin.getLogger().warning(UnhandledError.FILE_LOADER_ERROR + ": " + exception.getMessage());
+
 			Set<String>   files     = getMessageFiles();
 			StringBuilder languages = new StringBuilder();
 			String[]      nam       = files.toArray(new String[0]);
