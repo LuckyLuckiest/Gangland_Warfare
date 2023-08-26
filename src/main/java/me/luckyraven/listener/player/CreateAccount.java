@@ -15,7 +15,7 @@ import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.level.Level;
+import me.luckyraven.data.level.Level;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.timer.RepeatingTimer;

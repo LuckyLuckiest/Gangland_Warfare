@@ -1,4 +1,4 @@
-import me.luckyraven.level.Level;
+import me.luckyraven.data.level.Level;
 
 import java.util.Scanner;
 

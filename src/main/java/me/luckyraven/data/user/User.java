@@ -5,10 +5,10 @@ import lombok.Setter;
 import me.luckyraven.data.account.Account;
 import me.luckyraven.bounty.Bounty;
 import me.luckyraven.data.economy.EconomyHandler;
-import me.luckyraven.level.Level;
-import me.luckyraven.phone.Phone;
+import me.luckyraven.data.level.Level;
+import me.luckyraven.data.phone.Phone;
 import me.luckyraven.bukkit.scoreboard.Scoreboard;
-import me.luckyraven.wanted.Wanted;
+import me.luckyraven.data.wanted.Wanted;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 

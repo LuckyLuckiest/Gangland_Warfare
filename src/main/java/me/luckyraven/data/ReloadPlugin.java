@@ -15,7 +15,7 @@ import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
-import me.luckyraven.phone.Phone;
+import me.luckyraven.data.phone.Phone;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;

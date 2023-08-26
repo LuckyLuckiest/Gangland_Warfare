@@ -8,7 +8,7 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.level.Level;
+import me.luckyraven.data.level.Level;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.color.Color;

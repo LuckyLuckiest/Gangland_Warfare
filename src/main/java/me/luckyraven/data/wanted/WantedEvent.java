@@ -1,4 +1,4 @@
-package me.luckyraven.wanted;
+package me.luckyraven.data.wanted;
 
 import lombok.Getter;
 import me.luckyraven.data.user.User;

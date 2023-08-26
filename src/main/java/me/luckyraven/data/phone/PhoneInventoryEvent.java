@@ -1,4 +1,4 @@
-package me.luckyraven.phone;
+package me.luckyraven.data.phone;
 
 import lombok.Getter;
 import me.luckyraven.data.user.User;

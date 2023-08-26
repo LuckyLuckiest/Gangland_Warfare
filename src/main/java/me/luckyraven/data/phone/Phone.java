@@ -1,4 +1,4 @@
-package me.luckyraven.phone;
+package me.luckyraven.data.phone;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.Getter;

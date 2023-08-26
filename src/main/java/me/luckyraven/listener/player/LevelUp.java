@@ -3,7 +3,7 @@ package me.luckyraven.listener.player;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.user.User;
-import me.luckyraven.level.LevelUpEvent;
+import me.luckyraven.data.level.LevelUpEvent;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
