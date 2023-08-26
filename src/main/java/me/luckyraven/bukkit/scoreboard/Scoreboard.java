@@ -1,4 +1,4 @@
-package me.luckyraven.scoreboard;
+package me.luckyraven.bukkit.scoreboard;
 
 import fr.mrmicky.fastboard.FastBoard;
 import me.luckyraven.Gangland;
