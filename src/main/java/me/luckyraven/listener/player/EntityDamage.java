@@ -6,7 +6,7 @@ import me.luckyraven.bounty.BountyEvent;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.timer.RepeatingTimer;
+import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;

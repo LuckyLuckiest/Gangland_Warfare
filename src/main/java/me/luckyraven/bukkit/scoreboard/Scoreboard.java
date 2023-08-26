@@ -3,7 +3,7 @@ package me.luckyraven.bukkit.scoreboard;
 import fr.mrmicky.fastboard.FastBoard;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.user.User;
-import me.luckyraven.timer.RepeatingTimer;
+import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 

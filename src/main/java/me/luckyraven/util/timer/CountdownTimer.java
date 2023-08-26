@@ -1,4 +1,4 @@
-package me.luckyraven.timer;
+package me.luckyraven.util.timer;
 
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
