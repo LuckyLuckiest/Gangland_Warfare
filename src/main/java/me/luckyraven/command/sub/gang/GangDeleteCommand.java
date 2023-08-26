@@ -1,14 +1,15 @@
 package me.luckyraven.command.sub.gang;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.Member;
-import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ConfirmArgument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
@@ -18,15 +19,17 @@ import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.sql.Types;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 class GangDeleteCommand extends SubArgument {
@@ -128,9 +131,9 @@ class GangDeleteCommand extends SubArgument {
 			Gang gang = gangManager.getGang(user.getGangId());
 
 			// need to get all the users, even if they are not online,
+			// the periodical updates should take care of all the data save
 			// change the data directly from the database, and collect the online players ONLY!
 			List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
-			List<Member>       members           = new ArrayList<>(gang.getGroup());
 
 			double total = gang.getGroup().stream().mapToDouble(Member::getContribution).sum();
 			// get the contribution frequency for each user, and return that frequency according to the current balance
@@ -206,14 +209,11 @@ class GangDeleteCommand extends SubArgument {
 					});
 				}
 
-				if (handler instanceof GangDatabase gangDatabase) {
+				if (handler instanceof GangDatabase) {
 					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
 					helper.runQueries(database -> {
 						database.table("data").delete("id", String.valueOf(gang.getId()));
-
-						for (Member mem : members)
-							gangDatabase.updateMembersTable(mem);
 					});
 				}
 			}
