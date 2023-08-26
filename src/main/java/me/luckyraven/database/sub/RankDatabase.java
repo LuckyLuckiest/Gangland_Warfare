@@ -32,8 +32,10 @@ public class RankDatabase extends DatabaseHandler {
 
 	@Override
 	public void createTables() throws SQLException {
-		getDatabase().table("data").createTable("id INT PRIMARY KEY NOT NULL", "name TEXT NOT NULL",
-		                                        "permissions LONGTEXT NOT NULL", "parent LONGTEXT");
+		Database data = getDatabase().table("data");
+
+		data.createTable("id INT PRIMARY KEY NOT NULL", "name TEXT NOT NULL", "permissions LONGTEXT NOT NULL",
+		                 "parent LONGTEXT");
 	}
 
 	@Override
