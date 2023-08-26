@@ -21,18 +21,16 @@ public class GangManager {
 	public void initialize(GangDatabase gangDatabase) {
 		DatabaseHelper helper = new DatabaseHelper(gangland, gangDatabase);
 
-		Map<Integer, Gang>              gangsMap = new HashMap<>();
 		AtomicReference<List<Object[]>> rowsData = new AtomicReference<>();
 
 		// Initialize the Gang object
-		initGang(gangsMap, rowsData, helper);
+		initGang(rowsData, helper);
 
 		// To add the alias list
-		initAlias(gangsMap, rowsData, helper);
+		initAlias(rowsData, helper);
 	}
 
-	private void initGang(Map<Integer, Gang> gangsMap, AtomicReference<List<Object[]>> rowsData,
-	                      DatabaseHelper helper) {
+	private void initGang(AtomicReference<List<Object[]>> rowsData, DatabaseHelper helper) {
 		helper.runQueries(database -> {
 			if (rowsData.get() == null) rowsData.set(database.table("data").selectAll());
 
@@ -61,15 +59,12 @@ public class GangManager {
 				gang.getBounty().setAmount(bounty);
 				gang.setCreated(created);
 
-				gangsMap.put(id, gang);
+				gangs.put(id, gang);
 			}
-
-			gangs.putAll(gangsMap);
 		});
 	}
 
-	private void initAlias(Map<Integer, Gang> gangsMap, AtomicReference<List<Object[]>> rowsData,
-	                       DatabaseHelper helper) {
+	private void initAlias(AtomicReference<List<Object[]>> rowsData, DatabaseHelper helper) {
 		helper.runQueries(database -> {
 			if (rowsData.get() == null) rowsData.set(database.table("data").selectAll());
 
@@ -79,11 +74,11 @@ public class GangManager {
 
 				if (aliasList != null && !aliasList.isEmpty()) {
 					List<String> aliases = database.getList(aliasList);
-					Gang         gang    = gangsMap.get(id);
+					Gang         gang    = gangs.get(id);
 
 					if (gang != null) {
 						Set<Gang> aliasSet = aliases.stream()
-						                            .map(aliasId -> gangsMap.get(Integer.parseInt(aliasId)))
+						                            .map(aliasId -> gangs.get(Integer.parseInt(aliasId)))
 						                            .collect(Collectors.toSet());
 						gang.getAlly().addAll(aliasSet);
 					}
