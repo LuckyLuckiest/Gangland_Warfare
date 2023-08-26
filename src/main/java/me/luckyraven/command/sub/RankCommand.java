@@ -6,17 +6,17 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ConfirmArgument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.data.rank.Rank;
+import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.RankDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
-import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 
 import java.sql.Types;
@@ -131,29 +131,31 @@ public class RankCommand extends CommandHandler {
 		ConfirmArgument confirmDelete = new ConfirmArgument(getArgumentTree(), (argument, sender, args) -> {
 			Rank rank = rankManager.get(deleteRankName.get(sender).get());
 
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-				if (handler instanceof RankDatabase rankDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+			if (rank != null) {
+				for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+					if (handler instanceof RankDatabase rankDatabase) {
+						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
-					helper.runQueries(database -> {
-						rankManager.remove(rank);
-						database.table("data").delete("id", String.valueOf(rank.getUsedId()));
-					});
+						helper.runQueries(database -> {
+							rankManager.remove(rank);
+							database.table("data").delete("id", String.valueOf(rank.getUsedId()));
+						});
 
-					// important to refactor the ids, so they are in the correct id order
-					sender.sendMessage(ChatUtil.informationMessage("Refactoring IDs..."));
-					rankManager.refactorIds(rankDatabase);
-					sender.sendMessage(ChatUtil.informationMessage("Refactoring done"));
-					break;
+						// important to refactor the ids, so they are in the correct id order
+						sender.sendMessage(ChatUtil.informationMessage("Refactoring IDs..."));
+						rankManager.refactorIds(rankDatabase);
+						sender.sendMessage(ChatUtil.informationMessage("Refactoring done"));
+						break;
+					}
+
+				sender.sendMessage(MessageAddon.RANK_REMOVED.toString().replace("%rank%", rank.getName()));
+				deleteRankName.remove(sender);
+
+				CountdownTimer timer = deleteRankTimer.get(sender);
+				if (timer != null) {
+					if (!timer.isCancelled()) timer.cancel();
+					deleteRankTimer.remove(sender);
 				}
-
-			sender.sendMessage(MessageAddon.RANK_REMOVED.toString().replace("%rank%", rank.getName()));
-			deleteRankName.remove(sender);
-
-			CountdownTimer timer = deleteRankTimer.get(sender);
-			if (timer != null) {
-				if (!timer.isCancelled()) timer.cancel();
-				deleteRankTimer.remove(sender);
 			}
 		});
 
