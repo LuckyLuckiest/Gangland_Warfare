@@ -1,4 +1,4 @@
-package me.luckyraven.data.wanted;
+package me.luckyraven.feature.phone;
 
 import lombok.Getter;
 import me.luckyraven.data.user.User;
@@ -6,20 +6,25 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-public class WantedEvent extends Event implements Cancellable {
+@Getter
+public class PhoneInventoryEvent extends Event implements Cancellable {
 
 	private static final HandlerList handler = new HandlerList();
 
-	private final @Getter User<Player> user;
-	private final @Getter Wanted       wanted;
+	private final User<Player> user;
+	private final Phone        phone;
+	private final Inventory    inventory;
 
 	private boolean cancelled;
 
-	public WantedEvent(User<Player> user) {
+	public PhoneInventoryEvent(User<Player> user) {
 		this.user = user;
-		this.wanted = user.getWanted();
+		this.phone = user.getPhone();
+		this.inventory = phone.getInventoryHandler();
+		this.cancelled = false;
 	}
 
 	public static HandlerList getHandlerList() {

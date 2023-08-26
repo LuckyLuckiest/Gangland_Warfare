@@ -1,8 +1,8 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.data.bounty.Bounty;
-import me.luckyraven.data.bounty.BountyEvent;
+import me.luckyraven.feature.bounty.Bounty;
+import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.SettingAddon;

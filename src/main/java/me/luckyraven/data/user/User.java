@@ -3,12 +3,12 @@ package me.luckyraven.data.user;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.data.account.Account;
-import me.luckyraven.data.bounty.Bounty;
+import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.data.economy.EconomyHandler;
-import me.luckyraven.data.level.Level;
-import me.luckyraven.data.phone.Phone;
+import me.luckyraven.feature.level.Level;
+import me.luckyraven.feature.phone.Phone;
 import me.luckyraven.bukkit.scoreboard.Scoreboard;
-import me.luckyraven.data.wanted.Wanted;
+import me.luckyraven.feature.wanted.Wanted;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 

@@ -1,30 +1,36 @@
-package me.luckyraven.data.phone;
+package me.luckyraven.feature.bounty;
 
 import lombok.Getter;
+import lombok.Setter;
+import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.user.User;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @Getter
-public class PhoneInventoryEvent extends Event implements Cancellable {
+@Setter
+public class BountyEvent extends Event implements Cancellable {
 
 	private static final HandlerList handler = new HandlerList();
 
-	private final User<Player> user;
-	private final Phone        phone;
-	private final Inventory    inventory;
+	private final Bounty bounty;
 
+	private double  amountApplied;
 	private boolean cancelled;
 
-	public PhoneInventoryEvent(User<Player> user) {
-		this.user = user;
-		this.phone = user.getPhone();
-		this.inventory = phone.getInventoryHandler();
+	@Nullable
+	private User<Player> userBounty;
+	@Nullable
+	private Gang         gangBounty;
+
+	public BountyEvent(Bounty bounty) {
+		this.bounty = bounty;
 		this.cancelled = false;
+		this.amountApplied = bounty.getAmount();
 	}
 
 	public static HandlerList getHandlerList() {

@@ -1,4 +1,4 @@
-package me.luckyraven.data.bounty;
+package me.luckyraven.feature.bounty;
 
 import lombok.Getter;
 import lombok.Setter;

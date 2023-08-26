@@ -4,7 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.data.phone.Phone;
+import me.luckyraven.feature.phone.Phone;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

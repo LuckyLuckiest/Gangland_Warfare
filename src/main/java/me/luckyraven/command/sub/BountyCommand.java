@@ -1,8 +1,8 @@
 package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.data.bounty.Bounty;
-import me.luckyraven.data.bounty.BountyEvent;
+import me.luckyraven.feature.bounty.Bounty;
+import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.OptionalArgument;

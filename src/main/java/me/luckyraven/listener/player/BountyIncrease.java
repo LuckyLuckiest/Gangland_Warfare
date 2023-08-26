@@ -2,7 +2,7 @@ package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.bounty.BountyEvent;
+import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.data.user.User;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
