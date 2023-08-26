@@ -9,6 +9,7 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.level.Level;
+import me.luckyraven.level.LevelUpEvent;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -110,7 +111,12 @@ public class LevelCommand extends CommandHandler {
 			}
 
 			switch (args[2].toLowerCase()) {
-				case "add" -> user.getLevel().addExperience(argAmount);
+				case "add" -> {
+					LevelUpEvent event = new LevelUpEvent(user.getLevel());
+					event.setUser(user);
+
+					user.getLevel().addExperience(argAmount, event);
+				}
 				case "remove" -> user.getLevel().removeExperience(argAmount);
 			}
 
