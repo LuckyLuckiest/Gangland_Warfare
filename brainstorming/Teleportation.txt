@@ -1,0 +1,19 @@
+All data is saved in database or file?
+
+Should each gang have a single or multiple warps?
+
+Should the plugin have spawn system? Like having a spawn for police station, hospital, main spawn, random location...
+Like having a taxi system, taking the user to random places across the map (should be set by admins), or even taking the
+ user to specific landmark set.
+
+So should the spawn system be for specific locations and warp for gangs/clans??
+
+Create a waypoint class that saves location data into a database.
+Save waypoint name.
+Save x, y, z, and world locations.
+Add type column for each waypoint: spawn, gang, warp, taxi, safe-zone, global.
+Save if they are global, or gang. If it was gang-based, then have a column that saves these data.
+Add cooldown column, each waypoint has a custom cooldown which makes every waypoint unique.
+Add payment cost for each waypoint, so some waypoints are restricted by a certain cost.
+Add teleport shield, which saves a value for how long the user is protected from attacks upon teleportation.
+Add radius, thus if there was any effect in that radius it would be applied to the user.
