@@ -1,10 +1,15 @@
 package me.luckyraven.level;
 
 import lombok.Getter;
+import lombok.Setter;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.user.User;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @Getter
 public class LevelUpEvent extends Event implements Cancellable {
@@ -12,6 +17,11 @@ public class LevelUpEvent extends Event implements Cancellable {
 	private static final HandlerList handler = new HandlerList();
 
 	private final Level level;
+
+	@Nullable
+	private @Setter User<? extends OfflinePlayer> user;
+	@Nullable
+	private @Setter Gang                          gang;
 
 	private boolean cancelled;
 
