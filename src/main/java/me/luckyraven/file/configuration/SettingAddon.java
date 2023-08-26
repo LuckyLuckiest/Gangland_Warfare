@@ -19,11 +19,13 @@ public class SettingAddon {
 	private static final @Getter Map<String, Object> settingsPlaceholder = new LinkedHashMap<>();
 
 	private static @Getter FileConfiguration settings;
+	// update configuration
+	private static @Getter boolean           updaterEnabled, notifyPrivilegedPlayers, updaterAutoUpdate;
 	// language picked
-	private static @Getter String            languagePicked;
+	private static @Getter String languagePicked;
 	// database configuration
-	private static @Getter String            databaseType;
-	private static @Getter String            mysqlHost, mysqlUsername, mysqlPassword;
+	private static @Getter String databaseType;
+	private static @Getter String mysqlHost, mysqlUsername, mysqlPassword;
 	private static @Getter int     mysqlPort;
 	private static @Getter boolean sqliteBackup, sqliteFailedMysql, autoSave;
 	private static @Getter int    autoSaveTime;
@@ -76,6 +78,11 @@ public class SettingAddon {
 	}
 
 	private void initialize() {
+		// update configuration
+		updaterEnabled = settings.getBoolean("Update_Checker.Enable");
+		notifyPrivilegedPlayers = settings.getBoolean("Update_Checker.Notify_Privileged_Players");
+		updaterAutoUpdate = settings.getBoolean("Update_Checker.Auto_Update");
+
 		// language picked
 		languagePicked = settings.getString("Language");
 
@@ -143,7 +150,7 @@ public class SettingAddon {
 		gangRankHead = settings.getString("Gang.Rank.Head");
 		gangRankTail = settings.getString("Gang.Rank.Tail");
 		gangDisplayNameChar = Objects.requireNonNull(settings.getString("Gang.Display_Name_Char")).substring(0, 1);
-		gangInitialBalance = settings.getDouble("Gang.Account.First_Balance");
+		gangInitialBalance = settings.getDouble("Gang.Account.Initial_Balance");
 		gangCreateFee = settings.getDouble("Gang.Account.Create_Cost");
 		gangMaxBalance = settings.getDouble("Gang.Account.Maximum_Balance");
 		gangContributionRate = settings.getDouble("Gang.Account.Contribution_Rate");

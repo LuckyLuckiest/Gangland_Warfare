@@ -16,28 +16,36 @@
 # |      Settings Configuration      | #
 # +----------------------------------+ #
 
-# +---------------+ #
-# | Update Config | #
-# +---------------+ #
-
 # If you have faced any problem with the file, you can create a new one by changing [Config_Version] to a different
 # number, but when a new update comes out with a new configuration file(s), [Config_Version] will change resulting
 # in a new file(s) for that new version while saving old files with a suffix -old to indicate they are old.
 Config_Version: '${project.version}'
-# We recommend leaving it true so people that got the permission will receive an update message.
-Show_Update: true # This will work next update. An update will release immediately.
+
+# +---------------+ #
+# | Update Config | #
+# +---------------+ #
+
+# Get notified and updated for a new release of the plugin.
+Update_Checker:
+   # It is recommended to be left enabled since it doesn't take any RAM.
+   Enable: true
+   # Only privileged players will be notified when they join that there is a new update.
+   Notify_Privileged_Players: false
+   # This feature will auto install the update into the plugin own folder, inside a folder called 'release'.
+   Auto_Update: false
 
 # +-----------------+ #
 # | Language Config | #
 # +-----------------+ #
 
 # Messages language type. You can create a custom language by simply creating a folder called 'message' and inside it
-# the language. You should respect the prefix of the file name, it should be message_xx.yml, and xx can be any letter
-# you prefer. To switch between the languages, you enter the xx values in 'Language' and it would load that
-# configuration.
-# Any faulty written language names entered to this attribute 'Language' then the plugin would disable. To make the plugin
-# work, just use any valid language. To get the list of the available languages, just enter an invalid name, and a
-# message of the available list suffix would be displayed.
+# the language.
+# You should respect the prefix of the file name, it should be message_xx.yml, and xx can be any letter
+# you prefer. To switch between the languages, you enter the xx values in 'Language' configuration, and it would load
+# that configuration.
+# Any faulty written language names entered to this attribute 'Language' then the plugin would disable. To make the
+# plugin work, just use any valid language. To get the list of the available languages, just enter an invalid name,
+# and a message of the available list suffix would be displayed.
 Language: en
 
 # +-----------------+ #
@@ -56,10 +64,16 @@ Database:
       # Will create a backup if the type is mysql or sqlite
       Backup: true
       # Will use SQLite if unable to connect to MySQL
+      # It is recommended to set this true
       Failed_MySQL: true
    Auto_Save:
-      # Enable auto save
-      # If disabled, it would write to the database only when the player leaves or when the server closes
+      # Enabling auto save would clear unnecessary cache stored and update the databases.
+      # If disabled, it would write to the database and clear the cache only when the player leaves or when the server
+      # closes.
+      # Disabling this option is not recommended since it would create a lot of overhead to the CPU every time a user
+      # leaves.
+      # This effect takes place when the server contains a large number of player bases or players constantly
+      # joining and leaving the server.
       Enable: true
       # Time to auto save in minutes
       Time: 10
@@ -235,7 +249,7 @@ Gang:
       Tail: "owner"
    Account:
       # When a player creates a gang account, his account will have the amount of money that you set.
-      First_Balance: 0
+      Initial_Balance: 0
       # When a player wants to create a gang account, they are required to pay a fee.
       # Set it to zero, and the requirement is lifted.
       Create_Cost: 100_000
