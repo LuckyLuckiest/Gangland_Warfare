@@ -15,7 +15,7 @@ import java.util.Objects;
 public final class ChatUtil {
 
 	public static String replaceColorCodes(String message, String replaceWith) {
-		return message.replace("§", "&").replaceAll("&[0-9a-fA-Fk-oK-OrR]", replaceWith);
+		return message.replace('§', '&').replaceAll("&[0-9a-fA-Fk-oK-OrR]", replaceWith);
 	}
 
 	public static String color(final String message) {

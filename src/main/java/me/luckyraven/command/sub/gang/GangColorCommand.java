@@ -63,8 +63,8 @@ class GangColorCommand extends SubArgument {
 
 				if (material == null) return;
 
-				String name = colorCode + ChatUtil.capitalize(colorName.toLowerCase().replace("_", " ")) + " " +
-						ChatUtil.capitalize(materialName.toLowerCase().replace("_", " "));
+				String name = colorCode + ChatUtil.capitalize(colorName.toLowerCase().replace('_', ' ')) + " " +
+						ChatUtil.capitalize(materialName.toLowerCase().replace('_', ' '));
 
 				ItemBuilder itemBuilder = new ItemBuilder(material).setDisplayName(name);
 
@@ -84,7 +84,7 @@ class GangColorCommand extends SubArgument {
 
 						                   // inform player
 						                   String colorSelected = ChatUtil.color(colorCode + ChatUtil.capitalize(
-								                   colorName.toLowerCase().replace("_", " ")));
+								                   colorName.toLowerCase().replace('_', ' ')));
 						                   player2.sendMessage(MessageAddon.GANG_COLOR_SET.toString()
 						                                                                  .replace("%color%",
 						                                                                           colorSelected));
