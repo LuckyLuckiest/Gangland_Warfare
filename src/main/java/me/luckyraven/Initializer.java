@@ -1,8 +1,6 @@
 package me.luckyraven;
 
 import lombok.Getter;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.CommandManager;
@@ -13,14 +11,19 @@ import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.OptionCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
 import me.luckyraven.command.sub.gang.GangCommand;
+import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.placeholder.GanglandPlaceholder;
 import me.luckyraven.data.placeholder.replacer.Replacer;
+import me.luckyraven.data.rank.RankManager;
+import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.RankDatabase;
 import me.luckyraven.database.sub.UserDatabase;
+import me.luckyraven.database.sub.WaypointDatabase;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
@@ -29,7 +32,6 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.gang.GangMembersDamage;
 import me.luckyraven.listener.player.*;
-import me.luckyraven.data.rank.RankManager;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -55,6 +57,7 @@ public final class Initializer {
 	private @Getter RankManager         rankManager;
 	private @Getter LanguageLoader      languageLoader;
 	private @Getter GanglandPlaceholder placeholder;
+	private @Getter WaypointManager     waypointManager;
 	// Addons
 	private @Getter SettingAddon        settingAddon;
 
@@ -99,6 +102,14 @@ public final class Initializer {
 				if (handler instanceof GangDatabase gangDatabase) {
 					gangManager.initialize(gangDatabase);
 					memberManager.initialize(gangDatabase, gangManager, rankManager);
+					break;
+				}
+
+			// Waypoint manager
+			waypointManager = new WaypointManager(gangland);
+			for (DatabaseHandler handler : databaseManager.getDatabases())
+				if (handler instanceof WaypointDatabase waypointDatabase) {
+					waypointManager.initialize(waypointDatabase);
 					break;
 				}
 		}
@@ -155,6 +166,10 @@ public final class Initializer {
 		RankDatabase rankDatabase = new RankDatabase(plugin);
 		rankDatabase.setType(type);
 		databaseManager.addDatabase(rankDatabase);
+
+		WaypointDatabase waypointDatabase = new WaypointDatabase(plugin);
+		waypointDatabase.setType(type);
+		databaseManager.addDatabase(waypointDatabase);
 	}
 
 	private void events() {
@@ -190,6 +205,7 @@ public final class Initializer {
 		commandManager.addCommand(new RankCommand(gangland));
 		commandManager.addCommand(new BountyCommand(gangland));
 		commandManager.addCommand(new LevelCommand(gangland));
+		commandManager.addCommand(new WaypointCommand(gangland));
 		// gang commands
 		if (SettingAddon.isGangEnable()) {
 			commandManager.addCommand(new GangCommand(gangland));
