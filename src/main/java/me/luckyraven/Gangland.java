@@ -1,11 +1,13 @@
 package me.luckyraven;
 
+import com.google.common.base.Preconditions;
 import com.zaxxer.hikari.HikariConfig;
 import lombok.Getter;
 import me.luckyraven.data.ReloadPlugin;
+import me.luckyraven.data.permission.PermissionHandler;
 import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.dependency.PlaceholderAPIExpansion;
-import me.luckyraven.economy.EconomyHandler;
+import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.file.configuration.SettingAddon;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.logging.log4j.Level;
@@ -13,13 +15,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.bukkit.Bukkit;
+import org.bukkit.permissions.Permission;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 @Getter
-public final class Gangland extends JavaPlugin {
+public final class Gangland extends JavaPlugin implements PermissionHandler {
 
 	@Getter
 	private static final Logger            log4jLogger = LogManager.getLogger("Gangland_Warfare");
@@ -104,6 +110,18 @@ public final class Gangland extends JavaPlugin {
 
 	private void softDependency(@NotNull String name, @Nullable Runnable runnable) {
 		if (Bukkit.getPluginManager().getPlugin(name) != null) if (runnable != null) runnable.run();
+	}
+
+	@Override
+	public void addPermission(@NotNull String permission) {
+		Preconditions.checkNotNull(permission, "Permission string can't be null!");
+		if (permission.isEmpty()) return;
+
+		Permission    perm          = new Permission(permission);
+		PluginManager pluginManager = Bukkit.getPluginManager();
+		List<String>  permissions   = pluginManager.getPermissions().stream().map(Permission::getName).toList();
+
+		if (!permissions.contains(permission)) pluginManager.addPermission(perm);
 	}
 
 }

@@ -12,7 +12,7 @@ public abstract class SubArgument extends Argument {
 	public SubArgument(String[] arguments, Tree<Argument> tree, String subPermission, Argument parent) {
 		super(arguments, tree, null);
 		super.action = action();
-		setPermission(parent.getPermission() + "." + subPermission);
+		addPermission(parent.getPermission() + "." + subPermission);
 	}
 
 	public SubArgument(String argument, Tree<Argument> tree, Argument parent) {
