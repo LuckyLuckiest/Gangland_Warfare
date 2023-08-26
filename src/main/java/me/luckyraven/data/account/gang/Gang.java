@@ -3,7 +3,7 @@ package me.luckyraven.data.account.gang;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.data.account.Account;
-import me.luckyraven.bounty.Bounty;
+import me.luckyraven.data.bounty.Bounty;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
