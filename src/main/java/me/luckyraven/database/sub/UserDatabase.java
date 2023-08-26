@@ -33,13 +33,14 @@ public class UserDatabase extends DatabaseHandler {
 
 	@Override
 	public void createTables() throws SQLException {
-		getDatabase().table("data").createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "kills INT NOT NULL",
-		                                        "deaths INT NOT NULL", "mob_kills INT NOT NULL", "gang_id INT NOT NULL",
-		                                        "has_bank BOOLEAN NOT NULL", "balance DOUBLE NOT NULL",
-		                                        "bounty DOUBLE NOT NULL", "level INT NOT NULL",
-		                                        "experience DOUBLE NOT NULL");
-		getDatabase().table("bank").createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "name TEXT NOT NULL",
-		                                        "balance DOUBLE NOT NULL");
+		Database data = getDatabase().table("data");
+		Database bank = getDatabase().table("bank");
+
+		data.createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "kills INT NOT NULL", "deaths INT NOT NULL",
+		                 "mob_kills INT NOT NULL", "gang_id INT NOT NULL", "has_bank BOOLEAN NOT NULL",
+		                 "balance DOUBLE NOT NULL", "bounty DOUBLE NOT NULL", "level INT NOT NULL",
+		                 "experience DOUBLE NOT NULL");
+		bank.createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "name TEXT NOT NULL", "balance DOUBLE NOT NULL");
 	}
 
 	@Override
