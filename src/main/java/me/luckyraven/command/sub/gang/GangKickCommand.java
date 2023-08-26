@@ -1,33 +1,31 @@
 package me.luckyraven.command.sub.gang;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.Member;
-import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.rank.Rank;
+import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.GangDatabase;
+import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
-import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.rank.RankManager;
+import me.luckyraven.listener.player.CreateAccount;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.sql.Types;
 import java.util.Objects;
-import java.util.UUID;
 
 class GangKickCommand extends SubArgument {
 
@@ -68,6 +66,7 @@ class GangKickCommand extends SubArgument {
 		};
 	}
 
+	@SuppressWarnings("unchecked")
 	private void gangKick() {
 		Argument kickName = new OptionalArgument(tree, (argument, sender, args) -> {
 			Player       player     = (Player) sender;
@@ -99,50 +98,66 @@ class GangKickCommand extends SubArgument {
 				return;
 			}
 
-			Tree.Node<Rank> playerRank = userMember.getRank().getNode();
-			Tree.Node<Rank> targetRank = targetMember.getRank().getNode();
+			Rank playerRank = userMember.getRank();
+			Rank targetRank = targetMember.getRank();
 
-			if (!rankManager.getRankTree().isDescendant(targetRank, playerRank)) {
+			if (playerRank == null || targetRank == null) {
+				player.sendMessage(MessageAddon.INVALID_RANK.toString());
+				return;
+			}
+
+			Tree.Node<Rank> playerNode = userMember.getRank().getNode();
+			Tree.Node<Rank> targetNode = targetMember.getRank().getNode();
+
+			if (!rankManager.getRankTree().isDescendant(targetNode, playerNode)) {
 				player.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
 				return;
 			}
 
-			User<Player>  onlineTarget;
-			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
-			if (offlinePlayer.isOnline()) onlineTarget = userManager.getUser(offlinePlayer.getPlayer());
-			else onlineTarget = null;
+			User<? extends OfflinePlayer> targetUser;
+			OfflinePlayer                 offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
+			if (offlinePlayer.isOnline()) targetUser = userManager.getUser(offlinePlayer.getPlayer());
+			else {
+				targetUser = new User<>(offlinePlayer);
 
-			if (onlineTarget != null) {
-				gang.removeMember(onlineTarget, targetMember);
-				onlineTarget.getUser().sendMessage(MessageAddon.KICKED_FROM_GANG.toString());
-			} else
-				// remove user gang data
-				gang.removeMember(targetMember);
+				CreateAccount createAccount = gangland.getInitializer()
+				                                      .getListenerManager()
+				                                      .getListeners()
+				                                      .stream()
+				                                      .filter(listener -> listener instanceof CreateAccount)
+				                                      .map(listener -> (CreateAccount) listener)
+				                                      .findFirst()
+				                                      .orElse(null);
 
-			// update the user account
-			// update the gang data
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
-				if (handler instanceof UserDatabase userDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-					if (onlineTarget != null) helper.runQueries(database -> userDatabase.updateDataTable(onlineTarget));
-					else {
-						UUID finalTargetUuid = targetMember.getUuid();
-						helper.runQueries(database -> {
-							database.table("data").update("uuid = ?", new Object[]{finalTargetUuid},
-							                              new int[]{Types.VARCHAR}, new String[]{"gang_id"},
-							                              new Object[]{-1}, new int[]{Types.INTEGER});
-						});
-					}
+				if (createAccount == null) {
+					Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find CreateAccount class.");
+					return;
 				}
 
-				if (handler instanceof GangDatabase gangDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+				DatabaseManager databaseManager = gangland.getInitializer().getDatabaseManager();
 
-					Member finalTargetMember = targetMember;
-					helper.runQueries(database -> gangDatabase.updateMembersTable(finalTargetMember));
+				UserDatabase userHandler = databaseManager.getDatabases()
+				                                          .stream()
+				                                          .filter(handler -> handler instanceof UserDatabase)
+				                                          .map(handler -> (UserDatabase) handler)
+				                                          .findFirst()
+				                                          .orElse(null);
+
+				if (userHandler == null) {
+					Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find UserDatabase class.");
+					return;
 				}
+
+				createAccount.initializeUserData(targetUser, userHandler);
+
+				gangland.getInitializer().getOfflineUserManager().add((User<OfflinePlayer>) targetUser);
 			}
+
+			if (targetUser.getUser() instanceof Player p) {
+				p.sendMessage(MessageAddon.KICKED_FROM_GANG.toString());
+			}
+
+			gang.removeMember(targetUser, targetMember);
 
 			player.sendMessage(MessageAddon.GANG_KICKED_TARGET.toString()
 			                                                  .replace("%player%", Objects.requireNonNull(
