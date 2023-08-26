@@ -5,8 +5,8 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.account.type.Bank;
-import me.luckyraven.feature.bounty.Bounty;
-import me.luckyraven.feature.bounty.BountyEvent;
+import me.luckyraven.data.rank.Rank;
+import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.Database;
@@ -14,11 +14,12 @@ import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.UserDatabase;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.feature.bounty.Bounty;
+import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.feature.level.Level;
-import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.rank.RankManager;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.timer.RepeatingTimer;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -72,7 +73,7 @@ public final class CreateAccount implements Listener {
 		memberManager.add(newMember);
 	}
 
-	public void initializeUserData(User<Player> user, UserDatabase userDatabase) {
+	public void initializeUserData(User<? extends OfflinePlayer> user, UserDatabase userDatabase) {
 		DatabaseHelper helper = new DatabaseHelper(gangland, userDatabase);
 
 		helper.runQueries(database -> {
@@ -175,7 +176,7 @@ public final class CreateAccount implements Listener {
 		});
 	}
 
-	private void bountyExecutor(User<Player> user, BountyEvent bountyEvent, RepeatingTimer timer,
+	private void bountyExecutor(User<? extends OfflinePlayer> user, BountyEvent bountyEvent, RepeatingTimer timer,
 	                            DatabaseHelper helper) {
 		Bounty bounty    = user.getBounty();
 		double oldAmount = bounty.getAmount();
