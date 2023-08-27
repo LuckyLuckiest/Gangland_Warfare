@@ -46,18 +46,16 @@ class GangDeleteCommand extends SubArgument {
 
 	private final ConfirmArgument confirmDelete;
 
-	protected GangDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
-	                            UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                            RankManager rankManager) {
+	protected GangDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(new String[]{"delete", "remove"}, tree, "delete", parent);
 
 		this.gangland = gangland;
 		this.tree = tree;
 
-		this.userManager = userManager;
-		this.memberManager = memberManager;
-		this.gangManager = gangManager;
-		this.rankManager = rankManager;
+		this.userManager = gangland.getInitializer().getUserManager();
+		this.memberManager = gangland.getInitializer().getMemberManager();
+		this.gangManager = gangland.getInitializer().getGangManager();
+		this.rankManager = gangland.getInitializer().getRankManager();
 
 		this.deleteGangName = new HashMap<>();
 		this.deleteGangTimer = new HashMap<>();
@@ -91,9 +89,10 @@ class GangDeleteCommand extends SubArgument {
 			confirmDelete.setConfirmed(true);
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "delete"}));
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> sender.sendMessage(
+			CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, time -> sender.sendMessage(
 					MessageAddon.GANG_REMOVE_CONFIRM.toString()
-					                                .replace("%timer%", TimeUtil.formatTime(time.getDuration(), true))),
+					                                .replace("%timer%",
+					                                         TimeUtil.formatTime(time.getDuration() / 20L, true))),
 			                                          null, time -> {
 				confirmDelete.setConfirmed(false);
 				deleteGangName.remove(user);

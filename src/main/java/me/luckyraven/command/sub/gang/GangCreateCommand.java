@@ -1,25 +1,26 @@
 package me.luckyraven.command.sub.gang;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.command.argument.*;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
-import me.luckyraven.command.argument.*;
+import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -32,18 +33,16 @@ class GangCreateCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
 
-	protected GangCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
-	                            UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                            RankManager rankManager) {
+	protected GangCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super("create", tree, parent);
 
 		this.gangland = gangland;
 		this.tree = tree;
 
-		this.userManager = userManager;
-		this.memberManager = memberManager;
-		this.gangManager = gangManager;
-		this.rankManager = rankManager;
+		this.userManager = gangland.getInitializer().getUserManager();
+		this.memberManager = gangland.getInitializer().getMemberManager();
+		this.gangManager = gangland.getInitializer().getGangManager();
+		this.rankManager = gangland.getInitializer().getRankManager();
 
 		gangCreate();
 	}
@@ -64,8 +63,8 @@ class GangCreateCommand extends SubArgument {
 	}
 
 	private void gangCreate() {
-		HashMap<User<Player>, AtomicReference<String>> createGangName  = new HashMap<>();
-		HashMap<CommandSender, CountdownTimer>         createGangTimer = new HashMap<>();
+		Map<User<Player>, AtomicReference<String>> createGangName  = new HashMap<>();
+		Map<CommandSender, CountdownTimer>         createGangTimer = new HashMap<>();
 
 		ConfirmArgument confirmCreate = new ConfirmArgument(tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
@@ -139,9 +138,10 @@ class GangCreateCommand extends SubArgument {
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "create"}));
 			confirmCreate.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> sender.sendMessage(
+			CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, time -> sender.sendMessage(
 					MessageAddon.GANG_CREATE_CONFIRM.toString()
-					                                .replace("%timer%", TimeUtil.formatTime(time.getDuration(), true))),
+					                                .replace("%timer%",
+					                                         TimeUtil.formatTime(time.getDuration() / 20L, true))),
 			                                          null, time -> {
 				confirmCreate.setConfirmed(false);
 				createGangName.remove(user);

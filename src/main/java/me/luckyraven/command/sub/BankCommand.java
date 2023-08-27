@@ -1,20 +1,20 @@
 package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.data.account.Account;
-import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ConfirmArgument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.data.account.Account;
+import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -135,11 +135,10 @@ public class BankCommand extends CommandHandler {
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "create"}));
 			confirmCreate.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+			CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, time -> {
 				sender.sendMessage(MessageAddon.BANK_CREATE_CONFIRM.toString()
-				                                                   .replace("%timer%",
-				                                                            TimeUtil.formatTime(time.getDuration(),
-				                                                                                true)));
+				                                                   .replace("%timer%", TimeUtil.formatTime(
+						                                                   time.getDuration() / 20L, true)));
 			}, null, time -> {
 				confirmCreate.setConfirmed(false);
 				createBankName.remove(user);
@@ -207,11 +206,10 @@ public class BankCommand extends CommandHandler {
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "delete"}));
 			confirmDelete.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+			CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, time -> {
 				sender.sendMessage(MessageAddon.BANK_REMOVE_CONFIRM.toString()
-				                                                   .replace("%timer%",
-				                                                            TimeUtil.formatTime(time.getDuration(),
-				                                                                                true)));
+				                                                   .replace("%timer%", TimeUtil.formatTime(
+						                                                   time.getDuration() / 20L, true)));
 			}, null, time -> {
 				confirmDelete.setConfirmed(false);
 				deleteBankName.remove(user);

@@ -10,21 +10,20 @@ public class CountdownTimer extends BukkitRunnable {
 
 	private final JavaPlugin               plugin;
 	private final Consumer<CountdownTimer> duringTimer, beforeTimer, afterTimer;
-	private final @Getter int duration;
+	private final @Getter long duration;
 
-	@Getter
-	private int        timeLeft;
-	private BukkitTask bukkitTask;
+	private @Getter long       timeLeft;
+	private         BukkitTask bukkitTask;
 
-	public CountdownTimer(JavaPlugin plugin, int duration) {
+	public CountdownTimer(JavaPlugin plugin, long duration) {
 		this(plugin, duration, null);
 	}
 
-	public CountdownTimer(JavaPlugin plugin, int duration, Consumer<CountdownTimer> duringTimer) {
+	public CountdownTimer(JavaPlugin plugin, long duration, Consumer<CountdownTimer> duringTimer) {
 		this(plugin, duration, null, duringTimer, null);
 	}
 
-	public CountdownTimer(JavaPlugin plugin, int duration, Consumer<CountdownTimer> beforeTimer,
+	public CountdownTimer(JavaPlugin plugin, long duration, Consumer<CountdownTimer> beforeTimer,
 	                      Consumer<CountdownTimer> duringTimer, Consumer<CountdownTimer> afterTimer) {
 		this.plugin = plugin;
 		this.duration = duration;
@@ -49,7 +48,7 @@ public class CountdownTimer extends BukkitRunnable {
 	}
 
 	public void start() {
-		this.bukkitTask = runTaskTimer(plugin, 0L, 20L);
+		this.bukkitTask = runTaskTimer(plugin, 0L, duration);
 	}
 
 }

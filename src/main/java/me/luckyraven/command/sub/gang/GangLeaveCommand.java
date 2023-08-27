@@ -1,22 +1,22 @@
 package me.luckyraven.command.sub.gang;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.Member;
-import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ConfirmArgument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -33,17 +33,16 @@ class GangLeaveCommand extends SubArgument {
 	private final HashMap<User<Player>, CountdownTimer> leaveTimer;
 	private final ConfirmArgument                       leaveConfirm;
 
-	protected GangLeaveCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
-	                           MemberManager memberManager, GangManager gangManager, RankManager rankManager) {
+	protected GangLeaveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super("leave", tree, parent);
 
 		this.gangland = gangland;
 		this.tree = tree;
 
-		this.userManager = userManager;
-		this.memberManager = memberManager;
-		this.gangManager = gangManager;
-		this.rankManager = rankManager;
+		this.userManager = gangland.getInitializer().getUserManager();
+		this.memberManager = gangland.getInitializer().getMemberManager();
+		this.gangManager = gangland.getInitializer().getGangManager();
+		this.rankManager = gangland.getInitializer().getRankManager();
 
 		this.leaveTimer = new HashMap<>();
 		this.leaveConfirm = leaveConfirm();
@@ -74,7 +73,7 @@ class GangLeaveCommand extends SubArgument {
 
 			leaveConfirm.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> player.sendMessage(
+			CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, time -> player.sendMessage(
 					ChatUtil.confirmCommand(new String[]{"gang", "leave"})), null, time -> {
 				leaveConfirm.setConfirmed(false);
 				leaveTimer.remove(user);

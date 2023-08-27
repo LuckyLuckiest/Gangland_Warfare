@@ -1,23 +1,23 @@
 package me.luckyraven.command.sub.gang;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.Member;
-import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.rank.Rank;
+import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -37,18 +37,16 @@ class GangInviteCommand extends SubArgument {
 	private final HashMap<User<Player>, Gang>           playerInvite;
 	private final HashMap<User<Player>, CountdownTimer> inviteTimer;
 
-	protected GangInviteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
-	                            UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                            RankManager rankManager) {
+	protected GangInviteCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(new String[]{"invite", "add"}, tree, "invite", parent);
 
 		this.gangland = gangland;
 		this.tree = tree;
 
-		this.userManager = userManager;
-		this.memberManager = memberManager;
-		this.gangManager = gangManager;
-		this.rankManager = rankManager;
+		this.userManager = gangland.getInitializer().getUserManager();
+		this.memberManager = gangland.getInitializer().getMemberManager();
+		this.gangManager = gangland.getInitializer().getGangManager();
+		this.rankManager = gangland.getInitializer().getRankManager();
 
 		this.playerInvite = new HashMap<>();
 		this.inviteTimer = new HashMap<>();
@@ -98,7 +96,7 @@ class GangInviteCommand extends SubArgument {
 				return;
 			}
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+			CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, time -> {
 				player.sendMessage(MessageAddon.GANG_INVITE_PLAYER.toString().replace("%player%", targetStr));
 				target.sendMessage(
 						MessageAddon.GANG_INVITE_TARGET.toString().replace("%gang%", gang.getDisplayNameString()));

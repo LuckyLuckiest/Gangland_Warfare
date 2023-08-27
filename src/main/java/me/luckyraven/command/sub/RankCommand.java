@@ -103,11 +103,10 @@ public class RankCommand extends CommandHandler {
 			confirmCreate.setConfirmed(true);
 			createRankName.put(sender, new AtomicReference<>(args[2]));
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+			CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, time -> {
 				sender.sendMessage(MessageAddon.RANK_CREATE_CONFIRM.toString()
-				                                                   .replace("%timer%",
-				                                                            TimeUtil.formatTime(time.getDuration(),
-				                                                                                true)));
+				                                                   .replace("%timer%", TimeUtil.formatTime(
+						                                                   time.getDuration() / 20L, true)));
 			}, null, time -> {
 				confirmCreate.setConfirmed(false);
 				createRankName.remove(sender);
@@ -175,11 +174,10 @@ public class RankCommand extends CommandHandler {
 			confirmDelete.setConfirmed(true);
 			deleteRankName.put(sender, new AtomicReference<>(args[2]));
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+			CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, time -> {
 				sender.sendMessage(MessageAddon.RANK_REMOVE_CONFIRM.toString()
-				                                                   .replace("%timer%",
-				                                                            TimeUtil.formatTime(time.getDuration(),
-				                                                                                true)));
+				                                                   .replace("%timer%", TimeUtil.formatTime(
+						                                                   time.getDuration() / 20L, true)));
 			}, null, time -> {
 				confirmDelete.setConfirmed(false);
 				deleteRankName.remove(sender);

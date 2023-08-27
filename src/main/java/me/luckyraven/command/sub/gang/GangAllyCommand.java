@@ -1,19 +1,19 @@
 package me.luckyraven.command.sub.gang;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
-import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -28,16 +28,15 @@ class GangAllyCommand extends SubArgument {
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 
-	protected GangAllyCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
-	                          MemberManager memberManager, GangManager gangManager) {
-		super("ally", tree, parent);
+	protected GangAllyCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+		super(new String[]{"ally"}, tree, "ally", parent);
 
 		this.gangland = gangland;
 		this.tree = tree;
 
-		this.userManager = userManager;
-		this.memberManager = memberManager;
-		this.gangManager = gangManager;
+		this.userManager = gangland.getInitializer().getUserManager();
+		this.memberManager = gangland.getInitializer().getMemberManager();
+		this.gangManager = gangland.getInitializer().getGangManager();
 
 		gangAlly();
 	}
@@ -143,7 +142,7 @@ class GangAllyCommand extends SubArgument {
 
 					gangsIdMap.put(receiving, sending);
 
-					CountdownTimer timer = new CountdownTimer(gangland, 60, null, null, time -> {
+					CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, null, null, time -> {
 						gangsIdMap.remove(receiving);
 						gangRequestTimer.remove(receiving);
 					});
