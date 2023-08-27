@@ -1,10 +1,11 @@
 package me.luckyraven.command.sub.gang;
 
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.Tree;
@@ -18,12 +19,11 @@ class GangBalanceCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 
-	protected GangBalanceCommand(Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
-	                             GangManager gangManager) {
+	protected GangBalanceCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(new String[]{"balance", "bal"}, tree, "balance", parent);
 
-		this.userManager = userManager;
-		this.gangManager = gangManager;
+		this.userManager = gangland.getInitializer().getUserManager();
+		this.gangManager = gangland.getInitializer().getGangManager();
 	}
 
 	@Override

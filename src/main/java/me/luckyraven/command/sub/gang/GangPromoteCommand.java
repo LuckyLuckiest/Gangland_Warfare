@@ -1,19 +1,20 @@
 package me.luckyraven.command.sub.gang;
 
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.Member;
-import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.rank.Rank;
+import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
-import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.util.ChatUtil;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -33,16 +34,15 @@ class GangPromoteCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
 
-	protected GangPromoteCommand(Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
-	                             MemberManager memberManager, GangManager gangManager, RankManager rankManager) {
+	protected GangPromoteCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super("promote", tree, parent);
 
 		this.tree = tree;
 
-		this.userManager = userManager;
-		this.memberManager = memberManager;
-		this.gangManager = gangManager;
-		this.rankManager = rankManager;
+		this.userManager = gangland.getInitializer().getUserManager();
+		this.memberManager = gangland.getInitializer().getMemberManager();
+		this.gangManager = gangland.getInitializer().getGangManager();
+		this.rankManager = gangland.getInitializer().getRankManager();
 
 		this.addSubArgument(gangPromote());
 	}

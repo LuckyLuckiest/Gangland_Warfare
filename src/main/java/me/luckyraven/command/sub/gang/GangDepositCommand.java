@@ -1,13 +1,14 @@
 package me.luckyraven.command.sub.gang;
 
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.Member;
-import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.TriConsumer;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.Tree;
@@ -26,15 +27,14 @@ class GangDepositCommand extends SubArgument {
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 
-	protected GangDepositCommand(Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
-	                             MemberManager memberManager, GangManager gangManager) {
+	protected GangDepositCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super("deposit", tree, parent);
 
 		this.tree = tree;
 
-		this.userManager = userManager;
-		this.memberManager = memberManager;
-		this.gangManager = gangManager;
+		this.userManager = gangland.getInitializer().getUserManager();
+		this.memberManager = gangland.getInitializer().getMemberManager();
+		this.gangManager = gangland.getInitializer().getGangManager();
 
 		this.addSubArgument(gangDeposit());
 	}

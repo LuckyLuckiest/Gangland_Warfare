@@ -2,10 +2,6 @@ package me.luckyraven.command.sub.gang;
 
 import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.Gangland;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.Member;
-import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryAddons;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
@@ -13,11 +9,13 @@ import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
 import org.bukkit.Bukkit;
@@ -60,87 +58,71 @@ public class GangCommand extends CommandHandler {
 
 	@Override
 	protected void initializeArguments(Gangland gangland) {
-		UserManager<Player> userManager   = gangland.getInitializer().getUserManager();
-		GangManager         gangManager   = gangland.getInitializer().getGangManager();
-		MemberManager       memberManager = gangland.getInitializer().getMemberManager();
-		RankManager         rankManager   = gangland.getInitializer().getRankManager();
-
 		// create gang
 		// glw gang create <name>
-		Argument create = new GangCreateCommand(gangland, getArgumentTree(), getArgument(), userManager, memberManager,
-		                                        gangManager, rankManager);
+		Argument create = new GangCreateCommand(gangland, getArgumentTree(), getArgument());
 
 		// delete gang
 		// glw gang delete
-		Argument delete = new GangDeleteCommand(gangland, getArgumentTree(), getArgument(), userManager, memberManager,
-		                                        gangManager, rankManager);
+		Argument delete = new GangDeleteCommand(gangland, getArgumentTree(), getArgument());
 
 		// add user to gang
 		// glw gang invite <name>
-		GangInviteCommand addUser = new GangInviteCommand(gangland, getArgumentTree(), getArgument(), userManager,
-		                                                  memberManager, gangManager, rankManager);
+		GangInviteCommand addUser = new GangInviteCommand(gangland, getArgumentTree(), getArgument());
 
 		// glw gang accept
 		Argument acceptInvite = addUser.gangAccept();
 
 		// remove user from gang
 		// glw gang kick <name>
-		Argument removeUser = new GangKickCommand(gangland, getArgumentTree(), getArgument(), userManager,
-		                                          memberManager, gangManager, rankManager);
+		Argument removeUser = new GangKickCommand(gangland, getArgumentTree(), getArgument());
 
 		// leave the gang
 		// glw gang leave
-		Argument leave = new GangLeaveCommand(gangland, getArgumentTree(), getArgument(), userManager, memberManager,
-		                                      gangManager, rankManager);
+		Argument leave = new GangLeaveCommand(gangland, getArgumentTree(), getArgument());
 
 		// promote user in gang
 		// glw gang promote <name>
-		Argument promoteUser = new GangPromoteCommand(getArgumentTree(), getArgument(), userManager, memberManager,
-		                                              gangManager, rankManager);
+		Argument promoteUser = new GangPromoteCommand(gangland, getArgumentTree(), getArgument());
 
 		// demote user in gang
 		// glw gang demote <name>
-		Argument demoteUser = new GangDemoteCommand(getArgumentTree(), getArgument(), userManager, memberManager,
-		                                            gangManager, rankManager);
+		Argument demoteUser = new GangDemoteCommand(gangland, getArgumentTree(), getArgument());
 
 		getArgument().addPermission("gangland.command.gang.force_rank");
 
 		// deposit money to gang
 		// glw gang deposit <amount>
-		Argument deposit = new GangDepositCommand(getArgumentTree(), getArgument(), userManager, memberManager,
-		                                          gangManager);
+		Argument deposit = new GangDepositCommand(gangland, getArgumentTree(), getArgument());
 
 		// withdraw money from gang
 		// glw gang withdraw <amount>
-		Argument withdraw = new GangWithdrawCommand(getArgumentTree(), getArgument(), userManager, memberManager,
-		                                            gangManager);
+		Argument withdraw = new GangWithdrawCommand(gangland, getArgumentTree(), getArgument());
 
 		// balance of gang
 		// glw gang balance
-		Argument balance = new GangBalanceCommand(getArgumentTree(), getArgument(), userManager, gangManager);
+		Argument balance = new GangBalanceCommand(gangland, getArgumentTree(), getArgument());
 
 		// change gang name
 		// glw gang name <name>
-		Argument name = new GangRenameCommand(getArgumentTree(), getArgument(), userManager, gangManager);
+		Argument name = new GangRenameCommand(gangland, getArgumentTree(), getArgument());
 
 		// change gang description
 		// opens an anvil with a paper that can change the title
 		// glw gang desc
-		Argument description = new GangDescriptionCommand(gangland, getArgumentTree(), getArgument(), userManager,
-		                                                  gangManager);
+		Argument description = new GangDescriptionCommand(gangland, getArgumentTree(), getArgument());
 
 		// gang ally
 		// glw gang ally <request/abandon> <id>
-		Argument ally = new GangAllyCommand(gangland, getArgumentTree(), getArgument(), userManager, memberManager,
-		                                    gangManager);
+		Argument ally = new GangAllyCommand(gangland, getArgumentTree(), getArgument());
 
 		// change gang display name
 		// glw gang display <name>
-		Argument display = new GangDisplayCommand(getArgumentTree(), getArgument(), userManager, gangManager);
+		Argument display = new GangDisplayCommand(gangland, getArgumentTree(), getArgument());
 
 		// change gang color using gui
 		// glw gang color
-		Argument color = new GangColorCommand(gangland, getArgumentTree(), getArgument(), userManager, gangManager);
+		Argument color = new GangColorCommand(gangland, getArgumentTree(), getArgument());
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
