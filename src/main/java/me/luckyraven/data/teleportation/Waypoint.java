@@ -23,7 +23,7 @@ public class Waypoint {
 	private String world;
 
 	private @Setter WaypointType type;
-	private @Setter int          gangId, cooldown, shield;
+	private @Setter int          gangId, timer, cooldown, shield;
 	private @Setter double cost, radius;
 	private @Setter int usedId;
 
@@ -34,7 +34,7 @@ public class Waypoint {
 		this.world = "";
 		this.type = WaypointType.SAFE_ZONE;
 		this.gangId = -1;
-		this.cooldown = this.shield;
+		this.timer = this.cooldown = this.shield = 0;
 		this.cost = this.radius = 0D;
 		this.usedId = ++ID;
 	}
