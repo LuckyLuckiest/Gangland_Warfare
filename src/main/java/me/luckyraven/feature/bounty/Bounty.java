@@ -24,7 +24,7 @@ public class Bounty {
 	}
 
 	public RepeatingTimer createTimer(JavaPlugin plugin, long seconds, Consumer<RepeatingTimer> timer) {
-		this.repeatingTimer = new RepeatingTimer(plugin, 20L * seconds, timer);
+		this.repeatingTimer = new RepeatingTimer(plugin, seconds * 20L, timer);
 		return repeatingTimer;
 	}
 

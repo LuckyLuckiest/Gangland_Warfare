@@ -19,7 +19,8 @@ public class Scoreboard {
 
 		Gangland gangland = JavaPlugin.getPlugin(Gangland.class);
 
-		this.timer = new RepeatingTimer(gangland, 5 * 20L, (t) -> updateScoreboardContent());
+		int time = 5;
+		this.timer = new RepeatingTimer(gangland, time * 20L, (t) -> updateScoreboardContent());
 	}
 
 	public void updateScoreboardContent() {
