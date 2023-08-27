@@ -34,8 +34,9 @@ public class WaypointDatabase extends DatabaseHandler {
 
 		data.createTable("id INT PRIMARY KEY NOT NULL", "name TEXT NOT NULL", "world TEXT NOT NULL",
 		                 "x DOUBLE NOT NULL", "y DOUBLE NOT NULL", "z DOUBLE NOT NULL", "yaw DOUBLE NOT NULL",
-		                 "pitch DOUBLE NOT NULL", "type TEXT NOT NULL", "gang_id INT NOT NULL", "cooldown INT NOT NULL",
-		                 "shield INT NOT NULL", "cost DOUBLE NOT NULL", "radius DOUBLE NOT NULL");
+		                 "pitch DOUBLE NOT NULL", "type TEXT NOT NULL", "gang_id INT NOT NULL", "timer INT NOT NULL",
+		                 "cooldown INT NOT NULL", "shield INT NOT NULL", "cost DOUBLE NOT NULL",
+		                 "radius DOUBLE NOT NULL");
 	}
 
 	@Override
