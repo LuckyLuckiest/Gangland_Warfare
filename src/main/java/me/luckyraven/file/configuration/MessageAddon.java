@@ -98,22 +98,6 @@ public enum MessageAddon {
 	                                                                                 Type.COMMAND), RANK_PARENT_REMOVE(
 			"Commands.Rank.Parent.Remove", Type.COMMAND),
 
-	// commands - teleportation
-	PLAYER_SENT_TO_LOCATION("Commands.Spawn.Player.Sent", Type.COMMAND), PLAYER_TELEPORT_COOLDOWN(
-			"Commands.Spawn.Player.Cooldown", Type.COMMAND), TARGET_SENT_TO_LOCATION("Commands.Spawn.Target.Sent",
-	                                                                                 Type.COMMAND),
-	TARGET_TELEPORT_COOLDOWN("Commands.Spawn.Target.Cooldown", Type.COMMAND),
-
-	// commands - spawn
-	SPAWN_CREATED("Commands.Spawn.Created", Type.COMMAND), SPAWN_REMOVED("Commands.Spawn.Removed", Type.COMMAND),
-	SPAWN_LIST_PRIMARY("Commands.Spawn.List.Primary", Type.COMMAND), SPAWN_LIST_SECONDARY(
-			"Commands.Spawn.List.Secondary", Type.OTHER),
-
-	// commands - warp
-	WARP_CREATED("Commands.Warp.Created", Type.COMMAND), WARP_REMOVED("Commands.Warp.Removed", Type.COMMAND),
-	WARP_LIST_PRIMARY("Commands.Warp.List.Primary", Type.OTHER), WARP_LIST_SECONDARY("Commands.Warp.List.Secondary",
-	                                                                                 Type.OTHER),
-
 	// commands - bounty
 	BOUNTY_CURRENT("Commands.Bounty.Current", Type.COMMAND), BOUNTY_INCREMENT("Commands.Bounty.Increment", Type.OTHER),
 	BOUNTY_CLEAR("Commands.Bounty.Clear", Type.COMMAND), BOUNTY_LIFTED("Commands.Bounty.Lifted", Type.COMMAND),
@@ -125,6 +109,17 @@ public enum MessageAddon {
 	                                                                               Type.COMMAND), LEVEL_ADD(
 			"Commands.Level.Level.Add", Type.COMMAND), LEVEL_REMOVE("Commands.Level.Level.Remove", Type.COMMAND),
 	LEVEL_NEXT("Commands.Level.Next", Type.COMMAND),
+
+	// commands - waypoint
+	WAYPOINT_CREATED("Commands.Waypoint.Create.Created_Waypoint", Type.COMMAND), WAYPOINT_CREATE_CONFIRM(
+			"Commands.Waypoint.Create.Confirm_Timer", Type.COMMAND), WAYPOINT_SELECTED(
+			"Commands.Waypoint.Select.Selected", Type.COMMAND), WAYPOINT_DESELECTED(
+			"Commands.Waypoint.Select.Deselected", Type.COMMAND), WAYPOINT_LIST_PRIMARY(
+			"Commands.Waypoint.List.Primary", Type.COMMAND), WAYPOINT_LIST_SECONDARY("Commands.Waypoint.List.Secondary",
+	                                                                                 Type.COMMAND),
+	WAYPOINT_CONFIGURATION_SUCCESS("Commands.Waypoint.Configuration.Updated", Type.COMMAND), WAYPOINT_TELEPORT(
+			"Commands.Waypoint.Teleportation.Sent", Type.COMMAND), WAYPOINT_TELEPORT_TIMER(
+			"Commands.Waypoint.Teleportation.Timer", Type.COMMAND),
 
 	// errors - permissions
 	COMMAND_NO_PERM("Errors.Permissions.Command", Type.ERROR), KIT_NO_PERM("Errors.Permissions.Kit", Type.ERROR),
@@ -171,6 +166,10 @@ public enum MessageAddon {
 
 	// errors - bounty
 	NO_BOUNTY("Errors.Bounty.No_Bounty", Type.ERROR), NO_USER_SET_BOUNTY("Errors.Bounty.User_Set_Bounty", Type.ERROR),
+
+	// errors - waypoint
+	INVALID_WAYPOINT("Errors.Waypoint.Invalid", Type.ERROR), NOT_SELECTED_WAYPOINT("Errors.Waypoint.Not_Selected",
+	                                                                               Type.ERROR),
 
 	// errors - others
 	CANNOT_BE_NULL("Errors.Cannot_Null", Type.ERROR), MUST_BE_NUMBERS("Errors.Must_Be_Numbers", Type.ERROR),

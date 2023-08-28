@@ -189,25 +189,6 @@ Commands:
       Parent:
          Add: "Added &8[&e%parent%&8]&7 to &8[&a%rank%&8]&7."
          Remove: "Removed &8[&e%parent%&8]&7 from &8[&a%rank%&8]&7."
-   Teleportation:
-      Player:
-         Sent: "You have been sent to &a%location%&7."
-         Cooldown: "You will teleport to &a%location% &7in &b%time% &7%time_unit%&8(&7s&8)&7."
-      Target:
-         Sent: "&8%target% &7has been sent to &a%location%&7."
-         Cooldown: "&8%target% &7will teleport to &a%location% &7in &b%time% &7%time_unit%&8(&7s&8)&7."
-   Spawn:
-      Created: "Spawn &a%location% &7has been set!"
-      Removed: "Spawn &a%location% &7has been successfully removed!"
-      List:
-         Primary: "Spawn Locations&8:"
-         Secondary: "&7%list%"
-   Warp:
-      Created: "Warp &a%location% &7has been set!"
-      Removed: "Warp &a%location% &7has been successfully removed!"
-      List:
-         Primary: "Warp Locations&8:"
-         Secondary: "&7%list%"
    Bounty:
       Current: "Bounty &c%money_symbol%%bounty%"
       Bounty_Set: "You have a bounty on your head!"
@@ -223,6 +204,21 @@ Commands:
          Add: "Leveled Up &b%level%&7 levels."
          Remove: "Went down &b%level%&7 levels."
       Next: "Level: &f%level%&7/&b%max_level%%n%&7Experience: &f%experience%&7/&b%required_experience%"
+   Waypoint:
+      Create:
+         Created_Waypoint: "Created a new waypoint &8[&a%waypoint%&8]&7."
+         Confirm_Timer: "You have &a%timer%&7 to confirm the waypoint."
+      Select:
+         Selected: "The waypoint &8[&a%waypoint%&8]&7 has been selected."
+         Deselected: "The waypoint &8[&a%waypoint%&8]&7 has be deselected."
+      List:
+         Primary: "All the waypoints:"
+         Secondary: "%waypoints%"
+      Configuration:
+         Updated: "Configuration updated."
+      Teleportation:
+         Sent: "You have been sent to &a%location%&7."
+         Timer: "You will teleport to &a%location% &7in &b%timer%&7."
 
 Errors:
    Prefix: "&4Error&7: "
@@ -274,6 +270,9 @@ Errors:
    Bounty:
       No_Bounty: "This player doesn't have a bounty."
       User_Set_Bounty: "You didn't set a bounty for this player."
+   Waypoint:
+      Invalid: "Invalid waypoint."
+      Not_Selected: "No selected waypoint found."
    Cannot_Null: "Can not be &cnull&7!"
    Must_Be_Numbers: "&a%command% &7must be numbers."
    Dont_Use_Symbol: "Please don't use symbol."
