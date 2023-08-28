@@ -52,8 +52,9 @@ public class DatabaseManager {
 		} catch (Exception exception) {
 			String type = "";
 			switch (handler.getType()) {
-				case DatabaseHandler.MYSQL -> type = "MySQL";
-				case DatabaseHandler.SQLITE -> type = "SQLite";
+				// inverting the types since they will be inverse, according to the first switch statement
+				case DatabaseHandler.MYSQL -> type = "SQLite";
+				case DatabaseHandler.SQLITE -> type = "MySQL";
 			}
 
 			plugin.getLogger().info(
