@@ -1,9 +1,7 @@
 package me.luckyraven.command.argument;
 
-import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.data.permission.PermissionHandler;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -12,7 +10,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.PluginManager;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,7 +18,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
 
-public class Argument implements PermissionHandler, Cloneable {
+public class Argument implements Cloneable {
 
 	private final @Getter String[]            arguments;
 	private final @Getter Tree.Node<Argument> node;
@@ -87,13 +84,13 @@ public class Argument implements PermissionHandler, Cloneable {
 		getArgumentSequence(list, node.getParent());
 	}
 
-	@Override
-	public void addPermission(@NotNull String permission) {
-		Preconditions.checkNotNull(permission, "Permission string can't be null!");
-		if (permission.isEmpty()) return;
-
+	public void setPermission(String permission) {
 		this.permission = permission;
 
+		addPermission(permission);
+	}
+
+	public void addPermission(String permission) {
 		Permission    perm          = new Permission(permission);
 		PluginManager pluginManager = Bukkit.getPluginManager();
 		List<String>  permissions   = pluginManager.getPermissions().stream().map(Permission::getName).toList();
@@ -159,7 +156,8 @@ public class Argument implements PermissionHandler, Cloneable {
 		if (node == null || index >= list.length) return null;
 		if (!node.getData().equals(list[index]) && !node.getData().equals(dummy)) return null;
 
-		if (!sender.hasPermission(node.getData().getPermission())) {
+		String permission = node.getData().getPermission();
+		if (permission != null && !sender.hasPermission(permission)) {
 			sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
 			return null;
 		}
