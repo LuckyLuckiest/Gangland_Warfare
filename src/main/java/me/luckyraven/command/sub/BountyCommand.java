@@ -1,14 +1,14 @@
 package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.feature.bounty.Bounty;
-import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.feature.bounty.Bounty;
+import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
