@@ -2,6 +2,7 @@ package me.luckyraven.data;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
+import me.luckyraven.bukkit.scoreboard.Scoreboard;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
@@ -23,9 +24,6 @@ import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-/**
- * The type Reload plugin.
- */
 public class ReloadPlugin {
 
 	private final Gangland    gangland;
@@ -37,7 +35,19 @@ public class ReloadPlugin {
 	}
 
 	/**
-	 * Reloads the files and they're linked addons.
+	 * Reloads the periodical updates.
+	 */
+	public void periodicalUpdatesReload() {
+		int minutes = SettingAddon.getAutoSaveTime();
+
+		gangland.getPeriodicalUpdates().stop();
+
+		if (SettingAddon.isAutoSave()) gangland.getPeriodicalUpdates().setInterval(minutes * 60 * 20L);
+		else gangland.getPeriodicalUpdates().removeTimer();
+	}
+
+	/**
+	 * Reloads the files and their linked addons.
 	 */
 	public void filesReload() {
 		initializer.getFileManager().reloadFiles();
@@ -50,11 +60,26 @@ public class ReloadPlugin {
 	 * @param resetCache if old data needs to be cleared
 	 */
 	public void databaseInitialize(boolean resetCache) {
+		// order matters
 		rankInitialize(resetCache);
 		gangInitialize(resetCache);
 		memberInitialize(resetCache);
+		// order doesn't matter
 		userInitialize(resetCache);
 		waypointInitialize(resetCache);
+	}
+
+	/**
+	 *
+	 */
+	public void scoreboardReload() {
+		for (User<Player> user : initializer.getUserManager().getUsers().values()) {
+			user.getScoreboard().end();
+
+			user.setScoreboard(new Scoreboard(user));
+
+			user.getScoreboard().start();
+		}
 	}
 
 	/**
@@ -62,7 +87,7 @@ public class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 * @implNote Very important to run this method after {@link ListenerManager}, {@link DatabaseManager},
-	 * {@link CreateAccount}, {@link UserDatabase}, {@link RankDatabase}, and {@link GangDatabase} initialization.
+	 * {@link CreateAccount}, {@link UserDatabase}, and {@link GangDatabase} initialization.
 	 */
 	public void userInitialize(boolean resetCache) {
 		ListenerManager listenerManager = initializer.getListenerManager();
@@ -132,7 +157,7 @@ public class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 * @implNote Very important to run this method after {@link DatabaseManager}, {@link RankManager},
-	 * {@link GangManager}, {@link UserDatabase}, {@link RankDatabase}, and {@link GangDatabase} initialization.
+	 * {@link GangManager}, {@link RankDatabase}, and {@link GangDatabase} initialization.
 	 */
 	public void memberInitialize(boolean resetCache) {
 		RankManager   rankManager   = initializer.getRankManager();

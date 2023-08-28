@@ -13,12 +13,10 @@ import java.util.Map;
 
 public class ReloadCommand extends CommandHandler {
 
-	private final Gangland gangland;
 
 	public ReloadCommand(Gangland gangland) {
 		super(gangland, "reload", false, "rl");
 
-		this.gangland = gangland;
 		List<CommandInformation> list = getCommands().entrySet().stream().filter(
 				entry -> entry.getKey().startsWith("reload")).sorted(Map.Entry.comparingByKey()).map(
 				Map.Entry::getValue).toList();
@@ -28,23 +26,25 @@ public class ReloadCommand extends CommandHandler {
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		reloadProcess(commandSender, "", () -> {
-			gangland.getReloadPlugin().filesReload();
+			getGangland().getReloadPlugin().filesReload();
 			databaseReload();
-		});
+			getGangland().getReloadPlugin().scoreboardReload();
+			getGangland().getReloadPlugin().periodicalUpdatesReload();
+		}, true);
 	}
 
 	@Override
 	protected void initializeArguments(Gangland gangland) {
 		Argument files = new Argument(new String[]{"files", "file"}, getArgumentTree(), (argument, sender, args) -> {
-			reloadProcess(sender, "files", () -> gangland.getReloadPlugin().filesReload());
+			reloadProcess(sender, "files", () -> gangland.getReloadPlugin().filesReload(), true);
 		});
 
 		Argument data = new Argument(new String[]{"database", "data"}, getArgumentTree(), (argument, sender, args) -> {
-			reloadProcess(sender, "database", this::databaseReload);
+			reloadProcess(sender, "database", this::databaseReload, true);
 		});
 
 		Argument scoreboard = new Argument("scoreboard", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage("Not implemented yet!");
+			reloadProcess(sender, "scoreboard", () -> gangland.getReloadPlugin().scoreboardReload(), false);
 		});
 
 		List<Argument> arguments = new ArrayList<>();
@@ -61,12 +61,12 @@ public class ReloadCommand extends CommandHandler {
 		getHelpInfo().displayHelp(sender, page, "Reload");
 	}
 
-	private void reloadProcess(CommandSender sender, String process, Runnable runnable) {
+	private void reloadProcess(CommandSender sender, String process, Runnable runnable, boolean forceUpdate) {
 		sender.sendMessage(ChatUtil.commandMessage(
 				String.format("&bReloading&7 the plugin%s%s...", process.isEmpty() ? "" : " ", process)));
 		try {
+			if (forceUpdate) getGangland().getPeriodicalUpdates().forceUpdate();
 			runnable.run();
-			gangland.getPeriodicalUpdates().forceUpdate();
 
 			sender.sendMessage(ChatUtil.commandMessage("&aReload has been completed."));
 		} catch (Exception exception) {
@@ -75,7 +75,7 @@ public class ReloadCommand extends CommandHandler {
 	}
 
 	private void databaseReload() {
-		gangland.getReloadPlugin().databaseInitialize(true);
+		getGangland().getReloadPlugin().databaseInitialize(true);
 	}
 
 }
