@@ -52,8 +52,8 @@ public class Waypoint {
 		this.pitch = pitch;
 	}
 
-	public CompletableFuture<Boolean> teleport(JavaPlugin plugin, User<Player> user) {
-		CompletableFuture<Boolean> teleportResult = new CompletableFuture<>();
+	public CompletableFuture<TeleportResult> teleport(JavaPlugin plugin, User<Player> user) {
+		CompletableFuture<TeleportResult> teleportResult = new CompletableFuture<>();
 
 		Bukkit.getServer().getScheduler().runTaskLater(plugin, () -> {
 			World locWorld = Bukkit.getWorld(world);
@@ -68,12 +68,19 @@ public class Waypoint {
 					user.getUser().teleport(location);
 
 					// successfully teleported
-					teleportResult.complete(true);
+					TeleportResult result = new TeleportResult(true, user, this);
+					teleportResult.complete(result);
 				}
 				// event cancelled teleportation
-				else teleportResult.complete(false);
+				else {
+					TeleportResult result = new TeleportResult(false, user, this);
+					teleportResult.complete(result);
+				}
 
-			} else teleportResult.complete(false);
+			} else {
+				TeleportResult result = new TeleportResult(false, user, this);
+				teleportResult.complete(result);
+			}
 		}, 1L);
 
 		return teleportResult;
@@ -109,5 +116,7 @@ public class Waypoint {
 			return this.name().toLowerCase();
 		}
 	}
+
+	public record TeleportResult(boolean success, User<Player> playerUser, Waypoint waypoint) {}
 
 }
