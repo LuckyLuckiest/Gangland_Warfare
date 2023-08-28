@@ -20,7 +20,7 @@ public class Scoreboard {
 		Gangland gangland = JavaPlugin.getPlugin(Gangland.class);
 
 		int time = 5;
-		this.timer = new RepeatingTimer(gangland, time * 20L, (t) -> updateScoreboardContent());
+		this.timer = new RepeatingTimer(gangland, time * 20L, t -> updateScoreboardContent());
 	}
 
 	public void updateScoreboardContent() {
@@ -28,7 +28,7 @@ public class Scoreboard {
 		Player player = user.getUser();
 
 		String line1 = "Health: " + player.getHealth();
-		String line2 = "Level: " + player.getLevel();
+		String line2 = "Level: " + user.getLevel().getLevelValue();
 		String line3 = "Coins: " + user.getEconomy().getBalance();
 
 		fastBoard.updateTitle(player.getName());
