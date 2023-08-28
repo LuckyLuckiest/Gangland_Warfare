@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.WaypointDatabase;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
@@ -13,12 +14,14 @@ import java.util.Map;
 
 public class WaypointManager {
 
-	private final Map<Integer, Waypoint> waypoints;
 	private final Gangland               gangland;
+	private final Map<Integer, Waypoint> waypoints;
+	private final Map<Player, Waypoint>  selectedWaypoints;
 
 	public WaypointManager(Gangland gangland) {
 		this.gangland = gangland;
 		this.waypoints = new HashMap<>();
+		this.selectedWaypoints = new HashMap<>();
 	}
 
 	public void initialize(WaypointDatabase waypointDatabase) {
@@ -37,10 +40,11 @@ public class WaypointManager {
 				double x        = (double) result[v++];
 				double y        = (double) result[v++];
 				double z        = (double) result[v++];
-				float  yaw      = (float) result[v++];
-				float  pitch    = (float) result[v++];
+				double yaw      = (double) result[v++];
+				double pitch    = (double) result[v++];
 				String type     = String.valueOf(result[v++]);
 				int    gangId   = (int) result[v++];
+				int    timer    = (int) result[v++];
 				int    cooldown = (int) result[v++];
 				int    shield   = (int) result[v++];
 				double cost     = (double) result[v++];
@@ -48,13 +52,16 @@ public class WaypointManager {
 
 				Waypoint waypoint = new Waypoint(name);
 
-				waypoint.setCoordinates(world, x, y, z, yaw, pitch);
+				waypoint.setCoordinates(world, x, y, z, (float) yaw, (float) pitch);
 				waypoint.setType(Waypoint.WaypointType.valueOf(type.toUpperCase()));
 				waypoint.setGangId(gangId);
+				waypoint.setTimer(timer);
 				waypoint.setCooldown(cooldown);
 				waypoint.setShield(shield);
 				waypoint.setCost(cost);
 				waypoint.setRadius(radius);
+
+				gangland.addPermission("gangland.waypoint." + id);
 
 				waypoints.put(id, waypoint);
 			}
@@ -73,8 +80,10 @@ public class WaypointManager {
 	public void clear() {
 		Waypoint.setID(0);
 		waypoints.clear();
+		selectedWaypoints.clear();
 	}
 
+	@Nullable
 	public Waypoint get(int id) {
 		return waypoints.get(id);
 	}
@@ -118,8 +127,24 @@ public class WaypointManager {
 		});
 	}
 
+	public void playerSelect(Player player, Waypoint waypoint) {
+		selectedWaypoints.put(player, waypoint);
+	}
+
+	public Waypoint getSelected(Player player) {
+		return selectedWaypoints.get(player);
+	}
+
+	public Waypoint playerDeselect(Player player) {
+		return selectedWaypoints.remove(player);
+	}
+
 	public Map<Integer, Waypoint> getWaypoints() {
 		return Collections.unmodifiableMap(waypoints);
+	}
+
+	public Map<Player, Waypoint> getSelectedWaypoints() {
+		return Collections.unmodifiableMap(selectedWaypoints);
 	}
 
 	@Override
