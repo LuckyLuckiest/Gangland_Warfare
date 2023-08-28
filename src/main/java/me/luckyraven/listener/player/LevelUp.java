@@ -29,7 +29,7 @@ public class LevelUp implements Listener {
 			if (player == null) return;
 
 			player.sendMessage(
-					ChatUtil.prefixMessage("You have leveled up to &b" + event.getLevel().nextLevel() + "&7."));
+					ChatUtil.prefixMessage("You have leveled up to level &b" + event.getLevel().nextLevel() + "&7."));
 		}
 
 		Gang gang = event.getGang();
@@ -39,8 +39,8 @@ public class LevelUp implements Listener {
 					User::getUser).toList();
 
 			for (Player player : onlinePlayers)
-				player.sendMessage(
-						ChatUtil.prefixMessage("The gang has leveled up to &b" + event.getLevel().nextLevel() + "&7."));
+				player.sendMessage(ChatUtil.prefixMessage(
+						"The gang has leveled up to level &b" + event.getLevel().nextLevel() + "&7."));
 		}
 
 	}
