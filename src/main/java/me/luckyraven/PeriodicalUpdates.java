@@ -1,10 +1,14 @@
 package me.luckyraven;
 
+import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
-import me.luckyraven.bukkit.inventory.InventoryHandler;
+import me.luckyraven.data.rank.Rank;
+import me.luckyraven.data.rank.RankManager;
+import me.luckyraven.data.teleportation.Waypoint;
+import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
@@ -12,9 +16,8 @@ import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.RankDatabase;
 import me.luckyraven.database.sub.UserDatabase;
+import me.luckyraven.database.sub.WaypointDatabase;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
@@ -40,7 +43,7 @@ public class PeriodicalUpdates {
 
 	public PeriodicalUpdates(Gangland gangland, long interval) {
 		this(gangland);
-		this.repeatingTimer = new RepeatingTimer(gangland, interval, (timer) -> task());
+		this.repeatingTimer = new RepeatingTimer(gangland, interval, timer -> task());
 	}
 
 	private void task() {
@@ -66,6 +69,15 @@ public class PeriodicalUpdates {
 		long end = System.currentTimeMillis();
 
 		Gangland.getLog4jLogger().info(String.format("The process took %dms", end - start));
+	}
+
+	public void setInterval(long interval) {
+		if (repeatingTimer == null) repeatingTimer = new RepeatingTimer(gangland, interval, timer -> task());
+		else repeatingTimer.setInterval(interval);
+	}
+
+	public void removeTimer() {
+		this.repeatingTimer = null;
 	}
 
 	public void forceUpdate() {
@@ -106,6 +118,9 @@ public class PeriodicalUpdates {
 			} else if (handler instanceof RankDatabase rankDatabase) {
 				// rank info
 				updateRankData(gangland.getInitializer().getRankManager(), helper, rankDatabase);
+			} else if (handler instanceof WaypointDatabase waypointDatabase) {
+				// waypoint info
+				updateWaypointData(gangland.getInitializer().getWaypointManager(), helper, waypointDatabase);
 			}
 		}
 	}
@@ -166,6 +181,19 @@ public class PeriodicalUpdates {
 		});
 	}
 
+	private void updateWaypointData(WaypointManager waypointManager, DatabaseHelper helper,
+	                                WaypointDatabase waypointDatabase) {
+		helper.runQueries(database -> {
+			for (Waypoint waypoint : waypointManager.getWaypoints().values()) {
+				Object[] data = database.table("data").select("id = ?", new Object[]{waypoint.getUsedId()},
+				                                              new int[]{Types.INTEGER}, new String[]{"*"});
+
+				if (data.length == 0) waypointDatabase.insertDataTable(waypoint);
+				else waypointDatabase.updateDataTable(waypoint);
+			}
+		});
+	}
+
 	private void removeInventories() {
 		for (User<Player> user : gangland.getInitializer().getUserManager().getUsers().values())
 			if (!userViewingInventory(user)) {
@@ -191,7 +219,6 @@ public class PeriodicalUpdates {
 
 		for (InventoryType type : inventoryTypes)
 			if (user.getUser().getOpenInventory().getType() == type) return true;
-
 
 		return false;
 	}
