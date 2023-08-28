@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariConfig;
 import lombok.Getter;
 import me.luckyraven.data.ReloadPlugin;
 import me.luckyraven.data.economy.EconomyHandler;
-import me.luckyraven.data.permission.PermissionHandler;
 import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.dependency.PlaceholderAPIExpansion;
 import me.luckyraven.file.configuration.SettingAddon;
@@ -25,7 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 @Getter
-public final class Gangland extends JavaPlugin implements PermissionHandler {
+public final class Gangland extends JavaPlugin {
 
 	@Getter
 	private static final Logger            log4jLogger = LogManager.getLogger("Gangland_Warfare");
@@ -84,11 +83,15 @@ public final class Gangland extends JavaPlugin implements PermissionHandler {
 
 	private void dependencyHandler() {
 		// required dependencies
-		requiredDependency("NBTAPI", null);
+		Dependency nbtApi = new Dependency("NBTAPI", Dependency.Type.REQUIRED);
+		nbtApi.validate(null);
 
 		// soft dependencies
-		softDependency("PlaceholderAPI", () -> new PlaceholderAPIExpansion(this).register());
-		softDependency("Vault", () -> {
+		Dependency placeholderApi = new Dependency("PlaceholderAPI", Dependency.Type.SOFT);
+		placeholderApi.validate(() -> new PlaceholderAPIExpansion(this).register());
+
+		Dependency vault = new Dependency("Vault", Dependency.Type.SOFT);
+		vault.validate(() -> {
 			RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
 
 			if (rsp == null) return;
@@ -98,24 +101,6 @@ public final class Gangland extends JavaPlugin implements PermissionHandler {
 		});
 	}
 
-	private void requiredDependency(@NotNull String name, @Nullable Runnable runnable) {
-		if (Bukkit.getPluginManager().getPlugin(name) != null) {
-			if (runnable != null) runnable.run();
-			return;
-		}
-
-		log4jLogger.error(name + " is a required dependency!");
-		getPluginLoader().disablePlugin(this);
-	}
-
-	private void softDependency(@NotNull String name, @Nullable Runnable runnable) {
-		if (Bukkit.getPluginManager().getPlugin(name) != null) if (runnable != null) {
-			log4jLogger.info("Found " + name + ", linking...");
-			runnable.run();
-		}
-	}
-
-	@Override
 	public void addPermission(@NotNull String permission) {
 		Preconditions.checkNotNull(permission, "Permission string can't be null!");
 		if (permission.isEmpty()) return;
@@ -125,6 +110,35 @@ public final class Gangland extends JavaPlugin implements PermissionHandler {
 		List<String>  permissions   = pluginManager.getPermissions().stream().map(Permission::getName).toList();
 
 		if (!permissions.contains(permission)) pluginManager.addPermission(perm);
+	}
+
+	private class Dependency {
+
+		private final Type   type;
+		private final String name;
+
+		public Dependency(String name, Type type) {
+			this.name = name;
+			this.type = type;
+		}
+
+		public void validate(@Nullable Runnable runnable) {
+			if (Bukkit.getPluginManager().getPlugin(name) != null) {
+				if (runnable != null) runnable.run();
+				if (type == Type.SOFT) log4jLogger.info("Found " + name + ", linking...");
+				return;
+			}
+
+			if (type == Type.REQUIRED) {
+				log4jLogger.error(name + " is a required dependency!");
+				getPluginLoader().disablePlugin(Gangland.this);
+			}
+		}
+
+		enum Type {
+			REQUIRED, SOFT
+		}
+
 	}
 
 }
