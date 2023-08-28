@@ -3,13 +3,13 @@ package me.luckyraven.data.account.gang;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.data.account.Account;
-import me.luckyraven.feature.bounty.Bounty;
+import me.luckyraven.data.economy.EconomyHandler;
+import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.data.economy.EconomyHandler;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.level.Level;
-import me.luckyraven.data.rank.Rank;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.color.Color;
 import org.bukkit.Bukkit;
@@ -94,7 +94,7 @@ public class Gang extends Account<Integer, List<Member>> {
 
 	public void removeMember(User<? extends OfflinePlayer> user, Member member) {
 		if (!getGroup().contains(member)) return;
-		user.setGangId(-1);
+		user.resetGang();
 		user.removeAccount(this);
 		removeMember(member);
 	}
