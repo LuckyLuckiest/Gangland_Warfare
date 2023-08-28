@@ -3,7 +3,9 @@ package me.luckyraven.listener.player;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.database.DatabaseHandler;
+import me.luckyraven.database.DatabaseHelper;
+import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -30,7 +32,17 @@ public class RemoveAccount implements Listener {
 		// Remove the user from a user manager group
 		userManager.remove(user);
 
-		if (!SettingAddon.isAutoSave()) gangland.getPeriodicalUpdates().forceUpdate();
+		// must save user info
+		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+			if (handler instanceof UserDatabase userDatabase) {
+				DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+
+				helper.runQueries(database -> {
+					userDatabase.updateDataTable(user);
+					userDatabase.updateBankTable(user);
+				});
+				break;
+			}
 
 		user.getScoreboard().end();
 	}
