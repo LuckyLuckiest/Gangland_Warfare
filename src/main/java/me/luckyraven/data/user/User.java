@@ -30,11 +30,11 @@ public class User<T extends OfflinePlayer> {
 	private final Level               level;
 	private final Wanted              wanted;
 	private final EconomyHandler      economy;
-	private final Scoreboard          scoreboard;
 
 	private @Setter int kills, deaths, mobKills, gangId;
-	private @Setter boolean hasBank;
-	private @Setter Phone   phone;
+	private @Setter boolean    hasBank;
+	private @Setter Phone      phone;
+	private @Setter Scoreboard scoreboard;
 
 	/**
 	 * Instantiates a new Database.
