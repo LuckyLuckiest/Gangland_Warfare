@@ -85,8 +85,9 @@ public final class CreateAccount implements Listener {
 			                                     new int[]{Types.CHAR}, new String[]{"*"});
 			Bank bank = new Bank(user, "");
 			// create player data into database
-			if (bankInfo.length == 0) if (!SettingAddon.isAutoSave()) userDatabase.insertBankTable(user);
-			else {
+			if (bankInfo.length == 0) {
+				if (!SettingAddon.isAutoSave()) userDatabase.insertBankTable(user);
+			} else {
 				String name    = String.valueOf(bankInfo[1]);
 				double balance = (double) bankInfo[2];
 
@@ -103,8 +104,9 @@ public final class CreateAccount implements Listener {
 			Object[] dataInfo = dataTable.select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
 			                                     new int[]{Types.CHAR}, new String[]{"*"});
 			// create player data into a database
-			if (dataInfo.length == 0) if (!SettingAddon.isAutoSave()) userDatabase.insertDataTable(user);
-			else {
+			if (dataInfo.length == 0) {
+				if (!SettingAddon.isAutoSave()) userDatabase.insertDataTable(user);
+			} else {
 				int     kills      = (int) dataInfo[1];
 				int     deaths     = (int) dataInfo[2];
 				int     mobKills   = (int) dataInfo[3];
@@ -159,8 +161,9 @@ public final class CreateAccount implements Listener {
 			                                    new String[]{"*"});
 
 			// create member data into a database
-			if (memberInfo.length == 0) if (!SettingAddon.isAutoSave()) gangDatabase.insertMemberTable(member);
-			else {
+			if (memberInfo.length == 0) {
+				if (!SettingAddon.isAutoSave()) gangDatabase.insertMemberTable(member);
+			} else {
 				RankManager rankManager = gangland.getInitializer().getRankManager();
 
 				int    gangId       = (int) memberInfo[1];
