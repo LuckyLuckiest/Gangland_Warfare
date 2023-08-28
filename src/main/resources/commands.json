@@ -33,7 +33,7 @@
 	},
 	"economy_help": {
 		"usage": "/glw economy help <page>",
-		"description": "Shows economy help page."
+		"description": "Shows the specified page in economy menu."
 	},
 	"economy_add": {
 		"usage": "/glw economy deposit <specifier> <amount>",
@@ -65,7 +65,7 @@
 	},
 	"bank_help": {
 		"usage": "/glw bank help <page>",
-		"description": "Shows bank help page."
+		"description": "Shows the specified page in bank menu."
 	},
 	"bank_create": {
 		"usage": "/glw bank create <name>",
@@ -165,7 +165,7 @@
 	},
 	"gang_help": {
 		"usage": "/glw gang help <page>",
-		"description": "Shows gang help page."
+		"description": "Shows the specified page in gang menu."
 	},
 	"gang_create": {
 		"usage": "/glw gang create <name>",
@@ -277,7 +277,7 @@
 	},
 	"rank_help": {
 		"usage": "/glw rank help <page>",
-		"description": "Shows ranks help page."
+		"description": "Shows the specified page in ranks menu."
 	},
 	"rank_create": {
 		"usage": "/glw rank create <name>",
@@ -313,7 +313,7 @@
 	},
 	"bounty_help": {
 		"usage": "/glw bounty help <page>",
-		"description": "Shows bounty help page."
+		"description": "Shows the specified page in bounty menu."
 	},
 	"bounty_set": {
 		"usage": "/glw bounty set <player> <amount>",
@@ -329,7 +329,7 @@
 	},
 	"level_help": {
 		"usage": "/glw level help <page>",
-		"description": "Get level help page."
+		"description": "Shows the specified page in level menu."
 	},
 	"level_add_experience": {
 		"usage": "/glw level exp add <amount>",
@@ -350,5 +350,73 @@
 	"level_next": {
 		"usage": "/glw level next",
 		"description": "Shows statistics about the next level."
+	},
+	"waypoint": {
+		"usage": "/glw waypoint",
+		"description": "Get the help page."
+	},
+	"waypoint_help": {
+		"usage": "/glw waypoint help <page>",
+		"description": "Shows the specified page in waypoint menu."
+	},
+	"waypoint_list": {
+		"usage": "/glw waypoint list",
+		"description": "Shows a list of registered waypoints."
+	},
+	"waypoint_create": {
+		"usage": "/glw waypoint create <name>",
+		"description": "Creates a new waypoint according to the current location."
+	},
+	"waypoint_remove": {
+		"usage": "/glw waypoint delete <id>",
+		"description": "Deletes the specified waypoint."
+	},
+	"waypoint_select": {
+		"usage": "/glw waypoint select <id>",
+		"description": "Selects the waypoint to easily configure."
+	},
+	"waypoint_deselect": {
+		"usage": "/glw waypoint deselect",
+		"description": "Deselects the selected waypoint."
+	},
+	"waypoint_info": {
+		"usage": "/glw waypoint info",
+		"description": "Shows a detailed information about the selected waypoint."
+	},
+	"waypoint_type": {
+		"usage": "/glw waypoint type <value>",
+		"description": "Sets the specified waypoint with the specific type."
+	},
+	"waypoint_gangId": {
+		"usage": "/glw waypoint gangId <gangId>",
+		"description": "Sets the gangId in that waypoint."
+	},
+	"waypoint_timer": {
+		"usage": "/glw waypoint timer <amount>",
+		"description": "Sets the timer in that waypoint."
+	},
+	"waypoint_cooldown": {
+		"usage": "/glw waypoint cooldown <amount>",
+		"description": "Sets the teleport cooldown."
+	},
+	"waypoint_shield": {
+		"usage": "/glw waypoint shield <amount>",
+		"description": "Sets the shield duration in that waypoint."
+	},
+	"waypoint_cost": {
+		"usage": "/glw waypoint cost <amount>",
+		"description": "Sets the cost to teleport to that waypoint."
+	},
+	"waypoint_radius": {
+		"usage": "/glw waypoint radius <amount>",
+		"description": "Sets the radius of affect for that waypoint."
+	},
+	"waypoint_teleport": {
+		"usage": "/glw tp",
+		"description": "Teleport to the selected waypoint."
+	},
+	"waypoint_teleport_unknown": {
+		"usage": "/glw tp <name>",
+		"description": "Teleport to the waypoint specified."
 	}
 }
