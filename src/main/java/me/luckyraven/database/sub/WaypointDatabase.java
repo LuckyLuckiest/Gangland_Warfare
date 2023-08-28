@@ -65,9 +65,9 @@ public class WaypointDatabase extends DatabaseHandler {
 
 		config.insert(columns, new Object[]{
 				waypoint.getUsedId(), waypoint.getName(), waypoint.getWorld(), waypoint.getX(), waypoint.getY(),
-				waypoint.getZ(), waypoint.getYaw(), waypoint.getPitch(), waypoint.getType().getName(),
-				waypoint.getGangId(), waypoint.getCooldown(), waypoint.getShield(), waypoint.getCost(),
-				waypoint.getRadius()
+				waypoint.getZ(), (double) waypoint.getYaw(), (double) waypoint.getPitch(), waypoint.getType().getName(),
+				waypoint.getGangId(), waypoint.getTimer(), waypoint.getCooldown(), waypoint.getShield(),
+				waypoint.getCost(), waypoint.getRadius()
 		}, dataTypes);
 	}
 
@@ -83,8 +83,9 @@ public class WaypointDatabase extends DatabaseHandler {
 
 		config.update("id = ?", new Object[]{waypoint.getUsedId()}, new int[]{Types.INTEGER}, columns, new Object[]{
 				waypoint.getName(), waypoint.getWorld(), waypoint.getX(), waypoint.getY(), waypoint.getZ(),
-				waypoint.getYaw(), waypoint.getPitch(), waypoint.getType().getName(), waypoint.getGangId(),
-				waypoint.getCooldown(), waypoint.getShield(), waypoint.getCost(), waypoint.getRadius()
+				(double) waypoint.getYaw(), (double) waypoint.getPitch(), waypoint.getType().getName(),
+				waypoint.getGangId(), waypoint.getTimer(), waypoint.getCooldown(), waypoint.getShield(),
+				waypoint.getCost(), waypoint.getRadius()
 		}, dataTypes);
 	}
 
