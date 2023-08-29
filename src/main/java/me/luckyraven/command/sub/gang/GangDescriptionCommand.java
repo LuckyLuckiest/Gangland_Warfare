@@ -24,7 +24,7 @@ class GangDescriptionCommand extends SubArgument {
 	private final GangManager         gangManager;
 
 	protected GangDescriptionCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"desc", "description"}, tree, "description", parent);
+		super(new String[]{"desc", "description"}, tree, parent, "description");
 
 		this.gangland = gangland;
 

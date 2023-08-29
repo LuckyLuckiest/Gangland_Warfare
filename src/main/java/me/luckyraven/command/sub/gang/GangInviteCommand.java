@@ -38,7 +38,7 @@ class GangInviteCommand extends SubArgument {
 	private final HashMap<User<Player>, CountdownTimer> inviteTimer;
 
 	protected GangInviteCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"invite", "add"}, tree, "invite", parent);
+		super(new String[]{"invite", "add"}, tree, parent, "invite");
 
 		this.gangland = gangland;
 		this.tree = tree;
