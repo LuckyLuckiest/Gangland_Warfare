@@ -18,4 +18,8 @@ public class PluginException extends RuntimeException {
 		super(cause);
 	}
 
+	public PluginException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+	}
+
 }
