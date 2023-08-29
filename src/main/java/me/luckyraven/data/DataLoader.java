@@ -1,5 +1,6 @@
 package me.luckyraven.data;
 
+import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -27,7 +28,7 @@ public abstract class DataLoader {
 	}
 
 	/**
-	 * This method loads the data of the class, if there was a cause of problem inside the data it stops the process
+	 * This method loads the data of the class if there was a cause of problem inside the data, it stops the process
 	 * and prints the error.
 	 *
 	 * @param disable disables the plugin upon finding an exception.
@@ -45,14 +46,24 @@ public abstract class DataLoader {
 	}
 
 	/**
-	 * This method tries to load the data again (until it is loaded), if there was a cause of problem inside the data it
+	 * This method tries to load the data again (until it is loaded) if there was a cause of problem inside the data, it
 	 * stops the process and prints the error.
 	 *
 	 * @param disable disables the plugin upon finding an exception.
 	 */
 	public void tryAgain(JavaPlugin plugin, boolean disable) {
+		int maxAttempts = 5, initialValue = 5, counter = 0;
+
+		load(plugin, disable);
+
+		if (isLoaded) return;
+
 		// TODO make this instruction run every 5 seconds, and increment accordingly to X times until it fails
-		while (!isLoaded) load(plugin, disable);
+		++counter;
+
+		CountdownTimer timer = new CountdownTimer(plugin, initialValue, time -> load(plugin, disable));
+
+		timer.startAsync();
 	}
 
 }
