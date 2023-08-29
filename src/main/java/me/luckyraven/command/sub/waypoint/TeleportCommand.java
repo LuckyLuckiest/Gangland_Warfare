@@ -42,7 +42,9 @@ public class TeleportCommand extends CommandHandler {
 			return;
 		}
 
-		waypoint.teleport(getGangland(), user).thenAccept(teleportResult -> {
+		waypoint.teleport(getGangland(), user, (u, t) -> {
+			u.getUser().sendMessage(ChatUtil.color("Teleporting in &b" + t.getTimeLeft() + "&7 seconds."));
+		}).thenAccept(teleportResult -> {
 			if (teleportResult.success()) {
 				teleportResult.playerUser().getUser().sendMessage(
 						ChatUtil.prefixMessage("Successfully teleported to &b" + teleportResult.waypoint().getName()));
@@ -69,7 +71,9 @@ public class TeleportCommand extends CommandHandler {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
-			waypoint.teleport(getGangland(), user).thenAccept(teleportResult -> {
+			waypoint.teleport(getGangland(), user, (u, t) -> {
+				u.getUser().sendMessage(ChatUtil.color("&7Teleporting in &b" + t.getTimeLeft() + "&7 seconds."));
+			}).thenAccept(teleportResult -> {
 				if (teleportResult.success()) {
 					teleportResult.playerUser().getUser().sendMessage(ChatUtil.prefixMessage(
 							"Successfully teleported to &b" + teleportResult.waypoint().getName()));
