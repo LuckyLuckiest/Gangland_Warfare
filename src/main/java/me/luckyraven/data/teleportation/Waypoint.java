@@ -9,12 +9,17 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
 @Getter
 public class Waypoint {
+
+	private static final Map<User<Player>, CountdownTimer> teleportCooldown = new HashMap<>();
 
 	private static int ID = 0;
 
@@ -45,6 +50,19 @@ public class Waypoint {
 		Waypoint.ID = id;
 	}
 
+	public static boolean userOnCooldown(User<Player> user) {
+		return teleportCooldown.containsKey(user);
+	}
+
+	public static void removeCooldown(User<Player> user) {
+		teleportCooldown.remove(user);
+	}
+
+	@Nullable
+	public static CountdownTimer getCooldownTimer(User<Player> user) {
+		return teleportCooldown.get(user);
+	}
+
 	public void setCoordinates(String world, double x, double y, double z, float yaw, float pitch) {
 		this.world = world;
 		this.x = x;
@@ -54,8 +72,20 @@ public class Waypoint {
 		this.pitch = pitch;
 	}
 
+	/**
+	 * Teleports the user to this waypoint.
+	 *
+	 * @param plugin      the plugin used
+	 * @param user        the user that would be teleported
+	 * @param duringTimer access the user and countdown timer during the timer
+	 * @return the {@link TeleportResult} using {@link CompletableFuture} of the user
+	 * @throws IllegalTeleportException when the user tries to teleport again while having a cooldown
+	 */
 	public CompletableFuture<TeleportResult> teleport(JavaPlugin plugin, User<Player> user,
-	                                                  BiConsumer<User<Player>, CountdownTimer> duringTimer) {
+	                                                  BiConsumer<User<Player>, CountdownTimer> duringTimer)
+			throws IllegalTeleportException {
+		if (userOnCooldown(user)) throw new IllegalTeleportException("Can't teleport on a cooldown");
+
 		CompletableFuture<TeleportResult> teleportResult = new CompletableFuture<>();
 
 		CountdownTimer timer = new CountdownTimer(plugin, this.timer == 0 ? 0L : 1L, this.timer, null, t -> {
@@ -65,6 +95,7 @@ public class Waypoint {
 		}, t -> {
 			World locWorld = Bukkit.getWorld(world);
 
+			// if locWorld was a valid world
 			if (locWorld != null) {
 				Location location = new Location(locWorld, x, y, z, yaw, pitch);
 
@@ -73,6 +104,16 @@ public class Waypoint {
 
 				if (!event.isCancelled()) {
 					user.getUser().teleport(location);
+
+					// create a cooldown
+					if (this.cooldown != 0) {
+						CountdownTimer countdownTimer = new CountdownTimer(plugin, this.cooldown, null, null,
+						                                                   cooldownTimer -> teleportCooldown.remove(
+								                                                   user));
+						teleportCooldown.put(user, countdownTimer);
+
+						countdownTimer.start();
+					}
 
 					// successfully teleported
 					TeleportResult result = new TeleportResult(true, user, this);
@@ -83,8 +124,9 @@ public class Waypoint {
 					TeleportResult result = new TeleportResult(false, user, this);
 					teleportResult.complete(result);
 				}
-
-			} else {
+			}
+			// when locWorld was not valid
+			else {
 				TeleportResult result = new TeleportResult(false, user, this);
 				teleportResult.complete(result);
 			}
