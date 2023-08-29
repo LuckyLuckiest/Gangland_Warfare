@@ -19,7 +19,7 @@ class WaypointCooldownCommand extends SubArgument {
 	private final WaypointManager waypointManager;
 
 	protected WaypointCooldownCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"cooldown"}, tree, "cooldown", parent);
+		super("cooldown", tree, parent);
 
 		this.tree = tree;
 

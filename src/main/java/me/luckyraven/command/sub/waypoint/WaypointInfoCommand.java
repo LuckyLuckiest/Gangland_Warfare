@@ -17,7 +17,7 @@ class WaypointInfoCommand extends SubArgument {
 	private final WaypointManager waypointManager;
 
 	protected WaypointInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"info"}, tree, "info", parent);
+		super("info", tree, parent);
 
 		this.waypointManager = gangland.getInitializer().getWaypointManager();
 	}

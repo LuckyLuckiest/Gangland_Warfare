@@ -19,7 +19,7 @@ class WaypointShieldCommand extends SubArgument {
 	private final WaypointManager waypointManager;
 
 	protected WaypointShieldCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"shield"}, tree, "shield", parent);
+		super("shield", tree, parent);
 
 		this.tree = tree;
 

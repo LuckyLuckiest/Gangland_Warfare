@@ -19,7 +19,7 @@ class WaypointCostCommand extends SubArgument {
 	private final WaypointManager waypointManager;
 
 	protected WaypointCostCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"cost"}, tree, "cost", parent);
+		super("cost", tree, parent);
 
 		this.tree = tree;
 

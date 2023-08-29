@@ -19,7 +19,7 @@ class WaypointTimerCommand extends SubArgument {
 	private final WaypointManager waypointManager;
 
 	protected WaypointTimerCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"timer"}, tree, "timer", parent);
+		super("timer", tree, parent);
 
 		this.tree = tree;
 

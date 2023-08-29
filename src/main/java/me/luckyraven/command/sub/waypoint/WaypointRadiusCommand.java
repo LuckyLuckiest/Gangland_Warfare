@@ -19,7 +19,7 @@ class WaypointRadiusCommand extends SubArgument {
 	private final WaypointManager waypointManager;
 
 	protected WaypointRadiusCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"radius"}, tree, "radius", parent);
+		super("radius", tree, parent);
 
 		this.tree = tree;
 

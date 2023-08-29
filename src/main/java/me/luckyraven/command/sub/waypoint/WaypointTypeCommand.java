@@ -19,7 +19,7 @@ class WaypointTypeCommand extends SubArgument {
 	private final WaypointManager waypointManager;
 
 	protected WaypointTypeCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"type"}, tree, "type", parent);
+		super("type", tree, parent);
 
 		this.tree = tree;
 

@@ -25,7 +25,7 @@ class WaypointCreateCommand extends SubArgument {
 	private final WaypointManager waypointManager;
 
 	protected WaypointCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"create"}, tree, "create", parent);
+		super("create", tree, parent);
 
 		this.gangland = gangland;
 		this.tree = tree;
@@ -73,7 +73,7 @@ class WaypointCreateCommand extends SubArgument {
 			}
 
 			// create waypoint permission
-			gangland.addPermission("gangland.waypoint." + waypoint.getUsedId());
+			gangland.getInitializer().getPermissionManager().addPermission("waypoint." + waypoint.getUsedId());
 
 			// select the waypoint
 			// using '/glw waypoint select <id>' command to the created waypoint, so it is selected
