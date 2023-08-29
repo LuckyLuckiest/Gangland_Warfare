@@ -1,6 +1,5 @@
 package me.luckyraven;
 
-import com.google.common.base.Preconditions;
 import com.zaxxer.hikari.HikariConfig;
 import lombok.Getter;
 import me.luckyraven.data.ReloadPlugin;
@@ -14,14 +13,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.bukkit.Bukkit;
-import org.bukkit.permissions.Permission;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 @Getter
 public final class Gangland extends JavaPlugin {
@@ -99,17 +93,6 @@ public final class Gangland extends JavaPlugin {
 			// set the vault economy
 			EconomyHandler.setVaultEconomy(rsp.getProvider());
 		});
-	}
-
-	public void addPermission(@NotNull String permission) {
-		Preconditions.checkNotNull(permission, "Permission string can't be null!");
-		if (permission.isEmpty()) return;
-
-		Permission    perm          = new Permission(permission);
-		PluginManager pluginManager = Bukkit.getPluginManager();
-		List<String>  permissions   = pluginManager.getPermissions().stream().map(Permission::getName).toList();
-
-		if (!permissions.contains(permission)) pluginManager.addPermission(perm);
 	}
 
 	private class Dependency {
