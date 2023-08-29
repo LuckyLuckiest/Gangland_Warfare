@@ -26,7 +26,7 @@ class WaypointDeleteCommand extends SubArgument {
 	private final WaypointManager waypointManager;
 
 	protected WaypointDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"delete", "remove"}, tree, "delete", parent);
+		super(new String[]{"delete", "remove"}, tree, parent, "delete");
 
 		this.gangland = gangland;
 		this.tree = tree;
@@ -84,6 +84,10 @@ class WaypointDeleteCommand extends SubArgument {
 				}
 
 			// inform the player
+			sender.sendMessage();
+
+			gangland.getInitializer().getPermissionManager().removePermission(
+					"gangland.waypoint." + waypoint.getUsedId(), true);
 
 			waypointManager.remove(waypoint);
 			deleteWaypointId.remove(sender);

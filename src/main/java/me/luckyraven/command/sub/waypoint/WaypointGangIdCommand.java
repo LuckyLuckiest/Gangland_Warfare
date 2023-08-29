@@ -22,7 +22,7 @@ class WaypointGangIdCommand extends SubArgument {
 	private final WaypointManager waypointManager;
 
 	protected WaypointGangIdCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"gangId"}, tree, "gang_id", parent);
+		super(new String[]{"gangId"}, tree, parent, "gang_id");
 
 		this.tree = tree;
 
