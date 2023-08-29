@@ -32,7 +32,7 @@ public class PlayerDeath implements Listener {
 		Player       player = event.getEntity();
 		User<Player> user   = userManager.getUser(player);
 
-		// when player days, death counter increases
+		// when a player dies, death counter increases
 		user.setDeaths(user.getDeaths() + 1);
 
 		// punish the player if they die
