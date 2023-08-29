@@ -10,16 +10,21 @@ public class RepeatingTimer extends BukkitRunnable {
 
 	private final JavaPlugin               plugin;
 	private final Consumer<RepeatingTimer> repeatingTask;
+	private final long                     delay;
 
-	private BukkitTask bukkitTask;
-	@Getter
-	private long       interval;
-	private boolean    stopped;
-	private boolean    async;
+	private         BukkitTask bukkitTask;
+	private @Getter long       period;
+	private         boolean    stopped;
+	private         boolean    async;
 
-	public RepeatingTimer(JavaPlugin plugin, long interval, Consumer<RepeatingTimer> repeatingTask) {
+	public RepeatingTimer(JavaPlugin plugin, long period, Consumer<RepeatingTimer> repeatingTask) {
+		this(plugin, 0L, period, repeatingTask);
+	}
+
+	public RepeatingTimer(JavaPlugin plugin, long delay, long period, Consumer<RepeatingTimer> repeatingTask) {
 		this.plugin = plugin;
-		this.interval = interval;
+		this.delay = delay;
+		this.period = period;
 		this.repeatingTask = repeatingTask;
 		this.stopped = true;
 		this.async = false;
@@ -35,8 +40,8 @@ public class RepeatingTimer extends BukkitRunnable {
 		return !stopped;
 	}
 
-	public void setInterval(long interval) {
-		this.interval = interval;
+	public void setPeriod(long period) {
+		this.period = period;
 
 		if (bukkitTask == null || stopped) return;
 
@@ -53,14 +58,14 @@ public class RepeatingTimer extends BukkitRunnable {
 
 	public void start() {
 		if (bukkitTask != null && !stopped) return;
-		this.bukkitTask = runTaskTimer(plugin, 0L, interval);
+		this.bukkitTask = runTaskTimer(plugin, delay, period);
 		stopped = false;
 		this.async = false;
 	}
 
 	public void startAsync() {
 		if (bukkitTask != null && !stopped) return;
-		this.bukkitTask = runTaskTimerAsynchronously(plugin, 0L, interval);
+		this.bukkitTask = runTaskTimerAsynchronously(plugin, delay, period);
 		stopped = false;
 		this.async = true;
 	}

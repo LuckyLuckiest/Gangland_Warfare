@@ -73,7 +73,7 @@ public class PeriodicalUpdates {
 
 	public void setInterval(long interval) {
 		if (repeatingTimer == null) repeatingTimer = new RepeatingTimer(gangland, interval, timer -> task());
-		else repeatingTimer.setInterval(interval);
+		else repeatingTimer.setPeriod(interval);
 	}
 
 	public void removeTimer() {
