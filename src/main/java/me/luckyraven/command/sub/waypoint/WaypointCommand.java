@@ -29,6 +29,7 @@ public class WaypointCommand extends CommandHandler {
 	@Override
 	protected void initializeArguments(Gangland gangland) {
 		Argument create = new WaypointCreateCommand(gangland, getArgumentTree(), getArgument());
+		Argument delete = new WaypointDeleteCommand(gangland, getArgumentTree(), getArgument());
 
 		Argument select   = new WaypointSelectCommand(gangland, getArgumentTree(), getArgument());
 		Argument deselect = new WaypointDeselectCommand(gangland, getArgumentTree(), getArgument());
@@ -47,6 +48,7 @@ public class WaypointCommand extends CommandHandler {
 		List<Argument> arguments = new ArrayList<>();
 
 		arguments.add(create);
+		arguments.add(delete);
 
 		arguments.add(select);
 		arguments.add(deselect);
