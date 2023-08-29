@@ -3,6 +3,7 @@ package me.luckyraven.data.teleportation;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.data.user.User;
+import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -10,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 
 @Getter
 public class Waypoint {
@@ -52,10 +54,15 @@ public class Waypoint {
 		this.pitch = pitch;
 	}
 
-	public CompletableFuture<TeleportResult> teleport(JavaPlugin plugin, User<Player> user) {
+	public CompletableFuture<TeleportResult> teleport(JavaPlugin plugin, User<Player> user,
+	                                                  BiConsumer<User<Player>, CountdownTimer> duringTimer) {
 		CompletableFuture<TeleportResult> teleportResult = new CompletableFuture<>();
 
-		Bukkit.getServer().getScheduler().runTaskLater(plugin, () -> {
+		CountdownTimer timer = new CountdownTimer(plugin, this.timer == 0 ? 0L : 1L, this.timer, null, t -> {
+			if (t.getTimeLeft() == 0) return;
+
+			duringTimer.accept(user, t);
+		}, t -> {
 			World locWorld = Bukkit.getWorld(world);
 
 			if (locWorld != null) {
@@ -81,7 +88,9 @@ public class Waypoint {
 				TeleportResult result = new TeleportResult(false, user, this);
 				teleportResult.complete(result);
 			}
-		}, 1L);
+		});
+
+		timer.start();
 
 		return teleportResult;
 	}
