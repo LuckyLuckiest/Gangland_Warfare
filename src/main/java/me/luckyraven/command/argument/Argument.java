@@ -2,6 +2,7 @@ package me.luckyraven.command.argument;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.Gangland;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -10,6 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +24,7 @@ public class Argument implements Cloneable {
 
 	private final @Getter String[]            arguments;
 	private final @Getter Tree.Node<Argument> node;
+	private final @Getter boolean             displayAllArguments;
 
 	private final Tree<Argument> tree;
 
@@ -50,12 +53,18 @@ public class Argument implements Cloneable {
 
 	public Argument(String[] arguments, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action,
 	                String permission) {
+		this(arguments, tree, action, permission, false);
+	}
+
+	public Argument(String[] arguments, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action,
+	                String permission, boolean displayAllArguments) {
 		this.arguments = arguments;
 		this.tree = tree;
 		this.node = new Tree.Node<>(this);
 		this.action = action;
+		this.displayAllArguments = displayAllArguments;
 
-		addPermission(permission);
+		setPermission(permission);
 	}
 
 	public Argument(Argument other) {
@@ -63,6 +72,7 @@ public class Argument implements Cloneable {
 		this.node = other.getNode().clone();
 		this.tree = other.tree;
 		this.permission = other.permission;
+		this.displayAllArguments = other.displayAllArguments;
 		this.action = other.action;
 		this.executeOnPass = other.executeOnPass;
 	}
@@ -91,11 +101,21 @@ public class Argument implements Cloneable {
 	}
 
 	public void addPermission(String permission) {
-		Permission    perm          = new Permission(permission);
 		PluginManager pluginManager = Bukkit.getPluginManager();
-		List<String>  permissions   = pluginManager.getPermissions().stream().map(Permission::getName).toList();
 
-		if (!permissions.contains(permission)) pluginManager.addPermission(perm);
+		if (pluginManager.isPluginEnabled("Gangland_Warfare")) {
+			Gangland gangland = JavaPlugin.getPlugin(Gangland.class);
+
+			gangland.getInitializer().getPermissionManager().addPermission(permission);
+		} else {
+			if (permission.isEmpty()) return;
+
+			Permission   perm        = new Permission(permission);
+			List<String> permissions = pluginManager.getPermissions().stream().map(Permission::getName).toList();
+
+			// add the permission if it was not in the permission list
+			if (!permissions.contains(permission)) pluginManager.addPermission(perm);
+		}
 	}
 
 	public void addSubArgument(Argument argument) {
@@ -194,7 +214,7 @@ public class Argument implements Cloneable {
 
 	@Override
 	public String toString() {
-		return arguments[0];
+		return displayAllArguments ? Arrays.toString(arguments).replaceAll("[\\[\\]]", "") : arguments[0];
 	}
 
 	public List<String> getArgumentString() {
