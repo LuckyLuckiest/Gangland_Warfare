@@ -89,7 +89,7 @@ public class GangCommand extends CommandHandler {
 		// glw gang demote <name>
 		Argument demoteUser = new GangDemoteCommand(gangland, getArgumentTree(), getArgument());
 
-		getArgument().addPermission("gangland.command.gang.force_rank");
+		getArgument().addPermission(getPermission() + ".force_rank");
 
 		// deposit money to gang
 		// glw gang deposit <amount>
