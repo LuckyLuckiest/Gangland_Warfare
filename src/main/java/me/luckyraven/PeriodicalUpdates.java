@@ -196,26 +196,30 @@ public class PeriodicalUpdates {
 
 	private void removeInventories() {
 		for (User<Player> user : gangland.getInitializer().getUserManager().getUsers().values())
-			if (!userViewingInventory(user)) {
-				// Returns all inventories except the phone inventory
-				Set<NamespacedKey> keys = getPlayerInventories(user.getUser()).keySet().stream().filter(
-						namespacedKey -> {
-							String name  = namespacedKey.getKey();
-							int    index = name.lastIndexOf("_");
-							return !name.substring(0, index).equalsIgnoreCase(
-									InventoryHandler.titleRefactor(SettingAddon.getPhoneName()));
-						}).collect(Collectors.toSet());
+			removeInventory(user);
+	}
 
-				for (NamespacedKey key : keys)
-					InventoryHandler.removeInventory(key);
-			}
+	private void removeInventory(User<Player> user) {
+		if (userViewingInventory(user)) return;
+
+		// Returns all inventories except the phone inventory
+		Set<NamespacedKey> keys = getPlayerInventories(user.getUser()).keySet().stream().filter(namespacedKey -> {
+			String name  = namespacedKey.getKey();
+			int    index = name.lastIndexOf("_");
+			return !name.substring(0, index).equalsIgnoreCase(
+					InventoryHandler.titleRefactor(SettingAddon.getPhoneName()));
+		}).collect(Collectors.toSet());
+
+		for (NamespacedKey key : keys)
+			InventoryHandler.removeInventory(key);
 	}
 
 	private boolean userViewingInventory(User<Player> user) {
 		List<InventoryType> inventoryTypes = new ArrayList<>();
+
+		// the plugin uses only anvil and chest so far
 		inventoryTypes.add(InventoryType.ANVIL);
 		inventoryTypes.add(InventoryType.CHEST);
-		inventoryTypes.add(InventoryType.ENDER_CHEST);
 
 		for (InventoryType type : inventoryTypes)
 			if (user.getUser().getOpenInventory().getType() == type) return true;
