@@ -29,7 +29,7 @@ class GangColorCommand extends SubArgument {
 	private final GangManager         gangManager;
 
 	protected GangColorCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"color"}, tree, "color", parent);
+		super("color", tree, parent);
 
 		this.gangland = gangland;
 

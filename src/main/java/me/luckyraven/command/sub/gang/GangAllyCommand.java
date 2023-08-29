@@ -29,7 +29,7 @@ class GangAllyCommand extends SubArgument {
 	private final GangManager         gangManager;
 
 	protected GangAllyCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"ally"}, tree, "ally", parent);
+		super("ally", tree, parent);
 
 		this.gangland = gangland;
 		this.tree = tree;
