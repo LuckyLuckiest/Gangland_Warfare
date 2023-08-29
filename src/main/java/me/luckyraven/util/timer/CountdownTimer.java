@@ -10,24 +10,36 @@ public class CountdownTimer extends BukkitRunnable {
 
 	private final JavaPlugin               plugin;
 	private final Consumer<CountdownTimer> duringTimer, beforeTimer, afterTimer;
-	private final @Getter long duration;
+	private final @Getter long delay, period;
 
 	private @Getter long       timeLeft;
 	private         BukkitTask bukkitTask;
 
-	public CountdownTimer(JavaPlugin plugin, long duration) {
-		this(plugin, duration, null);
+	public CountdownTimer(JavaPlugin plugin, long time) {
+		this(plugin, time, null);
 	}
 
-	public CountdownTimer(JavaPlugin plugin, long duration, Consumer<CountdownTimer> duringTimer) {
-		this(plugin, duration, null, duringTimer, null);
+	public CountdownTimer(JavaPlugin plugin, long time, Consumer<CountdownTimer> duringTimer) {
+		this(plugin, time, null, duringTimer, null);
 	}
 
-	public CountdownTimer(JavaPlugin plugin, long duration, Consumer<CountdownTimer> beforeTimer,
+	public CountdownTimer(JavaPlugin plugin, long time, Consumer<CountdownTimer> beforeTimer,
+	                      Consumer<CountdownTimer> duringTimer, Consumer<CountdownTimer> afterTimer) {
+		this(plugin, 0L, time, beforeTimer, duringTimer, afterTimer);
+	}
+
+	public CountdownTimer(JavaPlugin plugin, long delay, long time, Consumer<CountdownTimer> beforeTimer,
+	                      Consumer<CountdownTimer> duringTimer, Consumer<CountdownTimer> afterTimer) {
+		// By default, it would run for an interval of 20L, thus every second
+		this(plugin, delay, 20L, time, beforeTimer, duringTimer, afterTimer);
+	}
+
+	public CountdownTimer(JavaPlugin plugin, long delay, long period, long time, Consumer<CountdownTimer> beforeTimer,
 	                      Consumer<CountdownTimer> duringTimer, Consumer<CountdownTimer> afterTimer) {
 		this.plugin = plugin;
-		this.duration = duration;
-		this.timeLeft = duration;
+		this.delay = delay;
+		this.period = period;
+		this.timeLeft = time;
 		this.beforeTimer = beforeTimer;
 		this.duringTimer = duringTimer;
 		this.afterTimer = afterTimer;
@@ -41,14 +53,18 @@ public class CountdownTimer extends BukkitRunnable {
 			return;
 		}
 
-		if (beforeTimer != null && timeLeft == duration) beforeTimer.accept(this);
+		if (beforeTimer != null && timeLeft == period) beforeTimer.accept(this);
 		if (duringTimer != null) duringTimer.accept(this);
 
-		timeLeft--;
+		--timeLeft;
 	}
 
 	public void start() {
-		this.bukkitTask = runTaskTimer(plugin, 0L, duration);
+		this.bukkitTask = runTaskTimer(plugin, delay, period);
+	}
+
+	public void startAsync() {
+		this.bukkitTask = runTaskTimerAsynchronously(plugin, delay, period);
 	}
 
 }
