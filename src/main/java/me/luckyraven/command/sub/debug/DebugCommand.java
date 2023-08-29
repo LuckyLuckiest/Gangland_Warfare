@@ -2,20 +2,20 @@ package me.luckyraven.command.sub.debug;
 
 import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.Gangland;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.Member;
-import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.placeholder.PlaceholderHandler;
+import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.JsonFormatter;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.data.rank.Rank;
 import me.luckyraven.util.color.Color;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
@@ -143,10 +143,17 @@ public class DebugCommand extends CommandHandler {
 
 		// permissions list
 		Argument perm = new Argument("perms", getArgumentTree(), (argument, sender, args) -> {
+			sender.sendMessage(
+					gangland.getInitializer().getPermissionManager().getPermissions().toArray(String[]::new));
+		});
+
+		Argument permOptional = new Argument("bukkit", getArgumentTree(), (argument, sender, args) -> {
 			String[] permissions = Bukkit.getPluginManager().getPermissions().stream().map(Permission::getName).filter(
-					name -> name.startsWith("gangland")).sorted().toArray(String[]::new);
+					name -> name.startsWith("gangland")).sorted(String::compareTo).toArray(String[]::new);
 			sender.sendMessage(permissions);
 		});
+
+		perm.addSubArgument(permOptional);
 
 		// all settings data
 		String[] setOpt = {"settings", "setting"};
