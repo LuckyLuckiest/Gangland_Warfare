@@ -5,17 +5,20 @@ import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.data.teleportation.IllegalTeleportException;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class TeleportCommand extends CommandHandler {
 
@@ -33,26 +36,10 @@ public class TeleportCommand extends CommandHandler {
 		UserManager<Player> userManager     = getGangland().getInitializer().getUserManager();
 		WaypointManager     waypointManager = getGangland().getInitializer().getWaypointManager();
 
-		Player       player   = (Player) commandSender;
-		User<Player> user     = userManager.getUser(player);
-		Waypoint     waypoint = waypointManager.getSelected(player);
+		Player   player   = (Player) commandSender;
+		Waypoint waypoint = waypointManager.getSelected(player);
 
-		if (waypoint == null) {
-			help(commandSender, 1);
-			return;
-		}
-
-		waypoint.teleport(getGangland(), user, (u, t) -> {
-			u.getUser().sendMessage(ChatUtil.color("Teleporting in &b" + t.getTimeLeft() + "&7 seconds."));
-		}).thenAccept(teleportResult -> {
-			if (teleportResult.success()) {
-				teleportResult.playerUser().getUser().sendMessage(
-						ChatUtil.prefixMessage("Successfully teleported to &b" + teleportResult.waypoint().getName()));
-			} else {
-				teleportResult.playerUser().getUser().sendMessage(
-						ChatUtil.prefixMessage("Unable to teleport to &b" + teleportResult.waypoint().getName()));
-			}
-		});
+		teleport(commandSender, waypoint, userManager);
 	}
 
 	@Override
@@ -63,17 +50,36 @@ public class TeleportCommand extends CommandHandler {
 		Argument name = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			Waypoint waypoint = waypointManager.get(args[1]);
 
-			if (waypoint == null) {
-				sender.sendMessage(MessageAddon.INVALID_WAYPOINT.toString());
-				return;
-			}
+			teleport(sender, waypoint, userManager);
+		});
 
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
+		getArgument().addPermission(getPermission() + ".cooldown_bypass");
 
-			waypoint.teleport(getGangland(), user, (u, t) -> {
+		getArgument().addSubArgument(name);
+	}
+
+	@Override
+	protected void help(CommandSender sender, int page) {
+		getHelpInfo().displayHelp(sender, page, "Waypoint");
+	}
+
+	private void teleport(CommandSender sender, Waypoint waypoint, UserManager<Player> userManager) {
+		if (waypoint == null) {
+			sender.sendMessage(MessageAddon.INVALID_WAYPOINT.toString());
+			return;
+		}
+
+		Player       player = (Player) sender;
+		User<Player> user   = userManager.getUser(player);
+
+		try {
+			if (player.hasPermission("gangland.command.teleport.cooldown_bypass")) Waypoint.removeCooldown(user);
+
+			CompletableFuture<Waypoint.TeleportResult> future = waypoint.teleport(getGangland(), user, (u, t) -> {
 				u.getUser().sendMessage(ChatUtil.color("&7Teleporting in &b" + t.getTimeLeft() + "&7 seconds."));
-			}).thenAccept(teleportResult -> {
+			});
+
+			future.thenAccept(teleportResult -> {
 				if (teleportResult.success()) {
 					teleportResult.playerUser().getUser().sendMessage(ChatUtil.prefixMessage(
 							"Successfully teleported to &b" + teleportResult.waypoint().getName()));
@@ -82,14 +88,14 @@ public class TeleportCommand extends CommandHandler {
 							ChatUtil.prefixMessage("Unable to teleport to &b" + teleportResult.waypoint().getName()));
 				}
 			});
-		});
+		} catch (IllegalTeleportException exception) {
+			CountdownTimer timer = Waypoint.getCooldownTimer(user);
 
-		getArgument().addSubArgument(name);
-	}
+			if (timer == null) return;
 
-	@Override
-	protected void help(CommandSender sender, int page) {
-		getHelpInfo().displayHelp(sender, page, "Waypoint");
+			player.sendMessage(
+					ChatUtil.color("&7You are on a cooldown. Wait &b" + timer.getTimeLeft() + "&7 seconds."));
+		}
 	}
 
 }
