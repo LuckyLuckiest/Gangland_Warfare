@@ -61,7 +61,7 @@ public class WaypointManager {
 				waypoint.setCost(cost);
 				waypoint.setRadius(radius);
 
-				gangland.addPermission("gangland.waypoint." + id);
+				gangland.getInitializer().getPermissionManager().addPermission("waypoint." + id);
 
 				waypoints.put(id, waypoint);
 			}

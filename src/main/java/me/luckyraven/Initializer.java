@@ -15,6 +15,8 @@ import me.luckyraven.command.sub.waypoint.TeleportCommand;
 import me.luckyraven.command.sub.waypoint.WaypointCommand;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.permission.PermissionManager;
+import me.luckyraven.data.permission.PermissionWorker;
 import me.luckyraven.data.placeholder.GanglandPlaceholder;
 import me.luckyraven.data.placeholder.replacer.Replacer;
 import me.luckyraven.data.rank.RankManager;
@@ -34,8 +36,10 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.gang.GangMembersDamage;
 import me.luckyraven.listener.player.*;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Objects;
@@ -50,6 +54,7 @@ public final class Initializer {
 	private final @Getter UserManager<OfflinePlayer> offlineUserManager;
 
 	// on plugin enable
+	private @Getter PermissionManager   permissionManager;
 	private @Getter FileManager         fileManager;
 	private @Getter DatabaseManager     databaseManager;
 	private @Getter GangManager         gangManager;
@@ -88,6 +93,13 @@ public final class Initializer {
 		if (plugin instanceof Gangland gangland) {
 			// Addons
 			MessageAddon.setPlugin(gangland);
+
+			// permission manager
+			permissionManager = new PermissionManager(plugin, new PermissionWorker("gangland"));
+
+			// add all registered plugin permissions
+			permissionManager.addAllPermissions(Bukkit.getPluginManager().getPermissions().stream().map(
+					Permission::getName).filter(permission -> permission.startsWith("gangland")).toList());
 
 			// Rank manager
 			rankManager = new RankManager(gangland);
