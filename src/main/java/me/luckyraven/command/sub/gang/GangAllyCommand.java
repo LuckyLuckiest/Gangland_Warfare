@@ -142,7 +142,7 @@ class GangAllyCommand extends SubArgument {
 
 					gangsIdMap.put(receiving, sending);
 
-					CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, null, null, time -> {
+					CountdownTimer timer = new CountdownTimer(gangland, 60, null, null, time -> {
 						gangsIdMap.remove(receiving);
 						gangRequestTimer.remove(receiving);
 					});

@@ -9,6 +9,7 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
@@ -64,7 +65,11 @@ class GangLeaveCommand extends SubArgument {
 			// if it was the owner, then they need to transfer the rank
 			if (member.getRank() == null) return;
 
-			if (member.getRank().match(rankManager.get(SettingAddon.getGangRankTail()).getUsedId())) {
+			Rank tail = rankManager.get(SettingAddon.getGangRankTail());
+
+			if (tail == null) return;
+
+			if (member.getRank().match(tail.getUsedId())) {
 				player.sendMessage(MessageAddon.GANG_TRANSFER_OWNERSHIP.toString());
 				return;
 			}
@@ -73,7 +78,7 @@ class GangLeaveCommand extends SubArgument {
 
 			leaveConfirm.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, time -> player.sendMessage(
+			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> player.sendMessage(
 					ChatUtil.confirmCommand(new String[]{"gang", "leave"})), null, time -> {
 				leaveConfirm.setConfirmed(false);
 				leaveTimer.remove(user);
@@ -101,7 +106,11 @@ class GangLeaveCommand extends SubArgument {
 			// if it was the owner, then they need to transfer the rank
 			if (member.getRank() == null) return;
 
-			if (member.getRank().match(rankManager.get(SettingAddon.getGangRankTail()).getUsedId())) {
+			Rank tail = rankManager.get(SettingAddon.getGangRankTail());
+
+			if (tail == null) return;
+
+			if (member.getRank().match(tail.getUsedId())) {
 				player.sendMessage(MessageAddon.GANG_TRANSFER_OWNERSHIP.toString());
 				return;
 			}

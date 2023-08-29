@@ -98,11 +98,12 @@ class WaypointCreateCommand extends SubArgument {
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"waypoint", "create"}));
 			confirmWaypoint.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, time -> sender.sendMessage(
-					MessageAddon.WAYPOINT_CREATE_CONFIRM.toString()
-					                                    .replace("%timer%",
-					                                             TimeUtil.formatTime(time.getDuration() / 20L, true))),
-			                                          null, time -> {
+			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+				sender.sendMessage(MessageAddon.WAYPOINT_CREATE_CONFIRM.toString()
+				                                                       .replace("%timer%",
+				                                                                TimeUtil.formatTime(time.getPeriod(),
+				                                                                                    true)));
+			}, null, time -> {
 				confirmWaypoint.setConfirmed(false);
 				createWaypointName.remove(player);
 				createWaypointTimer.remove(sender);

@@ -9,6 +9,7 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
@@ -79,7 +80,11 @@ class GangDeleteCommand extends SubArgument {
 			// check if the player is the owner
 			if (member.getRank() == null) return;
 
-			if (!member.getRank().match(rankManager.get(SettingAddon.getGangRankTail()).getUsedId())) {
+			Rank tail = rankManager.get(SettingAddon.getGangRankTail());
+
+			if (tail == null) return;
+
+			if (!member.getRank().match(tail.getUsedId())) {
 				player.sendMessage(MessageAddon.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
 				return;
 			}
@@ -89,10 +94,9 @@ class GangDeleteCommand extends SubArgument {
 			confirmDelete.setConfirmed(true);
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "delete"}));
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, time -> sender.sendMessage(
+			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> sender.sendMessage(
 					MessageAddon.GANG_REMOVE_CONFIRM.toString()
-					                                .replace("%timer%",
-					                                         TimeUtil.formatTime(time.getDuration() / 20L, true))),
+					                                .replace("%timer%", TimeUtil.formatTime(time.getPeriod(), true))),
 			                                          null, time -> {
 				confirmDelete.setConfirmed(false);
 				deleteGangName.remove(user);
@@ -122,7 +126,11 @@ class GangDeleteCommand extends SubArgument {
 			// check if the player is the owner
 			if (member.getRank() == null) return;
 
-			if (!member.getRank().match(rankManager.get(SettingAddon.getGangRankTail()).getUsedId())) {
+			Rank tail = rankManager.get(SettingAddon.getGangRankTail());
+
+			if (tail == null) return;
+
+			if (!member.getRank().match(tail.getUsedId())) {
 				player.sendMessage(MessageAddon.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
 				return;
 			}
@@ -219,6 +227,7 @@ class GangDeleteCommand extends SubArgument {
 
 			gangManager.remove(gang);
 			deleteGangName.remove(user);
+
 			CountdownTimer timer = deleteGangTimer.get(sender);
 			if (timer != null) {
 				if (!timer.isCancelled()) timer.cancel();

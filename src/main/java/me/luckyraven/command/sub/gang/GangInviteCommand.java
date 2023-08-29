@@ -96,7 +96,7 @@ class GangInviteCommand extends SubArgument {
 				return;
 			}
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, time -> {
+			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
 				player.sendMessage(MessageAddon.GANG_INVITE_PLAYER.toString().replace("%player%", targetStr));
 				target.sendMessage(
 						MessageAddon.GANG_INVITE_TARGET.toString().replace("%gang%", gang.getDisplayNameString()));

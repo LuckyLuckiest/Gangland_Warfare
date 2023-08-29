@@ -138,10 +138,9 @@ class GangCreateCommand extends SubArgument {
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "create"}));
 			confirmCreate.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, time -> sender.sendMessage(
+			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> sender.sendMessage(
 					MessageAddon.GANG_CREATE_CONFIRM.toString()
-					                                .replace("%timer%",
-					                                         TimeUtil.formatTime(time.getDuration() / 20L, true))),
+					                                .replace("%timer%", TimeUtil.formatTime(time.getPeriod(), true))),
 			                                          null, time -> {
 				confirmCreate.setConfirmed(false);
 				createGangName.remove(user);

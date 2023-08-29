@@ -135,10 +135,11 @@ public class BankCommand extends CommandHandler {
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "create"}));
 			confirmCreate.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, time -> {
+			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
 				sender.sendMessage(MessageAddon.BANK_CREATE_CONFIRM.toString()
-				                                                   .replace("%timer%", TimeUtil.formatTime(
-						                                                   time.getDuration() / 20L, true)));
+				                                                   .replace("%timer%",
+				                                                            TimeUtil.formatTime(time.getPeriod(),
+				                                                                                true)));
 			}, null, time -> {
 				confirmCreate.setConfirmed(false);
 				createBankName.remove(user);
@@ -206,10 +207,11 @@ public class BankCommand extends CommandHandler {
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "delete"}));
 			confirmDelete.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60 * 20L, time -> {
+			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
 				sender.sendMessage(MessageAddon.BANK_REMOVE_CONFIRM.toString()
-				                                                   .replace("%timer%", TimeUtil.formatTime(
-						                                                   time.getDuration() / 20L, true)));
+				                                                   .replace("%timer%",
+				                                                            TimeUtil.formatTime(time.getPeriod(),
+				                                                                                true)));
 			}, null, time -> {
 				confirmDelete.setConfirmed(false);
 				deleteBankName.remove(user);
