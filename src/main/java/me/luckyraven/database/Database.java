@@ -238,7 +238,7 @@ public interface Database {
 	int totalRows() throws SQLException;
 
 	/**
-	 * To delete all the data from the table leave <i><b>value</i></b> empty, and if yor specify the specified row using
+	 * To delete all the data from the table leave <i><b>value</i></b> empty, and if you specify the specified row using
 	 * <i><b>WHERE column_name=value</b></i>.
 	 *
 	 * @param column the specific column.
