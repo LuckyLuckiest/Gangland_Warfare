@@ -39,7 +39,9 @@ public class CommandTabCompleter implements TabCompleter {
 		for (CommandHandler handler : commandMap.values()) {
 			if (filters.stream().anyMatch(filterClass -> filterClass.isInstance(handler))) continue;
 
-			if (sender.hasPermission(handler.getPermission())) commandHandlers.add(handler);
+			String permission = handler.getPermission();
+
+			if (permission.isEmpty() || sender.hasPermission(handler.getPermission())) commandHandlers.add(handler);
 		}
 
 		if (args.length == 1) return collectedArguments(args, commandHandlers.stream()
@@ -50,9 +52,17 @@ public class CommandTabCompleter implements TabCompleter {
 
 		if (arg == null) return null;
 
+		List<String> arguments = new ArrayList<>();
+
+		for (Argument argument : arg.getNode().getChildren().stream().map(Tree.Node::getData).toList()) {
+			String permission = argument.getPermission();
+
+			if (permission.isEmpty() || sender.hasPermission(permission)) arguments.addAll(
+					argument.getArgumentString());
+		}
+
 		// TODO if there was an optional argument then no need to get the last valid because it will never be equal
-		return collectedArguments(args, arg.getNode().getChildren().stream().map(Tree.Node::getData).map(
-				Argument::getArgumentString).flatMap(List::stream).toList());
+		return collectedArguments(args, arguments);
 	}
 
 	private List<String> collectedArguments(String[] args, List<String> arguments) {
