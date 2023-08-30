@@ -84,8 +84,12 @@ public class WaypointTeleport implements Listener {
 								                                                   user));
 						teleportCooldown.put(user, countdownTimer);
 
+
 						countdownTimer.start();
 					}
+
+					// remove the countdown timer when the player already teleports
+					countdownTimer.remove(user.getUser());
 
 					// successfully teleported
 					TeleportResult result = new TeleportResult(true, user, waypoint);
