@@ -25,6 +25,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.permissions.PermissionAttachment;
 
 import java.sql.Types;
 
@@ -61,8 +62,12 @@ public final class CreateAccount implements Listener {
 		// need to check if the user already registered
 		Member member = memberManager.getMember(player.getUniqueId());
 
-		if (member != null) return;
+		if (member != null) {
+			initializeUserPermission(user, member);
+			return;
+		}
 
+		// if the member is new
 		Member newMember = new Member(player.getUniqueId());
 		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
 			if (handler instanceof GangDatabase gangDatabase) {
@@ -177,6 +182,22 @@ public final class CreateAccount implements Listener {
 				member.setGangJoinDateLong(gangJoin);
 			}
 		});
+	}
+
+	public void initializeUserPermission(User<Player> user, Member member) {
+		Rank rank = member.getRank();
+
+		if (rank == null) return;
+
+		// attach all the permissions when the user has the specified rank
+		PermissionAttachment attachment = user.getUser().addAttachment(gangland);
+		user.setPermissionAttachment(attachment);
+
+		for (String perm : rank.getPermissions())
+			attachment.setPermission(perm, true);
+
+		// apparently updates the command list according to the permission list
+		user.getUser().updateCommands();
 	}
 
 	private void bountyExecutor(User<? extends OfflinePlayer> user, BountyEvent bountyEvent, RepeatingTimer timer,
