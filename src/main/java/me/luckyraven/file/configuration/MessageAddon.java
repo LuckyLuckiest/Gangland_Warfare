@@ -170,6 +170,7 @@ public enum MessageAddon {
 	// errors - waypoint
 	INVALID_WAYPOINT("Errors.Waypoint.Invalid", Type.ERROR), NOT_SELECTED_WAYPOINT("Errors.Waypoint.Not_Selected",
 	                                                                               Type.ERROR),
+	UNABLE_TELEPORT_WAYPOINT("Errors.Waypoint.Teleport_Issue", Type.ERROR),
 
 	// errors - others
 	CANNOT_BE_NULL("Errors.Cannot_Null", Type.ERROR), MUST_BE_NUMBERS("Errors.Must_Be_Numbers", Type.ERROR),
@@ -209,6 +210,10 @@ public enum MessageAddon {
 	LEVEL_STATS("Level.Stats", Type.OTHER, true), LEVEL_METER_BAR("Level.Meter.Bar", Type.NO_CHANGE),
 	LEVEL_COMPLETE_COLOR("Level.Meter.Complete_Color", Type.NO_CHANGE), LEVEL_INCOMPLETE_COLOR(
 			"Level.Meter.Incomplete_Color", Type.NO_CHANGE),
+
+	// waypoint
+	WAYPOINT_TELEPORT_COOLDOWN("Waypoint.Cooldown", Type.OTHER), WAYPOINT_TELEPORT_CANCELLED(
+			"Waypoint.Cancelled_Teleport", Type.OTHER),
 	;
 
 	private static YamlConfiguration message;

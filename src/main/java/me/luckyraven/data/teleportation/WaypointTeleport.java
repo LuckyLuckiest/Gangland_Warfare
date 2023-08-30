@@ -1,6 +1,7 @@
 package me.luckyraven.data.teleportation;
 
 import me.luckyraven.data.user.User;
+import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -119,7 +120,7 @@ public class WaypointTeleport implements Listener {
 		timer.cancel();
 		countdownTimer.remove(player);
 
-		player.sendMessage("Cancelled the timer!");
+		player.sendMessage(MessageAddon.WAYPOINT_TELEPORT_CANCELLED.toString());
 	}
 
 	public record TeleportResult(boolean success, User<Player> playerUser, Waypoint waypoint) {}
