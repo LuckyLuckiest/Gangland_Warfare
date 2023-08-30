@@ -40,11 +40,13 @@ import me.luckyraven.listener.gang.GangMembersDamage;
 import me.luckyraven.listener.player.*;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public final class Initializer {
 
@@ -100,8 +102,12 @@ public final class Initializer {
 			permissionManager = new PermissionManager(plugin, new PermissionWorker("gangland"));
 
 			// add all registered plugin permissions
-			permissionManager.addAllPermissions(Bukkit.getPluginManager().getPermissions().stream().map(
-					Permission::getName).filter(permission -> permission.startsWith("gangland")).toList());
+			permissionManager.addAllPermissions(Bukkit.getPluginManager()
+			                                          .getPermissions()
+			                                          .stream()
+			                                          .map(Permission::getName)
+			                                          .filter(permission -> permission.startsWith("gangland"))
+			                                          .collect(Collectors.toSet()));
 
 			// Rank manager
 			rankManager = new RankManager(gangland);
@@ -238,8 +244,11 @@ public final class Initializer {
 		// Needs to be the final command to add all the help info
 		commandManager.addCommand(new HelpCommand(gangland));
 
-		Objects.requireNonNull(plugin.getCommand("glw")).setTabCompleter(
-				new CommandTabCompleter(CommandHandler.getCommandHandlerMap()));
+		PluginCommand command = plugin.getCommand("glw");
+
+		if (command == null) return;
+
+		command.setTabCompleter(new CommandTabCompleter(CommandHandler.getCommandHandlerMap()));
 	}
 
 }
