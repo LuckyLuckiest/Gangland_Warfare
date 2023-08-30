@@ -32,11 +32,11 @@ public class OptionCommand extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments(Gangland gangland) {
-		UserManager<Player> userManager   = gangland.getInitializer().getUserManager();
-		MemberManager       memberManager = gangland.getInitializer().getMemberManager();
-		GangManager         gangManager   = gangland.getInitializer().getGangManager();
-		RankManager         rankManager   = gangland.getInitializer().getRankManager();
+	protected void initializeArguments() {
+		UserManager<Player> userManager   = getGangland().getInitializer().getUserManager();
+		MemberManager       memberManager = getGangland().getInitializer().getMemberManager();
+		GangManager         gangManager   = getGangland().getInitializer().getGangManager();
+		RankManager         rankManager   = getGangland().getInitializer().getRankManager();
 
 		Argument gang = gangArgument(userManager, memberManager, gangManager, rankManager);
 

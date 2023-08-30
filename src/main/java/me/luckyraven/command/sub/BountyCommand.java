@@ -45,8 +45,8 @@ public class BountyCommand extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments(Gangland gangland) {
-		UserManager<Player> userManager = gangland.getInitializer().getUserManager();
+	protected void initializeArguments() {
+		UserManager<Player> userManager = getGangland().getInitializer().getUserManager();
 
 		// Add bounty to a user
 		// glw bounty set <player> <amount>
@@ -163,7 +163,7 @@ public class BountyCommand extends CommandHandler {
 				}
 			}
 
-			gangland.getServer().getPluginManager().callEvent(bountyEvent);
+			getGangland().getServer().getPluginManager().callEvent(bountyEvent);
 
 			if (!bountyEvent.isCancelled()) {
 				userBounty.addBounty(sender, value);

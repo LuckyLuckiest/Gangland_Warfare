@@ -34,9 +34,9 @@ public class ReloadCommand extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments(Gangland gangland) {
+	protected void initializeArguments() {
 		Argument files = new Argument(new String[]{"files", "file"}, getArgumentTree(), (argument, sender, args) -> {
-			reloadProcess(sender, "files", () -> gangland.getReloadPlugin().filesReload(), true);
+			reloadProcess(sender, "files", () -> getGangland().getReloadPlugin().filesReload(), true);
 		});
 
 		Argument data = new Argument(new String[]{"database", "data"}, getArgumentTree(), (argument, sender, args) -> {
@@ -44,7 +44,7 @@ public class ReloadCommand extends CommandHandler {
 		});
 
 		Argument scoreboard = new Argument("scoreboard", getArgumentTree(), (argument, sender, args) -> {
-			reloadProcess(sender, "scoreboard", () -> gangland.getReloadPlugin().scoreboardReload(), false);
+			reloadProcess(sender, "scoreboard", () -> getGangland().getReloadPlugin().scoreboardReload(), false);
 		});
 
 		List<Argument> arguments = new ArrayList<>();

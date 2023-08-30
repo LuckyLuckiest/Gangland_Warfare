@@ -12,7 +12,7 @@ import me.luckyraven.data.teleportation.WaypointTeleport;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.TimeUtil;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -43,9 +43,9 @@ public class TeleportCommand extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments(Gangland gangland) {
-		UserManager<Player> userManager     = gangland.getInitializer().getUserManager();
-		WaypointManager     waypointManager = gangland.getInitializer().getWaypointManager();
+	protected void initializeArguments() {
+		UserManager<Player> userManager     = getGangland().getInitializer().getUserManager();
+		WaypointManager     waypointManager = getGangland().getInitializer().getWaypointManager();
 
 		Argument name = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			Waypoint waypoint = waypointManager.get(args[1]);
@@ -77,23 +77,33 @@ public class TeleportCommand extends CommandHandler {
 					user);
 
 			waypoint.getWaypointTeleport().teleport(getGangland(), user, (u, t) -> {
-				u.getUser().sendMessage(ChatUtil.color("&7Teleporting in &b" + t.getTimeLeft() + "&7 seconds."));
+				String time    = TimeUtil.formatTime(t.getTimeLeft(), true);
+				String message = MessageAddon.WAYPOINT_TELEPORT_TIMER.toString().replace("%timer%", time);
+
+				u.getUser().sendMessage(message);
 			}).thenAccept(teleportResult -> {
+				String message;
 				if (teleportResult.success()) {
-					teleportResult.playerUser().getUser().sendMessage(ChatUtil.prefixMessage(
-							"Successfully teleported to &b" + teleportResult.waypoint().getName()));
+					message = MessageAddon.WAYPOINT_TELEPORT.toString().replace("%location%",
+					                                                            teleportResult.waypoint().getName());
+
 				} else {
-					teleportResult.playerUser().getUser().sendMessage(
-							ChatUtil.prefixMessage("Unable to teleport to &b" + teleportResult.waypoint().getName()));
+					message = MessageAddon.UNABLE_TELEPORT_WAYPOINT.toString().replace("%location%",
+					                                                                   teleportResult.waypoint()
+					                                                                                 .getName());
+
 				}
+				teleportResult.playerUser().getUser().sendMessage(message);
 			});
 		} catch (IllegalTeleportException exception) {
 			CountdownTimer timer = WaypointTeleport.getCooldownTimer(user);
 
 			if (timer == null) return;
 
-			player.sendMessage(
-					ChatUtil.color("&7You are on a cooldown. Wait &b" + timer.getTimeLeft() + "&7 seconds."));
+			String time    = TimeUtil.formatTime(timer.getTimeLeft(), true);
+			String message = MessageAddon.WAYPOINT_TELEPORT_COOLDOWN.toString().replace("%timer%", time);
+
+			player.sendMessage(message);
 		}
 	}
 

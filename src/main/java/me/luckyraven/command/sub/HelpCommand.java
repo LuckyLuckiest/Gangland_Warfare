@@ -33,7 +33,7 @@ public class HelpCommand extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments(Gangland gangland) {
+	protected void initializeArguments() {
 
 	}
 

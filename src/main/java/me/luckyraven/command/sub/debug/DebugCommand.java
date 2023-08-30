@@ -42,10 +42,10 @@ public class DebugCommand extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments(Gangland gangland) {
+	protected void initializeArguments() {
 		// user data
 		Argument userData = new Argument("user-data", getArgumentTree(), (argument, sender, args) -> {
-			UserManager<Player> userManager = gangland.getInitializer().getUserManager();
+			UserManager<Player> userManager = getGangland().getInitializer().getUserManager();
 			if (sender instanceof Player player) {
 				User<Player> user = userManager.getUser(player);
 
@@ -58,8 +58,8 @@ public class DebugCommand extends CommandHandler {
 
 		// gang data
 		Argument gangData = new Argument("gang-data", getArgumentTree(), (argument, sender, args) -> {
-			UserManager<Player> userManager = gangland.getInitializer().getUserManager();
-			GangManager         gangManager = gangland.getInitializer().getGangManager();
+			UserManager<Player> userManager = getGangland().getInitializer().getUserManager();
+			GangManager         gangManager = getGangland().getInitializer().getGangManager();
 			if (sender instanceof Player player) {
 				User<Player> user = userManager.getUser(player);
 				if (user.hasGang()) {
@@ -70,13 +70,13 @@ public class DebugCommand extends CommandHandler {
 					player.sendMessage("Not in a gang...");
 				}
 			} else {
-				for (Gang gang : gangland.getInitializer().getGangManager().getGangs().values())
+				for (Gang gang : getGangland().getInitializer().getGangManager().getGangs().values())
 					sender.sendMessage(gang.toString());
 			}
 		});
 
 		Argument memberData = new Argument("member-data", getArgumentTree(), (argument, sender, args) -> {
-			MemberManager memberManager = gangland.getInitializer().getMemberManager();
+			MemberManager memberManager = getGangland().getInitializer().getMemberManager();
 			if (sender instanceof Player player) {
 				Member member = memberManager.getMember(player.getUniqueId());
 
@@ -89,7 +89,7 @@ public class DebugCommand extends CommandHandler {
 
 		// rank data
 		Argument rankData = new Argument("rank-data", getArgumentTree(), (argument, sender, args) -> {
-			for (Rank rank : gangland.getInitializer().getRankManager().getRanks().values())
+			for (Rank rank : getGangland().getInitializer().getRankManager().getRanks().values())
 				sender.sendMessage(convertToJson(rank.toString()));
 		});
 
@@ -110,7 +110,7 @@ public class DebugCommand extends CommandHandler {
 
 				items.addAll(swords.stream().map(ItemStack::new).toList());
 
-				MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, player, items, "&6&lDebug items",
+				MultiInventory multi = MultiInventory.dynamicMultiInventory(getGangland(), player, items, "&6&lDebug items",
 				                                                            false, false, null);
 
 				multi.open(player);
@@ -122,8 +122,8 @@ public class DebugCommand extends CommandHandler {
 		// anvil gui
 		Argument anvil = new Argument("anvil", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
-				User<Player> user = gangland.getInitializer().getUserManager().getUser(player);
-				Gang         gang = gangland.getInitializer().getGangManager().getGang(user.getGangId());
+				User<Player> user = getGangland().getInitializer().getUserManager().getUser(player);
+				Gang         gang = getGangland().getInitializer().getGangManager().getGang(user.getGangId());
 
 				String text = "";
 				if (gang != null) text = gang.getDescription();
@@ -135,7 +135,7 @@ public class DebugCommand extends CommandHandler {
 
 					stateSnapshot.getPlayer().sendMessage(stateSnapshot.getText());
 					return List.of(AnvilGUI.ResponseAction.close());
-				}).text(text).title("Enter your answer.").plugin(gangland).open(player);
+				}).text(text).title("Enter your answer.").plugin(getGangland()).open(player);
 			} else {
 				sender.sendMessage("How will you view the anvil inventory?");
 			}
@@ -144,7 +144,7 @@ public class DebugCommand extends CommandHandler {
 		// permissions list
 		Argument perm = new Argument("perms", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(
-					gangland.getInitializer().getPermissionManager().getPermissions().toArray(String[]::new));
+					getGangland().getInitializer().getPermissionManager().getPermissions().toArray(String[]::new));
 		});
 
 		Argument permOptional = new Argument("bukkit", getArgumentTree(), (argument, sender, args) -> {
@@ -173,7 +173,7 @@ public class DebugCommand extends CommandHandler {
 		// testing placeholder
 		Argument placeholder = new Argument("placeholder-data", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
-				PlaceholderHandler handler = gangland.getInitializer().getPlaceholder();
+				PlaceholderHandler handler = getGangland().getInitializer().getPlaceholder();
 
 				String[] placeholders = {"%player%", "%info%", "%user_gang-id%"};
 
@@ -186,7 +186,7 @@ public class DebugCommand extends CommandHandler {
 
 		// force update data
 		Argument updateData = new Argument("update-data", getArgumentTree(), (argument, sender, args) -> {
-			gangland.getPeriodicalUpdates().forceUpdate();
+			getGangland().getPeriodicalUpdates().forceUpdate();
 		});
 
 		// all-inventory name space key data

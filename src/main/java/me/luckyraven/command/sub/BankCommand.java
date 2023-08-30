@@ -58,8 +58,8 @@ public class BankCommand extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments(Gangland gangland) {
-		UserManager<Player> userManager = gangland.getInitializer().getUserManager();
+	protected void initializeArguments() {
+		UserManager<Player> userManager = getGangland().getInitializer().getUserManager();
 
 		// create bank
 		// glw bank create name
@@ -135,7 +135,7 @@ public class BankCommand extends CommandHandler {
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "create"}));
 			confirmCreate.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+			CountdownTimer timer = new CountdownTimer(getGangland(), 60, time -> {
 				sender.sendMessage(MessageAddon.BANK_CREATE_CONFIRM.toString()
 				                                                   .replace("%timer%",
 				                                                            TimeUtil.formatTime(time.getPeriod(),
@@ -207,7 +207,7 @@ public class BankCommand extends CommandHandler {
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "delete"}));
 			confirmDelete.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+			CountdownTimer timer = new CountdownTimer(getGangland(), 60, time -> {
 				sender.sendMessage(MessageAddon.BANK_REMOVE_CONFIRM.toString()
 				                                                   .replace("%timer%",
 				                                                            TimeUtil.formatTime(time.getPeriod(),

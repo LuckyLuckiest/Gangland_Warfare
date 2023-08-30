@@ -57,72 +57,72 @@ public class GangCommand extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments(Gangland gangland) {
+	protected void initializeArguments() {
 		// create gang
 		// glw gang create <name>
-		Argument create = new GangCreateCommand(gangland, getArgumentTree(), getArgument());
+		Argument create = new GangCreateCommand(getGangland(), getArgumentTree(), getArgument());
 
 		// delete gang
 		// glw gang delete
-		Argument delete = new GangDeleteCommand(gangland, getArgumentTree(), getArgument());
+		Argument delete = new GangDeleteCommand(getGangland(), getArgumentTree(), getArgument());
 
 		// add user to gang
 		// glw gang invite <name>
-		GangInviteCommand addUser = new GangInviteCommand(gangland, getArgumentTree(), getArgument());
+		GangInviteCommand addUser = new GangInviteCommand(getGangland(), getArgumentTree(), getArgument());
 
 		// glw gang accept
 		Argument acceptInvite = addUser.gangAccept();
 
 		// remove user from gang
 		// glw gang kick <name>
-		Argument removeUser = new GangKickCommand(gangland, getArgumentTree(), getArgument());
+		Argument removeUser = new GangKickCommand(getGangland(), getArgumentTree(), getArgument());
 
 		// leave the gang
 		// glw gang leave
-		Argument leave = new GangLeaveCommand(gangland, getArgumentTree(), getArgument());
+		Argument leave = new GangLeaveCommand(getGangland(), getArgumentTree(), getArgument());
 
 		// promote user in gang
 		// glw gang promote <name>
-		Argument promoteUser = new GangPromoteCommand(gangland, getArgumentTree(), getArgument());
+		Argument promoteUser = new GangPromoteCommand(getGangland(), getArgumentTree(), getArgument());
 
 		// demote user in gang
 		// glw gang demote <name>
-		Argument demoteUser = new GangDemoteCommand(gangland, getArgumentTree(), getArgument());
+		Argument demoteUser = new GangDemoteCommand(getGangland(), getArgumentTree(), getArgument());
 
 		getArgument().addPermission(getPermission() + ".force_rank");
 
 		// deposit money to gang
 		// glw gang deposit <amount>
-		Argument deposit = new GangDepositCommand(gangland, getArgumentTree(), getArgument());
+		Argument deposit = new GangDepositCommand(getGangland(), getArgumentTree(), getArgument());
 
 		// withdraw money from gang
 		// glw gang withdraw <amount>
-		Argument withdraw = new GangWithdrawCommand(gangland, getArgumentTree(), getArgument());
+		Argument withdraw = new GangWithdrawCommand(getGangland(), getArgumentTree(), getArgument());
 
 		// balance of gang
 		// glw gang balance
-		Argument balance = new GangBalanceCommand(gangland, getArgumentTree(), getArgument());
+		Argument balance = new GangBalanceCommand(getGangland(), getArgumentTree(), getArgument());
 
 		// change gang name
 		// glw gang name <name>
-		Argument name = new GangRenameCommand(gangland, getArgumentTree(), getArgument());
+		Argument name = new GangRenameCommand(getGangland(), getArgumentTree(), getArgument());
 
 		// change gang description
 		// opens an anvil with a paper that can change the title
 		// glw gang desc
-		Argument description = new GangDescriptionCommand(gangland, getArgumentTree(), getArgument());
+		Argument description = new GangDescriptionCommand(getGangland(), getArgumentTree(), getArgument());
 
 		// gang ally
 		// glw gang ally <request/abandon> <id>
-		Argument ally = new GangAllyCommand(gangland, getArgumentTree(), getArgument());
+		Argument ally = new GangAllyCommand(getGangland(), getArgumentTree(), getArgument());
 
 		// change gang display name
 		// glw gang display <name>
-		Argument display = new GangDisplayCommand(gangland, getArgumentTree(), getArgument());
+		Argument display = new GangDisplayCommand(getGangland(), getArgumentTree(), getArgument());
 
 		// change gang color using gui
 		// glw gang color
-		Argument color = new GangColorCommand(gangland, getArgumentTree(), getArgument());
+		Argument color = new GangColorCommand(getGangland(), getArgumentTree(), getArgument());
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();

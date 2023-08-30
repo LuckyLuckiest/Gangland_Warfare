@@ -43,7 +43,7 @@ public class ReadNBTCommand extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments(Gangland gangland) {
+	protected void initializeArguments() {
 
 	}
 

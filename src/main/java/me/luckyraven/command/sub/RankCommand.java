@@ -46,8 +46,8 @@ public class RankCommand extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments(Gangland gangland) {
-		RankManager rankManager = gangland.getInitializer().getRankManager();
+	protected void initializeArguments() {
+		RankManager rankManager = getGangland().getInitializer().getRankManager();
 
 		// glw rank create <name>
 		Argument create = new Argument("create", getArgumentTree(), (argument, sender, args) -> {
@@ -60,9 +60,9 @@ public class RankCommand extends CommandHandler {
 		ConfirmArgument confirmCreate = new ConfirmArgument(getArgumentTree(), (argument, sender, args) -> {
 			Rank rank = new Rank(createRankName.get(sender).get());
 
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+			for (DatabaseHandler handler : getGangland().getInitializer().getDatabaseManager().getDatabases())
 				if (handler instanceof RankDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+					DatabaseHelper helper = new DatabaseHelper(getGangland(), handler);
 
 					helper.runQueries(database -> {
 						String permissions = database.createList(rank.getPermissions());
@@ -103,7 +103,7 @@ public class RankCommand extends CommandHandler {
 			confirmCreate.setConfirmed(true);
 			createRankName.put(sender, new AtomicReference<>(args[2]));
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+			CountdownTimer timer = new CountdownTimer(getGangland(), 60, time -> {
 				sender.sendMessage(MessageAddon.RANK_CREATE_CONFIRM.toString()
 				                                                   .replace("%timer%",
 				                                                            TimeUtil.formatTime(time.getPeriod(),
@@ -132,9 +132,9 @@ public class RankCommand extends CommandHandler {
 			Rank rank = rankManager.get(deleteRankName.get(sender).get());
 
 			if (rank != null) {
-				for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+				for (DatabaseHandler handler : getGangland().getInitializer().getDatabaseManager().getDatabases())
 					if (handler instanceof RankDatabase rankDatabase) {
-						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+						DatabaseHelper helper = new DatabaseHelper(getGangland(), handler);
 
 						helper.runQueries(database -> {
 							rankManager.remove(rank);
@@ -175,7 +175,7 @@ public class RankCommand extends CommandHandler {
 			confirmDelete.setConfirmed(true);
 			deleteRankName.put(sender, new AtomicReference<>(args[2]));
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+			CountdownTimer timer = new CountdownTimer(getGangland(), 60, time -> {
 				sender.sendMessage(MessageAddon.RANK_REMOVE_CONFIRM.toString()
 				                                                   .replace("%timer%",
 				                                                            TimeUtil.formatTime(time.getPeriod(),

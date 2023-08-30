@@ -36,8 +36,8 @@ public class EconomyCommand extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments(Gangland gangland) {
-		UserManager<Player>                     userManager = gangland.getInitializer().getUserManager();
+	protected void initializeArguments() {
+		UserManager<Player>                     userManager = getGangland().getInitializer().getUserManager();
 		HashMap<String, Supplier<List<Player>>> specifiers  = new HashMap<>();
 
 		// glw economy deposit

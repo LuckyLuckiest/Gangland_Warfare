@@ -47,14 +47,14 @@ public final class BalanceCommand extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments(Gangland gangland) {
+	protected void initializeArguments() {
 		Argument targetBalance = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			// get the target, validate if they are in the system
 			String target = args[1];
 
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+			for (DatabaseHandler handler : getGangland().getInitializer().getDatabaseManager().getDatabases())
 				if (handler instanceof UserDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+					DatabaseHelper helper = new DatabaseHelper(getGangland(), handler);
 
 					helper.runQueries(database -> {
 						// get all the user's data

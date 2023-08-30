@@ -49,7 +49,7 @@ public abstract class CommandHandler {
 		this.argument = new Argument(args, argumentTree, this::onExecute, this.permission);
 		this.argumentTree.add(argument.getNode());
 
-		initializeArguments(gangland);
+		initializeArguments();
 
 		COMMAND_HANDLER_MAP.put(this.label, this);
 	}
@@ -60,7 +60,7 @@ public abstract class CommandHandler {
 
 	protected abstract void onExecute(Argument argument, CommandSender commandSender, String[] arguments);
 
-	protected abstract void initializeArguments(Gangland gangland);
+	protected abstract void initializeArguments();
 
 	protected abstract void help(CommandSender sender, int page);
 

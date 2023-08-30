@@ -20,12 +20,8 @@ import java.util.Map;
 
 public class LevelCommand extends CommandHandler {
 
-	private final Gangland gangland;
-
 	public LevelCommand(Gangland gangland) {
 		super(gangland, "level", true);
-
-		this.gangland = gangland;
 
 		List<CommandInformation> list = getCommands().entrySet()
 		                                             .stream()
@@ -39,7 +35,7 @@ public class LevelCommand extends CommandHandler {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		UserManager<Player> userManager = gangland.getInitializer().getUserManager();
+		UserManager<Player> userManager = getGangland().getInitializer().getUserManager();
 		Player              player      = (Player) commandSender;
 		User<Player>        user        = userManager.getUser(player);
 
@@ -81,8 +77,8 @@ public class LevelCommand extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments(Gangland gangland) {
-		UserManager<Player> userManager = gangland.getInitializer().getUserManager();
+	protected void initializeArguments() {
+		UserManager<Player> userManager = getGangland().getInitializer().getUserManager();
 
 		String[] expArr = {"exp", "experience"};
 		Argument experience = new Argument(expArr, getArgumentTree(), (argument, sender, args) -> {

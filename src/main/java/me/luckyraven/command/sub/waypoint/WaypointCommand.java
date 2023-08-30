@@ -27,23 +27,23 @@ public class WaypointCommand extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments(Gangland gangland) {
-		Argument create = new WaypointCreateCommand(gangland, getArgumentTree(), getArgument());
-		Argument delete = new WaypointDeleteCommand(gangland, getArgumentTree(), getArgument());
+	protected void initializeArguments() {
+		Argument create = new WaypointCreateCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument delete = new WaypointDeleteCommand(getGangland(), getArgumentTree(), getArgument());
 
-		Argument select   = new WaypointSelectCommand(gangland, getArgumentTree(), getArgument());
-		Argument deselect = new WaypointDeselectCommand(gangland, getArgumentTree(), getArgument());
+		Argument select   = new WaypointSelectCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument deselect = new WaypointDeselectCommand(getGangland(), getArgumentTree(), getArgument());
 
-		Argument list = new WaypointListCommand(gangland, getArgumentTree(), getArgument());
-		Argument info = new WaypointInfoCommand(gangland, getArgumentTree(), getArgument());
+		Argument list = new WaypointListCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument info = new WaypointInfoCommand(getGangland(), getArgumentTree(), getArgument());
 
-		Argument type     = new WaypointTypeCommand(gangland, getArgumentTree(), getArgument());
-		Argument gangId   = new WaypointGangIdCommand(gangland, getArgumentTree(), getArgument());
-		Argument timer    = new WaypointTimerCommand(gangland, getArgumentTree(), getArgument());
-		Argument cooldown = new WaypointCooldownCommand(gangland, getArgumentTree(), getArgument());
-		Argument shield   = new WaypointShieldCommand(gangland, getArgumentTree(), getArgument());
-		Argument cost     = new WaypointCostCommand(gangland, getArgumentTree(), getArgument());
-		Argument radius   = new WaypointRadiusCommand(gangland, getArgumentTree(), getArgument());
+		Argument type     = new WaypointTypeCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument gangId   = new WaypointGangIdCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument timer    = new WaypointTimerCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument cooldown = new WaypointCooldownCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument shield   = new WaypointShieldCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument cost     = new WaypointCostCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument radius   = new WaypointRadiusCommand(getGangland(), getArgumentTree(), getArgument());
 
 		List<Argument> arguments = new ArrayList<>();
 
