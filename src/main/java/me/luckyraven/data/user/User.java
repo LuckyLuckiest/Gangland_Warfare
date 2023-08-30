@@ -11,6 +11,7 @@ import me.luckyraven.feature.phone.Phone;
 import me.luckyraven.feature.wanted.Wanted;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.PermissionAttachment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,9 +33,10 @@ public class User<T extends OfflinePlayer> {
 	private final EconomyHandler      economy;
 
 	private @Setter int kills, deaths, mobKills, gangId;
-	private @Setter boolean    hasBank;
-	private @Setter Phone      phone;
-	private @Setter Scoreboard scoreboard;
+	private @Setter boolean              hasBank;
+	private @Setter Phone                phone;
+	private @Setter Scoreboard           scoreboard;
+	private @Setter PermissionAttachment permissionAttachment;
 
 	/**
 	 * Instantiates a new Database.
@@ -142,8 +144,12 @@ public class User<T extends OfflinePlayer> {
 
 	@Override
 	public String toString() {
-		return String.format("User:{data=%s,kd=%.2f,balance=%.2f,level=%.2f,gangId=%d}", user, getKillDeathRatio(),
-		                     economy.getBalance(), level.getExperience(), gangId);
+		return String.format("User:{data=%s,kd=%.2f,balance=%.2f,level=%.2f,bounty=%.2f,gangId=%d,permissions=%s}",
+		                     user, getKillDeathRatio(), economy.getBalance(), bounty.getAmount(), level.getExperience(),
+		                     gangId, permissionAttachment != null ? permissionAttachment.getPermissions()
+		                                                                                .keySet()
+		                                                                                .stream()
+		                                                                                .toList() : "null");
 	}
 
 }
