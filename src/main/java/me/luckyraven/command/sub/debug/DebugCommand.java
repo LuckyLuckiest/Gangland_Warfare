@@ -6,6 +6,7 @@ import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.argument.OptionalArgument;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
@@ -215,6 +216,18 @@ public class DebugCommand extends CommandHandler {
 			                                   .toArray(String[]::new));
 		});
 
+		Argument checkPerm = new Argument("check-perm", getArgumentTree(), (argument, sender, args) -> {
+			sender.sendMessage("Missing argument <permission>");
+		});
+
+		Argument checkOptional = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+			String permission = args[2];
+
+			sender.sendMessage(permission + " -> " + sender.hasPermission(permission));
+		});
+
+		checkPerm.addSubArgument(checkOptional);
+
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
 
@@ -230,6 +243,7 @@ public class DebugCommand extends CommandHandler {
 		arguments.add(placeholder);
 		arguments.add(updateData);
 		arguments.add(inventoriesData);
+		arguments.add(checkPerm);
 
 		getArgument().addAllSubArguments(arguments);
 	}
