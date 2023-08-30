@@ -20,7 +20,9 @@ import me.luckyraven.data.permission.PermissionWorker;
 import me.luckyraven.data.placeholder.GanglandPlaceholder;
 import me.luckyraven.data.placeholder.replacer.Replacer;
 import me.luckyraven.data.rank.RankManager;
+import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
+import me.luckyraven.data.teleportation.WaypointTeleport;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseManager;
@@ -195,6 +197,7 @@ public final class Initializer {
 			listenerManager.addEvent(new BountyIncrease(gangland));
 			listenerManager.addEvent(new PlayerDeath(gangland));
 			listenerManager.addEvent(new LevelUp(gangland));
+			listenerManager.addEvent(new WaypointTeleport(new Waypoint("dummy")));
 			if (SettingAddon.isPhoneEnabled()) listenerManager.addEvent(new PhoneItem(gangland));
 
 			// gang events

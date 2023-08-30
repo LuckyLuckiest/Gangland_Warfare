@@ -8,6 +8,7 @@ import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.teleportation.IllegalTeleportException;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
+import me.luckyraven.data.teleportation.WaypointTeleport;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -18,7 +19,6 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 public class TeleportCommand extends CommandHandler {
 
@@ -73,13 +73,12 @@ public class TeleportCommand extends CommandHandler {
 		User<Player> user   = userManager.getUser(player);
 
 		try {
-			if (player.hasPermission("gangland.command.teleport.cooldown_bypass")) Waypoint.removeCooldown(user);
+			if (player.hasPermission("gangland.command.teleport.cooldown_bypass")) WaypointTeleport.removeCooldown(
+					user);
 
-			CompletableFuture<Waypoint.TeleportResult> future = waypoint.teleport(getGangland(), user, (u, t) -> {
+			waypoint.getWaypointTeleport().teleport(getGangland(), user, (u, t) -> {
 				u.getUser().sendMessage(ChatUtil.color("&7Teleporting in &b" + t.getTimeLeft() + "&7 seconds."));
-			});
-
-			future.thenAccept(teleportResult -> {
+			}).thenAccept(teleportResult -> {
 				if (teleportResult.success()) {
 					teleportResult.playerUser().getUser().sendMessage(ChatUtil.prefixMessage(
 							"Successfully teleported to &b" + teleportResult.waypoint().getName()));
@@ -89,7 +88,7 @@ public class TeleportCommand extends CommandHandler {
 				}
 			});
 		} catch (IllegalTeleportException exception) {
-			CountdownTimer timer = Waypoint.getCooldownTimer(user);
+			CountdownTimer timer = WaypointTeleport.getCooldownTimer(user);
 
 			if (timer == null) return;
 
