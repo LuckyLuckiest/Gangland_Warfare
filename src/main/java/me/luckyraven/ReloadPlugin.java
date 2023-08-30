@@ -1,7 +1,5 @@
-package me.luckyraven.data;
+package me.luckyraven;
 
-import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.bukkit.scoreboard.Scoreboard;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
@@ -38,12 +36,9 @@ public class ReloadPlugin {
 	 * Reloads the periodical updates.
 	 */
 	public void periodicalUpdatesReload() {
-		int minutes = SettingAddon.getAutoSaveTime();
-
 		gangland.getPeriodicalUpdates().stop();
 
-		if (SettingAddon.isAutoSave()) gangland.getPeriodicalUpdates().setInterval(minutes * 60 * 20L);
-		else gangland.getPeriodicalUpdates().removeTimer();
+		gangland.periodicalUpdatesInitializer();
 	}
 
 	/**
@@ -144,11 +139,17 @@ public class ReloadPlugin {
 
 				// this member doesn't have a gang because they are new
 				Member member = memberManager.getMember(player.getUniqueId());
-				if (member == null) {
-					Member newMember = new Member(player.getUniqueId());
-					createAccount.initializeMemberData(newMember, memberHandler);
-					memberManager.add(newMember);
+
+				// initialize the rank permissions
+				if (member != null) {
+					createAccount.initializeUserPermission(newUser, member);
+					continue;
 				}
+
+				// for a new member
+				Member newMember = new Member(player.getUniqueId());
+				createAccount.initializeMemberData(newMember, memberHandler);
+				memberManager.add(newMember);
 			}
 	}
 

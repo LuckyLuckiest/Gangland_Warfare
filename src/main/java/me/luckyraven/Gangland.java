@@ -2,7 +2,6 @@ package me.luckyraven;
 
 import com.zaxxer.hikari.HikariConfig;
 import lombok.Getter;
-import me.luckyraven.data.ReloadPlugin;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.dependency.PlaceholderAPIExpansion;
@@ -60,6 +59,11 @@ public final class Gangland extends JavaPlugin {
 		// initializes users and members who joined and not registered in postInitialize
 		reloadPlugin.userInitialize(false);
 
+		// initializes the periodical updates
+		periodicalUpdatesInitializer();
+	}
+
+	void periodicalUpdatesInitializer() {
 		// periodical updates
 		int minutes = SettingAddon.getAutoSaveTime();
 
