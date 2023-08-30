@@ -31,7 +31,6 @@ public class MemberManager {
 				Rank   rank         = rankManager.get(String.valueOf(result[3]));
 				long   joinedGang   = (long) result[4];
 
-
 				Member member = new Member(uuid);
 				member.setGangId(id);
 				member.setContribution(contribution);
