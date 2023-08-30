@@ -47,6 +47,7 @@
 	- Implement scoreboard (FastBoard)
 0.0.63-DEV:
 	- Warps and spawns.
+    - Working permissions in ranks.
 	- A Taxi system added to contacts in phone.
 0.0.64-DEV:
     - Gang settings.
@@ -58,9 +59,6 @@
 	- Gang spawn and home.
 0.0.72-DEV:
 	- Enhance wanted level.
-0.0.73-DEV:
-	- Add features registration, to enable specific features (e.g., gang, bounty, etc...) or not.
-    - Working permissions in ranks.
 0.0.7-BETA:
     - The release of the plugin
 
