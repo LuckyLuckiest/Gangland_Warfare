@@ -34,6 +34,10 @@ public class Member {
 		this.contribution = 0D;
 	}
 
+	public void resetGang() {
+		this.gangId = -1;
+	}
+
 	public Date getGangJoinDate() {
 		return new Date(gangJoinDateLong);
 	}
