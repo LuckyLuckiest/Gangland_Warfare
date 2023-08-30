@@ -2,23 +2,25 @@ package me.luckyraven.data.permission;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class PermissionManager {
 
 	private final JavaPlugin        plugin;
 	private final PermissionHandler permissionHandler;
-	private final List<String>      permissions;
+	private final Set<String>       permissions;
 
 	public PermissionManager(JavaPlugin plugin, PermissionHandler permissionHandler) {
 		this.plugin = plugin;
 		this.permissionHandler = permissionHandler;
-		this.permissions = new ArrayList<>();
+		this.permissions = new HashSet<>();
 	}
 
-	public void addAllPermissions(List<String> permissions) {
+	public void addAllPermissions(Set<String> permissions) {
 		permissions.forEach(this::addPermission);
 	}
 
@@ -45,12 +47,9 @@ public class PermissionManager {
 		return permissions.contains(permission);
 	}
 
-	public List<String> getPermissions() {
-		List<String> perms = new ArrayList<>(permissions);
-
-		perms.sort(String::compareTo);
-
-		return perms;
+	public Set<String> getPermissions() {
+		return new HashSet<>(permissions).stream().sorted(String::compareTo).collect(
+				Collectors.toCollection(LinkedHashSet::new));
 	}
 
 }
