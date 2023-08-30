@@ -20,6 +20,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.PermissionAttachment;
 
 import java.util.Objects;
 
@@ -117,8 +118,26 @@ class GangDemoteCommand extends SubArgument {
 			Rank previousRank = previousRankNode.getData();
 
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
-			if (offlinePlayer.isOnline()) Objects.requireNonNull(offlinePlayer.getPlayer()).sendMessage(
-					MessageAddon.GANG_DEMOTE_TARGET_SUCCESS.toString().replace("%rank%", previousRank.getName()));
+			if (offlinePlayer.getPlayer() != null && offlinePlayer.isOnline()) {
+				Player onlinePlayer = offlinePlayer.getPlayer();
+				String message = MessageAddon.GANG_DEMOTE_TARGET_SUCCESS.toString().replace("%rank%",
+				                                                                            previousRank.getName());
+
+				// remove the previous rank attachments
+				User<Player>         onlineUser = userManager.getUser(onlinePlayer);
+				PermissionAttachment attachment = onlineUser.getPermissionAttachment();
+
+				for (String permission : attachment.getPermissions().keySet())
+					attachment.unsetPermission(permission);
+
+				// add the new rank attachments
+				for (String perm : previousRank.getPermissions())
+					attachment.setPermission(perm, true);
+
+				onlineUser.getUser().updateCommands();
+
+				Objects.requireNonNull(onlinePlayer).sendMessage(message);
+			}
 			player.sendMessage(MessageAddon.GANG_DEMOTE_PLAYER_SUCCESS.toString()
 			                                                          .replace("%player%", targetStr)
 			                                                          .replace("%rank%", previousRank.getName()));
