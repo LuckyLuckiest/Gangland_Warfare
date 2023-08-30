@@ -5,6 +5,7 @@ import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.util.ChatUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ public class ReloadCommand extends CommandHandler {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		reloadProcess(commandSender, "", () -> {
+		reloadProcess("", () -> {
 			getGangland().getReloadPlugin().filesReload();
 			databaseReload();
 			getGangland().getReloadPlugin().scoreboardReload();
@@ -36,15 +37,15 @@ public class ReloadCommand extends CommandHandler {
 	@Override
 	protected void initializeArguments() {
 		Argument files = new Argument(new String[]{"files", "file"}, getArgumentTree(), (argument, sender, args) -> {
-			reloadProcess(sender, "files", () -> getGangland().getReloadPlugin().filesReload(), true);
+			reloadProcess("files", () -> getGangland().getReloadPlugin().filesReload(), true);
 		});
 
 		Argument data = new Argument(new String[]{"database", "data"}, getArgumentTree(), (argument, sender, args) -> {
-			reloadProcess(sender, "database", this::databaseReload, true);
+			reloadProcess("database", this::databaseReload, true);
 		});
 
 		Argument scoreboard = new Argument("scoreboard", getArgumentTree(), (argument, sender, args) -> {
-			reloadProcess(sender, "scoreboard", () -> getGangland().getReloadPlugin().scoreboardReload(), false);
+			reloadProcess("scoreboard", () -> getGangland().getReloadPlugin().scoreboardReload(), false);
 		});
 
 		List<Argument> arguments = new ArrayList<>();
@@ -61,21 +62,34 @@ public class ReloadCommand extends CommandHandler {
 		getHelpInfo().displayHelp(sender, page, "Reload");
 	}
 
-	private void reloadProcess(CommandSender sender, String process, Runnable runnable, boolean forceUpdate) {
-		sender.sendMessage(ChatUtil.commandMessage(
-				String.format("&bReloading&7 the plugin%s%s...", process.isEmpty() ? "" : " ", process)));
+	private void reloadProcess(String process, Runnable runnable, boolean forceUpdate) {
+		String permission = "gangland.command.reload";
+		String reloading  = String.format("&bReloading&7 the plugin%s%s...", process.isEmpty() ? "" : " ", process);
+
+		sendToOperators(permission, reloading);
 		try {
 			if (forceUpdate) getGangland().getPeriodicalUpdates().forceUpdate();
 			runnable.run();
 
-			sender.sendMessage(ChatUtil.commandMessage("&aReload has been completed."));
+			String reloadComplete = "&aReload has been completed.";
+
+			sendToOperators(permission, reloadComplete);
 		} catch (Exception exception) {
-			sender.sendMessage(ChatUtil.commandMessage("&cThere was a problem reloading the plugin!"));
+			String reloadIssue = "&cThere was a problem reloading the plugin!";
+
+			sendToOperators(permission, reloadIssue);
 		}
 	}
 
 	private void databaseReload() {
 		getGangland().getReloadPlugin().databaseInitialize(true);
+	}
+
+	private void sendToOperators(String permission, String message) {
+		Bukkit.getServer().getOnlinePlayers().stream().filter(player -> player.hasPermission(permission)).forEach(
+				player -> player.sendMessage(ChatUtil.commandMessage(message)));
+
+		Bukkit.getServer().getConsoleSender().sendMessage(ChatUtil.commandMessage(message));
 	}
 
 }
