@@ -1,5 +1,6 @@
 package me.luckyraven.command.argument;
 
+import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.Gangland;
@@ -12,6 +13,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,11 +27,13 @@ public class Argument implements Cloneable {
 	private final @Getter String[]            arguments;
 	private final @Getter Tree.Node<Argument> node;
 	private final @Getter boolean             displayAllArguments;
+	private final         Gangland            gangland;
 
 	private final Tree<Argument> tree;
 
 	TriConsumer<Argument, CommandSender, String[]> action;
 
+	@NotNull
 	private @Getter String                              permission;
 	private @Getter
 	@Setter         BiConsumer<CommandSender, String[]> executeOnPass;
@@ -58,23 +62,37 @@ public class Argument implements Cloneable {
 
 	public Argument(String[] arguments, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action,
 	                String permission, boolean displayAllArguments) {
+		Preconditions.checkNotNull(permission, "Permission string can't be null");
+
 		this.arguments = arguments;
 		this.tree = tree;
 		this.node = new Tree.Node<>(this);
 		this.action = action;
 		this.displayAllArguments = displayAllArguments;
 
+		// use gangland if it was available
+		if (Bukkit.getPluginManager().isPluginEnabled("Gangland_Warfare")) {
+			this.gangland = JavaPlugin.getPlugin(Gangland.class);
+		} else this.gangland = null;
+
 		setPermission(permission);
 	}
 
 	public Argument(Argument other) {
+		Preconditions.checkNotNull(other.permission, "Permission string can't be null");
+
 		this.arguments = other.arguments.clone();
-		this.node = other.getNode().clone();
+		this.node = other.getNode().clone(); // deep cloning needs a lot of processing (no time for that)
 		this.tree = other.tree;
 		this.permission = other.permission;
 		this.displayAllArguments = other.displayAllArguments;
 		this.action = other.action;
 		this.executeOnPass = other.executeOnPass;
+
+		// use gangland if it was available
+		if (Bukkit.getPluginManager().isPluginEnabled("Gangland_Warfare")) {
+			this.gangland = JavaPlugin.getPlugin(Gangland.class);
+		} else this.gangland = null;
 	}
 
 	public static String getArgumentSequence(Argument argument) {
@@ -94,24 +112,20 @@ public class Argument implements Cloneable {
 		getArgumentSequence(list, node.getParent());
 	}
 
-	public void setPermission(String permission) {
+	protected void setPermission(String permission) {
 		this.permission = permission;
 
 		addPermission(permission);
 	}
 
 	public void addPermission(String permission) {
-		PluginManager pluginManager = Bukkit.getPluginManager();
-
-		if (pluginManager.isPluginEnabled("Gangland_Warfare")) {
-			Gangland gangland = JavaPlugin.getPlugin(Gangland.class);
-
-			gangland.getInitializer().getPermissionManager().addPermission(permission);
-		} else {
+		if (gangland != null) gangland.getInitializer().getPermissionManager().addPermission(permission);
+		else {
 			if (permission.isEmpty()) return;
 
-			Permission   perm        = new Permission(permission);
-			List<String> permissions = pluginManager.getPermissions().stream().map(Permission::getName).toList();
+			PluginManager pluginManager = Bukkit.getPluginManager();
+			Permission    perm          = new Permission(permission);
+			List<String>  permissions   = pluginManager.getPermissions().stream().map(Permission::getName).toList();
 
 			// add the permission if it was not in the permission list
 			if (!permissions.contains(permission)) pluginManager.addPermission(perm);
@@ -135,21 +149,25 @@ public class Argument implements Cloneable {
 		}).toArray(Argument[]::new);
 
 		try {
-			Argument arg = traverseList(modifiedArg, sender, args);
+			ArgumentResult<Argument> arg = traverseList(modifiedArg, sender, args);
 
-			if (arg == null) {
-				StringBuilder invalidArg = new StringBuilder(MessageAddon.ARGUMENTS_WRONG.toString());
-				Argument      lastValid  = tree.traverseLastValid(modifiedArg);
-				if (lastValid != null) {
-					for (int i = 0; i < args.length; i++)
-						if (Arrays.stream(lastValid.arguments).anyMatch(args[i]::equalsIgnoreCase)) {
-							invalidArg.append(args[i + 1]);
+			switch (arg.getState()) {
+				case SUCCESS -> arg.getArgument().executeArgument(sender, args);
+				case NO_PERMISSION -> sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
+				case NOT_FOUND -> {
+					StringBuilder invalidArg = new StringBuilder(MessageAddon.ARGUMENTS_WRONG.toString());
+					Argument      lastValid  = tree.traverseLastValid(modifiedArg);
+					if (lastValid != null) {
+						for (int i = 0; i < args.length; i++)
+							if (Arrays.stream(lastValid.arguments).anyMatch(args[i]::equalsIgnoreCase)) {
+								if (i + 1 < args.length) invalidArg.append(args[i + 1]);
 
-							sender.sendMessage(invalidArg.toString());
-							break;
-						}
-				} else sender.sendMessage(invalidArg.append(args[0]).toString());
-			} else arg.executeArgument(sender, args);
+								sender.sendMessage(invalidArg.toString());
+								break;
+							}
+					} else sender.sendMessage(invalidArg.append(args[0]).toString());
+				}
+			}
 		} catch (Exception exception) {
 			if (exception.getMessage() != null) sender.sendMessage(exception.getMessage());
 			else sender.sendMessage("null");
@@ -167,31 +185,34 @@ public class Argument implements Cloneable {
 		if (executeOnPass != null) executeOnPass.accept(sender, args);
 	}
 
-	private Argument traverseList(Argument[] list, CommandSender sender, String[] args) {
+	private ArgumentResult<Argument> traverseList(Argument[] list, CommandSender sender, String[] args) {
 		return traverseList(tree.getRoot(), list, 0, new OptionalArgument(tree), sender, args);
 	}
 
-	private <T extends Argument> T traverseList(Tree.Node<T> node, Argument[] list, int index, OptionalArgument dummy,
-	                                            CommandSender sender, String[] args) {
-		if (node == null || index >= list.length) return null;
-		if (!node.getData().equals(list[index]) && !node.getData().equals(dummy)) return null;
+	private <T extends Argument> ArgumentResult<T> traverseList(Tree.Node<T> node, T[] list, int index,
+	                                                            OptionalArgument dummy, CommandSender sender,
+	                                                            String[] args) {
+		if (node == null || index >= list.length) return ArgumentResult.notFound();
+		if (!node.getData().equals(list[index]) && !node.getData().equals(dummy)) return ArgumentResult.notFound();
 
 		String permission = node.getData().getPermission();
-		if (permission != null && !sender.hasPermission(permission)) {
-			sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
-			return null;
-		}
+
+		if (!permission.isEmpty() && !sender.hasPermission(permission)) return ArgumentResult.noPermission(
+				node.getData());
 
 		node.getData().executeOnPass(sender, args);
 
-		if (index == list.length - 1) return node.getData();
+		if (index == list.length - 1) return ArgumentResult.success(node.getData());
 
 		for (Tree.Node<T> child : node.getChildren()) {
-			T result = traverseList(child, list, index + 1, dummy, sender, args);
-			if (result != null) return result;
+			ArgumentResult<T> result = traverseList(child, list, index + 1, dummy, sender, args);
+
+			if (result.getState() == ArgumentResult.ResultState.SUCCESS) return result;
+			else if (result.getState() == ArgumentResult.ResultState.NO_PERMISSION) return ArgumentResult.noPermission(
+					node.getData());
 		}
 
-		return null;
+		return ArgumentResult.notFound();
 	}
 
 	@Override
@@ -214,11 +235,11 @@ public class Argument implements Cloneable {
 
 	@Override
 	public String toString() {
-		return displayAllArguments ? Arrays.toString(arguments).replaceAll("[\\[\\]]", "") : arguments[0];
+		return arguments[0];
 	}
 
 	public List<String> getArgumentString() {
-		return List.of(toString());
+		return displayAllArguments ? List.of(arguments) : List.of(toString());
 	}
 
 }
