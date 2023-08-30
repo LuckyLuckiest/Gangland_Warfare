@@ -22,7 +22,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.PermissionAttachment;
 
 import java.util.List;
 import java.util.Objects;
@@ -144,17 +143,9 @@ class GangPromoteCommand extends SubArgument {
 					                                                                             nextRanks.get(0)
 					                                                                                      .getName());
 					// remove the previous rank attachments
-					User<Player>         onlineUser = userManager.getUser(onlinePlayer);
-					PermissionAttachment attachment = onlineUser.getPermissionAttachment();
+					User<Player> onlineUser = userManager.getUser(onlinePlayer);
 
-					for (String permission : attachment.getPermissions().keySet())
-						attachment.unsetPermission(permission);
-
-					// add the new rank attachments
-					for (String perm : nextRanks.get(0).getPermissions())
-						attachment.setPermission(perm, true);
-
-					onlineUser.getUser().updateCommands();
+					onlineUser.flushPermissions(nextRanks.get(0));
 
 					Objects.requireNonNull(onlinePlayer).sendMessage(message);
 				}

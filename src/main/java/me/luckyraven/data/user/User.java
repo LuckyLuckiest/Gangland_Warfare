@@ -5,6 +5,7 @@ import lombok.Setter;
 import me.luckyraven.bukkit.scoreboard.Scoreboard;
 import me.luckyraven.data.account.Account;
 import me.luckyraven.data.economy.EconomyHandler;
+import me.luckyraven.data.rank.Rank;
 import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.phone.Phone;
@@ -12,6 +13,7 @@ import me.luckyraven.feature.wanted.Wanted;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -140,6 +142,19 @@ public class User<T extends OfflinePlayer> {
 	 */
 	public double getKillDeathRatio() {
 		return deaths == 0 ? 0D : (double) kills / deaths;
+	}
+
+	public void flushPermissions(@Nullable Rank rank) {
+		if (!(user instanceof Player player)) return;
+
+		for (String permission : permissionAttachment.getPermissions().keySet())
+			permissionAttachment.unsetPermission(permission);
+
+		// add the new rank attachments
+		if (rank != null) for (String perm : rank.getPermissions())
+			permissionAttachment.setPermission(perm, true);
+
+		player.updateCommands();
 	}
 
 	@Override
