@@ -12,6 +12,7 @@ import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.placeholder.PlaceholderHandler;
 import me.luckyraven.data.rank.Rank;
+import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.JsonFormatter;
@@ -89,8 +90,24 @@ public class DebugCommand extends CommandHandler {
 
 		// rank data
 		Argument rankData = new Argument("rank-data", getArgumentTree(), (argument, sender, args) -> {
-			for (Rank rank : getGangland().getInitializer().getRankManager().getRanks().values())
-				sender.sendMessage(convertToJson(rank.toString()));
+			if (sender instanceof Player) {
+				for (Rank rank : getGangland().getInitializer().getRankManager().getRanks().values())
+					sender.sendMessage(convertToJson(rank.toString()));
+			} else {
+				for (Rank rank : getGangland().getInitializer().getRankManager().getRanks().values())
+					sender.sendMessage(rank.toString());
+			}
+		});
+
+		// waypoint data
+		Argument waypointData = new Argument("waypoint-data", getArgumentTree(), (argument, sender, args) -> {
+			if (sender instanceof Player) {
+				for (Waypoint waypoint : getGangland().getInitializer().getWaypointManager().getWaypoints().values())
+					sender.sendMessage(convertToJson(waypoint.toString()));
+			} else {
+				for (Waypoint waypoint : getGangland().getInitializer().getWaypointManager().getWaypoints().values())
+					sender.sendMessage(waypoint.toString());
+			}
 		});
 
 		// multi inventory
@@ -110,8 +127,8 @@ public class DebugCommand extends CommandHandler {
 
 				items.addAll(swords.stream().map(ItemStack::new).toList());
 
-				MultiInventory multi = MultiInventory.dynamicMultiInventory(getGangland(), player, items, "&6&lDebug items",
-				                                                            false, false, null);
+				MultiInventory multi = MultiInventory.dynamicMultiInventory(getGangland(), player, items,
+				                                                            "&6&lDebug items", false, false, null);
 
 				multi.open(player);
 			} else {
@@ -205,6 +222,7 @@ public class DebugCommand extends CommandHandler {
 		arguments.add(memberData);
 		arguments.add(gangData);
 		arguments.add(rankData);
+		arguments.add(waypointData);
 		arguments.add(multiInv);
 		arguments.add(anvil);
 		arguments.add(perm);
