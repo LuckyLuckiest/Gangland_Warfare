@@ -94,6 +94,8 @@ public class Gang extends Account<Integer, List<Member>> {
 
 	public void removeMember(User<? extends OfflinePlayer> user, Member member) {
 		if (!getGroup().contains(member)) return;
+
+		user.flushPermissions(null);
 		user.resetGang();
 		user.removeAccount(this);
 		removeMember(member);
@@ -101,7 +103,8 @@ public class Gang extends Account<Integer, List<Member>> {
 
 	public void removeMember(Member member) {
 		if (!getGroup().contains(member)) return;
-		member.setGangId(-1);
+
+		member.resetGang();
 		member.setContribution(0D);
 		member.setRank(null);
 		getGroup().remove(member);
