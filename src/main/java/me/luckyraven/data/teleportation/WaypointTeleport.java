@@ -22,6 +22,7 @@ public class WaypointTeleport implements Listener {
 
 	private static final Map<User<Player>, CountdownTimer> teleportCooldown = new HashMap<>();
 	private static final Map<Player, CountdownTimer>       countdownTimer   = new HashMap<>();
+	private static final Map<Player, Double>               totalDistance    = new HashMap<>();
 
 	private final Waypoint waypoint;
 
@@ -116,15 +117,33 @@ public class WaypointTeleport implements Listener {
 
 	@EventHandler
 	public void onPlayerMove(PlayerMoveEvent event) {
-		Player player = event.getPlayer();
+		Player   player = event.getPlayer();
+		Location from   = event.getFrom();
+		Location to     = event.getTo();
 
-		if (!countdownTimer.containsKey(player)) return;
+		if (to == null || !countdownTimer.containsKey(player)) return;
 
-		CountdownTimer timer = countdownTimer.get(player);
-		timer.cancel();
-		countdownTimer.remove(player);
+		double deltaX     = Math.abs(to.getX() - from.getX());
+		double deltaY     = Math.abs(to.getY() - from.getY());
+		double deltaZ     = Math.abs(to.getZ() - from.getZ());
+		double totalDelta = deltaX + deltaY + deltaZ;
 
-		player.sendMessage(MessageAddon.WAYPOINT_TELEPORT_CANCELLED.toString());
+		if (!totalDistance.containsKey(player)) totalDistance.put(player, totalDelta);
+		else {
+			double currentTotalDelta = totalDistance.get(player) + totalDelta;
+			totalDistance.put(player, currentTotalDelta);
+
+			double threshold = 1.5; // number of blocks
+			// when the player moves less than the threshold, ignore the case
+			if (currentTotalDelta < threshold) return;
+
+			CountdownTimer timer = countdownTimer.get(player);
+			timer.cancel();
+			countdownTimer.remove(player);
+			totalDistance.remove(player);
+
+			player.sendMessage(MessageAddon.WAYPOINT_TELEPORT_CANCELLED.toString());
+		}
 	}
 
 	public record TeleportResult(boolean success, User<Player> playerUser, Waypoint waypoint) {}
