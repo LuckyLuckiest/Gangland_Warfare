@@ -1,0 +1,52 @@
++=-------=+
+|  Ideas  |
++=-------=+
+1) Player entities using npcs.
+2) Make a dealer.
+3) Need to make jobs for players.
+
+Making npcs:
+1) Make a police officer as a player entity.
+2) Swat team as player entities too.
+3) Special forces as player entities.
+
+Making the dealer:
+1) Need a command to create it.
+2) Need a command to remove it.
+3) Need a class that handles all it's traits.
+4) Make an interactive gui in the dealer.
+Traits:
+ - Right Click to exectue a command that will be used only for
+   guis. Like /gta gui <name>
+  Gui menu:
+   - Will be decided later.
+ - Invincible.
+
+Making jobs:
+1) Need quests system.
+2) The quests should be balanced for both teams.
+3) Make the admins be able to create those quests.
+4) Need jobs system.
+  - Criminals:
+        - Heists quests.
+        - Criminal hideouts, which is getting purchasing a gang
+          hideout, then being able to add members in it.
+        - Attacking other hideouts.
+  - Police:
+        - There can be do types of police officers, good and bad.
+        - A meter that will identify the officer.
+        Good:
+          - Officers will seek for justice at all costs.
+          - Able to clear non-player criminal hideouts.
+          - Able to clear player ciminal hideout if a player was
+            discovered taking something into their hideouts.
+        Bad:
+          - They are independent, but they can steal from any where
+            or forge documents for criminals and earn high payouts.
+          -
+  - Civilans:
+        - Can do anything, but they need to choose a job in-order to
+          start more quests with more payouts.
+        - Can totally own properties in which they can buy land or even
+          rent an apartment.
+        - A criminal or a police officer can do so.
