@@ -1,5 +1,7 @@
-package me.luckyraven.command.argument;
+package me.luckyraven.command.argument.types;
 
+import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.argument.TriConsumer;
 import me.luckyraven.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 

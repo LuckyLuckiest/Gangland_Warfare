@@ -1,7 +1,7 @@
 package me.luckyraven.command;
 
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.command.argument.ConfirmArgument;
+import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.OptionCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;

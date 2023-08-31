@@ -1,7 +1,9 @@
-package me.luckyraven.command.argument;
+package me.luckyraven.command.argument.types;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.argument.TriConsumer;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;

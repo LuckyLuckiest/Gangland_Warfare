@@ -3,7 +3,7 @@ package me.luckyraven.command.sub;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.command.argument.OptionalArgument;
+import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.user.User;
 import me.luckyraven.database.DatabaseHandler;
