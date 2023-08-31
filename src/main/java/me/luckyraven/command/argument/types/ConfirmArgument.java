@@ -15,8 +15,7 @@ public class ConfirmArgument extends Argument {
 	private boolean confirmed;
 
 	public ConfirmArgument(Tree<Argument> tree) {
-		super("confirm", tree);
-		this.confirmed = false;
+		this(tree, null);
 	}
 
 	public ConfirmArgument(Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action) {
@@ -30,7 +29,9 @@ public class ConfirmArgument extends Argument {
 			sender.sendMessage(ChatUtil.errorMessage("Need to execute the initial statement to use this argument."));
 			return;
 		}
+
 		this.confirmed = false;
+
 		super.executeArgument(sender, args);
 	}
 
