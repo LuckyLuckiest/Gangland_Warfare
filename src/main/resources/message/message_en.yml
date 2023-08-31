@@ -318,4 +318,4 @@ Level:
 
 Waypoint:
    Cooldown: "&7You are on a cooldown. Wait &b%timer&7."
-   Cancelled_Teleport: "&7Cancelled teleportation!"
+   Cancelled_Teleport: "&7You moved, cancelled teleportation!"
