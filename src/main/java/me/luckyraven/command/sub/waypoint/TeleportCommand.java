@@ -12,18 +12,27 @@ import me.luckyraven.data.teleportation.WaypointTeleport;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeUtil;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class TeleportCommand extends CommandHandler {
 
+	private final Map<Player, Waypoint>       reconfirm;
+	private final Map<Player, CountdownTimer> reconfirmTimer;
+
 	public TeleportCommand(Gangland gangland) {
 		super(gangland, "teleport", true, "tp");
+
+		reconfirm = new HashMap<>();
+		reconfirmTimer = new HashMap<>();
 
 		List<CommandInformation> list = getCommands().entrySet().parallelStream().filter(
 				entry -> entry.getKey().startsWith("waypoint")).sorted(Map.Entry.comparingByKey()).map(
@@ -36,10 +45,11 @@ public class TeleportCommand extends CommandHandler {
 		UserManager<Player> userManager     = getGangland().getInitializer().getUserManager();
 		WaypointManager     waypointManager = getGangland().getInitializer().getWaypointManager();
 
-		Player   player   = (Player) commandSender;
-		Waypoint waypoint = waypointManager.getSelected(player);
+		Player       player   = (Player) commandSender;
+		User<Player> user     = userManager.getUser(player);
+		Waypoint     waypoint = waypointManager.getSelected(player);
 
-		teleport(commandSender, waypoint, userManager);
+		teleportCost(user, waypoint);
 	}
 
 	@Override
@@ -48,9 +58,11 @@ public class TeleportCommand extends CommandHandler {
 		WaypointManager     waypointManager = getGangland().getInitializer().getWaypointManager();
 
 		Argument name = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
-			Waypoint waypoint = waypointManager.get(args[1]);
+			Player       player   = (Player) sender;
+			User<Player> user     = userManager.getUser(player);
+			Waypoint     waypoint = waypointManager.get(args[1]);
 
-			teleport(sender, waypoint, userManager);
+			teleportCost(user, waypoint);
 		});
 
 		getArgument().addPermission(getPermission() + ".cooldown_bypass");
@@ -63,18 +75,51 @@ public class TeleportCommand extends CommandHandler {
 		getHelpInfo().displayHelp(sender, page, "Waypoint");
 	}
 
-	private void teleport(CommandSender sender, Waypoint waypoint, UserManager<Player> userManager) {
+	private void teleportCost(User<Player> user, Waypoint waypoint) {
 		if (waypoint == null) {
-			sender.sendMessage(MessageAddon.INVALID_WAYPOINT.toString());
+			user.getUser().sendMessage(MessageAddon.INVALID_WAYPOINT.toString());
 			return;
 		}
 
-		Player       player = (Player) sender;
-		User<Player> user   = userManager.getUser(player);
+		Player player = user.getUser();
+
+		if (waypoint.getCost() != 0D && !reconfirm.containsKey(player)) {
+			reconfirm.put(player, waypoint);
+
+			CountdownTimer timer = new CountdownTimer(getGangland(), 30, null, null, t -> reconfirm.remove(player));
+			reconfirmTimer.put(player, timer);
+
+			timer.startAsync();
+
+			player.sendMessage(ChatUtil.color(
+					"The teleportation costs &a" + SettingAddon.getMoneySymbol() + waypoint.getCost() + "&7.",
+					"To confirm the command re-type it again."));
+		} else {
+			if (user.getEconomy().getBalance() < waypoint.getCost()) player.sendMessage(
+					MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
+			else {
+				reconfirm.remove(player);
+				CountdownTimer timer = reconfirmTimer.get(player);
+
+				if (timer != null) {
+					if (!timer.isCancelled()) timer.cancel();
+					reconfirmTimer.remove(player);
+				}
+
+				teleport(user, waypoint);
+			}
+		}
+	}
+
+	private void teleport(User<Player> user, Waypoint waypoint) {
+		if (waypoint == null) {
+			user.getUser().sendMessage(MessageAddon.INVALID_WAYPOINT.toString());
+			return;
+		}
 
 		try {
-			if (player.hasPermission("gangland.command.teleport.cooldown_bypass")) WaypointTeleport.removeCooldown(
-					user);
+			if (user.getUser().hasPermission("gangland.command.teleport.cooldown_bypass"))
+				WaypointTeleport.removeCooldown(user);
 
 			waypoint.getWaypointTeleport().teleport(getGangland(), user, (u, t) -> {
 				String time    = TimeUtil.formatTime(t.getTimeLeft(), true);
@@ -82,18 +127,27 @@ public class TeleportCommand extends CommandHandler {
 
 				u.getUser().sendMessage(message);
 			}).thenAccept(teleportResult -> {
-				String message;
+				String       message;
+				User<Player> user1     = teleportResult.playerUser();
+				Player       player    = user1.getUser();
+				Waypoint     waypoint1 = teleportResult.waypoint();
+
 				if (teleportResult.success()) {
-					message = MessageAddon.WAYPOINT_TELEPORT.toString().replace("%location%",
-					                                                            teleportResult.waypoint().getName());
+					if (waypoint1.getCost() != 0D) {
+						user1.getEconomy().withdraw(waypoint1.getCost());
+						player.sendMessage(MessageAddon.WITHDRAW_MONEY_PLAYER.toString()
+						                                                     .replace("%amount%",
+						                                                              SettingAddon.formatDouble(
+								                                                              waypoint1.getCost())));
+					}
+					message = MessageAddon.WAYPOINT_TELEPORT.toString().replace("%location%", waypoint1.getName());
 
 				} else {
 					message = MessageAddon.UNABLE_TELEPORT_WAYPOINT.toString().replace("%location%",
-					                                                                   teleportResult.waypoint()
-					                                                                                 .getName());
+					                                                                   waypoint1.getName());
 
 				}
-				teleportResult.playerUser().getUser().sendMessage(message);
+				player.sendMessage(message);
 			});
 		} catch (IllegalTeleportException exception) {
 			CountdownTimer timer = WaypointTeleport.getCooldownTimer(user);
@@ -103,7 +157,7 @@ public class TeleportCommand extends CommandHandler {
 			String time    = TimeUtil.formatTime(timer.getTimeLeft(), true);
 			String message = MessageAddon.WAYPOINT_TELEPORT_COOLDOWN.toString().replace("%timer%", time);
 
-			player.sendMessage(message);
+			user.getUser().sendMessage(message);
 		}
 	}
 
