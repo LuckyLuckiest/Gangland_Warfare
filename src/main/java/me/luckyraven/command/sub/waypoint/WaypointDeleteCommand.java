@@ -140,7 +140,7 @@ class WaypointDeleteCommand extends SubArgument {
 				deleteWaypointTimer.remove(sender);
 			});
 
-			timer.start();
+			timer.startAsync();
 			deleteWaypointTimer.put(sender, timer);
 		});
 
