@@ -1,6 +1,7 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.bukkit.scoreboard.Scoreboard;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
@@ -57,25 +58,27 @@ public final class CreateAccount implements Listener {
 		// Add the user to a user manager group
 		userManager.add(user);
 
-		user.getScoreboard().start();
-
 		// need to check if the user already registered
 		Member member = memberManager.getMember(player.getUniqueId());
 
-		if (member != null) {
-			initializeUserPermission(user, member);
-			return;
+		if (member != null) initializeUserPermission(user, member);
+		else {
+			// if the member is new
+			Member newMember = new Member(player.getUniqueId());
+			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+				if (handler instanceof GangDatabase gangDatabase) {
+					initializeMemberData(newMember, gangDatabase);
+					break;
+				}
+
+			memberManager.add(newMember);
 		}
 
-		// if the member is new
-		Member newMember = new Member(player.getUniqueId());
-		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-			if (handler instanceof GangDatabase gangDatabase) {
-				initializeMemberData(newMember, gangDatabase);
-				break;
-			}
-
-		memberManager.add(newMember);
+		if (SettingAddon.isScoreboardEnabled() && user.getScoreboard() == null) {
+			// create a scoreboard when the player joins
+			user.setScoreboard(new Scoreboard(user));
+			user.getScoreboard().start();
+		}
 	}
 
 	public void initializeUserData(User<? extends OfflinePlayer> user, UserDatabase userDatabase) {
@@ -141,7 +144,7 @@ public final class CreateAccount implements Listener {
 				Bounty userBounty = user.getBounty();
 				userBounty.setAmount(bounty);
 
-				if (!(userBounty.hasBounty() && SettingAddon.isBountyTimerEnable())) return;
+				if (!(userBounty.hasBounty() && SettingAddon.isBountyTimerEnabled())) return;
 
 				BountyEvent bountyEvent = new BountyEvent(userBounty);
 				bountyEvent.setUserBounty(user);
