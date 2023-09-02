@@ -1,0 +1,107 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     / ________/      \_____   _____/      / __ \         | #
+# |    | /                     | |           / /  \ \        | #
+# |    | |  _______            | |          / /____\ \       | #
+# |    | |  \_____ \           | |         / ________ \      | #
+# |    | \_______/ ||          | |        / /        \ \     | #
+# |     \__________/           |_|       /_/          \_\    | #
+# |                                                          | #
+# |                   File: scoreboard.yml                   | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+
+# +------------------------------------+ #
+# |      Scoreboard Configuration      | #
+# +------------------------------------+ #
+
+# If you have faced any problem with the file, you can create a new one by changing [Config_Version] to a different
+# number, but when a new update comes out with a new configuration file(s), [Config_Version] will change resulting
+# in a new file(s) for that new version while saving old files with a suffix -old to indicate they are old.
+Config_Version: '${project.version}'
+
+Board:
+   Title:
+      Interval: 8
+      Lines:
+         - "&f&l<>"
+         - "&f&l< >"
+         - "&f&l< &8G &f&l>"
+         - "&f&l< &8G&7T &f&l>"
+         - "&f&l< &8G&7T&8A &f&l>"
+         - "&f&l[ &8G&7T&8A &f&l]"
+         - "&f&l[ &7G&8T&7A &f&l]"
+         - "&f&l[ &8G&7T&8A &f&l]"
+         - "&f&l[ &7G&8T&7A &f&l]"
+         - "&f&l[ &8G&7T&8A &f&l]"
+         - "&f&l> &8G&7T&8A &f&l<"
+         - "&f&l> &8G&7T &f&l<"
+         - "&f&l> &8G &f&l<"
+         - "&f&l> <"
+         - "&f&l><"
+   Rows:
+      1:
+         Interval: 5
+         Lines:
+            - "&6+----------------------+"
+            - "&e+----------------------+"
+      2:
+         Interval: 120
+         Lines:
+            - "&7&l> &c&lPlayer:"
+      3:
+         Interval: 10
+         Lines:
+            - "&7Wanted: &3%gangland_wanted%"
+      4:
+         Interval: 10
+         Lines:
+            - "&7K/D: &e%gangland_user_kd%"
+      5:
+         Interval: 5
+         Lines:
+            - "&7Purse: &2%gangland_money_symbol%&e%gangland_user_balance%"
+      6:
+         Interval: 120
+         Lines:
+            - ""
+      7:
+         Interval: 120
+         Lines:
+            - "&7&l> &c&lBank Info:"
+      8:
+         Interval: 10
+         Lines:
+            - "&7Name: &e%gangland_bank_name%"
+      9:
+         Interval: 10
+         Lines:
+            - "&7Balance: &2%gangland_money_symbol%&e%gangland_bank_balance%"
+      10:
+         Interval: 120
+         Lines:
+            - ""
+      11:
+         Interval: 120
+         Lines:
+            - "&7&l> &c&lGang Info:"
+      12:
+         Interval: 10
+         Lines:
+            - "&7Name: &e%gangland_gang_name%"
+      13:
+         Interval: 10
+         Lines:
+            - "&7Balance: &2%gangland_money_symbol%&e%gangland_gang_balance%"
+      14:
+         Interval: 80
+         Lines:
+            - "&7%server_online% &3online player(s)"
+            - "&7%player_ping% &cms latency"
+            - "&7%server_tps_1% &5TPS"
+      15:
+         Interval: 5
+         Lines:
+            - "&6+----------------------+"
+            - "&e+----------------------+"
