@@ -77,7 +77,6 @@ public class User<T extends OfflinePlayer> {
 	 *
 	 * @param user the user
 	 */
-	@SuppressWarnings("unchecked")
 	public User(T user) {
 		this.user = user;
 		this.kills = this.deaths = this.mobKills = 0;
@@ -88,8 +87,6 @@ public class User<T extends OfflinePlayer> {
 		this.bounty = new Bounty();
 		this.wanted = new Wanted();
 		this.economy = new EconomyHandler(this);
-		if (user instanceof Player) this.scoreboard = new Scoreboard((User<Player>) this);
-		else this.scoreboard = null;
 	}
 
 	/**
