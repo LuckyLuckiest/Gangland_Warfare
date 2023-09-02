@@ -29,31 +29,41 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	}
 
 	@Override
-	public @Nullable String onRequest(OfflinePlayer player, @NotNull String parameters) {
+	public @Nullable String onRequest(OfflinePlayer player, @NotNull String parameter) {
+		if (player == null) return null;
+
+		String param = parameter.toLowerCase();
+
+		if (param.contains("user_")) return getUser(player, param);
+		else if (param.contains("bank_")) return getBank(player, param);
+		else if (param.contains("gang_")) return getGang(player, param);
+		else return getSetting(parameter);
+	}
+
+	@Nullable
+	private String getSetting(String parameter) {
 		Object value = SettingAddon.getSettingsPlaceholder().entrySet().stream().filter(
-				entry -> entry.getKey().equalsIgnoreCase(parameters)).map(Map.Entry::getValue).findFirst().orElse(null);
+				entry -> entry.getKey().equals(parameter)).map(Map.Entry::getValue).findFirst().orElse(null);
 
-		if (value != null) {
-			if (value instanceof Double) return SettingAddon.formatDouble((double) value);
-			return String.valueOf(value);
-		}
+		if (value == null) return null;
 
-		// player related data
-		if (parameters.equalsIgnoreCase("player")) return player.getName();
+		if (value instanceof Double) return SettingAddon.formatDouble((double) value);
+		return String.valueOf(value);
+	}
 
+	@Nullable
+	private String getUser(OfflinePlayer player, String parameter) {
 		// for member
 		MemberManager memberManager = gangland.getInitializer().getMemberManager();
 		Member        member        = memberManager.getMember(player.getUniqueId());
 		String        userStr       = "user_";
 
-		if (member != null) {
-			if (parameters.equalsIgnoreCase(userStr + "gang-id")) return String.valueOf(member.getGangId());
-			if (parameters.equalsIgnoreCase(userStr + "rank"))
-				return member.getRank() == null ? "null" : member.getRank().getName();
-			if (parameters.equalsIgnoreCase(userStr + "contribution")) return SettingAddon.formatDouble(
-					member.getContribution());
-			if (parameters.equalsIgnoreCase(userStr + "gang-join-date")) return member.getGangJoinDateString();
-		}
+		if (member == null) return null;
+
+		if (parameter.equals(userStr + "gang-id")) return String.valueOf(member.getGangId());
+		if (parameter.equals(userStr + "rank")) return member.getRank() == null ? "null" : member.getRank().getName();
+		if (parameter.equals(userStr + "contribution")) return SettingAddon.formatDouble(member.getContribution());
+		if (parameter.equals(userStr + "gang-join-date")) return member.getGangJoinDateString();
 
 		// for user
 		if (!player.isOnline()) return null;
@@ -62,54 +72,72 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		UserManager<Player> userManager  = gangland.getInitializer().getUserManager();
 		User<Player>        user         = userManager.getUser(onlinePlayer);
 
-		if (user != null) {
-			if (parameters.equalsIgnoreCase(userStr + "balance")) return SettingAddon.formatDouble(
-					user.getEconomy().getBalance());
-			if (parameters.equalsIgnoreCase(userStr + "level")) return String.valueOf(user.getLevel().getLevelValue());
-			if (parameters.equalsIgnoreCase(userStr + "experience")) return SettingAddon.formatDouble(
-					user.getLevel().getExperience());
-			if (parameters.equalsIgnoreCase(userStr + "bounty")) return SettingAddon.formatDouble(
-					user.getBounty().getAmount());
-			if (parameters.equalsIgnoreCase(userStr + "kd")) return String.valueOf(user.getKillDeathRatio());
-			if (parameters.equalsIgnoreCase(userStr + "mob-kills")) return String.valueOf(user.getMobKills());
-			if (parameters.equalsIgnoreCase(userStr + "kills")) return String.valueOf(user.getKills());
-			if (parameters.equalsIgnoreCase(userStr + "deaths")) return String.valueOf(user.getDeaths());
+		if (user == null) return null;
 
-			// for bank
-			Bank   bank    = null;
-			String bankStr = "bank_";
+		if (parameter.equals(userStr + "balance")) return SettingAddon.formatDouble(user.getEconomy().getBalance());
+		if (parameter.equals(userStr + "level")) return String.valueOf(user.getLevel().getLevelValue());
+		if (parameter.equals(userStr + "experience")) return SettingAddon.formatDouble(user.getLevel().getExperience());
+		if (parameter.equals(userStr + "bounty")) return SettingAddon.formatDouble(user.getBounty().getAmount());
+		if (parameter.equals(userStr + "kd")) return SettingAddon.formatDouble(user.getKillDeathRatio());
+		if (parameter.equals(userStr + "mob-kills")) return String.valueOf(user.getMobKills());
+		if (parameter.equals(userStr + "kills")) return String.valueOf(user.getKills());
+		if (parameter.equals(userStr + "deaths")) return String.valueOf(user.getDeaths());
 
-			for (Account<?, ?> account : user.getLinkedAccounts())
-				if (account instanceof Bank found) {
-					bank = found;
-					break;
-				}
+		return null;
+	}
 
-			if (bank != null) {
-				if (parameters.equalsIgnoreCase(bankStr + "name")) return bank.getName();
-				if (parameters.equalsIgnoreCase(bankStr + "balance")) return SettingAddon.formatDouble(
-						bank.getEconomy().getBalance());
+	@Nullable
+	private String getBank(OfflinePlayer player, String parameter) {
+		// for bank
+		if (!(player instanceof Player online)) return null;
+
+		User<Player> user = gangland.getInitializer().getUserManager().getUser(online);
+
+		if (user == null) return null;
+
+		Bank   bank    = null;
+		String bankStr = "bank_";
+
+		for (Account<?, ?> account : user.getLinkedAccounts())
+			if (account instanceof Bank found) {
+				bank = found;
+				break;
 			}
 
-			// for gang
-			GangManager gangManager = gangland.getInitializer().getGangManager();
-			Gang        gang        = gangManager.getGang(user.getGangId());
-			String      gangStr     = "gang_";
+		if (bank == null) return null;
 
-			if (parameters.equalsIgnoreCase(gangStr + "name")) return gang.getName();
-			if (parameters.equalsIgnoreCase(gangStr + "display-name")) return gang.getDisplayNameString();
-			if (parameters.equalsIgnoreCase(gangStr + "color")) return gang.getColor();
-			if (parameters.equalsIgnoreCase(gangStr + "description")) return gang.getDescription();
-			if (parameters.equalsIgnoreCase(gangStr + "bounty")) return SettingAddon.formatDouble(
-					gang.getBounty().getAmount());
-			if (parameters.equalsIgnoreCase(gangStr + "balance")) return SettingAddon.formatDouble(
-					gang.getEconomy().getBalance());
-			if (parameters.equalsIgnoreCase(gangStr + "level")) return String.valueOf(gang.getLevel().getExperience());
-			if (parameters.equalsIgnoreCase(gangStr + "experience")) return SettingAddon.formatDouble(
-					gang.getLevel().getExperience());
-			if (parameters.equalsIgnoreCase(gangStr + "created")) return gang.getDateCreatedString();
-			if (parameters.equalsIgnoreCase(gangStr + "ally-list")) return gang.getAllyListString();
-		}
+		if (parameter.equals(bankStr + "name")) return bank.getName();
+		if (parameter.equals(bankStr + "balance")) return SettingAddon.formatDouble(bank.getEconomy().getBalance());
+
+		return null;
+	}
+
+	@Nullable
+	private String getGang(OfflinePlayer player, String parameter) {
+		// for gang
+		if (!(player instanceof Player online)) return null;
+
+		UserManager<Player> userManager = gangland.getInitializer().getUserManager();
+		User<Player>        user        = userManager.getUser(online);
+
+		if (user == null) return null;
+
+		GangManager gangManager = gangland.getInitializer().getGangManager();
+		Gang        gang        = gangManager.getGang(user.getGangId());
+		String      gangStr     = "gang_";
+
+		if (gang == null) return null;
+
+		if (parameter.equals(gangStr + "name")) return gang.getName();
+		if (parameter.equals(gangStr + "display-name")) return gang.getDisplayNameString();
+		if (parameter.equals(gangStr + "color")) return gang.getColor();
+		if (parameter.equals(gangStr + "description")) return gang.getDescription();
+		if (parameter.equals(gangStr + "bounty")) return SettingAddon.formatDouble(gang.getBounty().getAmount());
+		if (parameter.equals(gangStr + "balance")) return SettingAddon.formatDouble(gang.getEconomy().getBalance());
+		if (parameter.equals(gangStr + "level")) return String.valueOf(gang.getLevel().getExperience());
+		if (parameter.equals(gangStr + "experience")) return SettingAddon.formatDouble(gang.getLevel().getExperience());
+		if (parameter.equals(gangStr + "created")) return gang.getDateCreatedString();
+		if (parameter.equals(gangStr + "ally-list")) return gang.getAllyListString();
 
 		return null;
 	}
