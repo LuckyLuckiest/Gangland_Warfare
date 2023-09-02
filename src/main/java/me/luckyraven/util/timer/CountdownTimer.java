@@ -2,18 +2,13 @@ package me.luckyraven.util.timer;
 
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Consumer;
 
-public class CountdownTimer extends BukkitRunnable {
+public class CountdownTimer extends Timer {
 
-	private final JavaPlugin               plugin;
 	private final Consumer<CountdownTimer> duringTimer, beforeTimer, afterTimer;
-	private final @Getter long delay, period;
 
-	private @Getter long       timeLeft;
-	private         BukkitTask bukkitTask;
+	private @Getter long timeLeft;
 
 	public CountdownTimer(JavaPlugin plugin, long time) {
 		this(plugin, time, null);
@@ -36,9 +31,7 @@ public class CountdownTimer extends BukkitRunnable {
 
 	public CountdownTimer(JavaPlugin plugin, long delay, long period, long time, Consumer<CountdownTimer> beforeTimer,
 	                      Consumer<CountdownTimer> duringTimer, Consumer<CountdownTimer> afterTimer) {
-		this.plugin = plugin;
-		this.delay = delay;
-		this.period = period;
+		super(plugin, delay, period);
 		this.timeLeft = time;
 		this.beforeTimer = beforeTimer;
 		this.duringTimer = duringTimer;
@@ -49,22 +42,14 @@ public class CountdownTimer extends BukkitRunnable {
 	public void run() {
 		if (timeLeft < 1) {
 			afterTimer.accept(this);
-			if (bukkitTask != null) cancel();
+			stop();
 			return;
 		}
 
-		if (beforeTimer != null && timeLeft == period) beforeTimer.accept(this);
+		if (beforeTimer != null && timeLeft == getPeriod()) beforeTimer.accept(this);
 		if (duringTimer != null) duringTimer.accept(this);
 
 		--timeLeft;
-	}
-
-	public void start() {
-		this.bukkitTask = runTaskTimer(plugin, delay, period);
-	}
-
-	public void startAsync() {
-		this.bukkitTask = runTaskTimerAsynchronously(plugin, delay, period);
 	}
 
 }
