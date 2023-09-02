@@ -5,6 +5,7 @@ import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.OptionCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
+import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.datastructure.Tree;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -23,7 +24,8 @@ public class CommandTabCompleter implements TabCompleter {
 
 	// classes that I don't want displayed in tab completion
 	private final List<Class<? extends CommandHandler>> filters = Arrays.asList(DebugCommand.class, OptionCommand.class,
-	                                                                            ReadNBTCommand.class);
+	                                                                            ReadNBTCommand.class,
+	                                                                            TimerCommand.class);
 
 	public CommandTabCompleter(Map<String, CommandHandler> commandMap) {
 		this.commandMap = commandMap;
