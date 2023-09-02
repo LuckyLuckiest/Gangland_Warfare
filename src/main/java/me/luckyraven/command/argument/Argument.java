@@ -170,11 +170,11 @@ public class Argument implements Cloneable {
 					} else sender.sendMessage(invalidArg.append(args[0]).toString());
 				}
 			}
-		} catch (Exception exception) {
-			if (exception.getMessage() != null) sender.sendMessage(exception.getMessage());
+		} catch (Throwable throwable) {
+			if (throwable.getMessage() != null) sender.sendMessage(throwable.getMessage());
 			else sender.sendMessage("null");
 
-			Bukkit.getLogger().log(Level.WARNING, exception.getMessage(), exception);
+			Bukkit.getLogger().log(Level.WARNING, throwable.getMessage(), throwable);
 		}
 	}
 

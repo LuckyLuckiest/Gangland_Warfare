@@ -52,9 +52,9 @@ public class DatabaseHelper {
 		} catch (SQLException exception) {
 			exceptionCaught = true;
 			plugin.getLogger().log(Level.WARNING, UnhandledError.SQL_ERROR + ": " + exception.getMessage(), exception);
-		} catch (Exception exception) {
+		} catch (Throwable throwable) {
 			exceptionCaught = true;
-			plugin.getLogger().log(Level.WARNING, UnhandledError.ERROR + ": " + exception.getMessage(), exception);
+			plugin.getLogger().log(Level.WARNING, UnhandledError.ERROR + ": " + throwable.getMessage(), throwable);
 		} finally {
 			if (exceptionCaught) rollbackConnection();
 			if (database.getConnection() != null && !database.handlesConnectionPool()) database.disconnect();

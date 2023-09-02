@@ -58,8 +58,8 @@ public final class CommandManager implements CommandExecutor {
 				                                         String.format("/%s %s", label, Arrays.asList(args))));
 				return false;
 			}
-		} catch (Exception exception) {
-			Gangland.getLog4jLogger().error(UnhandledError.COMMANDS_ERROR + ": " + exception.getMessage(), exception);
+		} catch (Throwable throwable) {
+			Gangland.getLog4jLogger().error(UnhandledError.COMMANDS_ERROR + ": " + throwable.getMessage(), throwable);
 			return false;
 		}
 		return true;

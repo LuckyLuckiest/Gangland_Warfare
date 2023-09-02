@@ -54,7 +54,7 @@ public class PeriodicalUpdates {
 		try {
 			updatingDatabase();
 			Gangland.getLog4jLogger().info("Data save complete");
-		} catch (Exception exception) {
+		} catch (Throwable throwable) {
 			Gangland.getLog4jLogger().error("There was an issue saving the data...");
 		}
 
@@ -62,7 +62,7 @@ public class PeriodicalUpdates {
 		Gangland.getLog4jLogger().info("Cache reset...");
 		try {
 			removeInventories();
-		} catch (Exception exception) {
+		} catch (Throwable exception) {
 			Gangland.getLog4jLogger().error("There was an issue resetting the cache...", exception);
 		}
 

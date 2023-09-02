@@ -49,7 +49,7 @@ public class DatabaseManager {
 			}
 
 			plugin.getLogger().info(String.format("Backup done for '%s' database", handler.getSchemaName()));
-		} catch (Exception exception) {
+		} catch (Throwable throwable) {
 			String type = "";
 			switch (handler.getType()) {
 				// inverting the types since they will be inverse, according to the first switch statement
