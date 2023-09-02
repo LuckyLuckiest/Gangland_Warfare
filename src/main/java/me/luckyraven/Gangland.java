@@ -19,11 +19,12 @@ import org.jetbrains.annotations.Nullable;
 @Getter
 public final class Gangland extends JavaPlugin {
 
-	@Getter
-	private static final Logger            log4jLogger = LogManager.getLogger("Gangland_Warfare");
-	private              Initializer       initializer;
-	private              ReloadPlugin      reloadPlugin;
-	private              PeriodicalUpdates periodicalUpdates;
+	private static final @Getter Logger log4jLogger = LogManager.getLogger("Gangland_Warfare");
+
+	private Initializer             initializer;
+	private ReloadPlugin            reloadPlugin;
+	private PeriodicalUpdates       periodicalUpdates;
+	private PlaceholderAPIExpansion placeholderAPIExpansion;
 
 	@Override
 	public void onLoad() {
@@ -86,7 +87,10 @@ public final class Gangland extends JavaPlugin {
 
 		// soft dependencies
 		Dependency placeholderApi = new Dependency("PlaceholderAPI", Dependency.Type.SOFT);
-		placeholderApi.validate(() -> new PlaceholderAPIExpansion(this).register());
+		placeholderApi.validate(() -> {
+			this.placeholderAPIExpansion = new PlaceholderAPIExpansion(this);
+			this.placeholderAPIExpansion.register();
+		});
 
 		Dependency vault = new Dependency("Vault", Dependency.Type.SOFT);
 		vault.validate(() -> {
