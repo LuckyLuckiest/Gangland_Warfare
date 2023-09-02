@@ -48,12 +48,14 @@
 0.0.63-DEV:
 	- Warps and spawns.
     - Working permissions in ranks.
-	- A Taxi system added to contacts in phone.
+    - Configuring scoreboard.
 0.0.64-DEV:
+	- Work on waypoint radius, used for displaying particles
     - Gang settings.
 0.0.65-DEV:
     - Add custom inventories in YAML files.
     - Add custom scoreboard in YAML files.
+	- A Taxi system added to contacts in phone.
 
 0.0.71-DEV:
 	- Gang spawn and home.
