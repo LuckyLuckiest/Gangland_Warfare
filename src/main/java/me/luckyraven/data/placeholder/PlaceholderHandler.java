@@ -38,7 +38,7 @@ public class PlaceholderHandler extends PlaceholderRequest {
 	}
 
 	public String replacePlaceholder(OfflinePlayer player, @NotNull String text) {
-		return replacer.apply(player, text, this);
+		return replacer.apply(player, text.replace("%gangland_", "%"), this);
 	}
 
 	public List<String> replacePlaceholders(OfflinePlayer player, @NotNull List<String> text) {
