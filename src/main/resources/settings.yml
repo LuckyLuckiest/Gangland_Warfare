@@ -78,6 +78,18 @@ Database:
       # Time to auto save in minutes
       Time: 10
 
+# +-------------------+ #
+# | Scoreboard Config | #
+# +-------------------+ #
+Scoreboard:
+   Enable: true
+   # The plugin supports multiple drivers, and each driver has its own algorithm and way of updating scoreboards.
+   # Drivers' list:
+   #  1) Driver_V1: Caches the lines into memory and uses a clustering algorithm that updates similar line intervals
+   #                each tick.
+   #  2) Driver_V2:
+   Driver: "Driver_V1"
+
 # +------------------+ #
 # | Inventory Config | #
 # +------------------+ #

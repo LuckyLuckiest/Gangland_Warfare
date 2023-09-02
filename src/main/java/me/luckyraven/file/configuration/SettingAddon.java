@@ -18,7 +18,7 @@ public class SettingAddon {
 	private static final @Getter Map<String, Object> settingsMap         = new LinkedHashMap<>();
 	private static final @Getter Map<String, Object> settingsPlaceholder = new LinkedHashMap<>();
 
-	private static @Getter FileConfiguration settings;
+	private static         FileConfiguration settings;
 	// update configuration
 	private static @Getter boolean           updaterEnabled, notifyPrivilegedPlayers, updaterAutoUpdate;
 	// language picked
@@ -42,13 +42,13 @@ public class SettingAddon {
 	private static @Getter int    userSkillUpgrade;
 	private static @Getter double userSkillCost, userSkillExponential;
 	// user death
-	private static @Getter boolean deathEnable, deathMoneyCommandEnable, deathLoseMoney;
+	private static @Getter boolean deathEnabled, deathMoneyCommandEnabled, deathLoseMoney;
 	private static @Getter List<String> deathMoneyCommandExecutables;
 	private static @Getter String       deathLoseMoneyFormula;
 	private static @Getter double       deathThreshold;
 	// bounty configuration
 	private static @Getter double       bountyEachKillValue, bountyMaxKill;
-	private static @Getter boolean bountyTimerEnable;
+	private static @Getter boolean bountyTimerEnabled;
 	private static @Getter double  bountyTimerMultiple, bountyTimerMax;
 	private static @Getter int     bountyTimeInterval;
 	// phone configuration
@@ -57,9 +57,12 @@ public class SettingAddon {
 	private static @Getter int     phoneSlot;
 	private static @Getter boolean phoneMovable, phoneDroppable;
 	// gang configuration
-	private static @Getter boolean gangEnable, gangNameDuplicates;
+	private static @Getter boolean gangEnabled, gangNameDuplicates;
 	private static @Getter String gangRankHead, gangRankTail, gangDisplayNameChar;
 	private static @Getter double gangInitialBalance, gangCreateFee, gangMaxBalance, gangContributionRate;
+	// scoreboard configuration
+	private static @Getter boolean scoreboardEnabled;
+	private static @Getter String  scoreboardDriver;
 
 	public SettingAddon(FileManager fileManager) {
 		try {
@@ -121,8 +124,8 @@ public class SettingAddon {
 		userSkillCost = settings.getDouble("User.Level.Skill.Cost");
 		userSkillExponential = settings.getDouble("User.Level.Skill.Exponential");
 		// user death
-		deathEnable = settings.getBoolean("User.Death.Enable");
-		deathMoneyCommandEnable = settings.getBoolean("User.Death.Money.Command.Enable");
+		deathEnabled = settings.getBoolean("User.Death.Enable");
+		deathMoneyCommandEnabled = settings.getBoolean("User.Death.Money.Command.Enable");
 		deathMoneyCommandExecutables = settings.getStringList("User.Death.Money.Command.Executable");
 		deathLoseMoney = !settings.getBoolean("User.Death.Lose_Money");
 		deathLoseMoneyFormula = settings.getString("User.Death.Money.Formula");
@@ -131,7 +134,7 @@ public class SettingAddon {
 		// bounty
 		bountyEachKillValue = settings.getDouble("Bounty.Kill.Each");
 		bountyMaxKill = settings.getDouble("Bounty.Kill.Max");
-		bountyTimerEnable = settings.getBoolean("Bounty.Repeating_Timer.Enable");
+		bountyTimerEnabled = settings.getBoolean("Bounty.Repeating_Timer.Enable");
 		bountyTimerMultiple = settings.getDouble("Bounty.Repeating_Timer.Multiple");
 		bountyTimeInterval = settings.getInt("Bounty.Repeating_Timer.Time");
 		bountyTimerMax = settings.getDouble("Bounty.Repeating_Timer.Max");
@@ -145,7 +148,7 @@ public class SettingAddon {
 		phoneDroppable = !settings.getBoolean("Phone.Droppable");
 
 		// gang
-		gangEnable = settings.getBoolean("Gang.Enable");
+		gangEnabled = settings.getBoolean("Gang.Enable");
 		gangNameDuplicates = settings.getBoolean("Gang.Name_Duplicates");
 		gangRankHead = settings.getString("Gang.Rank.Head");
 		gangRankTail = settings.getString("Gang.Rank.Tail");
@@ -154,6 +157,10 @@ public class SettingAddon {
 		gangCreateFee = settings.getDouble("Gang.Account.Create_Cost");
 		gangMaxBalance = settings.getDouble("Gang.Account.Maximum_Balance");
 		gangContributionRate = settings.getDouble("Gang.Account.Contribution_Rate");
+
+		// scoreboard
+		scoreboardEnabled = settings.getBoolean("Scoreboard.Enable");
+		scoreboardDriver = settings.getString("Scoreboard.Driver");
 
 		addEachFieldReflection();
 		convertToPlaceholder();
