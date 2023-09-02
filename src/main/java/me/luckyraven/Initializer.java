@@ -10,6 +10,7 @@ import me.luckyraven.command.sub.*;
 import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.OptionCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
+import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.command.sub.gang.GangCommand;
 import me.luckyraven.command.sub.waypoint.TeleportCommand;
 import me.luckyraven.command.sub.waypoint.WaypointCommand;
@@ -240,6 +241,7 @@ public final class Initializer {
 		commandManager.addCommand(new OptionCommand(gangland));
 		commandManager.addCommand(new ReadNBTCommand(gangland));
 		commandManager.addCommand(new ReloadCommand(gangland));
+		commandManager.addCommand(new TimerCommand(gangland));
 
 		// Needs to be the final command to add all the help info
 		commandManager.addCommand(new HelpCommand(gangland));
