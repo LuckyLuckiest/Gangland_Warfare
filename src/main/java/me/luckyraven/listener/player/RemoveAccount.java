@@ -44,7 +44,10 @@ public class RemoveAccount implements Listener {
 				break;
 			}
 
-		user.getScoreboard().end();
+		if (user.getScoreboard() != null) {
+			user.getScoreboard().end();
+			user.setScoreboard(null);
+		}
 	}
 
 }
