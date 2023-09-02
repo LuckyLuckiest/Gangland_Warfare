@@ -1,4 +1,4 @@
-package me.luckyraven.bukkit.scoreboard;
+package me.luckyraven.bukkit.scoreboard.part;
 
 import lombok.Getter;
 import me.clip.placeholderapi.PlaceholderAPI;
@@ -13,14 +13,21 @@ import java.util.List;
 
 public class Line {
 
-	private final @Getter int          interval;
+	private final @Getter long         interval;
 	private final         List<String> contents;
-	private               int          index;
+	private final @Getter int          usedIndex;
 
-	public Line(int interval) {
+	private int index;
+
+	public Line(long interval) {
+		this(interval, 0);
+	}
+
+	public Line(long interval, int index) {
 		this.interval = interval;
 		this.index = 0;
 		this.contents = new ArrayList<>();
+		this.usedIndex = index;
 	}
 
 	public void addContent(String content) {
@@ -35,7 +42,7 @@ public class Line {
 		return contents.get(index);
 	}
 
-	public void update(JavaPlugin plugin, Player player) {
+	public String update(JavaPlugin plugin, Player player) {
 		String data       = getCurrentContent();
 		String newContent = "";
 
@@ -52,11 +59,18 @@ public class Line {
 
 		if (newContent.isEmpty()) newContent = data;
 
-		contents.set(index, newContent);
+		index = (index + 1) % contents.size();
+
+		return newContent;
 	}
 
-	public void nextContent() {
-		index = (index + 1) % contents.size();
+	public boolean isStatic() {
+		return interval == 0;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("Line{interval=%d,contents=%s}", interval, contents);
 	}
 
 }
