@@ -1,6 +1,7 @@
 package me.luckyraven.data;
 
-import me.luckyraven.util.timer.CountdownTimer;
+import me.luckyraven.exception.PluginException;
+import me.luckyraven.util.timer.SequenceTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -33,15 +34,17 @@ public abstract class DataLoader {
 	 *
 	 * @param disable disables the plugin upon finding an exception.
 	 */
-	public void load(JavaPlugin plugin, boolean disable) {
+	public void load(JavaPlugin plugin, boolean disable) throws PluginException {
 		try {
 			loadData();
 			isLoaded = true;
-		} catch (Exception exception) {
-			plugin.getLogger().log(Level.SEVERE,
-			                       "The plugin data has ran into a problem, please check the logs and report them to the developer.",
-			                       exception);
+		} catch (Throwable throwable) {
+			String message = "The plugin data has ran into a problem, please check the logs and report them to the developer.";
+
+			plugin.getLogger().log(Level.SEVERE, message, throwable);
+
 			if (disable) Bukkit.getPluginManager().disablePlugin(plugin);
+			throw new PluginException(throwable);
 		}
 	}
 
@@ -52,18 +55,26 @@ public abstract class DataLoader {
 	 * @param disable disables the plugin upon finding an exception.
 	 */
 	public void tryAgain(JavaPlugin plugin, boolean disable) {
-		int maxAttempts = 5, initialValue = 5, counter = 0;
+		int           maxAttempts = 5, initialValue = 5;
+		SequenceTimer timer       = new SequenceTimer(plugin);
 
-		load(plugin, disable);
+		for (int i = 1; i <= maxAttempts; i++) {
+			timer.addIntervalTaskPair(initialValue * 20L, time -> {
+				// if the process was successful, then stop the timer
+				if (isLoaded) time.stop();
 
-		if (isLoaded) return;
+				try {
+					loadData();
+					isLoaded = true;
+				} catch (Throwable throwable) {
+					if (disable) Bukkit.getPluginManager().disablePlugin(plugin);
+				}
+			});
 
-		// TODO make this instruction run every 5 seconds, and increment accordingly to X times until it fails
-		++counter;
+			initialValue += i * initialValue;
+		}
 
-		CountdownTimer timer = new CountdownTimer(plugin, initialValue, time -> load(plugin, disable));
-
-		timer.start(true);
+		timer.start(false);
 	}
 
 }
