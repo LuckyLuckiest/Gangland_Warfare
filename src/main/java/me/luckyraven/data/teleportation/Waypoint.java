@@ -2,6 +2,10 @@ package me.luckyraven.data.teleportation;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.jetbrains.annotations.Nullable;
 
 @Getter
 public class Waypoint {
@@ -44,6 +48,15 @@ public class Waypoint {
 		this.z = z;
 		this.yaw = yaw;
 		this.pitch = pitch;
+	}
+
+	@Nullable
+	public Location getLocation() {
+		World world = Bukkit.getWorld(this.world);
+
+		if (world == null) return null;
+
+		return new Location(world, x, y, z, yaw, pitch);
 	}
 
 	public boolean match(int id) {
