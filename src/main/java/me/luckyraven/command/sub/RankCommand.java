@@ -113,7 +113,7 @@ public class RankCommand extends CommandHandler {
 				createRankName.remove(sender);
 			});
 
-			timer.start();
+			timer.start(false);
 			createRankTimer.put(sender, timer);
 		});
 
@@ -185,7 +185,7 @@ public class RankCommand extends CommandHandler {
 				deleteRankName.remove(sender);
 			});
 
-			timer.start();
+			timer.start(false);
 			deleteRankTimer.put(sender, timer);
 		});
 

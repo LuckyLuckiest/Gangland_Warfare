@@ -151,7 +151,7 @@ public final class CreateAccount implements Listener {
 				RepeatingTimer repeatingTimer = userBounty.createTimer(gangland, SettingAddon.getBountyTimeInterval(),
 				                                                       timer -> bountyExecutor(user, bountyEvent, timer,
 				                                                                               helper));
-				repeatingTimer.start();
+				repeatingTimer.start(false);
 			}
 		});
 	}

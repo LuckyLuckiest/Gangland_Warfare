@@ -63,7 +63,7 @@ public abstract class DataLoader {
 
 		CountdownTimer timer = new CountdownTimer(plugin, initialValue, time -> load(plugin, disable));
 
-		timer.startAsync();
+		timer.start(true);
 	}
 
 }

@@ -145,7 +145,7 @@ public class BankCommand extends CommandHandler {
 				createBankName.remove(user);
 			});
 
-			timer.start();
+			timer.start(false);
 			createBankTimer.put(sender, timer);
 		});
 
@@ -217,7 +217,7 @@ public class BankCommand extends CommandHandler {
 				deleteBankName.remove(user);
 			});
 
-			timer.start();
+			timer.start(false);
 			deleteBankTimer.put(sender, timer);
 
 		}, getPermission() + ".delete");

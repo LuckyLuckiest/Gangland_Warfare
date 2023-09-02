@@ -1,7 +1,9 @@
 package me.luckyraven.command.sub.gang;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.argument.*;
+import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.command.argument.TriConsumer;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.gang.Gang;
@@ -149,7 +151,7 @@ class GangCreateCommand extends SubArgument {
 				createGangTimer.remove(sender);
 			});
 
-			timer.start();
+			timer.start(false);
 			createGangTimer.put(sender, timer);
 		});
 

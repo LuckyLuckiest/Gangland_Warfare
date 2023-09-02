@@ -111,7 +111,7 @@ class WaypointCreateCommand extends SubArgument {
 				createWaypointTimer.remove(sender);
 			});
 
-			timer.start();
+			timer.start(false);
 			createWaypointTimer.put(sender, timer);
 		});
 

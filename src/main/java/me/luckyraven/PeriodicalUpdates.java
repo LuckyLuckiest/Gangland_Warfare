@@ -71,15 +71,6 @@ public class PeriodicalUpdates {
 		Gangland.getLog4jLogger().info(String.format("The process took %dms", end - start));
 	}
 
-	public void setInterval(long interval) {
-		if (repeatingTimer == null) repeatingTimer = new RepeatingTimer(gangland, interval, timer -> task());
-		else repeatingTimer.setPeriod(interval);
-	}
-
-	public void removeTimer() {
-		this.repeatingTimer = null;
-	}
-
 	public void forceUpdate() {
 		Gangland.getLog4jLogger().info("Force update...");
 		task();
@@ -93,7 +84,7 @@ public class PeriodicalUpdates {
 		if (this.repeatingTimer == null) return;
 
 		Gangland.getLog4jLogger().info("Initializing auto-save...");
-		this.repeatingTimer.startAsync();
+		this.repeatingTimer.start(true);
 	}
 
 	private void updatingDatabase() {

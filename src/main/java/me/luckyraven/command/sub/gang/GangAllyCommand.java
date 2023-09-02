@@ -147,7 +147,7 @@ class GangAllyCommand extends SubArgument {
 						gangRequestTimer.remove(receiving);
 					});
 
-					timer.startAsync();
+					timer.start(true);
 					gangRequestTimer.put(receiving, timer);
 				}
 

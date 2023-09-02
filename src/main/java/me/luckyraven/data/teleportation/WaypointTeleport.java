@@ -20,9 +20,9 @@ import java.util.function.BiConsumer;
 
 public class WaypointTeleport implements Listener {
 
-	private static final Map<User<Player>, CountdownTimer> teleportCooldown = new HashMap<>();
-	private static final Map<Player, CountdownTimer>       countdownTimer   = new HashMap<>();
-	private static final Map<Player, Double>               totalDistance    = new HashMap<>();
+	private static final Map<Player, CountdownTimer> teleportCooldown = new HashMap<>();
+	private static final Map<Player, CountdownTimer> countdownTimer   = new HashMap<>();
+	private static final Map<Player, Double>         totalDistance    = new HashMap<>();
 
 	private final Waypoint waypoint;
 
@@ -30,17 +30,17 @@ public class WaypointTeleport implements Listener {
 		this.waypoint = waypoint;
 	}
 
-	public static boolean userOnCooldown(User<Player> user) {
-		return teleportCooldown.containsKey(user);
+	public static boolean userOnCooldown(Player player) {
+		return teleportCooldown.containsKey(player);
 	}
 
-	public static void removeCooldown(User<Player> user) {
-		teleportCooldown.remove(user);
+	public static void removeCooldown(Player player) {
+		teleportCooldown.remove(player);
 	}
 
 	@Nullable
-	public static CountdownTimer getCooldownTimer(User<Player> user) {
-		return teleportCooldown.get(user);
+	public static CountdownTimer getCooldownTimer(Player player) {
+		return teleportCooldown.get(player);
 	}
 
 	/**
@@ -55,7 +55,7 @@ public class WaypointTeleport implements Listener {
 	public CompletableFuture<TeleportResult> teleport(JavaPlugin plugin, User<Player> user,
 	                                                  BiConsumer<User<Player>, CountdownTimer> duringTimer)
 			throws IllegalTeleportException {
-		if (userOnCooldown(user)) throw new IllegalTeleportException("Can't teleport on a cooldown");
+		if (userOnCooldown(user.getUser())) throw new IllegalTeleportException("Can't teleport on a cooldown");
 
 		CompletableFuture<TeleportResult> teleportResult = new CompletableFuture<>();
 
@@ -69,28 +69,37 @@ public class WaypointTeleport implements Listener {
 
 			// if locWorld was a valid world
 			if (locWorld != null) {
+				Player player = user.getUser();
 				Location location = new Location(locWorld, waypoint.getX(), waypoint.getY(), waypoint.getZ(),
 				                                 waypoint.getYaw(), waypoint.getPitch());
 
-				TeleportEvent event = new TeleportEvent(waypoint, user);
+				TeleportEvent event = new TeleportEvent(user, player.getLocation(), waypoint);
 				Bukkit.getPluginManager().callEvent(event);
 
 				if (!event.isCancelled()) {
-					user.getUser().teleport(location);
+					player.teleport(location);
 
-					// create a cooldown
+					// create a cooldown timer
 					if (waypoint.getCooldown() != 0) {
 						CountdownTimer countdownTimer = new CountdownTimer(plugin, waypoint.getCooldown(), null, null,
-						                                                   cooldownTimer -> teleportCooldown.remove(
-								                                                   user));
-						teleportCooldown.put(user, countdownTimer);
+						                                                   time -> teleportCooldown.remove(player));
+						teleportCooldown.put(player, countdownTimer);
 
+						countdownTimer.start(true);
+					}
 
-						countdownTimer.start();
+					// create a shield timer
+					if (waypoint.getShield() != 0) {
+						CountdownTimer countdownTimer = new CountdownTimer(plugin, waypoint.getShield(), null, null,
+						                                                   time -> player.setInvulnerable(false));
+
+						player.setInvulnerable(true);
+
+						countdownTimer.start(false);
 					}
 
 					// remove the countdown timer when the player already teleports
-					countdownTimer.remove(user.getUser());
+					countdownTimer.remove(player);
 
 					// successfully teleported
 					TeleportResult result = new TeleportResult(true, user, waypoint);
@@ -110,7 +119,7 @@ public class WaypointTeleport implements Listener {
 		});
 
 		if (waypoint.getTimer() != 0) countdownTimer.put(user.getUser(), timer);
-		timer.start();
+		timer.start(false);
 
 		return teleportResult;
 	}

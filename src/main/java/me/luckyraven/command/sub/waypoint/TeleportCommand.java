@@ -89,11 +89,11 @@ public class TeleportCommand extends CommandHandler {
 			CountdownTimer timer = new CountdownTimer(getGangland(), 30, null, null, t -> reconfirm.remove(player));
 			reconfirmTimer.put(player, timer);
 
-			timer.startAsync();
+			timer.start(true);
 
-			player.sendMessage(ChatUtil.color(
-					"The teleportation costs &a" + SettingAddon.getMoneySymbol() + waypoint.getCost() + "&7.",
-					"To confirm the command re-type it again."));
+			player.sendMessage(ChatUtil.commandMessage(
+					"The teleportation costs &a" + SettingAddon.getMoneySymbol() + waypoint.getCost() + "&7."));
+			player.sendMessage(ChatUtil.color("&7To confirm the command re-type it again."));
 		} else {
 			if (user.getEconomy().getBalance() < waypoint.getCost()) player.sendMessage(
 					MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
@@ -119,7 +119,7 @@ public class TeleportCommand extends CommandHandler {
 
 		try {
 			if (user.getUser().hasPermission("gangland.command.teleport.cooldown_bypass"))
-				WaypointTeleport.removeCooldown(user);
+				WaypointTeleport.removeCooldown(user.getUser());
 
 			waypoint.getWaypointTeleport().teleport(getGangland(), user, (u, t) -> {
 				String time    = TimeUtil.formatTime(t.getTimeLeft(), true);
@@ -150,7 +150,7 @@ public class TeleportCommand extends CommandHandler {
 				player.sendMessage(message);
 			});
 		} catch (IllegalTeleportException exception) {
-			CountdownTimer timer = WaypointTeleport.getCooldownTimer(user);
+			CountdownTimer timer = WaypointTeleport.getCooldownTimer(user.getUser());
 
 			if (timer == null) return;
 

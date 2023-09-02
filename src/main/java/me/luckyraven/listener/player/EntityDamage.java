@@ -1,13 +1,13 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.feature.bounty.Bounty;
-import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.feature.bounty.Bounty;
+import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -65,7 +65,7 @@ public class EntityDamage implements Listener {
 					if (userBounty.getAmount() < SettingAddon.getBountyTimerMax()) {
 						// create a timer and start it
 						userBounty.createTimer(gangland, SettingAddon.getBountyTimeInterval(),
-						                       timer -> bountyExecutor(user, bountyEvent, timer)).start();
+						                       timer -> bountyExecutor(user, bountyEvent, timer)).start(false);
 					}
 				} else {
 					double eachKill = SettingAddon.getBountyEachKillValue();
