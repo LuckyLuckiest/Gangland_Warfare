@@ -38,7 +38,7 @@ public class PlayerDeath implements Listener {
 		// punish the player if they die
 		if (user.getEconomy().getBalance() <= SettingAddon.getDeathThreshold()) return;
 
-		if (SettingAddon.isDeathMoneyCommandEnable()) {
+		if (SettingAddon.isDeathMoneyCommandEnabled()) {
 			for (String executable : SettingAddon.getDeathMoneyCommandExecutables()) {
 				PlaceholderHandler placeholder = gangland.getInitializer().getPlaceholder();
 

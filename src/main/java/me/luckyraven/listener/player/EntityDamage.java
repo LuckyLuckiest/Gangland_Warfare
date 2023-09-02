@@ -61,7 +61,7 @@ public class EntityDamage implements Listener {
 
 				BountyEvent bountyEvent = new BountyEvent(userBounty);
 				bountyEvent.setUserBounty(user);
-				if (userBounty.getRepeatingTimer() == null && SettingAddon.isBountyTimerEnable()) {
+				if (userBounty.getRepeatingTimer() == null && SettingAddon.isBountyTimerEnabled()) {
 					if (userBounty.getAmount() < SettingAddon.getBountyTimerMax()) {
 						// create a timer and start it
 						userBounty.createTimer(gangland, SettingAddon.getBountyTimeInterval(),
