@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -29,7 +30,7 @@ public class ReloadCommand extends CommandHandler {
 		reloadProcess("", () -> {
 			getGangland().getReloadPlugin().filesReload();
 			databaseReload();
-			getGangland().getReloadPlugin().scoreboardReload();
+			scoreboardReload();
 			getGangland().getReloadPlugin().periodicalUpdatesReload();
 		}, true);
 	}
@@ -45,7 +46,7 @@ public class ReloadCommand extends CommandHandler {
 		});
 
 		Argument scoreboard = new Argument("scoreboard", getArgumentTree(), (argument, sender, args) -> {
-			reloadProcess("scoreboard", () -> getGangland().getReloadPlugin().scoreboardReload(), false);
+			reloadProcess("scoreboard", this::scoreboardReload, false);
 		});
 
 		List<Argument> arguments = new ArrayList<>();
@@ -74,11 +75,16 @@ public class ReloadCommand extends CommandHandler {
 			String reloadComplete = "&aReload has been completed.";
 
 			sendToOperators(permission, reloadComplete);
-		} catch (Exception exception) {
+		} catch (Throwable throwable) {
 			String reloadIssue = "&cThere was a problem reloading the plugin!";
 
 			sendToOperators(permission, reloadIssue);
+			Gangland.getLog4jLogger().error(throwable);
 		}
+	}
+
+	private void scoreboardReload() {
+		if (SettingAddon.isScoreboardEnabled()) getGangland().getReloadPlugin().scoreboardReload();
 	}
 
 	private void databaseReload() {
