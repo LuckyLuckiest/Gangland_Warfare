@@ -2,6 +2,7 @@ package me.luckyraven;
 
 import lombok.Getter;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
+import me.luckyraven.bukkit.scoreboard.ScoreboardManager;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.CommandTabCompleter;
@@ -70,6 +71,7 @@ public final class Initializer {
 	private @Getter LanguageLoader      languageLoader;
 	private @Getter GanglandPlaceholder placeholder;
 	private @Getter WaypointManager     waypointManager;
+	private @Getter ScoreboardManager   scoreboardManager;
 	// Addons
 	private @Getter SettingAddon        settingAddon;
 
@@ -158,10 +160,11 @@ public final class Initializer {
 	@SuppressWarnings("CommentedOutCode")
 	private void files() {
 		fileManager.addFile(new FileHandler(plugin, "settings", ".yml"), true);
-
 		addonsLoader();
 
-//		fileManager.addFile(new FileHandler("scoreboard", ".yml"));
+		fileManager.addFile(new FileHandler(plugin, "scoreboard", ".yml"), true);
+		scoreboardManager = new ScoreboardManager(fileManager);
+
 //		fileManager.addFile(new FileHandler("kits", ".yml"));
 //		fileManager.addFile(new FileHandler("ammunition", ".yml"));
 	}
@@ -169,7 +172,7 @@ public final class Initializer {
 	public void addonsLoader() {
 		settingAddon = new SettingAddon(fileManager);
 
-		this.languageLoader = new LanguageLoader(plugin, fileManager);
+		languageLoader = new LanguageLoader(plugin, fileManager);
 	}
 
 	private void databases() {
@@ -208,7 +211,7 @@ public final class Initializer {
 			if (SettingAddon.isPhoneEnabled()) listenerManager.addEvent(new PhoneItem(gangland));
 
 			// gang events
-			if (SettingAddon.isGangEnable()) {
+			if (SettingAddon.isGangEnabled()) {
 				listenerManager.addEvent(new GangMembersDamage(gangland));
 			}
 
@@ -232,7 +235,7 @@ public final class Initializer {
 		commandManager.addCommand(new WaypointCommand(gangland));
 		commandManager.addCommand(new TeleportCommand(gangland));
 		// gang commands
-		if (SettingAddon.isGangEnable()) {
+		if (SettingAddon.isGangEnabled()) {
 			commandManager.addCommand(new GangCommand(gangland));
 		}
 
