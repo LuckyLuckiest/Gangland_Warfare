@@ -37,7 +37,6 @@ public class ReloadPlugin {
 	 */
 	public void periodicalUpdatesReload() {
 		gangland.getPeriodicalUpdates().stop();
-
 		gangland.periodicalUpdatesInitializer();
 	}
 
@@ -69,10 +68,12 @@ public class ReloadPlugin {
 	 */
 	public void scoreboardReload() {
 		for (User<Player> user : initializer.getUserManager().getUsers().values()) {
-			user.getScoreboard().end();
+			if (user.getScoreboard() != null) {
+				user.getScoreboard().end();
+				user.setScoreboard(null);
+			}
 
 			user.setScoreboard(new Scoreboard(user));
-
 			user.getScoreboard().start();
 		}
 	}
@@ -122,7 +123,14 @@ public class ReloadPlugin {
 
 		MemberManager memberManager = initializer.getMemberManager();
 
-		if (resetCache) userManager.clear();
+		if (resetCache) {
+			for (User<Player> user : userManager.getUsers().values()) {
+				user.getScoreboard().end();
+				user.setScoreboard(null);
+			}
+
+			userManager.clear();
+		}
 
 		for (Player player : Bukkit.getOnlinePlayers())
 			if (!userManager.contains(userManager.getUser(player))) {
