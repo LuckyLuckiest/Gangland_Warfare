@@ -29,7 +29,7 @@ public abstract class Timer extends BukkitRunnable {
 		return !stopped;
 	}
 
-	public void start(boolean async) throws IllegalStateException {
+	public void start(boolean async) {
 		if (bukkitTask != null && !stopped) return;
 
 		if (async) this.bukkitTask = runTaskTimerAsynchronously(plugin, delay, period);
