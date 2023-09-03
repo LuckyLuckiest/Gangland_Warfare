@@ -125,6 +125,8 @@ public class ReloadPlugin {
 
 		if (resetCache) {
 			for (User<Player> user : userManager.getUsers().values()) {
+				if (user.getScoreboard() == null) continue;
+
 				user.getScoreboard().end();
 				user.setScoreboard(null);
 			}
