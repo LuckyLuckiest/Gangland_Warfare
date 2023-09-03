@@ -79,7 +79,7 @@ public class ReloadCommand extends CommandHandler {
 			String reloadIssue = "&cThere was a problem reloading the plugin!";
 
 			sendToOperators(permission, reloadIssue);
-			Gangland.getLog4jLogger().error(throwable);
+			Gangland.getLog4jLogger().error(throwable.getMessage(), throwable);
 		}
 	}
 
