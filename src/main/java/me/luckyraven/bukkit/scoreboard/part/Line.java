@@ -65,7 +65,7 @@ public class Line {
 	}
 
 	public boolean isStatic() {
-		return interval == 0;
+		return this instanceof StaticLine;
 	}
 
 	@Override
