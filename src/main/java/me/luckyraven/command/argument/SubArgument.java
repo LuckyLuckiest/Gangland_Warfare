@@ -1,6 +1,7 @@
 package me.luckyraven.command.argument;
 
 import me.luckyraven.datastructure.Tree;
+import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
 
 public abstract class SubArgument extends Argument {

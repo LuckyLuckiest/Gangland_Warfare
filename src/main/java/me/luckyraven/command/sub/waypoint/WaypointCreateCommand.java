@@ -10,6 +10,7 @@ import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;

@@ -10,6 +10,7 @@ import me.luckyraven.datastructure.Tree;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.TriConsumer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.permissions.Permission;

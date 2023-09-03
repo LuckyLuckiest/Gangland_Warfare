@@ -3,7 +3,7 @@ package me.luckyraven.command.sub.waypoint;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
-import me.luckyraven.command.argument.TriConsumer;
+import me.luckyraven.util.TriConsumer;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.datastructure.Tree;

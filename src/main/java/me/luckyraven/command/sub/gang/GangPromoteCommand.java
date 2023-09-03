@@ -4,7 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.command.argument.SubArgument;
-import me.luckyraven.command.argument.TriConsumer;
+import me.luckyraven.util.TriConsumer;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;

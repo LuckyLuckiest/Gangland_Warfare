@@ -1,4 +1,4 @@
-package me.luckyraven.command.argument;
+package me.luckyraven.util;
 
 @FunctionalInterface
 public interface TriConsumer<T, U, V> {

@@ -4,7 +4,7 @@ import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
 import com.google.common.base.Preconditions;
 import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.command.argument.TriConsumer;
+import me.luckyraven.util.TriConsumer;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;

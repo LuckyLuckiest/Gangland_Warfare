@@ -3,7 +3,7 @@ package me.luckyraven.bukkit.inventory;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
 import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.command.argument.TriConsumer;
+import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
