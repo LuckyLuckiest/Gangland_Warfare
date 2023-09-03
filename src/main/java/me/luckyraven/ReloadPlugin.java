@@ -73,7 +73,7 @@ public class ReloadPlugin {
 				user.setScoreboard(null);
 			}
 
-			user.setScoreboard(new Scoreboard(user));
+			user.setScoreboard(new Scoreboard(initializer.getScoreboardManager().getDriverHandler(user.getUser())));
 			user.getScoreboard().start();
 		}
 	}

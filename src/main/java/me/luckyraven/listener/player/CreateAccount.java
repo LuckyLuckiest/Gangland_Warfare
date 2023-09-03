@@ -76,7 +76,8 @@ public final class CreateAccount implements Listener {
 
 		if (SettingAddon.isScoreboardEnabled() && user.getScoreboard() == null) {
 			// create a scoreboard when the player joins
-			user.setScoreboard(new Scoreboard(user));
+			user.setScoreboard(
+					new Scoreboard(gangland.getInitializer().getScoreboardManager().getDriverHandler(player)));
 			user.getScoreboard().start();
 		}
 	}
