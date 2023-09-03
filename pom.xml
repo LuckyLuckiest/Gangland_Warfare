@@ -71,55 +71,47 @@
                     <relocations>
                         <relocation>
                             <pattern>net.wesjd.anvilgui</pattern>
-                            <shadedPattern>me.luckyraven.anvilgui</shadedPattern>
+                            <shadedPattern>me.luckyraven.bukkit.anvilgui</shadedPattern>
                         </relocation>
 
                         <relocation>
                             <pattern>com.zaxxer.hikari</pattern>
-                            <shadedPattern>me.luckyraven.hikari</shadedPattern>
+                            <shadedPattern>me.luckyraven.database.hikari</shadedPattern>
                         </relocation>
 
                         <relocation>
                             <pattern>com.cryptomorin.xseries</pattern>
-                            <shadedPattern>me.luckyraven.xseries</shadedPattern>
+                            <shadedPattern>me.luckyraven.dependency.xseries</shadedPattern>
                         </relocation>
 
                         <relocation>
                             <pattern>fr.mrmicky.fastboard</pattern>
-                            <shadedPattern>me.luckyraven.fastboard</shadedPattern>
+                            <shadedPattern>me.luckyraven.bukkit.scoreboard.fastboard</shadedPattern>
                         </relocation>
 
                         <relocation>
                             <pattern>net.objecthunter.exp4j</pattern>
-                            <shadedPattern>me.luckyraven.exp4j</shadedPattern>
+                            <shadedPattern>me.luckyraven.datastructure.exp4j</shadedPattern>
+                        </relocation>
+
+                        <relocation>
+                            <pattern>dev.sergiferry</pattern>
+                            <shadedPattern>me.luckyraven.feature</shadedPattern>
                         </relocation>
                     </relocations>
 
                     <filters>
                         <filter>
                             <artifact>*:*</artifact>
-                            <excludes>
-                                <!-- XSeries -->
-                                <exclude>com/cryptomorin/xseries/XBiome*</exclude>
-                                <exclude>com/cryptomorin/xseries/XBlock*</exclude>
-                                <exclude>com/cryptomorin/xseries/XEnchantment*</exclude>
-                                <exclude>com/cryptomorin/xseries/XEntity*</exclude>
-                                <exclude>com/cryptomorin/xseries/XItemStack*</exclude>
-                                <exclude>com/cryptomorin/xseries/XPotion*</exclude>
-                                <exclude>com/cryptomorin/xseries/XTag*</exclude>
-                                <exclude>com/cryptomorin/xseries/NMSExtras*</exclude>
-                                <exclude>com/cryptomorin/xseries/NoteBlockMusic*</exclude>
-                                <exclude>com/cryptomorin/xseries/SkullCacheListener*</exclude>
-                                <exclude>com/cryptomorin/xseries/particles/*</exclude>
-                                <exclude>com/cryptomorin/xseries/messages/*</exclude>
-
-                                <!-- FastBoard -->
-                                <exclude>fr/mrmicky/fastboard/adventure/*</exclude>
-                            </excludes>
+                            <excludeDefaults>false</excludeDefaults>
+                            <includes>
+                                <!-- AnvilGUI -->
+                                <include>net/wesjd/anvilgui/version/</include>
+                            </includes>
                         </filter>
                     </filters>
 
-                    <minimizeJar>false</minimizeJar>
+                    <minimizeJar>true</minimizeJar>
                 </configuration>
 
                 <executions>
@@ -167,6 +159,11 @@
         <repository>
             <id>sonatype</id>
             <url>https://oss.sonatype.org/content/groups/public/</url>
+        </repository>
+
+        <repository>
+            <id>ranull-repo-external</id>
+            <url>https://repo.ranull.com/maven/external/</url>
         </repository>
     </repositories>
 
@@ -223,6 +220,14 @@
             <groupId>fr.mrmicky</groupId>
             <artifactId>fastboard</artifactId>
             <version>2.0.0</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Player NPC -->
+        <dependency>
+            <groupId>dev.sergiferry</groupId>
+            <artifactId>playernpc</artifactId>
+            <version>2023.4</version>
             <scope>compile</scope>
         </dependency>
 
