@@ -3,6 +3,7 @@ package me.luckyraven;
 import lombok.Getter;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.scoreboard.ScoreboardManager;
+import me.luckyraven.bukkit.scoreboard.driver.DriverHandler;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.CommandTabCompleter;
@@ -45,14 +46,13 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 public final class Initializer {
 
-	private final JavaPlugin plugin;
+	private final Gangland gangland;
 
 	// on plugin load
 	private final @Getter InformationManager         informationManager;
@@ -68,16 +68,16 @@ public final class Initializer {
 	private @Getter ListenerManager     listenerManager;
 	private @Getter CommandManager      commandManager;
 	private @Getter RankManager         rankManager;
-	private @Getter LanguageLoader      languageLoader;
-	private @Getter GanglandPlaceholder placeholder;
 	private @Getter WaypointManager     waypointManager;
 	private @Getter ScoreboardManager   scoreboardManager;
 	// Addons
 	private @Getter SettingAddon        settingAddon;
+	private @Getter LanguageLoader      languageLoader;
+	private @Getter GanglandPlaceholder placeholder;
+	private @Getter DriverHandler       driverHandler;
 
-
-	public Initializer(JavaPlugin plugin) {
-		this.plugin = plugin;
+	public Initializer(Gangland gangland) {
+		this.gangland = gangland;
 		// If at any instance these data failed to load, then the plugin will not function
 		informationManager = new InformationManager();
 		informationManager.processCommands();
@@ -89,81 +89,75 @@ public final class Initializer {
 
 	public void postInitialize() {
 		// File
-		fileManager = new FileManager(plugin);
+		fileManager = new FileManager(gangland);
 		files();
 
 		// Database
-		databaseManager = new DatabaseManager(plugin);
+		databaseManager = new DatabaseManager(gangland);
 		databases();
 		databaseManager.initializeDatabases();
 
-		if (plugin instanceof Gangland gangland) {
-			// Addons
-			MessageAddon.setPlugin(gangland);
+		// Addons
+		MessageAddon.setPlugin(gangland);
 
-			// permission manager
-			permissionManager = new PermissionManager(plugin, new PermissionWorker("gangland"));
+		// permission manager
+		permissionManager = new PermissionManager(this.gangland, new PermissionWorker("gangland"));
 
-			// add all registered plugin permissions
-			permissionManager.addAllPermissions(Bukkit.getPluginManager()
-			                                          .getPermissions()
-			                                          .stream()
-			                                          .map(Permission::getName)
-			                                          .filter(permission -> permission.startsWith("gangland"))
-			                                          .collect(Collectors.toSet()));
+		// add all registered plugin permissions
+		permissionManager.addAllPermissions(Bukkit.getPluginManager()
+		                                          .getPermissions()
+		                                          .stream()
+		                                          .map(Permission::getName)
+		                                          .filter(permission -> permission.startsWith("gangland"))
+		                                          .collect(Collectors.toSet()));
 
-			// Rank manager
-			rankManager = new RankManager(gangland);
-			for (DatabaseHandler handler : databaseManager.getDatabases())
-				if (handler instanceof RankDatabase rankDatabase) {
-					rankManager.initialize(rankDatabase);
-					break;
-				}
+		// Rank manager
+		rankManager = new RankManager(gangland);
+		for (DatabaseHandler handler : databaseManager.getDatabases())
+			if (handler instanceof RankDatabase rankDatabase) {
+				rankManager.initialize(rankDatabase);
+				break;
+			}
 
-			// Gang manager
-			gangManager = new GangManager(gangland);
-			memberManager = new MemberManager(gangland);
-			for (DatabaseHandler handler : databaseManager.getDatabases())
-				if (handler instanceof GangDatabase gangDatabase) {
-					gangManager.initialize(gangDatabase);
-					memberManager.initialize(gangDatabase, gangManager, rankManager);
-					break;
-				}
+		// Gang manager
+		gangManager = new GangManager(gangland);
+		memberManager = new MemberManager(gangland);
+		for (DatabaseHandler handler : databaseManager.getDatabases())
+			if (handler instanceof GangDatabase gangDatabase) {
+				gangManager.initialize(gangDatabase);
+				memberManager.initialize(gangDatabase, gangManager, rankManager);
+				break;
+			}
 
-			// Waypoint manager
-			waypointManager = new WaypointManager(gangland);
-			for (DatabaseHandler handler : databaseManager.getDatabases())
-				if (handler instanceof WaypointDatabase waypointDatabase) {
-					waypointManager.initialize(waypointDatabase);
-					break;
-				}
-		}
+		// Waypoint manager
+		waypointManager = new WaypointManager(gangland);
+		for (DatabaseHandler handler : databaseManager.getDatabases())
+			if (handler instanceof WaypointDatabase waypointDatabase) {
+				waypointManager.initialize(waypointDatabase);
+				break;
+			}
 
 		// Events
-		listenerManager = new ListenerManager(plugin);
+		listenerManager = new ListenerManager(gangland);
 		events();
 		listenerManager.registerEvents();
 
 		// Commands
-		if (plugin instanceof Gangland gangland) {
-			commandManager = new CommandManager(gangland);
-			commands(gangland);
-		}
+		commandManager = new CommandManager(gangland);
+		commands(gangland);
 
 		// Placeholder
-		if (plugin instanceof Gangland gangland) {
-			placeholder = new GanglandPlaceholder(gangland, Replacer.Closure.PERCENT);
-		}
+		placeholder = new GanglandPlaceholder(gangland, Replacer.Closure.PERCENT);
 
 	}
 
 	@SuppressWarnings("CommentedOutCode")
 	private void files() {
-		fileManager.addFile(new FileHandler(plugin, "settings", ".yml"), true);
+		fileManager.addFile(new FileHandler(gangland, "settings", ".yml"), true);
 		addonsLoader();
 
-		fileManager.addFile(new FileHandler(plugin, "scoreboard", ".yml"), true);
-		scoreboardManager = new ScoreboardManager(fileManager);
+		fileManager.addFile(new FileHandler(gangland, "scoreboard", ".yml"), true);
+		scoreboardManager = new ScoreboardManager(gangland);
 
 //		fileManager.addFile(new FileHandler("kits", ".yml"));
 //		fileManager.addFile(new FileHandler("ammunition", ".yml"));
@@ -172,7 +166,7 @@ public final class Initializer {
 	public void addonsLoader() {
 		settingAddon = new SettingAddon(fileManager);
 
-		languageLoader = new LanguageLoader(plugin, fileManager);
+		languageLoader = new LanguageLoader(gangland, fileManager);
 	}
 
 	private void databases() {
@@ -181,48 +175,46 @@ public final class Initializer {
 		if (SettingAddon.getDatabaseType().equalsIgnoreCase("mysql")) type = DatabaseHandler.MYSQL;
 		else type = DatabaseHandler.SQLITE;
 
-		UserDatabase userDatabase = new UserDatabase(plugin);
+		UserDatabase userDatabase = new UserDatabase(gangland);
 		userDatabase.setType(type);
 		databaseManager.addDatabase(userDatabase);
 
-		GangDatabase gangDatabase = new GangDatabase(plugin);
+		GangDatabase gangDatabase = new GangDatabase(gangland);
 		gangDatabase.setType(type);
 		databaseManager.addDatabase(gangDatabase);
 
-		RankDatabase rankDatabase = new RankDatabase(plugin);
+		RankDatabase rankDatabase = new RankDatabase(gangland);
 		rankDatabase.setType(type);
 		databaseManager.addDatabase(rankDatabase);
 
-		WaypointDatabase waypointDatabase = new WaypointDatabase(plugin);
+		WaypointDatabase waypointDatabase = new WaypointDatabase(gangland);
 		waypointDatabase.setType(type);
 		databaseManager.addDatabase(waypointDatabase);
 	}
 
 	private void events() {
-		if (plugin instanceof Gangland gangland) {
-			// player events
-			listenerManager.addEvent(new CreateAccount(gangland));
-			listenerManager.addEvent(new RemoveAccount(gangland));
-			listenerManager.addEvent(new EntityDamage(gangland));
-			listenerManager.addEvent(new BountyIncrease(gangland));
-			listenerManager.addEvent(new PlayerDeath(gangland));
-			listenerManager.addEvent(new LevelUp(gangland));
-			listenerManager.addEvent(new WaypointTeleport(new Waypoint("dummy")));
-			if (SettingAddon.isPhoneEnabled()) listenerManager.addEvent(new PhoneItem(gangland));
+		// player events
+		listenerManager.addEvent(new CreateAccount(gangland));
+		listenerManager.addEvent(new RemoveAccount(gangland));
+		listenerManager.addEvent(new EntityDamage(gangland));
+		listenerManager.addEvent(new BountyIncrease(gangland));
+		listenerManager.addEvent(new PlayerDeath(gangland));
+		listenerManager.addEvent(new LevelUp(gangland));
+		listenerManager.addEvent(new WaypointTeleport(new Waypoint("dummy")));
+		if (SettingAddon.isPhoneEnabled()) listenerManager.addEvent(new PhoneItem(gangland));
 
-			// gang events
-			if (SettingAddon.isGangEnabled()) {
-				listenerManager.addEvent(new GangMembersDamage(gangland));
-			}
-
-			// inventory gui test double listener
-			listenerManager.addEvent(new InventoryHandler(gangland, "dummy", 9, null));
+		// gang events
+		if (SettingAddon.isGangEnabled()) {
+			listenerManager.addEvent(new GangMembersDamage(gangland));
 		}
+
+		// inventory gui test double listener
+		listenerManager.addEvent(new InventoryHandler(gangland, "dummy", 9, null));
 	}
 
 	private void commands(Gangland gangland) {
 		// initial command
-		Objects.requireNonNull(plugin.getCommand("glw")).setExecutor(commandManager);
+		Objects.requireNonNull(this.gangland.getCommand("glw")).setExecutor(commandManager);
 
 		// sub commands
 		// default plugin commands
@@ -249,7 +241,7 @@ public final class Initializer {
 		// Needs to be the final command to add all the help info
 		commandManager.addCommand(new HelpCommand(gangland));
 
-		PluginCommand command = plugin.getCommand("glw");
+		PluginCommand command = this.gangland.getCommand("glw");
 
 		if (command == null) return;
 
