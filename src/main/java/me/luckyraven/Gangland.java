@@ -115,8 +115,9 @@ public final class Gangland extends JavaPlugin {
 
 		public void validate(@Nullable Runnable runnable) {
 			if (Bukkit.getPluginManager().getPlugin(name) != null) {
-				if (runnable != null) runnable.run();
 				if (type == Type.SOFT) log4jLogger.info("Found " + name + ", linking...");
+				if (runnable != null) runnable.run();
+				log4jLogger.info("Linked " + name);
 				return;
 			}
 
