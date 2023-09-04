@@ -30,8 +30,8 @@ public class Argument implements Cloneable {
 	private final @Getter String[]            arguments;
 	private final @Getter Tree.Node<Argument> node;
 	private final @Getter boolean             displayAllArguments;
-	private final         Gangland            gangland;
 
+	private final Gangland       gangland;
 	private final Tree<Argument> tree;
 
 	TriConsumer<Argument, CommandSender, String[]> action;
