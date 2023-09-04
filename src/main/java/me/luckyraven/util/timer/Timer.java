@@ -10,9 +10,9 @@ public abstract class Timer extends BukkitRunnable {
 	private final         JavaPlugin plugin;
 	private final @Getter long       delay, period;
 
-	private         BukkitTask bukkitTask;
-	private         boolean    stopped;
-	private @Getter long       interval;
+	private          BukkitTask bukkitTask;
+	private volatile boolean    stopped;
+	private @Getter  long       interval;
 
 	public Timer(JavaPlugin plugin) {
 		this(plugin, 0L, 20L);
