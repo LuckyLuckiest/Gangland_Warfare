@@ -30,7 +30,8 @@ public class Gang extends Account<Integer, List<Member>> {
 	private final EconomyHandler economy;
 
 	private String name, displayName, color, description;
-	private long created;
+	private long  created;
+	private State state;
 
 	public Gang(int id, List<Member> users, String name) {
 		this(id, users);
@@ -50,8 +51,7 @@ public class Gang extends Account<Integer, List<Member>> {
 	public Gang() {
 		super(null, new ArrayList<>());
 
-		Random random = new Random();
-		setKey(random.nextInt(999_999));
+		generateId();
 
 		this.name = null;
 		this.displayName = "";
@@ -62,6 +62,11 @@ public class Gang extends Account<Integer, List<Member>> {
 		this.bounty = new Bounty();
 		this.level = new Level();
 		this.ally = new HashSet<>();
+	}
+
+	public void generateId() {
+		Random random = new Random();
+		setKey(random.nextInt(Integer.MAX_VALUE));
 	}
 
 	public void addMember(User<? extends OfflinePlayer> user, Member member, Rank rank) {
@@ -145,6 +150,10 @@ public class Gang extends Account<Integer, List<Member>> {
 				"Gang:{id=%d,name=%s,description=%s,members=%s,created=%s,balance=%.2f,level=%.2f,bounty=%,.2f,ally=%s}",
 				getId(), name, description, getGroup(), created, economy.getBalance(), level.getExperience(),
 				bounty.getAmount(), ally);
+	}
+
+	public enum State {
+		OPEN, INVITE, CLOSE
 	}
 
 }
