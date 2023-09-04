@@ -51,10 +51,10 @@
     - Configuring scoreboard.
     - Add custom scoreboard in YAML files.
 0.0.64-DEV:
+    - Add custom inventories in YAML files.
+0.0.65-DEV:
 	- Work on waypoint radius, used for displaying particles
     - Gang settings.
-0.0.65-DEV:
-    - Add custom inventories in YAML files.
 	- A Taxi system added to contacts in phone.
 
 0.0.71-DEV:
