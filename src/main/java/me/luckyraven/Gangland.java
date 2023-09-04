@@ -6,6 +6,8 @@ import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.dependency.PlaceholderAPIExpansion;
 import me.luckyraven.file.configuration.SettingAddon;
+import net.citizensnpcs.api.CitizensAPI;
+import net.citizensnpcs.api.npc.NPCRegistry;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -101,6 +103,9 @@ public final class Gangland extends JavaPlugin {
 			// set the vault economy
 			EconomyHandler.setVaultEconomy(rsp.getProvider());
 		});
+
+		Dependency citizens = new Dependency("Citizens", Dependency.Type.SOFT);
+		citizens.validate(null);
 	}
 
 	private class Dependency {

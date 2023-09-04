@@ -4,7 +4,7 @@ main: me.luckyraven.Gangland
 database: true
 api-version: 1.13
 depend: [NBTAPI]
-softdepend: [PlaceholderAPI,Vault]
+softdepend: [PlaceholderAPI,Vault,Citizens]
 author: LuckyRaven10
 description: '${project.description}'
 
