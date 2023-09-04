@@ -50,8 +50,12 @@ public class CommandTabCompleter implements TabCompleter {
 		                                                                     .map(CommandHandler::getLabel)
 		                                                                     .toList());
 
-		Argument arg = findArgument(args, commandHandlers);
+		CommandHandler commandHandler = commandMap.get(args[0]);
+		// this won't solve the case of multiple optional values but would definitely stop the tab completion
+		// end the command tab completion if the size was greater than the height of the tree
+		if (commandHandler != null && args.length > commandHandler.getArgumentTree().height()) return null;
 
+		Argument arg = findArgument(args, commandHandlers);
 		if (arg == null) return null;
 
 		List<String> arguments = new ArrayList<>();
@@ -62,8 +66,6 @@ public class CommandTabCompleter implements TabCompleter {
 			if (permission.isEmpty() || sender.hasPermission(permission)) arguments.addAll(
 					argument.getArgumentString());
 		}
-
-		// TODO if there was an optional argument then no need to get the last valid because it will never be equal
 		return collectedArguments(args, arguments);
 	}
 
