@@ -3,9 +3,9 @@ package me.luckyraven.command.argument.types;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.util.TriConsumer;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
 
 @Getter

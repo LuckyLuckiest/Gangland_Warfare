@@ -1,18 +1,18 @@
 package me.luckyraven.command.sub.debug;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
-import me.luckyraven.command.CommandHandler;
-import me.luckyraven.command.argument.Argument;
-import me.luckyraven.command.argument.types.OptionalArgument;
+import me.luckyraven.data.rank.Rank;
+import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
-import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.rank.RankManager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;

@@ -1,7 +1,8 @@
 package me.luckyraven.command.sub.waypoint;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.argument.*;
+import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.teleportation.Waypoint;

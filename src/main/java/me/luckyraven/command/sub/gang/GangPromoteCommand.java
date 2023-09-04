@@ -2,9 +2,8 @@ package me.luckyraven.command.sub.gang;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.command.argument.SubArgument;
-import me.luckyraven.util.TriConsumer;
+import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
@@ -16,6 +15,7 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.TriConsumer;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.bukkit.Bukkit;

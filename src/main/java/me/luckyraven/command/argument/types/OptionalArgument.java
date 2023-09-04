@@ -1,8 +1,8 @@
 package me.luckyraven.command.argument.types;
 
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.util.TriConsumer;
 import me.luckyraven.datastructure.Tree;
+import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
 
 import java.util.Arrays;

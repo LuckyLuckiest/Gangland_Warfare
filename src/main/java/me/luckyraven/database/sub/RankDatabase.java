@@ -1,10 +1,10 @@
 package me.luckyraven.database.sub;
 
+import me.luckyraven.data.rank.Rank;
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.data.rank.Rank;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;

@@ -1,10 +1,10 @@
 package me.luckyraven.data.account.gang;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
+import me.luckyraven.database.DatabaseHelper;
+import me.luckyraven.database.sub.GangDatabase;
 
 import java.util.*;
 
