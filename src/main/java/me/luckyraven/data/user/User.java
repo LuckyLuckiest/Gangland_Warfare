@@ -25,8 +25,7 @@ import java.util.List;
  */
 @Getter
 public class User<T extends OfflinePlayer> {
-
-
+	
 	private final T                   user;
 	private final List<Account<?, ?>> linkedAccounts;
 	private final Bounty              bounty;

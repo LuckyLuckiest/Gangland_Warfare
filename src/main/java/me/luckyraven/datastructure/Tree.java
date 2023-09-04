@@ -201,7 +201,7 @@ public class Tree<E> implements Iterable<E> {
 		public Node<T> clone() {
 			try {
 				@SuppressWarnings("unchecked") Node<T> clonedNode = (Node<T>) super.clone();
-				
+
 				return clonedNode;
 			} catch (CloneNotSupportedException exception) {
 				throw new PluginException(exception);
