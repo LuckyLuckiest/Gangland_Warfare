@@ -3,7 +3,6 @@ package me.luckyraven.command.sub.gang;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
-import me.luckyraven.util.TriConsumer;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.gang.Gang;
@@ -18,6 +17,7 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -25,7 +25,6 @@ import org.bukkit.entity.Player;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
 class GangCreateCommand extends SubArgument {
@@ -85,13 +84,9 @@ class GangCreateCommand extends SubArgument {
 				return;
 			}
 
-			Gang   gang   = new Gang();
-			Random random = new Random();
+			Gang gang = new Gang();
 
-			// need only positive ids
-			// 2^31 possible ids
-			do gang.setId(random.nextInt(Integer.MAX_VALUE));
-			while (gangManager.contains(gang));
+			while (gangManager.contains(gang)) gang.generateId();
 
 			member.setGangJoinDateLong(Instant.now().toEpochMilli());
 			gang.addMember(user, member, rankManager.get(SettingAddon.getGangRankTail()));
