@@ -15,12 +15,16 @@ import me.luckyraven.database.sub.RankDatabase;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.database.sub.WaypointDatabase;
 import me.luckyraven.feature.phone.Phone;
+import me.luckyraven.file.FileHandler;
+import me.luckyraven.file.FileManager;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+
+import java.io.IOException;
 
 public class ReloadPlugin {
 
@@ -67,6 +71,21 @@ public class ReloadPlugin {
 	 *
 	 */
 	public void scoreboardReload() {
+		// reload scoreboard file
+		FileManager fileManager = initializer.getFileManager();
+		try {
+			fileManager.checkFileLoaded("scoreboard");
+
+			FileHandler scoreboard = fileManager.getFile("scoreboard");
+			if (scoreboard == null) throw new IOException("scoreboard file is not loaded!");
+			scoreboard.reloadData();
+		} catch (IOException exception) {
+			Gangland.getLog4jLogger().error("scoreboard file is not loaded!", exception);
+			return;
+		}
+
+		initializer.scoreboardLoader();
+
 		for (User<Player> user : initializer.getUserManager().getUsers().values()) {
 			if (user.getScoreboard() != null) {
 				user.getScoreboard().end();
