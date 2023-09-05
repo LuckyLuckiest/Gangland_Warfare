@@ -7,6 +7,7 @@ import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.util.timer.RepeatingTimer;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -32,17 +33,19 @@ public class RemoveAccount implements Listener {
 		// Remove the user from a user manager group
 		userManager.remove(user);
 
-		// must save user info
-		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-			if (handler instanceof UserDatabase userDatabase) {
-				DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
+			// must save user info
+			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
+				if (handler instanceof UserDatabase userDatabase) {
+					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
-				helper.runQueries(database -> {
-					userDatabase.updateDataTable(user);
-					userDatabase.updateBankTable(user);
-				});
-				break;
-			}
+					helper.runQueries(database -> {
+						userDatabase.updateDataTable(user);
+						userDatabase.updateBankTable(user);
+					});
+					break;
+				}
+		});
 
 		if (user.getScoreboard() != null) {
 			user.getScoreboard().end();
