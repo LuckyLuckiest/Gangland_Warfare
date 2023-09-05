@@ -1,49 +1,54 @@
-stat:
-  open:
-    cmd: /glw gang
-  size: 45
-  name: "&6&l%gang%&r gang"
-  type: inventory
-  slots:
-    11:
-      item: GOLD_BLOCK
-      name: "&bBalance"
-      lore:
-        - "&e%money_symbol%%balance%"
-      enchanted: true
-    13:
-      item: CRAFTING_TABLE
-      name: "&bID"
-      lore:
-        - "&e%gang_id%"
-    15:
-      item: PAPER
-      name: "&bDescription"
-      lore:
-        - "&e%gang_desc%"
-    19:
-      item: PLAYER_HEAD
-      name: "&bMembers"
-      lore:
-        - "&a%gang_online-members_size%&7/&e%gang_members_size%"
-      onclick:
-        inv: users_stat
-    22:
-      item: GOLD_INGOT
-      name: "&bBounty"
-      lore:
-        - "&e%money_symbol%%gang_bounty%"
-      enchanted: true
-    25:
-      item: REDSTONE
-      name: "&bAlly"
-      lore:
-        - "&e%gang_ally_size%"
-      onclick:
-        inv: alliance_stat
-    31:
-      item: WRITABLE_BOOK
-      name: "&bCreated"
-      lore:
-        - "&e%gang_date-created%"
-      enchanted: true
+Information:
+   Display_Name: "&6&l%gangland_gang_name%&r gang"
+   Size: 45
+   Type: inventory
+   Open:
+      Command: "/glw gang"
+      Permission: "gangland.command.gang"
+   Configuration:
+      Fill: true
+      Border: false
+   Permission: "gangland.inventory.gang_stat"
+Slots:
+   11:
+      Item: GOLD_BLOCK
+      Name: "&bBalance"
+      Lore:
+         - "&e%money_symbol%%gangland_gang_balance%"
+      Enchanted: true
+   13:
+      Item: CRAFTING_TABLE
+      Name: "&bID"
+      Lore:
+         - "&e%gangland_gang_id%"
+   15:
+      Item: PAPER
+      Name: "&bDescription"
+      Lore:
+         - "&e%gangland_gang_description%"
+   19:
+      Item: PLAYER_HEAD
+      Name: "&bMembers"
+      Lore:
+         - "&a%gang_online-members_size%&7/&e%gang_members_size%"
+      OnInventoryClick:
+         Inventory: users_stat
+   22:
+      Item: GOLD_INGOT
+      Name: "&bBounty"
+      Lore:
+         - "&e%money_symbol%%gangland_gang_bounty%"
+      Enchanted: true
+   25:
+      Item: REDSTONE
+      Name: "&bAlly"
+      Lore:
+         - "&e%gang_ally_size%"
+      OnInventoryClick:
+         Inventory: alliance_stat
+   31:
+      Item: WRITABLE_BOOK
+      Name: "&bCreated"
+      Lore:
+         - "&e%gangland_gang_date-created%"
+      Enchanted: true
