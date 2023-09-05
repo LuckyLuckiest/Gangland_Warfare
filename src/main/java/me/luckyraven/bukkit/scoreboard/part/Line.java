@@ -65,7 +65,7 @@ public class Line {
 	}
 
 	public boolean isStatic() {
-		return this instanceof StaticLine;
+		return this instanceof StaticLine || interval == 0 || contents.size() == 1;
 	}
 
 	@Override
