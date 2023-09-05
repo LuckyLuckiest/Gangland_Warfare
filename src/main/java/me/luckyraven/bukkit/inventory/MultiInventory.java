@@ -4,8 +4,9 @@ import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
 import com.google.common.base.Preconditions;
 import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.util.TriConsumer;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.InventoryUtil;
+import me.luckyraven.util.TriConsumer;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -66,26 +67,30 @@ public class MultiInventory extends InventoryHandler {
 		MultiInventory multi = new MultiInventory(plugin, name, initialPage, player);
 
 		multi.addItems(multi, items, 0, items.size(), staticItemsAllowed, staticItems);
-		InventoryAddons.createBoarder(multi);
+		InventoryUtil.createBoarder(multi);
 		// if there is static items column, then create a line at column 2
-		if (staticItemsAllowed) InventoryAddons.verticalLine(multi, 2, InventoryAddons.getFillItem(),
-		                                                     SettingAddon.getInventoryFillName(), true);
+		if (staticItemsAllowed) InventoryUtil.verticalLine(multi, 2, InventoryUtil.getFillItem(),
+		                                                   SettingAddon.getInventoryFillName(), true);
 
 		// the other pages
 		for (int i = 1; i < pages; i++) {
 			int size = i == pages - 1 ? finalPage : initialPage;
 
-			InventoryHandler inv = new InventoryHandler(plugin, name, size, player,
-			                                            new NamespacedKey(plugin, titleRefactor(String.format("%s_%d", name, ++ID))));
+			InventoryHandler inv = new InventoryHandler(plugin, name, size, player, new NamespacedKey(plugin,
+			                                                                                          titleRefactor(
+					                                                                                          String.format(
+							                                                                                          "%s_%d",
+							                                                                                          name,
+							                                                                                          ++ID))));
 
 			int startIndex = i * perPage;
 			int endIndex   = Math.min(startIndex + perPage, items.size());
 
 			multi.addItems(inv, items, startIndex, endIndex, staticItemsAllowed, staticItems);
-			InventoryAddons.createBoarder(inv);
+			InventoryUtil.createBoarder(inv);
 			// if there is static items column, then create a line at column 2
-			if (staticItemsAllowed) InventoryAddons.verticalLine(inv, 2, InventoryAddons.getFillItem(),
-			                                                     SettingAddon.getInventoryFillName(), true);
+			if (staticItemsAllowed) InventoryUtil.verticalLine(inv, 2, InventoryUtil.getFillItem(),
+			                                                   SettingAddon.getInventoryFillName(), true);
 
 			multi.addPage(inv);
 		}
@@ -138,8 +143,8 @@ public class MultiInventory extends InventoryHandler {
 			if (inventoryHandler.getInventory().getItem(slot) != null) continue;
 
 			if (i < staticItems.size()) inventoryHandler.setItem(slot, items.get(i), false, consumers.get(i));
-			else inventoryHandler.getInventory().setItem(slot, new ItemBuilder(InventoryAddons.getLineItem()).setDisplayName(
-					SettingAddon.getInventoryLineName()).build());
+			else inventoryHandler.getInventory().setItem(slot, new ItemBuilder(
+					InventoryUtil.getLineItem()).setDisplayName(SettingAddon.getInventoryLineName()).build());
 
 		}
 	}
@@ -167,9 +172,9 @@ public class MultiInventory extends InventoryHandler {
 		firstPage.clear();
 
 		addItems(firstPage, items, 0, Math.min(perPage, items.size()), staticItemsAllowed, staticItems);
-		InventoryAddons.createBoarder(firstPage);
-		if (staticItemsAllowed) InventoryAddons.verticalLine(firstPage, 2, InventoryAddons.getFillItem(),
-		                                                     SettingAddon.getInventoryFillName(), true);
+		InventoryUtil.createBoarder(firstPage);
+		if (staticItemsAllowed) InventoryUtil.verticalLine(firstPage, 2, InventoryUtil.getFillItem(),
+		                                                   SettingAddon.getInventoryFillName(), true);
 
 		for (int i = 1; i < pages; i++) {
 			int              size = i == pages - 1 ? finalPage : initialPage;
@@ -189,9 +194,9 @@ public class MultiInventory extends InventoryHandler {
 				inv.clear();
 				addItems(inv, items, i * perPage, Math.min((i + 1) * perPage, items.size()), false, null);
 			}
-			InventoryAddons.createBoarder(inv);
-			if (staticItemsAllowed) InventoryAddons.verticalLine(inv, 2, InventoryAddons.getFillItem(),
-			                                                     SettingAddon.getInventoryFillName(), true);
+			InventoryUtil.createBoarder(inv);
+			if (staticItemsAllowed) InventoryUtil.verticalLine(inv, 2, InventoryUtil.getFillItem(),
+			                                                   SettingAddon.getInventoryFillName(), true);
 
 			inventoryIndex++;
 		}

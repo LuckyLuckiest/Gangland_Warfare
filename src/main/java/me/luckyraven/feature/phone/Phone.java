@@ -4,7 +4,6 @@ import com.cryptomorin.xseries.XMaterial;
 import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.bukkit.inventory.InventoryAddons;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.data.account.gang.Gang;
@@ -13,6 +12,7 @@ import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.user.User;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.InventoryUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.color.ColorUtil;
 import net.wesjd.anvilgui.AnvilGUI;
@@ -133,10 +133,10 @@ public class Phone {
 			                         // show taxi services
 		                         });
 
-		InventoryAddons.verticalLine(inventoryHandler, 2);
-		InventoryAddons.verticalLine(inventoryHandler, 8);
+		InventoryUtil.verticalLine(inventoryHandler, 2);
+		InventoryUtil.verticalLine(inventoryHandler, 8);
 
-		InventoryAddons.fillInventory(inventoryHandler);
+		InventoryUtil.fillInventory(inventoryHandler);
 	}
 
 	private void gangInventory(User<Player> user, GangManager gangManager,
@@ -260,13 +260,13 @@ public class Phone {
 			                multiInventory.open(player1);
 		                });
 
-		InventoryAddons.verticalLine(newGang, 2);
-		InventoryAddons.verticalLine(newGang, 8);
+		InventoryUtil.verticalLine(newGang, 2);
+		InventoryUtil.verticalLine(newGang, 8);
 
-		InventoryAddons.horizontalLine(newGang, 1);
-		InventoryAddons.horizontalLine(newGang, newGang.getSize() / 9);
+		InventoryUtil.horizontalLine(newGang, 1);
+		InventoryUtil.horizontalLine(newGang, newGang.getSize() / 9);
 
-		InventoryAddons.fillInventory(newGang);
+		InventoryUtil.fillInventory(newGang);
 
 		newGang.open(user.getUser());
 	}

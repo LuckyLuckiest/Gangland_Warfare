@@ -1,15 +1,16 @@
-package me.luckyraven.bukkit.inventory;
+package me.luckyraven.util;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.google.common.base.Preconditions;
 import me.luckyraven.bukkit.ItemBuilder;
+import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Arrays;
 
-public class InventoryAddons {
+public class InventoryUtil {
 
 	public static void aroundSlot(InventoryHandler inventoryHandler, int slot, Material material) {
 		ItemBuilder itemBuilder = new ItemBuilder(material);
@@ -60,7 +61,8 @@ public class InventoryAddons {
 		}
 	}
 
-	public static void horizontalLine(InventoryHandler inventoryHandler, int row, Material material, String name, boolean all) {
+	public static void horizontalLine(InventoryHandler inventoryHandler, int row, Material material, String name,
+	                                  boolean all) {
 		int rows = inventoryHandler.getSize() / 9;
 		Preconditions.checkArgument(row > 0 && row < rows + 1,
 		                            String.format("Rows need to be between 1 and %d inclusive", rows));
@@ -97,7 +99,8 @@ public class InventoryAddons {
 		}
 	}
 
-	public static void verticalLine(InventoryHandler inventoryHandler, int column, Material material, String name, boolean all) {
+	public static void verticalLine(InventoryHandler inventoryHandler, int column, Material material, String name,
+	                                boolean all) {
 		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
 
 		ItemBuilder itemBuilder = new ItemBuilder(material);
@@ -136,20 +139,12 @@ public class InventoryAddons {
 	}
 
 	public static Material getFillItem() {
-		Material item = XMaterial.matchXMaterial(SettingAddon.getInventoryFillItem())
-		                         .stream()
-		                         .toList()
-		                         .get(0)
-		                         .parseMaterial();
+		Material item = XMaterial.valueOf(SettingAddon.getInventoryFillItem()).parseMaterial();
 		return item != null ? item : XMaterial.BLACK_STAINED_GLASS_PANE.parseMaterial();
 	}
 
 	public static Material getLineItem() {
-		Material item = XMaterial.matchXMaterial(SettingAddon.getInventoryLineItem())
-		                         .stream()
-		                         .toList()
-		                         .get(0)
-		                         .parseMaterial();
+		Material item = XMaterial.valueOf(SettingAddon.getInventoryLineItem()).parseMaterial();
 		return item != null ? item : XMaterial.WHITE_STAINED_GLASS_PANE.parseMaterial();
 	}
 
