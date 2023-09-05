@@ -8,6 +8,7 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -75,7 +76,7 @@ public abstract class DatabaseHandler {
 				this.database = new SQLite(plugin);
 
 				StringBuilder schemaLoc = new StringBuilder(plugin.getDataFolder().getAbsolutePath());
-				schemaLoc.append("\\").append(getSchema()).append(".db");
+				schemaLoc.append(File.separator).append(getSchema()).append(".db");
 
 				try {
 					createSchema();
@@ -116,8 +117,8 @@ public abstract class DatabaseHandler {
 	}
 
 	public String getSchemaName() {
-		return getSchema().lastIndexOf("\\") != -1 ? getSchema().substring(getSchema().lastIndexOf("\\") + 1)
-		                                           : getSchema();
+		return getSchema().lastIndexOf(File.separator) != -1 ? getSchema().substring(
+				getSchema().lastIndexOf(File.separator) + 1) : getSchema();
 	}
 
 	private void useSQLite(String schema) {

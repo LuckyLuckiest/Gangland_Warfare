@@ -51,23 +51,29 @@ public class FileManager {
 	}
 
 	public void reloadFiles() {
-		for (FileHandler file : files) file.reloadData();
+		for (FileHandler file : files)
+			try {
+				file.reloadData();
+			} catch (IOException exception) {
+				plugin.getLogger().warning(
+						String.format(UnhandledError.FILE_LOADER_ERROR + " %s.%s: %s", file.getName(),
+						              file.getFileType(), exception.getMessage()));
+			}
 	}
 
 	public YamlConfiguration loadFromResources(String resourceFile) throws IOException, InvalidConfigurationException {
-		// tightly coupled to settings file
-		checkFileLoaded("settings");
-
-		File        file = new File(plugin.getDataFolder().getAbsolutePath() + "\\" + resourceFile);
+		File        file = new File(plugin.getDataFolder().getAbsolutePath() + File.separator + resourceFile);
 		InputStream inputStream;
 
 		// Checks for the file in system
 		if (plugin.getDataFolder().exists() && file.exists()) inputStream = new FileInputStream(file);
 			// Checks for the file in resources
-		else inputStream = plugin.getResource(resourceFile.replace("\\", "/"));
+		else inputStream = plugin.getResource(resourceFile.replace(File.separator, "/"));
 
-		if (inputStream == null) throw new FileNotFoundException(
-				String.format("%s is not registered!", resourceFile.substring(resourceFile.lastIndexOf("\\") + 1)));
+		if (inputStream == null) {
+			throw new FileNotFoundException(String.format("%s is not registered!", resourceFile.substring(
+					resourceFile.lastIndexOf(File.separator) + 1)));
+		}
 
 		YamlConfiguration yamlConfiguration = new YamlConfiguration();
 		yamlConfiguration.load(new InputStreamReader(inputStream, StandardCharsets.UTF_8));

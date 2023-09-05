@@ -8,6 +8,7 @@ import me.luckyraven.database.DatabaseHandler;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -52,7 +53,7 @@ public class UserDatabase extends DatabaseHandler {
 	public String getSchema() {
 		return switch (getType()) {
 			case DatabaseHandler.MYSQL -> schema;
-			case DatabaseHandler.SQLITE -> "database\\" + this.schema;
+			case DatabaseHandler.SQLITE -> "database" + File.separator + this.schema;
 			default -> null;
 		};
 	}
