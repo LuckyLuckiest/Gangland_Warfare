@@ -3,8 +3,8 @@ package me.luckyraven.bukkit.inventory;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
 import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.TriConsumer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -50,8 +50,7 @@ public class InventoryHandler implements Listener {
 		this.plugin = plugin;
 		this.displayTitle = title;
 
-		String data = player == null ? "null_" + ID++ : player.getUniqueId().toString();
-		this.title = new NamespacedKey(plugin, namespacedKey.getKey() + "_" + data);
+		this.title = new NamespacedKey(plugin, playerInventoryTitle(player, namespacedKey));
 
 		int realSize = factorOfNine(size);
 		this.size = Math.min(realSize, MAX_SLOTS);
@@ -64,8 +63,12 @@ public class InventoryHandler implements Listener {
 		INVENTORIES.put(this.title, this);
 	}
 
-	public InventoryHandler(JavaPlugin plugin, String title, int size, Player player) {
+	public InventoryHandler(JavaPlugin plugin, String title, int size, @Nullable Player player) {
 		this(plugin, title, size, player, new NamespacedKey(plugin, titleRefactor(title)));
+	}
+
+	public InventoryHandler(JavaPlugin plugin, String title, int size) {
+		this(plugin, title, size, null);
 	}
 
 	public static String titleRefactor(@NotNull String title) {
@@ -100,6 +103,11 @@ public class InventoryHandler implements Listener {
 
 	private int factorOfNine(int value) {
 		return (int) Math.ceil((double) value / 9) * 9;
+	}
+
+	public String playerInventoryTitle(@Nullable Player player, NamespacedKey namespacedKey) {
+		String data = player == null ? "null_" + ID++ : player.getUniqueId().toString();
+		return namespacedKey.getKey() + "_" + data;
 	}
 
 	public void rename(String name) {
@@ -159,6 +167,10 @@ public class InventoryHandler implements Listener {
 	public void setItem(int slot, ItemStack itemStack, boolean draggable,
 	                    TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
 		setItem(slot, new ItemBuilder(itemStack), draggable, clickable);
+	}
+
+	public boolean itemOccupied(int slot) {
+		return inventory.getItem(slot) != null;
 	}
 
 	public void clear() {
