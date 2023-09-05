@@ -122,23 +122,18 @@ public class FileHandler {
 		File oldFile = new File(plugin.getDataFolder(), directory + "-old" + fileType);
 
 		if (oldFile.exists()) {
-			File aOldFile;
-			int  i = 0;
-			do aOldFile = new File(plugin.getDataFolder(), directory + "-old (" + ++i + ")" + fileType);
-			while (aOldFile.exists());
-			try {
-				Files.move(file.toPath(), aOldFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			} catch (IOException exception) {
-				plugin.getLogger().warning(
-						String.format(UnhandledError.FILE_EDIT_ERROR + " %s to %s: %s", aOldFile.getName(),
-						              file.getName(), exception.getMessage()));
-			}
-		} else try {
+			int i = 0;
+			do oldFile = new File(plugin.getDataFolder(), directory + "-old (" + ++i + ")" + fileType);
+			while (oldFile.exists());
+		}
+
+		try {
 			Files.move(file.toPath(), oldFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException exception) {
-			plugin.getLogger().warning(
-					String.format(UnhandledError.FILE_EDIT_ERROR + " %s to %s: %s", oldFile.getName(), file.getName(),
-					              exception.getMessage()));
+			String message = String.format(UnhandledError.FILE_EDIT_ERROR + " %s to %s: %s", oldFile.getName(),
+			                               file.getName(), exception.getMessage());
+			plugin.getLogger().warning(message);
+			return;
 		}
 
 		// create a new file since the previous one was moved
