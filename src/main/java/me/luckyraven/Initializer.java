@@ -3,7 +3,6 @@ package me.luckyraven;
 import lombok.Getter;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.scoreboard.ScoreboardManager;
-import me.luckyraven.bukkit.scoreboard.driver.DriverHandler;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.CommandTabCompleter;
@@ -37,7 +36,9 @@ import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.ScoreboardAddon;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.inventory.InventoryLoader;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.gang.GangMembersDamage;
 import me.luckyraven.listener.player.*;
@@ -73,8 +74,9 @@ public final class Initializer {
 	// Addons
 	private @Getter SettingAddon        settingAddon;
 	private @Getter LanguageLoader      languageLoader;
+	private @Getter ScoreboardAddon     scoreboardAddon;
+	private @Getter InventoryLoader     inventoryLoader;
 	private @Getter GanglandPlaceholder placeholder;
-	private @Getter DriverHandler       driverHandler;
 
 	public Initializer(Gangland gangland) {
 		this.gangland = gangland;
@@ -154,10 +156,10 @@ public final class Initializer {
 	@SuppressWarnings("CommentedOutCode")
 	private void files() {
 		fileManager.addFile(new FileHandler(gangland, "settings", ".yml"), true);
-		addonsLoader();
-
 		fileManager.addFile(new FileHandler(gangland, "scoreboard", ".yml"), true);
 		scoreboardManager = new ScoreboardManager(gangland);
+
+		addonsLoader();
 
 //		fileManager.addFile(new FileHandler("kits", ".yml"));
 //		fileManager.addFile(new FileHandler("ammunition", ".yml"));
@@ -165,8 +167,18 @@ public final class Initializer {
 
 	public void addonsLoader() {
 		settingAddon = new SettingAddon(fileManager);
+		languageLoader = new LanguageLoader(gangland);
 
-		languageLoader = new LanguageLoader(gangland, fileManager);
+		scoreboardLoader();
+		inventoryLoader();
+	}
+
+	public void scoreboardLoader() {
+		scoreboardAddon = new ScoreboardAddon(fileManager);
+	}
+
+	public void inventoryLoader() {
+		inventoryLoader = new InventoryLoader(gangland);
 	}
 
 	private void databases() {

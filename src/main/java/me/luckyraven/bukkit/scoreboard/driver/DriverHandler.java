@@ -3,8 +3,8 @@ package me.luckyraven.bukkit.scoreboard.driver;
 import fr.mrmicky.fastboard.FastBoard;
 import lombok.Getter;
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.scoreboard.ScoreboardManager;
 import me.luckyraven.bukkit.scoreboard.part.Line;
+import me.luckyraven.file.configuration.ScoreboardAddon;
 
 import java.util.List;
 
@@ -20,10 +20,10 @@ public abstract class DriverHandler {
 		this.gangland = gangland;
 		this.fastBoard = fastBoard;
 
-		ScoreboardManager manager = gangland.getInitializer().getScoreboardManager();
+		ScoreboardAddon addon = gangland.getInitializer().getScoreboardAddon();
 
-		this.lines = manager.getLines();
-		this.title = manager.getTitle();
+		this.lines = addon.getLines();
+		this.title = addon.getTitle();
 
 		this.lines.add(title);
 
