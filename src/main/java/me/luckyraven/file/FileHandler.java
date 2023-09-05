@@ -19,14 +19,12 @@ import java.util.Objects;
 
 public class FileHandler {
 
-	@Getter
-	private final String     name;
-	private final String     fileType;
-	private final JavaPlugin plugin;
+	private final         JavaPlugin plugin;
+	private final @Getter String     name;
+	private final         String     fileType;
 
 	private File   file;
 	private String directory;
-
 
 	private @Getter FileConfiguration fileConfiguration;
 	private @Getter boolean           loaded;
@@ -35,6 +33,12 @@ public class FileHandler {
 	@Setter
 	private String configVersion;
 
+	public FileHandler(JavaPlugin plugin, File file) throws IOException {
+		this(plugin, file.getName(), file.getName().substring(file.getName().lastIndexOf(".")));
+		this.file = file;
+
+		registerYamlFile();
+	}
 
 	public FileHandler(JavaPlugin plugin, String name, String fileType) {
 		this(plugin, name, "", fileType);
@@ -44,42 +48,60 @@ public class FileHandler {
 		this.plugin = plugin;
 		this.name = name;
 		this.fileType = fileType.startsWith(".") ? fileType : "." + fileType;
-		this.directory = directory.isEmpty() ? name : directory + "\\" + name;
+		this.directory = directory.isEmpty() ? name : directory + File.separator + name;
 		this.loaded = false;
 		this.configVersion = plugin.getDescription().getVersion();
 	}
 
+	private void createNewFile(boolean inJar) throws IOException {
+		if (file == null) file = new File(plugin.getDataFolder(), directory + fileType);
+
+		if (file.exists()) return;
+
+		file.getParentFile().mkdirs();
+		if (plugin.getResource(directory + fileType) != null && inJar) plugin.saveResource(directory + fileType, false);
+		else {
+			int dir = file.getName().lastIndexOf(File.separator);
+
+			if (dir != -1) {
+				File folder = new File(plugin.getDataFolder(), file.getName().substring(0, dir));
+
+				// create a new folder
+				if (!folder.exists()) folder.mkdir();
+			}
+			file.createNewFile();
+		}
+	}
+
 	public void create(boolean inJar) throws IOException {
-		file = new File(plugin.getDataFolder(), directory + fileType);
+		createNewFile(inJar);
 
-		if (!file.exists()) {
-			file.getParentFile().mkdirs();
-			if (plugin.getResource(directory + fileType) != null && inJar) plugin.saveResource(directory + fileType,
-			                                                                                   false);
-			else {
-				int dir = file.getName().lastIndexOf("\\");
+		registerYamlFile();
+	}
 
-				if (dir != -1) {
-					File folder = new File(plugin.getDataFolder(), file.getName().substring(0, dir));
+	private void registerYamlFile() throws IOException {
+		if (!fileType.equals(".yml")) return;
+		fileConfiguration = new YamlConfiguration();
+		try (FileInputStream inputStream = new FileInputStream(file); InputStreamReader reader = new InputStreamReader(
+				inputStream, StandardCharsets.UTF_8)) {
+			fileConfiguration.load(reader);
+			loaded = true;
 
-					// create a new folder
-					if (!folder.exists()) folder.mkdir();
-				}
-				file.createNewFile();
-			}
+			validateConfigVersion();
+		} catch (InvalidConfigurationException exception) {
+			loaded = false;
+		}
+	}
+
+	private boolean validateConfigVersion() throws IOException {
+		String configVersion = fileConfiguration.getString("Config_Version");
+		if (configVersion != null) if (!Objects.equals(fileConfiguration.getString("Config_Version"),
+		                                               this.configVersion)) {
+			createNewFile();
+			return true;
 		}
 
-		if (fileType.equals(".yml")) {
-			fileConfiguration = new YamlConfiguration();
-			try (FileInputStream inputStream = new FileInputStream(file);
-			     InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
-				fileConfiguration.load(reader);
-				loaded = true;
-				if (!Objects.equals(fileConfiguration.getString("Config_Version"), configVersion)) createNewFile();
-			} catch (InvalidConfigurationException exception) {
-				loaded = false;
-			}
-		}
+		return false;
 	}
 
 	public void delete() throws IOException {
@@ -95,7 +117,8 @@ public class FileHandler {
 		}
 	}
 
-	public void createNewFile() {
+	public void createNewFile() throws IOException {
+		if (file == null) throw new IOException("File is not initialized");
 		File oldFile = new File(plugin.getDataFolder(), directory + "-old" + fileType);
 
 		if (oldFile.exists()) {
@@ -118,11 +141,12 @@ public class FileHandler {
 					              exception.getMessage()));
 		}
 
+		// create a new file since the previous one was moved
+		createNewFile(true);
 		plugin.getLogger().info(String.format("%s%s is an old build or corrupted, creating a new one", name, fileType));
 
 		try (FileInputStream inputStream = new FileInputStream(file); InputStreamReader reader = new InputStreamReader(
 				inputStream, StandardCharsets.UTF_8)) {
-			plugin.saveResource(directory + fileType, false);
 			fileConfiguration.load(reader);
 			loaded = true;
 		} catch (IOException | InvalidConfigurationException ignored) {
@@ -130,7 +154,7 @@ public class FileHandler {
 		}
 	}
 
-	public void reloadData() {
+	private void reload() {
 		// throwing fileConfiguration
 		if (fileConfiguration != null) fileConfiguration = null;
 
@@ -138,12 +162,20 @@ public class FileHandler {
 		fileConfiguration = YamlConfiguration.loadConfiguration(file);
 	}
 
+	public void reloadData() throws IOException {
+		// reload to apply changes
+		reload();
+
+		// need to check configuration was changed
+		if (validateConfigVersion()) reload();
+	}
+
 	public String getDirectory() {
 		return file.getAbsolutePath();
 	}
 
 	public void setDirectory(String directory) {
-		this.directory = directory + "\\" + name;
+		this.directory = directory + File.separator + name;
 	}
 
 	public String getFileType() {
