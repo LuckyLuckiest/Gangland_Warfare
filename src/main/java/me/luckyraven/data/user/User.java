@@ -25,7 +25,7 @@ import java.util.List;
  */
 @Getter
 public class User<T extends OfflinePlayer> {
-	
+
 	private final T                   user;
 	private final List<Account<?, ?>> linkedAccounts;
 	private final Bounty              bounty;
@@ -155,8 +155,8 @@ public class User<T extends OfflinePlayer> {
 
 	@Override
 	public String toString() {
-		return String.format("User:{data=%s,kd=%.2f,balance=%.2f,level=%.2f,bounty=%.2f,gangId=%d,permissions=%s}",
-		                     user, getKillDeathRatio(), economy.getBalance(), bounty.getAmount(), level.getExperience(),
+		return String.format("User:{data=%s,kd=%.2f,balance=%.2f,level=%d,bounty=%.2f,gangId=%d,permissions=%s}", user,
+		                     getKillDeathRatio(), economy.getBalance(), level.getLevelValue(), bounty.getAmount(),
 		                     gangId, permissionAttachment != null ? permissionAttachment.getPermissions()
 		                                                                                .keySet()
 		                                                                                .stream()
