@@ -216,6 +216,16 @@ public class DebugCommand extends CommandHandler {
 			                                   .toArray(String[]::new));
 		});
 
+		Argument specialInventories = new Argument("special", getArgumentTree(), (argument, sender, args) -> {
+			sender.sendMessage(InventoryHandler.getSpecialInventories()
+			                                   .keySet()
+			                                   .stream()
+			                                   .map(NamespacedKey::getKey)
+			                                   .toArray(String[]::new));
+		});
+
+		inventoriesData.addSubArgument(specialInventories);
+
 		Argument checkPerm = new Argument("check-perm", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage("Missing argument <permission>");
 		});
