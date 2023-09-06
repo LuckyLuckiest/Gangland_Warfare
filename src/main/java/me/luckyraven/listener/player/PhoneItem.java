@@ -2,19 +2,18 @@ package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.data.user.User;
+import me.luckyraven.data.user.UserDataInitEvent;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.phone.Phone;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -29,8 +28,8 @@ public class PhoneItem implements Listener {
 		this.userManager = gangland.getInitializer().getUserManager();
 	}
 
-	@EventHandler(priority = EventPriority.LOW)
-	public void onJoinGivePhone(PlayerJoinEvent event) {
+	@EventHandler
+	public void onJoinGivePhone(UserDataInitEvent event) {
 		// when the user joins, check if their inventory contains the specific nbt item
 		// if they don't have the item then add it to the inventory
 		Player player = event.getPlayer();
@@ -38,11 +37,10 @@ public class PhoneItem implements Listener {
 
 		if (!Phone.hasPhone(player)) phone.addPhoneToInventory(player);
 
-		User<Player> user = userManager.getUser(player);
-		user.setPhone(phone);
+		event.getUser().setPhone(phone);
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler
 	public void onPhoneInventoryInteract(InventoryClickEvent event) {
 		// Prevent the phone item from being thrown or moved in the inventory
 		if (event.getClickedInventory() == null) return;
@@ -57,7 +55,7 @@ public class PhoneItem implements Listener {
 		event.setCancelled(true);
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler
 	public void onPhoneItemInteract(PlayerInteractEvent event) {
 		ItemStack heldItem = event.getItem();
 
