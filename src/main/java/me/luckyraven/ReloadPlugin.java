@@ -1,5 +1,6 @@
 package me.luckyraven;
 
+import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.scoreboard.Scoreboard;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
@@ -7,6 +8,7 @@ import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.user.User;
+import me.luckyraven.data.user.UserDataInitEvent;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseManager;
@@ -68,7 +70,7 @@ public class ReloadPlugin {
 	}
 
 	/**
-	 *
+	 * Reloads the scoreboard content from the file.
 	 */
 	public void scoreboardReload() {
 		// reload scoreboard file
@@ -97,6 +99,12 @@ public class ReloadPlugin {
 		}
 	}
 
+	public void inventoryReload() {
+		// Simple inventory reload for special inventories ONLY
+		InventoryHandler.removeAllSpecialInventories();
+		initializer.inventoryLoader();
+	}
+
 	/**
 	 * Initializes the user and new members data (effective for reloads).
 	 *
@@ -105,19 +113,6 @@ public class ReloadPlugin {
 	 * {@link CreateAccount}, {@link UserDatabase}, and {@link GangDatabase} initialization.
 	 */
 	public void userInitialize(boolean resetCache) {
-		ListenerManager listenerManager = initializer.getListenerManager();
-		CreateAccount createAccount = listenerManager.getListeners()
-		                                             .stream()
-		                                             .filter(listener -> listener instanceof CreateAccount)
-		                                             .map(listener -> (CreateAccount) listener)
-		                                             .findFirst()
-		                                             .orElse(null);
-
-		if (createAccount == null) {
-			Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find CreateAccount class.");
-			return;
-		}
-
 		DatabaseManager databaseManager = initializer.getDatabaseManager();
 
 		UserDatabase userHandler = databaseManager.getDatabases().stream().filter(
@@ -163,7 +158,11 @@ public class ReloadPlugin {
 					if (!Phone.hasPhone(player)) phone.addPhoneToInventory(player);
 				}
 
-				createAccount.initializeUserData(newUser, userHandler);
+				initializer.getUserManager().initializeUserData(newUser, userHandler);
+
+				UserDataInitEvent userDataInitEvent = new UserDataInitEvent(newUser);
+				Bukkit.getPluginManager().callEvent(userDataInitEvent);
+
 				userManager.add(newUser);
 
 				// this member doesn't have a gang because they are new
@@ -171,13 +170,13 @@ public class ReloadPlugin {
 
 				// initialize the rank permissions
 				if (member != null) {
-					createAccount.initializeUserPermission(newUser, member);
+					initializer.getUserManager().initializeUserPermission(newUser, member);
 					continue;
 				}
 
 				// for a new member
 				Member newMember = new Member(player.getUniqueId());
-				createAccount.initializeMemberData(newMember, memberHandler);
+				initializer.getMemberManager().initializeMemberData(newMember, memberHandler);
 				memberManager.add(newMember);
 			}
 	}
