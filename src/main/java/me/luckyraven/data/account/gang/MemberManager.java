@@ -3,9 +3,12 @@ package me.luckyraven.data.account.gang;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
+import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.GangDatabase;
+import me.luckyraven.file.configuration.SettingAddon;
 
+import java.sql.Types;
 import java.util.*;
 
 public class MemberManager {
@@ -41,6 +44,34 @@ public class MemberManager {
 
 				Gang gang = gangManager.getGang(id);
 				if (gang != null) gang.getGroup().add(member);
+			}
+		});
+	}
+
+	public void initializeMemberData(Member member, GangDatabase gangDatabase) {
+		DatabaseHelper helper = new DatabaseHelper(gangland, gangDatabase);
+
+		helper.runQueries(database -> {
+			Database config = database.table("members");
+
+			Object[] memberInfo = config.select("uuid = ?", new Object[]{member.getUuid()}, new int[]{Types.CHAR},
+			                                    new String[]{"*"});
+
+			// create member data into a database
+			if (memberInfo.length == 0) {
+				if (!SettingAddon.isAutoSave()) gangDatabase.insertMemberTable(member);
+			} else {
+				RankManager rankManager = gangland.getInitializer().getRankManager();
+
+				int    gangId       = (int) memberInfo[1];
+				double contribution = (double) memberInfo[2];
+				Rank   rank         = rankManager.get(String.valueOf(memberInfo[3]));
+				long   gangJoin     = (long) memberInfo[4];
+
+				member.setGangId(gangId);
+				member.setContribution(contribution);
+				member.setRank(rank);
+				member.setGangJoinDateLong(gangJoin);
 			}
 		});
 	}
