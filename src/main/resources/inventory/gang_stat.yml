@@ -31,7 +31,7 @@ Slots:
       Name: "&bMembers"
       Lore:
          - "&a%gang_online-members_size%&7/&e%gang_members_size%"
-      OnInventoryClick:
+      OnClick:
          Inventory: users_stat
    22:
       Item: GOLD_INGOT
@@ -44,7 +44,7 @@ Slots:
       Name: "&bAlly"
       Lore:
          - "&e%gang_ally_size%"
-      OnInventoryClick:
+      OnClick:
          Inventory: alliance_stat
    31:
       Item: WRITABLE_BOOK
