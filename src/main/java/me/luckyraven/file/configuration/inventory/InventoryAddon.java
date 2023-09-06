@@ -11,7 +11,9 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.Event;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryEvent;
+import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.player.PlayerEvent;
 
 import java.io.File;
@@ -29,10 +31,13 @@ public class InventoryAddon {
 
 	static {
 		// initialize player events
-		loadEventSubclasses(playerEvents, PlayerEvent.class);
+//		loadEventSubclasses(playerEvents, PlayerEvent.class);
 
 		// initialize inventory events
-		loadEventSubclasses(inventoryEvents, InventoryEvent.class);
+		inventoryEvents.put("OnClick", InventoryClickEvent.class);
+		inventoryEvents.put("OnInteract", InventoryInteractEvent.class);
+		inventoryEvents.put("OnClose", InventoryCloseEvent.class);
+		inventoryEvents.put("OnInventory", InventoryEvent.class);
 	}
 
 	public static void registerInventory(Gangland gangland, FileHandler fileHandler) {
@@ -44,7 +49,7 @@ public class InventoryAddon {
 
 		// information section
 		String tempName = config.getString(information + "Name");
-		if (tempName == null || tempName.isEmpty()) tempName = name;
+		if (tempName == null || tempName.isEmpty()) tempName = name.substring(0, name.lastIndexOf('.'));
 		String displayName = config.getString(information + "Display_Name");
 		int    size        = config.getInt(information + "Size");
 		String type        = config.getString(information + "Type");
@@ -58,7 +63,7 @@ public class InventoryAddon {
 		List<Integer> configVertical   = config.getIntegerList(information + "Configuration.Line.Vertical");
 		List<Integer> configHorizontal = config.getIntegerList(information + "Configuration.Line.Horizontal");
 
-		InventoryHandler inventoryHandler = new InventoryHandler(gangland, displayName, size);
+		InventoryHandler inventoryHandler = new InventoryHandler(gangland, displayName, size, tempName, true);
 
 		// slots section
 		for (int slot = 0; slot < inventoryHandler.getSize(); ++slot) {
