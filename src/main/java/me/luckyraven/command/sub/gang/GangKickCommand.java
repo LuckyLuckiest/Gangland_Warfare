@@ -1,6 +1,7 @@
 package me.luckyraven.command.sub.gang;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.Initializer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
@@ -16,7 +17,6 @@ import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
-import me.luckyraven.listener.player.CreateAccount;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.UnhandledError;
@@ -119,20 +119,6 @@ class GangKickCommand extends SubArgument {
 			else {
 				targetUser = new User<>(offlinePlayer);
 
-				CreateAccount createAccount = gangland.getInitializer()
-				                                      .getListenerManager()
-				                                      .getListeners()
-				                                      .stream()
-				                                      .filter(listener -> listener instanceof CreateAccount)
-				                                      .map(listener -> (CreateAccount) listener)
-				                                      .findFirst()
-				                                      .orElse(null);
-
-				if (createAccount == null) {
-					Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find CreateAccount class.");
-					return;
-				}
-
 				DatabaseManager databaseManager = gangland.getInitializer().getDatabaseManager();
 
 				UserDatabase userHandler = databaseManager.getDatabases()
@@ -147,9 +133,13 @@ class GangKickCommand extends SubArgument {
 					return;
 				}
 
-				createAccount.initializeUserData(targetUser, userHandler);
+				Initializer initializer = gangland.getInitializer();
 
-				gangland.getInitializer().getOfflineUserManager().add((User<OfflinePlayer>) targetUser);
+				initializer.getUserManager().initializeUserData(targetUser, userHandler);
+
+				// no user initializer event called so far (need to work with it until fully compatible)
+
+				initializer.getOfflineUserManager().add((User<OfflinePlayer>) targetUser);
 			}
 
 			if (targetUser.getUser() instanceof Player p) {
