@@ -6,7 +6,6 @@ import me.luckyraven.Gangland;
 import me.luckyraven.data.placeholder.GanglandPlaceholder;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,19 +41,16 @@ public class Line {
 		return contents.get(index);
 	}
 
-	public String update(JavaPlugin plugin, Player player) {
+	public String update(Gangland gangland, Player player) {
 		String data       = getCurrentContent();
 		String newContent = "";
 
-		if (plugin instanceof Gangland gangland) {
-			if (gangland.getPlaceholderAPIExpansion() != null) {
-				if (PlaceholderAPI.containsPlaceholders(data)) newContent = PlaceholderAPI.setPlaceholders(player,
-				                                                                                           data);
-			} else {
-				GanglandPlaceholder placeholder = gangland.getInitializer().getPlaceholder();
+		if (gangland.getPlaceholderAPIExpansion() != null) {
+			if (PlaceholderAPI.containsPlaceholders(data)) newContent = PlaceholderAPI.setPlaceholders(player, data);
+		} else {
+			GanglandPlaceholder placeholder = gangland.getInitializer().getPlaceholder();
 
-				if (placeholder.containsPlaceholder(data)) newContent = placeholder.replacePlaceholder(player, data);
-			}
+			if (placeholder.containsPlaceholder(data)) newContent = placeholder.replacePlaceholder(player, data);
 		}
 
 		if (newContent.isEmpty()) newContent = data;
