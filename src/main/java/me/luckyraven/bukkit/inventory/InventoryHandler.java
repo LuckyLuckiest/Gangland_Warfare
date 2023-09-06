@@ -30,10 +30,12 @@ import java.util.stream.Collectors;
 
 public class InventoryHandler implements Listener {
 
-	public static final   int                                  MAX_SLOTS   = 54;
-	private static final  Map<NamespacedKey, InventoryHandler> INVENTORIES = new HashMap<>();
-	private static        int                                  ID          = 0;
-	private final @Getter int                                  size;
+	public static final  int                                  MAX_SLOTS           = 54;
+	private static final Map<NamespacedKey, InventoryHandler> INVENTORIES         = new HashMap<>();
+	private static final Map<NamespacedKey, InventoryHandler> SPECIAL_INVENTORIES = new HashMap<>();
+
+	private static        int ID = 0;
+	private final @Getter int size;
 
 	private final Map<Integer, TriConsumer<Player, InventoryHandler, ItemBuilder>> clickableSlots;
 
@@ -44,6 +46,23 @@ public class InventoryHandler implements Listener {
 	private @Getter Inventory     inventory;
 	private @Getter NamespacedKey title;
 	private @Getter String        displayTitle;
+
+	public InventoryHandler(JavaPlugin plugin, String title, int size, String special, boolean add) {
+		this.plugin = plugin;
+		this.displayTitle = title;
+
+		this.title = new NamespacedKey(plugin, special);
+
+		int realSize = factorOfNine(size);
+		this.size = Math.min(realSize, MAX_SLOTS);
+
+		this.inventory = Bukkit.createInventory(null, this.size, ChatUtil.color(title));
+		this.draggableSlots = new ArrayList<>();
+		this.clickableSlots = new HashMap<>();
+		this.clickableItems = new HashMap<>();
+
+		if (add) SPECIAL_INVENTORIES.put(this.title, this);
+	}
 
 	public InventoryHandler(JavaPlugin plugin, String title, int size, @Nullable Player player,
 	                        NamespacedKey namespacedKey) {
@@ -68,7 +87,7 @@ public class InventoryHandler implements Listener {
 	}
 
 	public InventoryHandler(JavaPlugin plugin, String title, int size) {
-		this(plugin, title, size, null);
+		this(plugin, title, size, title, true);
 	}
 
 	public static String titleRefactor(@NotNull String title) {
@@ -82,7 +101,7 @@ public class InventoryHandler implements Listener {
 		return new HashMap<>(INVENTORIES);
 	}
 
-	public static void removeAllInventories(Player player) {
+	public static void removeAllPlayerInventories(Player player) {
 		for (NamespacedKey key : getPlayerInventories(player).keySet())
 			removeInventory(key);
 	}
@@ -99,6 +118,19 @@ public class InventoryHandler implements Listener {
 			String        keyUuid = key.getKey().substring(index);
 			return keyUuid.equalsIgnoreCase(uuid);
 		}).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+	}
+
+	public static Map<NamespacedKey, InventoryHandler> getSpecialInventories() {
+		return new HashMap<>(SPECIAL_INVENTORIES);
+	}
+
+	public static void removeAllSpecialInventories() {
+		SPECIAL_INVENTORIES.clear();
+	}
+
+	public static void removeAllInventories() {
+		removeAllSpecialInventories();
+		INVENTORIES.clear();
 	}
 
 	private int factorOfNine(int value) {
@@ -185,7 +217,7 @@ public class InventoryHandler implements Listener {
 		player.closeInventory();
 
 		// need to remove all inventory instances of that player
-		removeAllInventories(player);
+		removeAllPlayerInventories(player);
 	}
 
 	@EventHandler
@@ -213,7 +245,7 @@ public class InventoryHandler implements Listener {
 			Player player = event.getPlayer();
 
 			// remove all the inventories of that player only
-			removeAllInventories(player);
+			removeAllPlayerInventories(player);
 		});
 	}
 
