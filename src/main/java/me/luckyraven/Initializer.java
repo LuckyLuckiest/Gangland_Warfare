@@ -56,37 +56,33 @@ public final class Initializer {
 	private final Gangland gangland;
 
 	// on plugin load
-	private final @Getter InformationManager         informationManager;
-	private final @Getter UserManager<Player>        userManager;
-	private final @Getter UserManager<OfflinePlayer> offlineUserManager;
+	private final @Getter InformationManager informationManager;
 
 	// on plugin enable
-	private @Getter PermissionManager   permissionManager;
-	private @Getter FileManager         fileManager;
-	private @Getter DatabaseManager     databaseManager;
-	private @Getter GangManager         gangManager;
-	private @Getter MemberManager       memberManager;
-	private @Getter ListenerManager     listenerManager;
-	private @Getter CommandManager      commandManager;
-	private @Getter RankManager         rankManager;
-	private @Getter WaypointManager     waypointManager;
-	private @Getter ScoreboardManager   scoreboardManager;
+	private @Getter UserManager<Player>        userManager;
+	private @Getter UserManager<OfflinePlayer> offlineUserManager;
+	private @Getter PermissionManager          permissionManager;
+	private @Getter FileManager                fileManager;
+	private @Getter DatabaseManager            databaseManager;
+	private @Getter GangManager                gangManager;
+	private @Getter MemberManager              memberManager;
+	private @Getter ListenerManager            listenerManager;
+	private @Getter CommandManager             commandManager;
+	private @Getter RankManager                rankManager;
+	private @Getter WaypointManager            waypointManager;
+	private @Getter ScoreboardManager          scoreboardManager;
 	// Addons
-	private @Getter SettingAddon        settingAddon;
-	private @Getter LanguageLoader      languageLoader;
-	private @Getter ScoreboardAddon     scoreboardAddon;
-	private @Getter InventoryLoader     inventoryLoader;
-	private @Getter GanglandPlaceholder placeholder;
+	private @Getter SettingAddon               settingAddon;
+	private @Getter LanguageLoader             languageLoader;
+	private @Getter ScoreboardAddon            scoreboardAddon;
+	private @Getter InventoryLoader            inventoryLoader;
+	private @Getter GanglandPlaceholder        placeholder;
 
 	public Initializer(Gangland gangland) {
 		this.gangland = gangland;
 		// If at any instance these data failed to load, then the plugin will not function
 		informationManager = new InformationManager();
 		informationManager.processCommands();
-
-		// User manager
-		userManager = new UserManager<>();
-		offlineUserManager = new UserManager<>();
 	}
 
 	public void postInitialize() {
@@ -112,6 +108,10 @@ public final class Initializer {
 		                                          .map(Permission::getName)
 		                                          .filter(permission -> permission.startsWith("gangland"))
 		                                          .collect(Collectors.toSet()));
+
+		// User manager
+		userManager = new UserManager<>(gangland);
+		offlineUserManager = new UserManager<>(gangland);
 
 		// Rank manager
 		rankManager = new RankManager(gangland);
@@ -214,6 +214,7 @@ public final class Initializer {
 		listenerManager.addEvent(new LevelUp(gangland));
 		listenerManager.addEvent(new WaypointTeleport(new Waypoint("dummy")));
 		if (SettingAddon.isPhoneEnabled()) listenerManager.addEvent(new PhoneItem(gangland));
+		if (SettingAddon.isScoreboardEnabled()) listenerManager.addEvent(new PlayerScoreboard(gangland));
 
 		// gang events
 		if (SettingAddon.isGangEnabled()) {
@@ -221,7 +222,7 @@ public final class Initializer {
 		}
 
 		// inventory gui test double listener
-		listenerManager.addEvent(new InventoryHandler(gangland, "dummy", 9, null));
+		listenerManager.addEvent(new InventoryHandler(gangland, "dummy", 9, "dummy_inventory", false));
 	}
 
 	private void commands(Gangland gangland) {
