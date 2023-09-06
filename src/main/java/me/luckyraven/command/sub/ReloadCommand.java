@@ -31,6 +31,7 @@ public class ReloadCommand extends CommandHandler {
 			getGangland().getReloadPlugin().filesReload();
 			databaseReload();
 			scoreboardReload();
+			getGangland().getReloadPlugin().inventoryReload();
 			getGangland().getReloadPlugin().periodicalUpdatesReload();
 		}, true);
 	}
