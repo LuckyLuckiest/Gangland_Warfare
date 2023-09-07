@@ -50,7 +50,7 @@ public class CommandTabCompleter implements TabCompleter {
 		                                                                     .map(CommandHandler::getLabel)
 		                                                                     .toList());
 
-		CommandHandler commandHandler = commandMap.get(args[0]);
+		CommandHandler commandHandler = commandMap.get(args[0].toLowerCase());
 		// this won't solve the case of multiple optional values but would definitely stop the tab completion
 		// end the command tab completion if the size was greater than the height of the tree
 		if (commandHandler != null && args.length > commandHandler.getArgumentTree().height()) return null;
