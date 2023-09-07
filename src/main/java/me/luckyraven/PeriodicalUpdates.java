@@ -61,7 +61,7 @@ public class PeriodicalUpdates {
 		// resetting player inventories
 		Gangland.getLog4jLogger().info("Cache reset...");
 		try {
-			removeInventories();
+			resetCache();
 		} catch (Throwable exception) {
 			Gangland.getLog4jLogger().error("There was an issue resetting the cache...", exception);
 		}
@@ -87,7 +87,11 @@ public class PeriodicalUpdates {
 		this.repeatingTimer.start(true);
 	}
 
-	private void updatingDatabase() {
+	public void resetCache() {
+		removeInventories();
+	}
+
+	public void updatingDatabase() {
 		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
 			DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
