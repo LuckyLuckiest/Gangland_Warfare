@@ -15,7 +15,6 @@ import java.util.Map;
 
 public class ReloadCommand extends CommandHandler {
 
-
 	public ReloadCommand(Gangland gangland) {
 		super(gangland, "reload", false, "rl");
 
@@ -31,7 +30,6 @@ public class ReloadCommand extends CommandHandler {
 			getGangland().getReloadPlugin().filesReload();
 			databaseReload();
 			scoreboardReload();
-			getGangland().getReloadPlugin().inventoryReload();
 			getGangland().getReloadPlugin().periodicalUpdatesReload();
 		}, true);
 	}
@@ -50,11 +48,19 @@ public class ReloadCommand extends CommandHandler {
 			reloadProcess("scoreboard", this::scoreboardReload, false);
 		});
 
+		Argument inventory = new Argument("inventory", getArgumentTree(), (argument, sender, args) -> {
+			reloadProcess("inventory", () -> {
+				getGangland().getPeriodicalUpdates().resetCache();
+				getGangland().getReloadPlugin().inventoryReload();
+			}, false);
+		});
+
 		List<Argument> arguments = new ArrayList<>();
 
 		arguments.add(files);
 		arguments.add(data);
 		arguments.add(scoreboard);
+		arguments.add(inventory);
 
 		getArgument().addAllSubArguments(arguments);
 	}
