@@ -178,7 +178,7 @@ class GangDeleteCommand extends SubArgument {
 					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
 					helper.runQueries(database -> {
-						List<Object[]> allUsers = database.table("account").selectAll();
+						List<Object[]> allUsers = database.table("data").selectAll();
 						List<Object[]> gangUsers = allUsers.parallelStream()
 						                                   .filter(obj -> Arrays.stream(obj)
 						                                                        .anyMatch(o -> o.toString()
