@@ -17,8 +17,8 @@ public class UserDataInitEvent extends Event implements Cancellable {
 
 	private boolean cancelled;
 
-	public UserDataInitEvent(User<Player> user) {
-		super(true);
+	public UserDataInitEvent(boolean async, User<Player> user) {
+		super(async);
 		this.user = user;
 		this.player = user.getUser();
 		this.cancelled = false;

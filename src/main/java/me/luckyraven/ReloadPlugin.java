@@ -160,7 +160,7 @@ public class ReloadPlugin {
 
 				initializer.getUserManager().initializeUserData(newUser, userHandler);
 
-				UserDataInitEvent userDataInitEvent = new UserDataInitEvent(newUser);
+				UserDataInitEvent userDataInitEvent = new UserDataInitEvent(false, newUser);
 				Bukkit.getPluginManager().callEvent(userDataInitEvent);
 
 				userManager.add(newUser);
@@ -177,6 +177,7 @@ public class ReloadPlugin {
 				// for a new member
 				Member newMember = new Member(player.getUniqueId());
 				initializer.getMemberManager().initializeMemberData(newMember, memberHandler);
+
 				memberManager.add(newMember);
 			}
 	}

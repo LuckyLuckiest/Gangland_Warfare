@@ -42,7 +42,7 @@ public final class CreateAccount implements Listener {
 				if (handler instanceof UserDatabase userDatabase) {
 					userManager.initializeUserData(user, userDatabase);
 
-					UserDataInitEvent userDataInitEvent = new UserDataInitEvent(user);
+					UserDataInitEvent userDataInitEvent = new UserDataInitEvent(true, user);
 					Bukkit.getPluginManager().callEvent(userDataInitEvent);
 					break;
 				}
