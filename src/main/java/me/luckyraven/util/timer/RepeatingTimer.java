@@ -6,6 +6,7 @@ import org.bukkit.util.Consumer;
 public class RepeatingTimer extends Timer {
 
 	private final Consumer<RepeatingTimer> task;
+	private       boolean                  justStarted;
 
 	public RepeatingTimer(JavaPlugin plugin, long period, Consumer<RepeatingTimer> task) {
 		this(plugin, 0L, period, task);
@@ -14,6 +15,7 @@ public class RepeatingTimer extends Timer {
 	public RepeatingTimer(JavaPlugin plugin, long delay, long period, Consumer<RepeatingTimer> task) {
 		super(plugin, delay, period);
 		this.task = task;
+		this.justStarted = true;
 	}
 
 	@Override
@@ -23,7 +25,8 @@ public class RepeatingTimer extends Timer {
 			return;
 		}
 
-		runTask();
+		if (!justStarted) runTask();
+		if (justStarted) justStarted = false;
 	}
 
 	public void runTask() {
