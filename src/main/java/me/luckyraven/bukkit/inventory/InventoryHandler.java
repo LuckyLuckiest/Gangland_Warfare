@@ -48,24 +48,7 @@ public class InventoryHandler implements Listener {
 	private @Getter NamespacedKey title;
 	private @Getter String        displayTitle;
 
-	public InventoryHandler(Gangland gangland, String title, int size, String special, boolean add) {
-		this.gangland = gangland;
-		this.displayTitle = title;
-
-		this.title = new NamespacedKey(gangland, special);
-
-		int realSize = factorOfNine(size);
-		this.size = Math.min(realSize, MAX_SLOTS);
-
-		this.inventory = Bukkit.createInventory(null, this.size, ChatUtil.color(title));
-		this.draggableSlots = new ArrayList<>();
-		this.clickableSlots = new HashMap<>();
-		this.clickableItems = new HashMap<>();
-
-		if (add) SPECIAL_INVENTORIES.put(this.title, this);
-	}
-
-	public InventoryHandler(Gangland gangland, String title, int size, User<Player> user, NamespacedKey namespacedKey) {
+	public InventoryHandler(Gangland gangland, String title, int size, NamespacedKey namespacedKey) {
 		this.gangland = gangland;
 		this.displayTitle = title;
 
@@ -78,12 +61,22 @@ public class InventoryHandler implements Listener {
 		this.draggableSlots = new ArrayList<>();
 		this.clickableSlots = new HashMap<>();
 		this.clickableItems = new HashMap<>();
+	}
+
+	public InventoryHandler(Gangland gangland, String title, int size, String special, boolean add) {
+		this(gangland, title, size, new NamespacedKey(gangland, special));
+
+		if (add) SPECIAL_INVENTORIES.put(this.title, this);
+	}
+
+	public InventoryHandler(Gangland gangland, String title, int size, User<Player> user, NamespacedKey namespacedKey) {
+		this(gangland, title, size, namespacedKey);
 
 		user.addInventory(this);
 	}
 
-	public InventoryHandler(Gangland gangland, String title, int size, User<Player> player) {
-		this(gangland, title, size, player, new NamespacedKey(gangland, titleRefactor(title)));
+	public InventoryHandler(Gangland gangland, String title, int size, User<Player> user) {
+		this(gangland, title, size, user, new NamespacedKey(gangland, titleRefactor(title)));
 	}
 
 	public InventoryHandler(Gangland gangland, String title, int size) {
