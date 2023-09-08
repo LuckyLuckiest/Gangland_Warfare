@@ -47,13 +47,15 @@ public class GangCommand extends CommandHandler {
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		UserManager<Player> userManager = getGangland().getInitializer().getUserManager();
-		GangManager         gangManager = getGangland().getInitializer().getGangManager();
+//		GangManager         gangManager = getGangland().getInitializer().getGangManager();
 
 		Player       player = (Player) commandSender;
 		User<Player> user   = userManager.getUser(player);
 
-		if (user.hasGang()) gangStat(getGangland(), user, userManager, gangManager);
-		else help(commandSender, 1);
+		if (!user.hasGang())
+//			gangStat(getGangland(), user, userManager, gangManager);
+//		else
+			help(commandSender, 1);
 	}
 
 	@Override
@@ -178,7 +180,7 @@ public class GangCommand extends CommandHandler {
 	                      GangManager gangManager) {
 		Gang gang = gangManager.getGang(user.getGangId());
 		InventoryHandler gui = new InventoryHandler(gangland, "&6&l" + gang.getDisplayNameString() + "&r gang", 5 * 9,
-		                                            user.getUser());
+		                                            user);
 
 		// balance
 		Material material = itemToBalance(gang);
@@ -203,6 +205,7 @@ public class GangCommand extends CommandHandler {
 		gui.setItem(19, XMaterial.PLAYER_HEAD.parseMaterial(), "&bMembers", new ArrayList<>(
 				            List.of("&a" + gang.getOnlineMembers(userManager).size() + "&7/&e" + gang.getGroup().size())), false,
 		            false, (player, inventory, item) -> {
+					User<Player>    user1 = userManager.getUser(player);
 					Gang            gang1 = gangManager.getGang(userManager.getUser(player).getGangId());
 					List<ItemStack> items = new ArrayList<>();
 
@@ -226,7 +229,7 @@ public class GangCommand extends CommandHandler {
 						items.add(itemBuilder.build());
 					}
 
-					MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, player, items,
+					MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, user1, items,
 					                                                            "&6&lGang Members", false, false, null);
 
 					multi.open(player);
@@ -240,6 +243,7 @@ public class GangCommand extends CommandHandler {
 		// ally
 		gui.setItem(25, XMaterial.REDSTONE.parseMaterial(), "&bAlly", List.of("&e" + gang.getAlly().size()), false,
 		            false, (player, inventory, item) -> {
+					User<Player>    user1 = userManager.getUser(player);
 					Gang            gang1 = gangManager.getGang(userManager.getUser(player).getGangId());
 					List<ItemStack> items = new ArrayList<>();
 
@@ -256,7 +260,7 @@ public class GangCommand extends CommandHandler {
 						items.add(itemBuilder.build());
 					}
 
-					MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, player, items,
+					MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, user1, items,
 					                                                            "&6&lGang Allies", false, false, null);
 
 					multi.open(player);
