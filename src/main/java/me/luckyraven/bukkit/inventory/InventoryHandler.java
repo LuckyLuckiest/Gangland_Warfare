@@ -220,7 +220,7 @@ public class InventoryHandler implements Listener {
 		player.closeInventory();
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onInventoryClick(InventoryClickEvent event) {
 		org.bukkit.inventory.Inventory clickedInventory = event.getClickedInventory();
 		if (clickedInventory == null) return;
