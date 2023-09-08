@@ -1,9 +1,7 @@
 package me.luckyraven.bukkit.scoreboard.part;
 
 import lombok.Getter;
-import me.clip.placeholderapi.PlaceholderAPI;
 import me.luckyraven.Gangland;
-import me.luckyraven.data.placeholder.GanglandPlaceholder;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.entity.Player;
 
@@ -43,15 +41,7 @@ public class Line {
 
 	public String update(Gangland gangland, Player player) {
 		String data       = getCurrentContent();
-		String newContent = "";
-
-		if (gangland.getPlaceholderAPIExpansion() != null) {
-			if (PlaceholderAPI.containsPlaceholders(data)) newContent = PlaceholderAPI.setPlaceholders(player, data);
-		} else {
-			GanglandPlaceholder placeholder = gangland.getInitializer().getPlaceholder();
-
-			if (placeholder.containsPlaceholder(data)) newContent = placeholder.replacePlaceholder(player, data);
-		}
+		String newContent = gangland.usePlaceholder(player, data);
 
 		if (newContent.isEmpty()) newContent = data;
 
@@ -61,7 +51,7 @@ public class Line {
 	}
 
 	public boolean isStatic() {
-		return this instanceof StaticLine || interval == 0 || contents.size() == 1;
+		return this instanceof StaticLine || interval == 0L;
 	}
 
 	@Override

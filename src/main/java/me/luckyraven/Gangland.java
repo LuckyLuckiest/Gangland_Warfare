@@ -2,9 +2,11 @@ package me.luckyraven;
 
 import com.zaxxer.hikari.HikariConfig;
 import lombok.Getter;
+import me.clip.placeholderapi.PlaceholderAPI;
 import me.luckyraven.data.economy.EconomyHandler;
+import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
+import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
 import me.luckyraven.database.DatabaseManager;
-import me.luckyraven.dependency.PlaceholderAPIExpansion;
 import me.luckyraven.file.configuration.SettingAddon;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.logging.log4j.Level;
@@ -12,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
@@ -62,6 +65,17 @@ public final class Gangland extends JavaPlugin {
 
 		// initializes the periodical updates
 		periodicalUpdatesInitializer();
+	}
+
+	public String usePlaceholder(Player player, String text) {
+		if (placeholderAPIExpansion != null) {
+			if (PlaceholderAPI.containsPlaceholders(text)) return PlaceholderAPI.setPlaceholders(player, text);
+		} else {
+			GanglandPlaceholder placeholder = initializer.getPlaceholder();
+			if (placeholder.containsPlaceholder(text)) return placeholder.replacePlaceholder(player, text);
+		}
+
+		return text;
 	}
 
 	void periodicalUpdatesInitializer() {
