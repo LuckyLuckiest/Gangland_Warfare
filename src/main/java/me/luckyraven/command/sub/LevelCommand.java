@@ -43,8 +43,8 @@ public class LevelCommand extends CommandHandler {
 		String currentLevel = String.valueOf(level.getLevelValue());
 		String maxLevel     = String.valueOf(level.getMaxLevel());
 
-		double exp = level.getExperience(), requiredExp = level.experienceCalculation(level.nextLevel()), percentage =
-				exp / requiredExp * 100;
+		double exp = level.getExperience(), requiredExp = level.experienceCalculation(
+				level.nextLevel()), percentage = level.getPercentage();
 
 		String experience         = String.format("%.2f", exp);
 		String requiredExperience = String.format("%.2f", requiredExp);
