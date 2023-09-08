@@ -33,11 +33,11 @@ public class Wanted {
 	}
 
 	public void incrementLevel() {
-		setLevel(increments);
+		setLevel(increments + level);
 	}
 
 	public String getLevelStr() {
-		StringBuilder builder = new StringBuilder(maxLevel);
+		StringBuilder builder   = new StringBuilder(maxLevel);
 		builder.append("★".repeat(level)).append("☆".repeat(Math.max(0, maxLevel - builder.length())));
 		return builder.toString();
 	}
