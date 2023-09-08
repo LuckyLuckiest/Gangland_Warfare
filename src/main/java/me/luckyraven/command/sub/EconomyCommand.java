@@ -15,7 +15,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public class EconomyCommand extends CommandHandler {
@@ -58,9 +61,12 @@ public class EconomyCommand extends CommandHandler {
 		}, getPermission() + ".set");
 
 		Argument amount = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
-			String specifier = args[2].startsWith("@") ? args[2].toLowerCase() : "@" + args[2];
+			String specifier;
+			if (args[2].startsWith("@")) specifier = args[2];
+			else if (args[2].contains("*")) specifier = args[2];
+			else specifier = "@" + args[2];
 
-			if (specifier.equalsIgnoreCase("@me") && !(sender instanceof Player)) {
+			if (specifier.equals("**") && !(sender instanceof Player)) {
 				sender.sendMessage(MessageAddon.NOT_PLAYER.toString());
 				return;
 			}
@@ -114,7 +120,7 @@ public class EconomyCommand extends CommandHandler {
 			}
 		});
 
-		String[] optionalSpecifier = {"@a", "@r", "@p", "@me", "@[<name>]"};
+		String[] optionalSpecifier = {"*", "**", "@[<name>]"};
 		Argument specifier = new OptionalArgument(optionalSpecifier, getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
 		});
@@ -160,9 +166,9 @@ public class EconomyCommand extends CommandHandler {
 	@NotNull
 	private Argument economyReset(HashMap<String, Supplier<List<Player>>> specifiers, UserManager<Player> userManager) {
 		Argument reset = new Argument("reset", getArgumentTree(), (argument, sender, args) -> {
-			String specifierStr = args.length > 2 ? args[2] : "@me";
+			String specifierStr = args.length > 2 ? args[2] : "**";
 
-			if (specifierStr.equalsIgnoreCase("@me") && !(sender instanceof Player)) {
+			if (specifierStr.equals("**") && !(sender instanceof Player)) {
 				sender.sendMessage(MessageAddon.NOT_PLAYER.toString());
 				return;
 			}
@@ -190,50 +196,20 @@ public class EconomyCommand extends CommandHandler {
 	private void collectSpecifiers(HashMap<String, Supplier<List<Player>>> specifiers, CommandSender sender,
 	                               String target) {
 		allPlayers(specifiers);
-		randomPlayer(specifiers);
-		nearestPlayer(specifiers, sender);
 		senderSpecifier(specifiers, sender);
-		if (target == null || target.isEmpty()) target = "@me";
-		if (!target.startsWith("@")) target = "@" + target;
+		if (target == null || target.isEmpty()) target = "**";
+		if (!target.startsWith("@") && !target.equals("**")) target = "@" + target;
 		targetSpecifier(specifiers, target);
 
 		if (!specifiers.containsKey(target)) throw new IllegalArgumentException("Unable to identify this specifier!");
 	}
 
 	private void allPlayers(HashMap<String, Supplier<List<Player>>> specifiers) {
-		specifiers.put("@a", () -> new ArrayList<>(Bukkit.getOnlinePlayers()));
-	}
-
-	private void randomPlayer(HashMap<String, Supplier<List<Player>>> specifiers) {
-		specifiers.put("@r", () -> {
-			List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
-			if (!players.isEmpty()) {
-				Player random = players.get(new Random().nextInt(players.size()));
-				return Collections.singletonList(random);
-			}
-			return Collections.emptyList();
-		});
-	}
-
-	private void nearestPlayer(HashMap<String, Supplier<List<Player>>> specifiers, CommandSender sender) {
-		specifiers.put("@p", () -> {
-			Player nearestPlayer   = null;
-			double closestDistance = Double.MAX_VALUE;
-			if (sender instanceof Player pl) for (Player player : Bukkit.getServer().getOnlinePlayers()) {
-				double distance = player.getLocation().distanceSquared(pl.getLocation());
-				if (distance < closestDistance) {
-					closestDistance = distance;
-					nearestPlayer = player;
-				}
-			}
-			List<Player> selectedPlayers = new ArrayList<>();
-			if (nearestPlayer != null) selectedPlayers.add(nearestPlayer);
-			return selectedPlayers;
-		});
+		specifiers.put("*", () -> new ArrayList<>(Bukkit.getOnlinePlayers()));
 	}
 
 	private void senderSpecifier(HashMap<String, Supplier<List<Player>>> specifiers, CommandSender sender) {
-		specifiers.put("@me", () -> {
+		specifiers.put("**", () -> {
 			List<Player> players = new ArrayList<>();
 			if (sender instanceof Player player) players.add(player);
 			return players;
