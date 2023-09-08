@@ -63,11 +63,13 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		String userStr = "user_";
 
 		if (member == null) return null;
+		Gang gang = gangManager.getGang(member.getGangId());
 
-		if (parameter.equals(userStr + "gang-id")) return String.valueOf(member.getGangId());
+		if (parameter.equals(userStr + "gang-id")) return gang == null ? "NA" : String.valueOf(member.getGangId());
+		if (parameter.equals(userStr + "contribution")) return gang == null ? "NA" : SettingAddon.formatDouble(
+				member.getContribution());
+		if (parameter.equals(userStr + "gang-join-date")) return gang == null ? "NA" : member.getGangJoinDateString();
 		if (parameter.equals(userStr + "rank")) return member.getRank() == null ? "NA" : member.getRank().getName();
-		if (parameter.equals(userStr + "contribution")) return SettingAddon.formatDouble(member.getContribution());
-		if (parameter.equals(userStr + "gang-join-date")) return member.getGangJoinDateString();
 
 		// for user
 		Player onlinePlayer = player.getPlayer();
