@@ -34,7 +34,8 @@ public class FileHandler {
 	private String configVersion;
 
 	public FileHandler(JavaPlugin plugin, File file) throws IOException {
-		this(plugin, file.getName(), file.getName().substring(file.getName().lastIndexOf(".")));
+		this(plugin, file.getName(), file.getParentFile().getPath(),
+		     file.getName().substring(file.getName().lastIndexOf(".")));
 		this.file = file;
 
 		registerYamlFile();
@@ -75,7 +76,6 @@ public class FileHandler {
 
 	public void create(boolean inJar) throws IOException {
 		createNewFile(inJar);
-
 		registerYamlFile();
 	}
 
