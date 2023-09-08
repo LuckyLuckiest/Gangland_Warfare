@@ -6,12 +6,13 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.user.User;
-import me.luckyraven.database.DatabaseHandler;
+import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -24,8 +25,12 @@ import java.util.stream.Collectors;
 
 public final class BalanceCommand extends CommandHandler {
 
+	private final UserManager<Player> userManager;
+
 	public BalanceCommand(Gangland gangland) {
 		super(gangland, "balance", false, "bal");
+
+		this.userManager = gangland.getInitializer().getUserManager();
 
 		List<CommandInformation> list = getCommands().entrySet().stream().filter(
 				entry -> entry.getKey().startsWith("balance")).sorted(Map.Entry.comparingByKey()).map(
@@ -50,44 +55,61 @@ public final class BalanceCommand extends CommandHandler {
 	protected void initializeArguments() {
 		Argument targetBalance = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			// get the target, validate if they are in the system
-			String target = args[1];
+			String       target = args[1];
+			User<Player> user   = userManager.getUser(Bukkit.getPlayer(target));
 
-			for (DatabaseHandler handler : getGangland().getInitializer().getDatabaseManager().getDatabases())
-				if (handler instanceof UserDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(getGangland(), handler);
+			if (user != null) {
+				sender.sendMessage(MessageAddon.BALANCE_TARGET.toString()
+				                                              .replace("%target%", target)
+				                                              .replace("%balance%", SettingAddon.formatDouble(
+						                                              user.getEconomy().getBalance())));
+				return;
+			}
 
-					helper.runQueries(database -> {
-						// get all the user's data
-						List<Object[]> usersData = database.table("data").selectAll();
+			UserDatabase userHandler = getGangland().getInitializer()
+			                                        .getDatabaseManager()
+			                                        .getDatabases()
+			                                        .stream()
+			                                        .filter(handler -> handler instanceof UserDatabase)
+			                                        .map(handler -> (UserDatabase) handler)
+			                                        .findFirst()
+			                                        .orElse(null);
 
-						// get only the uuids
-						Map<UUID, Double> uuids = usersData.stream().collect(
-								Collectors.toMap(objects -> UUID.fromString(String.valueOf(objects[0])),
-								                 objects -> (double) objects[6]));
+			if (userHandler == null) {
+				Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find UserDatabase class.");
+				return;
+			}
 
-						// iterate over all uuids and check if the name is similar to target
-						boolean found = false;
-						for (UUID uuid : uuids.keySet()) {
-							OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-							if (offlinePlayer.getName() == null) continue;
+			DatabaseHelper helper = new DatabaseHelper(getGangland(), userHandler);
 
-							if (offlinePlayer.getName().equalsIgnoreCase(target)) {
-								found = true;
-								sender.sendMessage(MessageAddon.BALANCE_TARGET.toString()
-								                                              .replace("%target%", target)
-								                                              .replace("%balance%",
-								                                                       SettingAddon.formatDouble(
-										                                                       uuids.get(uuid))));
+			helper.runQueries(database -> {
+				// get all the user's data
+				List<Object[]> usersData = database.table("data").selectAll();
 
-								break;
-							}
-						}
+				// get only the uuids
+				Map<UUID, Double> uuids = usersData.stream().collect(
+						Collectors.toMap(objects -> UUID.fromString(String.valueOf(objects[0])),
+						                 objects -> (double) objects[6]));
 
-						if (!found) sender.sendMessage(
-								MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", target));
-					});
-					break;
+				// iterate over all uuids and check if the name is similar to target
+				boolean found = false;
+				for (UUID uuid : uuids.keySet()) {
+					OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+					if (offlinePlayer.getName() == null) continue;
+
+					if (offlinePlayer.getName().equalsIgnoreCase(target)) {
+						found = true;
+						sender.sendMessage(MessageAddon.BALANCE_TARGET.toString()
+						                                              .replace("%target%", target)
+						                                              .replace("%balance%", SettingAddon.formatDouble(
+								                                              uuids.get(uuid))));
+
+						break;
+					}
 				}
+
+				if (!found) sender.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", target));
+			});
 		});
 
 		getArgument().addSubArgument(targetBalance);
