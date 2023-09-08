@@ -1,30 +1,30 @@
 package me.luckyraven.file.configuration.inventory;
 
 import com.cryptomorin.xseries.XMaterial;
-import lombok.Getter;
 import me.luckyraven.Gangland;
+import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.data.inventory.InventoryBuilder;
+import me.luckyraven.data.user.User;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.util.InventoryUtil;
+import me.luckyraven.util.color.MaterialType;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.event.Event;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryEvent;
 import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.player.PlayerEvent;
+import org.bukkit.inventory.ItemFlag;
+import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class InventoryAddon {
 
-	@Getter
 	private static final Map<String, InventoryBuilder>                inventories     = new HashMap<>();
 	private static final Map<String, Class<? extends PlayerEvent>>    playerEvents    = new HashMap<>();
 	private static final Map<String, Class<? extends InventoryEvent>> inventoryEvents = new HashMap<>();
@@ -40,21 +40,44 @@ public class InventoryAddon {
 		inventoryEvents.put("OnInventory", InventoryEvent.class);
 	}
 
+	@Nullable
+	public static InventoryBuilder getInventory(String key) {
+		return inventories.get(key);
+	}
+
+	public static Map<String, InventoryBuilder> getInventories() {
+		return new HashMap<>(inventories);
+	}
+
 	public static void registerInventory(Gangland gangland, FileHandler fileHandler) {
-		FileConfiguration config = fileHandler.getFileConfiguration();
-		final String      name   = fileHandler.getName().toLowerCase();
+		FileConfiguration config   = fileHandler.getFileConfiguration();
+		String            tempName = fileHandler.getName().toLowerCase();
 
 		String information = "Information.";
 		String slots       = "Slots.";
 
-		// information section
-		String tempName = config.getString(information + "Name");
-		if (tempName == null || tempName.isEmpty()) tempName = name.substring(0, name.lastIndexOf('.'));
-		String displayName = config.getString(information + "Display_Name");
-		int    size        = config.getInt(information + "Size");
-		String type        = config.getString(information + "Type");
+		String configVersion = config.getString("Config_Version");
+		if (configVersion != null) {
+			// recreates the file if needed
+			return;
+		}
 
-		String openCommand    = config.getString(information + "Open.Command");
+		// information section
+		String name = config.getString(information + "Name");
+		if (name == null || name.isEmpty()) name = tempName.substring(0, tempName.lastIndexOf('.'));
+		String displayName = Objects.requireNonNull(config.getString(information + "Display_Name"));
+		int    size        = config.getInt(information + "Size");
+
+		// the type would determine if it was an inventory handler or multi inventory
+		// nothing more since it is exhausting
+		String type = Objects.requireNonNull(config.getString(information + "Type"));
+
+		String tempOpenCommand = config.getString(information + "Open.Command");
+		String openCommand     = null;
+		if (tempOpenCommand != null) {
+			openCommand = tempOpenCommand.startsWith("/") ? tempOpenCommand : "/" + tempOpenCommand;
+			openCommand = openCommand.strip();
+		}
 		String openEvent      = config.getString(information + "Open.Event");
 		String openPermission = config.getString(information + "Open.Permission");
 
@@ -63,7 +86,7 @@ public class InventoryAddon {
 		List<Integer> configVertical   = config.getIntegerList(information + "Configuration.Line.Vertical");
 		List<Integer> configHorizontal = config.getIntegerList(information + "Configuration.Line.Horizontal");
 
-		InventoryHandler inventoryHandler = new InventoryHandler(gangland, displayName, size, tempName, true);
+		InventoryHandler inventoryHandler = new InventoryHandler(gangland, displayName, size, name, true);
 
 		// slots section
 		for (int slot = 0; slot < inventoryHandler.getSize(); ++slot) {
@@ -72,8 +95,22 @@ public class InventoryAddon {
 					sectionStr.substring(0, sectionStr.length() - 1));
 			if (section == null) continue;
 
-			String       item      = section.getString("Item");
-			String       itemName  = section.getString("Name");
+			String item;
+			String color = null;
+			if (section.isConfigurationSection("Item")) {
+				ConfigurationSection itemConfig = section.getConfigurationSection("Item");
+
+				if (itemConfig != null) {
+					item = itemConfig.getString("Type");
+					color = itemConfig.getString("Color");
+				} else item = null;
+			} else if (section.isString("Item")) item = section.getString("Item");
+			else item = null;
+
+			if (item == null) continue;
+
+			String itemName = section.getString("Name");
+			if (itemName == null) itemName = item.toLowerCase().replace('_', ' ');
 			List<String> lore      = section.getStringList("Lore");
 			boolean      enchanted = section.getBoolean("Enchanted");
 			boolean      draggable = section.getBoolean("Draggable");
@@ -91,28 +128,41 @@ public class InventoryAddon {
 				String slotInventory  = eventSection.getString("Inventory");
 				String slotPermission = eventSection.getString("Permission");
 
-				inventoryHandler.setItem(slot, XMaterial.valueOf(item).parseMaterial(), itemName, lore, enchanted,
-				                         draggable, (player, inventory, itemBuilder) -> {
-							if (slotPermission != null) {
-								if (!player.hasPermission(slotPermission)) return;
-							}
+				ItemBuilder itemBuilder = new ItemBuilder(validateItem(item).parseMaterial());
 
-							if (slotCommand != null) {
-								player.performCommand(slotCommand.replace('/', '\0'));
-							}
-							if (slotInventory != null) {
-								InventoryBuilder builder = inventories.get(slotInventory);
+				if (color != null) itemBuilder.addTag("color", color);
+				itemBuilder.setDisplayName(itemName);
+				itemBuilder.setLore(lore);
+				if (enchanted) {
+					itemBuilder.addEnchantment(Enchantment.DURABILITY, 1).addItemFlags(ItemFlag.HIDE_ENCHANTS);
+				}
 
-								if (builder == null) return;
-								builder.getInventoryHandler().open(player);
-							}
-						});
+				inventoryHandler.setItem(slot, itemBuilder, draggable, (player, inventory, builder) -> {
+					if (slotPermission != null) {
+						if (!player.hasPermission(slotPermission)) return;
+					}
+
+					if (slotCommand != null) {
+						String command = slotCommand.startsWith("/") ? slotCommand.substring(1) : slotCommand;
+						player.performCommand(command);
+					}
+					if (slotInventory != null) {
+						User<Player>     user       = gangland.getInitializer().getUserManager().getUser(player);
+						InventoryBuilder invBuilder = inventories.get(slotInventory);
+
+						if (invBuilder == null) return;
+
+						InventoryHandler handler = InventoryBuilder.initInventory(gangland, user, slotInventory,
+						                                                          invBuilder);
+						handler.open(player);
+					}
+				});
 
 				break;
 			}
 
 			if (!inventoryHandler.itemOccupied(slot)) {
-				inventoryHandler.setItem(slot, XMaterial.valueOf(item).parseMaterial(), itemName, lore, enchanted,
+				inventoryHandler.setItem(slot, validateItem(item).parseMaterial(), itemName, lore, enchanted,
 				                         draggable);
 			}
 		}
@@ -143,51 +193,19 @@ public class InventoryAddon {
 			value = openEvent;
 		}
 
-		builder.addOpen(state, value, openPermission);
+		if (state != null) builder.addOpen(state, value, openPermission);
 
-		inventories.put(tempName, builder);
+		inventories.put(name, builder);
 	}
 
-	private static <T extends Event> void loadEventSubclasses(Map<String, Class<? extends T>> events,
-	                                                          Class<T> initialClass) {
-		Package eventPackage = initialClass.getPackage();
-		String  packageName  = eventPackage.getName();
-		String  packagePath  = packageName.replace(".", "/");
+	private static XMaterial validateItem(String value) {
+		XMaterial      xMaterial;
+		MaterialType[] materialTypes = MaterialType.values();
+		if (Arrays.stream(materialTypes).anyMatch(materialType -> materialType.name().contains(value)))
+			xMaterial = XMaterial.matchXMaterial("BLACK_" + value).orElse(XMaterial.BLACK_WOOL);
+		else xMaterial = XMaterial.valueOf(value);
 
-		ClassLoader classLoader = initialClass.getClassLoader();
-
-		URL packageUrl = classLoader.getResource(packagePath);
-		if (packageUrl == null) return;
-
-		String packagePathStr = packageUrl.getPath();
-		File   packageDir     = new File(packagePathStr);
-		File[] files          = packageDir.listFiles();
-		if (!packageDir.isDirectory() || files == null) return;
-
-		for (File file : files) {
-			String fileName = file.getName();
-			if (!fileName.endsWith(".class")) continue;
-
-			// add the package directory and remove the .class
-			String className = packageName + "." + fileName.substring(0, fileName.length() - 6);
-			try {
-				Class<?> eventClass = Class.forName(className);
-				if (initialClass.isAssignableFrom(eventClass)) {
-					String eventName        = eventClass.getSimpleName().replace("Event", "");
-					String initialClassName = initialClass.getSimpleName().replace("Event", "");
-
-					StringBuilder builder = new StringBuilder("On");
-					String changedName =
-							initialClassName.length() == eventName.length() ? eventName : eventName.substring(
-									initialClassName.length() - 1, eventName.length() - 1);
-					builder.append(changedName);
-
-					events.put(builder.toString(), eventClass.asSubclass(initialClass));
-				}
-			} catch (ClassNotFoundException exception) {
-				Gangland.getLog4jLogger().error("The class was not found", exception);
-			}
-		}
+		return xMaterial;
 	}
 
 }
