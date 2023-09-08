@@ -114,7 +114,7 @@ public class DebugCommand extends CommandHandler {
 		// multi inventory
 		Argument multiInv = new Argument("multi", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
-
+				User<Player>    user  = getGangland().getInitializer().getUserManager().getUser(player);
 				List<ItemStack> items = new ArrayList<>();
 
 				for (Color color : Color.values()) {
@@ -128,7 +128,7 @@ public class DebugCommand extends CommandHandler {
 
 				items.addAll(swords.stream().map(ItemStack::new).toList());
 
-				MultiInventory multi = MultiInventory.dynamicMultiInventory(getGangland(), player, items,
+				MultiInventory multi = MultiInventory.dynamicMultiInventory(getGangland(), user, items,
 				                                                            "&6&lDebug items", false, false, null);
 
 				multi.open(player);
@@ -209,11 +209,25 @@ public class DebugCommand extends CommandHandler {
 
 		// all-inventory name space key data
 		Argument inventoriesData = new Argument("inv-data", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(InventoryHandler.getInventories()
-			                                   .keySet()
-			                                   .stream()
-			                                   .map(NamespacedKey::getKey)
-			                                   .toArray(String[]::new));
+			if (sender instanceof Player player) {
+				User<Player> user = getGangland().getInitializer().getUserManager().getUser(player);
+				sender.sendMessage(user.getInventories()
+				                       .stream()
+				                       .map(InventoryHandler::getTitle)
+				                       .map(NamespacedKey::getKey)
+				                       .toArray(String[]::new));
+			} else {
+				for (User<Player> user : getGangland().getInitializer().getUserManager().getUsers().values()) {
+					List<String> values = new ArrayList<>();
+					values.add(user.getUser().getName() + ":");
+					values.addAll(user.getInventories()
+					                  .stream()
+					                  .map(InventoryHandler::getTitle)
+					                  .map(NamespacedKey::getKey)
+					                  .toList());
+					sender.sendMessage(values.toArray(String[]::new));
+				}
+			}
 		});
 
 		Argument specialInventories = new Argument("special", getArgumentTree(), (argument, sender, args) -> {

@@ -2,6 +2,7 @@ package me.luckyraven.data.user;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.scoreboard.Scoreboard;
 import me.luckyraven.data.account.Account;
 import me.luckyraven.data.economy.EconomyHandler;
@@ -16,7 +17,9 @@ import org.bukkit.permissions.PermissionAttachment;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Handles all users registered data, only for online users.
@@ -26,12 +29,13 @@ import java.util.List;
 @Getter
 public class User<T extends OfflinePlayer> {
 
-	private final T                   user;
-	private final List<Account<?, ?>> linkedAccounts;
-	private final Bounty              bounty;
-	private final Level               level;
-	private final Wanted              wanted;
-	private final EconomyHandler      economy;
+	private final T                     user;
+	private final Bounty                bounty;
+	private final Level                 level;
+	private final Wanted                wanted;
+	private final EconomyHandler        economy;
+	private final List<Account<?, ?>>   linkedAccounts;
+	private final Set<InventoryHandler> inventoryHandlers;
 
 	private @Setter int kills, deaths, mobKills, gangId;
 	private @Setter boolean              hasBank;
@@ -42,50 +46,20 @@ public class User<T extends OfflinePlayer> {
 	/**
 	 * Instantiates a new Database.
 	 *
-	 * @param user     the user
-	 * @param kills    the kills
-	 * @param deaths   the deaths
-	 * @param mobKills the mob kills
-	 * @param hasBank  they had a bank
-	 * @param gangId   the gang id
-	 */
-	public User(T user, int kills, int deaths, int mobKills, boolean hasBank, int gangId) {
-		this(user, kills, deaths, mobKills, hasBank);
-		this.gangId = gangId;
-	}
-
-	/**
-	 * Instantiates a new Database.
-	 *
-	 * @param user     the user
-	 * @param kills    the kills
-	 * @param deaths   the deaths
-	 * @param mobKills the mob kills
-	 * @param hasBank  they had a bank
-	 */
-	public User(T user, int kills, int deaths, int mobKills, boolean hasBank) {
-		this(user);
-		this.kills = kills;
-		this.deaths = deaths;
-		this.mobKills = mobKills;
-		this.hasBank = hasBank;
-	}
-
-	/**
-	 * Instantiates a new Database.
-	 *
 	 * @param user the user
 	 */
 	public User(T user) {
 		this.user = user;
-		this.kills = this.deaths = this.mobKills = 0;
-		this.hasBank = false;
-		this.gangId = -1;
+		this.inventoryHandlers = new HashSet<>();
 		this.linkedAccounts = new ArrayList<>();
-		this.level = new Level();
 		this.bounty = new Bounty();
+		this.level = new Level();
 		this.wanted = new Wanted();
 		this.economy = new EconomyHandler(this);
+
+		this.kills = this.deaths = this.mobKills = 0;
+		this.gangId = -1;
+		this.hasBank = false;
 	}
 
 	/**
@@ -132,6 +106,69 @@ public class User<T extends OfflinePlayer> {
 	}
 
 	/**
+	 * Add the inventory to the user.
+	 *
+	 * @param inventoryHandler the inventory
+	 */
+	public void addInventory(InventoryHandler inventoryHandler) {
+		// remove the inventory if it was already generated
+		removeInventory(inventoryHandler.getTitle().getKey());
+
+		// add the inventory to the set
+		inventoryHandlers.add(inventoryHandler);
+	}
+
+	/**
+	 * Remove the inventory from the user.
+	 *
+	 * @param inventoryHandler the inventory
+	 */
+	public void removeInventory(InventoryHandler inventoryHandler) {
+		inventoryHandlers.remove(inventoryHandler);
+	}
+
+	/**
+	 * Remove the inventory from the user.
+	 *
+	 * @param name the name of the inventory
+	 */
+	public void removeInventory(String name) {
+		InventoryHandler inventory = getInventory(name);
+		if (inventory == null) return;
+		inventoryHandlers.remove(inventory);
+	}
+
+	/**
+	 * Get the inventory from the user.
+	 *
+	 * @param name the name of the inventory
+	 * @return the inventory if found or null
+	 */
+	@Nullable
+	public InventoryHandler getInventory(String name) {
+		return inventoryHandlers.stream()
+		                        .filter(handler -> handler.getTitle().getKey().equals(name.toLowerCase()))
+		                        .findFirst()
+		                        .orElse(null);
+	}
+
+	/**
+	 * Clears all the inventories from the user.
+	 */
+	public void clearInventories() {
+		inventoryHandlers.clear();
+	}
+
+	/**
+	 * Get the inventories from the user.
+	 *
+	 * @return a copy of the inventories registered to the user.
+	 */
+	public List<InventoryHandler> getInventories() {
+		return new ArrayList<>(inventoryHandlers);
+	}
+
+	/**
 	 * Gets a kills/deaths ratio of the user.
 	 *
 	 * @return the kd ratio
@@ -140,6 +177,11 @@ public class User<T extends OfflinePlayer> {
 		return deaths == 0 ? 0D : (double) kills / deaths;
 	}
 
+	/**
+	 * Flushes permissions and (if set) adds the new rank permissions.
+	 *
+	 * @param rank the rank
+	 */
 	public void flushPermissions(@Nullable Rank rank) {
 		if (!(user instanceof Player player)) return;
 
@@ -160,7 +202,7 @@ public class User<T extends OfflinePlayer> {
 		                     gangId, permissionAttachment != null ? permissionAttachment.getPermissions()
 		                                                                                .keySet()
 		                                                                                .stream()
-		                                                                                .toList() : "null");
+		                                                                                .toList() : "NA");
 	}
 
 }
