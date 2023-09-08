@@ -147,6 +147,10 @@ public class ItemBuilder {
 		return !value.isEmpty();
 	}
 
+	public Object getTagData(String tag) {
+		return NBT.get(itemStack, nbt -> nbt.getString(tag));
+	}
+
 	@Override
 	public String toString() {
 		return NBT.itemStackToNBT(itemStack).toString();
