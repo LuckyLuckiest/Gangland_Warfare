@@ -1,9 +1,9 @@
 package me.luckyraven.bukkit.scoreboard.driver.sub;
 
-import fr.mrmicky.fastboard.FastBoard;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.scoreboard.driver.DriverHandler;
 import me.luckyraven.bukkit.scoreboard.part.Line;
+import org.bukkit.entity.Player;
 
 import java.util.*;
 
@@ -12,8 +12,8 @@ public class DriverV1 extends DriverHandler {
 	private final Map<Long, List<Line>> clusters;
 	private final Map<Long, Integer>    clustersInterval;
 
-	public DriverV1(Gangland gangland, FastBoard fastBoard) {
-		super(gangland, fastBoard);
+	public DriverV1(Gangland gangland, Player player) {
+		super(gangland, player);
 
 		this.clusters = createClusters(getLines());
 		this.clustersInterval = new HashMap<>();

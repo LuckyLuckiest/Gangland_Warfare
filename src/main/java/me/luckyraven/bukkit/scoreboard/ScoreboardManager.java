@@ -1,6 +1,5 @@
 package me.luckyraven.bukkit.scoreboard;
 
-import fr.mrmicky.fastboard.FastBoard;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.scoreboard.driver.DriverHandler;
 import me.luckyraven.bukkit.scoreboard.driver.sub.DriverV1;
@@ -16,10 +15,8 @@ public class ScoreboardManager {
 	}
 
 	public DriverHandler getDriverHandler(Player player) {
-		FastBoard fastBoard = new FastBoard(player);
-
 		return switch (SettingAddon.getScoreboardDriver()) {
-			default -> new DriverV1(gangland, fastBoard);
+			default -> new DriverV1(gangland, player);
 		};
 	}
 
