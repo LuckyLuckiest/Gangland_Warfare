@@ -57,7 +57,7 @@ Board:
             - "&6+----------------------+"
             - "&e+----------------------+"
       2:
-         Interval: 120
+         Interval: 0
          Lines:
             - "&7&l> &c&lPlayer:"
       3:
@@ -73,11 +73,11 @@ Board:
          Lines:
             - "&7Purse: &2%gangland_money_symbol%&e%gangland_user_balance%"
       6:
-         Interval: 120
+         Interval: 0
          Lines:
             - ""
       7:
-         Interval: 120
+         Interval: 0
          Lines:
             - "&7&l> &c&lBank Info:"
       8:
@@ -89,11 +89,11 @@ Board:
          Lines:
             - "&7Balance: &2%gangland_money_symbol%&e%gangland_bank_balance%"
       10:
-         Interval: 120
+         Interval: 0
          Lines:
             - ""
       11:
-         Interval: 120
+         Interval: 0
          Lines:
             - "&7&l> &c&lGang Info:"
       12:
