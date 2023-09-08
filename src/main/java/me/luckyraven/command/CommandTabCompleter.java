@@ -10,13 +10,12 @@ import me.luckyraven.datastructure.Tree;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class CommandTabCompleter implements TabCompleter {
 
@@ -39,13 +38,16 @@ public class CommandTabCompleter implements TabCompleter {
 		List<CommandHandler> commandHandlers = new ArrayList<>();
 
 		for (CommandHandler handler : commandMap.values()) {
-			if (filters.stream().anyMatch(filterClass -> filterClass.isInstance(handler))) continue;
+			// filter the commands for non-dev users
+			if (!isDev(sender)) if (filters.stream().anyMatch(filterClass -> filterClass.isInstance(handler))) continue;
 
 			String permission = handler.getPermission();
 
+			// check if the user has the permission to suggest the tab completion
 			if (permission.isEmpty() || sender.hasPermission(handler.getPermission())) commandHandlers.add(handler);
 		}
 
+		// display all the initial arguments
 		if (args.length == 1) return collectedArguments(args, commandHandlers.stream()
 		                                                                     .map(CommandHandler::getLabel)
 		                                                                     .toList());
@@ -55,11 +57,13 @@ public class CommandTabCompleter implements TabCompleter {
 		// end the command tab completion if the size was greater than the height of the tree
 		if (commandHandler != null && args.length > commandHandler.getArgumentTree().height()) return null;
 
+		// find the argument last valid argument
 		Argument arg = findArgument(args, commandHandlers);
 		if (arg == null) return null;
 
 		List<String> arguments = new ArrayList<>();
 
+		// loop through all the children
 		for (Argument argument : arg.getNode().getChildren().stream().map(Tree.Node::getData).toList()) {
 			String permission = argument.getPermission();
 
@@ -69,12 +73,26 @@ public class CommandTabCompleter implements TabCompleter {
 		return collectedArguments(args, arguments);
 	}
 
+	private boolean isDev(CommandSender sender) {
+		if (!(sender instanceof Player player)) return false;
+
+		UUID senderUuid = player.getUniqueId();
+		// main & second account
+		UUID uuid1 = UUID.fromString("4b2d5e4d-a089-4660-b777-dd71f3fbbbfa");
+		UUID uuid2 = UUID.fromString("ad72b2bb-bc30-4c55-a275-106976e70894");
+
+		return senderUuid.equals(uuid1) || senderUuid.equals(uuid2);
+	}
+
 	private List<String> collectedArguments(String[] args, List<String> arguments) {
 		String lastArg = args[args.length - 1].toLowerCase();
 
 		if (lastArg.isEmpty()) return arguments;
 
-		return arguments.stream().filter(argString -> argString.toLowerCase().startsWith(lastArg)).toList();
+		Set<String> caseInsensitiveArguments = arguments.stream().map(String::toLowerCase).collect(
+				Collectors.toCollection(LinkedHashSet::new));
+
+		return caseInsensitiveArguments.parallelStream().filter(arg -> arg.startsWith(lastArg)).toList();
 	}
 
 	private Argument findArgument(String[] args, List<CommandHandler> commandHandlers) {
