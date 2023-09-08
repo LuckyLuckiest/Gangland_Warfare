@@ -19,8 +19,8 @@ import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.permission.PermissionWorker;
-import me.luckyraven.data.placeholder.GanglandPlaceholder;
 import me.luckyraven.data.placeholder.replacer.Replacer;
+import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
@@ -41,6 +41,7 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.gang.GangMembersDamage;
+import me.luckyraven.listener.inventory.InventoryOpenByCommand;
 import me.luckyraven.listener.player.*;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -213,6 +214,8 @@ public final class Initializer {
 		listenerManager.addEvent(new PlayerDeath(gangland));
 		listenerManager.addEvent(new LevelUp(gangland));
 		listenerManager.addEvent(new WaypointTeleport(new Waypoint("dummy")));
+
+		// switch events
 		if (SettingAddon.isPhoneEnabled()) listenerManager.addEvent(new PhoneItem(gangland));
 		if (SettingAddon.isScoreboardEnabled()) listenerManager.addEvent(new PlayerScoreboard(gangland));
 
@@ -221,8 +224,9 @@ public final class Initializer {
 			listenerManager.addEvent(new GangMembersDamage(gangland));
 		}
 
-		// inventory gui test double listener
+		// inventory events
 		listenerManager.addEvent(new InventoryHandler(gangland, "dummy", 9, "dummy_inventory", false));
+		listenerManager.addEvent(new InventoryOpenByCommand(gangland));
 	}
 
 	private void commands(Gangland gangland) {
