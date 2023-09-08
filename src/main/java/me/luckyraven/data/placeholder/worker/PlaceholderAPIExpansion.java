@@ -1,4 +1,4 @@
-package me.luckyraven.dependency;
+package me.luckyraven.data.placeholder.worker;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.luckyraven.Gangland;
