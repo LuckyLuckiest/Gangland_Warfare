@@ -120,6 +120,9 @@ public class Gang extends Account<Integer, List<Member>> {
 
 		for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
 			User<Player> onUser = userManager.getUser(onlinePlayer);
+
+			if (onUser == null) continue;
+
 			if (onUser.hasGang() && onUser.getGangId() == this.getId()) users.add(onUser);
 		}
 
