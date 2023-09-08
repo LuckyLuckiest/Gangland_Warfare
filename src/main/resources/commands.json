@@ -261,11 +261,19 @@
 	},
 	"wanted": {
 		"usage": "/glw wanted",
-		"description": "Shows the current level."
+		"description": "Shows the current wanted status."
 	},
-	"wanted_set": {
-		"usage": "/glw wanted set <amount>",
-		"description": "Sets wanted level."
+	"wanted_help": {
+		"usage": "/glw wanted help <page>",
+		"description": "Shows the specified page in wanted menu."
+	},
+	"wanted_add": {
+		"usage": "/glw wanted add <amount>",
+		"description": "Adds wanted level."
+	},
+	"wanted_remove": {
+		"usage": "/glw wanted remove <amount>",
+		"description": "Removes wanted level."
 	},
 	"resource_pack": {
 		"usage": "/glw resource",
