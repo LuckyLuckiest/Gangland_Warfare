@@ -3,7 +3,9 @@ package me.luckyraven.bukkit.inventory;
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
 import com.google.common.base.Preconditions;
+import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
+import me.luckyraven.data.user.User;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.InventoryUtil;
 import me.luckyraven.util.TriConsumer;
@@ -11,7 +13,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -22,21 +23,21 @@ import java.util.Map;
 public class MultiInventory extends InventoryHandler {
 
 	private static int                          ID = 0;
-	private final  JavaPlugin                   plugin;
+	private final  Gangland                     gangland;
 	private final  LinkedList<InventoryHandler> inventories;
 	private        int                          currentPage;
 
-	public MultiInventory(JavaPlugin plugin, String title, int size, Player player) {
-		super(plugin, title, size, player,
-		      new NamespacedKey(plugin, titleRefactor(String.format("%s_%d", title, ++ID))));
-		this.plugin = plugin;
+	public MultiInventory(Gangland gangland, String title, int size, User<Player> user) {
+		super(gangland, title, size, user,
+		      new NamespacedKey(gangland, titleRefactor(String.format("%s_%d", title, ++ID))));
+		this.gangland = gangland;
 		this.inventories = new LinkedList<>();
 		this.currentPage = 0;
 
 		this.inventories.add(this);
 	}
 
-	public static MultiInventory dynamicMultiInventory(JavaPlugin plugin, Player player, List<ItemStack> items,
+	public static MultiInventory dynamicMultiInventory(Gangland gangland, User<Player> user, List<ItemStack> items,
 	                                                   String name, boolean staticItemsAllowed, boolean fixedSize,
 	                                                   @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
 		if (staticItemsAllowed) {
@@ -64,7 +65,7 @@ public class MultiInventory extends InventoryHandler {
 		}
 
 		// the first page
-		MultiInventory multi = new MultiInventory(plugin, name, initialPage, player);
+		MultiInventory multi = new MultiInventory(gangland, name, initialPage, user);
 
 		multi.addItems(multi, items, 0, items.size(), staticItemsAllowed, staticItems);
 		InventoryUtil.createBoarder(multi);
@@ -76,7 +77,7 @@ public class MultiInventory extends InventoryHandler {
 		for (int i = 1; i < pages; i++) {
 			int size = i == pages - 1 ? finalPage : initialPage;
 
-			InventoryHandler inv = new InventoryHandler(plugin, name, size, player, new NamespacedKey(plugin,
+			InventoryHandler inv = new InventoryHandler(gangland, name, size, user, new NamespacedKey(gangland,
 			                                                                                          titleRefactor(
 					                                                                                          String.format(
 							                                                                                          "%s_%d",
@@ -149,7 +150,7 @@ public class MultiInventory extends InventoryHandler {
 		}
 	}
 
-	public void updateItems(List<ItemStack> items, Player player, boolean staticItemsAllowed,
+	public void updateItems(List<ItemStack> items, User<Player> user, boolean staticItemsAllowed,
 	                        @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
 		if (inventories.isEmpty()) {
 			return; // No inventories to update
@@ -182,9 +183,9 @@ public class MultiInventory extends InventoryHandler {
 
 			if (i >= inventories.size()) {
 				// If there's no corresponding inventory for this page, create a new one
-				NamespacedKey namespacedKey = new NamespacedKey(plugin, titleRefactor(
+				NamespacedKey namespacedKey = new NamespacedKey(gangland, titleRefactor(
 						String.format("%s_%d", firstPage.getDisplayTitle(), ++ID)));
-				inv = new InventoryHandler(plugin, firstPage.getDisplayTitle(), size, player, namespacedKey);
+				inv = new InventoryHandler(gangland, firstPage.getDisplayTitle(), size, user, namespacedKey);
 				addItems(inv, items, i * perPage, Math.min((i + 1) * perPage, items.size()), staticItemsAllowed,
 				         staticItems);
 				addPage(inv);

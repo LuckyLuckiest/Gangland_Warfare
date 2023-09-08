@@ -29,14 +29,16 @@ public class Phone {
 	private final         InventoryHandler inventoryHandler;
 	private final         ItemBuilder      item;
 	private final         Gangland         gangland;
+	private final         User<Player>     user;
 
 	private @Getter String displayName;
 
-	public Phone(Gangland gangland, Player player, String name) {
+	public Phone(Gangland gangland, User<Player> user, String name) {
 		this.name = name;
 		this.displayName = name;
 		this.gangland = gangland;
-		this.inventoryHandler = new InventoryHandler(gangland, displayName, InventoryHandler.MAX_SLOTS, player);
+		this.user = user;
+		this.inventoryHandler = new InventoryHandler(gangland, displayName, InventoryHandler.MAX_SLOTS, user);
 		this.item = new ItemBuilder(getPhoneMaterial()).setDisplayName(displayName).addTag("uniqueItem", "phone");
 	}
 
@@ -65,23 +67,21 @@ public class Phone {
 	}
 
 	public void setDisplayName(String displayName) {
-		inventoryHandler.rename(displayName);
+		InventoryHandler.rename(user, gangland, inventoryHandler, displayName);
 		this.displayName = displayName;
 		this.item.setDisplayName(displayName);
 	}
 
-	public void openInventory(Player player) {
-		User<Player> user = gangland.getInitializer().getUserManager().getUser(player);
-
+	public void openInventory() {
 		PhoneInventoryEvent event = new PhoneInventoryEvent(user);
 		gangland.getServer().getPluginManager().callEvent(event);
 
 		populateInventory(user, (pl, inventory, item) -> inventory.open(pl));
-		inventoryHandler.open(player);
+		inventoryHandler.open(user.getUser());
 	}
 
-	public void closeInventory(Player player) {
-		inventoryHandler.close(player);
+	public void closeInventory() {
+		inventoryHandler.close(user.getUser());
 	}
 
 	public org.bukkit.inventory.Inventory getInventoryHandler() {
@@ -142,7 +142,7 @@ public class Phone {
 	private void gangInventory(User<Player> user, GangManager gangManager,
 	                           TriConsumer<Player, InventoryHandler, ItemBuilder> callback) {
 		// show create gang and search for gang
-		InventoryHandler newGang = new InventoryHandler(gangland, "&6&lGang", 5 * 9, user.getUser());
+		InventoryHandler newGang = new InventoryHandler(gangland, "&6&lGang", 5 * 9, user);
 
 		if (user.hasGang()) {
 			Gang gang = gangManager.getGang(user.getGangId());
@@ -182,6 +182,7 @@ public class Phone {
 		newGang.setItem(23, XMaterial.BOOKSHELF.parseMaterial(), "&b&lSearch Gang", null, true, false,
 		                (player1, inv, it) -> {
 			                // open a multi inventory that displays all the gangs
+			                User<Player>    user1      = gangland.getInitializer().getUserManager().getUser(player1);
 			                List<Gang>      gangs      = gangManager.getGangs().values().stream().toList();
 			                List<ItemStack> gangsItems = new ArrayList<>();
 
@@ -216,7 +217,7 @@ public class Phone {
 
 			                // need to use a list to save the location
 			                Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems = new LinkedHashMap<>();
-			                MultiInventory multiInventory = MultiInventory.dynamicMultiInventory(gangland, player1,
+			                MultiInventory multiInventory = MultiInventory.dynamicMultiInventory(gangland, user1,
 			                                                                                     gangsItems,
 			                                                                                     "&6&lGangs View", true,
 			                                                                                     true, staticItems);
@@ -227,6 +228,8 @@ public class Phone {
 			                staticItems.put(searchItem.build(), (player2, currInv, itemBuilder) -> {
 				                // opens an anvil and enters the query
 				                new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
+					                User<Player> user2 = gangland.getInitializer().getUserManager().getUser(
+							                stateSnapshot.getPlayer());
 					                String output = stateSnapshot.getText();
 
 					                if (output == null || output.isEmpty()) {
@@ -239,7 +242,7 @@ public class Phone {
 							                                    .toLowerCase()
 							                                    .contains(output.toLowerCase())).toList();
 
-					                multiInventory.updateItems(items, stateSnapshot.getPlayer(), true, staticItems);
+					                multiInventory.updateItems(items, user2, true, staticItems);
 					                callback.accept(stateSnapshot.getPlayer(), currInv, itemBuilder);
 
 					                return List.of(AnvilGUI.ResponseAction.close());
@@ -255,7 +258,7 @@ public class Phone {
 
 			                // need to update because when initialized the process was not done accordingly,
 			                // this way should be changed since you update the items after initialization
-			                multiInventory.updateItems(gangsItems, player1, true, staticItems);
+			                multiInventory.updateItems(gangsItems, user1, true, staticItems);
 
 			                multiInventory.open(player1);
 		                });

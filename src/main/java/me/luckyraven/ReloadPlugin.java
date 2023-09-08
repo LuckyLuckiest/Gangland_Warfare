@@ -150,8 +150,8 @@ public class ReloadPlugin {
 
 		for (Player player : Bukkit.getOnlinePlayers())
 			if (!userManager.contains(userManager.getUser(player))) {
-				Phone        phone   = new Phone(gangland, player, SettingAddon.getPhoneName());
 				User<Player> newUser = new User<>(player);
+				Phone        phone   = new Phone(gangland, newUser, SettingAddon.getPhoneName());
 
 				if (SettingAddon.isPhoneEnabled()) {
 					newUser.setPhone(phone);
