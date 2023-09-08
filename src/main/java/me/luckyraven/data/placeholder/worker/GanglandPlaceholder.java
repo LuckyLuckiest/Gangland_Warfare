@@ -1,4 +1,4 @@
-package me.luckyraven.data.placeholder;
+package me.luckyraven.data.placeholder.worker;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.data.account.Account;
@@ -7,11 +7,11 @@ import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.account.type.Bank;
+import me.luckyraven.data.placeholder.PlaceholderHandler;
 import me.luckyraven.data.placeholder.replacer.Replacer;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.SettingAddon;
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -21,11 +21,16 @@ import java.util.Map;
 
 public class GanglandPlaceholder extends PlaceholderHandler {
 
-	private final Gangland gangland;
+	private final UserManager<Player> userManager;
+	private final MemberManager       memberManager;
+	private final GangManager         gangManager;
 
 	public GanglandPlaceholder(Gangland gangland, Replacer.Closure closure) {
 		super(closure);
-		this.gangland = gangland;
+
+		this.userManager = gangland.getInitializer().getUserManager();
+		this.memberManager = gangland.getInitializer().getMemberManager();
+		this.gangManager = gangland.getInitializer().getGangManager();
 	}
 
 	@Override
@@ -54,23 +59,21 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	@Nullable
 	private String getUser(OfflinePlayer player, String parameter) {
 		// for member
-		MemberManager memberManager = gangland.getInitializer().getMemberManager();
-		Member        member        = memberManager.getMember(player.getUniqueId());
-		String        userStr       = "user_";
+		Member member  = memberManager.getMember(player.getUniqueId());
+		String userStr = "user_";
 
 		if (member == null) return null;
 
 		if (parameter.equals(userStr + "gang-id")) return String.valueOf(member.getGangId());
-		if (parameter.equals(userStr + "rank")) return member.getRank() == null ? "null" : member.getRank().getName();
+		if (parameter.equals(userStr + "rank")) return member.getRank() == null ? "NA" : member.getRank().getName();
 		if (parameter.equals(userStr + "contribution")) return SettingAddon.formatDouble(member.getContribution());
 		if (parameter.equals(userStr + "gang-join-date")) return member.getGangJoinDateString();
 
 		// for user
-		if (!player.isOnline()) return null;
+		Player onlinePlayer = player.getPlayer();
+		if (!player.isOnline() || onlinePlayer == null) return null;
 
-		Player              onlinePlayer = Bukkit.getPlayer(player.getUniqueId());
-		UserManager<Player> userManager  = gangland.getInitializer().getUserManager();
-		User<Player>        user         = userManager.getUser(onlinePlayer);
+		User<Player> user = userManager.getUser(onlinePlayer);
 
 		if (user == null) return null;
 
@@ -89,9 +92,10 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	@Nullable
 	private String getBank(OfflinePlayer player, String parameter) {
 		// for bank
-		if (!(player instanceof Player online)) return null;
+		Player onlinePlayer = player.getPlayer();
+		if (!player.isOnline() || onlinePlayer == null) return null;
 
-		User<Player> user = gangland.getInitializer().getUserManager().getUser(online);
+		User<Player> user = userManager.getUser(onlinePlayer);
 
 		if (user == null) return null;
 
@@ -104,7 +108,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 				break;
 			}
 
-		if (bank == null) return null;
+		if (bank == null) return "NA";
 
 		if (parameter.equals(bankStr + "name")) return bank.getName();
 		if (parameter.equals(bankStr + "balance")) return SettingAddon.formatDouble(bank.getEconomy().getBalance());
@@ -115,22 +119,20 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	@Nullable
 	private String getGang(OfflinePlayer player, String parameter) {
 		// for gang
-		if (!(player instanceof Player online)) return null;
+		Member member = memberManager.getMember(player.getUniqueId());
 
-		UserManager<Player> userManager = gangland.getInitializer().getUserManager();
-		User<Player>        user        = userManager.getUser(online);
+		if (member == null) return null;
 
-		if (user == null) return null;
+		Gang   gang    = gangManager.getGang(member.getGangId());
+		String gangStr = "gang_";
 
-		GangManager gangManager = gangland.getInitializer().getGangManager();
-		Gang        gang        = gangManager.getGang(user.getGangId());
-		String      gangStr     = "gang_";
+		if (gang == null) return "NA";
 
-		if (gang == null) return null;
-
+		if (parameter.equals(gangStr + "id")) return String.valueOf(gang.getId());
 		if (parameter.equals(gangStr + "name")) return gang.getName();
 		if (parameter.equals(gangStr + "display-name")) return gang.getDisplayNameString();
 		if (parameter.equals(gangStr + "color")) return gang.getColor();
+		if (parameter.equals(gangStr + "color-name")) return gang.getColor().toLowerCase().replace("_", " ");
 		if (parameter.equals(gangStr + "description")) return gang.getDescription();
 		if (parameter.equals(gangStr + "bounty")) return SettingAddon.formatDouble(gang.getBounty().getAmount());
 		if (parameter.equals(gangStr + "balance")) return SettingAddon.formatDouble(gang.getEconomy().getBalance());
@@ -138,6 +140,10 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (parameter.equals(gangStr + "experience")) return SettingAddon.formatDouble(gang.getLevel().getExperience());
 		if (parameter.equals(gangStr + "created")) return gang.getDateCreatedString();
 		if (parameter.equals(gangStr + "ally-list")) return gang.getAllyListString();
+		if (parameter.equals(gangStr + "ally-size")) return String.valueOf(gang.getAlly().size());
+		if (parameter.equals(gangStr + "members-size")) return String.valueOf(gang.getGroup().size());
+		if (parameter.equals(gangStr + "online-members-size")) return String.valueOf(
+				gang.getOnlineMembers(userManager).size());
 
 		return null;
 	}
