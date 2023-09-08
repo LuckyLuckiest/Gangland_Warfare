@@ -22,11 +22,13 @@
 Config_Version: '${project.version}'
 
 Board:
+   Configuration:
+      Minimum_Size: 30
    Title:
-      Interval: 8
+      Interval: 2
       Lines:
          - "&f&l<>"
-         - "&f&l< >"
+         - "&f&l<&8=&f&l>"
          - "&f&l< &8G &f&l>"
          - "&f&l< &8G&7a &f&l>"
          - "&f&l< &8G&7a&8n &f&l>"
@@ -48,14 +50,14 @@ Board:
          - "&f&l> &8G&7a&8n &f&l<"
          - "&f&l> &8G&7a &f&l<"
          - "&f&l> &8G &f&l<"
-         - "&f&l> <"
+         - "&f&l>&8=&f&l<"
          - "&f&l><"
    Rows:
       1:
-         Interval: 5
+         Interval: 10
          Lines:
-            - "&6+----------------------+"
-            - "&e+----------------------+"
+            - "&7+--------------------+"
+            - "&8+--------------------+"
       2:
          Interval: 0
          Lines:
@@ -63,55 +65,52 @@ Board:
       3:
          Interval: 10
          Lines:
-            - "&7Wanted: &3%gangland_wanted%"
+            - "   &7Wanted: &f%gangland_user_wanted%"
       4:
          Interval: 10
          Lines:
-            - "&7K/D: &e%gangland_user_kd%"
+            - "   &7K/D: &e%gangland_user_kd%"
       5:
-         Interval: 5
+         Interval: 10
          Lines:
-            - "&7Purse: &2%gangland_money_symbol%&e%gangland_user_balance%"
+            - "   &7Purse: &2%gangland_money_symbol%&e%gangland_user_balance%"
       6:
-         Interval: 0
+         Interval: 10
          Lines:
-            - ""
+            - "   &7Level: &e%gangland_user_level% &8| &c%gangland_user_experience-percentage%%"
       7:
          Interval: 0
          Lines:
-            - "&7&l> &c&lBank Info:"
+            - "                              "
       8:
-         Interval: 10
+         Interval: 0
          Lines:
-            - "&7Name: &e%gangland_bank_name%"
+            - "&7&l> &c&lBank Info:"
       9:
          Interval: 10
          Lines:
-            - "&7Balance: &2%gangland_money_symbol%&e%gangland_bank_balance%"
+            - "   &7Name: &e%gangland_bank_name%"
       10:
-         Interval: 0
+         Interval: 10
          Lines:
-            - ""
+            - "   &7Balance: &2%gangland_money_symbol%&e%gangland_bank_balance%"
       11:
          Interval: 0
          Lines:
-            - "&7&l> &c&lGang Info:"
+            - "                              "
       12:
-         Interval: 10
+         Interval: 0
          Lines:
-            - "&7Name: &e%gangland_gang_name%"
+            - "&7&l> &c&lGang Info:"
       13:
          Interval: 10
          Lines:
-            - "&7Balance: &2%gangland_money_symbol%&e%gangland_gang_balance%"
+            - "   &7Name: &e%gangland_gang_display-name%"
       14:
-         Interval: 80
+         Interval: 10
          Lines:
-            - "&7%server_online% &3online player(s)"
-            - "&7%player_ping% &cms latency"
-            - "&7%server_tps_1% &5TPS"
+            - "   &7Contribution: &2%gangland_money_symbol%&e%gangland_user_contributed-amount%"
       15:
-         Interval: 5
+         Interval: 40
          Lines:
-            - "&6+----------------------+"
-            - "&e+----------------------+"
+            - "   &7Members: &e%gangland_gang_online-members-size%&8/&c%gangland_gang_members-size%"
