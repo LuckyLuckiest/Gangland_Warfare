@@ -26,15 +26,17 @@ Slots:
       Name: "&bDescription"
       Lore:
          - "&e%gangland_gang_description%"
+      OnClick:
+         Command: "/glw gang desc"
    19:
       Item: PLAYER_HEAD
       Name: "&bMembers"
       Lore:
-         - "&a%gang_online-members_size%&7/&e%gang_members_size%"
+         - "&a%gangland_gang_online-members-size%&7/&e%gangland_gang_members-size%"
       OnClick:
          Inventory: users_stat
    22:
-      Item: GOLD_INGOT
+      Item: BLAZE_ROD
       Name: "&bBounty"
       Lore:
          - "&e%money_symbol%%gangland_gang_bounty%"
@@ -43,12 +45,30 @@ Slots:
       Item: REDSTONE
       Name: "&bAlly"
       Lore:
-         - "&e%gang_ally_size%"
+         - "&e%gangland_gang_ally-size%"
       OnClick:
          Inventory: alliance_stat
-   31:
+   29:
       Item: WRITABLE_BOOK
       Name: "&bCreated"
       Lore:
-         - "&e%gangland_gang_date-created%"
+         - "&e%gangland_gang_created%"
       Enchanted: true
+   31:
+      Item:
+         Type: WOOL
+         Color: "%gangland_gang_color%"
+      Name: "&bColor"
+      Lore:
+         - "&e%gangland_gang_color-name%"
+      OnClick:
+         Command: "/glw gang color"
+   33:
+      Item:
+         Type: BANNER
+         Color: "%gangland_gang_color%"
+      Name: "&bStatistics"
+      Lore:
+         - "&eGang stats"
+      OnClick:
+         Inventory: gang_stat
