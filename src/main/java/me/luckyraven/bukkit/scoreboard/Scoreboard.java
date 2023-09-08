@@ -12,7 +12,7 @@ public class Scoreboard {
 		this.driver = driver;
 
 		// repeating the task each tick
-		this.timer = new RepeatingTimer(driver.getGangland(), 0L, 1L, time -> driver.update());
+		this.timer = new RepeatingTimer(driver.getGangland(), 0L, 1L, time -> this.driver.update());
 	}
 
 	public void start() {
@@ -26,6 +26,11 @@ public class Scoreboard {
 
 		timer.stop();
 		driver.getFastBoard().delete();
+	}
+
+	@Override
+	public String toString() {
+		return String.format("Scoreboard{Driver=%s,timer=%s}", driver, timer);
 	}
 
 }

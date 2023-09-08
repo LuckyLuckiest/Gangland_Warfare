@@ -5,6 +5,7 @@ import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.scoreboard.part.Line;
 import me.luckyraven.file.configuration.ScoreboardAddon;
+import org.bukkit.entity.Player;
 
 import java.util.List;
 
@@ -16,9 +17,9 @@ public abstract class DriverHandler {
 	private final List<Line> lines;
 	private final Line       title;
 
-	public DriverHandler(Gangland gangland, FastBoard fastBoard) {
+	public DriverHandler(Gangland gangland, Player player) {
 		this.gangland = gangland;
-		this.fastBoard = fastBoard;
+		this.fastBoard = new FastBoard(player);
 
 		ScoreboardAddon addon = gangland.getInitializer().getScoreboardAddon();
 
@@ -40,6 +41,11 @@ public abstract class DriverHandler {
 	private void updateBoard() {
 		fastBoard.updateTitle(updateLine(title));
 		fastBoard.updateLines(lines.stream().filter(line -> line != title).map(this::updateLine).toList());
+	}
+
+	@Override
+	public String toString() {
+		return String.format("FastBoard=%s,lines=[%s]", fastBoard, lines);
 	}
 
 }
