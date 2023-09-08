@@ -1,6 +1,5 @@
 package me.luckyraven;
 
-import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
@@ -17,9 +16,7 @@ import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.RankDatabase;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.database.sub.WaypointDatabase;
-import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.timer.RepeatingTimer;
-import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
@@ -27,10 +24,6 @@ import org.bukkit.event.inventory.InventoryType;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static me.luckyraven.bukkit.inventory.InventoryHandler.getPlayerInventories;
 
 public class PeriodicalUpdates {
 
@@ -197,16 +190,8 @@ public class PeriodicalUpdates {
 	private void removeInventory(User<Player> user) {
 		if (userViewingInventory(user)) return;
 
-		// Returns all inventories except the phone inventory
-		Set<NamespacedKey> keys = getPlayerInventories(user.getUser()).keySet().stream().filter(namespacedKey -> {
-			String name  = namespacedKey.getKey();
-			int    index = name.lastIndexOf("_");
-			return !name.substring(0, index).equalsIgnoreCase(
-					InventoryHandler.titleRefactor(SettingAddon.getPhoneName()));
-		}).collect(Collectors.toSet());
-
-		for (NamespacedKey key : keys)
-			InventoryHandler.removeInventory(key);
+		// remove the inventories
+		user.clearInventories();
 	}
 
 	private boolean userViewingInventory(User<Player> user) {
