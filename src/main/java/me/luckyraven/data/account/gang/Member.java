@@ -38,6 +38,14 @@ public class Member {
 		this.gangId = -1;
 	}
 
+	public boolean hasGang() {
+		return this.gangId != -1;
+	}
+
+	public boolean hasRank() {
+		return this.rank != null;
+	}
+
 	public Date getGangJoinDate() {
 		return new Date(gangJoinDateLong);
 	}
