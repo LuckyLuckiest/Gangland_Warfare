@@ -56,7 +56,7 @@ public class ScoreboardAddon {
 				long         interval = section.getLong("Interval");
 
 				Line line;
-				if (lines.size() == 1) line = new StaticLine(index++);
+				if (interval == 0L) line = new StaticLine(index++);
 				else line = new Line(interval, index++);
 
 				line.addAllContents(lines);
