@@ -210,7 +210,7 @@ public class Tree<E> implements Iterable<E> {
 
 		@Override
 		public String toString() {
-			return String.format("[data=%s,parent=%s]", data, parent == null ? "null" : parent.getData());
+			return String.format("[data=%s,parent=%s]", data, parent == null ? "NA" : parent.getData());
 		}
 
 	}
