@@ -38,6 +38,16 @@ public class ReloadPlugin {
 		this.initializer = gangland.getInitializer();
 	}
 
+	public void reload(boolean resetCache) {
+		filesReload();
+		// when resetting the cache, there would be a problem with the scoreboard trying to get some values
+		// first killing all scoreboards then initializing the data
+		killAllScoreboards();
+		databaseInitialize(resetCache);
+		if (SettingAddon.isScoreboardEnabled()) scoreboardReload();
+		periodicalUpdatesReload();
+	}
+
 	/**
 	 * Reloads the periodical updates.
 	 */
@@ -89,14 +99,23 @@ public class ReloadPlugin {
 		initializer.scoreboardLoader();
 
 		for (User<Player> user : initializer.getUserManager().getUsers().values()) {
-			if (user.getScoreboard() != null) {
-				user.getScoreboard().end();
-				user.setScoreboard(null);
-			}
+			killScoreboard(user);
 
 			user.setScoreboard(new Scoreboard(initializer.getScoreboardManager().getDriverHandler(user.getUser())));
 			user.getScoreboard().start();
 		}
+	}
+
+	private void killAllScoreboards() {
+		for (User<Player> user : initializer.getUserManager().getUsers().values())
+			killScoreboard(user);
+	}
+
+	private void killScoreboard(User<Player> user) {
+		if (user.getScoreboard() == null) return;
+
+		user.getScoreboard().end();
+		user.setScoreboard(null);
 	}
 
 	public void inventoryReload() {

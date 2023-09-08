@@ -26,12 +26,7 @@ public class ReloadCommand extends CommandHandler {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		reloadProcess("", () -> {
-			getGangland().getReloadPlugin().filesReload();
-			databaseReload();
-			scoreboardReload();
-			getGangland().getReloadPlugin().periodicalUpdatesReload();
-		}, true);
+		reloadProcess("", () -> getGangland().getReloadPlugin().reload(true), true);
 	}
 
 	@Override
@@ -41,11 +36,13 @@ public class ReloadCommand extends CommandHandler {
 		});
 
 		Argument data = new Argument(new String[]{"database", "data"}, getArgumentTree(), (argument, sender, args) -> {
-			reloadProcess("database", this::databaseReload, true);
+			reloadProcess("database", () -> getGangland().getReloadPlugin().databaseInitialize(true), true);
 		});
 
 		Argument scoreboard = new Argument("scoreboard", getArgumentTree(), (argument, sender, args) -> {
-			reloadProcess("scoreboard", this::scoreboardReload, false);
+			reloadProcess("scoreboard", () -> {
+				if (SettingAddon.isScoreboardEnabled()) getGangland().getReloadPlugin().scoreboardReload();
+			}, false);
 		});
 
 		Argument inventory = new Argument("inventory", getArgumentTree(), (argument, sender, args) -> {
@@ -88,14 +85,6 @@ public class ReloadCommand extends CommandHandler {
 			sendToOperators(permission, reloadIssue);
 			Gangland.getLog4jLogger().error(throwable.getMessage(), throwable);
 		}
-	}
-
-	private void scoreboardReload() {
-		if (SettingAddon.isScoreboardEnabled()) getGangland().getReloadPlugin().scoreboardReload();
-	}
-
-	private void databaseReload() {
-		getGangland().getReloadPlugin().databaseInitialize(true);
 	}
 
 	private void sendToOperators(String permission, String message) {
