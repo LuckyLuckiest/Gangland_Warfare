@@ -54,6 +54,10 @@ public class Level {
 		return Math.max(levelValue - 1, 0);
 	}
 
+	public double getPercentage() {
+		return experience / experienceCalculation(nextLevel()) * 100;
+	}
+
 	public int addLevels(int levels) {
 		int counter = 0;
 
