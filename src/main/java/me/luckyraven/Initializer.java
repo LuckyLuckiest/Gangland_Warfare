@@ -13,6 +13,7 @@ import me.luckyraven.command.sub.debug.OptionCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
 import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.command.sub.gang.GangCommand;
+import me.luckyraven.command.sub.wanted.WantedCommand;
 import me.luckyraven.command.sub.waypoint.TeleportCommand;
 import me.luckyraven.command.sub.waypoint.WaypointCommand;
 import me.luckyraven.data.account.gang.GangManager;
@@ -243,6 +244,8 @@ public final class Initializer {
 		commandManager.addCommand(new LevelCommand(gangland));
 		commandManager.addCommand(new WaypointCommand(gangland));
 		commandManager.addCommand(new TeleportCommand(gangland));
+		commandManager.addCommand(new WantedCommand(gangland));
+
 		// gang commands
 		if (SettingAddon.isGangEnabled()) {
 			commandManager.addCommand(new GangCommand(gangland));
