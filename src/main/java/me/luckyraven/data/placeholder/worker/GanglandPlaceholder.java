@@ -14,6 +14,7 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.wanted.Wanted;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.color.ColorUtil;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -154,6 +155,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (parameter.equals(gangStr + "state")) return gang.getState().name().toLowerCase();
 		if (parameter.equals(gangStr + "color")) return gang.getColor();
 		if (parameter.equals(gangStr + "color-name")) return gang.getColor().toLowerCase().replace("_", " ");
+		if (parameter.equals(gangStr + "color-code")) return ColorUtil.getColorCode(gang.getColor());
 		if (parameter.equals(gangStr + "description")) return gang.getDescription();
 		if (parameter.equals(gangStr + "created")) return gang.getDateCreatedString();
 
