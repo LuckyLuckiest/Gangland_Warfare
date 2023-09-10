@@ -1,0 +1,37 @@
+Information:
+   Display_Name: "%gangland_phone_name%"
+   Size: 45
+   Type: inventory
+   Open:
+      Type: OTHER_INVENTORY
+   Configuration:
+      Line:
+         Vertical: [2,8]
+         Horizontal: [1,5]
+      Fill: true
+
+Slots:
+   21:
+      Item: SLIME_BALL
+      Condition:
+         Value: "%gangland_user_has-gang%"
+         True:
+            Name: "&r%gangland_gang_color-code%%gangland_gang_display-name%"
+            OnClick:
+               Inventory: gang_info
+         False:
+            Name: "&c&lCreate Gang"
+            Lore:
+               - "&7Costs &a%gangland_money_symbol%%gangland_gang_create_fee%"
+            OnClick:
+               Inventory:
+                  Type: anvil
+                  Title: "Create Gang"
+                  Text: "Name"
+                  Success:
+                     Command: "/glw gang create %gangland_anvil_output%"
+   23:
+      Item: BOOKSHELF
+      Name: "&b&lSearch Gang"
+      OnClick:
+         Inventory: phone_gang_search

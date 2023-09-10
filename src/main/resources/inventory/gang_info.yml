@@ -8,7 +8,8 @@ Information:
    Configuration:
       Fill: true
       Border: false
-   Permission: "gangland.inventory.gang_stat"
+   Permission: "gangland.inventory.gang_info"
+
 Slots:
    11:
       Item: GOLD_BLOCK

@@ -1,4 +1,50 @@
-phone:
-  open:
-    event: phone_click
-  size:
+Information:
+   Display_Name: "%gangland_phone_name%"
+   Size: 54
+   Type: inventory
+   Open:
+      Event:
+         OnItemClick:
+            Action: RIGHT_CLICK
+         UniqueItem: phone
+   Configuration:
+      Line:
+         Vertical: [2,8]
+      Fill: true
+   Permission: "gangland.inventory.phone"
+
+Slots:
+   11:
+      Item: DIAMOND
+      Name: "&eMission"
+      OnClick:
+         Inventory: phone_mission
+   13:
+      Item: CAULDRON
+      Name: "&eGang"
+      OnClick:
+         Inventory: phone_gang
+   15:
+      Item: FURNACE_MINECART
+      Name: "&eProperty"
+      OnClick:
+         Inventory: phone_property
+   38:
+      Item:
+         Type: PLAYER_HEAD
+         Data:
+            Tag: "SkullOwner"
+            Value: "%gangland_user_name%"
+      Name: "&eAccount"
+      OnClick:
+         Inventory: phone_account
+   40:
+      Item: NETHER_STAR
+      Name: "&eBounties"
+      OnClick:
+         Inventory: phone_bounty
+   42:
+      Item: BOOK
+      Name: "&eContacts"
+      OnClick:
+         Inventory: phone_contact
