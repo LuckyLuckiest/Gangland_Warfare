@@ -17,8 +17,13 @@
 # +----------------------------------+ #
 
 # If you have faced any problem with the file, you can create a new one by changing [Config_Version] to a different
-# number, but when a new update comes out with a new configuration file(s), [Config_Version] will change resulting
-# in a new file(s) for that new version while saving old files with a suffix -old to indicate they are old.
+# number, but when a new update comes out by default, the config version would have a different version resulting in a
+# new file.
+# The old version file would have a suffix '-old' to indicate they are from the old version.
+# Each and every YAML file from this plugin supports this feature, even if the configuration section of [Config_Version]
+# wasn't explicitly mentioned.
+# Adding this section and changing the value would result in the same functionality, otherwise it won't recreate the
+# file.
 Config_Version: '${project.version}'
 
 # +---------------+ #
