@@ -5,6 +5,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.data.inventory.InventoryBuilder;
+import me.luckyraven.data.inventory.State;
 import me.luckyraven.data.user.User;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.util.InventoryUtil;
@@ -18,6 +19,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryEvent;
 import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.player.PlayerEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemFlag;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,6 +33,7 @@ public class InventoryAddon {
 
 	static {
 		// initialize player events
+		playerEvents.put("OnItemClick", PlayerInteractEvent.class);
 //		loadEventSubclasses(playerEvents, PlayerEvent.class);
 
 		// initialize inventory events
@@ -53,20 +56,21 @@ public class InventoryAddon {
 		FileConfiguration config   = fileHandler.getFileConfiguration();
 		String            tempName = fileHandler.getName().toLowerCase();
 
-		String information = "Information.";
-		String slots       = "Slots.";
-
 		String configVersion = config.getString("Config_Version");
 		if (configVersion != null) {
 			// recreates the file if needed
 			return;
 		}
 
+		String information = "Information.";
+		String slots       = "Slots.";
+
 		// information section
 		String name = config.getString(information + "Name");
-		if (name == null || name.isEmpty()) name = tempName.substring(0, tempName.lastIndexOf('.'));
+		if (name == null || name.isEmpty()) name = tempName;
 		String displayName = Objects.requireNonNull(config.getString(information + "Display_Name"));
 		int    size        = config.getInt(information + "Size");
+		String permission  = config.getString(information + "Permission");
 
 		// the type would determine if it was an inventory handler or multi inventory
 		// nothing more since it is exhausting
@@ -81,10 +85,7 @@ public class InventoryAddon {
 		String openEvent      = config.getString(information + "Open.Event");
 		String openPermission = config.getString(information + "Open.Permission");
 
-		boolean       configFill       = config.getBoolean(information + "Configuration.Fill");
-		boolean       configBorder     = config.getBoolean(information + "Configuration.Border");
-		List<Integer> configVertical   = config.getIntegerList(information + "Configuration.Line.Vertical");
-		List<Integer> configHorizontal = config.getIntegerList(information + "Configuration.Line.Horizontal");
+		if (permission != null) gangland.getInitializer().getPermissionManager().addPermission(permission);
 
 		InventoryHandler inventoryHandler = new InventoryHandler(gangland, displayName, size, name, true);
 
@@ -115,51 +116,8 @@ public class InventoryAddon {
 			boolean      enchanted = section.getBoolean("Enchanted");
 			boolean      draggable = section.getBoolean("Draggable");
 
-			for (String event : inventoryEvents.keySet()) {
-				String eventSectionStr = sectionStr + event + ".";
-				ConfigurationSection eventSection = config.getConfigurationSection(
-						eventSectionStr.substring(0, eventSectionStr.length() - 1));
-				if (eventSection == null) continue;
-
-				// so far, there is support for clickable events
-				if (!inventoryEvents.get(event).equals(InventoryClickEvent.class)) return;
-
-				String slotCommand    = eventSection.getString("Command");
-				String slotInventory  = eventSection.getString("Inventory");
-				String slotPermission = eventSection.getString("Permission");
-
-				ItemBuilder itemBuilder = new ItemBuilder(validateItem(item).parseMaterial());
-
-				if (color != null) itemBuilder.addTag("color", color);
-				itemBuilder.setDisplayName(itemName);
-				itemBuilder.setLore(lore);
-				if (enchanted) {
-					itemBuilder.addEnchantment(Enchantment.DURABILITY, 1).addItemFlags(ItemFlag.HIDE_ENCHANTS);
-				}
-
-				inventoryHandler.setItem(slot, itemBuilder, draggable, (player, inventory, builder) -> {
-					if (slotPermission != null) {
-						if (!player.hasPermission(slotPermission)) return;
-					}
-
-					if (slotCommand != null) {
-						String command = slotCommand.startsWith("/") ? slotCommand.substring(1) : slotCommand;
-						player.performCommand(command);
-					}
-					if (slotInventory != null) {
-						User<Player>     user       = gangland.getInitializer().getUserManager().getUser(player);
-						InventoryBuilder invBuilder = inventories.get(slotInventory);
-
-						if (invBuilder == null) return;
-
-						InventoryHandler handler = InventoryBuilder.initInventory(gangland, user, slotInventory,
-						                                                          invBuilder);
-						handler.open(player);
-					}
-				});
-
-				break;
-			}
+			processEventItems(gangland, config, inventoryHandler, slot, item, itemName, color, lore, enchanted,
+			                  draggable);
 
 			if (!inventoryHandler.itemOccupied(slot)) {
 				inventoryHandler.setItem(slot, validateItem(item).parseMaterial(), itemName, lore, enchanted,
@@ -167,8 +125,10 @@ public class InventoryAddon {
 			}
 		}
 
-		if (configFill) InventoryUtil.fillInventory(inventoryHandler);
-		else if (configBorder) InventoryUtil.createBoarder(inventoryHandler);
+		boolean       configFill       = config.getBoolean(information + "Configuration.Fill");
+		boolean       configBorder     = config.getBoolean(information + "Configuration.Border");
+		List<Integer> configVertical   = config.getIntegerList(information + "Configuration.Line.Vertical");
+		List<Integer> configHorizontal = config.getIntegerList(information + "Configuration.Line.Horizontal");
 
 		if (!configVertical.isEmpty()) {
 			for (int column : configVertical)
@@ -180,22 +140,80 @@ public class InventoryAddon {
 				InventoryUtil.horizontalLine(inventoryHandler, row);
 		}
 
-		InventoryBuilder builder = new InventoryBuilder(inventoryHandler);
+		if (configFill) InventoryUtil.fillInventory(inventoryHandler);
+		else if (configBorder) InventoryUtil.createBoarder(inventoryHandler);
+
+		InventoryBuilder builder = new InventoryBuilder(inventoryHandler, permission);
 
 		// open the inventory according to these states
-		InventoryBuilder.State state = null;
-		String                 value = null;
+		State  state = null;
+		String value = null;
 		if (openCommand != null) {
-			state = InventoryBuilder.State.COMMAND;
+			state = State.COMMAND;
 			value = openCommand;
 		} else if (openEvent != null) {
-			state = InventoryBuilder.State.EVENT;
+			state = State.EVENT;
 			value = openEvent;
 		}
 
 		if (state != null) builder.addOpen(state, value, openPermission);
 
 		inventories.put(name, builder);
+	}
+
+	private static void processEventItems(Gangland gangland, FileConfiguration config,
+	                                      InventoryHandler inventoryHandler, int slot, String item, String itemName,
+	                                      String color, List<String> lore, boolean enchanted, boolean draggable) {
+		for (String event : inventoryEvents.keySet()) {
+			String eventSectionStr = "Slots." + slot + "." + event + ".";
+			ConfigurationSection eventSection = config.getConfigurationSection(
+					eventSectionStr.substring(0, eventSectionStr.length() - 1));
+			if (eventSection == null) continue;
+
+			// so far, there is support for clickable events
+			if (inventoryEvents.get(event).equals(InventoryClickEvent.class)) {
+				inventoryClickEvent(gangland, eventSection, inventoryHandler, slot, item, itemName, color, lore,
+				                    enchanted, draggable);
+			} else return;
+			break;
+		}
+	}
+
+	private static void inventoryClickEvent(Gangland gangland, ConfigurationSection eventSection,
+	                                        InventoryHandler inventoryHandler, int slot, String item, String itemName,
+	                                        String color, List<String> lore, boolean enchanted, boolean draggable) {
+		String slotCommand    = eventSection.getString("Command");
+		String slotInventory  = eventSection.getString("Inventory");
+		String slotPermission = eventSection.getString("Permission");
+
+		ItemBuilder itemBuilder = new ItemBuilder(validateItem(item).parseMaterial());
+
+		if (color != null) itemBuilder.addTag("color", color);
+		itemBuilder.setDisplayName(itemName);
+		itemBuilder.setLore(lore);
+		if (enchanted) {
+			itemBuilder.addEnchantment(Enchantment.DURABILITY, 1).addItemFlags(ItemFlag.HIDE_ENCHANTS);
+		}
+
+		inventoryHandler.setItem(slot, itemBuilder, draggable, (player, inventory, builder) -> {
+			if (slotPermission != null) {
+				if (!player.hasPermission(slotPermission)) return;
+			}
+
+			if (slotCommand != null) {
+				String command = slotCommand.startsWith("/") ? slotCommand.substring(1) : slotCommand;
+				player.performCommand(command);
+			}
+			if (slotInventory != null) {
+				User<Player>     user       = gangland.getInitializer().getUserManager().getUser(player);
+				InventoryBuilder invBuilder = inventories.get(slotInventory);
+
+				if (invBuilder == null) return;
+
+				InventoryHandler handler = InventoryBuilder.initInventory(gangland, user, slotInventory, invBuilder);
+				handler.open(player);
+			}
+		});
 	}
 
 	private static XMaterial validateItem(String value) {

@@ -12,12 +12,14 @@ import org.jetbrains.annotations.Nullable;
 public class InventoryBuilder {
 
 	private final InventoryHandler inventoryHandler;
+	private final String           permission;
 
 	@Nullable
 	private OpenInventory openInventory;
 
-	public InventoryBuilder(InventoryHandler inventoryHandler) {
+	public InventoryBuilder(InventoryHandler inventoryHandler, String permission) {
 		this.inventoryHandler = inventoryHandler;
+		this.permission = permission;
 	}
 
 	public static InventoryHandler initInventory(Gangland gangland, User<Player> user, String name,
@@ -38,34 +40,9 @@ public class InventoryBuilder {
 	}
 
 	public void addOpen(@NotNull State state, String output, String permission) {
-		this.openInventory = new OpenInventory(state, output, permission);
+		if (openInventory == null) this.openInventory = new OpenInventory(state, output, permission);
 	}
 
-	@Getter
-	public enum State {
 
-		COMMAND, EVENT;
-
-		String output;
-
-		void setState(String output) {
-			this.output = output;
-		}
-
-	}
-
-	@Getter
-	public static class OpenInventory {
-
-		private final State  state;
-		private final String permission;
-
-		public OpenInventory(@NotNull State state, String output, String permission) {
-			this.state = state;
-			this.state.setState(output);
-			this.permission = permission;
-		}
-
-	}
 
 }
