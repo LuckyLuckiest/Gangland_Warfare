@@ -52,6 +52,9 @@
     - Add custom scoreboard in YAML files.
 0.0.64-DEV:
     - Add custom inventories in YAML files.
+    - Make inventories work with multi inventory system.
+    - Enhance the multi inventory system (don't use static methods).
+    - Make custom inventories YAML file configuration flexible.
 0.0.65-DEV:
 	- Work on waypoint radius, used for displaying particles
     - Gang settings.
