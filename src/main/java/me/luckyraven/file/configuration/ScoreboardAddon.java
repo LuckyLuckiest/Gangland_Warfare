@@ -17,27 +17,29 @@ public class ScoreboardAddon {
 
 	private final FileConfiguration scoreboard;
 
-	private final @Getter List<Line> lines = new ArrayList<>();
+	private final @Getter List<Line> lines;
 	private final @Getter Line       title;
 
 	public ScoreboardAddon(FileManager fileManager) {
+		this.lines = new ArrayList<>();
+
 		try {
 			fileManager.checkFileLoaded("scoreboard");
 			this.scoreboard = Objects.requireNonNull(fileManager.getFile("scoreboard")).getFileConfiguration();
-
-			// initializing the title
-			List<String> lines    = getLines("Title");
-			long         interval = scoreboard.getLong("Board.Title.Interval");
-
-			if (lines.size() == 1) title = new StaticLine();
-			else title = new Line(interval);
-			title.addAllContents(lines);
-
-			// initializing the rows
-			initializeRows();
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
+
+		// initializing the title
+		List<String> lines    = getLines("Title");
+		long         interval = scoreboard.getLong("Board.Title.Interval");
+
+		if (lines.size() == 1) title = new StaticLine();
+		else title = new Line(interval);
+		title.addAllContents(lines);
+
+		// initializing the rows
+		initializeRows();
 	}
 
 	private List<String> getLines(String section) {
