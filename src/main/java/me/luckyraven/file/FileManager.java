@@ -62,7 +62,7 @@ public class FileManager {
 	}
 
 	public YamlConfiguration loadFromResources(String resourceFile) throws IOException, InvalidConfigurationException {
-		File        file = new File(plugin.getDataFolder().getAbsolutePath() + File.separator + resourceFile);
+		File        file = new File(plugin.getDataFolder().getAbsolutePath(), resourceFile);
 		InputStream inputStream;
 
 		// Checks for the file in system
