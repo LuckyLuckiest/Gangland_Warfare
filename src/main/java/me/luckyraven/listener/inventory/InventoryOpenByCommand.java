@@ -3,6 +3,8 @@ package me.luckyraven.listener.inventory;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.data.inventory.InventoryBuilder;
+import me.luckyraven.data.inventory.OpenInventory;
+import me.luckyraven.data.inventory.State;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
@@ -27,21 +29,24 @@ public class InventoryOpenByCommand implements Listener {
 	@EventHandler
 	public void onInventoryCommand(PlayerCommandPreprocessEvent event) {
 		// includes the '/' at the beginning
-		String[] command = event.getMessage().strip().split(" ");
+		String[]     command = event.getMessage().strip().split(" ");
+		Player       player  = event.getPlayer();
+		User<Player> user    = userManager.getUser(player);
 
 		// this event runs before the event
 		Map<String, InventoryBuilder> inventories = InventoryAddon.getInventories();
 
 		for (Map.Entry<String, InventoryBuilder> inventory : inventories.entrySet()) {
-			String           name    = inventory.getKey();
-			InventoryBuilder builder = inventory.getValue();
+			String           name          = inventory.getKey();
+			InventoryBuilder builder       = inventory.getValue();
+			OpenInventory    openInventory = builder.getOpenInventory();
 
-			if (builder.getOpenInventory() == null) continue;
+			if (openInventory == null) continue;
 			// only check command types
-			if (builder.getOpenInventory().getState() != InventoryBuilder.State.COMMAND) continue;
+			if (openInventory.state() != State.COMMAND) continue;
 
 			// check if the command array is equal to an inventory command array
-			String[] inventoryCommandArr = builder.getOpenInventory().getState().getOutput().split(" ");
+			String[] inventoryCommandArr = openInventory.output().split(" ");
 
 			// check length
 			if (command.length != inventoryCommandArr.length) continue;
@@ -51,21 +56,21 @@ public class InventoryOpenByCommand implements Listener {
 					i -> command[i].equals(inventoryCommandArr[i]));
 			if (!arraysEqual) continue;
 
-			Player       player = event.getPlayer();
-			User<Player> user   = userManager.getUser(player);
+			String permission = builder.getPermission();
+			if (permission != null && !player.hasPermission(permission)) break;
 
-			if (!user.getUser().hasPermission(builder.getOpenInventory().getPermission())) break;
-			else {
-				try {
-					InventoryHandler inventoryHandler = InventoryBuilder.initInventory(gangland, user, name, builder);
+			if (openInventory.permission() != null && !player.hasPermission(openInventory.permission())) break;
 
-					inventoryHandler.open(player);
-					event.setCancelled(true);
-					break;
-				} catch (Exception exception) {
-					return;
-				}
+			try {
+				InventoryHandler inventoryHandler = InventoryBuilder.initInventory(gangland, user, name, builder);
+
+				inventoryHandler.open(player);
+				event.setCancelled(true);
+				break;
+			} catch (Exception exception) {
+				return;
 			}
+
 		}
 	}
 
