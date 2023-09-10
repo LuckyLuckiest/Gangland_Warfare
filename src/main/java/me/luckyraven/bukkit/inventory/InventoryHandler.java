@@ -227,7 +227,7 @@ public class InventoryHandler implements Listener {
 
 		Player       player = (Player) event.getWhoClicked();
 		User<Player> user   = gangland.getInitializer().getUserManager().getUser(player);
-		InventoryHandler inv = user.getInventoryHandlers().stream().filter(
+		InventoryHandler inv = user.getInventories().stream().filter(
 				inventory -> clickedInventory.equals(inventory.getInventory())).findFirst().orElse(null);
 
 		if (inv == null) return;
