@@ -88,6 +88,9 @@ public final class Initializer {
 	}
 
 	public void postInitialize() {
+		// permission manager
+		permissionManager = new PermissionManager(this.gangland, new PermissionWorker("gangland"));
+
 		// File
 		fileManager = new FileManager(gangland);
 		files();
@@ -99,9 +102,6 @@ public final class Initializer {
 
 		// Addons
 		MessageAddon.setPlugin(gangland);
-
-		// permission manager
-		permissionManager = new PermissionManager(this.gangland, new PermissionWorker("gangland"));
 
 		// add all registered plugin permissions
 		permissionManager.addAllPermissions(Bukkit.getPluginManager()
@@ -181,6 +181,12 @@ public final class Initializer {
 
 	public void inventoryLoader() {
 		inventoryLoader = new InventoryLoader(gangland);
+
+		inventoryLoader.addInventory(new FileHandler(gangland, "gang_info", "inventory", ".yml"));
+		inventoryLoader.addInventory(new FileHandler(gangland, "phone", "inventory", ".yml"));
+		inventoryLoader.addInventory(new FileHandler(gangland, "phone_gang", "inventory", ".yml"));
+
+		inventoryLoader.initialize();
 	}
 
 	private void databases() {
