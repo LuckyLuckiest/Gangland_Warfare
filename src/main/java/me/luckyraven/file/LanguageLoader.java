@@ -61,7 +61,7 @@ public class LanguageLoader {
 				gangland.getClass().getProtectionDomain().getCodeSource().getLocation().getPath(),
 				StandardCharsets.UTF_8);
 
-		File   directory = new File(gangland.getDataFolder().getAbsolutePath() + File.separator + "message");
+		File   directory = new File(gangland.getDataFolder().getAbsolutePath(), "message");
 		File[] con       = directory.listFiles();
 
 		if (con != null) for (File file : con) {
