@@ -35,7 +35,7 @@ public class User<T extends OfflinePlayer> {
 	private final Wanted                wanted;
 	private final EconomyHandler        economy;
 	private final List<Account<?, ?>>   linkedAccounts;
-	private final Set<InventoryHandler> inventoryHandlers;
+	private final Set<InventoryHandler> inventories;
 
 	private @Setter int kills, deaths, mobKills, gangId;
 	private @Setter boolean              hasBank;
@@ -50,7 +50,7 @@ public class User<T extends OfflinePlayer> {
 	 */
 	public User(T user) {
 		this.user = user;
-		this.inventoryHandlers = new HashSet<>();
+		this.inventories = new HashSet<>();
 		this.linkedAccounts = new ArrayList<>();
 		this.bounty = new Bounty();
 		this.level = new Level();
@@ -115,7 +115,7 @@ public class User<T extends OfflinePlayer> {
 		removeInventory(inventoryHandler.getTitle().getKey());
 
 		// add the inventory to the set
-		inventoryHandlers.add(inventoryHandler);
+		inventories.add(inventoryHandler);
 	}
 
 	/**
@@ -124,7 +124,7 @@ public class User<T extends OfflinePlayer> {
 	 * @param inventoryHandler the inventory
 	 */
 	public void removeInventory(InventoryHandler inventoryHandler) {
-		inventoryHandlers.remove(inventoryHandler);
+		inventories.remove(inventoryHandler);
 	}
 
 	/**
@@ -135,7 +135,7 @@ public class User<T extends OfflinePlayer> {
 	public void removeInventory(String name) {
 		InventoryHandler inventory = getInventory(name);
 		if (inventory == null) return;
-		inventoryHandlers.remove(inventory);
+		inventories.remove(inventory);
 	}
 
 	/**
@@ -146,17 +146,17 @@ public class User<T extends OfflinePlayer> {
 	 */
 	@Nullable
 	public InventoryHandler getInventory(String name) {
-		return inventoryHandlers.stream()
-		                        .filter(handler -> handler.getTitle().getKey().equals(name.toLowerCase()))
-		                        .findFirst()
-		                        .orElse(null);
+		return inventories.stream()
+		                  .filter(handler -> handler.getTitle().getKey().equals(name.toLowerCase()))
+		                  .findFirst()
+		                  .orElse(null);
 	}
 
 	/**
 	 * Clears all the inventories from the user.
 	 */
 	public void clearInventories() {
-		inventoryHandlers.clear();
+		inventories.clear();
 	}
 
 	/**
@@ -165,7 +165,7 @@ public class User<T extends OfflinePlayer> {
 	 * @return a copy of the inventories registered to the user.
 	 */
 	public List<InventoryHandler> getInventories() {
-		return new ArrayList<>(inventoryHandlers);
+		return new ArrayList<>(inventories);
 	}
 
 	/**
