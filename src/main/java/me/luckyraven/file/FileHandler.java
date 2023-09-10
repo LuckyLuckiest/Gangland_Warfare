@@ -29,9 +29,8 @@ public class FileHandler {
 	private @Getter FileConfiguration fileConfiguration;
 	private @Getter boolean           loaded;
 
-	@Getter
-	@Setter
-	private String configVersion;
+	private @Getter
+	@Setter String configVersion;
 
 	public FileHandler(JavaPlugin plugin, File file) throws IOException {
 		this(plugin, file.getName(), file.getParentFile().getPath(),
@@ -54,13 +53,20 @@ public class FileHandler {
 		this.configVersion = plugin.getDescription().getVersion();
 	}
 
+	public void create(boolean inJar) throws IOException {
+		createNewFile(inJar);
+		registerYamlFile();
+	}
+
 	private void createNewFile(boolean inJar) throws IOException {
-		if (file == null) file = new File(plugin.getDataFolder(), directory + fileType);
+		String resourceFile = directory + fileType;
+		if (file == null) file = new File(plugin.getDataFolder().getAbsolutePath(), resourceFile);
 
 		if (file.exists()) return;
 
 		file.getParentFile().mkdirs();
-		if (plugin.getResource(directory + fileType) != null && inJar) plugin.saveResource(directory + fileType, false);
+		if (plugin.getResource(resourceFile.replace(File.separator, "/")) != null && inJar) plugin.saveResource(
+				resourceFile, false);
 		else {
 			int dir = file.getName().lastIndexOf(File.separator);
 
@@ -72,11 +78,6 @@ public class FileHandler {
 			}
 			file.createNewFile();
 		}
-	}
-
-	public void create(boolean inJar) throws IOException {
-		createNewFile(inJar);
-		registerYamlFile();
 	}
 
 	private void registerYamlFile() throws IOException {
