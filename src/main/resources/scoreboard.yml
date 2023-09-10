@@ -15,15 +15,11 @@
 # +------------------------------------+ #
 # |      Scoreboard Configuration      | #
 # +------------------------------------+ #
-
-# If you have faced any problem with the file, you can create a new one by changing [Config_Version] to a different
-# number, but when a new update comes out with a new configuration file(s), [Config_Version] will change resulting
-# in a new file(s) for that new version while saving old files with a suffix -old to indicate they are old.
 Config_Version: '${project.version}'
 
 Board:
    Configuration:
-      Minimum_Size: 30
+      Minimum_Size: 20
    Title:
       Interval: 2
       Lines:
