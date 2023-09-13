@@ -5,6 +5,8 @@ import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.data.inventory.InventoryBuilder;
+import me.luckyraven.data.inventory.InventoryData;
+import me.luckyraven.data.inventory.OpenInventory;
 import me.luckyraven.data.inventory.State;
 import me.luckyraven.data.user.User;
 import me.luckyraven.file.FileHandler;
@@ -156,7 +158,14 @@ public class InventoryAddon {
 			value = openEvent;
 		}
 
-		if (state != null) builder.addOpen(state, value, openPermission);
+		InventoryData inventoryData = new InventoryData(name, displayName, type, size);
+		inventoryData.setPermission(permission);
+		inventoryData.setVerticalLine(configVertical);
+		inventoryData.setHorizontalLine(configHorizontal);
+		inventoryData.setFill(configFill);
+		inventoryData.setBorder(configBorder);
+
+		if (state != null) inventoryData.setOpenInventory(new OpenInventory(state, value, openPermission));
 
 		inventories.put(name, builder);
 	}
