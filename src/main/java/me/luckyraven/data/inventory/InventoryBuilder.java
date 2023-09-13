@@ -43,6 +43,4 @@ public class InventoryBuilder {
 		if (openInventory == null) this.openInventory = new OpenInventory(state, output, permission);
 	}
 
-
-
 }
