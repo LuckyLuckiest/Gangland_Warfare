@@ -1,0 +1,5 @@
+- When periodical updates occur, the inventories attached to the user are all removed.
+- Need to add two inventories, special and normal inventories. Special inventories are the ones that open with user
+interaction.
+- Non-special inventories are the ones that can be created using commands.
+- Tab completion doesn't end after the last optional argument, but ends at the height of the tree.
