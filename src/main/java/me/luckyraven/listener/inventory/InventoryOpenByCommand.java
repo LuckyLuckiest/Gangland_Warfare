@@ -62,7 +62,7 @@ public class InventoryOpenByCommand implements Listener {
 			if (openInventory.permission() != null && !player.hasPermission(openInventory.permission())) break;
 
 			try {
-				InventoryHandler inventoryHandler = InventoryBuilder.initInventory(gangland, user, name, builder);
+				InventoryHandler inventoryHandler = builder.createInventory(gangland, user, name);
 
 				inventoryHandler.open(player);
 				event.setCancelled(true);

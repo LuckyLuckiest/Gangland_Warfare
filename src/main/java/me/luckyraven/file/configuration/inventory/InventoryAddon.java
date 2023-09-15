@@ -208,7 +208,7 @@ public class InventoryAddon {
 
 				if (invBuilder == null) return;
 
-				InventoryHandler handler = invBuilder.createInventory(gangland, user, slotInventory, invBuilder);
+				InventoryHandler handler = invBuilder.createInventory(gangland, user, slotInventory);
 				handler.open(player);
 			}
 		});
