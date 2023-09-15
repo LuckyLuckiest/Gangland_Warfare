@@ -1,5 +1,7 @@
 package me.luckyraven;
 
+import com.viaversion.viaversion.api.Via;
+import com.viaversion.viaversion.api.ViaAPI;
 import com.zaxxer.hikari.HikariConfig;
 import lombok.Getter;
 import me.clip.placeholderapi.PlaceholderAPI;
@@ -28,6 +30,7 @@ public final class Gangland extends JavaPlugin {
 	private ReloadPlugin            reloadPlugin;
 	private PeriodicalUpdates       periodicalUpdates;
 	private PlaceholderAPIExpansion placeholderAPIExpansion;
+	private ViaAPI                  viaAPI;
 
 	@Override
 	public void onLoad() {
@@ -118,6 +121,9 @@ public final class Gangland extends JavaPlugin {
 
 		Dependency citizens = new Dependency("Citizens", Dependency.Type.SOFT);
 		citizens.validate(null);
+
+		Dependency viaVersion = new Dependency("ViaVersion", Dependency.Type.SOFT);
+		viaVersion.validate(() -> this.viaAPI = Via.getAPI());
 	}
 
 	private class Dependency {

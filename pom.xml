@@ -160,6 +160,13 @@
             <id>citizens-repo</id>
             <url>https://maven.citizensnpcs.co/repo</url>
         </repository>
+
+
+        <repository>
+            <id>viaversion-repo</id>
+            <url>https://repo.viaversion.com</url>
+        </repository>
+
     </repositories>
 
     <dependencies>
@@ -315,6 +322,13 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.viaversion</groupId>
+            <artifactId>viaversion-api</artifactId>
+            <version>4.7.0</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Soft plugins dependencies (end) -->
