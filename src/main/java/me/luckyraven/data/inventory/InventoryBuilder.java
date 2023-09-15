@@ -11,29 +11,29 @@ import org.jetbrains.annotations.Nullable;
 @Getter
 public class InventoryBuilder {
 
-	private final InventoryHandler inventoryHandler;
-	private final String           permission;
+	private final InventoryData inventoryData;
+	private final String        permission;
 
 	@Nullable
 	private OpenInventory openInventory;
 
-	public InventoryBuilder(InventoryHandler inventoryHandler, String permission) {
-		this.inventoryHandler = inventoryHandler;
+	public InventoryBuilder(InventoryData inventoryData, String permission) {
+		this.inventoryData = inventoryData;
 		this.permission = permission;
 	}
 
-	public static InventoryHandler initInventory(Gangland gangland, User<Player> user, String name,
-	                                             InventoryBuilder builder) {
+	public InventoryHandler createInventory(Gangland gangland, User<Player> user, String name,
+	                                        InventoryBuilder builder) {
 		InventoryHandler handler = user.getInventory(name);
 
 		// create a new instance
 		if (handler == null) {
-			InventoryHandler inventoryHandler = builder.getInventoryHandler();
-			handler = new InventoryHandler(gangland,
-			                               gangland.usePlaceholder(user.getUser(), inventoryHandler.getDisplayTitle()),
-			                               inventoryHandler.getSize(), user);
+//			InventoryHandler inventoryHandler = builder.getInventoryHandler();
+//			handler = new InventoryHandler(gangland,
+//			                               gangland.usePlaceholder(user.getUser(), inventoryHandler.getDisplayTitle()),
+//			                               inventoryHandler.getSize(), user);
 
-			handler.copyContent(inventoryHandler, user.getUser());
+//			handler.copyContent(inventoryHandler, user.getUser());
 		}
 
 		return handler;
