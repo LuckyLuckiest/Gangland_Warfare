@@ -1,5 +1,6 @@
 package me.luckyraven.bukkit.scoreboard.driver;
 
+import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import fr.mrmicky.fastboard.FastBoard;
 import lombok.Getter;
 import me.luckyraven.Gangland;
@@ -19,7 +20,18 @@ public abstract class DriverHandler {
 
 	public DriverHandler(Gangland gangland, Player player) {
 		this.gangland = gangland;
-		this.fastBoard = new FastBoard(player);
+		this.fastBoard = new FastBoard(player) {
+
+			@Override
+			protected boolean hasLinesMaxLength() {
+				// change the max line length according to the player version using ViaVersion
+				if (gangland.getViaAPI() != null) return gangland.getViaAPI().getPlayerVersion(getPlayer()) <
+						ProtocolVersion.v1_13.getVersion();
+
+				// assuming the players are all >1.13
+				return false;
+			}
+		};
 
 		ScoreboardAddon addon = gangland.getInitializer().getScoreboardAddon();
 
