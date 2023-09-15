@@ -8,9 +8,9 @@ import me.luckyraven.data.inventory.InventoryBuilder;
 import me.luckyraven.data.inventory.InventoryData;
 import me.luckyraven.data.inventory.OpenInventory;
 import me.luckyraven.data.inventory.State;
+import me.luckyraven.data.inventory.part.Slot;
 import me.luckyraven.data.user.User;
 import me.luckyraven.file.FileHandler;
-import me.luckyraven.util.InventoryUtil;
 import me.luckyraven.util.color.MaterialType;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -88,11 +88,12 @@ public class InventoryAddon {
 		String openPermission = config.getString(information + "Open.Permission");
 
 		if (permission != null) gangland.getInitializer().getPermissionManager().addPermission(permission);
+		int realSize = InventoryHandler.factorOfNine(size);
 
-		InventoryHandler inventoryHandler = new InventoryHandler(gangland, displayName, size, name, true);
+//		InventoryHandler inventoryHandler = new InventoryHandler(gangland, displayName, size, name, true);
 
 		// slots section
-		for (int slot = 0; slot < inventoryHandler.getSize(); ++slot) {
+		for (int slot = 0; slot < realSize; ++slot) {
 			String sectionStr = slots + slot + ".";
 			ConfigurationSection section = config.getConfigurationSection(
 					sectionStr.substring(0, sectionStr.length() - 1));
@@ -118,34 +119,19 @@ public class InventoryAddon {
 			boolean      enchanted = section.getBoolean("Enchanted");
 			boolean      draggable = section.getBoolean("Draggable");
 
-			processEventItems(gangland, config, inventoryHandler, slot, item, itemName, color, lore, enchanted,
-			                  draggable);
+			Slot usableSlot = processEventItems(gangland, config, slot, item, itemName, color, lore, enchanted,
+			                                    draggable);
 
-			if (!inventoryHandler.itemOccupied(slot)) {
-				inventoryHandler.setItem(slot, validateItem(item).parseMaterial(), itemName, lore, enchanted,
-				                         draggable);
-			}
+//			if (!inventoryHandler.itemOccupied(slot)) {
+//				inventoryHandler.setItem(slot, validateItem(item).parseMaterial(), itemName, lore, enchanted,
+//				                         draggable);
+//			}
 		}
 
 		boolean       configFill       = config.getBoolean(information + "Configuration.Fill");
 		boolean       configBorder     = config.getBoolean(information + "Configuration.Border");
 		List<Integer> configVertical   = config.getIntegerList(information + "Configuration.Line.Vertical");
 		List<Integer> configHorizontal = config.getIntegerList(information + "Configuration.Line.Horizontal");
-
-		if (!configVertical.isEmpty()) {
-			for (int column : configVertical)
-				InventoryUtil.verticalLine(inventoryHandler, column);
-		}
-
-		if (!configHorizontal.isEmpty()) {
-			for (int row : configHorizontal)
-				InventoryUtil.horizontalLine(inventoryHandler, row);
-		}
-
-		if (configFill) InventoryUtil.fillInventory(inventoryHandler);
-		else if (configBorder) InventoryUtil.createBoarder(inventoryHandler);
-
-		InventoryBuilder builder = new InventoryBuilder(inventoryHandler, permission);
 
 		// open the inventory according to these states
 		State  state = null;
@@ -167,12 +153,12 @@ public class InventoryAddon {
 
 		if (state != null) inventoryData.setOpenInventory(new OpenInventory(state, value, openPermission));
 
-		inventories.put(name, builder);
+		inventories.put(name, new InventoryBuilder(inventoryData, permission));
 	}
 
-	private static void processEventItems(Gangland gangland, FileConfiguration config,
-	                                      InventoryHandler inventoryHandler, int slot, String item, String itemName,
-	                                      String color, List<String> lore, boolean enchanted, boolean draggable) {
+	private static Slot processEventItems(Gangland gangland, FileConfiguration config, int slot, String item,
+	                                      String itemName, String color, List<String> lore, boolean enchanted,
+	                                      boolean draggable) {
 		for (String event : inventoryEvents.keySet()) {
 			String eventSectionStr = "Slots." + slot + "." + event + ".";
 			ConfigurationSection eventSection = config.getConfigurationSection(
@@ -181,16 +167,17 @@ public class InventoryAddon {
 
 			// so far, there is support for clickable events
 			if (inventoryEvents.get(event).equals(InventoryClickEvent.class)) {
-				inventoryClickEvent(gangland, eventSection, inventoryHandler, slot, item, itemName, color, lore,
-				                    enchanted, draggable);
-			} else return;
-			break;
+				return inventoryClickEvent(gangland, eventSection, slot, item, itemName, color, lore, enchanted,
+				                           draggable);
+			} else return null;
 		}
+
+		return null;
 	}
 
-	private static void inventoryClickEvent(Gangland gangland, ConfigurationSection eventSection,
-	                                        InventoryHandler inventoryHandler, int slot, String item, String itemName,
-	                                        String color, List<String> lore, boolean enchanted, boolean draggable) {
+	private static Slot inventoryClickEvent(Gangland gangland, ConfigurationSection eventSection, int slotLoc,
+	                                        String item, String itemName, String color, List<String> lore,
+	                                        boolean enchanted, boolean draggable) {
 		String slotCommand    = eventSection.getString("Command");
 		String slotInventory  = eventSection.getString("Inventory");
 		String slotPermission = eventSection.getString("Permission");
@@ -204,7 +191,9 @@ public class InventoryAddon {
 			itemBuilder.addEnchantment(Enchantment.DURABILITY, 1).addItemFlags(ItemFlag.HIDE_ENCHANTS);
 		}
 
-		inventoryHandler.setItem(slot, itemBuilder, draggable, (player, inventory, builder) -> {
+		Slot slot = new Slot(slotLoc, true, draggable, itemBuilder);
+
+		slot.setClickable((player, inventoryHandler, builder) -> {
 			if (slotPermission != null) {
 				if (!player.hasPermission(slotPermission)) return;
 			}
@@ -219,10 +208,12 @@ public class InventoryAddon {
 
 				if (invBuilder == null) return;
 
-				InventoryHandler handler = InventoryBuilder.initInventory(gangland, user, slotInventory, invBuilder);
+				InventoryHandler handler = invBuilder.createInventory(gangland, user, slotInventory, invBuilder);
 				handler.open(player);
 			}
 		});
+
+		return slot;
 	}
 
 	private static XMaterial validateItem(String value) {
