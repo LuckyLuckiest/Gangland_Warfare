@@ -111,7 +111,7 @@ public class InventoryHandler implements Listener {
 		inventoryHandler.title = new NamespacedKey(gangland, titleRefactor(name));
 	}
 
-	private int factorOfNine(int value) {
+	public static int factorOfNine(int value) {
 		return (int) Math.ceil((double) value / 9) * 9;
 	}
 
