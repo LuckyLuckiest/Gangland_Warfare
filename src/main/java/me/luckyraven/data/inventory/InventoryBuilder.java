@@ -22,12 +22,12 @@ public class InventoryBuilder {
 		this.permission = permission;
 	}
 
-	public InventoryHandler createInventory(Gangland gangland, User<Player> user, String name,
-	                                        InventoryBuilder builder) {
+	public InventoryHandler createInventory(Gangland gangland, User<Player> user, String name) {
 		InventoryHandler handler = user.getInventory(name);
 
 		// create a new instance
 		if (handler == null) {
+//			InventoryHandler inventoryHandler = new InventoryHandler(gangland, )
 //			InventoryHandler inventoryHandler = builder.getInventoryHandler();
 //			handler = new InventoryHandler(gangland,
 //			                               gangland.usePlaceholder(user.getUser(), inventoryHandler.getDisplayTitle()),
