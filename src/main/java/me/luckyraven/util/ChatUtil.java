@@ -10,6 +10,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 public final class ChatUtil {
@@ -38,6 +39,20 @@ public final class ChatUtil {
 
 	public static String capitalize(@NotNull String text) {
 		return text.substring(0, 1).toUpperCase() + text.substring(1);
+	}
+
+	public static String createList(List<String> texts) {
+		StringBuilder builder = new StringBuilder("[");
+
+		for (int i = 0; i < texts.size(); i++) {
+			builder.append(texts.get(i));
+
+			if (i < texts.size() - 1) builder.append(", ");
+		}
+
+		builder.append("]");
+
+		return builder.toString();
 	}
 
 	public static String center(@NotNull String text, int level) {
