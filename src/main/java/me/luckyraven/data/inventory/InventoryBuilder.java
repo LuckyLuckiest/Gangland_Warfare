@@ -1,46 +1,86 @@
 package me.luckyraven.data.inventory;
 
-import lombok.Getter;
 import me.luckyraven.Gangland;
+import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
+import me.luckyraven.data.inventory.part.Slot;
 import me.luckyraven.data.user.User;
+import me.luckyraven.util.InventoryUtil;
+import me.luckyraven.util.color.ColorUtil;
+import me.luckyraven.util.color.MaterialType;
+import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.bukkit.inventory.ItemFlag;
 
-@Getter
-public class InventoryBuilder {
+import java.util.List;
 
-	private final InventoryData inventoryData;
-	private final String        permission;
-
-	@Nullable
-	private OpenInventory openInventory;
-
-	public InventoryBuilder(InventoryData inventoryData, String permission) {
-		this.inventoryData = inventoryData;
-		this.permission = permission;
-	}
+public record InventoryBuilder(InventoryData inventoryData, String permission) {
 
 	public InventoryHandler createInventory(Gangland gangland, User<Player> user, String name) {
 		InventoryHandler handler = user.getInventory(name);
 
 		// create a new instance
 		if (handler == null) {
-//			InventoryHandler inventoryHandler = new InventoryHandler(gangland, )
-//			InventoryHandler inventoryHandler = builder.getInventoryHandler();
-//			handler = new InventoryHandler(gangland,
-//			                               gangland.usePlaceholder(user.getUser(), inventoryHandler.getDisplayTitle()),
-//			                               inventoryHandler.getSize(), user);
+			Player player = user.getUser();
 
-//			handler.copyContent(inventoryHandler, user.getUser());
+			String     displayName = inventoryData.getDisplayName();
+			int        size        = inventoryData.getSize();
+			List<Slot> slots       = inventoryData.getSlots();
+
+			// it is special when there is a click event
+			handler = new InventoryHandler(gangland, gangland.usePlaceholder(player, displayName), size, user, false);
+
+			for (Slot slot : slots) {
+				int         usedSlot = slot.getSlot();
+				ItemBuilder item     = slot.getItem();
+				if (item == null) continue;
+
+				String   colorTag = "color";
+				Material type     = item.getType();
+				if (item.hasNBTTag(colorTag)) {
+					// special treatment for colored data
+					String value = gangland.usePlaceholder(player, item.getTagData(colorTag).toString());
+
+					MaterialType material = MaterialType.WOOL;
+					for (MaterialType materialType : MaterialType.values()) {
+						if (type.name().contains(materialType.name())) {
+							material = materialType;
+							break;
+						}
+					}
+
+					type = ColorUtil.getMaterialByColor(value, material.name());
+				}
+
+				ItemBuilder newItem = new ItemBuilder(type);
+
+				String itemDisplayName = gangland.usePlaceholder(player, item.getDisplayName());
+				newItem.setDisplayName(itemDisplayName);
+
+				List<String> lore = item.getLore().stream().map(s -> gangland.usePlaceholder(player, s)).toList();
+				newItem.setLore(lore);
+
+				if (!item.getEnchantments().isEmpty()) newItem.addEnchantment(Enchantment.DURABILITY, 1).addItemFlags(
+						ItemFlag.HIDE_ENCHANTS);
+
+				handler.setItem(usedSlot, newItem, slot.isDraggable(), slot.getClickableSlot());
+			}
+
+			List<Integer> verticalLine   = inventoryData.getVerticalLine();
+			List<Integer> horizontalLine = inventoryData.getHorizontalLine();
+
+			if (!verticalLine.isEmpty()) for (int line : verticalLine)
+				InventoryUtil.verticalLine(handler, line);
+
+			if (!horizontalLine.isEmpty()) for (int line : horizontalLine)
+				InventoryUtil.horizontalLine(handler, line);
+
+			if (inventoryData.isBorder()) InventoryUtil.createBoarder(handler);
+			else if (inventoryData.isFill()) InventoryUtil.fillInventory(handler);
 		}
 
 		return handler;
-	}
-
-	public void addOpen(@NotNull State state, String output, String permission) {
-		if (openInventory == null) this.openInventory = new OpenInventory(state, output, permission);
 	}
 
 }
