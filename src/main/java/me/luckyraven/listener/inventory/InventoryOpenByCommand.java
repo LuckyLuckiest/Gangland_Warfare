@@ -39,7 +39,7 @@ public class InventoryOpenByCommand implements Listener {
 		for (Map.Entry<String, InventoryBuilder> inventory : inventories.entrySet()) {
 			String           name          = inventory.getKey();
 			InventoryBuilder builder       = inventory.getValue();
-			OpenInventory    openInventory = builder.getOpenInventory();
+			OpenInventory    openInventory = builder.inventoryData().getOpenInventory();
 
 			if (openInventory == null) continue;
 			// only check command types
@@ -56,7 +56,7 @@ public class InventoryOpenByCommand implements Listener {
 					i -> command[i].equals(inventoryCommandArr[i]));
 			if (!arraysEqual) continue;
 
-			String permission = builder.getPermission();
+			String permission = builder.permission();
 			if (permission != null && !player.hasPermission(permission)) break;
 
 			if (openInventory.permission() != null && !player.hasPermission(openInventory.permission())) break;
