@@ -24,7 +24,7 @@ public class RemoveAccount implements Listener {
 		this.userManager = gangland.getInitializer().getUserManager();
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerLeave(PlayerQuitEvent event) {
 		User<Player> user = userManager.getUser(event.getPlayer());
 
