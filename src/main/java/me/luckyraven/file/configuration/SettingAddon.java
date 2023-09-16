@@ -75,9 +75,13 @@ public class SettingAddon {
 		}
 	}
 
-	public static String formatDouble(double value) {
+	private static String format(double value) {
 		if (settings.getBoolean("Balance_Format.Enable")) return String.format(balanceFormat, value);
 		return String.valueOf(value);
+	}
+
+	public static String formatDouble(double value) {
+		return format(value).replaceAll("\\.?0*$", "");
 	}
 
 	private void initialize() {
