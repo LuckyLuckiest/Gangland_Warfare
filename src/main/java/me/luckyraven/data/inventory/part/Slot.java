@@ -24,7 +24,7 @@ public class Slot {
 	}
 
 	public void setClickable(TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
-		Preconditions.checkArgument(!this.clickable, "The slot is not clickable");
+		Preconditions.checkArgument(this.clickable, "The slot is not clickable");
 		this.clickableSlot = clickable;
 	}
 
