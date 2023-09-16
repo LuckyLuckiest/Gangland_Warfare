@@ -4,6 +4,7 @@ import com.cryptomorin.xseries.XMaterial;
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteItemNBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
+import lombok.Getter;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -19,6 +20,10 @@ public class ItemBuilder {
 
 	private static final Map<String, Object> SPECIAL_NBT = new HashMap<>();
 	private final        ItemStack           itemStack;
+
+	private @Getter String            displayName;
+	private @Getter List<String>      lore;
+	private @Getter List<Enchantment> enchantments = new ArrayList<>();
 
 	public ItemBuilder(ItemStack itemStack) {
 		this.itemStack = itemStack;
@@ -36,10 +41,10 @@ public class ItemBuilder {
 		if (displayName == null) displayName = "";
 		if (displayName.isEmpty()) displayName = " ";
 
-		@Nullable String finalDisplayName = displayName;
+		this.displayName = displayName;
 
 		modifyNBT(nbt -> nbt.modifyMeta(
-				(readableNBT, itemMeta) -> itemMeta.setDisplayName(ChatUtil.color(finalDisplayName))));
+				(readableNBT, itemMeta) -> itemMeta.setDisplayName(ChatUtil.color(this.displayName))));
 		return this;
 	}
 
@@ -55,11 +60,15 @@ public class ItemBuilder {
 		if (lore == null) loreList = new ArrayList<>();
 		else loreList = new ArrayList<>(lore.stream().map(ChatUtil::color).toList());
 
-		modifyNBT(nbt -> nbt.modifyMeta((readableNBT, itemMeta) -> itemMeta.setLore(loreList)));
+		this.lore = loreList;
+
+		modifyNBT(nbt -> nbt.modifyMeta((readableNBT, itemMeta) -> itemMeta.setLore(this.lore)));
 		return this;
 	}
 
 	public ItemBuilder addEnchantment(Enchantment enchantment, int level) {
+		enchantments.add(enchantment);
+
 		modifyNBT(nbt -> nbt.modifyMeta((readableNBT, itemMeta) -> itemMeta.addEnchant(enchantment, level, true)));
 		return this;
 	}
@@ -149,6 +158,10 @@ public class ItemBuilder {
 
 	public Object getTagData(String tag) {
 		return NBT.get(itemStack, nbt -> nbt.getString(tag));
+	}
+
+	public Material getType() {
+		return itemStack.getType();
 	}
 
 	@Override
