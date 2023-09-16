@@ -49,7 +49,7 @@ class GangColorCommand extends SubArgument {
 			}
 
 			InventoryHandler colorGUI = new InventoryHandler(gangland, "&5&lChoose a color", InventoryHandler.MAX_SLOTS,
-			                                                 user);
+			                                                 user, false);
 
 			int row = 2, column = 2;
 			for (Color color : Color.values()) {
@@ -71,7 +71,7 @@ class GangColorCommand extends SubArgument {
 				colorGUI.setItem((row - 1) * 9 + (column - 1), itemBuilder, false, (player1, inventory, item) -> {
 					User<Player> user1 = userManager.getUser(player1);
 					InventoryHandler confirmGUI = new InventoryHandler(gangland, "&4&lAre you sure?",
-					                                                   InventoryHandler.MAX_SLOTS, user1);
+					                                                   InventoryHandler.MAX_SLOTS, user1, false);
 					confirmGUI.setItem(22, item.build(), false);
 
 					Material mat = ColorUtil.getMaterialByColor(colorName, MaterialType.STAINED_GLASS_PANE.name());

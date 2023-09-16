@@ -69,14 +69,20 @@ public class InventoryHandler implements Listener {
 		if (add) SPECIAL_INVENTORIES.put(this.title, this);
 	}
 
-	public InventoryHandler(Gangland gangland, String title, int size, User<Player> user, NamespacedKey namespacedKey) {
+	public InventoryHandler(Gangland gangland, String title, int size, User<Player> user, NamespacedKey namespacedKey,
+	                        boolean special) {
 		this(gangland, title, size, namespacedKey);
+
+		if (special) {
+			user.addSpecialInventory(this);
+			return;
+		}
 
 		user.addInventory(this);
 	}
 
-	public InventoryHandler(Gangland gangland, String title, int size, User<Player> user) {
-		this(gangland, title, size, user, new NamespacedKey(gangland, titleRefactor(title)));
+	public InventoryHandler(Gangland gangland, String title, int size, User<Player> user, boolean special) {
+		this(gangland, title, size, user, new NamespacedKey(gangland, titleRefactor(title)), special);
 	}
 
 	public InventoryHandler(Gangland gangland, String title, int size) {
@@ -240,14 +246,15 @@ public class InventoryHandler implements Listener {
 		event.setCancelled(!inv.draggableSlots.contains(rawSlot));
 	}
 
-	@EventHandler(priority = EventPriority.HIGHEST)
+	@EventHandler(priority = EventPriority.LOWEST)
 	public synchronized void onPlayerQuit(PlayerQuitEvent event) {
-		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
-			Player       player = event.getPlayer();
-			User<Player> user   = gangland.getInitializer().getUserManager().getUser(player);
+		Player       player = event.getPlayer();
+		User<Player> user   = gangland.getInitializer().getUserManager().getUser(player);
 
+		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
 			// remove all the inventories of that player only
 			user.clearInventories();
+			user.clearSpecialInventories();
 		});
 	}
 

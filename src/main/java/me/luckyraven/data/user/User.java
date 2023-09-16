@@ -35,7 +35,7 @@ public class User<T extends OfflinePlayer> {
 	private final Wanted                wanted;
 	private final EconomyHandler        economy;
 	private final List<Account<?, ?>>   linkedAccounts;
-	private final Set<InventoryHandler> inventories;
+	private final Set<InventoryHandler> inventories, specialInventories;
 
 	private @Setter int kills, deaths, mobKills, gangId;
 	private @Setter boolean              hasBank;
@@ -50,12 +50,13 @@ public class User<T extends OfflinePlayer> {
 	 */
 	public User(T user) {
 		this.user = user;
-		this.inventories = new HashSet<>();
-		this.linkedAccounts = new ArrayList<>();
 		this.bounty = new Bounty();
 		this.level = new Level();
 		this.wanted = new Wanted();
 		this.economy = new EconomyHandler(this);
+		this.linkedAccounts = new ArrayList<>();
+		this.inventories = new HashSet<>();
+		this.specialInventories = new HashSet<>();
 
 		this.kills = this.deaths = this.mobKills = 0;
 		this.gangId = -1;
@@ -103,6 +104,10 @@ public class User<T extends OfflinePlayer> {
 	 */
 	public List<Account<?, ?>> getLinkedAccounts() {
 		return new ArrayList<>(linkedAccounts);
+	}
+
+	public void addSpecialInventory(InventoryHandler inventoryHandler) {
+		specialInventories.add(inventoryHandler);
 	}
 
 	/**
@@ -166,6 +171,14 @@ public class User<T extends OfflinePlayer> {
 	 */
 	public List<InventoryHandler> getInventories() {
 		return new ArrayList<>(inventories);
+	}
+
+	public List<InventoryHandler> getSpecialInventories() {
+		return new ArrayList<>(specialInventories);
+	}
+
+	public void clearSpecialInventories() {
+		specialInventories.clear();
 	}
 
 	/**

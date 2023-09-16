@@ -29,7 +29,7 @@ public class MultiInventory extends InventoryHandler {
 
 	public MultiInventory(Gangland gangland, String title, int size, User<Player> user) {
 		super(gangland, title, size, user,
-		      new NamespacedKey(gangland, titleRefactor(String.format("%s_%d", title, ++ID))));
+		      new NamespacedKey(gangland, titleRefactor(String.format("%s_%d", title, ++ID))), false);
 		this.gangland = gangland;
 		this.inventories = new LinkedList<>();
 		this.currentPage = 0;
@@ -77,12 +77,8 @@ public class MultiInventory extends InventoryHandler {
 		for (int i = 1; i < pages; i++) {
 			int size = i == pages - 1 ? finalPage : initialPage;
 
-			InventoryHandler inv = new InventoryHandler(gangland, name, size, user, new NamespacedKey(gangland,
-			                                                                                          titleRefactor(
-					                                                                                          String.format(
-							                                                                                          "%s_%d",
-							                                                                                          name,
-							                                                                                          ++ID))));
+			NamespacedKey    key = new NamespacedKey(gangland, titleRefactor(String.format("%s_%d", name, ++ID)));
+			InventoryHandler inv = new InventoryHandler(gangland, name, size, user, key, false);
 
 			int startIndex = i * perPage;
 			int endIndex   = Math.min(startIndex + perPage, items.size());
@@ -185,7 +181,7 @@ public class MultiInventory extends InventoryHandler {
 				// If there's no corresponding inventory for this page, create a new one
 				NamespacedKey namespacedKey = new NamespacedKey(gangland, titleRefactor(
 						String.format("%s_%d", firstPage.getDisplayTitle(), ++ID)));
-				inv = new InventoryHandler(gangland, firstPage.getDisplayTitle(), size, user, namespacedKey);
+				inv = new InventoryHandler(gangland, firstPage.getDisplayTitle(), size, user, namespacedKey, false);
 				addItems(inv, items, i * perPage, Math.min((i + 1) * perPage, items.size()), staticItemsAllowed,
 				         staticItems);
 				addPage(inv);

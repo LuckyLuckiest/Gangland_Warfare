@@ -18,6 +18,7 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.JsonFormatter;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.color.Color;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
@@ -211,7 +212,16 @@ public class DebugCommand extends CommandHandler {
 		Argument inventoriesData = new Argument("inv-data", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
 				User<Player> user = getGangland().getInitializer().getUserManager().getUser(player);
+
+				sender.sendMessage("Normal inventories: ");
 				sender.sendMessage(user.getInventories()
+				                       .stream()
+				                       .map(InventoryHandler::getTitle)
+				                       .map(NamespacedKey::getKey)
+				                       .toArray(String[]::new));
+
+				sender.sendMessage("Special inventories: ");
+				sender.sendMessage(user.getSpecialInventories()
 				                       .stream()
 				                       .map(InventoryHandler::getTitle)
 				                       .map(NamespacedKey::getKey)
@@ -219,13 +229,20 @@ public class DebugCommand extends CommandHandler {
 			} else {
 				for (User<Player> user : getGangland().getInitializer().getUserManager().getUsers().values()) {
 					List<String> values = new ArrayList<>();
-					values.add(user.getUser().getName() + ":");
+
 					values.addAll(user.getInventories()
 					                  .stream()
 					                  .map(InventoryHandler::getTitle)
 					                  .map(NamespacedKey::getKey)
 					                  .toList());
-					sender.sendMessage(values.toArray(String[]::new));
+					values.addAll(user.getSpecialInventories()
+					                  .stream()
+					                  .map(InventoryHandler::getTitle)
+					                  .map(NamespacedKey::getKey)
+					                  .toList());
+
+					sender.sendMessage(user.getUser().getName() + ":");
+					sender.sendMessage(ChatUtil.createList(values));
 				}
 			}
 		});

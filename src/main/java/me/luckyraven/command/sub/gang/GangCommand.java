@@ -180,7 +180,7 @@ public class GangCommand extends CommandHandler {
 	                      GangManager gangManager) {
 		Gang gang = gangManager.getGang(user.getGangId());
 		InventoryHandler gui = new InventoryHandler(gangland, "&6&l" + gang.getDisplayNameString() + "&r gang", 5 * 9,
-		                                            user);
+		                                            user, false);
 
 		// balance
 		Material material = itemToBalance(gang);

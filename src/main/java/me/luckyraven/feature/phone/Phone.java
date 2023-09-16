@@ -38,7 +38,7 @@ public class Phone {
 		this.displayName = name;
 		this.gangland = gangland;
 		this.user = user;
-		this.inventoryHandler = new InventoryHandler(gangland, displayName, InventoryHandler.MAX_SLOTS, user);
+		this.inventoryHandler = new InventoryHandler(gangland, displayName, InventoryHandler.MAX_SLOTS, user, true);
 		this.item = new ItemBuilder(getPhoneMaterial()).setDisplayName(displayName).addTag("uniqueItem", "phone");
 	}
 
@@ -142,7 +142,7 @@ public class Phone {
 	private void gangInventory(User<Player> user, GangManager gangManager,
 	                           TriConsumer<Player, InventoryHandler, ItemBuilder> callback) {
 		// show create gang and search for gang
-		InventoryHandler newGang = new InventoryHandler(gangland, "&6&lGang", 5 * 9, user);
+		InventoryHandler newGang = new InventoryHandler(gangland, "&6&lGang", 5 * 9, user, false);
 
 		if (user.hasGang()) {
 			Gang gang = gangManager.getGang(user.getGangId());
