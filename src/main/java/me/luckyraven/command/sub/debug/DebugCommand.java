@@ -264,7 +264,9 @@ public class DebugCommand extends CommandHandler {
 		Argument checkOptional = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
 			String permission = args[2];
 
-			sender.sendMessage(permission + " -> " + sender.hasPermission(permission));
+			sender.sendMessage(permission);
+			sender.sendMessage("hasPermission: " + sender.hasPermission(permission));
+			sender.sendMessage("isPermissionSet: " + sender.isPermissionSet(permission));
 		});
 
 		checkPerm.addSubArgument(checkOptional);
