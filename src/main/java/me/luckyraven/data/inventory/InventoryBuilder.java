@@ -36,6 +36,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 				ItemBuilder item     = slot.getItem();
 				if (item == null) continue;
 
+				// handles color tag
 				String   colorTag = "color";
 				Material type     = item.getType();
 				if (item.hasNBTTag(colorTag)) {
@@ -51,6 +52,13 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 					}
 
 					type = ColorUtil.getMaterialByColor(value, material.name());
+				}
+
+				// handles head data
+				String headTag = "head";
+				if (item.hasNBTTag(headTag)) {
+					String value = gangland.usePlaceholder(player, item.getTagData(headTag).toString());
+					item.modifyNBT(nbt -> nbt.setString("SkullOwner", value));
 				}
 
 				ItemBuilder newItem = new ItemBuilder(type);
