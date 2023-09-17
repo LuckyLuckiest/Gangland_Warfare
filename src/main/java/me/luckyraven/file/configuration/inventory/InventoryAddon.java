@@ -163,7 +163,7 @@ public class InventoryAddon {
 			if (inventoryEvents.get(event).equals(InventoryClickEvent.class)) {
 				return inventoryClickEvent(gangland, eventSection, slotLoc, item, itemName, color, lore, enchanted,
 				                           draggable);
-			} else return null;
+			}
 		}
 
 		// add the slot if it doesn't contain an event
@@ -216,11 +216,11 @@ public class InventoryAddon {
 		return xMaterial;
 	}
 
-	private static ItemBuilder createItem(String item, String itemName, String color, List<String> lore,
+	private static ItemBuilder createItem(String item, String itemName, String data, List<String> lore,
 	                                      boolean enchanted) {
 		ItemBuilder itemBuilder = new ItemBuilder(validateItem(item).parseMaterial());
 
-		if (color != null) itemBuilder.addTag("color", color);
+		if (data != null) itemBuilder.addTag("color", data);
 		itemBuilder.setDisplayName(itemName);
 		itemBuilder.setLore(lore);
 		if (enchanted) itemBuilder.addEnchantment(Enchantment.DURABILITY, 1).addItemFlags(ItemFlag.HIDE_ENCHANTS);
