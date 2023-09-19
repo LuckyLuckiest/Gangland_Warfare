@@ -30,7 +30,9 @@ Slots:
       OnClick:
          Command: "/glw gang desc"
    19:
-      Item: PLAYER_HEAD
+      Item:
+         Type: PLAYER_HEAD
+         Data: "%gangland_user_name%"
       Name: "&bMembers"
       Lore:
          - "&a%gangland_gang_online-members-size%&7/&e%gangland_gang_members-size%"
