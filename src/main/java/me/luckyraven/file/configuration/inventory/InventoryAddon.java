@@ -98,14 +98,16 @@ public class InventoryAddon {
 					sectionStr.substring(0, sectionStr.length() - 1));
 			if (section == null) continue;
 
-			String item;
-			String color = null;
+			String              item;
+			Map<String, Object> data = new HashMap<>();
 			if (section.isConfigurationSection("Item")) {
 				ConfigurationSection itemConfig = section.getConfigurationSection("Item");
 
 				if (itemConfig != null) {
 					item = itemConfig.getString("Type");
-					color = itemConfig.getString("Color");
+
+					data.put("color", itemConfig.getString("Color"));
+					data.put("data", itemConfig.getString("Data"));
 				} else item = null;
 			} else if (section.isString("Item")) item = section.getString("Item");
 			else item = null;
@@ -118,7 +120,7 @@ public class InventoryAddon {
 			boolean      enchanted = section.getBoolean("Enchanted");
 			boolean      draggable = section.getBoolean("Draggable");
 
-			slots.add(processEventItems(gangland, config, slot, item, itemName, color, lore, enchanted, draggable));
+			slots.add(processEventItems(gangland, config, slot, item, itemName, data, lore, enchanted, draggable));
 		}
 
 		boolean       configFill       = config.getBoolean(information + "Configuration.Fill");
@@ -151,8 +153,8 @@ public class InventoryAddon {
 	}
 
 	private static Slot processEventItems(Gangland gangland, FileConfiguration config, int slotLoc, String item,
-	                                      String itemName, String color, List<String> lore, boolean enchanted,
-	                                      boolean draggable) {
+	                                      String itemName, Map<String, Object> data, List<String> lore,
+	                                      boolean enchanted, boolean draggable) {
 		for (String event : inventoryEvents.keySet()) {
 			String eventSectionStr = "Slots." + slotLoc + "." + event + ".";
 			ConfigurationSection eventSection = config.getConfigurationSection(
@@ -161,25 +163,31 @@ public class InventoryAddon {
 
 			// so far, there is support for clickable events
 			if (inventoryEvents.get(event).equals(InventoryClickEvent.class)) {
-				return inventoryClickEvent(gangland, eventSection, slotLoc, item, itemName, color, lore, enchanted,
+				return inventoryClickEvent(gangland, eventSection, slotLoc, item, itemName, data, lore, enchanted,
 				                           draggable);
+			} else if (inventoryEvents.get(event).equals(InventoryInteractEvent.class)) {
+
+			} else if (inventoryEvents.get(event).equals(InventoryCloseEvent.class)) {
+
+			} else if (inventoryEvents.get(event).equals(InventoryEvent.class)) {
+
 			}
 		}
 
 		// add the slot if it doesn't contain an event
-		ItemBuilder itemBuilder = createItem(item, itemName, color, lore, enchanted);
+		ItemBuilder itemBuilder = createItem(item, itemName, data, lore, enchanted);
 
 		return new Slot(slotLoc, false, draggable, itemBuilder);
 	}
 
 	private static Slot inventoryClickEvent(Gangland gangland, ConfigurationSection eventSection, int slotLoc,
-	                                        String item, String itemName, String color, List<String> lore,
+	                                        String item, String itemName, Map<String, Object> data, List<String> lore,
 	                                        boolean enchanted, boolean draggable) {
 		String slotCommand    = eventSection.getString("Command");
 		String slotInventory  = eventSection.getString("Inventory");
 		String slotPermission = eventSection.getString("Permission");
 
-		ItemBuilder itemBuilder = createItem(item, itemName, color, lore, enchanted);
+		ItemBuilder itemBuilder = createItem(item, itemName, data, lore, enchanted);
 
 		Slot slot = new Slot(slotLoc, true, draggable, itemBuilder);
 
@@ -216,11 +224,16 @@ public class InventoryAddon {
 		return xMaterial;
 	}
 
-	private static ItemBuilder createItem(String item, String itemName, String data, List<String> lore,
+	private static ItemBuilder createItem(String item, String itemName, Map<String, Object> data, List<String> lore,
 	                                      boolean enchanted) {
 		ItemBuilder itemBuilder = new ItemBuilder(validateItem(item).parseMaterial());
 
-		if (data != null) itemBuilder.addTag("color", data);
+		String color    = (String) data.get("color");
+		String dataInfo = (String) data.get("data");
+
+		if (color != null) itemBuilder.addTag("color", color);
+		if (dataInfo != null) itemBuilder.addTag("data", dataInfo);
+
 		itemBuilder.setDisplayName(itemName);
 		itemBuilder.setLore(lore);
 		if (enchanted) itemBuilder.addEnchantment(Enchantment.DURABILITY, 1).addItemFlags(ItemFlag.HIDE_ENCHANTS);
