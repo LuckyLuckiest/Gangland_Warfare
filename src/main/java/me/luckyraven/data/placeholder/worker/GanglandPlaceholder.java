@@ -212,13 +212,14 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	private String valueFormat(double value) {
 		String[] suffixes = new String[]{"", "K", "M", "B", "T", "P", "E", "Z", "Y"};
 		int      index    = 0;
+		double   modValue = value;
 
-		while (value >= 1_000 && index < suffixes.length - 1) {
-			value /= 1_000;
+		while (modValue >= 1_000 && index < suffixes.length - 1) {
+			modValue /= 1_000;
 			++index;
 		}
 
-		return String.format("%s%s", SettingAddon.formatDouble(value), suffixes[index]);
+		return SettingAddon.formatDouble(modValue) + suffixes[index];
 	}
 
 }
