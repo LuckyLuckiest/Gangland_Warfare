@@ -16,6 +16,7 @@ import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.RankDatabase;
 import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.database.sub.WaypointDatabase;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -40,19 +41,20 @@ public class PeriodicalUpdates {
 	}
 
 	private void task() {
-		long start = System.currentTimeMillis();
+		long    start = System.currentTimeMillis();
+		boolean log   = SettingAddon.isAutoSaveDebug();
 
 		// auto-saving
-		Gangland.getLog4jLogger().info("Saving...");
+		if (log) Gangland.getLog4jLogger().info("Saving...");
 		try {
 			updatingDatabase();
-			Gangland.getLog4jLogger().info("Data save complete");
+			if (log) Gangland.getLog4jLogger().info("Data save complete");
 		} catch (Throwable throwable) {
 			Gangland.getLog4jLogger().error("There was an issue saving the data...");
 		}
 
 		// resetting player inventories
-		Gangland.getLog4jLogger().info("Cache reset...");
+		if (log) Gangland.getLog4jLogger().info("Cache reset...");
 		try {
 			resetCache();
 		} catch (Throwable exception) {
@@ -61,7 +63,7 @@ public class PeriodicalUpdates {
 
 		long end = System.currentTimeMillis();
 
-		Gangland.getLog4jLogger().info(String.format("The process took %dms", end - start));
+		if (log) Gangland.getLog4jLogger().info(String.format("The process took %dms", end - start));
 	}
 
 	public void forceUpdate() {

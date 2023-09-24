@@ -27,7 +27,7 @@ public class SettingAddon {
 	private static @Getter String databaseType;
 	private static @Getter String mysqlHost, mysqlUsername, mysqlPassword;
 	private static @Getter int     mysqlPort;
-	private static @Getter boolean sqliteBackup, sqliteFailedMysql, autoSave;
+	private static @Getter boolean sqliteBackup, sqliteFailedMysql, autoSave, autoSaveDebug;
 	private static @Getter int    autoSaveTime;
 	// inventory configuration
 	private static @Getter String inventoryFillItem, inventoryFillName, inventoryLineItem, inventoryLineName;
@@ -102,6 +102,7 @@ public class SettingAddon {
 		sqliteBackup = settings.getBoolean("Database.SQLite.Backup");
 		sqliteFailedMysql = settings.getBoolean("Database.SQLite.Failed_MySQL");
 		autoSave = settings.getBoolean("Database.Auto_Save.Enable");
+		autoSaveDebug = settings.getBoolean("Database.Auto_Save.Debug");
 		autoSaveTime = settings.getInt("Database.Auto_Save.Time");
 
 		// inventory

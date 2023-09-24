@@ -82,6 +82,8 @@ Database:
       Enable: true
       # Time to auto save in minutes
       Time: 10
+      # Enable if you want to print periodical updates in console
+      Debug: true
 
 # +-------------------+ #
 # | Scoreboard Config | #
@@ -285,7 +287,7 @@ Gang:
 Money_Symbol: '$'
 Balance_Format:
    Enable: true
-   Format: "%,.1f"
+   Format: "%,.2f"
 Killing_Mob:
    Min: 0
    Max: 20
