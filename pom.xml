@@ -285,7 +285,7 @@
         <dependency>
             <groupId>de.tr7zw</groupId>
             <artifactId>item-nbt-api-plugin</artifactId>
-            <version>2.11.3</version>
+            <version>2.12.0</version>
             <scope>provided</scope>
         </dependency>
 
@@ -297,7 +297,7 @@
         <dependency>
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
-            <version>2.11.3</version>
+            <version>2.11.4</version>
             <scope>provided</scope>
         </dependency>
 

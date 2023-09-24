@@ -4,6 +4,7 @@ import com.cryptomorin.xseries.XMaterial;
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteItemNBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
+import de.tr7zw.nbtapi.iface.ReadableItemNBT;
 import lombok.Getter;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Material;
@@ -15,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class ItemBuilder {
 
@@ -149,7 +151,7 @@ public class ItemBuilder {
 	}
 
 	public boolean hasNBTTag(String tag) {
-		String value = NBT.get(itemStack, nbt -> nbt.getString(tag));
+		String value = NBT.get(itemStack, (Function<ReadableItemNBT, String>) nbt -> nbt.getString(tag));
 
 		if (value == null) return false;
 
@@ -157,7 +159,7 @@ public class ItemBuilder {
 	}
 
 	public Object getTagData(String tag) {
-		return NBT.get(itemStack, nbt -> nbt.getString(tag));
+		return NBT.get(itemStack, (Function<ReadableItemNBT, Object>) nbt -> nbt.getString(tag));
 	}
 
 	public Material getType() {
