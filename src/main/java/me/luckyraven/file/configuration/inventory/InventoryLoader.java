@@ -34,7 +34,7 @@ public class InventoryLoader {
 		}
 
 		FileManager fileManager = gangland.getInitializer().getFileManager();
-		for (FileHandler fileHandler : inventoryFiles) {
+		for (FileHandler fileHandler : inventoryFiles)
 			try {
 				fileManager.addFile(fileHandler, true);
 
@@ -45,7 +45,6 @@ public class InventoryLoader {
 				                                              UnhandledError.FILE_LOADER_ERROR, fileHandler.getName()),
 				                                exception);
 			}
-		}
 	}
 
 	public void addInventory(FileHandler fileHandler) {
