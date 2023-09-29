@@ -214,16 +214,6 @@ public class InventoryAddon {
 		return slot;
 	}
 
-	private static XMaterial validateItem(String value) {
-		XMaterial      xMaterial;
-		MaterialType[] materialTypes = MaterialType.values();
-		if (Arrays.stream(materialTypes).anyMatch(materialType -> materialType.name().contains(value)))
-			xMaterial = XMaterial.matchXMaterial("BLACK_" + value).orElse(XMaterial.BLACK_WOOL);
-		else xMaterial = XMaterial.valueOf(value);
-
-		return xMaterial;
-	}
-
 	private static ItemBuilder createItem(String item, String itemName, Map<String, Object> data, List<String> lore,
 	                                      boolean enchanted) {
 		ItemBuilder itemBuilder = new ItemBuilder(validateItem(item).parseMaterial());
@@ -239,6 +229,16 @@ public class InventoryAddon {
 		if (enchanted) itemBuilder.addEnchantment(Enchantment.DURABILITY, 1).addItemFlags(ItemFlag.HIDE_ENCHANTS);
 
 		return itemBuilder;
+	}
+
+	private static XMaterial validateItem(String value) {
+		XMaterial      xMaterial;
+		MaterialType[] materialTypes = MaterialType.values();
+		if (Arrays.stream(materialTypes).anyMatch(materialType -> materialType.name().contains(value)))
+			xMaterial = XMaterial.matchXMaterial("BLACK_" + value).orElse(XMaterial.BLACK_WOOL);
+		else xMaterial = XMaterial.valueOf(value);
+
+		return xMaterial;
 	}
 
 }
