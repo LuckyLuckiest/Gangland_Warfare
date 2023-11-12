@@ -28,16 +28,33 @@ public class InventoryLoader {
 		if (!folder.exists() || files == null || files.length == 0) {
 			Gangland.getLog4jLogger().info("No inventory files were found... Creating new ones.");
 
+			// add inventories to the inventory files if they were not already added
+			if (files != null) for (File file : files) {
+				try {
+					FileHandler temp = new FileHandler(gangland, file);
+					// check if the file was not added, then add it
+					if (!inventoryFiles.contains(temp)) addInventory(temp);
+				} catch (IOException exception) {
+					Gangland.getLog4jLogger().error(String.format("%s: There was a problem with loading the file %s.",
+					                                              UnhandledError.FILE_CREATE_ERROR, file.getName()),
+					                                exception);
+				}
+			}
+
+			// when the inventory files are empty, then don't create any
 			if (inventoryFiles.isEmpty()) return;
 
+			// create each file if not present
 			createFiles(inventoryFiles);
 		}
 
+		// add each file handler from the inventory files to the file manager
 		FileManager fileManager = gangland.getInitializer().getFileManager();
 		for (FileHandler fileHandler : inventoryFiles)
 			try {
 				fileManager.addFile(fileHandler, true);
 
+				// register each inventory
 				InventoryAddon.registerInventory(gangland, fileHandler);
 				Gangland.getLog4jLogger().info("Registered inventory " + fileHandler.getName());
 			} catch (Exception exception) {
