@@ -178,4 +178,16 @@ public class FileHandler {
 		return fileType.substring(1);
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		if (this == object) return true;
+		if (object == null || getClass() != object.getClass()) return false;
+
+		FileHandler that = (FileHandler) object;
+
+		if (!Objects.equals(name, that.name)) return false;
+		if (!Objects.equals(fileType, that.fileType)) return false;
+		return Objects.equals(directory, that.directory);
+	}
+
 }
