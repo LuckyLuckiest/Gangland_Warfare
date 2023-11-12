@@ -1,12 +1,21 @@
-When the user joins the server, the following is created
-	-	User<T> is initialized
-	-	Default rank of 0
-	-	Default balance of 0
-	-	Default of false gang
-	-	Default of false bank
-	-	Default of false in bounty
+A total overhaul to the database system needs to be addressed.
+The system needs a group of tables rather than a group of databases.
+Each table would contribute to a structure of other tables to do a specific job.
+A set of entities would be addressed along with advanced database system modeling would be implemented to ease the use
+resource management system.
 
-In database the specified tables will have this specific contents.
+Entities:
+	- User data
+		-> Member (offline data)
+		-> Bank
+	- Gang data
+		-> Settings
+		-> Ally
+	- Rank data
+	- Waypoint data
+	- Safe data
+
+In the database, the specified tables will have these specific contents.
 user:
 - Data:
 	- uuid (pk)		(\str\)
@@ -40,7 +49,3 @@ gang:
 safes:
 - Data:
 	- id (pk)		(\int\)
-
-There will multiple yaml files for saving data.
-- Dealer:
-- Safes:
