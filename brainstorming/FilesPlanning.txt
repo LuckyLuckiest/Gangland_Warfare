@@ -2,7 +2,7 @@ A total overhaul to the database system needs to be addressed.
 The system needs a group of tables rather than a group of databases.
 Each table would contribute to a structure of other tables to do a specific job.
 A set of entities would be addressed along with advanced database system modeling would be implemented to ease the use
-resource management system.
+of resource management system.
 
 Entities:
 	- User data
@@ -13,7 +13,11 @@ Entities:
 		-> Ally
 	- Rank data
 	- Waypoint data
-	- Safe data
+
+	* Future plans:
+		- Safe data
+		- NPCs data
+		- Auction info
 
 In the database, the specified tables will have these specific contents.
 user:
