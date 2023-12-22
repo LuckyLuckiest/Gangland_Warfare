@@ -79,10 +79,8 @@ public class EntityDamage implements Listener {
 						if (!bountyEvent.isCancelled()) user.getBounty().setAmount(amount);
 					}
 				}
-
-				// change wanted level
-
 			}
+			// change wanted level
 		} else user.setMobKills(user.getMobKills() + 1);
 	}
 
