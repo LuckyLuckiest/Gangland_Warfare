@@ -1,7 +1,7 @@
 Features:
 	1)	Weapons
 	2)	Phone
-	3)	Economy
+	3)	Economy (Expanding on Banks & Adding Bitcoins to trade with dealers)
 	4)	Police
 	5)	Bounty
 	6)	Wanted Levels
@@ -9,11 +9,16 @@ Features:
 	8)	Dealer
 	9)	Gang
 	10)	Level system
-	11)	Heist
-	12) Missions
+	11)	Heist & Robberies
+	12) Jobs & Missions
 	13) Quest
 	14) Cars
 	15) Houses
+	16) Auction house
+	17) Death Cam
+	18) Passive Mode
+	19) NPCs
+	20) Casino
 
 Weapons:
 	Can be created from a text file
@@ -171,3 +176,56 @@ Houses:
 	 features or benefits.
 	Implement a social feature that allows players to visit and interact with each other's houses, fostering a sense of
 	 community and personalization.
+
+Auction House:
+	Players can buy and sell items through an auction system
+	Bids and sales are time-limited
+	A variety of rare and valuable items can be found
+
+	- ChatGPT suggestion:
+	Introduce a bidding war mechanic that adds excitement and competition to the auction process, allowing players to
+ 	 strategically outbid each other.
+	Include exclusive auction events or themed auctions that feature unique and highly sought-after items.
+
+Death Cam:
+	Players can view a replay of their death
+	Provides insights into the attacker's location and tactics
+	Can be used for learning and strategizing
+
+	- ChatGPT suggestion:
+	Allow players to share their death cam footage with others, fostering a community where players can learn from each
+	 other's experiences.
+	Implement a kill cam option, allowing the attacker to also review the encounter from their perspective.
+
+	Passive Mode:
+	Players can toggle on/off
+	Immune to attacks from other players
+	Cannot engage in combat while in passive mode
+
+	- ChatGPT suggestion:
+	Introduce limitations to passive mode, such as a cooldown period or restrictions on certain activities, to prevent
+	 abuse.
+	Include passive mode-exclusive activities or challenges that allow players to participate in non-combat gameplay.
+
+NPCs:
+	Various NPCs with different roles and interactions
+	Merchants, quest givers, and other characters populate the game world
+	React to player actions and choices
+
+	- ChatGPT suggestion:
+	Implement dynamic NPC behaviors influenced by the in-game economy, weather, or player-driven events.
+	Include unique NPCs with their own storylines or quests that players can engage with, adding depth and richness to
+ 	 the game world.
+
+Casino:
+	Players can engage in various casino games such as poker, blackjack, and slot machines
+	Winning rewards money or exclusive items
+	Casino events and tournaments
+
+	- ChatGPT suggestion:
+	Introduce a casino heist scenario where players can plan and execute elaborate schemes to rob the casino.
+	Implement a VIP system that rewards frequent casino visitors with exclusive perks, access to high-stakes games, or
+ 	 unique cosmetic items.
+	These additional features contribute to a more immersive and dynamic game environment, offering players a wide range
+	 of activities and interactions. The suggestions aim to enhance player engagement, encourage collaboration, and
+	 provide a rich and evolving gaming experience.
