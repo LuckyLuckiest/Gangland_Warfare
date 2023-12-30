@@ -52,7 +52,7 @@
     - Add custom scoreboard in YAML files.
 0.0.64-DEV:
     - Add custom inventories in YAML files.
-    - Make inventories work with multi inventory system.
+    - Make inventories work with a multi-inventory system.
     - Enhance the multi inventory system (don't use static methods).
     - Make custom inventories YAML file configuration flexible.
 0.0.65-DEV:
@@ -60,49 +60,52 @@
     - Gang settings.
 	- A Taxi system added to contacts in phone.
 
-0.0.71-DEV:
+... Switch the versions system to 'MAJOR.MINOR.patch' ...
+-> Check this link and learn more about versions: "https://en.wikipedia.org/wiki/Software_versioning"
+
+0.7.1-DEV:
 	- Gang spawn and home.
-0.0.72-DEV:
+0.7.2-DEV:
 	- Enhance wanted level.
-0.0.7-BETA:
+0.7-BETA:
     - The release of the plugin
 
 ... Before the end of the summer holidays ...
 
-0.0.74-DEV:
+0.7.4-DEV:
     - Bug fixes for the previous features.
-0.0.75-DEV:
+0.7.5-DEV:
     - Synchronization of "maps" to handle multiple players.
     - Inventory interactions for multiple players.
 
 ... Can release the plugin as a BETA version ...
 All the features afterward are updates that supposedly can be the roadmap
 
-0.0.81-DEV:
+0.8.1-DEV:
 	- Gang attacks.
-0.0.82-DEV:
+0.8.2-DEV:
 	- Gang challenges.
-0.0.83-DEV:
+0.8.3-DEV:
 	- Cars.
-0.0.8-BETA:
+0.8-BETA:
     - Update the plugin.
 
-0.0.91-DEV:
+0.9.1-DEV:
 	- Safes heist.
-0.0.92-DEV:
+0.9.2-DEV:
 	- Purchasable houses.
-0.0.93-DEV:
+0.9.3-DEV:
 	- Fully functional Heist system.
-0.0.94-DEV:
+0.9.4-DEV:
 	- Weapons.
-0.0.9-BETA:
+0.9-BETA:
     - Update the plugin.
 
-0.1-BETA:
+1.0-BETA:
 	- Fixing bugs as much as possible.
 
-0.1.1:
+1.0.1:
 	- Either end BETA and enter full release
 	- Or stick with dev and beta builds
 
-expected release on v0.1.1
+expected release on v1.0.1
