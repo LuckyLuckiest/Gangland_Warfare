@@ -55,6 +55,11 @@ public class Line {
 	}
 
 	@Override
+	public int hashCode() {
+		return (int) interval;
+	}
+
+	@Override
 	public String toString() {
 		return String.format("Line{interval=%d,contents=%s}", interval, contents);
 	}
