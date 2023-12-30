@@ -17,8 +17,9 @@
 # +----------------------------------+ #
 
 # If you have faced any problem with the file, you can create a new one by changing [Config_Version] to a different
-# number, but when a new update comes out by default, the config version would have a different version resulting in a
-# new file.
+# number.
+# However, when a new update comes out by default, the config version would have a different version resulting in a new
+# file.
 # The old version file would have a suffix '-old' to indicate they are from the old version.
 # Each and every YAML file from this plugin supports this feature, even if the configuration section of [Config_Version]
 # wasn't explicitly mentioned.
@@ -45,12 +46,12 @@ Update_Checker:
 
 # Messages language type. You can create a custom language by simply creating a folder called 'message' and inside it
 # the language.
-# You should respect the prefix of the file name, it should be message_xx.yml, and xx can be any letter
-# you prefer. To switch between the languages, you enter the xx values in 'Language' configuration, and it would load
-# that configuration.
+# You should respect the prefix of the file name, it should be message_xx.yml, and xx can be any letter you prefer. To
+# switch between the languages, you enter the xx values in 'Language' configuration, and it would load that
+# configuration.
 # Any faulty written language names entered to this attribute 'Language' then the plugin would disable. To make the
-# plugin work, just use any valid language. To get the list of the available languages, just enter an invalid name,
-# and a message of the available list suffix would be displayed.
+# plugin work, use any valid language. To get the list of the available languages, enter an invalid name, and a message
+# of the available list suffix would be displayed.
 Language: en
 
 # +-----------------+ #
@@ -77,8 +78,8 @@ Database:
       # closes.
       # Disabling this option is not recommended since it would create a lot of overhead to the CPU every time a user
       # leaves.
-      # This effect takes place when the server contains a large number of player bases or players constantly
-      # joining and leaving the server.
+      # This effect takes place when the server contains a large number of player bases or players constantly joining
+      # and leaving the server.
       Enable: true
       # Time to auto save in minutes
       Time: 10
@@ -94,7 +95,8 @@ Scoreboard:
    # Drivers' list:
    #  1) Driver_V1: Caches the lines into memory and uses a clustering algorithm that updates similar line intervals
    #                each tick.
-   #  2) Driver_V2:
+   #  2) Driver_V2: Caches the lines into memory similar to Driver_V1 algorithm. The difference is it uses built-in
+   #                library to manage the clusters.
    Driver: "Driver_V1"
 
 # +------------------+ #
