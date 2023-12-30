@@ -1,0 +1,8 @@
+Tabs and indents:
+	-> Use tab character
+	-> Size: 4
+	-> Indent: 4
+	-> Don't keep indents on empty lines
+
+Wrapping and Braces:
+	-> Hard wrap at: 120
