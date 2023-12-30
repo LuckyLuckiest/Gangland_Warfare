@@ -66,15 +66,24 @@ public class PeriodicalUpdates {
 		if (log) Gangland.getLog4jLogger().info(String.format("The process took %dms", end - start));
 	}
 
+	/**
+	 * Updates the plugin information.
+	 */
 	public void forceUpdate() {
 		Gangland.getLog4jLogger().info("Force update...");
 		task();
 	}
 
+	/**
+	 * Stops the periodical update timer.
+	 */
 	public void stop() {
 		if (this.repeatingTimer != null) this.repeatingTimer.stop();
 	}
 
+	/**
+	 * Starts the periodical update tasks.
+	 */
 	public void start() {
 		if (this.repeatingTimer == null) return;
 
@@ -82,10 +91,16 @@ public class PeriodicalUpdates {
 		this.repeatingTimer.start(true);
 	}
 
+	/**
+	 * Resets the cache data.
+	 */
 	public void resetCache() {
 		removeInventories();
 	}
 
+	/**
+	 * All queried data is sent and handle in the database.
+	 */
 	public void updatingDatabase() {
 		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
 			DatabaseHelper helper = new DatabaseHelper(gangland, handler);

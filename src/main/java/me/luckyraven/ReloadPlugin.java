@@ -38,6 +38,11 @@ public class ReloadPlugin {
 		this.initializer = gangland.getInitializer();
 	}
 
+	/**
+	 * Reloads the whole plugin files, scoreboards, and database.
+	 *
+	 * @param resetCache if old data needs to be cleared
+	 */
 	public void reload(boolean resetCache) {
 		filesReload();
 		// when resetting the cache, there would be a problem with the scoreboard trying to get some values
@@ -65,7 +70,7 @@ public class ReloadPlugin {
 	}
 
 	/**
-	 * Properly and inorder initialize the database data.
+	 * Properly and in-order initializes the database data.
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 */
@@ -118,6 +123,9 @@ public class ReloadPlugin {
 		user.setScoreboard(null);
 	}
 
+	/**
+	 * Reloads the inventory information.
+	 */
 	public void inventoryReload() {
 		// Simple inventory reload for special inventories ONLY
 		InventoryHandler.removeAllSpecialInventories();
