@@ -66,11 +66,13 @@ public class RankManager {
 
 			// reasons for calling head is because it is the initial rank the user will have
 			// reasons for calling tail is because it is the final rank the user will have
-			// because of the structure of the tree, there can be multiple parents (will call it children because of the inverse nature)
-			// the children of that node makes the tree diverse so the user can choose 1 node for the specified tree, this creates
+			// because of the structure of the tree, there can be multiple parents (will call it children because of the
+			// inverse nature)
+			// the children of that node makes the tree diverse so the user can choose 1 node for the specified tree,
+			// this creates
 			// tree diversity.
-			// From this concept, each node can have unique perks and diverse to their specified node OR
-			// return back to a single unique node which continues the list.
+			// From this concept, each node can have unique perks and diverse to their specified node
+			// OR return to a single unique node which continues the list.
 			// Example:        user
 			//                /   \
 			//          peasant  member

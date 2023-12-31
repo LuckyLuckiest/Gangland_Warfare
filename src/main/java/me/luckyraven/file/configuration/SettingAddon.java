@@ -185,7 +185,7 @@ public class SettingAddon {
 			}
 		}
 
-		// need to remove the map in order to show the other values separately
+		// need to remove the map to show the other values separately
 		settingsMap.remove("settingsMap");
 		settingsMap.remove("settingsPlaceholder");
 		settingsMap.remove("settings");

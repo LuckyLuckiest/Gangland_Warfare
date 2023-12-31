@@ -90,7 +90,7 @@ public class DatabaseManager {
 	}
 
 	private void backup(DatabaseHandler handler, int databaseType) throws SQLException {
-		// save all the databases data in a map, name: data
+		// save all the database data in a map, name: data
 		Map<String, List<Object[]>> data = databaseInformation(handler);
 
 		// check if a database exists if they don't handle them
@@ -113,7 +113,7 @@ public class DatabaseManager {
 				for (int i = 0; i < dataTypes.length; i++)
 					dataTypes[i] = columnsDataType.get(i);
 
-				// if they don't exist, we create them otherwise just update the data
+				// if they don't exist, we create them otherwise update the data
 				for (Object[] objects : data.get(table)) {
 					Object[] row = config.select(columns[0] + " = ?", new Object[]{objects[0]}, new int[]{dataTypes[0]},
 					                             new String[]{"*"});
