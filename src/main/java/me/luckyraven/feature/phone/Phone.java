@@ -101,6 +101,7 @@ public class Phone {
 		return true;
 	}
 
+	// TODO use the inventory system to avoid hardcoded inventories
 	private void populateInventory(User<Player> user, TriConsumer<Player, InventoryHandler, ItemBuilder> callback) {
 		// missions
 		inventoryHandler.setItem(11, XMaterial.DIAMOND.parseMaterial(), "&eMissions", null, false, false);
