@@ -64,64 +64,66 @@ public class WaypointTeleport implements Listener {
 			                                          if (t.getTimeLeft() == 0) return;
 
 			                                          duringTimer.accept(user, t);
-		                                          }, t -> {
-			World locWorld = Bukkit.getWorld(waypoint.getWorld());
-
-			// if locWorld was a valid world
-			if (locWorld != null) {
-				Player player = user.getUser();
-				Location location = new Location(locWorld, waypoint.getX(), waypoint.getY(), waypoint.getZ(),
-				                                 waypoint.getYaw(), waypoint.getPitch());
-
-				TeleportEvent event = new TeleportEvent(user, player.getLocation(), waypoint);
-				Bukkit.getPluginManager().callEvent(event);
-
-				if (!event.isCancelled()) {
-					player.teleport(location);
-
-					// create a cooldown timer
-					if (waypoint.getCooldown() != 0) {
-						CountdownTimer countdownTimer = new CountdownTimer(plugin, waypoint.getCooldown(), null, null,
-						                                                   time -> teleportCooldown.remove(player));
-						teleportCooldown.put(player, countdownTimer);
-
-						countdownTimer.start(true);
-					}
-
-					// create a shield timer
-					if (waypoint.getShield() != 0) {
-						CountdownTimer countdownTimer = new CountdownTimer(plugin, waypoint.getShield(), null, null,
-						                                                   time -> player.setInvulnerable(false));
-
-						player.setInvulnerable(true);
-
-						countdownTimer.start(false);
-					}
-
-					// remove the countdown timer when the player already teleports
-					countdownTimer.remove(player);
-
-					// successfully teleported
-					TeleportResult result = new TeleportResult(true, user, waypoint);
-					teleportResult.complete(result);
-				}
-				// event cancelled teleportation
-				else {
-					TeleportResult result = new TeleportResult(false, user, waypoint);
-					teleportResult.complete(result);
-				}
-			}
-			// when locWorld was not valid
-			else {
-				TeleportResult result = new TeleportResult(false, user, waypoint);
-				teleportResult.complete(result);
-			}
-		});
+		                                          }, t -> teleport(plugin, user, teleportResult));
 
 		if (waypoint.getTimer() != 0) countdownTimer.put(user.getUser(), timer);
 		timer.start(false);
 
 		return teleportResult;
+	}
+
+	private void teleport(JavaPlugin plugin, User<Player> user, CompletableFuture<TeleportResult> teleportResult) {
+		World locWorld = Bukkit.getWorld(waypoint.getWorld());
+
+		// if locWorld was not valid
+		if (locWorld == null) {
+			TeleportResult result = new TeleportResult(false, user, waypoint);
+			teleportResult.complete(result);
+			return;
+		}
+
+		// if locWorld was a valid world
+		Player player = user.getUser();
+		Location location = new Location(locWorld, waypoint.getX(), waypoint.getY(), waypoint.getZ(), waypoint.getYaw(),
+		                                 waypoint.getPitch());
+
+		TeleportEvent event = new TeleportEvent(user, player.getLocation(), waypoint);
+		Bukkit.getPluginManager().callEvent(event);
+
+		// event cancelled teleportation
+		if (event.isCancelled()) {
+			TeleportResult result = new TeleportResult(false, user, waypoint);
+			teleportResult.complete(result);
+			return;
+		}
+
+		player.teleport(location);
+
+		// create a cooldown timer
+		if (waypoint.getCooldown() != 0) {
+			CountdownTimer countdownTimer = new CountdownTimer(plugin, waypoint.getCooldown(), null, null,
+			                                                   time -> teleportCooldown.remove(player));
+			teleportCooldown.put(player, countdownTimer);
+
+			countdownTimer.start(true);
+		}
+
+		// create a shield timer
+		if (waypoint.getShield() != 0) {
+			CountdownTimer countdownTimer = new CountdownTimer(plugin, waypoint.getShield(), null, null,
+			                                                   time -> player.setInvulnerable(false));
+
+			player.setInvulnerable(true);
+
+			countdownTimer.start(false);
+		}
+
+		// remove the countdown timer when the player already teleports
+		countdownTimer.remove(player);
+
+		// successfully teleported
+		TeleportResult result = new TeleportResult(true, user, waypoint);
+		teleportResult.complete(result);
 	}
 
 	@EventHandler
@@ -137,22 +139,24 @@ public class WaypointTeleport implements Listener {
 		double deltaZ     = Math.abs(to.getZ() - from.getZ());
 		double totalDelta = deltaX + deltaY + deltaZ;
 
-		if (!totalDistance.containsKey(player)) totalDistance.put(player, totalDelta);
-		else {
-			double currentTotalDelta = totalDistance.get(player) + totalDelta;
-			totalDistance.put(player, currentTotalDelta);
-
-			double threshold = 1.5; // number of blocks
-			// when the player moves less than the threshold, ignore the case
-			if (currentTotalDelta < threshold) return;
-
-			CountdownTimer timer = countdownTimer.get(player);
-			timer.cancel();
-			countdownTimer.remove(player);
-			totalDistance.remove(player);
-
-			player.sendMessage(MessageAddon.WAYPOINT_TELEPORT_CANCELLED.toString());
+		if (!totalDistance.containsKey(player)) {
+			totalDistance.put(player, totalDelta);
+			return;
 		}
+
+		double currentTotalDelta = totalDistance.get(player) + totalDelta;
+		totalDistance.put(player, currentTotalDelta);
+
+		double threshold = 1.5; // number of blocks
+		// when the player moves less than the threshold, ignore the case
+		if (currentTotalDelta < threshold) return;
+
+		CountdownTimer timer = countdownTimer.get(player);
+		timer.cancel();
+		countdownTimer.remove(player);
+		totalDistance.remove(player);
+
+		player.sendMessage(MessageAddon.WAYPOINT_TELEPORT_CANCELLED.toString());
 	}
 
 	public record TeleportResult(boolean success, User<Player> playerUser, Waypoint waypoint) {}
