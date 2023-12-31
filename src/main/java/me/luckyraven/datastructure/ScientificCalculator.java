@@ -80,13 +80,15 @@ public class ScientificCalculator {
 			@Override
 			public double apply(double... args) {
 				final int arg = (int) args[0];
-				if ((double) arg != args[0]) {
-					throw new IllegalArgumentException("Operand for factorial has to be an integer");
-				}
-				if (arg < 0) {
-					throw new IllegalArgumentException("The operand of the factorial can not be less than zero");
-				}
+
+				if ((double) arg != args[0]) throw new IllegalArgumentException(
+						"Operand for factorial has to be an integer");
+
+				if (arg < 0) throw new IllegalArgumentException(
+						"The operand of the factorial can not be less than zero");
+
 				double result = 1;
+
 				for (int i = 1; i <= arg; i++)
 					result *= i;
 
