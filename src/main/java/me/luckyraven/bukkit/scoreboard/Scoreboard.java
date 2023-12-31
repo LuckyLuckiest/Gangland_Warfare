@@ -30,7 +30,7 @@ public class Scoreboard {
 
 	@Override
 	public String toString() {
-		return String.format("Scoreboard{Driver=%s,timer=%s}", driver, timer);
+		return String.format("Scoreboard{driver=%s,timer=%s}", driver, timer);
 	}
 
 }

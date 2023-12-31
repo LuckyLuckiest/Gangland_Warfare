@@ -70,8 +70,9 @@ public class Waypoint {
 	@Override
 	public String toString() {
 		return String.format(
-				"{id=%d,name=%s,x=%.2f,y=%.2f,z=%.2f,yaw=%.2f,pitch=%.2f,world=%s,type=%s,gangId=%d,cooldown=%d,shield=%d,cost=%.2f,radius=%.2f}",
-				usedId, name, x, y, z, yaw, pitch, world, type.getName(), gangId, cooldown, shield, cost, radius);
+				"Waypoint{id=%d,name=%s,x=%.2f,y=%.2f,z=%.2f,yaw=%.2f,pitch=%.2f,world=%s,type=%s,gangId=%d," +
+						"cooldown=%d,shield=%d,cost=%.2f,radius=%.2f}", usedId, name, x, y, z, yaw, pitch, world,
+				type.getName(), gangId, cooldown, shield, cost, radius);
 	}
 
 	@Getter

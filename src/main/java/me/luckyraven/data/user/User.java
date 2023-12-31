@@ -210,7 +210,7 @@ public class User<T extends OfflinePlayer> {
 
 	@Override
 	public String toString() {
-		return String.format("User:{data=%s,kd=%.2f,balance=%.2f,level=%d,bounty=%.2f,gangId=%d,permissions=%s}", user,
+		return String.format("User{data=%s,kd=%.2f,balance=%.2f,level=%d,bounty=%.2f,gangId=%d,permissions=%s}", user,
 		                     getKillDeathRatio(), economy.getBalance(), level.getLevelValue(), bounty.getAmount(),
 		                     gangId, permissionAttachment != null ? permissionAttachment.getPermissions()
 		                                                                                .keySet()

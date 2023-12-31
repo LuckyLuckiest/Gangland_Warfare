@@ -80,7 +80,7 @@ public class Member {
 
 	@Override
 	public String toString() {
-		return String.format("Member:{uuid=%s,gangId=%d,contribution=%.2f,rank=%s,gangJoin=%s}", uuid, gangId,
+		return String.format("Member{uuid=%s,gangId=%d,contribution=%.2f,rank=%s,gangJoin=%s}", uuid, gangId,
 		                     contribution, rank == null ? "NA" : rank.getName(), getGangJoinDateString());
 	}
 

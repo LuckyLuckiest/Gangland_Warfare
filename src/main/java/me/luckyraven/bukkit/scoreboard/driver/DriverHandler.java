@@ -57,7 +57,7 @@ public abstract class DriverHandler {
 
 	@Override
 	public String toString() {
-		return String.format("FastBoard=%s,lines=[%s]", fastBoard, lines);
+		return String.format("DriverHandler{title=%s,lines=%s}", fastBoard, lines);
 	}
 
 }

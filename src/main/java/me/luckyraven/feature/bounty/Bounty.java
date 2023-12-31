@@ -65,7 +65,7 @@ public class Bounty {
 
 	@Override
 	public String toString() {
-		return String.format("{amount=%.2f}", amount);
+		return String.format("Bounty{amount=%.2f}", amount);
 	}
 
 }

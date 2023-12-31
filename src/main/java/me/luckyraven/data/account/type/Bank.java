@@ -25,7 +25,7 @@ public class Bank extends Account<UUID, User<? extends OfflinePlayer>> {
 
 	@Override
 	public String toString() {
-		return String.format("Bank:{uuid=%s,name=%s,balance=%.2f}", getKey(), name, economy.getBalance());
+		return String.format("Bank{uuid=%s,name=%s,balance=%.2f}", getKey(), name, economy.getBalance());
 	}
 
 }

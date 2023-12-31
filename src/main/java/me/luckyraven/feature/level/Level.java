@@ -125,7 +125,7 @@ public class Level {
 
 	@Override
 	public String toString() {
-		return String.format("{level=%d,experience=%.2f,max_level=%d}", levelValue, experience, maxLevel);
+		return String.format("Level{level=%d,experience=%.2f,max_level=%d}", levelValue, experience, maxLevel);
 	}
 
 }
