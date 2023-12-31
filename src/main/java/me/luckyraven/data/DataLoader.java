@@ -7,9 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.logging.Level;
 
-/**
- * The type Data loader.
- */
+@Deprecated(forRemoval = true)
 public abstract class DataLoader {
 
 	private boolean isLoaded = false;
