@@ -33,13 +33,14 @@ public class GangDatabase extends DatabaseHandler {
 
 	@Override
 	public void createTables() throws SQLException {
-		Database data    = getDatabase().table("data");
-		Database members = getDatabase().table("members");
+		Database data = getDatabase().table("data");
 
 		data.createTable("id INT PRIMARY KEY NOT NULL", "name TEXT NOT NULL", "display_name TEXT NOT NULL",
 		                 "color TEXT NOT NULL", "description TEXT NOT NULL", "balance DOUBLE NOT NULL",
 		                 "level INT NOT NULL", "experience DOUBLE NOT NUll", "bounty DOUBLE NOT NULL",
 		                 "ally LONGTEXT NOT NULL", "created BIGINT NOT NULL");
+
+		Database members = getDatabase().table("members");
 
 		members.createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "gang_id INT NOT NULL",
 		                    "contribution DOUBLE NOT NULL", "position TEXT", "join_date BIGINT");
