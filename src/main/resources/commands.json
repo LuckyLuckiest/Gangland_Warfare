@@ -251,14 +251,6 @@
 		"usage": "/glw weapon list",
 		"description": "Shows all the available weapons."
 	},
-	"ammunition": {
-		"usage": "/glw ammo give <name> <type> <amount>",
-		"description": "Gives the player the specified ammo."
-	},
-	"ammunition_list": {
-		"usage": "/glw ammo list",
-		"description": "Shows all the available ammo."
-	},
 	"wanted": {
 		"usage": "/glw wanted",
 		"description": "Shows the current wanted status."
@@ -426,5 +418,37 @@
 	"waypoint_teleport_unknown": {
 		"usage": "/glw tp <name>",
 		"description": "Teleport to the waypoint specified."
+	},
+	"weapon_help": {
+		"usage": "/glw weapon help <page>",
+		"description": "Shows the specified page in weapon menu."
+	},
+	"weapon_list": {
+		"usage": "/glw weapon list",
+		"description": "Shows a list of registered weapons."
+	},
+	"weapon_give": {
+		"usage": "/glw weapon give <name> <amount>",
+		"description": "Gives the specified weapon if registered."
+	},
+	"weapon_info": {
+		"usage": "/glw weapon info <name>",
+		"description": "Shows the information of the held weapon or of the specified name."
+	},
+	"ammunition_help": {
+		"usage": "/glw ammo help <page>",
+		"description": "Shows the specified page in ammo menu."
+	},
+	"ammunition_list": {
+		"usage": "/glw ammo list",
+		"description": "Shows all the available ammo."
+	},
+	"ammunition_give": {
+		"usage": "/glw ammo give <name> <amount>",
+		"description": "Gives the player the specified ammo if registered."
+	},
+	"ammunition_info": {
+		"usage": "/glw ammo info <name>",
+		"description": "Shows the information of the held ammo or of the specified name."
 	}
 }
