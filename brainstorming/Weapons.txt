@@ -1,0 +1,28 @@
+Weapons category:
+	- Guns
+	- Melee
+	- Projectile
+	- Incendiary
+
+Guns:
+	- Should be able to choose the selective fire (single, burst, auto).
+	- Should have unique reloads configured (instant, single, or num).
+	- Bullets should affect specific body parts.
+	- There should be modules for specific configurations.
+
+	There are steps that need to be processed when firing a gun:
+		1)	Check if the current item is a weapon.
+		2)	Check if the current item contains ammo and call the reload process.
+		3)	Shoot the bullet.
+		4)	Consume bullet.
+
+	There are steps that need to be processed when the gun needs a reload:
+		1)	Reload the weapon if no ammo and has a magazine.
+		2)	Send feedback of no ammo to reload.
+
+	There are steps that need to be processed for launching a projectile:
+		1)	Launch the projectile.
+		2)	Apply spread.
+		3)	Apply recoil.
+		4)	Apply push.
+		5)	Check for the projectile distance.

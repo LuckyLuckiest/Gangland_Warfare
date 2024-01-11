@@ -1,0 +1,204 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     / ________/      \_____   _____/      / __ \         | #
+# |    | /                     | |           / /  \ \        | #
+# |    | |  _______            | |          / /____\ \       | #
+# |    | |  \_____ \           | |         / ________ \      | #
+# |    | \_______/ ||          | |        / /        \ \     | #
+# |     \__________/           |_|       /_/          \_\    | #
+# |                                                          | #
+# |                      File: rifle.yml                     | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+
+# +-----------------+ #
+# |      Rifle      | #
+# +-----------------+ #
+
+# All the information of the weapon
+Information:
+   # The displayed name of the weapon
+   Name: "&7M4 Carbine"
+   # The category of the weapon:
+   # gun, melee, projectile, incendiary
+   Category: gun
+   # The material that would be used for the weapon
+   Material: IRON_PICKAXE
+   # For mc versions 1.9> setting durability can have unique textures
+   Durability:
+      Base: 100
+      Change:
+         On_Shot: 0
+         On_Repair: 0
+   # The item lore
+   Lore:
+      - "&7The M4 Carbine is a 5.56×45mm NATO, air-cooled, gas-operated,"
+      - "&7direct impingement, magazine-fed, select fire carbine."
+   # The weapon would display its information when dropped
+   Drop_Hologram: true
+
+# Shoot configuration
+Shoot:
+   # The type of fire when using the weapon
+   # SINGLE, BURST, AUTO
+   Selective_Fire: SINGLE
+
+   # Projectile configuration
+   Projectile:
+      # The speed of the projectile
+      Speed: 4
+      # There are 4 types of projectiles:
+      # BULLET, FLARE, ROCKET, SPREAD
+      Type: BULLET
+
+      # The projectile damage on impact
+      Damage:
+         # The base value
+         Base: 3
+         # Weapon explosion damage
+         Explosion_Damage: 0
+         # The time the player would be on fire (ticks = 20 ~ 1 second)
+         Fire_Ticks: 100
+         # Head bonus damage
+         Head: 5
+         # Critical Hit damage
+         Critical_Hit:
+            # The change in %
+            Chance: 2
+            # Bonus amount
+            Amount: 4
+
+      # The number of projectiles consumed
+      Consumed_Amount: 1
+      # The number of projectiles shot
+      Per_Shot: 1
+      # The cooldown of the bullet before shooting another one
+      Cooldown: 0
+      # The maximum travel distance of the projectile
+      Distance: 10
+      # A particle trail of the projectile
+      Particle: true
+
+   # The weapon consumption
+   Weapon_Consumed:
+      # Consume the weapon on which shot
+      Consume_On_Shot: 0
+      # The time after the first shot to consume the weapon
+      Time: -1
+
+   # The spread of the projectile
+   Spread:
+      # The initial spread value
+      Starting_Spread: 0.05
+      # The time before the spread value is reset
+      Time: 5
+      # The change of the spread after time
+      Change:
+         # The base value for spread value
+         Base: 0.05
+         # The bounds that would be incremented
+         Bounds:
+            # Reset to the starting spread when on bound
+            Reset_On_Bound: true
+            # The minimum value for the random value
+            Min: 0.05
+            # The maximum value for the random value
+            Max: 1.5
+
+   # The screen shake of the player
+   Recoil:
+      # The recoil effect of the player screen
+      Amount: 0.05
+      # Push velocity upon shots
+      Push: 0.05
+      # Power up which affects the y-axis
+      Power_Up: 0.0002
+      # The pattern that would be used for recoil, and at the end it would reset to the first value
+      Pattern:
+         - 0.05;0.05
+         - 0.5;1
+         - 0.5;2
+
+   Sound:
+      # The default sound that would be used when there is no custom sound available
+      Default_Sound:
+         Sound: ENTITY_GENERIC_EXPLODE
+         Volume: 1.3
+         Pitch: 2.2
+      # Overrides the default shoot sound if available
+      Custom_Sound:
+         Sound: sound.gta.m4_shoot
+         Volume: 1
+         Pitch: 2.2
+      # When the weapon magazine is empty, it would use the sound set
+      Empty_Default_Sound:
+         Sound: ENTITY_BLAZE_BURN
+         Volume: 1
+         Pitch: 1
+      # Overrides the default empty sound if available
+      Empty_Custom_Sound:
+         Sound: sound.gta.m4_empty
+         Volume: 1
+         Pitch: 1
+
+# Weapon reload configuration
+Reload:
+   # The default magazine holding capacity
+   Capacity: 45
+   # The reload time taken
+   Cooldown: 10
+   # The ammo name from the ammunition YAML file
+   Ammo_Type: "5,56"
+   # The number of ammunition items that is required to insert one magazine
+   Consume: 1
+
+   Sound:
+      # Default sounds only use mc supported sounds, and they can be overlapped with custom sounds
+      Default_Sound_Before:
+         Sound: ENTITY_WITHER_DEATH
+         Volume: 1
+         Pitch: 1
+      Default_Sound_After:
+         Sound: ENTITY_WITHER_DEATH
+         Volume: 1
+         Pitch: 1
+      # The custom sound played when reloading a gun
+      Custom_Sound:
+         Start:
+            Cooldown: 0
+            Sound: sound.gta.m4_reload_start
+            Volume: 1
+            Pitch: 1
+         Mid:
+            Cooldown: 0
+            Sound: sound.gta.m4_reload_mid
+            Volume: 1
+            Pitch: 1
+         End:
+            Cooldown: 1
+            Sound: sound.gta.m4_reload_end
+            Volume: 1
+            Pitch: 1
+
+   # Reloading action bar information
+   Action_Bar:
+      # Shows when the player is currently reloading the weapon
+      Reloading: "&cReloading..."
+      # Shows before the weapon reloads
+      Opening: "&cOpening..."
+
+   # There are 3 types of reloads:
+   # 1) instant - treats the reload as a magazine to reload weapon
+   # 2) one - dynamically places ammunition in increments of one
+   # 3) num - this requires two arguments separated by '-' to specify the amount of ammunition that is required to
+   #          dynamically insert in the weapon. This would work similarly to type one.
+   Type: INSTANT
+
+Scope:
+   Level: 2
+   Data: 100
+
+Modifiers:
+   Break_Blocks:
+      - GLASS-3
