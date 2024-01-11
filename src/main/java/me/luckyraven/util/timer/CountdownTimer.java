@@ -2,7 +2,8 @@ package me.luckyraven.util.timer;
 
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.Consumer;
+
+import java.util.function.Consumer;
 
 public class CountdownTimer extends Timer {
 

@@ -25,8 +25,9 @@ public abstract class DriverHandler {
 			@Override
 			protected boolean hasLinesMaxLength() {
 				// change the max line length according to the player version using ViaVersion
-				if (gangland.getViaAPI() != null) return gangland.getViaAPI().getPlayerVersion(getPlayer()) <
-						ProtocolVersion.v1_13.getVersion();
+				if (gangland.getViaAPI() != null)
+					return gangland.getViaAPI().getPlayerVersion(getPlayer().getUniqueId()) <
+							ProtocolVersion.v1_13.getVersion();
 
 				// assuming the players are all >1.13
 				return false;

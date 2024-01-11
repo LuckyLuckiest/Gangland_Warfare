@@ -48,17 +48,18 @@ public class RankDatabase extends DatabaseHandler {
 		Object[] tailRow = dataTable.select("name = ?", new Object[]{tail}, new int[]{Types.VARCHAR},
 		                                    new String[]{"*"});
 		int rows = dataTable.totalRows() + 1;
-		if (tailRow.length == 0) dataTable.insert(dataTable.getColumns().toArray(String[]::new),
-		                                          new Object[]{rows, tail, "", ""}, new int[]{
-						Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR
-				});
+		if (tailRow.length == 0)
+			dataTable.insert(dataTable.getColumns().toArray(String[]::new), new Object[]{rows, tail, "", ""}, new int[]{
+					Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR
+			});
 
 		Object[] headRow = dataTable.select("name = ?", new Object[]{head}, new int[]{Types.VARCHAR},
 		                                    new String[]{"*"});
-		if (headRow.length == 0) dataTable.insert(dataTable.getColumns().toArray(String[]::new),
-		                                          new Object[]{rows + 1, head, "", tail}, new int[]{
-						Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR
-				});
+		if (headRow.length == 0)
+			dataTable.insert(dataTable.getColumns().toArray(String[]::new), new Object[]{rows + 1, head, "", tail},
+			                 new int[]{
+					                 Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR
+			                 });
 	}
 
 	@Override
@@ -72,12 +73,8 @@ public class RankDatabase extends DatabaseHandler {
 
 	public void insertDataTable(Rank rank) throws SQLException {
 		String permissions = getDatabase().createList(rank.getPermissions());
-		String children = getDatabase().createList(rank.getNode()
-		                                               .getChildren()
-		                                               .stream()
-		                                               .map(Tree.Node::getData)
-		                                               .map(Rank::getName)
-		                                               .toList());
+		String children = getDatabase().createList(
+				rank.getNode().getChildren().stream().map(Tree.Node::getData).map(Rank::getName).toList());
 
 		Database      config          = getDatabase().table("data");
 		List<String>  columnsTemp     = config.getColumns();
@@ -93,12 +90,8 @@ public class RankDatabase extends DatabaseHandler {
 
 	public void updateDataTable(Rank rank) throws SQLException {
 		String permissions = getDatabase().createList(rank.getPermissions());
-		String children = getDatabase().createList(rank.getNode()
-		                                               .getChildren()
-		                                               .stream()
-		                                               .map(Tree.Node::getData)
-		                                               .map(Rank::getName)
-		                                               .toList());
+		String children = getDatabase().createList(
+				rank.getNode().getChildren().stream().map(Tree.Node::getData).map(Rank::getName).toList());
 
 		Database      config          = getDatabase().table("data");
 		List<String>  columnsTemp     = config.getColumns();

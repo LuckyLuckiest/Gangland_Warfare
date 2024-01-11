@@ -139,8 +139,8 @@ public class Gang extends Account<Integer, List<Member>> {
 	}
 
 	public String getDisplayNameString() {
-		return displayName.isEmpty() ? this.name : ChatUtil.color(
-				this.displayName + "&c" + SettingAddon.getGangDisplayNameChar());
+		return displayName.isEmpty() ? this.name
+		                             : ChatUtil.color(this.displayName + "&c" + SettingAddon.getGangDisplayNameChar());
 	}
 
 	public String getAllyListString() {

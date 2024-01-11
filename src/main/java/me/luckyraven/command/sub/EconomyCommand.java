@@ -26,9 +26,12 @@ public class EconomyCommand extends CommandHandler {
 	public EconomyCommand(Gangland gangland) {
 		super(gangland, "economy", false, "eco");
 
-		List<CommandInformation> list = getCommands().entrySet().stream().filter(
-				entry -> entry.getKey().startsWith("economy")).sorted(Map.Entry.comparingByKey()).map(
-				Map.Entry::getValue).toList();
+		List<CommandInformation> list = getCommands().entrySet()
+		                                             .stream()
+		                                             .filter(entry -> entry.getKey().startsWith("economy"))
+		                                             .sorted(Map.Entry.comparingByKey())
+		                                             .map(Map.Entry::getValue)
+		                                             .toList();
 
 		getHelpInfo().addAll(list);
 	}
@@ -109,10 +112,10 @@ public class EconomyCommand extends CommandHandler {
 							strValue = "set";
 						}
 					}
-					user.getUser().sendMessage(MessageAddon.valueOf(strValue.toUpperCase() + "_MONEY_PLAYER")
-					                                       .toString()
-					                                       .replace("%amount%",
-					                                                SettingAddon.formatDouble(valueChanged)));
+					user.getUser()
+					    .sendMessage(MessageAddon.valueOf(strValue.toUpperCase() + "_MONEY_PLAYER")
+					                             .toString()
+					                             .replace("%amount%", SettingAddon.formatDouble(valueChanged)));
 					user.getEconomy().setBalance(value);
 				}
 			} catch (NumberFormatException exception) {

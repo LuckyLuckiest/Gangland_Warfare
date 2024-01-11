@@ -1,10 +1,13 @@
 package me.luckyraven.util;
 
+import com.cryptomorin.xseries.messages.ActionBar;
 import com.google.common.base.Preconditions;
+import me.luckyraven.Gangland;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -121,6 +124,10 @@ public final class ChatUtil {
 
 	public static String setArguments(String arguments, String command) {
 		return color(arguments + ChatUtil.commandDesign(command));
+	}
+
+	public static void sendActionBar(Player player, String message) {
+		ActionBar.sendActionBar(JavaPlugin.getPlugin(Gangland.class), player, message);
 	}
 
 }

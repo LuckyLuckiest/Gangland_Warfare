@@ -43,8 +43,8 @@ public class GangMembersDamage implements Listener {
 		Gang gang1 = gangManager.getGang(userDamager.getGangId());
 		Gang gang2 = gangManager.getGang(userDamaged.getGangId());
 
-		if (gang1.getAlly().contains(gang2) || userDamager.getGangId() == userDamaged.getGangId()) event.setCancelled(
-				true);
+		if (gang1.getAlly().contains(gang2) || userDamager.getGangId() == userDamaged.getGangId())
+			event.setCancelled(true);
 
 	}
 

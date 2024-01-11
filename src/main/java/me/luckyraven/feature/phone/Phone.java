@@ -53,7 +53,8 @@ public class Phone {
 	}
 
 	public static boolean isPhone(ItemStack item) {
-		return new ItemBuilder(item).hasNBTTag("uniqueItem");
+		ItemBuilder itemBuilder = new ItemBuilder(item);
+		return itemBuilder.hasNBTTag("uniqueItem") && itemBuilder.getTagData("uniqueItem").equals("phone");
 	}
 
 	public static boolean hasPhone(Player player) {
@@ -166,8 +167,8 @@ public class Phone {
 					                String output = stateSnapshot.getText();
 
 					                if (output == null || output.isEmpty()) {
-						                stateSnapshot.getPlayer().sendMessage(
-								                MessageAddon.INVALID_GANG_NAME.toString());
+						                stateSnapshot.getPlayer()
+						                             .sendMessage(MessageAddon.INVALID_GANG_NAME.toString());
 						                return Collections.emptyList();
 					                }
 
@@ -190,9 +191,9 @@ public class Phone {
 			                for (Gang gang : gangs) {
 				                ItemBuilder itemBuilder = new ItemBuilder(
 						                XMaterial.PLAYER_HEAD.parseMaterial()).setDisplayName(
-						                String.format("&r%s%s&7 Gang", ColorUtil.getColorCode(gang.getColor()),
-						                              gang.getDisplayNameString())).setLore(
-						                "&e" + gang.getDescription());
+								                                                      String.format("&r%s%s&7 Gang", ColorUtil.getColorCode(gang.getColor()),
+								                                                                    gang.getDisplayNameString()))
+				                                                              .setLore("&e" + gang.getDescription());
 
 				                UUID uuid = gang.getGroup()
 				                                .stream()
@@ -229,19 +230,23 @@ public class Phone {
 			                staticItems.put(searchItem.build(), (player2, currInv, itemBuilder) -> {
 				                // opens an anvil and enters the query
 				                new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
-					                User<Player> user2 = gangland.getInitializer().getUserManager().getUser(
-							                stateSnapshot.getPlayer());
+					                User<Player> user2 = gangland.getInitializer()
+					                                             .getUserManager()
+					                                             .getUser(stateSnapshot.getPlayer());
 					                String output = stateSnapshot.getText();
 
 					                if (output == null || output.isEmpty()) {
 						                return Collections.emptyList();
 					                }
 
-					                List<ItemStack> items = gangsItems.stream().filter(
-							                itemStack -> Objects.requireNonNull(itemStack.getItemMeta())
-							                                    .getDisplayName()
-							                                    .toLowerCase()
-							                                    .contains(output.toLowerCase())).toList();
+					                List<ItemStack> items = gangsItems.stream()
+					                                                  .filter(itemStack -> Objects.requireNonNull(
+							                                                                              itemStack.getItemMeta())
+					                                                                              .getDisplayName()
+					                                                                              .toLowerCase()
+					                                                                              .contains(
+							                                                                              output.toLowerCase()))
+					                                                  .toList();
 
 					                multiInventory.updateItems(items, user2, true, staticItems);
 					                callback.accept(stateSnapshot.getPlayer(), currInv, itemBuilder);

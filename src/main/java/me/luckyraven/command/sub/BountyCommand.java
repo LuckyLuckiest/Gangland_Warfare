@@ -24,9 +24,12 @@ public class BountyCommand extends CommandHandler {
 	public BountyCommand(Gangland gangland) {
 		super(gangland, "bounty", false);
 
-		List<CommandInformation> list = getCommands().entrySet().stream().filter(
-				entry -> entry.getKey().startsWith("bounty")).sorted(Map.Entry.comparingByKey()).map(
-				Map.Entry::getValue).toList();
+		List<CommandInformation> list = getCommands().entrySet()
+		                                             .stream()
+		                                             .filter(entry -> entry.getKey().startsWith("bounty"))
+		                                             .sorted(Map.Entry.comparingByKey())
+		                                             .map(Map.Entry::getValue)
+		                                             .toList();
 
 		getHelpInfo().addAll(list);
 	}

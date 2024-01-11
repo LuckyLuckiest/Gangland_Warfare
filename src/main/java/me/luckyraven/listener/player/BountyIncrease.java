@@ -25,11 +25,12 @@ public class BountyIncrease implements Listener {
 	public void onBountyIncrease(BountyEvent event) {
 		User<? extends OfflinePlayer> user = event.getUserBounty();
 
-		String bountyIncrement = MessageAddon.BOUNTY_INCREMENT.toString().replace("%bounty%", SettingAddon.formatDouble(
-				event.getAmountApplied()));
+		String bountyIncrement = MessageAddon.BOUNTY_INCREMENT.toString()
+		                                                      .replace("%bounty%", SettingAddon.formatDouble(
+				                                                      event.getAmountApplied()));
 
-		if (user != null && user.getUser().isOnline()) if (!event.isCancelled()) Objects.requireNonNull(
-				user.getUser().getPlayer()).sendMessage(bountyIncrement);
+		if (user != null && user.getUser().isOnline())
+			if (!event.isCancelled()) Objects.requireNonNull(user.getUser().getPlayer()).sendMessage(bountyIncrement);
 
 		Gang gang = event.getGangBounty();
 		if (gang != null) if (!event.isCancelled()) {

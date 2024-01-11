@@ -134,14 +134,16 @@ public class PeriodicalUpdates {
 	                            UserDatabase userDatabase) {
 		helper.runQueries(database -> {
 			for (User<? extends OfflinePlayer> user : userManager.getUsers().values()) {
-				Object[] data = database.table("data").select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
-				                                              new int[]{Types.CHAR}, new String[]{"*"});
+				Object[] data = database.table("data")
+				                        .select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
+				                                new int[]{Types.CHAR}, new String[]{"*"});
 
 				if (data.length == 0) userDatabase.insertDataTable(user);
 				else userDatabase.updateDataTable(user);
 
-				Object[] bank = database.table("bank").select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
-				                                              new int[]{Types.CHAR}, new String[]{"*"});
+				Object[] bank = database.table("bank")
+				                        .select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
+				                                new int[]{Types.CHAR}, new String[]{"*"});
 
 				if (bank.length == 0) userDatabase.insertBankTable(user);
 				else userDatabase.updateBankTable(user);
@@ -152,8 +154,9 @@ public class PeriodicalUpdates {
 	private void updateMemberData(MemberManager memberManager, DatabaseHelper helper, GangDatabase gangDatabase) {
 		helper.runQueries(database -> {
 			for (Member member : memberManager.getMembers().values()) {
-				Object[] data = database.table("members").select("uuid = ?", new Object[]{member.getUuid()},
-				                                                 new int[]{Types.CHAR}, new String[]{"*"});
+				Object[] data = database.table("members")
+				                        .select("uuid = ?", new Object[]{member.getUuid()}, new int[]{Types.CHAR},
+				                                new String[]{"*"});
 
 				if (data.length == 0) gangDatabase.insertMemberTable(member);
 				else gangDatabase.updateMembersTable(member);
@@ -164,8 +167,9 @@ public class PeriodicalUpdates {
 	private void updateGangData(GangManager gangManager, DatabaseHelper helper, GangDatabase gangDatabase) {
 		helper.runQueries(database -> {
 			for (Gang gang : gangManager.getGangs().values()) {
-				Object[] data = database.table("data").select("id = ?", new Object[]{gang.getId()},
-				                                              new int[]{Types.INTEGER}, new String[]{"*"});
+				Object[] data = database.table("data")
+				                        .select("id = ?", new Object[]{gang.getId()}, new int[]{Types.INTEGER},
+				                                new String[]{"*"});
 
 				if (data.length == 0) gangDatabase.insertDataTable(gang);
 				else gangDatabase.updateDataTable(gang);
@@ -190,8 +194,9 @@ public class PeriodicalUpdates {
 	                                WaypointDatabase waypointDatabase) {
 		helper.runQueries(database -> {
 			for (Waypoint waypoint : waypointManager.getWaypoints().values()) {
-				Object[] data = database.table("data").select("id = ?", new Object[]{waypoint.getUsedId()},
-				                                              new int[]{Types.INTEGER}, new String[]{"*"});
+				Object[] data = database.table("data")
+				                        .select("id = ?", new Object[]{waypoint.getUsedId()}, new int[]{Types.INTEGER},
+				                                new String[]{"*"});
 
 				if (data.length == 0) waypointDatabase.insertDataTable(waypoint);
 				else waypointDatabase.updateDataTable(waypoint);

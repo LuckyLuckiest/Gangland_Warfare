@@ -65,8 +65,8 @@ public class FileHandler {
 		if (file.exists()) return;
 
 		file.getParentFile().mkdirs();
-		if (plugin.getResource(resourceFile.replace(File.separator, "/")) != null && inJar) plugin.saveResource(
-				resourceFile, false);
+		if (plugin.getResource(resourceFile.replace(File.separator, "/")) != null && inJar)
+			plugin.saveResource(resourceFile, false);
 		else {
 			int dir = file.getName().lastIndexOf(File.separator);
 
@@ -83,8 +83,8 @@ public class FileHandler {
 	private void registerYamlFile() throws IOException {
 		if (!fileType.equals(".yml")) return;
 		fileConfiguration = new YamlConfiguration();
-		try (FileInputStream inputStream = new FileInputStream(file); InputStreamReader reader = new InputStreamReader(
-				inputStream, StandardCharsets.UTF_8)) {
+		try (FileInputStream inputStream = new FileInputStream(file);
+		     InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
 			fileConfiguration.load(reader);
 			loaded = true;
 
@@ -96,11 +96,11 @@ public class FileHandler {
 
 	private boolean validateConfigVersion() throws IOException {
 		String configVersion = fileConfiguration.getString("Config_Version");
-		if (configVersion != null) if (!Objects.equals(fileConfiguration.getString("Config_Version"),
-		                                               this.configVersion)) {
-			createNewFile();
-			return true;
-		}
+		if (configVersion != null)
+			if (!Objects.equals(fileConfiguration.getString("Config_Version"), this.configVersion)) {
+				createNewFile();
+				return true;
+			}
 
 		return false;
 	}
@@ -113,8 +113,9 @@ public class FileHandler {
 		if (fileConfiguration != null && file != null) try {
 			fileConfiguration.save(file);
 		} catch (IOException exception) {
-			plugin.getLogger().warning(String.format(UnhandledError.FILE_SAVE_ERROR + " %s to %s: %s", name, file,
-			                                         exception.getMessage()));
+			plugin.getLogger()
+			      .warning(String.format(UnhandledError.FILE_SAVE_ERROR + " %s to %s: %s", name, file,
+			                             exception.getMessage()));
 		}
 	}
 
@@ -141,8 +142,8 @@ public class FileHandler {
 		createNewFile(true);
 		plugin.getLogger().info(String.format("%s%s is an old build or corrupted, creating a new one", name, fileType));
 
-		try (FileInputStream inputStream = new FileInputStream(file); InputStreamReader reader = new InputStreamReader(
-				inputStream, StandardCharsets.UTF_8)) {
+		try (FileInputStream inputStream = new FileInputStream(file);
+		     InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
 			fileConfiguration.load(reader);
 			loaded = true;
 		} catch (IOException | InvalidConfigurationException ignored) {

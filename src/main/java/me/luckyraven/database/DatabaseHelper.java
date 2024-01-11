@@ -74,8 +74,9 @@ public class DatabaseHelper {
 				database.getConnection().setAutoCommit(true);
 			}
 		} catch (SQLException exception) {
-			plugin.getLogger().warning(
-					UnhandledError.SQL_ERROR + ": Failed to rollback database connection, " + exception.getMessage());
+			plugin.getLogger()
+			      .warning(UnhandledError.SQL_ERROR + ": Failed to rollback database connection, " +
+					               exception.getMessage());
 		}
 	}
 

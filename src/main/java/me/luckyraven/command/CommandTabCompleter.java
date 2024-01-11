@@ -48,9 +48,8 @@ public class CommandTabCompleter implements TabCompleter {
 		}
 
 		// display all the initial arguments
-		if (args.length == 1) return collectedArguments(args, commandHandlers.stream()
-		                                                                     .map(CommandHandler::getLabel)
-		                                                                     .toList());
+		if (args.length == 1)
+			return collectedArguments(args, commandHandlers.stream().map(CommandHandler::getLabel).toList());
 
 		CommandHandler commandHandler = commandMap.get(args[0].toLowerCase());
 		// this won't solve the case of multiple optional values but would definitely stop the tab completion
@@ -67,8 +66,8 @@ public class CommandTabCompleter implements TabCompleter {
 		for (Argument argument : arg.getNode().getChildren().stream().map(Tree.Node::getData).toList()) {
 			String permission = argument.getPermission();
 
-			if (permission.isEmpty() || sender.hasPermission(permission)) arguments.addAll(
-					argument.getArgumentString());
+			if (permission.isEmpty() || sender.hasPermission(permission))
+				arguments.addAll(argument.getArgumentString());
 		}
 		return collectedArguments(args, arguments);
 	}
@@ -89,8 +88,9 @@ public class CommandTabCompleter implements TabCompleter {
 
 		if (lastArg.isEmpty()) return arguments;
 
-		Set<String> caseInsensitiveArguments = arguments.stream().map(String::toLowerCase).collect(
-				Collectors.toCollection(LinkedHashSet::new));
+		Set<String> caseInsensitiveArguments = arguments.stream()
+		                                                .map(String::toLowerCase)
+		                                                .collect(Collectors.toCollection(LinkedHashSet::new));
 
 		return caseInsensitiveArguments.parallelStream().filter(arg -> arg.startsWith(lastArg)).toList();
 	}

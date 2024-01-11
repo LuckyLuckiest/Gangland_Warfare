@@ -228,8 +228,9 @@ public class RankCommand extends CommandHandler {
 				case "add" -> {
 					if (rank.contains("")) rank.removePermission("");
 					rank.addPermission(permString);
-					message = MessageAddon.RANK_PERMISSION_ADD.toString().replace("%rank%", rank.getName()).replace(
-							"%permission%", permString);
+					message = MessageAddon.RANK_PERMISSION_ADD.toString()
+					                                          .replace("%rank%", rank.getName())
+					                                          .replace("%permission%", permString);
 				}
 				case "remove" -> {
 					if (!rank.contains(permString)) {
@@ -237,8 +238,9 @@ public class RankCommand extends CommandHandler {
 						return;
 					}
 					rank.removePermission(permString);
-					message = MessageAddon.RANK_PERMISSION_REMOVE.toString().replace("%rank%", rank.getName()).replace(
-							"%permission%", permString);
+					message = MessageAddon.RANK_PERMISSION_REMOVE.toString()
+					                                             .replace("%rank%", rank.getName())
+					                                             .replace("%permission%", permString);
 				}
 			}
 

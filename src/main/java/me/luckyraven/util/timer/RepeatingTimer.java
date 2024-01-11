@@ -1,7 +1,8 @@
 package me.luckyraven.util.timer;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.Consumer;
+
+import java.util.function.Consumer;
 
 public class RepeatingTimer extends Timer {
 

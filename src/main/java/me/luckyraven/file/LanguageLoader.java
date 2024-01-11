@@ -40,9 +40,9 @@ public class LanguageLoader {
 				languages.append(file, file.lastIndexOf("_") + 1, file.lastIndexOf("."));
 				if (i < files.size() - 1) languages.append(", ");
 			}
-			this.gangland.getLogger().info(
-					"Disabling plugin, reason: unidentifiable message file.\nPlease use languages from the list: " +
-							languages);
+			this.gangland.getLogger()
+			             .info("Disabling plugin, reason: unidentifiable message file.\nPlease use languages from the list: " +
+					                   languages);
 			Bukkit.getServer().getPluginManager().disablePlugin(this.gangland);
 		}
 	}
@@ -80,8 +80,9 @@ public class LanguageLoader {
 				if (i++ != 0) files.add(name.substring(name.lastIndexOf("/") + 1));
 			}
 		} catch (IOException exception) {
-			gangland.getLogger().warning(UnhandledError.MISSING_JAR_ERROR + ": " + exception.getMessage() + "\n" +
-					                             "This error occurred since the plugin jar file is not in the plugins folder.");
+			gangland.getLogger()
+			        .warning(UnhandledError.MISSING_JAR_ERROR + ": " + exception.getMessage() + "\n" +
+					                 "This error occurred since the plugin jar file is not in the plugins folder.");
 		}
 		return files;
 	}

@@ -21,9 +21,8 @@ public class ScientificCalculator {
 		this.formula = expression;
 		ExpressionBuilder builder = new ExpressionBuilder(formula);
 
-		if (!(variables == null || variables.isEmpty())) builder.variables(variables.keySet())
-		                                                        .operator(operators())
-		                                                        .functions(functions());
+		if (!(variables == null || variables.isEmpty()))
+			builder.variables(variables.keySet()).operator(operators()).functions(functions());
 
 		this.expression = builder.build();
 
@@ -81,11 +80,11 @@ public class ScientificCalculator {
 			public double apply(double... args) {
 				final int arg = (int) args[0];
 
-				if ((double) arg != args[0]) throw new IllegalArgumentException(
-						"Operand for factorial has to be an integer");
+				if ((double) arg != args[0])
+					throw new IllegalArgumentException("Operand for factorial has to be an integer");
 
-				if (arg < 0) throw new IllegalArgumentException(
-						"The operand of the factorial can not be less than zero");
+				if (arg < 0)
+					throw new IllegalArgumentException("The operand of the factorial can not be less than zero");
 
 				double result = 1;
 

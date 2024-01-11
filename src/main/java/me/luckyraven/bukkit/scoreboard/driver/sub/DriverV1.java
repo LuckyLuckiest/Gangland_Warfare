@@ -35,8 +35,9 @@ public class DriverV1 extends DriverHandler {
 
 				// update the lines in fastboard
 				if (lines.contains(getTitle())) getFastBoard().updateTitle(updateLine(getTitle()));
-				else lines.stream().filter(line -> line != getTitle()).forEach(
-						line -> getFastBoard().updateLine(line.getUsedIndex(), updateLine(line)));
+				else lines.stream()
+				          .filter(line -> line != getTitle())
+				          .forEach(line -> getFastBoard().updateLine(line.getUsedIndex(), updateLine(line)));
 			}
 
 			// increment the current interval value

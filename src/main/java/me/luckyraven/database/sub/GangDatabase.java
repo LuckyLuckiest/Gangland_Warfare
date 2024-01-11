@@ -120,7 +120,7 @@ public class GangDatabase extends DatabaseHandler {
 
 		config.insert(columns, new Object[]{
 				member.getUuid(), member.getGangId(), member.getContribution(),
-				member.getRank() == null ? null : member.getRank().getName(), member.getGangJoinDate()
+				member.getRank() == null ? null : member.getRank().getName(), member.getGangJoinDateLong()
 		}, dataTypes);
 	}
 

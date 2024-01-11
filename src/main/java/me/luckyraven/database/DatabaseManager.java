@@ -57,8 +57,9 @@ public class DatabaseManager {
 				case DatabaseHandler.SQLITE -> type = "MySQL";
 			}
 
-			plugin.getLogger().info(
-					String.format("Failed to create a backup for '%s' in '%s' database.", type, handler.getSchema()));
+			plugin.getLogger()
+			      .info(String.format("Failed to create a backup for '%s' in '%s' database.", type,
+			                          handler.getSchema()));
 		}
 
 		return handler;

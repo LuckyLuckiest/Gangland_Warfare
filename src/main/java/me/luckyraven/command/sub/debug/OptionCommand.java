@@ -103,8 +103,10 @@ public class OptionCommand extends CommandHandler {
 			targetMember.setRank(nextRank);
 
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
-			if (offlinePlayer.isOnline()) Objects.requireNonNull(offlinePlayer.getPlayer()).sendMessage(
-					MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString().replace("%rank%", nextRank.getName()));
+			if (offlinePlayer.isOnline()) Objects.requireNonNull(offlinePlayer.getPlayer())
+			                                     .sendMessage(MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString()
+			                                                                                          .replace("%rank%",
+			                                                                                                   nextRank.getName()));
 			player.sendMessage(MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString()
 			                                                           .replace("%player%", targetStr)
 			                                                           .replace("%rank%", nextRank.getName()));

@@ -414,7 +414,8 @@ public interface Database {
 		else if (columnType.equals(Boolean.class)) {
 			int intValue = resultSet.getInt(columnName);
 			value = intValue != 0;
-		} else value = columnType.cast(value);
+		} else if (columnType.equals(Long.class) && value instanceof Integer) value = ((Integer) value).longValue();
+		else value = columnType.cast(value);
 
 		return value;
 	}

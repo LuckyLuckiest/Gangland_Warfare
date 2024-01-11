@@ -56,8 +56,9 @@ public class InventoryUtil {
 			if (inventoryHandler.getInventory().getItem(slot + i) != null) continue;
 
 			if (i < items.length) inventoryHandler.getInventory().setItem(slot + i, items[i]);
-			else inventoryHandler.getInventory().setItem(slot + i, new ItemBuilder(getLineItem()).setDisplayName(
-					SettingAddon.getInventoryLineName()).build());
+			else inventoryHandler.getInventory()
+			                     .setItem(slot + i, new ItemBuilder(getLineItem()).setDisplayName(
+					                     SettingAddon.getInventoryLineName()).build());
 		}
 	}
 
@@ -94,8 +95,9 @@ public class InventoryUtil {
 			if (inventoryHandler.getInventory().getItem(slot) != null) continue;
 
 			if (i < items.length) inventoryHandler.getInventory().setItem(slot, items[i]);
-			else inventoryHandler.getInventory().setItem(slot, new ItemBuilder(getLineItem()).setDisplayName(
-					SettingAddon.getInventoryLineName()).build());
+			else inventoryHandler.getInventory()
+			                     .setItem(slot, new ItemBuilder(getLineItem()).setDisplayName(
+					                     SettingAddon.getInventoryLineName()).build());
 		}
 	}
 

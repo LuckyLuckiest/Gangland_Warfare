@@ -70,8 +70,9 @@ public class MultiInventory extends InventoryHandler {
 		multi.addItems(multi, items, 0, items.size(), staticItemsAllowed, staticItems);
 		InventoryUtil.createBoarder(multi);
 		// if there is static items column, then create a line at column 2
-		if (staticItemsAllowed) InventoryUtil.verticalLine(multi, 2, InventoryUtil.getFillItem(),
-		                                                   SettingAddon.getInventoryFillName(), true);
+		if (staticItemsAllowed)
+			InventoryUtil.verticalLine(multi, 2, InventoryUtil.getFillItem(), SettingAddon.getInventoryFillName(),
+			                           true);
 
 		// the other pages
 		for (int i = 1; i < pages; i++) {
@@ -86,8 +87,9 @@ public class MultiInventory extends InventoryHandler {
 			multi.addItems(inv, items, startIndex, endIndex, staticItemsAllowed, staticItems);
 			InventoryUtil.createBoarder(inv);
 			// if there is static items column, then create a line at column 2
-			if (staticItemsAllowed) InventoryUtil.verticalLine(inv, 2, InventoryUtil.getFillItem(),
-			                                                   SettingAddon.getInventoryFillName(), true);
+			if (staticItemsAllowed)
+				InventoryUtil.verticalLine(inv, 2, InventoryUtil.getFillItem(), SettingAddon.getInventoryFillName(),
+				                           true);
 
 			multi.addPage(inv);
 		}
@@ -140,8 +142,9 @@ public class MultiInventory extends InventoryHandler {
 			if (inventoryHandler.getInventory().getItem(slot) != null) continue;
 
 			if (i < staticItems.size()) inventoryHandler.setItem(slot, items.get(i), false, consumers.get(i));
-			else inventoryHandler.getInventory().setItem(slot, new ItemBuilder(
-					InventoryUtil.getLineItem()).setDisplayName(SettingAddon.getInventoryLineName()).build());
+			else inventoryHandler.getInventory()
+			                     .setItem(slot, new ItemBuilder(InventoryUtil.getLineItem()).setDisplayName(
+					                     SettingAddon.getInventoryLineName()).build());
 
 		}
 	}
@@ -170,8 +173,9 @@ public class MultiInventory extends InventoryHandler {
 
 		addItems(firstPage, items, 0, Math.min(perPage, items.size()), staticItemsAllowed, staticItems);
 		InventoryUtil.createBoarder(firstPage);
-		if (staticItemsAllowed) InventoryUtil.verticalLine(firstPage, 2, InventoryUtil.getFillItem(),
-		                                                   SettingAddon.getInventoryFillName(), true);
+		if (staticItemsAllowed)
+			InventoryUtil.verticalLine(firstPage, 2, InventoryUtil.getFillItem(), SettingAddon.getInventoryFillName(),
+			                           true);
 
 		for (int i = 1; i < pages; i++) {
 			int              size = i == pages - 1 ? finalPage : initialPage;
@@ -192,8 +196,9 @@ public class MultiInventory extends InventoryHandler {
 				addItems(inv, items, i * perPage, Math.min((i + 1) * perPage, items.size()), false, null);
 			}
 			InventoryUtil.createBoarder(inv);
-			if (staticItemsAllowed) InventoryUtil.verticalLine(inv, 2, InventoryUtil.getFillItem(),
-			                                                   SettingAddon.getInventoryFillName(), true);
+			if (staticItemsAllowed)
+				InventoryUtil.verticalLine(inv, 2, InventoryUtil.getFillItem(), SettingAddon.getInventoryFillName(),
+				                           true);
 
 			inventoryIndex++;
 		}

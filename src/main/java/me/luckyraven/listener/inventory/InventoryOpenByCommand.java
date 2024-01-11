@@ -13,7 +13,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
-import java.util.Map;
+import java.util.Set;
 import java.util.stream.IntStream;
 
 public class InventoryOpenByCommand implements Listener {
@@ -34,12 +34,13 @@ public class InventoryOpenByCommand implements Listener {
 		User<Player> user    = userManager.getUser(player);
 
 		// this event runs before the event
-		Map<String, InventoryBuilder> inventories = InventoryAddon.getInventories();
+		Set<String> inventoryKeys = InventoryAddon.getInventoryKeys();
 
-		for (Map.Entry<String, InventoryBuilder> inventory : inventories.entrySet()) {
-			String           name          = inventory.getKey();
-			InventoryBuilder builder       = inventory.getValue();
-			OpenInventory    openInventory = builder.inventoryData().getOpenInventory();
+		for (String inventory : inventoryKeys) {
+			InventoryBuilder builder = InventoryAddon.getInventory(inventory);
+			if (builder == null) continue;
+
+			OpenInventory openInventory = builder.inventoryData().getOpenInventory();
 
 			if (openInventory == null) continue;
 			// only check command types
@@ -52,8 +53,8 @@ public class InventoryOpenByCommand implements Listener {
 			if (command.length != inventoryCommandArr.length) continue;
 
 			// check each content
-			boolean arraysEqual = IntStream.range(0, command.length).allMatch(
-					i -> command[i].equals(inventoryCommandArr[i]));
+			boolean arraysEqual = IntStream.range(0, command.length)
+			                               .allMatch(i -> command[i].equals(inventoryCommandArr[i]));
 			if (!arraysEqual) continue;
 
 			String permission = builder.permission();
@@ -62,7 +63,7 @@ public class InventoryOpenByCommand implements Listener {
 			if (openInventory.permission() != null && !player.hasPermission(openInventory.permission())) break;
 
 			try {
-				InventoryHandler inventoryHandler = builder.createInventory(gangland, user, name);
+				InventoryHandler inventoryHandler = builder.createInventory(gangland, user, inventory);
 
 				inventoryHandler.open(player);
 				event.setCancelled(true);

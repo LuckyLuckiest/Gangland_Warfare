@@ -160,9 +160,8 @@ public class LevelCommand extends CommandHandler {
 			}
 
 			String type = args[1].toUpperCase();
-			player.sendMessage(MessageAddon.valueOf("LEVEL_" + type)
-			                               .toString()
-			                               .replace("%level%", String.valueOf(levels)));
+			player.sendMessage(
+					MessageAddon.valueOf("LEVEL_" + type).toString().replace("%level%", String.valueOf(levels)));
 		});
 
 		levelAdd.addSubArgument(levelOptional);

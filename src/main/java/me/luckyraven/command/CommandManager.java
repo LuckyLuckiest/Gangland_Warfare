@@ -45,8 +45,8 @@ public final class CommandManager implements CommandExecutor {
 			boolean match = false;
 
 			for (Map.Entry<String, CommandHandler> entry : commands.entrySet())
-				if (entry.getKey().equalsIgnoreCase(args[0]) || entry.getValue().getAlias().contains(
-						args[0].toLowerCase())) {
+				if (entry.getKey().equalsIgnoreCase(args[0]) ||
+						entry.getValue().getAlias().contains(args[0].toLowerCase())) {
 					if (Arrays.stream(args).anyMatch("help"::equalsIgnoreCase)) onHelp(entry, sender, args);
 					else entry.getValue().runExecute(sender, args);
 					match = true;

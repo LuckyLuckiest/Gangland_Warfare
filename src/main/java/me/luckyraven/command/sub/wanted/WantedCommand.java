@@ -18,9 +18,12 @@ public class WantedCommand extends CommandHandler {
 	public WantedCommand(Gangland gangland) {
 		super(gangland, "wanted", true);
 
-		List<CommandInformation> list = getCommands().entrySet().parallelStream().filter(
-				entry -> entry.getKey().startsWith("wanted")).sorted(Map.Entry.comparingByKey()).map(
-				Map.Entry::getValue).toList();
+		List<CommandInformation> list = getCommands().entrySet()
+		                                             .stream()
+		                                             .filter(entry -> entry.getKey().startsWith("wanted"))
+		                                             .sorted(Map.Entry.comparingByKey())
+		                                             .map(Map.Entry::getValue)
+		                                             .toList();
 		getHelpInfo().addAll(list);
 	}
 

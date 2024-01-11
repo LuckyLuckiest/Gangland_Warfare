@@ -5,10 +5,10 @@ import lombok.Setter;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.Consumer;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class Bounty {
 

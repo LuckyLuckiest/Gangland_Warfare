@@ -1,7 +1,9 @@
 package me.luckyraven.command.sub.debug;
 
 import com.cryptomorin.xseries.XMaterial;
+import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import me.luckyraven.Gangland;
+import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
@@ -28,6 +30,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.permissions.Permission;
 
@@ -124,8 +127,11 @@ public class DebugCommand extends CommandHandler {
 					}
 				}
 
-				List<Material> swords = Arrays.stream(XMaterial.values()).map(XMaterial::parseMaterial).filter(
-						Objects::nonNull).filter(material -> material.name().contains("SWORD")).toList();
+				List<Material> swords = Arrays.stream(XMaterial.values())
+				                              .map(XMaterial::parseMaterial)
+				                              .filter(Objects::nonNull)
+				                              .filter(material -> material.name().contains("SWORD"))
+				                              .toList();
 
 				items.addAll(swords.stream().map(ItemStack::new).toList());
 
@@ -167,8 +173,13 @@ public class DebugCommand extends CommandHandler {
 		});
 
 		Argument permOptional = new Argument("bukkit", getArgumentTree(), (argument, sender, args) -> {
-			String[] permissions = Bukkit.getPluginManager().getPermissions().stream().map(Permission::getName).filter(
-					name -> name.startsWith("gangland")).sorted(String::compareTo).toArray(String[]::new);
+			String[] permissions = Bukkit.getPluginManager()
+			                             .getPermissions()
+			                             .stream()
+			                             .map(Permission::getName)
+			                             .filter(name -> name.startsWith("gangland"))
+			                             .sorted(String::compareTo)
+			                             .toArray(String[]::new);
 			sender.sendMessage(permissions);
 		});
 
@@ -196,8 +207,9 @@ public class DebugCommand extends CommandHandler {
 
 				String[] placeholders = {"%player%", "%info%", "%user_gang-id%"};
 
-				Arrays.stream(placeholders).forEach(
-						string -> sender.sendMessage(string + " -> " + handler.replacePlaceholder(player, string)));
+				Arrays.stream(placeholders)
+				      .forEach(string -> sender.sendMessage(
+						      string + " -> " + handler.replacePlaceholder(player, string)));
 			} else {
 				sender.sendMessage("Can't process non-player data.");
 			}
@@ -271,6 +283,39 @@ public class DebugCommand extends CommandHandler {
 
 		checkPerm.addSubArgument(checkOptional);
 
+		Argument giveGun = new Argument("weapon", getArgumentTree(), (argument, sender, args) -> {
+			if (!(sender instanceof Player)) {
+				sender.sendMessage("Only for players!");
+				return;
+			}
+
+			Inventory   playerInv = ((Player) sender).getInventory();
+			ItemBuilder weapon    = new ItemBuilder(Material.STICK);
+
+			weapon.setDisplayName("Test Weapon");
+			weapon.addTag("uniqueItem", "weapon");
+
+			for (int i = 0; i < playerInv.getSize(); i++) {
+				if (playerInv.getItem(i) != null) continue;
+
+				playerInv.setItem(i, weapon.build());
+				break;
+			}
+		});
+
+		Argument version = new Argument("version", getArgumentTree(), (argument, sender, args) -> {
+			sender.sendMessage("Server version: " + Bukkit.getVersion(), "Bukkit version: " + Bukkit.getBukkitVersion(),
+			                   "Plugin version: " + getGangland().getDescription().getVersion(),
+			                   "API version: " + getGangland().getDescription().getAPIVersion());
+
+			if (!(sender instanceof Player player && getGangland().getViaAPI() != null)) return;
+
+			int             playerVersion   = getGangland().getViaAPI().getPlayerVersion(player.getUniqueId());
+			ProtocolVersion protocolVersion = ProtocolVersion.getProtocol(playerVersion);
+
+			sender.sendMessage("Client version: " + protocolVersion.getName());
+		});
+
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
 
@@ -287,6 +332,8 @@ public class DebugCommand extends CommandHandler {
 		arguments.add(updateData);
 		arguments.add(inventoriesData);
 		arguments.add(checkPerm);
+		arguments.add(giveGun);
+		arguments.add(version);
 
 		getArgument().addAllSubArguments(arguments);
 	}

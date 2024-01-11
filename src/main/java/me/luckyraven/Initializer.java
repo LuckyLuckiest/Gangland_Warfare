@@ -16,6 +16,8 @@ import me.luckyraven.command.sub.gang.GangCommand;
 import me.luckyraven.command.sub.wanted.WantedCommand;
 import me.luckyraven.command.sub.waypoint.TeleportCommand;
 import me.luckyraven.command.sub.waypoint.WaypointCommand;
+import me.luckyraven.command.sub.weapon.AmmunitionCommand;
+import me.luckyraven.command.sub.weapon.WeaponCommand;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
@@ -40,10 +42,13 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.ScoreboardAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
+import me.luckyraven.file.configuration.weapon.AmmunitionAddon;
+import me.luckyraven.file.configuration.weapon.WeaponLoader;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.gang.GangMembersDamage;
 import me.luckyraven.listener.inventory.InventoryOpenByCommand;
 import me.luckyraven.listener.player.*;
+import me.luckyraven.listener.player.weapon.WeaponInteract;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
@@ -79,6 +84,8 @@ public final class Initializer {
 	private @Getter ScoreboardAddon            scoreboardAddon;
 	private @Getter InventoryLoader            inventoryLoader;
 	private @Getter GanglandPlaceholder        placeholder;
+	private @Getter AmmunitionAddon            ammunitionAddon;
+	private @Getter WeaponLoader               weaponLoader;
 
 	public Initializer(Gangland gangland) {
 		this.gangland = gangland;
@@ -155,16 +162,15 @@ public final class Initializer {
 
 	}
 
-	@SuppressWarnings("CommentedOutCode")
 	private void files() {
 		fileManager.addFile(new FileHandler(gangland, "settings", ".yml"), true);
 		fileManager.addFile(new FileHandler(gangland, "scoreboard", ".yml"), true);
+		fileManager.addFile(new FileHandler(gangland, "ammunition", ".yml"), true);
 		scoreboardManager = new ScoreboardManager(gangland);
 
 		addonsLoader();
 
 //		fileManager.addFile(new FileHandler("kits", ".yml"));
-//		fileManager.addFile(new FileHandler("ammunition", ".yml"));
 	}
 
 	public void addonsLoader() {
@@ -173,6 +179,7 @@ public final class Initializer {
 
 		scoreboardLoader();
 		inventoryLoader();
+		weaponLoader();
 	}
 
 	public void scoreboardLoader() {
@@ -182,11 +189,20 @@ public final class Initializer {
 	public void inventoryLoader() {
 		inventoryLoader = new InventoryLoader(gangland);
 
-		inventoryLoader.addInventory(new FileHandler(gangland, "gang_info", "inventory", ".yml"));
-		inventoryLoader.addInventory(new FileHandler(gangland, "phone", "inventory", ".yml"));
-		inventoryLoader.addInventory(new FileHandler(gangland, "phone_gang", "inventory", ".yml"));
+		inventoryLoader.addFile(new FileHandler(gangland, "gang_info", "inventory", ".yml"));
+		inventoryLoader.addFile(new FileHandler(gangland, "phone", "inventory", ".yml"));
+		inventoryLoader.addFile(new FileHandler(gangland, "phone_gang", "inventory", ".yml"));
 
 		inventoryLoader.initialize();
+	}
+
+	public void weaponLoader() {
+		ammunitionAddon = new AmmunitionAddon(fileManager);
+		weaponLoader = new WeaponLoader(gangland);
+
+		weaponLoader.addFile(new FileHandler(gangland, "rifle", "weapon", ".yml"));
+
+		weaponLoader.initialize();
 	}
 
 	private void databases() {
@@ -222,6 +238,9 @@ public final class Initializer {
 		listenerManager.addEvent(new LevelUp(gangland));
 		listenerManager.addEvent(new WaypointTeleport(new Waypoint("dummy")));
 
+		// weapon events
+		listenerManager.addEvent(new WeaponInteract(gangland));
+
 		// switch events
 		if (SettingAddon.isPhoneEnabled()) listenerManager.addEvent(new PhoneItem(gangland));
 		if (SettingAddon.isScoreboardEnabled()) listenerManager.addEvent(new PlayerScoreboard(gangland));
@@ -251,6 +270,8 @@ public final class Initializer {
 		commandManager.addCommand(new WaypointCommand(gangland));
 		commandManager.addCommand(new TeleportCommand(gangland));
 		commandManager.addCommand(new WantedCommand(gangland));
+		commandManager.addCommand(new WeaponCommand(gangland));
+		commandManager.addCommand(new AmmunitionCommand(gangland));
 
 		// gang commands
 		if (SettingAddon.isGangEnabled()) {

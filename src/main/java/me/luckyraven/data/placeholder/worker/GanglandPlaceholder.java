@@ -50,8 +50,13 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 	@Nullable
 	private String getSetting(String parameter) {
-		Object value = SettingAddon.getSettingsPlaceholder().entrySet().stream().filter(
-				entry -> entry.getKey().equals(parameter)).map(Map.Entry::getValue).findFirst().orElse(null);
+		Object value = SettingAddon.getSettingsPlaceholder()
+		                           .entrySet()
+		                           .stream()
+		                           .filter(entry -> entry.getKey().equals(parameter))
+		                           .map(Map.Entry::getValue)
+		                           .findFirst()
+		                           .orElse(null);
 
 		if (value == null) return null;
 
@@ -71,8 +76,8 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (parameter.equals(userStr + "gang-id")) return !member.hasGang() ? "NA" : String.valueOf(member.getGangId());
 		if (parameter.equals(userStr + "gang-join-date"))
 			return !member.hasGang() ? "NA" : member.getGangJoinDateString();
-		if (parameter.equals(userStr + "contribution")) return !member.hasGang() ? "NA" : SettingAddon.formatDouble(
-				member.getContribution());
+		if (parameter.equals(userStr + "contribution"))
+			return !member.hasGang() ? "NA" : SettingAddon.formatDouble(member.getContribution());
 		if (parameter.equals(userStr + "contributed-amount")) return !member.hasGang() ? "NA" : valueFormat(
 				SettingAddon.getGangContributionRate() * member.getContribution());
 		if (parameter.equals(userStr + "has-rank")) return String.valueOf(member.hasRank());
@@ -168,10 +173,10 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 		// members
 		if (parameter.equals(gangStr + "members-size")) return String.valueOf(gang.getGroup().size());
-		if (parameter.equals(gangStr + "online-members-size")) return String.valueOf(
-				gang.getOnlineMembers(userManager).size());
-		if (parameter.equals(gangStr + "offline-members-size")) return String.valueOf(
-				gang.getGroup().size() - gang.getOnlineMembers(userManager).size());
+		if (parameter.equals(gangStr + "online-members-size"))
+			return String.valueOf(gang.getOnlineMembers(userManager).size());
+		if (parameter.equals(gangStr + "offline-members-size"))
+			return String.valueOf(gang.getGroup().size() - gang.getOnlineMembers(userManager).size());
 
 		// ally
 		if (parameter.equals(gangStr + "ally-list")) return gang.getAllyListString();
@@ -189,12 +194,12 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (parameter.equals(type + "level-previous")) return String.valueOf(level.previousLevel());
 		if (parameter.equals(type + "experience")) return valueFormat(level.getExperience());
 		if (parameter.equals(type + "experience-percentage")) return valueFormat(level.getPercentage());
-		if (parameter.equals(type + "experience-next-level")) return valueFormat(
-				level.experienceCalculation(level.nextLevel()));
-		if (parameter.equals(type + "experience-previous-level")) return valueFormat(
-				level.experienceCalculation(level.previousLevel()));
-		if (parameter.equals(type + "experience-current-level")) return valueFormat(
-				level.experienceCalculation(level.getLevelValue()));
+		if (parameter.equals(type + "experience-next-level"))
+			return valueFormat(level.experienceCalculation(level.nextLevel()));
+		if (parameter.equals(type + "experience-previous-level"))
+			return valueFormat(level.experienceCalculation(level.previousLevel()));
+		if (parameter.equals(type + "experience-current-level"))
+			return valueFormat(level.experienceCalculation(level.getLevelValue()));
 		if (parameter.startsWith(type + "experience-level-")) {
 			String param = parameter.substring(parameter.lastIndexOf('-') + 1);
 			int    value;

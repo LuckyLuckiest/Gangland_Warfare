@@ -34,9 +34,12 @@ public class TeleportCommand extends CommandHandler {
 		reconfirm = new HashMap<>();
 		reconfirmTimer = new HashMap<>();
 
-		List<CommandInformation> list = getCommands().entrySet().parallelStream().filter(
-				entry -> entry.getKey().startsWith("waypoint")).sorted(Map.Entry.comparingByKey()).map(
-				Map.Entry::getValue).toList();
+		List<CommandInformation> list = getCommands().entrySet()
+		                                             .stream()
+		                                             .filter(entry -> entry.getKey().startsWith("waypoint"))
+		                                             .sorted(Map.Entry.comparingByKey())
+		                                             .map(Map.Entry::getValue)
+		                                             .toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -95,8 +98,8 @@ public class TeleportCommand extends CommandHandler {
 					"The teleportation costs &a" + SettingAddon.getMoneySymbol() + waypoint.getCost() + "&7."));
 			player.sendMessage(ChatUtil.color("&7To confirm the command re-type it again."));
 		} else {
-			if (user.getEconomy().getBalance() < waypoint.getCost()) player.sendMessage(
-					MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
+			if (user.getEconomy().getBalance() < waypoint.getCost())
+				player.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 			else {
 				reconfirm.remove(player);
 				CountdownTimer timer = reconfirmTimer.get(player);
@@ -143,8 +146,8 @@ public class TeleportCommand extends CommandHandler {
 					message = MessageAddon.WAYPOINT_TELEPORT.toString().replace("%location%", waypoint1.getName());
 
 				} else {
-					message = MessageAddon.UNABLE_TELEPORT_WAYPOINT.toString().replace("%location%",
-					                                                                   waypoint1.getName());
+					message = MessageAddon.UNABLE_TELEPORT_WAYPOINT.toString()
+					                                               .replace("%location%", waypoint1.getName());
 
 				}
 				player.sendMessage(message);

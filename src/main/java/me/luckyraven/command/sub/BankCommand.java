@@ -296,9 +296,10 @@ public class BankCommand extends CommandHandler {
 					}
 				}
 
-				user.getUser().sendMessage(MessageAddon.valueOf("BANK_MONEY_" + strArg.toUpperCase() + "_PLAYER")
-				                                       .toString()
-				                                       .replace("%amount%", SettingAddon.formatDouble(argAmount)));
+				user.getUser()
+				    .sendMessage(MessageAddon.valueOf("BANK_MONEY_" + strArg.toUpperCase() + "_PLAYER")
+				                             .toString()
+				                             .replace("%amount%", SettingAddon.formatDouble(argAmount)));
 
 			} catch (NumberFormatException exception) {
 				player.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));

@@ -36,7 +36,7 @@ public class GangCommand extends CommandHandler {
 		super(gangland, "gang", true);
 
 		List<CommandInformation> list = getCommands().entrySet()
-		                                             .parallelStream()
+		                                             .stream()
 		                                             .filter(entry -> entry.getKey().startsWith("gang"))
 		                                             .sorted(Map.Entry.comparingByKey())
 		                                             .map(Map.Entry::getValue)

@@ -35,8 +35,10 @@ public class LevelUp implements Listener {
 		Gang gang = event.getGang();
 
 		if (gang != null) {
-			List<Player> onlinePlayers = gang.getOnlineMembers(gangland.getInitializer().getUserManager()).stream().map(
-					User::getUser).toList();
+			List<Player> onlinePlayers = gang.getOnlineMembers(gangland.getInitializer().getUserManager())
+			                                 .stream()
+			                                 .map(User::getUser)
+			                                 .toList();
 
 			for (Player player : onlinePlayers)
 				player.sendMessage(ChatUtil.prefixMessage(

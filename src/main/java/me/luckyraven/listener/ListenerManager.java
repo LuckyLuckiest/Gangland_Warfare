@@ -11,13 +11,13 @@ import java.util.Set;
 
 public class ListenerManager {
 
+	private final JavaPlugin    plugin;
 	@Getter
 	private final Set<Listener> listeners;
-	private final JavaPlugin    plugin;
 
 	public ListenerManager(JavaPlugin plugin) {
-		listeners = new HashSet<>();
 		this.plugin = plugin;
+		this.listeners = new HashSet<>();
 	}
 
 	public void registerEvents() {

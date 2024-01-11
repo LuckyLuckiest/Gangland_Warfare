@@ -15,9 +15,12 @@ public class WaypointCommand extends CommandHandler {
 	public WaypointCommand(Gangland gangland) {
 		super(gangland, "waypoint", true);
 
-		List<CommandInformation> list = getCommands().entrySet().parallelStream().filter(
-				entry -> entry.getKey().startsWith("waypoint")).sorted(Map.Entry.comparingByKey()).map(
-				Map.Entry::getValue).toList();
+		List<CommandInformation> list = getCommands().entrySet()
+		                                             .stream()
+		                                             .filter(entry -> entry.getKey().startsWith("waypoint"))
+		                                             .sorted(Map.Entry.comparingByKey())
+		                                             .map(Map.Entry::getValue)
+		                                             .toList();
 		getHelpInfo().addAll(list);
 	}
 

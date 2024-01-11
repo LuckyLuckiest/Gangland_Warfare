@@ -142,9 +142,12 @@ public class ReloadPlugin {
 	public void userInitialize(boolean resetCache) {
 		DatabaseManager databaseManager = initializer.getDatabaseManager();
 
-		UserDatabase userHandler = databaseManager.getDatabases().stream().filter(
-				handler -> handler instanceof UserDatabase).map(handler -> (UserDatabase) handler).findFirst().orElse(
-				null);
+		UserDatabase userHandler = databaseManager.getDatabases()
+		                                          .stream()
+		                                          .filter(handler -> handler instanceof UserDatabase)
+		                                          .map(handler -> (UserDatabase) handler)
+		                                          .findFirst()
+		                                          .orElse(null);
 
 		if (userHandler == null) {
 			Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find UserDatabase class.");
@@ -153,9 +156,12 @@ public class ReloadPlugin {
 
 		UserManager<Player> userManager = initializer.getUserManager();
 
-		GangDatabase memberHandler = databaseManager.getDatabases().stream().filter(
-				handler -> handler instanceof GangDatabase).map(handler -> (GangDatabase) handler).findFirst().orElse(
-				null);
+		GangDatabase memberHandler = databaseManager.getDatabases()
+		                                            .stream()
+		                                            .filter(handler -> handler instanceof GangDatabase)
+		                                            .map(handler -> (GangDatabase) handler)
+		                                            .findFirst()
+		                                            .orElse(null);
 
 		if (memberHandler == null) {
 			Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find GangDatabase class.");

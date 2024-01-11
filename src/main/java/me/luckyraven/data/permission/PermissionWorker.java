@@ -39,8 +39,8 @@ public class PermissionWorker implements PermissionHandler {
 		if (permission.isEmpty()) return;
 
 		// not moral to remove other plugins permissions
-		if (!permission.startsWith(this.indicator)) throw new IllegalAccessException(
-				"Not allowed to access other plugins registered permission.");
+		if (!permission.startsWith(this.indicator))
+			throw new IllegalAccessException("Not allowed to access other plugins registered permission.");
 
 		PluginManager pluginManager = Bukkit.getPluginManager();
 
@@ -49,8 +49,12 @@ public class PermissionWorker implements PermissionHandler {
 
 	@Override
 	public boolean permissionExists(@NotNull String permission) {
-		return Bukkit.getPluginManager().getPermissions().stream().map(Permission::getName).toList().contains(
-				permission);
+		return Bukkit.getPluginManager()
+		             .getPermissions()
+		             .stream()
+		             .map(Permission::getName)
+		             .toList()
+		             .contains(permission);
 	}
 
 }

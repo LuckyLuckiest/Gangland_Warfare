@@ -49,13 +49,13 @@ public class InventoryAddon {
 		return inventories.get(key);
 	}
 
-	public static Map<String, InventoryBuilder> getInventories() {
-		return new HashMap<>(inventories);
+	public static Set<String> getInventoryKeys() {
+		return inventories.keySet();
 	}
 
 	public static void registerInventory(Gangland gangland, FileHandler fileHandler) {
 		FileConfiguration config   = fileHandler.getFileConfiguration();
-		String            tempName = fileHandler.getName().toLowerCase();
+		String            fileName = fileHandler.getName().toLowerCase();
 
 		String configVersion = config.getString("Config_Version");
 		if (configVersion != null) {
@@ -68,7 +68,7 @@ public class InventoryAddon {
 
 		// information section
 		String name = config.getString(information + "Name");
-		if (name == null || name.isEmpty()) name = tempName;
+		if (name == null || name.isEmpty()) name = fileName;
 		String displayName = Objects.requireNonNull(config.getString(information + "Display_Name"));
 		int    size        = config.getInt(information + "Size");
 		String permission  = config.getString(information + "Permission");

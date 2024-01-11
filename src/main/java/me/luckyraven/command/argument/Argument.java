@@ -160,15 +160,20 @@ public class Argument implements Cloneable {
 				case NOT_FOUND -> {
 					StringBuilder invalidArg = new StringBuilder(MessageAddon.ARGUMENTS_WRONG.toString());
 					Argument      lastValid  = tree.traverseLastValid(modifiedArg);
-					if (lastValid != null) {
-						for (int i = 0; i < args.length; i++)
-							if (Arrays.stream(lastValid.arguments).anyMatch(args[i]::equalsIgnoreCase)) {
-								if (i + 1 < args.length) invalidArg.append(args[i + 1]);
 
-								sender.sendMessage(invalidArg.toString());
-								break;
-							}
-					} else sender.sendMessage(invalidArg.append(args[0]).toString());
+					if (lastValid == null) {
+						sender.sendMessage(invalidArg.append(args[0]).toString());
+						return;
+					}
+
+					for (int i = 0; i < args.length; i++) {
+						if (Arrays.stream(lastValid.arguments).noneMatch(args[i]::equalsIgnoreCase)) continue;
+
+						if (i + 1 < args.length) invalidArg.append(args[i + 1]);
+
+						sender.sendMessage(invalidArg.toString());
+						break;
+					}
 				}
 			}
 		} catch (Throwable throwable) {
@@ -200,8 +205,8 @@ public class Argument implements Cloneable {
 
 		String permission = node.getData().getPermission();
 
-		if (!permission.isEmpty() && !sender.hasPermission(permission)) return ArgumentResult.noPermission(
-				node.getData());
+		if (!permission.isEmpty() && !sender.hasPermission(permission))
+			return ArgumentResult.noPermission(node.getData());
 
 		node.getData().executeOnPass(sender, args);
 
@@ -211,8 +216,8 @@ public class Argument implements Cloneable {
 			ArgumentResult<T> result = traverseList(child, list, index + 1, dummy, sender, args);
 
 			if (result.getState() == ArgumentResult.ResultState.SUCCESS) return result;
-			else if (result.getState() == ArgumentResult.ResultState.NO_PERMISSION) return ArgumentResult.noPermission(
-					node.getData());
+			else if (result.getState() == ArgumentResult.ResultState.NO_PERMISSION)
+				return ArgumentResult.noPermission(node.getData());
 		}
 
 		return ArgumentResult.notFound();
@@ -223,8 +228,8 @@ public class Argument implements Cloneable {
 		if (this == obj) return true;
 		if (!(obj instanceof Argument argument)) return false;
 
-		return Arrays.stream(argument.arguments).anyMatch(
-				arg -> Arrays.stream(this.arguments).anyMatch(arg::equalsIgnoreCase));
+		return Arrays.stream(argument.arguments)
+		             .anyMatch(arg -> Arrays.stream(this.arguments).anyMatch(arg::equalsIgnoreCase));
 	}
 
 	@Override

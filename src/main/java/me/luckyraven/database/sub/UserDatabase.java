@@ -126,10 +126,9 @@ public class UserDatabase extends DatabaseHandler {
 				for (int i = 0; i < dataTypes.length; i++)
 					dataTypes[i] = columnsDataType.get(i);
 
-				getDatabase().table("bank").update("uuid = ?", new Object[]{user.getUser().getUniqueId()},
-				                                   new int[]{Types.CHAR}, columns,
-				                                   new Object[]{bank.getName(), bank.getEconomy().getBalance()},
-				                                   dataTypes);
+				getDatabase().table("bank")
+				             .update("uuid = ?", new Object[]{user.getUser().getUniqueId()}, new int[]{Types.CHAR},
+				                     columns, new Object[]{bank.getName(), bank.getEconomy().getBalance()}, dataTypes);
 				break;
 			}
 	}

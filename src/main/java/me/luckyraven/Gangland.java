@@ -30,7 +30,7 @@ public final class Gangland extends JavaPlugin {
 	private ReloadPlugin            reloadPlugin;
 	private PeriodicalUpdates       periodicalUpdates;
 	private PlaceholderAPIExpansion placeholderAPIExpansion;
-	private ViaAPI                  viaAPI;
+	private ViaAPI<?>               viaAPI;
 
 	@Override
 	public void onLoad() {

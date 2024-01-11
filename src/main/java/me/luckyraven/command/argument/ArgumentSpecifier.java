@@ -38,8 +38,8 @@ public class ArgumentSpecifier {
 		if (!modifiedTarget.startsWith("@")) modifiedTarget = "@" + target;
 		targetSpecifier(modifiedTarget);
 
-		if (!specifiers.containsKey(modifiedTarget)) throw new IllegalArgumentException(
-				"Unable to identify this specifier!");
+		if (!specifiers.containsKey(modifiedTarget))
+			throw new IllegalArgumentException("Unable to identify this specifier!");
 	}
 
 	private void allPlayers() {

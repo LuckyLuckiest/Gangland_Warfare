@@ -14,14 +14,16 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class ItemBuilder {
 
-	private static final Map<String, Object> SPECIAL_NBT = new HashMap<>();
-	private final        ItemStack           itemStack;
+	private final ItemStack itemStack;
 
 	private @Getter String            displayName;
 	private @Getter List<String>      lore;
@@ -35,13 +37,8 @@ public class ItemBuilder {
 		this.itemStack = new ItemStack(material);
 	}
 
-	public static Map<String, Object> getSpecialNBTs() {
-		return SPECIAL_NBT;
-	}
-
 	public ItemBuilder setDisplayName(@Nullable String displayName) {
-		if (displayName == null) displayName = "";
-		if (displayName.isEmpty()) displayName = " ";
+		if (displayName == null || displayName.isEmpty()) displayName = " ";
 
 		this.displayName = displayName;
 
@@ -90,6 +87,12 @@ public class ItemBuilder {
 		return this;
 	}
 
+	public ItemBuilder setMaxStackSize(int size) {
+//		itemStack.set
+
+		return this;
+	}
+
 	public ItemBuilder setAmount(int amount) {
 		modifyNBT(nbt -> nbt.setInteger("Count", amount));
 		return this;
@@ -118,8 +121,10 @@ public class ItemBuilder {
 
 			skullOwnerCompound.setUUID("Id", UUID.randomUUID());
 
-			skullOwnerCompound.getOrCreateCompound("Properties").getCompoundList("textures").addCompound().setString(
-					"Value", base64);
+			skullOwnerCompound.getOrCreateCompound("Properties")
+			                  .getCompoundList("textures")
+			                  .addCompound()
+			                  .setString("Value", base64);
 		});
 
 		return this;
@@ -130,8 +135,7 @@ public class ItemBuilder {
 	}
 
 	public ItemBuilder addTag(String tag, Object value) {
-		if (value instanceof String) modifyNBT(nbt -> nbt.setString(tag, (String) value));
-		else if (value instanceof Byte) modifyNBT(nbt -> nbt.setByte(tag, (byte) value));
+		if (value instanceof Byte) modifyNBT(nbt -> nbt.setByte(tag, (byte) value));
 		else if (value instanceof byte[]) modifyNBT(nbt -> nbt.setByteArray(tag, (byte[]) value));
 		else if (value instanceof Short) modifyNBT(nbt -> nbt.setShort(tag, (short) value));
 		else if (value instanceof Integer) modifyNBT(nbt -> nbt.setInteger(tag, (int) value));
@@ -144,8 +148,7 @@ public class ItemBuilder {
 		else if (value instanceof ItemStack[]) modifyNBT(nbt -> nbt.setItemStackArray(tag, (ItemStack[]) value));
 		else if (value instanceof UUID) modifyNBT(nbt -> nbt.setUUID(tag, (UUID) value));
 		else if (value instanceof Enum) modifyNBT(nbt -> nbt.setEnum(tag, (Enum<?>) value));
-
-		SPECIAL_NBT.put(tag, value);
+		else modifyNBT(nbt -> nbt.setString(tag, value.toString()));
 
 		return this;
 	}
