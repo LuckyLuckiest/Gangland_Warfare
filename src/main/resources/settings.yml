@@ -35,10 +35,10 @@ Config_Version: '${project.version}'
 Update_Checker:
    # It is recommended to be left enabled since it doesn't take any RAM.
    Enable: true
-   # Only privileged players will be notified when they join that there is a new update.
+   # Only privileged players will be notified when they join if there is a new update.
    Notify_Privileged_Players: false
    # This feature will auto install the update into the plugin own folder, inside a folder called 'release'.
-   Auto_Update: false
+   Auto_Download: true
 
 # +-----------------+ #
 # | Language Config | #
@@ -53,6 +53,11 @@ Update_Checker:
 # plugin work, use any valid language. To get the list of the available languages, enter an invalid name, and a message
 # of the available list suffix would be displayed.
 Language: en
+
+# +----------------------+ #
+# | Resource Pack Config | #
+# +----------------------+ #
+
 
 # +-----------------+ #
 # | Database Config | #
@@ -95,9 +100,10 @@ Scoreboard:
    # Drivers' list:
    #  1) Driver_V1: Caches the lines into memory and uses a clustering algorithm that updates similar line intervals
    #                each tick.
-   #  2) Driver_V2: Caches the lines into memory similar to Driver_V1 algorithm. The difference is it uses built-in
+   #  2) Driver_V2: Caches the lines into memory similar to Driver_V1 algorithm. The difference is it uses a built-in
    #                library to manage the clusters.
-   Driver: "Driver_V1"
+   #  3) Driver_V3: Uses interactive scoreboard to temporarily disable the main one and use the alternative scoreboard.
+   Driver: "Driver_V2"
 
 # +------------------+ #
 # | Inventory Config | #

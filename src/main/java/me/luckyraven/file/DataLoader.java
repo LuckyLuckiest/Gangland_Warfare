@@ -1,21 +1,27 @@
-package me.luckyraven.data;
+package me.luckyraven.file;
 
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.util.timer.SequenceTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.function.Consumer;
 import java.util.logging.Level;
 
-@Deprecated(forRemoval = true)
-public abstract class DataLoader {
+public abstract class DataLoader<T> {
+
+	private final JavaPlugin plugin;
 
 	private boolean isLoaded = false;
+
+	public DataLoader(JavaPlugin plugin) {
+		this.plugin = plugin;
+	}
 
 	/**
 	 * Loads data from the plugin.
 	 */
-	protected abstract void loadData();
+	protected abstract void loadData(Consumer<T> consumer);
 
 	/**
 	 * Used to communicate with the program if all the data is loaded inside the plugin.
@@ -32,12 +38,14 @@ public abstract class DataLoader {
 	 *
 	 * @param disable disables the plugin upon finding an exception.
 	 */
-	public void load(JavaPlugin plugin, boolean disable) throws PluginException {
+	public void load(boolean disable, Consumer<T> consumer) throws PluginException {
 		try {
-			loadData();
+			loadData(consumer);
 			isLoaded = true;
 		} catch (Throwable throwable) {
-			String message = "The plugin data has ran into a problem, please check the logs and report them to the developer.";
+			String message = String.format(
+					"The plugin data has ran into a problem, please check the logs and report them to the developer" +
+							".\nVersion: %s", plugin.getDescription().getVersion());
 
 			plugin.getLogger().log(Level.SEVERE, message, throwable);
 
@@ -52,7 +60,7 @@ public abstract class DataLoader {
 	 *
 	 * @param disable disables the plugin upon finding an exception.
 	 */
-	public void tryAgain(JavaPlugin plugin, boolean disable) {
+	public void tryAgain(boolean disable, Consumer<T> consumer) {
 		int           maxAttempts = 5, initialValue = 5;
 		SequenceTimer timer       = new SequenceTimer(plugin);
 
@@ -61,12 +69,7 @@ public abstract class DataLoader {
 				// if the process was successful, then stop the timer
 				if (isLoaded) time.stop();
 
-				try {
-					loadData();
-					isLoaded = true;
-				} catch (Throwable throwable) {
-					if (disable) Bukkit.getPluginManager().disablePlugin(plugin);
-				}
+				load(disable, consumer);
 			});
 
 			initialValue += i * initialValue;
