@@ -20,9 +20,14 @@ public class Ammunition {
 	private       List<String> lore;
 
 	public ItemStack give() {
+		return give(1);
+	}
+
+	public ItemStack give(int amount) {
 		ItemBuilder builder = new ItemBuilder(material);
 
 		builder.setDisplayName(displayName).setLore(lore);
+		builder.setAmount(amount);
 		builder.addTag("ammo", name);
 
 		return builder.build();
