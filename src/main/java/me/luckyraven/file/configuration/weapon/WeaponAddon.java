@@ -23,11 +23,11 @@ public class WeaponAddon {
 	private static final Map<String, Weapon> weapons = new HashMap<>();
 
 	@Nullable
-	public static Weapon getWeapon(String key) {
+	public Weapon getWeapon(String key) {
 		return weapons.get(key);
 	}
 
-	public static Set<String> getWeaponKeys() {
+	public Set<String> getWeaponKeys() {
 		return weapons.keySet();
 	}
 
