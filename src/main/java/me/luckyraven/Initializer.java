@@ -43,6 +43,7 @@ import me.luckyraven.file.configuration.ScoreboardAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
 import me.luckyraven.file.configuration.weapon.AmmunitionAddon;
+import me.luckyraven.file.configuration.weapon.WeaponAddon;
 import me.luckyraven.file.configuration.weapon.WeaponLoader;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.gang.GangMembersDamage;
@@ -86,6 +87,7 @@ public final class Initializer {
 	private @Getter GanglandPlaceholder        placeholder;
 	private @Getter AmmunitionAddon            ammunitionAddon;
 	private @Getter WeaponLoader               weaponLoader;
+	private @Getter WeaponAddon                weaponAddon;
 
 	public Initializer(Gangland gangland) {
 		this.gangland = gangland;
@@ -198,6 +200,7 @@ public final class Initializer {
 
 	public void weaponLoader() {
 		ammunitionAddon = new AmmunitionAddon(fileManager);
+		weaponAddon = new WeaponAddon();
 		weaponLoader = new WeaponLoader(gangland);
 
 		weaponLoader.addFile(new FileHandler(gangland, "rifle", "weapon", ".yml"));
