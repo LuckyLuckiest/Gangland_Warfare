@@ -26,6 +26,10 @@ public class AmmunitionAddon {
 			throw new PluginException(exception);
 		}
 
+		registerAmmunition(ammunition);
+	}
+
+	private void registerAmmunition(FileConfiguration ammunition) {
 		List<String> temp = new ArrayList<>();
 
 		// initialize the data
@@ -54,8 +58,12 @@ public class AmmunitionAddon {
 		Gangland.getLog4jLogger().info(temp);
 	}
 
-	public Map<String, Ammunition> getAmmo() {
-		return new HashMap<>(ammo);
+	public Ammunition getAmmunition(String key) {
+		return ammo.get(key);
+	}
+
+	public Set<String> getAmmunitionKeys() {
+		return ammo.keySet();
 	}
 
 }
