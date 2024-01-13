@@ -17,7 +17,7 @@ public class WeaponLoader extends FolderLoader {
 	public void initialize() {
 		this.load(true, fileHandler -> {
 			try {
-				WeaponAddon.registerWeapon(gangland, fileHandler);
+				gangland.getInitializer().getWeaponAddon().registerWeapon(gangland, fileHandler);
 			} catch (InvalidConfigurationException exception) {
 				Gangland.getLog4jLogger()
 				        .info("There was a problem loading the weapon: " + exception.getMessage(), exception);
