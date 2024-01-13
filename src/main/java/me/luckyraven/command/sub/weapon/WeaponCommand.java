@@ -6,6 +6,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
 import org.bukkit.command.CommandSender;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +32,17 @@ public class WeaponCommand extends CommandHandler {
 
 	@Override
 	protected void initializeArguments() {
-//		WeaponGiveCommand weaponGive =
+		Argument give = new WeaponGiveCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument info = new WeaponInfoCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument list = new WeaponListCommand(getGangland(), getArgumentTree(), getArgument());
+
+		List<Argument> arguments = new ArrayList<>();
+
+		arguments.add(give);
+		arguments.add(info);
+		arguments.add(list);
+
+		getArgument().addAllSubArguments(arguments);
 	}
 
 	@Override

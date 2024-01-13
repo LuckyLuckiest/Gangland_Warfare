@@ -24,6 +24,8 @@ public class AmmunitionGiveCommand extends SubArgument {
 
 		this.gangland = gangland;
 		this.tree = tree;
+
+		ammunitionGive();
 	}
 
 	@Override
@@ -54,7 +56,7 @@ public class AmmunitionGiveCommand extends SubArgument {
 			}
 
 			giveAmmunition(player, ammoName.toLowerCase(), ammoAmount);
-			player.sendMessage(ChatUtil.commandMessage("Given &a1 &b" + ammoName + "&7."));
+			player.sendMessage(ChatUtil.commandMessage("Given &a" + ammoAmount + " &b" + ammoName + "&7."));
 		});
 
 		name.addSubArgument(amount);
@@ -64,12 +66,13 @@ public class AmmunitionGiveCommand extends SubArgument {
 	private void giveAmmunition(Player player, String name, int amount) {
 		int        slots      = (int) Math.ceil(amount / 64D);
 		int        amountLeft = amount;
-		Ammunition ammunition = gangland.getInitializer().getAmmunitionAddon().getAmmo().get(name);
+		Ammunition ammunition = gangland.getInitializer().getAmmunitionAddon().getAmmunition(name);
 
 		if (ammunition == null) {
 			player.sendMessage("Invalid ammunition!");
 			return;
 		}
+
 
 		PlayerInventory inventory = player.getInventory();
 
@@ -88,9 +91,9 @@ public class AmmunitionGiveCommand extends SubArgument {
 			--slots;
 		}
 
-		// make the player drop from their inventory this amount
+		// make the player drop from their inventory the rest of items
 		while (amountLeft > 0) {
-			ammunition.give();
+			player.getWorld().dropItemNaturally(player.getLocation(), ammunition.give());
 			--amountLeft;
 		}
 	}
