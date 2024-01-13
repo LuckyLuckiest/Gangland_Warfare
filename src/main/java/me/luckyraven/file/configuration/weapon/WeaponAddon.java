@@ -20,18 +20,13 @@ import java.util.*;
 
 public class WeaponAddon {
 
-	private static final Map<String, Weapon> weapons = new HashMap<>();
+	private final Map<String, Weapon> weapons;
 
-	@Nullable
-	public Weapon getWeapon(String key) {
-		return weapons.get(key);
+	public WeaponAddon() {
+		this.weapons = new HashMap<>();
 	}
 
-	public Set<String> getWeaponKeys() {
-		return weapons.keySet();
-	}
-
-	public static void registerWeapon(Gangland gangland, FileHandler fileHandler) throws InvalidConfigurationException {
+	public void registerWeapon(Gangland gangland, FileHandler fileHandler) throws InvalidConfigurationException {
 		FileConfiguration config   = fileHandler.getFileConfiguration();
 		String            fileName = fileHandler.getName().toLowerCase();
 
@@ -233,7 +228,7 @@ public class WeaponAddon {
 		// ammo type
 		String ammoTypeString = reloadSection.getString("Ammo_Type");
 		Ammunition ammoType = Objects.requireNonNull(
-				gangland.getInitializer().getAmmunitionAddon().getAmmo().get(ammoTypeString));
+				gangland.getInitializer().getAmmunitionAddon().getAmmunition(ammoTypeString));
 
 		// consume
 		int reloadConsume = reloadSection.getInt("Consume");
@@ -371,6 +366,15 @@ public class WeaponAddon {
 		weapon.setReloadActionBarOpening(reloadActionBarOpening);
 
 		weapons.put(fileName, weapon);
+	}
+
+	@Nullable
+	public Weapon getWeapon(String key) {
+		return weapons.get(key);
+	}
+
+	public Set<String> getWeaponKeys() {
+		return weapons.keySet();
 	}
 
 }
