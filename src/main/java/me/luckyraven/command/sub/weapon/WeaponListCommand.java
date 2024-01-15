@@ -9,6 +9,7 @@ import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
 
+import java.util.Iterator;
 import java.util.Set;
 
 public class WeaponListCommand extends SubArgument {
@@ -27,11 +28,19 @@ public class WeaponListCommand extends SubArgument {
 			Set<String> weapons = gangland.getInitializer().getWeaponAddon().getWeaponKeys();
 
 			sender.sendMessage(ChatUtil.commandMessage("List of weapons"));
-			for (String weaponStr : weapons) {
-				Weapon weapon = gangland.getInitializer().getWeaponAddon().getWeapon(weaponStr);
+
+			Iterator<String> iterator = weapons.iterator();
+			StringBuilder    builder  = new StringBuilder();
+
+			while (iterator.hasNext()) {
+				Weapon weapon = gangland.getInitializer().getWeaponAddon().getWeapon(iterator.next());
 				if (weapon == null) continue;
-				sender.sendMessage(ChatUtil.color(weapon.getDisplayName()));
+
+				builder.append("&b").append(weapon.getName());
+				if (iterator.hasNext()) builder.append("&7, ");
 			}
+
+			sender.sendMessage(ChatUtil.color(builder.toString()));
 		};
 	}
 

@@ -10,6 +10,7 @@ import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
 
+import java.util.Iterator;
 import java.util.Set;
 
 public class AmmunitionListCommand extends SubArgument {
@@ -28,11 +29,19 @@ public class AmmunitionListCommand extends SubArgument {
 			Set<String> ammunitions = gangland.getInitializer().getAmmunitionAddon().getAmmunitionKeys();
 
 			sender.sendMessage(ChatUtil.commandMessage("List of ammunition"));
-			for (String ammunitionStr : ammunitions) {
-				Ammunition ammunition = gangland.getInitializer().getAmmunitionAddon().getAmmunition(ammunitionStr);
+
+			Iterator<String> iterator = ammunitions.iterator();
+			StringBuilder    builder  = new StringBuilder();
+
+			while (iterator.hasNext()) {
+				Ammunition ammunition = gangland.getInitializer().getAmmunitionAddon().getAmmunition(iterator.next());
 				if (ammunition == null) continue;
-				sender.sendMessage(ChatUtil.color(ammunition.getDisplayName()));
+
+				builder.append("&b").append(ammunition.getName());
+				if (iterator.hasNext()) builder.append("&7, ");
 			}
+
+			sender.sendMessage(ChatUtil.color(builder.toString()));
 		};
 	}
 
