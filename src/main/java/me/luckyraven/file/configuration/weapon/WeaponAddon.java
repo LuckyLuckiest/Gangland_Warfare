@@ -66,7 +66,7 @@ public class WeaponAddon {
 		}
 
 		// lore
-		List<String> lore = informationSection.getStringList("Name");
+		List<String> lore = informationSection.getStringList("Lore");
 
 		// drop hologram
 		boolean dropHologram = informationSection.getBoolean("Drop_Hologram");
