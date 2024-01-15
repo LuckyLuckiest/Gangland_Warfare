@@ -9,6 +9,7 @@ import me.luckyraven.feature.weapon.projectile.ProjectileType;
 import me.luckyraven.feature.weapon.reload.ReloadType;
 import me.luckyraven.file.configuration.SoundConfiguration;
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -99,8 +100,8 @@ public class Weapon {
 		ItemBuilder builder = new ItemBuilder(material);
 
 		builder.setDisplayName(displayName).setLore(lore).setDurability(durability);
-		builder.addTag("weapon", name);
-		builder.addTag("mag", reloadCapacity);
+		builder.addTag("weapon", name).addTag("mag", reloadCapacity);
+		builder.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
 
 		return builder.build();
 	}
@@ -108,7 +109,7 @@ public class Weapon {
 	@Override
 	public String toString() {
 		return String.format("Weapon{name='%s',displayName='%s',material=%s,damage=%.2f,ammo=%s}", name, displayName,
-		                     material, projectileDamage, reloadAmmoType);
+							 material, projectileDamage, reloadAmmoType);
 	}
 
 }
