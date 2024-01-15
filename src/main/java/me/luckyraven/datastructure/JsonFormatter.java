@@ -2,6 +2,7 @@ package me.luckyraven.datastructure;
 
 import java.lang.reflect.Array;
 import java.util.Map;
+import java.util.Stack;
 
 public class JsonFormatter {
 
@@ -9,19 +10,34 @@ public class JsonFormatter {
 		StringBuilder builder = new StringBuilder();
 		int           index   = 0, indentLevel = 0;
 
-		String modifiedFormat = format.replaceAll(": |=", ":").replaceAll(", ", ",");
+		String           modifiedFormat = format.replaceAll(": |=", ":").replaceAll(", ", ",");
+		Stack<Character> insideQuotes   = new Stack<>();
+
 		while (index < modifiedFormat.length()) {
 			char c = modifiedFormat.charAt(index);
+			// make sure that the current string is inside quotes or not
+			boolean hasQuotes = !insideQuotes.isEmpty() && insideQuotes.peek().equals('"');
 
-			if (c == '{' || c == '[') {
+			if (c == '"') {
+				if (insideQuotes.isEmpty()) {
+					insideQuotes.push('"');
+				} else {
+					insideQuotes.pop();
+				}
+				builder.append(c);
+			} else if (c == '{' || c == '[' && !hasQuotes) {
 				indentLevel++;
 				builder.append(c).append("\n").append(getIndent(indent, indentLevel));
-			} else if (c == '}' || c == ']') {
+			} else if (c == '}' || c == ']' && !hasQuotes) {
 				indentLevel--;
 				builder.append("\n").append(getIndent(indent, indentLevel)).append(c);
-			} else if (c == ':') builder.append(c).append(" ");
-			else if (c == ',') builder.append(c).append("\n").append(getIndent(indent, indentLevel));
-			else builder.append(c);
+			} else if (c == ':' && !hasQuotes) {
+				builder.append(c).append(" ");
+			} else if (c == ',' && !hasQuotes) {
+				builder.append(c).append("\n").append(getIndent(indent, indentLevel));
+			} else {
+				builder.append(c);
+			}
 
 			index++;
 		}
@@ -85,9 +101,11 @@ public class JsonFormatter {
 		for (int i = 0; i < length; i++) {
 			Object element = Array.get(value, i);
 
-			if (element == null) arrayBuilder.append("null");
-			else if (element instanceof String) arrayBuilder.append(stringDataType(element));
-			else arrayBuilder.append(element);
+			if (element == null) { arrayBuilder.append("null"); } else if (element instanceof String) {
+				arrayBuilder.append(stringDataType(element));
+			} else {
+				arrayBuilder.append(element);
+			}
 
 			if (i < length - 1) arrayBuilder.append(",");
 		}
