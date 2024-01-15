@@ -74,7 +74,7 @@ public class WeaponGiveCommand extends SubArgument {
 
 		PlayerInventory inventory = player.getInventory();
 
-		for (int i = 0; i < inventory.getContents().length; i++) {
+		for (int i = 0; i < inventory.getStorageContents().length; i++) {
 			ItemStack itemStack = inventory.getItem(i);
 
 			if (itemStack != null) continue;
