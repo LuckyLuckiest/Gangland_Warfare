@@ -114,11 +114,11 @@ public final class Initializer {
 
 		// add all registered plugin permissions
 		permissionManager.addAllPermissions(Bukkit.getPluginManager()
-		                                          .getPermissions()
-		                                          .stream()
-		                                          .map(Permission::getName)
-		                                          .filter(permission -> permission.startsWith("gangland"))
-		                                          .collect(Collectors.toSet()));
+												  .getPermissions()
+													.stream()
+													.map(Permission::getName)
+													.filter(permission -> permission.startsWith("gangland"))
+													.collect(Collectors.toSet()));
 
 		// User manager
 		userManager = new UserManager<>(gangland);

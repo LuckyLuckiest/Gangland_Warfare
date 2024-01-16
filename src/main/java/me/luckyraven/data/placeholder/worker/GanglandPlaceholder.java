@@ -51,12 +51,12 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	@Nullable
 	private String getSetting(String parameter) {
 		Object value = SettingAddon.getSettingsPlaceholder()
-		                           .entrySet()
-		                           .stream()
-		                           .filter(entry -> entry.getKey().equals(parameter))
-		                           .map(Map.Entry::getValue)
-		                           .findFirst()
-		                           .orElse(null);
+								   .entrySet()
+								   .stream()
+								   .filter(entry -> entry.getKey().equals(parameter))
+								   .map(Map.Entry::getValue)
+								   .findFirst()
+								   .orElse(null);
 
 		if (value == null) return null;
 
@@ -78,8 +78,11 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 			return !member.hasGang() ? "NA" : member.getGangJoinDateString();
 		if (parameter.equals(userStr + "contribution"))
 			return !member.hasGang() ? "NA" : SettingAddon.formatDouble(member.getContribution());
-		if (parameter.equals(userStr + "contributed-amount")) return !member.hasGang() ? "NA" : valueFormat(
-				SettingAddon.getGangContributionRate() * member.getContribution());
+		if (parameter.equals(userStr + "contributed-amount")) return !member.hasGang() ?
+																	 "NA" :
+																	 valueFormat(
+																			 SettingAddon.getGangContributionRate() *
+																			 member.getContribution());
 		if (parameter.equals(userStr + "has-rank")) return String.valueOf(member.hasRank());
 		if (parameter.equals(userStr + "rank")) return member.getRank() == null ? "NA" : member.getRank().getName();
 

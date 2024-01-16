@@ -94,8 +94,8 @@ public class InventoryAddon {
 		// slots section
 		for (int slot = 0; slot < realSize; ++slot) {
 			String sectionStr = slotsStr + slot + ".";
-			ConfigurationSection section = config.getConfigurationSection(
-					sectionStr.substring(0, sectionStr.length() - 1));
+			ConfigurationSection section =
+					config.getConfigurationSection(sectionStr.substring(0, sectionStr.length() - 1));
 			if (section == null) continue;
 
 			String              item;
@@ -153,18 +153,18 @@ public class InventoryAddon {
 	}
 
 	private static Slot processEventItems(Gangland gangland, FileConfiguration config, int slotLoc, String item,
-	                                      String itemName, Map<String, Object> data, List<String> lore,
-	                                      boolean enchanted, boolean draggable) {
+										  String itemName, Map<String, Object> data, List<String> lore,
+										  boolean enchanted, boolean draggable) {
 		for (String event : inventoryEvents.keySet()) {
 			String eventSectionStr = "Slots." + slotLoc + "." + event + ".";
-			ConfigurationSection eventSection = config.getConfigurationSection(
-					eventSectionStr.substring(0, eventSectionStr.length() - 1));
+			ConfigurationSection eventSection =
+					config.getConfigurationSection(eventSectionStr.substring(0, eventSectionStr.length() - 1));
 			if (eventSection == null) continue;
 
 			// so far, there is support for clickable events
 			if (inventoryEvents.get(event).equals(InventoryClickEvent.class)) {
 				return inventoryClickEvent(gangland, eventSection, slotLoc, item, itemName, data, lore, enchanted,
-				                           draggable);
+										   draggable);
 			} else if (inventoryEvents.get(event).equals(InventoryInteractEvent.class)) {
 
 			} else if (inventoryEvents.get(event).equals(InventoryCloseEvent.class)) {
@@ -181,8 +181,8 @@ public class InventoryAddon {
 	}
 
 	private static Slot inventoryClickEvent(Gangland gangland, ConfigurationSection eventSection, int slotLoc,
-	                                        String item, String itemName, Map<String, Object> data, List<String> lore,
-	                                        boolean enchanted, boolean draggable) {
+											String item, String itemName, Map<String, Object> data, List<String> lore,
+											boolean enchanted, boolean draggable) {
 		String slotCommand    = eventSection.getString("Command");
 		String slotInventory  = eventSection.getString("Inventory");
 		String slotPermission = eventSection.getString("Permission");
@@ -215,7 +215,7 @@ public class InventoryAddon {
 	}
 
 	private static ItemBuilder createItem(String item, String itemName, Map<String, Object> data, List<String> lore,
-	                                      boolean enchanted) {
+										  boolean enchanted) {
 		ItemBuilder itemBuilder = new ItemBuilder(validateItem(item).parseMaterial());
 
 		String color    = (String) data.get("color");

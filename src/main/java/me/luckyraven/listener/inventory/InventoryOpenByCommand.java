@@ -53,8 +53,8 @@ public class InventoryOpenByCommand implements Listener {
 			if (command.length != inventoryCommandArr.length) continue;
 
 			// check each content
-			boolean arraysEqual = IntStream.range(0, command.length)
-			                               .allMatch(i -> command[i].equals(inventoryCommandArr[i]));
+			boolean arraysEqual =
+					IntStream.range(0, command.length).allMatch(i -> command[i].equals(inventoryCommandArr[i]));
 			if (!arraysEqual) continue;
 
 			String permission = builder.permission();

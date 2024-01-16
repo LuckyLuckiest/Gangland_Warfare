@@ -125,7 +125,7 @@ public class TimerCommand extends CommandHandler {
 
 			timer.addIntervalTaskPair(val, t -> sender.sendMessage(
 					"Timer: " + t.getCurrentInterval() + ", task: " + t.getTaskInterval() + ", mod: " +
-							(t.getTaskInterval() == 0 ? 0 : t.getCurrentInterval() % t.getTaskInterval())));
+					(t.getTaskInterval() == 0 ? 0 : t.getCurrentInterval() % t.getTaskInterval())));
 
 			sender.sendMessage("Added a new interval, " + val);
 		});

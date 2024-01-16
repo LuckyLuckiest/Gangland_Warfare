@@ -42,8 +42,8 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 					if (!folderFiles.contains(temp)) addFile(temp);
 				} catch (IOException exception) {
 					Gangland.getLog4jLogger()
-					        .error(String.format("%s: There was a problem with loading the file %s.",
-					                             UnhandledError.FILE_CREATE_ERROR, file.getName()), exception);
+							.error(String.format("%s: There was a problem with loading the file %s.",
+												 UnhandledError.FILE_CREATE_ERROR, file.getName()), exception);
 				}
 			}
 
@@ -66,8 +66,8 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 				temp.add(fileHandler.getName());
 			} catch (Exception exception) {
 				Gangland.getLog4jLogger()
-				        .error(String.format("%s: There was a problem registering the " + getFolderName() + " %s.",
-				                             UnhandledError.FILE_LOADER_ERROR, fileHandler.getName()), exception);
+						.error(String.format("%s: There was a problem registering the " + getFolderName() + " %s.",
+											 UnhandledError.FILE_LOADER_ERROR, fileHandler.getName()), exception);
 			}
 
 		if (temp.isEmpty()) Gangland.getLog4jLogger().info("No files were handled");

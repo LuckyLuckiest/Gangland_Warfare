@@ -122,11 +122,11 @@ class GangKickCommand extends SubArgument {
 				DatabaseManager databaseManager = gangland.getInitializer().getDatabaseManager();
 
 				UserDatabase userHandler = databaseManager.getDatabases()
-				                                          .stream()
-				                                          .filter(handler -> handler instanceof UserDatabase)
-				                                          .map(handler -> (UserDatabase) handler)
-				                                          .findFirst()
-				                                          .orElse(null);
+														  .stream()
+														  .filter(handler -> handler instanceof UserDatabase)
+														  .map(handler -> (UserDatabase) handler)
+														  .findFirst()
+														  .orElse(null);
 
 				if (userHandler == null) {
 					Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find UserDatabase class.");
@@ -149,8 +149,8 @@ class GangKickCommand extends SubArgument {
 			gang.removeMember(targetUser, targetMember);
 
 			player.sendMessage(MessageAddon.GANG_KICKED_TARGET.toString()
-			                                                  .replace("%player%", Objects.requireNonNull(
-					                                                  offlinePlayer.getName())));
+															  .replace("%player%", Objects.requireNonNull(
+																	  offlinePlayer.getName())));
 		});
 
 		this.addSubArgument(kickName);

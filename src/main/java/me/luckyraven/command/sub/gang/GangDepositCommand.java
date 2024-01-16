@@ -79,11 +79,11 @@ class GangDepositCommand extends SubArgument {
 				gang.getEconomy().deposit(argAmount);
 				member.increaseContribution(contribution);
 				for (User<Player> gangUser : gangOnlineMembers) {
-					gangUser.getUser().sendMessage(MessageAddon.GANG_MONEY_DEPOSIT.toString()
-					                                                              .replace("%player%", player.getName())
-					                                                              .replace("%amount%",
-					                                                                       SettingAddon.formatDouble(
-							                                                                       argAmount)));
+					gangUser.getUser()
+							.sendMessage(MessageAddon.GANG_MONEY_DEPOSIT.toString()
+																		.replace("%player%", player.getName())
+																		.replace("%amount%",
+																				 SettingAddon.formatDouble(argAmount)));
 				}
 				player.sendMessage(ChatUtil.color("&a+" + contribution));
 			} catch (NumberFormatException exception) {

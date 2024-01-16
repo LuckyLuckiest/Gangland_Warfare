@@ -137,8 +137,9 @@ class GangInviteCommand extends SubArgument {
 			// don't broadcast to the joined member
 			List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
 			for (User<Player> onUser : gangOnlineMembers)
-				onUser.getUser().sendMessage(
-						MessageAddon.GANG_PLAYER_JOINED.toString().replace("%player%", user.getUser().getName()));
+				onUser.getUser()
+					  .sendMessage(
+							  MessageAddon.GANG_PLAYER_JOINED.toString().replace("%player%", user.getUser().getName()));
 
 			member.setGangJoinDateLong(Instant.now().toEpochMilli());
 			gang.addMember(user, member, rank);

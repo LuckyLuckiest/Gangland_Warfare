@@ -70,7 +70,7 @@ public class InventoryHandler implements Listener {
 	}
 
 	public InventoryHandler(Gangland gangland, String title, int size, User<Player> user, NamespacedKey namespacedKey,
-	                        boolean special) {
+							boolean special) {
 		this(gangland, title, size, namespacedKey);
 
 		if (special) {
@@ -161,18 +161,18 @@ public class InventoryHandler implements Listener {
 			}
 
 			setItem(i, type, displayName, lore, enchanted, inventoryHandler.draggableSlots.contains(i),
-			        inventoryHandler.clickableSlots.get(i));
+					inventoryHandler.clickableSlots.get(i));
 		}
 	}
 
 	public void setItem(int slot, Material material, @Nullable String displayName, @Nullable List<String> lore,
-	                    boolean enchanted, boolean draggable) {
+						boolean enchanted, boolean draggable) {
 		setItem(slot, material, displayName, lore, enchanted, draggable, null);
 	}
 
 	public void setItem(int slot, Material material, @Nullable String displayName, @Nullable List<String> lore,
-	                    boolean enchanted, boolean draggable,
-	                    TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
+						boolean enchanted, boolean draggable,
+						TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
 		ItemBuilder item = new ItemBuilder(material).setDisplayName(displayName).setLore(lore);
 
 		if (enchanted) {
@@ -183,7 +183,7 @@ public class InventoryHandler implements Listener {
 	}
 
 	public void setItem(int slot, ItemBuilder itemBuilder, boolean draggable,
-	                    TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
+						TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
 		setItem(slot, itemBuilder.build(), draggable);
 
 		if (clickable != null) {
@@ -206,7 +206,7 @@ public class InventoryHandler implements Listener {
 	}
 
 	public void setItem(int slot, ItemStack itemStack, boolean draggable,
-	                    TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
+						TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
 		setItem(slot, new ItemBuilder(itemStack), draggable, clickable);
 	}
 
@@ -234,17 +234,17 @@ public class InventoryHandler implements Listener {
 		Player       player = (Player) event.getWhoClicked();
 		User<Player> user   = gangland.getInitializer().getUserManager().getUser(player);
 		InventoryHandler inv = user.getInventories()
-		                           .stream()
-		                           .filter(inventory -> clickedInventory.equals(inventory.getInventory()))
-		                           .findFirst()
-		                           .orElse(null);
+				.stream()
+				.filter(inventory -> clickedInventory.equals(inventory.getInventory()))
+				.findFirst()
+				.orElse(null);
 
 		if (inv == null) return;
 
 		int rawSlot = event.getRawSlot();
 
 		TriConsumer<Player, InventoryHandler, ItemBuilder> slots = inv.clickableSlots.getOrDefault(rawSlot,
-		                                                                                           (pl, i, item) -> {});
+																								   (pl, i, item) -> { });
 		slots.accept(player, inv, inv.clickableItems.getOrDefault(rawSlot, null));
 		event.setCancelled(!inv.draggableSlots.contains(rawSlot));
 	}

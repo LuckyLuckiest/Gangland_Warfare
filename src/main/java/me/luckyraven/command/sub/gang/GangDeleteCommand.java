@@ -96,8 +96,8 @@ class GangDeleteCommand extends SubArgument {
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> sender.sendMessage(
 					MessageAddon.GANG_REMOVE_CONFIRM.toString()
-					                                .replace("%timer%", TimeUtil.formatTime(time.getPeriod(), true))),
-			                                          null, time -> {
+													.replace("%timer%", TimeUtil.formatTime(time.getPeriod(), true))),
+													  null, time -> {
 				confirmDelete.setConfirmed(false);
 				deleteGangName.remove(user);
 				deleteGangTimer.remove(sender);
@@ -160,15 +160,15 @@ class GangDeleteCommand extends SubArgument {
 						gangUser.getEconomy().deposit(amount);
 
 						// inform the online users
-						gangUser.getUser().sendMessage(MessageAddon.KICKED_FROM_GANG.toString(),
-						                               MessageAddon.GANG_REMOVED.toString()
-						                                                        .replace("%gang%",
-						                                                                 deleteGangName.get(user)
-						                                                                               .get()),
-						                               MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
-						                                                                .replace("%amount%",
-						                                                                         SettingAddon.formatDouble(
-								                                                                         amount)));
+						gangUser.getUser()
+								.sendMessage(MessageAddon.KICKED_FROM_GANG.toString(),
+											 MessageAddon.GANG_REMOVED.toString()
+																	  .replace("%gang%",
+																			   deleteGangName.get(user).get()),
+											 MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
+																			  .replace("%amount%",
+																					   SettingAddon.formatDouble(
+																							   amount)));
 						// update the database
 						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
 
@@ -180,11 +180,11 @@ class GangDeleteCommand extends SubArgument {
 					helper.runQueries(database -> {
 						List<Object[]> allUsers = database.table("data").selectAll();
 						List<Object[]> gangUsers = allUsers.parallelStream()
-						                                   .filter(obj -> Arrays.stream(obj)
-						                                                        .anyMatch(o -> o.toString()
-						                                                                        .equals(String.valueOf(
-								                                                                        gang.getId()))))
-						                                   .toList();
+														   .filter(obj -> Arrays.stream(obj)
+																				.anyMatch(o -> o.toString()
+																								.equals(String.valueOf(
+																										gang.getId()))))
+														   .toList();
 
 						for (Object[] data : gangUsers) {
 							UUID   uuid = UUID.fromString(String.valueOf(data[0]));
@@ -198,10 +198,10 @@ class GangDeleteCommand extends SubArgument {
 
 							gang.getEconomy().withdraw(amount);
 
-							database.table("data").update("uuid = ?", new Object[]{uuid.toString()},
-							                              new int[]{Types.CHAR}, new String[]{"balance", "gang_id"},
-							                              new Object[]{balance + amount, -1},
-							                              new int[]{Types.DOUBLE, Types.INTEGER});
+							database.table("data")
+									.update("uuid = ?", new Object[]{uuid.toString()}, new int[]{Types.CHAR},
+											new String[]{"balance", "gang_id"}, new Object[]{balance + amount, -1},
+											new int[]{Types.DOUBLE, Types.INTEGER});
 						}
 					});
 
@@ -209,9 +209,9 @@ class GangDeleteCommand extends SubArgument {
 						double amount = SettingAddon.getGangCreateFee() / 4;
 						user.getEconomy().deposit(amount);
 						player.sendMessage(MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
-						                                                    .replace("%amount%",
-						                                                             SettingAddon.formatDouble(
-								                                                             amount)));
+																			.replace("%amount%",
+																					 SettingAddon.formatDouble(
+																							 amount)));
 						userDatabase.updateDataTable(user);
 					});
 				}

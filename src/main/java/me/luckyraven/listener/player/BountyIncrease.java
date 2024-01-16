@@ -26,8 +26,8 @@ public class BountyIncrease implements Listener {
 		User<? extends OfflinePlayer> user = event.getUserBounty();
 
 		String bountyIncrement = MessageAddon.BOUNTY_INCREMENT.toString()
-		                                                      .replace("%bounty%", SettingAddon.formatDouble(
-				                                                      event.getAmountApplied()));
+															  .replace("%bounty%", SettingAddon.formatDouble(
+																	  event.getAmountApplied()));
 
 		if (user != null && user.getUser().isOnline())
 			if (!event.isCancelled()) Objects.requireNonNull(user.getUser().getPlayer()).sendMessage(bountyIncrement);

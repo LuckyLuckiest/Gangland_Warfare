@@ -19,11 +19,8 @@ public class JsonFormatter {
 			boolean hasQuotes = !insideQuotes.isEmpty() && insideQuotes.peek().equals('"');
 
 			if (c == '"') {
-				if (insideQuotes.isEmpty()) {
-					insideQuotes.push('"');
-				} else {
-					insideQuotes.pop();
-				}
+				if (insideQuotes.isEmpty()) insideQuotes.push('"');
+				else insideQuotes.pop();
 				builder.append(c);
 			} else if (c == '{' || c == '[' && !hasQuotes) {
 				indentLevel++;
@@ -31,13 +28,9 @@ public class JsonFormatter {
 			} else if (c == '}' || c == ']' && !hasQuotes) {
 				indentLevel--;
 				builder.append("\n").append(getIndent(indent, indentLevel)).append(c);
-			} else if (c == ':' && !hasQuotes) {
-				builder.append(c).append(" ");
-			} else if (c == ',' && !hasQuotes) {
-				builder.append(c).append("\n").append(getIndent(indent, indentLevel));
-			} else {
-				builder.append(c);
-			}
+			} else if (c == ':' && !hasQuotes) builder.append(c).append(" ");
+			else if (c == ',' && !hasQuotes) builder.append(c).append("\n").append(getIndent(indent, indentLevel));
+			else builder.append(c);
 
 			index++;
 		}

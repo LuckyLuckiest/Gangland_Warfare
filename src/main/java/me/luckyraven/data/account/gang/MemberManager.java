@@ -54,8 +54,8 @@ public class MemberManager {
 		helper.runQueries(database -> {
 			Database config = database.table("members");
 
-			Object[] memberInfo = config.select("uuid = ?", new Object[]{member.getUuid()}, new int[]{Types.CHAR},
-			                                    new String[]{"*"});
+			Object[] memberInfo =
+					config.select("uuid = ?", new Object[]{member.getUuid()}, new int[]{Types.CHAR}, new String[]{"*"});
 
 			// create member data into a database
 			if (memberInfo.length == 0) {

@@ -63,7 +63,7 @@ class WaypointTypeCommand extends SubArgument {
 				}
 
 				player.sendMessage(ChatUtil.errorMessage("Invalid Waypoint Type. Select from the list:"),
-				                   ChatUtil.color("&7" + builder));
+								   ChatUtil.color("&7" + builder));
 
 				type = waypoint.getType();
 			}

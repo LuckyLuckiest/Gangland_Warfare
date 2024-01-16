@@ -63,8 +63,8 @@ public final class HelpInfo {
 	 * Display a help menu to the specified <i>sender</i>.
 	 *
 	 * @param sender Displaying the help menu to the sender
-	 * @param page   The page the sender wants to view
-	 * @param title  The title of the help menu
+	 * @param page The page the sender wants to view
+	 * @param title The title of the help menu
 	 */
 	public void displayHelp(CommandSender sender, int page, String title) {
 		int maxPages = getMaxPages();
@@ -72,7 +72,7 @@ public final class HelpInfo {
 		if (page > maxPages) throw new IllegalArgumentException("Cannot exceed maximum allowed pages");
 		String header = ChatUtil.color(
 				"&3Oo&3&m------&r &8&l[&bG&fL&bW&8&l]&7 " + title + " &8[&7" + page + "&5/&7" + maxPages +
-						"&8] &3&m------&3oO");
+				"&8] &3&m------&3oO");
 		sender.sendMessage("");
 		sender.sendMessage(header);
 		sender.sendMessage("");

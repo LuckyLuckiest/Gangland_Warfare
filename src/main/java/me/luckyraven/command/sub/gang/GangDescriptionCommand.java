@@ -60,10 +60,10 @@ class GangDescriptionCommand extends SubArgument {
 				// change the gang description
 				gang1.setDescription(output);
 
-				stateSnapshot.getPlayer().sendMessage(MessageAddon.GANG_DESCRIPTION_CHANGE.toString()
-				                                                                          .replace("%old_desc%", old)
-				                                                                          .replace("%new_desc%",
-				                                                                                   output));
+				stateSnapshot.getPlayer()
+							 .sendMessage(MessageAddon.GANG_DESCRIPTION_CHANGE.toString()
+																			  .replace("%old_desc%", old)
+																			  .replace("%new_desc%", output));
 				return List.of(AnvilGUI.ResponseAction.close());
 			}).text(gang.getDescription()).title("Gang description").plugin(gangland).open(player);
 		};

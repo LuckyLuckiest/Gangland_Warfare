@@ -33,8 +33,8 @@ public abstract class DataLoader<T> {
 	}
 
 	/**
-	 * This method loads the data of the class if there was a cause of problem inside the data, it stops the process
-	 * and prints the error.
+	 * This method loads the data of the class if there was a cause of problem inside the data, it stops the process and
+	 * prints the error.
 	 *
 	 * @param disable disables the plugin upon finding an exception.
 	 */
@@ -45,7 +45,7 @@ public abstract class DataLoader<T> {
 		} catch (Throwable throwable) {
 			String message = String.format(
 					"The plugin data has ran into a problem, please check the logs and report them to the developer" +
-							".\nVersion: %s", plugin.getDescription().getVersion());
+					".\nVersion: %s", plugin.getDescription().getVersion());
 
 			plugin.getLogger().log(Level.SEVERE, message, throwable);
 

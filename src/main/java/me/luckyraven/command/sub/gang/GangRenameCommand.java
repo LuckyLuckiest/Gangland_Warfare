@@ -71,9 +71,10 @@ class GangRenameCommand extends SubArgument {
 			gang.setName(newName);
 
 			for (User<Player> onlineMembers : gang.getOnlineMembers(userManager))
-				onlineMembers.getUser().sendMessage(MessageAddon.GANG_RENAME.toString()
-				                                                            .replace("%old_gang%", oldName)
-				                                                            .replace("%gang%", gang.getName()));
+				onlineMembers.getUser()
+							 .sendMessage(MessageAddon.GANG_RENAME.toString()
+																  .replace("%old_gang%", oldName)
+																  .replace("%gang%", gang.getName()));
 		});
 
 		this.addSubArgument(changeName);

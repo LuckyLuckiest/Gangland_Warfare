@@ -28,8 +28,8 @@ public class FileManager {
 			file.create(true);
 		} catch (IOException exception) {
 			plugin.getLogger()
-			      .warning(String.format(UnhandledError.FILE_CREATE_ERROR + " %s.%s: %s", file.getName(),
-			                             file.getFileType(), exception.getMessage()));
+				  .warning(String.format(UnhandledError.FILE_CREATE_ERROR + " %s.%s: %s", file.getName(),
+										 file.getFileType(), exception.getMessage()));
 		}
 	}
 
@@ -56,8 +56,8 @@ public class FileManager {
 				file.reloadData();
 			} catch (IOException exception) {
 				plugin.getLogger()
-				      .warning(String.format(UnhandledError.FILE_LOADER_ERROR + " %s.%s: %s", file.getName(),
-				                             file.getFileType(), exception.getMessage()));
+					  .warning(String.format(UnhandledError.FILE_LOADER_ERROR + " %s.%s: %s", file.getName(),
+											 file.getFileType(), exception.getMessage()));
 			}
 	}
 

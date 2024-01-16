@@ -18,10 +18,8 @@ public class LevelUpEvent extends Event implements Cancellable {
 
 	private final Level level;
 
-	@Nullable
-	private @Setter User<? extends OfflinePlayer> user;
-	@Nullable
-	private @Setter Gang                          gang;
+	@Nullable private @Setter User<? extends OfflinePlayer> user;
+	@Nullable private @Setter Gang                          gang;
 
 	private boolean cancelled;
 

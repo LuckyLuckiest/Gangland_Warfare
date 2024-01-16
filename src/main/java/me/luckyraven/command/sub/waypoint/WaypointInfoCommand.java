@@ -35,17 +35,16 @@ class WaypointInfoCommand extends SubArgument {
 			}
 
 			String type = String.format("&7Type:&b %s%s", waypoint.getType().getName(),
-			                            waypoint.getType() == Waypoint.WaypointType.GANG ? ", Gang linked: " +
-					                            waypoint.getGangId() : "");
+										waypoint.getType() == Waypoint.WaypointType.GANG ?
+										", Gang linked: " + waypoint.getGangId() :
+										"");
 
-			String[] info = {
-					String.format("&8[&a%s&8]&7 info:", waypoint.getName()), "&7ID:&b " + waypoint.getUsedId(),
-					"&7X:&b " + waypoint.getX(), "&7Y:&b " + waypoint.getY(), "&7Z:&b " + waypoint.getZ(),
-					"&7Yaw:&b " + waypoint.getYaw(), "&7Pitch:&b " + waypoint.getPitch(),
-					"&7World:&b " + waypoint.getWorld(), type, "&7Timer:&b " + waypoint.getTimer(),
-					"&7Cooldown:&b " + waypoint.getCooldown(), "&7Shield:&b " + waypoint.getShield(),
-					"&7Cost:&b " + waypoint.getCost(), "&7Radius:&b " + waypoint.getRadius()
-			};
+			String[] info = {String.format("&8[&a%s&8]&7 info:", waypoint.getName()), "&7ID:&b " + waypoint.getUsedId(),
+							 "&7X:&b " + waypoint.getX(), "&7Y:&b " + waypoint.getY(), "&7Z:&b " + waypoint.getZ(),
+							 "&7Yaw:&b " + waypoint.getYaw(), "&7Pitch:&b " + waypoint.getPitch(),
+							 "&7World:&b " + waypoint.getWorld(), type, "&7Timer:&b " + waypoint.getTimer(),
+							 "&7Cooldown:&b " + waypoint.getCooldown(), "&7Shield:&b " + waypoint.getShield(),
+							 "&7Cost:&b " + waypoint.getCost(), "&7Radius:&b " + waypoint.getRadius()};
 
 			player.sendMessage(ChatUtil.color(info));
 		};

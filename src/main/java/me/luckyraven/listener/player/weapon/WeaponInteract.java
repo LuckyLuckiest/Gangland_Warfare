@@ -32,7 +32,7 @@ public class WeaponInteract implements Listener {
 	private final Random                random         = new Random();
 	private final Set<RelativeMovement> RELATIVE_FLAGS = new HashSet<>(
 			Arrays.asList(RelativeMovement.a, RelativeMovement.b, RelativeMovement.c, RelativeMovement.e,
-			              RelativeMovement.d));
+						  RelativeMovement.d));
 
 	public WeaponInteract(Gangland gangland) {
 		this.gangland = gangland;
@@ -99,7 +99,7 @@ public class WeaponInteract implements Listener {
 			projectile.setVelocity(currentVelocity.setY(newY).normalize());
 
 			if (projectile.getLocation().getChunk().isLoaded() ||
-					(projectile.getLocation().getY() > 0 && distance < furthestDistance.get() * 10)) return;
+				(projectile.getLocation().getY() > 0 && distance < furthestDistance.get() * 10)) return;
 
 			projectile.remove();
 			t.cancel();

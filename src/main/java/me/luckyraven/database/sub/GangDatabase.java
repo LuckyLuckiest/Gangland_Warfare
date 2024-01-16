@@ -36,14 +36,14 @@ public class GangDatabase extends DatabaseHandler {
 		Database data = getDatabase().table("data");
 
 		data.createTable("id INT PRIMARY KEY NOT NULL", "name TEXT NOT NULL", "display_name TEXT NOT NULL",
-		                 "color TEXT NOT NULL", "description TEXT NOT NULL", "balance DOUBLE NOT NULL",
-		                 "level INT NOT NULL", "experience DOUBLE NOT NUll", "bounty DOUBLE NOT NULL",
-		                 "ally LONGTEXT NOT NULL", "created BIGINT NOT NULL");
+						 "color TEXT NOT NULL", "description TEXT NOT NULL", "balance DOUBLE NOT NULL",
+						 "level INT NOT NULL", "experience DOUBLE NOT NUll", "bounty DOUBLE NOT NULL",
+						 "ally LONGTEXT NOT NULL", "created BIGINT NOT NULL");
 
 		Database members = getDatabase().table("members");
 
 		members.createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "gang_id INT NOT NULL",
-		                    "contribution DOUBLE NOT NULL", "position TEXT", "join_date BIGINT");
+							"contribution DOUBLE NOT NULL", "position TEXT", "join_date BIGINT");
 	}
 
 	@Override
@@ -77,11 +77,10 @@ public class GangDatabase extends DatabaseHandler {
 		for (int i = 0; i < dataTypes.length; i++)
 			dataTypes[i] = columnsDataType.get(i);
 
-		config.insert(columns, new Object[]{
-				gang.getId(), gang.getName(), gang.getDisplayName(), gang.getColor(), gang.getDescription(),
-				gang.getEconomy().getBalance(), gang.getLevel().getLevelValue(), gang.getLevel().getExperience(),
-				gang.getBounty().getAmount(), alias, gang.getCreated()
-		}, dataTypes);
+		config.insert(columns, new Object[]{gang.getId(), gang.getName(), gang.getDisplayName(), gang.getColor(),
+											gang.getDescription(), gang.getEconomy().getBalance(),
+											gang.getLevel().getLevelValue(), gang.getLevel().getExperience(),
+											gang.getBounty().getAmount(), alias, gang.getCreated()}, dataTypes);
 	}
 
 	public void updateDataTable(Gang gang) throws SQLException {
@@ -101,11 +100,11 @@ public class GangDatabase extends DatabaseHandler {
 		for (int i = 0; i < dataTypes.length; i++)
 			dataTypes[i] = columnsDataType.get(i);
 
-		config.update("id = ?", new Object[]{gang.getId()}, new int[]{Types.INTEGER}, columns, new Object[]{
-				gang.getName(), gang.getDisplayName(), gang.getColor(), gang.getDescription(),
-				gang.getEconomy().getBalance(), gang.getLevel().getLevelValue(), gang.getLevel().getExperience(),
-				gang.getBounty().getAmount(), alias, gang.getCreated()
-		}, dataTypes);
+		config.update("id = ?", new Object[]{gang.getId()}, new int[]{Types.INTEGER}, columns,
+					  new Object[]{gang.getName(), gang.getDisplayName(), gang.getColor(), gang.getDescription(),
+								   gang.getEconomy().getBalance(), gang.getLevel().getLevelValue(),
+								   gang.getLevel().getExperience(), gang.getBounty().getAmount(), alias,
+								   gang.getCreated()}, dataTypes);
 	}
 
 	public void insertMemberTable(Member member) throws SQLException {
@@ -118,10 +117,9 @@ public class GangDatabase extends DatabaseHandler {
 		for (int i = 0; i < dataTypes.length; i++)
 			dataTypes[i] = columnsDataType.get(i);
 
-		config.insert(columns, new Object[]{
-				member.getUuid(), member.getGangId(), member.getContribution(),
-				member.getRank() == null ? null : member.getRank().getName(), member.getGangJoinDateLong()
-		}, dataTypes);
+		config.insert(columns, new Object[]{member.getUuid(), member.getGangId(), member.getContribution(),
+											member.getRank() == null ? null : member.getRank().getName(),
+											member.getGangJoinDateLong()}, dataTypes);
 	}
 
 	public void updateMembersTable(Member member) throws SQLException {
@@ -134,10 +132,10 @@ public class GangDatabase extends DatabaseHandler {
 		for (int i = 0; i < dataTypes.length; i++)
 			dataTypes[i] = columnsDataType.get(i);
 
-		config.update("uuid = ?", new Object[]{member.getUuid()}, new int[]{Types.CHAR}, columns, new Object[]{
-				member.getGangId(), member.getContribution(),
-				member.getRank() == null ? null : member.getRank().getName(), member.getGangJoinDateLong()
-		}, dataTypes);
+		config.update("uuid = ?", new Object[]{member.getUuid()}, new int[]{Types.CHAR}, columns,
+					  new Object[]{member.getGangId(), member.getContribution(),
+								   member.getRank() == null ? null : member.getRank().getName(),
+								   member.getGangJoinDateLong()}, dataTypes);
 	}
 
 }

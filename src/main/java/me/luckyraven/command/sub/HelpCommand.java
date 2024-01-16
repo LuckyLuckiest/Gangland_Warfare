@@ -15,12 +15,12 @@ public class HelpCommand extends CommandHandler {
 		getHelpInfo().add(getCommandInformation("general_page"));
 
 		getHelpInfo().addAll(gangland.getInitializer()
-		                             .getCommandManager()
-		                             .getCommands()
-		                             .values()
-		                             .parallelStream()
-		                             .flatMap(entry -> entry.getHelpInfo().getList().stream())
-		                             .collect(Collectors.toList()));
+									 .getCommandManager()
+									 .getCommands()
+									 .values()
+									 .parallelStream()
+									 .flatMap(entry -> entry.getHelpInfo().getList().stream())
+									 .collect(Collectors.toList()));
 	}
 
 	@Override

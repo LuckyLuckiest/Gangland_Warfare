@@ -20,18 +20,18 @@ public class CountdownTimer extends Timer {
 	}
 
 	public CountdownTimer(JavaPlugin plugin, long time, Consumer<CountdownTimer> beforeTimer,
-	                      Consumer<CountdownTimer> duringTimer, Consumer<CountdownTimer> afterTimer) {
+						  Consumer<CountdownTimer> duringTimer, Consumer<CountdownTimer> afterTimer) {
 		this(plugin, 0L, time, beforeTimer, duringTimer, afterTimer);
 	}
 
 	public CountdownTimer(JavaPlugin plugin, long delay, long time, Consumer<CountdownTimer> beforeTimer,
-	                      Consumer<CountdownTimer> duringTimer, Consumer<CountdownTimer> afterTimer) {
+						  Consumer<CountdownTimer> duringTimer, Consumer<CountdownTimer> afterTimer) {
 		// By default, it would run for an interval of 20L, thus every second
 		this(plugin, delay, 20L, time, beforeTimer, duringTimer, afterTimer);
 	}
 
 	public CountdownTimer(JavaPlugin plugin, long delay, long period, long time, Consumer<CountdownTimer> beforeTimer,
-	                      Consumer<CountdownTimer> duringTimer, Consumer<CountdownTimer> afterTimer) {
+						  Consumer<CountdownTimer> duringTimer, Consumer<CountdownTimer> afterTimer) {
 		super(plugin, delay, period);
 		this.timeLeft = time;
 		this.beforeTimer = beforeTimer;

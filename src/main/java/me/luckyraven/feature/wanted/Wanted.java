@@ -8,12 +8,8 @@ public class Wanted {
 	private @Getter int level;
 	private @Setter int increments;
 
-	@Getter
-	@Setter
-	private int     maxLevel;
-	@Getter
-	@Setter
-	private boolean wanted;
+	@Getter @Setter private int     maxLevel;
+	@Getter @Setter private boolean wanted;
 
 	public Wanted(int level) {
 		this();

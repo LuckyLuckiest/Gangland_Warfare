@@ -28,8 +28,12 @@ class WaypointListCommand extends SubArgument {
 		return (argument, sender, args) -> {
 			StringBuilder builder = new StringBuilder();
 
-			List<Waypoint> waypoints = waypointManager.getWaypoints().entrySet().stream().sorted(
-					Map.Entry.comparingByKey()).map(Map.Entry::getValue).toList();
+			List<Waypoint> waypoints = waypointManager.getWaypoints()
+													  .entrySet()
+													  .stream()
+													  .sorted(Map.Entry.comparingByKey())
+													  .map(Map.Entry::getValue)
+													  .toList();
 			for (int i = 0; i < waypoints.size(); i++) {
 				builder.append(waypoints.get(i).getName()).append(':').append(i + 1);
 
@@ -37,8 +41,8 @@ class WaypointListCommand extends SubArgument {
 			}
 
 			sender.sendMessage(MessageAddon.WAYPOINT_LIST_PRIMARY.toString(),
-			                   MessageAddon.WAYPOINT_LIST_SECONDARY.toString()
-			                                                       .replace("%waypoints%", builder.toString()));
+							   MessageAddon.WAYPOINT_LIST_SECONDARY.toString()
+																   .replace("%waypoints%", builder.toString()));
 		};
 	}
 

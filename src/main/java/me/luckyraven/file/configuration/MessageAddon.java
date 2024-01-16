@@ -9,13 +9,19 @@ import java.util.List;
 public enum MessageAddon {
 
 	// prefixes
-	PREFIX("Normal.Prefix", Type.OTHER), INFORMATION_PREFIX("Information.Prefix", Type.OTHER),
-	COMMAND_PREFIX("Commands.Prefix", Type.OTHER), ERROR_PREFIX("Errors.Prefix", Type.OTHER),
+	PREFIX("Normal.Prefix", Type.OTHER),
+	INFORMATION_PREFIX("Information.Prefix", Type.OTHER),
+	COMMAND_PREFIX("Commands.Prefix", Type.OTHER),
+	ERROR_PREFIX("Errors.Prefix", Type.OTHER),
 
 	// date
-	DATE("Normal.Format.Date", Type.OTHER), TIME("Normal.Format.Time", Type.OTHER),
-	SECOND("Time_Unit.Second", Type.OTHER), MINUTE("Time_Unit.Minute", Type.OTHER), HOUR("Time_Unit.Hour", Type.OTHER),
-	DAY("Time_Unit.Day", Type.OTHER), WEEK("Time_Unit.Week", Type.OTHER),
+	DATE("Normal.Format.Date", Type.OTHER),
+	TIME("Normal.Format.Time", Type.OTHER),
+	SECOND("Time_Unit.Second", Type.OTHER),
+	MINUTE("Time_Unit.Minute", Type.OTHER),
+	HOUR("Time_Unit.Hour", Type.OTHER),
+	DAY("Time_Unit.Day", Type.OTHER),
+	WEEK("Time_Unit.Week", Type.OTHER),
 
 	// commands - arguments
 	ARGUMENTS_MISSING("Commands.Syntax.Missing_Arguments", Type.COMMAND),
@@ -23,7 +29,8 @@ public enum MessageAddon {
 	ARGUMENTS_DONT_EXIST("Commands.Syntax.Doesnt_Exist", Type.COMMAND),
 
 	// commands - weapons
-	GIVE_AMMO("Commands.Weapons.Gave_Ammo", Type.COMMAND), GIVE_WEAPON("Commands.Weapons.Gave_Weapon", Type.COMMAND),
+	GIVE_AMMO("Commands.Weapons.Gave_Ammo", Type.COMMAND),
+	GIVE_WEAPON("Commands.Weapons.Gave_Weapon", Type.COMMAND),
 
 	// commands - economy
 	BALANCE_PLAYER("Commands.Economy.Balance.Player", Type.COMMAND),
@@ -59,7 +66,8 @@ public enum MessageAddon {
 	GANG_REMOVE_CONFIRM("Commands.Gang.Remove.Confirm_Timer", Type.COMMAND),
 	PLAYER_IN_GANG("Commands.Gang.Available.Player_In_Gang", Type.COMMAND),
 	TARGET_IN_GANG("Commands.Gang.Available.Target_In_Gang", Type.COMMAND),
-	GANG_BALANCE("Commands.Gang.Balance", Type.COMMAND), GANG_MONEY_DEPOSIT("Commands.Gang.Money.Add", Type.COMMAND),
+	GANG_BALANCE("Commands.Gang.Balance", Type.COMMAND),
+	GANG_MONEY_DEPOSIT("Commands.Gang.Money.Add", Type.COMMAND),
 	GANG_MONEY_WITHDRAW("Commands.Gang.Money.Take", Type.COMMAND),
 	GANG_INVITE_PLAYER("Commands.Gang.Invite.Player", Type.COMMAND),
 	GANG_INVITE_TARGET("Commands.Gang.Invite.Target", Type.COMMAND),
@@ -103,15 +111,18 @@ public enum MessageAddon {
 	RANK_PARENT_REMOVE("Commands.Rank.Parent.Remove", Type.COMMAND),
 
 	// commands - bounty
-	BOUNTY_CURRENT("Commands.Bounty.Current", Type.COMMAND), BOUNTY_INCREMENT("Commands.Bounty.Increment", Type.OTHER),
-	BOUNTY_CLEAR("Commands.Bounty.Clear", Type.COMMAND), BOUNTY_LIFTED("Commands.Bounty.Lifted", Type.COMMAND),
+	BOUNTY_CURRENT("Commands.Bounty.Current", Type.COMMAND),
+	BOUNTY_INCREMENT("Commands.Bounty.Increment", Type.OTHER),
+	BOUNTY_CLEAR("Commands.Bounty.Clear", Type.COMMAND),
+	BOUNTY_LIFTED("Commands.Bounty.Lifted", Type.COMMAND),
 	BOUNTY_PLAYER_LIFT("Commands.Bounty.Player_Lift", Type.COMMAND),
 	BOUNTY_SET("Commands.Bounty.Bounty_Set", Type.COMMAND),
 
 	// commands - level
 	LEVEL_EXP_ADD("Commands.Level.Experience.Add", Type.COMMAND),
 	LEVEL_EXP_REMOVE("Commands.Level.Experience.Remove", Type.COMMAND),
-	LEVEL_ADD("Commands.Level.Level.Add", Type.COMMAND), LEVEL_REMOVE("Commands.Level.Level.Remove", Type.COMMAND),
+	LEVEL_ADD("Commands.Level.Level.Add", Type.COMMAND),
+	LEVEL_REMOVE("Commands.Level.Level.Remove", Type.COMMAND),
 	LEVEL_NEXT("Commands.Level.Next", Type.COMMAND),
 
 	// commands - waypoint
@@ -126,12 +137,16 @@ public enum MessageAddon {
 	WAYPOINT_TELEPORT_TIMER("Commands.Waypoint.Teleportation.Timer", Type.COMMAND),
 
 	// errors - permissions
-	COMMAND_NO_PERM("Errors.Permissions.Command", Type.ERROR), KIT_NO_PERM("Errors.Permissions.Kit", Type.ERROR),
-	SPAWN_NO_PERM("Errors.Permissions.Spawn", Type.ERROR), WARP_NO_PERM("Errors.Permissions.Warp", Type.ERROR),
-	SIGN_NO_PERM("Errors.Permissions.Sign", Type.ERROR), OTHER_NO_PERM("Errors.Permissions.Other", Type.ERROR),
+	COMMAND_NO_PERM("Errors.Permissions.Command", Type.ERROR),
+	KIT_NO_PERM("Errors.Permissions.Kit", Type.ERROR),
+	SPAWN_NO_PERM("Errors.Permissions.Spawn", Type.ERROR),
+	WARP_NO_PERM("Errors.Permissions.Warp", Type.ERROR),
+	SIGN_NO_PERM("Errors.Permissions.Sign", Type.ERROR),
+	OTHER_NO_PERM("Errors.Permissions.Other", Type.ERROR),
 
 	// errors - player
-	NOT_PLAYER("Errors.Player.Not_Player", Type.ERROR), PLAYER_NOT_FOUND("Errors.Player.Player_Not_Found", Type.ERROR),
+	NOT_PLAYER("Errors.Player.Not_Player", Type.ERROR),
+	PLAYER_NOT_FOUND("Errors.Player.Player_Not_Found", Type.ERROR),
 	INVENTORY_FULL("Errors.Player.Inv_Full", Type.ERROR),
 
 	// errors - kit
@@ -147,10 +162,13 @@ public enum MessageAddon {
 	CANNOT_CREATE_BANK("Errors.Bank.Cannot_Create", Type.ERROR),
 
 	// errors - gang
-	INVALID_GANG_NAME("Errors.Gang.Invalid_Name", Type.ERROR), MUST_CREATE_GANG("Errors.Gang.Must_Create", Type.ERROR),
-	CANNOT_CREATE_GANG("Errors.Gang.Cannot_Create", Type.ERROR), NOT_OWNER("Errors.Gang.Not_Owner", Type.ERROR),
+	INVALID_GANG_NAME("Errors.Gang.Invalid_Name", Type.ERROR),
+	MUST_CREATE_GANG("Errors.Gang.Must_Create", Type.ERROR),
+	CANNOT_CREATE_GANG("Errors.Gang.Cannot_Create", Type.ERROR),
+	NOT_OWNER("Errors.Gang.Not_Owner", Type.ERROR),
 	DUPLICATE_GANG_NAME("Errors.Gang.Duplicate_Names", Type.ERROR),
-	NO_GANG_INVITATION("Errors.Gang.No_Invite", Type.ERROR), GANG_SAME_RANK_ACTION("Errors.Gang.Same_Rank", Type.ERROR),
+	NO_GANG_INVITATION("Errors.Gang.No_Invite", Type.ERROR),
+	GANG_SAME_RANK_ACTION("Errors.Gang.Same_Rank", Type.ERROR),
 	GANG_HIGHER_RANK_ACTION("Errors.Gang.Higher_Rank", Type.ERROR),
 	GANG_DOESNT_EXIST("Errors.Gang.Doesnt_Exist", Type.ERROR),
 
@@ -168,7 +186,8 @@ public enum MessageAddon {
 	WORLD_NOT_FOUND("Errors.Teleportation.World.Not_Found", Type.ERROR),
 
 	// errors - bounty
-	NO_BOUNTY("Errors.Bounty.No_Bounty", Type.ERROR), NO_USER_SET_BOUNTY("Errors.Bounty.User_Set_Bounty", Type.ERROR),
+	NO_BOUNTY("Errors.Bounty.No_Bounty", Type.ERROR),
+	NO_USER_SET_BOUNTY("Errors.Bounty.User_Set_Bounty", Type.ERROR),
 
 	// errors - waypoint
 	INVALID_WAYPOINT("Errors.Waypoint.Invalid", Type.ERROR),
@@ -176,7 +195,8 @@ public enum MessageAddon {
 	UNABLE_TELEPORT_WAYPOINT("Errors.Waypoint.Teleport_Issue", Type.ERROR),
 
 	// errors - others
-	CANNOT_BE_NULL("Errors.Cannot_Null", Type.ERROR), MUST_BE_NUMBERS("Errors.Must_Be_Numbers", Type.ERROR),
+	CANNOT_BE_NULL("Errors.Cannot_Null", Type.ERROR),
+	MUST_BE_NUMBERS("Errors.Must_Be_Numbers", Type.ERROR),
 	DONT_USE_SYMBOL("Errors.Dont_Use_Symbol", Type.ERROR),
 
 	// information - drops
@@ -189,26 +209,37 @@ public enum MessageAddon {
 	KICKED_FROM_GANG("Information.Gang.Kicked", Type.INFORMATION),
 
 	// kits
-	KIT_RECEIVED("Kits.Received", Type.COMMAND), KIT_REMOVED("Kits.Removed", Type.COMMAND),
-	KIT_INVALID("Kits.Invalid", Type.COMMAND), KIT_LIST_UNDEFINED("Kits.List_Undefined", Type.ERROR),
+	KIT_RECEIVED("Kits.Received", Type.COMMAND),
+	KIT_REMOVED("Kits.Removed", Type.COMMAND),
+	KIT_INVALID("Kits.Invalid", Type.COMMAND),
+	KIT_LIST_UNDEFINED("Kits.List_Undefined", Type.ERROR),
 
 	// safe
-	SAFE_CREATED("Safe.Created", Type.COMMAND), SAFE_REMOVED("Safe.Removed", Type.COMMAND),
-	SAFE_ROBBED("Safe.Robbed", Type.PREFIX), SAFE_RESPAWNED("Safe.Respawned", Type.PREFIX),
+	SAFE_CREATED("Safe.Created", Type.COMMAND),
+	SAFE_REMOVED("Safe.Removed", Type.COMMAND),
+	SAFE_ROBBED("Safe.Robbed", Type.PREFIX),
+	SAFE_RESPAWNED("Safe.Respawned", Type.PREFIX),
 
 	// wanted level
-	NOT_WANTED("Wanted_Level.Not_Wanted", Type.PREFIX), PAID_WANTED("Wanted_Level.Paid", Type.PREFIX),
+	NOT_WANTED("Wanted_Level.Not_Wanted", Type.PREFIX),
+	PAID_WANTED("Wanted_Level.Paid", Type.PREFIX),
 
 	// weapons
-	INVALID_AMMO("Weapons.Not_Valid_Ammo", Type.ERROR), INVALID_WEAPON("Weapons.Not_Valid_Weapon", Type.ERROR),
-	INVALID_AMOUNT("Weapons.Not_Valid_Amount", Type.ERROR), KILLED_PLAYER("Weapons.Killed_Player", Type.PREFIX),
-	GUN_NOT_IN_INVENTORY("Weapons.Gun_Not_In_Inventory", Type.PREFIX), GUN_BOUGHT("Weapons.Gun_Bought", Type.PREFIX),
-	GUN_SOLD("Weapons.Gun_Sold", Type.PREFIX), AMMO_NOT_IN_INVENTORY("Weapons.Ammo_Not_In_Inventory", Type.PREFIX),
-	AMMO_BOUGHT("Weapons.Ammo_Bought", Type.PREFIX), AMMO_SOLD("Weapons.Ammo_Sold", Type.PREFIX),
+	INVALID_AMMO("Weapons.Not_Valid_Ammo", Type.ERROR),
+	INVALID_WEAPON("Weapons.Not_Valid_Weapon", Type.ERROR),
+	INVALID_AMOUNT("Weapons.Not_Valid_Amount", Type.ERROR),
+	KILLED_PLAYER("Weapons.Killed_Player", Type.PREFIX),
+	GUN_NOT_IN_INVENTORY("Weapons.Gun_Not_In_Inventory", Type.PREFIX),
+	GUN_BOUGHT("Weapons.Gun_Bought", Type.PREFIX),
+	GUN_SOLD("Weapons.Gun_Sold", Type.PREFIX),
+	AMMO_NOT_IN_INVENTORY("Weapons.Ammo_Not_In_Inventory", Type.PREFIX),
+	AMMO_BOUGHT("Weapons.Ammo_Bought", Type.PREFIX),
+	AMMO_SOLD("Weapons.Ammo_Sold", Type.PREFIX),
 	NOT_ENOUGH_AMMO("Weapons.Not_Enough_Ammo", Type.PREFIX),
 
 	// level
-	LEVEL_STATS("Level.Stats", Type.OTHER, true), LEVEL_METER_BAR("Level.Meter.Bar", Type.NO_CHANGE),
+	LEVEL_STATS("Level.Stats", Type.OTHER, true),
+	LEVEL_METER_BAR("Level.Meter.Bar", Type.NO_CHANGE),
 	LEVEL_COMPLETE_COLOR("Level.Meter.Complete_Color", Type.NO_CHANGE),
 	LEVEL_INCOMPLETE_COLOR("Level.Meter.Incomplete_Color", Type.NO_CHANGE),
 
@@ -272,6 +303,11 @@ public enum MessageAddon {
 
 enum Type {
 
-	PREFIX, COMMAND, ERROR, INFORMATION, OTHER, NO_CHANGE
+	PREFIX,
+	COMMAND,
+	ERROR,
+	INFORMATION,
+	OTHER,
+	NO_CHANGE
 
 }

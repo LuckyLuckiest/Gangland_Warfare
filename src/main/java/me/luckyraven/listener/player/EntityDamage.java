@@ -35,7 +35,7 @@ public class EntityDamage implements Listener {
 		} else return;
 
 		if (!(event.getEntity() instanceof LivingEntity livingEntity &&
-				livingEntity.getHealth() <= event.getFinalDamage())) return;
+			  livingEntity.getHealth() <= event.getFinalDamage())) return;
 
 		User<Player> user = userManager.getUser(damager.getPlayer());
 
@@ -65,7 +65,7 @@ public class EntityDamage implements Listener {
 					if (userBounty.getAmount() < SettingAddon.getBountyTimerMax()) {
 						// create a timer and start it
 						userBounty.createTimer(gangland, SettingAddon.getBountyTimeInterval(),
-						                       timer -> bountyExecutor(user, bountyEvent, timer)).start(false);
+											   timer -> bountyExecutor(user, bountyEvent, timer)).start(false);
 					}
 				} else {
 					double eachKill = SettingAddon.getBountyEachKillValue();
@@ -86,8 +86,9 @@ public class EntityDamage implements Listener {
 
 	private void bountyExecutor(User<Player> user, BountyEvent bountyEvent, RepeatingTimer timer) {
 		Bounty userBounty = user.getBounty();
-		double currentBounty = user.getBounty().getAmount() == 0D ? SettingAddon.getBountyEachKillValue() /
-				SettingAddon.getBountyTimerMultiple() : user.getBounty().getAmount();
+		double currentBounty = user.getBounty().getAmount() == 0D ?
+							   SettingAddon.getBountyEachKillValue() / SettingAddon.getBountyTimerMultiple() :
+							   user.getBounty().getAmount();
 
 		if (userBounty.getAmount() >= SettingAddon.getBountyTimerMax()) timer.stop();
 		else {

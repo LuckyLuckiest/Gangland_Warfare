@@ -132,15 +132,15 @@ class GangCreateCommand extends SubArgument {
 
 			// Need to notify the player and give access to confirm
 			player.sendMessage(MessageAddon.GANG_CREATE_FEE.toString()
-			                                               .replace("%amount%", SettingAddon.formatDouble(
-					                                               SettingAddon.getGangCreateFee())));
+														   .replace("%amount%", SettingAddon.formatDouble(
+																   SettingAddon.getGangCreateFee())));
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "create"}));
 			confirmCreate.setConfirmed(true);
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> sender.sendMessage(
 					MessageAddon.GANG_CREATE_CONFIRM.toString()
-					                                .replace("%timer%", TimeUtil.formatTime(time.getPeriod(), true))),
-			                                          null, time -> {
+													.replace("%timer%", TimeUtil.formatTime(time.getPeriod(), true))),
+													  null, time -> {
 				confirmCreate.setConfirmed(false);
 				createGangName.remove(user);
 				createGangTimer.remove(sender);

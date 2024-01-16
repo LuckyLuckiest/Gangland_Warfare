@@ -34,10 +34,10 @@ public class WaypointDatabase extends DatabaseHandler {
 		Database data = getDatabase().table("data");
 
 		data.createTable("id INT PRIMARY KEY NOT NULL", "name TEXT NOT NULL", "world TEXT NOT NULL",
-		                 "x DOUBLE NOT NULL", "y DOUBLE NOT NULL", "z DOUBLE NOT NULL", "yaw DOUBLE NOT NULL",
-		                 "pitch DOUBLE NOT NULL", "type TEXT NOT NULL", "gang_id INT NOT NULL", "timer INT NOT NULL",
-		                 "cooldown INT NOT NULL", "shield INT NOT NULL", "cost DOUBLE NOT NULL",
-		                 "radius DOUBLE NOT NULL");
+						 "x DOUBLE NOT NULL", "y DOUBLE NOT NULL", "z DOUBLE NOT NULL", "yaw DOUBLE NOT NULL",
+						 "pitch DOUBLE NOT NULL", "type TEXT NOT NULL", "gang_id INT NOT NULL", "timer INT NOT NULL",
+						 "cooldown INT NOT NULL", "shield INT NOT NULL", "cost DOUBLE NOT NULL",
+						 "radius DOUBLE NOT NULL");
 	}
 
 	@Override
@@ -64,12 +64,12 @@ public class WaypointDatabase extends DatabaseHandler {
 		for (int i = 0; i < dataTypes.length; i++)
 			dataTypes[i] = columnsDataType.get(i);
 
-		config.insert(columns, new Object[]{
-				waypoint.getUsedId(), waypoint.getName(), waypoint.getWorld(), waypoint.getX(), waypoint.getY(),
-				waypoint.getZ(), (double) waypoint.getYaw(), (double) waypoint.getPitch(), waypoint.getType().getName(),
-				waypoint.getGangId(), waypoint.getTimer(), waypoint.getCooldown(), waypoint.getShield(),
-				waypoint.getCost(), waypoint.getRadius()
-		}, dataTypes);
+		config.insert(columns,
+					  new Object[]{waypoint.getUsedId(), waypoint.getName(), waypoint.getWorld(), waypoint.getX(),
+								   waypoint.getY(), waypoint.getZ(), (double) waypoint.getYaw(),
+								   (double) waypoint.getPitch(), waypoint.getType().getName(), waypoint.getGangId(),
+								   waypoint.getTimer(), waypoint.getCooldown(), waypoint.getShield(),
+								   waypoint.getCost(), waypoint.getRadius()}, dataTypes);
 	}
 
 	public void updateDataTable(Waypoint waypoint) throws SQLException {
@@ -82,12 +82,12 @@ public class WaypointDatabase extends DatabaseHandler {
 		for (int i = 0; i < dataTypes.length; i++)
 			dataTypes[i] = columnsDataType.get(i);
 
-		config.update("id = ?", new Object[]{waypoint.getUsedId()}, new int[]{Types.INTEGER}, columns, new Object[]{
-				waypoint.getName(), waypoint.getWorld(), waypoint.getX(), waypoint.getY(), waypoint.getZ(),
-				(double) waypoint.getYaw(), (double) waypoint.getPitch(), waypoint.getType().getName(),
-				waypoint.getGangId(), waypoint.getTimer(), waypoint.getCooldown(), waypoint.getShield(),
-				waypoint.getCost(), waypoint.getRadius()
-		}, dataTypes);
+		config.update("id = ?", new Object[]{waypoint.getUsedId()}, new int[]{Types.INTEGER}, columns,
+					  new Object[]{waypoint.getName(), waypoint.getWorld(), waypoint.getX(), waypoint.getY(),
+								   waypoint.getZ(), (double) waypoint.getYaw(), (double) waypoint.getPitch(),
+								   waypoint.getType().getName(), waypoint.getGangId(), waypoint.getTimer(),
+								   waypoint.getCooldown(), waypoint.getShield(), waypoint.getCost(),
+								   waypoint.getRadius()}, dataTypes);
 	}
 
 }

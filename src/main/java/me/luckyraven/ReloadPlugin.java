@@ -136,6 +136,7 @@ public class ReloadPlugin {
 	 * Initializes the user and new members data (effective for reloads).
 	 *
 	 * @param resetCache if old data needs to be cleared
+	 *
 	 * @implNote Very important to run this method after {@link ListenerManager}, {@link DatabaseManager},
 	 * {@link CreateAccount}, {@link UserDatabase}, and {@link GangDatabase} initialization.
 	 */
@@ -143,11 +144,11 @@ public class ReloadPlugin {
 		DatabaseManager databaseManager = initializer.getDatabaseManager();
 
 		UserDatabase userHandler = databaseManager.getDatabases()
-		                                          .stream()
-		                                          .filter(handler -> handler instanceof UserDatabase)
-		                                          .map(handler -> (UserDatabase) handler)
-		                                          .findFirst()
-		                                          .orElse(null);
+				.stream()
+				.filter(handler -> handler instanceof UserDatabase)
+				.map(handler -> (UserDatabase) handler)
+				.findFirst()
+				.orElse(null);
 
 		if (userHandler == null) {
 			Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find UserDatabase class.");
@@ -157,11 +158,11 @@ public class ReloadPlugin {
 		UserManager<Player> userManager = initializer.getUserManager();
 
 		GangDatabase memberHandler = databaseManager.getDatabases()
-		                                            .stream()
-		                                            .filter(handler -> handler instanceof GangDatabase)
-		                                            .map(handler -> (GangDatabase) handler)
-		                                            .findFirst()
-		                                            .orElse(null);
+				.stream()
+				.filter(handler -> handler instanceof GangDatabase)
+				.map(handler -> (GangDatabase) handler)
+				.findFirst()
+				.orElse(null);
 
 		if (memberHandler == null) {
 			Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find GangDatabase class.");
@@ -219,6 +220,7 @@ public class ReloadPlugin {
 	 * Initializes members' data (effective for reloads).
 	 *
 	 * @param resetCache if old data needs to be cleared
+	 *
 	 * @implNote Very important to run this method after {@link DatabaseManager}, {@link RankManager},
 	 * {@link GangManager}, {@link RankDatabase}, and {@link GangDatabase} initialization.
 	 */
@@ -240,6 +242,7 @@ public class ReloadPlugin {
 	 * Initializes the gang data (effective for reloads).
 	 *
 	 * @param resetCache if old data needs to be cleared
+	 *
 	 * @implNote Very important to run this method after {@link DatabaseManager}, and {@link GangDatabase}
 	 * initialization.
 	 */
@@ -259,6 +262,7 @@ public class ReloadPlugin {
 	 * Initializes the rank data (effective for reloads).
 	 *
 	 * @param resetCache if old data needs to be cleared
+	 *
 	 * @implNote Very important to run this method after {@link DatabaseManager}, and {@link RankDatabase}
 	 * initialization.
 	 */
@@ -278,6 +282,7 @@ public class ReloadPlugin {
 	 * Initializes the waypoint data (effective for reloads).
 	 *
 	 * @param resetCache if old data needs to be cleared
+	 *
 	 * @implNote Very important to run this method after {@link DatabaseManager}, and {@link WaypointDatabase}
 	 * initialization.
 	 */

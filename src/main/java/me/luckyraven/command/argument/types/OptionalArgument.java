@@ -19,7 +19,7 @@ public class OptionalArgument extends Argument {
 	}
 
 	public OptionalArgument(String[] possibleArguments, Tree<Argument> tree,
-	                        TriConsumer<Argument, CommandSender, String[]> action) {
+							TriConsumer<Argument, CommandSender, String[]> action) {
 		super(argumentsWithOptional(possibleArguments), tree, action);
 	}
 

@@ -26,7 +26,9 @@ public class ArgumentResult<T extends Argument> {
 	}
 
 	public enum ResultState {
-		SUCCESS, NO_PERMISSION, NOT_FOUND
+		SUCCESS,
+		NO_PERMISSION,
+		NOT_FOUND
 	}
 
 }

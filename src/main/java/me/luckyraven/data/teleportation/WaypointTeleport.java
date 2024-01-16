@@ -46,25 +46,27 @@ public class WaypointTeleport implements Listener {
 	/**
 	 * Teleports the user to this waypoint.
 	 *
-	 * @param plugin      the plugin used
-	 * @param user        the user that would be teleported
+	 * @param plugin the plugin used
+	 * @param user the user that would be teleported
 	 * @param duringTimer access the user and countdown timer during the timer
+	 *
 	 * @return the {@link TeleportResult} using {@link CompletableFuture} of the user
+	 *
 	 * @throws IllegalTeleportException when the user tries to teleport again while having a cooldown
 	 */
 	public CompletableFuture<TeleportResult> teleport(JavaPlugin plugin, User<Player> user,
-	                                                  BiConsumer<User<Player>, CountdownTimer> duringTimer)
-			throws IllegalTeleportException {
+													  BiConsumer<User<Player>, CountdownTimer> duringTimer) throws
+			IllegalTeleportException {
 		if (userOnCooldown(user.getUser())) throw new IllegalTeleportException("Can't teleport on a cooldown");
 
 		CompletableFuture<TeleportResult> teleportResult = new CompletableFuture<>();
 
-		CountdownTimer timer = new CountdownTimer(plugin, waypoint.getTimer() == 0 ? 0L : 1L, waypoint.getTimer(), null,
-		                                          t -> {
-			                                          if (t.getTimeLeft() == 0) return;
+		CountdownTimer timer =
+				new CountdownTimer(plugin, waypoint.getTimer() == 0 ? 0L : 1L, waypoint.getTimer(), null, t -> {
+					if (t.getTimeLeft() == 0) return;
 
-			                                          duringTimer.accept(user, t);
-		                                          }, t -> teleport(plugin, user, teleportResult));
+					duringTimer.accept(user, t);
+				}, t -> teleport(plugin, user, teleportResult));
 
 		if (waypoint.getTimer() != 0) countdownTimer.put(user.getUser(), timer);
 		timer.start(false);
@@ -85,7 +87,7 @@ public class WaypointTeleport implements Listener {
 		// if locWorld was a valid world
 		Player player = user.getUser();
 		Location location = new Location(locWorld, waypoint.getX(), waypoint.getY(), waypoint.getZ(), waypoint.getYaw(),
-		                                 waypoint.getPitch());
+										 waypoint.getPitch());
 
 		TeleportEvent event = new TeleportEvent(user, player.getLocation(), waypoint);
 		Bukkit.getPluginManager().callEvent(event);
@@ -102,7 +104,7 @@ public class WaypointTeleport implements Listener {
 		// create a cooldown timer
 		if (waypoint.getCooldown() != 0) {
 			CountdownTimer countdownTimer = new CountdownTimer(plugin, waypoint.getCooldown(), null, null,
-			                                                   time -> teleportCooldown.remove(player));
+															   time -> teleportCooldown.remove(player));
 			teleportCooldown.put(player, countdownTimer);
 
 			countdownTimer.start(true);
@@ -110,8 +112,8 @@ public class WaypointTeleport implements Listener {
 
 		// create a shield timer
 		if (waypoint.getShield() != 0) {
-			CountdownTimer countdownTimer = new CountdownTimer(plugin, waypoint.getShield(), null, null,
-			                                                   time -> player.setInvulnerable(false));
+			CountdownTimer countdownTimer =
+					new CountdownTimer(plugin, waypoint.getShield(), null, null, time -> player.setInvulnerable(false));
 
 			player.setInvulnerable(true);
 
@@ -159,6 +161,6 @@ public class WaypointTeleport implements Listener {
 		player.sendMessage(MessageAddon.WAYPOINT_TELEPORT_CANCELLED.toString());
 	}
 
-	public record TeleportResult(boolean success, User<Player> playerUser, Waypoint waypoint) {}
+	public record TeleportResult(boolean success, User<Player> playerUser, Waypoint waypoint) { }
 
 }

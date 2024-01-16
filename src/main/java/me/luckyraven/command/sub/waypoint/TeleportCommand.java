@@ -35,11 +35,11 @@ public class TeleportCommand extends CommandHandler {
 		reconfirmTimer = new HashMap<>();
 
 		List<CommandInformation> list = getCommands().entrySet()
-		                                             .stream()
-		                                             .filter(entry -> entry.getKey().startsWith("waypoint"))
-		                                             .sorted(Map.Entry.comparingByKey())
-		                                             .map(Map.Entry::getValue)
-		                                             .toList();
+													 .stream()
+													 .filter(entry -> entry.getKey().startsWith("waypoint"))
+													 .sorted(Map.Entry.comparingByKey())
+													 .map(Map.Entry::getValue)
+													 .toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -139,15 +139,15 @@ public class TeleportCommand extends CommandHandler {
 					if (waypoint1.getCost() != 0D) {
 						user1.getEconomy().withdraw(waypoint1.getCost());
 						player.sendMessage(MessageAddon.WITHDRAW_MONEY_PLAYER.toString()
-						                                                     .replace("%amount%",
-						                                                              SettingAddon.formatDouble(
-								                                                              waypoint1.getCost())));
+																			 .replace("%amount%",
+																					  SettingAddon.formatDouble(
+																							  waypoint1.getCost())));
 					}
 					message = MessageAddon.WAYPOINT_TELEPORT.toString().replace("%location%", waypoint1.getName());
 
 				} else {
 					message = MessageAddon.UNABLE_TELEPORT_WAYPOINT.toString()
-					                                               .replace("%location%", waypoint1.getName());
+																   .replace("%location%", waypoint1.getName());
 
 				}
 				player.sendMessage(message);

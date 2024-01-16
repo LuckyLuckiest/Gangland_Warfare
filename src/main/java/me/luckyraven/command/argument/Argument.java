@@ -54,17 +54,17 @@ public class Argument implements Cloneable {
 	}
 
 	public Argument(String argument, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action,
-	                String permission) {
+					String permission) {
 		this(new String[]{argument}, tree, action, permission);
 	}
 
 	public Argument(String[] arguments, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action,
-	                String permission) {
+					String permission) {
 		this(arguments, tree, action, permission, false);
 	}
 
 	public Argument(String[] arguments, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action,
-	                String permission, boolean displayAllArguments) {
+					String permission, boolean displayAllArguments) {
 		Preconditions.checkNotNull(permission, "Permission string can't be null");
 
 		this.arguments = arguments;
@@ -198,8 +198,8 @@ public class Argument implements Cloneable {
 	}
 
 	private <T extends Argument> ArgumentResult<T> traverseList(Tree.Node<T> node, T[] list, int index,
-	                                                            OptionalArgument dummy, CommandSender sender,
-	                                                            String[] args) {
+																OptionalArgument dummy, CommandSender sender,
+																String[] args) {
 		if (node == null || index >= list.length) return ArgumentResult.notFound();
 		if (!node.getData().equals(list[index]) && !node.getData().equals(dummy)) return ArgumentResult.notFound();
 
@@ -229,7 +229,7 @@ public class Argument implements Cloneable {
 		if (!(obj instanceof Argument argument)) return false;
 
 		return Arrays.stream(argument.arguments)
-		             .anyMatch(arg -> Arrays.stream(this.arguments).anyMatch(arg::equalsIgnoreCase));
+					 .anyMatch(arg -> Arrays.stream(this.arguments).anyMatch(arg::equalsIgnoreCase));
 	}
 
 	@Override

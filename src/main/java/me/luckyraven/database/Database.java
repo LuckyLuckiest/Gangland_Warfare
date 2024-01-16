@@ -14,7 +14,8 @@ public interface Database {
 	 * Initialize the database according to the given credentials and the specific database.
 	 *
 	 * @param credentials to enter the database.
-	 * @param schema      the schema name to enter.
+	 * @param schema the schema name to enter.
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	void initialize(Map<String, Object> credentials, String schema) throws SQLException;
@@ -23,7 +24,9 @@ public interface Database {
 	 * Switch between schemas if the given schema is true.
 	 *
 	 * @param schema the schema name to access.
+	 *
 	 * @return the boolean
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	boolean switchSchema(String schema) throws SQLException;
@@ -32,7 +35,9 @@ public interface Database {
 	 * Schema exists boolean.
 	 *
 	 * @param schema the schema
+	 *
 	 * @return the boolean
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	boolean schemaExists(String schema) throws SQLException;
@@ -41,6 +46,7 @@ public interface Database {
 	 * Create schema.
 	 *
 	 * @param name the name of the new schema
+	 *
 	 * @throws SQLException the sql exception
 	 * @throws IOException  if the program failed to create a file
 	 */
@@ -50,6 +56,7 @@ public interface Database {
 	 * Drop schema.
 	 *
 	 * @param name the name of the schema to drop.
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	void dropSchema(String name) throws SQLException;
@@ -58,7 +65,9 @@ public interface Database {
 	 * Specify the name of the table that will be used to work on.
 	 *
 	 * @param tableName name of the table.
+	 *
 	 * @return {@link Database} class.
+	 *
 	 * @throws SQLException when there is no connection.
 	 */
 	Database table(String tableName) throws SQLException;
@@ -79,6 +88,7 @@ public interface Database {
 	 * Tests the connection of the sql database.
 	 *
 	 * @param url The database url link
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	void testConnection(String url) throws SQLException;
@@ -94,6 +104,7 @@ public interface Database {
 	 * Creates a table for the specified file.
 	 *
 	 * @param values gets an array of string values and executes a query.
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	void createTable(String... values) throws SQLException;
@@ -116,6 +127,7 @@ public interface Database {
 	 * Changes the name of the table.
 	 *
 	 * @param newName new name of the table.
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	void setTableName(String newName) throws SQLException;
@@ -133,9 +145,11 @@ public interface Database {
 	 * }
 	 * </pre>
 	 *
-	 * @param name      name of the new column.
+	 * @param name name of the new column.
 	 * @param columType values that are used for this new column.
+	 *
 	 * @return database instance
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	Database addColumn(String name, String columType) throws SQLException;
@@ -157,17 +171,19 @@ public interface Database {
 	 * </pre>
 	 *
 	 * @param columns column names.
-	 * @param values  each value information.
-	 * @param types   each column data type, use {@link java.sql.Types} to specify the data type.
+	 * @param values each value information.
+	 * @param types each column data type, use {@link java.sql.Types} to specify the data type.
+	 *
 	 * @return database instance
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	Database insert(String[] columns, Object[] values, int[] types) throws SQLException;
 
 	/**
-	 * Selects data from the table specified and returns an array of objects from that table.
-	 * It is very important that the values to be inserted should have a placeholder of '?', and if
-	 * available they should be specified into the '{@code parameters}' parameter.<br/><br/>
+	 * Selects data from the table specified and returns an array of objects from that table. It is very important that
+	 * the values to be inserted should have a placeholder of '?', and if available they should be specified into the
+	 * '{@code parameters}' parameter.<br/><br/>
 	 *
 	 * <pre>{@code
 	 * Database database = ...
@@ -182,11 +198,13 @@ public interface Database {
 	 * }
 	 * </pre>
 	 *
-	 * @param row          the specific row for a value that you need.
+	 * @param row the specific row for a value that you need.
 	 * @param placeholders placeholder values.
-	 * @param types        each placeholder type.
-	 * @param columns      which values you need information from.
+	 * @param types each placeholder type.
+	 * @param columns which values you need information from.
+	 *
 	 * @return array of objects according to the length of columns provided.
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	Object[] select(String row, Object[] placeholders, int[] types, String[] columns) throws SQLException;
@@ -195,6 +213,7 @@ public interface Database {
 	 * Selects all the rows from the table specified and returns a list of an array of objects from that table.
 	 *
 	 * @return a list of all the rows array
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	List<Object[]> selectAll() throws SQLException;
@@ -218,17 +237,19 @@ public interface Database {
 	 * }
 	 * </pre>
 	 *
-	 * @param row             the specific row that will be updated in the database
+	 * @param row the specific row that will be updated in the database
 	 * @param rowPlaceholders the row placeholders
-	 * @param rowTypes        the row data types
-	 * @param columns         the columns
+	 * @param rowTypes the row data types
+	 * @param columns the columns
 	 * @param colPlaceholders the columns placeholders
-	 * @param colTypes        the columns data types
+	 * @param colTypes the columns data types
+	 *
 	 * @return database instance
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	Database update(String row, Object[] rowPlaceholders, int[] rowTypes, String[] columns, Object[] colPlaceholders,
-	                int[] colTypes) throws SQLException;
+					int[] colTypes) throws SQLException;
 
 	/**
 	 * Gets the total rows of the specified table.
@@ -238,12 +259,15 @@ public interface Database {
 	int totalRows() throws SQLException;
 
 	/**
-	 * To delete all the data from the table leave <i><b>value</i></b> empty, and if you specify the specified row using
+	 * To delete all the data from the table leave <i><b>value</i></b> empty, and if you specify the specified row
+	 * using
 	 * <i><b>WHERE column_name=value</b></i>.
 	 *
 	 * @param column the specific column.
-	 * @param value  all data from the table or specific data.
+	 * @param value all data from the table or specific data.
+	 *
 	 * @return database instance
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	Database delete(String column, String value) throws SQLException;
@@ -252,7 +276,9 @@ public interface Database {
 	 * Executes a query that you wish to execute.
 	 *
 	 * @param statement the statement provided needs SQL experience.
+	 *
 	 * @return returns the result found.
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	ResultSet executeQuery(String statement) throws SQLException;
@@ -261,6 +287,7 @@ public interface Database {
 	 * Executes an update to table that you wish to execute.
 	 *
 	 * @param statement the statement provided needs SQL experience.
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	void executeUpdate(String statement) throws SQLException;
@@ -269,6 +296,7 @@ public interface Database {
 	 * Execute a statement to the table.
 	 *
 	 * @param statement the statement provided needs SQL experience.
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	void executeStatement(String statement) throws SQLException;
@@ -284,6 +312,7 @@ public interface Database {
 	 * Gets all the columns of the specified table.
 	 *
 	 * @return a list of all columns names.
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	List<String> getColumns() throws SQLException;
@@ -292,7 +321,9 @@ public interface Database {
 	 * Gets columns data type.
 	 *
 	 * @param columns the columns
+	 *
 	 * @return the columns data type
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	List<Integer> getColumnsDataType(String[] columns) throws SQLException;
@@ -300,14 +331,15 @@ public interface Database {
 	/**
 	 * Prepare placeholder statements by converting the placeholders into their appropriate data type.
 	 *
-	 * @param statement    the statement
+	 * @param statement the statement
 	 * @param placeholders the placeholders
-	 * @param types        the data types
-	 * @param startPos     the start pos
+	 * @param types the data types
+	 * @param startPos the start pos
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	default void preparePlaceholderStatements(PreparedStatement statement, Object[] placeholders, int[] types,
-	                                          int startPos) throws SQLException {
+											  int startPos) throws SQLException {
 		for (int i = 0; i < placeholders.length; i++) {
 			Object value = placeholders[i];
 			int    type  = types[i];
@@ -338,7 +370,9 @@ public interface Database {
 	 * Gets the specified attribute data type from the current table.
 	 *
 	 * @param resultSet the result set
+	 *
 	 * @return the column types
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	default Map<String, Class<?>> getColumnTypes(ResultSet resultSet) throws SQLException {
@@ -360,6 +394,7 @@ public interface Database {
 	 * Gets the java equivalent data type of the database used data types.
 	 *
 	 * @param columnType the column type
+	 *
 	 * @return the java type
 	 */
 	default Class<?> getJavaType(int columnType) {
@@ -381,6 +416,7 @@ public interface Database {
 	 * Gets column type.
 	 *
 	 * @param columnType the column type
+	 *
 	 * @return the column type
 	 */
 	default int getColumnType(Class<?> columnType) {
@@ -399,14 +435,16 @@ public interface Database {
 	/**
 	 * Gets the value appropriate data type.
 	 *
-	 * @param resultSet  the result set
+	 * @param resultSet the result set
 	 * @param columnName the column name
 	 * @param columnType the column type
+	 *
 	 * @return the value from result set
+	 *
 	 * @throws SQLException the sql exception
 	 */
-	default Object getValueFromResultSet(ResultSet resultSet, String columnName, Class<?> columnType)
-			throws SQLException {
+	default Object getValueFromResultSet(ResultSet resultSet, String columnName, Class<?> columnType) throws
+			SQLException {
 		Object value = resultSet.getObject(columnName);
 
 		if (resultSet.wasNull()) value = null;
@@ -425,7 +463,9 @@ public interface Database {
 	 * Gets the database all table names.
 	 *
 	 * @param connection the connection
+	 *
 	 * @return the table names
+	 *
 	 * @throws SQLException the sql exception
 	 */
 	default List<String> getTableNames(Connection connection) throws SQLException {
@@ -445,6 +485,7 @@ public interface Database {
 	 * Creates a uniform way to create a list in the used sql.
 	 *
 	 * @param values information to use
+	 *
 	 * @return values joined using a comma as delimiter
 	 */
 	default String createList(List<String> values) {
@@ -455,6 +496,7 @@ public interface Database {
 	 * Breaks down the list used by the uniform delimiter
 	 *
 	 * @param list values with delimiters
+	 *
 	 * @return a list of data
 	 */
 	default List<String> getList(String list) {

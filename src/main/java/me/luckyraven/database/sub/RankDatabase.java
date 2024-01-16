@@ -36,7 +36,7 @@ public class RankDatabase extends DatabaseHandler {
 		Database data = getDatabase().table("data");
 
 		data.createTable("id INT PRIMARY KEY NOT NULL", "name TEXT NOT NULL", "permissions LONGTEXT NOT NULL",
-		                 "parent LONGTEXT");
+						 "parent LONGTEXT");
 	}
 
 	@Override
@@ -45,21 +45,18 @@ public class RankDatabase extends DatabaseHandler {
 
 		String head = SettingAddon.getGangRankHead(), tail = SettingAddon.getGangRankTail();
 
-		Object[] tailRow = dataTable.select("name = ?", new Object[]{tail}, new int[]{Types.VARCHAR},
-		                                    new String[]{"*"});
+		Object[] tailRow =
+				dataTable.select("name = ?", new Object[]{tail}, new int[]{Types.VARCHAR}, new String[]{"*"});
 		int rows = dataTable.totalRows() + 1;
 		if (tailRow.length == 0)
-			dataTable.insert(dataTable.getColumns().toArray(String[]::new), new Object[]{rows, tail, "", ""}, new int[]{
-					Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR
-			});
+			dataTable.insert(dataTable.getColumns().toArray(String[]::new), new Object[]{rows, tail, "", ""},
+							 new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR});
 
-		Object[] headRow = dataTable.select("name = ?", new Object[]{head}, new int[]{Types.VARCHAR},
-		                                    new String[]{"*"});
+		Object[] headRow =
+				dataTable.select("name = ?", new Object[]{head}, new int[]{Types.VARCHAR}, new String[]{"*"});
 		if (headRow.length == 0)
 			dataTable.insert(dataTable.getColumns().toArray(String[]::new), new Object[]{rows + 1, head, "", tail},
-			                 new int[]{
-					                 Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR
-			                 });
+							 new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR});
 	}
 
 	@Override
@@ -103,7 +100,7 @@ public class RankDatabase extends DatabaseHandler {
 			dataTypes[i] = columnsDataType.get(i);
 
 		config.update("id = ?", new Object[]{rank.getUsedId()}, new int[]{Types.INTEGER}, columns,
-		              new Object[]{rank.getName(), permissions, children}, dataTypes);
+					  new Object[]{rank.getName(), permissions, children}, dataTypes);
 	}
 
 }

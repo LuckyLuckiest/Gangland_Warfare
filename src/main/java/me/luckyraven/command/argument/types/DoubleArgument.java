@@ -19,17 +19,17 @@ public class DoubleArgument extends Argument {
 	}
 
 	public DoubleArgument(String[] arguments, Tree<Argument> tree,
-	                      TriConsumer<Argument, CommandSender, String[]> action) {
+						  TriConsumer<Argument, CommandSender, String[]> action) {
 		this(arguments, tree, action, "");
 	}
 
 	public DoubleArgument(String argument, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action,
-	                      String permission) {
+						  String permission) {
 		this(new String[]{argument}, tree, action, permission);
 	}
 
 	public DoubleArgument(String[] arguments, Tree<Argument> tree,
-	                      TriConsumer<Argument, CommandSender, String[]> action, String permission) {
+						  TriConsumer<Argument, CommandSender, String[]> action, String permission) {
 		super(arguments, tree, action, permission);
 		this.confirmed = false;
 	}

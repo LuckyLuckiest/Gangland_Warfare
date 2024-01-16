@@ -42,8 +42,9 @@ public class UserManager<T extends OfflinePlayer> {
 			Database bankTable = database.table("bank");
 
 			// check for bank table
-			Object[] bankInfo = bankTable.select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
-			                                     new int[]{Types.CHAR}, new String[]{"*"});
+			Object[] bankInfo =
+					bankTable.select("uuid = ?", new Object[]{user.getUser().getUniqueId()}, new int[]{Types.CHAR},
+									 new String[]{"*"});
 			Bank bank = new Bank(user, "");
 			// create player data into database
 			if (bankInfo.length == 0) {
@@ -62,8 +63,9 @@ public class UserManager<T extends OfflinePlayer> {
 			Database dataTable = database.table("data");
 
 			// check for data table
-			Object[] dataInfo = dataTable.select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
-			                                     new int[]{Types.CHAR}, new String[]{"*"});
+			Object[] dataInfo =
+					dataTable.select("uuid = ?", new Object[]{user.getUser().getUniqueId()}, new int[]{Types.CHAR},
+									 new String[]{"*"});
 			// create player data into a database
 			if (dataInfo.length == 0) {
 				if (!SettingAddon.isAutoSave()) userDatabase.insertDataTable(user);
@@ -105,8 +107,8 @@ public class UserManager<T extends OfflinePlayer> {
 				if (userBounty.getAmount() >= SettingAddon.getBountyTimerMax()) return;
 
 				RepeatingTimer repeatingTimer = userBounty.createTimer(gangland, SettingAddon.getBountyTimeInterval(),
-				                                                       timer -> bountyExecutor(user, bountyEvent, timer,
-				                                                                               helper));
+																	   timer -> bountyExecutor(user, bountyEvent, timer,
+																							   helper));
 				repeatingTimer.start(false);
 			}
 		});
@@ -129,7 +131,7 @@ public class UserManager<T extends OfflinePlayer> {
 	}
 
 	private void bountyExecutor(User<? extends OfflinePlayer> user, BountyEvent bountyEvent, RepeatingTimer timer,
-	                            DatabaseHelper helper) {
+								DatabaseHelper helper) {
 		Bounty bounty    = user.getBounty();
 		double oldAmount = bounty.getAmount();
 

@@ -22,9 +22,8 @@ public class CommandTabCompleter implements TabCompleter {
 	private final Map<String, CommandHandler> commandMap;
 
 	// classes that I don't want displayed in tab completion
-	private final List<Class<? extends CommandHandler>> filters = Arrays.asList(DebugCommand.class, OptionCommand.class,
-	                                                                            ReadNBTCommand.class,
-	                                                                            TimerCommand.class);
+	private final List<Class<? extends CommandHandler>> filters =
+			Arrays.asList(DebugCommand.class, OptionCommand.class, ReadNBTCommand.class, TimerCommand.class);
 
 	public CommandTabCompleter(Map<String, CommandHandler> commandMap) {
 		this.commandMap = commandMap;
@@ -33,7 +32,7 @@ public class CommandTabCompleter implements TabCompleter {
 	@Nullable
 	@Override
 	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
-	                                  @NotNull String[] args) {
+									  @NotNull String[] args) {
 		// commands according to user permission
 		List<CommandHandler> commandHandlers = new ArrayList<>();
 
@@ -88,9 +87,8 @@ public class CommandTabCompleter implements TabCompleter {
 
 		if (lastArg.isEmpty()) return arguments;
 
-		Set<String> caseInsensitiveArguments = arguments.stream()
-		                                                .map(String::toLowerCase)
-		                                                .collect(Collectors.toCollection(LinkedHashSet::new));
+		Set<String> caseInsensitiveArguments =
+				arguments.stream().map(String::toLowerCase).collect(Collectors.toCollection(LinkedHashSet::new));
 
 		return caseInsensitiveArguments.parallelStream().filter(arg -> arg.startsWith(lastArg)).toList();
 	}

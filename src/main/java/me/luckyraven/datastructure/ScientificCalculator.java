@@ -13,9 +13,8 @@ import java.util.Map;
 
 public class ScientificCalculator {
 
-	@Getter
-	private final String     formula;
-	private final Expression expression;
+	@Getter private final String     formula;
+	private final         Expression expression;
 
 	public ScientificCalculator(String expression, @Nullable Map<String, Double> variables) {
 		this.formula = expression;

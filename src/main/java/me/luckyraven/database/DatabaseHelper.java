@@ -11,10 +11,9 @@ import java.util.logging.Level;
 
 public class DatabaseHelper {
 
-	private final JavaPlugin      plugin;
-	@Getter
-	private final DatabaseHandler databaseHandler;
-	private final Database        database;
+	private final         JavaPlugin      plugin;
+	@Getter private final DatabaseHandler databaseHandler;
+	private final         Database        database;
 
 	public DatabaseHelper(JavaPlugin plugin, @NotNull DatabaseHandler databaseHandler) {
 		this.plugin = plugin;
@@ -23,9 +22,8 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * Takes care of connecting to the database and disconnecting from it.
-	 * Because this plugin uses HikariCP, it will not disconnect the HikariPool until the plugin is disabled.
-	 * <br/>
+	 * Takes care of connecting to the database and disconnecting from it. Because this plugin uses HikariCP, it will
+	 * not disconnect the HikariPool until the plugin is disabled. <br/>
 	 * <pre>{@code
 	 * DatabaseHelper helper = new DatabaseHelper(plugin, handler);
 	 * helper.runQueries(database -> {
@@ -75,8 +73,8 @@ public class DatabaseHelper {
 			}
 		} catch (SQLException exception) {
 			plugin.getLogger()
-			      .warning(UnhandledError.SQL_ERROR + ": Failed to rollback database connection, " +
-					               exception.getMessage());
+				  .warning(UnhandledError.SQL_ERROR + ": Failed to rollback database connection, " +
+						   exception.getMessage());
 		}
 	}
 

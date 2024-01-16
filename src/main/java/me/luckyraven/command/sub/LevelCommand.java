@@ -24,11 +24,11 @@ public class LevelCommand extends CommandHandler {
 		super(gangland, "level", true);
 
 		List<CommandInformation> list = getCommands().entrySet()
-		                                             .stream()
-		                                             .filter(entry -> entry.getKey().startsWith("level"))
-		                                             .sorted(Map.Entry.comparingByKey())
-		                                             .map(Map.Entry::getValue)
-		                                             .toList();
+													 .stream()
+													 .filter(entry -> entry.getKey().startsWith("level"))
+													 .sorted(Map.Entry.comparingByKey())
+													 .map(Map.Entry::getValue)
+													 .toList();
 
 		getHelpInfo().addAll(list);
 	}
@@ -43,8 +43,8 @@ public class LevelCommand extends CommandHandler {
 		String currentLevel = String.valueOf(level.getLevelValue());
 		String maxLevel     = String.valueOf(level.getMaxLevel());
 
-		double exp = level.getExperience(), requiredExp = level.experienceCalculation(
-				level.nextLevel()), percentage = level.getPercentage();
+		double exp = level.getExperience(), requiredExp = level.experienceCalculation(level.nextLevel()), percentage =
+				level.getPercentage();
 
 		String experience         = String.format("%.2f", exp);
 		String requiredExperience = String.format("%.2f", requiredExp);
@@ -66,13 +66,13 @@ public class LevelCommand extends CommandHandler {
 		String progressBar = ChatUtil.color(builder.toString());
 
 		String stats = MessageAddon.LEVEL_STATS.toString()
-		                                       .replace("%player%", player.getName())
-		                                       .replace("%level%", currentLevel)
-		                                       .replace("%max_level%", maxLevel)
-		                                       .replace("%experience%", experience)
-		                                       .replace("%required_experience%", requiredExperience)
-		                                       .replace("%percentage%", percentageStr)
-		                                       .replace("%progress_bar%", progressBar);
+											   .replace("%player%", player.getName())
+											   .replace("%level%", currentLevel)
+											   .replace("%max_level%", maxLevel)
+											   .replace("%experience%", experience)
+											   .replace("%required_experience%", requiredExperience)
+											   .replace("%percentage%", percentageStr)
+											   .replace("%progress_bar%", progressBar);
 		player.sendMessage(stats);
 	}
 
@@ -118,8 +118,8 @@ public class LevelCommand extends CommandHandler {
 
 			String type = args[2].toUpperCase();
 			player.sendMessage(MessageAddon.valueOf("LEVEL_EXP_" + type)
-			                               .toString()
-			                               .replace("%experience%", String.valueOf(argAmount)));
+										   .toString()
+										   .replace("%experience%", String.valueOf(argAmount)));
 		});
 
 		expAdd.addSubArgument(expOptional);
@@ -181,10 +181,10 @@ public class LevelCommand extends CommandHandler {
 			String requiredExperience = String.format("%.2f", requiredExp);
 
 			String message = MessageAddon.LEVEL_NEXT.toString()
-			                                        .replace("%level%", currentLevel)
-			                                        .replace("%max_level%", maxLevel)
-			                                        .replace("%experience%", exp)
-			                                        .replace("%required_experience%", requiredExperience);
+													.replace("%level%", currentLevel)
+													.replace("%max_level%", maxLevel)
+													.replace("%experience%", exp)
+													.replace("%required_experience%", requiredExperience);
 			player.sendMessage(message);
 		});
 

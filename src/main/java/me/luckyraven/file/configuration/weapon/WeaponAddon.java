@@ -54,8 +54,8 @@ public class WeaponAddon {
 		else material = XMaterial.FEATHER.parseMaterial();
 
 		// durability
-		ConfigurationSection durabilitySection = Objects.requireNonNull(
-				informationSection.getConfigurationSection("Durability"));
+		ConfigurationSection durabilitySection =
+				Objects.requireNonNull(informationSection.getConfigurationSection("Durability"));
 		short                durability              = (short) durabilitySection.getInt("Base");
 		ConfigurationSection durabilityChangeSection = durabilitySection.getConfigurationSection("Change");
 		int                  onShotDurability        = 0;
@@ -81,8 +81,8 @@ public class WeaponAddon {
 		SelectiveFire selectiveFire       = SelectiveFire.getType(Objects.requireNonNull(selectiveFireString));
 
 		// projectile
-		ConfigurationSection projectileSection = Objects.requireNonNull(
-				shootSection.getConfigurationSection("Projectile"));
+		ConfigurationSection projectileSection =
+				Objects.requireNonNull(shootSection.getConfigurationSection("Projectile"));
 		// speed
 		int projectileSpeed = projectileSection.getInt("Speed");
 		// type
@@ -90,8 +90,8 @@ public class WeaponAddon {
 		ProjectileType projectileType       = ProjectileType.getType(Objects.requireNonNull(projectileTypeString));
 
 		// damage
-		ConfigurationSection damageSection = Objects.requireNonNull(
-				projectileSection.getConfigurationSection("Damage"));
+		ConfigurationSection damageSection =
+				Objects.requireNonNull(projectileSection.getConfigurationSection("Damage"));
 		int                  projectileDamage            = damageSection.getInt("Base");
 		int                  projectileExplosionDamage   = damageSection.getInt("Explosion_Damage");
 		int                  projectileFireTicks         = damageSection.getInt("Fire_Ticks");
@@ -121,8 +121,8 @@ public class WeaponAddon {
 		boolean projectileParticle = projectileSection.getBoolean("Particle");
 
 		// weapon consumed
-		ConfigurationSection weaponConsumedSection = Objects.requireNonNull(
-				shootSection.getConfigurationSection("Weapon_Consumed"));
+		ConfigurationSection weaponConsumedSection =
+				Objects.requireNonNull(shootSection.getConfigurationSection("Weapon_Consumed"));
 		int weaponConsumedOnShot = weaponConsumedSection.getInt("Consume_On_Shot");
 		int weaponConsumedTime   = weaponConsumedSection.getInt("Time");
 
@@ -164,8 +164,8 @@ public class WeaponAddon {
 			pushVelocity = recoilSection.getDouble("Push");
 			pushPowerUp = recoilSection.getDouble("Power_Up");
 			recoilPattern = recoilSection.getStringList("Pattern").stream() // stream
-			                             .map(string -> string.split(";")) // convert to array
-			                             .toList(); // back to the list
+										 .map(string -> string.split(";")) // convert to array
+										 .toList(); // back to the list
 		}
 
 		// sound
@@ -227,8 +227,8 @@ public class WeaponAddon {
 
 		// ammo type
 		String ammoTypeString = reloadSection.getString("Ammo_Type");
-		Ammunition ammoType = Objects.requireNonNull(
-				gangland.getInitializer().getAmmunitionAddon().getAmmunition(ammoTypeString));
+		Ammunition ammoType =
+				Objects.requireNonNull(gangland.getInitializer().getAmmunitionAddon().getAmmunition(ammoTypeString));
 
 		// consume
 		int reloadConsume = reloadSection.getInt("Consume");
@@ -242,15 +242,15 @@ public class WeaponAddon {
 		SoundConfiguration   reloadCustomSoundEnd     = null;
 
 		if (reloadSoundSection != null) {
-			ConfigurationSection defaultSoundBefore = reloadSoundSection.getConfigurationSection(
-					"Default_Sound_Before");
+			ConfigurationSection defaultSoundBefore =
+					reloadSoundSection.getConfigurationSection("Default_Sound_Before");
 			if (defaultSoundBefore != null) {
 				String sound  = Objects.requireNonNull(defaultSoundBefore.getString("Sound"));
 				float  volume = (float) defaultSoundBefore.getDouble("Volume");
 				float  pitch  = (float) defaultSoundBefore.getDouble("Pitch");
 
-				reloadDefaultSoundBefore = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, sound, volume,
-				                                                  pitch);
+				reloadDefaultSoundBefore =
+						new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, sound, volume, pitch);
 			}
 
 			ConfigurationSection defaultSoundAfter = reloadSoundSection.getConfigurationSection("Default_Sound_After");
@@ -259,8 +259,8 @@ public class WeaponAddon {
 				float  volume = (float) defaultSoundAfter.getDouble("Volume");
 				float  pitch  = (float) defaultSoundAfter.getDouble("Pitch");
 
-				reloadDefaultSoundAfter = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, sound, volume,
-				                                                 pitch);
+				reloadDefaultSoundAfter =
+						new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, sound, volume, pitch);
 			}
 
 			ConfigurationSection customSoundSection = reloadSoundSection.getConfigurationSection("Custom_Sound");
@@ -271,8 +271,8 @@ public class WeaponAddon {
 					float  volume = (float) customSoundStart.getDouble("Volume");
 					float  pitch  = (float) customSoundStart.getDouble("Pitch");
 
-					reloadCustomSoundStart = new SoundConfiguration(SoundConfiguration.SoundType.CUSTOM, sound, volume,
-					                                                pitch);
+					reloadCustomSoundStart =
+							new SoundConfiguration(SoundConfiguration.SoundType.CUSTOM, sound, volume, pitch);
 				}
 
 				ConfigurationSection customSoundMid = customSoundSection.getConfigurationSection("Mid");
@@ -281,8 +281,8 @@ public class WeaponAddon {
 					float  volume = (float) customSoundMid.getDouble("Volume");
 					float  pitch  = (float) customSoundMid.getDouble("Pitch");
 
-					reloadCustomSoundMid = new SoundConfiguration(SoundConfiguration.SoundType.CUSTOM, sound, volume,
-					                                              pitch);
+					reloadCustomSoundMid =
+							new SoundConfiguration(SoundConfiguration.SoundType.CUSTOM, sound, volume, pitch);
 				}
 
 				ConfigurationSection customSoundEnd = customSoundSection.getConfigurationSection("End");
@@ -291,8 +291,8 @@ public class WeaponAddon {
 					float  volume = (float) customSoundEnd.getDouble("Volume");
 					float  pitch  = (float) customSoundEnd.getDouble("Pitch");
 
-					reloadCustomSoundEnd = new SoundConfiguration(SoundConfiguration.SoundType.CUSTOM, sound, volume,
-					                                              pitch);
+					reloadCustomSoundEnd =
+							new SoundConfiguration(SoundConfiguration.SoundType.CUSTOM, sound, volume, pitch);
 				}
 			}
 		}
@@ -321,11 +321,11 @@ public class WeaponAddon {
 		reloadType.setAmount(reloadTypeAmount);
 
 		// initialize the object
-		Weapon weapon = new Weapon(fileName, displayName, category, material, durability, lore, dropHologram,
-		                           selectiveFire, weaponConsumedOnShot, projectileSpeed, projectileType,
-		                           projectileDamage, projectileConsumed, projectilePerShot, projectileCooldown,
-		                           projectileDistance, projectileParticle, reloadCapacity, reloadCooldown, ammoType,
-		                           reloadConsume, reloadType);
+		Weapon weapon =
+				new Weapon(fileName, displayName, category, material, durability, lore, dropHologram, selectiveFire,
+						   weaponConsumedOnShot, projectileSpeed, projectileType, projectileDamage, projectileConsumed,
+						   projectilePerShot, projectileCooldown, projectileDistance, projectileParticle,
+						   reloadCapacity, reloadCooldown, ammoType, reloadConsume, reloadType);
 
 		weapon.setDurabilityOnShot(onShotDurability);
 		weapon.setDurabilityOnRepair(onRepairDurability);

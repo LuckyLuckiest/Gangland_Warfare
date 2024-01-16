@@ -16,10 +16,9 @@ public class SequenceTimer extends Timer {
 	private final List<IntervalTaskPair>  intervalTaskPairs;
 
 	private @Getter long currentInterval, totalInterval;
-	private @Getter
-	@Setter Mode             mode;
-	private IntervalTaskPair currentTask;
-	private boolean          added;
+	private @Getter @Setter Mode             mode;
+	private                 IntervalTaskPair currentTask;
+	private                 boolean          added;
 
 	public SequenceTimer(JavaPlugin plugin) {
 		this(plugin, 0L, 20L);
@@ -77,8 +76,7 @@ public class SequenceTimer extends Timer {
 						// move the task at the end (important for circular timer)
 						intervalTaskQueue.add(currentTask);
 				}
-			}
-			while (currentTask != null && currentTask.getInterval() == 0);
+			} while (currentTask != null && currentTask.getInterval() == 0);
 		}
 	}
 
@@ -106,7 +104,8 @@ public class SequenceTimer extends Timer {
 	}
 
 	public enum Mode {
-		NORMAL, CIRCULAR
+		NORMAL,
+		CIRCULAR
 	}
 
 	private class IntervalTaskPair {

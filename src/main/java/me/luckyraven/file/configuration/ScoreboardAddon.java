@@ -65,8 +65,7 @@ public class ScoreboardAddon {
 
 				this.lines.add(line);
 			}
-		}
-		while (section != null);
+		} while (section != null);
 	}
 
 }

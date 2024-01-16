@@ -25,11 +25,11 @@ public class BountyCommand extends CommandHandler {
 		super(gangland, "bounty", false);
 
 		List<CommandInformation> list = getCommands().entrySet()
-		                                             .stream()
-		                                             .filter(entry -> entry.getKey().startsWith("bounty"))
-		                                             .sorted(Map.Entry.comparingByKey())
-		                                             .map(Map.Entry::getValue)
-		                                             .toList();
+													 .stream()
+													 .filter(entry -> entry.getKey().startsWith("bounty"))
+													 .sorted(Map.Entry.comparingByKey())
+													 .map(Map.Entry::getValue)
+													 .toList();
 
 		getHelpInfo().addAll(list);
 	}
@@ -42,8 +42,8 @@ public class BountyCommand extends CommandHandler {
 			User<Player> user = userManager.getUser(player);
 
 			player.sendMessage(MessageAddon.BOUNTY_CURRENT.toString()
-			                                              .replace("%bounty%", SettingAddon.formatDouble(
-					                                              user.getBounty().getAmount())));
+														  .replace("%bounty%", SettingAddon.formatDouble(
+																  user.getBounty().getAmount())));
 		} else help(commandSender, 1);
 	}
 
@@ -95,26 +95,26 @@ public class BountyCommand extends CommandHandler {
 					// remove the user
 					userBounty.removeBounty(sender);
 					sender.sendMessage(MessageAddon.BOUNTY_PLAYER_LIFT.toString()
-					                                                  .replace("%amount%",
-					                                                           SettingAddon.formatDouble(amount))
-					                                                  .replace("%player%", playerStr));
+																	  .replace("%amount%",
+																			   SettingAddon.formatDouble(amount))
+																	  .replace("%player%", playerStr));
 
 					if (sender instanceof Player senderPlayer) {
 						User<Player> userSender = userManager.getUser(senderPlayer);
 
 						userSender.getEconomy().deposit(amount);
 						senderPlayer.sendMessage(MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
-						                                                          .replace("%amount%",
-						                                                                   SettingAddon.formatDouble(
-								                                                                   amount)));
+																				  .replace("%amount%",
+																						   SettingAddon.formatDouble(
+																								   amount)));
 					}
 
 					if (userBounty.getAmount() == 0D) player.sendMessage(MessageAddon.BOUNTY_CLEAR.toString());
 					else player.sendMessage(MessageAddon.BOUNTY_LIFTED.toString()
-					                                                  .replace("%amount%",
-					                                                           SettingAddon.formatDouble(amount))
-					                                                  .replace("%bounty%", SettingAddon.formatDouble(
-							                                                  userBounty.getAmount())));
+																	  .replace("%amount%",
+																			   SettingAddon.formatDouble(amount))
+																	  .replace("%bounty%", SettingAddon.formatDouble(
+																			  userBounty.getAmount())));
 
 				}
 			}
@@ -160,9 +160,9 @@ public class BountyCommand extends CommandHandler {
 				} else {
 					userSender.getEconomy().withdraw(value);
 					senderPlayer.sendMessage(MessageAddon.WITHDRAW_MONEY_PLAYER.toString()
-					                                                           .replace("%amount%",
-					                                                                    SettingAddon.formatDouble(
-							                                                                    value)));
+																			   .replace("%amount%",
+																						SettingAddon.formatDouble(
+																								value)));
 				}
 			}
 

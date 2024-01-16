@@ -147,14 +147,15 @@ public class User<T extends OfflinePlayer> {
 	 * Get the inventory from the user.
 	 *
 	 * @param name the name of the inventory
+	 *
 	 * @return the inventory if found or null
 	 */
 	@Nullable
 	public InventoryHandler getInventory(String name) {
 		return inventories.stream()
-		                  .filter(handler -> handler.getTitle().getKey().equals(name.toLowerCase()))
-		                  .findFirst()
-		                  .orElse(null);
+						  .filter(handler -> handler.getTitle().getKey().equals(name.toLowerCase()))
+						  .findFirst()
+						  .orElse(null);
 	}
 
 	/**
@@ -211,11 +212,10 @@ public class User<T extends OfflinePlayer> {
 	@Override
 	public String toString() {
 		return String.format("User{data=%s,kd=%.2f,balance=%.2f,level=%d,bounty=%.2f,gangId=%d,permissions=%s}", user,
-		                     getKillDeathRatio(), economy.getBalance(), level.getLevelValue(), bounty.getAmount(),
-		                     gangId, permissionAttachment != null ? permissionAttachment.getPermissions()
-		                                                                                .keySet()
-		                                                                                .stream()
-		                                                                                .toList() : "NA");
+							 getKillDeathRatio(), economy.getBalance(), level.getLevelValue(), bounty.getAmount(),
+							 gangId, permissionAttachment != null ?
+									 permissionAttachment.getPermissions().keySet().stream().toList() :
+									 "NA");
 	}
 
 }

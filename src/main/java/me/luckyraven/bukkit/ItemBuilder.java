@@ -122,9 +122,9 @@ public class ItemBuilder {
 			skullOwnerCompound.setUUID("Id", UUID.randomUUID());
 
 			skullOwnerCompound.getOrCreateCompound("Properties")
-			                  .getCompoundList("textures")
-			                  .addCompound()
-			                  .setString("Value", base64);
+							  .getCompoundList("textures")
+							  .addCompound()
+							  .setString("Value", base64);
 		});
 
 		return this;

@@ -69,8 +69,9 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 				List<String> lore = item.getLore().stream().map(s -> gangland.usePlaceholder(player, s)).toList();
 				newItem.setLore(lore);
 
-				if (!item.getEnchantments().isEmpty())
-					newItem.addEnchantment(Enchantment.DURABILITY, 1).addItemFlags(ItemFlag.HIDE_ENCHANTS);
+				if (!item.getEnchantments().isEmpty()) newItem.addEnchantment(Enchantment.DURABILITY, 1)
+															  .addItemFlags(ItemFlag.HIDE_ENCHANTS,
+																			ItemFlag.HIDE_ATTRIBUTES);
 
 				handler.setItem(usedSlot, newItem, slot.isDraggable(), slot.getClickableSlot());
 			}

@@ -78,8 +78,8 @@ public class GangManager {
 
 					if (gang != null) {
 						Set<Gang> aliasSet = aliases.stream()
-						                            .map(aliasId -> gangs.get(Integer.parseInt(aliasId)))
-						                            .collect(Collectors.toSet());
+													.map(aliasId -> gangs.get(Integer.parseInt(aliasId)))
+													.collect(Collectors.toSet());
 						gang.getAlly().addAll(aliasSet);
 					}
 				}

@@ -32,11 +32,11 @@ public class RankCommand extends CommandHandler {
 		super(gangland, "rank", false);
 
 		List<CommandInformation> list = getCommands().entrySet()
-		                                             .stream()
-		                                             .filter(entry -> entry.getKey().startsWith("rank"))
-		                                             .sorted(Map.Entry.comparingByKey())
-		                                             .map(Map.Entry::getValue)
-		                                             .toList();
+													 .stream()
+													 .filter(entry -> entry.getKey().startsWith("rank"))
+													 .sorted(Map.Entry.comparingByKey())
+													 .map(Map.Entry::getValue)
+													 .toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -69,8 +69,8 @@ public class RankCommand extends CommandHandler {
 
 						Database config = database.table("data");
 						config.insert(config.getColumns().toArray(String[]::new),
-						              new Object[]{rank.getUsedId(), rank.getName(), permissions, ""},
-						              new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR});
+									  new Object[]{rank.getUsedId(), rank.getName(), permissions, ""},
+									  new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR});
 					});
 
 					break;
@@ -105,9 +105,9 @@ public class RankCommand extends CommandHandler {
 
 			CountdownTimer timer = new CountdownTimer(getGangland(), 60, time -> {
 				sender.sendMessage(MessageAddon.RANK_CREATE_CONFIRM.toString()
-				                                                   .replace("%timer%",
-				                                                            TimeUtil.formatTime(time.getPeriod(),
-				                                                                                true)));
+																   .replace("%timer%",
+																			TimeUtil.formatTime(time.getPeriod(),
+																								true)));
 			}, null, time -> {
 				confirmCreate.setConfirmed(false);
 				createRankName.remove(sender);
@@ -177,9 +177,9 @@ public class RankCommand extends CommandHandler {
 
 			CountdownTimer timer = new CountdownTimer(getGangland(), 60, time -> {
 				sender.sendMessage(MessageAddon.RANK_REMOVE_CONFIRM.toString()
-				                                                   .replace("%timer%",
-				                                                            TimeUtil.formatTime(time.getPeriod(),
-				                                                                                true)));
+																   .replace("%timer%",
+																			TimeUtil.formatTime(time.getPeriod(),
+																								true)));
 			}, null, time -> {
 				confirmDelete.setConfirmed(false);
 				deleteRankName.remove(sender);
@@ -229,8 +229,8 @@ public class RankCommand extends CommandHandler {
 					if (rank.contains("")) rank.removePermission("");
 					rank.addPermission(permString);
 					message = MessageAddon.RANK_PERMISSION_ADD.toString()
-					                                          .replace("%rank%", rank.getName())
-					                                          .replace("%permission%", permString);
+															  .replace("%rank%", rank.getName())
+															  .replace("%permission%", permString);
 				}
 				case "remove" -> {
 					if (!rank.contains(permString)) {
@@ -239,8 +239,8 @@ public class RankCommand extends CommandHandler {
 					}
 					rank.removePermission(permString);
 					message = MessageAddon.RANK_PERMISSION_REMOVE.toString()
-					                                             .replace("%rank%", rank.getName())
-					                                             .replace("%permission%", permString);
+																 .replace("%rank%", rank.getName())
+																 .replace("%permission%", permString);
 				}
 			}
 
@@ -293,9 +293,9 @@ public class RankCommand extends CommandHandler {
 			}
 
 			sender.sendMessage(MessageAddon.RANK_INFO_PRIMARY.toString()
-			                                                 .replace("%rank%", rank.getName())
-			                                                 .replace("%id%", String.valueOf(rank.getUsedId()))
-			                                                 .replace("%parent%", parentBuilder.toString()));
+															 .replace("%rank%", rank.getName())
+															 .replace("%id%", String.valueOf(rank.getUsedId()))
+															 .replace("%parent%", parentBuilder.toString()));
 			sender.sendMessage(
 					MessageAddon.RANK_INFO_SECONDARY.toString().replace("%permissions%", permBuilder.toString()));
 		});
@@ -330,8 +330,8 @@ public class RankCommand extends CommandHandler {
 					}
 					rank.getNode().add(childRank.getNode());
 					sender.sendMessage(MessageAddon.RANK_PARENT_ADD.toString()
-					                                               .replace("%parent%", childRank.getName())
-					                                               .replace("%rank%", rank.getName()));
+																   .replace("%parent%", childRank.getName())
+																   .replace("%rank%", rank.getName()));
 				}
 
 				case "remove" -> {
@@ -341,8 +341,8 @@ public class RankCommand extends CommandHandler {
 					}
 					rank.getNode().remove(childRank.getNode());
 					sender.sendMessage(MessageAddon.RANK_PARENT_REMOVE.toString()
-					                                                  .replace("%parent%", childRank.getName())
-					                                                  .replace("%rank%", rank.getName()));
+																	  .replace("%parent%", childRank.getName())
+																	  .replace("%rank%", rank.getName()));
 				}
 			}
 		});

@@ -2,7 +2,10 @@ package me.luckyraven.feature.weapon.projectile;
 
 public enum ProjectileType {
 
-	BULLET, SPREAD, FLARE, ROCKET;
+	BULLET,
+	SPREAD,
+	FLARE,
+	ROCKET;
 
 	public static ProjectileType getType(String type) {
 		return switch (type.toLowerCase()) {

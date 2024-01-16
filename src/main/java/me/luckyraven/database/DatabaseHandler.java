@@ -117,8 +117,9 @@ public abstract class DatabaseHandler {
 	}
 
 	public String getSchemaName() {
-		return getSchema().lastIndexOf(File.separator) != -1 ? getSchema().substring(
-				getSchema().lastIndexOf(File.separator) + 1) : getSchema();
+		return getSchema().lastIndexOf(File.separator) != -1 ?
+			   getSchema().substring(getSchema().lastIndexOf(File.separator) + 1) :
+			   getSchema();
 	}
 
 	private void useSQLite(String schema) {

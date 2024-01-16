@@ -88,12 +88,11 @@ class GangWithdrawCommand extends SubArgument {
 				// the user can get to negative value
 				member.decreaseContribution(contribution);
 				for (User<Player> gangUser : gangOnlineMembers) {
-					gangUser.getUser().sendMessage(MessageAddon.GANG_MONEY_WITHDRAW.toString()
-					                                                               .replace("%player%",
-					                                                                        player.getName())
-					                                                               .replace("%amount%",
-					                                                                        SettingAddon.formatDouble(
-							                                                                        argAmount)));
+					gangUser.getUser()
+							.sendMessage(MessageAddon.GANG_MONEY_WITHDRAW.toString()
+																		 .replace("%player%", player.getName())
+																		 .replace("%amount%", SettingAddon.formatDouble(
+																				 argAmount)));
 				}
 				player.sendMessage(ChatUtil.color("&c-" + contribution));
 			} catch (NumberFormatException exception) {

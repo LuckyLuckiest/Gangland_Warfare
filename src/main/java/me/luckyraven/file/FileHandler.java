@@ -29,12 +29,11 @@ public class FileHandler {
 	private @Getter FileConfiguration fileConfiguration;
 	private @Getter boolean           loaded;
 
-	private @Getter
-	@Setter String configVersion;
+	private @Getter @Setter String configVersion;
 
 	public FileHandler(JavaPlugin plugin, File file) throws IOException {
 		this(plugin, file.getName(), file.getParentFile().getPath(),
-		     file.getName().substring(file.getName().lastIndexOf(".")));
+			 file.getName().substring(file.getName().lastIndexOf(".")));
 		this.file = file;
 
 		registerYamlFile();
@@ -84,7 +83,7 @@ public class FileHandler {
 		if (!fileType.equals(".yml")) return;
 		fileConfiguration = new YamlConfiguration();
 		try (FileInputStream inputStream = new FileInputStream(file);
-		     InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+			 InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
 			fileConfiguration.load(reader);
 			loaded = true;
 
@@ -114,8 +113,8 @@ public class FileHandler {
 			fileConfiguration.save(file);
 		} catch (IOException exception) {
 			plugin.getLogger()
-			      .warning(String.format(UnhandledError.FILE_SAVE_ERROR + " %s to %s: %s", name, file,
-			                             exception.getMessage()));
+				  .warning(String.format(UnhandledError.FILE_SAVE_ERROR + " %s to %s: %s", name, file,
+										 exception.getMessage()));
 		}
 	}
 
@@ -132,8 +131,9 @@ public class FileHandler {
 		try {
 			Files.move(file.toPath(), oldFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException exception) {
-			String message = String.format(UnhandledError.FILE_EDIT_ERROR + " %s to %s: %s", oldFile.getName(),
-			                               file.getName(), exception.getMessage());
+			String message =
+					String.format(UnhandledError.FILE_EDIT_ERROR + " %s to %s: %s", oldFile.getName(), file.getName(),
+								  exception.getMessage());
 			plugin.getLogger().warning(message);
 			return;
 		}
@@ -143,7 +143,7 @@ public class FileHandler {
 		plugin.getLogger().info(String.format("%s%s is an old build or corrupted, creating a new one", name, fileType));
 
 		try (FileInputStream inputStream = new FileInputStream(file);
-		     InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+			 InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
 			fileConfiguration.load(reader);
 			loaded = true;
 		} catch (IOException | InvalidConfigurationException ignored) {

@@ -13,6 +13,7 @@ public class WeaponInfoCommand extends SubArgument {
 
 	public WeaponInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super("info", tree, parent);
+
 		this.gangland = gangland;
 	}
 

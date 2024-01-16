@@ -60,7 +60,7 @@ class WaypointCreateCommand extends SubArgument {
 			Location location = player.getLocation();
 
 			waypoint.setCoordinates(player.getWorld().getName(), location.getX(), location.getY(), location.getZ(),
-			                        location.getYaw(), location.getPitch());
+									location.getYaw(), location.getPitch());
 
 			// add the waypoint to waypoint manager
 			waypointManager.add(waypoint);
@@ -83,7 +83,7 @@ class WaypointCreateCommand extends SubArgument {
 			// using '/glw waypoint select <id>' command to the created waypoint, so it is selected
 			player.performCommand(
 					Argument.getArgumentSequence(Objects.requireNonNull(tree.find(new Argument("select", tree)))) +
-							" " + waypoint.getUsedId());
+					" " + waypoint.getUsedId());
 		});
 
 		this.addSubArgument(confirmWaypoint);
@@ -104,9 +104,9 @@ class WaypointCreateCommand extends SubArgument {
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
 				sender.sendMessage(MessageAddon.WAYPOINT_CREATE_CONFIRM.toString()
-				                                                       .replace("%timer%",
-				                                                                TimeUtil.formatTime(time.getPeriod(),
-				                                                                                    true)));
+																	   .replace("%timer%",
+																				TimeUtil.formatTime(time.getPeriod(),
+																									true)));
 			}, null, time -> {
 				confirmWaypoint.setConfirmed(false);
 				createWaypointName.remove(player);

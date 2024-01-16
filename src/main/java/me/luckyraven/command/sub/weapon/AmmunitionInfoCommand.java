@@ -13,13 +13,14 @@ public class AmmunitionInfoCommand extends SubArgument {
 
 	public AmmunitionInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super("info", tree, parent);
+
 		this.gangland = gangland;
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			
+
 		};
 	}
 

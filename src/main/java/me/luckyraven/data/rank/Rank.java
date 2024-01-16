@@ -15,8 +15,7 @@ public class Rank {
 	private final @Getter Tree.Node<Rank> node;
 	private final         List<String>    permissions;
 
-	private @Getter
-	@Setter int usedId;
+	private @Getter @Setter int usedId;
 
 	public Rank(String name) {
 		this(name, new ArrayList<>());

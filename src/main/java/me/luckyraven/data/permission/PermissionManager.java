@@ -49,8 +49,8 @@ public class PermissionManager {
 
 	public Set<String> getPermissions() {
 		return new HashSet<>(permissions).stream()
-		                                 .sorted(String::compareTo)
-		                                 .collect(Collectors.toCollection(LinkedHashSet::new));
+										 .sorted(String::compareTo)
+										 .collect(Collectors.toCollection(LinkedHashSet::new));
 	}
 
 }

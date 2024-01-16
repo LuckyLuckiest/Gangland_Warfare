@@ -119,8 +119,8 @@ class GangDemoteCommand extends SubArgument {
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
 			if (offlinePlayer.getPlayer() != null && offlinePlayer.isOnline()) {
 				Player onlinePlayer = offlinePlayer.getPlayer();
-				String message = MessageAddon.GANG_DEMOTE_TARGET_SUCCESS.toString().replace("%rank%",
-				                                                                            previousRank.getName());
+				String message =
+						MessageAddon.GANG_DEMOTE_TARGET_SUCCESS.toString().replace("%rank%", previousRank.getName());
 
 				// remove the previous rank attachments
 				User<Player> onlineUser = userManager.getUser(onlinePlayer);
@@ -130,8 +130,8 @@ class GangDemoteCommand extends SubArgument {
 				Objects.requireNonNull(onlinePlayer).sendMessage(message);
 			}
 			player.sendMessage(MessageAddon.GANG_DEMOTE_PLAYER_SUCCESS.toString()
-			                                                          .replace("%player%", targetStr)
-			                                                          .replace("%rank%", previousRank.getName()));
+																	  .replace("%player%", targetStr)
+																	  .replace("%rank%", previousRank.getName()));
 			targetMember.setRank(previousRank);
 		});
 	}

@@ -48,8 +48,8 @@ class GangColorCommand extends SubArgument {
 				return;
 			}
 
-			InventoryHandler colorGUI = new InventoryHandler(gangland, "&5&lChoose a color", InventoryHandler.MAX_SLOTS,
-			                                                 user, false);
+			InventoryHandler colorGUI =
+					new InventoryHandler(gangland, "&5&lChoose a color", InventoryHandler.MAX_SLOTS, user, false);
 
 			int row = 2, column = 2;
 			for (Color color : Color.values()) {
@@ -64,34 +64,35 @@ class GangColorCommand extends SubArgument {
 				if (material == null) return;
 
 				String name = colorCode + ChatUtil.capitalize(colorName.toLowerCase().replace('_', ' ')) + " " +
-						ChatUtil.capitalize(materialName.toLowerCase().replace('_', ' '));
+							  ChatUtil.capitalize(materialName.toLowerCase().replace('_', ' '));
 
 				ItemBuilder itemBuilder = new ItemBuilder(material).setDisplayName(name);
 
 				colorGUI.setItem((row - 1) * 9 + (column - 1), itemBuilder, false, (player1, inventory, item) -> {
 					User<Player> user1 = userManager.getUser(player1);
-					InventoryHandler confirmGUI = new InventoryHandler(gangland, "&4&lAre you sure?",
-					                                                   InventoryHandler.MAX_SLOTS, user1, false);
+					InventoryHandler confirmGUI =
+							new InventoryHandler(gangland, "&4&lAre you sure?", InventoryHandler.MAX_SLOTS, user1,
+												 false);
 					confirmGUI.setItem(22, item.build(), false);
 
 					Material mat = ColorUtil.getMaterialByColor(colorName, MaterialType.STAINED_GLASS_PANE.name());
 					InventoryUtil.aroundSlot(confirmGUI, 22, mat);
 
 					confirmGUI.setItem(49, XMaterial.GREEN_CONCRETE.parseMaterial(), "&aConfirm", null, false, false,
-					                   (player2, inv, it) -> {
-						                   Gang gang = gangManager.getGang(userManager.getUser(player2).getGangId());
-						                   // save the data in gang
-						                   gang.setColor(colorName);
+									   (player2, inv, it) -> {
+										   Gang gang = gangManager.getGang(userManager.getUser(player2).getGangId());
+										   // save the data in gang
+										   gang.setColor(colorName);
 
-						                   // inform player
-						                   String colorSelected = ChatUtil.color(colorCode + ChatUtil.capitalize(
-								                   colorName.toLowerCase().replace('_', ' ')));
-						                   player2.sendMessage(MessageAddon.GANG_COLOR_SET.toString()
-						                                                                  .replace("%color%",
-						                                                                           colorSelected));
+										   // inform player
+										   String colorSelected = ChatUtil.color(colorCode + ChatUtil.capitalize(
+												   colorName.toLowerCase().replace('_', ' ')));
+										   player2.sendMessage(MessageAddon.GANG_COLOR_SET.toString()
+																						  .replace("%color%",
+																								   colorSelected));
 
-						                   inv.close(player2);
-					                   });
+										   inv.close(player2);
+									   });
 
 					InventoryUtil.fillInventory(confirmGUI);
 
@@ -105,7 +106,7 @@ class GangColorCommand extends SubArgument {
 			}
 
 			colorGUI.setItem((6 - 1) * 9, XMaterial.RED_CONCRETE.parseMaterial(), "&4Exit", null, false, false,
-			                 (player1, inventory, item) -> inventory.close(player1));
+							 (player1, inventory, item) -> inventory.close(player1));
 
 			InventoryUtil.createBoarder(colorGUI);
 

@@ -4,7 +4,9 @@ import lombok.Setter;
 
 public enum ReloadType {
 
-	INSTANT, ONE, NUM;
+	INSTANT,
+	ONE,
+	NUM;
 
 	private @Setter int amount;
 

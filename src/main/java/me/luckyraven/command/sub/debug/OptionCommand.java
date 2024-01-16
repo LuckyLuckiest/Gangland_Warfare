@@ -49,7 +49,7 @@ public class OptionCommand extends CommandHandler {
 	}
 
 	private Argument gangArgument(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                              RankManager rankManager) {
+								  RankManager rankManager) {
 		Argument gang = new Argument("gang", getArgumentTree());
 
 		Argument rank = new Argument("rank", getArgumentTree());
@@ -104,12 +104,12 @@ public class OptionCommand extends CommandHandler {
 
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
 			if (offlinePlayer.isOnline()) Objects.requireNonNull(offlinePlayer.getPlayer())
-			                                     .sendMessage(MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString()
-			                                                                                          .replace("%rank%",
-			                                                                                                   nextRank.getName()));
+												 .sendMessage(MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString()
+																									  .replace("%rank%",
+																											   nextRank.getName()));
 			player.sendMessage(MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString()
-			                                                           .replace("%player%", targetStr)
-			                                                           .replace("%rank%", nextRank.getName()));
+																	   .replace("%player%", targetStr)
+																	   .replace("%rank%", nextRank.getName()));
 		});
 
 		target.addSubArgument(rankType);

@@ -41,7 +41,7 @@ public class WantedAddCommand extends SubArgument {
 			wanted.setLevel(Math.min(wanted.getMaxLevel(), wanted.getLevel() + amount));
 
 			sender.sendMessage(String.format("Added %d wanted level%s.", amount, ChatUtil.plural(amount)),
-			                   wanted.getLevelStr());
+							   wanted.getLevelStr());
 		};
 	}
 
@@ -68,7 +68,7 @@ public class WantedAddCommand extends SubArgument {
 			wanted.setLevel(value);
 
 			sender.sendMessage(String.format("Added %d wanted level%s.", realAmount, ChatUtil.plural(realAmount)),
-			                   wanted.getLevelStr());
+							   wanted.getLevelStr());
 		});
 
 		this.addSubArgument(optional);

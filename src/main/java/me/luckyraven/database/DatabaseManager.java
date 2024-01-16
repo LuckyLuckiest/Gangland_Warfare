@@ -58,8 +58,8 @@ public class DatabaseManager {
 			}
 
 			plugin.getLogger()
-			      .info(String.format("Failed to create a backup for '%s' in '%s' database.", type,
-			                          handler.getSchema()));
+				  .info(String.format("Failed to create a backup for '%s' in '%s' database.", type,
+									  handler.getSchema()));
 		}
 
 		return handler;
@@ -117,11 +117,11 @@ public class DatabaseManager {
 				// if they don't exist, we create them otherwise update the data
 				for (Object[] objects : data.get(table)) {
 					Object[] row = config.select(columns[0] + " = ?", new Object[]{objects[0]}, new int[]{dataTypes[0]},
-					                             new String[]{"*"});
+												 new String[]{"*"});
 
 					if (row.length == 0) config.insert(columns, objects, dataTypes);
 					else config.update(columns[0] + " = ?", new Object[]{objects[0]}, new int[]{dataTypes[0]}, columns,
-					                   objects, dataTypes);
+									   objects, dataTypes);
 				}
 			}
 		});

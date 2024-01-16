@@ -164,8 +164,7 @@ public class Tree<E> implements Iterable<E> {
 		private final List<Node<T>> children;
 		private final T             data;
 
-		@Setter
-		private Node<T> parent;
+		@Setter private Node<T> parent;
 
 		public Node(T data) {
 			this.data = data;

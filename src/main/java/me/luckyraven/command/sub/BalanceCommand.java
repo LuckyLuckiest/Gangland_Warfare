@@ -33,11 +33,11 @@ public final class BalanceCommand extends CommandHandler {
 		this.userManager = gangland.getInitializer().getUserManager();
 
 		List<CommandInformation> list = getCommands().entrySet()
-		                                             .stream()
-		                                             .filter(entry -> entry.getKey().startsWith("balance"))
-		                                             .sorted(Map.Entry.comparingByKey())
-		                                             .map(Map.Entry::getValue)
-		                                             .toList();
+													 .stream()
+													 .filter(entry -> entry.getKey().startsWith("balance"))
+													 .sorted(Map.Entry.comparingByKey())
+													 .map(Map.Entry::getValue)
+													 .toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -63,20 +63,20 @@ public final class BalanceCommand extends CommandHandler {
 
 			if (user != null) {
 				sender.sendMessage(MessageAddon.BALANCE_TARGET.toString()
-				                                              .replace("%target%", target)
-				                                              .replace("%balance%", SettingAddon.formatDouble(
-						                                              user.getEconomy().getBalance())));
+															  .replace("%target%", target)
+															  .replace("%balance%", SettingAddon.formatDouble(
+																	  user.getEconomy().getBalance())));
 				return;
 			}
 
 			UserDatabase userHandler = getGangland().getInitializer()
-			                                        .getDatabaseManager()
-			                                        .getDatabases()
-			                                        .stream()
-			                                        .filter(handler -> handler instanceof UserDatabase)
-			                                        .map(handler -> (UserDatabase) handler)
-			                                        .findFirst()
-			                                        .orElse(null);
+													.getDatabaseManager()
+													.getDatabases()
+													.stream()
+													.filter(handler -> handler instanceof UserDatabase)
+													.map(handler -> (UserDatabase) handler)
+													.findFirst()
+													.orElse(null);
 
 			if (userHandler == null) {
 				Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find UserDatabase class.");
@@ -91,9 +91,9 @@ public final class BalanceCommand extends CommandHandler {
 
 				// get only the uuids
 				Map<UUID, Double> uuids = usersData.stream()
-				                                   .collect(Collectors.toMap(
-						                                   objects -> UUID.fromString(String.valueOf(objects[0])),
-						                                   objects -> (double) objects[6]));
+												   .collect(Collectors.toMap(
+														   objects -> UUID.fromString(String.valueOf(objects[0])),
+														   objects -> (double) objects[6]));
 
 				// iterate over all uuids and check if the name is similar to target
 				boolean found = false;
@@ -104,9 +104,9 @@ public final class BalanceCommand extends CommandHandler {
 					if (offlinePlayer.getName().equalsIgnoreCase(target)) {
 						found = true;
 						sender.sendMessage(MessageAddon.BALANCE_TARGET.toString()
-						                                              .replace("%target%", target)
-						                                              .replace("%balance%", SettingAddon.formatDouble(
-								                                              uuids.get(uuid))));
+																	  .replace("%target%", target)
+																	  .replace("%balance%", SettingAddon.formatDouble(
+																			  uuids.get(uuid))));
 
 						break;
 					}

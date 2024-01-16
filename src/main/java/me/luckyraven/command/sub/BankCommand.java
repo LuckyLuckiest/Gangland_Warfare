@@ -30,11 +30,11 @@ public class BankCommand extends CommandHandler {
 		super(gangland, "bank", true);
 
 		List<CommandInformation> list = getCommands().entrySet()
-		                                             .stream()
-		                                             .filter(entry -> entry.getKey().startsWith("bank"))
-		                                             .sorted(Map.Entry.comparingByKey())
-		                                             .map(Map.Entry::getValue)
-		                                             .toList();
+													 .stream()
+													 .filter(entry -> entry.getKey().startsWith("bank"))
+													 .sorted(Map.Entry.comparingByKey())
+													 .map(Map.Entry::getValue)
+													 .toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -47,11 +47,11 @@ public class BankCommand extends CommandHandler {
 			for (Account<?, ?> account : user.getLinkedAccounts())
 				if (account instanceof Bank bank) {
 					player.sendMessage(ChatUtil.color(String.format("&6%s&7 bank information", player.getName()),
-					                                  String.format("&7%s&8: &a%s", "Name", bank.getName()),
-					                                  String.format("&7%s&8: &a%s%s", "Balance",
-					                                                SettingAddon.getMoneySymbol(),
-					                                                SettingAddon.formatDouble(
-							                                                bank.getEconomy().getBalance()))));
+													  String.format("&7%s&8: &a%s", "Name", bank.getName()),
+													  String.format("&7%s&8: &a%s%s", "Balance",
+																	SettingAddon.getMoneySymbol(),
+																	SettingAddon.formatDouble(
+																			bank.getEconomy().getBalance()))));
 					break;
 				}
 		} else help(commandSender, 1);
@@ -130,16 +130,16 @@ public class BankCommand extends CommandHandler {
 
 			// Need to notify the player and give access to confirm
 			player.sendMessage(MessageAddon.BANK_CREATE_FEE.toString()
-			                                               .replace("%amount%", SettingAddon.formatDouble(
-					                                               SettingAddon.getBankCreateFee())));
+														   .replace("%amount%", SettingAddon.formatDouble(
+																   SettingAddon.getBankCreateFee())));
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "create"}));
 			confirmCreate.setConfirmed(true);
 
 			CountdownTimer timer = new CountdownTimer(getGangland(), 60, time -> {
 				sender.sendMessage(MessageAddon.BANK_CREATE_CONFIRM.toString()
-				                                                   .replace("%timer%",
-				                                                            TimeUtil.formatTime(time.getPeriod(),
-				                                                                                true)));
+																   .replace("%timer%",
+																			TimeUtil.formatTime(time.getPeriod(),
+																								true)));
 			}, null, time -> {
 				confirmCreate.setConfirmed(false);
 				createBankName.remove(user);
@@ -209,9 +209,9 @@ public class BankCommand extends CommandHandler {
 
 			CountdownTimer timer = new CountdownTimer(getGangland(), 60, time -> {
 				sender.sendMessage(MessageAddon.BANK_REMOVE_CONFIRM.toString()
-				                                                   .replace("%timer%",
-				                                                            TimeUtil.formatTime(time.getPeriod(),
-				                                                                                true)));
+																   .replace("%timer%",
+																			TimeUtil.formatTime(time.getPeriod(),
+																								true)));
 			}, null, time -> {
 				confirmDelete.setConfirmed(false);
 				deleteBankName.remove(user);
@@ -286,20 +286,20 @@ public class BankCommand extends CommandHandler {
 						}
 
 						processMoney(user, bank, user.getEconomy().getBalance(), argAmount, inBank,
-						             user.getEconomy().getBalance() - argAmount);
+									 user.getEconomy().getBalance() - argAmount);
 					}
 					case "withdraw", "take" -> {
 						strArg = "withdraw";
 						processMoney(user, bank, bank.getEconomy().getBalance(), argAmount,
-						             bank.getEconomy().getBalance() - argAmount,
-						             user.getEconomy().getBalance() + argAmount);
+									 bank.getEconomy().getBalance() - argAmount,
+									 user.getEconomy().getBalance() + argAmount);
 					}
 				}
 
 				user.getUser()
-				    .sendMessage(MessageAddon.valueOf("BANK_MONEY_" + strArg.toUpperCase() + "_PLAYER")
-				                             .toString()
-				                             .replace("%amount%", SettingAddon.formatDouble(argAmount)));
+					.sendMessage(MessageAddon.valueOf("BANK_MONEY_" + strArg.toUpperCase() + "_PLAYER")
+											 .toString()
+											 .replace("%amount%", SettingAddon.formatDouble(argAmount)));
 
 			} catch (NumberFormatException exception) {
 				player.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
@@ -323,8 +323,8 @@ public class BankCommand extends CommandHandler {
 			for (Account<?, ?> account : user.getLinkedAccounts())
 				if (account instanceof Bank bank) {
 					player.sendMessage(MessageAddon.BANK_BALANCE_PLAYER.toString()
-					                                                   .replace("%balance%", SettingAddon.formatDouble(
-							                                                   bank.getEconomy().getBalance())));
+																	   .replace("%balance%", SettingAddon.formatDouble(
+																			   bank.getEconomy().getBalance())));
 				}
 		}, getPermission() + ".balance");
 
@@ -346,7 +346,7 @@ public class BankCommand extends CommandHandler {
 	}
 
 	private void processMoney(User<Player> user, Bank bank, double check, double amount, double inBank,
-	                          double inAccount) {
+							  double inAccount) {
 		if (check == 0D) user.getUser().sendMessage(MessageAddon.CANNOT_TAKE_LESS_THAN_ZERO.toString());
 		else if (amount > check) user.getUser().sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 		else {

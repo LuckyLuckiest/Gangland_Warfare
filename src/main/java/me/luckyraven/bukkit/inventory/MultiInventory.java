@@ -29,7 +29,7 @@ public class MultiInventory extends InventoryHandler {
 
 	public MultiInventory(Gangland gangland, String title, int size, User<Player> user) {
 		super(gangland, title, size, user,
-		      new NamespacedKey(gangland, titleRefactor(String.format("%s_%d", title, ++ID))), false);
+			  new NamespacedKey(gangland, titleRefactor(String.format("%s_%d", title, ++ID))), false);
 		this.gangland = gangland;
 		this.inventories = new LinkedList<>();
 		this.currentPage = 0;
@@ -38,8 +38,8 @@ public class MultiInventory extends InventoryHandler {
 	}
 
 	public static MultiInventory dynamicMultiInventory(Gangland gangland, User<Player> user, List<ItemStack> items,
-	                                                   String name, boolean staticItemsAllowed, boolean fixedSize,
-	                                                   @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
+													   String name, boolean staticItemsAllowed, boolean fixedSize,
+													   @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
 		if (staticItemsAllowed) {
 			Preconditions.checkNotNull(staticItems, "No static items set");
 			Preconditions.checkArgument(staticItems.size() <= 6, "Can't add more items than max rows");
@@ -72,7 +72,7 @@ public class MultiInventory extends InventoryHandler {
 		// if there is static items column, then create a line at column 2
 		if (staticItemsAllowed)
 			InventoryUtil.verticalLine(multi, 2, InventoryUtil.getFillItem(), SettingAddon.getInventoryFillName(),
-			                           true);
+									   true);
 
 		// the other pages
 		for (int i = 1; i < pages; i++) {
@@ -89,7 +89,7 @@ public class MultiInventory extends InventoryHandler {
 			// if there is static items column, then create a line at column 2
 			if (staticItemsAllowed)
 				InventoryUtil.verticalLine(inv, 2, InventoryUtil.getFillItem(), SettingAddon.getInventoryFillName(),
-				                           true);
+										   true);
 
 			multi.addPage(inv);
 		}
@@ -98,8 +98,8 @@ public class MultiInventory extends InventoryHandler {
 	}
 
 	private void addItems(InventoryHandler inv, List<ItemStack> items, int startIndex, int endIndex,
-	                      boolean staticItemsAllowed,
-	                      @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
+						  boolean staticItemsAllowed,
+						  @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
 		if (staticItemsAllowed) {
 			Preconditions.checkNotNull(staticItems, "No static items set");
 			Preconditions.checkArgument(staticItems.size() <= 6, "Can't add more items than max rows");
@@ -122,7 +122,7 @@ public class MultiInventory extends InventoryHandler {
 	}
 
 	private void verticalLine(InventoryHandler inventoryHandler, int column,
-	                          Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
+							  Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
 		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
 
 		// from 1-6
@@ -143,14 +143,14 @@ public class MultiInventory extends InventoryHandler {
 
 			if (i < staticItems.size()) inventoryHandler.setItem(slot, items.get(i), false, consumers.get(i));
 			else inventoryHandler.getInventory()
-			                     .setItem(slot, new ItemBuilder(InventoryUtil.getLineItem()).setDisplayName(
-					                     SettingAddon.getInventoryLineName()).build());
+								 .setItem(slot, new ItemBuilder(InventoryUtil.getLineItem()).setDisplayName(
+										 SettingAddon.getInventoryLineName()).build());
 
 		}
 	}
 
 	public void updateItems(List<ItemStack> items, User<Player> user, boolean staticItemsAllowed,
-	                        @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
+							@Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
 		if (inventories.isEmpty()) {
 			return; // No inventories to update
 		}
@@ -175,7 +175,7 @@ public class MultiInventory extends InventoryHandler {
 		InventoryUtil.createBoarder(firstPage);
 		if (staticItemsAllowed)
 			InventoryUtil.verticalLine(firstPage, 2, InventoryUtil.getFillItem(), SettingAddon.getInventoryFillName(),
-			                           true);
+									   true);
 
 		for (int i = 1; i < pages; i++) {
 			int              size = i == pages - 1 ? finalPage : initialPage;
@@ -187,7 +187,7 @@ public class MultiInventory extends InventoryHandler {
 						String.format("%s_%d", firstPage.getDisplayTitle(), ++ID)));
 				inv = new InventoryHandler(gangland, firstPage.getDisplayTitle(), size, user, namespacedKey, false);
 				addItems(inv, items, i * perPage, Math.min((i + 1) * perPage, items.size()), staticItemsAllowed,
-				         staticItems);
+						 staticItems);
 				addPage(inv);
 			} else {
 				// If there's already an inventory for this page, update its items and title
@@ -198,7 +198,7 @@ public class MultiInventory extends InventoryHandler {
 			InventoryUtil.createBoarder(inv);
 			if (staticItemsAllowed)
 				InventoryUtil.verticalLine(inv, 2, InventoryUtil.getFillItem(), SettingAddon.getInventoryFillName(),
-				                           true);
+										   true);
 
 			inventoryIndex++;
 		}
@@ -258,44 +258,47 @@ public class MultiInventory extends InventoryHandler {
 
 	private void addNextPageItem(InventoryHandler linkedInventory) {
 		ItemBuilder item  = createItemHead("&a->", String.format("&7(%d/%d)", currentPage + 1, inventories.size()));
-		String      arrow = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTYzMzlmZjJlNTM0MmJhMThiZGM0OGE5OWNjYTY1ZDEyM2NlNzgxZDg3ODI3MmY5ZDk2NGVhZDNiOGFkMzcwIn19fQ==";
+		String      arrow =
+				"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTYzMzlmZjJlNTM0MmJhMThiZGM0OGE5OWNjYTY1ZDEyM2NlNzgxZDg3ODI3MmY5ZDk2NGVhZDNiOGFkMzcwIn19fQ==";
 
 		item.customHead(arrow);
 		linkedInventory.setItem(linkedInventory.getSize() - 1, item.build(), false,
-		                        (player, inventory, itemBuilder) -> {
-			                        // open the next inventory
-			                        nextPage().open(player);
+								(player, inventory, itemBuilder) -> {
+									// open the next inventory
+									nextPage().open(player);
 
-			                        buttonClickSound(player);
-		                        });
+									buttonClickSound(player);
+								});
 	}
 
 	private void addPreviousPageItem(InventoryHandler linkedInventory) {
 		ItemBuilder item  = createItemHead("&c<-");
-		String      arrow = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=";
+		String      arrow =
+				"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=";
 
 		item.customHead(arrow);
 		linkedInventory.setItem(linkedInventory.getSize() - 9, item.build(), false,
-		                        (player, inventory, itemBuilder) -> {
-			                        // open the previous inventory
-			                        previousPage().open(player);
+								(player, inventory, itemBuilder) -> {
+									// open the previous inventory
+									previousPage().open(player);
 
-			                        buttonClickSound(player);
-		                        });
+									buttonClickSound(player);
+								});
 	}
 
 	private void addHomePageItem(InventoryHandler linkedInventory) {
 		ItemBuilder item = createItemHead("&cBack to " + this.getDisplayTitle());
-		String      home = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWUxNTZlYjVhZmZkZGYyMDg2MTdhYWI3YjQzMGZhZDlmMmM5OTFlYzJmMzgzMDRhMGMyMTNmMzFlNzZjYmJlNCJ9fX0=";
+		String      home =
+				"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWUxNTZlYjVhZmZkZGYyMDg2MTdhYWI3YjQzMGZhZDlmMmM5OTFlYzJmMzgzMDRhMGMyMTNmMzFlNzZjYmJlNCJ9fX0=";
 
 		item.customHead(home);
 		linkedInventory.setItem(linkedInventory.getSize() - 5, item.build(), false,
-		                        (player, inventory, itemBuilder) -> {
-			                        // open the home inventory
-			                        homePage().open(player);
+								(player, inventory, itemBuilder) -> {
+									// open the home inventory
+									homePage().open(player);
 
-			                        buttonClickSound(player);
-		                        });
+									buttonClickSound(player);
+								});
 	}
 
 	private ItemBuilder createItemHead(String name, @Nullable String... lore) {

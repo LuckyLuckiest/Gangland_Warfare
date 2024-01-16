@@ -1,3 +1,3 @@
 package me.luckyraven.feature.weapon.reload;
 
-public interface Reload {}
+public interface Reload { }

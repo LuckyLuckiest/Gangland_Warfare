@@ -22,10 +22,8 @@ public class BountyEvent extends Event implements Cancellable {
 	private double  amountApplied;
 	private boolean cancelled;
 
-	@Nullable
-	private User<? extends OfflinePlayer> userBounty;
-	@Nullable
-	private Gang                          gangBounty;
+	@Nullable private User<? extends OfflinePlayer> userBounty;
+	@Nullable private Gang                          gangBounty;
 
 	public BountyEvent(Bounty bounty) {
 		this.bounty = bounty;

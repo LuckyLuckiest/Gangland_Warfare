@@ -73,7 +73,7 @@ class WaypointDeleteCommand extends SubArgument {
 					helper.runQueries(database -> {
 						Database config = database.table("data");
 						Object[] info = config.select("id = ?", new Object[]{id}, new int[]{Types.INTEGER},
-						                              new String[]{"*"});
+													  new String[]{"*"});
 
 						// if the data was already saved into the database
 						if (info.length == 0) return;

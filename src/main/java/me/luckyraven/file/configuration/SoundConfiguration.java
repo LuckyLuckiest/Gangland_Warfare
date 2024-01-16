@@ -15,12 +15,13 @@ public record SoundConfiguration(SoundType type, @NotNull String sound, float vo
 
 			xSoundOptional.ifPresent(
 					xSound -> player.playSound(player.getLocation(), Objects.requireNonNull(xSound.parseSound()),
-					                           volume, pitch));
+											   volume, pitch));
 		} else player.playSound(player.getLocation(), sound, volume, pitch);
 	}
 
 	public enum SoundType {
-		VANILLA, CUSTOM
+		VANILLA,
+		CUSTOM
 	}
 
 }

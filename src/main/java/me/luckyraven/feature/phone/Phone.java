@@ -43,11 +43,8 @@ public class Phone {
 	}
 
 	public static Material getPhoneMaterial() {
-		Material phoneItem = XMaterial.matchXMaterial(SettingAddon.getPhoneItem())
-		                              .stream()
-		                              .toList()
-		                              .get(0)
-		                              .parseMaterial();
+		Material phoneItem =
+				XMaterial.matchXMaterial(SettingAddon.getPhoneItem()).stream().toList().get(0).parseMaterial();
 		if (phoneItem == null) return XMaterial.REDSTONE.parseMaterial();
 		return phoneItem;
 	}
@@ -110,7 +107,7 @@ public class Phone {
 		// gang
 		GangManager gangManager = gangland.getInitializer().getGangManager();
 		inventoryHandler.setItem(13, XMaterial.CAULDRON.parseMaterial(), "&eGang", null, false, false,
-		                         (player, inventory, item) -> gangInventory(user, gangManager, callback));
+								 (player, inventory, item) -> gangInventory(user, gangManager, callback));
 
 		// property
 		inventoryHandler.setItem(15, XMaterial.FURNACE_MINECART.parseMaterial(), "&eProperty", null, false, false);
@@ -125,15 +122,15 @@ public class Phone {
 
 		// bounties
 		inventoryHandler.setItem(40, XMaterial.NETHER_STAR.parseMaterial(), "&eBounties", null, false, false,
-		                         (player, inventory, item) -> {
-			                         // show current bounties and leaderboard
-		                         });
+								 (player, inventory, item) -> {
+									 // show current bounties and leaderboard
+								 });
 
 		// contacts
 		inventoryHandler.setItem(42, XMaterial.BOOK.parseMaterial(), "&eContacts", null, false, false,
-		                         (player, inventory, item) -> {
-			                         // show taxi services
-		                         });
+								 (player, inventory, item) -> {
+									 // show taxi services
+								 });
 
 		InventoryUtil.verticalLine(inventoryHandler, 2);
 		InventoryUtil.verticalLine(inventoryHandler, 8);
@@ -142,7 +139,7 @@ public class Phone {
 	}
 
 	private void gangInventory(User<Player> user, GangManager gangManager,
-	                           TriConsumer<Player, InventoryHandler, ItemBuilder> callback) {
+							   TriConsumer<Player, InventoryHandler, ItemBuilder> callback) {
 		// show create gang and search for gang
 		InventoryHandler newGang = new InventoryHandler(gangland, "&6&lGang", 5 * 9, user, false);
 
@@ -151,123 +148,124 @@ public class Phone {
 
 			// my gang
 			newGang.setItem(21, XMaterial.SLIME_BALL.parseMaterial(),
-			                String.format("&r%s%s&7 Gang", ColorUtil.getColorCode(gang.getColor()),
-			                              gang.getDisplayNameString()), null, false, false,
-			                (player1, inv, it) -> player1.performCommand("glw gang"));
+							String.format("&r%s%s&7 Gang", ColorUtil.getColorCode(gang.getColor()),
+										  gang.getDisplayNameString()), null, false, false,
+							(player1, inv, it) -> player1.performCommand("glw gang"));
 		} else {
 			// create gang
 			List<String> createLore = new ArrayList<>(
 					List.of(String.format("&7Costs &a%s%s", SettingAddon.getMoneySymbol(),
-					                      SettingAddon.formatDouble(SettingAddon.getGangCreateFee()))));
+										  SettingAddon.formatDouble(SettingAddon.getGangCreateFee()))));
 
 			newGang.setItem(21, XMaterial.SLIME_BALL.parseMaterial(), "&c&lCreate Gang", createLore, false, false,
-			                (player1, inv, it) -> {
-				                // open an anvil to set the name
-				                new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
-					                String output = stateSnapshot.getText();
+							(player1, inv, it) -> {
+								// open an anvil to set the name
+								new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
+									String output = stateSnapshot.getText();
 
-					                if (output == null || output.isEmpty()) {
-						                stateSnapshot.getPlayer()
-						                             .sendMessage(MessageAddon.INVALID_GANG_NAME.toString());
-						                return Collections.emptyList();
-					                }
+									if (output == null || output.isEmpty()) {
+										stateSnapshot.getPlayer()
+													 .sendMessage(MessageAddon.INVALID_GANG_NAME.toString());
+										return Collections.emptyList();
+									}
 
-					                // then perform the command
-					                stateSnapshot.getPlayer().performCommand("glw gang create " + output);
+									// then perform the command
+									stateSnapshot.getPlayer().performCommand("glw gang create " + output);
 
-					                return List.of(AnvilGUI.ResponseAction.close());
-				                }).text("Name").title("Create Gang").plugin(gangland).open(player1);
-			                });
+									return List.of(AnvilGUI.ResponseAction.close());
+								}).text("Name").title("Create Gang").plugin(gangland).open(player1);
+							});
 		}
 
 		// search gang
 		newGang.setItem(23, XMaterial.BOOKSHELF.parseMaterial(), "&b&lSearch Gang", null, true, false,
-		                (player1, inv, it) -> {
-			                // open a multi inventory that displays all the gangs
-			                User<Player>    user1      = gangland.getInitializer().getUserManager().getUser(player1);
-			                List<Gang>      gangs      = gangManager.getGangs().values().stream().toList();
-			                List<ItemStack> gangsItems = new ArrayList<>();
+						(player1, inv, it) -> {
+							// open a multi inventory that displays all the gangs
+							User<Player>    user1      = gangland.getInitializer().getUserManager().getUser(player1);
+							List<Gang>      gangs      = gangManager.getGangs().values().stream().toList();
+							List<ItemStack> gangsItems = new ArrayList<>();
 
-			                for (Gang gang : gangs) {
-				                ItemBuilder itemBuilder = new ItemBuilder(
-						                XMaterial.PLAYER_HEAD.parseMaterial()).setDisplayName(
-								                                                      String.format("&r%s%s&7 Gang", ColorUtil.getColorCode(gang.getColor()),
-								                                                                    gang.getDisplayNameString()))
-				                                                              .setLore("&e" + gang.getDescription());
+							for (Gang gang : gangs) {
+								ItemBuilder itemBuilder =
+										new ItemBuilder(XMaterial.PLAYER_HEAD.parseMaterial()).setDisplayName(
+																									  String.format("&r%s%s&7 Gang", ColorUtil.getColorCode(gang.getColor()),
+																													gang.getDisplayNameString()))
+																							  .setLore("&e" +
+																									   gang.getDescription());
 
-				                UUID uuid = gang.getGroup()
-				                                .stream()
-				                                .filter(member -> Objects.requireNonNull(member.getRank())
-				                                                         .getName()
-				                                                         .equalsIgnoreCase(
-						                                                         SettingAddon.getGangRankTail()))
-				                                .findFirst()
-				                                .map(Member::getUuid)
-				                                .orElse(null);
+								UUID uuid = gang.getGroup()
+												.stream()
+												.filter(member -> Objects.requireNonNull(member.getRank())
+																		 .getName()
+																		 .equalsIgnoreCase(
+																				 SettingAddon.getGangRankTail()))
+												.findFirst()
+												.map(Member::getUuid)
+												.orElse(null);
 
-				                String name = "";
-				                if (uuid != null) {
-					                name = Bukkit.getOfflinePlayer(uuid).getName();
-					                if (name == null) name = "";
-				                }
+								String name = "";
+								if (uuid != null) {
+									name = Bukkit.getOfflinePlayer(uuid).getName();
+									if (name == null) name = "";
+								}
 
-				                String finalName = name;
-				                itemBuilder.modifyNBT(nbt -> nbt.setString("SkullOwner", finalName));
+								String finalName = name;
+								itemBuilder.modifyNBT(nbt -> nbt.setString("SkullOwner", finalName));
 
-				                gangsItems.add(itemBuilder.build());
-			                }
+								gangsItems.add(itemBuilder.build());
+							}
 
-			                // need to use a list to save the location
-			                Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems = new LinkedHashMap<>();
-			                MultiInventory multiInventory = MultiInventory.dynamicMultiInventory(gangland, user1,
-			                                                                                     gangsItems,
-			                                                                                     "&6&lGangs View", true,
-			                                                                                     true, staticItems);
+							// need to use a list to save the location
+							Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems =
+									new LinkedHashMap<>();
+							MultiInventory multiInventory =
+									MultiInventory.dynamicMultiInventory(gangland, user1, gangsItems, "&6&lGangs View",
+																		 true, true, staticItems);
 
-			                // search
-			                ItemBuilder searchItem = new ItemBuilder(
-					                XMaterial.WRITABLE_BOOK.parseMaterial()).setDisplayName("&eSearch");
-			                staticItems.put(searchItem.build(), (player2, currInv, itemBuilder) -> {
-				                // opens an anvil and enters the query
-				                new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
-					                User<Player> user2 = gangland.getInitializer()
-					                                             .getUserManager()
-					                                             .getUser(stateSnapshot.getPlayer());
-					                String output = stateSnapshot.getText();
+							// search
+							ItemBuilder searchItem =
+									new ItemBuilder(XMaterial.WRITABLE_BOOK.parseMaterial()).setDisplayName("&eSearch");
+							staticItems.put(searchItem.build(), (player2, currInv, itemBuilder) -> {
+								// opens an anvil and enters the query
+								new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
+									User<Player> user2 = gangland.getInitializer()
+																 .getUserManager()
+																 .getUser(stateSnapshot.getPlayer());
+									String output = stateSnapshot.getText();
 
-					                if (output == null || output.isEmpty()) {
-						                return Collections.emptyList();
-					                }
+									if (output == null || output.isEmpty()) {
+										return Collections.emptyList();
+									}
 
-					                List<ItemStack> items = gangsItems.stream()
-					                                                  .filter(itemStack -> Objects.requireNonNull(
-							                                                                              itemStack.getItemMeta())
-					                                                                              .getDisplayName()
-					                                                                              .toLowerCase()
-					                                                                              .contains(
-							                                                                              output.toLowerCase()))
-					                                                  .toList();
+									List<ItemStack> items = gangsItems.stream()
+																	  .filter(itemStack -> Objects.requireNonNull(
+																										  itemStack.getItemMeta())
+																								  .getDisplayName()
+																								  .toLowerCase()
+																								  .contains(
+																										  output.toLowerCase()))
+																	  .toList();
 
-					                multiInventory.updateItems(items, user2, true, staticItems);
-					                callback.accept(stateSnapshot.getPlayer(), currInv, itemBuilder);
+									multiInventory.updateItems(items, user2, true, staticItems);
+									callback.accept(stateSnapshot.getPlayer(), currInv, itemBuilder);
 
-					                return List.of(AnvilGUI.ResponseAction.close());
-				                }).text("").title("Enter the query").plugin(gangland).open(player2);
+									return List.of(AnvilGUI.ResponseAction.close());
+								}).text("").title("Enter the query").plugin(gangland).open(player2);
 
-				                // when done, close the anvil and change the items according to the query
-			                });
-			                // sort
-			                ItemBuilder sortItem = new ItemBuilder(XMaterial.GLOW_ITEM_FRAME.parseMaterial());
-			                staticItems.put(sortItem.build(), (player2, currInv, itemBuilder) -> {
-				                // sorts the items according to the name
-			                });
+								// when done, close the anvil and change the items according to the query
+							});
+							// sort
+							ItemBuilder sortItem = new ItemBuilder(XMaterial.GLOW_ITEM_FRAME.parseMaterial());
+							staticItems.put(sortItem.build(), (player2, currInv, itemBuilder) -> {
+								// sorts the items according to the name
+							});
 
-			                // need to update because when initialized the process was not done accordingly,
-			                // this way should be changed since you update the items after initialization
-			                multiInventory.updateItems(gangsItems, user1, true, staticItems);
+							// need to update because when initialized the process was not done accordingly,
+							// this way should be changed since you update the items after initialization
+							multiInventory.updateItems(gangsItems, user1, true, staticItems);
 
-			                multiInventory.open(player1);
-		                });
+							multiInventory.open(player1);
+						});
 
 		InventoryUtil.verticalLine(newGang, 2);
 		InventoryUtil.verticalLine(newGang, 8);

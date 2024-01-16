@@ -30,7 +30,7 @@ public final class CommandManager implements CommandExecutor {
 
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
-	                         @NotNull String[] args) {
+							 @NotNull String[] args) {
 		try {
 			if (!sender.hasPermission("gangland.command.main")) {
 				sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
@@ -46,16 +46,17 @@ public final class CommandManager implements CommandExecutor {
 
 			for (Map.Entry<String, CommandHandler> entry : commands.entrySet())
 				if (entry.getKey().equalsIgnoreCase(args[0]) ||
-						entry.getValue().getAlias().contains(args[0].toLowerCase())) {
+					entry.getValue().getAlias().contains(args[0].toLowerCase())) {
 					if (Arrays.stream(args).anyMatch("help"::equalsIgnoreCase)) onHelp(entry, sender, args);
 					else entry.getValue().runExecute(sender, args);
+
 					match = true;
 					break;
 				}
 
 			if (!match) {
 				sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_DONT_EXIST.toString(),
-				                                         String.format("/%s %s", label, Arrays.asList(args))));
+														 String.format("/%s %s", label, Arrays.asList(args))));
 				return false;
 			}
 		} catch (Throwable throwable) {
@@ -79,9 +80,9 @@ public final class CommandManager implements CommandExecutor {
 		// Get the page number if it exists
 		int page = 1;
 		int index = IntStream.range(0, args.length - 1)
-		                     .filter(i -> args[i].equalsIgnoreCase("help"))
-		                     .findFirst()
-		                     .orElse(-1);
+							 .filter(i -> args[i].equalsIgnoreCase("help"))
+							 .findFirst()
+							 .orElse(-1);
 		if (index != -1) try {
 			page = Integer.parseInt(args[index + 1]);
 		} catch (NumberFormatException | ArrayIndexOutOfBoundsException ignored) {

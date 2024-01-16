@@ -27,11 +27,11 @@ public class EconomyCommand extends CommandHandler {
 		super(gangland, "economy", false, "eco");
 
 		List<CommandInformation> list = getCommands().entrySet()
-		                                             .stream()
-		                                             .filter(entry -> entry.getKey().startsWith("economy"))
-		                                             .sorted(Map.Entry.comparingByKey())
-		                                             .map(Map.Entry::getValue)
-		                                             .toList();
+													 .stream()
+													 .filter(entry -> entry.getKey().startsWith("economy"))
+													 .sorted(Map.Entry.comparingByKey())
+													 .map(Map.Entry::getValue)
+													 .toList();
 
 		getHelpInfo().addAll(list);
 	}
@@ -54,9 +54,9 @@ public class EconomyCommand extends CommandHandler {
 
 		// glw economy withdraw
 		Argument withdraw = new Argument(new String[]{"withdraw", "take"}, getArgumentTree(),
-		                                 (argument, sender, args) -> sender.sendMessage(
-				                                 ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(),
-				                                                       "<specifier>")), getPermission() + ".withdraw");
+										 (argument, sender, args) -> sender.sendMessage(
+												 ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(),
+																	   "<specifier>")), getPermission() + ".withdraw");
 
 		// glw economy set
 		Argument set = new Argument("set", getArgumentTree(), (argument, sender, args) -> {
@@ -91,7 +91,7 @@ public class EconomyCommand extends CommandHandler {
 								valueChanged = argAmount;
 
 							value = Math.min(user.getEconomy().getBalance() + argAmount,
-							                 SettingAddon.getUserMaxBalance());
+											 SettingAddon.getUserMaxBalance());
 							strValue = "deposit";
 						}
 						case "withdraw", "take" -> {
@@ -113,9 +113,9 @@ public class EconomyCommand extends CommandHandler {
 						}
 					}
 					user.getUser()
-					    .sendMessage(MessageAddon.valueOf(strValue.toUpperCase() + "_MONEY_PLAYER")
-					                             .toString()
-					                             .replace("%amount%", SettingAddon.formatDouble(valueChanged)));
+						.sendMessage(MessageAddon.valueOf(strValue.toUpperCase() + "_MONEY_PLAYER")
+												 .toString()
+												 .replace("%amount%", SettingAddon.formatDouble(valueChanged)));
 					user.getEconomy().setBalance(value);
 				}
 			} catch (NumberFormatException exception) {
@@ -146,7 +146,7 @@ public class EconomyCommand extends CommandHandler {
 		Argument reset = economyReset(specifiers, userManager);
 
 		Argument resetSpecifier = new OptionalArgument(optionalSpecifier, getArgumentTree(),
-		                                               (argument, sender, args) -> reset.executeArgument(sender, args));
+													   (argument, sender, args) -> reset.executeArgument(sender, args));
 
 		reset.addSubArgument(resetSpecifier);
 
@@ -197,7 +197,7 @@ public class EconomyCommand extends CommandHandler {
 	}
 
 	private void collectSpecifiers(HashMap<String, Supplier<List<Player>>> specifiers, CommandSender sender,
-	                               String target) {
+								   String target) {
 		allPlayers(specifiers);
 		senderSpecifier(specifiers, sender);
 		if (target == null || target.isEmpty()) target = "**";

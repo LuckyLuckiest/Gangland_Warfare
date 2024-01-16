@@ -12,7 +12,8 @@ public interface Replacer {
 	@Getter
 	enum Closure {
 
-		PERCENT('%', '%'), BRACKET('{', '}');
+		PERCENT('%', '%'),
+		BRACKET('{', '}');
 
 		private final char head, tail;
 

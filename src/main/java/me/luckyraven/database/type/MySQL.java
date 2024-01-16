@@ -237,7 +237,7 @@ public class MySQL implements Database {
 		Preconditions.checkNotNull(values, "Missing data");
 		Preconditions.checkNotNull(types, "Missing data types");
 		Preconditions.checkArgument(columns.length == values.length && columns.length == types.length,
-		                            "Invalid columns, values, and types data parameters");
+									"Invalid columns, values, and types data parameters");
 
 		StringBuilder columnNames  = new StringBuilder();
 		StringBuilder placeholders = new StringBuilder();
@@ -270,7 +270,7 @@ public class MySQL implements Database {
 		Preconditions.checkNotNull(placeholders, "Missing placeholders");
 		Preconditions.checkNotNull(types, "Missing data types");
 		Preconditions.checkArgument(count == placeholders.length && count == types.length,
-		                            "Invalid placeholders, and types data parameters");
+									"Invalid placeholders, and types data parameters");
 		Preconditions.checkNotNull(columns, "Missing columns");
 
 		StringBuilder query = new StringBuilder("SELECT ");
@@ -337,7 +337,7 @@ public class MySQL implements Database {
 
 	@Override
 	public Database update(String row, Object[] rowPlaceholders, int[] rowTypes, String[] columns,
-	                       Object[] colPlaceholders, int[] colTypes) throws SQLException {
+						   Object[] colPlaceholders, int[] colTypes) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
 		Preconditions.checkNotNull(table, "Invalid table");
 
@@ -346,13 +346,13 @@ public class MySQL implements Database {
 		Preconditions.checkNotNull(rowPlaceholders, "Missing row placeholders");
 		Preconditions.checkNotNull(rowTypes, "Missing row types");
 		Preconditions.checkArgument(count == rowPlaceholders.length && count == rowTypes.length,
-		                            "Invalid row placeholders, and types data parameters");
+									"Invalid row placeholders, and types data parameters");
 
 		Preconditions.checkNotNull(columns, "Missing columns");
 		Preconditions.checkNotNull(colPlaceholders, "Missing columns placeholders");
 		Preconditions.checkNotNull(colTypes, "Missing columns types");
 		Preconditions.checkArgument(columns.length == colPlaceholders.length && columns.length == colTypes.length,
-		                            "Invalid columns placeholders, and types data parameters");
+									"Invalid columns placeholders, and types data parameters");
 
 		StringBuilder query = new StringBuilder("UPDATE ").append(table).append(" SET ");
 		for (int i = 0; i < columns.length; i++) {
@@ -373,7 +373,7 @@ public class MySQL implements Database {
 
 	@Override
 	public int totalRows() throws SQLException {
-		Object[] result = select("", new Object[]{}, new int[]{}, new String[]{"COUNT(*)"});
+		Object[] result = select("", new Object[]{ }, new int[]{ }, new String[]{"COUNT(*)"});
 		if (result.length > 0 && result[0] instanceof Number) {
 			return ((Number) result[0]).intValue();
 		}

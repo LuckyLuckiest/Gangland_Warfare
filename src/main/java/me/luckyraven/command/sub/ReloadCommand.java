@@ -19,11 +19,11 @@ public class ReloadCommand extends CommandHandler {
 		super(gangland, "reload", false, "rl");
 
 		List<CommandInformation> list = getCommands().entrySet()
-		                                             .stream()
-		                                             .filter(entry -> entry.getKey().startsWith("reload"))
-		                                             .sorted(Map.Entry.comparingByKey())
-		                                             .map(Map.Entry::getValue)
-		                                             .toList();
+													 .stream()
+													 .filter(entry -> entry.getKey().startsWith("reload"))
+													 .sorted(Map.Entry.comparingByKey())
+													 .map(Map.Entry::getValue)
+													 .toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -92,10 +92,10 @@ public class ReloadCommand extends CommandHandler {
 
 	private void sendToOperators(String permission, String message) {
 		Bukkit.getServer()
-		      .getOnlinePlayers()
-		      .stream()
-		      .filter(player -> player.hasPermission(permission))
-		      .forEach(player -> player.sendMessage(ChatUtil.commandMessage(message)));
+			  .getOnlinePlayers()
+			  .stream()
+			  .filter(player -> player.hasPermission(permission))
+			  .forEach(player -> player.sendMessage(ChatUtil.commandMessage(message)));
 
 		Bukkit.getServer().getConsoleSender().sendMessage(ChatUtil.commandMessage(message));
 	}

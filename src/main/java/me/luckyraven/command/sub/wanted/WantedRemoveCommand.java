@@ -41,7 +41,7 @@ public class WantedRemoveCommand extends SubArgument {
 			wanted.setLevel(Math.max(0, wanted.getLevel() - amount));
 
 			sender.sendMessage(String.format("Removed %d wanted level%s.", amount, ChatUtil.plural(amount)),
-			                   wanted.getLevelStr());
+							   wanted.getLevelStr());
 		};
 	}
 
@@ -67,7 +67,7 @@ public class WantedRemoveCommand extends SubArgument {
 			wanted.setLevel(value);
 
 			sender.sendMessage(String.format("Removed %d wanted level%s.", realAmount, ChatUtil.plural(realAmount)),
-			                   wanted.getLevelStr());
+							   wanted.getLevelStr());
 		});
 
 		this.addSubArgument(optional);

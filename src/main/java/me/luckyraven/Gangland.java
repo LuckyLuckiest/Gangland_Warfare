@@ -151,7 +151,8 @@ public final class Gangland extends JavaPlugin {
 		}
 
 		enum Type {
-			REQUIRED, SOFT
+			REQUIRED,
+			SOFT
 		}
 
 	}

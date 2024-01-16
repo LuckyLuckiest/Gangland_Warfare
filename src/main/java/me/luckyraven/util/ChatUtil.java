@@ -116,10 +116,10 @@ public final class ChatUtil {
 
 	public static String commandDesign(String command) {
 		return color(command.replace("/glw", "&6/glw&7")
-		                    .replace("<", "&5<&7")
-		                    .replace(">", "&5>&7")
-		                    .replace(" - ", " &c-&r ")
-		                    .replaceAll("[\\[\\],]", ""));
+							.replace("<", "&5<&7")
+							.replace(">", "&5>&7")
+							.replace(" - ", " &c-&r ")
+							.replaceAll("[\\[\\],]", ""));
 	}
 
 	public static String setArguments(String arguments, String command) {

@@ -47,7 +47,7 @@ public class InventoryUtil {
 	public static void horizontalLine(InventoryHandler inventoryHandler, int row, ItemStack... items) {
 		int rows = inventoryHandler.getSize() / 9;
 		Preconditions.checkArgument(row > 0 && row < rows + 1,
-		                            String.format("Rows need to be between 1 and %d inclusive", rows));
+									String.format("Rows need to be between 1 and %d inclusive", rows));
 
 		// always nine slots
 		int slot = (row - 1) * 9;
@@ -57,16 +57,16 @@ public class InventoryUtil {
 
 			if (i < items.length) inventoryHandler.getInventory().setItem(slot + i, items[i]);
 			else inventoryHandler.getInventory()
-			                     .setItem(slot + i, new ItemBuilder(getLineItem()).setDisplayName(
-					                     SettingAddon.getInventoryLineName()).build());
+								 .setItem(slot + i, new ItemBuilder(getLineItem()).setDisplayName(
+										 SettingAddon.getInventoryLineName()).build());
 		}
 	}
 
 	public static void horizontalLine(InventoryHandler inventoryHandler, int row, Material material, String name,
-	                                  boolean all) {
+									  boolean all) {
 		int rows = inventoryHandler.getSize() / 9;
 		Preconditions.checkArgument(row > 0 && row < rows + 1,
-		                            String.format("Rows need to be between 1 and %d inclusive", rows));
+									String.format("Rows need to be between 1 and %d inclusive", rows));
 		ItemBuilder itemBuilder = new ItemBuilder(material);
 		ItemStack   item        = itemBuilder.setDisplayName(name).build();
 
@@ -96,13 +96,13 @@ public class InventoryUtil {
 
 			if (i < items.length) inventoryHandler.getInventory().setItem(slot, items[i]);
 			else inventoryHandler.getInventory()
-			                     .setItem(slot, new ItemBuilder(getLineItem()).setDisplayName(
-					                     SettingAddon.getInventoryLineName()).build());
+								 .setItem(slot, new ItemBuilder(getLineItem()).setDisplayName(
+										 SettingAddon.getInventoryLineName()).build());
 		}
 	}
 
 	public static void verticalLine(InventoryHandler inventoryHandler, int column, Material material, String name,
-	                                boolean all) {
+									boolean all) {
 		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
 
 		ItemBuilder itemBuilder = new ItemBuilder(material);

@@ -28,7 +28,7 @@ public class InformationManager {
 		for (String property : jsonObject.keySet()) {
 			ind = jsonObject.get(property).getAsJsonObject();
 			commands.put(property,
-			             new CommandInformation(ind.get("usage").getAsString(), ind.get("description").getAsString()));
+						 new CommandInformation(ind.get("usage").getAsString(), ind.get("description").getAsString()));
 		}
 	}
 

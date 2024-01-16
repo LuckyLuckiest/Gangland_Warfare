@@ -68,9 +68,8 @@ class GangPromoteCommand extends SubArgument {
 			User<Player> user       = userManager.getUser(player);
 			Member       userMember = memberManager.getMember(player.getUniqueId());
 
-			String forceRank = "gangland.command.gang.force_rank";
-
-			boolean force = player.hasPermission(forceRank);
+			String  forceRank = "gangland.command.gang.force_rank";
+			boolean force     = player.hasPermission(forceRank);
 
 			if (!user.hasGang()) {
 				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
@@ -110,11 +109,11 @@ class GangPromoteCommand extends SubArgument {
 
 			// navigate the ranks first
 			List<Rank> nextRanks = Objects.requireNonNull(rankManager.getRankTree().find(currentRank))
-			                              .getNode()
-			                              .getChildren()
-			                              .stream()
-			                              .map(Tree.Node::getData)
-			                              .toList();
+										  .getNode()
+										  .getChildren()
+										  .stream()
+										  .map(Tree.Node::getData)
+										  .toList();
 
 			if (nextRanks.isEmpty()) {
 				player.sendMessage(MessageAddon.GANG_PROMOTE_END.toString());
@@ -129,7 +128,7 @@ class GangPromoteCommand extends SubArgument {
 
 					ComponentBuilder sep = new ComponentBuilder(rank).event(
 							new ClickEvent(ClickEvent.Action.RUN_COMMAND,
-							               "/glw option gang rank " + targetStr + " " + rank));
+										   "/glw option gang rank " + targetStr + " " + rank));
 
 					ranks.append(sep.create());
 
@@ -139,9 +138,9 @@ class GangPromoteCommand extends SubArgument {
 				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
 				if (offlinePlayer.getPlayer() != null && offlinePlayer.isOnline()) {
 					Player onlinePlayer = offlinePlayer.getPlayer();
-					String message = MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString().replace("%rank%",
-					                                                                             nextRanks.get(0)
-					                                                                                      .getName());
+					String message = MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString()
+																			 .replace("%rank%",
+																					  nextRanks.get(0).getName());
 					// remove the previous rank attachments
 					User<Player> onlineUser = userManager.getUser(onlinePlayer);
 
@@ -150,9 +149,9 @@ class GangPromoteCommand extends SubArgument {
 					Objects.requireNonNull(onlinePlayer).sendMessage(message);
 				}
 				player.sendMessage(MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString()
-				                                                           .replace("%player%", targetStr)
-				                                                           .replace("%rank%",
-				                                                                    nextRanks.get(0).getName()));
+																		   .replace("%player%", targetStr)
+																		   .replace("%rank%",
+																					nextRanks.get(0).getName()));
 
 				targetMember.setRank(nextRanks.get(0));
 			}

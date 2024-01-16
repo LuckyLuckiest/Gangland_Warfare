@@ -37,9 +37,9 @@ public class UserDatabase extends DatabaseHandler {
 		Database data = getDatabase().table("data");
 
 		data.createTable("uuid CHAR(36) PRIMARY KEY NOT NULL", "kills INT NOT NULL", "deaths INT NOT NULL",
-		                 "mob_kills INT NOT NULL", "gang_id INT NOT NULL", "has_bank BOOLEAN NOT NULL",
-		                 "balance DOUBLE NOT NULL", "bounty DOUBLE NOT NULL", "level INT NOT NULL",
-		                 "experience DOUBLE NOT NULL");
+						 "mob_kills INT NOT NULL", "gang_id INT NOT NULL", "has_bank BOOLEAN NOT NULL",
+						 "balance DOUBLE NOT NULL", "bounty DOUBLE NOT NULL", "level INT NOT NULL",
+						 "experience DOUBLE NOT NULL");
 
 		Database bank = getDatabase().table("bank");
 
@@ -70,11 +70,11 @@ public class UserDatabase extends DatabaseHandler {
 		for (int i = 0; i < dataTypes.length; i++)
 			dataTypes[i] = columnsDataType.get(i);
 
-		config.insert(columns, new Object[]{
-				user.getUser().getUniqueId(), user.getKills(), user.getDeaths(), user.getMobKills(), user.getGangId(),
-				user.isHasBank(), user.getEconomy().getBalance(), user.getBounty().getAmount(),
-				user.getLevel().getLevelValue(), user.getLevel().getExperience()
-		}, dataTypes);
+		config.insert(columns,
+					  new Object[]{user.getUser().getUniqueId(), user.getKills(), user.getDeaths(), user.getMobKills(),
+								   user.getGangId(), user.isHasBank(), user.getEconomy().getBalance(),
+								   user.getBounty().getAmount(), user.getLevel().getLevelValue(),
+								   user.getLevel().getExperience()}, dataTypes);
 	}
 
 	public void updateDataTable(User<? extends OfflinePlayer> user) throws SQLException {
@@ -88,11 +88,9 @@ public class UserDatabase extends DatabaseHandler {
 			dataTypes[i] = columnsDataType.get(i);
 
 		config.update("uuid = ?", new Object[]{user.getUser().getUniqueId()}, new int[]{Types.CHAR}, columns,
-		              new Object[]{
-				              user.getKills(), user.getDeaths(), user.getMobKills(), user.getGangId(), user.isHasBank(),
-				              user.getEconomy().getBalance(), user.getBounty().getAmount(),
-				              user.getLevel().getLevelValue(), user.getLevel().getExperience()
-		              }, dataTypes);
+					  new Object[]{user.getKills(), user.getDeaths(), user.getMobKills(), user.getGangId(),
+								   user.isHasBank(), user.getEconomy().getBalance(), user.getBounty().getAmount(),
+								   user.getLevel().getLevelValue(), user.getLevel().getExperience()}, dataTypes);
 	}
 
 	public void insertBankTable(User<? extends OfflinePlayer> user) throws SQLException {
@@ -107,9 +105,8 @@ public class UserDatabase extends DatabaseHandler {
 				for (int i = 0; i < dataTypes.length; i++)
 					dataTypes[i] = columnsDataType.get(i);
 
-				config.insert(columns, new Object[]{
-						user.getUser().getUniqueId(), bank.getName(), bank.getEconomy().getBalance()
-				}, dataTypes);
+				config.insert(columns, new Object[]{user.getUser().getUniqueId(), bank.getName(),
+													bank.getEconomy().getBalance()}, dataTypes);
 				break;
 			}
 	}
@@ -127,8 +124,8 @@ public class UserDatabase extends DatabaseHandler {
 					dataTypes[i] = columnsDataType.get(i);
 
 				getDatabase().table("bank")
-				             .update("uuid = ?", new Object[]{user.getUser().getUniqueId()}, new int[]{Types.CHAR},
-				                     columns, new Object[]{bank.getName(), bank.getEconomy().getBalance()}, dataTypes);
+							 .update("uuid = ?", new Object[]{user.getUser().getUniqueId()}, new int[]{Types.CHAR},
+									 columns, new Object[]{bank.getName(), bank.getEconomy().getBalance()}, dataTypes);
 				break;
 			}
 	}

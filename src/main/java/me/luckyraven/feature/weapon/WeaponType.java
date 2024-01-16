@@ -2,7 +2,12 @@ package me.luckyraven.feature.weapon;
 
 public enum WeaponType {
 
-	GUN, MELEE, PROJECTILE, INCENDIARY, BIOLOGICAL, OTHER;
+	GUN,
+	MELEE,
+	PROJECTILE,
+	INCENDIARY,
+	BIOLOGICAL,
+	OTHER;
 
 	public static WeaponType getType(String type) {
 		return switch (type.toLowerCase()) {

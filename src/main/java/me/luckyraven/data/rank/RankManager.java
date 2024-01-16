@@ -49,12 +49,12 @@ public class RankManager {
 			}
 
 			rankTree.add(nodeMap.keySet()
-			                    .stream()
-			                    .filter(node -> node.getData()
-			                                        .getName()
-			                                        .equalsIgnoreCase(SettingAddon.getGangRankHead()))
-			                    .findFirst()
-			                    .orElse(null));
+								.stream()
+								.filter(node -> node.getData()
+													.getName()
+													.equalsIgnoreCase(SettingAddon.getGangRankHead()))
+								.findFirst()
+								.orElse(null));
 
 			// map information
 			// the map saves the node and the child of that node
@@ -95,10 +95,10 @@ public class RankManager {
 
 	private Tree.Node<Rank> findChildNode(Map<Tree.Node<Rank>, List<String>> nodeMap, String child) {
 		return nodeMap.keySet()
-		              .stream()
-		              .filter(node -> node.getData().getName().equalsIgnoreCase(child))
-		              .findFirst()
-		              .orElse(null);
+					  .stream()
+					  .filter(node -> node.getData().getName().equalsIgnoreCase(child))
+					  .findFirst()
+					  .orElse(null);
 	}
 
 	public void add(Rank rank) {

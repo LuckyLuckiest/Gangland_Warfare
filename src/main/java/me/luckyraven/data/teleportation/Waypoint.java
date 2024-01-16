@@ -71,14 +71,18 @@ public class Waypoint {
 	public String toString() {
 		return String.format(
 				"Waypoint{id=%d,name=%s,x=%.2f,y=%.2f,z=%.2f,yaw=%.2f,pitch=%.2f,world=%s,type=%s,gangId=%d," +
-						"cooldown=%d,shield=%d,cost=%.2f,radius=%.2f}", usedId, name, x, y, z, yaw, pitch, world,
+				"cooldown=%d,shield=%d,cost=%.2f,radius=%.2f}", usedId, name, x, y, z, yaw, pitch, world,
 				type.getName(), gangId, cooldown, shield, cost, radius);
 	}
 
 	@Getter
 	public enum WaypointType {
 
-		SPAWN(true), GANG(true), QUEST(false), SAFE_ZONE(true), GLOBAL(false);
+		SPAWN(true),
+		GANG(true),
+		QUEST(false),
+		SAFE_ZONE(true),
+		GLOBAL(false);
 
 		private final boolean safe;
 
