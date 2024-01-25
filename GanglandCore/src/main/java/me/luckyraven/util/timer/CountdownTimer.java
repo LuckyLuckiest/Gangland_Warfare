@@ -42,7 +42,7 @@ public class CountdownTimer extends Timer {
 	@Override
 	public void run() {
 		if (timeLeft < 1) {
-			afterTimer.accept(this);
+			if (afterTimer != null) afterTimer.accept(this);
 			stop();
 			return;
 		}
