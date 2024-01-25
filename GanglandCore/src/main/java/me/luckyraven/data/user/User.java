@@ -1,5 +1,6 @@
 package me.luckyraven.data.user;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
@@ -38,10 +39,11 @@ public class User<T extends OfflinePlayer> {
 	private final Set<InventoryHandler> inventories, specialInventories;
 
 	private @Setter int kills, deaths, mobKills, gangId;
-	private @Setter boolean              hasBank;
 	private @Setter Phone                phone;
 	private @Setter Scoreboard           scoreboard;
 	private @Setter PermissionAttachment permissionAttachment;
+
+	@Getter(value = AccessLevel.NONE) private @Setter boolean hasBank;
 
 	/**
 	 * Instantiates a new Database.
@@ -61,6 +63,15 @@ public class User<T extends OfflinePlayer> {
 		this.kills   = this.deaths = this.mobKills = 0;
 		this.gangId  = -1;
 		this.hasBank = false;
+	}
+
+	/**
+	 * Has bank boolean.
+	 *
+	 * @return the boolean
+	 */
+	public boolean hasBank() {
+		return hasBank;
 	}
 
 	/**

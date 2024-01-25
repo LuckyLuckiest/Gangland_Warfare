@@ -72,7 +72,7 @@ public class UserDatabase extends DatabaseHandler {
 
 		config.insert(columns,
 					  new Object[]{user.getUser().getUniqueId(), user.getKills(), user.getDeaths(), user.getMobKills(),
-								   user.getGangId(), user.isHasBank(), user.getEconomy().getBalance(),
+								   user.getGangId(), user.hasBank(), user.getEconomy().getBalance(),
 								   user.getBounty().getAmount(), user.getLevel().getLevelValue(),
 								   user.getLevel().getExperience()}, dataTypes);
 	}
@@ -89,7 +89,7 @@ public class UserDatabase extends DatabaseHandler {
 
 		config.update("uuid = ?", new Object[]{user.getUser().getUniqueId()}, new int[]{Types.CHAR}, columns,
 					  new Object[]{user.getKills(), user.getDeaths(), user.getMobKills(), user.getGangId(),
-								   user.isHasBank(), user.getEconomy().getBalance(), user.getBounty().getAmount(),
+								   user.hasBank(), user.getEconomy().getBalance(), user.getBounty().getAmount(),
 								   user.getLevel().getLevelValue(), user.getLevel().getExperience()}, dataTypes);
 	}
 
