@@ -33,9 +33,7 @@ public class HelpCommand extends CommandHandler {
 	}
 
 	@Override
-	protected void initializeArguments() {
-
-	}
+	protected void initializeArguments() { }
 
 	@Override
 	protected void help(CommandSender sender, int page) {
