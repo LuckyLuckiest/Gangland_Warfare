@@ -48,7 +48,7 @@ class GangDeleteCommand extends SubArgument {
 	private final ConfirmArgument confirmDelete;
 
 	protected GangDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"delete", "remove"}, tree, parent, "delete");
+		super(new String[]{"delete", "remove", "del"}, tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;

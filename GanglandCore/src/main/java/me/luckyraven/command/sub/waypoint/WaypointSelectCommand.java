@@ -19,7 +19,7 @@ class WaypointSelectCommand extends SubArgument {
 	private final WaypointManager waypointManager;
 
 	protected WaypointSelectCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"select", "selects"}, tree, parent, "select");
+		super(new String[]{"select", "selects"}, tree, parent);
 
 		this.tree = tree;
 

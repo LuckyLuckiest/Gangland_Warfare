@@ -4,21 +4,23 @@ import me.luckyraven.datastructure.Tree;
 import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
 
+import java.util.Objects;
+
 public abstract class SubArgument extends Argument {
 
-	public SubArgument(String argument, Tree<Argument> tree, Argument parent) {
+	protected SubArgument(String argument, Tree<Argument> tree, Argument parent) {
 		this(argument, tree, parent, argument);
 	}
 
-	public SubArgument(String argument, Tree<Argument> tree, Argument parent, String permission) {
+	protected SubArgument(String argument, Tree<Argument> tree, Argument parent, String permission) {
 		this(new String[]{argument}, tree, parent, permission);
 	}
 
-	public SubArgument(String[] arguments, Tree<Argument> tree, Argument parent) {
-		this(arguments, tree, parent, "");
+	protected SubArgument(String[] arguments, Tree<Argument> tree, Argument parent) {
+		this(arguments, tree, parent, Objects.requireNonNull(arguments[0]));
 	}
 
-	public SubArgument(String[] arguments, Tree<Argument> tree, Argument parent, String subPermission) {
+	protected SubArgument(String[] arguments, Tree<Argument> tree, Argument parent, String subPermission) {
 		super(arguments, tree, null);
 		super.action = action();
 
