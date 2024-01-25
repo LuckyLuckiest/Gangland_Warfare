@@ -53,12 +53,17 @@
                     <relocations>
                         <relocation>
                             <pattern>net.wesjd.anvilgui</pattern>
-                            <shadedPattern>me.luckyraven.bukkit.anvilgui</shadedPattern>
+                            <shadedPattern>me.luckyraven.dependency.anvilgui</shadedPattern>
                         </relocation>
 
                         <relocation>
                             <pattern>com.zaxxer.hikari</pattern>
-                            <shadedPattern>me.luckyraven.database.hikari</shadedPattern>
+                            <shadedPattern>me.luckyraven.dependency.hikari</shadedPattern>
+                        </relocation>
+
+                        <relocation>
+                            <pattern>org.slf4j</pattern>
+                            <shadedPattern>me.luckyraven.dependency.logging</shadedPattern>
                         </relocation>
 
                         <relocation>
@@ -68,12 +73,12 @@
 
                         <relocation>
                             <pattern>fr.mrmicky.fastboard</pattern>
-                            <shadedPattern>me.luckyraven.bukkit.scoreboard.fastboard</shadedPattern>
+                            <shadedPattern>me.luckyraven.dependency.fastboard</shadedPattern>
                         </relocation>
 
                         <relocation>
                             <pattern>net.objecthunter.exp4j</pattern>
-                            <shadedPattern>me.luckyraven.datastructure.exp4j</shadedPattern>
+                            <shadedPattern>me.luckyraven.dependency.exp4j</shadedPattern>
                         </relocation>
                     </relocations>
 
@@ -84,10 +89,8 @@
                             <includes>
                                 <!-- AnvilGUI -->
                                 <include>net/wesjd/anvilgui/version/</include>
-                                <!-- All information -->
-                                <include>me/luckyraven/</include>
                                 <!-- Compatibility -->
-                                <!--<include></include>-->
+                                <include>me/luckyraven/</include>
                             </includes>
                         </filter>
                     </filters>
@@ -110,7 +113,6 @@
     </build>
 
     <dependencies>
-
         <!-- Include Core -->
         <dependency>
             <groupId>me.luckyraven</groupId>
@@ -119,7 +121,102 @@
         </dependency>
 
         <!-- Include NMS -->
-
+        <!-- 1.20.x -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_20_R3</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_20_R2</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <!-- 1.19.x -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_19_R3</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_19_R2</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_19_R1</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <!-- 1.18.x -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_18_R1</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <!-- 1.17.x -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_17_R1</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <!-- 1.16.x -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_16_R3</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_16_R2</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_16_R1</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <!-- 1.15.x -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_15_R1</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <!-- 1.14.x -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_14_R1</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <!-- 1.13.x -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_13_R2</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_13_R1</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <!-- 1.12.x -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_12_R1</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <!-- 1.11.x -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_11_R1</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <!-- 1.10.x -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_10_R1</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
     </dependencies>
 
 </project>
