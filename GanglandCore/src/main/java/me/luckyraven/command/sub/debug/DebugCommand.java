@@ -9,7 +9,6 @@ import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
-import me.luckyraven.compatibility.CompatibilityAPI;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
@@ -310,7 +309,8 @@ public class DebugCommand extends CommandHandler {
 		Argument version = new Argument("version", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage("Server version: " + Bukkit.getVersion(), "Bukkit version: " + Bukkit.getBukkitVersion(),
 							   "Plugin version: " + getGangland().getDescription().getVersion(),
-							   "API version: " + getGangland().getDescription().getAPIVersion());
+							   "API version: " + getGangland().getDescription().getAPIVersion(),
+							   "Bukkit version: " + Bukkit.getServer().getClass().getPackage().getName());
 
 			if (!(sender instanceof Player player && getGangland().getViaAPI() != null)) return;
 
@@ -346,15 +346,15 @@ public class DebugCommand extends CommandHandler {
 
 				Block block = location.getBlock();
 
-				CompatibilityAPI.getBlockCompatibility().getCrackPacket(block, 1);
+//				CompatibilityAPI.getBlockCompatibility().getCrackPacket(block, 1);
 
 				if (block.getType() != Material.AIR) {
 					World    world         = block.getWorld();
 					Location blockLocation = block.getLocation();
 
-					CountdownTimer timer = new CountdownTimer(getGangland(), 40,
+					CountdownTimer timer = new CountdownTimer(getGangland(), 0L, 0L, 40, null,
 															  t -> world.playEffect(blockLocation, Effect.STEP_SOUND,
-																					block.getType()));
+																					block.getType()), null);
 
 					timer.start(false);
 				}
