@@ -41,7 +41,17 @@ class GangDepositCommand extends SubArgument {
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
-		return null;
+		return (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
+		};
 	}
 
 	private OptionalArgument gangDeposit() {
