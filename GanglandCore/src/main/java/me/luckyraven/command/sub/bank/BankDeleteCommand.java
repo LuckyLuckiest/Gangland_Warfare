@@ -97,7 +97,7 @@ public class BankDeleteCommand extends SubArgument {
 			for (Account<?, ?> account : user.getLinkedAccounts())
 				if (account instanceof Bank bank) {
 					user.getEconomy().deposit(bank.getEconomy().getBalance() + SettingAddon.getBankCreateFee() / 2);
-					user.setBank(false);
+					user.setHasBank(false);
 
 					bank.setName("");
 					bank.getEconomy().setBalance(0D);

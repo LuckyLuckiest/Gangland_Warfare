@@ -73,7 +73,7 @@ public class BankCreateCommand extends SubArgument {
 			}
 
 			user.getEconomy().withdraw(SettingAddon.getBankCreateFee());
-			user.setBank(true);
+			user.setHasBank(true);
 
 			for (Account<?, ?> account : user.getLinkedAccounts())
 				if (account instanceof Bank bank) {
