@@ -1,0 +1,134 @@
+package me.luckyraven.command.sub.bank;
+
+import me.luckyraven.Gangland;
+import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.command.argument.types.ConfirmArgument;
+import me.luckyraven.command.argument.types.OptionalArgument;
+import me.luckyraven.data.account.Account;
+import me.luckyraven.data.account.type.Bank;
+import me.luckyraven.data.user.User;
+import me.luckyraven.data.user.UserManager;
+import me.luckyraven.datastructure.Tree;
+import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.TriConsumer;
+import me.luckyraven.util.timer.CountdownTimer;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
+import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicReference;
+
+public class BankCreateCommand extends SubArgument {
+
+	private final Gangland            gangland;
+	private final Tree<Argument>      tree;
+	private final UserManager<Player> userManager;
+
+	protected BankCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+		super("create", tree, parent);
+
+		this.gangland = gangland;
+		this.tree     = tree;
+
+		this.userManager = gangland.getInitializer().getUserManager();
+
+		bankCreate();
+	}
+
+	@Override
+	protected TriConsumer<Argument, CommandSender, String[]> action() {
+		return (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user.hasBank()) {
+				player.sendMessage(MessageAddon.BANK_EXIST.toString());
+				return;
+			}
+
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+		};
+	}
+
+	private void bankCreate() {
+		HashMap<User<Player>, AtomicReference<String>> createBankName  = new HashMap<>();
+		HashMap<CommandSender, CountdownTimer>         createBankTimer = new HashMap<>();
+
+		ConfirmArgument confirmCreate = new ConfirmArgument(tree, (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user.hasBank()) {
+				player.sendMessage(MessageAddon.BANK_EXIST.toString());
+				return;
+			}
+
+			if (user.getEconomy().getBalance() < SettingAddon.getBankCreateFee()) {
+				player.sendMessage(MessageAddon.CANNOT_CREATE_BANK.toString());
+				return;
+			}
+
+			user.getEconomy().withdraw(SettingAddon.getBankCreateFee());
+			user.setBank(true);
+
+			for (Account<?, ?> account : user.getLinkedAccounts())
+				if (account instanceof Bank bank) {
+					bank.setName(createBankName.get(user).get());
+					bank.getEconomy().setBalance(SettingAddon.getBankInitialBalance());
+					break;
+				}
+
+			player.sendMessage(MessageAddon.BANK_CREATED.toString().replace("%bank%", createBankName.get(user).get()));
+
+			createBankName.remove(user);
+
+			CountdownTimer timer = createBankTimer.get(sender);
+			if (timer != null) {
+				if (!timer.isCancelled()) timer.cancel();
+				createBankTimer.remove(sender);
+			}
+		});
+
+		this.addSubArgument(confirmCreate);
+
+		Argument createName = new OptionalArgument(tree, (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user.hasBank()) {
+				player.sendMessage(MessageAddon.BANK_EXIST.toString());
+				return;
+			}
+
+			if (confirmCreate.isConfirmed()) return;
+
+			createBankName.put(user, new AtomicReference<>(args[2]));
+
+			// Need to notify the player and give access to confirm
+			player.sendMessage(MessageAddon.BANK_CREATE_FEE.toString()
+														   .replace("%amount%", SettingAddon.formatDouble(
+																   SettingAddon.getBankCreateFee())));
+			player.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "create"}));
+			confirmCreate.setConfirmed(true);
+
+			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+				sender.sendMessage(MessageAddon.BANK_CREATE_CONFIRM.toString()
+																   .replace("%timer%",
+																			TimeUtil.formatTime(time.getPeriod(),
+																								true)));
+			}, null, time -> {
+				confirmCreate.setConfirmed(false);
+				createBankName.remove(user);
+			});
+
+			timer.start(false);
+			createBankTimer.put(sender, timer);
+		});
+
+		this.addSubArgument(createName);
+	}
+}
