@@ -8,6 +8,8 @@ import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.CommandTabCompleter;
 import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.command.sub.*;
+import me.luckyraven.command.sub.bank.BankCommand;
+import me.luckyraven.command.sub.bounty.BountyCommand;
 import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.OptionCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
@@ -18,6 +20,7 @@ import me.luckyraven.command.sub.waypoint.TeleportCommand;
 import me.luckyraven.command.sub.waypoint.WaypointCommand;
 import me.luckyraven.command.sub.weapon.AmmunitionCommand;
 import me.luckyraven.command.sub.weapon.WeaponCommand;
+import me.luckyraven.compatibility.CompatibilityWorker;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
@@ -89,6 +92,8 @@ public final class Initializer {
 	private @Getter AmmunitionAddon            ammunitionAddon;
 	private @Getter WeaponLoader               weaponLoader;
 	private @Getter WeaponAddon                weaponAddon;
+	// Compatibility
+	private @Getter CompatibilityWorker        compatibilityWorker;
 
 	public Initializer(Gangland gangland) {
 		this.gangland = gangland;
@@ -163,6 +168,8 @@ public final class Initializer {
 		// Placeholder
 		placeholder = new GanglandPlaceholder(gangland, Replacer.Closure.PERCENT);
 
+		// Compatibility loader
+		compatibilityWorker = new CompatibilityWorker(gangland);
 	}
 
 	public void addonsLoader() {

@@ -62,11 +62,6 @@
                         </relocation>
 
                         <relocation>
-                            <pattern>org.slf4j</pattern>
-                            <shadedPattern>me.luckyraven.dependency.logging</shadedPattern>
-                        </relocation>
-
-                        <relocation>
                             <pattern>com.cryptomorin.xseries</pattern>
                             <shadedPattern>me.luckyraven.dependency.xseries</shadedPattern>
                         </relocation>
