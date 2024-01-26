@@ -3,13 +3,11 @@ package me.luckyraven.listener.player.weapon;
 import com.google.common.util.concurrent.AtomicDouble;
 import me.luckyraven.Gangland;
 import me.luckyraven.feature.weapon.Weapon;
+import me.luckyraven.feature.weapon.projectile.type.Bullet;
 import me.luckyraven.util.timer.RepeatingTimer;
-import net.minecraft.network.protocol.game.PacketPlayOutPosition;
-import net.minecraft.world.entity.RelativeMovement;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
-import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -19,10 +17,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -30,12 +25,6 @@ public class WeaponInteract implements Listener {
 
 	private final Gangland gangland;
 	private final Random   random;
-
-	private final Set<RelativeMovement> ABSOLUTE_FLAGS = new HashSet<>(
-			Arrays.asList(RelativeMovement.a, RelativeMovement.b, RelativeMovement.c));
-	private final Set<RelativeMovement> RELATIVE_FLAGS = new HashSet<>(
-			Arrays.asList(RelativeMovement.a, RelativeMovement.b, RelativeMovement.c, RelativeMovement.e,
-						  RelativeMovement.d));
 
 	public WeaponInteract(Gangland gangland) {
 		this.gangland = gangland;
@@ -63,10 +52,16 @@ public class WeaponInteract implements Listener {
 		boolean rightClick = event.getAction() == Action.RIGHT_CLICK_AIR ||
 							 event.getAction() == Action.RIGHT_CLICK_BLOCK;
 		if (rightClick) {
-//			Bullet bullet = new Bullet(player, weapon);
+			Bullet bullet = new Bullet(player, weapon);
 
-//			bullet.launchProjectile();
+			bullet.launchProjectile();
 
+			float screenRecoil = 0.05F;
+
+			gangland.getInitializer()
+					.getCompatibilityWorker()
+					.getRecoilCompatibility()
+					.modifyCameraRotation(player, screenRecoil, screenRecoil, true);
 
 		}
 
@@ -92,7 +87,6 @@ public class WeaponInteract implements Listener {
 //		RepeatingTimer timer = applyGravity(projectile);
 //
 //		// Recoil logic
-//		float screenRecoil = 0.05F;
 //		float pushVelocity = 0.05F;
 //
 //		if (!player.isSneaking()) push(player, .0002F, pushVelocity);
@@ -149,19 +143,6 @@ public class WeaponInteract implements Listener {
 
 		if (location.getBlock().getRelative(BlockFace.DOWN).getType() != Material.AIR) player.setVelocity(
 				location.getDirection().multiply(push).add(vector));
-	}
-
-	private void applyRecoil(Player player, float yaw, float pitch) {
-		float newYaw   = -yaw + 1;
-		float newPitch = pitch - 1;
-
-		// Need to use NMS for smooth player movements
-		// Exclusive for 1.20.4
-		(((CraftPlayer) player).getHandle()).c.b(
-				new PacketPlayOutPosition(0D, 0D, 0D, newYaw, newPitch, RELATIVE_FLAGS, 0));
-
-		// Use Entity#setRotation for future updates that are still not updated to avoid issues
-//		player.setRotation(player.getLocation().getYaw() + newYaw, player.getLocation().getPitch() + newPitch);
 	}
 
 }
