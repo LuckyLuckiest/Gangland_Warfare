@@ -3,6 +3,7 @@ package me.luckyraven.util;
 import com.cryptomorin.xseries.messages.ActionBar;
 import com.google.common.base.Preconditions;
 import me.luckyraven.Gangland;
+import me.luckyraven.datastructure.SpellChecker;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.Bukkit;
@@ -11,10 +12,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public final class ChatUtil {
 
@@ -130,6 +130,31 @@ public final class ChatUtil {
 
 	public static void sendActionBar(Player player, String message) {
 		ActionBar.sendActionBar(JavaPlugin.getPlugin(Gangland.class), player, message);
+	}
+
+	public static String generateCommandSuggestion(String word, Set<String> dictionary, String command,
+												   @Nullable String[] args) {
+		// generate suggestions
+		SpellChecker checker = new SpellChecker(word, dictionary);
+
+		checker.generateSuggestions();
+
+		Map<Integer, List<String>> suggestions = checker.getSuggestions();
+		// get the minimum length
+		int minimum = suggestions.keySet().stream().mapToInt(Integer::intValue).min().orElse(-1);
+
+		StringBuilder builder = new StringBuilder("&eDid you mean ");
+
+		builder.append("&b\"").append("/").append(command).append(" ");
+
+		if (args != null) for (String arg : args) builder.append(arg).append(" ");
+
+		if (minimum != -1) builder.append(suggestions.get(minimum).get(0));
+
+		builder.trimToSize();
+		builder.append("\"&e?");
+
+		return builder.toString();
 	}
 
 }
