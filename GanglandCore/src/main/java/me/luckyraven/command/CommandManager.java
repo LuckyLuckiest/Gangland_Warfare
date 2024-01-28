@@ -1,31 +1,71 @@
 package me.luckyraven.command;
 
+import lombok.Getter;
 import me.luckyraven.Gangland;
+import me.luckyraven.command.sub.debug.DebugCommand;
+import me.luckyraven.command.sub.debug.OptionCommand;
+import me.luckyraven.command.sub.debug.ReadNBTCommand;
+import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static me.luckyraven.util.ChatUtil.color;
 
 public final class CommandManager implements CommandExecutor {
 
-	private final Map<String, CommandHandler> commands;
-	private final Gangland                    gangland;
+	// classes that shouldn't be displayed in tab completion
+	@Getter private static final List<Class<? extends CommandHandler>> filters = Arrays.asList(DebugCommand.class,
+																							   OptionCommand.class,
+																							   ReadNBTCommand.class,
+																							   TimerCommand.class);
+
+	private static final Map<String, CommandHandler> commands = new HashMap<>();
+	private final        Gangland                    gangland;
 
 	public CommandManager(Gangland gangland) {
 		this.gangland = gangland;
-		this.commands = new HashMap<>();
+	}
+
+	public static List<CommandHandler> getPermissibleCommands(CommandSender sender) {
+		List<CommandHandler> commandHandlers = new ArrayList<>();
+
+		for (CommandHandler handler : commands.values()) {
+			// filter the commands for non-dev users
+			if (!isDev(sender)) if (filters.stream().anyMatch(filterClass -> filterClass.isInstance(handler))) continue;
+
+			String permission = handler.getPermission();
+
+			// check if the user has the permission to suggest the tab completion
+			if (permission.isEmpty() || sender.hasPermission(handler.getPermission())) commandHandlers.add(handler);
+		}
+
+		return commandHandlers;
+	}
+
+	public static Map<String, CommandHandler> getCommands() {
+		return new HashMap<>(commands);
+	}
+
+	private static boolean isDev(CommandSender sender) {
+		if (!(sender instanceof Player player)) return false;
+
+		UUID senderUuid = player.getUniqueId();
+		// main & second account
+		UUID uuid1 = UUID.fromString("4b2d5e4d-a089-4660-b777-dd71f3fbbbfa");
+		UUID uuid2 = UUID.fromString("ad72b2bb-bc30-4c55-a275-106976e70894");
+
+		return senderUuid.equals(uuid1) || senderUuid.equals(uuid2);
 	}
 
 	@Override
@@ -58,6 +98,21 @@ public final class CommandManager implements CommandExecutor {
 			if (!match) {
 				sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_DONT_EXIST.toString(),
 														 String.format("/%s %s", label, Arrays.asList(args))));
+
+				List<CommandHandler> commandHandlers = getPermissibleCommands(sender);
+
+				Set<String> dictionary = commandHandlers.stream()
+														.map(CommandHandler::getAlias)
+														.flatMap(Collection::stream)
+														.filter(s -> !s.equals("?"))
+														.collect(Collectors.toSet());
+
+				dictionary.addAll(commandHandlers.stream()
+												 .map(handler -> handler.getArgument().getArguments()[0])
+												 .collect(Collectors.toSet()));
+
+				sender.sendMessage(
+						ChatUtil.color(ChatUtil.generateCommandSuggestion(args[0], dictionary, label, null)));
 				return false;
 			}
 		} catch (Throwable throwable) {
@@ -69,10 +124,6 @@ public final class CommandManager implements CommandExecutor {
 
 	public void addCommand(CommandHandler sub) {
 		commands.put(sub.getLabel(), sub);
-	}
-
-	public Map<String, CommandHandler> getCommands() {
-		return new HashMap<>(commands);
 	}
 
 	public void show(CommandSender cs) {

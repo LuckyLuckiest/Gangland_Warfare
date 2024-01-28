@@ -18,12 +18,11 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Argument implements Cloneable {
 
@@ -144,10 +143,10 @@ public class Argument implements Cloneable {
 		}).toArray(Argument[]::new);
 
 		try {
-			ArgumentResult<Argument> arg = traverseList(modifiedArg, sender, args);
+			ArgumentResult<Argument> argument = traverseList(modifiedArg, sender, args);
 
-			switch (arg.getState()) {
-				case SUCCESS -> arg.getArgument().executeArgument(sender, args);
+			switch (argument.getState()) {
+				case SUCCESS -> argument.getArgument().executeArgument(sender, args);
 				case NO_PERMISSION -> sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
 				case NOT_FOUND -> {
 					StringBuilder invalidArg = new StringBuilder(MessageAddon.ARGUMENTS_WRONG.toString());
@@ -161,9 +160,34 @@ public class Argument implements Cloneable {
 					for (int i = 0; i < args.length; i++) {
 						if (Arrays.stream(lastValid.arguments).noneMatch(args[i]::equalsIgnoreCase)) continue;
 
-						if (i + 1 < args.length) invalidArg.append(args[i + 1]);
+						// print the last wrong argument inputted
+						int    length = i;
+						String lastInput;
+
+						if (i + 1 < args.length) {
+							length    = i + 1;
+							lastInput = args[length];
+							invalidArg.append(lastInput);
+						} else {
+							lastInput = args[length];
+						}
 
 						sender.sendMessage(invalidArg.toString());
+
+						// get the last valid input children
+						List<Tree.Node<Argument>> children = lastValid.node.getChildren();
+						Set<String> dictionary = children.stream()
+														 .map(node -> node.getData().arguments)
+														 .flatMap(Stream::of)
+														 .filter(s -> !s.equals("?"))
+														 .collect(Collectors.toSet());
+						String[] validArguments = Arrays.stream(args)
+														.toList()
+														.subList(0, length)
+														.toArray(String[]::new);
+
+						sender.sendMessage(ChatUtil.color(
+								ChatUtil.generateCommandSuggestion(lastInput, dictionary, "glw", validArguments)));
 						break;
 					}
 				}

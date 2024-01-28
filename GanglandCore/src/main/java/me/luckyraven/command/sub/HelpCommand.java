@@ -2,6 +2,7 @@ package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
 import org.bukkit.command.CommandSender;
 
@@ -14,13 +15,11 @@ public class HelpCommand extends CommandHandler {
 		getHelpInfo().add(getCommandInformation("general"));
 		getHelpInfo().add(getCommandInformation("general_page"));
 
-		getHelpInfo().addAll(gangland.getInitializer()
-									 .getCommandManager()
-									 .getCommands()
-									 .values()
-									 .parallelStream()
-									 .flatMap(entry -> entry.getHelpInfo().getList().stream())
-									 .collect(Collectors.toList()));
+		getHelpInfo().addAll(CommandManager.getCommands()
+										   .values()
+										   .parallelStream()
+										   .flatMap(entry -> entry.getHelpInfo().getList().stream())
+										   .collect(Collectors.toList()));
 	}
 
 	@Override

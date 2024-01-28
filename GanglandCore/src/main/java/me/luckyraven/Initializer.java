@@ -3,7 +3,6 @@ package me.luckyraven;
 import lombok.Getter;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.scoreboard.ScoreboardManager;
-import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.CommandTabCompleter;
 import me.luckyraven.command.data.InformationManager;
@@ -20,7 +19,9 @@ import me.luckyraven.command.sub.waypoint.TeleportCommand;
 import me.luckyraven.command.sub.waypoint.WaypointCommand;
 import me.luckyraven.command.sub.weapon.AmmunitionCommand;
 import me.luckyraven.command.sub.weapon.WeaponCommand;
+import me.luckyraven.compatibility.CompatibilitySetup;
 import me.luckyraven.compatibility.CompatibilityWorker;
+import me.luckyraven.compatibility.VersionSetup;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
@@ -69,6 +70,8 @@ public final class Initializer {
 
 	// on plugin load
 	private final @Getter InformationManager informationManager;
+	private final @Getter VersionSetup       versionSetup;
+	private final @Getter CompatibilitySetup compatibilitySetup;
 
 	// on plugin enable
 	private @Getter UserManager<Player>        userManager;
@@ -97,9 +100,13 @@ public final class Initializer {
 
 	public Initializer(Gangland gangland) {
 		this.gangland = gangland;
+
 		// If at any instance these data failed to load, then the plugin will not function
-		informationManager = new InformationManager();
-		informationManager.processCommands();
+		this.informationManager = new InformationManager();
+		this.informationManager.processCommands();
+
+		this.versionSetup       = new VersionSetup();
+		this.compatibilitySetup = new CompatibilitySetup(gangland);
 	}
 
 	public void postInitialize() {
@@ -297,14 +304,14 @@ public final class Initializer {
 		commandManager.addCommand(new ReloadCommand(gangland));
 		commandManager.addCommand(new TimerCommand(gangland));
 
-		// Needs to be the final command to add all the help info
+		// Needs to be the final command to add all the help information
 		commandManager.addCommand(new HelpCommand(gangland));
 
 		PluginCommand command = this.gangland.getCommand("glw");
 
 		if (command == null) return;
 
-		command.setTabCompleter(new CommandTabCompleter(CommandHandler.getCommandHandlerMap()));
+		command.setTabCompleter(new CommandTabCompleter(CommandManager.getCommands()));
 	}
 
 }

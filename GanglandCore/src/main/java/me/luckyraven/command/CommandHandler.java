@@ -10,15 +10,12 @@ import me.luckyraven.file.configuration.MessageAddon;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 @Getter
 public abstract class CommandHandler {
-
-	private static final Map<String, CommandHandler> COMMAND_HANDLER_MAP = new HashMap<>();
 
 	private final String         label;
 	private final Set<String>    alias;
@@ -50,8 +47,6 @@ public abstract class CommandHandler {
 		this.argumentTree.add(argument.getNode());
 
 		initializeArguments();
-
-		COMMAND_HANDLER_MAP.put(this.label, this);
 	}
 
 	protected abstract void onExecute(Argument argument, CommandSender commandSender, String[] arguments);
@@ -59,10 +54,6 @@ public abstract class CommandHandler {
 	protected abstract void initializeArguments();
 
 	protected abstract void help(CommandSender sender, int page);
-
-	public static Map<String, CommandHandler> getCommandHandlerMap() {
-		return COMMAND_HANDLER_MAP;
-	}
 
 	public void runExecute(CommandSender sender, String[] args) {
 		// sender has the permission
