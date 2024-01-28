@@ -44,6 +44,8 @@ public class WeaponInteract implements Listener {
 		Player player = event.getPlayer();
 		Weapon weapon = gangland.getInitializer().getWeaponAddon().getWeapon(weaponName);
 
+		if (weapon == null) return;
+
 		// left-click does nothing
 		boolean leftClick = event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK;
 		if (leftClick) { }
@@ -56,12 +58,12 @@ public class WeaponInteract implements Listener {
 
 			bullet.launchProjectile();
 
-			float screenRecoil = 0.05F;
+			float recoil = (float) weapon.getRecoilAmount();
 
 			gangland.getInitializer()
 					.getCompatibilityWorker()
 					.getRecoilCompatibility()
-					.modifyCameraRotation(player, screenRecoil, screenRecoil, true);
+					.modifyCameraRotation(player, recoil, recoil, true);
 
 		}
 
