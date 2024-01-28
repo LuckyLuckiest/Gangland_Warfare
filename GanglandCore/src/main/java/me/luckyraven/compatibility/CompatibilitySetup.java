@@ -1,15 +1,20 @@
 package me.luckyraven.compatibility;
 
+import me.luckyraven.Gangland;
 import me.luckyraven.util.ReflectionUtil;
 import org.jetbrains.annotations.Nullable;
 
 public final class CompatibilitySetup {
 
-	private CompatibilitySetup() { }
+	private final Gangland gangland;
+
+	public CompatibilitySetup(Gangland gangland) {
+		this.gangland = gangland;
+	}
 
 	@Nullable
-	public static <T> T getCompatibleVersion(Class<T> interfaceClazz, String directory) {
-		String version = VersionSetup.getVersionAsString();
+	public <T> T getCompatibleVersion(Class<T> interfaceClazz, String directory) {
+		String version = this.gangland.getInitializer().getVersionSetup().getVersionString();
 		try {
 			Class<?> clazz = Class.forName(directory + "." + version, false, interfaceClazz.getClassLoader());
 			Object   comp  = ReflectionUtil.newInstance(ReflectionUtil.getConstructor(clazz));
