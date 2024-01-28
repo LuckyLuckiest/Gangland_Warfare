@@ -17,7 +17,7 @@ public class TimerCommand extends CommandHandler {
 	private final Map<CommandSender, SequenceTimer> timerMap;
 
 	public TimerCommand(Gangland gangland) {
-		super(gangland, "timer", false, "t");
+		super(gangland, "timer", false);
 
 		this.timerMap = new HashMap<>();
 	}
