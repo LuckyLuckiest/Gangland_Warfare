@@ -1,5 +1,6 @@
 package me.luckyraven.compatibility;
 
+import lombok.Getter;
 import me.luckyraven.Gangland;
 import org.bukkit.Bukkit;
 
@@ -7,11 +8,30 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 
+@Getter
 public final class VersionSetup {
 
-	private VersionSetup() { }
+	private final String  versionString;
+	private final double  version;
+	private final boolean paper;
 
-	public static String getVersionAsString() {
+	public VersionSetup() {
+		this.versionString = getVersion();
+		this.version       = getVersion(versionString);
+
+		boolean isPaper;
+
+		try {
+			Class.forName("com.destroystokyo.paper.VersionHistoryManager$VersionData");
+			isPaper = true;
+		} catch (ClassNotFoundException exception) {
+			isPaper = false;
+		}
+
+		this.paper = isPaper;
+	}
+
+	private String getVersion() {
 		try {
 			return Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
 		} catch (ArrayIndexOutOfBoundsException exception) {
@@ -20,7 +40,7 @@ public final class VersionSetup {
 		}
 	}
 
-	public static double getVersionAsNumber(String version) {
+	private double getVersion(String version) {
 		version = version.replaceFirst("v", "");
 		version = version.replaceFirst("R", "");
 		String[] splitVersion  = version.split("_");
