@@ -34,7 +34,7 @@ public final class Gangland extends JavaPlugin {
 
 	@Override
 	public void onLoad() {
-		// disable hikari cp logs
+		// disable hikaricp logs
 		disableAllLogs(HikariConfig.class);
 
 		initializer  = new Initializer(this);
@@ -101,6 +101,9 @@ public final class Gangland extends JavaPlugin {
 		// required dependencies
 		Dependency nbtApi = new Dependency("NBTAPI", Dependency.Type.REQUIRED);
 		nbtApi.validate(null);
+
+		Dependency protocolLib = new Dependency("ProtocolLib", Dependency.Type.REQUIRED);
+		protocolLib.validate(null);
 
 		// soft dependencies
 		Dependency placeholderApi = new Dependency("PlaceholderAPI", Dependency.Type.SOFT);

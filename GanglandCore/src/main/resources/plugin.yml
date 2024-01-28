@@ -1,10 +1,11 @@
-name: ${project.parent.name}
+name: Gangland_Warfare
 version: ${project.version}
 main: me.luckyraven.Gangland
 database: true
 api-version: 1.13
 depend:
    - NBTAPI
+   - ProtocolLib
 softdepend:
    - PlaceholderAPI
    - Vault
