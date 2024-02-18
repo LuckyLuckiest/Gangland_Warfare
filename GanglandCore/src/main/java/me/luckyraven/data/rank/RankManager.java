@@ -44,10 +44,10 @@ public class RankManager {
 				Rank rank = new Rank(name, permissions);
 
 				nodeMap.put(rank.getNode(), child);
-
 				ranks.put(id, rank);
 			}
 
+			// add the rank head
 			rankTree.add(nodeMap.keySet()
 								.stream()
 								.filter(node -> node.getData()
@@ -58,8 +58,7 @@ public class RankManager {
 
 			// map information
 			// the map saves the node and the child of that node
-			// when data collected, the loop will iterate over each entry, and adds the node
-			// to the parent entry key
+			// when data collected, the loop will iterate over each entry, and adds the node to the parent entry key
 
 			// member, parent = owner -> null (head)
 			// owner, parent = null -> member (tail)
@@ -69,8 +68,7 @@ public class RankManager {
 			// because of the structure of the tree, there can be multiple parents (will call it children because of the
 			// inverse nature)
 			// the children of that node makes the tree diverse so the user can choose 1 node for the specified tree,
-			// this creates
-			// tree diversity.
+			// this creates tree diversity.
 			// From this concept, each node can have unique perks and diverse to their specified node
 			// OR return to a single unique node which continues the list.
 			// Example:        user
@@ -151,11 +149,16 @@ public class RankManager {
 		return Collections.unmodifiableMap(ranks);
 	}
 
+	public int size() {
+		return ranks.size();
+	}
+
 	@Override
 	public String toString() {
 		return String.format("ranks=%s", ranks);
 	}
 
+	@Nullable
 	private Tree.Node<Rank> findChildNode(Map<Tree.Node<Rank>, List<String>> nodeMap, String child) {
 		return nodeMap.keySet()
 					  .stream()
