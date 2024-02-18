@@ -23,6 +23,7 @@ public class CompatibilityWorker implements Compatibility {
 		if (recoilCompatibility == null) {
 			gangland.getLogger().info("You are running an unsupported version... Will try to use the default way.");
 			recoilCompatibility = new RecoilCompatibility();
+			recoilCompatibility.setGangland(gangland);
 		}
 
 		this.recoilCompatibility = recoilCompatibility;
