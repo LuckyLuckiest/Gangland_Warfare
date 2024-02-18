@@ -1,10 +1,20 @@
 package me.luckyraven.util;
 
+import me.luckyraven.Gangland;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public final class ReflectionUtil {
 
@@ -64,6 +74,43 @@ public final class ReflectionUtil {
 			return clazz.getConstructor(parameters);
 		} catch (NoSuchMethodException | SecurityException exception) {
 			throw new InternalError("Failed to get constructor.", exception);
+		}
+	}
+
+	public static Set<Class<?>> getAllClasses(String packageName) {
+		try {
+			Enumeration<URL> resources = ClassLoader.getSystemResources(packageName.replace('.', '/'));
+			Set<Class<?>>    classes   = new HashSet<>();
+
+			while (resources.hasMoreElements()) {
+				URL resource = resources.nextElement();
+				classes.addAll(getClassesFromResource(resource, packageName));
+			}
+
+			return classes;
+		} catch (IOException exception) {
+			Gangland.getLog4jLogger().error(exception);
+			return Collections.emptySet();
+		}
+	}
+
+	private static Set<Class<?>> getClassesFromResource(URL resource, String packageName) {
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.openStream()))) {
+			return reader.lines()
+						 .filter(line -> line.endsWith(".class"))
+						 .map(line -> getClass(line, packageName))
+						 .collect(Collectors.toSet());
+		} catch (IOException exception) {
+			Gangland.getLog4jLogger().error(exception);
+			return Collections.emptySet();
+		}
+	}
+
+	private static Class<?> getClass(String className, String packageName) {
+		try {
+			return Class.forName(packageName + "." + className.substring(0, className.lastIndexOf('.')));
+		} catch (ClassNotFoundException exception) {
+			throw new InternalError("Failed to get class.", exception);
 		}
 	}
 
