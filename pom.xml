@@ -23,10 +23,11 @@
         <module>GanglandCompatibility</module>
         <module>GanglandCompatibility/V1_20_R3</module>
         <module>GanglandCompatibility/V1_20_R2</module>
-        <!-- Missing V1_20_R1 -->
+        <module>GanglandCompatibility/V1_20_R1</module>
         <module>GanglandCompatibility/V1_19_R3</module>
         <module>GanglandCompatibility/V1_19_R2</module>
         <module>GanglandCompatibility/V1_19_R1</module>
+        <module>GanglandCompatibility/V1_18_R2</module>
         <module>GanglandCompatibility/V1_18_R1</module>
         <module>GanglandCompatibility/V1_17_R1</module>
         <module>GanglandCompatibility/V1_16_R3</module>
