@@ -2,8 +2,10 @@ package me.luckyraven.listener.player.weapon;
 
 import com.google.common.util.concurrent.AtomicDouble;
 import me.luckyraven.Gangland;
+import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.projectile.type.Bullet;
+import me.luckyraven.file.configuration.SoundConfiguration;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -17,18 +19,15 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class WeaponInteract implements Listener {
 
 	private final Gangland gangland;
-	private final Random   random;
 
 	public WeaponInteract(Gangland gangland) {
 		this.gangland = gangland;
-		this.random   = new Random();
 	}
 
 	@EventHandler
@@ -42,6 +41,11 @@ public class WeaponInteract implements Listener {
 
 		// get the weapon information
 		Player player = event.getPlayer();
+		// Need to change how the weapons are got, basically there can be a repeated pattern of similar weapons sharing
+		// similar traits but are not the same fundamentally.
+		// A solution for this is to have all the weapons loaded and stored in a map
+		// The weapons acquired by the user are created at that instance as a new weapon, which takes all the traits
+		// stored.
 		Weapon weapon = gangland.getInitializer().getWeaponAddon().getWeapon(weaponName);
 
 		if (weapon == null) return;
@@ -54,17 +58,41 @@ public class WeaponInteract implements Listener {
 		boolean rightClick = event.getAction() == Action.RIGHT_CLICK_AIR ||
 							 event.getAction() == Action.RIGHT_CLICK_BLOCK;
 		if (rightClick) {
+			// consume bullet
+			boolean consumed = weapon.consumeShot();
+
+			// no shot fired
+			if (!consumed) {
+				// sound
+				boolean sound = playSound(player, weapon.getCustomMagSound());
+				if (!sound) playSound(player, weapon.getDefaultMagSound());
+
+				return;
+			}
+
 			Bullet bullet = new Bullet(player, weapon);
 
+			// launch the projectile
 			bullet.launchProjectile();
+
+			// update data
+			ItemBuilder heldWeapon = weapon.getHeldWeapon(player);
+
+			if (heldWeapon != null) {
+				weapon.updateWeaponData(heldWeapon);
+				weapon.updateWeapon(player, heldWeapon, player.getInventory().getHeldItemSlot());
+			}
 
 			float recoil = (float) weapon.getRecoilAmount();
 
-			gangland.getInitializer()
-					.getCompatibilityWorker()
-					.getRecoilCompatibility()
-					.modifyCameraRotation(player, recoil, recoil, true);
+			if (!player.isSneaking()) recoil(player, recoil, recoil);
+			else recoil(player, recoil / 4, recoil / 4);
 
+			if (!player.isSneaking()) push(player, weapon.getPushPowerUp(), weapon.getPushVelocity());
+			else push(player, 0, 0);
+
+			boolean shotSound = playSound(player, weapon.getCustomShotSound());
+			if (!shotSound) playSound(player, weapon.getDefaultShotSound());
 		}
 
 		// drop reloads the gun
@@ -88,24 +116,7 @@ public class WeaponInteract implements Listener {
 //
 //		RepeatingTimer timer = applyGravity(projectile);
 //
-//		// Recoil logic
-//		float pushVelocity = 0.05F;
-//
-//		if (!player.isSneaking()) push(player, .0002F, pushVelocity);
-//		else push(player, 0, 0);
-//
-//		if (!player.isSneaking()) applyRecoil(player, screenRecoil, screenRecoil);
-//		else applyRecoil(player, screenRecoil / 4, screenRecoil / 4);
-//
 //		timer.start(false);
-	}
-
-	private Vector applySpread(Vector originalVector, double spreadFactor) {
-		double offsetX = (random.nextDouble() - 0.5) * spreadFactor;
-		double offsetY = (random.nextDouble() - 0.5) * spreadFactor;
-		double offsetZ = (random.nextDouble() - 0.5) * spreadFactor;
-
-		return originalVector.add(new Vector(offsetX, offsetY, offsetZ)).normalize();
 	}
 
 	@NotNull
@@ -137,6 +148,13 @@ public class WeaponInteract implements Listener {
 		});
 	}
 
+	private void recoil(Player player, float yaw, float pitch) {
+		gangland.getInitializer()
+				.getCompatibilityWorker()
+				.getRecoilCompatibility()
+				.modifyCameraRotation(player, yaw, pitch, true);
+	}
+
 	private void push(Player player, double powerUp, double push) {
 		if (push > 0) push *= -1;
 
@@ -145,6 +163,12 @@ public class WeaponInteract implements Listener {
 
 		if (location.getBlock().getRelative(BlockFace.DOWN).getType() != Material.AIR) player.setVelocity(
 				location.getDirection().multiply(push).add(vector));
+	}
+
+	private boolean playSound(Player player, SoundConfiguration sound) {
+		if (sound == null) return false;
+
+		return sound.playSound(player);
 	}
 
 }
