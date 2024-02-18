@@ -53,4 +53,8 @@ public class PermissionManager {
 										 .collect(Collectors.toCollection(LinkedHashSet::new));
 	}
 
+	public int size() {
+		return permissions.size();
+	}
+
 }

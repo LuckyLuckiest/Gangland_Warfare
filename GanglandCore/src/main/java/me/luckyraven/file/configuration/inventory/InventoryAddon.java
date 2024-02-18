@@ -53,6 +53,10 @@ public class InventoryAddon {
 		return inventories.keySet();
 	}
 
+	public static int size() {
+		return inventories.size();
+	}
+
 	public static void registerInventory(Gangland gangland, FileHandler fileHandler) {
 		FileConfiguration config   = fileHandler.getFileConfiguration();
 		String            fileName = fileHandler.getName().toLowerCase();

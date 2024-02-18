@@ -143,6 +143,10 @@ public class WaypointManager {
 		return Collections.unmodifiableMap(waypoints);
 	}
 
+	public int size() {
+		return waypoints.size();
+	}
+
 	public Map<Player, Waypoint> getSelectedWaypoints() {
 		return Collections.unmodifiableMap(selectedWaypoints);
 	}
