@@ -186,7 +186,7 @@ public class WeaponAddon {
 				defaultShotSound = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, sound, volume, pitch);
 			}
 
-			ConfigurationSection customSound = soundSection.getConfigurationSection("Default_Sound");
+			ConfigurationSection customSound = soundSection.getConfigurationSection("Custom_Sound");
 			if (customSound != null) {
 				String sound  = Objects.requireNonNull(customSound.getString("Sound"));
 				float  volume = (float) customSound.getDouble("Volume");
@@ -195,7 +195,7 @@ public class WeaponAddon {
 				customShotSound = new SoundConfiguration(SoundConfiguration.SoundType.CUSTOM, sound, volume, pitch);
 			}
 
-			ConfigurationSection emptyDefaultSound = soundSection.getConfigurationSection("Default_Sound");
+			ConfigurationSection emptyDefaultSound = soundSection.getConfigurationSection("Empty_Default_Sound");
 			if (emptyDefaultSound != null) {
 				String sound  = Objects.requireNonNull(emptyDefaultSound.getString("Sound"));
 				float  volume = (float) emptyDefaultSound.getDouble("Volume");
@@ -204,7 +204,7 @@ public class WeaponAddon {
 				defaultMagSound = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, sound, volume, pitch);
 			}
 
-			ConfigurationSection emptyCustomSound = soundSection.getConfigurationSection("Default_Sound");
+			ConfigurationSection emptyCustomSound = soundSection.getConfigurationSection("Empty_Custom_Sound");
 			if (emptyCustomSound != null) {
 				String sound  = Objects.requireNonNull(emptyCustomSound.getString("Sound"));
 				float  volume = (float) emptyCustomSound.getDouble("Volume");
@@ -374,6 +374,10 @@ public class WeaponAddon {
 
 	public Set<String> getWeaponKeys() {
 		return weapons.keySet();
+	}
+
+	public int size() {
+		return weapons.size();
 	}
 
 }
