@@ -58,6 +58,14 @@ Language: en
 # | Resource Pack Config | #
 # +----------------------+ #
 
+# This plugin contains a custom resource pack that can be used in the server.
+# A manual download is applicable if there was any problem faced.
+Resource_Pack:
+   Enable: true
+   # This is the direct download url link.
+   URL: "https://drive.google.com/uc?export=download&id=1ynhOxjyvQn9QhIQ8y_Lf-iU97FQwMj-x"
+   # Kicks the player if they didn't accept the resource pack
+   Kick: false
 
 # +-----------------+ #
 # | Database Config | #
@@ -181,6 +189,26 @@ User:
          Threshold: 1_000
       Respawn:
          Enable: false
+         Screen:
+            Enable: true
+            Title: "&cWASTED"
+            Subtitle: "&7Teleporting to %gangland_waypoint_spawn% after &a%gangland_time% &7%gangland_time_unit%&8(&7s&8)"
+         Chat:
+            Enable: true
+            Message:
+               - ""
+               - ""
+               - ""
+               - ""
+         GameMode:
+            Enable: true
+            Change_To: "spectator"
+         Health:
+            Enable: true
+            Amount: 20
+         Hunger:
+            Enable: true
+            Amount: 20
 
 # +---------------+ #
 # | Bounty Config | #
