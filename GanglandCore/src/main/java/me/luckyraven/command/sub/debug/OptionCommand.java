@@ -13,6 +13,7 @@ import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -36,13 +37,34 @@ public class OptionCommand extends CommandHandler {
 		GangManager         gangManager   = getGangland().getInitializer().getGangManager();
 		RankManager         rankManager   = getGangland().getInitializer().getRankManager();
 
-		Argument gang = gangArgument(userManager, memberManager, gangManager, rankManager);
+		Argument gang     = gangArgument(userManager, memberManager, gangManager, rankManager);
+		Argument resource = resourcePack();
 
 		getArgument().addSubArgument(gang);
+		getArgument().addSubArgument(resource);
 	}
 
 	@Override
 	protected void help(CommandSender sender, int page) { }
+
+	private Argument resourcePack() {
+		Argument click = new Argument("click", getArgumentTree());
+
+		// glw option click resource
+		Argument resource = new Argument("resource", getArgumentTree(), (argument, sender, args) -> {
+			sender.sendMessage(ChatUtil.prefixMessage(
+					"&7You should first disconnect from the server and click the server tab you created, " +
+					"next click &8(&bEdit&8)&7 then change &8(&bServer Resource Packs&8)&7 to either " +
+					"&aPrompt&7 or &aEnabled&7 then click &8(&bDone&8)&7 button and log back in."));
+			sender.sendMessage(ChatUtil.color(
+					"&7If you chose &aPrompt &7then click &8(&bYes&8)&7 once you joined back into the server, " +
+					"then the download process will start."));
+		});
+
+		click.addSubArgument(resource);
+
+		return click;
+	}
 
 	private Argument gangArgument(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
 								  RankManager rankManager) {
