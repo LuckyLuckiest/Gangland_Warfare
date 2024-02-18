@@ -37,51 +37,53 @@ public class EntityDamage implements Listener {
 		if (!(event.getEntity() instanceof LivingEntity livingEntity &&
 			  livingEntity.getHealth() <= event.getFinalDamage())) return;
 
-		User<Player> user = userManager.getUser(damager.getPlayer());
+		// the current damager
+		User<Player> damagerUser = userManager.getUser(damager.getPlayer());
+
+		// the entity killed is not a player
+		if (!(event.getEntity() instanceof Player player)) {
+			damagerUser.setMobKills(damagerUser.getMobKills() + 1);
+			return;
+		}
 
 		// check if it was a player or a mob
-		User<Player> deadUser;
-		if (event.getEntity() instanceof Player player) {
-			deadUser = userManager.getUser(player);
+		User<Player> deadUser = userManager.getUser(player);
 
-			user.setKills(user.getKills() + 1);
+		damagerUser.setKills(damagerUser.getKills() + 1);
 
-			// when does the attacked user have a bounty
-			if (deadUser.getBounty().hasBounty()) {
-				double amount = deadUser.getBounty().getAmount();
+		// when does the attacked user have a bounty
+		if (deadUser.getBounty().hasBounty()) {
+			double amount = deadUser.getBounty().getAmount();
 
-				user.getEconomy().deposit(amount);
-				deadUser.getBounty().resetBounty();
+			damagerUser.getEconomy().deposit(amount);
+			deadUser.getBounty().resetBounty();
+			damagerUser.getUser().sendMessage(ChatUtil.color("&a+" + amount));
+		} else {
+			// TODO change the values when there is a level system
+			// the start value would be the player level
+			Bounty      userBounty  = damagerUser.getBounty();
+			BountyEvent bountyEvent = new BountyEvent(userBounty);
 
-				user.getUser().sendMessage(ChatUtil.color("&a+" + amount));
-			} else {
-				// TODO change the values when there is a level system
-				// the start value would be the player level
-				Bounty userBounty = user.getBounty();
-
-				BountyEvent bountyEvent = new BountyEvent(userBounty);
-				bountyEvent.setUserBounty(user);
-				if (userBounty.getRepeatingTimer() == null && SettingAddon.isBountyTimerEnabled()) {
-					if (userBounty.getAmount() < SettingAddon.getBountyTimerMax()) {
-						// create a timer and start it
-						userBounty.createTimer(gangland, SettingAddon.getBountyTimeInterval(),
-											   timer -> bountyExecutor(user, bountyEvent, timer)).start(false);
-					}
-				} else {
-					double eachKill = SettingAddon.getBountyEachKillValue();
-					double amount   = eachKill + userBounty.getAmount();
-
-					if (amount <= SettingAddon.getBountyMaxKill()) {
-						bountyEvent.setAmountApplied(eachKill);
-
-						gangland.getServer().getPluginManager().callEvent(bountyEvent);
-
-						if (!bountyEvent.isCancelled()) user.getBounty().setAmount(amount);
-					}
+			bountyEvent.setUserBounty(damagerUser);
+			if (userBounty.getRepeatingTimer() == null && SettingAddon.isBountyTimerEnabled()) {
+				if (userBounty.getAmount() < SettingAddon.getBountyTimerMax()) {
+					// create a timer and start it
+					userBounty.createTimer(gangland, SettingAddon.getBountyTimeInterval(),
+										   timer -> bountyExecutor(damagerUser, bountyEvent, timer)).start(false);
 				}
+			} else {
+				double eachKill = SettingAddon.getBountyEachKillValue();
+				double amount   = eachKill + userBounty.getAmount();
+
+				if (amount > SettingAddon.getBountyMaxKill()) return;
+
+				bountyEvent.setAmountApplied(eachKill);
+				gangland.getServer().getPluginManager().callEvent(bountyEvent);
+
+				if (!bountyEvent.isCancelled()) damagerUser.getBounty().setAmount(amount);
 			}
-			// change wanted level
-		} else user.setMobKills(user.getMobKills() + 1);
+		}
+		// change wanted level
 	}
 
 	private void bountyExecutor(User<Player> user, BountyEvent bountyEvent, RepeatingTimer timer) {
