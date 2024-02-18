@@ -4,6 +4,7 @@ import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.FileManager;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.IOException;
@@ -22,10 +23,14 @@ public class SettingAddon {
 	// update configuration
 	private static @Getter boolean           updaterEnabled, notifyPrivilegedPlayers, updaterAutoUpdate;
 	// language picked
-	private static @Getter String languagePicked;
+	private static @Getter String  languagePicked;
+	// resource pack
+	private static @Getter boolean resourcePackEnabled;
+	private static @Getter String  resourcePackUrl;
+	private static @Getter boolean resourcePackKick;
 	// database configuration
-	private static @Getter String databaseType;
-	private static @Getter String mysqlHost, mysqlUsername, mysqlPassword;
+	private static @Getter String  databaseType;
+	private static @Getter String  mysqlHost, mysqlUsername, mysqlPassword;
 	private static @Getter int     mysqlPort;
 	private static @Getter boolean sqliteBackup, sqliteFailedMysql, autoSave, autoSaveDebug;
 	private static @Getter int    autoSaveTime;
@@ -86,71 +91,97 @@ public class SettingAddon {
 
 	private void initialize() {
 		// update configuration
-		updaterEnabled          = settings.getBoolean("Update_Checker.Enable");
-		notifyPrivilegedPlayers = settings.getBoolean("Update_Checker.Notify_Privileged_Players");
-		updaterAutoUpdate       = settings.getBoolean("Update_Checker.Auto_Update");
+		ConfigurationSection updateChecker = settings.getConfigurationSection("Update_Checker");
+		Objects.requireNonNull(updateChecker);
+
+		updaterEnabled          = updateChecker.getBoolean("Enable");
+		notifyPrivilegedPlayers = updateChecker.getBoolean("Notify_Privileged_Players");
+		updaterAutoUpdate       = updateChecker.getBoolean("Auto_Update");
 
 		// language picked
 		languagePicked = settings.getString("Language");
 
+		// resource pack
+		ConfigurationSection resourcePack = settings.getConfigurationSection("Resource_Pack");
+		Objects.requireNonNull(resourcePack);
+
+		resourcePackEnabled = resourcePack.getBoolean("Enable");
+		resourcePackUrl     = resourcePack.getString("URL");
+		resourcePackKick    = resourcePack.getBoolean("Kick");
+
 		// database
-		databaseType      = settings.getString("Database.Type");
-		mysqlHost         = settings.getString("Database.MySQL.Host");
-		mysqlUsername     = settings.getString("Database.MySQL.Username");
-		mysqlPassword     = settings.getString("Database.MySQL.Password");
-		mysqlPort         = settings.getInt("Database.MySQL.Port");
-		sqliteBackup      = settings.getBoolean("Database.SQLite.Backup");
-		sqliteFailedMysql = settings.getBoolean("Database.SQLite.Failed_MySQL");
-		autoSave          = settings.getBoolean("Database.Auto_Save.Enable");
-		autoSaveDebug     = settings.getBoolean("Database.Auto_Save.Debug");
-		autoSaveTime      = settings.getInt("Database.Auto_Save.Time");
+		ConfigurationSection database = settings.getConfigurationSection("Database");
+		Objects.requireNonNull(database);
+
+		databaseType      = database.getString("Type");
+		mysqlHost         = database.getString("MySQL.Host");
+		mysqlUsername     = database.getString("MySQL.Username");
+		mysqlPassword     = database.getString("MySQL.Password");
+		mysqlPort         = database.getInt("MySQL.Port");
+		sqliteBackup      = database.getBoolean("SQLite.Backup");
+		sqliteFailedMysql = database.getBoolean("SQLite.Failed_MySQL");
+		autoSave          = database.getBoolean("Auto_Save.Enable");
+		autoSaveDebug     = database.getBoolean("Auto_Save.Debug");
+		autoSaveTime      = database.getInt("Auto_Save.Time");
 
 		// inventory
-		inventoryFillItem = settings.getString("Inventory.Fill.Item");
-		inventoryFillName = settings.getString("Inventory.Fill.Name");
-		inventoryLineItem = settings.getString("Inventory.Line.Item");
-		inventoryLineName = settings.getString("Inventory.Line.Name");
+		ConfigurationSection inventory = settings.getConfigurationSection("Inventory");
+		Objects.requireNonNull(inventory);
+
+		inventoryFillItem = inventory.getString("Inventory.Fill.Item");
+		inventoryFillName = inventory.getString("Inventory.Fill.Name");
+		inventoryLineItem = inventory.getString("Inventory.Line.Item");
+		inventoryLineName = inventory.getString("Inventory.Line.Name");
 
 		// economy
 		moneySymbol   = Objects.requireNonNull(settings.getString("Money_Symbol")).substring(0, 1);
 		balanceFormat = settings.getString("Balance_Format.Format");
 
 		// user
-		userInitialBalance = settings.getDouble("User.Account.Initial_Balance");
-		userMaxBalance     = settings.getDouble("User.Account.Maximum_Balance");
-		bankInitialBalance = settings.getDouble("User.Bank.Initial_Balance");
-		bankCreateFee      = settings.getDouble("User.Bank.Create_Cost");
-		bankMaxBalance     = settings.getDouble("User.Bank.Maximum_Balance");
+		ConfigurationSection user = settings.getConfigurationSection("User");
+		Objects.requireNonNull(user);
+
+		userInitialBalance = user.getDouble("Account.Initial_Balance");
+		userMaxBalance     = user.getDouble("Account.Maximum_Balance");
+		bankInitialBalance = user.getDouble("Bank.Initial_Balance");
+		bankCreateFee      = user.getDouble("Bank.Create_Cost");
+		bankMaxBalance     = user.getDouble("Bank.Maximum_Balance");
 		// user levels
-		userMaxLevel         = settings.getInt("User.Level.Maximum_Level");
-		userLevelBaseAmount  = settings.getInt("User.Level.Base_Amount");
-		userLevelFormula     = settings.getString("User.Level.Formula");
-		userSkillUpgrade     = settings.getInt("User.Level.Skill.Upgrade");
-		userSkillCost        = settings.getDouble("User.Level.Skill.Cost");
-		userSkillExponential = settings.getDouble("User.Level.Skill.Exponential");
+		userMaxLevel         = user.getInt("Level.Maximum_Level");
+		userLevelBaseAmount  = user.getInt("Level.Base_Amount");
+		userLevelFormula     = user.getString("Level.Formula");
+		userSkillUpgrade     = user.getInt("Level.Skill.Upgrade");
+		userSkillCost        = user.getDouble("Level.Skill.Cost");
+		userSkillExponential = user.getDouble("Level.Skill.Exponential");
 		// user death
-		deathEnabled                 = settings.getBoolean("User.Death.Enable");
-		deathMoneyCommandEnabled     = settings.getBoolean("User.Death.Money.Command.Enable");
-		deathMoneyCommandExecutables = settings.getStringList("User.Death.Money.Command.Executable");
-		deathLoseMoney               = !settings.getBoolean("User.Death.Lose_Money");
-		deathLoseMoneyFormula        = settings.getString("User.Death.Money.Formula");
-		deathThreshold               = settings.getDouble("User.Death.Money.Threshold");
+		deathEnabled                 = user.getBoolean("Death.Enable");
+		deathMoneyCommandEnabled     = user.getBoolean("Death.Money.Command.Enable");
+		deathMoneyCommandExecutables = user.getStringList("Death.Money.Command.Executable");
+		deathLoseMoney               = !user.getBoolean("Death.Lose_Money");
+		deathLoseMoneyFormula        = user.getString("Death.Money.Formula");
+		deathThreshold               = user.getDouble("Death.Money.Threshold");
 
 		// bounty
-		bountyEachKillValue = settings.getDouble("Bounty.Kill.Each");
-		bountyMaxKill       = settings.getDouble("Bounty.Kill.Max");
-		bountyTimerEnabled  = settings.getBoolean("Bounty.Repeating_Timer.Enable");
-		bountyTimerMultiple = settings.getDouble("Bounty.Repeating_Timer.Multiple");
-		bountyTimeInterval  = settings.getInt("Bounty.Repeating_Timer.Time");
-		bountyTimerMax      = settings.getDouble("Bounty.Repeating_Timer.Max");
+		ConfigurationSection bounty = settings.getConfigurationSection("Bounty");
+		Objects.requireNonNull(bounty);
+
+		bountyEachKillValue = bounty.getDouble("Kill.Each");
+		bountyMaxKill       = bounty.getDouble("Kill.Max");
+		bountyTimerEnabled  = bounty.getBoolean("Repeating_Timer.Enable");
+		bountyTimerMultiple = bounty.getDouble("Repeating_Timer.Multiple");
+		bountyTimeInterval  = bounty.getInt("Repeating_Timer.Time");
+		bountyTimerMax      = bounty.getDouble("Repeating_Timer.Max");
 
 		// phone
-		phoneEnabled   = settings.getBoolean("Phone.Enable");
-		phoneItem      = settings.getString("Phone.Item");
-		phoneName      = settings.getString("Phone.Name");
-		phoneSlot      = settings.getInt("Phone.Slot");
-		phoneMovable   = !settings.getBoolean("Phone.Movable");
-		phoneDroppable = !settings.getBoolean("Phone.Droppable");
+		ConfigurationSection phone = settings.getConfigurationSection("Phone");
+		Objects.requireNonNull(phone);
+
+		phoneEnabled   = phone.getBoolean("Enable");
+		phoneItem      = phone.getString("Item");
+		phoneName      = phone.getString("Name");
+		phoneSlot      = phone.getInt("Slot");
+		phoneMovable   = !phone.getBoolean("Movable");
+		phoneDroppable = !phone.getBoolean("Droppable");
 
 		// gang
 		gangEnabled          = settings.getBoolean("Gang.Enable");
