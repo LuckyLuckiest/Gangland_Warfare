@@ -12,12 +12,12 @@ import java.math.RoundingMode;
 public final class VersionSetup {
 
 	private final String  versionString;
-	private final double  version;
+	private final double  versionNumber;
 	private final boolean paper;
 
 	public VersionSetup() {
 		this.versionString = getVersion();
-		this.version       = getVersion(versionString);
+		this.versionNumber = getVersion(versionString);
 
 		boolean isPaper;
 
