@@ -75,6 +75,11 @@
                             <pattern>net.objecthunter.exp4j</pattern>
                             <shadedPattern>me.luckyraven.dependency.exp4j</shadedPattern>
                         </relocation>
+
+                        <relocation>
+                            <pattern>org.bstats</pattern>
+                            <shadedPattern>me.luckyraven.dependency.bstats</shadedPattern>
+                        </relocation>
                     </relocations>
 
                     <filters>
@@ -127,6 +132,11 @@
             <artifactId>gangland-1_20_R2</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_20_R1</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
         <!-- 1.19.x -->
         <dependency>
             <groupId>me.luckyraven</groupId>
@@ -144,6 +154,11 @@
             <version>${project.parent.version}</version>
         </dependency>
         <!-- 1.18.x -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_18_R2</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-1_18_R1</artifactId>

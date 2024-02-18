@@ -5,21 +5,29 @@ import com.viaversion.viaversion.api.ViaAPI;
 import com.zaxxer.hikari.HikariConfig;
 import lombok.Getter;
 import me.clip.placeholderapi.PlaceholderAPI;
+import me.luckyraven.bukkit.scoreboard.ScoreboardManager;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
 import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
 import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.bstats.bukkit.Metrics;
+import org.bstats.charts.AdvancedPie;
+import org.bstats.charts.SingleLineChart;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Getter
 public final class Gangland extends JavaPlugin {
@@ -68,6 +76,11 @@ public final class Gangland extends JavaPlugin {
 
 		// initializes the periodical updates
 		periodicalUpdatesInitializer();
+
+		// initialize bstats
+		bStats();
+
+		log4jLogger.info(ScoreboardManager.getDrivers());
 	}
 
 	public String usePlaceholder(Player player, String text) {
@@ -89,6 +102,47 @@ public final class Gangland extends JavaPlugin {
 		else this.periodicalUpdates = new PeriodicalUpdates(this);
 
 		periodicalUpdates.start();
+	}
+
+	private void bStats() {
+		int     pluginId = 21012;
+		Metrics metrics  = new Metrics(this, pluginId);
+
+		// number of weapons loaded
+		metrics.addCustomChart(new SingleLineChart("number_of_weapons", () -> initializer.getWeaponAddon().size()));
+
+		// number of inventories loaded
+		metrics.addCustomChart(new SingleLineChart("number_of_inventories", InventoryAddon::size));
+
+		// number of ranks
+		metrics.addCustomChart(new SingleLineChart("number_of_ranks", () -> initializer.getRankManager().size()));
+
+		// number of gangs
+		metrics.addCustomChart(new SingleLineChart("number_of_gangs", () -> initializer.getGangManager().size()));
+
+		// number of permissions
+//		metrics.addCustomChart(
+//				new SingleLineChart("number_of_permissions", () -> initializer.getPermissionManager().size()));
+
+		// number of waypoints
+		metrics.addCustomChart(
+				new SingleLineChart("number_of_waypoints", () -> initializer.getWaypointManager().size()));
+
+		// scoreboard driver
+		metrics.addCustomChart(new AdvancedPie("scoreboard_driver", () -> {
+			Map<String, Integer> values = new HashMap<>();
+
+			for (String driver : ScoreboardManager.getDrivers()) {
+				if (!driver.equalsIgnoreCase(SettingAddon.getScoreboardDriver())) {
+					values.put(driver, 0);
+					continue;
+				}
+
+				values.put(driver, 100);
+			}
+
+			return values;
+		}));
 	}
 
 	private void disableAllLogs(Class<?> clazz) {

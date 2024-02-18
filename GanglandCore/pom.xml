@@ -83,6 +83,11 @@
                             <pattern>net.objecthunter.exp4j</pattern>
                             <shadedPattern>me.luckyraven.datastructure.exp4j</shadedPattern>
                         </relocation>
+
+                        <relocation>
+                            <pattern>org.bstats</pattern>
+                            <shadedPattern>me.luckyraven.dependency.bstats</shadedPattern>
+                        </relocation>
                     </relocations>
 
                     <filters>
@@ -215,6 +220,14 @@
             <groupId>net.objecthunter</groupId>
             <artifactId>exp4j</artifactId>
             <version>0.4.8</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- bStats -->
+        <dependency>
+            <groupId>org.bstats</groupId>
+            <artifactId>bstats-bukkit</artifactId>
+            <version>3.0.2</version>
             <scope>compile</scope>
         </dependency>
 
