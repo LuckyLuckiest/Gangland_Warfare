@@ -6,14 +6,18 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Snowball;
 import org.bukkit.util.Vector;
 
+import java.util.Random;
+
 public abstract class WeaponProjectile extends WProjectile {
 
 	private final Weapon weapon;
+	private final Random random;
 
 	public WeaponProjectile(LivingEntity shooter, Weapon weapon, Location location, Vector velocity) {
 		super(shooter, location, velocity);
 
 		this.weapon = weapon;
+		this.random = new Random();
 	}
 
 	@Override
@@ -34,15 +38,23 @@ public abstract class WeaponProjectile extends WProjectile {
 		projectile.setGravity(false);
 		projectile.setShooter(getShooter());
 
-		// set the velocity according to the modified values
-		projectile.setVelocity(velocity.multiply(getSpeed()));
-
 		// apply spread
+		Vector spread = applySpread(velocity, weapon.getSpreadStart());
 
+		// set the velocity according to the modified values
+		projectile.setVelocity(spread.multiply(getSpeed()));
 	}
 
 	@Override
 	public double getSpeed() {
 		return weapon.getProjectileSpeed();
+	}
+
+	private Vector applySpread(Vector originalVector, double spreadFactor) {
+		double offsetX = (random.nextDouble() - 0.5) * spreadFactor;
+		double offsetY = (random.nextDouble() - 0.5) * spreadFactor;
+		double offsetZ = (random.nextDouble() - 0.5) * spreadFactor;
+
+		return originalVector.add(new Vector(offsetX, offsetY, offsetZ)).normalize();
 	}
 }
