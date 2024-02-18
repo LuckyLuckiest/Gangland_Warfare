@@ -254,6 +254,7 @@ public final class Initializer {
 		listenerManager.addEvent(new BountyIncrease(gangland));
 		listenerManager.addEvent(new PlayerDeath(gangland));
 		listenerManager.addEvent(new LevelUp(gangland));
+		listenerManager.addEvent(new LoadResourcePack());
 		listenerManager.addEvent(new WaypointTeleport(new Waypoint("dummy")));
 
 		// weapon events
@@ -291,6 +292,7 @@ public final class Initializer {
 		commandManager.addCommand(new WantedCommand(gangland));
 		commandManager.addCommand(new WeaponCommand(gangland));
 		commandManager.addCommand(new AmmunitionCommand(gangland));
+		commandManager.addCommand(new DownloadResourceCommand(gangland));
 
 		// gang commands
 		if (SettingAddon.isGangEnabled()) {
