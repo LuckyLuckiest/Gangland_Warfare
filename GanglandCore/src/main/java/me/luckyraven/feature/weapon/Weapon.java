@@ -8,6 +8,8 @@ import me.luckyraven.feature.weapon.projectile.ProjectileType;
 import me.luckyraven.feature.weapon.reload.ReloadType;
 import me.luckyraven.file.configuration.SoundConfiguration;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -15,12 +17,14 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.UUID;
 
 @Getter
 @Setter
 public class Weapon {
 
 	// Information configuration
+	private final UUID   uuid;
 	private final String name, displayName;
 	private final WeaponType   category;
 	private final Material     material;
@@ -101,12 +105,13 @@ public class Weapon {
 	private String reloadActionBarReloading;
 	private String reloadActionBarOpening;
 
-	public Weapon(String name, String displayName, WeaponType category, Material material, short durability,
+	public Weapon(UUID uuid, String name, String displayName, WeaponType category, Material material, short durability,
 				  List<String> lore, boolean dropHologram, SelectiveFire selectiveFire, int weaponShotConsume,
 				  double projectileSpeed, ProjectileType projectileType, double projectileDamage,
 				  int projectileConsumed, int projectilePerShot, int projectileCooldown, int projectileDistance,
 				  boolean particle, int maxMagCapacity, int reloadCooldown, Ammunition reloadAmmoType,
 				  int reloadConsume, ReloadType reloadType) {
+		this.uuid                 = uuid;
 		this.name                 = name;
 		this.displayName          = displayName;
 		this.category             = category;
@@ -134,6 +139,26 @@ public class Weapon {
 		this.changingDisplayName  = updateDisplayName(displayName);
 	}
 
+	public Weapon(String name, String displayName, WeaponType category, Material material, short durability,
+				  List<String> lore, boolean dropHologram, SelectiveFire selectiveFire, int weaponShotConsume,
+				  double projectileSpeed, ProjectileType projectileType, double projectileDamage,
+				  int projectileConsumed, int projectilePerShot, int projectileCooldown, int projectileDistance,
+				  boolean particle, int maxMagCapacity, int reloadCooldown, Ammunition reloadAmmoType,
+				  int reloadConsume, ReloadType reloadType) {
+		this(null, name, displayName, category, material, durability, lore, dropHologram, selectiveFire,
+			 weaponShotConsume, projectileSpeed, projectileType, projectileDamage, projectileConsumed,
+			 projectilePerShot, projectileCooldown, projectileDistance, particle, maxMagCapacity, reloadCooldown,
+			 reloadAmmoType, reloadConsume, reloadType);
+	}
+
+	public Weapon(UUID uuid, Weapon weapon) {
+		this(uuid, weapon.name, weapon.displayName, weapon.category, weapon.material, weapon.durability, weapon.lore,
+			 weapon.dropHologram, weapon.currentSelectiveFire, weapon.weaponShotConsume, weapon.projectileSpeed,
+			 weapon.projectileType, weapon.projectileDamage, weapon.projectileConsumed, weapon.projectilePerShot,
+			 weapon.projectileCooldown, weapon.projectileDistance, weapon.particle, weapon.maxMagCapacity,
+			 weapon.reloadCooldown, weapon.reloadAmmoType, weapon.reloadConsume, weapon.reloadType);
+	}
+
 	@Nullable
 	public static String getHeldWeaponName(ItemStack item) {
 		return isWeapon(item) ? (String) new ItemBuilder(item).getTagData("weapon") : null;
@@ -141,6 +166,40 @@ public class Weapon {
 
 	public static boolean isWeapon(ItemStack item) {
 		return new ItemBuilder(item).hasNBTTag("weapon");
+	}
+
+	/**
+	 * Gets the held weapon.
+	 *
+	 * @param player Current player.
+	 *
+	 * @return held weapon ItemBuilder or a null.
+	 */
+	@Nullable
+	public ItemBuilder getHeldWeapon(Player player) {
+		ItemStack mainHandItem = itemAccordingToSlot(player, EquipmentSlot.HAND);
+
+		if (isWeapon(mainHandItem)) return new ItemBuilder(mainHandItem);
+
+		ItemStack offHandItem = itemAccordingToSlot(player, EquipmentSlot.OFF_HAND);
+
+		return isWeapon(offHandItem) ? new ItemBuilder(offHandItem) : null;
+	}
+
+	public void updateWeaponData(ItemBuilder itemBuilder) {
+		// display name
+		this.changingDisplayName = updateDisplayName(displayName);
+		itemBuilder.setDisplayName(changingDisplayName);
+
+		// selective fire
+		updateTag(itemBuilder, WeaponTag.SELECTIVE_FIRE, currentSelectiveFire);
+
+		// mag capacity
+		updateTag(itemBuilder, WeaponTag.AMMO_LEFT, currentMagCapacity);
+	}
+
+	public void updateWeapon(Player player, ItemBuilder itemBuilder, int slot) {
+		player.getInventory().setItem(slot, itemBuilder.build());
 	}
 
 	public void updateTag(ItemBuilder itemBuilder, WeaponTag tag, Object value) {
@@ -156,11 +215,11 @@ public class Weapon {
 	public boolean consumeShot() {
 		if (currentMagCapacity <= 0) return false;
 
-		currentMagCapacity = Math.max(0, currentMagCapacity - weaponShotConsume);
+		currentMagCapacity = Math.max(0, currentMagCapacity - projectileConsumed);
 		return true;
 	}
 
-	public ItemStack getItem() {
+	public ItemStack buildItem() {
 		ItemBuilder builder = new ItemBuilder(material);
 
 		builder.setDisplayName(changingDisplayName).setLore(lore).setDurability(durability);
@@ -176,6 +235,10 @@ public class Weapon {
 							 material, projectileDamage, reloadAmmoType);
 	}
 
+	private ItemStack itemAccordingToSlot(Player player, EquipmentSlot equipmentSlot) {
+		return player.getInventory().getItem(equipmentSlot);
+	}
+
 	private String updateDisplayName(String displayName) {
 		return displayName + " &8«&6" + currentMagCapacity + "&7/&6" + maxMagCapacity + "&8»";
 	}
@@ -185,6 +248,7 @@ public class Weapon {
 	}
 
 	private void initializeTags(ItemBuilder itemBuilder) {
+		tags.put(WeaponTag.UUID, uuid);
 		tags.put(WeaponTag.WEAPON, name);
 		tags.put(WeaponTag.SELECTIVE_FIRE, currentSelectiveFire);
 		tags.put(WeaponTag.AMMO_LEFT, currentMagCapacity);

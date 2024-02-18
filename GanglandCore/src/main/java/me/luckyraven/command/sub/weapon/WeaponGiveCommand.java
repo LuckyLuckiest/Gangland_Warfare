@@ -81,14 +81,14 @@ public class WeaponGiveCommand extends SubArgument {
 			// check if no amount needs to be given
 			if (amountLeft == 0) break;
 
-			player.getInventory().setItem(i, weapon.getItem());
+			player.getInventory().setItem(i, weapon.buildItem());
 
 			--amountLeft;
 		}
 
 		// make the player drop from their inventory the rest of items
 		while (amountLeft > 0) {
-			player.getWorld().dropItemNaturally(player.getLocation(), weapon.getItem());
+			player.getWorld().dropItemNaturally(player.getLocation(), weapon.buildItem());
 			--amountLeft;
 		}
 	}
