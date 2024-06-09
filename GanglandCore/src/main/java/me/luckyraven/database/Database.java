@@ -1,5 +1,7 @@
 package me.luckyraven.database;
 
+import me.luckyraven.util.DatabaseUtil;
+
 import java.io.IOException;
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -94,7 +96,7 @@ public interface Database {
 	void testConnection(String url) throws SQLException;
 
 	/**
-	 * Checks if the class handles coonection pool.
+	 * Checks if the class handles connection pool.
 	 *
 	 * @return boolean value.
 	 */
@@ -311,7 +313,7 @@ public interface Database {
 	/**
 	 * Gets all the columns of the specified table.
 	 *
-	 * @return a list of all columns names.
+	 * @return a list of all column names.
 	 *
 	 * @throws SQLException the sql exception
 	 */
@@ -322,11 +324,20 @@ public interface Database {
 	 *
 	 * @param columns the columns
 	 *
-	 * @return the columns data type
+	 * @return the column data type
 	 *
 	 * @throws SQLException the sql exception
 	 */
 	List<Integer> getColumnsDataType(String[] columns) throws SQLException;
+
+	/**
+	 * Gets the column data type as a string.
+	 *
+	 * @param columnType the column class
+	 *
+	 * @return the column data type
+	 */
+	String getStringDataType(int columnType, int size);
 
 	/**
 	 * Prepare placeholder statements by converting the placeholders into their appropriate data type.
@@ -359,7 +370,8 @@ public interface Database {
 					Timestamp     timestamp = Timestamp.valueOf(dateTime);
 					statement.setTimestamp(index, timestamp);
 				}
-				case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR -> statement.setString(
+				case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR,
+					 Types.LONGNVARCHAR -> statement.setString(
 						index, String.valueOf(value));
 				default -> statement.setObject(index, value);
 			}
@@ -383,53 +395,11 @@ public interface Database {
 		for (int i = 1; i <= columnCount; i++) {
 			String   columnName = metaData.getColumnName(i);
 			int      columnType = metaData.getColumnType(i);
-			Class<?> javaType   = getJavaType(columnType);
+			Class<?> javaType   = DatabaseUtil.getJavaType(columnType);
 			columnTypes.put(columnName, javaType);
 		}
 
 		return columnTypes;
-	}
-
-	/**
-	 * Gets the java equivalent data type of the database used data types.
-	 *
-	 * @param columnType the column type
-	 *
-	 * @return the java type
-	 */
-	default Class<?> getJavaType(int columnType) {
-		return switch (columnType) {
-			case Types.TINYINT -> Byte.class;
-			case Types.SMALLINT -> Short.class;
-			case Types.INTEGER -> Integer.class;
-			case Types.BIGINT -> Long.class;
-			case Types.FLOAT, Types.REAL -> Float.class;
-			case Types.DOUBLE -> Double.class;
-			case Types.BOOLEAN, Types.BIT -> Boolean.class;
-			case Types.DATE, Types.TIME, Types.TIMESTAMP -> LocalDateTime.class;
-			case Types.NULL, Types.NUMERIC -> null;
-			default -> String.class;
-		};
-	}
-
-	/**
-	 * Gets column type.
-	 *
-	 * @param columnType the column type
-	 *
-	 * @return the column type
-	 */
-	default int getColumnType(Class<?> columnType) {
-		if (columnType == null) return Types.NULL;
-		if (columnType.equals(Byte.class)) return Types.TINYINT;
-		if (columnType.equals(Short.class)) return Types.SMALLINT;
-		if (columnType.equals(Integer.class)) return Types.INTEGER;
-		if (columnType.equals(Long.class)) return Types.BIGINT;
-		if (columnType.equals(Float.class)) return Types.FLOAT;
-		if (columnType.equals(Double.class)) return Types.DOUBLE;
-		if (columnType.equals(Boolean.class)) return Types.BOOLEAN;
-		if (columnType.equals(LocalDateTime.class)) return Types.TIMESTAMP;
-		return Types.VARCHAR;
 	}
 
 	/**
@@ -500,7 +470,7 @@ public interface Database {
 	 * @return a list of data
 	 */
 	default List<String> getList(String list) {
-		return new ArrayList(Arrays.stream(list.split(",")).toList());
+		return new ArrayList<>(Arrays.stream(list.split(",")).toList());
 	}
 
 }

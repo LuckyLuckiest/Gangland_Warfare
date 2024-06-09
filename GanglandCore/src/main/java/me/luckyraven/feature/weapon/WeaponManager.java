@@ -1,13 +1,14 @@
 package me.luckyraven.feature.weapon;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.database.DatabaseHandler;
+import me.luckyraven.database.sub.GanglandDatabase;
+import me.luckyraven.database.tables.WeaponTable;
 import me.luckyraven.file.configuration.weapon.WeaponAddon;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.sql.SQLException;
+import java.util.*;
 
 public class WeaponManager {
 
@@ -18,7 +19,20 @@ public class WeaponManager {
 		this.weaponAddon = gangland.getInitializer().getWeaponAddon();
 		this.weapons     = new HashMap<>();
 
-		init();
+		// initialize the weapons map
+		gangland.getInitializer()
+				.getDatabaseManager()
+				.getDatabases()
+				.stream()
+				.filter(database -> database instanceof GanglandDatabase)
+				.map(database -> (GanglandDatabase) database)
+				.flatMap(ganglandDatabase -> ganglandDatabase.getTables()
+															 .stream()
+															 .filter(table -> table instanceof WeaponTable)
+															 .map(table -> new AbstractMap.SimpleEntry<>(
+																	 ganglandDatabase, (WeaponTable) table)))
+				.findFirst()
+				.ifPresent(entry -> init(entry.getKey(), entry.getValue()));
 	}
 
 	/**
@@ -73,8 +87,14 @@ public class WeaponManager {
 		return Collections.unmodifiableMap(weapons);
 	}
 
-	private void init(/*Need Weapons Table*/) {
+	private void init(DatabaseHandler databaseHandler, WeaponTable table) {
 		// initialize all the weapons from the database
+		try {
+			List<Object[]> data = databaseHandler.getDatabase().selectAll();
+
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 }

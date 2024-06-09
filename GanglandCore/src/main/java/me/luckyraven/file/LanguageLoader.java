@@ -33,7 +33,7 @@ public class LanguageLoader {
 
 			Set<String>   files     = getMessageFiles();
 			StringBuilder languages = new StringBuilder();
-			String[]      nam       = files.toArray(new String[0]);
+			String[]      nam       = files.toArray(String[]::new);
 
 			for (int i = 0; i < files.size(); i++) {
 				String file = nam[i];
@@ -66,10 +66,14 @@ public class LanguageLoader {
 		try (JarFile jar = new JarFile(path)) {
 			Iterator<JarEntry> entries = jar.stream().iterator();
 			int                i       = 0;
+
 			while (entries.hasNext()) {
 				JarEntry entry = entries.next();
+
 				if (!entry.getName().startsWith("message/")) continue;
+
 				String name = entry.getName();
+
 				if (i++ != 0) files.add(name.substring(name.lastIndexOf("/") + 1));
 			}
 		} catch (IOException exception) {

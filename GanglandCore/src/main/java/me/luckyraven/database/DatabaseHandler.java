@@ -82,16 +82,13 @@ public abstract class DatabaseHandler {
 					createSchema();
 
 					this.database.initialize(credentials, schemaLoc.toString());
-				} catch (SQLException exception) {
+				} catch (SQLException | IOException exception) {
 					this.database = null;
+					UnhandledError inst = exception instanceof SQLException ?
+										  UnhandledError.SQL_ERROR :
+										  UnhandledError.FILE_CREATE_ERROR;
 
-					plugin.getLogger().warning(UnhandledError.SQL_ERROR + ": " + exception.getMessage());
-
-					throw new PluginException(exception.getMessage(), exception);
-				} catch (IOException exception) {
-					this.database = null;
-
-					plugin.getLogger().warning(UnhandledError.FILE_CREATE_ERROR + ": " + exception.getMessage());
+					plugin.getLogger().warning(inst + ": " + exception.getMessage());
 
 					throw new PluginException(exception.getMessage(), exception);
 				}

@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import me.luckyraven.database.Database;
+import me.luckyraven.util.DatabaseUtil;
 
 import java.sql.*;
 import java.time.Duration;
@@ -465,10 +466,25 @@ public class MySQL implements Database {
 		List<Integer> dataTypes = new ArrayList<>();
 		for (String columnName : cols) {
 			Class<?> columnType = columnTypes.get(columnName);
-			dataTypes.add(getColumnType(columnType));
+			dataTypes.add(DatabaseUtil.getColumnType(columnType));
 		}
 
 		return dataTypes;
 	}
 
+	@Override
+	public String getStringDataType(int columnType, int size) {
+		return switch (columnType) {
+			case Types.TINYINT -> "TINYINT";
+			case Types.SMALLINT -> "SMALLINT";
+			case Types.INTEGER -> "INT";
+			case Types.BIGINT -> "BIGINT";
+			case Types.FLOAT -> "FLOAT";
+			case Types.DOUBLE -> "DOUBLE";
+			case Types.BOOLEAN -> "BOOLEAN";
+			case Types.TIMESTAMP -> "TIMESTAMP";
+			case Types.VARCHAR -> "VARCHAR(" + size + ")";
+			default -> "VARCHAR(255)";
+		};
+	}
 }

@@ -35,10 +35,9 @@ import me.luckyraven.data.teleportation.WaypointTeleport;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseManager;
-import me.luckyraven.database.sub.GangDatabase;
-import me.luckyraven.database.sub.RankDatabase;
-import me.luckyraven.database.sub.UserDatabase;
-import me.luckyraven.database.sub.WaypointDatabase;
+import me.luckyraven.database.component.Table;
+import me.luckyraven.database.sub.*;
+import me.luckyraven.database.tables.*;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
@@ -61,6 +60,8 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -86,6 +87,7 @@ public final class Initializer {
 	private @Getter RankManager                rankManager;
 	private @Getter WaypointManager            waypointManager;
 	private @Getter ScoreboardManager          scoreboardManager;
+	private @Getter GanglandDatabase           ganglandDatabase;
 	// Addons
 	private @Getter SettingAddon               settingAddon;
 	private @Getter LanguageLoader             languageLoader;
@@ -137,31 +139,58 @@ public final class Initializer {
 		userManager        = new UserManager<>(gangland);
 		offlineUserManager = new UserManager<>(gangland);
 
+		// initialize the database
+		ganglandDatabase = GanglandDatabase.findInstance(databaseManager);
+
+		// manage if the database was null
+		if (ganglandDatabase == null) {
+			return;
+		}
+
 		// Rank manager
+		List<Table<?>> rankTables = new ArrayList<>();
 		rankManager = new RankManager(gangland);
-		for (DatabaseHandler handler : databaseManager.getDatabases())
-			if (handler instanceof RankDatabase rankDatabase) {
-				rankManager.initialize(rankDatabase);
-				break;
-			}
+
+		for (Table<?> table : ganglandDatabase.getTables()) {
+			if (!(table instanceof RankTable || table instanceof RankParentTable)) continue;
+
+			rankTables.add(table);
+		}
+
+		// initialize the rank class
+//		rankManager.initialize(rankDatabase);
 
 		// Gang manager
+		List<Table<?>> gangTables = new ArrayList<>();
 		gangManager   = new GangManager(gangland);
 		memberManager = new MemberManager(gangland);
-		for (DatabaseHandler handler : databaseManager.getDatabases())
-			if (handler instanceof GangDatabase gangDatabase) {
-				gangManager.initialize(gangDatabase);
-				memberManager.initialize(gangDatabase, gangManager, rankManager);
-				break;
-			}
+
+		for (Table<?> table : ganglandDatabase.getTables()) {
+			if (!(table instanceof GangTable || table instanceof GangAllieTable || table instanceof MemberTable))
+				continue;
+
+			gangTables.add(table);
+		}
+
+		// initialize the gang and member classes
+//		gangManager.initialize(gangDatabase);
+//		memberManager.initialize(gangDatabase, gangManager, rankManager);
 
 		// Waypoint manager
+		Table<Waypoint> waypointTable = ganglandDatabase.getTables()
+														.stream()
+														.filter(table -> table instanceof WaypointTable)
+														.map(WaypointTable.class::cast).findFirst().orElse(null);
+
+		// handle the null value
+		if (waypointTable == null) {
+			return;
+		}
+
 		waypointManager = new WaypointManager(gangland);
-		for (DatabaseHandler handler : databaseManager.getDatabases())
-			if (handler instanceof WaypointDatabase waypointDatabase) {
-				waypointManager.initialize(waypointDatabase);
-				break;
-			}
+
+		// initialize the waypoint class
+//		waypointManager.initialize(waypointDatabase);
 
 		// Events
 		listenerManager = new ListenerManager(gangland);
@@ -219,8 +248,6 @@ public final class Initializer {
 		scoreboardManager = new ScoreboardManager(gangland);
 
 		addonsLoader();
-
-//		fileManager.addFile(new FileHandler("kits", ".yml"));
 	}
 
 	private void databases() {
@@ -229,6 +256,12 @@ public final class Initializer {
 		if (SettingAddon.getDatabaseType().equalsIgnoreCase("mysql")) type = DatabaseHandler.MYSQL;
 		else type = DatabaseHandler.SQLITE;
 
+		// Primary database
+		GanglandDatabase ganglandDatabase = new GanglandDatabase(gangland);
+		ganglandDatabase.setType(type);
+		databaseManager.addDatabase(ganglandDatabase);
+
+		// Temporary databases
 		UserDatabase userDatabase = new UserDatabase(gangland);
 		userDatabase.setType(type);
 		databaseManager.addDatabase(userDatabase);

@@ -27,6 +27,6 @@ public class Recoil_1_20_R1 extends RecoilCompatibility {
 		PacketPlayOutPosition packet = new PacketPlayOutPosition(0D, 0D, 0D, newYaw, newPitch,
 																 position ? RELATIVE_FLAGS : ABSOLUTE_FLAGS, 0);
 
-		(((CraftPlayer) player).getHandle()).connection.send(packet);
+		(((CraftPlayer) player).getHandle()).c.a(packet);
 	}
 }

@@ -1,0 +1,68 @@
+package me.luckyraven.database.tables;
+
+import me.luckyraven.data.user.User;
+import me.luckyraven.database.component.Attribute;
+import me.luckyraven.database.component.Table;
+import org.bukkit.OfflinePlayer;
+
+import java.sql.Types;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+public class UserTable extends Table<User<? extends OfflinePlayer>> {
+
+	public UserTable() {
+		super("user");
+
+		Attribute<UUID>    uuid       = new Attribute<>("uuid", true);
+		Attribute<Double>  balance    = new Attribute<>("balance", false);
+		Attribute<Integer> kills      = new Attribute<>("kills", false);
+		Attribute<Integer> deaths     = new Attribute<>("deaths", false);
+		Attribute<Integer> mobKills   = new Attribute<>("mob_kills", false);
+		Attribute<Double>  bounty     = new Attribute<>("bounty", false);
+		Attribute<Integer> level      = new Attribute<>("level", false);
+		Attribute<Double>  experience = new Attribute<>("experience", false);
+		Attribute<Integer> wanted     = new Attribute<>("wanted", false);
+
+		balance.setDefaultValue(0D);
+		kills.setDefaultValue(0);
+		deaths.setDefaultValue(0);
+		mobKills.setDefaultValue(0);
+		bounty.setDefaultValue(0D);
+		level.setDefaultValue(0);
+		experience.setDefaultValue(0D);
+		wanted.setDefaultValue(0);
+
+		this.addAttribute(uuid);
+		this.addAttribute(balance);
+		this.addAttribute(kills);
+		this.addAttribute(deaths);
+		this.addAttribute(mobKills);
+		this.addAttribute(bounty);
+		this.addAttribute(level);
+		this.addAttribute(experience);
+		this.addAttribute(wanted);
+	}
+
+	@Override
+	public Object[] getData(User<? extends OfflinePlayer> data) {
+		return new Object[]{data.getUser().getUniqueId(), data.getEconomy().getBalance(), data.getKills(),
+							data.getDeaths(), data.getMobKills(), data.getBounty().getAmount(),
+							data.getLevel().getLevelValue(), data.getLevel().getExperience(),
+							data.getWanted().getLevel()};
+	}
+
+	@Override
+	public Map<String, Object> searchCriteria(User<? extends OfflinePlayer> data) {
+		Map<String, Object> search = new HashMap<>();
+
+		search.put("search", "uuid = ?");
+		search.put("info", new Object[]{data.getUser().getUniqueId()});
+		search.put("type", new int[]{Types.CHAR});
+		search.put("index", new int[]{0});
+
+		return Collections.unmodifiableMap(search);
+	}
+}

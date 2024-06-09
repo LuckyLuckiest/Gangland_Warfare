@@ -157,7 +157,7 @@ public class ReloadPlugin {
 												  .orElse(null);
 
 		if (userHandler == null) {
-			Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find UserDatabase class.");
+			Gangland.getLog4jLogger().error("{}: Unable to find UserDatabase class.", UnhandledError.ERROR);
 			return;
 		}
 
@@ -171,7 +171,7 @@ public class ReloadPlugin {
 													.orElse(null);
 
 		if (memberHandler == null) {
-			Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find GangDatabase class.");
+			Gangland.getLog4jLogger().error("{}: Unable to find GangDatabase class.", UnhandledError.ERROR);
 			return;
 		}
 

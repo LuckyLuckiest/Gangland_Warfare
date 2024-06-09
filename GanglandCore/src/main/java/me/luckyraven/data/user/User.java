@@ -17,10 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Handles all users registered data, only for online users.
@@ -31,6 +28,7 @@ import java.util.Set;
 public class User<T extends OfflinePlayer> {
 
 	private final T                     user;
+	private final UUID                  uuid;
 	private final Bounty                bounty;
 	private final Level                 level;
 	private final Wanted                wanted;
@@ -52,6 +50,7 @@ public class User<T extends OfflinePlayer> {
 	 */
 	public User(T user) {
 		this.user               = user;
+		this.uuid               = user.getUniqueId();
 		this.bounty             = new Bounty();
 		this.level              = new Level();
 		this.wanted             = new Wanted();

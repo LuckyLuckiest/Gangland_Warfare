@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import me.luckyraven.database.Database;
 import me.luckyraven.file.FileHandler;
+import me.luckyraven.util.DatabaseUtil;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -456,10 +457,19 @@ public class SQLite implements Database {
 		List<Integer> dataTypes = new ArrayList<>();
 		for (String columnName : cols) {
 			Class<?> columnType = columnTypes.get(columnName);
-			dataTypes.add(getColumnType(columnType));
+			dataTypes.add(DatabaseUtil.getColumnType(columnType));
 		}
 
 		return dataTypes;
 	}
 
+	@Override
+	public String getStringDataType(int columnType, int size) {
+		return switch (columnType) {
+			case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BOOLEAN -> "INTEGER";
+			case Types.BIGINT -> "BIGINT";
+			case Types.FLOAT, Types.DOUBLE -> "REAL";
+			default -> "TEXT";
+		};
+	}
 }

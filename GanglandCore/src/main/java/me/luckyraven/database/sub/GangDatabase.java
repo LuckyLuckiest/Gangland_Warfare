@@ -122,7 +122,7 @@ public class GangDatabase extends DatabaseHandler {
 											member.getGangJoinDateLong()}, dataTypes);
 	}
 
-	public void updateMembersTable(Member member) throws SQLException {
+	public void updateMemberTable(Member member) throws SQLException {
 		Database      config          = getDatabase().table("members");
 		List<String>  columnsTemp     = config.getColumns();
 		String[]      columns         = columnsTemp.subList(1, columnsTemp.size()).toArray(String[]::new);

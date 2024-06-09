@@ -172,7 +172,7 @@ public class PeriodicalUpdates {
 												new String[]{"*"});
 
 				if (data.length == 0) gangDatabase.insertMemberTable(member);
-				else gangDatabase.updateMembersTable(member);
+				else gangDatabase.updateMemberTable(member);
 			}
 		});
 	}

@@ -5,6 +5,8 @@ import me.luckyraven.Gangland;
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.RankDatabase;
+import me.luckyraven.database.tables.RankParentTable;
+import me.luckyraven.database.tables.RankTable;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.jetbrains.annotations.Nullable;
@@ -27,12 +29,21 @@ public class RankManager {
 		this.rankTree = new Tree<>();
 	}
 
-	public void initialize(RankDatabase rankDatabase) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, rankDatabase);
+	public void initialize(RankTable rankTable, RankParentTable rankParentTable) {
+		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
 		helper.runQueries(database -> {
-			Map<Tree.Node<Rank>, List<String>> nodeMap  = new HashMap<>();
-			List<Object[]>                     rowsData = database.table("data").selectAll();
+			Map<Tree.Node<Rank>, List<String>> nodeMap = new HashMap<>();
+
+			List<Object[]> rowsRank           = database.table(rankTable.getName()).selectAll();
+			List<Object[]> rowsRankParent     = database.table(rankParentTable.getName()).selectAll();
+			List<Object[]> rowsPermission     = database.table(rankParentTable.getName()).selectAll();
+			List<Object[]> rowsRankPermission = database.table(rankParentTable.getName()).selectAll();
+
+			// set up the permissions
+			for (Object[] result : rowsPermission) {
+
+			}
 
 			// data information
 			for (Object[] result : rowsData) {
