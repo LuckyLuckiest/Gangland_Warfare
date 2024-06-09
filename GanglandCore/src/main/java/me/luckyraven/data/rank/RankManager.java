@@ -15,7 +15,6 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.Pair;
 import org.jetbrains.annotations.Nullable;
 
-import java.security.Permissions;
 import java.util.*;
 
 public class RankManager {
@@ -84,7 +83,16 @@ public class RankManager {
 				int              id          = (int) result[0];
 				String           name        = String.valueOf(result[1]);
 				List<Permission> permissions = new ArrayList<>();
-				List<String>     child       = database.getList(String.valueOf(result[3]));
+				List<String>     child       = new ArrayList<>();
+
+				// set up the permissions
+				// get the permissions which have this rank id
+				List<Integer> permIds = ranksPermissions.stream()
+														.filter(pair -> pair.first() == id)
+														.map(Pair::second)
+														.toList();
+				// group them together and add them as permissions list
+//				permissions.addAll(permIds);
 
 				Rank rank = new Rank(name, permissions);
 
@@ -100,7 +108,7 @@ public class RankManager {
 													.equalsIgnoreCase(SettingAddon.getGangRankHead()))
 								.findFirst()
 								// what if there was a node that doesn't have this specific head!
-								// we need to find the node that would be attached to this default rank
+								// need to find the node that would be attached to this default rank
 								.orElse(new Rank(SettingAddon.getGangRankHead()).getNode()));
 
 			// map information
