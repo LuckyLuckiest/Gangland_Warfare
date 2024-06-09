@@ -2,34 +2,43 @@ package me.luckyraven.data.rank;
 
 import lombok.Getter;
 import me.luckyraven.Gangland;
+import me.luckyraven.data.permission.Permission;
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.RankDatabase;
+import me.luckyraven.database.tables.PermissionTable;
 import me.luckyraven.database.tables.RankParentTable;
+import me.luckyraven.database.tables.RankPermissionTable;
 import me.luckyraven.database.tables.RankTable;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.Pair;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.security.Permissions;
+import java.util.*;
 
 public class RankManager {
 
-	private final Map<Integer, Rank> ranks;
-	private final Gangland           gangland;
+	private final Gangland                    gangland;
+	private final Map<Integer, Rank>          ranks;
+	private final Set<Pair<Integer, Integer>> ranksParent;
+	private final Map<Integer, Permission>    permissions;
+	private final Set<Pair<Integer, Integer>> ranksPermissions;
 
 	private final @Getter Tree<Rank> rankTree;
 
 	public RankManager(Gangland gangland) {
-		this.gangland = gangland;
-		this.ranks    = new HashMap<>();
-		this.rankTree = new Tree<>();
+		this.gangland         = gangland;
+		this.ranks            = new HashMap<>();
+		this.ranksParent      = new HashSet<>();
+		this.rankTree         = new Tree<>();
+		this.permissions      = new HashMap<>();
+		this.ranksPermissions = new HashSet<>();
 	}
 
-	public void initialize(RankTable rankTable, RankParentTable rankParentTable) {
+	public void initialize(RankTable rankTable, RankParentTable rankParentTable, PermissionTable permissionTable,
+						   RankPermissionTable rankPermissionTable) {
 		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
 		helper.runQueries(database -> {
@@ -37,20 +46,45 @@ public class RankManager {
 
 			List<Object[]> rowsRank           = database.table(rankTable.getName()).selectAll();
 			List<Object[]> rowsRankParent     = database.table(rankParentTable.getName()).selectAll();
-			List<Object[]> rowsPermission     = database.table(rankParentTable.getName()).selectAll();
-			List<Object[]> rowsRankPermission = database.table(rankParentTable.getName()).selectAll();
+			List<Object[]> rowsPermission     = database.table(permissionTable.getName()).selectAll();
+			List<Object[]> rowsRankPermission = database.table(rankPermissionTable.getName()).selectAll();
+
+			// set up the rank parent relation
+			for (Object[] result : rowsRankParent) {
+				int id       = (int) result[0];
+				int parentId = (int) result[1];
+
+				Pair<Integer, Integer> parent = new Pair<>(id, parentId);
+
+				ranksParent.add(parent);
+			}
 
 			// set up the permissions
 			for (Object[] result : rowsPermission) {
+				int    id         = (int) result[0];
+				String permission = String.valueOf(result[1]);
 
+				Permission perm = new Permission(id, permission);
+
+				permissions.put(id, perm);
+			}
+
+			// set up the rank permissions relation
+			for (Object[] result : rowsRankPermission) {
+				int rankId = (int) result[0];
+				int permId = (int) result[1];
+
+				Pair<Integer, Integer> rankPerm = new Pair<>(rankId, permId);
+
+				ranksPermissions.add(rankPerm);
 			}
 
 			// data information
-			for (Object[] result : rowsData) {
-				int          id          = (int) result[0];
-				String       name        = String.valueOf(result[1]);
-				List<String> permissions = database.getList(String.valueOf(result[2]));
-				List<String> child       = database.getList(String.valueOf(result[3]));
+			for (Object[] result : rowsRank) {
+				int              id          = (int) result[0];
+				String           name        = String.valueOf(result[1]);
+				List<Permission> permissions = new ArrayList<>();
+				List<String>     child       = database.getList(String.valueOf(result[3]));
 
 				Rank rank = new Rank(name, permissions);
 
@@ -65,7 +99,9 @@ public class RankManager {
 													.getName()
 													.equalsIgnoreCase(SettingAddon.getGangRankHead()))
 								.findFirst()
-								.orElse(null));
+								// what if there was a node that doesn't have this specific head!
+								// we need to find the node that would be attached to this default rank
+								.orElse(new Rank(SettingAddon.getGangRankHead()).getNode()));
 
 			// map information
 			// the map saves the node and the child of that node
