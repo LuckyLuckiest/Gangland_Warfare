@@ -2,6 +2,7 @@ package me.luckyraven.data.rank;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.data.permission.Permission;
 import me.luckyraven.datastructure.Tree;
 
 import java.util.ArrayList;
@@ -11,9 +12,9 @@ public class Rank {
 
 	private static int ID = 0;
 
-	private final @Getter String          name;
-	private final @Getter Tree.Node<Rank> node;
-	private final         List<String>    permissions;
+	private final @Getter String           name;
+	private final @Getter Tree.Node<Rank>  node;
+	private final         List<Permission> permissions;
 
 	private @Getter @Setter int usedId;
 
@@ -21,7 +22,7 @@ public class Rank {
 		this(name, new ArrayList<>());
 	}
 
-	public Rank(String name, List<String> permissions) {
+	public Rank(String name, List<Permission> permissions) {
 		this.name        = name;
 		this.permissions = permissions;
 		this.node        = new Tree.Node<>(this);
@@ -36,19 +37,19 @@ public class Rank {
 		return id == usedId;
 	}
 
-	public void addPermission(String permission) {
+	public void addPermission(Permission permission) {
 		permissions.add(permission);
 	}
 
-	public void removePermission(String permission) {
+	public void removePermission(Permission permission) {
 		permissions.remove(permission);
 	}
 
-	public boolean contains(String permission) {
+	public boolean contains(Permission permission) {
 		return permissions.contains(permission);
 	}
 
-	public List<String> getPermissions() {
+	public List<Permission> getPermissions() {
 		return new ArrayList<>(permissions);
 	}
 
