@@ -80,10 +80,8 @@ public class RankManager {
 
 			// data information
 			for (Object[] result : rowsRank) {
-				int              id          = (int) result[0];
-				String           name        = String.valueOf(result[1]);
-				List<Permission> permissions = new ArrayList<>();
-				List<String>     child       = new ArrayList<>();
+				int    id   = (int) result[0];
+				String name = String.valueOf(result[1]);
 
 				// set up the permissions
 				// get the permissions which have this rank id
@@ -92,12 +90,29 @@ public class RankManager {
 														.map(Pair::second)
 														.toList();
 				// group them together and add them as permissions list
-//				permissions.addAll(permIds);
+				List<Permission> perms = this.permissions.keySet()
+														 .stream()
+														 .filter(permIds::contains)
+														 .map(this.permissions::get)
+														 .toList();
+				List<Permission> permissions = new ArrayList<>(perms);
 
 				Rank rank = new Rank(name, permissions);
 
-				nodeMap.put(rank.getNode(), child);
 				ranks.put(id, rank);
+			}
+
+			// set up the children of the rank
+			for (int rankId : ranks.keySet()) {
+				// get the rank parents of the specified id
+				List<String> children = this.ranksParent.stream()
+														// need only the ranks which are under this rank id
+														.filter(pair -> pair.first() == rankId)
+														// get the name of the ranks under this id
+														.map(pair -> this.ranks.get(pair.second()).getName())
+														.toList();
+
+				nodeMap.put(this.ranks.get(rankId).getNode(), children);
 			}
 
 			// add the rank head

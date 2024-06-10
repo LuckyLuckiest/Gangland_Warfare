@@ -17,6 +17,8 @@ public class RankParentTable extends Table<Rank> {
 		Attribute<Integer> id       = new Attribute<>("id", true);
 		Attribute<Integer> parentId = new Attribute<>("parent_id", false);
 
+		parentId.setUnique(true);
+
 		parentId.setForeignKey(rankTable.get("id"), rankTable);
 
 		this.addAttribute(id);
