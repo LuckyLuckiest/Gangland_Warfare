@@ -19,11 +19,13 @@ public abstract class Table<T> {
 
 	public abstract Object[] getData(T data);
 
-	// standard would be
-	// "search" -> the string that would be used to search with
-	// "info" -> the Object[] which is used to substitute in the search
-	// "type" -> the int[] data type of the info
-	// "index" -> ignores the indexes from getData method returned values
+	/**
+	 * Standard would be:
+	 * <p>"search" -> the string that would be used to search with</p>
+	 * <p>"info" -> the Object[] which is used to substitute in the search</p>
+	 * <p>"type" -> the int[] data type of the info</p>
+	 * <p>"index" -> ignores the indexes from getData method returned values</p>
+	 */
 	public abstract Map<String, Object> searchCriteria(T data);
 
 	public Attribute<?> get(String column) {
