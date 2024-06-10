@@ -1,6 +1,7 @@
 package me.luckyraven;
 
 import lombok.Getter;
+import lombok.val;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.scoreboard.ScoreboardManager;
 import me.luckyraven.command.CommandManager;
@@ -152,13 +153,19 @@ public final class Initializer {
 		rankManager = new RankManager(gangland);
 
 		for (Table<?> table : ganglandDatabase.getTables()) {
-			if (!(table instanceof RankTable || table instanceof RankParentTable)) continue;
+			if (!(table instanceof RankTable || table instanceof RankParentTable || table instanceof PermissionTable ||
+				  table instanceof RankPermissionTable)) continue;
 
 			rankTables.add(table);
 		}
 
 		// initialize the rank class
-//		rankManager.initialize(rankDatabase);
+		RankTable           rankTable           = getInstanceFromTables(RankTable.class, rankTables);
+		RankParentTable     rankParentTable     = getInstanceFromTables(RankParentTable.class, rankTables);
+		PermissionTable     permissionTable     = getInstanceFromTables(PermissionTable.class, rankTables);
+		RankPermissionTable rankPermissionTable = getInstanceFromTables(RankPermissionTable.class, rankTables);
+
+		rankManager.initialize(rankTable, rankParentTable, permissionTable, rankPermissionTable);
 
 		// Gang manager
 		List<Table<?>> gangTables = new ArrayList<>();
@@ -173,14 +180,20 @@ public final class Initializer {
 		}
 
 		// initialize the gang and member classes
-//		gangManager.initialize(gangDatabase);
+		GangTable      gangTable      = getInstanceFromTables(GangTable.class, gangTables);
+		GangAllieTable gangAllieTable = getInstanceFromTables(GangAllieTable.class, gangTables);
+		MemberTable    memberTable    = getInstanceFromTables(MemberTable.class, gangTables);
+
+		gangManager.initialize(gangTable, gangAllieTable);
 //		memberManager.initialize(gangDatabase, gangManager, rankManager);
 
 		// Waypoint manager
 		Table<Waypoint> waypointTable = ganglandDatabase.getTables()
 														.stream()
 														.filter(table -> table instanceof WaypointTable)
-														.map(WaypointTable.class::cast).findFirst().orElse(null);
+														.map(WaypointTable.class::cast)
+														.findFirst()
+														.orElse(null);
 
 		// handle the null value
 		if (waypointTable == null) {
@@ -347,6 +360,14 @@ public final class Initializer {
 		if (command == null) return;
 
 		command.setTabCompleter(new CommandTabCompleter(CommandManager.getCommands()));
+	}
+
+	private <E> E getInstanceFromTables(Class<E> clazz, List<Table<?>> tables) {
+		return tables.stream()
+					 .filter(clazz::isInstance)
+					 .map(clazz::cast)
+					 .findFirst()
+					 .orElseThrow(() -> new RuntimeException("There was a problem finding class, " + clazz.getName()));
 	}
 
 }
