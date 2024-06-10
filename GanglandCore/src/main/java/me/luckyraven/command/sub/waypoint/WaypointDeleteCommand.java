@@ -10,7 +10,6 @@ import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.WaypointDatabase;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;

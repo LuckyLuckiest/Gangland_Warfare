@@ -15,7 +15,6 @@ import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.RankDatabase;
 import me.luckyraven.database.sub.UserDatabase;
-import me.luckyraven.database.sub.WaypointDatabase;
 import me.luckyraven.feature.phone.Phone;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;

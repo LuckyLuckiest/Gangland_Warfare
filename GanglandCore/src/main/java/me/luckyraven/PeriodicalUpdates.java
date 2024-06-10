@@ -15,7 +15,8 @@ import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.RankDatabase;
 import me.luckyraven.database.sub.UserDatabase;
-import me.luckyraven.database.sub.WaypointDatabase;
+import me.luckyraven.database.tables.RankTable;
+import me.luckyraven.database.tables.WaypointTable;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.OfflinePlayer;
@@ -25,6 +26,7 @@ import org.bukkit.event.inventory.InventoryType;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class PeriodicalUpdates {
 
@@ -177,29 +179,31 @@ public class PeriodicalUpdates {
 		});
 	}
 
-	private void updateRankData(RankManager rankManager, DatabaseHelper helper, RankDatabase rankDatabase) {
+	private void updateRankData(RankManager rankManager, DatabaseHelper helper, RankTable rankTable) {
 		helper.runQueries(database -> {
 			for (Rank rank : rankManager.getRankTree()) {
-				Object[] data = database.table("data")
+				Map<String, Object> search = rankTable.searchCriteria(rank);
+				Object[] data = database.table(rankTable.getName())
 										.select("id = ?", new Object[]{rank.getUsedId()}, new int[]{Types.INTEGER},
 												new String[]{"*"});
 
-				if (data.length == 0) rankDatabase.insertDataTable(rank);
-				else rankDatabase.updateDataTable(rank);
+				if (data.length == 0) rankTable.insertTableQuery(database, rank);
+				else rankTable.updateTableQuery(database, rank);
 			}
 		});
 	}
 
 	private void updateWaypointData(WaypointManager waypointManager, DatabaseHelper helper,
-									WaypointDatabase waypointDatabase) {
+									WaypointTable waypointTable) {
 		helper.runQueries(database -> {
 			for (Waypoint waypoint : waypointManager.getWaypoints().values()) {
-				Object[] data = database.table("data")
-										.select("id = ?", new Object[]{waypoint.getUsedId()}, new int[]{Types.INTEGER},
-												new String[]{"*"});
+				Map<String, Object> search = waypointTable.searchCriteria(waypoint);
+				Object[] data = database.table(waypointTable.getName())
+										.select((String) search.get("search"), (Object[]) search.get("info"),
+												(int[]) search.get("type"), new String[]{"*"});
 
-				if (data.length == 0) waypointDatabase.insertDataTable(waypoint);
-				else waypointDatabase.updateDataTable(waypoint);
+				if (data.length == 0) waypointTable.insertTableQuery(database, waypoint);
+				else waypointTable.updateTableQuery(database, waypoint);
 			}
 		});
 	}
