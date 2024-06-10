@@ -18,6 +18,8 @@ public class GangAllieTable extends Table<Gang> {
 		Attribute<Integer> allieId = new Attribute<>("allie_id", false);
 		Attribute<Long>    since   = new Attribute<>("since", false);
 
+		allieId.setUnique(true);
+
 		since.setDefaultValue(-1L);
 
 		gangId.setForeignKey(gangTable.get("gang_id"), gangTable);
