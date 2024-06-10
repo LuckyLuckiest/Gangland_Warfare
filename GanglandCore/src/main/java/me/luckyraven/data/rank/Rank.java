@@ -23,10 +23,14 @@ public class Rank {
 	}
 
 	public Rank(String name, List<Permission> permissions) {
+		this(name, ++ID, permissions);
+	}
+
+	public Rank(String name, int id, List<Permission> permissions) {
 		this.name        = name;
+		this.usedId      = id;
 		this.permissions = permissions;
 		this.node        = new Tree.Node<>(this);
-		this.usedId      = ++ID;
 	}
 
 	protected static void setID(int id) {
