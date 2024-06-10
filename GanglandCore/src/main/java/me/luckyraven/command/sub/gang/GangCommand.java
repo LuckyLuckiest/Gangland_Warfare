@@ -16,6 +16,7 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.InventoryUtil;
+import me.luckyraven.util.Pair;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
 import org.bukkit.Bukkit;
@@ -241,13 +242,13 @@ public class GangCommand extends CommandHandler {
 									  SettingAddon.formatDouble(gang.getBounty().getAmount())))), true, false);
 
 		// ally
-		gui.setItem(25, XMaterial.REDSTONE.parseMaterial(), "&bAlly", List.of("&e" + gang.getAlly().size()), false,
+		gui.setItem(25, XMaterial.REDSTONE.parseMaterial(), "&bAlly", List.of("&e" + gang.getAllies().size()), false,
 					false, (player, inventory, item) -> {
 					User<Player>    user1 = userManager.getUser(player);
 					Gang            gang1 = gangManager.getGang(userManager.getUser(player).getGangId());
 					List<ItemStack> items = new ArrayList<>();
 
-					for (Gang ally : gang1.getAlly()) {
+					for (Gang ally : gang1.getAllies().stream().map(Pair::first).toList()) {
 						List<String> data = new ArrayList<>();
 						data.add("&7ID:&e " + ally.getId());
 						data.add(String.format("&7Members:&a %d&7/&e%d", ally.getOnlineMembers(userManager).size(),

@@ -63,8 +63,8 @@ public class GangDatabase extends DatabaseHandler {
 	public void insertDataTable(Gang gang) throws SQLException {
 		List<String> tempAlias = new ArrayList<>();
 
-		for (Gang alias : gang.getAlly())
-			tempAlias.add(String.valueOf(alias.getId()));
+//		for (Gang alias : gang.getAllies())
+//			tempAlias.add(String.valueOf(alias.getId()));
 
 		String alias = getDatabase().createList(tempAlias);
 
@@ -86,8 +86,8 @@ public class GangDatabase extends DatabaseHandler {
 	public void updateDataTable(Gang gang) throws SQLException {
 		List<String> tempAlias = new ArrayList<>();
 
-		for (Gang alias : gang.getAlly())
-			tempAlias.add(String.valueOf(alias.getId()));
+//		for (Gang alias : gang.getAllies())
+//			tempAlias.add(String.valueOf(alias.getId()));
 
 		String alias = getDatabase().createList(tempAlias);
 

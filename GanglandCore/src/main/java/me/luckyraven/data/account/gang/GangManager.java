@@ -2,7 +2,9 @@ package me.luckyraven.data.account.gang;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.GangDatabase;
+import me.luckyraven.database.tables.GangAllieTable;
+import me.luckyraven.database.tables.GangTable;
+import me.luckyraven.util.Pair;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -10,24 +12,86 @@ import java.util.stream.Collectors;
 
 public class GangManager {
 
-	private final Map<Integer, Gang> gangs;
-	private final Gangland           gangland;
+	private final Gangland                                gangland;
+	private final Map<Integer, Gang>                      gangs;
+	private final Set<Pair<Integer, Pair<Integer, Long>>> gangsAllie;
 
 	public GangManager(Gangland gangland) {
-		this.gangland = gangland;
-		this.gangs    = new HashMap<>();
+		this.gangland   = gangland;
+		this.gangs      = new HashMap<>();
+		this.gangsAllie = new HashSet<>();
 	}
 
-	public void initialize(GangDatabase gangDatabase) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, gangDatabase);
+	public void initialize(GangTable gangTable, GangAllieTable gangAllieTable) {
+		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
-		AtomicReference<List<Object[]>> rowsData = new AtomicReference<>();
+		helper.runQueries(database -> {
+			Set<Pair<Integer, Pair<Integer, Long>>> allied = new HashSet<>();
 
-		// Initialize the Gang object
-		initGang(rowsData, helper);
+			List<Object[]> gangsData      = database.table(gangTable.getName()).selectAll();
+			List<Object[]> gangAlliesData = database.table(gangAllieTable.getName()).selectAll();
 
-		// To add the alias list
-		initAlias(rowsData, helper);
+			// set up the gangs
+			for (Object[] result : gangsData) {
+				int    id          = (int) result[0];
+				String name        = String.valueOf(result[1]);
+				String displayName = String.valueOf(result[2]);
+				String description = String.valueOf(result[3]);
+				String color       = String.valueOf(result[4]);
+				double balance     = (double) result[5];
+				int    level       = (int) result[6];
+				double experience  = (double) result[7];
+				double bounty      = (double) result[8];
+				long   created     = (long) result[9];
+
+				Gang gang = new Gang(id);
+
+				gang.setName(name);
+				gang.setDisplayName(displayName);
+				gang.setColor(color);
+				gang.setDescription(description);
+				gang.getEconomy().setBalance(balance);
+				gang.getLevel().setLevelValue(level);
+				gang.getLevel().setExperience(experience);
+				gang.getBounty().setAmount(bounty);
+				gang.setCreated(created);
+
+				gangs.put(id, gang);
+			}
+
+			// set up the gang allies
+			// store the data
+			for (Object[] result : gangAlliesData) {
+				int  gangId  = (int) result[0];
+				int  allieId = (int) result[1];
+				long since   = (long) result[2];
+
+				Pair<Integer, Long>                allieDate   = new Pair<>(allieId, since);
+				Pair<Integer, Pair<Integer, Long>> stackedData = new Pair<>(gangId, allieDate);
+
+				gangsAllie.add(stackedData);
+			}
+
+			// add the gang allies to the specified gang
+			for (int gangId : gangs.keySet()) {
+				// get data associated to specific id
+				List<Pair<Integer, Long>> alliedGangsIdData = gangsAllie.stream()
+																		.filter(pair -> pair.first() == gangId)
+																		.map(Pair::second)
+																		.toList();
+
+				// convert each id to Gang instance
+				List<Pair<Gang, Long>> alliedGangsData = alliedGangsIdData.stream()
+																		  .map(pair -> new Pair<>(
+																				  gangs.get(pair.first()),
+																				  pair.second()))
+																		  .toList();
+
+				// add the gang to the new gang
+				gangs.get(gangId).addAllAllies(alliedGangsData);
+			}
+		});
+
 	}
 
 	public void add(Gang gang) {
@@ -58,62 +122,4 @@ public class GangManager {
 	public Map<Integer, Gang> getGangs() {
 		return Collections.unmodifiableMap(gangs);
 	}
-
-	private void initGang(AtomicReference<List<Object[]>> rowsData, DatabaseHelper helper) {
-		helper.runQueries(database -> {
-			if (rowsData.get() == null) rowsData.set(database.table("data").selectAll());
-
-			// data information
-			for (Object[] result : rowsData.get()) {
-				int    id          = (int) result[0];
-				String name        = String.valueOf(result[1]);
-				String displayName = String.valueOf(result[2]);
-				String color       = String.valueOf(result[3]);
-				String description = String.valueOf(result[4]);
-				double balance     = (double) result[5];
-				int    level       = (int) result[6];
-				double experience  = (double) result[7];
-				double bounty      = (double) result[8];
-				long   created     = (long) result[10];
-
-				Gang gang = new Gang(id);
-
-				gang.setName(name);
-				gang.setDisplayName(displayName);
-				gang.setColor(color);
-				gang.setDescription(description);
-				gang.getEconomy().setBalance(balance);
-				gang.getLevel().setLevelValue(level);
-				gang.getLevel().setExperience(experience);
-				gang.getBounty().setAmount(bounty);
-				gang.setCreated(created);
-
-				gangs.put(id, gang);
-			}
-		});
-	}
-
-	private void initAlias(AtomicReference<List<Object[]>> rowsData, DatabaseHelper helper) {
-		helper.runQueries(database -> {
-			if (rowsData.get() == null) rowsData.set(database.table("data").selectAll());
-
-			for (Object[] result : rowsData.get()) {
-				int    id        = (int) result[0];
-				String aliasList = String.valueOf(result[9]);
-
-				if (aliasList != null && !aliasList.isEmpty()) {
-					List<String> aliases = database.getList(aliasList);
-					Gang         gang    = gangs.get(id);
-
-					if (gang != null) {
-						Set<Gang> aliasSet = aliases.stream()
-													.map(aliasId -> gangs.get(Integer.parseInt(aliasId)))
-													.collect(Collectors.toSet());
-						gang.getAlly().addAll(aliasSet);
-					}
-				}
-			}
-		});
-	}
-
 }

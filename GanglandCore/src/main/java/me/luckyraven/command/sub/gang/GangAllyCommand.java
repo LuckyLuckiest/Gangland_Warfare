@@ -116,7 +116,7 @@ class GangAllyCommand extends SubArgument {
 			switch (args[2].toLowerCase()) {
 				case "request" -> {
 					// check if they are allied before proceeding
-					if (receiving.getAlly().contains(sending)) {
+					if (receiving.isAllie(sending)) {
 						player.sendMessage(MessageAddon.ALREADY_ALLIED_GANG.toString());
 						return;
 					}
@@ -178,8 +178,8 @@ class GangAllyCommand extends SubArgument {
 																					  .replace("%gang%",
 																							   sending.getDisplayNameString())));
 
-					sending.getAlly().remove(receiving);
-					receiving.getAlly().remove(sending);
+					sending.removeAllie(receiving);
+					receiving.removeAllie(sending);
 				}
 			}
 
@@ -211,14 +211,14 @@ class GangAllyCommand extends SubArgument {
 			Gang sending = gangsIdMap.get(receiving);
 
 			// check if they are allied before proceeding
-			if (receiving.getAlly().contains(sending)) {
+			if (receiving.isAllie(sending)) {
 				player.sendMessage(MessageAddon.ALREADY_ALLIED_GANG.toString());
 				return;
 			}
 
 			// add both ally
-			receiving.getAlly().add(sending);
-			sending.getAlly().add(receiving);
+			receiving.addAllie(sending);
+			sending.addAllie(receiving);
 
 			// send a message to every member in the sending gang
 			Bukkit.getOnlinePlayers()
@@ -270,7 +270,7 @@ class GangAllyCommand extends SubArgument {
 			Gang sending = gangsIdMap.get(receiving);
 
 			// check if they are allied before proceeding
-			if (receiving.getAlly().contains(sending)) {
+			if (receiving.isAllie(sending)) {
 				player.sendMessage(MessageAddon.ALREADY_ALLIED_GANG.toString());
 				return;
 			}

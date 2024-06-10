@@ -11,6 +11,7 @@ import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.Pair;
 import me.luckyraven.util.color.Color;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -24,10 +25,10 @@ import java.util.*;
 @Setter
 public class Gang extends Account<Integer, List<Member>> {
 
-	private final Set<Gang>      ally;
-	private final Level          level;
-	private final Bounty         bounty;
-	private final EconomyHandler economy;
+	private final Set<Pair<Gang, Long>> allies;
+	private final Level                 level;
+	private final Bounty                bounty;
+	private final EconomyHandler        economy;
 
 	private String name, displayName, color, description;
 	private long  created;
@@ -61,12 +62,36 @@ public class Gang extends Account<Integer, List<Member>> {
 		this.economy     = new EconomyHandler(null);
 		this.bounty      = new Bounty();
 		this.level       = new Level();
-		this.ally        = new HashSet<>();
+		this.allies      = new HashSet<>();
 	}
 
 	public void generateId() {
 		Random random = new Random();
 		setKey(random.nextInt(Integer.MAX_VALUE));
+	}
+
+	public void addAllAllies(List<Pair<Gang, Long>> allieDateList) {
+		allieDateList.forEach(this::addAllie);
+	}
+
+	public void addAllie(Pair<Gang, Long> allieDate) {
+		allies.add(allieDate);
+	}
+
+	public void addAllie(Gang gang) {
+		allies.add(new Pair<>(gang, Instant.now().toEpochMilli()));
+	}
+
+	public void removeAllie(Gang gang) {
+		allies.removeIf(pair -> pair.first().getId() == gang.getId());
+	}
+
+	public boolean isAllie(Gang gang) {
+		return !allies.stream().filter(pair -> pair.first().getId() == gang.getId()).toList().isEmpty();
+	}
+
+	public Set<Pair<Gang, Long>> getAllies() {
+		return Collections.unmodifiableSet(allies);
 	}
 
 	public void addMember(User<? extends OfflinePlayer> user, Member member, Rank rank) {
@@ -145,7 +170,7 @@ public class Gang extends Account<Integer, List<Member>> {
 	}
 
 	public String getAllyListString() {
-		return ally.stream().map(Gang::getDisplayNameString).toString();
+		return allies.stream().map(Pair::first).map(Gang::getDisplayNameString).toString();
 	}
 
 	@Override
@@ -153,7 +178,7 @@ public class Gang extends Account<Integer, List<Member>> {
 		return String.format(
 				"Gang{id=%d,name=%s,description=%s,members=%s,created=%s,balance=%.2f,level=%.2f,bounty=%,.2f,ally=%s}",
 				getId(), name, description, getGroup(), created, economy.getBalance(), level.getExperience(),
-				bounty.getAmount(), ally);
+				bounty.getAmount(), getAllyListString());
 	}
 
 	public enum State {

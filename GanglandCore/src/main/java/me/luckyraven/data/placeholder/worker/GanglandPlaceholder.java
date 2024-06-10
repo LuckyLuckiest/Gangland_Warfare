@@ -183,7 +183,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 		// ally
 		if (parameter.equals(gangStr + "ally-list")) return gang.getAllyListString();
-		if (parameter.equals(gangStr + "ally-size")) return String.valueOf(gang.getAlly().size());
+		if (parameter.equals(gangStr + "ally-size")) return String.valueOf(gang.getAllies().size());
 
 		// level
 		return getLevelPlaceholder(parameter, gangStr, gang.getLevel());
