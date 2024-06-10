@@ -7,8 +7,6 @@ import me.luckyraven.database.tables.GangTable;
 import me.luckyraven.util.Pair;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 public class GangManager {
 
@@ -26,23 +24,22 @@ public class GangManager {
 		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
 		helper.runQueries(database -> {
-			Set<Pair<Integer, Pair<Integer, Long>>> allied = new HashSet<>();
-
 			List<Object[]> gangsData      = database.table(gangTable.getName()).selectAll();
 			List<Object[]> gangAlliesData = database.table(gangAllieTable.getName()).selectAll();
 
 			// set up the gangs
 			for (Object[] result : gangsData) {
-				int    id          = (int) result[0];
-				String name        = String.valueOf(result[1]);
-				String displayName = String.valueOf(result[2]);
-				String description = String.valueOf(result[3]);
-				String color       = String.valueOf(result[4]);
-				double balance     = (double) result[5];
-				int    level       = (int) result[6];
-				double experience  = (double) result[7];
-				double bounty      = (double) result[8];
-				long   created     = (long) result[9];
+				int    v           = 0;
+				int    id          = (int) result[v++];
+				String name        = String.valueOf(result[v++]);
+				String displayName = String.valueOf(result[v++]);
+				String description = String.valueOf(result[v++]);
+				String color       = String.valueOf(result[v++]);
+				double balance     = (double) result[v++];
+				int    level       = (int) result[v++];
+				double experience  = (double) result[v++];
+				double bounty      = (double) result[v++];
+				long   created     = (long) result[v];
 
 				Gang gang = new Gang(id);
 
