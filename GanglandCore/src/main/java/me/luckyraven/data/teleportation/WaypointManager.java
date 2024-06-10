@@ -3,7 +3,7 @@ package me.luckyraven.data.teleportation;
 import me.luckyraven.Gangland;
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.WaypointDatabase;
+import me.luckyraven.database.tables.WaypointTable;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,17 +24,16 @@ public class WaypointManager {
 		this.selectedWaypoints = new HashMap<>();
 	}
 
-	public void initialize(WaypointDatabase waypointDatabase) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, waypointDatabase);
+	public void initialize(WaypointTable waypointTable) {
+		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
 		helper.runQueries(database -> {
-			Database config = database.table("data");
-
-			List<Object[]> data = config.selectAll();
+			List<Object[]> data = database.table(waypointTable.getName()).selectAll();
 
 			for (Object[] result : data) {
 				int    v        = 0;
 				int    id       = (int) result[v++];
+				int    gangId   = (int) result[v++];
 				String name     = String.valueOf(result[v++]);
 				String world    = String.valueOf(result[v++]);
 				double x        = (double) result[v++];
@@ -43,10 +42,9 @@ public class WaypointManager {
 				double yaw      = (double) result[v++];
 				double pitch    = (double) result[v++];
 				String type     = String.valueOf(result[v++]);
-				int    gangId   = (int) result[v++];
+				int    shield   = (int) result[v++];
 				int    timer    = (int) result[v++];
 				int    cooldown = (int) result[v++];
-				int    shield   = (int) result[v++];
 				double cost     = (double) result[v++];
 				double radius   = (double) result[v];
 
@@ -97,11 +95,11 @@ public class WaypointManager {
 						.orElse(null);
 	}
 
-	public void refactorIds(WaypointDatabase waypointDatabase) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, waypointDatabase);
+	public void refactorIds(WaypointTable waypointTable) {
+		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
 		helper.runQueries(database -> {
-			Database config = database.table("data");
+			Database config = database.table(waypointTable.getName());
 
 			List<Object[]> rowsData = config.selectAll();
 
@@ -118,7 +116,7 @@ public class WaypointManager {
 				waypoint.setUsedId(tempId);
 				waypoints.put(tempId, waypoint);
 
-				waypointDatabase.insertDataTable(waypoint);
+				waypointTable.insertTableQuery(database, waypoint);
 
 				tempId++;
 			}
