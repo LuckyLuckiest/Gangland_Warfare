@@ -114,6 +114,10 @@ public class Gang extends Account<Integer, List<Member>> {
 		getGroup().add(member);
 	}
 
+	public void addMember(Member member) {
+		addMember(member, member.getRank());
+	}
+
 	public List<Member> getGroup() {
 		return super.getValue();
 	}

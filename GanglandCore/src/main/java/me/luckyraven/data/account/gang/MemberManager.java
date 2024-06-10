@@ -5,7 +5,7 @@ import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.GangDatabase;
+import me.luckyraven.database.tables.MemberTable;
 import me.luckyraven.file.configuration.SettingAddon;
 
 import java.sql.Types;
@@ -13,60 +13,76 @@ import java.util.*;
 
 public class MemberManager {
 
-	private final Map<UUID, Member> members;
 	private final Gangland          gangland;
+	private final Map<UUID, Member> members;
 
 	public MemberManager(Gangland gangland) {
 		this.gangland = gangland;
 		this.members  = new HashMap<>();
 	}
 
-	public void initialize(GangDatabase gangDatabase, GangManager gangManager, RankManager rankManager) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, gangDatabase);
+	public void initialize(MemberTable memberTable, GangManager gangManager, RankManager rankManager) {
+		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
 		helper.runQueries(database -> {
-			List<Object[]> rowsData = database.table("members").selectAll();
+			List<Object[]> rowsData = database.table(memberTable.getName()).selectAll();
 
 			for (Object[] result : rowsData) {
-				UUID   uuid         = UUID.fromString(String.valueOf(result[0]));
-				int    id           = (int) result[1];
-				double contribution = (double) result[2];
-				Rank   rank         = rankManager.get(String.valueOf(result[3]));
-				long   joinedGang   = (long) result[4];
+				int    v            = 0;
+				UUID   uuid         = UUID.fromString(String.valueOf(result[v++]));
+				int    gangId       = (int) result[v++];
+				double contribution = (double) result[v++];
+				int    rankId       = (int) result[v++];
+				long   joinedGang   = (long) result[v];
 
+				Rank   rank   = rankManager.get(rankId);
 				Member member = new Member(uuid);
-				member.setGangId(id);
+
+				if (rank == null) {
+					// convert the rank to the initial rank (head)
+					rank = rankManager.getRankTree().getRoot().getData();
+				}
+
+				member.setGangId(gangId);
 				member.setContribution(contribution);
 				member.setRank(rank);
 				member.setGangJoinDateLong(joinedGang);
 
 				members.put(uuid, member);
 
-				Gang gang = gangManager.getGang(id);
-				if (gang != null) gang.getGroup().add(member);
+				Gang gang = gangManager.getGang(gangId);
+				if (gang != null) gang.addMember(member);
 			}
 		});
 	}
 
-	public void initializeMemberData(Member member, GangDatabase gangDatabase) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, gangDatabase);
+	public void initializeMemberData(Member member, MemberTable memberTable) {
+		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
 		helper.runQueries(database -> {
-			Database config = database.table("members");
+			Database config = database.table(memberTable.getName());
 
 			Object[] memberInfo = config.select("uuid = ?", new Object[]{member.getUuid()}, new int[]{Types.CHAR},
 												new String[]{"*"});
 
 			// create member data into a database
 			if (memberInfo.length == 0) {
-				if (!SettingAddon.isAutoSave()) gangDatabase.insertMemberTable(member);
+				if (!SettingAddon.isAutoSave()) memberTable.insertTableQuery(database, member);
 			} else {
 				RankManager rankManager = gangland.getInitializer().getRankManager();
 
-				int    gangId       = (int) memberInfo[1];
-				double contribution = (double) memberInfo[2];
-				Rank   rank         = rankManager.get(String.valueOf(memberInfo[3]));
-				long   gangJoin     = (long) memberInfo[4];
+				int    v            = 1;
+				int    gangId       = (int) memberInfo[v++];
+				double contribution = (double) memberInfo[v++];
+				int    rankId       = (int) memberInfo[v++];
+				long   gangJoin     = (long) memberInfo[v];
+
+				Rank rank = rankManager.get(rankId);
+
+				if (rank == null) {
+					// convert the rank to the initial rank (head)
+					rank = rankManager.getRankTree().getRoot().getData();
+				}
 
 				member.setGangId(gangId);
 				member.setContribution(contribution);
