@@ -89,7 +89,7 @@ public class RankManager {
 														.filter(pair -> pair.first() == id)
 														.map(Pair::second)
 														.toList();
-				// group them together and add them as permissions list
+				// group them together and add them as a permissions list
 				List<Permission> perms = this.permissions.keySet()
 														 .stream()
 														 .filter(permIds::contains)
