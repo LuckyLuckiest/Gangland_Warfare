@@ -1,7 +1,6 @@
 package me.luckyraven;
 
 import lombok.Getter;
-import lombok.val;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.scoreboard.ScoreboardManager;
 import me.luckyraven.command.CommandManager;
@@ -37,8 +36,9 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.database.component.Table;
-import me.luckyraven.database.sub.*;
+import me.luckyraven.database.sub.GanglandDatabase;
 import me.luckyraven.database.tables.*;
+import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
@@ -145,7 +145,8 @@ public final class Initializer {
 
 		// manage if the database was null
 		if (ganglandDatabase == null) {
-			return;
+			throw new PluginException("Gangland Database instance is not found.");
+			// plugin crashes
 		}
 
 		// Rank manager
@@ -185,25 +186,16 @@ public final class Initializer {
 		MemberTable    memberTable    = getInstanceFromTables(MemberTable.class, gangTables);
 
 		gangManager.initialize(gangTable, gangAllieTable);
-//		memberManager.initialize(gangDatabase, gangManager, rankManager);
+		memberManager.initialize(memberTable, gangManager, rankManager);
 
 		// Waypoint manager
-		Table<Waypoint> waypointTable = ganglandDatabase.getTables()
-														.stream()
-														.filter(table -> table instanceof WaypointTable)
-														.map(WaypointTable.class::cast)
-														.findFirst()
-														.orElse(null);
-
-		// handle the null value
-		if (waypointTable == null) {
-			return;
-		}
-
 		waypointManager = new WaypointManager(gangland);
 
+		WaypointTable waypointTable = getInstanceFromTables(WaypointTable.class,
+															ganglandDatabase.getTables().stream().toList());
+
 		// initialize the waypoint class
-//		waypointManager.initialize(waypointDatabase);
+		waypointManager.initialize(waypointTable);
 
 		// Events
 		listenerManager = new ListenerManager(gangland);
@@ -273,23 +265,6 @@ public final class Initializer {
 		GanglandDatabase ganglandDatabase = new GanglandDatabase(gangland);
 		ganglandDatabase.setType(type);
 		databaseManager.addDatabase(ganglandDatabase);
-
-		// Temporary databases
-		UserDatabase userDatabase = new UserDatabase(gangland);
-		userDatabase.setType(type);
-		databaseManager.addDatabase(userDatabase);
-
-		GangDatabase gangDatabase = new GangDatabase(gangland);
-		gangDatabase.setType(type);
-		databaseManager.addDatabase(gangDatabase);
-
-		RankDatabase rankDatabase = new RankDatabase(gangland);
-		rankDatabase.setType(type);
-		databaseManager.addDatabase(rankDatabase);
-
-		WaypointDatabase waypointDatabase = new WaypointDatabase(gangland);
-		waypointDatabase.setType(type);
-		databaseManager.addDatabase(waypointDatabase);
 	}
 
 	private void events() {
