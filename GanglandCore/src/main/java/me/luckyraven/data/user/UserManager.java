@@ -5,6 +5,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.type.Bank;
+import me.luckyraven.data.permission.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHelper;
@@ -121,8 +122,8 @@ public class UserManager<T extends OfflinePlayer> {
 		PermissionAttachment attachment = user.getUser().addAttachment(gangland);
 		user.setPermissionAttachment(attachment);
 
-		for (String perm : rank.getPermissions())
-			attachment.setPermission(perm, true);
+		for (Permission perm : rank.getPermissions())
+			attachment.setPermission(perm.permission(), true);
 
 		// apparently updates the command list according to the permission list
 		user.getUser().updateCommands();
