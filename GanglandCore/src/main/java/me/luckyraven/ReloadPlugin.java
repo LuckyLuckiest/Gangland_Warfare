@@ -10,20 +10,16 @@ import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserDataInitEvent;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.database.component.Table;
-import me.luckyraven.database.sub.GangDatabase;
 import me.luckyraven.database.sub.GanglandDatabase;
-import me.luckyraven.database.sub.RankDatabase;
-import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.database.tables.*;
 import me.luckyraven.feature.phone.Phone;
+import me.luckyraven.feature.weapon.WeaponManager;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
-import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -78,6 +74,7 @@ public class ReloadPlugin {
 		// order doesn't matter
 		userInitialize(resetCache);
 		waypointInitialize(resetCache);
+		weaponInitialize(resetCache);
 	}
 
 	/**
@@ -85,8 +82,8 @@ public class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 *
-	 * @implNote Very important to run this method after {@link DatabaseManager}, and {@link RankDatabase}
-	 * 		initialization.
+	 * @implNote Very important to run this method after {@link RankTable}, {@link RankParentTable},
+	 *        {@link PermissionTable}, and {@link RankPermissionTable} initialization.
 	 */
 	public void rankInitialize(boolean resetCache) {
 		RankManager rankManager = initializer.getRankManager();
@@ -107,7 +104,7 @@ public class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 *
-	 * @implNote Very important to run this method after {@link DatabaseManager}, and {@link GangDatabase}
+	 * @implNote Very important to run this method after {@link GangTable}, and {@link GangAllieTable}
 	 * 		initialization.
 	 */
 	public void gangInitialize(boolean resetCache) {
@@ -127,8 +124,8 @@ public class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 *
-	 * @implNote Very important to run this method after {@link DatabaseManager}, {@link RankManager},
-	 *        {@link GangManager}, {@link RankDatabase}, and {@link GangDatabase} initialization.
+	 * @implNote Very important to run this method after {@link RankManager}, {@link GangManager}, and
+	 *        {@link MemberTable} initialization.
 	 */
 	public void memberInitialize(boolean resetCache) {
 		RankManager   rankManager   = initializer.getRankManager();
@@ -148,39 +145,12 @@ public class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 *
-	 * @implNote Very important to run this method after {@link ListenerManager}, {@link DatabaseManager},
-	 *        {@link CreateAccount}, {@link UserDatabase}, and {@link GangDatabase} initialization.
+	 * @implNote Very important to run this method after {@link ListenerManager}, {@link CreateAccount},
+	 *        {@link UserTable}, {@link BankTable}, and {@link MemberTable} initialization.
 	 */
 	public void userInitialize(boolean resetCache) {
-		DatabaseManager databaseManager = initializer.getDatabaseManager();
-
-		UserDatabase userHandler = databaseManager.getDatabases()
-												  .stream()
-												  .filter(handler -> handler instanceof UserDatabase)
-												  .map(handler -> (UserDatabase) handler)
-												  .findFirst()
-												  .orElse(null);
-
-		if (userHandler == null) {
-			Gangland.getLog4jLogger().error("{}: Unable to find UserDatabase class.", UnhandledError.ERROR);
-			return;
-		}
-
-		UserManager<Player> userManager = initializer.getUserManager();
-
-		GangDatabase memberHandler = databaseManager.getDatabases()
-													.stream()
-													.filter(handler -> handler instanceof GangDatabase)
-													.map(handler -> (GangDatabase) handler)
-													.findFirst()
-													.orElse(null);
-
-		if (memberHandler == null) {
-			Gangland.getLog4jLogger().error("{}: Unable to find GangDatabase class.", UnhandledError.ERROR);
-			return;
-		}
-
-		MemberManager memberManager = initializer.getMemberManager();
+		UserManager<Player> userManager   = initializer.getUserManager();
+		MemberManager       memberManager = initializer.getMemberManager();
 
 		if (resetCache) {
 			for (User<Player> user : userManager.getUsers().values()) {
@@ -193,6 +163,11 @@ public class ReloadPlugin {
 			userManager.clear();
 		}
 
+		List<Table<?>> tables      = ganglandDatabase.getTables().stream().toList();
+		UserTable      userTable   = initializer.getInstanceFromTables(UserTable.class, tables);
+		BankTable      bankTable   = initializer.getInstanceFromTables(BankTable.class, tables);
+		MemberTable    memberTable = initializer.getInstanceFromTables(MemberTable.class, tables);
+
 		for (Player player : Bukkit.getOnlinePlayers())
 			if (!userManager.contains(userManager.getUser(player))) {
 				User<Player> newUser = new User<>(player);
@@ -203,7 +178,7 @@ public class ReloadPlugin {
 					if (!Phone.hasPhone(player)) phone.addPhoneToInventory(player);
 				}
 
-				initializer.getUserManager().initializeUserData(newUser, userHandler);
+				initializer.getUserManager().initializeUserData(newUser, userTable, bankTable);
 
 				UserDataInitEvent userDataInitEvent = new UserDataInitEvent(false, newUser);
 				Bukkit.getPluginManager().callEvent(userDataInitEvent);
@@ -220,9 +195,7 @@ public class ReloadPlugin {
 				}
 
 				// for a new member
-				Member         newMember   = new Member(player.getUniqueId());
-				List<Table<?>> tables      = ganglandDatabase.getTables().stream().toList();
-				MemberTable    memberTable = initializer.getInstanceFromTables(MemberTable.class, tables);
+				Member newMember = new Member(player.getUniqueId());
 
 				initializer.getMemberManager().initializeMemberData(newMember, memberTable);
 
@@ -235,8 +208,7 @@ public class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 *
-	 * @implNote Very important to run this method after {@link DatabaseManager}, and {@link WaypointTable}
-	 * 		initialization.
+	 * @implNote Very important to run this method after {@link WaypointTable} initialization.
 	 */
 	public void waypointInitialize(boolean resetCache) {
 		WaypointManager waypointManager = initializer.getWaypointManager();
@@ -247,6 +219,24 @@ public class ReloadPlugin {
 		WaypointTable  waypointTable = initializer.getInstanceFromTables(WaypointTable.class, tables);
 
 		waypointManager.initialize(waypointTable);
+	}
+
+	/**
+	 * Initializes the weapon data (effective for reloads).
+	 *
+	 * @param resetCache if old data needs to be cleared
+	 *
+	 * @implNote Very important to run this method after {@link WeaponTable} initialization.
+	 */
+	public void weaponInitialize(boolean resetCache) {
+		WeaponManager weaponManager = initializer.getWeaponManager();
+
+		if (resetCache) weaponManager.clear();
+
+		List<Table<?>> tables      = ganglandDatabase.getTables().stream().toList();
+		WeaponTable    weaponTable = initializer.getInstanceFromTables(WeaponTable.class, tables);
+
+		weaponManager.initialize(weaponTable);
 	}
 
 	/**

@@ -4,34 +4,36 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.GangDatabase;
-import me.luckyraven.database.sub.RankDatabase;
-import me.luckyraven.database.sub.UserDatabase;
-import me.luckyraven.database.tables.RankTable;
-import me.luckyraven.database.tables.WaypointTable;
+import me.luckyraven.database.component.Table;
+import me.luckyraven.database.sub.GanglandDatabase;
+import me.luckyraven.database.tables.*;
+import me.luckyraven.feature.weapon.Weapon;
+import me.luckyraven.feature.weapon.WeaponManager;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.Pair;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class PeriodicalUpdates {
 
-	private final Gangland       gangland;
-	private       RepeatingTimer repeatingTimer;
+	private final Gangland    gangland;
+	private final Initializer initializer;
+
+	private RepeatingTimer repeatingTimer;
 
 	public PeriodicalUpdates(Gangland gangland, long interval) {
 		this(gangland);
@@ -39,39 +41,67 @@ public class PeriodicalUpdates {
 	}
 
 	public PeriodicalUpdates(Gangland gangland) {
-		this.gangland = gangland;
+		this.gangland    = gangland;
+		this.initializer = gangland.getInitializer();
 	}
 
 	/**
 	 * All queried data is sent and handle in the database.
 	 */
 	public void updatingDatabase() {
-		for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
-			DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+		GanglandDatabase database = initializer.getGanglandDatabase();
+		DatabaseHelper   helper   = new DatabaseHelper(gangland, database);
+		List<Table<?>>   tables   = database.getTables().stream().toList();
 
-			if (handler instanceof UserDatabase userDatabase) {
-				// online users
-				updateUserData(gangland.getInitializer().getUserManager(), helper, userDatabase);
+		// update the user data
+		UserManager<Player>        userManager        = initializer.getUserManager();
+		UserManager<OfflinePlayer> offlineUserManager = initializer.getOfflineUserManager();
+		UserTable                  userTable          = initializer.getInstanceFromTables(UserTable.class, tables);
+		BankTable                  bankTable          = initializer.getInstanceFromTables(BankTable.class, tables);
 
-				// offline users
-				UserManager<OfflinePlayer> offlineUserManager = gangland.getInitializer().getOfflineUserManager();
+		// online users
+		updateUserData(userManager, helper, userTable, bankTable);
 
-				updateUserData(offlineUserManager, helper, userDatabase);
-				offlineUserManager.clear();
-			} else if (handler instanceof GangDatabase gangDatabase) {
-				// gang data
-				updateGangData(gangland.getInitializer().getGangManager(), helper, gangDatabase);
+		// offline users
+		updateUserData(offlineUserManager, helper, userTable, bankTable);
+		offlineUserManager.clear();
 
-				// member data
-				updateMemberData(gangland.getInitializer().getMemberManager(), helper, gangDatabase);
-			} else if (handler instanceof RankDatabase rankDatabase) {
-				// rank info
-				updateRankData(gangland.getInitializer().getRankManager(), helper, rankDatabase);
-			} else if (handler instanceof WaypointDatabase waypointDatabase) {
-				// waypoint info
-				updateWaypointData(gangland.getInitializer().getWaypointManager(), helper, waypointDatabase);
-			}
-		}
+		// update the gang data
+		GangManager    gangManager    = initializer.getGangManager();
+		MemberManager  memberManager  = initializer.getMemberManager();
+		GangTable      gangTable      = initializer.getInstanceFromTables(GangTable.class, tables);
+		GangAllieTable gangAllieTable = initializer.getInstanceFromTables(GangAllieTable.class, tables);
+		MemberTable    memberTable    = initializer.getInstanceFromTables(MemberTable.class, tables);
+
+		// gang data
+		updateGangData(gangManager, helper, gangTable, gangAllieTable);
+
+		// member data
+		updateMemberData(memberManager, helper, memberTable);
+
+		// update the rank data
+		RankManager         rankManager         = initializer.getRankManager();
+		RankTable           rankTable           = initializer.getInstanceFromTables(RankTable.class, tables);
+		PermissionTable     permissionTable     = initializer.getInstanceFromTables(PermissionTable.class, tables);
+		RankPermissionTable rankPermissionTable = initializer.getInstanceFromTables(RankPermissionTable.class, tables);
+		RankParentTable     rankParentTable     = initializer.getInstanceFromTables(RankParentTable.class, tables);
+
+		// rank data
+		updateRankData(rankManager, helper, rankTable, permissionTable, rankPermissionTable, rankParentTable);
+
+		// update the waypoint data
+		WaypointManager waypointManager = initializer.getWaypointManager();
+		WaypointTable   waypointTable   = initializer.getInstanceFromTables(WaypointTable.class, tables);
+
+		// waypoint data
+		updateWaypointData(waypointManager, helper, waypointTable);
+
+		// update the weapon data
+		WeaponManager weaponManager = initializer.getWeaponManager();
+		WeaponTable   weaponTable   = initializer.getInstanceFromTables(WeaponTable.class, tables);
+
+		// weapon data
+		updateWeaponData(weaponManager, helper, weaponTable);
 	}
 
 	/**
@@ -133,62 +163,124 @@ public class PeriodicalUpdates {
 	}
 
 	private void updateUserData(UserManager<? extends OfflinePlayer> userManager, DatabaseHelper helper,
-								UserDatabase userDatabase) {
+								UserTable userTable, BankTable bankTable) {
 		helper.runQueries(database -> {
 			for (User<? extends OfflinePlayer> user : userManager.getUsers().values()) {
-				Object[] data = database.table("data")
-										.select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
-												new int[]{Types.CHAR}, new String[]{"*"});
+				// update user data
+				Map<String, Object> searchUser = userTable.searchCriteria(user);
+				Object[] data = database.table(userTable.getName())
+										.select((String) searchUser.get("search"), (Object[]) searchUser.get("info"),
+												(int[]) searchUser.get("type"), new String[]{"*"});
 
-				if (data.length == 0) userDatabase.insertDataTable(user);
-				else userDatabase.updateDataTable(user);
+				if (data.length == 0) userTable.insertTableQuery(database, user);
+				else userTable.updateTableQuery(database, user);
 
-				Object[] bank = database.table("bank")
-										.select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
-												new int[]{Types.CHAR}, new String[]{"*"});
+				// update bank data
+				Map<String, Object> searchBank = bankTable.searchCriteria(user);
+				Object[] bank = database.table(bankTable.getName())
+										.select((String) searchBank.get("search"), (Object[]) searchBank.get("info"),
+												(int[]) searchBank.get("type"), new String[]{"*"});
 
-				if (bank.length == 0) userDatabase.insertBankTable(user);
-				else userDatabase.updateBankTable(user);
+				if (bank.length == 0) bankTable.insertTableQuery(database, user);
+				else bankTable.updateTableQuery(database, user);
 			}
 		});
 	}
 
-	private void updateGangData(GangManager gangManager, DatabaseHelper helper, GangDatabase gangDatabase) {
+	private void updateGangData(GangManager gangManager, DatabaseHelper helper, GangTable gangTable,
+								GangAllieTable gangAllieTable) {
 		helper.runQueries(database -> {
 			for (Gang gang : gangManager.getGangs().values()) {
-				Object[] data = database.table("data")
-										.select("id = ?", new Object[]{gang.getId()}, new int[]{Types.INTEGER},
-												new String[]{"*"});
+				// update gang data
+				Map<String, Object> searchGang = gangTable.searchCriteria(gang);
+				Object[] data = database.table(gangTable.getName())
+										.select((String) searchGang.get("search"), (Object[]) searchGang.get("info"),
+												(int[]) searchGang.get("type"), new String[]{"*"});
 
-				if (data.length == 0) gangDatabase.insertDataTable(gang);
-				else gangDatabase.updateDataTable(gang);
+				if (data.length == 0) gangTable.insertTableQuery(database, gang);
+				else gangTable.updateTableQuery(database, gang);
+
+				// update gang allie data
+				for (Pair<Gang, Long> alliedGang : gang.getAllies()) {
+					Pair<Gang, Gang>    team            = new Pair<>(gang, alliedGang.first());
+					Map<String, Object> searchGangAllie = gangAllieTable.searchCriteria(team);
+					Object[] allie = database.table(gangAllieTable.getName())
+											 .select((String) searchGangAllie.get("search"),
+													 (Object[]) searchGangAllie.get("info"),
+													 (int[]) searchGangAllie.get("type"), new String[]{"*"});
+
+					if (allie.length == 0) gangAllieTable.insertTableQuery(database, team);
+					else gangAllieTable.updateTableQuery(database, team);
+				}
 			}
 		});
 	}
 
-	private void updateMemberData(MemberManager memberManager, DatabaseHelper helper, GangDatabase gangDatabase) {
+	private void updateMemberData(MemberManager memberManager, DatabaseHelper helper, MemberTable memberTable) {
 		helper.runQueries(database -> {
 			for (Member member : memberManager.getMembers().values()) {
-				Object[] data = database.table("members")
-										.select("uuid = ?", new Object[]{member.getUuid()}, new int[]{Types.CHAR},
-												new String[]{"*"});
+				Map<String, Object> search = memberTable.searchCriteria(member);
+				Object[] data = database.table(memberTable.getName())
+										.select((String) search.get("search"), (Object[]) search.get("info"),
+												(int[]) search.get("type"), new String[]{"*"});
 
-				if (data.length == 0) gangDatabase.insertMemberTable(member);
-				else gangDatabase.updateMemberTable(member);
+				if (data.length == 0) memberTable.insertTableQuery(database, member);
+				else memberTable.updateTableQuery(database, member);
 			}
 		});
 	}
 
-	private void updateRankData(RankManager rankManager, DatabaseHelper helper, RankTable rankTable) {
+	private void updateRankData(RankManager rankManager, DatabaseHelper helper, RankTable rankTable,
+								PermissionTable permissionTable, RankPermissionTable rankPermissionTable,
+								RankParentTable rankParentTable) {
 		helper.runQueries(database -> {
+			// update rank data
 			for (Rank rank : rankManager.getRankTree()) {
 				Map<String, Object> search = rankTable.searchCriteria(rank);
 				Object[] data = database.table(rankTable.getName())
-										.select("id = ?", new Object[]{rank.getUsedId()}, new int[]{Types.INTEGER},
-												new String[]{"*"});
+										.select((String) search.get("search"), (Object[]) search.get("info"),
+												(int[]) search.get("type"), new String[]{"*"});
 
 				if (data.length == 0) rankTable.insertTableQuery(database, rank);
 				else rankTable.updateTableQuery(database, rank);
+			}
+
+			// update permission data
+			for (Permission permission : rankManager.getPermissions().values()) {
+				Map<String, Object> search = permissionTable.searchCriteria(permission);
+				Object[] data = database.table(permissionTable.getName())
+										.select((String) search.get("search"), (Object[]) search.get("info"),
+												(int[]) search.get("type"), new String[]{"*"});
+
+				if (data.length == 0) permissionTable.insertTableQuery(database, permission);
+				else permissionTable.updateTableQuery(database, permission);
+			}
+
+			// update permission data
+			for (Pair<Integer, Integer> rankParentIds : rankManager.getRanksParent()) {
+				Pair<Rank, Rank> rankParent = new Pair<>(rankManager.get(rankParentIds.first()),
+														 rankManager.get(rankParentIds.second()));
+				Map<String, Object> search = rankParentTable.searchCriteria(rankParent);
+				Object[] data = database.table(rankParentTable.getName())
+										.select((String) search.get("search"), (Object[]) search.get("info"),
+												(int[]) search.get("type"), new String[]{"*"});
+
+				if (data.length == 0) rankParentTable.insertTableQuery(database, rankParent);
+				else rankParentTable.updateTableQuery(database, rankParent);
+			}
+
+			// update permission data
+			for (Pair<Integer, Integer> rankPermissionIds : rankManager.getRanksPermissions()) {
+				Pair<Rank, Permission> rankPermission = new Pair<>(rankManager.get(rankPermissionIds.first()),
+																   rankManager.getPermission(
+																		   rankPermissionIds.second()));
+				Map<String, Object> search = rankPermissionTable.searchCriteria(rankPermission);
+				Object[] data = database.table(rankPermissionTable.getName())
+										.select((String) search.get("search"), (Object[]) search.get("info"),
+												(int[]) search.get("type"), new String[]{"*"});
+
+				if (data.length == 0) rankPermissionTable.insertTableQuery(database, rankPermission);
+				else rankPermissionTable.updateTableQuery(database, rankPermission);
 			}
 		});
 	}
@@ -208,8 +300,22 @@ public class PeriodicalUpdates {
 		});
 	}
 
+	private void updateWeaponData(WeaponManager weaponManager, DatabaseHelper helper, WeaponTable weaponTable) {
+		helper.runQueries(database -> {
+			for (Weapon weapon : weaponManager.getWeapons().values()) {
+				Map<String, Object> search = weaponTable.searchCriteria(weapon);
+				Object[] data = database.table(weaponTable.getName())
+										.select((String) search.get("search"), (Object[]) search.get("info"),
+												(int[]) search.get("type"), new String[]{"*"});
+
+				if (data.length == 0) weaponTable.insertTableQuery(database, weapon);
+				else weaponTable.updateTableQuery(database, weapon);
+			}
+		});
+	}
+
 	private void removeInventories() {
-		for (User<Player> user : gangland.getInitializer().getUserManager().getUsers().values())
+		for (User<Player> user : initializer.getUserManager().getUsers().values())
 			removeInventory(user);
 	}
 
