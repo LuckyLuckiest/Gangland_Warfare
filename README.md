@@ -3,13 +3,16 @@ Dive into ***Gangland Warfare***, where Minecraft meets the thrill of GTA! Choos
 
 ***Gangland Warfare*** fuses the thrill of GTA with the creativity of Minecraft, offering a rich and immersive experience. Dive into a world where you can choose your path as a criminal or a cop and explore these exciting features:
 
-### Choose Your Path: Cop or Criminal
+### Choose Your Path: Cop, Criminal, or Civilian
 
 - **Criminal Empire:**
 Dive into the underworld, orchestrate daring heists, smuggle contraband, and build your empire. Rise through your gang's ranks and become the city's most notorious criminal.
 
 - **Law Enforcement:**
 Join the ranks of the police force, chase down fugitives, and bring criminals to justice. Patrol the streets, respond to crimes in progress, and maintain order in a city rife with chaos.
+
+- **Civilian Life:**
+Engage in everyday activities, choose jobs, own properties, and participate in various quests for rewards.
 
 ### Dynamic Gameplay Features
 
@@ -24,22 +27,25 @@ Manage your wealth with in-game banking and trade with dealers.
 
 ### Exciting Missions and Challenges
 
+- **Jobs and Missions:**
+Take on jobs and missions as a criminal, cop, or civilian. Criminals can plan heists and manage hideouts, cops can clear criminal hideouts and tackle corruption, and civilians can own properties and complete diverse quests.
+
 - **Bounty System:**
 Set and claim bounties on players, adding an extra layer of excitement and competition. Whether hunting criminals or evading bounty hunters, every moment is packed with action.
 
 - **Wanted Levels:**
-Experience intense chases with a dynamic wanted level system that increases police presence as your infamy grows.
+Experience intense chases with a dynamic wanted-level system that increases police presence as your infamy grows.
 
 - **Heists and Robberies:**
 Plan and execute elaborate heists for big rewards, requiring strategy and coordination.
 
-### Engagin World Elements
-
-- **Dealers:**
-Interact with black market and regular dealers for unique items and resources.
+### Immersive World Elements
 
 - **NPCs:**
-Various NPCs offer missions, trade, and interact dynamically with the player.
+Various NPCs, including police officers, SWAT teams, special forces, and dealers, populate the world and interact dynamically with players.
+
+- **Dealers:**
+Interact with the black market and regular dealers for unique items and resources. Use commands to create and manage dealers with interactive GUIs.
 
 - **Casino:**
 Engage in casino games like poker and slot machines for a chance to win money and exclusive items.
@@ -47,13 +53,13 @@ Engage in casino games like poker and slot machines for a chance to win money an
 ### Customization and Progression
 
 - **Gangs:**
-Form and manage gangs with a hierarchical rank system, set challenges, and toggle friendly fire.
+Form and manage gangs with a hierarchical rank system set challenges, and toggle friendly fire.
 
 - **Level System:**
 Gain experience, level up, and unlock rewards and abilities.
 
 - **Houses and Properties:**
-Own and customize houses that serve as safe zones and item storage.
+Own and customize houses that serve as safe zones and item storage. Civilians, criminals, and cops can own land or rent apartments.
 
 ### Additional Features
 
@@ -64,10 +70,10 @@ Purchase vehicles for racing, transportation, and combat.
 Buy and sell items through a competitive auction system.
 
 - **Death Cam:**
-GTA like top down death to view how you died, and engage into strategizing a better approach.
+A GTA like top-down death to view how you died, and engage in strategizing a better approach.
 
 - **Passive Mode:**
-Toggle to immune mode to avoid combat, allowing for peaceful interactions activities.
+Toggle to immune mode to avoid combat, allowing for peaceful interaction activities.
 
 - **Scoreboard and Achievements:**
 Track your achievements and progress with a customizable scoreboard, showcasing your rise to power or your dedication to law enforcement.
