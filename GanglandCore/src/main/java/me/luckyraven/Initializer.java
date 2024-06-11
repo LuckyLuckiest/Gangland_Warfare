@@ -337,7 +337,7 @@ public final class Initializer {
 		command.setTabCompleter(new CommandTabCompleter(CommandManager.getCommands()));
 	}
 
-	private <E> E getInstanceFromTables(Class<E> clazz, List<Table<?>> tables) {
+	public <E> E getInstanceFromTables(Class<E> clazz, List<Table<?>> tables) {
 		return tables.stream()
 					 .filter(clazz::isInstance)
 					 .map(clazz::cast)
