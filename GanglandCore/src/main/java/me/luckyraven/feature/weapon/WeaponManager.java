@@ -1,38 +1,33 @@
 package me.luckyraven.feature.weapon;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.sub.GanglandDatabase;
+import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.WeaponTable;
 import me.luckyraven.file.configuration.weapon.WeaponAddon;
 import org.jetbrains.annotations.Nullable;
 
-import java.sql.SQLException;
 import java.util.*;
 
 public class WeaponManager {
 
+	private final Gangland          gangland;
 	private final Map<UUID, Weapon> weapons;
 	private final WeaponAddon       weaponAddon;
 
 	public WeaponManager(Gangland gangland) {
+		this.gangland    = gangland;
 		this.weaponAddon = gangland.getInitializer().getWeaponAddon();
 		this.weapons     = new HashMap<>();
+	}
 
-		// initialize the weapons map
-		gangland.getInitializer()
-				.getDatabaseManager()
-				.getDatabases()
-				.stream()
-				.filter(database -> database instanceof GanglandDatabase)
-				.map(database -> (GanglandDatabase) database)
-				.flatMap(ganglandDatabase -> ganglandDatabase.getTables()
-															 .stream()
-															 .filter(table -> table instanceof WeaponTable)
-															 .map(table -> new AbstractMap.SimpleEntry<>(
-																	 ganglandDatabase, (WeaponTable) table)))
-				.findFirst()
-				.ifPresent(entry -> init(entry.getKey(), entry.getValue()));
+	public void initialize(WeaponTable table) {
+		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
+
+		helper.runQueries(database -> {
+			List<Object[]> data = database.table(table.getName()).selectAll();
+
+			// TODO Complete the rest of the code
+		});
 	}
 
 	/**
@@ -83,18 +78,12 @@ public class WeaponManager {
 		return weaponV3;
 	}
 
-	public Map<UUID, Weapon> getWeapons() {
-		return Collections.unmodifiableMap(weapons);
+	public void clear() {
+		weapons.clear();
 	}
 
-	private void init(DatabaseHandler databaseHandler, WeaponTable table) {
-		// initialize all the weapons from the database
-		try {
-			List<Object[]> data = databaseHandler.getDatabase().selectAll();
-
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
+	public Map<UUID, Weapon> getWeapons() {
+		return Collections.unmodifiableMap(weapons);
 	}
 
 }
