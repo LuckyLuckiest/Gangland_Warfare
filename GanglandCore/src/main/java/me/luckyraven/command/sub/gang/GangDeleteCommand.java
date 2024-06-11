@@ -123,9 +123,9 @@ class GangDeleteCommand extends SubArgument {
 				return;
 			}
 
-			// check if the player is the owner
 			if (member.getRank() == null) return;
 
+			// check if the player is the owner
 			Rank tail = rankManager.get(SettingAddon.getGangRankTail());
 
 			if (tail == null) return;
@@ -142,8 +142,8 @@ class GangDeleteCommand extends SubArgument {
 			// change the data directly from the database, and collect the online players ONLY!
 			List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
 
-			double total = gang.getGroup().stream().mapToDouble(Member::getContribution).sum();
 			// get the contribution frequency for each user, and return that frequency according to the current balance
+			double total = gang.getGroup().stream().mapToDouble(Member::getContribution).sum();
 
 			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
 				// change the gang id for all the members
@@ -151,11 +151,14 @@ class GangDeleteCommand extends SubArgument {
 					// change the online users gang id
 					for (User<Player> gangUser : gangOnlineMembers) {
 						Member mem = memberManager.getMember(gangUser.getUser().getUniqueId());
+
 						gang.removeMember(gangUser, mem);
+
 						// distribute the balance according to the contribution
 						double freq    = mem.getContribution();
 						double balance = gang.getEconomy().getBalance();
 						double amount  = Math.round(total) == 0 ? 0 : freq / total * balance;
+
 						gang.getEconomy().withdraw(amount);
 						gangUser.getEconomy().deposit(amount);
 
@@ -169,10 +172,6 @@ class GangDeleteCommand extends SubArgument {
 																			  .replace("%amount%",
 																					   SettingAddon.formatDouble(
 																							   amount)));
-						// update the database
-						DatabaseHelper helper = new DatabaseHelper(gangland, handler);
-
-						helper.runQueries(database -> userDatabase.updateDataTable(gangUser));
 					}
 					// change the others' gang id
 					DatabaseHelper helper = new DatabaseHelper(gangland, handler);

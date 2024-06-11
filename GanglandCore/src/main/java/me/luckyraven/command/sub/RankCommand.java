@@ -1,25 +1,30 @@
 package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.Initializer;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.database.Database;
-import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.RankDatabase;
+import me.luckyraven.database.component.Attribute;
+import me.luckyraven.database.component.Table;
+import me.luckyraven.database.sub.GanglandDatabase;
+import me.luckyraven.database.tables.RankParentTable;
+import me.luckyraven.database.tables.RankPermissionTable;
+import me.luckyraven.database.tables.RankTable;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.Pair;
 import me.luckyraven.util.TimeUtil;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -58,23 +63,41 @@ public class RankCommand extends CommandHandler {
 		HashMap<CommandSender, CountdownTimer>          createRankTimer = new HashMap<>();
 
 		ConfirmArgument confirmCreate = new ConfirmArgument(getArgumentTree(), (argument, sender, args) -> {
-			Rank rank = new Rank(createRankName.get(sender).get());
+			Rank             rank             = new Rank(createRankName.get(sender).get(), Rank.getNewId());
+			GanglandDatabase ganglandDatabase = getGangland().getInitializer().getGanglandDatabase();
+			DatabaseHelper   helper           = new DatabaseHelper(getGangland(), ganglandDatabase);
+			List<Table<?>>   tables           = ganglandDatabase.getTables().stream().toList();
 
-			for (DatabaseHandler handler : getGangland().getInitializer().getDatabaseManager().getDatabases())
-				if (handler instanceof RankDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(getGangland(), handler);
+			RankTable rankTable = getGangland().getInitializer().getInstanceFromTables(RankTable.class, tables);
+			RankPermissionTable rankPermissionTable = getGangland().getInitializer()
+																   .getInstanceFromTables(RankPermissionTable.class,
+																						  tables);
 
-					helper.runQueries(database -> {
-						String permissions = database.createList(rank.getPermissions());
+			helper.runQueries(database -> {
+				// update the rank data
+				database.table(rankTable.getName())
+						.insert(rankTable.getColumns().toArray(String[]::new), rankTable.getData(rank),
+								rankTable.getAttributes()
+										 .values()
+										 .stream()
+										 .map(Attribute::getType)
+										 .mapToInt(Integer::intValue)
+										 .toArray());
 
-						Database config = database.table("data");
-						config.insert(config.getColumns().toArray(String[]::new),
-									  new Object[]{rank.getUsedId(), rank.getName(), permissions, ""},
-									  new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR, Types.VARCHAR});
-					});
+				// update the rank permissions data
+				for (Permission permission : rank.getPermissions()) {
+					Pair<Rank, Permission> pair = new Pair<>(rank, permission);
 
-					break;
+					database.table(rankPermissionTable.getName())
+							.insert(rankPermissionTable.getColumns().toArray(String[]::new),
+									rankPermissionTable.getData(pair), rankPermissionTable.getAttributes()
+																						  .values()
+																						  .stream()
+																						  .map(Attribute::getType)
+																						  .mapToInt(Integer::intValue)
+																						  .toArray());
 				}
+			});
 
 			sender.sendMessage(MessageAddon.RANK_CREATED.toString().replace("%rank%", rank.getName()));
 			rankManager.add(rank);
@@ -132,21 +155,24 @@ public class RankCommand extends CommandHandler {
 			Rank rank = rankManager.get(deleteRankName.get(sender).get());
 
 			if (rank != null) {
-				for (DatabaseHandler handler : getGangland().getInitializer().getDatabaseManager().getDatabases())
-					if (handler instanceof RankDatabase rankDatabase) {
-						DatabaseHelper helper = new DatabaseHelper(getGangland(), handler);
+				Initializer      initializer      = getGangland().getInitializer();
+				GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
+				DatabaseHelper   helper           = new DatabaseHelper(getGangland(), ganglandDatabase);
+				List<Table<?>>   tables           = ganglandDatabase.getTables().stream().toList();
 
-						helper.runQueries(database -> {
-							rankManager.remove(rank);
-							database.table("data").delete("id", String.valueOf(rank.getUsedId()));
-						});
+				// remove all the instances from all the tables
+				RankTable       rankTable       = initializer.getInstanceFromTables(RankTable.class, tables);
+				RankParentTable rankParentTable = initializer.getInstanceFromTables(RankParentTable.class, tables);
+				RankPermissionTable rankPermissionTable = initializer.getInstanceFromTables(RankPermissionTable.class,
+																							tables);
 
-						// important to refactor the ids, so they are in the correct id order
-						sender.sendMessage(ChatUtil.informationMessage("Refactoring IDs..."));
-						rankManager.refactorIds(rankDatabase);
-						sender.sendMessage(ChatUtil.informationMessage("Refactoring done"));
-						break;
-					}
+				helper.runQueries(database -> {
+					rankManager.remove(rank);
+
+					database.table(rankTable.getName()).delete("id", String.valueOf(rank.getUsedId()));
+					database.table(rankParentTable.getName()).delete("id", String.valueOf(rank.getUsedId()));
+					database.table(rankPermissionTable.getName()).delete("rank_id", String.valueOf(rank.getUsedId()));
+				});
 
 				sender.sendMessage(MessageAddon.RANK_REMOVED.toString().replace("%rank%", rank.getName()));
 				deleteRankName.remove(sender);
@@ -226,8 +252,10 @@ public class RankCommand extends CommandHandler {
 			String message    = "";
 			switch (args[2].toLowerCase()) {
 				case "add" -> {
-					if (rank.contains("")) rank.removePermission("");
-					rank.addPermission(permString);
+					Permission newPermission = new Permission(Permission.getNewId(), permString);
+
+					rank.addPermission(newPermission);
+
 					message = MessageAddon.RANK_PERMISSION_ADD.toString()
 															  .replace("%rank%", rank.getName())
 															  .replace("%permission%", permString);
@@ -237,7 +265,9 @@ public class RankCommand extends CommandHandler {
 						sender.sendMessage(MessageAddon.INVALID_RANK_PERMISSION.toString());
 						return;
 					}
+
 					rank.removePermission(permString);
+
 					message = MessageAddon.RANK_PERMISSION_REMOVE.toString()
 																 .replace("%rank%", rank.getName())
 																 .replace("%permission%", permString);
