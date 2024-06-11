@@ -1,6 +1,6 @@
 package me.luckyraven.database.tables;
 
-import me.luckyraven.data.permission.Permission;
+import me.luckyraven.data.rank.Permission;
 import me.luckyraven.database.component.Attribute;
 import me.luckyraven.database.component.Table;
 
@@ -23,7 +23,7 @@ public class PermissionTable extends Table<Permission> {
 
 	@Override
 	public Object[] getData(Permission data) {
-		return new Object[]{data.id(), data.permission()};
+		return new Object[]{data.getUsedId(), data.getPermission()};
 	}
 
 	@Override
@@ -31,7 +31,7 @@ public class PermissionTable extends Table<Permission> {
 		Map<String, Object> search = new HashMap<>();
 
 		search.put("search", "id = ?");
-		search.put("info", new Object[]{data.id()});
+		search.put("info", new Object[]{data.getUsedId()});
 		search.put("type", new int[]{Types.INTEGER});
 		search.put("index", new int[]{0});
 

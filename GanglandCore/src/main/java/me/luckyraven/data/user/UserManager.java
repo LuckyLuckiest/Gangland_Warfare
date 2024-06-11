@@ -7,7 +7,7 @@ import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.account.type.Bank;
-import me.luckyraven.data.permission.Permission;
+import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.UserDatabase;
@@ -143,7 +143,7 @@ public class UserManager<T extends OfflinePlayer> {
 		user.setPermissionAttachment(attachment);
 
 		for (Permission perm : rank.getPermissions())
-			attachment.setPermission(perm.permission(), true);
+			attachment.setPermission(perm.getPermission(), true);
 
 		// apparently updates the command list according to the permission list
 		user.getUser().updateCommands();

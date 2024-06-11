@@ -7,7 +7,7 @@ import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.scoreboard.Scoreboard;
 import me.luckyraven.data.account.Account;
 import me.luckyraven.data.economy.EconomyHandler;
-import me.luckyraven.data.permission.Permission;
+import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.level.Level;
@@ -215,7 +215,7 @@ public class User<T extends OfflinePlayer> {
 
 		// add the new rank attachments
 		if (rank != null) for (Permission perm : rank.getPermissions())
-			permissionAttachment.setPermission(perm.permission(), true);
+			permissionAttachment.setPermission(perm.getPermission(), true);
 
 		player.updateCommands();
 	}
