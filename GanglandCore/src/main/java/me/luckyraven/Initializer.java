@@ -39,6 +39,7 @@ import me.luckyraven.database.component.Table;
 import me.luckyraven.database.sub.GanglandDatabase;
 import me.luckyraven.database.tables.*;
 import me.luckyraven.exception.PluginException;
+import me.luckyraven.feature.weapon.WeaponManager;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
@@ -61,7 +62,6 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -88,6 +88,7 @@ public final class Initializer {
 	private @Getter RankManager                rankManager;
 	private @Getter WaypointManager            waypointManager;
 	private @Getter ScoreboardManager          scoreboardManager;
+	private @Getter WeaponManager              weaponManager;
 	private @Getter GanglandDatabase           ganglandDatabase;
 	// Addons
 	private @Getter SettingAddon               settingAddon;
@@ -149,41 +150,27 @@ public final class Initializer {
 			// plugin crashes
 		}
 
+		List<Table<?>> tables = ganglandDatabase.getTables().stream().toList();
+
 		// Rank manager
-		List<Table<?>> rankTables = new ArrayList<>();
 		rankManager = new RankManager(gangland);
 
-		for (Table<?> table : ganglandDatabase.getTables()) {
-			if (!(table instanceof RankTable || table instanceof RankParentTable || table instanceof PermissionTable ||
-				  table instanceof RankPermissionTable)) continue;
-
-			rankTables.add(table);
-		}
-
 		// initialize the rank class
-		RankTable           rankTable           = getInstanceFromTables(RankTable.class, rankTables);
-		RankParentTable     rankParentTable     = getInstanceFromTables(RankParentTable.class, rankTables);
-		PermissionTable     permissionTable     = getInstanceFromTables(PermissionTable.class, rankTables);
-		RankPermissionTable rankPermissionTable = getInstanceFromTables(RankPermissionTable.class, rankTables);
+		RankTable           rankTable           = getInstanceFromTables(RankTable.class, tables);
+		RankParentTable     rankParentTable     = getInstanceFromTables(RankParentTable.class, tables);
+		PermissionTable     permissionTable     = getInstanceFromTables(PermissionTable.class, tables);
+		RankPermissionTable rankPermissionTable = getInstanceFromTables(RankPermissionTable.class, tables);
 
 		rankManager.initialize(rankTable, rankParentTable, permissionTable, rankPermissionTable);
 
 		// Gang manager
-		List<Table<?>> gangTables = new ArrayList<>();
 		gangManager   = new GangManager(gangland);
 		memberManager = new MemberManager(gangland);
 
-		for (Table<?> table : ganglandDatabase.getTables()) {
-			if (!(table instanceof GangTable || table instanceof GangAllieTable || table instanceof MemberTable))
-				continue;
-
-			gangTables.add(table);
-		}
-
 		// initialize the gang and member classes
-		GangTable      gangTable      = getInstanceFromTables(GangTable.class, gangTables);
-		GangAllieTable gangAllieTable = getInstanceFromTables(GangAllieTable.class, gangTables);
-		MemberTable    memberTable    = getInstanceFromTables(MemberTable.class, gangTables);
+		GangTable      gangTable      = getInstanceFromTables(GangTable.class, tables);
+		GangAllieTable gangAllieTable = getInstanceFromTables(GangAllieTable.class, tables);
+		MemberTable    memberTable    = getInstanceFromTables(MemberTable.class, tables);
 
 		gangManager.initialize(gangTable, gangAllieTable);
 		memberManager.initialize(memberTable, gangManager, rankManager);
@@ -191,11 +178,18 @@ public final class Initializer {
 		// Waypoint manager
 		waypointManager = new WaypointManager(gangland);
 
-		WaypointTable waypointTable = getInstanceFromTables(WaypointTable.class,
-															ganglandDatabase.getTables().stream().toList());
+		WaypointTable waypointTable = getInstanceFromTables(WaypointTable.class, tables);
 
 		// initialize the waypoint class
 		waypointManager.initialize(waypointTable);
+
+		// Weapon manager
+		weaponManager = new WeaponManager(gangland);
+
+		WeaponTable weaponTable = getInstanceFromTables(WeaponTable.class, tables);
+
+		// initialize the weapon class
+		weaponManager.initialize(weaponTable);
 
 		// Events
 		listenerManager = new ListenerManager(gangland);
@@ -244,6 +238,14 @@ public final class Initializer {
 		weaponLoader.addFile(new FileHandler(gangland, "rifle", "weapon", ".yml"));
 
 		weaponLoader.initialize();
+	}
+
+	public <E> E getInstanceFromTables(Class<E> clazz, List<Table<?>> tables) {
+		return tables.stream()
+					 .filter(clazz::isInstance)
+					 .map(clazz::cast)
+					 .findFirst()
+					 .orElseThrow(() -> new RuntimeException("There was a problem finding class, " + clazz.getName()));
 	}
 
 	private void files() {
@@ -335,14 +337,6 @@ public final class Initializer {
 		if (command == null) return;
 
 		command.setTabCompleter(new CommandTabCompleter(CommandManager.getCommands()));
-	}
-
-	public <E> E getInstanceFromTables(Class<E> clazz, List<Table<?>> tables) {
-		return tables.stream()
-					 .filter(clazz::isInstance)
-					 .map(clazz::cast)
-					 .findFirst()
-					 .orElseThrow(() -> new RuntimeException("There was a problem finding class, " + clazz.getName()));
 	}
 
 }
