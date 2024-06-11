@@ -2,10 +2,7 @@ package me.luckyraven.data.rank;
 
 import lombok.Getter;
 import me.luckyraven.Gangland;
-import me.luckyraven.data.permission.Permission;
-import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.RankDatabase;
 import me.luckyraven.database.tables.PermissionTable;
 import me.luckyraven.database.tables.RankParentTable;
 import me.luckyraven.database.tables.RankPermissionTable;
@@ -59,14 +56,19 @@ public class RankManager {
 			}
 
 			// set up the permissions
+			int lastPermissionId = -1;
+
 			for (Object[] result : rowsPermission) {
 				int    id         = (int) result[0];
 				String permission = String.valueOf(result[1]);
 
 				Permission perm = new Permission(id, permission);
+				lastPermissionId = id;
 
 				permissions.put(id, perm);
 			}
+
+			Permission.setID(lastPermissionId + 1);
 
 			// set up the rank permissions relation
 			for (Object[] result : rowsRankPermission) {
@@ -79,6 +81,8 @@ public class RankManager {
 			}
 
 			// data information
+			int lastRankId = -1;
+
 			for (Object[] result : rowsRank) {
 				int    id   = (int) result[0];
 				String name = String.valueOf(result[1]);
@@ -97,10 +101,13 @@ public class RankManager {
 														 .toList();
 				List<Permission> permissions = new ArrayList<>(perms);
 
-				Rank rank = new Rank(name, permissions);
+				Rank rank = new Rank(name, id, permissions);
+				lastRankId = id;
 
 				ranks.put(id, rank);
 			}
+
+			Rank.setID(lastRankId + 1);
 
 			// set up the children of the rank
 			for (int rankId : ranks.keySet()) {
@@ -109,8 +116,7 @@ public class RankManager {
 														// need only the ranks which are under this rank id
 														.filter(pair -> pair.first() == rankId)
 														// get the name of the ranks under this id
-														.map(pair -> this.ranks.get(pair.second()).getName())
-														.toList();
+														.map(pair -> this.ranks.get(pair.second()).getName()).toList();
 
 				nodeMap.put(this.ranks.get(rankId).getNode(), children);
 			}
@@ -124,7 +130,7 @@ public class RankManager {
 								.findFirst()
 								// what if there was a node that doesn't have this specific head!
 								// need to find the node that would be attached to this default rank
-								.orElse(new Rank(SettingAddon.getGangRankHead()).getNode()));
+								.orElse(new Rank(SettingAddon.getGangRankHead(), Rank.getNewId()).getNode()));
 
 			// map information
 			// the map saves the node and the child of that node
@@ -176,6 +182,10 @@ public class RankManager {
 		rankTree.clear();
 	}
 
+	public Permission getPermission(int id) {
+		return permissions.get(id);
+	}
+
 	public Rank get(int id) {
 		return ranks.get(id);
 	}
@@ -185,38 +195,20 @@ public class RankManager {
 		return ranks.values().stream().filter(rank -> rank.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
 	}
 
-	public void refactorIds(RankDatabase rankDatabase) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, rankDatabase);
-
-		helper.runQueries(database -> {
-			Database config = database.table("data");
-
-			List<Object[]> rowsData = config.selectAll();
-
-			// remove all the data from the table
-			config.delete("", "");
-
-			int tempId = 1;
-			for (Object[] result : rowsData) {
-				int id = (int) result[0];
-
-				Rank rank = ranks.get(id);
-				ranks.remove(rank.getUsedId());
-
-				rank.setUsedId(tempId);
-				ranks.put(tempId, rank);
-
-				rankDatabase.insertDataTable(rank);
-
-				tempId++;
-			}
-
-			Rank.setID(tempId - 1);
-		});
-	}
-
 	public Map<Integer, Rank> getRanks() {
 		return Collections.unmodifiableMap(ranks);
+	}
+
+	public Map<Integer, Permission> getPermissions() {
+		return Collections.unmodifiableMap(permissions);
+	}
+
+	public Set<Pair<Integer, Integer>> getRanksParent() {
+		return Collections.unmodifiableSet(ranksParent);
+	}
+
+	public Set<Pair<Integer, Integer>> getRanksPermissions() {
+		return Collections.unmodifiableSet(ranksPermissions);
 	}
 
 	public int size() {
