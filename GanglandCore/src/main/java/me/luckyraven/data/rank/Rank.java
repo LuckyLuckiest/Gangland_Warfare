@@ -1,29 +1,24 @@
 package me.luckyraven.data.rank;
 
 import lombok.Getter;
-import lombok.Setter;
-import me.luckyraven.data.permission.Permission;
 import me.luckyraven.datastructure.Tree;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+@Getter
 public class Rank {
 
 	private static int ID = 0;
 
-	private final @Getter String           name;
-	private final @Getter Tree.Node<Rank>  node;
-	private final         List<Permission> permissions;
+	private final String           name;
+	private final Tree.Node<Rank>  node;
+	private final int              usedId;
+	private final List<Permission> permissions;
 
-	private @Getter @Setter int usedId;
-
-	public Rank(String name) {
-		this(name, new ArrayList<>());
-	}
-
-	public Rank(String name, List<Permission> permissions) {
-		this(name, ++ID, permissions);
+	public Rank(String name, int id) {
+		this(name, id, new ArrayList<>());
 	}
 
 	public Rank(String name, int id, List<Permission> permissions) {
@@ -31,6 +26,10 @@ public class Rank {
 		this.usedId      = id;
 		this.permissions = permissions;
 		this.node        = new Tree.Node<>(this);
+	}
+
+	public static int getNewId() {
+		return ID++;
 	}
 
 	protected static void setID(int id) {
@@ -45,8 +44,16 @@ public class Rank {
 		permissions.add(permission);
 	}
 
+	public void removePermission(String permission) {
+		permissions.removeIf(perm -> perm.getPermission().equalsIgnoreCase(permission));
+	}
+
 	public void removePermission(Permission permission) {
 		permissions.remove(permission);
+	}
+
+	public boolean contains(String permission) {
+		return permissions.stream().anyMatch(perm -> perm.getPermission().equalsIgnoreCase(permission));
 	}
 
 	public boolean contains(Permission permission) {
@@ -54,7 +61,7 @@ public class Rank {
 	}
 
 	public List<Permission> getPermissions() {
-		return new ArrayList<>(permissions);
+		return Collections.unmodifiableList(permissions);
 	}
 
 	@Override
