@@ -3,13 +3,16 @@ package me.luckyraven.data.user;
 import com.google.common.base.Preconditions;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.data.permission.Permission;
 import me.luckyraven.data.rank.Rank;
-import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.sub.UserDatabase;
+import me.luckyraven.database.tables.BankTable;
+import me.luckyraven.database.tables.UserTable;
 import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.feature.level.Level;
@@ -35,23 +38,23 @@ public class UserManager<T extends OfflinePlayer> {
 		this.users    = new HashMap<>();
 	}
 
-	public void initializeUserData(User<? extends OfflinePlayer> user, UserDatabase userDatabase) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, userDatabase);
+	public void initializeUserData(User<? extends OfflinePlayer> user, UserTable userTable, BankTable bankTable) {
+		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
 		helper.runQueries(database -> {
 			// <--------------- Bank Info --------------->
-			Database bankTable = database.table("bank");
+			Object[] bankData = database.table(bankTable.getName())
+										.select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
+												new int[]{Types.CHAR}, new String[]{"*"});
 
 			// check for bank table
-			Object[] bankInfo = bankTable.select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
-												 new int[]{Types.CHAR}, new String[]{"*"});
 			Bank bank = new Bank(user, "");
 			// create player data into database
-			if (bankInfo.length == 0) {
-				if (!SettingAddon.isAutoSave()) userDatabase.insertBankTable(user);
+			if (bankData.length == 0) {
+				if (!SettingAddon.isAutoSave()) bankTable.insertTableQuery(database, user);
 			} else {
-				String name    = String.valueOf(bankInfo[1]);
-				double balance = (double) bankInfo[2];
+				String name    = String.valueOf(bankData[1]);
+				double balance = (double) bankData[2];
 
 				bank.setName(name);
 				bank.getEconomy().setBalance(balance);
@@ -60,42 +63,58 @@ public class UserManager<T extends OfflinePlayer> {
 			user.addAccount(bank);
 
 			// <--------------- Data Info --------------->
-			Database dataTable = database.table("data");
+			Object[] userData = database.table(userTable.getName())
+										.select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
+												new int[]{Types.CHAR}, new String[]{"*"});
 
-			// check for data table
-			Object[] dataInfo = dataTable.select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
-												 new int[]{Types.CHAR}, new String[]{"*"});
 			// create player data into a database
-			if (dataInfo.length == 0) {
-				if (!SettingAddon.isAutoSave()) userDatabase.insertDataTable(user);
+			if (userData.length == 0) {
+				if (!SettingAddon.isAutoSave()) userTable.insertTableQuery(database, user);
 			} else {
-				int     kills      = (int) dataInfo[1];
-				int     deaths     = (int) dataInfo[2];
-				int     mobKills   = (int) dataInfo[3];
-				int     gangId     = (int) dataInfo[4];
-				boolean hasBank    = (boolean) dataInfo[5];
-				double  balance    = (double) dataInfo[6];
-				double  bounty     = (double) dataInfo[7];
-				int     level      = (int) dataInfo[8];
-				double  experience = (double) dataInfo[9];
+				int    v          = 1;
+				double balance    = (double) userData[v++];
+				int    kills      = (int) userData[v++];
+				int    deaths     = (int) userData[v++];
+				int    mobKills   = (int) userData[v++];
+				double bounty     = (double) userData[v++];
+				int    level      = (int) userData[v++];
+				double experience = (double) userData[v++];
+				int    wanted     = (int) userData[v];
 
 				user.setKills(kills);
 				user.setDeaths(deaths);
 				user.setMobKills(mobKills);
-				user.setGangId(gangId);
-				user.setHasBank(hasBank);
 				user.getEconomy().setBalance(balance);
+				user.getWanted().setLevel(wanted);
+
+				// get the gang id from the member manager
+				MemberManager memberManager = gangland.getInitializer().getMemberManager();
+
+				user.setGangId(memberManager.getMember(user.getUuid()).getGangId());
+
+				// check for the availability of the bank from the accounts connected to the user
+				boolean hasBank = user.getLinkedAccounts()
+									  .stream()
+									  .anyMatch(account -> account instanceof Bank);
+
+				user.setHasBank(hasBank);
 
 				if (user.hasGang()) {
-					Gang gang = gangland.getInitializer().getGangManager().getGang(user.getGangId());
+					GangManager gangManager = gangland.getInitializer().getGangManager();
+					Gang        gang        = gangManager.getGang(user.getGangId());
+
 					user.addAccount(gang);
 				}
 
+				// set the level of the user
 				Level userLevel = user.getLevel();
+
 				userLevel.setLevelValue(level);
 				userLevel.setExperience(experience);
 
+				// set the bounty value of the user
 				Bounty userBounty = user.getBounty();
+
 				userBounty.setAmount(bounty);
 
 				if (!(userBounty.hasBounty() && SettingAddon.isBountyTimerEnabled())) return;
@@ -120,6 +139,7 @@ public class UserManager<T extends OfflinePlayer> {
 
 		// attach all the permissions when the user has the specified rank
 		PermissionAttachment attachment = user.getUser().addAttachment(gangland);
+
 		user.setPermissionAttachment(attachment);
 
 		for (Permission perm : rank.getPermissions())
