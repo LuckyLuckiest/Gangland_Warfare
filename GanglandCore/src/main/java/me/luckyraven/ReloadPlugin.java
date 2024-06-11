@@ -10,11 +10,13 @@ import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserDataInitEvent;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseManager;
+import me.luckyraven.database.component.Table;
 import me.luckyraven.database.sub.GangDatabase;
+import me.luckyraven.database.sub.GanglandDatabase;
 import me.luckyraven.database.sub.RankDatabase;
 import me.luckyraven.database.sub.UserDatabase;
+import me.luckyraven.database.tables.*;
 import me.luckyraven.feature.phone.Phone;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
@@ -26,15 +28,18 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.io.IOException;
+import java.util.List;
 
 public class ReloadPlugin {
 
-	private final Gangland    gangland;
-	private final Initializer initializer;
+	private final Gangland         gangland;
+	private final Initializer      initializer;
+	private final GanglandDatabase ganglandDatabase;
 
 	public ReloadPlugin(Gangland gangland) {
-		this.gangland    = gangland;
-		this.initializer = gangland.getInitializer();
+		this.gangland         = gangland;
+		this.initializer      = gangland.getInitializer();
+		this.ganglandDatabase = initializer.getGanglandDatabase();
 	}
 
 	/**
@@ -88,11 +93,13 @@ public class ReloadPlugin {
 
 		if (resetCache) rankManager.clear();
 
-		for (DatabaseHandler handler : initializer.getDatabaseManager().getDatabases())
-			if (handler instanceof RankDatabase rankDatabase) {
-				rankManager.initialize(rankDatabase);
-				break;
-			}
+		List<Table<?>>      tables              = ganglandDatabase.getTables().stream().toList();
+		RankTable           rankTable           = initializer.getInstanceFromTables(RankTable.class, tables);
+		RankParentTable     rankParentTable     = initializer.getInstanceFromTables(RankParentTable.class, tables);
+		PermissionTable     permissionTable     = initializer.getInstanceFromTables(PermissionTable.class, tables);
+		RankPermissionTable rankPermissionTable = initializer.getInstanceFromTables(RankPermissionTable.class, tables);
+
+		rankManager.initialize(rankTable, rankParentTable, permissionTable, rankPermissionTable);
 	}
 
 	/**
@@ -108,11 +115,11 @@ public class ReloadPlugin {
 
 		if (resetCache) gangManager.clear();
 
-		for (DatabaseHandler handler : initializer.getDatabaseManager().getDatabases())
-			if (handler instanceof GangDatabase gangDatabase) {
-				gangManager.initialize(gangDatabase);
-				break;
-			}
+		List<Table<?>> tables         = ganglandDatabase.getTables().stream().toList();
+		GangTable      gangTable      = initializer.getInstanceFromTables(GangTable.class, tables);
+		GangAllieTable gangAllieTable = initializer.getInstanceFromTables(GangAllieTable.class, tables);
+
+		gangManager.initialize(gangTable, gangAllieTable);
 	}
 
 	/**
@@ -130,11 +137,10 @@ public class ReloadPlugin {
 
 		if (resetCache) memberManager.clear();
 
-		for (DatabaseHandler handler : initializer.getDatabaseManager().getDatabases())
-			if (handler instanceof GangDatabase gangDatabase) {
-				memberManager.initialize(gangDatabase, gangManager, rankManager);
-				break;
-			}
+		List<Table<?>> tables      = ganglandDatabase.getTables().stream().toList();
+		MemberTable    memberTable = initializer.getInstanceFromTables(MemberTable.class, tables);
+
+		memberManager.initialize(memberTable, gangManager, rankManager);
 	}
 
 	/**
@@ -214,8 +220,11 @@ public class ReloadPlugin {
 				}
 
 				// for a new member
-				Member newMember = new Member(player.getUniqueId());
-				initializer.getMemberManager().initializeMemberData(newMember, memberHandler);
+				Member         newMember   = new Member(player.getUniqueId());
+				List<Table<?>> tables      = ganglandDatabase.getTables().stream().toList();
+				MemberTable    memberTable = initializer.getInstanceFromTables(MemberTable.class, tables);
+
+				initializer.getMemberManager().initializeMemberData(newMember, memberTable);
 
 				memberManager.add(newMember);
 			}
@@ -226,7 +235,7 @@ public class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 *
-	 * @implNote Very important to run this method after {@link DatabaseManager}, and {@link WaypointDatabase}
+	 * @implNote Very important to run this method after {@link DatabaseManager}, and {@link WaypointTable}
 	 * 		initialization.
 	 */
 	public void waypointInitialize(boolean resetCache) {
@@ -234,11 +243,10 @@ public class ReloadPlugin {
 
 		if (resetCache) waypointManager.clear();
 
-		for (DatabaseHandler handler : initializer.getDatabaseManager().getDatabases())
-			if (handler instanceof WaypointDatabase waypointDatabase) {
-				waypointManager.initialize(waypointDatabase);
-				break;
-			}
+		List<Table<?>> tables        = ganglandDatabase.getTables().stream().toList();
+		WaypointTable  waypointTable = initializer.getInstanceFromTables(WaypointTable.class, tables);
+
+		waypointManager.initialize(waypointTable);
 	}
 
 	/**
