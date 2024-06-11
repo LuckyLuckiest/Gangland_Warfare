@@ -3,13 +3,14 @@ package me.luckyraven.database.tables;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.database.component.Attribute;
 import me.luckyraven.database.component.Table;
+import me.luckyraven.util.Pair;
 
 import java.sql.Types;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class GangAllieTable extends Table<Gang> {
+public class GangAllieTable extends Table<Pair<Gang, Gang>> {
 
 	public GangAllieTable(GangTable gangTable) {
 		super("gang_allie");
@@ -31,18 +32,18 @@ public class GangAllieTable extends Table<Gang> {
 	}
 
 	@Override
-	public Object[] getData(Gang data) {
-		return new Object[]{data.getId()};
+	public Object[] getData(Pair<Gang, Gang> data) {
+		return new Object[]{data.first().getId(), data.second().getId()};
 	}
 
 	@Override
-	public Map<String, Object> searchCriteria(Gang data) {
+	public Map<String, Object> searchCriteria(Pair<Gang, Gang> data) {
 		Map<String, Object> search = new HashMap<>();
 
-		search.put("search", "id = ?, allie_id = ?");
-		search.put("info", new Object[]{data.getId(),});
-		search.put("type", new int[]{Types.CHAR});
-		search.put("index", new int[]{0});
+		search.put("search", "id = ? AND allie_id = ?");
+		search.put("info", new Object[]{data.first().getId(), data.second().getId()});
+		search.put("type", new int[]{Types.CHAR, Types.CHAR});
+		search.put("index", new int[]{0, 1});
 
 		return Collections.unmodifiableMap(search);
 	}
