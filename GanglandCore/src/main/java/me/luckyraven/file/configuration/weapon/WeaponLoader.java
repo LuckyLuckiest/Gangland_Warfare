@@ -20,7 +20,7 @@ public class WeaponLoader extends FolderLoader {
 				gangland.getInitializer().getWeaponAddon().registerWeapon(gangland, fileHandler);
 			} catch (InvalidConfigurationException exception) {
 				Gangland.getLog4jLogger()
-						.info("There was a problem loading the weapon: " + exception.getMessage(), exception);
+						.info("There was a problem loading the weapon: {}", exception.getMessage(), exception);
 			}
 		});
 	}
