@@ -1,6 +1,7 @@
 package me.luckyraven.command.sub.waypoint;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.Initializer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
@@ -8,8 +9,10 @@ import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.database.Database;
-import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
+import me.luckyraven.database.component.Table;
+import me.luckyraven.database.sub.GanglandDatabase;
+import me.luckyraven.database.tables.WaypointTable;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
@@ -17,8 +20,8 @@ import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 
-import java.sql.Types;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -65,26 +68,27 @@ class WaypointDeleteCommand extends SubArgument {
 			}
 
 			// get the row and delete from the database
-			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases())
-				if (handler instanceof WaypointDatabase waypointDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+			Initializer      initializer      = gangland.getInitializer();
+			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
+			DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
+			List<Table<?>>   tables           = ganglandDatabase.getTables().stream().toList();
 
-					helper.runQueries(database -> {
-						Database config = database.table("data");
-						Object[] info = config.select("id = ?", new Object[]{id}, new int[]{Types.INTEGER},
-													  new String[]{"*"});
+			WaypointTable waypointTable = initializer.getInstanceFromTables(WaypointTable.class, tables);
 
-						// if the data was already saved into the database
-						if (info.length == 0) return;
+			helper.runQueries(database -> {
+				Map<String, Object> search = waypointTable.searchCriteria(waypoint);
+				Database            config = database.table(waypointTable.getName());
+				Object[] info = config.select((String) search.get("search"), (Object[]) search.get("info"),
+											  (int[]) search.get("type"), new String[]{"*"});
 
-						config.delete("id = ?", String.valueOf(waypoint.getUsedId()));
+				// if the data was already saved into the database
+				if (info.length == 0) return;
 
-						// refactor the ids
-						waypointManager.refactorIds(waypointDatabase);
-					});
+				config.delete("id", String.valueOf(waypoint.getUsedId()));
 
-					break;
-				}
+				// refactor the ids
+				waypointManager.refactorIds(waypointTable);
+			});
 
 			// inform the player
 			sender.sendMessage();

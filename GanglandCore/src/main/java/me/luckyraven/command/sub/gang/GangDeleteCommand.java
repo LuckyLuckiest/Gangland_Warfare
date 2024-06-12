@@ -1,6 +1,7 @@
 package me.luckyraven.command.sub.gang;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.Initializer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
@@ -12,14 +13,20 @@ import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.GangDatabase;
+import me.luckyraven.database.component.Table;
+import me.luckyraven.database.sub.GanglandDatabase;
 import me.luckyraven.database.sub.UserDatabase;
+import me.luckyraven.database.tables.GangAllieTable;
+import me.luckyraven.database.tables.GangTable;
+import me.luckyraven.database.tables.UserTable;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.Pair;
 import me.luckyraven.util.TimeUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.timer.CountdownTimer;
@@ -27,10 +34,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.sql.Types;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 class GangDeleteCommand extends SubArgument {
@@ -145,6 +149,15 @@ class GangDeleteCommand extends SubArgument {
 			// get the contribution frequency for each user, and return that frequency according to the current balance
 			double total = gang.getGroup().stream().mapToDouble(Member::getContribution).sum();
 
+			Initializer      initializer      = gangland.getInitializer();
+			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
+			DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
+			List<Table<?>>   tables           = ganglandDatabase.getTables().stream().toList();
+
+			UserTable      userTable      = initializer.getInstanceFromTables(UserTable.class, tables);
+			GangTable      gangTable      = initializer.getInstanceFromTables(GangTable.class, tables);
+			GangAllieTable gangAllieTable = initializer.getInstanceFromTables(GangAllieTable.class, tables);
+
 			for (DatabaseHandler handler : gangland.getInitializer().getDatabaseManager().getDatabases()) {
 				// change the gang id for all the members
 				if (handler instanceof UserDatabase userDatabase) {
@@ -215,13 +228,24 @@ class GangDeleteCommand extends SubArgument {
 					});
 				}
 
-				if (handler instanceof GangDatabase) {
-					DatabaseHelper helper = new DatabaseHelper(gangland, handler);
+				// remove the gang information
+				helper.runQueries(database -> {
+					int removedGang = gang.getId();
 
-					helper.runQueries(database -> {
-						database.table("data").delete("id", String.valueOf(gang.getId()));
-					});
-				}
+					// remove the gang itself
+					database.table(gangTable.getName()).delete("id", String.valueOf(removedGang));
+
+					// remove allied gangs to itself
+					for (Pair<Gang, Long> alliedGangPair : gang.getAllies()) {
+						int      alliedGangId = alliedGangPair.first().getId();
+						Database config       = database.table(gangAllieTable.getName());
+
+						config.delete("gang_id", String.valueOf(alliedGangId));
+						// remove other gangs who're allied to the removed gang
+						// the number of gangs allied with the removed gang is equal to the opposite
+						config.delete("allie_id", String.valueOf(removedGang));
+					}
+				});
 			}
 
 			gangManager.remove(gang);

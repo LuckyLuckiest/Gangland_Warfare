@@ -13,18 +13,20 @@ import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseManager;
-import me.luckyraven.database.sub.UserDatabase;
+import me.luckyraven.database.component.Table;
+import me.luckyraven.database.sub.GanglandDatabase;
+import me.luckyraven.database.tables.BankTable;
+import me.luckyraven.database.tables.UserTable;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
-import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.List;
 import java.util.Objects;
 
 class GangKickCommand extends SubArgument {
@@ -119,23 +121,14 @@ class GangKickCommand extends SubArgument {
 			else {
 				targetUser = new User<>(offlinePlayer);
 
-				DatabaseManager databaseManager = gangland.getInitializer().getDatabaseManager();
+				Initializer      initializer      = gangland.getInitializer();
+				GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
+				List<Table<?>>   tables           = ganglandDatabase.getTables().stream().toList();
 
-				UserDatabase userHandler = databaseManager.getDatabases()
-														  .stream()
-														  .filter(handler -> handler instanceof UserDatabase)
-														  .map(handler -> (UserDatabase) handler)
-														  .findFirst()
-														  .orElse(null);
+				UserTable userTable = initializer.getInstanceFromTables(UserTable.class, tables);
+				BankTable bankTable = initializer.getInstanceFromTables(BankTable.class, tables);
 
-				if (userHandler == null) {
-					Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find UserDatabase class.");
-					return;
-				}
-
-				Initializer initializer = gangland.getInitializer();
-
-				initializer.getUserManager().initializeUserData(targetUser, userHandler);
+				initializer.getUserManager().initializeUserData(targetUser, userTable, bankTable);
 
 				// no user initializer event called so far (need to work with it until fully compatible)
 
