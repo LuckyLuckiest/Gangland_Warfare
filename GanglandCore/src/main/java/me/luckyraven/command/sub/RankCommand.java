@@ -73,6 +73,8 @@ public class RankCommand extends CommandHandler {
 																   .getInstanceFromTables(RankPermissionTable.class,
 																						  tables);
 
+			// this is totally automated and is unnecessary
+			// further testing is required
 			helper.runQueries(database -> {
 				// update the rank data
 				database.table(rankTable.getName())
