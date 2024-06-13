@@ -1,6 +1,7 @@
 package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.Initializer;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
@@ -8,11 +9,12 @@ import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.UserDatabase;
+import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.component.Table;
+import me.luckyraven.database.tables.UserTable;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -69,36 +71,29 @@ public final class BalanceCommand extends CommandHandler {
 				return;
 			}
 
-			UserDatabase userHandler = getGangland().getInitializer()
-													.getDatabaseManager()
-													.getDatabases()
-													.stream()
-													.filter(handler -> handler instanceof UserDatabase)
-													.map(handler -> (UserDatabase) handler)
-													.findFirst()
-													.orElse(null);
+			Initializer      initializer      = getGangland().getInitializer();
+			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
+			DatabaseHelper   helper           = new DatabaseHelper(getGangland(), ganglandDatabase);
+			List<Table<?>>   tables           = ganglandDatabase.getTables().stream().toList();
 
-			if (userHandler == null) {
-				Gangland.getLog4jLogger().error(UnhandledError.ERROR + ": Unable to find UserDatabase class.");
-				return;
-			}
-
-			DatabaseHelper helper = new DatabaseHelper(getGangland(), userHandler);
+			UserTable userTable = initializer.getInstanceFromTables(UserTable.class, tables);
 
 			helper.runQueries(database -> {
 				// get all the user's data
-				List<Object[]> usersData = database.table("data").selectAll();
+				List<Object[]> usersData = database.table(userTable.getName()).selectAll();
 
 				// get only the uuids
 				Map<UUID, Double> uuids = usersData.stream()
 												   .collect(Collectors.toMap(
 														   objects -> UUID.fromString(String.valueOf(objects[0])),
-														   objects -> (double) objects[6]));
+														   objects -> (double) objects[1]));
 
 				// iterate over all uuids and check if the name is similar to target
 				boolean found = false;
+
 				for (UUID uuid : uuids.keySet()) {
 					OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+
 					if (offlinePlayer.getName() == null) continue;
 
 					if (offlinePlayer.getName().equalsIgnoreCase(target)) {

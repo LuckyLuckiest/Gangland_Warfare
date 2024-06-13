@@ -10,7 +10,6 @@ import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.sub.UserDatabase;
 import me.luckyraven.database.tables.BankTable;
 import me.luckyraven.database.tables.UserTable;
 import me.luckyraven.feature.bounty.Bounty;
@@ -93,9 +92,7 @@ public class UserManager<T extends OfflinePlayer> {
 				user.setGangId(memberManager.getMember(user.getUuid()).getGangId());
 
 				// check for the availability of the bank from the accounts connected to the user
-				boolean hasBank = user.getLinkedAccounts()
-									  .stream()
-									  .anyMatch(account -> account instanceof Bank);
+				boolean hasBank = user.getLinkedAccounts().stream().anyMatch(account -> account instanceof Bank);
 
 				user.setHasBank(hasBank);
 
@@ -120,13 +117,15 @@ public class UserManager<T extends OfflinePlayer> {
 				if (!(userBounty.hasBounty() && SettingAddon.isBountyTimerEnabled())) return;
 
 				BountyEvent bountyEvent = new BountyEvent(userBounty);
+
 				bountyEvent.setUserBounty(user);
 
 				if (userBounty.getAmount() >= SettingAddon.getBountyTimerMax()) return;
 
 				RepeatingTimer repeatingTimer = userBounty.createTimer(gangland, SettingAddon.getBountyTimeInterval(),
-																	   timer -> bountyExecutor(user, bountyEvent, timer,
-																							   helper));
+																	   timer -> bountyExecutor(user, bountyEvent,
+																							   timer));
+
 				repeatingTimer.start(false);
 			}
 		});
@@ -192,8 +191,7 @@ public class UserManager<T extends OfflinePlayer> {
 		return "users=" + users;
 	}
 
-	private void bountyExecutor(User<? extends OfflinePlayer> user, BountyEvent bountyEvent, RepeatingTimer timer,
-								DatabaseHelper helper) {
+	private void bountyExecutor(User<? extends OfflinePlayer> user, BountyEvent bountyEvent, RepeatingTimer timer) {
 		Bounty bounty    = user.getBounty();
 		double oldAmount = bounty.getAmount();
 
@@ -208,12 +206,6 @@ public class UserManager<T extends OfflinePlayer> {
 			if (!bountyEvent.isCancelled())
 				// change the amount
 				bounty.setAmount(amount);
-
-			// update the database
-			UserDatabase   userDatabase = (UserDatabase) helper.getDatabaseHandler();
-			DatabaseHelper help         = new DatabaseHelper(gangland, userDatabase);
-
-			help.runQueries(db -> userDatabase.updateDataTable(user));
 		}
 	}
 
