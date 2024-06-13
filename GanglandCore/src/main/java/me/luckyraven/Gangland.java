@@ -12,6 +12,8 @@ import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
 import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
+import me.luckyraven.updater.UpdateChecker;
+import me.luckyraven.util.timer.RepeatingTimer;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -37,6 +39,7 @@ public final class Gangland extends JavaPlugin {
 	private Initializer             initializer;
 	private ReloadPlugin            reloadPlugin;
 	private PeriodicalUpdates       periodicalUpdates;
+	private UpdateChecker           updateChecker;
 	private PlaceholderAPIExpansion placeholderAPIExpansion;
 	private ViaAPI<?>               viaAPI;
 
@@ -82,6 +85,9 @@ public final class Gangland extends JavaPlugin {
 		bStats();
 
 		log4jLogger.info(ScoreboardManager.getDrivers());
+
+		// check for new updates
+		updateCheckerInitializer();
 	}
 
 	public String usePlaceholder(Player player, String text) {
@@ -184,6 +190,20 @@ public final class Gangland extends JavaPlugin {
 		viaVersion.validate(() -> this.viaAPI = Via.getAPI());
 	}
 
+	private void updateCheckerInitializer() {
+		updateChecker = new UpdateChecker(this, 0);
+
+		// there needs to be checks every 6 hours
+		// give an option if there was an update
+		int hours = 6;
+		RepeatingTimer updateTimer = new RepeatingTimer(this, hours * 60 * 60 * 20L, timer -> {
+
+		});
+
+		// the tasks and timer should be async, so there is no load on the main server thread
+		updateTimer.start(true);
+	}
+
 	private class Dependency {
 
 		private final Type   type;
@@ -196,14 +216,14 @@ public final class Gangland extends JavaPlugin {
 
 		public void validate(@Nullable Runnable runnable) {
 			if (Bukkit.getPluginManager().getPlugin(name) != null) {
-				if (type == Type.SOFT) log4jLogger.info("Found " + name + ", linking...");
+				if (type == Type.SOFT) log4jLogger.info("Found {}, linking...", name);
 				if (runnable != null) runnable.run();
-				log4jLogger.info("Linked " + name);
+				log4jLogger.info("Linked {}", name);
 				return;
 			}
 
 			if (type == Type.REQUIRED) {
-				log4jLogger.error(name + " is a required dependency!");
+				log4jLogger.error("{} is a required dependency!", name);
 				getPluginLoader().disablePlugin(Gangland.this);
 			}
 		}
