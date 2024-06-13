@@ -45,8 +45,7 @@ public final class Gangland extends JavaPlugin {
 		// disable hikaricp logs
 		disableAllLogs(HikariConfig.class);
 
-		initializer  = new Initializer(this);
-		reloadPlugin = new ReloadPlugin(this);
+		initializer = new Initializer(this);
 	}
 
 	@Override
@@ -67,6 +66,8 @@ public final class Gangland extends JavaPlugin {
 	public void onEnable() {
 		// must initialize so the plugin works as normal
 		initializer.postInitialize();
+
+		reloadPlugin = new ReloadPlugin(this);
 
 		// checks for dependencies
 		dependencyHandler();
