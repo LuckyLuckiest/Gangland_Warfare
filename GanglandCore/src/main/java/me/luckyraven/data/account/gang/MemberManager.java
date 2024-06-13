@@ -3,12 +3,10 @@ package me.luckyraven.data.account.gang;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.MemberTable;
 import me.luckyraven.file.configuration.SettingAddon;
 
-import java.sql.Types;
 import java.util.*;
 
 public class MemberManager {
@@ -60,10 +58,10 @@ public class MemberManager {
 		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
 		helper.runQueries(database -> {
-			Database config = database.table(memberTable.getName());
-
-			Object[] memberInfo = config.select("uuid = ?", new Object[]{member.getUuid()}, new int[]{Types.CHAR},
-												new String[]{"*"});
+			Map<String, Object> search = memberTable.searchCriteria(member);
+			Object[] memberInfo = database.table(memberTable.getName())
+										  .select((String) search.get("search"), (Object[]) search.get("info"),
+												  (int[]) search.get("type"), new String[]{"*"});
 
 			// create member data into a database
 			if (memberInfo.length == 0) {
