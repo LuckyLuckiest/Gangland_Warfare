@@ -1,8 +1,5 @@
-package me.luckyraven.database.sub;
+package me.luckyraven.database;
 
-import me.luckyraven.database.Database;
-import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.*;
 import me.luckyraven.file.configuration.SettingAddon;
@@ -133,23 +130,27 @@ public class GanglandDatabase extends DatabaseHandler {
 	@Override
 	public void insertInitialData() throws SQLException {
 		Database dataTable = getDatabase().table(rankTable.getName());
+		String   head      = SettingAddon.getGangRankHead(), tail = SettingAddon.getGangRankTail();
 
-		String head = SettingAddon.getGangRankHead(), tail = SettingAddon.getGangRankTail();
-
+		// check if the tail is set
 		Object[] tailRow = dataTable.select("name = ?", new Object[]{tail}, new int[]{Types.VARCHAR},
 											new String[]{"*"});
+
 		int rows = dataTable.totalRows() + 1;
-		if (tailRow.length == 0) dataTable.insert(dataTable.getColumns().toArray(String[]::new),
-												  new Object[]{rows, tail, "", ""},
-												  new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR,
-															Types.VARCHAR});
+
+		if (tailRow.length == 0) dataTable.insert(rankTable.getColumns().toArray(String[]::new),
+												  new Object[]{rows, tail}, new int[]{Types.INTEGER, Types.VARCHAR});
 
 		Object[] headRow = dataTable.select("name = ?", new Object[]{head}, new int[]{Types.VARCHAR},
 											new String[]{"*"});
-		if (headRow.length == 0) dataTable.insert(dataTable.getColumns().toArray(String[]::new),
-												  new Object[]{rows + 1, head, "", tail},
-												  new int[]{Types.INTEGER, Types.VARCHAR, Types.VARCHAR,
-															Types.VARCHAR});
+
+		if (headRow.length == 0) {
+			dataTable.insert(rankTable.getColumns().toArray(String[]::new), new Object[]{rows + 1, head},
+							 new int[]{Types.INTEGER, Types.VARCHAR});
+			getDatabase().table(rankParentTable.getName())
+						 .insert(rankParentTable.getColumns().toArray(String[]::new), new Object[]{rows + 1, rows},
+								 new int[]{Types.INTEGER, Types.INTEGER});
+		}
 	}
 
 	@Override
