@@ -16,8 +16,8 @@ public class RankPermissionTable extends Table<Pair<Rank, Permission>> {
 	public RankPermissionTable(RankTable rankTable, PermissionTable permissionTable) {
 		super("rank_permission");
 
-		Attribute<Integer> rankId       = new Attribute<>("rank_id", true);
-		Attribute<Integer> permissionId = new Attribute<>("permission_id", false);
+		Attribute<Integer> rankId       = new Attribute<>("rank_id", true, Integer.class);
+		Attribute<Integer> permissionId = new Attribute<>("permission_id", false, Integer.class);
 
 		permissionId.setUnique(true);
 

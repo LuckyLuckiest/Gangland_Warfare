@@ -23,24 +23,22 @@ public class Attribute<T> {
 
 	@Setter(AccessLevel.NONE) private Attribute<?> foreignKey;
 
-	@SuppressWarnings("unchecked")
-	public Attribute(String name, int type, int size, boolean primaryKey) {
+	public Attribute(String name, int type, int size, boolean primaryKey, Class<T> classType) {
 		this.name       = name.toLowerCase();
 		this.type       = type;
 		this.size       = size;
 		this.primaryKey = primaryKey;
-		this.classType  = (Class<T>) Object.class;
+		this.classType  = classType;
 	}
 
-	public Attribute(String name, int type, boolean primaryKey) {
-		this(name, type, 0, primaryKey);
+	public Attribute(String name, int type, boolean primaryKey, Class<T> classType) {
+		this(name, type, 0, primaryKey, classType);
 	}
 
-	@SuppressWarnings("unchecked")
-	public Attribute(String name, boolean primaryKey) {
+	public Attribute(String name, boolean primaryKey, Class<T> classType) {
 		this.name       = name;
 		this.primaryKey = primaryKey;
-		this.classType  = (Class<T>) Object.class;
+		this.classType  = classType;
 		this.type       = DatabaseUtil.getColumnType(this.classType);
 		this.size       = getLocalSize();
 	}

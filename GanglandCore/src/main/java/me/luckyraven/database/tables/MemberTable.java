@@ -15,11 +15,11 @@ public class MemberTable extends Table<Member> {
 	public MemberTable(UserTable userTable, GangTable gangTable, RankTable rankTable) {
 		super("member");
 
-		Attribute<UUID>    uuid         = new Attribute<>("uuid", true);
-		Attribute<Integer> gangId       = new Attribute<>("gang_id", false);
-		Attribute<Double>  contribution = new Attribute<>("contribution", false);
-		Attribute<Integer> rankId       = new Attribute<>("rank_id", false);
-		Attribute<Long>    joinDate     = new Attribute<>("join_date", false);
+		Attribute<UUID>    uuid         = new Attribute<>("uuid", true, UUID.class);
+		Attribute<Integer> gangId       = new Attribute<>("gang_id", false, Integer.class);
+		Attribute<Double>  contribution = new Attribute<>("contribution", false, Double.class);
+		Attribute<Integer> rankId       = new Attribute<>("rank_id", false, Integer.class);
+		Attribute<Long>    joinDate     = new Attribute<>("join_date", false, Long.class);
 
 		gangId.setDefaultValue(-1);
 		contribution.setDefaultValue(0D);

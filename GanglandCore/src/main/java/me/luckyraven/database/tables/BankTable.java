@@ -18,9 +18,9 @@ public class BankTable extends Table<User<? extends OfflinePlayer>> {
 	public BankTable(UserTable userTable) {
 		super("bank");
 
-		Attribute<UUID>   uuid    = new Attribute<>("uuid", true);
-		Attribute<String> name    = new Attribute<>("name", false);
-		Attribute<Double> balance = new Attribute<>("balance", false);
+		Attribute<UUID>   uuid    = new Attribute<>("uuid", true, UUID.class);
+		Attribute<String> name    = new Attribute<>("name", false, String.class);
+		Attribute<Double> balance = new Attribute<>("balance", false, Double.class);
 
 		balance.setDefaultValue(0D);
 

@@ -14,21 +14,21 @@ public class WaypointTable extends Table<Waypoint> {
 	public WaypointTable(GangTable gangTable) {
 		super("waypoint");
 
-		Attribute<Integer> id       = new Attribute<>("id", true);
-		Attribute<Integer> gangId   = new Attribute<>("gang_id", false);
-		Attribute<String>  name     = new Attribute<>("name", false);
-		Attribute<String>  world    = new Attribute<>("world", false);
-		Attribute<Double>  x        = new Attribute<>("x", false);
-		Attribute<Double>  y        = new Attribute<>("y", false);
-		Attribute<Double>  z        = new Attribute<>("z", false);
-		Attribute<Float>   yaw      = new Attribute<>("yaw", false);
-		Attribute<Float>   pitch    = new Attribute<>("pitch", false);
-		Attribute<String>  type     = new Attribute<>("type", false);
-		Attribute<Integer> shield   = new Attribute<>("shield", false);
-		Attribute<Integer> timer    = new Attribute<>("timer", false);
-		Attribute<Integer> cooldown = new Attribute<>("cooldown", false);
-		Attribute<Double>  cost     = new Attribute<>("cost", false);
-		Attribute<Double>  radius   = new Attribute<>("radius", false);
+		Attribute<Integer> id       = new Attribute<>("id", true, Integer.class);
+		Attribute<Integer> gangId   = new Attribute<>("gang_id", false, Integer.class);
+		Attribute<String>  name     = new Attribute<>("name", false, String.class);
+		Attribute<String>  world    = new Attribute<>("world", false, String.class);
+		Attribute<Double>  x        = new Attribute<>("x", false, Double.class);
+		Attribute<Double>  y        = new Attribute<>("y", false, Double.class);
+		Attribute<Double>  z        = new Attribute<>("z", false, Double.class);
+		Attribute<Float>   yaw      = new Attribute<>("yaw", false, Float.class);
+		Attribute<Float>   pitch    = new Attribute<>("pitch", false, Float.class);
+		Attribute<String>  type     = new Attribute<>("type", false, String.class);
+		Attribute<Integer> shield   = new Attribute<>("shield", false, Integer.class);
+		Attribute<Integer> timer    = new Attribute<>("timer", false, Integer.class);
+		Attribute<Integer> cooldown = new Attribute<>("cooldown", false, Integer.class);
+		Attribute<Double>  cost     = new Attribute<>("cost", false, Double.class);
+		Attribute<Double>  radius   = new Attribute<>("radius", false, Double.class);
 
 		gangId.setDefaultValue(-1);
 		x.setDefaultValue(0D);

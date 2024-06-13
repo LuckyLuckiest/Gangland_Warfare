@@ -14,16 +14,16 @@ public class GangTable extends Table<Gang> {
 	public GangTable() {
 		super("gang");
 
-		Attribute<Integer> id          = new Attribute<>("id", true);
-		Attribute<String>  name        = new Attribute<>("name", false);
-		Attribute<String>  displayName = new Attribute<>("display_name", false);
-		Attribute<String>  description = new Attribute<>("description", false);
-		Attribute<String>  color       = new Attribute<>("color", false);
-		Attribute<Double>  balance     = new Attribute<>("balance", false);
-		Attribute<Integer> level       = new Attribute<>("level", false);
-		Attribute<Double>  experience  = new Attribute<>("experience", false);
-		Attribute<Double>  bounty      = new Attribute<>("bounty", false);
-		Attribute<Long>    created     = new Attribute<>("created", false);
+		Attribute<Integer> id          = new Attribute<>("id", true, Integer.class);
+		Attribute<String>  name        = new Attribute<>("name", false, String.class);
+		Attribute<String>  displayName = new Attribute<>("display_name", false, String.class);
+		Attribute<String>  description = new Attribute<>("description", false, String.class);
+		Attribute<String>  color       = new Attribute<>("color", false, String.class);
+		Attribute<Double>  balance     = new Attribute<>("balance", false, Double.class);
+		Attribute<Integer> level       = new Attribute<>("level", false, Integer.class);
+		Attribute<Double>  experience  = new Attribute<>("experience", false, Double.class);
+		Attribute<Double>  bounty      = new Attribute<>("bounty", false, Double.class);
+		Attribute<Long>    created     = new Attribute<>("created", false, Long.class);
 
 		balance.setDefaultValue(0D);
 		level.setDefaultValue(0);

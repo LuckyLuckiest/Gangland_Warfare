@@ -15,9 +15,9 @@ public class GangAllieTable extends Table<Pair<Gang, Gang>> {
 	public GangAllieTable(GangTable gangTable) {
 		super("gang_allie");
 
-		Attribute<Integer> gangId  = new Attribute<>("gang_id", true);
-		Attribute<Integer> allieId = new Attribute<>("allie_id", false);
-		Attribute<Long>    since   = new Attribute<>("since", false);
+		Attribute<Integer> gangId  = new Attribute<>("gang_id", true, Integer.class);
+		Attribute<Integer> allieId = new Attribute<>("allie_id", false, Integer.class);
+		Attribute<Long>    since   = new Attribute<>("since", false, Long.class);
 
 		allieId.setUnique(true);
 

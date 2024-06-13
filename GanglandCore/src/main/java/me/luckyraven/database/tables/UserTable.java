@@ -16,15 +16,15 @@ public class UserTable extends Table<User<? extends OfflinePlayer>> {
 	public UserTable() {
 		super("user");
 
-		Attribute<UUID>    uuid       = new Attribute<>("uuid", true);
-		Attribute<Double>  balance    = new Attribute<>("balance", false);
-		Attribute<Integer> kills      = new Attribute<>("kills", false);
-		Attribute<Integer> deaths     = new Attribute<>("deaths", false);
-		Attribute<Integer> mobKills   = new Attribute<>("mob_kills", false);
-		Attribute<Double>  bounty     = new Attribute<>("bounty", false);
-		Attribute<Integer> level      = new Attribute<>("level", false);
-		Attribute<Double>  experience = new Attribute<>("experience", false);
-		Attribute<Integer> wanted     = new Attribute<>("wanted", false);
+		Attribute<UUID>    uuid       = new Attribute<>("uuid", true, UUID.class);
+		Attribute<Double>  balance    = new Attribute<>("balance", false, Double.class);
+		Attribute<Integer> kills      = new Attribute<>("kills", false, Integer.class);
+		Attribute<Integer> deaths     = new Attribute<>("deaths", false, Integer.class);
+		Attribute<Integer> mobKills   = new Attribute<>("mob_kills", false, Integer.class);
+		Attribute<Double>  bounty     = new Attribute<>("bounty", false, Double.class);
+		Attribute<Integer> level      = new Attribute<>("level", false, Integer.class);
+		Attribute<Double>  experience = new Attribute<>("experience", false, Double.class);
+		Attribute<Integer> wanted     = new Attribute<>("wanted", false, Integer.class);
 
 		balance.setDefaultValue(0D);
 		kills.setDefaultValue(0);

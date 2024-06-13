@@ -15,8 +15,8 @@ public class RankParentTable extends Table<Pair<Rank, Rank>> {
 	public RankParentTable(RankTable rankTable) {
 		super("rank_parent");
 
-		Attribute<Integer> id       = new Attribute<>("id", true);
-		Attribute<Integer> parentId = new Attribute<>("parent_id", false);
+		Attribute<Integer> id       = new Attribute<>("id", true, Integer.class);
+		Attribute<Integer> parentId = new Attribute<>("parent_id", false, Integer.class);
 
 		parentId.setUnique(true);
 

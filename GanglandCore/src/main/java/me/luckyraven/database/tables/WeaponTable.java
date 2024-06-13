@@ -15,8 +15,8 @@ public class WeaponTable extends Table<Weapon> {
 	public WeaponTable() {
 		super("weapon");
 
-		Attribute<UUID>   uuid = new Attribute<>("uuid", true);
-		Attribute<String> type = new Attribute<>("type", false);
+		Attribute<UUID>   uuid = new Attribute<>("uuid", true, UUID.class);
+		Attribute<String> type = new Attribute<>("type", false, String.class);
 
 		this.addAttribute(uuid);
 		this.addAttribute(type);

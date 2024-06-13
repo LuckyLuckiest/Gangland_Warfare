@@ -14,8 +14,8 @@ public class PermissionTable extends Table<Permission> {
 	public PermissionTable() {
 		super("permission");
 
-		Attribute<Integer> id   = new Attribute<>("id", true);
-		Attribute<String>  name = new Attribute<>("name", false);
+		Attribute<Integer> id   = new Attribute<>("id", true, Integer.class);
+		Attribute<String>  name = new Attribute<>("name", false, String.class);
 
 		this.addAttribute(id);
 		this.addAttribute(name);
