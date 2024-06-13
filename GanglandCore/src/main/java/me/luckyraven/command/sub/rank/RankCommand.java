@@ -1,4 +1,4 @@
-package me.luckyraven.command.sub;
+package me.luckyraven.command.sub.rank;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
@@ -11,16 +11,14 @@ import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.component.Attribute;
+import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.component.Table;
-import me.luckyraven.database.sub.GanglandDatabase;
 import me.luckyraven.database.tables.RankParentTable;
 import me.luckyraven.database.tables.RankPermissionTable;
 import me.luckyraven.database.tables.RankTable;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.Pair;
 import me.luckyraven.util.TimeUtil;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
@@ -63,43 +61,43 @@ public class RankCommand extends CommandHandler {
 		HashMap<CommandSender, CountdownTimer>          createRankTimer = new HashMap<>();
 
 		ConfirmArgument confirmCreate = new ConfirmArgument(getArgumentTree(), (argument, sender, args) -> {
-			Rank             rank             = new Rank(createRankName.get(sender).get(), Rank.getNewId());
-			GanglandDatabase ganglandDatabase = getGangland().getInitializer().getGanglandDatabase();
-			DatabaseHelper   helper           = new DatabaseHelper(getGangland(), ganglandDatabase);
-			List<Table<?>>   tables           = ganglandDatabase.getTables().stream().toList();
+			Rank rank = new Rank(createRankName.get(sender).get(), Rank.getNewId());
+//			GanglandDatabase ganglandDatabase = getGangland().getInitializer().getGanglandDatabase();
+//			DatabaseHelper   helper           = new DatabaseHelper(getGangland(), ganglandDatabase);
+//			List<Table<?>>   tables           = ganglandDatabase.getTables().stream().toList();
 
-			RankTable rankTable = getGangland().getInitializer().getInstanceFromTables(RankTable.class, tables);
-			RankPermissionTable rankPermissionTable = getGangland().getInitializer()
-																   .getInstanceFromTables(RankPermissionTable.class,
-																						  tables);
+//			RankTable rankTable = getGangland().getInitializer().getInstanceFromTables(RankTable.class, tables);
+//			RankPermissionTable rankPermissionTable = getGangland().getInitializer()
+//																   .getInstanceFromTables(RankPermissionTable.class,
+//																						  tables);
 
 			// this is totally automated and is unnecessary
 			// further testing is required
-			helper.runQueries(database -> {
-				// update the rank data
-				database.table(rankTable.getName())
-						.insert(rankTable.getColumns().toArray(String[]::new), rankTable.getData(rank),
-								rankTable.getAttributes()
-										 .values()
-										 .stream()
-										 .map(Attribute::getType)
-										 .mapToInt(Integer::intValue)
-										 .toArray());
-
-				// update the rank permissions data
-				for (Permission permission : rank.getPermissions()) {
-					Pair<Rank, Permission> pair = new Pair<>(rank, permission);
-
-					database.table(rankPermissionTable.getName())
-							.insert(rankPermissionTable.getColumns().toArray(String[]::new),
-									rankPermissionTable.getData(pair), rankPermissionTable.getAttributes()
-																						  .values()
-																						  .stream()
-																						  .map(Attribute::getType)
-																						  .mapToInt(Integer::intValue)
-																						  .toArray());
-				}
-			});
+//			helper.runQueries(database -> {
+//				// update the rank data
+//				database.table(rankTable.getName())
+//						.insert(rankTable.getColumns().toArray(String[]::new), rankTable.getData(rank),
+//								rankTable.getAttributes()
+//										 .values()
+//										 .stream()
+//										 .map(Attribute::getType)
+//										 .mapToInt(Integer::intValue)
+//										 .toArray());
+//
+//				// update the rank permissions data
+//				for (Permission permission : rank.getPermissions()) {
+//					Pair<Rank, Permission> pair = new Pair<>(rank, permission);
+//
+//					database.table(rankPermissionTable.getName())
+//							.insert(rankPermissionTable.getColumns().toArray(String[]::new),
+//									rankPermissionTable.getData(pair), rankPermissionTable.getAttributes()
+//																						  .values()
+//																						  .stream()
+//																						  .map(Attribute::getType)
+//																						  .mapToInt(Integer::intValue)
+//																						  .toArray());
+//				}
+//			});
 
 			sender.sendMessage(MessageAddon.RANK_CREATED.toString().replace("%rank%", rank.getName()));
 			rankManager.add(rank);
