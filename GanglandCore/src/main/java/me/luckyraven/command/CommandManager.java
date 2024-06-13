@@ -116,7 +116,7 @@ public final class CommandManager implements CommandExecutor {
 				return false;
 			}
 		} catch (Throwable throwable) {
-			Gangland.getLog4jLogger().error(UnhandledError.COMMANDS_ERROR + ": " + throwable.getMessage(), throwable);
+			Gangland.getLog4jLogger().error("{}: {}", UnhandledError.COMMANDS_ERROR, throwable.getMessage(), throwable);
 			return false;
 		}
 		return true;

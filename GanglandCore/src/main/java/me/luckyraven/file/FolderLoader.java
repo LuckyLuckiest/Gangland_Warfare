@@ -44,13 +44,13 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 		File[] files  = folder.listFiles();
 
 		if (!folder.exists() || files == null || files.length == 0) {
-			Gangland.getLog4jLogger().info("No '" + getFolderName() + "' files were found... Creating new ones.");
+			Gangland.getLog4jLogger().info("No '{}' files were found... Creating new ones.", getFolderName());
 
-			// add files to the folder files if they were not already added
+			// add files to the folder files if they weren't already added
 			if (files != null) for (File file : files) {
 				try {
 					FileHandler temp = new FileHandler(gangland, file);
-					// check if the file was not added, then add it
+					// check if the file wasn't added, then add it
 					if (!folderFiles.contains(temp)) addFile(temp);
 				} catch (IOException exception) {
 					Gangland.getLog4jLogger()
@@ -94,7 +94,8 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 			for (FileHandler file : files)
 				file.create(true);
 		} catch (IOException exception) {
-			Gangland.getLog4jLogger().info(UnhandledError.FILE_CREATE_ERROR + ": " + exception.getMessage(), exception);
+			Gangland.getLog4jLogger()
+					.info("{}: {}", UnhandledError.FILE_CREATE_ERROR, exception.getMessage(), exception);
 		}
 	}
 
