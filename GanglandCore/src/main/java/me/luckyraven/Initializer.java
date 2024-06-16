@@ -64,7 +64,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public final class Initializer {
@@ -151,7 +150,7 @@ public final class Initializer {
 			// plugin crashes
 		}
 
-		List<Table<?>> tables = ganglandDatabase.getTables().stream().toList();
+		List<Table<?>> tables = ganglandDatabase.getTables();
 
 		// Rank manager
 		rankManager = new RankManager(gangland);
@@ -169,11 +168,11 @@ public final class Initializer {
 		memberManager = new MemberManager(gangland);
 
 		// initialize the gang and member classes
-		GangTable      gangTable      = getInstanceFromTables(GangTable.class, tables);
-		GangAllieTable gangAllieTable = getInstanceFromTables(GangAllieTable.class, tables);
-		MemberTable    memberTable    = getInstanceFromTables(MemberTable.class, tables);
+		GangTable       gangTable       = getInstanceFromTables(GangTable.class, tables);
+		GangAlliesTable gangAlliesTable = getInstanceFromTables(GangAlliesTable.class, tables);
+		MemberTable     memberTable     = getInstanceFromTables(MemberTable.class, tables);
 
-		gangManager.initialize(gangTable, gangAllieTable);
+		gangManager.initialize(gangTable, gangAlliesTable);
 		memberManager.initialize(memberTable, gangManager, rankManager);
 
 		// Waypoint manager
@@ -300,8 +299,13 @@ public final class Initializer {
 	}
 
 	private void commands(Gangland gangland) {
+		String        startValue = "glw";
+		PluginCommand command    = this.gangland.getCommand(startValue);
+
+		if (command == null) return;
+
 		// initial command
-		Objects.requireNonNull(this.gangland.getCommand("glw")).setExecutor(commandManager);
+		command.setExecutor(commandManager);
 
 		// sub commands
 		// default plugin commands
@@ -329,14 +333,12 @@ public final class Initializer {
 		commandManager.addCommand(new ReadNBTCommand(gangland));
 		commandManager.addCommand(new ReloadCommand(gangland));
 		commandManager.addCommand(new TimerCommand(gangland));
+		commandManager.addCommand(new DownloadPluginCommand(gangland));
 
 		// Needs to be the final command to add all the help information
 		commandManager.addCommand(new HelpCommand(gangland));
 
-		PluginCommand command = this.gangland.getCommand("glw");
-
-		if (command == null) return;
-
+		// initialize the tab completer
 		command.setTabCompleter(new CommandTabCompleter(CommandManager.getCommands()));
 	}
 

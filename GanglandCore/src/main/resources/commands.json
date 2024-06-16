@@ -450,5 +450,13 @@
 	"ammunition_info": {
 		"usage": "/glw ammo info <name>",
 		"description": "Shows the information of the held ammo or of the specified name."
+	},
+	"update": {
+		"usage": "/glw update",
+		"description": "Checks for a new update for the plugin."
+	},
+	"update_download": {
+		"usage": "/glw update download",
+		"description": "If there was an update it would try to download it."
 	}
 }
