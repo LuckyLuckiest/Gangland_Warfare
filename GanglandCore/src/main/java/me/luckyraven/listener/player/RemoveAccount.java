@@ -19,7 +19,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.List;
 
-public class RemoveAccount implements Listener {
+public final class RemoveAccount implements Listener {
 
 	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
@@ -44,7 +44,7 @@ public class RemoveAccount implements Listener {
 			Initializer      initializer      = gangland.getInitializer();
 			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
 			DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
-			List<Table<?>>   tables           = ganglandDatabase.getTables().stream().toList();
+			List<Table<?>>   tables           = ganglandDatabase.getTables();
 
 			UserTable userTable = initializer.getInstanceFromTables(UserTable.class, tables);
 			BankTable bankTable = initializer.getInstanceFromTables(BankTable.class, tables);

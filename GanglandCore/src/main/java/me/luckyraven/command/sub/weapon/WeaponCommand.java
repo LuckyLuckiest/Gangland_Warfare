@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class WeaponCommand extends CommandHandler {
+public final class WeaponCommand extends CommandHandler {
 
 	public WeaponCommand(Gangland gangland) {
 		super(gangland, "weapon", true);

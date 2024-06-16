@@ -21,7 +21,7 @@ import org.bukkit.entity.Player;
 
 import java.util.Objects;
 
-public class OptionCommand extends CommandHandler {
+public final class OptionCommand extends CommandHandler {
 
 	public OptionCommand(Gangland gangland) {
 		super(gangland, "option", false);

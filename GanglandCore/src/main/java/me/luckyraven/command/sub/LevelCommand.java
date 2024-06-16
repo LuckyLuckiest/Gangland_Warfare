@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class LevelCommand extends CommandHandler {
+public final class LevelCommand extends CommandHandler {
 
 	public LevelCommand(Gangland gangland) {
 		super(gangland, "level", true);

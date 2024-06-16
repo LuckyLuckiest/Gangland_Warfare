@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TimerCommand extends CommandHandler {
+public final class TimerCommand extends CommandHandler {
 
 	private final Map<CommandSender, SequenceTimer> timerMap;
 

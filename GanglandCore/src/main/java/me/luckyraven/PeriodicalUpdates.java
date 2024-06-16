@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class PeriodicalUpdates {
+public final class PeriodicalUpdates {
 
 	private final Gangland    gangland;
 	private final Initializer initializer;
@@ -51,7 +51,17 @@ public class PeriodicalUpdates {
 	public void updatingDatabase() {
 		GanglandDatabase database = initializer.getGanglandDatabase();
 		DatabaseHelper   helper   = new DatabaseHelper(gangland, database);
-		List<Table<?>>   tables   = database.getTables().stream().toList();
+		List<Table<?>>   tables   = database.getTables();
+
+		// update the rank data
+		RankManager         rankManager         = initializer.getRankManager();
+		RankTable           rankTable           = initializer.getInstanceFromTables(RankTable.class, tables);
+		PermissionTable     permissionTable     = initializer.getInstanceFromTables(PermissionTable.class, tables);
+		RankPermissionTable rankPermissionTable = initializer.getInstanceFromTables(RankPermissionTable.class, tables);
+		RankParentTable     rankParentTable     = initializer.getInstanceFromTables(RankParentTable.class, tables);
+
+		// rank data
+		updateRankData(rankManager, helper, rankTable, permissionTable, rankPermissionTable, rankParentTable);
 
 		// update the user data
 		UserManager<Player>        userManager        = initializer.getUserManager();
@@ -67,27 +77,17 @@ public class PeriodicalUpdates {
 		offlineUserManager.clear();
 
 		// update the gang data
-		GangManager    gangManager    = initializer.getGangManager();
-		MemberManager  memberManager  = initializer.getMemberManager();
-		GangTable      gangTable      = initializer.getInstanceFromTables(GangTable.class, tables);
-		GangAllieTable gangAllieTable = initializer.getInstanceFromTables(GangAllieTable.class, tables);
-		MemberTable    memberTable    = initializer.getInstanceFromTables(MemberTable.class, tables);
+		GangManager     gangManager     = initializer.getGangManager();
+		MemberManager   memberManager   = initializer.getMemberManager();
+		GangTable       gangTable       = initializer.getInstanceFromTables(GangTable.class, tables);
+		GangAlliesTable gangAlliesTable = initializer.getInstanceFromTables(GangAlliesTable.class, tables);
+		MemberTable     memberTable     = initializer.getInstanceFromTables(MemberTable.class, tables);
 
 		// gang data
-		updateGangData(gangManager, helper, gangTable, gangAllieTable);
+		updateGangData(gangManager, helper, gangTable, gangAlliesTable);
 
 		// member data
 		updateMemberData(memberManager, helper, memberTable);
-
-		// update the rank data
-		RankManager         rankManager         = initializer.getRankManager();
-		RankTable           rankTable           = initializer.getInstanceFromTables(RankTable.class, tables);
-		PermissionTable     permissionTable     = initializer.getInstanceFromTables(PermissionTable.class, tables);
-		RankPermissionTable rankPermissionTable = initializer.getInstanceFromTables(RankPermissionTable.class, tables);
-		RankParentTable     rankParentTable     = initializer.getInstanceFromTables(RankParentTable.class, tables);
-
-		// rank data
-		updateRankData(rankManager, helper, rankTable, permissionTable, rankPermissionTable, rankParentTable);
 
 		// update the waypoint data
 		WaypointManager waypointManager = initializer.getWaypointManager();
@@ -188,7 +188,7 @@ public class PeriodicalUpdates {
 	}
 
 	private void updateGangData(GangManager gangManager, DatabaseHelper helper, GangTable gangTable,
-								GangAllieTable gangAllieTable) {
+								GangAlliesTable gangAlliesTable) {
 		helper.runQueries(database -> {
 			for (Gang gang : gangManager.getGangs().values()) {
 				// update gang data
@@ -203,14 +203,14 @@ public class PeriodicalUpdates {
 				// update gang allie data
 				for (Pair<Gang, Long> alliedGang : gang.getAllies()) {
 					Pair<Gang, Gang>    team            = new Pair<>(gang, alliedGang.first());
-					Map<String, Object> searchGangAllie = gangAllieTable.searchCriteria(team);
-					Object[] allie = database.table(gangAllieTable.getName())
+					Map<String, Object> searchGangAllie = gangAlliesTable.searchCriteria(team);
+					Object[] allie = database.table(gangAlliesTable.getName())
 											 .select((String) searchGangAllie.get("search"),
 													 (Object[]) searchGangAllie.get("info"),
 													 (int[]) searchGangAllie.get("type"), new String[]{"*"});
 
-					if (allie.length == 0) gangAllieTable.insertTableQuery(database, team);
-					else gangAllieTable.updateTableQuery(database, team);
+					if (allie.length == 0) gangAlliesTable.insertTableQuery(database, team);
+					else gangAlliesTable.updateTableQuery(database, team);
 				}
 			}
 		});

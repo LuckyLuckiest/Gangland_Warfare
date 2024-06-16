@@ -1,6 +1,7 @@
 package me.luckyraven.command.sub.debug;
 
 import com.cryptomorin.xseries.XMaterial;
+import com.cryptomorin.xseries.particles.XParticle;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
@@ -39,7 +40,7 @@ import org.bukkit.permissions.Permission;
 
 import java.util.*;
 
-public class DebugCommand extends CommandHandler {
+public final class DebugCommand extends CommandHandler {
 
 	public DebugCommand(Gangland gangland) {
 		super(gangland, "debug", false);
@@ -333,7 +334,7 @@ public class DebugCommand extends CommandHandler {
 			if (location != null) {
 				for (int i = 0; i < 100; i++) {
 					player.getWorld()
-						  .spawnParticle(Particle.REDSTONE, location, 50,
+						  .spawnParticle(XParticle.DUST.get(), location, 50,
 										 new Particle.DustOptions(Color.RED.getBukkitColor(), 0.5F));
 				}
 

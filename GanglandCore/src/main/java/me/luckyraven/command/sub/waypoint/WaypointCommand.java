@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class WaypointCommand extends CommandHandler {
+public final class WaypointCommand extends CommandHandler {
 
 	public WaypointCommand(Gangland gangland) {
 		super(gangland, "waypoint", true);

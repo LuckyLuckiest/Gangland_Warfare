@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TeleportCommand extends CommandHandler {
+public final class TeleportCommand extends CommandHandler {
 
 	private final Map<Player, Waypoint>       reconfirm;
 	private final Map<Player, CountdownTimer> reconfirmTimer;
@@ -89,7 +89,9 @@ public class TeleportCommand extends CommandHandler {
 		if (waypoint.getCost() != 0D && !reconfirm.containsKey(player)) {
 			reconfirm.put(player, waypoint);
 
-			CountdownTimer timer = new CountdownTimer(getGangland(), 30, null, null, t -> reconfirm.remove(player));
+			CountdownTimer timer = new CountdownTimer(getGangland(), 30, null, null, t -> {
+				reconfirm.remove(player);
+			});
 			reconfirmTimer.put(player, timer);
 
 			timer.start(true);

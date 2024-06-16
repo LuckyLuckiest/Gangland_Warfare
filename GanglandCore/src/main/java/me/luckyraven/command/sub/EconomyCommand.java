@@ -20,8 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
-public class EconomyCommand extends CommandHandler {
+public final class EconomyCommand extends CommandHandler {
 
 	public EconomyCommand(Gangland gangland) {
 		super(gangland, "economy", false, "eco");
@@ -80,6 +81,8 @@ public class EconomyCommand extends CommandHandler {
 				String strValue  = "";
 
 				List<Player> players = specifiers.get(specifier).get();
+
+				if (players == null || players.isEmpty()) return;
 
 				for (Player player : players) {
 					User<Player> user         = userManager.getUser(player);
@@ -200,34 +203,37 @@ public class EconomyCommand extends CommandHandler {
 								   String target) {
 		allPlayers(specifiers);
 		senderSpecifier(specifiers, sender);
+
 		if (target == null || target.isEmpty()) target = "**";
 		if (!target.startsWith("@") && !target.equals("**")) target = "@" + target;
+
 		targetSpecifier(specifiers, target);
 
 		if (!specifiers.containsKey(target)) throw new IllegalArgumentException("Unable to identify this specifier!");
 	}
 
 	private void allPlayers(HashMap<String, Supplier<List<Player>>> specifiers) {
-		specifiers.put("*", () -> new ArrayList<>(Bukkit.getOnlinePlayers()));
+		List<Player> players = Bukkit.getOnlinePlayers().stream().map(player -> (Player) player).toList();
+
+		specifiers.put("*", () -> new ArrayList<>(players));
 	}
 
 	private void senderSpecifier(HashMap<String, Supplier<List<Player>>> specifiers, CommandSender sender) {
-		specifiers.put("**", () -> {
-			List<Player> players = new ArrayList<>();
-			if (sender instanceof Player player) players.add(player);
-			return players;
-		});
+		List<Player> players = Stream.of(sender).filter(s -> s instanceof Player).map(s -> (Player) s).toList();
+
+		specifiers.put("**", () -> new ArrayList<>(players));
 	}
 
 	private void targetSpecifier(HashMap<String, Supplier<List<Player>>> specifiers, String target) {
-		List<Player> players = new ArrayList<>();
-		for (Player player : Bukkit.getOnlinePlayers())
-			if (player.getName().equalsIgnoreCase(target.substring(1))) {
-				players.add(player);
-				break;
-			}
+		List<Player> players = Bukkit.getOnlinePlayers()
+									 .stream()
+									 .filter(player -> player.getName().equalsIgnoreCase(target.substring(1)))
+									 .map(player -> (Player) player)
+									 .findFirst()
+									 .stream()
+									 .toList();
 
-		if (!players.isEmpty()) specifiers.put(target, () -> players);
+		specifiers.put(target, () -> new ArrayList<>(players));
 	}
 
 }

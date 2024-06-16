@@ -13,7 +13,7 @@ import org.bukkit.entity.Player;
 import java.util.List;
 import java.util.Map;
 
-public class WantedCommand extends CommandHandler {
+public final class WantedCommand extends CommandHandler {
 
 	public WantedCommand(Gangland gangland) {
 		super(gangland, "wanted", true);

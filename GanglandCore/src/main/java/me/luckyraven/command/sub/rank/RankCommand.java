@@ -1,35 +1,16 @@
 package me.luckyraven.command.sub.rank;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.command.argument.types.ConfirmArgument;
-import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.command.data.CommandInformation;
-import me.luckyraven.data.rank.Permission;
-import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.component.Table;
-import me.luckyraven.database.tables.RankParentTable;
-import me.luckyraven.database.tables.RankPermissionTable;
-import me.luckyraven.database.tables.RankTable;
-import me.luckyraven.datastructure.Tree;
-import me.luckyraven.file.configuration.MessageAddon;
-import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.TimeUtil;
-import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
-public class RankCommand extends CommandHandler {
+public final class RankCommand extends CommandHandler {
 
 	public RankCommand(Gangland gangland) {
 		super(gangland, "rank", false);
@@ -50,8 +31,6 @@ public class RankCommand extends CommandHandler {
 
 	@Override
 	protected void initializeArguments() {
-		RankManager rankManager = getGangland().getInitializer().getRankManager();
-
 		// create rank
 		// glw rank create <name>
 		Argument create = new RankCreateCommand(getGangland(), getArgumentTree(), getArgument());

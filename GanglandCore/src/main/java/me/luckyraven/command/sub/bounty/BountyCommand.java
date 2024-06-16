@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class BountyCommand extends CommandHandler {
+public final class BountyCommand extends CommandHandler {
 
 	public BountyCommand(Gangland gangland) {
 		super(gangland, "bounty", false);

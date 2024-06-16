@@ -4,7 +4,6 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
-import me.luckyraven.data.account.Account;
 import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -17,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class BankCommand extends CommandHandler {
+public final class BankCommand extends CommandHandler {
 
 	public BankCommand(Gangland gangland) {
 		super(gangland, "bank", true);
@@ -45,22 +44,17 @@ public class BankCommand extends CommandHandler {
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		Player       player = (Player) commandSender;
 		User<Player> user   = getGangland().getInitializer().getUserManager().getUser(player);
+		Bank         bank   = Bank.getInstance(user);
 
-		if (!user.hasBank()) {
+		if (!user.hasBank() || bank == null) {
 			help(commandSender, 1);
 			return;
 		}
 
-		for (Account<?, ?> account : user.getLinkedAccounts()) {
-			if (!(account instanceof Bank bank)) continue;
-
-			player.sendMessage(ChatUtil.color(String.format("&6%s&7 bank information", player.getName()),
-											  String.format("&7%s&8: &a%s", "Name", bank.getName()),
-											  String.format("&7%s&8: &a%s%s", "Balance", SettingAddon.getMoneySymbol(),
-															SettingAddon.formatDouble(
-																	bank.getEconomy().getBalance()))));
-			break;
-		}
+		player.sendMessage(ChatUtil.color(String.format("&6%s&7 bank information", player.getName()),
+										  String.format("&7%s&8: &a%s", "Name", bank.getName()),
+										  String.format("&7%s&8: &a%s%s", "Balance", SettingAddon.getMoneySymbol(),
+														SettingAddon.formatDouble(bank.getEconomy().getBalance()))));
 	}
 
 	@Override

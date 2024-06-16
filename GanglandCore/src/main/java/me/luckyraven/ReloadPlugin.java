@@ -26,7 +26,7 @@ import org.bukkit.entity.Player;
 import java.io.IOException;
 import java.util.List;
 
-public class ReloadPlugin {
+public final class ReloadPlugin {
 
 	private final Gangland         gangland;
 	private final Initializer      initializer;
@@ -90,7 +90,7 @@ public class ReloadPlugin {
 
 		if (resetCache) rankManager.clear();
 
-		List<Table<?>>      tables              = ganglandDatabase.getTables().stream().toList();
+		List<Table<?>>      tables              = ganglandDatabase.getTables();
 		RankTable           rankTable           = initializer.getInstanceFromTables(RankTable.class, tables);
 		RankParentTable     rankParentTable     = initializer.getInstanceFromTables(RankParentTable.class, tables);
 		PermissionTable     permissionTable     = initializer.getInstanceFromTables(PermissionTable.class, tables);
@@ -104,7 +104,7 @@ public class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 *
-	 * @implNote Very important to run this method after {@link GangTable}, and {@link GangAllieTable}
+	 * @implNote Very important to run this method after {@link GangTable}, and {@link GangAlliesTable}
 	 * 		initialization.
 	 */
 	public void gangInitialize(boolean resetCache) {
@@ -112,11 +112,11 @@ public class ReloadPlugin {
 
 		if (resetCache) gangManager.clear();
 
-		List<Table<?>> tables         = ganglandDatabase.getTables().stream().toList();
-		GangTable      gangTable      = initializer.getInstanceFromTables(GangTable.class, tables);
-		GangAllieTable gangAllieTable = initializer.getInstanceFromTables(GangAllieTable.class, tables);
+		List<Table<?>>  tables          = ganglandDatabase.getTables();
+		GangTable       gangTable       = initializer.getInstanceFromTables(GangTable.class, tables);
+		GangAlliesTable gangAlliesTable = initializer.getInstanceFromTables(GangAlliesTable.class, tables);
 
-		gangManager.initialize(gangTable, gangAllieTable);
+		gangManager.initialize(gangTable, gangAlliesTable);
 	}
 
 	/**
@@ -134,7 +134,7 @@ public class ReloadPlugin {
 
 		if (resetCache) memberManager.clear();
 
-		List<Table<?>> tables      = ganglandDatabase.getTables().stream().toList();
+		List<Table<?>> tables      = ganglandDatabase.getTables();
 		MemberTable    memberTable = initializer.getInstanceFromTables(MemberTable.class, tables);
 
 		memberManager.initialize(memberTable, gangManager, rankManager);
@@ -163,7 +163,7 @@ public class ReloadPlugin {
 			userManager.clear();
 		}
 
-		List<Table<?>> tables      = ganglandDatabase.getTables().stream().toList();
+		List<Table<?>> tables      = ganglandDatabase.getTables();
 		UserTable      userTable   = initializer.getInstanceFromTables(UserTable.class, tables);
 		BankTable      bankTable   = initializer.getInstanceFromTables(BankTable.class, tables);
 		MemberTable    memberTable = initializer.getInstanceFromTables(MemberTable.class, tables);
@@ -215,7 +215,7 @@ public class ReloadPlugin {
 
 		if (resetCache) waypointManager.clear();
 
-		List<Table<?>> tables        = ganglandDatabase.getTables().stream().toList();
+		List<Table<?>> tables        = ganglandDatabase.getTables();
 		WaypointTable  waypointTable = initializer.getInstanceFromTables(WaypointTable.class, tables);
 
 		waypointManager.initialize(waypointTable);
@@ -233,7 +233,7 @@ public class ReloadPlugin {
 
 		if (resetCache) weaponManager.clear();
 
-		List<Table<?>> tables      = ganglandDatabase.getTables().stream().toList();
+		List<Table<?>> tables      = ganglandDatabase.getTables();
 		WeaponTable    weaponTable = initializer.getInstanceFromTables(WeaponTable.class, tables);
 
 		weaponManager.initialize(weaponTable);

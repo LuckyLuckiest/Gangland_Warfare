@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class ReloadCommand extends CommandHandler {
+public final class ReloadCommand extends CommandHandler {
 
 	public ReloadCommand(Gangland gangland) {
 		super(gangland, "reload", false, "rl");

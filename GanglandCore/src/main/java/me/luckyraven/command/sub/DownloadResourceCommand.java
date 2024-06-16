@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 import java.util.List;
 import java.util.Map;
 
-public class DownloadResourceCommand extends CommandHandler {
+public final class DownloadResourceCommand extends CommandHandler {
 
 	public DownloadResourceCommand(Gangland gangland) {
 		super(gangland, "resource", true, "download");

@@ -8,7 +8,7 @@ import org.bukkit.command.CommandSender;
 
 import java.util.stream.Collectors;
 
-public class HelpCommand extends CommandHandler {
+public final class HelpCommand extends CommandHandler {
 
 	public HelpCommand(Gangland gangland) {
 		super(gangland, "help", false, "general", "?");

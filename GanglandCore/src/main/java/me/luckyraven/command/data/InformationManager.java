@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @Getter
-public class InformationManager {
+public final class InformationManager {
 
 	private final Map<String, CommandInformation> commands;
 

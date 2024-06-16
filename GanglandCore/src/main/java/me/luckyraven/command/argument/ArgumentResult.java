@@ -3,7 +3,7 @@ package me.luckyraven.command.argument;
 import lombok.Getter;
 
 @Getter
-public class ArgumentResult<T extends Argument> {
+public final class ArgumentResult<T extends Argument> {
 
 	private final ResultState state;
 	private final T           argument;

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class CommandTabCompleter implements TabCompleter {
+public final class CommandTabCompleter implements TabCompleter {
 
 	private final Map<String, CommandHandler> commandMap;
 
@@ -58,7 +58,7 @@ public class CommandTabCompleter implements TabCompleter {
 
 		if (lastArg.isEmpty()) return arguments;
 
-		return arguments.stream().map(String::toLowerCase).filter(arg -> arg.startsWith(lastArg)).distinct().toList();
+		return arguments.stream().map(String::toLowerCase).filter(arg -> arg.contains(lastArg)).distinct().toList();
 	}
 
 	private Argument findArgument(String[] args, List<CommandHandler> commandHandlers) {

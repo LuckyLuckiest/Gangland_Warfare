@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class GangCommand extends CommandHandler {
+public final class GangCommand extends CommandHandler {
 
 	public GangCommand(Gangland gangland) {
 		super(gangland, "gang", true);

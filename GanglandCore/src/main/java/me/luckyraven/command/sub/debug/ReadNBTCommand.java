@@ -10,7 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-public class ReadNBTCommand extends CommandHandler {
+public final class ReadNBTCommand extends CommandHandler {
 
 	public ReadNBTCommand(Gangland gangland) {
 		super(gangland, "nbt", true, "read-nbt", "readnbt");
