@@ -5,14 +5,12 @@ import me.luckyraven.database.component.Attribute;
 import me.luckyraven.database.component.Table;
 
 import java.sql.Types;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class MemberTable extends Table<Member> {
 
-	public MemberTable(UserTable userTable, GangTable gangTable, RankTable rankTable) {
+	public MemberTable(UserTable userTable, RankTable rankTable) {
 		super("member");
 
 		Attribute<UUID>    uuid         = new Attribute<>("uuid", true, UUID.class);
@@ -27,31 +25,24 @@ public class MemberTable extends Table<Member> {
 		rankId.setDefaultValue(-1);
 
 		uuid.setForeignKey(userTable.get("uuid"), userTable);
-		gangId.setForeignKey(gangTable.get("id"), gangTable);
 		rankId.setForeignKey(rankTable.get("id"), rankTable);
 
 		this.addAttribute(uuid);
 		this.addAttribute(gangId);
 		this.addAttribute(contribution);
-		this.addAttribute(joinDate);
 		this.addAttribute(rankId);
+		this.addAttribute(joinDate);
 	}
 
 	@Override
 	public Object[] getData(Member data) {
-		return new Object[]{data.getUuid(), data.getGangId(), data.getContribution(),
-							data.getRank() == null ? null : data.getRank().getUsedId(), data.getGangJoinDateLong()};
+		return new Object[]{data.getUuid().toString(), data.getGangId(), data.getContribution(),
+							data.getRank() == null ? -1 : data.getRank().getUsedId(), data.getGangJoinDateLong()};
 	}
 
 	@Override
 	public Map<String, Object> searchCriteria(Member data) {
-		Map<String, Object> search = new HashMap<>();
-
-		search.put("search", "uuid = ?");
-		search.put("info", new Object[]{data.getUuid()});
-		search.put("type", new int[]{Types.CHAR});
-		search.put("index", new int[]{0});
-
-		return Collections.unmodifiableMap(search);
+		return createSearchCriteria("uuid = ?", new Object[]{data.getUuid().toString()}, new int[]{Types.CHAR},
+									new int[]{0});
 	}
 }

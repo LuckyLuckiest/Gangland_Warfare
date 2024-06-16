@@ -192,8 +192,8 @@ public interface Database {
 	 * database.connect();
 	 *
 	 * Object[] info = database.table("data").select("uuid = ?",
-	 * 												 new Object[]{1},
-	 *                                               new int[]{Types.INTEGER}
+	 * 												 new Object[]{"xxxx-xxxx-xxxxxxxx"},
+	 *                                               new int[]{Types.CHAR}
 	 *                                               new String[]{"name", "balance"});
 	 *
 	 * database.disconnect();
@@ -396,6 +396,7 @@ public interface Database {
 			String   columnName = metaData.getColumnName(i);
 			int      columnType = metaData.getColumnType(i);
 			Class<?> javaType   = DatabaseUtil.getJavaType(columnType);
+
 			columnTypes.put(columnName, javaType);
 		}
 

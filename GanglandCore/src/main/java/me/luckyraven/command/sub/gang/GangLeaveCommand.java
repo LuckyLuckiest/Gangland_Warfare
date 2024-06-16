@@ -78,8 +78,9 @@ class GangLeaveCommand extends SubArgument {
 
 			leaveConfirm.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> player.sendMessage(
-					ChatUtil.confirmCommand(new String[]{"gang", "leave"})), null, time -> {
+			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+				player.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "leave"}));
+			}, null, time -> {
 				leaveConfirm.setConfirmed(false);
 				leaveTimer.remove(user);
 			});

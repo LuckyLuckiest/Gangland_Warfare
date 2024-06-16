@@ -6,8 +6,6 @@ import me.luckyraven.database.component.Table;
 import me.luckyraven.util.Pair;
 
 import java.sql.Types;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 public class RankParentTable extends Table<Pair<Rank, Rank>> {
@@ -33,13 +31,8 @@ public class RankParentTable extends Table<Pair<Rank, Rank>> {
 
 	@Override
 	public Map<String, Object> searchCriteria(Pair<Rank, Rank> data) {
-		Map<String, Object> search = new HashMap<>();
-
-		search.put("search", "id = ? AND parent_id = ?");
-		search.put("info", new Object[]{data.first().getUsedId(), data.second().getUsedId()});
-		search.put("type", new int[]{Types.INTEGER, Types.INTEGER});
-		search.put("index", new int[]{0, 1});
-
-		return Collections.unmodifiableMap(search);
+		return createSearchCriteria("id = ? AND parent_id = ?",
+									new Object[]{data.first().getUsedId(), data.second().getUsedId()},
+									new int[]{Types.INTEGER, Types.INTEGER}, new int[]{0, 1});
 	}
 }

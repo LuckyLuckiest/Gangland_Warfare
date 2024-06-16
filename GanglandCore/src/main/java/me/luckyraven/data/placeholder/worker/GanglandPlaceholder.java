@@ -1,7 +1,6 @@
 package me.luckyraven.data.placeholder.worker;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.data.account.Account;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
@@ -127,14 +126,8 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 		if (user == null) return null;
 
-		Bank   bank    = null;
+		Bank   bank    = Bank.getInstance(user);
 		String bankStr = "bank_";
-
-		for (Account<?, ?> account : user.getLinkedAccounts())
-			if (account instanceof Bank found) {
-				bank = found;
-				break;
-			}
 
 		if (bank == null) return "NA";
 

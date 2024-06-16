@@ -5,8 +5,6 @@ import me.luckyraven.database.component.Attribute;
 import me.luckyraven.database.component.Table;
 
 import java.sql.Types;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 public class PermissionTable extends Table<Permission> {
@@ -28,13 +26,6 @@ public class PermissionTable extends Table<Permission> {
 
 	@Override
 	public Map<String, Object> searchCriteria(Permission data) {
-		Map<String, Object> search = new HashMap<>();
-
-		search.put("search", "id = ?");
-		search.put("info", new Object[]{data.getUsedId()});
-		search.put("type", new int[]{Types.INTEGER});
-		search.put("index", new int[]{0});
-
-		return Collections.unmodifiableMap(search);
+		return createSearchCriteria("id = ?", new Object[]{data.getUsedId()}, new int[]{Types.INTEGER}, new int[]{0});
 	}
 }

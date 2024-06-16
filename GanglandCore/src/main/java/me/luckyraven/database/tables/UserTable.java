@@ -6,8 +6,6 @@ import me.luckyraven.database.component.Table;
 import org.bukkit.OfflinePlayer;
 
 import java.sql.Types;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -48,7 +46,7 @@ public class UserTable extends Table<User<? extends OfflinePlayer>> {
 
 	@Override
 	public Object[] getData(User<? extends OfflinePlayer> data) {
-		return new Object[]{data.getUser().getUniqueId(), data.getEconomy().getBalance(), data.getKills(),
+		return new Object[]{data.getUser().getUniqueId().toString(), data.getEconomy().getBalance(), data.getKills(),
 							data.getDeaths(), data.getMobKills(), data.getBounty().getAmount(),
 							data.getLevel().getLevelValue(), data.getLevel().getExperience(),
 							data.getWanted().getLevel()};
@@ -56,13 +54,7 @@ public class UserTable extends Table<User<? extends OfflinePlayer>> {
 
 	@Override
 	public Map<String, Object> searchCriteria(User<? extends OfflinePlayer> data) {
-		Map<String, Object> search = new HashMap<>();
-
-		search.put("search", "uuid = ?");
-		search.put("info", new Object[]{data.getUser().getUniqueId()});
-		search.put("type", new int[]{Types.CHAR});
-		search.put("index", new int[]{0});
-
-		return Collections.unmodifiableMap(search);
+		return createSearchCriteria("uuid = ?", new Object[]{data.getUser().getUniqueId().toString()},
+									new int[]{Types.CHAR}, new int[]{0});
 	}
 }

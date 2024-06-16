@@ -5,8 +5,6 @@ import me.luckyraven.database.component.Attribute;
 import me.luckyraven.database.component.Table;
 
 import java.sql.Types;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 public class WaypointTable extends Table<Waypoint> {
@@ -42,7 +40,7 @@ public class WaypointTable extends Table<Waypoint> {
 		cost.setDefaultValue(0D);
 		radius.setDefaultValue(0D);
 
-		gangId.setForeignKey(gangTable.get("gang_id"), gangTable);
+		gangId.setForeignKey(gangTable.get("id"), gangTable);
 
 		this.addAttribute(id);
 		this.addAttribute(gangId);
@@ -71,13 +69,6 @@ public class WaypointTable extends Table<Waypoint> {
 
 	@Override
 	public Map<String, Object> searchCriteria(Waypoint data) {
-		Map<String, Object> search = new HashMap<>();
-
-		search.put("search", "id = ?");
-		search.put("info", new Object[]{data.getUsedId()});
-		search.put("type", new int[]{Types.INTEGER});
-		search.put("index", new int[]{0});
-
-		return Collections.unmodifiableMap(search);
+		return createSearchCriteria("id = ?", new Object[]{data.getUsedId()}, new int[]{Types.INTEGER}, new int[]{0});
 	}
 }

@@ -197,11 +197,18 @@ public final class Gangland extends JavaPlugin {
 		// give an option if there was an update
 		int hours = 6;
 		RepeatingTimer updateTimer = new RepeatingTimer(this, hours * 60 * 60 * 20L, timer -> {
+			String newVersion     = this.updateChecker.getLatestVersion();
+			String currentVersion = getDescription().getVersion();
 
+			if (newVersion != null && !newVersion.equals(currentVersion))
+				Gangland.getLog4jLogger()
+						.info("The current version is {}, please update to the newest version available: {}",
+							  currentVersion, newVersion);
+			else Gangland.getLog4jLogger().info("The plugin is up to date.");
 		});
 
 		// the tasks and timer should be async, so there is no load on the main server thread
-		updateTimer.start(true);
+//		updateTimer.start(true);
 	}
 
 	private class Dependency {

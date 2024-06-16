@@ -5,8 +5,6 @@ import me.luckyraven.database.component.Attribute;
 import me.luckyraven.database.component.Table;
 
 import java.sql.Types;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 public class GangTable extends Table<Gang> {
@@ -51,13 +49,6 @@ public class GangTable extends Table<Gang> {
 
 	@Override
 	public Map<String, Object> searchCriteria(Gang data) {
-		Map<String, Object> search = new HashMap<>();
-
-		search.put("search", "id = ?");
-		search.put("info", new Object[]{data.getId()});
-		search.put("type", new int[]{Types.INTEGER});
-		search.put("index", new int[]{0});
-
-		return Collections.unmodifiableMap(search);
+		return createSearchCriteria("id = ?", new Object[]{data.getId()}, new int[]{Types.INTEGER}, new int[]{0});
 	}
 }

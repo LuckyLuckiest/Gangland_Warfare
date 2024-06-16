@@ -18,7 +18,7 @@ public class ArgumentSpecifier {
 		this.commandSender = commandSender;
 	}
 
-	public void initialize(String target) {
+	public void initialize(String target) throws IllegalArgumentException {
 		collectSpecifiers(target);
 	}
 
@@ -26,7 +26,7 @@ public class ArgumentSpecifier {
 		return Collections.unmodifiableMap(specifiers);
 	}
 
-	private void collectSpecifiers(@Nullable final String target) {
+	private void collectSpecifiers(@Nullable final String target) throws IllegalArgumentException {
 		allPlayers();
 		randomPlayer();
 		nearestPlayer();

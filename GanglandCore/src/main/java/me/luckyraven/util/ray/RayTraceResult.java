@@ -1,5 +1,6 @@
 package me.luckyraven.util.ray;
 
+import com.cryptomorin.xseries.particles.XParticle;
 import lombok.Getter;
 import me.luckyraven.compatibility.CompatibilityAPI;
 import me.luckyraven.compatibility.HitBox;
@@ -148,7 +149,7 @@ public class RayTraceResult {
 			player.getWorld().spawnParticle(Particle.CRIT, x, y, z, 1, 0, 0, 0, 0.0001);
 		} else {
 			player.getWorld()
-				  .spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, 0.0001,
+				  .spawnParticle(XParticle.DUST.get(), x, y, z, 1, 0, 0, 0, 0.0001,
 								 new Particle.DustOptions(Color.BLACK.getBukkitColor(), 1.5f), true);
 		}
 	}

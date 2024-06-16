@@ -5,32 +5,39 @@ import me.luckyraven.bukkit.scoreboard.driver.DriverHandler;
 import me.luckyraven.bukkit.scoreboard.driver.sub.DriverV1;
 import me.luckyraven.bukkit.scoreboard.driver.sub.DriverV2;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.util.ReflectionUtil;
 import org.bukkit.entity.Player;
+import org.reflections.Reflections;
+import org.reflections.util.ConfigurationBuilder;
+import org.reflections.util.FilterBuilder;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class ScoreboardManager {
 
 	private static final List<String> DRIVERS = new ArrayList<>();
 
 	static {
-		List<Class<?>> classes = new ArrayList<>(
-				ReflectionUtil.getAllClasses("me.luckyraven.bukkit.scoreboard.driver.sub"));
+		String packageName = "me.luckyraven.bukkit.scoreboard.driver.sub";
+		Reflections reflections = new Reflections(new ConfigurationBuilder().forPackage(packageName)
+																			.filterInputsBy(
+																					new FilterBuilder().includePackage(
+																							packageName)));
+		Set<Class<?>> modules = reflections.getSubTypesOf(Object.class);
 
-		Gangland.getLog4jLogger().info(classes);
-
-		for (Class<?> clazz : classes) {
+		for (Class<?> clazz : modules) {
 			if (!(DriverHandler.class.isAssignableFrom(clazz) && !clazz.isInterface() &&
 				  !Modifier.isAbstract(clazz.getModifiers()))) continue;
 
-			@SuppressWarnings("unchecked") // We know clazz is a subclass of DriverHandler
+			@SuppressWarnings("unchecked") // it is known that clazz is a subclass of DriverHandler
 			Class<? extends DriverHandler> driverClass = (Class<? extends DriverHandler>) clazz;
 			DRIVERS.add(driverClass.getSimpleName());
 		}
+
+		// TODO make this work!
 	}
 
 	private final Gangland gangland;

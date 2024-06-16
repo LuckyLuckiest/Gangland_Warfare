@@ -1,6 +1,5 @@
 package me.luckyraven.database.tables;
 
-import me.luckyraven.data.account.Account;
 import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.database.component.Attribute;
@@ -8,8 +7,6 @@ import me.luckyraven.database.component.Table;
 import org.bukkit.OfflinePlayer;
 
 import java.sql.Types;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -33,22 +30,16 @@ public class BankTable extends Table<User<? extends OfflinePlayer>> {
 
 	@Override
 	public Object[] getData(User<? extends OfflinePlayer> data) {
-		for (Account<?, ?> account : data.getLinkedAccounts())
-			if (account instanceof Bank bank)
-				return new Object[]{data.getUser().getUniqueId(), bank.getName(), bank.getEconomy().getBalance()};
+		Bank bank = Bank.getInstance(data);
 
-		return null;
+		if (bank == null) return new Object[]{ };
+
+		return new Object[]{data.getUser().getUniqueId().toString(), bank.getName(), bank.getEconomy().getBalance()};
 	}
 
 	@Override
 	public Map<String, Object> searchCriteria(User<? extends OfflinePlayer> data) {
-		Map<String, Object> search = new HashMap<>();
-
-		search.put("search", "uuid = ?");
-		search.put("info", new Object[]{data.getUser().getUniqueId()});
-		search.put("type", new Object[]{Types.CHAR});
-		search.put("index", new int[]{0});
-
-		return Collections.unmodifiableMap(search);
+		return createSearchCriteria("uuid = ?", new Object[]{data.getUser().getUniqueId().toString()},
+									new int[]{Types.CHAR}, new int[]{0});
 	}
 }

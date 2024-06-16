@@ -5,6 +5,7 @@ import me.luckyraven.database.Database;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 public abstract class Table<T> {
@@ -84,42 +85,70 @@ public abstract class Table<T> {
 		return lines.toArray(String[]::new);
 	}
 
-	public void insertTableQuery(Database database, T data) throws SQLException {
+	public synchronized void insertTableQuery(Database database, T data) throws SQLException {
 		String[] columns         = getColumns().toArray(String[]::new);
+		Object[] allData         = getData(data);
 		int[]    columnsDataType = attributes.values().stream().mapToInt(Attribute::getType).toArray();
 		Database config          = database.table(name);
 
-		config.insert(columns, getData(data), columnsDataType);
+		if (allData == null || allData.length == 0) return;
+
+		config.insert(columns, allData, columnsDataType);
 	}
 
-	public void updateTableQuery(Database database, T data) throws SQLException {
-		Map<String, Object> search             = searchCriteria(data);
-		Object[]            allData            = getData(data);
-		List<String>        columnsTemp        = getColumns().stream().toList();
-		int[]               indexes            = (int[]) search.get("index");
-		List<String>        colTemp            = new ArrayList<>();
-		List<Object>        objectsTemp        = new ArrayList<>();
-		int[]               extractedDataTypes = attributes.values().stream().mapToInt(Attribute::getType).toArray();
-		List<Integer>       dataTypesTemp      = new ArrayList<>();
+	public synchronized void updateTableQuery(Database database, T data) throws SQLException {
+		Map<String, Object> search  = searchCriteria(data);
+		Object[]            allData = getData(data);
+
+		// there is no data to work with
+		if (allData == null || allData.length == 0) return;
+
+		List<String>  columnsTemp   = getColumns().stream().toList();
+		List<String>  colTemp       = new ArrayList<>();
+		List<Object>  objectsTemp   = new ArrayList<>();
+		List<Integer> dataTypesTemp = new ArrayList<>();
+
+		int[]        indexes            = (int[]) search.get("index");
+		Set<Integer> indexSet           = Arrays.stream(indexes).boxed().collect(Collectors.toSet());
+		int[]        extractedDataTypes = attributes.values().stream().mapToInt(Attribute::getType).toArray();
+
+		boolean includedNonPrimaryKeyColumn = false;
 
 		for (int i = 0; i < columnsTemp.size(); i++) {
-			int finalI = i;
-			if (Arrays.stream(indexes).anyMatch(value -> value == finalI)) continue;
+			if (indexSet.contains(i)) continue;
 
 			colTemp.add(columnsTemp.get(i));
 			objectsTemp.add(allData[i]);
 			dataTypesTemp.add(extractedDataTypes[i]);
+
+			includedNonPrimaryKeyColumn = true;
 		}
 
-		int[] dataTypes = new int[dataTypesTemp.size()];
+		if (!includedNonPrimaryKeyColumn && !columnsTemp.isEmpty()) {
+			List<Attribute<?>> attr = attributes.values().stream().toList();
 
-		for (int i = 0; i < dataTypes.length; i++)
-			 dataTypes[i] = dataTypesTemp.get(i);
+			for (int i = 0; i < columnsTemp.size(); i++) {
+				// ignore primary key
+				boolean isPrimaryKey = attr.get(i).isPrimaryKey();
 
-		Database config = database.table(name);
+				if (isPrimaryKey) continue;
+
+				colTemp.add(columnsTemp.get(i));
+				objectsTemp.add(allData[i]);
+				dataTypesTemp.add(extractedDataTypes[i]);
+			}
+		}
+
+		int[]    dataTypes = dataTypesTemp.stream().mapToInt(Integer::intValue).toArray();
+		Database config    = database.table(name);
 
 		config.update((String) search.get("search"), (Object[]) search.get("info"), (int[]) search.get("type"),
 					  colTemp.toArray(String[]::new), objectsTemp.toArray(), dataTypes);
+	}
+
+	protected Map<String, Object> createSearchCriteria(String searchQuery, Object[] queryPlaceholder,
+													   int[] queryDataTypes, int[] ignoredIndexes) {
+		return Map.of("search", searchQuery, "info", queryPlaceholder, "type", queryDataTypes, "index", ignoredIndexes);
 	}
 
 	protected void addAttribute(Attribute<?> attribute) {

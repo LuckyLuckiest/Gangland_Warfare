@@ -5,15 +5,18 @@ import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.JarURLConnection;
 import java.net.URL;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 public final class ReflectionUtil {
@@ -79,19 +82,24 @@ public final class ReflectionUtil {
 
 	public static Set<Class<?>> getAllClasses(String packageName) {
 		try {
-			Enumeration<URL> resources = ClassLoader.getSystemResources(packageName.replace('.', '/'));
-			Set<Class<?>>    classes   = new HashSet<>();
+			ClassLoader      classLoader = Thread.currentThread().getContextClassLoader();
+			Enumeration<URL> resources   = classLoader.getResources(packageName.replace('.', '/'));
+			Set<Class<?>>    classes     = new HashSet<>();
 
 			while (resources.hasMoreElements()) {
 				URL resource = resources.nextElement();
+
+				if (resource.getProtocol().equals("jar")) classes.addAll(getClassesFromJar(resource, packageName));
+				else classes.addAll(getClassesFromDirectory(resource, packageName));
+
 				classes.addAll(getClassesFromResource(resource, packageName));
 			}
 
 			return classes;
 		} catch (IOException exception) {
 			Gangland.getLog4jLogger().error(exception);
-			return Collections.emptySet();
 		}
+		return Collections.emptySet();
 	}
 
 	private static Set<Class<?>> getClassesFromResource(URL resource, String packageName) {
@@ -104,6 +112,50 @@ public final class ReflectionUtil {
 			Gangland.getLog4jLogger().error(exception);
 			return Collections.emptySet();
 		}
+	}
+
+	private static Set<Class<?>> getClassesFromDirectory(URL resource, String packageName) {
+		Set<Class<?>> classes = new HashSet<>();
+		try {
+			String directoryPath = URLDecoder.decode(resource.getPath(), StandardCharsets.UTF_8);
+			File   directory     = new File(directoryPath);
+
+			if (!(directory.exists() && directory.isDirectory())) return classes;
+
+			for (File file : Objects.requireNonNull(directory.listFiles())) {
+				if (!file.getName().endsWith(".class")) continue;
+
+				String className = packageName + '.' + file.getName().substring(0, file.getName().length() - 6);
+				classes.add(Class.forName(className));
+			}
+		} catch (Exception exception) {
+			Gangland.getLog4jLogger().error(exception);
+		}
+		return classes;
+	}
+
+	private static Set<Class<?>> getClassesFromJar(URL resource, String packageName) {
+		Set<Class<?>> classes = new HashSet<>();
+		try {
+			JarURLConnection      jarConn = (JarURLConnection) resource.openConnection();
+			JarFile               jarFile = jarConn.getJarFile();
+			Enumeration<JarEntry> entries = jarFile.entries();
+
+			String packagePath = packageName.replace('.', '/');
+
+			while (entries.hasMoreElements()) {
+				JarEntry entry     = entries.nextElement();
+				String   entryName = entry.getName();
+
+				if (!(entryName.startsWith(packagePath) && entryName.endsWith(".class"))) continue;
+
+				String className = entryName.replace('/', '.').substring(0, entryName.length() - 6);
+				classes.add(Class.forName(className));
+			}
+		} catch (Exception exception) {
+			Gangland.getLog4jLogger().error(exception);
+		}
+		return classes;
 	}
 
 	private static Class<?> getClass(String className, String packageName) {

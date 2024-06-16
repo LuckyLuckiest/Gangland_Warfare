@@ -5,25 +5,16 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.Member;
-import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
-import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -85,12 +76,14 @@ class RankCreateCommand extends SubArgument {
 			confirmCreate.setConfirmed(true);
 			createRankName.put(sender, new AtomicReference<>(args[2]));
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
+				if (time.getTimeLeft() % 20 != 0) return;
+
 				sender.sendMessage(MessageAddon.RANK_CREATE_CONFIRM.toString()
 																   .replace("%timer%",
-																			TimeUtil.formatTime(time.getPeriod(),
+																			TimeUtil.formatTime(time.getTimeLeft(),
 																								true)));
-			}, null, time -> {
+			}, time -> {
 				confirmCreate.setConfirmed(false);
 				createRankName.remove(sender);
 			});

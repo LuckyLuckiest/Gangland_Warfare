@@ -1,7 +1,6 @@
 package me.luckyraven.updater;
 
 import me.luckyraven.Gangland;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.BufferedReader;
@@ -19,7 +18,7 @@ public class UpdateChecker {
 		this.resourceId = resourceId;
 	}
 
-	public void getLatestVersion() {
+	public String getLatestVersion() {
 		try {
 			HttpURLConnection connection = (HttpURLConnection) new URL(
 					"https://api.spigotmc.org/legacy/update.php?resource=" + resourceId).openConnection();
@@ -33,18 +32,12 @@ public class UpdateChecker {
 
 			reader.close();
 
-			String currentVersion = plugin.getDescription().getVersion();
-
-			if (latestVersion != null && !latestVersion.equals(currentVersion)) {
-				Gangland.getLog4jLogger()
-						.info("The current version is {}, please update to the newest version available: {}",
-							  currentVersion, latestVersion);
-			} else {
-				Gangland.getLog4jLogger().info("The plugin is up to date.");
-			}
+			return latestVersion;
 		} catch (Exception exception) {
-			Gangland.getLog4jLogger().error("checking for latest version error.", exception);
+			Gangland.getLog4jLogger().error("Unable to check for the latest version.", exception);
 		}
+
+		return plugin.getDescription().getVersion();
 	}
 
 	public void downloadLatestVersion() {

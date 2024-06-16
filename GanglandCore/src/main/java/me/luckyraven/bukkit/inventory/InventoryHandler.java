@@ -1,5 +1,6 @@
 package me.luckyraven.bukkit.inventory;
 
+import com.cryptomorin.xseries.XEnchantment;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
 import me.luckyraven.Gangland;
@@ -12,7 +13,6 @@ import me.luckyraven.util.color.MaterialType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -176,7 +176,7 @@ public class InventoryHandler implements Listener {
 		ItemBuilder item = new ItemBuilder(material).setDisplayName(displayName).setLore(lore);
 
 		if (enchanted) {
-			item.addEnchantment(Enchantment.DURABILITY, 1).addItemFlags(ItemFlag.HIDE_ENCHANTS);
+			item.addEnchantment(XEnchantment.UNBREAKING.getEnchant(), 1).addItemFlags(ItemFlag.HIDE_ENCHANTS);
 		}
 
 		setItem(slot, item, draggable, clickable);

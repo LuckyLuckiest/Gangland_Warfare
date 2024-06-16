@@ -7,8 +7,6 @@ import me.luckyraven.database.component.Table;
 import me.luckyraven.util.Pair;
 
 import java.sql.Types;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 public class RankPermissionTable extends Table<Pair<Rank, Permission>> {
@@ -35,13 +33,8 @@ public class RankPermissionTable extends Table<Pair<Rank, Permission>> {
 
 	@Override
 	public Map<String, Object> searchCriteria(Pair<Rank, Permission> data) {
-		Map<String, Object> search = new HashMap<>();
-
-		search.put("search", "rank_id = ? AND permission_id = ?");
-		search.put("info", new Object[]{data.first().getUsedId(), data.second().getUsedId()});
-		search.put("type", new int[]{Types.INTEGER, Types.INTEGER});
-		search.put("index", new int[]{0, 1});
-
-		return Collections.unmodifiableMap(search);
+		return createSearchCriteria("rank_id = ? AND permission_id = ?",
+									new Object[]{data.first().getUsedId(), data.second().getUsedId()},
+									new int[]{Types.INTEGER, Types.INTEGER}, new int[]{0, 1});
 	}
 }

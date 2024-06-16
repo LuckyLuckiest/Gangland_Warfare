@@ -26,6 +26,7 @@ public class LanguageLoader {
 
 	public LanguageLoader(Gangland gangland) {
 		this.gangland = gangland;
+
 		try {
 			message = loadMessage(gangland.getInitializer().getFileManager());
 		} catch (IOException | InvalidConfigurationException exception) {
@@ -40,9 +41,10 @@ public class LanguageLoader {
 				languages.append(file, file.lastIndexOf("_") + 1, file.lastIndexOf("."));
 				if (i < files.size() - 1) languages.append(", ");
 			}
-			this.gangland.getLogger()
-						 .info("Disabling plugin, reason: unidentifiable message file.\nPlease use languages from the list: " +
-							   languages);
+
+			Gangland.getLog4jLogger()
+					.warn("Disabling plugin, reason: unidentifiable message file.\nPlease use languages from the list: {}",
+						  languages);
 			Bukkit.getServer().getPluginManager().disablePlugin(this.gangland);
 		}
 	}
@@ -77,9 +79,9 @@ public class LanguageLoader {
 				if (i++ != 0) files.add(name.substring(name.lastIndexOf("/") + 1));
 			}
 		} catch (IOException exception) {
-			gangland.getLogger()
-					.warning(UnhandledError.MISSING_JAR_ERROR + ": " + exception.getMessage() + "\n" +
-							 "This error occurred since the plugin jar file is not in the plugins folder.");
+			Gangland.getLog4jLogger()
+					.error("{}: {}\nThis error occurred since the plugin jar file is not in the plugins folder.",
+						   UnhandledError.MISSING_JAR_ERROR, exception.getMessage());
 		}
 		return files;
 	}

@@ -23,7 +23,19 @@ public class Attribute<T> {
 
 	@Setter(AccessLevel.NONE) private Attribute<?> foreignKey;
 
-	public Attribute(String name, int type, int size, boolean primaryKey, Class<T> classType) {
+	public Attribute(String name, boolean primaryKey, Class<T> classType) {
+		this(name, primaryKey, getLocalSize(classType), classType);
+	}
+
+	public Attribute(String name, boolean primaryKey, int size, Class<T> classType) {
+		this(name, primaryKey, DatabaseUtil.getColumnType(classType), size, classType);
+	}
+
+	public Attribute(String name, int type, boolean primaryKey, Class<T> classType) {
+		this(name, primaryKey, type, getLocalSize(classType), classType);
+	}
+
+	public Attribute(String name, boolean primaryKey, int type, int size, Class<T> classType) {
 		this.name       = name.toLowerCase();
 		this.type       = type;
 		this.size       = size;
@@ -31,26 +43,15 @@ public class Attribute<T> {
 		this.classType  = classType;
 	}
 
-	public Attribute(String name, int type, boolean primaryKey, Class<T> classType) {
-		this(name, type, 0, primaryKey, classType);
-	}
-
-	public Attribute(String name, boolean primaryKey, Class<T> classType) {
-		this.name       = name;
-		this.primaryKey = primaryKey;
-		this.classType  = classType;
-		this.type       = DatabaseUtil.getColumnType(this.classType);
-		this.size       = getLocalSize();
+	private static <T> int getLocalSize(Class<T> classType) {
+		if (classType.equals(UUID.class)) return 36;
+		else if (classType.equals(String.class)) return 255;
+		return 0;
 	}
 
 	public void setForeignKey(Attribute<?> attribute, Table<?> associatedTable) {
 		this.foreignKey      = attribute;
 		this.associatedTable = associatedTable;
-	}
-
-	private int getLocalSize() {
-		if (classType.equals(UUID.class)) return 36;
-		return 0;
 	}
 
 }

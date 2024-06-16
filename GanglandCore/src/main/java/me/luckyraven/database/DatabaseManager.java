@@ -2,13 +2,12 @@ package me.luckyraven.database;
 
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class DatabaseManager {
 
@@ -69,8 +68,8 @@ public class DatabaseManager {
 		return new ArrayList<>(databases);
 	}
 
-	private Map<String, List<Object[]>> databaseInformation(DatabaseHandler handler) throws SQLException {
-		Map<String, List<Object[]>> data = new HashMap<>();
+	private LinkedHashMap<String, List<Object[]>> databaseInformation(DatabaseHandler handler) throws SQLException {
+		LinkedHashMap<String, List<Object[]>> data = new LinkedHashMap<>();
 
 		for (String table : handler.getDatabase().getTables()) {
 			Database config = handler.getDatabase().table(table);
@@ -78,8 +77,7 @@ public class DatabaseManager {
 			List<Object[]> info = new ArrayList<>();
 			try {
 				info.addAll(config.selectAll());
-			} catch (SQLException ignored) {
-			}
+			} catch (SQLException ignored) { }
 
 			if (!info.isEmpty()) data.put(table, config.selectAll());
 		}
@@ -92,7 +90,7 @@ public class DatabaseManager {
 
 	private void backup(DatabaseHandler handler, int databaseType) throws SQLException {
 		// save all the database data in a map, name: data
-		Map<String, List<Object[]>> data = databaseInformation(handler);
+		LinkedHashMap<String, List<Object[]>> data = databaseInformation(handler);
 
 		// check if a database exists if they don't handle them
 		handler.enforceType(databaseType);

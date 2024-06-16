@@ -1,5 +1,6 @@
 package me.luckyraven.compatibility;
 
+import com.cryptomorin.xseries.particles.XParticle;
 import lombok.Getter;
 import me.luckyraven.util.color.Color;
 import me.luckyraven.util.ray.BlockTraceResult;
@@ -284,7 +285,7 @@ public class HitBox {
 						player.getWorld().spawnParticle(Particle.CRIT, x, y, z, 1, 0, 0, 0, 0.0001);
 					} else {
 						player.getWorld()
-							  .spawnParticle(Particle.REDSTONE, x, y, z, 1, 0, 0, 0, 0.0001,
+							  .spawnParticle(XParticle.DUST.get(), x, y, z, 1, 0, 0, 0, 0.0001,
 											 new Particle.DustOptions(color.getBukkitColor(), 0.5f), true);
 					}
 				}

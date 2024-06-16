@@ -33,16 +33,46 @@ public final class VersionSetup {
 
 	private String getVersion() {
 		try {
-			return Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
+			String packageName = Bukkit.getServer().getClass().getPackage().getName();
+			String version     = packageName.substring(packageName.lastIndexOf(".") + 1);
+
+			// check for known version structure changes
+			if (version.equals("craftbukkit")) {
+				// attempt to use reflection to get the version
+				Gangland.getLog4jLogger()
+						.warn("Unable to determine the server version... Trying to use bukkit version...");
+
+				// try to get the server version from bukkit
+				String bukkitVersion    = Bukkit.getVersion().split(" ")[0];
+				String processedVersion = bukkitVersion.split("-")[0];
+
+				// fix how the version would look, vX_XX_RX
+				StringBuilder builder    = new StringBuilder("v");
+				String[]      newVersion = processedVersion.split("\\.");
+
+				builder.append(newVersion[0]).append("_").append(newVersion[1]);
+
+				if (newVersion.length > 2) builder.append("_R").append(newVersion[2]);
+
+				// get the last valid version
+//				.append(newVersion[2])
+
+				version = builder.toString();
+			}
+
+			return version;
 		} catch (ArrayIndexOutOfBoundsException exception) {
 			Gangland.getLog4jLogger().error(exception);
-			return null;
 		}
+
+		return null;
 	}
 
 	private double getVersion(String version) {
 		version = version.replaceFirst("v", "");
 		version = version.replaceFirst("R", "");
+		version = version.replaceAll("\\.", "_");
+
 		String[] splitVersion  = version.split("_");
 		double   mainVersion   = Double.parseDouble(splitVersion[0]);
 		double   subVersion    = Double.parseDouble(splitVersion[1]) / 100;

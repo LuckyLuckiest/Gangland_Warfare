@@ -20,8 +20,7 @@ public final class DatabaseUtil {
 		if (columnType.equals(Short.class)) return Types.SMALLINT;
 		if (columnType.equals(Integer.class)) return Types.INTEGER;
 		if (columnType.equals(Long.class)) return Types.BIGINT;
-		if (columnType.equals(Float.class)) return Types.FLOAT;
-		if (columnType.equals(Double.class)) return Types.DOUBLE;
+		if (columnType.equals(Double.class) || columnType.equals(Float.class)) return Types.DOUBLE;
 		if (columnType.equals(Boolean.class)) return Types.BOOLEAN;
 		if (columnType.equals(LocalDateTime.class)) return Types.TIMESTAMP;
 		return Types.VARCHAR;
@@ -38,10 +37,9 @@ public final class DatabaseUtil {
 		return switch (columnType) {
 			case Types.TINYINT -> Byte.class;
 			case Types.SMALLINT -> Short.class;
-			case Types.INTEGER -> Integer.class;
+			case Types.INTEGER, Types.ROWID -> Integer.class;
 			case Types.BIGINT -> Long.class;
-			case Types.FLOAT, Types.REAL -> Float.class;
-			case Types.DOUBLE -> Double.class;
+			case Types.DOUBLE, Types.FLOAT, Types.REAL -> Double.class;
 			case Types.BOOLEAN, Types.BIT -> Boolean.class;
 			case Types.DATE, Types.TIME, Types.TIMESTAMP -> LocalDateTime.class;
 			case Types.NULL, Types.NUMERIC -> null;

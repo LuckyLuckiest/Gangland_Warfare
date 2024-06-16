@@ -1,5 +1,6 @@
 package me.luckyraven.data.inventory;
 
+import com.cryptomorin.xseries.XEnchantment;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
@@ -9,7 +10,6 @@ import me.luckyraven.util.InventoryUtil;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
 import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 
@@ -69,7 +69,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 				List<String> lore = item.getLore().stream().map(s -> gangland.usePlaceholder(player, s)).toList();
 				newItem.setLore(lore);
 
-				if (!item.getEnchantments().isEmpty()) newItem.addEnchantment(Enchantment.DURABILITY, 1)
+				if (!item.getEnchantments().isEmpty()) newItem.addEnchantment(XEnchantment.UNBREAKING.getEnchant(), 1)
 															  .addItemFlags(ItemFlag.HIDE_ENCHANTS,
 																			ItemFlag.HIDE_ATTRIBUTES);
 

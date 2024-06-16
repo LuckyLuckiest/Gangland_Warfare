@@ -1,5 +1,6 @@
 package me.luckyraven.file.configuration.inventory;
 
+import com.cryptomorin.xseries.XEnchantment;
 import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
@@ -14,7 +15,6 @@ import me.luckyraven.file.FileHandler;
 import me.luckyraven.util.color.MaterialType;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -230,7 +230,8 @@ public class InventoryAddon {
 
 		itemBuilder.setDisplayName(itemName);
 		itemBuilder.setLore(lore);
-		if (enchanted) itemBuilder.addEnchantment(Enchantment.DURABILITY, 1).addItemFlags(ItemFlag.HIDE_ENCHANTS);
+		if (enchanted) itemBuilder.addEnchantment(XEnchantment.UNBREAKING.getEnchant(), 1)
+								  .addItemFlags(ItemFlag.HIDE_ENCHANTS);
 
 		return itemBuilder;
 	}

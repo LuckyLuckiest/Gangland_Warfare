@@ -2,6 +2,7 @@ package me.luckyraven.command;
 
 import lombok.Getter;
 import me.luckyraven.Gangland;
+import me.luckyraven.command.sub.DownloadPluginCommand;
 import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.OptionCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
@@ -28,10 +29,12 @@ public final class CommandManager implements CommandExecutor {
 	@Getter private static final List<Class<? extends CommandHandler>> filters = Arrays.asList(DebugCommand.class,
 																							   OptionCommand.class,
 																							   ReadNBTCommand.class,
-																							   TimerCommand.class);
+																							   TimerCommand.class,
+																							   DownloadPluginCommand.class);
 
 	private static final Map<String, CommandHandler> commands = new HashMap<>();
-	private final        Gangland                    gangland;
+
+	private final Gangland gangland;
 
 	public CommandManager(Gangland gangland) {
 		this.gangland = gangland;
