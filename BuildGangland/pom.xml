@@ -15,8 +15,8 @@
     <name>Gangland Build</name>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -80,6 +80,11 @@
                             <pattern>org.bstats</pattern>
                             <shadedPattern>me.luckyraven.dependency.bstats</shadedPattern>
                         </relocation>
+
+                        <relocation>
+                            <pattern>org.reflections</pattern>
+                            <shadedPattern>me.luckyraven.util.reflections</shadedPattern>
+                        </relocation>
                     </relocations>
 
                     <filters>
@@ -122,6 +127,11 @@
 
         <!-- Include NMS -->
         <!-- 1.20.x -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_20_R4</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-1_20_R3</artifactId>
