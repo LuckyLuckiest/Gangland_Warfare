@@ -43,19 +43,34 @@
     - Used to unlock items.
 0.0.62-DEV: (DONE)
 	- Economy system (implement vault dependency).
-	- When the player dies, they are punished.
+	- When the player dies, they’re punished.
 	- Implement scoreboard (FastBoard)
 0.0.63-DEV: (DONE)
 	- Warps and spawns.
     - Working permissions in ranks.
     - Configuring scoreboard.
     - Add custom scoreboard in YAML files.
-0.0.64-DEV:
+0.0.64-DEV: (DONE)
+    - Rework the database and how they work.
     - Add custom inventories in YAML files.
     - Make inventories work with a multi-inventory system.
-    - Enhance the multi inventory system (don't use static methods).
-    - Make custom inventories YAML file configuration flexible.
+    - Make custom inventories YAML file configuration flexible. (NOT DONE)
+    - Experiment with guns.
 0.0.65-DEV:
+    - Work more on guns.
+        - Saving the guns in a database (partially).
+        - Loading the guns fully using database and default data from the weapon itself.
+        - Reload system.
+        - Ammo system.
+        - Weapon interact system.
+        - Ammo damage to surroundings and entities.
+        - Weapon drop system.
+    - Work on signs.
+        - Be able to abstract sign creation.
+        - Try to make it diverse.
+        - Open inventory.
+        - Do commands.
+0.0.66-DEV:
 	- Work on waypoint radius, used for displaying particles
     - Gang settings.
 	- A Taxi system added to contacts in phone.
