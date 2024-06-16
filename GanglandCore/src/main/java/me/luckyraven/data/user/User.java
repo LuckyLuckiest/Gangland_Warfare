@@ -108,15 +108,6 @@ public class User<T extends OfflinePlayer> {
 		linkedAccounts.remove(account);
 	}
 
-	/**
-	 * Gets linked accounts.
-	 *
-	 * @return the linked accounts
-	 */
-	public List<Account<?, ?>> getLinkedAccounts() {
-		return new ArrayList<>(linkedAccounts);
-	}
-
 	public void addSpecialInventory(InventoryHandler inventoryHandler) {
 		specialInventories.add(inventoryHandler);
 	}

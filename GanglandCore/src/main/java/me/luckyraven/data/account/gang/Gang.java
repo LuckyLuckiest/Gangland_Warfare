@@ -50,9 +50,7 @@ public class Gang extends Account<Integer, List<Member>> {
 	}
 
 	public Gang() {
-		super(null, new ArrayList<>());
-
-		generateId();
+		super(generateId(), new ArrayList<>());
 
 		this.name        = null;
 		this.displayName = "";
@@ -65,39 +63,33 @@ public class Gang extends Account<Integer, List<Member>> {
 		this.allies      = new HashSet<>();
 	}
 
-	public void generateId() {
+	public static int generateId() {
 		Random random = new Random();
-		setKey(random.nextInt(Integer.MAX_VALUE));
+		return random.nextInt(Integer.MAX_VALUE);
 	}
 
-	public void addAllAllies(List<Pair<Gang, Long>> allieDateList) {
-		allieDateList.forEach(this::addAllie);
-	}
-
-	public void addAllie(Pair<Gang, Long> allieDate) {
+	public void addAlly(Pair<Gang, Long> allieDate) {
 		allies.add(allieDate);
 	}
 
-	public void addAllie(Gang gang) {
-		allies.add(new Pair<>(gang, Instant.now().toEpochMilli()));
+	public void addAllAllies(List<Pair<Gang, Long>> allieDateList) {
+		allieDateList.forEach(this::addAlly);
 	}
 
-	public void removeAllie(Gang gang) {
+	public void addAlly(Gang gang) {
+		addAlly(new Pair<>(gang, Instant.now().toEpochMilli()));
+	}
+
+	public void removeAlly(Gang gang) {
 		allies.removeIf(pair -> pair.first().getId() == gang.getId());
 	}
 
-	public boolean isAllie(Gang gang) {
+	public boolean isAlly(Gang gang) {
 		return !allies.stream().filter(pair -> pair.first().getId() == gang.getId()).toList().isEmpty();
 	}
 
 	public Set<Pair<Gang, Long>> getAllies() {
 		return Collections.unmodifiableSet(allies);
-	}
-
-	public void addMember(User<? extends OfflinePlayer> user, Member member, Rank rank) {
-		user.setGangId(this.getId());
-		user.addAccount(this);
-		addMember(member, rank);
 	}
 
 	public int getId() {
@@ -112,6 +104,12 @@ public class Gang extends Account<Integer, List<Member>> {
 		member.setGangId(this.getId());
 		member.setRank(rank);
 		getGroup().add(member);
+	}
+
+	public void addMember(User<? extends OfflinePlayer> user, Member member, Rank rank) {
+		user.setGangId(this.getId());
+		user.addAccount(this);
+		addMember(member, rank);
 	}
 
 	public void addMember(Member member) {
@@ -174,15 +172,25 @@ public class Gang extends Account<Integer, List<Member>> {
 	}
 
 	public String getAllyListString() {
-		return allies.stream().map(Pair::first).map(Gang::getDisplayNameString).toString();
+		return allies.stream().map(Pair::first).map(Gang::getDisplayNameString).toList().toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Gang gang = (Gang) o;
+
+		return getId() == gang.getId();
 	}
 
 	@Override
 	public String toString() {
 		return String.format(
-				"Gang{id=%d,name=%s,description=%s,members=%s,created=%s,balance=%.2f,level=%.2f,bounty=%,.2f,ally=%s}",
-				getId(), name, description, getGroup(), created, economy.getBalance(), level.getExperience(),
-				bounty.getAmount(), getAllyListString());
+				"Gang{id=%d,name=%s,description=%s,members=%s,created=%s,balance=%.2f,level=%.2f,bounty=%,.2f,allies=%s}",
+				getId(), name, description, getGroup(), getDateCreatedString(), economy.getBalance(),
+				level.getExperience(), bounty.getAmount(), getAllyListString());
 	}
 
 	public enum State {

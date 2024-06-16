@@ -2,7 +2,7 @@ package me.luckyraven.data.account.gang;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.tables.GangAllieTable;
+import me.luckyraven.database.tables.GangAlliesTable;
 import me.luckyraven.database.tables.GangTable;
 import me.luckyraven.util.Pair;
 
@@ -20,12 +20,12 @@ public class GangManager {
 		this.gangsAllie = new HashSet<>();
 	}
 
-	public void initialize(GangTable gangTable, GangAllieTable gangAllieTable) {
+	public void initialize(GangTable gangTable, GangAlliesTable gangAlliesTable) {
 		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
 		helper.runQueries(database -> {
 			List<Object[]> gangsData      = database.table(gangTable.getName()).selectAll();
-			List<Object[]> gangAlliesData = database.table(gangAllieTable.getName()).selectAll();
+			List<Object[]> gangAlliesData = database.table(gangAlliesTable.getName()).selectAll();
 
 			// set up the gangs
 			for (Object[] result : gangsData) {

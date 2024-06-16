@@ -22,7 +22,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
 import org.jetbrains.annotations.NotNull;
 
-import java.sql.Types;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,30 +40,11 @@ public class UserManager<T extends OfflinePlayer> {
 		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
 		helper.runQueries(database -> {
-			// <--------------- Bank Info --------------->
-			Object[] bankData = database.table(bankTable.getName())
-										.select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
-												new int[]{Types.CHAR}, new String[]{"*"});
-
-			// check for bank table
-			Bank bank = new Bank(user, "");
-			// create player data into database
-			if (bankData.length == 0) {
-				if (!SettingAddon.isAutoSave()) bankTable.insertTableQuery(database, user);
-			} else {
-				String name    = String.valueOf(bankData[1]);
-				double balance = (double) bankData[2];
-
-				bank.setName(name);
-				bank.getEconomy().setBalance(balance);
-			}
-
-			user.addAccount(bank);
-
 			// <--------------- Data Info --------------->
+			Map<String, Object> userSearch = userTable.searchCriteria(user);
 			Object[] userData = database.table(userTable.getName())
-										.select("uuid = ?", new Object[]{user.getUser().getUniqueId()},
-												new int[]{Types.CHAR}, new String[]{"*"});
+										.select((String) userSearch.get("search"), (Object[]) userSearch.get("info"),
+												(int[]) userSearch.get("type"), new String[]{"*"});
 
 			// create player data into a database
 			if (userData.length == 0) {
@@ -92,9 +72,27 @@ public class UserManager<T extends OfflinePlayer> {
 				user.setGangId(memberManager.getMember(user.getUuid()).getGangId());
 
 				// check for the availability of the bank from the accounts connected to the user
-				boolean hasBank = user.getLinkedAccounts().stream().anyMatch(account -> account instanceof Bank);
+				// <--------------- Bank Info --------------->
+				Map<String, Object> bankSearch = bankTable.searchCriteria(user);
+				Object[] bankData = database.table(bankTable.getName())
+											.select((String) bankSearch.get("search"),
+													(Object[]) bankSearch.get("info"), (int[]) bankSearch.get("type"),
+													new String[]{"*"});
+
+				boolean hasBank = bankData.length != 0;
 
 				user.setHasBank(hasBank);
+
+				if (hasBank) {
+					// create player data into database
+					String name        = String.valueOf(bankData[1]);
+					double bankBalance = (double) bankData[2];
+
+					Bank bank = new Bank(user, name);
+
+					bank.getEconomy().setBalance(bankBalance);
+					user.addAccount(bank);
+				}
 
 				if (user.hasGang()) {
 					GangManager gangManager = gangland.getInitializer().getGangManager();

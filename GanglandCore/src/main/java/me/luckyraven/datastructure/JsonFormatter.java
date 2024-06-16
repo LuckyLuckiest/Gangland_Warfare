@@ -94,7 +94,9 @@ public class JsonFormatter {
 		for (int i = 0; i < length; i++) {
 			Object element = Array.get(value, i);
 
-			if (element == null) { arrayBuilder.append("null"); } else if (element instanceof String) {
+			if (element == null) {
+				arrayBuilder.append("null");
+			} else if (element instanceof String) {
 				arrayBuilder.append(stringDataType(element));
 			} else {
 				arrayBuilder.append(element);

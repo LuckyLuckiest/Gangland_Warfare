@@ -23,6 +23,8 @@ class RankInfoCommand extends SubArgument {
 		this.tree = tree;
 
 		this.rankManager = gangland.getInitializer().getRankManager();
+
+		rankInfo();
 	}
 
 	@Override
