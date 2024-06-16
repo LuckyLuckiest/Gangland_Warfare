@@ -12,11 +12,11 @@ import org.bukkit.command.CommandSender;
 import java.util.Iterator;
 import java.util.Set;
 
-public class AmmunitionListCommand extends SubArgument {
+class AmmunitionListCommand extends SubArgument {
 
 	private final Gangland gangland;
 
-	public AmmunitionListCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected AmmunitionListCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super("list", tree, parent);
 
 		this.gangland = gangland;

@@ -7,11 +7,11 @@ import me.luckyraven.datastructure.Tree;
 import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
 
-public class AmmunitionInfoCommand extends SubArgument {
+class AmmunitionInfoCommand extends SubArgument {
 
 	private final Gangland gangland;
 
-	public AmmunitionInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected AmmunitionInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super("info", tree, parent);
 
 		this.gangland = gangland;

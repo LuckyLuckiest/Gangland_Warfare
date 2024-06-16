@@ -14,12 +14,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
-public class AmmunitionGiveCommand extends SubArgument {
+class AmmunitionGiveCommand extends SubArgument {
 
 	private final Gangland       gangland;
 	private final Tree<Argument> tree;
 
-	public AmmunitionGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected AmmunitionGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super("give", tree, parent);
 
 		this.gangland = gangland;

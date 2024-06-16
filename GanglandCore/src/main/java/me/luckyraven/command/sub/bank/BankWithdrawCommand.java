@@ -4,7 +4,6 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
-import me.luckyraven.data.account.Account;
 import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
@@ -16,7 +15,7 @@ import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class BankWithdrawCommand extends SubArgument {
+class BankWithdrawCommand extends SubArgument {
 
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
@@ -50,8 +49,9 @@ public class BankWithdrawCommand extends SubArgument {
 		return new OptionalArgument(tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
+			Bank         bank   = Bank.getInstance(user);
 
-			if (!user.hasBank()) {
+			if (!user.hasBank() || bank == null) {
 				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
@@ -64,15 +64,6 @@ public class BankWithdrawCommand extends SubArgument {
 				player.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
 				return;
 			}
-
-			Bank bank = null;
-			for (Account<?, ?> account : user.getLinkedAccounts())
-				if (account instanceof Bank) {
-					bank = (Bank) account;
-					break;
-				}
-
-			if (bank == null) throw new NullPointerException("Bank is null");
 
 			double inBank = bank.getEconomy().getBalance() - argAmount;
 

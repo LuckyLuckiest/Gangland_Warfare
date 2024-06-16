@@ -3,7 +3,6 @@ package me.luckyraven.command.sub.bank;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
-import me.luckyraven.data.account.Account;
 import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
@@ -14,7 +13,7 @@ import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class BankBalanceCommand extends SubArgument {
+class BankBalanceCommand extends SubArgument {
 
 	private final UserManager<Player> userManager;
 
@@ -27,20 +26,18 @@ public class BankBalanceCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			Player player = (Player) sender;
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+			Bank         bank   = Bank.getInstance(user);
 
-			User<Player> user = userManager.getUser(player);
-			if (!user.hasBank()) {
+			if (!user.hasBank() || bank == null) {
 				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
 
-			for (Account<?, ?> account : user.getLinkedAccounts())
-				if (account instanceof Bank bank) {
-					player.sendMessage(MessageAddon.BANK_BALANCE_PLAYER.toString()
-																	   .replace("%balance%", SettingAddon.formatDouble(
-																			   bank.getEconomy().getBalance())));
-				}
+			player.sendMessage(MessageAddon.BANK_BALANCE_PLAYER.toString()
+															   .replace("%balance%", SettingAddon.formatDouble(
+																	   bank.getEconomy().getBalance())));
 		};
 	}
 }

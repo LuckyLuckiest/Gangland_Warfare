@@ -4,7 +4,6 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
-import me.luckyraven.data.account.Account;
 import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
@@ -17,12 +16,13 @@ import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class BankDeleteCommand extends SubArgument {
+class BankDeleteCommand extends SubArgument {
 
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
@@ -52,57 +52,56 @@ public class BankDeleteCommand extends SubArgument {
 		return (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
+			Bank         bank   = Bank.getInstance(user);
 
-			if (!user.hasBank()) {
+			if (!user.hasBank() || bank == null) {
 				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
 
 			if (confirmDelete.isConfirmed()) return;
 
-			for (Account<?, ?> account : user.getLinkedAccounts())
-				if (account instanceof Bank bank) {
-					deleteBankName.put(user, new AtomicReference<>(bank.getName()));
-					break;
-				}
-
-			player.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "delete"}));
+			deleteBankName.put(user, new AtomicReference<>(bank.getName()));
 			confirmDelete.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
-				sender.sendMessage(MessageAddon.BANK_REMOVE_CONFIRM.toString()
-																   .replace("%timer%",
-																			TimeUtil.formatTime(time.getPeriod(),
-																								true)));
-			}, null, time -> {
-				confirmDelete.setConfirmed(false);
-				deleteBankName.remove(user);
-			});
-
-			timer.start(false);
+			CountdownTimer timer = getCountdownTimer(sender, player, user);
 			deleteBankTimer.put(sender, timer);
 		};
+	}
+
+	@NotNull
+	private CountdownTimer getCountdownTimer(CommandSender sender, Player player, User<Player> user) {
+		CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+			player.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "delete"}));
+		}, time -> {
+			if (time.getTimeLeft() % 20 != 0) return;
+
+			sender.sendMessage(MessageAddon.BANK_REMOVE_CONFIRM.toString()
+															   .replace("%timer%",
+																		TimeUtil.formatTime(time.getTimeLeft(), true)));
+		}, time -> {
+			confirmDelete.setConfirmed(false);
+			deleteBankName.remove(user);
+		});
+
+		timer.start(false);
+		return timer;
 	}
 
 	private ConfirmArgument bankDeleteConfirm() {
 		return new ConfirmArgument(tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
+			Bank         bank   = Bank.getInstance(user);
 
-			if (!user.hasBank()) {
+			if (!user.hasBank() || bank == null) {
 				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
 
-			for (Account<?, ?> account : user.getLinkedAccounts())
-				if (account instanceof Bank bank) {
-					user.getEconomy().deposit(bank.getEconomy().getBalance() + SettingAddon.getBankCreateFee() / 2);
-					user.setHasBank(false);
-
-					bank.setName("");
-					bank.getEconomy().setBalance(0D);
-					break;
-				}
+			user.getEconomy().deposit(bank.getEconomy().getBalance() + SettingAddon.getBankCreateFee() / 2);
+			user.setHasBank(false);
+			user.removeAccount(bank);
 
 			player.sendMessage(MessageAddon.BANK_REMOVED.toString().replace("%bank%", deleteBankName.get(user).get()));
 

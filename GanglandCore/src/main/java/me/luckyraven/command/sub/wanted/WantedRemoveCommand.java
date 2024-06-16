@@ -14,7 +14,7 @@ import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class WantedRemoveCommand extends SubArgument {
+class WantedRemoveCommand extends SubArgument {
 
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;

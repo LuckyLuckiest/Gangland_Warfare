@@ -5,7 +5,6 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
-import me.luckyraven.data.account.Account;
 import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
@@ -22,7 +21,7 @@ import org.bukkit.entity.Player;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class BankCreateCommand extends SubArgument {
+class BankCreateCommand extends SubArgument {
 
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
@@ -72,15 +71,13 @@ public class BankCreateCommand extends SubArgument {
 				return;
 			}
 
+			Bank bank = new Bank(user, createBankName.get(user).get());
+
+			// create the bank
 			user.getEconomy().withdraw(SettingAddon.getBankCreateFee());
 			user.setHasBank(true);
-
-			for (Account<?, ?> account : user.getLinkedAccounts())
-				if (account instanceof Bank bank) {
-					bank.setName(createBankName.get(user).get());
-					bank.getEconomy().setBalance(SettingAddon.getBankInitialBalance());
-					break;
-				}
+			user.addAccount(bank);
+			bank.getEconomy().setBalance(SettingAddon.getBankInitialBalance());
 
 			player.sendMessage(MessageAddon.BANK_CREATED.toString().replace("%bank%", createBankName.get(user).get()));
 
@@ -115,12 +112,14 @@ public class BankCreateCommand extends SubArgument {
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "create"}));
 			confirmCreate.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
+				if (time.getTimeLeft() % 20 != 0) return;
+
 				sender.sendMessage(MessageAddon.BANK_CREATE_CONFIRM.toString()
 																   .replace("%timer%",
-																			TimeUtil.formatTime(time.getPeriod(),
+																			TimeUtil.formatTime(time.getTimeLeft(),
 																								true)));
-			}, null, time -> {
+			}, time -> {
 				confirmCreate.setConfirmed(false);
 				createBankName.remove(user);
 			});

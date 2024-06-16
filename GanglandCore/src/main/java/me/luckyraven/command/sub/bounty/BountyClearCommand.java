@@ -16,7 +16,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class BountyClearCommand extends SubArgument {
+class BountyClearCommand extends SubArgument {
 
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
