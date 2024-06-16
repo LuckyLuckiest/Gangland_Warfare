@@ -74,7 +74,7 @@ public final class BalanceCommand extends CommandHandler {
 			Initializer      initializer      = getGangland().getInitializer();
 			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
 			DatabaseHelper   helper           = new DatabaseHelper(getGangland(), ganglandDatabase);
-			List<Table<?>>   tables           = ganglandDatabase.getTables().stream().toList();
+			List<Table<?>>   tables           = ganglandDatabase.getTables();
 
 			UserTable userTable = initializer.getInstanceFromTables(UserTable.class, tables);
 

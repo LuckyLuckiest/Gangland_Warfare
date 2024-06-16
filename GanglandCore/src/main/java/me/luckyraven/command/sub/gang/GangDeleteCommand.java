@@ -17,7 +17,7 @@ import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.component.Table;
-import me.luckyraven.database.tables.GangAllieTable;
+import me.luckyraven.database.tables.GangAlliesTable;
 import me.luckyraven.database.tables.GangTable;
 import me.luckyraven.database.tables.MemberTable;
 import me.luckyraven.database.tables.UserTable;
@@ -100,10 +100,14 @@ class GangDeleteCommand extends SubArgument {
 			confirmDelete.setConfirmed(true);
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "delete"}));
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> sender.sendMessage(
-					MessageAddon.GANG_REMOVE_CONFIRM.toString()
-													.replace("%timer%", TimeUtil.formatTime(time.getPeriod(), true))),
-													  null, time -> {
+			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
+				if (time.getTimeLeft() % 20 != 0) return;
+
+				sender.sendMessage(MessageAddon.GANG_REMOVE_CONFIRM.toString()
+																   .replace("%timer%",
+																			TimeUtil.formatTime(time.getPeriod(),
+																								true)));
+			}, time -> {
 				confirmDelete.setConfirmed(false);
 				deleteGangName.remove(user);
 				deleteGangTimer.remove(sender);
@@ -154,12 +158,12 @@ class GangDeleteCommand extends SubArgument {
 			Initializer      initializer      = gangland.getInitializer();
 			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
 			DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
-			List<Table<?>>   tables           = ganglandDatabase.getTables().stream().toList();
+			List<Table<?>>   tables           = ganglandDatabase.getTables();
 
-			UserTable      userTable      = initializer.getInstanceFromTables(UserTable.class, tables);
-			MemberTable    memberTable    = initializer.getInstanceFromTables(MemberTable.class, tables);
-			GangTable      gangTable      = initializer.getInstanceFromTables(GangTable.class, tables);
-			GangAllieTable gangAllieTable = initializer.getInstanceFromTables(GangAllieTable.class, tables);
+			UserTable       userTable       = initializer.getInstanceFromTables(UserTable.class, tables);
+			MemberTable     memberTable     = initializer.getInstanceFromTables(MemberTable.class, tables);
+			GangTable       gangTable       = initializer.getInstanceFromTables(GangTable.class, tables);
+			GangAlliesTable gangAlliesTable = initializer.getInstanceFromTables(GangAlliesTable.class, tables);
 
 			// change the online users gang id
 			for (User<Player> gangUser : gangOnlineMembers) {
@@ -176,14 +180,16 @@ class GangDeleteCommand extends SubArgument {
 				gangUser.getEconomy().deposit(amount);
 
 				// inform the online users
-				gangUser.getUser().sendMessage(MessageAddon.KICKED_FROM_GANG.toString(),
-											   MessageAddon.GANG_REMOVED.toString()
-																		.replace("%gang%",
-																				 deleteGangName.get(user).get()),
-											   MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
-																				.replace("%amount%",
-																						 SettingAddon.formatDouble(
-																								 amount)));
+				gangUser.getUser()
+						.sendMessage(MessageAddon.KICKED_FROM_GANG.toString(), MessageAddon.GANG_REMOVED.toString()
+																										.replace(
+																												"%gang%",
+																												deleteGangName.get(
+																																	  user)
+																															  .get()),
+									 MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
+																	  .replace("%amount%",
+																			   SettingAddon.formatDouble(amount)));
 			}
 
 			helper.runQueries(database -> {
@@ -211,13 +217,13 @@ class GangDeleteCommand extends SubArgument {
 					gang.getEconomy().withdraw(amount);
 
 					// update the balance
-					database.table(userTable.getName()).update("uuid = ?", new Object[]{uuid.toString()},
-															   new int[]{Types.CHAR}, new String[]{"balance"},
-															   new Object[]{balance + amount}, new int[]{Types.DOUBLE});
+					database.table(userTable.getName())
+							.update("uuid = ?", new Object[]{uuid.toString()}, new int[]{Types.CHAR},
+									new String[]{"balance"}, new Object[]{balance + amount}, new int[]{Types.DOUBLE});
 					// update the gang id
-					database.table(memberTable.getName()).update("uuid = ?", new Object[]{uuid.toString()},
-																 new int[]{Types.CHAR}, new String[]{"gang_id"},
-																 new Object[]{-1}, new int[]{Types.INTEGER});
+					database.table(memberTable.getName())
+							.update("uuid = ?", new Object[]{uuid.toString()}, new int[]{Types.CHAR},
+									new String[]{"gang_id"}, new Object[]{-1}, new int[]{Types.INTEGER});
 				}
 			});
 
@@ -239,7 +245,7 @@ class GangDeleteCommand extends SubArgument {
 				// remove allied gangs to itself
 				for (Pair<Gang, Long> alliedGangPair : gang.getAllies()) {
 					int      alliedGangId = alliedGangPair.first().getId();
-					Database config       = database.table(gangAllieTable.getName());
+					Database config       = database.table(gangAlliesTable.getName());
 
 					config.delete("gang_id", String.valueOf(alliedGangId));
 					// remove other gangs who're allied to the removed gang

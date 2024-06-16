@@ -123,7 +123,7 @@ class GangKickCommand extends SubArgument {
 
 				Initializer      initializer      = gangland.getInitializer();
 				GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
-				List<Table<?>>   tables           = ganglandDatabase.getTables().stream().toList();
+				List<Table<?>>   tables           = ganglandDatabase.getTables();
 
 				UserTable userTable = initializer.getInstanceFromTables(UserTable.class, tables);
 				BankTable bankTable = initializer.getInstanceFromTables(BankTable.class, tables);

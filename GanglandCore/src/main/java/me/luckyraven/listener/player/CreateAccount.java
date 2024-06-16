@@ -44,7 +44,7 @@ public final class CreateAccount implements Listener {
 		user.getEconomy().setBalance(SettingAddon.getUserInitialBalance());
 
 		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
-			List<Table<?>> tables    = ganglandDatabase.getTables().stream().toList();
+			List<Table<?>> tables    = ganglandDatabase.getTables();
 			UserTable      userTable = gangland.getInitializer().getInstanceFromTables(UserTable.class, tables);
 			BankTable      bankTable = gangland.getInitializer().getInstanceFromTables(BankTable.class, tables);
 
@@ -66,7 +66,7 @@ public final class CreateAccount implements Listener {
 			Member newMember = new Member(player.getUniqueId());
 
 			Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
-				List<Table<?>> tables      = ganglandDatabase.getTables().stream().toList();
+				List<Table<?>> tables      = ganglandDatabase.getTables();
 				MemberTable    memberTable = gangland.getInitializer().getInstanceFromTables(MemberTable.class, tables);
 
 				memberManager.initializeMemberData(newMember, memberTable);

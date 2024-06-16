@@ -71,7 +71,7 @@ class WaypointDeleteCommand extends SubArgument {
 			Initializer      initializer      = gangland.getInitializer();
 			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
 			DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
-			List<Table<?>>   tables           = ganglandDatabase.getTables().stream().toList();
+			List<Table<?>>   tables           = ganglandDatabase.getTables();
 
 			WaypointTable waypointTable = initializer.getInstanceFromTables(WaypointTable.class, tables);
 
