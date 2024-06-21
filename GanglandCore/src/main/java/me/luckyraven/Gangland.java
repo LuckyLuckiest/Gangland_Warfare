@@ -13,6 +13,7 @@ import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.updater.UpdateChecker;
+import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.timer.RepeatingTimer;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.logging.log4j.Level;
@@ -30,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Getter
 public final class Gangland extends JavaPlugin {
@@ -42,6 +44,8 @@ public final class Gangland extends JavaPlugin {
 	private UpdateChecker           updateChecker;
 	private PlaceholderAPIExpansion placeholderAPIExpansion;
 	private ViaAPI<?>               viaAPI;
+
+	private Gangland() { }
 
 	@Override
 	public void onLoad() {
@@ -195,17 +199,27 @@ public final class Gangland extends JavaPlugin {
 
 		// there needs to be checks every 6 hours
 		// give an option if there was an update
-		int hours = 6;
+		int                 hours           = 6;
+		String              checkPermission = "gangland.update.check";
+		final AtomicBoolean checked         = new AtomicBoolean();
+
 		RepeatingTimer updateTimer = new RepeatingTimer(this, hours * 60 * 60 * 20L, timer -> {
 			String newVersion     = this.updateChecker.getLatestVersion();
 			String currentVersion = getDescription().getVersion();
 
-			if (newVersion != null && !newVersion.equals(currentVersion))
-				Gangland.getLog4jLogger()
-						.info("The current version is {}, please update to the newest version available: {}",
-							  currentVersion, newVersion);
-			else Gangland.getLog4jLogger().info("The plugin is up to date.");
+			if (newVersion != null && !newVersion.equals(currentVersion)) {
+				ChatUtil.sendToOperators(checkPermission, String.format(
+						"The current version is %s, please update to the newest version available: %s", currentVersion,
+						newVersion));
+			} else {
+				if (!checked.get()) {
+					ChatUtil.sendToOperators(checkPermission, "The plugin is up to date.");
+					checked.set(true);
+				}
+			}
 		});
+
+		initializer.getPermissionManager().addPermission(checkPermission);
 
 		// the tasks and timer should be async, so there is no load on the main server thread
 //		updateTimer.start(true);
