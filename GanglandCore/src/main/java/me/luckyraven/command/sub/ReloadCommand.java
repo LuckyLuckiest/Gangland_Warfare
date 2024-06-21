@@ -6,7 +6,6 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
@@ -71,33 +70,24 @@ public final class ReloadCommand extends CommandHandler {
 	}
 
 	private void reloadProcess(String process, Runnable runnable, boolean forceUpdate) {
-		String permission = "gangland.command.reload";
+		String permission = getPermission();
 		String reloading  = String.format("&bReloading&7 the plugin%s%s...", process.isEmpty() ? "" : " ", process);
 
-		sendToOperators(permission, reloading);
+		ChatUtil.sendToOperators(permission, reloading);
+
 		try {
 			if (forceUpdate) getGangland().getPeriodicalUpdates().forceUpdate();
 			runnable.run();
 
 			String reloadComplete = "&aReload has been completed.";
 
-			sendToOperators(permission, reloadComplete);
+			ChatUtil.sendToOperators(permission, reloadComplete);
 		} catch (Throwable throwable) {
 			String reloadIssue = "&cThere was a problem reloading the plugin!";
 
-			sendToOperators(permission, reloadIssue);
+			ChatUtil.sendToOperators(permission, reloadIssue);
 			Gangland.getLog4jLogger().error(throwable.getMessage(), throwable);
 		}
-	}
-
-	private void sendToOperators(String permission, String message) {
-		Bukkit.getServer()
-			  .getOnlinePlayers()
-			  .stream()
-			  .filter(player -> player.hasPermission(permission))
-			  .forEach(player -> player.sendMessage(ChatUtil.commandMessage(message)));
-
-		Bukkit.getServer().getConsoleSender().sendMessage(ChatUtil.commandMessage(message));
 	}
 
 }

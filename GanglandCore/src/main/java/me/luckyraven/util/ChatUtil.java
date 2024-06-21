@@ -46,20 +46,6 @@ public final class ChatUtil {
 		return text.substring(0, 1).toUpperCase() + text.substring(1);
 	}
 
-	public static String createList(List<String> texts) {
-		StringBuilder builder = new StringBuilder("[");
-
-		for (int i = 0; i < texts.size(); i++) {
-			builder.append(texts.get(i));
-
-			if (i < texts.size() - 1) builder.append(", ");
-		}
-
-		builder.append("]");
-
-		return builder.toString();
-	}
-
 	public static String center(@NotNull String text, int level) {
 		Preconditions.checkNotNull(text, "Text can't be null!");
 
@@ -155,6 +141,16 @@ public final class ChatUtil {
 		builder.append("\"&e?");
 
 		return builder.toString();
+	}
+
+	public static void sendToOperators(String permission, String message) {
+		Bukkit.getServer()
+			  .getOnlinePlayers()
+			  .stream()
+			  .filter(player -> permission == null || permission.isEmpty() || player.hasPermission(permission))
+			  .forEach(player -> player.sendMessage(ChatUtil.commandMessage(message)));
+
+		Bukkit.getServer().getConsoleSender().sendMessage(ChatUtil.commandMessage(message));
 	}
 
 }
