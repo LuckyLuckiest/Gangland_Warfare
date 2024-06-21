@@ -21,7 +21,7 @@
 # However, when a new update comes out by default, the config version would have a different version resulting in a new
 # file.
 # The old version file would have a suffix '-old' to indicate they are from the old version.
-# Each and every YAML file from this plugin supports this feature, even if the configuration section of [Config_Version]
+# Every YAML file from this plugin supports this feature, even if the configuration section of [Config_Version]
 # wasn't explicitly mentioned.
 # Adding this section and changing the value would result in the same functionality, otherwise it won't recreate the
 # file.
@@ -33,7 +33,7 @@ Config_Version: '${project.version}'
 
 # Get notified and updated for a new release of the plugin.
 Update_Checker:
-   # It is recommended to be left enabled since it doesn't take any RAM.
+   # It is recommended to be left enabled since it doesn't take any space in the RAM.
    Enable: true
    # Only privileged players will be notified when they join if there is a new update.
    Notify_Privileged_Players: false

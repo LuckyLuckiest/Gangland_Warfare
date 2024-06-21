@@ -118,8 +118,7 @@ Commands:
       Money:
          Player_Add: "&a%money_symbol%%amount% &7has been deposited from your account to your bank account."
          Player_Take: "&a%money_symbol%%amount% &7has been withdrawn from your bank account into your account."
-         Target_Add: "&a%money_symbol%%amount% &7has been deposited from &6%target%'s&7 account to his bank 
-         account."
+         Target_Add: "&a%money_symbol%%amount% &7has been deposited from &6%target%'s&7 account to his bank account."
          Target_Take: "&a%money_symbol%%amount% &7has been withdrawn from &6%target%'s &7bank account."
    Gang:
       Create:

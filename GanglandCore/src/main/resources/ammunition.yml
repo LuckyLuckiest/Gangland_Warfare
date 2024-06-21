@@ -17,7 +17,7 @@
 # +----------------------+
 
 # 9mm is an example of an ammo, which is a string
-# If you try to create a new ammo type that contains "." replace it "," and name it to whatever you want, this issue
+# If you try to create a new ammo type that contains "." replace it "," and name it to whatever you want; this issue
 # can cause errors.
 9mm:
    # [Material] is used to get the material type, you can use any type of material from any minecraft version.
