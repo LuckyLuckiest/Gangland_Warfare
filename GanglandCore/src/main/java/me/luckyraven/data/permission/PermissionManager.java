@@ -25,7 +25,7 @@ public class PermissionManager {
 	}
 
 	public void addPermission(String permission) {
-		if (permission.isEmpty()) return;
+		if (permission == null || permission.isEmpty()) return;
 
 		permissionHandler.addPermission(permission);
 		permissions.add(permissionHandler.permissionRefactor(permission));
