@@ -22,7 +22,6 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.JsonFormatter;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.ray.RayTrace;
-import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.color.Color;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
@@ -258,7 +257,7 @@ public final class DebugCommand extends CommandHandler {
 									  .toList());
 
 					sender.sendMessage(user.getUser().getName() + ":");
-					sender.sendMessage(ChatUtil.createList(values));
+					sender.sendMessage(String.valueOf(values));
 				}
 			}
 		});
