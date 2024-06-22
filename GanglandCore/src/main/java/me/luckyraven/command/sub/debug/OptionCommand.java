@@ -19,8 +19,6 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.Objects;
-
 public final class OptionCommand extends CommandHandler {
 
 	public OptionCommand(Gangland gangland) {
@@ -94,10 +92,9 @@ public final class OptionCommand extends CommandHandler {
 			Member targetMember = null;
 			for (Member member : userGang.getGroup()) {
 				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
+				String        offlineName   = offlinePlayer.getName();
 
-				if (offlinePlayer.getName() == null) continue;
-
-				if (!Objects.requireNonNull(offlinePlayer.getName()).equalsIgnoreCase(targetStr)) continue;
+				if (offlineName == null || offlineName.isEmpty() || !offlineName.equalsIgnoreCase(targetStr)) continue;
 
 				targetMember = member;
 				break;
@@ -118,13 +115,19 @@ public final class OptionCommand extends CommandHandler {
 			}
 
 			Rank nextRank = rankManager.get(rankStr);
+
+			if (nextRank == null) return;
+
 			targetMember.setRank(nextRank);
 
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
-			if (offlinePlayer.isOnline()) Objects.requireNonNull(offlinePlayer.getPlayer())
-												 .sendMessage(MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString()
-																									  .replace("%rank%",
-																											   nextRank.getName()));
+			Player        onlinePlayer  = offlinePlayer.getPlayer();
+
+			if (onlinePlayer != null && offlinePlayer.isOnline()) {
+				onlinePlayer.sendMessage(
+						MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString().replace("%rank%", nextRank.getName()));
+			}
+
 			player.sendMessage(MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString()
 																	   .replace("%player%", targetStr)
 																	   .replace("%rank%", nextRank.getName()));

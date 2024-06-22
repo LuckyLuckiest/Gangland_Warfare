@@ -85,10 +85,9 @@ class GangKickCommand extends SubArgument {
 			Member targetMember = null;
 			for (Member member : gang.getGroup()) {
 				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
+				String        offlineName   = offlinePlayer.getName();
 
-				if (offlinePlayer.getName() == null) continue;
-
-				if (!Objects.requireNonNull(offlinePlayer.getName()).equalsIgnoreCase(targetStr)) continue;
+				if (offlineName == null || offlineName.isEmpty() || !offlineName.equalsIgnoreCase(targetStr)) continue;
 
 				targetMember = member;
 				break;
@@ -117,6 +116,7 @@ class GangKickCommand extends SubArgument {
 
 			User<? extends OfflinePlayer> targetUser;
 			OfflinePlayer                 offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
+
 			if (offlinePlayer.isOnline()) targetUser = userManager.getUser(offlinePlayer.getPlayer());
 			else {
 				targetUser = new User<>(offlinePlayer);

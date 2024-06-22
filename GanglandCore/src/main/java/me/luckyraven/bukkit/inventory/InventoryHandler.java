@@ -26,10 +26,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class InventoryHandler implements Listener {
 
@@ -97,7 +94,7 @@ public class InventoryHandler implements Listener {
 	}
 
 	public static Map<NamespacedKey, InventoryHandler> getSpecialInventories() {
-		return new HashMap<>(SPECIAL_INVENTORIES);
+		return Collections.unmodifiableMap(SPECIAL_INVENTORIES);
 	}
 
 	public static void removeAllSpecialInventories() {
@@ -134,7 +131,7 @@ public class InventoryHandler implements Listener {
 			Material    type        = item.getType();
 			if (itemBuilder.hasNBTTag(dataTag)) {
 				// special treatment for colored data
-				String value = gangland.usePlaceholder(player, itemBuilder.getTagData(dataTag).toString());
+				String value = gangland.usePlaceholder(player, itemBuilder.getTagData(dataTag));
 
 				MaterialType material = MaterialType.WOOL;
 				for (MaterialType materialType : MaterialType.values()) {

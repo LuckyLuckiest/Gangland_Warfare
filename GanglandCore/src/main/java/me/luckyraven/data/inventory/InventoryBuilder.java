@@ -41,7 +41,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 				Material type     = item.getType();
 				if (item.hasNBTTag(colorTag)) {
 					// special treatment for colored data
-					String value = gangland.usePlaceholder(player, item.getTagData(colorTag).toString());
+					String value = gangland.usePlaceholder(player, item.getTagData(colorTag));
 
 					MaterialType material = MaterialType.WOOL;
 					for (MaterialType materialType : MaterialType.values()) {
@@ -57,7 +57,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 				// handles head data
 				String headTag = "head";
 				if (item.hasNBTTag(headTag)) {
-					String value = gangland.usePlaceholder(player, item.getTagData(headTag).toString());
+					String value = gangland.usePlaceholder(player, item.getTagData(headTag));
 					item.modifyNBT(nbt -> nbt.setString("SkullOwner", value));
 				}
 

@@ -7,6 +7,7 @@ import me.luckyraven.data.inventory.part.Slot;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -32,7 +33,7 @@ public class InventoryData {
 	}
 
 	public List<Slot> getSlots() {
-		return new ArrayList<>(slots);
+		return Collections.unmodifiableList(slots);
 	}
 
 }

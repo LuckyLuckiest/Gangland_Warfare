@@ -15,10 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MultiInventory extends InventoryHandler {
 
@@ -202,7 +199,7 @@ public class MultiInventory extends InventoryHandler {
 	}
 
 	public List<InventoryHandler> getLinkedInventories() {
-		return new LinkedList<>(inventories);
+		return Collections.unmodifiableList(inventories);
 	}
 
 	private void addItems(InventoryHandler inv, List<ItemStack> items, int startIndex, int endIndex,

@@ -75,7 +75,7 @@ class WaypointDeleteCommand extends SubArgument {
 
 			WaypointTable waypointTable = initializer.getInstanceFromTables(WaypointTable.class, tables);
 
-			helper.runQueries(database -> {
+			helper.runQueriesAsync(database -> {
 				Map<String, Object> search = waypointTable.searchCriteria(waypoint);
 				Database            config = database.table(waypointTable.getName());
 				Object[] info = config.select((String) search.get("search"), (Object[]) search.get("info"),
@@ -91,7 +91,7 @@ class WaypointDeleteCommand extends SubArgument {
 			});
 
 			// inform the player
-			sender.sendMessage();
+			sender.sendMessage(ChatUtil.commandMessage("Removed the waypoint!"));
 
 			gangland.getInitializer()
 					.getPermissionManager()

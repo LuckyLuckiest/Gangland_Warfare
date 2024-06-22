@@ -26,7 +26,18 @@ public class WeaponManager {
 		helper.runQueries(database -> {
 			List<Object[]> data = database.table(table.getName()).selectAll();
 
-			// TODO Complete the rest of the code
+			for (Object[] result : data) {
+				UUID   uuid = UUID.fromString(String.valueOf(result[0]));
+				String type = String.valueOf(result[1]);
+
+				Weapon weaponAddon = this.weaponAddon.getWeapon(type);
+
+				if (weaponAddon == null) continue;
+
+				Weapon weapon = new Weapon(uuid, weaponAddon);
+
+				this.weapons.put(uuid, weapon);
+			}
 		});
 	}
 
@@ -54,6 +65,7 @@ public class WeaponManager {
 		// type should not be null
 		if (type == null || type.isEmpty()) return null;
 
+		// the type is basically the name of the weapon in the files
 		Weapon weaponV2 = weaponAddon.getWeapon(type);
 
 		if (weaponV2 == null) return null;

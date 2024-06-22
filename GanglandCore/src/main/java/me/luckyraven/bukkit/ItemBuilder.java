@@ -175,8 +175,8 @@ public class ItemBuilder {
 		return !value.isEmpty();
 	}
 
-	public Object getTagData(String tag) {
-		return NBT.get(itemStack, (Function<ReadableItemNBT, Object>) nbt -> nbt.getString(tag));
+	public String getTagData(String tag) {
+		return NBT.get(itemStack, (Function<ReadableItemNBT, String>) nbt -> nbt.getString(tag));
 	}
 
 	public Material getType() {

@@ -1,12 +1,16 @@
 package me.luckyraven.command.sub.bank;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.Initializer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.database.DatabaseHelper;
+import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.tables.BankTable;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
@@ -102,6 +106,17 @@ class BankDeleteCommand extends SubArgument {
 			user.getEconomy().deposit(bank.getEconomy().getBalance() + SettingAddon.getBankCreateFee() / 2);
 			user.setHasBank(false);
 			user.removeAccount(bank);
+
+			// remove the bank from the database
+			Initializer      initializer      = gangland.getInitializer();
+			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
+			DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
+
+			BankTable bankTable = initializer.getInstanceFromTables(BankTable.class, ganglandDatabase.getTables());
+
+			helper.runQueriesAsync(database -> {
+				database.table(bankTable.getName()).delete("uuid = ?", user.getUser().getUniqueId().toString());
+			});
 
 			player.sendMessage(MessageAddon.BANK_REMOVED.toString().replace("%bank%", deleteBankName.get(user).get()));
 

@@ -161,11 +161,19 @@ public class Weapon {
 
 	@Nullable
 	public static String getHeldWeaponName(ItemStack item) {
-		return isWeapon(item) ? (String) new ItemBuilder(item).getTagData("weapon") : null;
+		return isWeapon(item) ? new ItemBuilder(item).getTagData("weapon") : null;
 	}
 
 	public static boolean isWeapon(ItemStack item) {
 		return new ItemBuilder(item).hasNBTTag("weapon");
+	}
+
+	public static String getTagProperName(WeaponTag tag) {
+		return tag.name().toLowerCase().replace("_", "-");
+	}
+
+	private static WeaponTag[] getAllTags() {
+		return WeaponTag.values();
 	}
 
 	/**
@@ -191,15 +199,41 @@ public class Weapon {
 		this.changingDisplayName = updateDisplayName(displayName);
 		itemBuilder.setDisplayName(changingDisplayName);
 
+		boolean updatedSelectiveFire = false, updatedCurrentAmmo = false;
+
+		// add non-available tags
+		for (WeaponTag tag : getAllTags()) {
+			if (containsTag(itemBuilder, tag)) continue;
+
+			switch (tag) {
+				case UUID -> tags.put(tag, uuid.toString());
+				case WEAPON -> tags.put(tag, name);
+				case SELECTIVE_FIRE -> {
+					tags.put(tag, currentSelectiveFire);
+					updatedSelectiveFire = true;
+				}
+				case AMMO_LEFT -> {
+					tags.put(tag, currentMagCapacity);
+					updatedCurrentAmmo = true;
+				}
+			}
+
+			itemBuilder.addTag(getTagProperName(tag), tags.get(tag));
+		}
+
 		// selective fire
-		updateTag(itemBuilder, WeaponTag.SELECTIVE_FIRE, currentSelectiveFire);
+		if (!updatedSelectiveFire) updateTag(itemBuilder, WeaponTag.SELECTIVE_FIRE, currentSelectiveFire);
 
 		// mag capacity
-		updateTag(itemBuilder, WeaponTag.AMMO_LEFT, currentMagCapacity);
+		if (!updatedCurrentAmmo) updateTag(itemBuilder, WeaponTag.AMMO_LEFT, currentMagCapacity);
 	}
 
 	public void updateWeapon(Player player, ItemBuilder itemBuilder, int slot) {
 		player.getInventory().setItem(slot, itemBuilder.build());
+	}
+
+	public boolean containsTag(ItemBuilder itemBuilder, WeaponTag tag) {
+		return itemBuilder.hasNBTTag(getTagProperName(tag));
 	}
 
 	public void updateTag(ItemBuilder itemBuilder, WeaponTag tag, Object value) {
@@ -243,12 +277,8 @@ public class Weapon {
 		return displayName + " &8«&6" + currentMagCapacity + "&7/&6" + maxMagCapacity + "&8»";
 	}
 
-	private String getTagProperName(WeaponTag tag) {
-		return tag.name().toLowerCase().replace("_", "-");
-	}
-
 	private void initializeTags(ItemBuilder itemBuilder) {
-		tags.put(WeaponTag.UUID, uuid);
+		tags.put(WeaponTag.UUID, uuid.toString());
 		tags.put(WeaponTag.WEAPON, name);
 		tags.put(WeaponTag.SELECTIVE_FIRE, currentSelectiveFire);
 		tags.put(WeaponTag.AMMO_LEFT, currentMagCapacity);

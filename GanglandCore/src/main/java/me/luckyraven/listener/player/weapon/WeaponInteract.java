@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.AtomicDouble;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.feature.weapon.Weapon;
+import me.luckyraven.feature.weapon.WeaponTag;
 import me.luckyraven.feature.weapon.projectile.type.Bullet;
 import me.luckyraven.file.configuration.SoundConfiguration;
 import me.luckyraven.util.timer.RepeatingTimer;
@@ -16,9 +17,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -33,20 +36,30 @@ public class WeaponInteract implements Listener {
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		// check if it was a weapon
-		if (event.getItem() == null) return;
-		if (!Weapon.isWeapon(event.getItem())) return;
+		ItemStack item = event.getItem();
 
-		String weaponName = Weapon.getHeldWeaponName(event.getItem());
+		if (item == null) return;
+		if (!Weapon.isWeapon(item)) return;
+
+		String weaponName = Weapon.getHeldWeaponName(item);
 		if (weaponName == null) return;
 
 		// get the weapon information
-		Player player = event.getPlayer();
+		Player      player   = event.getPlayer();
+		ItemBuilder tempItem = new ItemBuilder(item);
+		String      value    = String.valueOf(tempItem.getTagData(Weapon.getTagProperName(WeaponTag.UUID)));
+		UUID        uuid     = null;
+
+		if (!(value == null || value.equals("null") || value.isEmpty())) {
+			uuid = UUID.fromString(value);
+		}
+
 		// Need to change how the weapons are got, basically there can be a repeated pattern of similar weapons sharing
-		// similar traits but are not the same fundamentally.
-		// A solution for this is to have all the weapons loaded and stored in a map
-		// The weapons acquired by the user are created at that instance as a new weapon, which takes all the traits
+		// similar traits but are different fundamentally.
+		// A solution for this is to have all the weapons loaded and stored in a map.
+		// The weapons acquired by the user are created in that instance as a new weapon, which takes all the traits
 		// stored.
-		Weapon weapon = gangland.getInitializer().getWeaponAddon().getWeapon(weaponName);
+		Weapon weapon = gangland.getInitializer().getWeaponManager().getWeapon(uuid, weaponName);
 
 		if (weapon == null) return;
 

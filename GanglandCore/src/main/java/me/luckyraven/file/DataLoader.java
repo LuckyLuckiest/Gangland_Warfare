@@ -44,8 +44,8 @@ public abstract class DataLoader<T> {
 			isLoaded = true;
 		} catch (Throwable throwable) {
 			String message = String.format(
-					"The plugin data has ran into a problem, please check the logs and report them to the developer" +
-					".\nVersion: %s", plugin.getDescription().getVersion());
+					"The plugin data has ran into a problem, please check the logs and report them to the developer." +
+					"\nVersion: %s", plugin.getDescription().getVersion());
 
 			plugin.getLogger().log(Level.SEVERE, message, throwable);
 

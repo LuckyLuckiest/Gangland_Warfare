@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class FileManager {
@@ -82,7 +83,7 @@ public class FileManager {
 	}
 
 	public List<FileHandler> getFiles() {
-		return new ArrayList<>(files);
+		return Collections.unmodifiableList(files);
 	}
 
 }

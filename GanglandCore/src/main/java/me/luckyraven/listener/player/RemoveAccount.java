@@ -10,7 +10,6 @@ import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.BankTable;
 import me.luckyraven.database.tables.UserTable;
 import me.luckyraven.util.timer.RepeatingTimer;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -40,20 +39,18 @@ public final class RemoveAccount implements Listener {
 		// Remove the user from a user manager group
 		userManager.remove(user);
 
-		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
-			Initializer      initializer      = gangland.getInitializer();
-			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
-			DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
-			List<Table<?>>   tables           = ganglandDatabase.getTables();
+		Initializer      initializer      = gangland.getInitializer();
+		GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
+		DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
+		List<Table<?>>   tables           = ganglandDatabase.getTables();
 
-			UserTable userTable = initializer.getInstanceFromTables(UserTable.class, tables);
-			BankTable bankTable = initializer.getInstanceFromTables(BankTable.class, tables);
+		UserTable userTable = initializer.getInstanceFromTables(UserTable.class, tables);
+		BankTable bankTable = initializer.getInstanceFromTables(BankTable.class, tables);
 
-			// must save user info
-			helper.runQueries(database -> {
-				userTable.updateTableQuery(database, user);
-				bankTable.updateTableQuery(database, user);
-			});
+		// must save user info
+		helper.runQueriesAsync(database -> {
+			userTable.updateTableQuery(database, user);
+			bankTable.updateTableQuery(database, user);
 		});
 
 		if (user.getScoreboard() == null) return;

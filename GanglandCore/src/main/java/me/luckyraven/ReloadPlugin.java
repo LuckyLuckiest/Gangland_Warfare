@@ -82,8 +82,8 @@ public final class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 *
-	 * @implNote Very important to run this method after {@link RankTable}, {@link RankParentTable},
-	 *        {@link PermissionTable}, and {@link RankPermissionTable} initialization.
+	 * @implNote Very important to run this method after {@link RankManager}, {@link RankTable},
+	 *        {@link RankParentTable}, {@link PermissionTable}, and {@link RankPermissionTable} initialization.
 	 */
 	public void rankInitialize(boolean resetCache) {
 		RankManager rankManager = initializer.getRankManager();
@@ -104,8 +104,8 @@ public final class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 *
-	 * @implNote Very important to run this method after {@link GangTable}, and {@link GangAlliesTable}
-	 * 		initialization.
+	 * @implNote Very important to run this method after {@link GangManager}, {@link GangTable}, and
+	 *        {@link GangAlliesTable} initialization.
 	 */
 	public void gangInitialize(boolean resetCache) {
 		GangManager gangManager = initializer.getGangManager();
@@ -124,8 +124,8 @@ public final class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 *
-	 * @implNote Very important to run this method after {@link RankManager}, {@link GangManager}, and
-	 *        {@link MemberTable} initialization.
+	 * @implNote Very important to run this method after {@link RankManager}, {@link GangManager},
+	 *        {@link MemberManager}, and {@link MemberTable} initialization.
 	 */
 	public void memberInitialize(boolean resetCache) {
 		RankManager   rankManager   = initializer.getRankManager();
@@ -146,7 +146,8 @@ public final class ReloadPlugin {
 	 * @param resetCache if old data needs to be cleared
 	 *
 	 * @implNote Very important to run this method after {@link ListenerManager}, {@link CreateAccount},
-	 *        {@link UserTable}, {@link BankTable}, and {@link MemberTable} initialization.
+	 *        {@link UserManager}, {@link MemberManager} {@link UserTable}, {@link BankTable}, and {@link MemberTable}
+	 * 		initialization.
 	 */
 	public void userInitialize(boolean resetCache) {
 		UserManager<Player> userManager   = initializer.getUserManager();
@@ -208,7 +209,8 @@ public final class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 *
-	 * @implNote Very important to run this method after {@link WaypointTable} initialization.
+	 * @implNote Very important to run this method after {@link WaypointManager}, and {@link WaypointTable}
+	 * 		initialization.
 	 */
 	public void waypointInitialize(boolean resetCache) {
 		WaypointManager waypointManager = initializer.getWaypointManager();
@@ -226,7 +228,8 @@ public final class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 *
-	 * @implNote Very important to run this method after {@link WeaponTable} initialization.
+	 * @implNote Very important to run this method after {@link WeaponManager}, and {@link WeaponTable}
+	 * 		initialization.
 	 */
 	public void weaponInitialize(boolean resetCache) {
 		WeaponManager weaponManager = initializer.getWeaponManager();

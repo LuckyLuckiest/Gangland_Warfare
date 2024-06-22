@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -413,7 +414,7 @@ public class SQLite implements Database {
 
 	@Override
 	public List<String> getTables() {
-		return new ArrayList<>(tableNames);
+		return Collections.unmodifiableList(tableNames);
 	}
 
 	@Override

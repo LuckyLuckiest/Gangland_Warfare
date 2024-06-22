@@ -173,11 +173,11 @@ public class User<T extends OfflinePlayer> {
 	 * @return a copy of the inventories registered to the user.
 	 */
 	public List<InventoryHandler> getInventories() {
-		return new ArrayList<>(inventories);
+		return inventories.stream().toList();
 	}
 
 	public List<InventoryHandler> getSpecialInventories() {
-		return new ArrayList<>(specialInventories);
+		return specialInventories.stream().toList();
 	}
 
 	public void clearSpecialInventories() {

@@ -93,18 +93,18 @@ public final class BalanceCommand extends CommandHandler {
 
 				for (UUID uuid : uuids.keySet()) {
 					OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+					String        offlineName   = offlinePlayer.getName();
 
-					if (offlinePlayer.getName() == null) continue;
+					if (offlineName == null || offlineName.isEmpty() || !offlineName.equalsIgnoreCase(target)) continue;
 
-					if (offlinePlayer.getName().equalsIgnoreCase(target)) {
-						found = true;
-						sender.sendMessage(MessageAddon.BALANCE_TARGET.toString()
-																	  .replace("%target%", target)
-																	  .replace("%balance%", SettingAddon.formatDouble(
-																			  uuids.get(uuid))));
+					found = true;
 
-						break;
-					}
+					sender.sendMessage(MessageAddon.BALANCE_TARGET.toString()
+																  .replace("%target%", target)
+																  .replace("%balance%",
+																		   SettingAddon.formatDouble(uuids.get(uuid))));
+
+					break;
 				}
 
 				if (!found) sender.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", target));

@@ -22,7 +22,7 @@ public class WeaponTable extends Table<Weapon> {
 
 	@Override
 	public Object[] getData(Weapon data) {
-		return new Object[]{data.getUuid().toString(), data.getCategory().name()};
+		return new Object[]{data.getUuid().toString(), data.getName()};
 	}
 
 	@Override

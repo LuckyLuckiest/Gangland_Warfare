@@ -371,8 +371,7 @@ public interface Database {
 					statement.setTimestamp(index, timestamp);
 				}
 				case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR,
-					 Types.LONGNVARCHAR -> statement.setString(
-						index, String.valueOf(value));
+					 Types.LONGNVARCHAR -> statement.setString(index, String.valueOf(value));
 				default -> statement.setObject(index, value);
 			}
 		}
@@ -471,7 +470,7 @@ public interface Database {
 	 * @return a list of data
 	 */
 	default List<String> getList(String list) {
-		return new ArrayList<>(Arrays.stream(list.split(",")).toList());
+		return Arrays.stream(list.split(",")).toList();
 	}
 
 }

@@ -6,6 +6,7 @@ import me.luckyraven.util.UnhandledError;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -34,7 +35,7 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 	}
 
 	public List<FileHandler> getFiles() {
-		return new ArrayList<>(folderFiles);
+		return Collections.unmodifiableList(folderFiles);
 	}
 
 	@Override

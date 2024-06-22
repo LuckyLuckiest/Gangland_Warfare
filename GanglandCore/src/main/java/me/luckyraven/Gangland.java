@@ -45,7 +45,7 @@ public final class Gangland extends JavaPlugin {
 	private PlaceholderAPIExpansion placeholderAPIExpansion;
 	private ViaAPI<?>               viaAPI;
 
-	private Gangland() { }
+	public Gangland() { }
 
 	@Override
 	public void onLoad() {

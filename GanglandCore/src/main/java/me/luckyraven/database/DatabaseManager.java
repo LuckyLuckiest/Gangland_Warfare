@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -65,7 +66,7 @@ public class DatabaseManager {
 	}
 
 	public List<DatabaseHandler> getDatabases() {
-		return new ArrayList<>(databases);
+		return Collections.unmodifiableList(databases);
 	}
 
 	private LinkedHashMap<String, List<Object[]>> databaseInformation(DatabaseHandler handler) throws SQLException {

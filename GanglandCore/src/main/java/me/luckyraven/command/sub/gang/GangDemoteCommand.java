@@ -80,8 +80,9 @@ class GangDemoteCommand extends SubArgument {
 			Member targetMember = null;
 			for (Member member : gang.getGroup()) {
 				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
+				String        offlineName   = offlinePlayer.getName();
 
-				if (!Objects.requireNonNull(offlinePlayer.getName()).equalsIgnoreCase(targetStr)) continue;
+				if (offlineName == null || offlineName.isEmpty() || !offlineName.equalsIgnoreCase(targetStr)) continue;
 
 				targetMember = member;
 				break;
@@ -114,10 +115,11 @@ class GangDemoteCommand extends SubArgument {
 				return;
 			}
 
-			Rank previousRank = previousRankNode.getData();
-
+			Rank          previousRank  = previousRankNode.getData();
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
-			if (offlinePlayer.getPlayer() != null && offlinePlayer.isOnline()) {
+			String        offlineName   = offlinePlayer.getName();
+
+			if (offlineName != null && !offlineName.isEmpty() && offlinePlayer.isOnline()) {
 				Player onlinePlayer = offlinePlayer.getPlayer();
 				String message = MessageAddon.GANG_DEMOTE_TARGET_SUCCESS.toString()
 																		.replace("%rank%", previousRank.getName());
@@ -129,6 +131,7 @@ class GangDemoteCommand extends SubArgument {
 
 				Objects.requireNonNull(onlinePlayer).sendMessage(message);
 			}
+
 			player.sendMessage(MessageAddon.GANG_DEMOTE_PLAYER_SUCCESS.toString()
 																	  .replace("%player%", targetStr)
 																	  .replace("%rank%", previousRank.getName()));

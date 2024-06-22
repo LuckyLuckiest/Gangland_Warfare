@@ -192,7 +192,7 @@ class GangDeleteCommand extends SubArgument {
 																			   SettingAddon.formatDouble(amount)));
 			}
 
-			helper.runQueries(database -> {
+			helper.runQueriesAsync(database -> {
 				Database       userConfig = database.table(userTable.getName());
 				List<Object[]> allUsers   = userConfig.selectAll();
 				List<Object[]> gangUsers = allUsers.parallelStream()
@@ -236,7 +236,7 @@ class GangDeleteCommand extends SubArgument {
 																		 SettingAddon.formatDouble(amount)));
 
 			// remove the gang information
-			helper.runQueries(database -> {
+			helper.runQueriesAsync(database -> {
 				int removedGang = gang.getId();
 
 				// remove the gang itself

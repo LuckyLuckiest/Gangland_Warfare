@@ -69,7 +69,7 @@ class RankDeleteCommand extends SubArgument {
 				RankPermissionTable rankPermissionTable = initializer.getInstanceFromTables(RankPermissionTable.class,
 																							tables);
 
-				helper.runQueries(database -> {
+				helper.runQueriesAsync(database -> {
 					rankManager.remove(rank);
 
 					database.table(rankTable.getName()).delete("id", String.valueOf(rank.getUsedId()));
