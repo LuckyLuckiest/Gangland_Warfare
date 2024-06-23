@@ -4,7 +4,6 @@ import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.particles.XParticle;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
@@ -20,6 +19,7 @@ import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.JsonFormatter;
+import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.ray.RayTrace;
 import me.luckyraven.util.color.Color;
@@ -33,7 +33,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.permissions.Permission;
 
@@ -287,22 +286,8 @@ public final class DebugCommand extends CommandHandler {
 		checkPerm.addSubArgument(checkOptional);
 
 		Argument giveGun = new Argument("weapon", getArgumentTree(), (argument, sender, args) -> {
-			if (!(sender instanceof Player)) {
-				sender.sendMessage("Only for players!");
-				return;
-			}
-
-			Inventory   playerInv = ((Player) sender).getInventory();
-			ItemBuilder weapon    = new ItemBuilder(Material.STICK);
-
-			weapon.setDisplayName("Test Weapon");
-			weapon.addTag("uniqueItem", "weapon");
-
-			for (int i = 0; i < playerInv.getSize(); i++) {
-				if (playerInv.getItem(i) != null) continue;
-
-				playerInv.setItem(i, weapon.build());
-				break;
+			for (Weapon weapon : getGangland().getInitializer().getWeaponManager().getWeapons().values()) {
+				sender.sendMessage(weapon.getUuid().toString());
 			}
 		});
 
