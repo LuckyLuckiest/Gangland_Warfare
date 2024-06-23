@@ -1,12 +1,17 @@
 package me.luckyraven.feature.weapon;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.WeaponTable;
 import me.luckyraven.file.configuration.weapon.WeaponAddon;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class WeaponManager {
 
@@ -17,7 +22,7 @@ public class WeaponManager {
 	public WeaponManager(Gangland gangland) {
 		this.gangland    = gangland;
 		this.weaponAddon = gangland.getInitializer().getWeaponAddon();
-		this.weapons     = new HashMap<>();
+		this.weapons     = new ConcurrentHashMap<>();
 	}
 
 	public void initialize(WeaponTable table) {
@@ -53,24 +58,34 @@ public class WeaponManager {
 	 * 		UUID and null type. <br/> 2) Invalid UUID and invalid type.
 	 */
 	@Nullable
-	public Weapon getWeapon(UUID uuid, @Nullable String type) {
-		Weapon weaponV1 = null;
+	public synchronized Weapon getWeapon(UUID uuid, @Nullable String type) {
+		if (uuid != null && weapons.containsKey(uuid)) {
+			Weapon availableWeapon = weapons.get(uuid);
 
-		if (uuid != null) weaponV1 = weapons.get(uuid);
-
-		if (weaponV1 != null)
+			setWeaponData(availableWeapon);
 			// when the weapon is already saved
-			return weaponV1;
+			return availableWeapon;
+		}
 
 		// type shouldn't be null
 		if (type == null || type.isEmpty()) return null;
 
 		// the type is basically the name of the weapon in the files
-		Weapon weaponV2 = weaponAddon.getWeapon(type);
+		Weapon weaponAddon = this.weaponAddon.getWeapon(type);
 
-		if (weaponV2 == null) return null;
+		if (weaponAddon == null) return null;
 
-		// generate a new uuid
+		// check if the weapon already has an uuid but not registered
+		if (uuid != null) {
+			Weapon uuidWeapon = new Weapon(uuid, weaponAddon);
+
+			setWeaponData(uuidWeapon);
+			weapons.put(uuid, uuidWeapon);
+
+			return uuidWeapon;
+		}
+
+		// generate a new uuid if there was non found
 		boolean found = false;
 		UUID    generatedUuid;
 
@@ -83,11 +98,12 @@ public class WeaponManager {
 		} while (!found);
 
 		// when the weapon is registered in the system but not tagged with an uuid
-		Weapon weaponV3 = new Weapon(generatedUuid, weaponV2);
+		Weapon finalWeapon = new Weapon(generatedUuid, weaponAddon);
 
-		weapons.put(generatedUuid, weaponV3);
+		setWeaponData(finalWeapon);
+		weapons.put(generatedUuid, finalWeapon);
 
-		return weaponV3;
+		return finalWeapon;
 	}
 
 	public void clear() {
@@ -96,6 +112,19 @@ public class WeaponManager {
 
 	public Map<UUID, Weapon> getWeapons() {
 		return Collections.unmodifiableMap(weapons);
+	}
+
+	private void setWeaponData(Weapon weapon) {
+		// need to collect data and save their values
+		ItemBuilder itemBuilder = new ItemBuilder(weapon.getMaterial());
+		// get the ammo left
+		int amountLeft = itemBuilder.getIntegerTagData(Weapon.getTagProperName(WeaponTag.AMMO_LEFT));
+		// get the selective fire
+		SelectiveFire selectiveFire = SelectiveFire.getType(
+				itemBuilder.getStringTagData(Weapon.getTagProperName(WeaponTag.SELECTIVE_FIRE)));
+
+		weapon.setCurrentMagCapacity(amountLeft);
+		weapon.setCurrentSelectiveFire(selectiveFire);
 	}
 
 }
