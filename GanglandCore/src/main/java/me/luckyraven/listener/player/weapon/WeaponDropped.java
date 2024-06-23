@@ -2,6 +2,7 @@ package me.luckyraven.listener.player.weapon;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.feature.weapon.Weapon;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -22,9 +23,18 @@ public class WeaponDropped implements Listener {
 		// check if it was a weapon only
 		if (!Weapon.isWeapon(item)) return;
 
-		event.setCancelled(true);
+		Player player = event.getPlayer();
 
-		// reload the weapon
+		// drop the weapon normally
+		if (!player.isSneaking()) return;
+
+		// check if the player doesn't have the item
+		boolean found = false;
+
+		if (!found) return;
+
+		// drop the weapon if the player has ammunition item for it
+		event.setCancelled(true);
 	}
 
 }
