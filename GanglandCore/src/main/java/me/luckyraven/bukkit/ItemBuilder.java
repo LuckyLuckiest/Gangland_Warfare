@@ -168,7 +168,7 @@ public class ItemBuilder {
 	}
 
 	public boolean hasNBTTag(String tag) {
-		String value = NBT.get(itemStack, (Function<ReadableItemNBT, String>) nbt -> nbt.getString(tag));
+		String value = getTagData(tag);
 
 		if (value == null) return false;
 
