@@ -75,6 +75,7 @@ class BountySetCommand extends SubArgument {
 			User<Player> user        = userManager.getUser(player);
 			Bounty       userBounty  = user.getBounty();
 			BountyEvent  bountyEvent = new BountyEvent(userBounty);
+
 			bountyEvent.setUserBounty(user);
 
 			if (userBounty.size() == 0) player.sendMessage(MessageAddon.BOUNTY_SET.toString());
@@ -104,7 +105,6 @@ class BountySetCommand extends SubArgument {
 
 			if (!bountyEvent.isCancelled()) {
 				userBounty.addBounty(sender, value);
-
 			}
 		});
 
