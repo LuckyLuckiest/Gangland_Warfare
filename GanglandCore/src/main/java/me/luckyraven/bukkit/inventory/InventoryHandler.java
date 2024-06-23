@@ -131,7 +131,7 @@ public class InventoryHandler implements Listener {
 			Material    type        = item.getType();
 			if (itemBuilder.hasNBTTag(dataTag)) {
 				// special treatment for colored data
-				String value = gangland.usePlaceholder(player, itemBuilder.getTagData(dataTag));
+				String value = gangland.usePlaceholder(player, itemBuilder.getStringTagData(dataTag));
 
 				MaterialType material = MaterialType.WOOL;
 				for (MaterialType materialType : MaterialType.values()) {

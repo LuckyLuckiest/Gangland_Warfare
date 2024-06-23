@@ -161,7 +161,7 @@ public class Weapon {
 
 	@Nullable
 	public static String getHeldWeaponName(ItemStack item) {
-		return isWeapon(item) ? new ItemBuilder(item).getTagData("weapon") : null;
+		return isWeapon(item) ? new ItemBuilder(item).getStringTagData("weapon") : null;
 	}
 
 	public static boolean isWeapon(ItemStack item) {

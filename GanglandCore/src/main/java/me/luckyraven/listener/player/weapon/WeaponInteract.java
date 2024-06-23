@@ -5,6 +5,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.WeaponTag;
+import me.luckyraven.feature.weapon.events.WeaponShootEvent;
 import me.luckyraven.feature.weapon.projectile.type.Bullet;
 import me.luckyraven.file.configuration.SoundConfiguration;
 import me.luckyraven.util.timer.RepeatingTimer;
@@ -47,7 +48,7 @@ public class WeaponInteract implements Listener {
 		// get the weapon information
 		Player      player   = event.getPlayer();
 		ItemBuilder tempItem = new ItemBuilder(item);
-		String      value    = String.valueOf(tempItem.getTagData(Weapon.getTagProperName(WeaponTag.UUID)));
+		String      value    = String.valueOf(tempItem.getStringTagData(Weapon.getTagProperName(WeaponTag.UUID)));
 		UUID        uuid     = null;
 
 		if (!(value == null || value.equals("null") || value.isEmpty())) {
@@ -65,7 +66,13 @@ public class WeaponInteract implements Listener {
 
 		// left-click does nothing
 		boolean leftClick = event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK;
-		if (leftClick) { }
+		if (leftClick) {
+
+			return;
+		}
+
+		// pre-shot event
+
 
 		// right-click shoots
 		boolean rightClick = event.getAction() == Action.RIGHT_CLICK_AIR ||
@@ -83,10 +90,13 @@ public class WeaponInteract implements Listener {
 				return;
 			}
 
-			Bullet bullet = new Bullet(player, weapon);
+			Bullet           bullet           = new Bullet(player, weapon);
+			WeaponShootEvent weaponShootEvent = new WeaponShootEvent(weapon, bullet);
 
 			// launch the projectile
-			bullet.launchProjectile();
+			if (!weaponShootEvent.isCancelled()) bullet.launchProjectile();
+
+			gangland.getServer().getPluginManager().callEvent(weaponShootEvent);
 
 			// update data
 			ItemBuilder heldWeapon = weapon.getHeldWeapon(player);
@@ -106,15 +116,9 @@ public class WeaponInteract implements Listener {
 
 			boolean shotSound = playSound(player, weapon.getCustomShotSound());
 			if (!shotSound) playSound(player, weapon.getDefaultShotSound());
+
+			return;
 		}
-
-		// drop reloads the gun
-
-		// pre-shot event
-
-		// check for reload
-
-		// shot event
 
 		// projectile logic
 //		Projectile projectile = player.launchProjectile(Snowball.class);

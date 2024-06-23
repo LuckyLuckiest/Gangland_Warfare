@@ -55,7 +55,7 @@ public class Phone {
 
 	public static boolean isPhone(ItemStack item) {
 		ItemBuilder itemBuilder = new ItemBuilder(item);
-		return itemBuilder.hasNBTTag("uniqueItem") && itemBuilder.getTagData("uniqueItem").equals("phone");
+		return itemBuilder.hasNBTTag("uniqueItem") && itemBuilder.getStringTagData("uniqueItem").equals("phone");
 	}
 
 	public static boolean hasPhone(Player player) {

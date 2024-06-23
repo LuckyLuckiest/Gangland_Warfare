@@ -168,15 +168,19 @@ public class ItemBuilder {
 	}
 
 	public boolean hasNBTTag(String tag) {
-		String value = getTagData(tag);
+		String value = getStringTagData(tag);
 
 		if (value == null) return false;
 
 		return !value.isEmpty();
 	}
 
-	public String getTagData(String tag) {
+	public String getStringTagData(String tag) {
 		return NBT.get(itemStack, (Function<ReadableItemNBT, String>) nbt -> nbt.getString(tag));
+	}
+
+	public int getIntegerTagData(String tag) {
+		return NBT.get(itemStack, (Function<ReadableItemNBT, Integer>) nbt -> nbt.getInteger(tag));
 	}
 
 	public Material getType() {
