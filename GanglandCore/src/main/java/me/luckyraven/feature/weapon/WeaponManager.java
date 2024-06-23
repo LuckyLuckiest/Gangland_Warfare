@@ -43,7 +43,7 @@ public class WeaponManager {
 
 	/**
 	 * Obtaining a weapon from the saved data is a hectic procedure, thus making sure if the weapon is already generated
-	 * would be better for the system. <br/> It is fine if the weapon was not already registered since there can be
+	 * would be better for the system. <br/> It is fine if the weapon wasn't already registered since there can be
 	 * specific ones that need an uuid attached, and these weapons are generated from this function.
 	 *
 	 * @param uuid Get already saved weapon UUID.
@@ -62,7 +62,7 @@ public class WeaponManager {
 			// when the weapon is already saved
 			return weaponV1;
 
-		// type should not be null
+		// type shouldn't be null
 		if (type == null || type.isEmpty()) return null;
 
 		// the type is basically the name of the weapon in the files
