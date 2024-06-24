@@ -8,6 +8,7 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
+import java.util.Objects;
 
 @AllArgsConstructor
 @RequiredArgsConstructor
@@ -38,8 +39,18 @@ public class Ammunition {
 	}
 
 	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Ammunition that = (Ammunition) o;
+
+		return Objects.equals(name, that.name) && material == that.material;
+	}
+
+	@Override
 	public String toString() {
-		return String.format("Ammunition{ammo='%s',name='%s',material=%s", name, displayName, material.toString());
+		return String.format("Ammunition{ammo='%s',name='%s',material='%s'", name, displayName, material.toString());
 	}
 
 }
