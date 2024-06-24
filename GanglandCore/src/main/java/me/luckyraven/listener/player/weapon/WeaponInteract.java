@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.AtomicDouble;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.feature.weapon.Weapon;
-import me.luckyraven.feature.weapon.WeaponTag;
 import me.luckyraven.feature.weapon.events.WeaponShootEvent;
 import me.luckyraven.feature.weapon.projectile.type.Bullet;
 import me.luckyraven.file.configuration.SoundConfiguration;
@@ -46,14 +45,8 @@ public class WeaponInteract implements Listener {
 		if (weaponName == null) return;
 
 		// get the weapon information
-		Player      player   = event.getPlayer();
-		ItemBuilder tempItem = new ItemBuilder(item);
-		String      value    = String.valueOf(tempItem.getStringTagData(Weapon.getTagProperName(WeaponTag.UUID)));
-		UUID        uuid     = null;
-
-		if (!(value == null || value.equals("null") || value.isEmpty())) {
-			uuid = UUID.fromString(value);
-		}
+		Player player = event.getPlayer();
+		UUID   uuid   = Weapon.getWeaponUUID(item);
 
 		// Need to change how the weapons are got, basically there can be a repeated pattern of similar weapons sharing
 		// similar traits but are different fundamentally.
@@ -61,7 +54,6 @@ public class WeaponInteract implements Listener {
 		// The weapons acquired by the user are created in that instance as a new weapon, which takes all the traits
 		// stored.
 		Weapon weapon = gangland.getInitializer().getWeaponManager().getWeapon(uuid, weaponName);
-
 		if (weapon == null) return;
 
 		// left-click does nothing

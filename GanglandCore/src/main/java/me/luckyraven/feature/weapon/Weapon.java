@@ -164,6 +164,18 @@ public class Weapon {
 		return isWeapon(item) ? new ItemBuilder(item).getStringTagData("weapon") : null;
 	}
 
+	public static UUID getWeaponUUID(ItemStack item) {
+		ItemBuilder tempItem = new ItemBuilder(item);
+		String      value    = String.valueOf(tempItem.getStringTagData(Weapon.getTagProperName(WeaponTag.UUID)));
+		UUID        uuid     = null;
+
+		if (!(value == null || value.equals("null") || value.isEmpty())) {
+			uuid = UUID.fromString(value);
+		}
+
+		return uuid;
+	}
+
 	public static boolean isWeapon(ItemStack item) {
 		return new ItemBuilder(item).hasNBTTag("weapon");
 	}
