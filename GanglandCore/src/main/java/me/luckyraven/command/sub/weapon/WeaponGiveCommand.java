@@ -65,7 +65,7 @@ class WeaponGiveCommand extends SubArgument {
 
 	private void giveWeapon(Player player, String name, int amount) {
 		int    amountLeft = amount;
-		Weapon weapon     = gangland.getInitializer().getWeaponManager().getWeapon(null, name);
+		Weapon weapon     = gangland.getInitializer().getWeaponManager().getWeapon(name);
 
 		if (weapon == null) {
 			player.sendMessage("Invalid weapon!");

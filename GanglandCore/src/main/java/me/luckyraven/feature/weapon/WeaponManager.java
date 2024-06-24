@@ -46,6 +46,11 @@ public class WeaponManager {
 		});
 	}
 
+	@Nullable
+	public synchronized Weapon getWeapon(@Nullable String type) {
+		return getWeapon(null, type);
+	}
+
 	/**
 	 * Obtaining a weapon from the saved data is a hectic procedure, thus making sure if the weapon is already generated
 	 * would be better for the system. <br/> It is fine if the weapon wasn't already registered since there can be

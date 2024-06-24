@@ -33,7 +33,7 @@ class WeaponListCommand extends SubArgument {
 			StringBuilder    builder  = new StringBuilder();
 
 			while (iterator.hasNext()) {
-				Weapon weapon = gangland.getInitializer().getWeaponManager().getWeapon(null, iterator.next());
+				Weapon weapon = gangland.getInitializer().getWeaponManager().getWeapon(iterator.next());
 				if (weapon == null) continue;
 
 				builder.append("&b").append(weapon.getName());
