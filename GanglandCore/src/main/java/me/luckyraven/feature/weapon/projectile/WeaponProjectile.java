@@ -3,21 +3,24 @@ package me.luckyraven.feature.weapon.projectile;
 import me.luckyraven.feature.weapon.Weapon;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Snowball;
+import org.bukkit.entity.Projectile;
 import org.bukkit.util.Vector;
 
 import java.util.Random;
 
-public abstract class WeaponProjectile extends WProjectile {
+public abstract class WeaponProjectile<T extends Projectile> extends WProjectile {
 
-	private final Weapon weapon;
-	private final Random random;
+	private final Weapon   weapon;
+	private final Class<T> bulletType;
+	private final Random   random;
 
-	public WeaponProjectile(LivingEntity shooter, Weapon weapon, Location location, Vector velocity) {
+	public WeaponProjectile(LivingEntity shooter, Weapon weapon, Location location, Vector velocity,
+							Class<T> bulletType) {
 		super(shooter, location, velocity);
 
-		this.weapon = weapon;
-		this.random = new Random();
+		this.weapon     = weapon;
+		this.bulletType = bulletType;
+		this.random     = new Random();
 	}
 
 	@Override
@@ -32,7 +35,7 @@ public abstract class WeaponProjectile extends WProjectile {
 		Location spawnLocation = eyeLocation.clone().add(eyeLocation.getDirection());
 
 		// spawn the projectile
-		Snowball projectile = getShooter().getWorld().spawn(spawnLocation, Snowball.class);
+		Projectile projectile = getShooter().getWorld().spawn(spawnLocation, bulletType);
 
 		projectile.setSilent(true);
 		projectile.setGravity(false);
