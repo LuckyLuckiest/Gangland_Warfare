@@ -25,9 +25,6 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 
 	@Override
 	public void launchProjectile() {
-		// Get the starting position
-
-
 		// Get the eye location
 		Location eyeLocation = getShooter().getEyeLocation();
 		Vector   velocity    = getVelocity();
@@ -45,7 +42,8 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 		Vector spread = applySpread(velocity, weapon.getSpreadStart());
 
 		// set the velocity according to the modified values
-		projectile.setVelocity(spread.multiply(getSpeed()));
+		setVelocity(spread.multiply(getSpeed()));
+		projectile.setVelocity(getVelocity());
 	}
 
 	@Override
