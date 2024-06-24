@@ -5,6 +5,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.events.WeaponShootEvent;
+import me.luckyraven.feature.weapon.projectile.WeaponProjectile;
 import me.luckyraven.feature.weapon.projectile.type.Bullet;
 import me.luckyraven.file.configuration.SoundConfiguration;
 import me.luckyraven.util.timer.RepeatingTimer;
@@ -56,7 +57,7 @@ public class WeaponInteract implements Listener {
 		Weapon weapon = gangland.getInitializer().getWeaponManager().getWeapon(uuid, weaponName);
 		if (weapon == null) return;
 
-		// left-click does nothing
+		// left-click scopes
 		boolean leftClick = event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK;
 		if (leftClick) {
 
@@ -82,13 +83,13 @@ public class WeaponInteract implements Listener {
 				return;
 			}
 
-			Bullet           bullet           = new Bullet(player, weapon);
-			WeaponShootEvent weaponShootEvent = new WeaponShootEvent(weapon, bullet);
+			WeaponProjectile<?> weaponProjectile = new Bullet(player, weapon);
+			WeaponShootEvent    weaponShootEvent = new WeaponShootEvent(weapon, weaponProjectile);
 
 			// launch the projectile
-			if (!weaponShootEvent.isCancelled()) bullet.launchProjectile();
+			if (weaponShootEvent.isCancelled()) return;
 
-			gangland.getServer().getPluginManager().callEvent(weaponShootEvent);
+			weaponProjectile.launchProjectile();
 
 			// update data
 			ItemBuilder heldWeapon = weapon.getHeldWeapon(player);
@@ -106,10 +107,11 @@ public class WeaponInteract implements Listener {
 			if (!player.isSneaking()) push(player, weapon.getPushPowerUp(), weapon.getPushVelocity());
 			else push(player, 0, 0);
 
+			// TODO fix the sound
 			boolean shotSound = playSound(player, weapon.getCustomShotSound());
 			if (!shotSound) playSound(player, weapon.getDefaultShotSound());
 
-			return;
+			gangland.getServer().getPluginManager().callEvent(weaponShootEvent);
 		}
 
 		// projectile logic
