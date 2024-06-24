@@ -1,5 +1,6 @@
 package me.luckyraven.feature.weapon.projectile;
 
+import com.google.common.base.Preconditions;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -61,7 +62,7 @@ public abstract class WProjectile {
 	}
 
 	public void setLocation(@NotNull Vector location) {
-		if (location == null) throw new IllegalArgumentException("Location can't be null!");
+		Preconditions.checkNotNull(location, "Location can't be null!");
 
 		this.lastLocation = this.location.clone();
 		this.location     = location;
@@ -72,7 +73,7 @@ public abstract class WProjectile {
 	}
 
 	public void setVelocity(@NotNull Vector velocity) {
-		if (velocity == null) throw new IllegalArgumentException("Velocity can't be null!");
+		Preconditions.checkNotNull(velocity, "Velocity can't be null!");
 		this.velocity = velocity;
 	}
 
