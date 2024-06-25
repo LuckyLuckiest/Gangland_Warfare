@@ -1,10 +1,15 @@
 package me.luckyraven.feature.weapon;
 
+import com.google.common.base.Preconditions;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.WeaponTable;
 import me.luckyraven.file.configuration.weapon.WeaponAddon;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
@@ -47,8 +52,69 @@ public class WeaponManager {
 	}
 
 	@Nullable
-	public synchronized Weapon getWeapon(@Nullable String type) {
-		return getWeapon(null, type);
+	public String getHeldWeaponName(ItemStack item) {
+		Preconditions.checkNotNull(item, "Item can't be null!");
+		Preconditions.checkArgument(item.getType().equals(Material.AIR) || item.getAmount() == 0,
+									"Item can't be air or amount of 0.");
+
+		return isWeapon(item) ? new ItemBuilder(item).getStringTagData("weapon") : null;
+	}
+
+	public UUID getWeaponUUID(ItemStack item) {
+		Preconditions.checkNotNull(item, "Item can't be null!");
+		Preconditions.checkArgument(item.getType().equals(Material.AIR) || item.getAmount() == 0,
+									"Item can't be air or amount of 0.");
+
+		ItemBuilder tempItem = new ItemBuilder(item);
+		String      value    = String.valueOf(tempItem.getStringTagData(Weapon.getTagProperName(WeaponTag.UUID)));
+		UUID        uuid     = null;
+
+		if (!(value == null || value.equals("null") || value.isEmpty())) {
+			uuid = UUID.fromString(value);
+		}
+
+		return uuid;
+	}
+
+	public boolean isWeapon(ItemStack item) {
+		Preconditions.checkNotNull(item, "Item can't be null!");
+		Preconditions.checkArgument(item.getType().equals(Material.AIR) || item.getAmount() == 0,
+									"Item can't be air or amount of 0.");
+
+		return new ItemBuilder(item).hasNBTTag("weapon");
+	}
+
+	/**
+	 * Gets the held weapon.
+	 *
+	 * @param player Current player.
+	 *
+	 * @return held weapon ItemBuilder or a null.
+	 */
+	@Nullable
+	public ItemBuilder getHeldWeaponItem(Player player) {
+		ItemStack mainHandItem = itemAccordingToSlot(player, EquipmentSlot.HAND);
+
+		if (mainHandItem == null || mainHandItem.getType().equals(Material.AIR) || mainHandItem.getAmount() == 0)
+			return null;
+		if (isWeapon(mainHandItem)) return new ItemBuilder(mainHandItem);
+
+		ItemStack offHandItem = itemAccordingToSlot(player, EquipmentSlot.OFF_HAND);
+
+		if (offHandItem == null || offHandItem.getType().equals(Material.AIR) || offHandItem.getAmount() == 0)
+			return null;
+
+		return isWeapon(offHandItem) ? new ItemBuilder(offHandItem) : null;
+	}
+
+	@Nullable
+	public Weapon getWeapon(Player player, @Nullable String type) {
+		return getWeapon(player, null, type);
+	}
+
+	@Nullable
+	public Weapon getWeapon(Player player, UUID uuid, @Nullable String type) {
+		return getWeapon(player, uuid, type, false);
 	}
 
 	/**
@@ -56,18 +122,21 @@ public class WeaponManager {
 	 * would be better for the system. <br/> It is fine if the weapon wasn't already registered since there can be
 	 * specific ones that need an uuid attached, and these weapons are generated from this function.
 	 *
+	 * @param player Gets the player that called this instruction.
 	 * @param uuid Get already saved weapon UUID.
 	 * @param type Can be nullable if the uuid was valid, otherwise use a valid type.
+	 * @param newInstance Changes the data according to the currently held item.
 	 *
 	 * @return A weapon from the stored data. There is a chance to return null values in two cases: <br/> 1) Invalid
 	 * 		UUID and null type. <br/> 2) Invalid UUID and invalid type.
 	 */
 	@Nullable
-	public synchronized Weapon getWeapon(UUID uuid, @Nullable String type) {
+	public Weapon getWeapon(Player player, UUID uuid, @Nullable String type, boolean newInstance) {
+		// the weapon is already created
 		if (uuid != null && weapons.containsKey(uuid)) {
 			Weapon availableWeapon = weapons.get(uuid);
 
-			setWeaponData(availableWeapon);
+			setWeaponData(availableWeapon, player);
 			// when the weapon is already saved
 			return availableWeapon;
 		}
@@ -84,7 +153,7 @@ public class WeaponManager {
 		if (uuid != null) {
 			Weapon uuidWeapon = new Weapon(uuid, weaponAddon);
 
-			setWeaponData(uuidWeapon);
+			setWeaponData(uuidWeapon, player);
 			weapons.put(uuid, uuidWeapon);
 
 			return uuidWeapon;
@@ -102,13 +171,33 @@ public class WeaponManager {
 			if (!weapons.containsKey(generatedUuid)) found = true;
 		} while (!found);
 
+		// mostly for new weapons
 		// when the weapon is registered in the system but not tagged with an uuid
 		Weapon finalWeapon = new Weapon(generatedUuid, weaponAddon);
 
-		setWeaponData(finalWeapon);
+		// check if the weapon is new or not
+		// if it was new then no need to set the data of the uuid since it is not even created/built
+		if (!newInstance) setWeaponData(finalWeapon, player);
+
 		weapons.put(generatedUuid, finalWeapon);
 
 		return finalWeapon;
+	}
+
+	@Nullable
+	public Weapon validateAndGetWeapon(Player player, ItemStack heldItem) {
+		Preconditions.checkNotNull(heldItem);
+		if (!isWeapon(heldItem)) return null;
+
+		String weaponName = getHeldWeaponName(heldItem);
+		if (weaponName == null) return null;
+
+		// get the weapon information
+		UUID uuid = getWeaponUUID(heldItem);
+		if (uuid == null) return null;
+
+		// get or load the new weapon
+		return getWeapon(player, uuid, weaponName);
 	}
 
 	public void clear() {
@@ -119,9 +208,16 @@ public class WeaponManager {
 		return Collections.unmodifiableMap(weapons);
 	}
 
-	private void setWeaponData(Weapon weapon) {
+	private ItemStack itemAccordingToSlot(Player player, EquipmentSlot equipmentSlot) {
+		return player.getInventory().getItem(equipmentSlot);
+	}
+
+	private void setWeaponData(Weapon weapon, Player player) {
 		// need to collect data and save their values
-		ItemBuilder itemBuilder = new ItemBuilder(weapon.getMaterial());
+		ItemBuilder itemBuilder = getHeldWeaponItem(player);
+
+		if (itemBuilder == null) return;
+
 		// get the ammo left
 		int amountLeft = itemBuilder.getIntegerTagData(Weapon.getTagProperName(WeaponTag.AMMO_LEFT));
 		// get the selective fire

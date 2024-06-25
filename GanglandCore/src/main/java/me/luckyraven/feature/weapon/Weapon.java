@@ -11,15 +11,12 @@ import me.luckyraven.feature.weapon.reload.ReloadType;
 import me.luckyraven.file.configuration.SoundConfiguration;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.Nullable;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 @Setter
@@ -46,7 +43,9 @@ public class Weapon {
 	private final boolean        particle;
 
 	// Reload configuration
-	@Getter(value = AccessLevel.NONE) @Setter(value = AccessLevel.NONE) private final Reload reload;
+	@Getter(value = AccessLevel.NONE)
+	@Setter(value = AccessLevel.NONE)
+	private final Reload reload;
 
 	private final int                    maxMagCapacity;
 	private final int                    reloadCooldown;
@@ -91,12 +90,12 @@ public class Weapon {
 
 	// Shot-sound configuration
 	// shot
-	private SoundConfiguration defaultShotSound;
-	private SoundConfiguration customShotSound;
+	private SoundConfiguration shotDefaultSound;
+	private SoundConfiguration shotCustomSound;
 
 	// empty mag
-	private SoundConfiguration defaultMagSound;
-	private SoundConfiguration customMagSound;
+	private SoundConfiguration EmptyMagDefaultSound;
+	private SoundConfiguration EmptyMagCustomSound;
 
 	// Reload-sound configuration
 	private SoundConfiguration reloadDefaultSoundBefore;
@@ -108,6 +107,14 @@ public class Weapon {
 	// Reload-action bar configuration
 	private String reloadActionBarReloading;
 	private String reloadActionBarOpening;
+
+	// Scope configuration
+	private int     scopeLevel;
+	private boolean scoped;
+
+	// Scope-sound configuration
+	private SoundConfiguration scopeDefaultSound;
+	private SoundConfiguration scopeCustomSound;
 
 	public Weapon(UUID uuid, String name, String displayName, WeaponType category, Material material, short durability,
 				  List<String> lore, boolean dropHologram, SelectiveFire selectiveFire, int weaponShotConsume,
@@ -162,57 +169,66 @@ public class Weapon {
 			 weapon.projectileType, weapon.projectileDamage, weapon.projectileConsumed, weapon.projectilePerShot,
 			 weapon.projectileCooldown, weapon.projectileDistance, weapon.particle, weapon.maxMagCapacity,
 			 weapon.reloadCooldown, weapon.reloadAmmoType, weapon.reloadConsume, weapon.reloadType);
-	}
 
-	@Nullable
-	public static String getHeldWeaponName(ItemStack item) {
-		return isWeapon(item) ? new ItemBuilder(item).getStringTagData("weapon") : null;
-	}
-
-	public static UUID getWeaponUUID(ItemStack item) {
-		ItemBuilder tempItem = new ItemBuilder(item);
-		String      value    = String.valueOf(tempItem.getStringTagData(Weapon.getTagProperName(WeaponTag.UUID)));
-		UUID        uuid     = null;
-
-		if (!(value == null || value.equals("null") || value.isEmpty())) {
-			uuid = UUID.fromString(value);
-		}
-
-		return uuid;
-	}
-
-	public static boolean isWeapon(ItemStack item) {
-		return new ItemBuilder(item).hasNBTTag("weapon");
+		this.durabilityOnShot            = weapon.durabilityOnShot;
+		this.durabilityOnRepair          = weapon.durabilityOnRepair;
+		this.weaponShotConsumeTime       = weapon.weaponShotConsumeTime;
+		this.projectileExplosionDamage   = weapon.projectileExplosionDamage;
+		this.projectileFireTicks         = weapon.projectileFireTicks;
+		this.projectileHeadDamage        = weapon.projectileHeadDamage;
+		this.projectileBodyDamage        = weapon.projectileBodyDamage;
+		this.projectileCriticalHitChance = weapon.projectileCriticalHitChance;
+		this.projectileCriticalHitDamage = weapon.projectileCriticalHitDamage;
+		this.spreadStart                 = weapon.spreadStart;
+		this.spreadResetTime             = weapon.spreadResetTime;
+		this.spreadChangeBase            = weapon.spreadChangeBase;
+		this.spreadResetOnBound          = weapon.spreadResetOnBound;
+		this.spreadBoundMinimum          = weapon.spreadBoundMinimum;
+		this.spreadBoundMaximum          = weapon.spreadBoundMaximum;
+		this.recoilAmount                = weapon.recoilAmount;
+		this.pushVelocity                = weapon.pushVelocity;
+		this.pushPowerUp                 = weapon.pushPowerUp;
+		this.recoilPattern               = new ArrayList<>(weapon.recoilPattern);
+		this.shotDefaultSound            = weapon.shotDefaultSound.clone();
+		this.shotCustomSound             = weapon.shotCustomSound.clone();
+		this.EmptyMagDefaultSound        = weapon.EmptyMagDefaultSound.clone();
+		this.EmptyMagCustomSound         = weapon.EmptyMagCustomSound.clone();
+		this.reloadDefaultSoundBefore    = weapon.reloadDefaultSoundBefore.clone();
+		this.reloadDefaultSoundAfter     = weapon.reloadDefaultSoundAfter.clone();
+		this.reloadCustomSoundStart      = weapon.reloadCustomSoundStart.clone();
+		this.reloadCustomSoundMid        = weapon.reloadCustomSoundMid.clone();
+		this.reloadCustomSoundEnd        = weapon.reloadCustomSoundEnd.clone();
+		this.reloadActionBarReloading    = weapon.reloadActionBarReloading;
+		this.reloadActionBarOpening      = weapon.reloadActionBarOpening;
+		this.scopeLevel                  = weapon.scopeLevel;
+		this.scopeDefaultSound           = weapon.scopeDefaultSound.clone();
+		this.scopeCustomSound            = weapon.scopeCustomSound.clone();
 	}
 
 	public static String getTagProperName(WeaponTag tag) {
-		return tag.name().toLowerCase().replace("_", "-");
+		return tag.name().toLowerCase().replaceAll("_", "-");
 	}
 
 	private static WeaponTag[] getAllTags() {
 		return WeaponTag.values();
 	}
 
-	/**
-	 * Gets the held weapon.
-	 *
-	 * @param player Current player.
-	 *
-	 * @return held weapon ItemBuilder or a null.
-	 */
-	@Nullable
-	public ItemBuilder getHeldWeapon(Player player) {
-		ItemStack mainHandItem = itemAccordingToSlot(player, EquipmentSlot.HAND);
-
-		if (isWeapon(mainHandItem)) return new ItemBuilder(mainHandItem);
-
-		ItemStack offHandItem = itemAccordingToSlot(player, EquipmentSlot.OFF_HAND);
-
-		return isWeapon(offHandItem) ? new ItemBuilder(offHandItem) : null;
-	}
-
 	public void reload() {
 		reload.reload();
+	}
+
+	public void scope(Player player) {
+		scoped = true;
+		// TODO use XPotion
+		player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, Integer.MAX_VALUE, scopeLevel));
+		player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, Integer.MAX_VALUE, 250));
+	}
+
+	public void unScope(Player player) {
+		scoped = false;
+		// TODO use XPotion
+		player.removePotionEffect(PotionEffectType.SLOWNESS);
+		player.removePotionEffect(PotionEffectType.JUMP_BOOST);
 	}
 
 	public void updateWeaponData(ItemBuilder itemBuilder) {
@@ -257,11 +273,6 @@ public class Weapon {
 		return itemBuilder.hasNBTTag(getTagProperName(tag));
 	}
 
-	public void updateTag(ItemBuilder itemBuilder, WeaponTag tag, Object value) {
-		tags.replace(tag, value);
-		itemBuilder.modifyTag(getTagProperName(tag), value);
-	}
-
 	/**
 	 * Consumes a shot depending on the amount set.
 	 *
@@ -290,8 +301,9 @@ public class Weapon {
 							 material, projectileDamage, reloadAmmoType);
 	}
 
-	private ItemStack itemAccordingToSlot(Player player, EquipmentSlot equipmentSlot) {
-		return player.getInventory().getItem(equipmentSlot);
+	private void updateTag(ItemBuilder itemBuilder, WeaponTag tag, Object value) {
+		tags.replace(tag, value);
+		itemBuilder.modifyTag(getTagProperName(tag), value);
 	}
 
 	private String updateDisplayName(String displayName) {
