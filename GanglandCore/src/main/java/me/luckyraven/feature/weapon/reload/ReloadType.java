@@ -16,18 +16,18 @@ public enum ReloadType {
 
 	@Setter private int amount;
 
-	public Reload createInstance(Weapon weapon, Ammunition ammunition) {
-		return switch (weapon.getReloadType()) {
-			case INSTANT -> new InstantReload(weapon, ammunition);
-			case ONE, NUM -> new NumberedReload(weapon, ammunition, amount);
-		};
-	}
-
 	public static ReloadType getType(String type) {
 		return switch (type.toLowerCase()) {
 			default -> INSTANT;
 			case "one" -> ONE;
 			case "num" -> NUM;
+		};
+	}
+
+	public Reload createInstance(Weapon weapon, Ammunition ammunition) {
+		return switch (weapon.getReloadType()) {
+			case INSTANT -> new InstantReload(weapon, ammunition);
+			case ONE, NUM -> new NumberedReload(weapon, ammunition, amount);
 		};
 	}
 
