@@ -70,6 +70,7 @@ public class WeaponDropped implements Listener {
 		event.setCancelled(true);
 
 		// remove the item accordingly
+		weapon.reload();
 	}
 
 }
