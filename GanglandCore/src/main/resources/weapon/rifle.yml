@@ -195,9 +195,22 @@ Reload:
    #          dynamically insert in the weapon. This would work similarly to type one.
    Type: INSTANT
 
+# Weapon scope configuration
 Scope:
+   # Sets the scope level
    Level: 2
-   Data: 100
+
+   Sound:
+      # The default sound that would be used if the custom sound was not found
+      Default_Sound:
+         Sound: ENTITY_GENERIC_EXPLODE
+         Volume: 1
+         Pitch: 3
+      # The custom sound played when using scope
+      Custom_Sound:
+         Sound: sound.gta.m4_scope
+         Volume: 1
+         Pitch: 1
 
 Modifiers:
    Break_Blocks:

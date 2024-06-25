@@ -319,6 +319,41 @@ public class WeaponAddon {
 		ReloadType reloadType = ReloadType.getType(reloadTypeTemp);
 		reloadType.setAmount(reloadTypeAmount);
 
+		/* scope section */
+		ConfigurationSection scopeSection      = config.getConfigurationSection("Scope");
+		int                  scopeLevel        = 0;
+		SoundConfiguration   scopeDefaultSound = null;
+		SoundConfiguration   scopeCustomSound  = null;
+
+		if (scopeSection != null) {
+			// scope level
+			scopeLevel = scopeSection.getInt("Level");
+
+			// sound
+			ConfigurationSection scopeSoundSection = scopeSection.getConfigurationSection("Sound");
+			if (scopeSoundSection != null) {
+				ConfigurationSection defaultSound = scopeSoundSection.getConfigurationSection("Default_Sound");
+				if (defaultSound != null) {
+					String sound  = Objects.requireNonNull(defaultSound.getString("Sound"));
+					float  volume = (float) defaultSound.getDouble("Volume");
+					float  pitch  = (float) defaultSound.getDouble("Pitch");
+
+					scopeDefaultSound = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, sound, volume,
+															   pitch);
+				}
+
+				ConfigurationSection customSound = scopeSoundSection.getConfigurationSection("Custom_Sound");
+				if (customSound != null) {
+					String sound  = Objects.requireNonNull(customSound.getString("Sound"));
+					float  volume = (float) customSound.getDouble("Volume");
+					float  pitch  = (float) customSound.getDouble("Pitch");
+
+					scopeCustomSound = new SoundConfiguration(SoundConfiguration.SoundType.CUSTOM, sound, volume,
+															  pitch);
+				}
+			}
+		}
+
 		// initialize the object
 		Weapon weapon = new Weapon(fileName, displayName, category, material, durability, lore, dropHologram,
 								   selectiveFire, weaponConsumedOnShot, projectileSpeed, projectileType,
@@ -350,10 +385,10 @@ public class WeaponAddon {
 		weapon.setPushPowerUp(pushPowerUp);
 		weapon.setRecoilPattern(recoilPattern);
 
-		weapon.setDefaultShotSound(defaultShotSound);
-		weapon.setCustomShotSound(customShotSound);
-		weapon.setDefaultMagSound(defaultMagSound);
-		weapon.setCustomMagSound(customMagSound);
+		weapon.setShotDefaultSound(defaultShotSound);
+		weapon.setShotCustomSound(customShotSound);
+		weapon.setEmptyMagDefaultSound(defaultMagSound);
+		weapon.setEmptyMagCustomSound(customMagSound);
 
 		weapon.setReloadDefaultSoundBefore(reloadDefaultSoundBefore);
 		weapon.setReloadDefaultSoundAfter(reloadDefaultSoundAfter);
@@ -363,6 +398,11 @@ public class WeaponAddon {
 
 		weapon.setReloadActionBarReloading(reloadActionBarReloading);
 		weapon.setReloadActionBarOpening(reloadActionBarOpening);
+
+		weapon.setScopeLevel(scopeLevel);
+
+		weapon.setScopeDefaultSound(scopeDefaultSound);
+		weapon.setScopeCustomSound(scopeCustomSound);
 
 		weapons.put(fileName, weapon);
 	}

@@ -3,6 +3,7 @@ package me.luckyraven.listener.player.weapon;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.feature.weapon.Weapon;
+import me.luckyraven.feature.weapon.WeaponManager;
 import me.luckyraven.feature.weapon.events.WeaponShootEvent;
 import me.luckyraven.feature.weapon.projectile.WeaponProjectile;
 import me.luckyraven.file.configuration.SoundConfiguration;
@@ -14,51 +15,42 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-import java.util.UUID;
-
 public class WeaponInteract implements Listener {
 
-	private final Gangland gangland;
+	private final Gangland      gangland;
+	private final WeaponManager weaponManager;
 
 	public WeaponInteract(Gangland gangland) {
-		this.gangland = gangland;
+		this.gangland      = gangland;
+		this.weaponManager = gangland.getInitializer().getWeaponManager();
 	}
 
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent event) {
-		// check if it was a weapon
-		ItemStack item = event.getItem();
+		Player    player = event.getPlayer();
+		ItemStack item   = event.getItem();
+		Weapon    weapon = weaponManager.validateAndGetWeapon(player, item);
 
-		if (item == null) return;
-		if (!Weapon.isWeapon(item)) return;
-
-		String weaponName = Weapon.getHeldWeaponName(item);
-		if (weaponName == null) return;
-
-		// get the weapon information
-		Player player = event.getPlayer();
-		UUID   uuid   = Weapon.getWeaponUUID(item);
-
-		// Need to change how the weapons are got, basically there can be a repeated pattern of similar weapons sharing
-		// similar traits but are different fundamentally.
-		// A solution for this is to have all the weapons loaded and stored in a map.
-		// The weapons acquired by the user are created in that instance as a new weapon, which takes all the traits
-		// stored.
-		Weapon weapon = gangland.getInitializer().getWeaponManager().getWeapon(uuid, weaponName);
 		if (weapon == null) return;
 
 		// left-click scopes
 		boolean leftClick = event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK;
 		if (leftClick) {
+			if (!weapon.isScoped()) {
+				weapon.scope(player);
+				SoundConfiguration.playSounds(player, weapon.getScopeCustomSound(), weapon.getScopeDefaultSound());
+				return;
+			}
+
+			weapon.unScope(player);
+			SoundConfiguration.playSounds(player, weapon.getScopeCustomSound(), weapon.getScopeDefaultSound());
 
 			return;
 		}
-
-		// pre-shot event
-
 
 		// right-click shoots
 		boolean rightClick = event.getAction() == Action.RIGHT_CLICK_AIR ||
@@ -70,8 +62,8 @@ public class WeaponInteract implements Listener {
 			// no shot fired
 			if (!consumed) {
 				// sound
-				boolean sound = playSound(player, weapon.getCustomMagSound());
-				if (!sound) playSound(player, weapon.getDefaultMagSound());
+				SoundConfiguration.playSounds(player, weapon.getEmptyMagCustomSound(),
+											  weapon.getEmptyMagDefaultSound());
 
 				return;
 			}
@@ -85,7 +77,7 @@ public class WeaponInteract implements Listener {
 			weaponProjectile.launchProjectile();
 
 			// update data
-			ItemBuilder heldWeapon = weapon.getHeldWeapon(player);
+			ItemBuilder heldWeapon = weaponManager.getHeldWeaponItem(player);
 
 			if (heldWeapon != null) {
 				weapon.updateWeaponData(heldWeapon);
@@ -100,12 +92,23 @@ public class WeaponInteract implements Listener {
 			if (!player.isSneaking()) push(player, weapon.getPushPowerUp(), weapon.getPushVelocity());
 			else push(player, 0, 0);
 
-			// TODO fix the sound
-			boolean shotSound = playSound(player, weapon.getCustomShotSound());
-			if (!shotSound) playSound(player, weapon.getDefaultShotSound());
+			SoundConfiguration.playSounds(player, weapon.getShotCustomSound(), weapon.getShotDefaultSound());
 
 			gangland.getServer().getPluginManager().callEvent(weaponShootEvent);
 		}
+	}
+
+	@EventHandler
+	public void onWeaponHeld(PlayerItemHeldEvent event) {
+		// check if it was a weapon
+		Player    player = event.getPlayer();
+		ItemStack item   = player.getItemInUse();
+		Weapon    weapon = weaponManager.validateAndGetWeapon(player, item);
+
+		if (weapon == null) return;
+		if (!weapon.isScoped()) return;
+
+		weapon.unScope(player);
 	}
 
 	private void recoil(Player player, float yaw, float pitch) {
@@ -123,12 +126,6 @@ public class WeaponInteract implements Listener {
 
 		if (location.getBlock().getRelative(BlockFace.DOWN).getType() != Material.AIR) player.setVelocity(
 				location.getDirection().multiply(push).add(vector));
-	}
-
-	private boolean playSound(Player player, SoundConfiguration sound) {
-		if (sound == null) return false;
-
-		return sound.playSound(player);
 	}
 
 }
