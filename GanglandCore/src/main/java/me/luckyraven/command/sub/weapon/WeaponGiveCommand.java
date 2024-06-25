@@ -39,8 +39,9 @@ class WeaponGiveCommand extends SubArgument {
 			Player player     = (Player) sender;
 			String weaponName = args[2];
 
-			giveWeapon(player, weaponName.toLowerCase(), 1);
-			player.sendMessage(ChatUtil.commandMessage("Given &b" + weaponName + "&7."));
+			if (giveWeapon(player, weaponName.toLowerCase(), 1)) player.sendMessage(
+					ChatUtil.commandMessage("Given &b" + weaponName + "&7."));
+			else player.sendMessage(ChatUtil.errorMessage("Invalid weapon!"));
 		});
 
 		Argument amount = new OptionalArgument(tree, (argument, sender, args) -> {
@@ -55,22 +56,20 @@ class WeaponGiveCommand extends SubArgument {
 				return;
 			}
 
-			giveWeapon(player, weaponName.toLowerCase(), weaponAmount);
-			player.sendMessage(ChatUtil.commandMessage("Given &a" + weaponAmount + " &b" + weaponName + "&7."));
+			if (giveWeapon(player, weaponName.toLowerCase(), weaponAmount)) player.sendMessage(
+					ChatUtil.commandMessage("Given &a" + weaponAmount + " &b" + weaponName + "&7."));
+			else player.sendMessage(ChatUtil.errorMessage("Invalid weapon!"));
 		});
 
 		name.addSubArgument(amount);
 		this.addSubArgument(name);
 	}
 
-	private void giveWeapon(Player player, String name, int amount) {
+	private boolean giveWeapon(Player player, String name, int amount) {
 		int    amountLeft = amount;
-		Weapon weapon     = gangland.getInitializer().getWeaponManager().getWeapon(name);
+		Weapon weapon     = gangland.getInitializer().getWeaponManager().getWeapon(player, null, name, true);
 
-		if (weapon == null) {
-			player.sendMessage("Invalid weapon!");
-			return;
-		}
+		if (weapon == null) return false;
 
 		PlayerInventory inventory = player.getInventory();
 
@@ -91,6 +90,8 @@ class WeaponGiveCommand extends SubArgument {
 			player.getWorld().dropItemNaturally(player.getLocation(), weapon.buildItem());
 			--amountLeft;
 		}
+
+		return true;
 	}
 
 }
