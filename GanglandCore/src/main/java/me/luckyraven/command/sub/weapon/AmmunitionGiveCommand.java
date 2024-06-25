@@ -84,7 +84,7 @@ class AmmunitionGiveCommand extends SubArgument {
 
 			int amountGive = amountLeft % 65;
 
-			player.getInventory().setItem(i, ammunition.getItem(amountGive));
+			player.getInventory().setItem(i, ammunition.buildItem(amountGive));
 
 			amountLeft -= amountGive;
 			--slots;
@@ -92,7 +92,7 @@ class AmmunitionGiveCommand extends SubArgument {
 
 		// make the player drop from their inventory the rest of items
 		while (amountLeft > 0) {
-			player.getWorld().dropItemNaturally(player.getLocation(), ammunition.getItem());
+			player.getWorld().dropItemNaturally(player.getLocation(), ammunition.buildItem());
 			--amountLeft;
 		}
 	}
