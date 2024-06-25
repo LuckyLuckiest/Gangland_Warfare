@@ -66,50 +66,55 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 		setVelocity(spread.multiply(getSpeed()));
 		projectile.setVelocity(getVelocity());
 
-		synchronized (sessionProjectileCount) {
-			// record each projectile launched
-			sessionProjectileCount.merge(getShooter().getUniqueId(), 1L, Long::sum);
-			// current reached value
-			long currentCount = sessionProjectileCount.get(getShooter().getUniqueId());
-
-			// save the instance
-			synchronized (projectileMap) {
-				Map<Long, Pair<WeaponProjectile<?>, Projectile>> projectiles = new HashMap<>();
-
-				projectiles.put(currentCount, new Pair<>(this, projectile));
-				projectileMap.merge(getShooter().getUniqueId(), projectiles, (oldMap, map) -> {
-					oldMap.putAll(map);
-					return oldMap;
-				});
-			}
-
-			// save the current player projectile lunch location
-			synchronized (shotLocation) {
-				Map<Long, Location> locationShot = new HashMap<>();
-
-				locationShot.put(currentCount, spawnLocation);
-				shotLocation.merge(getShooter().getUniqueId(), locationShot, (oldMap, map) -> {
-					oldMap.putAll(map);
-					return oldMap;
-				});
-			}
-		}
-
-		// update the projectile position
-		RepeatingTimer timer = new RepeatingTimer(plugin, 20L, time -> {
-//			Map<Integer, Pair<WeaponProjectile<?>, Projectile>> weaponProjectiles = projectileMap.get(
-//					getShooter().getUniqueId());
-
-//			for (Pair<WeaponProjectile<?>, Projectile> weaponProjectilePair : weaponProjectiles.values()) {
-//				WeaponProjectile<?> weaponProjectile = weaponProjectilePair.first();
-//				Projectile          thrownProjectile = weaponProjectilePair.second();
-
-//				weaponProjectile.setLocation(thrownProjectile.getVelocity());
-//				double distanceTravelled = Location.
+//		synchronized (sessionProjectileCount) {
+//			// record each projectile launched
+//			sessionProjectileCount.merge(getShooter().getUniqueId(), 1L, Long::sum);
+//			// current reached value
+//			long currentCount = sessionProjectileCount.get(getShooter().getUniqueId());
+//
+//			// save the instance
+//			synchronized (projectileMap) {
+//				Map<Long, Pair<WeaponProjectile<?>, Projectile>> projectiles = new HashMap<>();
+//
+//				projectiles.put(currentCount, new Pair<>(this, projectile));
+//				projectileMap.merge(getShooter().getUniqueId(), projectiles, (oldMap, map) -> {
+//					oldMap.putAll(map);
+//					return oldMap;
+//				});
 //			}
-		});
+//
+//			// save the current player projectile lunch location
+//			synchronized (shotLocation) {
+//				Map<Long, Location> locationShot = new HashMap<>();
+//
+//				locationShot.put(currentCount, spawnLocation);
+//				shotLocation.merge(getShooter().getUniqueId(), locationShot, (oldMap, map) -> {
+//					oldMap.putAll(map);
+//					return oldMap;
+//				});
+//			}
+//		}
+//
+//		// update the projectile position
+//		RepeatingTimer timer = new RepeatingTimer(plugin, 20L, time -> {
+////			Map<Integer, Pair<WeaponProjectile<?>, Projectile>> weaponProjectiles = projectileMap.get(
+////					getShooter().getUniqueId());
+//
+////			for (Pair<WeaponProjectile<?>, Projectile> weaponProjectilePair : weaponProjectiles.values()) {
+////				WeaponProjectile<?> weaponProjectile = weaponProjectilePair.first();
+////				Projectile          thrownProjectile = weaponProjectilePair.second();
+//
+////				weaponProjectile.setLocation(thrownProjectile.getVelocity());
+////				double distanceTravelled = Location.
+////			}
+//		});
+//
+//		timer.start(true);
+	}
 
-		timer.start(true);
+	@Override
+	public double getSpeed() {
+		return weapon.getProjectileSpeed();
 	}
 
 	@NotNull
@@ -139,11 +144,6 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 			projectile.remove();
 			t.cancel();
 		});
-	}
-
-	@Override
-	public double getSpeed() {
-		return weapon.getProjectileSpeed();
 	}
 
 	private Vector applySpread(Vector originalVector, double spreadFactor) {
