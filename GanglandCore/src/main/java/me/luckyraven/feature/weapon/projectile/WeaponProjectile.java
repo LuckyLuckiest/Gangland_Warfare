@@ -1,23 +1,44 @@
 package me.luckyraven.feature.weapon.projectile;
 
+import com.google.common.util.concurrent.AtomicDouble;
 import me.luckyraven.feature.weapon.Weapon;
+import me.luckyraven.util.Pair;
+import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Projectile;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class WeaponProjectile<T extends Projectile> extends WProjectile {
 
-	private final Weapon   weapon;
-	private final Class<T> bulletType;
-	private final Random   random;
+	// current player projectile count
+	private static final Map<UUID, Long> sessionProjectileCount = new HashMap<>();
 
-	public WeaponProjectile(LivingEntity shooter, Weapon weapon, Location location, Vector velocity,
+	// projectile launched by a specific player with the projectile instance itself
+	private static final Map<UUID, Map<Long, Pair<WeaponProjectile<?>, Projectile>>> projectileMap = new HashMap<>();
+
+	// projectile location according to the saved id
+	private static final Map<UUID, Map<Long, Location>> shotLocation = new HashMap<>();
+
+	private final JavaPlugin plugin;
+	private final Weapon     weapon;
+	private final Class<T>   bulletType;
+	private final Random     random;
+
+	public WeaponProjectile(JavaPlugin plugin, LivingEntity shooter, Weapon weapon, Location location, Vector velocity,
 							Class<T> bulletType) {
 		super(shooter, location, velocity);
 
+		this.plugin     = plugin;
 		this.weapon     = weapon;
 		this.bulletType = bulletType;
 		this.random     = new Random();
@@ -44,6 +65,80 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 		// set the velocity according to the modified values
 		setVelocity(spread.multiply(getSpeed()));
 		projectile.setVelocity(getVelocity());
+
+		synchronized (sessionProjectileCount) {
+			// record each projectile launched
+			sessionProjectileCount.merge(getShooter().getUniqueId(), 1L, Long::sum);
+			// current reached value
+			long currentCount = sessionProjectileCount.get(getShooter().getUniqueId());
+
+			// save the instance
+			synchronized (projectileMap) {
+				Map<Long, Pair<WeaponProjectile<?>, Projectile>> projectiles = new HashMap<>();
+
+				projectiles.put(currentCount, new Pair<>(this, projectile));
+				projectileMap.merge(getShooter().getUniqueId(), projectiles, (oldMap, map) -> {
+					oldMap.putAll(map);
+					return oldMap;
+				});
+			}
+
+			// save the current player projectile lunch location
+			synchronized (shotLocation) {
+				Map<Long, Location> locationShot = new HashMap<>();
+
+				locationShot.put(currentCount, spawnLocation);
+				shotLocation.merge(getShooter().getUniqueId(), locationShot, (oldMap, map) -> {
+					oldMap.putAll(map);
+					return oldMap;
+				});
+			}
+		}
+
+		// update the projectile position
+		RepeatingTimer timer = new RepeatingTimer(plugin, 20L, time -> {
+//			Map<Integer, Pair<WeaponProjectile<?>, Projectile>> weaponProjectiles = projectileMap.get(
+//					getShooter().getUniqueId());
+
+//			for (Pair<WeaponProjectile<?>, Projectile> weaponProjectilePair : weaponProjectiles.values()) {
+//				WeaponProjectile<?> weaponProjectile = weaponProjectilePair.first();
+//				Projectile          thrownProjectile = weaponProjectilePair.second();
+
+//				weaponProjectile.setLocation(thrownProjectile.getVelocity());
+//				double distanceTravelled = Location.
+//			}
+		});
+
+		timer.start(true);
+	}
+
+	@NotNull
+	private RepeatingTimer applyGravity(Projectile projectile) {
+		AtomicReference<Location> initialLocation  = new AtomicReference<>(projectile.getLocation());
+		AtomicDouble              furthestDistance = new AtomicDouble(10);
+		AtomicBoolean             falling          = new AtomicBoolean();
+
+		return new RepeatingTimer(plugin, 1, t -> {
+			if (projectile.isDead()) {
+				t.cancel();
+				return;
+			}
+
+			double distance = initialLocation.get().distance(projectile.getLocation());
+
+			if (distance >= furthestDistance.get() && !falling.get()) falling.set(true);
+			if (!falling.get()) return;
+
+			Vector currentVelocity = projectile.getVelocity();
+			double newY            = currentVelocity.getY() - 0.001;
+			projectile.setVelocity(currentVelocity.setY(newY).normalize());
+
+			if (projectile.getLocation().getChunk().isLoaded() ||
+				(projectile.getLocation().getY() > 0 && distance < furthestDistance.get() * 10)) return;
+
+			projectile.remove();
+			t.cancel();
+		});
 	}
 
 	@Override

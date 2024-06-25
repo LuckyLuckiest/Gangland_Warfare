@@ -1,30 +1,23 @@
 package me.luckyraven.listener.player.weapon;
 
-import com.google.common.util.concurrent.AtomicDouble;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.events.WeaponShootEvent;
 import me.luckyraven.feature.weapon.projectile.WeaponProjectile;
-import me.luckyraven.feature.weapon.projectile.type.Bullet;
 import me.luckyraven.file.configuration.SoundConfiguration;
-import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class WeaponInteract implements Listener {
 
@@ -83,7 +76,7 @@ public class WeaponInteract implements Listener {
 				return;
 			}
 
-			WeaponProjectile<?> weaponProjectile = new Bullet(player, weapon);
+			WeaponProjectile<?> weaponProjectile = weapon.getProjectileType().createInstance(gangland, player, weapon);
 			WeaponShootEvent    weaponShootEvent = new WeaponShootEvent(weapon, weaponProjectile);
 
 			// launch the projectile
@@ -113,50 +106,6 @@ public class WeaponInteract implements Listener {
 
 			gangland.getServer().getPluginManager().callEvent(weaponShootEvent);
 		}
-
-		// projectile logic
-//		Projectile projectile = player.launchProjectile(Snowball.class);
-//		Vector     velocity   = player.getLocation().getDirection();
-//
-//		// Introduce spread by modifying the projectile velocity
-//		double spreadAngle = Math.toRadians(5);
-//		velocity = applySpread(velocity, spreadAngle);
-//
-//		projectile.setVelocity(velocity.multiply(2));
-//		projectile.setGravity(false);
-//
-//		RepeatingTimer timer = applyGravity(projectile);
-//
-//		timer.start(false);
-	}
-
-	@NotNull
-	private RepeatingTimer applyGravity(Projectile projectile) {
-		AtomicReference<Location> initialLocation  = new AtomicReference<>(projectile.getLocation());
-		AtomicDouble              furthestDistance = new AtomicDouble(10);
-		AtomicBoolean             falling          = new AtomicBoolean();
-
-		return new RepeatingTimer(gangland, 1, t -> {
-			if (projectile.isDead()) {
-				t.cancel();
-				return;
-			}
-
-			double distance = initialLocation.get().distance(projectile.getLocation());
-
-			if (distance >= furthestDistance.get() && !falling.get()) falling.set(true);
-			if (!falling.get()) return;
-
-			Vector currentVelocity = projectile.getVelocity();
-			double newY            = currentVelocity.getY() - 0.001;
-			projectile.setVelocity(currentVelocity.setY(newY).normalize());
-
-			if (projectile.getLocation().getChunk().isLoaded() ||
-				(projectile.getLocation().getY() > 0 && distance < furthestDistance.get() * 10)) return;
-
-			projectile.remove();
-			t.cancel();
-		});
 	}
 
 	private void recoil(Player player, float yaw, float pitch) {
