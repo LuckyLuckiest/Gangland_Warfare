@@ -1,10 +1,12 @@
 package me.luckyraven.feature.weapon;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.feature.weapon.ammo.Ammunition;
 import me.luckyraven.feature.weapon.projectile.ProjectileType;
+import me.luckyraven.feature.weapon.reload.Reload;
 import me.luckyraven.feature.weapon.reload.ReloadType;
 import me.luckyraven.file.configuration.SoundConfiguration;
 import org.bukkit.Material;
@@ -44,6 +46,8 @@ public class Weapon {
 	private final boolean        particle;
 
 	// Reload configuration
+	@Getter(value = AccessLevel.NONE) @Setter(value = AccessLevel.NONE) private final Reload reload;
+
 	private final int                    maxMagCapacity;
 	private final int                    reloadCooldown;
 	private final Ammunition             reloadAmmoType;
@@ -137,6 +141,7 @@ public class Weapon {
 		this.reloadType           = reloadType;
 		this.tags                 = new TreeMap<>();
 		this.changingDisplayName  = updateDisplayName(displayName);
+		this.reload               = reloadType.createInstance(this, reloadAmmoType);
 	}
 
 	public Weapon(String name, String displayName, WeaponType category, Material material, short durability,
@@ -204,6 +209,10 @@ public class Weapon {
 		ItemStack offHandItem = itemAccordingToSlot(player, EquipmentSlot.OFF_HAND);
 
 		return isWeapon(offHandItem) ? new ItemBuilder(offHandItem) : null;
+	}
+
+	public void reload() {
+		reload.reload();
 	}
 
 	public void updateWeaponData(ItemBuilder itemBuilder) {
