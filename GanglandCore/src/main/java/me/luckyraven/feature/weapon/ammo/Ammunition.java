@@ -1,5 +1,6 @@
 package me.luckyraven.feature.weapon.ammo;
 
+import com.google.common.base.Preconditions;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -21,14 +22,18 @@ public class Ammunition {
 	private       List<String> lore;
 
 	public static boolean isAmmunition(ItemStack item) {
+		Preconditions.checkNotNull(item, "Item can't be null!");
+		Preconditions.checkArgument(item.getType().equals(Material.AIR) || item.getAmount() == 0,
+									"Item can't be air or amount of 0.");
+
 		return new ItemBuilder(item).hasNBTTag("ammo");
 	}
 
-	public ItemStack getItem() {
-		return getItem(1);
+	public ItemStack buildItem() {
+		return buildItem(1);
 	}
 
-	public ItemStack getItem(int amount) {
+	public ItemStack buildItem(int amount) {
 		ItemBuilder builder = new ItemBuilder(material);
 
 		builder.setDisplayName(displayName).setLore(lore);

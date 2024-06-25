@@ -33,6 +33,15 @@ public class ItemBuilder {
 		this.itemStack = itemStack;
 	}
 
+	/**
+	 * This constructor is primarily used to simply create a new instance of the ItemBuilder, never use this constructor
+	 * to create an indirect instance of an ItemStack.
+	 * <p>
+	 * There will be multiple problems risen from creating a new instance of ItemBuilder with a material, mainly the
+	 * NBTTag wouldn't be recognized since it would be saved in the ItemStack and not the Material.
+	 *
+	 * @param material The material type used.
+	 */
 	public ItemBuilder(Material material) {
 		this.itemStack = new ItemStack(material);
 	}
@@ -94,7 +103,7 @@ public class ItemBuilder {
 	}
 
 	public ItemBuilder setAmount(int amount) {
-		modifyNBT(nbt -> nbt.setInteger("Count", amount));
+		itemStack.setAmount(amount);
 		return this;
 	}
 
