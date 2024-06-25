@@ -7,9 +7,9 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class Bullet extends WeaponProjectile<Snowball> {
+public class Spread extends WeaponProjectile<Snowball> {
 
-	public Bullet(JavaPlugin plugin, LivingEntity shooter, Weapon weapon) {
+	public Spread(JavaPlugin plugin, LivingEntity shooter, Weapon weapon) {
 		super(plugin, shooter, weapon, shooter.getEyeLocation(), shooter.getEyeLocation().getDirection(),
 			  Snowball.class);
 	}
