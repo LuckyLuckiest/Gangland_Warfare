@@ -9,29 +9,36 @@ import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.BankTable;
 import me.luckyraven.database.tables.UserTable;
+import me.luckyraven.feature.weapon.Weapon;
+import me.luckyraven.feature.weapon.WeaponManager;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
 public final class RemoveAccount implements Listener {
 
 	private final Gangland            gangland;
+	private final Initializer         initializer;
 	private final UserManager<Player> userManager;
+	private final WeaponManager       weaponManager;
 
 	public RemoveAccount(Gangland gangland) {
-		this.gangland    = gangland;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.gangland      = gangland;
+		this.initializer   = gangland.getInitializer();
+		this.userManager   = initializer.getUserManager();
+		this.weaponManager = initializer.getWeaponManager();
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerLeave(PlayerQuitEvent event) {
-		User<Player> user = userManager.getUser(event.getPlayer());
-
+		Player         player      = event.getPlayer();
+		User<Player>   user        = userManager.getUser(player);
 		RepeatingTimer bountyTimer = user.getBounty().getRepeatingTimer();
 
 		if (bountyTimer != null) bountyTimer.stop();
@@ -39,7 +46,6 @@ public final class RemoveAccount implements Listener {
 		// Remove the user from a user manager group
 		userManager.remove(user);
 
-		Initializer      initializer      = gangland.getInitializer();
 		GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
 		DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
 		List<Table<?>>   tables           = ganglandDatabase.getTables();
@@ -53,10 +59,19 @@ public final class RemoveAccount implements Listener {
 			bankTable.updateTableQuery(database, user);
 		});
 
-		if (user.getScoreboard() == null) return;
+		if (user.getScoreboard() != null) {
+			user.getScoreboard().end();
+			user.setScoreboard(null);
+		}
 
-		user.getScoreboard().end();
-		user.setScoreboard(null);
+		// check if it was a weapon
+		ItemStack item   = player.getItemInUse();
+		Weapon    weapon = weaponManager.validateAndGetWeapon(player, item);
+
+		if (weapon == null) return;
+		if (!weapon.isScoped()) return;
+
+		weapon.unScope(player);
 	}
 
 }
