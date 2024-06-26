@@ -79,13 +79,13 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 				temp.add(fileHandler.getName());
 			} catch (Exception exception) {
 				Gangland.getLog4jLogger()
-						.error(String.format("%s: There was a problem registering the " + getFolderName() + " %s.",
-											 UnhandledError.FILE_LOADER_ERROR, fileHandler.getName()), exception);
+						.error("{}: There was a problem registering the {} {}", UnhandledError.FILE_LOADER_ERROR,
+							   getFolderName(), fileHandler.getName(), exception);
 			}
 
 		if (temp.isEmpty()) Gangland.getLog4jLogger().info("No files were handled");
 		else {
-			Gangland.getLog4jLogger().info("Registered the following files from '" + getFolderName() + "' folder:");
+			Gangland.getLog4jLogger().info("Registered the following files from '{}' folder:", getFolderName());
 			Gangland.getLog4jLogger().info(temp);
 		}
 	}
