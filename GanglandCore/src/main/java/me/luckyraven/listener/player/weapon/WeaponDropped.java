@@ -1,11 +1,8 @@
 package me.luckyraven.listener.player.weapon;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.WeaponManager;
-import me.luckyraven.feature.weapon.ammo.Ammunition;
-import org.bukkit.Material;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -41,35 +38,18 @@ public class WeaponDropped implements Listener {
 		if (!player.isSneaking()) return;
 
 		// check if the player has the item
-		boolean         found          = false;
-		int             inventoryIndex = -1;
 		PlayerInventory inventory      = player.getInventory();
 		String          ammunitionName = weapon.getReloadAmmoType().getName();
-		for (int i = 0; i < inventory.getSize(); i++) {
-			ItemStack inventoryItem = inventory.getItem(i);
 
-			if (inventoryItem == null || inventoryItem.getType().equals(Material.AIR) || inventoryItem.getAmount() == 0)
-				continue;
-			if (!Ammunition.isAmmunition(inventoryItem)) continue;
+		if (inventory.containsAtLeast(weapon.getReloadAmmoType().buildItem(), weapon.getReloadConsume())) {
 
-			// get the ammunition type
-			ItemBuilder itemBuilder = new ItemBuilder(inventoryItem);
-			// get the ammunition name
-			String name = itemBuilder.getStringTagData("ammo");
-
-			if (!ammunitionName.equalsIgnoreCase(name)) continue;
-
-			inventoryIndex = i;
-			found          = true;
 		}
-
-		if (!found) return;
 
 		// don't drop the weapon if the player has ammunition item for it
 		event.setCancelled(true);
 
 		// remove the item accordingly
-		weapon.reload();
+		weapon.reload(player);
 	}
 
 }
