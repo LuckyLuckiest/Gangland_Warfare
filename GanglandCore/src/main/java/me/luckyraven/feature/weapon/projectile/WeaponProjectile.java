@@ -53,63 +53,67 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 		Location spawnLocation = eyeLocation.clone().add(eyeLocation.getDirection());
 
 		// spawn the projectile
-		Projectile projectile = getShooter().getWorld().spawn(spawnLocation, bulletType);
+		for (int i = 0; i < weapon.getProjectilePerShot(); ++i) {
+			Projectile projectile = getShooter().getWorld().spawn(spawnLocation, bulletType);
 
-		projectile.setSilent(true);
-		projectile.setGravity(false);
-		projectile.setShooter(getShooter());
+			projectile.setSilent(true);
+			projectile.setGravity(false);
+			projectile.setShooter(getShooter());
 
-		// apply spread
-		Vector spread = applySpread(velocity, weapon.getSpreadStart());
+			// apply spread
+			Vector spread = applySpread(velocity, weapon.getSpreadStart());
 
-		// set the velocity according to the modified values
-		setVelocity(spread.multiply(getSpeed()));
-		projectile.setVelocity(getVelocity());
+			// set the velocity according to the modified values
+			setVelocity(spread.multiply(getSpeed()));
+			projectile.setVelocity(getVelocity());
 
-//		synchronized (sessionProjectileCount) {
-//			// record each projectile launched
-//			sessionProjectileCount.merge(getShooter().getUniqueId(), 1L, Long::sum);
-//			// current reached value
-//			long currentCount = sessionProjectileCount.get(getShooter().getUniqueId());
-//
-//			// save the instance
-//			synchronized (projectileMap) {
-//				Map<Long, Pair<WeaponProjectile<?>, Projectile>> projectiles = new HashMap<>();
-//
-//				projectiles.put(currentCount, new Pair<>(this, projectile));
-//				projectileMap.merge(getShooter().getUniqueId(), projectiles, (oldMap, map) -> {
-//					oldMap.putAll(map);
-//					return oldMap;
-//				});
-//			}
-//
-//			// save the current player projectile lunch location
-//			synchronized (shotLocation) {
-//				Map<Long, Location> locationShot = new HashMap<>();
-//
-//				locationShot.put(currentCount, spawnLocation);
-//				shotLocation.merge(getShooter().getUniqueId(), locationShot, (oldMap, map) -> {
-//					oldMap.putAll(map);
-//					return oldMap;
-//				});
-//			}
-//		}
-//
-//		// update the projectile position
-//		RepeatingTimer timer = new RepeatingTimer(plugin, 20L, time -> {
-////			Map<Integer, Pair<WeaponProjectile<?>, Projectile>> weaponProjectiles = projectileMap.get(
-////					getShooter().getUniqueId());
-//
-////			for (Pair<WeaponProjectile<?>, Projectile> weaponProjectilePair : weaponProjectiles.values()) {
-////				WeaponProjectile<?> weaponProjectile = weaponProjectilePair.first();
-////				Projectile          thrownProjectile = weaponProjectilePair.second();
-//
-////				weaponProjectile.setLocation(thrownProjectile.getVelocity());
-////				double distanceTravelled = Location.
-////			}
-//		});
-//
-//		timer.start(true);
+			synchronized (sessionProjectileCount) {
+				// record each projectile launched
+				sessionProjectileCount.merge(getShooter().getUniqueId(), 1L, Long::sum);
+				// current reached value
+				long currentCount = sessionProjectileCount.get(getShooter().getUniqueId());
+
+				// save the instance
+				synchronized (projectileMap) {
+					Map<Long, Pair<WeaponProjectile<?>, Projectile>> projectiles = new HashMap<>();
+
+					projectiles.put(currentCount, new Pair<>(this, projectile));
+					projectileMap.merge(getShooter().getUniqueId(), projectiles, (oldMap, map) -> {
+						oldMap.putAll(map);
+						return oldMap;
+					});
+				}
+
+				// save the current player projectile lunch location
+				synchronized (shotLocation) {
+					Map<Long, Location> locationShot = new HashMap<>();
+
+					locationShot.put(currentCount, spawnLocation);
+					shotLocation.merge(getShooter().getUniqueId(), locationShot, (oldMap, map) -> {
+						oldMap.putAll(map);
+						return oldMap;
+					});
+				}
+			}
+
+			// update the projectile position
+			RepeatingTimer timer = new RepeatingTimer(plugin, 20L, time -> {
+				Map<Long, Pair<WeaponProjectile<?>, Projectile>> weaponProjectiles = projectileMap.get(
+						getShooter().getUniqueId());
+
+				for (Pair<WeaponProjectile<?>, Projectile> weaponProjectilePair : weaponProjectiles.values()) {
+					WeaponProjectile<?> weaponProjectile = weaponProjectilePair.first();
+					Projectile          thrownProjectile = weaponProjectilePair.second();
+
+//				double distanceTravelled = shotLocation.get(getShooter().getUniqueId()).distance(weaponProjectile.getLocation());
+
+//				weaponProjectile.addDistanceTravelled(distanceTravelled);
+					weaponProjectile.setLocation(thrownProjectile.getVelocity());
+				}
+			});
+
+			timer.start(true);
+		}
 	}
 
 	@Override
@@ -118,9 +122,9 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 	}
 
 	@NotNull
-	private RepeatingTimer applyGravity(Projectile projectile) {
+	private RepeatingTimer applyGravity(Weapon weapon, Projectile projectile) {
 		AtomicReference<Location> initialLocation  = new AtomicReference<>(projectile.getLocation());
-		AtomicDouble              furthestDistance = new AtomicDouble(10);
+		AtomicDouble              furthestDistance = new AtomicDouble(weapon.getProjectileDistance());
 		AtomicBoolean             falling          = new AtomicBoolean();
 
 		return new RepeatingTimer(plugin, 1, t -> {
