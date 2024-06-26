@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.bukkit.ItemBuilder;
+import me.luckyraven.exception.PluginException;
 import me.luckyraven.feature.weapon.ammo.Ammunition;
 import me.luckyraven.feature.weapon.projectile.ProjectileType;
 import me.luckyraven.feature.weapon.reload.Reload;
@@ -20,7 +21,7 @@ import java.util.*;
 
 @Getter
 @Setter
-public class Weapon {
+public class Weapon implements Cloneable {
 
 	// Information configuration
 	private final UUID   uuid;
@@ -42,10 +43,6 @@ public class Weapon {
 	private final int            projectileDistance;
 	private final boolean        particle;
 
-	// Reload configuration
-	@Getter(value = AccessLevel.NONE)
-	@Setter(value = AccessLevel.NONE)
-	private final Reload reload;
 
 	private final int                    maxMagCapacity;
 	private final int                    reloadCooldown;
@@ -53,7 +50,13 @@ public class Weapon {
 	private final int                    reloadConsume;
 	private final ReloadType             reloadType;
 	private final Map<WeaponTag, Object> tags;
-	private       String                 changingDisplayName;
+
+	// Reload configuration
+	@Getter(value = AccessLevel.NONE)
+	@Setter(value = AccessLevel.NONE)
+	private Reload reload;
+
+	private String changingDisplayName;
 
 	// Shoot configuration
 	private SelectiveFire currentSelectiveFire;
@@ -293,6 +296,39 @@ public class Weapon {
 		builder.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
 
 		return builder.build();
+	}
+
+	@Override
+	public Weapon clone() {
+		try {
+			Weapon weapon = (Weapon) super.clone();
+
+			// current mag capacity
+			weapon.currentMagCapacity = weapon.maxMagCapacity;
+			// remove all tags set
+			weapon.tags.clear();
+			// copy the recoil pattern
+			weapon.recoilPattern = new ArrayList<>(this.recoilPattern);
+
+			// sounds
+			weapon.shotDefaultSound         = this.shotDefaultSound.clone();
+			weapon.shotCustomSound          = this.shotCustomSound.clone();
+			weapon.EmptyMagDefaultSound     = this.EmptyMagDefaultSound.clone();
+			weapon.EmptyMagCustomSound      = this.EmptyMagCustomSound.clone();
+			weapon.reloadDefaultSoundBefore = this.reloadDefaultSoundBefore.clone();
+			weapon.reloadDefaultSoundAfter  = this.reloadDefaultSoundAfter.clone();
+			weapon.reloadCustomSoundStart   = this.reloadCustomSoundStart.clone();
+			weapon.reloadCustomSoundMid     = this.reloadCustomSoundMid.clone();
+			weapon.reloadCustomSoundEnd     = this.reloadCustomSoundEnd.clone();
+			weapon.scopeDefaultSound        = this.scopeDefaultSound.clone();
+			weapon.scopeCustomSound         = this.scopeCustomSound.clone();
+
+			weapon.reload = this.reload.clone();
+
+			return weapon;
+		} catch (CloneNotSupportedException exception) {
+			throw new PluginException(exception);
+		}
 	}
 
 	@Override

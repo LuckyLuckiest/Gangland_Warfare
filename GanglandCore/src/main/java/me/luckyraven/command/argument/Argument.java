@@ -1,6 +1,7 @@
 package me.luckyraven.command.argument;
 
 import com.google.common.base.Preconditions;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.Gangland;
@@ -24,19 +25,25 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Getter
 public class Argument implements Cloneable {
 
-	private final @Getter String[]            arguments;
-	private final @Getter Tree.Node<Argument> node;
-	private final @Getter boolean             displayAllArguments;
+	private final boolean displayAllArguments;
 
+	private Tree.Node<Argument> node;
+	private String[]            arguments;
+
+	@Getter(value = AccessLevel.NONE)
 	private final Gangland       gangland;
-	private final Tree<Argument> tree;
+	@Getter(value = AccessLevel.NONE)
+	private       Tree<Argument> tree;
 
 	TriConsumer<Argument, CommandSender, String[]> action;
 
-	@NotNull private @Getter String                              permission;
-	private @Getter @Setter  BiConsumer<CommandSender, String[]> executeOnPass;
+	@NotNull
+	private String                              permission;
+	@Setter
+	private BiConsumer<CommandSender, String[]> executeOnPass;
 
 	public Argument(String argument, Tree<Argument> tree) {
 		this(argument, tree, null);
@@ -214,10 +221,18 @@ public class Argument implements Cloneable {
 					 .anyMatch(arg -> Arrays.stream(this.arguments).anyMatch(arg::equalsIgnoreCase));
 	}
 
+	// TODO test this method
 	@Override
 	public Argument clone() {
 		try {
-			return (Argument) super.clone();
+			Argument argument = (Argument) super.clone();
+
+			// deep clone argument data
+			argument.node      = this.node.clone();
+			argument.arguments = this.arguments.clone();
+			argument.tree      = this.tree.clone();
+
+			return argument;
 		} catch (CloneNotSupportedException exception) {
 			throw new PluginException(exception);
 		}

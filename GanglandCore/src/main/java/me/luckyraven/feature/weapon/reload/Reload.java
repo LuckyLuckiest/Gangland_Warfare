@@ -1,11 +1,12 @@
 package me.luckyraven.feature.weapon.reload;
 
+import me.luckyraven.exception.PluginException;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.ammo.Ammunition;
 
 import java.util.function.Consumer;
 
-public abstract class Reload {
+public abstract class Reload implements Cloneable {
 
 	private final Weapon     weapon;
 	private final Ammunition ammunition;
@@ -28,4 +29,12 @@ public abstract class Reload {
 		// end reloading sound
 	}
 
+	@Override
+	public Reload clone() {
+		try {
+			return (Reload) super.clone();
+		} catch (CloneNotSupportedException exception) {
+			throw new PluginException(exception);
+		}
+	}
 }

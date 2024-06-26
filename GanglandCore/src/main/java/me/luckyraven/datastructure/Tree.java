@@ -13,7 +13,7 @@ import java.util.NoSuchElementException;
 
 @Getter
 @Setter
-public class Tree<E> implements Iterable<E> {
+public class Tree<E> implements Iterable<E>, Cloneable {
 
 	private Node<E> root;
 
@@ -97,11 +97,25 @@ public class Tree<E> implements Iterable<E> {
 		return getAllNodes().stream().map(Object::toString).toList().toString();
 	}
 
-	private int height(Node<E> node) {
+	@Override
+	public Tree<E> clone() {
+		try {
+			@SuppressWarnings("unchecked") Tree<E> tree = (Tree<E>) super.clone();
+
+			// deep cloning every node connected to it
+			tree.root = this.root.clone();
+
+			return tree;
+		} catch (CloneNotSupportedException e) {
+			throw new AssertionError();
+		}
+	}
+
+	private int height(Node<?> node) {
 		if (node == null) return 0;
 
 		int maxHeight = 0;
-		for (Node<E> child : node.getChildren()) {
+		for (Node<?> child : node.getChildren()) {
 			int childHeight = height(child);
 			maxHeight = Math.max(maxHeight, childHeight);
 		}
@@ -161,10 +175,11 @@ public class Tree<E> implements Iterable<E> {
 	@Getter
 	public static class Node<T> implements Cloneable {
 
-		private final List<Node<T>> children;
 		private final T             data;
+		private       List<Node<T>> children;
 
-		@Setter private Node<T> parent;
+		@Setter
+		private Node<T> parent;
 
 		public Node(T data) {
 			this.data     = data;
@@ -200,6 +215,17 @@ public class Tree<E> implements Iterable<E> {
 		public Node<T> clone() {
 			try {
 				@SuppressWarnings("unchecked") Node<T> clonedNode = (Node<T>) super.clone();
+
+				// deep clone
+				List<Node<T>> children = new ArrayList<>();
+
+				for (Node<T> child : this.children)
+					children.add(child.clone());
+
+				clonedNode.children = children;
+
+				Node<T> parent = this.parent;
+				if (parent != null) clonedNode.parent = parent.clone();
 
 				return clonedNode;
 			} catch (CloneNotSupportedException exception) {
