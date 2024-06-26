@@ -216,8 +216,8 @@ public class Weapon implements Cloneable {
 		return WeaponTag.values();
 	}
 
-	public void reload() {
-		reload.reload();
+	public void reload(Player player) {
+		reload.reload(player);
 	}
 
 	public void scope(Player player) {
