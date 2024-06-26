@@ -3,8 +3,10 @@ package me.luckyraven.feature.weapon.reload;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.ammo.Ammunition;
+import me.luckyraven.file.configuration.SoundConfiguration;
+import org.bukkit.entity.Player;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 public abstract class Reload implements Cloneable {
 
@@ -16,17 +18,17 @@ public abstract class Reload implements Cloneable {
 		this.ammunition = ammunition;
 	}
 
-	public abstract Consumer<Ammunition> consumeAmmunition();
+	public abstract BiConsumer<Weapon, Ammunition> executeReload(Player player);
 
-	public abstract Consumer<Weapon> executeReload();
-
-	public void reload() {
+	public void reload(Player player) {
 		// start reloading sound
+		SoundConfiguration.playSounds(player, weapon.getReloadCustomSoundStart(), weapon.getReloadDefaultSoundBefore());
 
 		// start the reload with the stored sound
-		executeReload().accept(weapon);
+		executeReload(player).accept(weapon, ammunition);
 
 		// end reloading sound
+		SoundConfiguration.playSounds(player, weapon.getReloadCustomSoundEnd(), weapon.getReloadCustomSoundEnd());
 	}
 
 	@Override
@@ -37,4 +39,5 @@ public abstract class Reload implements Cloneable {
 			throw new PluginException(exception);
 		}
 	}
+
 }
