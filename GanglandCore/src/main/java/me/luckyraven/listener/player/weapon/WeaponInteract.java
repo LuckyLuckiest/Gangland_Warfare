@@ -14,6 +14,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
@@ -96,6 +98,20 @@ public class WeaponInteract implements Listener {
 
 			gangland.getServer().getPluginManager().callEvent(weaponShootEvent);
 		}
+	}
+
+	@EventHandler
+	public void onBlockPlace(BlockPlaceEvent event) {
+		if (!weaponManager.isWeapon(event.getPlayer().getItemInUse())) return;
+
+		event.setCancelled(true);
+	}
+
+	@EventHandler
+	public void onBlockBreak(BlockBreakEvent event) {
+		if (!weaponManager.isWeapon(event.getPlayer().getItemInUse())) return;
+
+		event.setCancelled(true);
 	}
 
 	@EventHandler
