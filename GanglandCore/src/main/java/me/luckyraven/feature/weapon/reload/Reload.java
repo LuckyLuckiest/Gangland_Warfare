@@ -1,19 +1,25 @@
 package me.luckyraven.feature.weapon.reload;
 
+import lombok.Getter;
+import me.luckyraven.Gangland;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.ammo.Ammunition;
 import me.luckyraven.file.configuration.SoundConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.function.BiConsumer;
 
 public abstract class Reload implements Cloneable {
 
+	@Getter
+	private final Gangland   gangland;
 	private final Weapon     weapon;
 	private final Ammunition ammunition;
 
 	public Reload(Weapon weapon, Ammunition ammunition) {
+		this.gangland   = JavaPlugin.getPlugin(Gangland.class);
 		this.weapon     = weapon;
 		this.ammunition = ammunition;
 	}

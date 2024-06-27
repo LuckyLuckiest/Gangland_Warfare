@@ -147,11 +147,13 @@ Reload:
    # The default magazine holding capacity
    Capacity: 45
    # The reload time taken
-   Cooldown: 10
+   Cooldown: 3
    # The ammo name from the ammunition YAML file
    Ammo_Type: "5,56"
    # The number of ammunition items that is required to insert one magazine
    Consume: 1
+   # The amount that would be restored in the magazine
+   Restore: 45
 
    Sound:
       # Default sounds only use mc supported sounds, and they can be overlapped with custom sounds

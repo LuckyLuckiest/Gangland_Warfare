@@ -232,6 +232,9 @@ public class WeaponAddon {
 		// consume
 		int reloadConsume = reloadSection.getInt("Consume");
 
+		// restore
+		int reloadRestore = reloadSection.getInt("Restore");
+
 		// sound
 		ConfigurationSection reloadSoundSection       = reloadSection.getConfigurationSection("Sound");
 		SoundConfiguration   reloadDefaultSoundBefore = null;
@@ -359,7 +362,7 @@ public class WeaponAddon {
 								   selectiveFire, weaponConsumedOnShot, projectileSpeed, projectileType,
 								   projectileDamage, projectileConsumed, projectilePerShot, projectileCooldown,
 								   projectileDistance, projectileParticle, reloadCapacity, reloadCooldown, ammoType,
-								   reloadConsume, reloadType);
+								   reloadConsume, reloadRestore, reloadType);
 
 		weapon.setDurabilityOnShot(onShotDurability);
 		weapon.setDurabilityOnRepair(onRepairDurability);

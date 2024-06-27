@@ -48,6 +48,7 @@ public class Weapon implements Cloneable {
 	private final int                    reloadCooldown;
 	private final Ammunition             reloadAmmoType;
 	private final int                    reloadConsume;
+	private final int                    reloadRestore;
 	private final ReloadType             reloadType;
 	private final Map<WeaponTag, Object> tags;
 
@@ -124,7 +125,7 @@ public class Weapon implements Cloneable {
 				  double projectileSpeed, ProjectileType projectileType, double projectileDamage,
 				  int projectileConsumed, int projectilePerShot, int projectileCooldown, int projectileDistance,
 				  boolean particle, int maxMagCapacity, int reloadCooldown, Ammunition reloadAmmoType,
-				  int reloadConsume, ReloadType reloadType) {
+				  int reloadConsume, int reloadRestore, ReloadType reloadType) {
 		this.uuid                 = uuid;
 		this.name                 = name;
 		this.displayName          = displayName;
@@ -148,6 +149,7 @@ public class Weapon implements Cloneable {
 		this.reloadCooldown       = reloadCooldown;
 		this.reloadAmmoType       = reloadAmmoType;
 		this.reloadConsume        = reloadConsume;
+		this.reloadRestore        = reloadRestore == -1 ? maxMagCapacity : reloadRestore;
 		this.reloadType           = reloadType;
 		this.tags                 = new TreeMap<>();
 		this.changingDisplayName  = updateDisplayName(displayName);
@@ -159,11 +161,11 @@ public class Weapon implements Cloneable {
 				  double projectileSpeed, ProjectileType projectileType, double projectileDamage,
 				  int projectileConsumed, int projectilePerShot, int projectileCooldown, int projectileDistance,
 				  boolean particle, int maxMagCapacity, int reloadCooldown, Ammunition reloadAmmoType,
-				  int reloadConsume, ReloadType reloadType) {
+				  int reloadConsume, int reloadRestore, ReloadType reloadType) {
 		this(null, name, displayName, category, material, durability, lore, dropHologram, selectiveFire,
 			 weaponShotConsume, projectileSpeed, projectileType, projectileDamage, projectileConsumed,
 			 projectilePerShot, projectileCooldown, projectileDistance, particle, maxMagCapacity, reloadCooldown,
-			 reloadAmmoType, reloadConsume, reloadType);
+			 reloadAmmoType, reloadConsume, reloadRestore, reloadType);
 	}
 
 	public Weapon(UUID uuid, Weapon weapon) {
@@ -171,7 +173,8 @@ public class Weapon implements Cloneable {
 			 weapon.dropHologram, weapon.currentSelectiveFire, weapon.weaponShotConsume, weapon.projectileSpeed,
 			 weapon.projectileType, weapon.projectileDamage, weapon.projectileConsumed, weapon.projectilePerShot,
 			 weapon.projectileCooldown, weapon.projectileDistance, weapon.particle, weapon.maxMagCapacity,
-			 weapon.reloadCooldown, weapon.reloadAmmoType, weapon.reloadConsume, weapon.reloadType);
+			 weapon.reloadCooldown, weapon.reloadAmmoType, weapon.reloadConsume, weapon.reloadRestore,
+			 weapon.reloadType);
 
 		this.durabilityOnShot            = weapon.durabilityOnShot;
 		this.durabilityOnRepair          = weapon.durabilityOnRepair;
