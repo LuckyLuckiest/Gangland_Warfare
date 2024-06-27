@@ -14,6 +14,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import java.util.Map;
+
 class AmmunitionGiveCommand extends SubArgument {
 
 	private final Gangland       gangland;
@@ -64,36 +66,32 @@ class AmmunitionGiveCommand extends SubArgument {
 	}
 
 	private void giveAmmunition(Player player, String name, int amount) {
-		int        slots      = (int) Math.ceil(amount / 64D);
-		int        amountLeft = amount;
 		Ammunition ammunition = gangland.getInitializer().getAmmunitionAddon().getAmmunition(name);
 
 		if (ammunition == null) {
-			player.sendMessage("Invalid ammunition!");
+			player.sendMessage(ChatUtil.errorMessage("Invalid ammunition!"));
 			return;
 		}
 
-		PlayerInventory inventory = player.getInventory();
+		int             slots      = (int) Math.ceil(amount / 64D);
+		int             amountLeft = amount;
+		PlayerInventory inventory  = player.getInventory();
+		ItemStack[]     items      = new ItemStack[slots];
 
-		for (int i = 0; i < inventory.getStorageContents().length; i++) {
-			ItemStack itemStack = inventory.getItem(i);
-
-			if (itemStack != null) continue;
-			// check if no amount needs to be given
-			if (slots == 0) break;
-
+		for (int i = 0; i < items.length; ++i) {
 			int amountGive = amountLeft % 65;
 
-			player.getInventory().setItem(i, ammunition.buildItem(amountGive));
+			if (amountLeft <= 0) break;
 
-			amountLeft -= amountGive;
-			--slots;
+			items[i]   = ammunition.buildItem(amountGive);
+			amountLeft = Math.max(0, amountLeft - amountGive);
 		}
 
+		Map<Integer, ItemStack> left = inventory.addItem(items);
+
 		// make the player drop from their inventory the rest of items
-		while (amountLeft > 0) {
-			player.getWorld().dropItemNaturally(player.getLocation(), ammunition.buildItem());
-			--amountLeft;
+		for (ItemStack item : left.values()) {
+			player.getWorld().dropItemNaturally(player.getLocation(), item);
 		}
 	}
 
