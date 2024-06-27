@@ -48,13 +48,12 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 	public void launchProjectile() {
 		// Get the eye location
 		Location eyeLocation = getShooter().getEyeLocation();
-		Vector   velocity    = getVelocity();
-		// calculate the spawn location based on the view direction
-		Location spawnLocation = eyeLocation.clone().add(eyeLocation.getDirection());
-
-		// spawn the projectile
+		// spawn the projectile(s)
 		for (int i = 0; i < weapon.getProjectilePerShot(); ++i) {
-			Projectile projectile = getShooter().getWorld().spawn(spawnLocation, bulletType);
+			Vector velocity = getVelocity();
+			// calculate the spawn location based on the view direction
+			Location   spawnLocation = eyeLocation.clone().add(eyeLocation.getDirection());
+			Projectile projectile    = getShooter().getWorld().spawn(spawnLocation, bulletType);
 
 			projectile.setSilent(true);
 			projectile.setGravity(false);
