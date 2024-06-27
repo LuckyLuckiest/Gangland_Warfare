@@ -38,17 +38,13 @@ public class WeaponDropped implements Listener {
 		if (!player.isSneaking()) return;
 
 		// check if the player has the item
-		PlayerInventory inventory      = player.getInventory();
-		String          ammunitionName = weapon.getReloadAmmoType().getName();
-
-		if (inventory.containsAtLeast(weapon.getReloadAmmoType().buildItem(), weapon.getReloadConsume())) {
-
-		}
+		PlayerInventory inventory = player.getInventory();
+		if (!inventory.containsAtLeast(weapon.getReloadAmmoType().buildItem(), weapon.getReloadConsume())) return;
 
 		// don't drop the weapon if the player has ammunition item for it
 		event.setCancelled(true);
 
-		// remove the item accordingly
+		// reload the weapon
 		weapon.reload(player);
 	}
 
