@@ -16,9 +16,10 @@ public class SequenceTimer extends Timer {
 	private final List<IntervalTaskPair>  intervalTaskPairs;
 
 	private @Getter long currentInterval, totalInterval;
-	private @Getter @Setter Mode             mode;
-	private                 IntervalTaskPair currentTask;
-	private                 boolean          added;
+	private @Getter
+	@Setter Mode             mode;
+	private IntervalTaskPair currentTask;
+	private boolean          added;
 
 	public SequenceTimer(JavaPlugin plugin) {
 		this(plugin, 0L, 20L);
@@ -35,24 +36,25 @@ public class SequenceTimer extends Timer {
 		this.intervalTaskPairs = new ArrayList<>();
 		this.mode              = mode;
 		this.currentInterval   = this.totalInterval = 0L;
-		this.added             = false;
 	}
 
 	public void addIntervalTaskPair(long interval, Consumer<SequenceTimer> task) {
 		IntervalTaskPair intervalTaskPair = new IntervalTaskPair(interval, task);
 
-		intervalTaskQueue.add(intervalTaskPair);
 		intervalTaskPairs.add(intervalTaskPair);
-		if (currentTask == null) currentTask = intervalTaskQueue.poll();
+
+		if (currentTask == null) {
+			currentTask = intervalTaskPair;
+			added       = true;
+		} else intervalTaskQueue.add(intervalTaskPair);
+
 		totalInterval += interval;
 	}
 
 	@Override
 	public void run() {
-		currentInterval = (currentInterval + 1) % totalInterval;
-
 		// cancel the timer if it was stopped
-		if (!isRunning() || intervalTaskQueue.isEmpty() || currentTask == null) {
+		if (!isRunning() || currentTask == null) {
 			stop();
 			return;
 		}
@@ -60,7 +62,7 @@ public class SequenceTimer extends Timer {
 		++currentTask.currentInterval;
 
 		// run the task only when it reaches its interval
-		if (currentTask.getInterval() == currentTask.getCurrentInterval()) {
+		if (currentTask.getInterval() == currentTask.getCurrentInterval() || currentTask.getInterval() == 0) {
 			do {
 				// run the task
 				currentTask.runTask();
@@ -68,17 +70,19 @@ public class SequenceTimer extends Timer {
 				// check if the task was completed
 				if (!currentTask.isCompleted()) continue;
 
+				if (mode == Mode.CIRCULAR)
+					// move the task at the end (important for circular timer)
+					intervalTaskQueue.add(currentTask);
+
 				// change the state of the currentTask
 				currentTask.reset();
 				// get the head of the queue and remove it
-				currentTask = intervalTaskQueue.poll();
-
-				if (mode != Mode.CIRCULAR) continue;
-
-				// move the task at the end (important for circular timer)
-				intervalTaskQueue.add(currentTask);
+				if (intervalTaskPairs.isEmpty()) currentTask = null;
+				else currentTask = intervalTaskQueue.poll();
 			} while (currentTask != null && currentTask.getInterval() == 0);
 		}
+
+		currentInterval = (currentInterval + 1) % totalInterval;
 	}
 
 	@Override
@@ -92,6 +96,12 @@ public class SequenceTimer extends Timer {
 		}
 	}
 
+	@Override
+	public void stop() {
+		super.stop();
+		this.reset();
+	}
+
 	public void reset() {
 		intervalTaskQueue.clear();
 		intervalTaskQueue.addAll(intervalTaskPairs);
@@ -102,6 +112,15 @@ public class SequenceTimer extends Timer {
 
 	public long getTaskInterval() {
 		return currentTask.getInterval();
+	}
+
+	public SequenceTimer copy(JavaPlugin plugin) {
+		SequenceTimer newTimer = new SequenceTimer(plugin, this.getDelay(), this.getPeriod(), this.getMode());
+
+		for (IntervalTaskPair intervalTaskPair : this.intervalTaskPairs)
+			newTimer.addIntervalTaskPair(intervalTaskPair.interval, intervalTaskPair.task);
+
+		return newTimer;
 	}
 
 	public enum Mode {

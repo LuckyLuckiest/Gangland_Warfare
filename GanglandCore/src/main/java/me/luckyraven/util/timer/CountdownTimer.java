@@ -9,7 +9,11 @@ public class CountdownTimer extends Timer {
 
 	private final Consumer<CountdownTimer> duringTimer, beforeTimer, afterTimer;
 
-	private @Getter long timeLeft;
+	@Getter
+	private final long totalTime;
+
+	@Getter
+	private long timeLeft;
 
 	public CountdownTimer(JavaPlugin plugin, long time) {
 		this(plugin, time, null);
@@ -33,6 +37,7 @@ public class CountdownTimer extends Timer {
 	public CountdownTimer(JavaPlugin plugin, long delay, long period, long time, Consumer<CountdownTimer> beforeTimer,
 						  Consumer<CountdownTimer> duringTimer, Consumer<CountdownTimer> afterTimer) {
 		super(plugin, delay, period);
+		this.totalTime   = time;
 		this.timeLeft    = time;
 		this.beforeTimer = beforeTimer;
 		this.duringTimer = duringTimer;
@@ -47,7 +52,7 @@ public class CountdownTimer extends Timer {
 			return;
 		}
 
-		if (beforeTimer != null && timeLeft == getPeriod()) beforeTimer.accept(this);
+		if (beforeTimer != null && timeLeft == totalTime) beforeTimer.accept(this);
 		if (duringTimer != null) duringTimer.accept(this);
 
 		--timeLeft;

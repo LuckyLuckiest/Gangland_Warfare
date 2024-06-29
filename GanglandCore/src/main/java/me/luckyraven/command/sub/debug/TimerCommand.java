@@ -15,11 +15,13 @@ import java.util.Map;
 public final class TimerCommand extends CommandHandler {
 
 	private final Map<CommandSender, SequenceTimer> timerMap;
+	private final Map<CommandSender, SequenceTimer> startedTimers;
 
 	public TimerCommand(Gangland gangland) {
 		super(gangland, "timer", false);
 
-		this.timerMap = new HashMap<>();
+		this.timerMap      = new HashMap<>();
+		this.startedTimers = new HashMap<>();
 	}
 
 	@Override
@@ -46,6 +48,7 @@ public final class TimerCommand extends CommandHandler {
 		Argument delete = new Argument("delete", getArgumentTree(), (argument, sender, args) -> {
 			SequenceTimer timer = timerMap.remove(sender);
 
+			startedTimers.remove(sender);
 			sender.sendMessage("Removed " + timer);
 		});
 
@@ -84,7 +87,18 @@ public final class TimerCommand extends CommandHandler {
 				return;
 			}
 
+			if (startedTimers.containsKey(sender)) {
+				SequenceTimer newTimer = timer.copy(getGangland());
+
+				sender.sendMessage("Created a new timer " + newTimer);
+
+				timerMap.put(sender, newTimer);
+				timer = newTimer;
+			}
+
 			timer.start(false);
+			startedTimers.put(sender, timer);
+
 			sender.sendMessage("Started timer");
 		});
 
@@ -97,7 +111,6 @@ public final class TimerCommand extends CommandHandler {
 			}
 
 			timer.stop();
-			timer.reset();
 			sender.sendMessage("Stopped timer");
 		});
 

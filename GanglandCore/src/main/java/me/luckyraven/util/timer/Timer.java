@@ -5,13 +5,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public abstract class Timer extends BukkitRunnable {
 
-	private final         JavaPlugin plugin;
-	private final @Getter long       delay, period;
+	private final JavaPlugin plugin;
+	@Getter
+	private final long       delay, period;
+	private final AtomicBoolean stopped;
 
-	private          BukkitTask bukkitTask;
-	private volatile boolean    stopped;
+	private BukkitTask bukkitTask;
 
 	public Timer(JavaPlugin plugin) {
 		this(plugin, 0L, 20L);
@@ -21,28 +24,30 @@ public abstract class Timer extends BukkitRunnable {
 		this.plugin  = plugin;
 		this.delay   = delay;
 		this.period  = period;
-		this.stopped = true;
+		this.stopped = new AtomicBoolean(true);
 	}
 
 	public boolean isRunning() {
-		return !stopped;
+		return !stopped.get();
 	}
 
 	public void start(boolean async) {
-		if (bukkitTask != null && !stopped) return;
+		if (bukkitTask != null) return;
+		if (isRunning()) return;
 
 		if (async) this.bukkitTask = runTaskTimerAsynchronously(plugin, delay, period);
 		else this.bukkitTask = runTaskTimer(plugin, delay, period);
 
-		stopped = false;
+		this.stopped.set(false);
 	}
 
 	public void stop() {
-		if (stopped || bukkitTask == null) return;
+		if (!isRunning() || bukkitTask == null) return;
 
 		this.bukkitTask.cancel();
+		this.stopped.set(true);
 
-		this.stopped = true;
+		this.bukkitTask = null;
 	}
 
 }
