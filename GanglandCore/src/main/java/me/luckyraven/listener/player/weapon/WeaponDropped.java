@@ -3,19 +3,22 @@ package me.luckyraven.listener.player.weapon;
 import me.luckyraven.Gangland;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.WeaponManager;
+import me.luckyraven.util.ChatUtil;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 
 public class WeaponDropped implements Listener {
 
+	private final Gangland      gangland;
 	private final WeaponManager weaponManager;
 
 	public WeaponDropped(Gangland gangland) {
+		this.gangland      = gangland;
 		this.weaponManager = gangland.getInitializer().getWeaponManager();
 	}
 
@@ -28,24 +31,37 @@ public class WeaponDropped implements Listener {
 
 		if (weapon == null) return;
 
+		// no interruption while the weapon is reloading
+		if (weapon.isReloading()) {
+			event.setCancelled(true);
+			return;
+		}
+
 		// show the hologram when the weapon is dropped
 		if (weapon.isDropHologram()) {
-			item.setCustomName(weapon.getDisplayName());
+			item.setCustomName(ChatUtil.color(weapon.getDisplayName()));
 			item.setCustomNameVisible(true);
 		}
 
 		// drop the weapon normally
 		if (!player.isSneaking()) return;
 
-		// check if the player has the item
-		PlayerInventory inventory = player.getInventory();
-		if (!inventory.containsAtLeast(weapon.getReloadAmmoType().buildItem(), weapon.getReloadConsume())) return;
+		// check for full ammo
+		boolean fullAmmo = weapon.isMagazineFull();
+
+		if (fullAmmo) return;
+
+		// check if the item is available or it was creative
+		boolean haveItem = weaponManager.hasAmmunition(player, weapon);
+		boolean creative = player.getGameMode() == GameMode.CREATIVE;
+
+		if (!(haveItem || creative)) return;
 
 		// don't drop the weapon if the player has ammunition item for it
 		event.setCancelled(true);
 
 		// reload the weapon
-		weapon.reload(player);
+		weapon.reload(gangland, player, !creative);
 	}
 
 }
