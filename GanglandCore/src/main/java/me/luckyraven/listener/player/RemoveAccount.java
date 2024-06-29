@@ -64,14 +64,15 @@ public final class RemoveAccount implements Listener {
 			user.setScoreboard(null);
 		}
 
+		// search if the player holds a weapon
 		// check if it was a weapon
-		ItemStack item   = player.getItemInUse();
+		ItemStack item   = player.getInventory().getItemInMainHand();
 		Weapon    weapon = weaponManager.validateAndGetWeapon(player, item);
 
 		if (weapon == null) return;
-		if (!weapon.isScoped()) return;
+		if (weapon.isReloading()) weapon.stopReloading();
 
-		weapon.unScope(player);
+		weapon.unScope(player, true);
 	}
 
 }
