@@ -16,12 +16,15 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 
 	private final String            folder;
 	private final List<FileHandler> folderFiles;
+	private final List<FileHandler> expectedFolderFiles;
 
 	public FolderLoader(Gangland gangland, String folder) {
 		super(gangland);
-		this.gangland    = gangland;
-		this.folder      = folder;
-		this.folderFiles = new ArrayList<>();
+
+		this.gangland            = gangland;
+		this.folder              = folder;
+		this.folderFiles         = new ArrayList<>();
+		this.expectedFolderFiles = new ArrayList<>();
 	}
 
 	public abstract void initialize();
@@ -30,12 +33,21 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 		folderFiles.add(fileHandler);
 	}
 
+	public void addExpectedFile(FileHandler fileHandler) {
+		expectedFolderFiles.add(fileHandler);
+	}
+
 	public String getFolderName() {
 		return folder.substring(folder.lastIndexOf("/") + 1);
 	}
 
 	public List<FileHandler> getFiles() {
 		return Collections.unmodifiableList(folderFiles);
+	}
+
+	@Override
+	public void clear() {
+		folderFiles.clear();
 	}
 
 	@Override
@@ -48,23 +60,21 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 			Gangland.getLog4jLogger().info("No '{}' files were found... Creating new ones.", getFolderName());
 
 			// add files to the folder files if they weren't already added
-			if (files != null) for (File file : files) {
-				try {
-					FileHandler temp = new FileHandler(gangland, file);
-					// check if the file wasn't added, then add it
-					if (!folderFiles.contains(temp)) addFile(temp);
-				} catch (IOException exception) {
-					Gangland.getLog4jLogger()
-							.error(String.format("%s: There was a problem with loading the file %s.",
-												 UnhandledError.FILE_CREATE_ERROR, file.getName()), exception);
-				}
-			}
+			if (files != null) addFiles(files);
+			else folderFiles.addAll(expectedFolderFiles);
 
 			// when the folder files are empty, then don't create any
 			if (folderFiles.isEmpty()) return;
 
 			// create each file if not present
 			createFiles(folderFiles);
+		}
+		// check the folder with the contents available and add them
+		else {
+			addFiles(files);
+
+			// when the folder files are empty, then don't create any
+			if (folderFiles.isEmpty()) return;
 		}
 
 		// add each file handler from the folder to the file manager
@@ -87,6 +97,20 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 		else {
 			Gangland.getLog4jLogger().info("Registered the following files from '{}' folder:", getFolderName());
 			Gangland.getLog4jLogger().info(temp);
+		}
+	}
+
+	private void addFiles(File[] files) {
+		for (File file : files) {
+			try {
+				FileHandler temp = new FileHandler(gangland, file);
+				// check if the file wasn't added, then add it
+				if (!folderFiles.contains(temp)) addFile(temp);
+			} catch (IOException exception) {
+				Gangland.getLog4jLogger()
+						.error(String.format("%s: There was a problem with loading the file %s.",
+											 UnhandledError.FILE_CREATE_ERROR, file.getName()), exception);
+			}
 		}
 	}
 
