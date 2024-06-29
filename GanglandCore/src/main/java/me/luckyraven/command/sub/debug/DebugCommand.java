@@ -140,6 +140,8 @@ public final class DebugCommand extends CommandHandler {
 				MultiInventory multi = MultiInventory.dynamicMultiInventory(getGangland(), user, items,
 																			"&6&lDebug items", false, false, null);
 
+				if (multi == null) return;
+
 				multi.open(player);
 			} else {
 				sender.sendMessage("How will you see the inventory?");

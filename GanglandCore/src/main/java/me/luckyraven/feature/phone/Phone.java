@@ -226,6 +226,8 @@ public class Phone {
 																								 "&6&lGangs View", true,
 																								 true, staticItems);
 
+							if (multiInventory == null) return;
+
 							// search
 							ItemBuilder searchItem = new ItemBuilder(
 									XMaterial.WRITABLE_BOOK.parseMaterial()).setDisplayName("&eSearch");
