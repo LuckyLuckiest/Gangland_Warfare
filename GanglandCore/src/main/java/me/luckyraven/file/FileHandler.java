@@ -19,20 +19,26 @@ import java.util.Objects;
 
 public class FileHandler {
 
-	private final         JavaPlugin plugin;
-	private final @Getter String     name;
-	private final         String     fileType;
+	private final JavaPlugin plugin;
+	private final String     fileType;
+	@Getter
+	private final String     name;
 
 	private File   file;
 	private String directory;
 
-	private @Getter FileConfiguration fileConfiguration;
-	private @Getter boolean           loaded;
+	@Getter
+	private FileConfiguration fileConfiguration;
+	@Getter
+	private boolean           loaded;
 
-	private @Getter @Setter String configVersion;
+	@Getter
+	@Setter
+	private String configVersion;
 
 	public FileHandler(JavaPlugin plugin, File file) throws IOException {
-		this(plugin, file.getName(), file.getParentFile().getPath(),
+		this(plugin, file.getName().substring(0, file.getName().lastIndexOf(".")),
+			 file.getParentFile().getPath().substring(file.getParentFile().getPath().lastIndexOf("\\") + 1),
 			 file.getName().substring(file.getName().lastIndexOf(".")));
 		this.file = file;
 
