@@ -6,10 +6,7 @@ import me.luckyraven.exception.PluginException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 @Getter
 @Setter
@@ -216,16 +213,41 @@ public class Tree<E> implements Iterable<E>, Cloneable {
 			try {
 				@SuppressWarnings("unchecked") Node<T> clonedNode = (Node<T>) super.clone();
 
-				// deep clone
-				List<Node<T>> children = new ArrayList<>();
+				// shallow copy to avoid modifying the original list
+				clonedNode.children = new ArrayList<>();
 
 				for (Node<T> child : this.children)
-					children.add(child.clone());
+					clonedNode.add(child.clone());
 
-				clonedNode.children = children;
+				// no need to clone the parent since they are already cloned
 
-				Node<T> parent = this.parent;
-				if (parent != null) clonedNode.parent = parent.clone();
+				return clonedNode;
+			} catch (CloneNotSupportedException exception) {
+				throw new PluginException(exception);
+			}
+
+//			Map<Node<T>, Node<T>> clonedNodes = new HashMap<>();
+//			return clone(clonedNodes);
+		}
+
+		public Node<T> clone(Map<Node<T>, Node<T>> clonedNodes) {
+			if (clonedNodes.containsKey(this)) {
+				return clonedNodes.get(this);
+			}
+
+			try {
+				@SuppressWarnings("unchecked") Node<T> clonedNode = (Node<T>) super.clone();
+
+				// shallow copy to avoid modifying the original list
+				clonedNode.children = new ArrayList<>();
+
+				// add the cloned node to the map
+				clonedNodes.put(this, clonedNode);
+
+				for (Node<T> child : this.children)
+					clonedNode.add(child.clone(clonedNodes));
+
+				// no need to clone the parent since they are already cloned
 
 				return clonedNode;
 			} catch (CloneNotSupportedException exception) {
