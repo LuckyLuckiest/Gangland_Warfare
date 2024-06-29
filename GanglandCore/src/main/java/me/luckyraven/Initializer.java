@@ -57,6 +57,7 @@ import me.luckyraven.listener.inventory.InventoryOpenByCommand;
 import me.luckyraven.listener.player.*;
 import me.luckyraven.listener.player.weapon.WeaponDropped;
 import me.luckyraven.listener.player.weapon.WeaponInteract;
+import me.luckyraven.listener.player.weapon.WeaponSelectiveFireChange;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
@@ -207,6 +208,15 @@ public final class Initializer {
 		compatibilityWorker = new CompatibilityWorker(gangland);
 	}
 
+	public void files() {
+		fileManager.addFile(new FileHandler(gangland, "settings", ".yml"), true);
+		fileManager.addFile(new FileHandler(gangland, "scoreboard", ".yml"), true);
+		fileManager.addFile(new FileHandler(gangland, "ammunition", ".yml"), true);
+		scoreboardManager = new ScoreboardManager(gangland);
+
+		addonsLoader();
+	}
+
 	public void addonsLoader() {
 		settingAddon   = new SettingAddon(fileManager);
 		languageLoader = new LanguageLoader(gangland);
@@ -216,6 +226,21 @@ public final class Initializer {
 		weaponLoader();
 	}
 
+	public void addonsClear() {
+		// clear the inventory loader
+		inventoryLoader.clear();
+		// clear the ammunition addons
+		ammunitionAddon.clear();
+		ammunitionAddon = null;
+
+		// clear the weapon addons
+		weaponAddon.clear();
+		weaponAddon = null;
+
+		weaponLoader.clear();
+		weaponLoader = null;
+	}
+
 	public void scoreboardLoader() {
 		scoreboardAddon = new ScoreboardAddon(fileManager);
 	}
@@ -223,9 +248,9 @@ public final class Initializer {
 	public void inventoryLoader() {
 		inventoryLoader = new InventoryLoader(gangland);
 
-		inventoryLoader.addFile(new FileHandler(gangland, "gang_info", "inventory", ".yml"));
-		inventoryLoader.addFile(new FileHandler(gangland, "phone", "inventory", ".yml"));
-		inventoryLoader.addFile(new FileHandler(gangland, "phone_gang", "inventory", ".yml"));
+		inventoryLoader.addExpectedFile(new FileHandler(gangland, "gang_info", "inventory", ".yml"));
+		inventoryLoader.addExpectedFile(new FileHandler(gangland, "phone", "inventory", ".yml"));
+		inventoryLoader.addExpectedFile(new FileHandler(gangland, "phone_gang", "inventory", ".yml"));
 
 		inventoryLoader.initialize();
 	}
@@ -235,7 +260,7 @@ public final class Initializer {
 		weaponAddon     = new WeaponAddon();
 		weaponLoader    = new WeaponLoader(gangland);
 
-		weaponLoader.addFile(new FileHandler(gangland, "rifle", "weapon", ".yml"));
+		weaponLoader.addExpectedFile(new FileHandler(gangland, "rifle", "weapon", ".yml"));
 
 		weaponLoader.initialize();
 	}
@@ -246,15 +271,6 @@ public final class Initializer {
 					 .map(clazz::cast)
 					 .findFirst()
 					 .orElseThrow(() -> new RuntimeException("There was a problem finding class, " + clazz.getName()));
-	}
-
-	private void files() {
-		fileManager.addFile(new FileHandler(gangland, "settings", ".yml"), true);
-		fileManager.addFile(new FileHandler(gangland, "scoreboard", ".yml"), true);
-		fileManager.addFile(new FileHandler(gangland, "ammunition", ".yml"), true);
-		scoreboardManager = new ScoreboardManager(gangland);
-
-		addonsLoader();
 	}
 
 	private void databases() {
@@ -283,6 +299,7 @@ public final class Initializer {
 		// weapon events
 		listenerManager.addEvent(new WeaponInteract(gangland));
 		listenerManager.addEvent(new WeaponDropped(gangland));
+		listenerManager.addEvent(new WeaponSelectiveFireChange(gangland));
 
 		// switch events
 		if (SettingAddon.isPhoneEnabled()) listenerManager.addEvent(new PhoneItem(gangland));
