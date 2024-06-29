@@ -243,14 +243,6 @@
 		"usage": "/glw safewand",
 		"description": "Gives the player a safe wand."
 	},
-	"weapons": {
-		"usage": "/glw weapon give <name> <type>",
-		"description": "Gives the player the specified weapon."
-	},
-	"weapons_list": {
-		"usage": "/glw weapon list",
-		"description": "Shows all the available weapons."
-	},
 	"wanted": {
 		"usage": "/glw wanted",
 		"description": "Shows the current wanted status."
