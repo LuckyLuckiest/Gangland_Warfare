@@ -1,6 +1,5 @@
 package me.luckyraven.feature.weapon;
 
-import com.google.common.base.Preconditions;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.database.DatabaseHelper;
@@ -53,17 +52,14 @@ public class WeaponManager {
 
 	@Nullable
 	public String getHeldWeaponName(ItemStack item) {
-		Preconditions.checkNotNull(item, "Item can't be null!");
-		Preconditions.checkArgument(item.getType().equals(Material.AIR) || item.getAmount() == 0,
-									"Item can't be air or amount of 0.");
+		if (item == null || item.getType().equals(Material.AIR) || item.getAmount() == 0) return null;
 
 		return isWeapon(item) ? new ItemBuilder(item).getStringTagData("weapon") : null;
 	}
 
+	@Nullable
 	public UUID getWeaponUUID(ItemStack item) {
-		Preconditions.checkNotNull(item, "Item can't be null!");
-		Preconditions.checkArgument(item.getType().equals(Material.AIR) || item.getAmount() == 0,
-									"Item can't be air or amount of 0.");
+		if (item == null || item.getType().equals(Material.AIR) || item.getAmount() == 0) return null;
 
 		ItemBuilder tempItem = new ItemBuilder(item);
 		String      value    = String.valueOf(tempItem.getStringTagData(Weapon.getTagProperName(WeaponTag.UUID)));
@@ -77,11 +73,13 @@ public class WeaponManager {
 	}
 
 	public boolean isWeapon(ItemStack item) {
-		Preconditions.checkNotNull(item, "Item can't be null!");
-		Preconditions.checkArgument(item.getType().equals(Material.AIR) || item.getAmount() == 0,
-									"Item can't be air or amount of 0.");
+		if (item == null || item.getType().equals(Material.AIR) || item.getAmount() == 0) return false;
 
 		return new ItemBuilder(item).hasNBTTag("weapon");
+	}
+
+	public boolean hasAmmunition(Player player, Weapon weapon) {
+		return player.getInventory().containsAtLeast(weapon.getReloadAmmoType().buildItem(), weapon.getReloadConsume());
 	}
 
 	/**
@@ -186,7 +184,7 @@ public class WeaponManager {
 
 	@Nullable
 	public Weapon validateAndGetWeapon(Player player, ItemStack heldItem) {
-		Preconditions.checkNotNull(heldItem);
+		if (heldItem == null || heldItem.getType().equals(Material.AIR) || heldItem.getAmount() == 0) return null;
 		if (!isWeapon(heldItem)) return null;
 
 		String weaponName = getHeldWeaponName(heldItem);

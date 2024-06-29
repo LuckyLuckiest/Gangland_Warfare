@@ -34,13 +34,15 @@ public class MultiInventory extends InventoryHandler {
 		this.inventories.add(this);
 	}
 
+	@Nullable
 	public static MultiInventory dynamicMultiInventory(Gangland gangland, User<Player> user, List<ItemStack> items,
 													   String name, boolean staticItemsAllowed, boolean fixedSize,
 													   @Nullable
 													   Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
 		if (staticItemsAllowed) {
-			Preconditions.checkNotNull(staticItems, "No static items set");
-			Preconditions.checkArgument(staticItems.size() <= 6, "Can't add more items than max rows");
+			if (staticItems == null || staticItems.size() <= 6) return null;
+//			Preconditions.checkNotNull(staticItems, "No static items set");
+//			Preconditions.checkArgument(staticItems.size() <= 6, "Can't add more items than max rows");
 		}
 
 		int maxRows    = 4;
