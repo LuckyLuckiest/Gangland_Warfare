@@ -8,21 +8,23 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class FileManager {
 
-	private final List<FileHandler> files;
-	private final JavaPlugin        plugin;
+	private final JavaPlugin       plugin;
+	private final Set<FileHandler> files;
 
 	public FileManager(JavaPlugin plugin) {
-		this.files  = new ArrayList<>();
+		this.files  = new HashSet<>();
 		this.plugin = plugin;
 	}
 
 	public void addFile(FileHandler file, boolean create) {
+		if (files.contains(file)) return;
+
 		files.add(file);
 		if (!create) return;
 		try {
@@ -32,6 +34,10 @@ public class FileManager {
 				  .warning(String.format(UnhandledError.FILE_CREATE_ERROR + " %s.%s: %s", file.getName(),
 										 file.getFileType(), exception.getMessage()));
 		}
+	}
+
+	public void clear() {
+		files.clear();
 	}
 
 	@Nullable
@@ -66,7 +72,7 @@ public class FileManager {
 		File        file = new File(plugin.getDataFolder().getAbsolutePath(), resourceFile);
 		InputStream inputStream;
 
-		// Checks for the file in system
+		// Checks for the file in the system
 		if (plugin.getDataFolder().exists() && file.exists()) inputStream = new FileInputStream(file);
 			// Checks for the file in resources
 		else inputStream = plugin.getResource(resourceFile.replace(File.separator, "/"));
@@ -82,8 +88,8 @@ public class FileManager {
 		return yamlConfiguration;
 	}
 
-	public List<FileHandler> getFiles() {
-		return Collections.unmodifiableList(files);
+	public Set<FileHandler> getFiles() {
+		return Collections.unmodifiableSet(files);
 	}
 
 }

@@ -46,7 +46,7 @@ public final class ReloadPlugin {
 	public void reload(boolean resetCache) {
 		filesReload();
 		// when resetting the cache, there would be a problem with the scoreboard trying to get some values
-		// first killing all scoreboards then initializing the data
+		// first killing all scoreboards, then initializing the data
 		killAllScoreboards();
 		databaseInitialize(resetCache);
 		if (SettingAddon.isScoreboardEnabled()) scoreboardReload();
@@ -57,6 +57,9 @@ public final class ReloadPlugin {
 	 * Reloads the files and their linked addons.
 	 */
 	public void filesReload() {
+		// first, remove all the data saved from the files
+		initializer.addonsClear();
+		// second, reload the files
 		initializer.getFileManager().reloadFiles();
 		initializer.addonsLoader();
 	}

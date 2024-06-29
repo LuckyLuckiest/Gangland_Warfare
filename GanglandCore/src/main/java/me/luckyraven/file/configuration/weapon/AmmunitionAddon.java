@@ -13,10 +13,10 @@ import java.util.*;
 
 public class AmmunitionAddon {
 
-	private final Map<String, Ammunition> ammo;
+	private final Map<String, Ammunition> ammunition;
 
 	public AmmunitionAddon(FileManager fileManager) {
-		this.ammo = new HashMap<>();
+		this.ammunition = new HashMap<>();
 
 		FileConfiguration ammunition;
 		try {
@@ -30,11 +30,15 @@ public class AmmunitionAddon {
 	}
 
 	public Ammunition getAmmunition(String key) {
-		return ammo.get(key);
+		return ammunition.get(key);
 	}
 
 	public Set<String> getAmmunitionKeys() {
-		return ammo.keySet();
+		return ammunition.keySet();
+	}
+
+	public void clear() {
+		ammunition.clear();
 	}
 
 	private void registerAmmunition(FileConfiguration ammunition) {
@@ -58,7 +62,7 @@ public class AmmunitionAddon {
 
 			Ammunition ammo = new Ammunition(key, name, xMaterial.parseMaterial(), lore);
 
-			this.ammo.put(key, ammo);
+			this.ammunition.put(key, ammo);
 			temp.add(key);
 		}
 

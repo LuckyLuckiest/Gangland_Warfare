@@ -19,6 +19,11 @@ public abstract class DataLoader<T> {
 	}
 
 	/**
+	 * Clears the data from the plugin.
+	 */
+	public abstract void clear();
+
+	/**
 	 * Loads data from the plugin.
 	 */
 	protected abstract void loadData(Consumer<T> consumer);
