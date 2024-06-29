@@ -1,5 +1,6 @@
 package me.luckyraven.feature.weapon;
 
+import com.cryptomorin.xseries.XPotion;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,6 +15,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -31,7 +33,7 @@ public class Weapon implements Cloneable {
 	private final short        durability;
 	private final List<String> lore;
 	private final boolean      dropHologram;
-	private final int          weaponShotConsume;
+	private final int          weaponConsumedOnShot;
 
 	// Shoot-projectile configuration
 	private final double         projectileSpeed;
@@ -68,7 +70,7 @@ public class Weapon implements Cloneable {
 	private int durabilityOnRepair;
 
 	// Shoot-weapon consume configuration
-	private int weaponShotConsumeTime;
+	private int weaponConsumeOnTime;
 
 	// Shoot-damage configuration
 	private double projectileExplosionDamage;
@@ -121,7 +123,7 @@ public class Weapon implements Cloneable {
 	private SoundConfiguration scopeCustomSound;
 
 	public Weapon(UUID uuid, String name, String displayName, WeaponType category, Material material, short durability,
-				  List<String> lore, boolean dropHologram, SelectiveFire selectiveFire, int weaponShotConsume,
+				  List<String> lore, boolean dropHologram, SelectiveFire selectiveFire, int weaponConsumedOnShot,
 				  double projectileSpeed, ProjectileType projectileType, double projectileDamage,
 				  int projectileConsumed, int projectilePerShot, int projectileCooldown, int projectileDistance,
 				  boolean particle, int maxMagCapacity, int reloadCooldown, Ammunition reloadAmmoType,
@@ -135,7 +137,7 @@ public class Weapon implements Cloneable {
 		this.lore                 = lore;
 		this.dropHologram         = dropHologram;
 		this.currentSelectiveFire = selectiveFire;
-		this.weaponShotConsume    = weaponShotConsume;
+		this.weaponConsumedOnShot = weaponConsumedOnShot;
 		this.projectileSpeed      = projectileSpeed;
 		this.projectileType       = projectileType;
 		this.projectileDamage     = projectileDamage;
@@ -157,20 +159,20 @@ public class Weapon implements Cloneable {
 	}
 
 	public Weapon(String name, String displayName, WeaponType category, Material material, short durability,
-				  List<String> lore, boolean dropHologram, SelectiveFire selectiveFire, int weaponShotConsume,
+				  List<String> lore, boolean dropHologram, SelectiveFire selectiveFire, int weaponConsumedOnShot,
 				  double projectileSpeed, ProjectileType projectileType, double projectileDamage,
 				  int projectileConsumed, int projectilePerShot, int projectileCooldown, int projectileDistance,
 				  boolean particle, int maxMagCapacity, int reloadCooldown, Ammunition reloadAmmoType,
 				  int reloadConsume, int reloadRestore, ReloadType reloadType) {
 		this(null, name, displayName, category, material, durability, lore, dropHologram, selectiveFire,
-			 weaponShotConsume, projectileSpeed, projectileType, projectileDamage, projectileConsumed,
+			 weaponConsumedOnShot, projectileSpeed, projectileType, projectileDamage, projectileConsumed,
 			 projectilePerShot, projectileCooldown, projectileDistance, particle, maxMagCapacity, reloadCooldown,
 			 reloadAmmoType, reloadConsume, reloadRestore, reloadType);
 	}
 
 	public Weapon(UUID uuid, Weapon weapon) {
 		this(uuid, weapon.name, weapon.displayName, weapon.category, weapon.material, weapon.durability, weapon.lore,
-			 weapon.dropHologram, weapon.currentSelectiveFire, weapon.weaponShotConsume, weapon.projectileSpeed,
+			 weapon.dropHologram, weapon.currentSelectiveFire, weapon.weaponConsumedOnShot, weapon.projectileSpeed,
 			 weapon.projectileType, weapon.projectileDamage, weapon.projectileConsumed, weapon.projectilePerShot,
 			 weapon.projectileCooldown, weapon.projectileDistance, weapon.particle, weapon.maxMagCapacity,
 			 weapon.reloadCooldown, weapon.reloadAmmoType, weapon.reloadConsume, weapon.reloadRestore,
@@ -178,7 +180,7 @@ public class Weapon implements Cloneable {
 
 		this.durabilityOnShot            = weapon.durabilityOnShot;
 		this.durabilityOnRepair          = weapon.durabilityOnRepair;
-		this.weaponShotConsumeTime       = weapon.weaponShotConsumeTime;
+		this.weaponConsumeOnTime         = weapon.weaponConsumeOnTime;
 		this.projectileExplosionDamage   = weapon.projectileExplosionDamage;
 		this.projectileFireTicks         = weapon.projectileFireTicks;
 		this.projectileHeadDamage        = weapon.projectileHeadDamage;
@@ -219,22 +221,34 @@ public class Weapon implements Cloneable {
 		return WeaponTag.values();
 	}
 
-	public void reload(Player player) {
-		reload.reload(player);
+	public boolean isReloading() {
+		return reload.isReloading();
 	}
 
-	public void scope(Player player) {
-		scoped = true;
-		// TODO use XPotion
-		player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, Integer.MAX_VALUE, scopeLevel));
-		player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, Integer.MAX_VALUE, 250));
+	public void reload(JavaPlugin plugin, Player player, boolean removeAmmunition) {
+		reload.reload(plugin, player, removeAmmunition);
 	}
 
-	public void unScope(Player player) {
-		scoped = false;
-		// TODO use XPotion
-		player.removePotionEffect(PotionEffectType.SLOWNESS);
-		player.removePotionEffect(PotionEffectType.JUMP_BOOST);
+	public void stopReloading() {
+		reload.stopReloading();
+	}
+
+	public void scope(Player player, boolean bypass) {
+		if (!bypass) if (scoped) return;
+
+		this.scoped = true;
+
+		applyEffect(player, XPotion.SLOWNESS, scopeLevel);
+		applyEffect(player, XPotion.JUMP_BOOST, 250);
+	}
+
+	public void unScope(Player player, boolean bypass) {
+		if (!bypass) if (!scoped) return;
+
+		this.scoped = false;
+
+		removeEffect(player, XPotion.SLOWNESS);
+		removeEffect(player, XPotion.JUMP_BOOST);
 	}
 
 	public void updateWeaponData(ItemBuilder itemBuilder) {
@@ -275,8 +289,20 @@ public class Weapon implements Cloneable {
 		player.getInventory().setItem(slot, itemBuilder.build());
 	}
 
+	public void removeWeapon(Player player, int slot) {
+		player.getInventory().setItem(slot, new ItemStack(Material.AIR));
+	}
+
 	public boolean containsTag(ItemBuilder itemBuilder, WeaponTag tag) {
 		return itemBuilder.hasNBTTag(getTagProperName(tag));
+	}
+
+	public boolean isMagazineFull() {
+		return currentMagCapacity >= maxMagCapacity;
+	}
+
+	public void addAmmunition(int amount) {
+		currentMagCapacity = Math.min(maxMagCapacity, currentMagCapacity + amount);
 	}
 
 	/**
@@ -336,8 +362,33 @@ public class Weapon implements Cloneable {
 
 	@Override
 	public String toString() {
-		return String.format("Weapon{name='%s',displayName='%s',material=%s,damage=%.2f,ammo=%s}", name, displayName,
-							 material, projectileDamage, reloadAmmoType);
+		return String.format(
+				"Weapon{uuid='%s',name='%s',displayName='%s',category='%s',material='%s',durability=%d,lore='%s'," +
+				"dropHologram=%b,weaponConsumedOnShot=%b,projectileSpeed=%.2f,projectileType='%s',projectileDamage=%.2f," +
+				"projectileConsumed=%d,projectilePerShot=%d,projectileCooldown=%d,projectileDistance=%d," +
+				"particle='%s',maxMagCapacity=%d,reloadCooldown=%d,reloadAmmoType='%s',reloadConsume=%d," +
+				"reloadRestore=%d,reloadType='%s',tags='%s',reload='%s',changingDisplayName='%s',currentSelectiveFire=%b," +
+				"currentMagCapacity=%d,durabilityOnShot=%d,durabilityOnRepair=%d,weaponConsumeOnTime=%b," +
+				"projectileExplosionDamage=%.2f,projectileFireTicks=%d,projectileHeadDamage=%.2f," +
+				"projectileBodyDamage=%.2f,projectileCriticalHitChance=%d,projectileCriticalHitDamage=%.2f," +
+				"spreadStart=%.2f,spreadResetTime=%d,spreadChangeBase=%.2f,spreadResetOnBound=%b," +
+				"spreadBoundMinimum=%.2f,spreadBoundMaximum=%.2f,recoilAmount=%.2f,pushVelocity=%.2f,pushPowerUp=%b," +
+				"recoilPattern='%s',shotDefaultSound='%s',shotCustomSound='%s',EmptyMagDefaultSound='%s'," +
+				"EmptyMagCustomSound='%s',reloadDefaultSoundBefore='%s',reloadDefaultSoundAfter='%s'," +
+				"reloadCustomSoundStart='%s',reloadCustomSoundMid='%s',reloadCustomSoundEnd='%s'," +
+				"reloadActionBarReloading='%s',reloadActionBarOpening='%s',scopeLevel=%d,scoped=%b," +
+				"scopeDefaultSound='%s',scopeCustomSound='%s'}", uuid.toString(), name, displayName, category, material,
+				durability, lore, dropHologram, weaponConsumedOnShot, projectileSpeed, projectileType, projectileDamage,
+				projectileConsumed, projectilePerShot, projectileCooldown, projectileDistance, particle, maxMagCapacity,
+				reloadCooldown, reloadAmmoType, reloadConsume, reloadRestore, reloadType, tags, reload,
+				changingDisplayName, currentSelectiveFire, currentMagCapacity, durabilityOnShot, durabilityOnRepair,
+				weaponConsumeOnTime, projectileExplosionDamage, projectileFireTicks, projectileHeadDamage,
+				projectileBodyDamage, projectileCriticalHitChance, projectileCriticalHitDamage, spreadStart,
+				spreadResetTime, spreadChangeBase, spreadResetOnBound, spreadBoundMinimum, spreadBoundMaximum,
+				recoilAmount, pushVelocity, pushPowerUp, recoilPattern, shotDefaultSound, shotCustomSound,
+				EmptyMagDefaultSound, EmptyMagCustomSound, reloadDefaultSoundBefore, reloadDefaultSoundAfter,
+				reloadCustomSoundStart, reloadCustomSoundMid, reloadCustomSoundEnd, reloadActionBarReloading,
+				reloadActionBarOpening, scopeLevel, scoped, scopeDefaultSound, scopeCustomSound);
 	}
 
 	private void updateTag(ItemBuilder itemBuilder, WeaponTag tag, Object value) {
@@ -357,6 +408,28 @@ public class Weapon implements Cloneable {
 
 		for (WeaponTag tag : tags.keySet())
 			itemBuilder.addTag(getTagProperName(tag), tags.get(tag));
+	}
+
+	private void applyEffect(Player player, XPotion potion, int amplifier) {
+		Optional<XPotion> optional = XPotion.matchXPotion(potion.name());
+		if (optional.isEmpty()) return;
+
+		PotionEffectType potionEffectType = optional.get().getPotionEffectType();
+
+		if (potionEffectType == null) return;
+
+		player.addPotionEffect(new PotionEffect(potionEffectType, Integer.MAX_VALUE, amplifier));
+	}
+
+	private void removeEffect(Player player, XPotion potion) {
+		Optional<XPotion> optional = XPotion.matchXPotion(potion.name());
+		if (optional.isEmpty()) return;
+
+		PotionEffectType potionEffectType = optional.get().getPotionEffectType();
+
+		if (potionEffectType == null) return;
+
+		player.removePotionEffect(potionEffectType);
 	}
 
 }
