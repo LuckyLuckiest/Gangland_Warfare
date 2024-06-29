@@ -11,7 +11,7 @@ public class CompatibilityWorker implements Compatibility {
 		Compatibility compatibility = gangland.getInitializer()
 											  .getCompatibilitySetup()
 											  .getCompatibleVersion(Compatibility.class,
-																	"me.luckyraven.compatibility.version");
+																	VersionSetup.getCompatibilityFolder());
 
 
 		RecoilCompatibility recoilCompatibility = null;

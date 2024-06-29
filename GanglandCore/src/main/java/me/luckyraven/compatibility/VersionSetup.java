@@ -11,6 +11,9 @@ import java.math.RoundingMode;
 @Getter
 public final class VersionSetup {
 
+	@Getter
+	private static final String compatibilityFolder = "me.luckyraven.compatibility.version";
+
 	private final String  versionString;
 	private final double  versionNumber;
 	private final boolean paper;
