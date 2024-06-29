@@ -5,43 +5,73 @@ import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.ammo.Ammunition;
 import me.luckyraven.feature.weapon.reload.Reload;
 import me.luckyraven.file.configuration.SoundConfiguration;
-import me.luckyraven.util.timer.CountdownTimer;
+import me.luckyraven.util.timer.SequenceTimer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.function.BiConsumer;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class InstantReload extends Reload {
+
+	private SequenceTimer timer;
 
 	public InstantReload(Weapon weapon, Ammunition ammunition) {
 		super(weapon, ammunition);
 	}
 
 	@Override
-	public BiConsumer<Weapon, Ammunition> executeReload(Player player) {
-		return (weapon, ammunition) -> {
-			PlayerInventory inventory = player.getInventory();
+	public void stopReloading() {
+		if (timer == null || timer.isCancelled()) return;
 
-			// need to take care of the cooldown
-			CountdownTimer timer = new CountdownTimer(getGangland(), weapon.getReloadCooldown());
-			timer.start(false);
+		timer.stop();
+		timer = null;
+	}
 
-			// consume the item
-			inventory.removeItem(ammunition.buildItem(weapon.getReloadConsume()));
+	@Override
+	protected void executeReload(JavaPlugin plugin, Player player, boolean removeAmmunition) {
+		PlayerInventory inventory = player.getInventory();
+		AtomicInteger   slot      = new AtomicInteger();
 
+		timer = new SequenceTimer(plugin);
+
+		// start reloading the gun
+		timer.addIntervalTaskPair(0, time -> {
+			super.startReloading(player);
+
+			// save the slot of the weapon
+			slot.set(inventory.getHeldItemSlot());
+
+			// remove the magazine the moment the reloading starts to prevent bugs
+			if (removeAmmunition)
+				// consume the item
+				inventory.removeItem(getAmmunition().buildItem(getWeapon().getReloadConsume()));
+		});
+
+		// the sound that plays at the middle
+		long midSound = getWeapon().getReloadCooldown() / 2;
+		timer.addIntervalTaskPair(midSound, time -> {
 			// play the sound at the middle
-			SoundConfiguration.playSounds(player, weapon.getReloadCustomSoundMid(), null);
+			SoundConfiguration.playSounds(player, getWeapon().getReloadCustomSoundMid(), null);
+		});
 
+		long remaining = Math.max(0, getWeapon().getReloadCooldown() - midSound);
+		// continue execution after the sound had finished
+		timer.addIntervalTaskPair(remaining, time -> {
 			// add to the weapon capacity
-			weapon.setCurrentMagCapacity(weapon.getReloadRestore());
+			getWeapon().addAmmunition(getWeapon().getReloadRestore());
 
 			// update the weapon data
-			ItemBuilder heldWeapon = getGangland().getInitializer().getWeaponManager().getHeldWeaponItem(player);
-			if (heldWeapon == null) return;
+			ItemBuilder heldWeapon = new ItemBuilder(getWeapon().buildItem());
 
-			weapon.updateWeaponData(heldWeapon);
-			weapon.updateWeapon(player, heldWeapon, inventory.getHeldItemSlot());
-		};
+			getWeapon().updateWeaponData(heldWeapon);
+			getWeapon().updateWeapon(player, heldWeapon, slot.get());
+
+			// end reloading the gun
+			super.endReloading(player);
+		});
+
+		timer.start(false);
 	}
 
 }
