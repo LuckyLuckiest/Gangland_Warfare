@@ -24,7 +24,7 @@ Information:
    # gun, melee, projectile, incendiary
    Category: gun
    # The material that would be used for the weapon
-   Material: IRON_HORSE_ARMOR
+   Material: IRON_PICKAXE
    # For mc versions 1.9> setting durability can have unique textures
    Durability:
       Base: 100
