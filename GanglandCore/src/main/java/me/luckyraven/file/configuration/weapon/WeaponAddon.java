@@ -124,6 +124,7 @@ public class WeaponAddon {
 				shootSection.getConfigurationSection("Weapon_Consumed"));
 		int weaponConsumedOnShot = weaponConsumedSection.getInt("Consume_On_Shot");
 		int weaponConsumedTime   = weaponConsumedSection.getInt("Time");
+		weaponConsumedTime = weaponConsumedTime == 0 ? -1 : weaponConsumedTime;
 
 		// spread
 		ConfigurationSection spreadSection      = shootSection.getConfigurationSection("Spread");
@@ -374,7 +375,7 @@ public class WeaponAddon {
 		weapon.setProjectileCriticalHitChance(projectileCriticalHitChance);
 		weapon.setProjectileCriticalHitDamage(projectileCriticalHitDamage);
 
-		weapon.setWeaponShotConsumeTime(weaponConsumedTime);
+		weapon.setWeaponConsumeOnTime(weaponConsumedTime);
 
 		weapon.setSpreadStart(spreadStart);
 		weapon.setSpreadResetTime(spreadResetTime);
@@ -417,6 +418,10 @@ public class WeaponAddon {
 
 	public Set<String> getWeaponKeys() {
 		return weapons.keySet();
+	}
+
+	public void clear() {
+		weapons.clear();
 	}
 
 	public int size() {
