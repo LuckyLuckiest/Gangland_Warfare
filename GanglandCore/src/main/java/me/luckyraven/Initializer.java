@@ -55,6 +55,7 @@ import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.gang.GangMembersDamage;
 import me.luckyraven.listener.inventory.InventoryOpenByCommand;
 import me.luckyraven.listener.player.*;
+import me.luckyraven.listener.player.weapon.ProjectileDamage;
 import me.luckyraven.listener.player.weapon.WeaponDropped;
 import me.luckyraven.listener.player.weapon.WeaponInteract;
 import me.luckyraven.listener.player.weapon.WeaponSelectiveFireChange;
@@ -300,6 +301,7 @@ public final class Initializer {
 		listenerManager.addEvent(new WeaponInteract(gangland));
 		listenerManager.addEvent(new WeaponDropped(gangland));
 		listenerManager.addEvent(new WeaponSelectiveFireChange(gangland));
+		listenerManager.addEvent(new ProjectileDamage(gangland));
 
 		// switch events
 		if (SettingAddon.isPhoneEnabled()) listenerManager.addEvent(new PhoneItem(gangland));
