@@ -73,18 +73,18 @@ public class WeaponInteract implements Listener {
 		event.setUseInteractedBlock(Event.Result.DENY);
 
 		// check the selective fire
-		switch (weapon.getCurrentSelectiveFire()) {
-			case AUTO -> {
-				// should be continuous
-				return;
-			}
-			case SINGLE, BURST -> {
-				// should wait for the cooldown before shooting
-				return;
-			}
-		}
+//		switch (weapon.getCurrentSelectiveFire()) {
+//			case AUTO -> {
+//				// should be continuous
+//				return;
+//			}
+//			case SINGLE, BURST -> {
+//				// should wait for the cooldown before shooting
+//				return;
+//			}
+//		}
 
-		SequenceTimer sequenceTimer = new SequenceTimer(gangland);
+		SequenceTimer sequenceTimer = new SequenceTimer(gangland, 0, 1);
 
 		for (int i = 0; i < weapon.getProjectilePerShot(); ++i) {
 			sequenceTimer.addIntervalTaskPair(weapon.getProjectileCooldown(), time -> {
@@ -153,6 +153,8 @@ public class WeaponInteract implements Listener {
 				}
 			});
 		}
+
+		sequenceTimer.start(false);
 	}
 
 	@EventHandler
