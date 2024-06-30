@@ -5,6 +5,7 @@ import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.WeaponTable;
 import me.luckyraven.file.configuration.weapon.WeaponAddon;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
@@ -204,6 +205,10 @@ public class WeaponManager {
 
 	public Map<UUID, Weapon> getWeapons() {
 		return Collections.unmodifiableMap(weapons);
+	}
+
+	public boolean isHeadPosition(Location l1, Location l2) {
+		return Math.abs(l1.getY() - l2.getY()) > 1.4;
 	}
 
 	private ItemStack itemAccordingToSlot(Player player, EquipmentSlot equipmentSlot) {
