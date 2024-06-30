@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 @Getter
 public class WeaponShootEvent extends WeaponEvent implements Cancellable {
 
-	private static final HandlerList handlers = new HandlerList();
+	private static final HandlerList handler = new HandlerList();
 
 	private final WeaponProjectile<?> weaponProjectile;
 
@@ -20,6 +20,10 @@ public class WeaponShootEvent extends WeaponEvent implements Cancellable {
 		super(weapon);
 
 		this.weaponProjectile = weaponProjectile;
+	}
+
+	public static HandlerList getHandlerList() {
+		return handler;
 	}
 
 	@Override
@@ -33,8 +37,8 @@ public class WeaponShootEvent extends WeaponEvent implements Cancellable {
 	}
 
 	@NotNull
-	@Override
 	public HandlerList getHandlers() {
-		return handlers;
+		return handler;
 	}
+
 }

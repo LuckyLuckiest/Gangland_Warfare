@@ -12,4 +12,5 @@ public abstract class WeaponEvent extends Event {
 	public WeaponEvent(Weapon weapon) {
 		this.weapon = weapon;
 	}
+
 }
