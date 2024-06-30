@@ -20,6 +20,7 @@ public class SequenceTimer extends Timer {
 	@Setter Mode             mode;
 	private IntervalTaskPair currentTask;
 	private boolean          added;
+	private boolean          totalIntervalChanged;
 
 	public SequenceTimer(JavaPlugin plugin) {
 		this(plugin, 0L, 20L);
@@ -35,7 +36,8 @@ public class SequenceTimer extends Timer {
 		this.intervalTaskQueue = new LinkedList<>();
 		this.intervalTaskPairs = new ArrayList<>();
 		this.mode              = mode;
-		this.currentInterval   = this.totalInterval = 0L;
+		this.currentInterval   = 0;
+		this.totalInterval     = 0;
 	}
 
 	public void addIntervalTaskPair(long interval, Consumer<SequenceTimer> task) {
@@ -94,6 +96,11 @@ public class SequenceTimer extends Timer {
 			intervalTaskQueue.add(currentTask);
 			added = true;
 		}
+
+		if (totalInterval > 0) return;
+
+		totalInterval        = 1;
+		totalIntervalChanged = true;
 	}
 
 	@Override
@@ -108,6 +115,7 @@ public class SequenceTimer extends Timer {
 		currentTask     = intervalTaskQueue.poll();
 		currentInterval = 0L;
 		added           = false;
+		totalInterval   = totalIntervalChanged ? 0 : totalInterval;
 	}
 
 	public long getTaskInterval() {
