@@ -12,8 +12,10 @@ import org.jetbrains.annotations.NotNull;
 
 public abstract class WProjectile {
 
-	@Getter private final LivingEntity shooter;
-	@Getter private final World        world;
+	@Getter
+	private final LivingEntity shooter;
+	@Getter
+	private final World        world;
 
 	private Vector lastLocation;
 	private Vector location;
@@ -91,10 +93,6 @@ public abstract class WProjectile {
 
 	public void addDistanceTravelled(double amount) {
 		distanceTravelled += amount;
-	}
-
-	public boolean isHeadPosition(Location l1, Location l2) {
-		return Math.abs(l1.getY() - l2.getY()) > 1.4;
 	}
 
 }
