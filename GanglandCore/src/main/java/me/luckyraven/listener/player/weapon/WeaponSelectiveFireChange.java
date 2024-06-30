@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 
 public class WeaponSelectiveFireChange implements Listener {
@@ -29,7 +30,7 @@ public class WeaponSelectiveFireChange implements Listener {
 		if (!(humanEntity instanceof Player player)) return;
 
 		// check if the player is trying to open their inventory
-		if (!event.getInventory().equals(player.getInventory())) return;
+		if (event.getInventory().getType() != InventoryType.PLAYER) return;
 
 		// check if the player is holding a weapon
 		ItemStack item   = player.getInventory().getItemInMainHand();
