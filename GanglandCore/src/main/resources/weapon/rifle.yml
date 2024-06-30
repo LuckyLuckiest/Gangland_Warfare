@@ -55,18 +55,18 @@ Shoot:
       # The projectile damage on impact
       Damage:
          # The base value
-         Base: 3
+         Base: 7
          # Weapon explosion damage
          Explosion_Damage: 0
          # The time the player would be on fire (ticks = 20 ~ 1 second)
-         Fire_Ticks: 100
-         # Head bonus damage
+         Fire_Ticks: 0
+         # Head bonus damage added to the base damage
          Head: 5
          # Critical Hit damage
          Critical_Hit:
-            # The change in %
+            # The chance in percentage (%)
             Chance: 2
-            # Bonus amount
+            # Bonus amount added to the base damage
             Amount: 4
 
       # The number of projectiles consumed
