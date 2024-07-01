@@ -86,59 +86,13 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 		WeaponProjectileLaunchEvent event = new WeaponProjectileLaunchEvent(weapon, projectile, this);
 		plugin.getServer().getPluginManager().callEvent(event);
 
-//		synchronized (sessionProjectileCount) {
-//			// record each projectile launched
-//			sessionProjectileCount.merge(getShooter().getUniqueId(), 1L, Long::sum);
-//			// currently reached value
-//			long currentCount = sessionProjectileCount.get(getShooter().getUniqueId());
-//
-//			// save the instance
-//			synchronized (projectileMap) {
-//				Map<Long, Pair<WeaponProjectile<?>, Projectile>> projectiles = new HashMap<>();
-//
-//				projectiles.put(currentCount, new Pair<>(this, projectile));
-//				projectileMap.merge(getShooter().getUniqueId(), projectiles, (oldMap, map) -> {
-//					oldMap.putAll(map);
-//					return oldMap;
-//				});
-//			}
-//
-//			// save the current player projectile lunch location
-//			synchronized (shotLocation) {
-//				Map<Long, Vector> locationShot = new HashMap<>();
-//
-//				locationShot.put(currentCount, spawnLocation.toVector());
-//				shotLocation.merge(getShooter().getUniqueId(), locationShot, (oldMap, map) -> {
-//					oldMap.putAll(map);
-//					return oldMap;
-//				});
-//			}
-//		}
-//
-//		// update the projectile position
-//		RepeatingTimer timer = new RepeatingTimer(plugin, 20L, time -> {
-//			Map<Long, Pair<WeaponProjectile<?>, Projectile>> weaponProjectiles = projectileMap.get(
-//					getShooter().getUniqueId());
-//
-//			for (Pair<WeaponProjectile<?>, Projectile> weaponProjectilePair : weaponProjectiles.values()) {
-//				if (weaponProjectilePair == null) continue;
-//
-//				WeaponProjectile<?> weaponProjectile = weaponProjectilePair.first();
-//				Projectile          thrownProjectile = weaponProjectilePair.second();
-//
-//				if (weaponProjectile == null) continue;
-//				if (thrownProjectile == null) continue;
-//
-//				double distanceTravelled = shotLocation.get(getShooter().getUniqueId())
-//													   .get(sessionProjectileCount.get(getShooter().getUniqueId()))
-//													   .distance(weaponProjectile.getLocation());
-//
-//				weaponProjectile.addDistanceTravelled(distanceTravelled);
-//				weaponProjectile.setLocation(thrownProjectile.getVelocity());
-//			}
-//		});
-//
-//		timer.start(false);
+		// record each projectile launched
+		synchronized (sessionProjectileCount) {
+			sessionProjectileCount.merge(getShooter().getUniqueId(), 1L, Long::sum);
+		}
+
+		// update the projectile position
+		// TODO
 	}
 
 	@Override
