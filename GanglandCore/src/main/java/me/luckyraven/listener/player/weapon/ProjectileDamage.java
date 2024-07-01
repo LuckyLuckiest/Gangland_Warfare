@@ -11,13 +11,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ProjectileDamage implements Listener {
 
-	private final static Map<Integer, Weapon> weaponInstance = new HashMap<>();
+	private final static Map<Integer, Weapon> weaponInstance = new ConcurrentHashMap<>();
 
 	private final Gangland      gangland;
 	private final WeaponManager weaponManager;
@@ -82,7 +82,7 @@ public class ProjectileDamage implements Listener {
 		});
 		projectile.remove();
 
-		timer.start(true);
+		timer.start(false);
 	}
 
 }
