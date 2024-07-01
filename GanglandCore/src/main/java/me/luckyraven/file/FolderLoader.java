@@ -80,9 +80,11 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 		// add each file handler from the folder to the file manager
 		FileManager  fileManager = gangland.getInitializer().getFileManager();
 		List<String> temp        = new ArrayList<>();
-		for (FileHandler fileHandler : folderFiles)
+		for (FileHandler fileHandler : folderFiles) {
 			try {
-				fileManager.addFile(fileHandler, true);
+				// check if the file is already in the file manager
+				if (!fileManager.contains(fileHandler.getName()))
+					fileManager.addFile(fileHandler, true);
 
 				// process each file handler
 				consumer.accept(fileHandler);
@@ -92,6 +94,7 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 						.error("{}: There was a problem registering the {} {}", UnhandledError.FILE_LOADER_ERROR,
 							   getFolderName(), fileHandler.getName(), exception);
 			}
+		}
 
 		if (temp.isEmpty()) Gangland.getLog4jLogger().info("No files were handled");
 		else {

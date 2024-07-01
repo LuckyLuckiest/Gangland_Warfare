@@ -40,9 +40,16 @@ public class FileManager {
 		files.clear();
 	}
 
+	public boolean contains(String fileName) {
+		for (FileHandler file : files)
+			if (file.getName().equalsIgnoreCase(fileName)) return true;
+		return false;
+	}
+
 	@Nullable
 	public FileHandler getFile(String fileName) {
-		for (FileHandler file : files) if (file.getName().equalsIgnoreCase(fileName)) return file;
+		for (FileHandler file : files)
+			if (file.getName().equalsIgnoreCase(fileName)) return file;
 		return null;
 	}
 
