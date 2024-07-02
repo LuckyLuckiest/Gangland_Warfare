@@ -41,7 +41,7 @@ class AmmunitionInfoCommand extends SubArgument {
 			// display the necessary information
 			JsonFormatter jsonFormatter = new JsonFormatter();
 
-			player.sendMessage(jsonFormatter.formatToJson(ammunition.toString(), " ".repeat(3)));
+			player.sendMessage(jsonFormatter.formatToJson(ChatUtil.color(ammunition.toString()), " ".repeat(3)));
 		};
 	}
 

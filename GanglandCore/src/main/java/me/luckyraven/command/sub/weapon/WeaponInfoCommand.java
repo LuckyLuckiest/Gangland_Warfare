@@ -39,7 +39,7 @@ class WeaponInfoCommand extends SubArgument {
 			// display the necessary information
 			JsonFormatter jsonFormatter = new JsonFormatter();
 
-			player.sendMessage(jsonFormatter.formatToJson(weapon.toString(), " ".repeat(3)));
+			player.sendMessage(jsonFormatter.formatToJson(ChatUtil.color(weapon.toString()), " ".repeat(3)));
 		};
 	}
 
