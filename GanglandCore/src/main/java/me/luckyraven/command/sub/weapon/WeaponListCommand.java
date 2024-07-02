@@ -17,7 +17,7 @@ class WeaponListCommand extends SubArgument {
 	private final Gangland gangland;
 
 	protected WeaponListCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("list", tree, parent);
+		super(gangland, "list", tree, parent);
 
 		this.gangland = gangland;
 	}

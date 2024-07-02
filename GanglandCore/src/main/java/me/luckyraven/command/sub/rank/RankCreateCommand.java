@@ -25,7 +25,7 @@ class RankCreateCommand extends SubArgument {
 	private final RankManager    rankManager;
 
 	protected RankCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("create", tree, parent);
+		super(gangland, "create", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
@@ -46,7 +46,7 @@ class RankCreateCommand extends SubArgument {
 		HashMap<CommandSender, AtomicReference<String>> createRankName  = new HashMap<>();
 		HashMap<CommandSender, CountdownTimer>          createRankTimer = new HashMap<>();
 
-		ConfirmArgument confirmCreate = new ConfirmArgument(tree, (argument, sender, args) -> {
+		ConfirmArgument confirmCreate = new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
 			Rank rank = new Rank(createRankName.get(sender).get(), Rank.getNewId());
 
 			sender.sendMessage(MessageAddon.RANK_CREATED.toString().replace("%rank%", rank.getName()));
@@ -62,7 +62,7 @@ class RankCreateCommand extends SubArgument {
 
 		this.addSubArgument(confirmCreate);
 
-		Argument createName = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument createName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Rank rank = rankManager.get(args[2]);
 
 			if (rank != null) {

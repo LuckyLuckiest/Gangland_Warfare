@@ -7,6 +7,7 @@ import me.luckyraven.datastructure.Tree;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
 
 @Getter
 @Setter
@@ -14,12 +15,13 @@ public class ConfirmArgument extends Argument {
 
 	private boolean confirmed;
 
-	public ConfirmArgument(Tree<Argument> tree) {
-		this(tree, null);
+	public ConfirmArgument(JavaPlugin plugin, Tree<Argument> tree) {
+		this(plugin, tree, null);
 	}
 
-	public ConfirmArgument(Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action) {
-		super("confirm", tree, action);
+	public ConfirmArgument(JavaPlugin plugin, Tree<Argument> tree,
+						   TriConsumer<Argument, CommandSender, String[]> action) {
+		super(plugin, "confirm", tree, action);
 		this.confirmed = false;
 	}
 

@@ -38,7 +38,7 @@ class BankDeleteCommand extends SubArgument {
 	private final ConfirmArgument confirmDelete;
 
 	protected BankDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"delete", "remove", "del"}, tree, parent);
+		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
@@ -93,7 +93,7 @@ class BankDeleteCommand extends SubArgument {
 	}
 
 	private ConfirmArgument bankDeleteConfirm() {
-		return new ConfirmArgument(tree, (argument, sender, args) -> {
+		return new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 			Bank         bank   = Bank.getInstance(user);

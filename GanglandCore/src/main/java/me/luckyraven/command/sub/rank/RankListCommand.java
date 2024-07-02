@@ -17,7 +17,7 @@ class RankListCommand extends SubArgument {
 	private final RankManager rankManager;
 
 	protected RankListCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("list", tree, parent);
+		super(gangland, "list", tree, parent);
 
 		this.rankManager = gangland.getInitializer().getRankManager();
 	}

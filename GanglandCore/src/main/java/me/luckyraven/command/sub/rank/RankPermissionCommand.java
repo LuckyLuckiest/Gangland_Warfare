@@ -15,13 +15,15 @@ import org.bukkit.command.CommandSender;
 
 class RankPermissionCommand extends SubArgument {
 
+	private final Gangland       gangland;
 	private final Tree<Argument> tree;
 	private final RankManager    rankManager;
 
 	protected RankPermissionCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"permission", "perm"}, tree, parent);
+		super(gangland, new String[]{"permission", "perm"}, tree, parent);
 
-		this.tree = tree;
+		this.gangland = gangland;
+		this.tree     = tree;
 
 		this.rankManager = gangland.getInitializer().getRankManager();
 
@@ -36,7 +38,7 @@ class RankPermissionCommand extends SubArgument {
 	}
 
 	private void rankPermission() {
-		Argument perm = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument perm = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			// check if rank exists
 			Rank rank = rankManager.get(args[3]);
 
@@ -75,17 +77,17 @@ class RankPermissionCommand extends SubArgument {
 			sender.sendMessage(message);
 		});
 
-		Argument permName = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument permName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<permission>"));
 		});
 
 		permName.addSubArgument(perm);
 
-		Argument addPerm = new Argument("add", tree, (argument, sender, args) -> {
+		Argument addPerm = new Argument(gangland, "add", tree, (argument, sender, args) -> {
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, this.getPermission() + ".add");
 
-		Argument removePerm = new Argument("remove", tree, (argument, sender, args) -> {
+		Argument removePerm = new Argument(gangland, "remove", tree, (argument, sender, args) -> {
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, this.getPermission() + ".remove");
 

@@ -58,7 +58,7 @@ public final class BalanceCommand extends CommandHandler {
 
 	@Override
 	protected void initializeArguments() {
-		Argument targetBalance = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+		Argument targetBalance = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
 			// get the target, validate if they are in the system
 			String       target = args[1];
 			User<Player> user   = userManager.getUser(Bukkit.getPlayer(target));

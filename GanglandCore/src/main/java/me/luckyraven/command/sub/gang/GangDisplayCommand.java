@@ -17,14 +17,16 @@ import org.bukkit.entity.Player;
 
 class GangDisplayCommand extends SubArgument {
 
+	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 
 	protected GangDisplayCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("display", tree, parent);
+		super(gangland, "display", tree, parent);
 
-		this.tree = tree;
+		this.gangland = gangland;
+		this.tree     = tree;
 
 		this.userManager = gangland.getInitializer().getUserManager();
 		this.gangManager = gangland.getInitializer().getGangManager();
@@ -48,7 +50,7 @@ class GangDisplayCommand extends SubArgument {
 	}
 
 	private void gangDisplay() {
-		Argument displayName = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument displayName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -65,7 +67,7 @@ class GangDisplayCommand extends SubArgument {
 		});
 
 		// glw gang display remove
-		Argument removeDisplay = new Argument("remove", tree, (argument, sender, args) -> {
+		Argument removeDisplay = new Argument(gangland, "remove", tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 

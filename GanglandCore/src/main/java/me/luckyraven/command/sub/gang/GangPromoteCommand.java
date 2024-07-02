@@ -28,6 +28,7 @@ import java.util.Objects;
 
 class GangPromoteCommand extends SubArgument {
 
+	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
@@ -35,9 +36,10 @@ class GangPromoteCommand extends SubArgument {
 	private final RankManager         rankManager;
 
 	protected GangPromoteCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("promote", tree, parent);
+		super(gangland, "promote", tree, parent);
 
-		this.tree = tree;
+		this.gangland = gangland;
+		this.tree     = tree;
 
 		this.userManager   = gangland.getInitializer().getUserManager();
 		this.memberManager = gangland.getInitializer().getMemberManager();
@@ -63,7 +65,7 @@ class GangPromoteCommand extends SubArgument {
 	}
 
 	private OptionalArgument gangPromote() {
-		return new OptionalArgument(tree, (argument, sender, args) -> {
+		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player     = (Player) sender;
 			User<Player> user       = userManager.getUser(player);
 			Member       userMember = memberManager.getMember(player.getUniqueId());

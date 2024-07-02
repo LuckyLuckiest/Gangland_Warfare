@@ -15,13 +15,15 @@ import org.bukkit.entity.Player;
 
 class WaypointShieldCommand extends SubArgument {
 
+	private final Gangland        gangland;
 	private final Tree<Argument>  tree;
 	private final WaypointManager waypointManager;
 
 	protected WaypointShieldCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("shield", tree, parent);
+		super(gangland, "shield", tree, parent);
 
-		this.tree = tree;
+		this.gangland = gangland;
+		this.tree     = tree;
 
 		this.waypointManager = gangland.getInitializer().getWaypointManager();
 
@@ -36,7 +38,7 @@ class WaypointShieldCommand extends SubArgument {
 	}
 
 	private void waypointShield() {
-		Argument optional = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument optional = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player   player   = (Player) sender;
 			Waypoint waypoint = waypointManager.getSelected(player);
 

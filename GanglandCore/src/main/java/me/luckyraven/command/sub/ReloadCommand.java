@@ -33,21 +33,26 @@ public final class ReloadCommand extends CommandHandler {
 
 	@Override
 	protected void initializeArguments() {
-		Argument files = new Argument(new String[]{"files", "file"}, getArgumentTree(), (argument, sender, args) -> {
-			reloadProcess("files", () -> getGangland().getReloadPlugin().filesReload(), true);
-		});
+		Argument files = new Argument(getGangland(), new String[]{"files", "file"}, getArgumentTree(),
+									  (argument, sender, args) -> {
+										  reloadProcess("files", () -> getGangland().getReloadPlugin().filesReload(),
+														true);
+									  });
 
-		Argument data = new Argument(new String[]{"database", "data"}, getArgumentTree(), (argument, sender, args) -> {
-			reloadProcess("database", () -> getGangland().getReloadPlugin().databaseInitialize(true), true);
-		});
+		Argument data = new Argument(getGangland(), new String[]{"database", "data"}, getArgumentTree(),
+									 (argument, sender, args) -> {
+										 reloadProcess("database",
+													   () -> getGangland().getReloadPlugin().databaseInitialize(true),
+													   true);
+									 });
 
-		Argument scoreboard = new Argument("scoreboard", getArgumentTree(), (argument, sender, args) -> {
+		Argument scoreboard = new Argument(getGangland(), "scoreboard", getArgumentTree(), (argument, sender, args) -> {
 			reloadProcess("scoreboard", () -> {
 				if (SettingAddon.isScoreboardEnabled()) getGangland().getReloadPlugin().scoreboardReload();
 			}, false);
 		});
 
-		Argument inventory = new Argument("inventory", getArgumentTree(), (argument, sender, args) -> {
+		Argument inventory = new Argument(getGangland(), "inventory", getArgumentTree(), (argument, sender, args) -> {
 			reloadProcess("inventory", () -> {
 				getGangland().getPeriodicalUpdates().resetCache();
 				getGangland().getReloadPlugin().inventoryReload();

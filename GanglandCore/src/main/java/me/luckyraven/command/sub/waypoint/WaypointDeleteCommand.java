@@ -32,7 +32,7 @@ class WaypointDeleteCommand extends SubArgument {
 	private final WaypointManager waypointManager;
 
 	protected WaypointDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"delete", "remove", "del"}, tree, parent);
+		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
@@ -56,7 +56,7 @@ class WaypointDeleteCommand extends SubArgument {
 		// TODO for all confirm values, they should have a sender and the confirm argument, because you can unlock and
 		//  lock for all users who are trying to use the confirm argument, thus make it user specific to take care of
 		//  such scenario
-		ConfirmArgument confirm = new ConfirmArgument(tree, (argument, sender, args) -> {
+		ConfirmArgument confirm = new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
 			int id = deleteWaypointId.get(sender).get();
 
 			Waypoint waypoint = waypointManager.get(id);
@@ -109,7 +109,7 @@ class WaypointDeleteCommand extends SubArgument {
 
 		this.addSubArgument(confirm);
 
-		Argument optional = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument optional = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			if (confirm.isConfirmed()) return;
 
 			// the id would be the second argument

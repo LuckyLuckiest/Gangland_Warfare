@@ -29,7 +29,7 @@ class WaypointCreateCommand extends SubArgument {
 	private final WaypointManager waypointManager;
 
 	protected WaypointCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("create", tree, parent);
+		super(gangland, "create", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
@@ -52,7 +52,7 @@ class WaypointCreateCommand extends SubArgument {
 		Map<CommandSender, CountdownTimer>   createWaypointTimer = new HashMap<>();
 
 		// create a new waypoint class after confirmation
-		ConfirmArgument confirmWaypoint = new ConfirmArgument(tree, (argument, sender, args) -> {
+		ConfirmArgument confirmWaypoint = new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
 			Player player = (Player) sender;
 
 			String   name     = createWaypointName.get(player).get();
@@ -81,15 +81,15 @@ class WaypointCreateCommand extends SubArgument {
 
 			// select the waypoint
 			// using '/glw waypoint select <id>' command to the created waypoint, so it is selected
-			player.performCommand(
-					Argument.getArgumentSequence(Objects.requireNonNull(tree.find(new Argument("select", tree)))) +
-					" " + waypoint.getUsedId());
+			player.performCommand(Argument.getArgumentSequence(
+					Objects.requireNonNull(tree.find(new Argument(gangland, "select", tree)))) + " " +
+								  waypoint.getUsedId());
 		});
 
 		this.addSubArgument(confirmWaypoint);
 
 		// get the proposed waypoint name
-		Argument createName = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument createName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player player = (Player) sender;
 
 			if (confirmWaypoint.isConfirmed()) return;

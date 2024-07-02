@@ -20,7 +20,7 @@ class GangBalanceCommand extends SubArgument {
 	private final GangManager         gangManager;
 
 	protected GangBalanceCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"balance", "bal"}, tree, parent);
+		super(gangland, new String[]{"balance", "bal"}, tree, parent);
 
 		this.userManager = gangland.getInitializer().getUserManager();
 		this.gangManager = gangland.getInitializer().getGangManager();

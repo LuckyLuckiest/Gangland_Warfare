@@ -35,7 +35,7 @@ class GangLeaveCommand extends SubArgument {
 	private final ConfirmArgument                       leaveConfirm;
 
 	protected GangLeaveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("leave", tree, parent);
+		super(gangland, "leave", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
@@ -91,7 +91,7 @@ class GangLeaveCommand extends SubArgument {
 	}
 
 	private ConfirmArgument leaveConfirm() {
-		return new ConfirmArgument(tree, (argument, sender, args) -> {
+		return new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 			Member       member = memberManager.getMember(player.getUniqueId());

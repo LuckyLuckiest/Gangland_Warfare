@@ -14,13 +14,15 @@ import org.bukkit.command.CommandSender;
 
 class RankInfoCommand extends SubArgument {
 
+	private final Gangland       gangland;
 	private final Tree<Argument> tree;
 	private final RankManager    rankManager;
 
 	protected RankInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("info", tree, parent);
+		super(gangland, "info", tree, parent);
 
-		this.tree = tree;
+		this.gangland = gangland;
+		this.tree     = tree;
 
 		this.rankManager = gangland.getInitializer().getRankManager();
 
@@ -35,7 +37,7 @@ class RankInfoCommand extends SubArgument {
 	}
 
 	private void rankInfo() {
-		Argument infoName = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument infoName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Rank rank = rankManager.get(args[2]);
 
 			if (rank == null) {

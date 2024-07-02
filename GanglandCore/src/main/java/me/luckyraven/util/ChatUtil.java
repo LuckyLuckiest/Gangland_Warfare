@@ -2,7 +2,6 @@ package me.luckyraven.util;
 
 import com.cryptomorin.xseries.messages.ActionBar;
 import com.google.common.base.Preconditions;
-import me.luckyraven.Gangland;
 import me.luckyraven.datastructure.SpellChecker;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
@@ -114,8 +113,8 @@ public final class ChatUtil {
 		return color(arguments + ChatUtil.commandDesign(command));
 	}
 
-	public static void sendActionBar(Player player, String message) {
-		ActionBar.sendActionBar(JavaPlugin.getPlugin(Gangland.class), player, message);
+	public static void sendActionBar(JavaPlugin plugin, Player player, String message) {
+		ActionBar.sendActionBar(plugin, player, message);
 	}
 
 	public static String generateCommandSuggestion(String word, Set<String> dictionary, String command,

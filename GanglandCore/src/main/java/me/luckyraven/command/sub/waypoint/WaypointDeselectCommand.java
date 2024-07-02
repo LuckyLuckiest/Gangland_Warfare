@@ -16,7 +16,7 @@ class WaypointDeselectCommand extends SubArgument {
 	private final WaypointManager waypointManager;
 
 	protected WaypointDeselectCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("deselect", tree, parent);
+		super(gangland, "deselect", tree, parent);
 
 		this.waypointManager = gangland.getInitializer().getWaypointManager();
 	}

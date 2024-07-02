@@ -47,15 +47,16 @@ public final class DownloadPluginCommand extends CommandHandler {
 
 	@Override
 	protected void initializeArguments() {
-		Argument confirm = new DoubleArgument("download", getArgumentTree(), (argument, sender, args) -> {
-			if (!containsUpdate.containsKey(sender)) return;
+		Argument confirm = new DoubleArgument(getGangland(), "download", getArgumentTree(),
+											  (argument, sender, args) -> {
+												  if (!containsUpdate.containsKey(sender)) return;
 
-			boolean newUpdate = containsUpdate.get(sender);
+												  boolean newUpdate = containsUpdate.get(sender);
 
-			if (!newUpdate) return;
+												  if (!newUpdate) return;
 
-			getGangland().getUpdateChecker().downloadLatestVersion();
-		}, getPermission() + ".download");
+												  getGangland().getUpdateChecker().downloadLatestVersion();
+											  }, getPermission() + ".download");
 
 		getArgument().addSubArgument(confirm);
 	}

@@ -29,7 +29,7 @@ class GangAllyCommand extends SubArgument {
 	private final GangManager         gangManager;
 
 	protected GangAllyCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("ally", tree, parent);
+		super(gangland, "ally", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
@@ -57,7 +57,7 @@ class GangAllyCommand extends SubArgument {
 	}
 
 	private void gangAlly() {
-		Argument requestAlly = new Argument("request", tree, (argument, sender, args) -> {
+		Argument requestAlly = new Argument(gangland, "request", tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -70,7 +70,7 @@ class GangAllyCommand extends SubArgument {
 		}, this.getPermission() + ".request");
 
 		// glw gang ally abandon <id>
-		Argument abandonAlly = new Argument("abandon", tree, (argument, sender, args) -> {
+		Argument abandonAlly = new Argument(gangland, "abandon", tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -85,7 +85,7 @@ class GangAllyCommand extends SubArgument {
 		// key -> the gang requesting alliance with, value -> the gang sending the request
 		HashMap<Gang, Gang>           gangsIdMap       = new HashMap<>();
 		HashMap<Gang, CountdownTimer> gangRequestTimer = new HashMap<>();
-		Argument allyId = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument allyId = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -189,7 +189,7 @@ class GangAllyCommand extends SubArgument {
 		abandonAlly.addSubArgument(allyId);
 
 		// glw gang ally accept
-		Argument allyAccept = new Argument("accept", tree, (argument, sender, args) -> {
+		Argument allyAccept = new Argument(gangland, "accept", tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -248,7 +248,7 @@ class GangAllyCommand extends SubArgument {
 			}
 		}, this.getPermission() + ".accept");
 
-		Argument allyReject = new Argument("reject", tree, (argument, sender, args) -> {
+		Argument allyReject = new Argument(gangland, "reject", tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 

@@ -15,13 +15,15 @@ import org.bukkit.entity.Player;
 
 class WaypointSelectCommand extends SubArgument {
 
+	private final Gangland        gangland;
 	private final Tree<Argument>  tree;
 	private final WaypointManager waypointManager;
 
 	protected WaypointSelectCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"select", "selects"}, tree, parent);
+		super(gangland, new String[]{"select", "selects"}, tree, parent);
 
-		this.tree = tree;
+		this.gangland = gangland;
+		this.tree     = tree;
 
 		this.waypointManager = gangland.getInitializer().getWaypointManager();
 
@@ -37,7 +39,7 @@ class WaypointSelectCommand extends SubArgument {
 
 	private void waypointSelect() {
 		// to select a waypoint, its id should be provided
-		Argument select = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument select = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			// the id would be the second argument
 			String argId = args[2];
 

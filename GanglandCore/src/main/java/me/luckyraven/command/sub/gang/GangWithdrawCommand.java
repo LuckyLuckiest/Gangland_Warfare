@@ -22,15 +22,17 @@ import java.util.List;
 
 class GangWithdrawCommand extends SubArgument {
 
+	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 
 	protected GangWithdrawCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("withdraw", tree, parent);
+		super(gangland, "withdraw", tree, parent);
 
-		this.tree = tree;
+		this.gangland = gangland;
+		this.tree     = tree;
 
 		this.userManager   = gangland.getInitializer().getUserManager();
 		this.memberManager = gangland.getInitializer().getMemberManager();
@@ -55,7 +57,7 @@ class GangWithdrawCommand extends SubArgument {
 	}
 
 	private OptionalArgument gangWithdraw() {
-		return new OptionalArgument(tree, (argument, sender, args) -> {
+		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 			Member       member = memberManager.getMember(player.getUniqueId());

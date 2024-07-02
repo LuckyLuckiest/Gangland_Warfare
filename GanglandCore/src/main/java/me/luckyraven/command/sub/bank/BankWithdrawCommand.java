@@ -17,13 +17,15 @@ import org.bukkit.entity.Player;
 
 class BankWithdrawCommand extends SubArgument {
 
+	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
 	protected BankWithdrawCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("withdraw", tree, parent);
+		super(gangland, "withdraw", tree, parent);
 
-		this.tree = tree;
+		this.gangland = gangland;
+		this.tree     = tree;
 
 		this.userManager = gangland.getInitializer().getUserManager();
 
@@ -46,7 +48,7 @@ class BankWithdrawCommand extends SubArgument {
 	}
 
 	private OptionalArgument bankWithdraw() {
-		return new OptionalArgument(tree, (argument, sender, args) -> {
+		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 			Bank         bank   = Bank.getInstance(user);

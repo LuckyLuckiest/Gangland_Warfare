@@ -17,13 +17,15 @@ import org.bukkit.entity.Player;
 
 class BankDepositCommand extends SubArgument {
 
+	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
 	protected BankDepositCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("deposit", tree, parent);
+		super(gangland, "deposit", tree, parent);
 
-		this.tree = tree;
+		this.gangland = gangland;
+		this.tree     = tree;
 
 		this.userManager = gangland.getInitializer().getUserManager();
 
@@ -46,7 +48,7 @@ class BankDepositCommand extends SubArgument {
 	}
 
 	private OptionalArgument bankDeposit() {
-		return new OptionalArgument(tree, (argument, sender, args) -> {
+		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 			Bank         bank   = Bank.getInstance(user);

@@ -46,10 +46,10 @@ public final class OptionCommand extends CommandHandler {
 	protected void help(CommandSender sender, int page) { }
 
 	private Argument resourcePack() {
-		Argument click = new Argument("click", getArgumentTree());
+		Argument click = new Argument(getGangland(), "click", getArgumentTree());
 
 		// glw option click resource
-		Argument resource = new Argument("resource", getArgumentTree(), (argument, sender, args) -> {
+		Argument resource = new Argument(getGangland(), "resource", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(ChatUtil.prefixMessage(
 					"&7You should first disconnect from the server and click the server tab you created, " +
 					"next click &8(&bEdit&8)&7 then change &8(&bServer Resource Packs&8)&7 to either " +
@@ -66,16 +66,16 @@ public final class OptionCommand extends CommandHandler {
 
 	private Argument gangArgument(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
 								  RankManager rankManager) {
-		Argument gang = new Argument("gang", getArgumentTree());
+		Argument gang = new Argument(getGangland(), "gang", getArgumentTree());
 
-		Argument rank = new Argument("rank", getArgumentTree());
+		Argument rank = new Argument(getGangland(), "rank", getArgumentTree());
 
-		Argument target = new OptionalArgument(getArgumentTree());
+		Argument target = new OptionalArgument(getGangland(), getArgumentTree());
 
 		rank.addSubArgument(target);
 
 		// glw option gang rank <target> <rank>
-		Argument rankType = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+		Argument rankType = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
 			Player       player     = (Player) sender;
 			User<Player> user       = userManager.getUser(player);
 			Member       userMember = memberManager.getMember(player.getUniqueId());

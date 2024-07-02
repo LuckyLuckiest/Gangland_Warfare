@@ -60,7 +60,7 @@ public final class TeleportCommand extends CommandHandler {
 		UserManager<Player> userManager     = getGangland().getInitializer().getUserManager();
 		WaypointManager     waypointManager = getGangland().getInitializer().getWaypointManager();
 
-		Argument name = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+		Argument name = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
 			Player       player   = (Player) sender;
 			User<Player> user     = userManager.getUser(player);
 			Waypoint     waypoint = waypointManager.get(args[1]);

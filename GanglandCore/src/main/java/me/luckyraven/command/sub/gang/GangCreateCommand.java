@@ -37,7 +37,7 @@ class GangCreateCommand extends SubArgument {
 	private final RankManager         rankManager;
 
 	protected GangCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("create", tree, parent);
+		super(gangland, "create", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
@@ -69,7 +69,7 @@ class GangCreateCommand extends SubArgument {
 		Map<User<Player>, AtomicReference<String>> createGangName  = new HashMap<>();
 		Map<CommandSender, CountdownTimer>         createGangTimer = new HashMap<>();
 
-		ConfirmArgument confirmCreate = new ConfirmArgument(tree, (argument, sender, args) -> {
+		ConfirmArgument confirmCreate = new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 			Member       member = memberManager.getMember(player.getUniqueId());
@@ -109,7 +109,7 @@ class GangCreateCommand extends SubArgument {
 
 		this.addSubArgument(confirmCreate);
 
-		Argument createName = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument createName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 

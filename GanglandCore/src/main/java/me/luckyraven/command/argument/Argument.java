@@ -29,46 +29,45 @@ import java.util.stream.Stream;
 public class Argument implements Cloneable {
 
 	private final boolean displayAllArguments;
-
+	@Getter(value = AccessLevel.NONE)
+	private final JavaPlugin     plugin;
+	TriConsumer<Argument, CommandSender, String[]> action;
 	private Tree.Node<Argument> node;
 	private String[]            arguments;
-
-	@Getter(value = AccessLevel.NONE)
-	private final Gangland       gangland;
 	@Getter(value = AccessLevel.NONE)
 	private       Tree<Argument> tree;
-
-	TriConsumer<Argument, CommandSender, String[]> action;
-
 	@NotNull
 	private String                              permission;
 	@Setter
 	private BiConsumer<CommandSender, String[]> executeOnPass;
 
-	public Argument(String argument, Tree<Argument> tree) {
-		this(argument, tree, null);
+	public Argument(JavaPlugin plugin, String argument, Tree<Argument> tree) {
+		this(plugin, argument, tree, null);
 	}
 
-	public Argument(String argument, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action) {
-		this(new String[]{argument}, tree, action);
+	public Argument(JavaPlugin plugin, String argument, Tree<Argument> tree,
+					TriConsumer<Argument, CommandSender, String[]> action) {
+		this(plugin, new String[]{argument}, tree, action);
 	}
 
-	public Argument(String[] arguments, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action) {
-		this(arguments, tree, action, "");
+	public Argument(JavaPlugin plugin, String[] arguments, Tree<Argument> tree,
+					TriConsumer<Argument, CommandSender, String[]> action) {
+		this(plugin, arguments, tree, action, "");
 	}
 
-	public Argument(String argument, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action,
-					String permission) {
-		this(new String[]{argument}, tree, action, permission);
+	public Argument(JavaPlugin plugin, String argument, Tree<Argument> tree,
+					TriConsumer<Argument, CommandSender, String[]> action, String permission) {
+		this(plugin, new String[]{argument}, tree, action, permission);
 	}
 
-	public Argument(String[] arguments, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action,
-					String permission) {
-		this(arguments, tree, action, permission, false);
+	public Argument(JavaPlugin plugin, String[] arguments, Tree<Argument> tree,
+					TriConsumer<Argument, CommandSender, String[]> action, String permission) {
+		this(plugin, arguments, tree, action, permission, false);
 	}
 
-	public Argument(String[] arguments, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action,
-					String permission, boolean displayAllArguments) {
+	public Argument(JavaPlugin plugin, String[] arguments, Tree<Argument> tree,
+					TriConsumer<Argument, CommandSender, String[]> action, String permission,
+					boolean displayAllArguments) {
 		Preconditions.checkNotNull(permission, "Permission string can't be null");
 
 		this.arguments           = arguments;
@@ -76,11 +75,7 @@ public class Argument implements Cloneable {
 		this.node                = new Tree.Node<>(this);
 		this.action              = action;
 		this.displayAllArguments = displayAllArguments;
-
-		// use gangland if it was available
-		if (Bukkit.getPluginManager().isPluginEnabled("Gangland_Warfare")) {
-			this.gangland = JavaPlugin.getPlugin(Gangland.class);
-		} else this.gangland = null;
+		this.plugin              = plugin;
 
 		setPermission(permission);
 	}
@@ -95,11 +90,7 @@ public class Argument implements Cloneable {
 		this.displayAllArguments = other.displayAllArguments;
 		this.action              = other.action;
 		this.executeOnPass       = other.executeOnPass;
-
-		// use gangland if it was available
-		if (Bukkit.getPluginManager().isPluginEnabled("Gangland_Warfare")) {
-			this.gangland = JavaPlugin.getPlugin(Gangland.class);
-		} else this.gangland = null;
+		this.plugin              = other.plugin;
 	}
 
 	public static String getArgumentSequence(Argument argument) {
@@ -120,7 +111,9 @@ public class Argument implements Cloneable {
 	}
 
 	public void addPermission(String permission) {
-		if (gangland != null) gangland.getInitializer().getPermissionManager().addPermission(permission);
+		if (plugin instanceof Gangland gangland) gangland.getInitializer()
+														 .getPermissionManager()
+														 .addPermission(permission);
 		else {
 			if (permission.isEmpty()) return;
 
@@ -145,8 +138,8 @@ public class Argument implements Cloneable {
 
 	public void execute(CommandSender sender, String[] args) {
 		Argument[] modifiedArg = Arrays.stream(args).map(arg -> {
-			if (arg.toLowerCase().contains("confirm")) return new ConfirmArgument(tree);
-			return new Argument(arg, tree);
+			if (arg.toLowerCase().contains("confirm")) return new ConfirmArgument(plugin, tree);
+			return new Argument(plugin, arg, tree);
 		}).toArray(Argument[]::new);
 
 		try {
@@ -258,7 +251,7 @@ public class Argument implements Cloneable {
 	}
 
 	private ArgumentResult<Argument> traverseList(Argument[] list, CommandSender sender, String[] args) {
-		return traverseList(tree.getRoot(), list, 0, new OptionalArgument(tree), sender, args);
+		return traverseList(tree.getRoot(), list, 0, new OptionalArgument(plugin, tree), sender, args);
 	}
 
 	private <T extends Argument> ArgumentResult<T> traverseList(Tree.Node<T> node, T[] list, int index,

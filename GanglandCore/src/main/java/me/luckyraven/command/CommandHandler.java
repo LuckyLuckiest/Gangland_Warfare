@@ -1,5 +1,6 @@
 package me.luckyraven.command;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
@@ -17,6 +18,8 @@ import java.util.Set;
 @Getter
 public abstract class CommandHandler {
 
+	@Getter(value = AccessLevel.PROTECTED)
+	private final Gangland       gangland;
 	private final String         label;
 	private final Set<String>    alias;
 	private final String         permission;
@@ -24,7 +27,6 @@ public abstract class CommandHandler {
 	private final HelpInfo       helpInfo;
 	private final Argument       argument;
 	private final Tree<Argument> argumentTree;
-	private final Gangland       gangland;
 
 	public CommandHandler(Gangland gangland, String label, boolean user, String... alias) {
 		this.gangland = gangland;
@@ -43,7 +45,7 @@ public abstract class CommandHandler {
 		args[0] = label;
 		System.arraycopy(alias, 0, args, 1, args.length - 1);
 
-		this.argument = new Argument(args, argumentTree, this::onExecute, this.permission);
+		this.argument = new Argument(gangland, args, argumentTree, this::onExecute, this.permission);
 		this.argumentTree.add(argument.getNode());
 
 		initializeArguments();

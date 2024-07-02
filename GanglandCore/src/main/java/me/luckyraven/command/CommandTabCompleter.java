@@ -6,6 +6,7 @@ import me.luckyraven.datastructure.Tree;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,9 +16,11 @@ import java.util.Map;
 
 public final class CommandTabCompleter implements TabCompleter {
 
+	private final JavaPlugin                  plugin;
 	private final Map<String, CommandHandler> commandMap;
 
-	public CommandTabCompleter(Map<String, CommandHandler> commandMap) {
+	public CommandTabCompleter(JavaPlugin plugin, Map<String, CommandHandler> commandMap) {
+		this.plugin     = plugin;
 		this.commandMap = commandMap;
 	}
 
@@ -67,8 +70,8 @@ public final class CommandTabCompleter implements TabCompleter {
 		for (Tree<Argument> tree : commandHandlers.stream().map(CommandHandler::getArgumentTree).toList()) {
 			for (int i = 0; i < args.length; i++) {
 				String arg = args[i];
-				if (arg.toLowerCase().contains("confirm")) modifiedArg[i] = new ConfirmArgument(tree);
-				else modifiedArg[i] = new Argument(arg, tree);
+				if (arg.toLowerCase().contains("confirm")) modifiedArg[i] = new ConfirmArgument(plugin, tree);
+				else modifiedArg[i] = new Argument(plugin, arg, tree);
 			}
 
 			Argument found = tree.traverseLastValid(modifiedArg);

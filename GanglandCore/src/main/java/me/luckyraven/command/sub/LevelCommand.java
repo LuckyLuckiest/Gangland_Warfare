@@ -81,19 +81,19 @@ public final class LevelCommand extends CommandHandler {
 		UserManager<Player> userManager = getGangland().getInitializer().getUserManager();
 
 		String[] expArr = {"exp", "experience"};
-		Argument experience = new Argument(expArr, getArgumentTree(), (argument, sender, args) -> {
+		Argument experience = new Argument(getGangland(), expArr, getArgumentTree(), (argument, sender, args) -> {
 			ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<add/remove>");
 		}, getPermission() + ".experience");
 
-		Argument expAdd = new Argument("add", getArgumentTree(), (argument, sender, args) -> {
+		Argument expAdd = new Argument(getGangland(), "add", getArgumentTree(), (argument, sender, args) -> {
 			ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>");
 		}, experience.getPermission() + ".add");
 
-		Argument expRemove = new Argument("remove", getArgumentTree(), (argument, sender, args) -> {
+		Argument expRemove = new Argument(getGangland(), "remove", getArgumentTree(), (argument, sender, args) -> {
 			ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>");
 		}, experience.getPermission() + ".remove");
 
-		Argument expOptional = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+		Argument expOptional = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -131,15 +131,15 @@ public final class LevelCommand extends CommandHandler {
 		String levelPerm = getPermission() + ".level";
 		getArgument().addPermission(levelPerm);
 
-		Argument levelAdd = new Argument("add", getArgumentTree(), (argument, sender, args) -> {
+		Argument levelAdd = new Argument(getGangland(), "add", getArgumentTree(), (argument, sender, args) -> {
 			ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>");
 		}, levelPerm + ".add");
 
-		Argument levelRemove = new Argument("remove", getArgumentTree(), (argument, sender, args) -> {
+		Argument levelRemove = new Argument(getGangland(), "remove", getArgumentTree(), (argument, sender, args) -> {
 			ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>");
 		}, levelPerm + ".remove");
 
-		Argument levelOptional = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+		Argument levelOptional = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -167,7 +167,7 @@ public final class LevelCommand extends CommandHandler {
 		levelAdd.addSubArgument(levelOptional);
 		levelRemove.addSubArgument(levelOptional);
 
-		Argument next = new Argument("next", getArgumentTree(), (argument, sender, args) -> {
+		Argument next = new Argument(getGangland(), "next", getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 

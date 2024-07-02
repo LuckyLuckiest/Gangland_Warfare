@@ -18,13 +18,15 @@ import org.bukkit.entity.Player;
 
 class BountyClearCommand extends SubArgument {
 
+	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
 	public BountyClearCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"clear", "remove", "delete", "del"}, tree, parent);
+		super(gangland, new String[]{"clear", "remove", "delete", "del"}, tree, parent);
 
-		this.tree = tree;
+		this.gangland = gangland;
+		this.tree     = tree;
 
 		this.userManager = gangland.getInitializer().getUserManager();
 
@@ -39,7 +41,7 @@ class BountyClearCommand extends SubArgument {
 	}
 
 	private void bountyClear() {
-		Argument playerName = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument playerName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			String playerStr = args[2];
 			Player player    = Bukkit.getPlayer(playerStr);
 

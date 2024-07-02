@@ -33,7 +33,7 @@ class RankDeleteCommand extends SubArgument {
 	private final RankManager    rankManager;
 
 	protected RankDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"delete", "remove", "del"}, tree, parent);
+		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
@@ -54,7 +54,7 @@ class RankDeleteCommand extends SubArgument {
 		HashMap<CommandSender, AtomicReference<String>> deleteRankName  = new HashMap<>();
 		HashMap<CommandSender, CountdownTimer>          deleteRankTimer = new HashMap<>();
 
-		ConfirmArgument confirmDelete = new ConfirmArgument(tree, (argument, sender, args) -> {
+		ConfirmArgument confirmDelete = new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
 			Rank rank = rankManager.get(deleteRankName.get(sender).get());
 
 			if (rank != null) {
@@ -90,7 +90,7 @@ class RankDeleteCommand extends SubArgument {
 
 		this.addSubArgument(confirmDelete);
 
-		Argument deleteName = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument deleteName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Rank rank = rankManager.get(args[2]);
 
 			if (rank == null) {

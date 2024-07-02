@@ -39,7 +39,7 @@ class GangKickCommand extends SubArgument {
 	private final RankManager         rankManager;
 
 	protected GangKickCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("kick", tree, parent);
+		super(gangland, "kick", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
@@ -69,7 +69,7 @@ class GangKickCommand extends SubArgument {
 
 	@SuppressWarnings("unchecked")
 	private void gangKick() {
-		Argument kickName = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument kickName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player     = (Player) sender;
 			User<Player> user       = userManager.getUser(player);
 			Member       userMember = memberManager.getMember(player.getUniqueId());

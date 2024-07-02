@@ -199,7 +199,7 @@ public final class GangCommand extends CommandHandler {
 					new ArrayList<>(List.of("&e" + gang.getDescription())), false, false,
 					(player, inventory, items) -> {
 						player.performCommand(Argument.getArgumentSequence(Objects.requireNonNull(
-								getArgumentTree().find(new Argument("desc", getArgumentTree())))));
+								getArgumentTree().find(new Argument(gangland, "desc", getArgumentTree())))));
 					});
 
 		// members
@@ -276,7 +276,7 @@ public final class GangCommand extends CommandHandler {
 					new ArrayList<>(List.of("&e" + gang.getColor().toLowerCase().replace("_", " "))), false, false,
 					(player, inventory, item) -> {
 						player.performCommand(Argument.getArgumentSequence(Objects.requireNonNull(
-								getArgumentTree().find(new Argument("color", getArgumentTree())))));
+								getArgumentTree().find(new Argument(getGangland(), "color", getArgumentTree())))));
 					});
 
 		gui.setItem(33, ColorUtil.getMaterialByColor(gang.getColor(), MaterialType.BANNER.name()), "&bStatistics",

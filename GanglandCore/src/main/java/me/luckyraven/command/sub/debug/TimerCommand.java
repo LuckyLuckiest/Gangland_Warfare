@@ -38,25 +38,25 @@ public final class TimerCommand extends CommandHandler {
 
 	@Override
 	protected void initializeArguments() {
-		Argument create = new Argument("create", getArgumentTree(), (argument, sender, args) -> {
+		Argument create = new Argument(getGangland(), "create", getArgumentTree(), (argument, sender, args) -> {
 			SequenceTimer timer = new SequenceTimer(getGangland(), 0L, 20L, SequenceTimer.Mode.CIRCULAR);
 
 			timerMap.put(sender, timer);
 			sender.sendMessage("Added " + timer);
 		});
 
-		Argument delete = new Argument("delete", getArgumentTree(), (argument, sender, args) -> {
+		Argument delete = new Argument(getGangland(), "delete", getArgumentTree(), (argument, sender, args) -> {
 			SequenceTimer timer = timerMap.remove(sender);
 
 			startedTimers.remove(sender);
 			sender.sendMessage("Removed " + timer);
 		});
 
-		Argument mode = new Argument("mode", getArgumentTree(), (argument, sender, args) -> {
+		Argument mode = new Argument(getGangland(), "mode", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage("Missing argument, <mode>");
 		});
 
-		Argument modeOptional = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+		Argument modeOptional = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
 			SequenceTimer timer = timerMap.get(sender);
 
 			if (timer == null) {
@@ -79,7 +79,7 @@ public final class TimerCommand extends CommandHandler {
 
 		mode.addSubArgument(modeOptional);
 
-		Argument start = new Argument("start", getArgumentTree(), (argument, sender, args) -> {
+		Argument start = new Argument(getGangland(), "start", getArgumentTree(), (argument, sender, args) -> {
 			SequenceTimer timer = timerMap.get(sender);
 
 			if (timer == null) {
@@ -102,7 +102,7 @@ public final class TimerCommand extends CommandHandler {
 			sender.sendMessage("Started timer");
 		});
 
-		Argument stop = new Argument("stop", getArgumentTree(), (argument, sender, args) -> {
+		Argument stop = new Argument(getGangland(), "stop", getArgumentTree(), (argument, sender, args) -> {
 			SequenceTimer timer = timerMap.get(sender);
 
 			if (timer == null) {
@@ -114,11 +114,11 @@ public final class TimerCommand extends CommandHandler {
 			sender.sendMessage("Stopped timer");
 		});
 
-		Argument addInterval = new Argument("add", getArgumentTree(), (argument, sender, args) -> {
+		Argument addInterval = new Argument(getGangland(), "add", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage("Missing argument, <interval>");
 		});
 
-		Argument interval = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+		Argument interval = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
 			String value = args[2];
 
 			int val;

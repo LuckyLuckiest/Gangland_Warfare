@@ -16,7 +16,7 @@ class RankTraverseCommand extends SubArgument {
 	private final RankManager rankManager;
 
 	protected RankTraverseCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("traverse", tree, parent);
+		super(gangland, "traverse", tree, parent);
 
 		this.rankManager = gangland.getInitializer().getRankManager();
 	}

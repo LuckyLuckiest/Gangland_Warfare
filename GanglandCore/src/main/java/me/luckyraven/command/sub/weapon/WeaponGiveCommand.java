@@ -20,7 +20,7 @@ class WeaponGiveCommand extends SubArgument {
 	private final Tree<Argument> tree;
 
 	protected WeaponGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("give", tree, parent);
+		super(gangland, "give", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
@@ -35,7 +35,7 @@ class WeaponGiveCommand extends SubArgument {
 	}
 
 	private void weaponGive() {
-		Argument name = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument name = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player player     = (Player) sender;
 			String weaponName = args[2];
 
@@ -44,7 +44,7 @@ class WeaponGiveCommand extends SubArgument {
 			else player.sendMessage(ChatUtil.errorMessage("Invalid weapon!"));
 		});
 
-		Argument amount = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player player     = (Player) sender;
 			String weaponName = args[2];
 			int    weaponAmount;

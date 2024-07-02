@@ -14,13 +14,15 @@ import org.bukkit.command.CommandSender;
 
 class RankParentCommand extends SubArgument {
 
+	private final Gangland       gangland;
 	private final Tree<Argument> tree;
 	private final RankManager    rankManager;
 
 	protected RankParentCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("parent", tree, parent);
+		super(gangland, "parent", tree, parent);
 
-		this.tree = tree;
+		this.gangland = gangland;
+		this.tree     = tree;
 
 		this.rankManager = gangland.getInitializer().getRankManager();
 
@@ -35,7 +37,7 @@ class RankParentCommand extends SubArgument {
 	}
 
 	private void rankParent() {
-		Argument parentStr = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument parentStr = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Rank rank = rankManager.get(args[3]);
 
 			if (rank == null) {
@@ -75,17 +77,17 @@ class RankParentCommand extends SubArgument {
 			}
 		});
 
-		Argument parentName = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument parentName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<parent>"));
 		});
 
 		parentName.addSubArgument(parentStr);
 
-		Argument addParent = new Argument("add", tree, (argument, sender, args) -> {
+		Argument addParent = new Argument(gangland, "add", tree, (argument, sender, args) -> {
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, this.getPermission() + ".add");
 
-		Argument removeParent = new Argument("remove", tree, (argument, sender, args) -> {
+		Argument removeParent = new Argument(gangland, "remove", tree, (argument, sender, args) -> {
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, this.getPermission() + ".remove");
 

@@ -22,15 +22,17 @@ import java.util.List;
 
 class GangDepositCommand extends SubArgument {
 
+	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 
 	protected GangDepositCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("deposit", tree, parent);
+		super(gangland, "deposit", tree, parent);
 
-		this.tree = tree;
+		this.gangland = gangland;
+		this.tree     = tree;
 
 		this.userManager   = gangland.getInitializer().getUserManager();
 		this.memberManager = gangland.getInitializer().getMemberManager();
@@ -55,7 +57,7 @@ class GangDepositCommand extends SubArgument {
 	}
 
 	private OptionalArgument gangDeposit() {
-		return new OptionalArgument(tree, (argument, sender, args) -> {
+		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 			Member       member = memberManager.getMember(player.getUniqueId());

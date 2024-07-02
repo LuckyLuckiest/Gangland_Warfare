@@ -28,7 +28,7 @@ class BankCreateCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 
 	protected BankCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("create", tree, parent);
+		super(gangland, "create", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
@@ -57,7 +57,7 @@ class BankCreateCommand extends SubArgument {
 		HashMap<User<Player>, AtomicReference<String>> createBankName  = new HashMap<>();
 		HashMap<CommandSender, CountdownTimer>         createBankTimer = new HashMap<>();
 
-		ConfirmArgument confirmCreate = new ConfirmArgument(tree, (argument, sender, args) -> {
+		ConfirmArgument confirmCreate = new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -92,7 +92,7 @@ class BankCreateCommand extends SubArgument {
 
 		this.addSubArgument(confirmCreate);
 
-		Argument createName = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument createName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 

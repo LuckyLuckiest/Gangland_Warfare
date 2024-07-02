@@ -18,14 +18,16 @@ import org.bukkit.entity.Player;
 
 class GangRenameCommand extends SubArgument {
 
+	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 
 	protected GangRenameCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("rename", tree, parent);
+		super(gangland, "rename", tree, parent);
 
-		this.tree = tree;
+		this.gangland = gangland;
+		this.tree     = tree;
 
 		this.userManager = gangland.getInitializer().getUserManager();
 		this.gangManager = gangland.getInitializer().getGangManager();
@@ -49,7 +51,7 @@ class GangRenameCommand extends SubArgument {
 	}
 
 	private void gangRename() {
-		Argument changeName = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument changeName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 

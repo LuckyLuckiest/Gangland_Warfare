@@ -24,7 +24,7 @@ class BountySetCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 
 	public BountySetCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(new String[]{"set", "add"}, tree, parent);
+		super(gangland, new String[]{"set", "add"}, tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
@@ -42,7 +42,7 @@ class BountySetCommand extends SubArgument {
 	}
 
 	private void bountySet() {
-		Argument playerName = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument playerName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			String playerStr = args[2];
 			Player player    = Bukkit.getPlayer(playerStr);
 
@@ -54,7 +54,7 @@ class BountySetCommand extends SubArgument {
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
 		});
 
-		Argument amount = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			String playerStr = args[2];
 			Player player    = Bukkit.getPlayer(playerStr);
 

@@ -4,23 +4,25 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class OptionalArgument extends Argument {
 
-	public OptionalArgument(Tree<Argument> tree) {
-		super("?", tree);
+	public OptionalArgument(JavaPlugin plugin, Tree<Argument> tree) {
+		super(plugin, "?", tree);
 	}
 
-	public OptionalArgument(Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action) {
-		super("?", tree, action);
-	}
-
-	public OptionalArgument(String[] possibleArguments, Tree<Argument> tree,
+	public OptionalArgument(JavaPlugin plugin, Tree<Argument> tree,
 							TriConsumer<Argument, CommandSender, String[]> action) {
-		super(argumentsWithOptional(possibleArguments), tree, action);
+		super(plugin, "?", tree, action);
+	}
+
+	public OptionalArgument(JavaPlugin plugin, String[] possibleArguments, Tree<Argument> tree,
+							TriConsumer<Argument, CommandSender, String[]> action) {
+		super(plugin, argumentsWithOptional(possibleArguments), tree, action);
 	}
 
 	private static String[] argumentsWithOptional(String[] possibleArguments) {

@@ -16,13 +16,15 @@ import org.bukkit.entity.Player;
 
 class WantedRemoveCommand extends SubArgument {
 
+	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
 	public WantedRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("remove", tree, parent);
+		super(gangland, "remove", tree, parent);
 
-		this.tree = tree;
+		this.gangland = gangland;
+		this.tree     = tree;
 
 		this.userManager = gangland.getInitializer().getUserManager();
 
@@ -46,7 +48,7 @@ class WantedRemoveCommand extends SubArgument {
 	}
 
 	private void wantedValue() {
-		Argument optional = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument optional = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			String amountStr = args[2];
 
 			int amount;

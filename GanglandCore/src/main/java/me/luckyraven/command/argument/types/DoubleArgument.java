@@ -7,6 +7,7 @@ import me.luckyraven.datastructure.Tree;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
 
 @Getter
 @Setter
@@ -14,23 +15,23 @@ public class DoubleArgument extends Argument {
 
 	private boolean confirmed;
 
-	public DoubleArgument(String argument, Tree<Argument> tree) {
-		this(new String[]{argument}, tree, null);
+	public DoubleArgument(JavaPlugin plugin, String argument, Tree<Argument> tree) {
+		this(plugin, new String[]{argument}, tree, null);
 	}
 
-	public DoubleArgument(String[] arguments, Tree<Argument> tree,
+	public DoubleArgument(JavaPlugin plugin, String[] arguments, Tree<Argument> tree,
 						  TriConsumer<Argument, CommandSender, String[]> action) {
-		this(arguments, tree, action, "");
+		this(plugin, arguments, tree, action, "");
 	}
 
-	public DoubleArgument(String argument, Tree<Argument> tree, TriConsumer<Argument, CommandSender, String[]> action,
-						  String permission) {
-		this(new String[]{argument}, tree, action, permission);
-	}
-
-	public DoubleArgument(String[] arguments, Tree<Argument> tree,
+	public DoubleArgument(JavaPlugin plugin, String argument, Tree<Argument> tree,
 						  TriConsumer<Argument, CommandSender, String[]> action, String permission) {
-		super(arguments, tree, action, permission);
+		this(plugin, new String[]{argument}, tree, action, permission);
+	}
+
+	public DoubleArgument(JavaPlugin plugin, String[] arguments, Tree<Argument> tree,
+						  TriConsumer<Argument, CommandSender, String[]> action, String permission) {
+		super(plugin, arguments, tree, action, permission);
 		this.confirmed = false;
 	}
 

@@ -48,23 +48,26 @@ public final class EconomyCommand extends CommandHandler {
 		HashMap<String, Supplier<List<Player>>> specifiers  = new HashMap<>();
 
 		// glw economy deposit
-		Argument deposit = new Argument(new String[]{"deposit", "add"}, getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<specifier>"));
-		}, getPermission() + ".deposit");
+		Argument deposit = new Argument(getGangland(), new String[]{"deposit", "add"}, getArgumentTree(),
+										(argument, sender, args) -> {
+											sender.sendMessage(
+													ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(),
+																		  "<specifier>"));
+										}, getPermission() + ".deposit");
 
 
 		// glw economy withdraw
-		Argument withdraw = new Argument(new String[]{"withdraw", "take"}, getArgumentTree(),
+		Argument withdraw = new Argument(getGangland(), new String[]{"withdraw", "take"}, getArgumentTree(),
 										 (argument, sender, args) -> sender.sendMessage(
 												 ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(),
 																	   "<specifier>")), getPermission() + ".withdraw");
 
 		// glw economy set
-		Argument set = new Argument("set", getArgumentTree(), (argument, sender, args) -> {
+		Argument set = new Argument(getGangland(), "set", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<specifier>"));
 		}, getPermission() + ".set");
 
-		Argument amount = new OptionalArgument(getArgumentTree(), (argument, sender, args) -> {
+		Argument amount = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
 			String specifier;
 			if (args[2].startsWith("@")) specifier = args[2];
 			else if (args[2].contains("*")) specifier = args[2];
@@ -127,9 +130,11 @@ public final class EconomyCommand extends CommandHandler {
 		});
 
 		String[] optionalSpecifier = {"*", "**", "@[<name>]"};
-		Argument specifier = new OptionalArgument(optionalSpecifier, getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
-		});
+		Argument specifier = new OptionalArgument(getGangland(), optionalSpecifier, getArgumentTree(),
+												  (argument, sender, args) -> {
+													  sender.sendMessage(ChatUtil.setArguments(
+															  MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
+												  });
 
 		specifier.setExecuteOnPass((sender, args) -> {
 			try {
@@ -148,7 +153,7 @@ public final class EconomyCommand extends CommandHandler {
 		// glw economy reset
 		Argument reset = economyReset(specifiers, userManager);
 
-		Argument resetSpecifier = new OptionalArgument(optionalSpecifier, getArgumentTree(),
+		Argument resetSpecifier = new OptionalArgument(getGangland(), optionalSpecifier, getArgumentTree(),
 													   (argument, sender, args) -> reset.executeArgument(sender, args));
 
 		reset.addSubArgument(resetSpecifier);
@@ -171,7 +176,7 @@ public final class EconomyCommand extends CommandHandler {
 
 	@NotNull
 	private Argument economyReset(HashMap<String, Supplier<List<Player>>> specifiers, UserManager<Player> userManager) {
-		Argument reset = new Argument("reset", getArgumentTree(), (argument, sender, args) -> {
+		Argument reset = new Argument(getGangland(), "reset", getArgumentTree(), (argument, sender, args) -> {
 			String specifierStr = args.length > 2 ? args[2] : "**";
 
 			if (specifierStr.equals("**") && !(sender instanceof Player)) {

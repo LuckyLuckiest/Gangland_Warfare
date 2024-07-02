@@ -17,14 +17,16 @@ import org.bukkit.entity.Player;
 
 class WaypointGangIdCommand extends SubArgument {
 
+	private final Gangland        gangland;
 	private final Tree<Argument>  tree;
 	private final GangManager     gangManager;
 	private final WaypointManager waypointManager;
 
 	protected WaypointGangIdCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super("gangId", tree, parent, "gang_id");
+		super(gangland, "gangId", tree, parent, "gang_id");
 
-		this.tree = tree;
+		this.gangland = gangland;
+		this.tree     = tree;
 
 		this.gangManager     = gangland.getInitializer().getGangManager();
 		this.waypointManager = gangland.getInitializer().getWaypointManager();
@@ -40,7 +42,7 @@ class WaypointGangIdCommand extends SubArgument {
 	}
 
 	private void waypointGangId() {
-		Argument optional = new OptionalArgument(tree, (argument, sender, args) -> {
+		Argument optional = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player   player   = (Player) sender;
 			Waypoint waypoint = waypointManager.getSelected(player);
 
