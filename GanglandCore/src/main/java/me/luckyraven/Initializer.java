@@ -78,6 +78,7 @@ public final class Initializer {
 	private final @Getter CompatibilitySetup compatibilitySetup;
 
 	// on plugin enable
+	// Managers
 	private @Getter UserManager<Player>        userManager;
 	private @Getter UserManager<OfflinePlayer> offlineUserManager;
 	private @Getter PermissionManager          permissionManager;
@@ -91,16 +92,19 @@ public final class Initializer {
 	private @Getter WaypointManager            waypointManager;
 	private @Getter ScoreboardManager          scoreboardManager;
 	private @Getter WeaponManager              weaponManager;
-	private @Getter GanglandDatabase           ganglandDatabase;
 	// Addons
 	private @Getter SettingAddon               settingAddon;
-	private @Getter LanguageLoader             languageLoader;
 	private @Getter ScoreboardAddon            scoreboardAddon;
-	private @Getter InventoryLoader            inventoryLoader;
-	private @Getter GanglandPlaceholder        placeholder;
 	private @Getter AmmunitionAddon            ammunitionAddon;
-	private @Getter WeaponLoader               weaponLoader;
 	private @Getter WeaponAddon                weaponAddon;
+	// Loader
+	private @Getter LanguageLoader             languageLoader;
+	private @Getter InventoryLoader            inventoryLoader;
+	private @Getter WeaponLoader               weaponLoader;
+	// Database
+	private @Getter GanglandDatabase           ganglandDatabase;
+	// Placeholder
+	private @Getter GanglandPlaceholder        placeholder;
 	// Compatibility
 	private @Getter CompatibilityWorker        compatibilityWorker;
 
@@ -232,14 +236,9 @@ public final class Initializer {
 		inventoryLoader.clear();
 		// clear the ammunition addons
 		ammunitionAddon.clear();
-		ammunitionAddon = null;
-
 		// clear the weapon addons
 		weaponAddon.clear();
-		weaponAddon = null;
-
 		weaponLoader.clear();
-		weaponLoader = null;
 	}
 
 	public void scoreboardLoader() {
