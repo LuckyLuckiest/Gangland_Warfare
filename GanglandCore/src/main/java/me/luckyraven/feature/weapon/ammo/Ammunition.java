@@ -3,6 +3,7 @@ package me.luckyraven.feature.weapon.ammo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -24,6 +25,16 @@ public class Ammunition {
 		if (item == null || item.getType().equals(Material.AIR) || item.getAmount() == 0) return false;
 
 		return new ItemBuilder(item).hasNBTTag("ammo");
+	}
+
+	public static Ammunition getHeldAmmunition(Gangland gangland, ItemStack itemHeld) {
+		if (itemHeld == null || itemHeld.getType().equals(Material.AIR) || itemHeld.getAmount() == 0) return null;
+		if (!isAmmunition(itemHeld)) return null;
+
+		ItemBuilder itemBuilder    = new ItemBuilder(itemHeld);
+		String      ammunitionName = itemBuilder.getStringTagData("ammo");
+
+		return gangland.getInitializer().getAmmunitionAddon().getAmmunition(ammunitionName);
 	}
 
 	public ItemStack buildItem() {
