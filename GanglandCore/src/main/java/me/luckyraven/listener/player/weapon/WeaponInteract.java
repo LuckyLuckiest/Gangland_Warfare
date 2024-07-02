@@ -7,7 +7,9 @@ import me.luckyraven.feature.weapon.WeaponManager;
 import me.luckyraven.feature.weapon.events.WeaponShootEvent;
 import me.luckyraven.feature.weapon.projectile.WeaponProjectile;
 import me.luckyraven.file.configuration.SoundConfiguration;
+import me.luckyraven.util.Pair;
 import me.luckyraven.util.timer.CountdownTimer;
+import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.timer.SequenceTimer;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -23,15 +25,24 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WeaponInteract implements Listener {
 
 	private final Gangland      gangland;
 	private final WeaponManager weaponManager;
 
+	private final Map<UUID, Pair<AtomicBoolean, AtomicBoolean>> continuousFire;
+
 	public WeaponInteract(Gangland gangland) {
-		this.gangland      = gangland;
-		this.weaponManager = gangland.getInitializer().getWeaponManager();
+		this.gangland       = gangland;
+		this.weaponManager  = gangland.getInitializer().getWeaponManager();
+		this.continuousFire = new ConcurrentHashMap<>();
 	}
 
 	@EventHandler
@@ -72,89 +83,53 @@ public class WeaponInteract implements Listener {
 		// cancel block interaction
 		event.setUseInteractedBlock(Event.Result.DENY);
 
-		// check the selective fire
-//		switch (weapon.getCurrentSelectiveFire()) {
-//			case AUTO -> {
-//				// should be continuous
-//				return;
-//			}
-//			case SINGLE, BURST -> {
-//				// should wait for the cooldown before shooting
-//				return;
-//			}
-//		}
+		// check if the pair exists
+		Pair<AtomicBoolean, AtomicBoolean> pair = continuousFire.get(weapon.getUuid());
+		// create a new instance
+		Pair<AtomicBoolean, AtomicBoolean> newPair = getContinuityAndCooldownPair(pair, weapon);
 
-		SequenceTimer sequenceTimer = new SequenceTimer(gangland, 0, 1);
+		if (pair == null) {
+			// create a new instance and insert it in
+			continuousFire.put(weapon.getUuid(), newPair);
 
-		for (int i = 0; i < weapon.getProjectilePerShot(); ++i) {
-			sequenceTimer.addIntervalTaskPair(weapon.getProjectileCooldown(), time -> {
-				// consume bullet
-				boolean consumed = weapon.consumeShot();
+			// run each process each second
+			RepeatingTimer continuousTimer = new RepeatingTimer(gangland, 20L, time -> {
+				// get the necessary information
+				Pair<AtomicBoolean, AtomicBoolean> retrievedPair = continuousFire.get(weapon.getUuid());
 
-				// no shot fired
-				if (!consumed) {
-					// sound
-					SoundConfiguration.playSounds(player, weapon.getEmptyMagCustomSound(),
-												  weapon.getEmptyMagDefaultSound());
+				// the first boolean is for continuous firing
+				boolean continueFiring = retrievedPair.second().get();
+				// the second boolean is for waiting on a cooldown
+				boolean waitCooldown = retrievedPair.first().get();
 
+				if (!continueFiring) {
+					time.stop();
 					return;
 				}
 
-				WeaponProjectile<?> weaponProjectile = weapon.getProjectileType()
-															 .createInstance(gangland, player, weapon);
-				WeaponShootEvent weaponShootEvent = new WeaponShootEvent(weapon, weaponProjectile);
-				gangland.getServer().getPluginManager().callEvent(weaponShootEvent);
+				// otherwise wait for cooldown
+				if (waitCooldown) return;
 
-				// launch the projectile
-				if (weaponShootEvent.isCancelled()) return;
-
-				weaponProjectile.launchProjectile();
-
-				// update data
-				ItemBuilder heldWeapon = weaponManager.getHeldWeaponItem(player);
-
-				if (heldWeapon != null) {
-					weapon.updateWeaponData(heldWeapon);
-					weapon.updateWeapon(player, heldWeapon, player.getInventory().getHeldItemSlot());
-				}
-
-				float recoil = (float) weapon.getRecoilAmount();
-
-				if (!player.isSneaking()) recoil(player, recoil, recoil);
-				else {
-					float newValue = recoil / 2;
-
-					if (weapon.isScoped()) recoil(player, newValue, newValue);
-					else recoil(player, newValue / 2, newValue / 2);
-				}
-
-				if (!player.isSneaking()) push(player, weapon.getPushPowerUp(), weapon.getPushVelocity());
-				else {
-					if (weapon.isScoped()) push(player, weapon.getPushPowerUp() / 2, weapon.getPushVelocity() / 2);
-					else push(player, 0, 0);
-				}
-
-				SoundConfiguration.playSounds(player, weapon.getShotCustomSound(), weapon.getShotDefaultSound());
-
-				// weapon consumption
-				if (weapon.getWeaponConsumedOnShot() > 0 &&
-					weapon.getCurrentMagCapacity() == weapon.getWeaponConsumedOnShot()) {
-					weapon.removeWeapon(player, player.getInventory().getHeldItemSlot());
-				}
-
-				if (weapon.getWeaponConsumeOnTime() > -1) {
-					CountdownTimer timer = new CountdownTimer(gangland, weapon.getWeaponConsumeOnTime(), null, null,
-															  time1 -> {
-																  weapon.removeWeapon(player, player.getInventory()
-																									.getHeldItemSlot());
-															  });
-
-					timer.start(false);
-				}
 			});
+
+			continuousTimer.start(false);
+		} else {
+			// modify the pair value
+			continuousFire.replace(weapon.getUuid(), newPair);
 		}
 
-		sequenceTimer.start(false);
+//		CountdownTimer continuousTimer = new CountdownTimer(gangland, 1, // each second should check if it was shooting
+//															null, // no need to do anything before starting the timer
+//															time -> {
+//																// check if the weapon should be shooting or not
+//																if (continuousFire.containsKey(weapon.getUuid()))
+//																	// shoot the weapon
+//																	shoot(player, weapon);
+//															}, time ->
+//																	// remove the timer from the continuous timer
+//																	continuousFire.remove(weapon.getUuid()));
+//
+//		continuousTimer.start(false);
 	}
 
 	@EventHandler
@@ -181,6 +156,122 @@ public class WeaponInteract implements Listener {
 		if (weapon == null) return;
 
 		weapon.unScope(player, true);
+	}
+
+	@NotNull
+	private Pair<AtomicBoolean, AtomicBoolean> getContinuityAndCooldownPair(Pair<AtomicBoolean, AtomicBoolean> pair,
+																			Weapon weapon) {
+		AtomicBoolean continuous;
+		AtomicBoolean cooldown;
+
+		// if the weapon is in continuous fire, then get the stored data
+		if (pair != null) {
+			continuous = pair.first();
+			cooldown   = pair.second();
+		}
+		// else create new data
+		else {
+			continuous = new AtomicBoolean();
+			cooldown   = new AtomicBoolean();
+		}
+
+		// check the selective fire
+		switch (weapon.getCurrentSelectiveFire()) {
+			case AUTO -> {
+				// should be continuous
+				continuous.set(true);
+				cooldown.set(false);
+			}
+			case BURST -> {
+				// should be continuous and wait for the cooldown
+				continuous.set(true);
+				cooldown.set(true);
+			}
+			case SINGLE -> {
+				// should be only once
+				continuous.set(false);
+				cooldown.set(false);
+			}
+		}
+
+		return new Pair<>(continuous, cooldown);
+	}
+
+	private void shoot(Player player, Weapon weapon) {
+		SequenceTimer sequenceTimer = new SequenceTimer(gangland, 0, 1);
+
+		for (int i = 0; i < weapon.getProjectilePerShot(); ++i)
+			 sequenceTimer.addIntervalTaskPair(weapon.getProjectileCooldown(), time -> shootInterval(player, weapon));
+
+		sequenceTimer.start(false);
+	}
+
+	private void shootInterval(Player player, Weapon weapon) {
+		// consume bullet
+		boolean consumed = weapon.consumeShot();
+
+		// no shot fired
+		if (!consumed) {
+			// empty magazine sound
+			SoundConfiguration.playSounds(player, weapon.getEmptyMagCustomSound(), weapon.getEmptyMagDefaultSound());
+			return;
+		}
+
+		WeaponProjectile<?> weaponProjectile = weapon.getProjectileType().createInstance(gangland, player, weapon);
+		WeaponShootEvent    weaponShootEvent = new WeaponShootEvent(weapon, weaponProjectile);
+		gangland.getServer().getPluginManager().callEvent(weaponShootEvent);
+
+		// launch the projectile
+		if (weaponShootEvent.isCancelled()) {
+			// substitute for the consumed shot
+			weapon.addAmmunition(1);
+			return;
+		}
+
+		weaponProjectile.launchProjectile();
+
+		// update data
+		ItemBuilder heldWeapon = weaponManager.getHeldWeaponItem(player);
+
+		if (heldWeapon != null) {
+			weapon.updateWeaponData(heldWeapon);
+			weapon.updateWeapon(player, heldWeapon, player.getInventory().getHeldItemSlot());
+		}
+
+		// apply recoil
+		float recoil = (float) weapon.getRecoilAmount();
+
+		if (!player.isSneaking()) recoil(player, recoil, recoil);
+		else {
+			float newValue = recoil / 2;
+
+			if (weapon.isScoped()) recoil(player, newValue, newValue);
+			else recoil(player, newValue / 2, newValue / 2);
+		}
+
+		// apply push
+		if (!player.isSneaking()) push(player, weapon.getPushPowerUp(), weapon.getPushVelocity());
+		else {
+			if (weapon.isScoped()) push(player, weapon.getPushPowerUp() / 2, weapon.getPushVelocity() / 2);
+			else push(player, 0, 0);
+		}
+
+		// shooting sound
+		SoundConfiguration.playSounds(player, weapon.getShotCustomSound(), weapon.getShotDefaultSound());
+
+		// weapon consumption
+		if (weapon.getWeaponConsumedOnShot() > 0 &&
+			weapon.getCurrentMagCapacity() == weapon.getWeaponConsumedOnShot()) {
+			weapon.removeWeapon(player, player.getInventory().getHeldItemSlot());
+		}
+
+		if (weapon.getWeaponConsumeOnTime() <= -1) return;
+
+		CountdownTimer timer = new CountdownTimer(gangland, weapon.getWeaponConsumeOnTime(), null, null,
+												  time -> weapon.removeWeapon(player,
+																			  player.getInventory().getHeldItemSlot()));
+
+		timer.start(false);
 	}
 
 	private void recoil(Player player, float yaw, float pitch) {
