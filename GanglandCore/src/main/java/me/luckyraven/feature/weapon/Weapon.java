@@ -373,22 +373,17 @@ public class Weapon implements Cloneable {
 				"projectileBodyDamage=%.2f,projectileCriticalHitChance=%d,projectileCriticalHitDamage=%.2f," +
 				"spreadStart=%.2f,spreadResetTime=%d,spreadChangeBase=%.2f,spreadResetOnBound=%b," +
 				"spreadBoundMinimum=%.2f,spreadBoundMaximum=%.2f,recoilAmount=%.2f,pushVelocity=%.2f,pushPowerUp=%b," +
-				"recoilPattern='%s',shotDefaultSound='%s',shotCustomSound='%s',EmptyMagDefaultSound='%s'," +
-				"EmptyMagCustomSound='%s',reloadDefaultSoundBefore='%s',reloadDefaultSoundAfter='%s'," +
-				"reloadCustomSoundStart='%s',reloadCustomSoundMid='%s',reloadCustomSoundEnd='%s'," +
-				"reloadActionBarReloading='%s',reloadActionBarOpening='%s',scopeLevel=%d,scoped=%b," +
-				"scopeDefaultSound='%s',scopeCustomSound='%s'}", uuid.toString(), name, displayName, category, material,
-				durability, lore, dropHologram, weaponConsumedOnShot, projectileSpeed, projectileType, projectileDamage,
-				projectileConsumed, projectilePerShot, projectileCooldown, projectileDistance, particle, maxMagCapacity,
-				reloadCooldown, reloadAmmoType, reloadConsume, reloadRestore, reloadType, tags, reload,
-				changingDisplayName, currentSelectiveFire, currentMagCapacity, durabilityOnShot, durabilityOnRepair,
-				weaponConsumeOnTime, projectileExplosionDamage, projectileFireTicks, projectileHeadDamage,
-				projectileBodyDamage, projectileCriticalHitChance, projectileCriticalHitDamage, spreadStart,
-				spreadResetTime, spreadChangeBase, spreadResetOnBound, spreadBoundMinimum, spreadBoundMaximum,
-				recoilAmount, pushVelocity, pushPowerUp, recoilPattern, shotDefaultSound, shotCustomSound,
-				EmptyMagDefaultSound, EmptyMagCustomSound, reloadDefaultSoundBefore, reloadDefaultSoundAfter,
-				reloadCustomSoundStart, reloadCustomSoundMid, reloadCustomSoundEnd, reloadActionBarReloading,
-				reloadActionBarOpening, scopeLevel, scoped, scopeDefaultSound, scopeCustomSound);
+				"recoilPattern='%s',reloadActionBarReloading='%s',reloadActionBarOpening='%s',scopeLevel=%d,scoped=%b}",
+				uuid.toString(), name, displayName, category, material, durability, lore, dropHologram,
+				weaponConsumedOnShot, projectileSpeed, projectileType, projectileDamage, projectileConsumed,
+				projectilePerShot, projectileCooldown, projectileDistance, particle, maxMagCapacity, reloadCooldown,
+				reloadAmmoType, reloadConsume, reloadRestore, reloadType, tags, reload, changingDisplayName,
+				currentSelectiveFire, currentMagCapacity, durabilityOnShot, durabilityOnRepair, weaponConsumeOnTime,
+				projectileExplosionDamage, projectileFireTicks, projectileHeadDamage, projectileBodyDamage,
+				projectileCriticalHitChance, projectileCriticalHitDamage, spreadStart, spreadResetTime,
+				spreadChangeBase, spreadResetOnBound, spreadBoundMinimum, spreadBoundMaximum, recoilAmount,
+				pushVelocity, pushPowerUp, recoilPattern.stream().map(Arrays::toString).toList(),
+				reloadActionBarReloading, reloadActionBarOpening, scopeLevel, scoped);
 	}
 
 	private void updateTag(ItemBuilder itemBuilder, WeaponTag tag, Object value) {
