@@ -14,6 +14,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import java.util.Map;
+
 class WeaponGiveCommand extends SubArgument {
 
 	private final Gangland       gangland;
@@ -36,11 +38,11 @@ class WeaponGiveCommand extends SubArgument {
 
 	private void weaponGive() {
 		Argument name = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			Player player     = (Player) sender;
-			String weaponName = args[2];
+			Player  player     = (Player) sender;
+			String  weaponName = args[2];
+			boolean giveWeapon = giveWeapon(player, weaponName.toLowerCase(), 1);
 
-			if (giveWeapon(player, weaponName.toLowerCase(), 1)) player.sendMessage(
-					ChatUtil.commandMessage("Given &b" + weaponName + "&7."));
+			if (giveWeapon) player.sendMessage(ChatUtil.commandMessage("Given &b" + weaponName + "&7."));
 			else player.sendMessage(ChatUtil.errorMessage("Invalid weapon!"));
 		});
 
@@ -56,7 +58,9 @@ class WeaponGiveCommand extends SubArgument {
 				return;
 			}
 
-			if (giveWeapon(player, weaponName.toLowerCase(), weaponAmount)) player.sendMessage(
+			boolean giveWeapon = giveWeapon(player, weaponName.toLowerCase(), weaponAmount);
+
+			if (giveWeapon) player.sendMessage(
 					ChatUtil.commandMessage("Given &a" + weaponAmount + " &b" + weaponName + "&7."));
 			else player.sendMessage(ChatUtil.errorMessage("Invalid weapon!"));
 		});
@@ -66,29 +70,29 @@ class WeaponGiveCommand extends SubArgument {
 	}
 
 	private boolean giveWeapon(Player player, String name, int amount) {
-		int    amountLeft = amount;
-		Weapon weapon     = gangland.getInitializer().getWeaponManager().getWeapon(player, null, name, true);
+		Weapon weapon = gangland.getInitializer().getWeaponManager().getWeapon(player, null, name, true);
 
 		if (weapon == null) return false;
 
-		PlayerInventory inventory = player.getInventory();
+		int             slots      = (int) Math.ceil(amount / 64D);
+		int             amountLeft = amount;
+		PlayerInventory inventory  = player.getInventory();
+		ItemStack[]     items      = new ItemStack[slots];
 
 		for (int i = 0; i < inventory.getStorageContents().length; i++) {
-			ItemStack itemStack = inventory.getItem(i);
+			int amountGive = amountLeft % 65;
 
-			if (itemStack != null) continue;
-			// check if no amount needs to be given
-			if (amountLeft == 0) break;
+			if (amountGive <= 0) break;
 
-			player.getInventory().setItem(i, weapon.buildItem());
-
-			--amountLeft;
+			items[i]   = weapon.buildItem();
+			amountLeft = Math.max(0, amountLeft - 1);
 		}
 
+		Map<Integer, ItemStack> left = inventory.addItem(items);
+
 		// make the player drop from their inventory the rest of items
-		while (amountLeft > 0) {
-			player.getWorld().dropItemNaturally(player.getLocation(), weapon.buildItem());
-			--amountLeft;
+		for (ItemStack item : left.values()) {
+			player.getWorld().dropItemNaturally(player.getLocation(), item);
 		}
 
 		return true;

@@ -38,11 +38,12 @@ class AmmunitionGiveCommand extends SubArgument {
 
 	private void ammunitionGive() {
 		Argument name = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			Player player   = (Player) sender;
-			String ammoName = args[2];
+			Player  player         = (Player) sender;
+			String  ammoName       = args[2];
+			boolean giveAmmunition = giveAmmunition(player, ammoName.toLowerCase(), 1);
 
-			giveAmmunition(player, ammoName.toLowerCase(), 1);
-			player.sendMessage(ChatUtil.commandMessage("Given &a1 &b" + ammoName + "&7."));
+			if (giveAmmunition) player.sendMessage(ChatUtil.commandMessage("Given &a1 &b" + ammoName + "&7."));
+			else player.sendMessage(ChatUtil.errorMessage("Invalid ammunition!"));
 		});
 
 		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
@@ -57,21 +58,21 @@ class AmmunitionGiveCommand extends SubArgument {
 				return;
 			}
 
-			giveAmmunition(player, ammoName.toLowerCase(), ammoAmount);
-			player.sendMessage(ChatUtil.commandMessage("Given &a" + ammoAmount + " &b" + ammoName + "&7."));
+			boolean giveAmmunition = giveAmmunition(player, ammoName.toLowerCase(), ammoAmount);
+
+			if (giveAmmunition) player.sendMessage(
+					ChatUtil.commandMessage("Given &a" + ammoAmount + " &b" + ammoName + "&7."));
+			else player.sendMessage(ChatUtil.errorMessage("Invalid ammunition!"));
 		});
 
 		name.addSubArgument(amount);
 		this.addSubArgument(name);
 	}
 
-	private void giveAmmunition(Player player, String name, int amount) {
+	private boolean giveAmmunition(Player player, String name, int amount) {
 		Ammunition ammunition = gangland.getInitializer().getAmmunitionAddon().getAmmunition(name);
 
-		if (ammunition == null) {
-			player.sendMessage(ChatUtil.errorMessage("Invalid ammunition!"));
-			return;
-		}
+		if (ammunition == null) return false;
 
 		int             slots      = (int) Math.ceil(amount / 64D);
 		int             amountLeft = amount;
@@ -93,6 +94,8 @@ class AmmunitionGiveCommand extends SubArgument {
 		for (ItemStack item : left.values()) {
 			player.getWorld().dropItemNaturally(player.getLocation(), item);
 		}
+
+		return true;
 	}
 
 }
