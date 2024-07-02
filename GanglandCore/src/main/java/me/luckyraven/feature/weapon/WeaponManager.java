@@ -4,7 +4,6 @@ import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.WeaponTable;
-import me.luckyraven.file.configuration.weapon.WeaponAddon;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -12,22 +11,16 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 
 public class WeaponManager {
 
 	private final Gangland          gangland;
 	private final Map<UUID, Weapon> weapons;
-	private final WeaponAddon       weaponAddon;
 
 	public WeaponManager(Gangland gangland) {
-		this.gangland    = gangland;
-		this.weaponAddon = gangland.getInitializer().getWeaponAddon();
-		this.weapons     = new ConcurrentHashMap<>();
+		this.gangland = gangland;
+		this.weapons  = new HashMap<>();
 	}
 
 	public void initialize(WeaponTable table) {
@@ -40,7 +33,7 @@ public class WeaponManager {
 				UUID   uuid = UUID.fromString(String.valueOf(result[0]));
 				String type = String.valueOf(result[1]);
 
-				Weapon weaponAddon = this.weaponAddon.getWeapon(type);
+				Weapon weaponAddon = gangland.getInitializer().getWeaponAddon().getWeapon(type);
 
 				if (weaponAddon == null) continue;
 
@@ -117,7 +110,7 @@ public class WeaponManager {
 	}
 
 	/**
-	 * Obtaining a weapon from the saved data is a hectic procedure, thus making sure if the weapon is already generated
+	 * Getting a weapon from the saved data is a hectic procedure, thus making sure if the weapon is already generated
 	 * would be better for the system. <br/> It is fine if the weapon wasn't already registered since there can be
 	 * specific ones that need an uuid attached, and these weapons are generated from this function.
 	 *
@@ -144,7 +137,7 @@ public class WeaponManager {
 		if (type == null || type.isEmpty()) return null;
 
 		// the type is basically the name of the weapon in the files
-		Weapon weaponAddon = this.weaponAddon.getWeapon(type);
+		Weapon weaponAddon = gangland.getInitializer().getWeaponAddon().getWeapon(type);
 
 		if (weaponAddon == null) return null;
 
@@ -158,11 +151,11 @@ public class WeaponManager {
 			return uuidWeapon;
 		}
 
-		// generate a new uuid if there was non found
+		// generate a new uuid if there was non-found
 		boolean found = false;
 		UUID    generatedUuid;
 
-		// it shouldn't take a long time given the nature the UUID's low probability of collision
+		// it shouldn't take a long time given the nature of the UUID's low probability of having a collision
 		// worst case O(n^2)
 		do {
 			generatedUuid = UUID.randomUUID();
@@ -175,7 +168,7 @@ public class WeaponManager {
 		Weapon finalWeapon = new Weapon(generatedUuid, weaponAddon);
 
 		// check if the weapon is new or not
-		// if it was new then no need to set the data of the uuid since it is not even created/built
+		// if it was new, then no need to set the data of the uuid since it is not even created/built
 		if (!newInstance) setWeaponData(finalWeapon, player);
 
 		weapons.put(generatedUuid, finalWeapon);
