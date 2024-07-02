@@ -5,7 +5,6 @@ database: true
 api-version: 1.13
 depend:
    - NBTAPI
-   - ProtocolLib
 softdepend:
    - PlaceholderAPI
    - Vault

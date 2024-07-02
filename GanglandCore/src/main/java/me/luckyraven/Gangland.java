@@ -167,9 +167,6 @@ public final class Gangland extends JavaPlugin {
 		Dependency nbtApi = new Dependency("NBTAPI", Dependency.Type.REQUIRED);
 		nbtApi.validate(null);
 
-		Dependency protocolLib = new Dependency("ProtocolLib", Dependency.Type.REQUIRED);
-		protocolLib.validate(null);
-
 		// soft dependencies
 		Dependency placeholderApi = new Dependency("PlaceholderAPI", Dependency.Type.SOFT);
 		placeholderApi.validate(() -> {
