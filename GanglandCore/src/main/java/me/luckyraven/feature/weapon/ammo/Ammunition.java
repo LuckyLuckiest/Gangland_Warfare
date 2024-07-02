@@ -63,7 +63,7 @@ public class Ammunition {
 
 	@Override
 	public String toString() {
-		return String.format("Ammunition{ammo='%s',name='%s',material='%s'", name, displayName, material.toString());
+		return String.format("Ammunition{ammo='%s',name='%s',material='%s'}", name, displayName, material.toString());
 	}
 
 }
