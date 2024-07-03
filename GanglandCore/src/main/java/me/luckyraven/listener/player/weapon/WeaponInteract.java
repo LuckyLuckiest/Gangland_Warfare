@@ -1,7 +1,10 @@
 package me.luckyraven.listener.player.weapon;
 
+import lombok.Getter;
+import lombok.Setter;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
+import me.luckyraven.feature.weapon.SelectiveFire;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.WeaponManager;
 import me.luckyraven.feature.weapon.events.WeaponShootEvent;
@@ -26,18 +29,19 @@ import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class WeaponInteract implements Listener {
 
 	private final Gangland      gangland;
 	private final WeaponManager weaponManager;
 
-	private final Map<UUID, Pair<AtomicBoolean, AtomicBoolean>> continuousFire;
+	private final Map<UUID, AtomicReference<WeaponData>> continuousFire;
 
 	public WeaponInteract(Gangland gangland) {
 		this.gangland       = gangland;
@@ -84,38 +88,37 @@ public class WeaponInteract implements Listener {
 		event.setUseInteractedBlock(Event.Result.DENY);
 
 		// check if the pair exists
-		Pair<AtomicBoolean, AtomicBoolean> pair = continuousFire.get(weapon.getUuid());
+		WeaponData weaponData = continuousFire.get(weapon.getUuid()).get();
 		// create a new instance
-		Pair<AtomicBoolean, AtomicBoolean> newPair = getContinuityAndCooldownPair(pair, weapon);
+		WeaponData finalWeaponData = getWeaponData(weaponData, weapon);
 
-		if (pair == null) {
+		if (weaponData == null) {
 			// create a new instance and insert it in
-			continuousFire.put(weapon.getUuid(), newPair);
+			continuousFire.put(weapon.getUuid(), new AtomicReference<>(finalWeaponData));
 
 			// run each process each second
 			RepeatingTimer continuousTimer = new RepeatingTimer(gangland, 20L, time -> {
 				// get the necessary information
-				Pair<AtomicBoolean, AtomicBoolean> retrievedPair = continuousFire.get(weapon.getUuid());
+				WeaponData retrievedWeaponData = continuousFire.get(weapon.getUuid()).get();
 
-				// the first boolean is for continuous firing
-				boolean continueFiring = retrievedPair.second().get();
-				// the second boolean is for waiting on a cooldown
-				boolean waitCooldown = retrievedPair.first().get();
-
-				if (!continueFiring) {
+				if (!retrievedWeaponData.currentContinuous) {
 					time.stop();
 					return;
 				}
 
 				// otherwise wait for cooldown
-				if (waitCooldown) return;
+				if (retrievedWeaponData.currentCooldown) return;
 
 			});
 
 			continuousTimer.start(false);
 		} else {
 			// modify the pair value
-			continuousFire.replace(weapon.getUuid(), newPair);
+			WeaponData oldWeaponData = continuousFire.get(weapon.getUuid()).get();
+
+			// change the data
+
+			continuousFire.replace(weapon.getUuid(), continuousFire.get(weapon.getUuid()));
 		}
 
 //		CountdownTimer continuousTimer = new CountdownTimer(gangland, 1, // each second should check if it was shooting
@@ -159,48 +162,54 @@ public class WeaponInteract implements Listener {
 	}
 
 	@NotNull
-	private Pair<AtomicBoolean, AtomicBoolean> getContinuityAndCooldownPair(Pair<AtomicBoolean, AtomicBoolean> pair,
-																			Weapon weapon) {
-		AtomicBoolean continuous;
-		AtomicBoolean cooldown;
+	private WeaponData getWeaponData(@Nullable WeaponData weaponData, @NotNull Weapon weapon) {
+		WeaponData finalWeaponData;
 
 		// if the weapon is in continuous fire, then get the stored data
-		if (pair != null) {
-			continuous = pair.first();
-			cooldown   = pair.second();
+		if (weaponData != null) {
+			finalWeaponData = new WeaponData(weaponData.continuous, weaponData.cooldown);
 		}
 		// else create new data
 		else {
-			continuous = new AtomicBoolean();
-			cooldown   = new AtomicBoolean();
+			// check the selective fire
+			Pair<Boolean, Boolean> continuityAndCooldown = getContinuityAndCooldownPair(
+					weapon.getCurrentSelectiveFire());
+			finalWeaponData = new WeaponData(continuityAndCooldown.first(), continuityAndCooldown.second());
 		}
 
-		// check the selective fire
-		switch (weapon.getCurrentSelectiveFire()) {
+		return finalWeaponData;
+	}
+
+	@NotNull
+	private Pair<Boolean, Boolean> getContinuityAndCooldownPair(@NotNull SelectiveFire selectiveFire) {
+		switch (selectiveFire) {
 			case AUTO -> {
 				// should be continuous
-				continuous.set(true);
-				cooldown.set(false);
+				return new Pair<>(true, false);
 			}
 			case BURST -> {
-				// should be continuous and wait for the cooldown
-				continuous.set(true);
-				cooldown.set(true);
+				// should wait for the cooldown
+				return new Pair<>(false, true);
 			}
 			case SINGLE -> {
 				// should be only once
-				continuous.set(false);
-				cooldown.set(false);
+				return new Pair<>(false, false);
 			}
 		}
 
-		return new Pair<>(continuous, cooldown);
+		// if there was a new configuration added, this would be the default value
+		return new Pair<>(true, true);
 	}
 
 	private void shoot(Player player, Weapon weapon) {
+		// have only multiple shots for when the weapon is burst
+		int numberOfShots = 1;
+
+		if (weapon.getCurrentSelectiveFire() == SelectiveFire.BURST) numberOfShots = weapon.getProjectilePerShot();
+
 		SequenceTimer sequenceTimer = new SequenceTimer(gangland, 0, 1);
 
-		for (int i = 0; i < weapon.getProjectilePerShot(); ++i)
+		for (int i = 0; i < numberOfShots; ++i)
 			 sequenceTimer.addIntervalTaskPair(weapon.getProjectileCooldown(), time -> shootInterval(player, weapon));
 
 		sequenceTimer.start(false);
@@ -289,6 +298,21 @@ public class WeaponInteract implements Listener {
 
 		if (location.getBlock().getRelative(BlockFace.DOWN).getType() != Material.AIR) player.setVelocity(
 				location.getDirection().multiply(push).add(vector));
+	}
+
+	@Getter
+	@Setter
+	private static class WeaponData {
+		private final boolean continuous, cooldown;
+		private boolean currentContinuous, currentCooldown;
+
+		public WeaponData(boolean continuous, boolean cooldown) {
+			this.continuous        = continuous;
+			this.currentContinuous = continuous;
+			this.cooldown          = cooldown;
+			this.currentCooldown   = cooldown;
+		}
+
 	}
 
 }
