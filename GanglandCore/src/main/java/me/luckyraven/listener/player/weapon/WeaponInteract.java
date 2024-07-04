@@ -1,7 +1,5 @@
 package me.luckyraven.listener.player.weapon;
 
-import lombok.Getter;
-import lombok.Setter;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.feature.weapon.SelectiveFire;
@@ -96,22 +94,39 @@ public class WeaponInteract implements Listener {
 			// create a new instance and insert it in
 			continuousFire.put(weapon.getUuid(), new AtomicReference<>(finalWeaponData));
 
-			// run each process each second
-			RepeatingTimer continuousTimer = new RepeatingTimer(gangland, 20L, time -> {
+			// run the process each x ticks
+			RepeatingTimer continuousTimer = new RepeatingTimer(gangland, 5L, time -> {
 				// get the necessary information
-				WeaponData retrievedWeaponData = continuousFire.get(weapon.getUuid()).get();
+				AtomicReference<WeaponData> retrievedWeaponData = continuousFire.get(weapon.getUuid());
 
-				if (!retrievedWeaponData.currentContinuous) {
+				if (retrievedWeaponData == null || !retrievedWeaponData.get().continuous) {
 					time.stop();
 					return;
 				}
 
-				// otherwise wait for cooldown
-				if (retrievedWeaponData.currentCooldown) return;
+				// otherwise, wait for cooldown
+				if (retrievedWeaponData.get().cooldown) return;
 
+				shoot(player, weapon);
 			});
 
 			continuousTimer.start(false);
+
+			// remove the weapon after 1 second of not pressing the button
+			RepeatingTimer stopTimer = new RepeatingTimer(gangland, 20L, time -> {
+				// get the necessary information
+				AtomicReference<WeaponData> stillShooting = continuousFire.get(weapon.getUuid());
+
+				if (stillShooting == null) {
+					time.stop();
+					return;
+				}
+
+				// if the player is still shooting, then don't stop
+				
+			});
+
+			stopTimer.start(false);
 		} else {
 			// modify the pair value
 			WeaponData oldWeaponData = continuousFire.get(weapon.getUuid()).get();
@@ -120,19 +135,6 @@ public class WeaponInteract implements Listener {
 
 			continuousFire.replace(weapon.getUuid(), continuousFire.get(weapon.getUuid()));
 		}
-
-//		CountdownTimer continuousTimer = new CountdownTimer(gangland, 1, // each second should check if it was shooting
-//															null, // no need to do anything before starting the timer
-//															time -> {
-//																// check if the weapon should be shooting or not
-//																if (continuousFire.containsKey(weapon.getUuid()))
-//																	// shoot the weapon
-//																	shoot(player, weapon);
-//															}, time ->
-//																	// remove the timer from the continuous timer
-//																	continuousFire.remove(weapon.getUuid()));
-//
-//		continuousTimer.start(false);
 	}
 
 	@EventHandler
@@ -300,19 +302,6 @@ public class WeaponInteract implements Listener {
 				location.getDirection().multiply(push).add(vector));
 	}
 
-	@Getter
-	@Setter
-	private static class WeaponData {
-		private final boolean continuous, cooldown;
-		private boolean currentContinuous, currentCooldown;
-
-		public WeaponData(boolean continuous, boolean cooldown) {
-			this.continuous        = continuous;
-			this.currentContinuous = continuous;
-			this.cooldown          = cooldown;
-			this.currentCooldown   = cooldown;
-		}
-
-	}
+	private record WeaponData(boolean continuous, boolean cooldown) { }
 
 }
