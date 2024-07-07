@@ -86,54 +86,69 @@ public class WeaponInteract implements Listener {
 		event.setUseInteractedBlock(Event.Result.DENY);
 
 		// check if the pair exists
-		WeaponData weaponData = continuousFire.get(weapon.getUuid()).get();
-		// create a new instance
-		WeaponData finalWeaponData = getWeaponData(weaponData, weapon);
+		AtomicReference<WeaponData> weaponData = continuousFire.get(weapon.getUuid());
 
 		if (weaponData == null) {
+			// create a new instance
+			WeaponData finalWeaponData = getWeaponData(null, weapon);
 			// create a new instance and insert it in
 			continuousFire.put(weapon.getUuid(), new AtomicReference<>(finalWeaponData));
 
+			// get the necessary information
+			AtomicReference<WeaponData> retrievedWeaponData = continuousFire.get(weapon.getUuid());
 			// run the process each x ticks
-			RepeatingTimer continuousTimer = new RepeatingTimer(gangland, 5L, time -> {
-				// get the necessary information
-				AtomicReference<WeaponData> retrievedWeaponData = continuousFire.get(weapon.getUuid());
-
-				if (retrievedWeaponData == null || !retrievedWeaponData.get().continuous) {
+			RepeatingTimer continuousTimer = new RepeatingTimer(gangland, 1L, time -> {
+				if (retrievedWeaponData == null) {
 					time.stop();
 					return;
 				}
+
+				// shot already and not continuous
+				WeaponData data = retrievedWeaponData.get();
+
+				if (!data.shooting) {
+					continuousFire.remove(weapon.getUuid());
+					time.stop();
+					return;
+				}
+
+				boolean check = data.shooting && !data.continuous;
+
+				if (check) return;
 
 				// otherwise, wait for cooldown
-				if (retrievedWeaponData.get().cooldown) return;
+				if (data.cooldown) return;
 
 				shoot(player, weapon);
+				data.shooting = true;
 			});
 
-			continuousTimer.start(false);
+			continuousTimer.start(true);
 
 			// remove the weapon after 1 second of not pressing the button
-			RepeatingTimer stopTimer = new RepeatingTimer(gangland, 20L, time -> {
-				// get the necessary information
-				AtomicReference<WeaponData> stillShooting = continuousFire.get(weapon.getUuid());
-
-				if (stillShooting == null) {
-					time.stop();
-					return;
-				}
-
-				// if the player is still shooting, then don't stop
-				
-			});
-
-			stopTimer.start(false);
+//			RepeatingTimer stopTimer = new RepeatingTimer(gangland, 20L, time -> {
+//				// get the necessary information
+//				AtomicReference<WeaponData> stillShooting = continuousFire.get(weapon.getUuid());
+//
+//				if (stillShooting == null) {
+//					time.stop();
+//					return;
+//				}
+//
+//				// if the player is still shooting, then don't stop
+//				if (!stillShooting.get().shooting) {
+//					time.stop();
+//					continuousFire.remove(weapon.getUuid());
+//					return;
+//				}
+//
+//				stillShooting.get().shooting = false;
+//			});
+//
+//			stopTimer.start(true);
 		} else {
-			// modify the pair value
-			WeaponData oldWeaponData = continuousFire.get(weapon.getUuid()).get();
-
-			// change the data
-
-			continuousFire.replace(weapon.getUuid(), continuousFire.get(weapon.getUuid()));
+			// modify the value
+			continuousFire.get(weapon.getUuid()).get().shooting = false;
 		}
 	}
 
@@ -302,6 +317,16 @@ public class WeaponInteract implements Listener {
 				location.getDirection().multiply(push).add(vector));
 	}
 
-	private record WeaponData(boolean continuous, boolean cooldown) { }
+	private static class WeaponData {
+
+		private final boolean continuous, cooldown;
+		private boolean shooting;
+
+		public WeaponData(boolean continuous, boolean cooldown) {
+			this.continuous = continuous;
+			this.cooldown   = cooldown;
+		}
+
+	}
 
 }
