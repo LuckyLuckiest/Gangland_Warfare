@@ -1,6 +1,6 @@
 package me.luckyraven.database.tables;
 
-import me.luckyraven.PluginData;
+import me.luckyraven.data.plugin.PluginData;
 import me.luckyraven.database.component.Attribute;
 import me.luckyraven.database.component.Table;
 
@@ -17,6 +17,11 @@ public class PluginDataTable extends Table<PluginData> {
 		Attribute<Date>    pluginActivateDate = new Attribute<>("activate_date", false, Date.class);
 		Attribute<Date>    scanDate           = new Attribute<>("scan_date", false, Date.class);
 		Attribute<Date>    scheduledScanDate  = new Attribute<>("scheduled_scan_date", false, Date.class);
+
+		this.addAttribute(id);
+		this.addAttribute(pluginActivateDate);
+		this.addAttribute(scanDate);
+		this.addAttribute(scheduledScanDate);
 	}
 
 	@Override
