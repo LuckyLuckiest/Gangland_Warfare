@@ -6,6 +6,7 @@ import me.luckyraven.exception.PluginException;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.ammo.Ammunition;
 import me.luckyraven.file.configuration.SoundConfiguration;
+import me.luckyraven.util.ChatUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -28,7 +29,10 @@ public abstract class Reload implements Cloneable {
 	protected abstract void executeReload(JavaPlugin plugin, Player player, boolean removeAmmunition);
 
 	public void reload(JavaPlugin plugin, Player player, boolean removeAmmunition) {
-		// start executing reload process
+		// reload the weapon action bar status
+		ChatUtil.sendActionBar(plugin, player, weapon.getReloadActionBarReloading(), weapon.getReloadCooldown());
+
+		// start executing the reload process
 		executeReload(plugin, player, removeAmmunition);
 	}
 
@@ -44,6 +48,9 @@ public abstract class Reload implements Cloneable {
 	protected void startReloading(Player player) {
 		// set that the weapon is reloading
 		this.reloading = true;
+
+		// open the reload chamber action bar status
+		ChatUtil.sendActionBar(player, weapon.getReloadActionBarOpening());
 
 		// start reloading sound
 		SoundConfiguration.playSounds(player, weapon.getReloadCustomSoundStart(), weapon.getReloadDefaultSoundBefore());

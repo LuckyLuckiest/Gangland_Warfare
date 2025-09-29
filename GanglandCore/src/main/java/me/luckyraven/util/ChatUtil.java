@@ -113,8 +113,14 @@ public final class ChatUtil {
 		return color(arguments + ChatUtil.commandDesign(command));
 	}
 
-	public static void sendActionBar(JavaPlugin plugin, Player player, String message) {
-		ActionBar.sendActionBar(plugin, player, message);
+	public static void sendActionBar(Player player, String message) {
+		ActionBar.clearActionBar(player);
+		ActionBar.sendActionBar(player, color(message));
+	}
+
+	public static void sendActionBar(JavaPlugin plugin, Player player, String message, long duration) {
+		ActionBar.clearActionBar(player);
+		ActionBar.sendActionBar(plugin, player, color(message), duration);
 	}
 
 	public static String generateCommandSuggestion(String word, Set<String> dictionary, String command,
@@ -134,7 +140,7 @@ public final class ChatUtil {
 
 		if (args != null) for (String arg : args) builder.append(arg).append(" ");
 
-		if (minimum != -1) builder.append(suggestions.get(minimum).get(0));
+		if (minimum != -1) builder.append(suggestions.get(minimum).getFirst());
 
 		builder.trimToSize();
 		builder.append("\"&e?");

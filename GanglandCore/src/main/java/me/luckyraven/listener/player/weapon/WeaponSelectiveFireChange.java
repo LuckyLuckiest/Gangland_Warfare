@@ -4,12 +4,11 @@ import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.WeaponManager;
-import org.bukkit.entity.HumanEntity;
+import me.luckyraven.util.ChatUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
 
 public class WeaponSelectiveFireChange implements Listener {
@@ -23,14 +22,11 @@ public class WeaponSelectiveFireChange implements Listener {
 	}
 
 	@EventHandler
-	public void onInventoryOpen(InventoryOpenEvent event) {
-		HumanEntity humanEntity = event.getPlayer();
+	public void onSwapHand(PlayerSwapHandItemsEvent event) {
+		Player player = event.getPlayer();
 
-		// validate that it is the player
-		if (!(humanEntity instanceof Player player)) return;
-
-		// check if the player is trying to open their inventory
-		if (event.getInventory().getType() != InventoryType.PLAYER) return;
+		// check if the player is shifting
+		if (!player.isSneaking()) return;
 
 		// check if the player is holding a weapon
 		ItemStack item   = player.getInventory().getItemInMainHand();
@@ -50,6 +46,10 @@ public class WeaponSelectiveFireChange implements Listener {
 
 		weapon.updateWeaponData(itemBuilder);
 		weapon.updateWeapon(player, itemBuilder, player.getInventory().getHeldItemSlot());
+
+		ChatUtil.sendActionBar(player,
+							   "&6Selective Fire > &e" +
+							   ChatUtil.capitalize(weapon.getCurrentSelectiveFire().name().toLowerCase()));
 	}
 
 }
