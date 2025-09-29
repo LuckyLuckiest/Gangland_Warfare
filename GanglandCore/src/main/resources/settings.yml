@@ -37,7 +37,7 @@ Update_Checker:
    Enable: true
    # Only privileged players will be notified when they join if there is a new update.
    Notify_Privileged_Players: false
-   # This feature will auto install the update into the plugin own folder, inside a folder called 'release'.
+   # This feature will auto-install the update into the plugin's own folder, inside a folder called 'release'.
    Auto_Download: true
 
 # +-----------------+ #
@@ -47,7 +47,7 @@ Update_Checker:
 # Messages language type. You can create a custom language by simply creating a folder called 'message' and inside it
 # the language.
 # You should respect the prefix of the file name, it should be message_xx.yml, and xx can be any letter you prefer. To
-# switch between the languages, you enter the xx values in 'Language' configuration, and it would load that
+# switch between the languages, you enter the xx values in the 'Language' configuration, and it would load that
 # configuration.
 # Any faulty written language names entered to this attribute 'Language' then the plugin would disable. To make the
 # plugin work, use any valid language. To get the list of the available languages, enter an invalid name, and a message
@@ -86,7 +86,7 @@ Database:
       # It is recommended to set this true
       Failed_MySQL: true
    Auto_Save:
-      # Enabling auto save would clear unnecessary cache stored and update the databases.
+      # Enabling auto save would clear update the databases.
       # If disabled, it would write to the database and clear the cache only when the player leaves or when the server
       # closes.
       # Disabling this option is not recommended since it would create a lot of overhead to the CPU every time a user
@@ -94,9 +94,10 @@ Database:
       # This effect takes place when the server contains a large number of player bases or players constantly joining
       # and leaving the server.
       Enable: true
-      # Time to auto save in minutes
+      # Time to auto save in minutes.
+      # Time in hours for removal of unnecessary data.
       Time: 10
-      # Enable if you want to print periodical updates in console
+      # Enable if you want to print periodical updates in the console.
       Debug: true
 
 # +-------------------+ #
@@ -167,7 +168,7 @@ User:
    # When the user dies
    Death:
       Enable: true
-      # Money related configuration upon death
+      # Money-related configuration upon death
       Money:
          # Command used when the user dies
          Command:
