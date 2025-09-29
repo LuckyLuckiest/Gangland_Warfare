@@ -6,6 +6,7 @@ import com.google.common.base.Preconditions;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.data.user.User;
+import me.luckyraven.datastructure.LinkedList;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.InventoryUtil;
 import me.luckyraven.util.TriConsumer;
@@ -15,11 +16,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 
 public class MultiInventory extends InventoryHandler {
 
-	private static int                          ID = 0;
+	private static long                         ID = 0;
 	private final  Gangland                     gangland;
 	private final  LinkedList<InventoryHandler> inventories;
 	private        int                          currentPage;
@@ -37,8 +42,7 @@ public class MultiInventory extends InventoryHandler {
 	@Nullable
 	public static MultiInventory dynamicMultiInventory(Gangland gangland, User<Player> user, List<ItemStack> items,
 													   String name, boolean staticItemsAllowed, boolean fixedSize,
-													   @Nullable
-													   Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
+													   @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
 		if (staticItemsAllowed) {
 			if (staticItems == null || staticItems.size() <= 6) return null;
 //			Preconditions.checkNotNull(staticItems, "No static items set");
@@ -53,7 +57,7 @@ public class MultiInventory extends InventoryHandler {
 		int pages   = (int) Math.ceil((double) amount / perPage);
 
 		int remainingAmount = amount % perPage;
-		// the inventory size of the other pages is determined according to which page is reached
+		// the inventory size of the other pages is determined according to which page is reached,
 		// it can be that the page reached is the final page that means the finalPage calculation is
 		// applied to it
 		int finalPage   = remainingAmount + 9 * 2 + (int) Math.ceil((double) remainingAmount / 9);
@@ -69,7 +73,7 @@ public class MultiInventory extends InventoryHandler {
 
 		multi.addItems(multi, items, 0, items.size(), staticItemsAllowed, staticItems);
 		InventoryUtil.createBoarder(multi);
-		// if there is static items column, then create a line at column 2
+		// if there is a static items column, then create a line at column 2
 		if (staticItemsAllowed) InventoryUtil.verticalLine(multi, 2, InventoryUtil.getFillItem(),
 														   SettingAddon.getInventoryFillName(), true);
 
@@ -85,11 +89,16 @@ public class MultiInventory extends InventoryHandler {
 
 			multi.addItems(inv, items, startIndex, endIndex, staticItemsAllowed, staticItems);
 			InventoryUtil.createBoarder(inv);
-			// if there is static items column, then create a line at column 2
+			// if there is a static items column, then create a line at column 2
 			if (staticItemsAllowed) InventoryUtil.verticalLine(inv, 2, InventoryUtil.getFillItem(),
 															   SettingAddon.getInventoryFillName(), true);
 
 			multi.addPage(inv);
+		}
+
+		// add the navigation buttons
+		for (LinkedList.Node<InventoryHandler> node : multi.inventories) {
+			if (node.getNext() != null) multi.addNavigationButtons(node.getData(), node.getNext().getData());
 		}
 
 		return multi;
@@ -102,7 +111,7 @@ public class MultiInventory extends InventoryHandler {
 		}
 
 		int maxRows    = 4;
-		int maxColumns = inventories.getFirst().getSize() / 9;
+		int maxColumns = inventories.getHead().getData().getSize() / 9;
 
 		int perPage = maxColumns * maxRows;
 		int pages   = (int) Math.ceil((double) items.size() / perPage);
@@ -112,7 +121,7 @@ public class MultiInventory extends InventoryHandler {
 		int initialPage     = pages == 1 ? finalPage : InventoryHandler.MAX_SLOTS;
 
 		int              inventoryIndex = 0;
-		InventoryHandler firstPage      = inventories.getFirst();
+		InventoryHandler firstPage      = inventories.getHead().getData();
 
 		// Update the first page with new items
 		firstPage.clear();
@@ -126,7 +135,7 @@ public class MultiInventory extends InventoryHandler {
 			int              size = i == pages - 1 ? finalPage : initialPage;
 			InventoryHandler inv;
 
-			if (i >= inventories.size()) {
+			if (i >= inventories.getSize()) {
 				// If there's no corresponding inventory for this page, create a new one
 				NamespacedKey namespacedKey = new NamespacedKey(gangland, titleRefactor(
 						String.format("%s_%d", firstPage.getDisplayTitle(), ++ID)));
@@ -137,6 +146,9 @@ public class MultiInventory extends InventoryHandler {
 			} else {
 				// If there's already an inventory for this page, update its items and title
 				inv = inventories.get(i);
+
+				if (inv == null) continue;
+
 				inv.clear();
 				addItems(inv, items, i * perPage, Math.min((i + 1) * perPage, items.size()), false, null);
 			}
@@ -148,17 +160,13 @@ public class MultiInventory extends InventoryHandler {
 		}
 
 		// Remove any extra inventories if there were more pages before the update
-		while (inventories.size() > inventoryIndex + 1) {
-			removePage(inventories.getLast());
+		while (inventories.getSize() > inventoryIndex + 1) {
+			removePage(inventories.getTail().getData());
 		}
 	}
 
 	public void addPage(InventoryHandler currentInv) {
-		InventoryHandler lastInv = inventories.getLast();
-
-		addNavigationButtons(currentInv, lastInv);
-
-		inventories.addLast(currentInv);
+		inventories.add(currentInv);
 	}
 
 	public boolean removePage(InventoryHandler gui) {
@@ -167,11 +175,17 @@ public class MultiInventory extends InventoryHandler {
 
 		int next = current + 1, prev = current - 1;
 
-		if (current == 0) if (inventories.size() > 1) {
+		if (current == 0) if (inventories.getSize() > 1) {
 			InventoryHandler nextInventory = inventories.get(next);
+
+			if (nextInventory == null) return false;
+
 			nextInventory.removeItem(nextInventory.getSize() - 9);
-		} else if (current == inventories.size() - 1) {
+		} else if (current == inventories.getSize() - 1) {
 			InventoryHandler prevInventory = inventories.get(prev);
+
+			if (prevInventory == null) return false;
+
 			prevInventory.removeItem(prevInventory.getSize() - 1);
 		}
 
@@ -181,7 +195,7 @@ public class MultiInventory extends InventoryHandler {
 
 	public InventoryHandler nextPage() {
 		++currentPage;
-		if (currentPage >= inventories.size()) currentPage = inventories.size() - 1;
+		if (currentPage >= inventories.getSize()) currentPage = inventories.getSize() - 1;
 		return inventories.get(currentPage);
 	}
 
@@ -192,16 +206,16 @@ public class MultiInventory extends InventoryHandler {
 	}
 
 	public boolean hasNextPage() {
-		return currentPage < inventories.size();
+		return currentPage < inventories.getSize();
 	}
 
 	public InventoryHandler homePage() {
 		currentPage = 0;
-		return inventories.getFirst();
+		return inventories.getHead().getData();
 	}
 
 	public List<InventoryHandler> getLinkedInventories() {
-		return Collections.unmodifiableList(inventories);
+		return Collections.unmodifiableList(inventories.toList());
 	}
 
 	private void addItems(InventoryHandler inv, List<ItemStack> items, int startIndex, int endIndex,
@@ -257,7 +271,7 @@ public class MultiInventory extends InventoryHandler {
 	}
 
 	private void addNextPageItem(InventoryHandler linkedInventory) {
-		ItemBuilder item = createItemHead("&a->", String.format("&7(%d/%d)", currentPage + 1, inventories.size()));
+		ItemBuilder item = createItemHead("&a->", String.format("&7(%d/%d)", currentPage + 1, inventories.getSize()));
 		String arrow
 				= "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTYzMzlmZjJlNTM0MmJhMThiZGM0OGE5OWNjYTY1ZDEyM2NlNzgxZDg3ODI3MmY5ZDk2NGVhZDNiOGFkMzcwIn19fQ==";
 
@@ -302,16 +316,16 @@ public class MultiInventory extends InventoryHandler {
 	}
 
 	private ItemBuilder createItemHead(String name, @Nullable String... lore) {
-		ItemBuilder item = new ItemBuilder(XMaterial.PLAYER_HEAD.parseMaterial()).setDisplayName(name);
+		ItemBuilder item = new ItemBuilder(XMaterial.PLAYER_HEAD.get()).setDisplayName(name);
 
 		if (lore != null) item.setLore(lore);
 
 		return item;
 	}
 
-	private void addNavigationButtons(InventoryHandler currentInv, InventoryHandler lastInv) {
+	private void addNavigationButtons(InventoryHandler currentInv, InventoryHandler nextInv) {
 		// next page -> gui
-		addNextPageItem(lastInv);
+		addNextPageItem(nextInv);
 
 		// home page
 		addHomePageItem(currentInv);
@@ -322,7 +336,7 @@ public class MultiInventory extends InventoryHandler {
 
 	private void buttonClickSound(Player player) {
 		// sound
-		Sound sound = XSound.BLOCK_WOODEN_BUTTON_CLICK_ON.parseSound();
+		Sound sound = XSound.BLOCK_WOODEN_BUTTON_CLICK_ON.get();
 		if (sound != null) player.playSound(player.getLocation(), sound, 1F, 1F);
 	}
 
