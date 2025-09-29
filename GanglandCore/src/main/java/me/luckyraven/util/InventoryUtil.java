@@ -6,11 +6,8 @@ import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.Material;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -161,17 +158,6 @@ public final class InventoryUtil {
 		if (xMaterialOptional.isPresent()) material = xMaterialOptional.get().get();
 
 		return material != null ? material : XMaterial.WHITE_STAINED_GLASS_PANE.get();
-	}
-
-	public static Inventory getTopInventory(Object inventoryView) {
-		try {
-			Method getTopInventory = inventoryView.getClass().getMethod("getTopInventory");
-			getTopInventory.setAccessible(true);
-
-			return (Inventory) getTopInventory.invoke(inventoryView);
-		} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException exception) {
-			throw new RuntimeException(exception);
-		}
 	}
 
 }

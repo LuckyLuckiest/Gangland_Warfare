@@ -159,7 +159,7 @@ public final class PeriodicalUpdates {
 
 		long end = System.currentTimeMillis();
 
-		if (log) Gangland.getLog4jLogger().info(String.format("The process took %dms", end - start));
+		if (log) Gangland.getLog4jLogger().info("The process took {}ms", end - start);
 	}
 
 	private void updateUserData(UserManager<? extends OfflinePlayer> userManager, DatabaseHelper helper,
@@ -334,7 +334,7 @@ public final class PeriodicalUpdates {
 		inventoryTypes.add(InventoryType.CHEST);
 
 		for (InventoryType type : inventoryTypes)
-			if (user.getUser().getOpenInventory().getType() == type) return true;
+			if (user.getUser().getOpenInventory().getTopInventory().getType() == type) return true;
 
 		return false;
 	}
