@@ -13,8 +13,6 @@ import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.updater.UpdateChecker;
-import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.timer.RepeatingTimer;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -27,11 +25,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Getter
 public final class Gangland extends JavaPlugin {
@@ -94,6 +92,16 @@ public final class Gangland extends JavaPlugin {
 		updateCheckerInitializer();
 	}
 
+	/**
+	 * Uses PlaceholderAPI if configured to replace the text with the appropriate placeholder configured.
+	 * </b>
+	 * If PlaceholderAPI wasn't configured, then it is replaced with the default placeholder handled by the plugin.
+	 *
+	 * @param player the player object
+	 * @param text the string that contains the placeholder(s)
+	 *
+	 * @return the replaced placeholder text with the appropriate placeholder
+	 */
 	public String usePlaceholder(Player player, String text) {
 		if (placeholderAPIExpansion != null) {
 			if (PlaceholderAPI.containsPlaceholders(text)) return PlaceholderAPI.setPlaceholders(player, text);
@@ -105,6 +113,9 @@ public final class Gangland extends JavaPlugin {
 		return text;
 	}
 
+	/**
+	 * Initializes the plugin periodical update cycle.
+	 */
 	void periodicalUpdatesInitializer() {
 		// periodical updates
 		int minutes = SettingAddon.getAutoSaveTime();
@@ -115,6 +126,9 @@ public final class Gangland extends JavaPlugin {
 		periodicalUpdates.start();
 	}
 
+	/**
+	 * Uses bStats to create statistical metrics for development purposes.
+	 */
 	private void bStats() {
 		int     pluginId = 21012;
 		Metrics metrics  = new Metrics(this, pluginId);
@@ -156,12 +170,22 @@ public final class Gangland extends JavaPlugin {
 		}));
 	}
 
-	private void disableAllLogs(Class<?> clazz) {
+	/**
+	 * Removes all the logs of the specified class.
+	 *
+	 * @param clazz the class that contains the logs
+	 */
+	private void disableAllLogs(@NotNull Class<?> clazz) {
 		String path = clazz.getPackageName();
 
 		Configurator.setLevel(path, Level.ERROR);
 	}
 
+	/**
+	 * Initializes the dependency handler by checking for each required and soft dependency of the plugin.
+	 * </b>
+	 * The plugin gets initialized based on the dependencies provided.
+	 */
 	private void dependencyHandler() {
 		// required dependencies
 		Dependency nbtApi = new Dependency("NBTAPI", Dependency.Type.REQUIRED);
@@ -191,37 +215,27 @@ public final class Gangland extends JavaPlugin {
 		viaVersion.validate(() -> this.viaAPI = Via.getAPI());
 	}
 
+	/**
+	 * Initializes the update checker timer, which checks if there was a new update for the plugin published.
+	 */
 	private void updateCheckerInitializer() {
-		updateChecker = new UpdateChecker(this, 0);
-
 		// there needs to be checks every 6 hours
 		// give an option if there was an update
-		int                 hours           = 6;
-		String              checkPermission = "gangland.update.check";
-		final AtomicBoolean checked         = new AtomicBoolean();
+		int hours = 6;
 
-		RepeatingTimer updateTimer = new RepeatingTimer(this, hours * 60 * 60 * 20L, timer -> {
-			String newVersion     = this.updateChecker.getLatestVersion();
-			String currentVersion = getDescription().getVersion();
+		// initialize the update checker
+		updateChecker = new UpdateChecker(this, -1, hours * 60 * 60 * 20L);
 
-			if (newVersion != null && !newVersion.equals(currentVersion)) {
-				ChatUtil.sendToOperators(checkPermission, String.format(
-						"The current version is %s, please update to the newest version available: %s", currentVersion,
-						newVersion));
-			} else {
-				if (!checked.get()) {
-					ChatUtil.sendToOperators(checkPermission, "The plugin is up to date.");
-					checked.set(true);
-				}
-			}
-		});
-
-		initializer.getPermissionManager().addPermission(checkPermission);
+		// add the necessary permissions for checking for updates
+		initializer.getPermissionManager().addPermission(updateChecker.getCheckPermission());
 
 		// the tasks and timer should be async, so there is no load on the main server thread
-//		updateTimer.start(true);
+		updateChecker.start();
 	}
 
+	/**
+	 * A class helper that initializes this plugin and links it with other plugins.
+	 */
 	private class Dependency {
 
 		private final Type   type;
@@ -236,14 +250,15 @@ public final class Gangland extends JavaPlugin {
 			if (Bukkit.getPluginManager().getPlugin(name) != null) {
 				if (type == Type.SOFT) log4jLogger.info("Found {}, linking...", name);
 				if (runnable != null) runnable.run();
+
 				log4jLogger.info("Linked {}", name);
 				return;
 			}
 
-			if (type == Type.REQUIRED) {
-				log4jLogger.error("{} is a required dependency!", name);
-				getPluginLoader().disablePlugin(Gangland.this);
-			}
+			if (type != Type.REQUIRED) return;
+
+			log4jLogger.error("{} is a required dependency!", name);
+			getPluginLoader().disablePlugin(Gangland.this);
 		}
 
 		enum Type {
