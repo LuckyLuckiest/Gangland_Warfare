@@ -10,9 +10,9 @@ public enum SelectiveFire {
 
 	public static SelectiveFire getType(String type) {
 		return switch (type.toLowerCase()) {
-			default -> AUTO;
 			case "single" -> SINGLE;
 			case "burst" -> BURST;
+			default -> AUTO;
 		};
 	}
 
