@@ -3,27 +3,35 @@ package me.luckyraven.compatibility;
 import me.luckyraven.Gangland;
 import me.luckyraven.feature.weapon.projectile.recoil.RecoilCompatibility;
 
+import java.util.logging.Level;
+
 public class CompatibilityWorker implements Compatibility {
 
 	private final RecoilCompatibility recoilCompatibility;
 
 	public CompatibilityWorker(Gangland gangland) {
-		Compatibility compatibility = gangland.getInitializer()
-											  .getCompatibilitySetup()
-											  .getCompatibleVersion(Compatibility.class,
-																	VersionSetup.getCompatibilityFolder());
-
-
 		RecoilCompatibility recoilCompatibility = null;
 
-		if (compatibility != null) recoilCompatibility = compatibility.getRecoilCompatibility();
+		try {
+			Compatibility compatibility = gangland.getInitializer()
+												  .getCompatibilitySetup()
+												  .getCompatibleVersion(Compatibility.class,
+																		VersionSetup.getCompatibilityFolder());
 
-		if (recoilCompatibility == null) {
-			gangland.getLogger().info("You are running an unsupported version... Will try to use the default way.");
+			if (compatibility != null) recoilCompatibility = compatibility.getRecoilCompatibility();
 
-			recoilCompatibility = new RecoilCompatibility();
+			if (recoilCompatibility == null) {
+				gangland.getLogger().info("You are running an unsupported version... Will try to use the default way.");
 
-			recoilCompatibility.setGangland(gangland);
+				recoilCompatibility = new RecoilCompatibility();
+
+				recoilCompatibility.setGangland(gangland);
+			}
+
+		} catch (Exception exception) {
+			gangland.getLogger()
+					.log(Level.WARNING, "There was a problem loading Compatibility class... " + exception.getMessage(),
+						 exception);
 		}
 
 		this.recoilCompatibility = recoilCompatibility;
@@ -33,4 +41,5 @@ public class CompatibilityWorker implements Compatibility {
 	public RecoilCompatibility getRecoilCompatibility() {
 		return recoilCompatibility;
 	}
+
 }
