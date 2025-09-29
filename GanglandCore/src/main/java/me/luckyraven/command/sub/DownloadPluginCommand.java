@@ -33,7 +33,9 @@ public final class DownloadPluginCommand extends CommandHandler {
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		// check if there was an update
-		boolean newUpdate = getGangland().getUpdateChecker().getLatestVersion() != null;
+		boolean newUpdate = !getGangland().getUpdateChecker()
+										  .getLatestVersion()
+										  .equalsIgnoreCase(getGangland().getDescription().getVersion());
 
 		containsUpdate.put(commandSender, newUpdate);
 
