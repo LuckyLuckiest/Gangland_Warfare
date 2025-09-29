@@ -40,5 +40,4 @@ public final class TimeUtil {
 		builder.append(value).append(" ").append(type).append(ChatUtil.plural((int) value)).append(" ");
 	}
 
-
 }
