@@ -128,10 +128,10 @@ public class SettingAddon {
 		ConfigurationSection inventory = settings.getConfigurationSection("Inventory");
 		Objects.requireNonNull(inventory);
 
-		inventoryFillItem = inventory.getString("Inventory.Fill.Item");
-		inventoryFillName = inventory.getString("Inventory.Fill.Name");
-		inventoryLineItem = inventory.getString("Inventory.Line.Item");
-		inventoryLineName = inventory.getString("Inventory.Line.Name");
+		inventoryFillItem = inventory.getString("Fill.Item");
+		inventoryFillName = inventory.getString("Fill.Name");
+		inventoryLineItem = inventory.getString("Line.Item");
+		inventoryLineName = inventory.getString("Line.Name");
 
 		// economy
 		moneySymbol   = Objects.requireNonNull(settings.getString("Money_Symbol")).substring(0, 1);
