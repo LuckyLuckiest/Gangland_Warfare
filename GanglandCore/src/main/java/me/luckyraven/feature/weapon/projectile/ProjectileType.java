@@ -15,21 +15,21 @@ public enum ProjectileType {
 	FLARE,
 	ROCKET;
 
+	public static ProjectileType getType(String type) {
+		return switch (type.toLowerCase()) {
+			case "flare" -> FLARE;
+			case "spread" -> SPREAD;
+			case "rocket" -> ROCKET;
+			default -> BULLET;
+		};
+	}
+
 	public WeaponProjectile<?> createInstance(JavaPlugin plugin, LivingEntity shooter, Weapon weapon) {
 		return switch (weapon.getProjectileType()) {
 			case BULLET -> new Bullet(plugin, shooter, weapon);
 			case SPREAD -> new Spread(plugin, shooter, weapon);
 			case FLARE -> new Flare(plugin, shooter, weapon);
 			case ROCKET -> new Rocket(plugin, shooter, weapon);
-		};
-	}
-
-	public static ProjectileType getType(String type) {
-		return switch (type.toLowerCase()) {
-			default -> BULLET;
-			case "flare" -> FLARE;
-			case "spread" -> SPREAD;
-			case "rocket" -> ROCKET;
 		};
 	}
 
