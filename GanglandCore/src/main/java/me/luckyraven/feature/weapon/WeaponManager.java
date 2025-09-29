@@ -125,12 +125,13 @@ public class WeaponManager {
 	@Nullable
 	public Weapon getWeapon(Player player, UUID uuid, @Nullable String type, boolean newInstance) {
 		// the weapon is already created
-		if (uuid != null && weapons.containsKey(uuid)) {
-			Weapon availableWeapon = weapons.get(uuid);
-
-			setWeaponData(availableWeapon, player);
-			// when the weapon is already saved
-			return availableWeapon;
+		if (uuid != null) {
+			Weapon existing = weapons.get(uuid);
+			if (existing != null) {
+				setWeaponData(existing, player);
+				// when the weapon is already saved
+				return existing;
+			}
 		}
 
 		// type shouldn't be null
@@ -141,37 +142,20 @@ public class WeaponManager {
 
 		if (weaponAddon == null) return null;
 
-		// check if the weapon already has an uuid but not registered
-		if (uuid != null) {
-			Weapon uuidWeapon = new Weapon(uuid, weaponAddon);
+		// check if the weapon already has an uuid but not registered, use it; otherwise generate one
+		UUID finalUuid = (uuid != null) ? uuid : UUID.randomUUID();
 
-			setWeaponData(uuidWeapon, player);
-			weapons.put(uuid, uuidWeapon);
-
-			return uuidWeapon;
-		}
-
-		// generate a new uuid if there was non-found
-		boolean found = false;
-		UUID    generatedUuid;
-
-		// it shouldn't take a long time given the nature of the UUID's low probability of having a collision
-		// worst case O(n^2)
-		do {
-			generatedUuid = UUID.randomUUID();
-
-			if (!weapons.containsKey(generatedUuid)) found = true;
-		} while (!found);
+		while (weapons.containsKey(finalUuid)) finalUuid = UUID.randomUUID();
 
 		// mostly for new weapons
 		// when the weapon is registered in the system but not tagged with an uuid
-		Weapon finalWeapon = new Weapon(generatedUuid, weaponAddon);
+		Weapon finalWeapon = new Weapon(finalUuid, weaponAddon);
 
 		// check if the weapon is new or not
 		// if it was new, then no need to set the data of the uuid since it is not even created/built
 		if (!newInstance) setWeaponData(finalWeapon, player);
 
-		weapons.put(generatedUuid, finalWeapon);
+		weapons.put(finalUuid, finalWeapon);
 
 		return finalWeapon;
 	}
