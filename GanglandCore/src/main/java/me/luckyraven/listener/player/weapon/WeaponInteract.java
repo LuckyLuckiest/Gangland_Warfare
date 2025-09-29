@@ -40,11 +40,13 @@ public class WeaponInteract implements Listener {
 	private final WeaponManager weaponManager;
 
 	private final Map<UUID, AtomicReference<WeaponData>> continuousFire;
+	private final Map<UUID, Boolean>                     singleShotLock;
 
 	public WeaponInteract(Gangland gangland) {
 		this.gangland       = gangland;
 		this.weaponManager  = gangland.getInitializer().getWeaponManager();
 		this.continuousFire = new ConcurrentHashMap<>();
+		this.singleShotLock = new ConcurrentHashMap<>();
 	}
 
 	@EventHandler
@@ -88,64 +90,50 @@ public class WeaponInteract implements Listener {
 		// check if the pair exists
 		AtomicReference<WeaponData> weaponData = continuousFire.get(weapon.getUuid());
 
+		// prevent holding the firing for multiple times
+		if (weapon.getCurrentSelectiveFire() == SelectiveFire.SINGLE) {
+			UUID playerId = player.getUniqueId();
+			if (singleShotLock.getOrDefault(playerId, false)) {
+				return;
+			}
+
+			singleShotLock.put(playerId, true);
+		}
+
 		if (weaponData == null) {
 			// create a new instance
 			WeaponData finalWeaponData = getWeaponData(null, weapon);
+
 			// create a new instance and insert it in
 			continuousFire.put(weapon.getUuid(), new AtomicReference<>(finalWeaponData));
 
 			// get the necessary information
 			AtomicReference<WeaponData> retrievedWeaponData = continuousFire.get(weapon.getUuid());
+
 			// run the process each x ticks
-			RepeatingTimer continuousTimer = new RepeatingTimer(gangland, 1L, time -> {
-				if (retrievedWeaponData == null) {
-					time.stop();
-					return;
-				}
+			RepeatingTimer shootingTimer = getShootingTimer(retrievedWeaponData, weapon, player);
 
-				// shot already and not continuous
-				WeaponData data = retrievedWeaponData.get();
-
-				if (!data.shooting) {
-					continuousFire.remove(weapon.getUuid());
-					time.stop();
-					return;
-				}
-
-				boolean check = data.shooting && !data.continuous;
-
-				if (check) return;
-
-				// otherwise, wait for cooldown
-				if (data.cooldown) return;
-
-				shoot(player, weapon);
-				data.shooting = true;
-			});
-
-			continuousTimer.start(true);
+			shootingTimer.start(false);
 
 			// remove the weapon after 1 second of not pressing the button
-//			RepeatingTimer stopTimer = new RepeatingTimer(gangland, 20L, time -> {
-//				// get the necessary information
-//				AtomicReference<WeaponData> stillShooting = continuousFire.get(weapon.getUuid());
-//
-//				if (stillShooting == null) {
-//					time.stop();
-//					return;
-//				}
-//
-//				// if the player is still shooting, then don't stop
-//				if (!stillShooting.get().shooting) {
-//					time.stop();
-//					continuousFire.remove(weapon.getUuid());
-//					return;
-//				}
-//
-//				stillShooting.get().shooting = false;
-//			});
-//
-//			stopTimer.start(true);
+			new RepeatingTimer(gangland, 2L, time -> {
+				// get the necessary information
+				AtomicReference<WeaponData> stillShooting = continuousFire.get(weapon.getUuid());
+
+				if (stillShooting == null) {
+					time.stop();
+					return;
+				}
+
+				// if the player is still shooting, then don't stop
+				if (!stillShooting.get().shooting) {
+					time.stop();
+					continuousFire.remove(weapon.getUuid());
+					return;
+				}
+
+				stillShooting.get().shooting = false;
+			}).start(true);
 		} else {
 			// modify the value
 			continuousFire.get(weapon.getUuid()).get().shooting = false;
@@ -179,6 +167,70 @@ public class WeaponInteract implements Listener {
 	}
 
 	@NotNull
+	private RepeatingTimer getShootingTimer(AtomicReference<WeaponData> retrievedWeaponData, Weapon weapon,
+											Player player) {
+		return new RepeatingTimer(gangland, 1L, time -> {
+			if (retrievedWeaponData == null) {
+				time.stop();
+				return;
+			}
+
+			// shot already and not continuous
+			WeaponData data = retrievedWeaponData.get();
+
+			if (!data.shooting) {
+				continuousFire.remove(weapon.getUuid());
+				time.stop();
+				return;
+			}
+
+			// handle the weapon according to the selective fire
+			selectiveFireShooter(weapon, player, time, weapon.getCurrentSelectiveFire(), data);
+		});
+	}
+
+	private void selectiveFireShooter(Weapon weapon, Player player, RepeatingTimer time, SelectiveFire selectiveFire,
+									  WeaponData data) {
+		switch (selectiveFire) {
+			case AUTO -> {
+				if (data.cooldown) return;
+
+				data.cooldown = true;
+				shoot(player, weapon);
+
+				new CountdownTimer(gangland, 0L, 0L, weapon.getProjectileCooldown(), null, null,
+								   timer -> data.cooldown = false).start(false);
+			}
+			case BURST -> {
+				if (data.cooldown) return;
+
+				data.cooldown = true;
+				shoot(player, weapon);
+
+				// reset after burst delay
+				new CountdownTimer(gangland, 0L, 0L, weapon.getProjectileCooldown(), null, null, timer -> {
+					data.cooldown = false;
+					data.shooting = false;
+
+					continuousFire.remove(weapon.getUuid());
+					time.stop();
+				}).start(false);
+			}
+			case SINGLE -> {
+				shoot(player, weapon);
+				data.shooting = false;
+
+				UUID playerId = player.getUniqueId();
+				new CountdownTimer(gangland, 0L, 0L, 5L, null, null, timer -> singleShotLock.remove(playerId)).start(
+						false);
+
+				continuousFire.remove(weapon.getUuid());
+				time.stop();
+			}
+		}
+	}
+
+	@NotNull
 	private WeaponData getWeaponData(@Nullable WeaponData weaponData, @NotNull Weapon weapon) {
 		WeaponData finalWeaponData;
 
@@ -194,28 +246,15 @@ public class WeaponInteract implements Listener {
 			finalWeaponData = new WeaponData(continuityAndCooldown.first(), continuityAndCooldown.second());
 		}
 
+		finalWeaponData.shooting = true;
+
 		return finalWeaponData;
 	}
 
 	@NotNull
 	private Pair<Boolean, Boolean> getContinuityAndCooldownPair(@NotNull SelectiveFire selectiveFire) {
-		switch (selectiveFire) {
-			case AUTO -> {
-				// should be continuous
-				return new Pair<>(true, false);
-			}
-			case BURST -> {
-				// should wait for the cooldown
-				return new Pair<>(false, true);
-			}
-			case SINGLE -> {
-				// should be only once
-				return new Pair<>(false, false);
-			}
-		}
-
-		// if there was a new configuration added, this would be the default value
-		return new Pair<>(true, true);
+		// let the timer repeat, but the behavior is handled per the mode
+		return new Pair<>(true, false);
 	}
 
 	private void shoot(Player player, Weapon weapon) {
@@ -233,7 +272,7 @@ public class WeaponInteract implements Listener {
 	}
 
 	private void shootInterval(Player player, Weapon weapon) {
-		// consume bullet
+		// consume a bullet
 		boolean consumed = weapon.consumeShot();
 
 		// no shot fired
@@ -293,7 +332,7 @@ public class WeaponInteract implements Listener {
 
 		if (weapon.getWeaponConsumeOnTime() <= -1) return;
 
-		CountdownTimer timer = new CountdownTimer(gangland, weapon.getWeaponConsumeOnTime(), null, null,
+		CountdownTimer timer = new CountdownTimer(gangland, 0L, 0L, weapon.getWeaponConsumeOnTime(), null, null,
 												  time -> weapon.removeWeapon(player,
 																			  player.getInventory().getHeldItemSlot()));
 
@@ -319,8 +358,8 @@ public class WeaponInteract implements Listener {
 
 	private static class WeaponData {
 
-		private final boolean continuous, cooldown;
-		private boolean shooting;
+		private final boolean continuous;
+		private       boolean shooting, cooldown;
 
 		public WeaponData(boolean continuous, boolean cooldown) {
 			this.continuous = continuous;
