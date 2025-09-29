@@ -8,12 +8,10 @@
 		<groupId>me.luckyraven</groupId>
 		<artifactId>gangland_warfare</artifactId>
 		<version>0.0.6-DEV</version>
+		<relativePath>../../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>gangland_compatibility</artifactId>
-	<packaging>pom</packaging>
-
-	<name>Gangland Compatibility</name>
+	<artifactId>gangland-1_21_R3</artifactId>
 
 	<properties>
 		<maven.compiler.source>21</maven.compiler.source>
@@ -21,24 +19,25 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
-	<build>
-		<!-- Maven plugin jar (start) -->
+	<dependencies>
+		<!-- Bukkit/Spigot/Paper builds (start) -->
 
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>4.0.0-beta-1</version>
-				<configuration>
-					<skipIfEmpty>true</skipIfEmpty>
-					<classesDirectory/>
-					<outputDirectory/>
-					<testClassesDirectory/>
-				</configuration>
-			</plugin>
-		</plugins>
+		<!-- Spigot Build -->
+		<dependency>
+			<groupId>org.spigotmc</groupId>
+			<artifactId>spigot</artifactId>
+			<version>1.21.4-R0.1-SNAPSHOT</version>
+			<scope>provided</scope>
+		</dependency>
 
-		<!-- Maven plugin jar (end) -->
-	</build>
+		<!-- Bukkit/Spigot/Paper builds (end) -->
+
+		<!-- Core Module -->
+		<dependency>
+			<groupId>me.luckyraven</groupId>
+			<artifactId>gangland_core</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+	</dependencies>
 
 </project>
