@@ -57,9 +57,9 @@
     - Make custom inventories YAML file configuration flexible. (NOT DONE)
     - Experiment with guns.
 0.0.65-DEV:
-    - Work more on guns.
+    - Work more on guns. (DONE - Need more tuning since I got burned out from it)
         - Saving the guns in a database (partially).
-        - Loading the guns fully using database and default data from the weapon itself.
+        - Loading the guns fully using a database and default data from the weapon itself.
         - Reload system.
         - Ammo system.
         - Weapon interact system.
