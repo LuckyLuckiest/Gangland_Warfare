@@ -25,10 +25,4 @@ public interface ScopeCompatibility {
 	 */
 	void removeNightVision(Player player);
 
-//	/**
-//	 * @param event the remove entity effect packet
-//	 *
-//	 * @return true if packet is removing night vision
-//	 */
-//	boolean isRemoveNightVisionPacket(PacketEvent event);
 }
