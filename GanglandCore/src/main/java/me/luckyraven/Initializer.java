@@ -29,6 +29,7 @@ import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.permission.PermissionWorker;
 import me.luckyraven.data.placeholder.replacer.Replacer;
 import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
+import me.luckyraven.data.plugin.PluginManager;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
@@ -79,6 +80,7 @@ public final class Initializer {
 
 	// on plugin enable
 	// Managers
+	private @Getter PluginManager              pluginManager;
 	private @Getter UserManager<Player>        userManager;
 	private @Getter UserManager<OfflinePlayer> offlineUserManager;
 	private @Getter PermissionManager          permissionManager;
@@ -119,6 +121,11 @@ public final class Initializer {
 		this.compatibilitySetup = new CompatibilitySetup(gangland);
 	}
 
+	/**
+	 * Initializes the rest of the necessary classes that would conflict with the first object initialization.
+	 * </b>
+	 * This is used to safeguard the first initialization.
+	 */
 	public void postInitialize() {
 		// permission manager
 		permissionManager = new PermissionManager(this.gangland, new PermissionWorker("gangland"));
@@ -157,6 +164,14 @@ public final class Initializer {
 		}
 
 		List<Table<?>> tables = ganglandDatabase.getTables();
+
+		// plugin manager
+		pluginManager = new PluginManager(gangland);
+
+		// initialize the plugin manager
+		PluginDataTable pluginTable = getInstanceFromTables(PluginDataTable.class, tables);
+
+		pluginManager.initialize(pluginTable);
 
 		// Rank manager
 		rankManager = new RankManager(gangland);
@@ -213,6 +228,11 @@ public final class Initializer {
 		compatibilityWorker = new CompatibilityWorker(gangland);
 	}
 
+	/**
+	 * Initializes the files and by default adds three types of files (even if not presented) to the registered files,
+	 * and if they were not created, a new file would get created. Additionally, it loads the addons which help the
+	 * plugin functionality work.
+	 */
 	public void files() {
 		fileManager.addFile(new FileHandler(gangland, "settings", ".yml"), true);
 		fileManager.addFile(new FileHandler(gangland, "scoreboard", ".yml"), true);
@@ -222,6 +242,9 @@ public final class Initializer {
 		addonsLoader();
 	}
 
+	/**
+	 * Helps the plugin features to properly load.
+	 */
 	public void addonsLoader() {
 		settingAddon   = new SettingAddon(fileManager);
 		languageLoader = new LanguageLoader(gangland);
@@ -231,6 +254,9 @@ public final class Initializer {
 		weaponLoader();
 	}
 
+	/**
+	 * Clears the addons information cached.
+	 */
 	public void addonsClear() {
 		// clear the inventory loader
 		inventoryLoader.clear();
@@ -241,10 +267,16 @@ public final class Initializer {
 		weaponLoader.clear();
 	}
 
+	/**
+	 * Loads the scoreboard.
+	 */
 	public void scoreboardLoader() {
 		scoreboardAddon = new ScoreboardAddon(fileManager);
 	}
 
+	/**
+	 * Loads the inventory handler.
+	 */
 	public void inventoryLoader() {
 		inventoryLoader = new InventoryLoader(gangland);
 
@@ -295,6 +327,7 @@ public final class Initializer {
 		listenerManager.addEvent(new LevelUp(gangland));
 		listenerManager.addEvent(new LoadResourcePack());
 		listenerManager.addEvent(new WaypointTeleport(new Waypoint("dummy")));
+		listenerManager.addEvent(new RegisterSign(gangland));
 
 		// weapon events
 		listenerManager.addEvent(new WeaponInteract(gangland));
