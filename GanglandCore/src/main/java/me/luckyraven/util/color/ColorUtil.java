@@ -23,7 +23,7 @@ public final class ColorUtil {
 				String materialName = type.name();
 
 				materialMap.put(colorName.toLowerCase() + "_" + materialName.toLowerCase(),
-								XMaterial.valueOf(colorName + "_" + materialName).parseMaterial());
+								XMaterial.valueOf(colorName + "_" + materialName).get());
 			}
 		}
 	}

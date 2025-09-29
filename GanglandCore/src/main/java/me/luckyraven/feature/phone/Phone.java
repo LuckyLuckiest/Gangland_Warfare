@@ -44,12 +44,8 @@ public class Phone {
 	}
 
 	public static Material getPhoneMaterial() {
-		Material phoneItem = XMaterial.matchXMaterial(SettingAddon.getPhoneItem())
-									  .stream()
-									  .toList()
-									  .get(0)
-									  .parseMaterial();
-		if (phoneItem == null) return XMaterial.REDSTONE.parseMaterial();
+		Material phoneItem = XMaterial.matchXMaterial(SettingAddon.getPhoneItem()).stream().toList().getFirst().get();
+		if (phoneItem == null) return XMaterial.REDSTONE.get();
 		return phoneItem;
 	}
 
@@ -106,18 +102,18 @@ public class Phone {
 	// TODO use the inventory system to avoid hardcoded inventories
 	private void populateInventory(User<Player> user, TriConsumer<Player, InventoryHandler, ItemBuilder> callback) {
 		// missions
-		inventoryHandler.setItem(11, XMaterial.DIAMOND.parseMaterial(), "&eMissions", null, false, false);
+		inventoryHandler.setItem(11, XMaterial.DIAMOND.get(), "&eMissions", null, false, false);
 
 		// gang
 		GangManager gangManager = gangland.getInitializer().getGangManager();
-		inventoryHandler.setItem(13, XMaterial.CAULDRON.parseMaterial(), "&eGang", null, false, false,
+		inventoryHandler.setItem(13, XMaterial.CAULDRON.get(), "&eGang", null, false, false,
 								 (player, inventory, item) -> gangInventory(user, gangManager, callback));
 
 		// property
-		inventoryHandler.setItem(15, XMaterial.FURNACE_MINECART.parseMaterial(), "&eProperty", null, false, false);
+		inventoryHandler.setItem(15, XMaterial.FURNACE_MINECART.get(), "&eProperty", null, false, false);
 
 		// account
-		ItemBuilder itemBuilder = new ItemBuilder(XMaterial.PLAYER_HEAD.parseMaterial());
+		ItemBuilder itemBuilder = new ItemBuilder(XMaterial.PLAYER_HEAD.get());
 		itemBuilder.setDisplayName("&eAccount").modifyNBT(nbt -> nbt.setString("SkullOwner", user.getUser().getName()));
 
 		inventoryHandler.setItem(38, itemBuilder.build(), false, (player, inventory, item) -> {
@@ -125,13 +121,13 @@ public class Phone {
 		});
 
 		// bounties
-		inventoryHandler.setItem(40, XMaterial.NETHER_STAR.parseMaterial(), "&eBounties", null, false, false,
+		inventoryHandler.setItem(40, XMaterial.NETHER_STAR.get(), "&eBounties", null, false, false,
 								 (player, inventory, item) -> {
 									 // show current bounties and leaderboard
 								 });
 
 		// contacts
-		inventoryHandler.setItem(42, XMaterial.BOOK.parseMaterial(), "&eContacts", null, false, false,
+		inventoryHandler.setItem(42, XMaterial.BOOK.get(), "&eContacts", null, false, false,
 								 (player, inventory, item) -> {
 									 // show taxi services
 								 });
@@ -151,7 +147,7 @@ public class Phone {
 			Gang gang = gangManager.getGang(user.getGangId());
 
 			// my gang
-			newGang.setItem(21, XMaterial.SLIME_BALL.parseMaterial(),
+			newGang.setItem(21, XMaterial.SLIME_BALL.get(),
 							String.format("&r%s%s&7 Gang", ColorUtil.getColorCode(gang.getColor()),
 										  gang.getDisplayNameString()), null, false, false,
 							(player1, inv, it) -> player1.performCommand("glw gang"));
@@ -161,7 +157,7 @@ public class Phone {
 					List.of(String.format("&7Costs &a%s%s", SettingAddon.getMoneySymbol(),
 										  SettingAddon.formatDouble(SettingAddon.getGangCreateFee()))));
 
-			newGang.setItem(21, XMaterial.SLIME_BALL.parseMaterial(), "&c&lCreate Gang", createLore, false, false,
+			newGang.setItem(21, XMaterial.SLIME_BALL.get(), "&c&lCreate Gang", createLore, false, false,
 							(player1, inv, it) -> {
 								// open an anvil to set the name
 								new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
@@ -182,7 +178,7 @@ public class Phone {
 		}
 
 		// search gang
-		newGang.setItem(23, XMaterial.BOOKSHELF.parseMaterial(), "&b&lSearch Gang", null, true, false,
+		newGang.setItem(23, XMaterial.BOOKSHELF.get(), "&b&lSearch Gang", null, true, false,
 						(player1, inv, it) -> {
 							// open a multi inventory that displays all the gangs
 							User<Player>    user1      = gangland.getInitializer().getUserManager().getUser(player1);
@@ -191,10 +187,10 @@ public class Phone {
 
 							for (Gang gang : gangs) {
 								ItemBuilder itemBuilder = new ItemBuilder(
-										XMaterial.PLAYER_HEAD.parseMaterial()).setDisplayName(
-																					  String.format("&r%s%s&7 Gang", ColorUtil.getColorCode(gang.getColor()),
-																									gang.getDisplayNameString()))
-																			  .setLore("&e" + gang.getDescription());
+										XMaterial.PLAYER_HEAD.get()).setDisplayName(
+																			String.format("&r%s%s&7 Gang", ColorUtil.getColorCode(gang.getColor()),
+																						  gang.getDisplayNameString()))
+																	.setLore("&e" + gang.getDescription());
 
 								UUID uuid = gang.getGroup()
 												.stream()
@@ -230,7 +226,7 @@ public class Phone {
 
 							// search
 							ItemBuilder searchItem = new ItemBuilder(
-									XMaterial.WRITABLE_BOOK.parseMaterial()).setDisplayName("&eSearch");
+									XMaterial.WRITABLE_BOOK.get()).setDisplayName("&eSearch");
 							staticItems.put(searchItem.build(), (player2, currInv, itemBuilder) -> {
 								// opens an anvil and enters the query
 								new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
@@ -261,7 +257,7 @@ public class Phone {
 								// when done, close the anvil and change the items according to the query
 							});
 							// sort
-							ItemBuilder sortItem = new ItemBuilder(XMaterial.GLOW_ITEM_FRAME.parseMaterial());
+							ItemBuilder sortItem = new ItemBuilder(XMaterial.GLOW_ITEM_FRAME.get());
 							staticItems.put(sortItem.build(), (player2, currInv, itemBuilder) -> {
 								// sorts the items according to the name
 							});

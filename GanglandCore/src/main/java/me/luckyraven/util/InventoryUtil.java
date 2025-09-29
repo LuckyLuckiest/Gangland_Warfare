@@ -6,9 +6,13 @@ import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.Material;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Optional;
 
 public final class InventoryUtil {
 
@@ -142,13 +146,32 @@ public final class InventoryUtil {
 	}
 
 	public static Material getFillItem() {
-		Material item = XMaterial.valueOf(SettingAddon.getInventoryFillItem()).parseMaterial();
-		return item != null ? item : XMaterial.BLACK_STAINED_GLASS_PANE.parseMaterial();
+		Material            material          = null;
+		Optional<XMaterial> xMaterialOptional = XMaterial.matchXMaterial(SettingAddon.getInventoryFillItem());
+
+		if (xMaterialOptional.isPresent()) material = xMaterialOptional.get().get();
+
+		return material != null ? material : XMaterial.BLACK_STAINED_GLASS_PANE.get();
 	}
 
 	public static Material getLineItem() {
-		Material item = XMaterial.valueOf(SettingAddon.getInventoryLineItem()).parseMaterial();
-		return item != null ? item : XMaterial.WHITE_STAINED_GLASS_PANE.parseMaterial();
+		Material            material          = null;
+		Optional<XMaterial> xMaterialOptional = XMaterial.matchXMaterial(SettingAddon.getInventoryLineItem());
+
+		if (xMaterialOptional.isPresent()) material = xMaterialOptional.get().get();
+
+		return material != null ? material : XMaterial.WHITE_STAINED_GLASS_PANE.get();
+	}
+
+	public static Inventory getTopInventory(Object inventoryView) {
+		try {
+			Method getTopInventory = inventoryView.getClass().getMethod("getTopInventory");
+			getTopInventory.setAccessible(true);
+
+			return (Inventory) getTopInventory.invoke(inventoryView);
+		} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException exception) {
+			throw new RuntimeException(exception);
+		}
 	}
 
 }

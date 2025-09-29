@@ -50,8 +50,8 @@ public class WeaponAddon {
 		String              materialString    = informationSection.getString("Material");
 		Optional<XMaterial> xMaterialOptional = XMaterial.matchXMaterial(Objects.requireNonNull(materialString));
 		Material            material;
-		if (xMaterialOptional.isPresent()) material = xMaterialOptional.get().parseMaterial();
-		else material = XMaterial.FEATHER.parseMaterial();
+		if (xMaterialOptional.isPresent()) material = xMaterialOptional.get().get();
+		else material = XMaterial.FEATHER.get();
 
 		// durability
 		ConfigurationSection durabilitySection = Objects.requireNonNull(

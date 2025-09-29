@@ -123,7 +123,7 @@ public class ItemBuilder {
 	}
 
 	public ItemBuilder customHead(String base64) {
-		if (itemStack.getType() != XMaterial.PLAYER_HEAD.parseMaterial()) return this;
+		if (itemStack.getType() != XMaterial.PLAYER_HEAD.get()) return this;
 
 		modifyNBT(nbt -> {
 			ReadWriteNBT skullOwnerCompound = nbt.getOrCreateCompound("SkullOwner");

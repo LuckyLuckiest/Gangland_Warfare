@@ -60,7 +60,7 @@ public class AmmunitionAddon {
 
 			List<String> lore = section.getStringList("Lore");
 
-			Ammunition ammo = new Ammunition(key, name, xMaterial.parseMaterial(), lore);
+			Ammunition ammo = new Ammunition(key, name, xMaterial.get(), lore);
 
 			this.ammunition.put(key, ammo);
 			temp.add(key);

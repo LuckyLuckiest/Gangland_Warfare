@@ -139,7 +139,7 @@ public final class DebugCommand extends CommandHandler {
 				}
 
 				List<Material> swords = Arrays.stream(XMaterial.values())
-											  .map(XMaterial::parseMaterial)
+											  .map(XMaterial::get)
 											  .filter(Objects::nonNull)
 											  .filter(material -> material.name().contains("SWORD"))
 											  .toList();

@@ -77,7 +77,7 @@ class GangColorCommand extends SubArgument {
 					Material mat = ColorUtil.getMaterialByColor(colorName, MaterialType.STAINED_GLASS_PANE.name());
 					InventoryUtil.aroundSlot(confirmGUI, 22, mat);
 
-					confirmGUI.setItem(49, XMaterial.GREEN_CONCRETE.parseMaterial(), "&aConfirm", null, false, false,
+					confirmGUI.setItem(49, XMaterial.GREEN_CONCRETE.get(), "&aConfirm", null, false, false,
 									   (player2, inv, it) -> {
 										   Gang gang = gangManager.getGang(userManager.getUser(player2).getGangId());
 										   // save the data in gang
@@ -104,7 +104,7 @@ class GangColorCommand extends SubArgument {
 				} else ++column;
 			}
 
-			colorGUI.setItem((6 - 1) * 9, XMaterial.RED_CONCRETE.parseMaterial(), "&4Exit", null, false, false,
+			colorGUI.setItem((6 - 1) * 9, XMaterial.RED_CONCRETE.get(), "&4Exit", null, false, false,
 							 (player1, inventory, item) -> inventory.close(player1));
 
 			InventoryUtil.createBoarder(colorGUI);

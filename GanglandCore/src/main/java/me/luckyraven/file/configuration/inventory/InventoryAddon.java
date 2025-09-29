@@ -220,7 +220,7 @@ public class InventoryAddon {
 
 	private static ItemBuilder createItem(String item, String itemName, Map<String, Object> data, List<String> lore,
 										  boolean enchanted) {
-		ItemBuilder itemBuilder = new ItemBuilder(validateItem(item).parseMaterial());
+		ItemBuilder itemBuilder = new ItemBuilder(validateItem(item).get());
 
 		String color    = (String) data.get("color");
 		String dataInfo = (String) data.get("data");
