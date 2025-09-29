@@ -13,6 +13,7 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.wanted.Wanted;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.NumberUtil;
 import me.luckyraven.util.color.ColorUtil;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -79,7 +80,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 			return !member.hasGang() ? "NA" : SettingAddon.formatDouble(member.getContribution());
 		if (parameter.equals(userStr + "contributed-amount")) return !member.hasGang() ?
 																	 "NA" :
-																	 valueFormat(
+																	 NumberUtil.valueFormat(
 																			 SettingAddon.getGangContributionRate() *
 																			 member.getContribution());
 		if (parameter.equals(userStr + "has-rank")) return String.valueOf(member.hasRank());
@@ -94,10 +95,10 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (user == null) return null;
 
 		// economy
-		if (parameter.equals(userStr + "balance")) return valueFormat(user.getEconomy().getBalance());
+		if (parameter.equals(userStr + "balance")) return NumberUtil.valueFormat(user.getEconomy().getBalance());
 
 		// bounty
-		if (parameter.equals(userStr + "bounty")) return valueFormat(user.getBounty().getAmount());
+		if (parameter.equals(userStr + "bounty")) return NumberUtil.valueFormat(user.getBounty().getAmount());
 		if (parameter.equals(userStr + "has-bounty")) return String.valueOf(user.getBounty().hasBounty());
 
 		if (parameter.equals(userStr + "kd")) return SettingAddon.formatDouble(user.getKillDeathRatio());
@@ -132,7 +133,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (bank == null) return "NA";
 
 		if (parameter.equals(bankStr + "name")) return bank.getName();
-		if (parameter.equals(bankStr + "balance")) return valueFormat(bank.getEconomy().getBalance());
+		if (parameter.equals(bankStr + "balance")) return NumberUtil.valueFormat(bank.getEconomy().getBalance());
 
 		return null;
 	}
@@ -161,10 +162,10 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (parameter.equals(gangStr + "created")) return gang.getDateCreatedString();
 
 		// economy
-		if (parameter.equals(gangStr + "balance")) return valueFormat(gang.getEconomy().getBalance());
+		if (parameter.equals(gangStr + "balance")) return NumberUtil.valueFormat(gang.getEconomy().getBalance());
 
 		// bounty
-		if (parameter.equals(gangStr + "bounty")) return valueFormat(gang.getBounty().getAmount());
+		if (parameter.equals(gangStr + "bounty")) return NumberUtil.valueFormat(gang.getBounty().getAmount());
 		if (parameter.equals(gangStr + "has-bounty")) return String.valueOf(gang.getBounty().hasBounty());
 
 		// members
@@ -188,14 +189,14 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (parameter.equals(type + "level-max")) return String.valueOf(level.getMaxLevel());
 		if (parameter.equals(type + "level-next")) return String.valueOf(level.nextLevel());
 		if (parameter.equals(type + "level-previous")) return String.valueOf(level.previousLevel());
-		if (parameter.equals(type + "experience")) return valueFormat(level.getExperience());
-		if (parameter.equals(type + "experience-percentage")) return valueFormat(level.getPercentage());
+		if (parameter.equals(type + "experience")) return NumberUtil.valueFormat(level.getExperience());
+		if (parameter.equals(type + "experience-percentage")) return NumberUtil.valueFormat(level.getPercentage());
 		if (parameter.equals(type + "experience-next-level"))
-			return valueFormat(level.experienceCalculation(level.nextLevel()));
+			return NumberUtil.valueFormat(level.experienceCalculation(level.nextLevel()));
 		if (parameter.equals(type + "experience-previous-level"))
-			return valueFormat(level.experienceCalculation(level.previousLevel()));
+			return NumberUtil.valueFormat(level.experienceCalculation(level.previousLevel()));
 		if (parameter.equals(type + "experience-current-level"))
-			return valueFormat(level.experienceCalculation(level.getLevelValue()));
+			return NumberUtil.valueFormat(level.experienceCalculation(level.getLevelValue()));
 		if (parameter.startsWith(type + "experience-level-")) {
 			String param = parameter.substring(parameter.lastIndexOf('-') + 1);
 			int    value;
@@ -204,23 +205,10 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 			} catch (NumberFormatException exception) {
 				return "NA";
 			}
-			return valueFormat(level.experienceCalculation(value));
+			return NumberUtil.valueFormat(level.experienceCalculation(value));
 		}
 
 		return null;
-	}
-
-	private String valueFormat(double value) {
-		String[] suffixes = new String[]{"", "K", "M", "B", "T", "P", "E", "Z", "Y"};
-		int      index    = 0;
-		double   modValue = value;
-
-		while (modValue >= 1_000 && index < suffixes.length - 1) {
-			modValue /= 1_000;
-			++index;
-		}
-
-		return SettingAddon.formatDouble(modValue) + suffixes[index];
 	}
 
 }

@@ -1,8 +1,54 @@
 package me.luckyraven.util;
 
+import me.luckyraven.file.configuration.SettingAddon;
+
 public final class NumberUtil {
 
-	private NumberUtil() { }
+	private static final String[] SUFFIXES = {"", "K", "M", "B", "T", "P", "E", "Z", "Y"};
+
+	public static String valueFormat(double value) {
+		int    index    = 0;
+		double modValue = value;
+
+		while (modValue >= 1_000 && index < SUFFIXES.length - 1) {
+			modValue /= 1_000;
+			++index;
+		}
+
+		return SettingAddon.formatDouble(modValue) + SUFFIXES[index];
+	}
+
+	public static boolean isValueFormatted(String value) {
+		return value.toUpperCase().matches(".*[KMBTPEZY]$");
+	}
+
+	public static double parseFormattedDouble(String input) {
+		input = input.toUpperCase().trim();
+
+		for (int i = SUFFIXES.length - 1; i >= 1; i--) {
+			String suffix = SUFFIXES[i];
+
+			if (!input.endsWith(suffix)) continue;
+
+			String numberPart = input.substring(0, input.length() - suffix.length());
+
+			try {
+				return Double.parseDouble(numberPart) * Math.pow(1000, i);
+			} catch (NumberFormatException exception) {
+				throw new IllegalArgumentException("Invalid formatted number: " + input);
+			}
+		}
+
+		try {
+			return Double.parseDouble(input);
+		} catch (NumberFormatException exception) {
+			throw new IllegalArgumentException("Invalid number: " + input);
+		}
+	}
+
+	public static int parseFormattedInteger(String input) {
+		return (int) parseFormattedDouble(input);
+	}
 
 	/**
 	 * <a href="https://en.wikipedia.org/wiki/Linear_interpolation">Linear interpolation</a>
@@ -21,35 +67,6 @@ public final class NumberUtil {
 	 */
 	public static double lerp(double min, double max, double factor) {
 		return min + factor * (max - min);
-	}
-
-	public static int intFloor(double value) {
-		int i = (int) value;
-		return value < (double) i ? i - 1 : i;
-	}
-
-	/**
-	 * Returns 0 if value is 0, 1 if value is more than 0 and -1 if value is less than 0
-	 *
-	 * @param value the value which signum to return
-	 *
-	 * @return the value in signum
-	 */
-	public static int sign(double value) {
-		if (value == 0.0) {
-			return 0;
-		} else {
-			return value > 0.0 ? 1 : -1;
-		}
-	}
-
-	public static long longFloor(double value) {
-		long l = (long) value;
-		return value < (double) l ? l - 1 : l;
-	}
-
-	public static double frac(double value) {
-		return value - (double) NumberUtil.longFloor(value);
 	}
 
 	/**
