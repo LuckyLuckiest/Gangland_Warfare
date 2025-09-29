@@ -20,10 +20,10 @@ public record SoundConfiguration(SoundType type, @NotNull String sound, float vo
 
 	public boolean playSound(Player player) {
 		if (type == SoundType.VANILLA) {
-			Optional<XSound> xSoundOptional = XSound.matchXSound(sound);
+			Optional<XSound> xSoundOptional = XSound.of(sound);
 
 			if (xSoundOptional.isPresent()) {
-				Sound sound = xSoundOptional.get().parseSound();
+				Sound sound = xSoundOptional.get().get();
 
 				if (sound == null) return false;
 
