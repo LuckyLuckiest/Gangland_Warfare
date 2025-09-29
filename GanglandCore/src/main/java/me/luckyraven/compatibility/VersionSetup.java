@@ -3,6 +3,7 @@ package me.luckyraven.compatibility;
 import lombok.Getter;
 import me.luckyraven.Gangland;
 import org.bukkit.Bukkit;
+import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -19,7 +20,11 @@ public final class VersionSetup {
 	private final boolean paper;
 
 	public VersionSetup() {
-		this.versionString = getVersion();
+		String checkVersion = getVersion();
+
+		if (checkVersion == null) this.versionString = Version.getLastValidVersion();
+		else this.versionString = checkVersion;
+
 		this.versionNumber = getVersion(versionString);
 
 		boolean isPaper;
@@ -34,6 +39,7 @@ public final class VersionSetup {
 		this.paper = isPaper;
 	}
 
+	@Nullable
 	private String getVersion() {
 		try {
 			String packageName = Bukkit.getServer().getClass().getPackage().getName();
@@ -57,10 +63,21 @@ public final class VersionSetup {
 
 				if (newVersion.length > 2) builder.append("_R").append(newVersion[2]);
 
-				// get the last valid version
-//				.append(newVersion[2])
-
 				version = builder.toString();
+
+				String value = Version.getDeterminedVersion(version);
+
+				// get last valid version
+				if (value == null) {
+					Gangland.getLog4jLogger()
+							.warn("This version hasn't been tested... Loading latest valid version...");
+
+					version = Version.getLastValidVersion();
+				} else {
+					Gangland.getLog4jLogger().info("Found a valid version... {}", value);
+
+					version = value;
+				}
 			}
 
 			return version;
