@@ -2,6 +2,7 @@ package me.luckyraven.command.sub.waypoint;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.argument.ArgumentUtil;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
@@ -81,7 +82,7 @@ class WaypointCreateCommand extends SubArgument {
 
 			// select the waypoint
 			// using '/glw waypoint select <id>' command to the created waypoint, so it is selected
-			player.performCommand(Argument.getArgumentSequence(
+			player.performCommand(ArgumentUtil.getArgumentSequence(
 					Objects.requireNonNull(tree.find(new Argument(gangland, "select", tree)))) + " " +
 								  waypoint.getUsedId());
 		});

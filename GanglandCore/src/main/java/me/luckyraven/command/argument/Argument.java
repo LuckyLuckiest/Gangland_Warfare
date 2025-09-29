@@ -19,7 +19,9 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -28,14 +30,14 @@ import java.util.stream.Stream;
 @Getter
 public class Argument implements Cloneable {
 
-	private final boolean displayAllArguments;
+	private final boolean    displayAllArguments;
 	@Getter(value = AccessLevel.NONE)
-	private final JavaPlugin     plugin;
+	private final JavaPlugin plugin;
 	TriConsumer<Argument, CommandSender, String[]> action;
-	private Tree.Node<Argument> node;
-	private String[]            arguments;
+	private Tree.Node<Argument>                 node;
+	private String[]                            arguments;
 	@Getter(value = AccessLevel.NONE)
-	private       Tree<Argument> tree;
+	private Tree<Argument>                      tree;
 	@NotNull
 	private String                              permission;
 	@Setter
@@ -93,23 +95,11 @@ public class Argument implements Cloneable {
 		this.plugin              = other.plugin;
 	}
 
-	public static String getArgumentSequence(Argument argument) {
-		List<String> sequence = new ArrayList<>();
-
-		getArgumentSequence(sequence, argument.getNode());
-
-		Collections.reverse(sequence);
-
-		return "glw " + String.join(" ", sequence) + " " + argument.getArguments()[0];
-	}
-
-	private static void getArgumentSequence(List<String> list, Tree.Node<Argument> node) {
-		if (node == null || node.getParent() == null) return;
-
-		list.add(node.getParent().getData().getArguments()[0]);
-		getArgumentSequence(list, node.getParent());
-	}
-
+	/**
+	 * Associates the argument with a permission
+	 *
+	 * @param permission the permission representation
+	 */
 	public void addPermission(String permission) {
 		if (plugin instanceof Gangland gangland) gangland.getInitializer()
 														 .getPermissionManager()
@@ -126,16 +116,42 @@ public class Argument implements Cloneable {
 		}
 	}
 
+	/**
+	 * Adds a sub argument to this argument
+	 *
+	 * @param argument the new argument attached
+	 */
 	public void addSubArgument(Argument argument) {
 		if (tree.contains(argument)) return;
 		if (argument.toString().contains("?")) node.add(argument.getNode());
 		else node.add(0, argument.getNode());
 	}
 
+	/**
+	 * Adds all the arguments in the list as a child to this argument
+	 *
+	 * @param elements the argument list
+	 */
 	public void addAllSubArguments(List<Argument> elements) {
 		elements.forEach(this::addSubArgument);
 	}
 
+	/**
+	 * <p>
+	 * Executes the command according to the type of the argument string.
+	 * <p>
+	 * The argument tree would be traversed, and each argument according to its type would be executed on arrival or
+	 * not.
+	 * <p>
+	 * According to the states of the argument, if it either executes successfully or gives a no permission message or
+	 * redeems as not found.
+	 * <p>
+	 * The not found argument would search for the last invalid inputted argument and would replace it with a suggestion
+	 * of a similar argument using a specific algorithm.
+	 *
+	 * @param sender the command sender
+	 * @param args the argument string array
+	 */
 	public void execute(CommandSender sender, String[] args) {
 		Argument[] modifiedArg = Arrays.stream(args).map(arg -> {
 			if (arg.toLowerCase().contains("confirm")) return new ConfirmArgument(plugin, tree);
@@ -148,49 +164,7 @@ public class Argument implements Cloneable {
 			switch (argument.getState()) {
 				case SUCCESS -> argument.getArgument().executeArgument(sender, args);
 				case NO_PERMISSION -> sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
-				case NOT_FOUND -> {
-					StringBuilder invalidArg = new StringBuilder(MessageAddon.ARGUMENTS_WRONG.toString());
-					Argument      lastValid  = tree.traverseLastValid(modifiedArg);
-
-					if (lastValid == null) {
-						sender.sendMessage(invalidArg.append(args[0]).toString());
-						return;
-					}
-
-					for (int i = 0; i < args.length; i++) {
-						if (Arrays.stream(lastValid.arguments).noneMatch(args[i]::equalsIgnoreCase)) continue;
-
-						// print the last wrong argument inputted
-						int    length = i;
-						String lastInput;
-
-						if (i + 1 < args.length) {
-							length    = i + 1;
-							lastInput = args[length];
-							invalidArg.append(lastInput);
-						} else {
-							lastInput = args[length];
-						}
-
-						sender.sendMessage(invalidArg.toString());
-
-						// get the last valid input children
-						List<Tree.Node<Argument>> children = lastValid.node.getChildren();
-						Set<String> dictionary = children.stream()
-														 .map(node -> node.getData().arguments)
-														 .flatMap(Stream::of)
-														 .filter(s -> !s.equals("?"))
-														 .collect(Collectors.toSet());
-						String[] validArguments = Arrays.stream(args)
-														.toList()
-														.subList(0, length)
-														.toArray(String[]::new);
-
-						sender.sendMessage(ChatUtil.color(
-								ChatUtil.generateCommandSuggestion(lastInput, dictionary, "glw", validArguments)));
-						break;
-					}
-				}
+				case NOT_FOUND -> notFound(sender, args, modifiedArg);
 			}
 		} catch (Throwable throwable) {
 			if (throwable.getMessage() != null) sender.sendMessage(throwable.getMessage());
@@ -248,6 +222,47 @@ public class Argument implements Cloneable {
 
 	void executeOnPass(CommandSender sender, String[] args) {
 		if (executeOnPass != null) executeOnPass.accept(sender, args);
+	}
+
+	private void notFound(CommandSender sender, String[] args, Argument[] modifiedArg) {
+		StringBuilder invalidArg = new StringBuilder(MessageAddon.ARGUMENTS_WRONG.toString());
+		Argument      lastValid  = tree.traverseLastValid(modifiedArg);
+
+		if (lastValid == null) {
+			sender.sendMessage(invalidArg.append(args[0]).toString());
+			return;
+		}
+
+		for (int i = 0; i < args.length; i++) {
+			if (Arrays.stream(lastValid.arguments).noneMatch(args[i]::equalsIgnoreCase)) continue;
+
+			// print the last wrong argument inputted
+			int    length = i;
+			String lastInput;
+
+			if (i + 1 < args.length) {
+				length    = i + 1;
+				lastInput = args[length];
+				invalidArg.append(lastInput);
+			} else {
+				lastInput = args[length];
+			}
+
+			sender.sendMessage(invalidArg.toString());
+
+			// get the last valid input children
+			List<Tree.Node<Argument>> children = lastValid.node.getChildren();
+			Set<String> dictionary = children.stream()
+											 .map(node -> node.getData().arguments)
+											 .flatMap(Stream::of)
+											 .filter(s -> !s.equals("?"))
+											 .collect(Collectors.toSet());
+			String[] validArguments = Arrays.stream(args).toList().subList(0, length).toArray(String[]::new);
+
+			sender.sendMessage(
+					ChatUtil.color(ChatUtil.generateCommandSuggestion(lastInput, dictionary, "glw", validArguments)));
+			break;
+		}
 	}
 
 	private ArgumentResult<Argument> traverseList(Argument[] list, CommandSender sender, String[] args) {
