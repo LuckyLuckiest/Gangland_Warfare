@@ -3,9 +3,13 @@ package me.luckyraven.data.plugin;
 import me.luckyraven.Gangland;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.PluginDataTable;
+import me.luckyraven.file.configuration.SettingAddon;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -27,19 +31,39 @@ public class PluginManager {
 
 			if (data.isEmpty()) {
 				Instant    now        = Instant.now();
-				Date       nowDate    = new Date(now.getEpochSecond());
-				PluginData pluginData = new PluginData(nowDate, (Date) nowDate.clone(), (Date) nowDate.clone());
+				long       nowDate    = now.getEpochSecond();
+				long       nextScan   = nextPlannedDate(new Date(nowDate)).getTime();
+				PluginData pluginData = new PluginData(nowDate, nowDate, nextScan);
 
 				pluginDataList.add(pluginData);
 			} else {
 				for (Object[] result : data) {
-					int v  = 0;
-					int id = (int) result[v++];
-//					Date dateActivation =
-//					Date id = (int) result[v++];
+					int  v              = 0;
+					int  id             = (int) result[v++];
+					long dateActivation = (long) result[v++];
+					long scanDate       = (long) result[v++];
+					long scheduledDate  = (long) result[v];
+
+					PluginData pluginData = new PluginData(id, dateActivation, scanDate, scheduledDate);
+
+					pluginDataList.add(pluginData);
+
+					PluginData.setID(id);
 				}
 			}
 		});
+
+	}
+
+	public List<PluginData> getPluginDataList() {
+		return Collections.unmodifiableList(pluginDataList);
+	}
+
+	public Date nextPlannedDate(Date currentDate) {
+		LocalDateTime localDateTime = currentDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+		LocalDateTime updatedTime   = localDateTime.plusHours(SettingAddon.getAutoSaveTime());
+
+		return Date.from(updatedTime.atZone(ZoneId.systemDefault()).toInstant());
 	}
 
 }

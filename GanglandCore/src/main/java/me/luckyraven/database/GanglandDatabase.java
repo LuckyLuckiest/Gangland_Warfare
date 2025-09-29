@@ -18,6 +18,7 @@ public class GanglandDatabase extends DatabaseHandler {
 
 	private final String              schema;
 	private final List<Table<?>>      tables;
+	private final PluginDataTable     pluginDataTable;
 	private final UserTable           userTable;
 	private final BankTable           bankTable;
 	private final GangTable           gangTable;
@@ -36,6 +37,7 @@ public class GanglandDatabase extends DatabaseHandler {
 		this.schema = "gangland";
 		this.tables = new ArrayList<>();
 
+		this.pluginDataTable     = new PluginDataTable();
 		this.userTable           = new UserTable();
 		this.bankTable           = new BankTable(userTable);
 		this.gangTable           = new GangTable();
@@ -48,6 +50,7 @@ public class GanglandDatabase extends DatabaseHandler {
 		this.waypointTable       = new WaypointTable(gangTable);
 		this.weaponTable         = new WeaponTable();
 
+		tables.add(pluginDataTable);
 		tables.add(userTable);
 		tables.add(bankTable);
 		tables.add(gangTable);
@@ -82,47 +85,51 @@ public class GanglandDatabase extends DatabaseHandler {
 
 	@Override
 	public void createTables() throws SQLException {
-		// (1) user table
+		// (1) plugin data table
+		Database pluginDataDatabase = getDatabase().table(pluginDataTable.getName());
+		pluginDataDatabase.createTable(pluginDataTable.createTableQuery(pluginDataDatabase));
+
+		// (2) user table
 		Database userDatabase = getDatabase().table(userTable.getName());
 		userDatabase.createTable(userTable.createTableQuery(userDatabase));
 
-		// (2) gang table
+		// (3) gang table
 		Database gangDatabase = getDatabase().table(gangTable.getName());
 		gangDatabase.createTable(gangTable.createTableQuery(gangDatabase));
 
-		// (3) rank table
+		// (4) rank table
 		Database rankDatabase = getDatabase().table(rankTable.getName());
 		rankDatabase.createTable(rankTable.createTableQuery(rankDatabase));
 
-		// (4) permission table
+		// (5) permission table
 		Database permissionDatabase = getDatabase().table(permissionTable.getName());
 		permissionDatabase.createTable(permissionTable.createTableQuery(permissionDatabase));
 
-		// (5) waypoint table
+		// (6) waypoint table
 		Database waypointDatabase = getDatabase().table(waypointTable.getName());
 		waypointDatabase.createTable(waypointTable.createTableQuery(waypointDatabase));
 
-		// (6) user bank table
+		// (7) user bank table
 		Database bankDatabase = getDatabase().table(bankTable.getName());
 		bankDatabase.createTable(bankTable.createTableQuery(bankDatabase));
 
-		// (7) gang allie table
+		// (8) gang allie table
 		Database gangAllieDatabase = getDatabase().table(gangAlliesTable.getName());
 		gangAllieDatabase.createTable(gangAlliesTable.createTableQuery(gangAllieDatabase));
 
-		// (8) weapon table
+		// (9) weapon table
 		Database weaponDatabase = getDatabase().table(weaponTable.getName());
 		weaponDatabase.createTable(weaponTable.createTableQuery(weaponDatabase));
 
-		// (9) member table
+		// (10) member table
 		Database memberDatabase = getDatabase().table(memberTable.getName());
 		memberDatabase.createTable(memberTable.createTableQuery(memberDatabase));
 
-		// (10) rank parent table
+		// (11) rank parent table
 		Database rankParentDatabase = getDatabase().table(rankParentTable.getName());
 		rankParentDatabase.createTable(rankParentTable.createTableQuery(rankParentDatabase));
 
-		// (11) rank permission table
+		// (12) rank permission table
 		Database rankPermissionDatabase = getDatabase().table(rankPermissionTable.getName());
 		rankPermissionDatabase.createTable(rankPermissionTable.createTableQuery(rankPermissionDatabase));
 	}

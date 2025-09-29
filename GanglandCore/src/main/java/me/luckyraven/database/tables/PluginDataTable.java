@@ -5,7 +5,6 @@ import me.luckyraven.database.component.Attribute;
 import me.luckyraven.database.component.Table;
 
 import java.sql.Types;
-import java.util.Date;
 import java.util.Map;
 
 public class PluginDataTable extends Table<PluginData> {
@@ -14,9 +13,9 @@ public class PluginDataTable extends Table<PluginData> {
 		super("plugin_data");
 
 		Attribute<Integer> id                 = new Attribute<>("id", true, Integer.class);
-		Attribute<Date>    pluginActivateDate = new Attribute<>("activate_date", false, Date.class);
-		Attribute<Date>    scanDate           = new Attribute<>("scan_date", false, Date.class);
-		Attribute<Date>    scheduledScanDate  = new Attribute<>("scheduled_scan_date", false, Date.class);
+		Attribute<Long>    pluginActivateDate = new Attribute<>("activate_date", false, Long.class);
+		Attribute<Long>    scanDate           = new Attribute<>("scan_date", false, Long.class);
+		Attribute<Long>    scheduledScanDate  = new Attribute<>("scheduled_scan_date", false, Long.class);
 
 		this.addAttribute(id);
 		this.addAttribute(pluginActivateDate);
