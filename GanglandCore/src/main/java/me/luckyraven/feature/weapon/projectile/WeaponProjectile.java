@@ -5,7 +5,6 @@ import com.google.common.util.concurrent.AtomicDouble;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.events.WeaponProjectileLaunchEvent;
 import me.luckyraven.ray.RayTrace;
-import me.luckyraven.util.Pair;
 import me.luckyraven.util.ParticleUtil;
 import me.luckyraven.util.color.Color;
 import me.luckyraven.util.timer.RepeatingTimer;
@@ -18,24 +17,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Map;
 import java.util.Random;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class WeaponProjectile<T extends Projectile> extends WProjectile {
-
-	// current player projectile count
-	private static final Map<UUID, Long> sessionProjectileCount = new ConcurrentHashMap<>();
-
-	// projectile launched by a specific player with the projectile instance itself
-	private static final Map<UUID, Map<Long, Pair<WeaponProjectile<?>, Projectile>>> projectileMap
-			= new ConcurrentHashMap<>();
-
-	// projectile location according to the saved id
-	private static final Map<UUID, Map<Long, Vector>> shotLocation = new ConcurrentHashMap<>();
 
 	private final JavaPlugin plugin;
 	private final Weapon     weapon;
@@ -85,14 +71,6 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 		// call the projectile launch event
 		WeaponProjectileLaunchEvent event = new WeaponProjectileLaunchEvent(weapon, projectile, this);
 		plugin.getServer().getPluginManager().callEvent(event);
-
-		// record each projectile launched
-		synchronized (sessionProjectileCount) {
-			sessionProjectileCount.merge(getShooter().getUniqueId(), 1L, Long::sum);
-		}
-
-		// update the projectile position
-		// TODO
 	}
 
 	@Override
