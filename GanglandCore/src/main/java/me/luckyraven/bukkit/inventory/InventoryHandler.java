@@ -28,7 +28,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class InventoryHandler implements Listener {
+public class InventoryHandler implements Listener, Comparable<InventoryHandler> {
 
 	public static final  int                                  MAX_SLOTS           = 54;
 	private static final Map<NamespacedKey, InventoryHandler> SPECIAL_INVENTORIES = new HashMap<>();
@@ -173,7 +173,7 @@ public class InventoryHandler implements Listener {
 		ItemBuilder item = new ItemBuilder(material).setDisplayName(displayName).setLore(lore);
 
 		if (enchanted) {
-			item.addEnchantment(XEnchantment.UNBREAKING.getEnchant(), 1).addItemFlags(ItemFlag.HIDE_ENCHANTS);
+			item.addEnchantment(XEnchantment.UNBREAKING.get(), 1).addItemFlags(ItemFlag.HIDE_ENCHANTS);
 		}
 
 		setItem(slot, item, draggable, clickable);
@@ -258,4 +258,9 @@ public class InventoryHandler implements Listener {
 		});
 	}
 
+	@Override
+	public int compareTo(@NotNull InventoryHandler handler) {
+		if (this.title.equals(handler.title)) return 0;
+		return this.title.toString().compareTo(handler.title.toString());
+	}
 }
