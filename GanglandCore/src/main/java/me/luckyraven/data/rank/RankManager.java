@@ -63,7 +63,8 @@ public class RankManager {
 				String permission = String.valueOf(result[1]);
 
 				Permission perm = new Permission(id, permission);
-				lastPermissionId = id;
+
+				if (id > lastPermissionId) lastPermissionId = id;
 
 				permissions.put(id, perm);
 			}
@@ -102,7 +103,8 @@ public class RankManager {
 				List<Permission> permissions = new ArrayList<>(perms);
 
 				Rank rank = new Rank(name, id, permissions);
-				lastRankId = id;
+
+				if (id > lastRankId) lastRankId = id;
 
 				ranks.put(id, rank);
 			}
@@ -139,11 +141,11 @@ public class RankManager {
 			// member, parent = owner -> null (head)
 			// owner, parent = null -> member (tail)
 
-			// reasons for calling head is because it is the initial rank the user will have
+			// Reasons for calling head are because it is the initial rank the user will have
 			// reasons for calling tail is because it is the final rank the user will have
 			// because of the structure of the tree, there can be multiple parents (will call it children because of the
 			// inverse nature)
-			// the children of that node makes the tree diverse so the user can choose 1 node for the specified tree,
+			// the children of that node make the tree diverse so the user can choose 1 node for the specified tree,
 			// this creates tree diversity.
 			// From this concept, each node can have unique perks and diverse to their specified node
 			// OR return to a single unique node which continues the list.
