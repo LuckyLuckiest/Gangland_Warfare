@@ -1,7 +1,6 @@
 package me.luckyraven.util;
 
 import me.luckyraven.Gangland;
-import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
@@ -21,23 +20,7 @@ import java.util.stream.Collectors;
 
 public final class ReflectionUtil {
 
-	private static final String BUKKIT_VERSION;
-	private static final String NMS_VERSION;
-	private static final String CRAFTBUKKIT_VERSION;
-	private static final int    MINECRAFT_VERSION;
-
-	static {
-		BUKKIT_VERSION      = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
-		MINECRAFT_VERSION   = Integer.parseInt(BUKKIT_VERSION.split("_")[1]);
-		NMS_VERSION         = "net.minecraft.server." + BUKKIT_VERSION + ".";
-		CRAFTBUKKIT_VERSION = "org.bukkit.craftbukkit." + BUKKIT_VERSION + ".";
-	}
-
 	private ReflectionUtil() { }
-
-	public static int getMinecraftVersion() {
-		return MINECRAFT_VERSION;
-	}
 
 	public static <T> T newInstance(@NotNull Class<T> constructorClass, Object... parameters) {
 		Class<?>[] classes = new Class[parameters.length];
@@ -75,6 +58,14 @@ public final class ReflectionUtil {
 	public static <T> Constructor<T> getConstructor(@NotNull Class<T> clazz, Class<?>... parameters) {
 		try {
 			return clazz.getConstructor(parameters);
+		} catch (NoSuchMethodException | SecurityException exception) {
+			throw new InternalError("Failed to get constructor.", exception);
+		}
+	}
+
+	public static <T> Constructor<T> getDeclaredConstructor(@NotNull Class<T> clazz, Class<?>... parameters) {
+		try {
+			return clazz.getDeclaredConstructor(parameters);
 		} catch (NoSuchMethodException | SecurityException exception) {
 			throw new InternalError("Failed to get constructor.", exception);
 		}
