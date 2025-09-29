@@ -301,6 +301,10 @@ public class Weapon implements Cloneable {
 		return currentMagCapacity >= maxMagCapacity;
 	}
 
+	public boolean isMagazineEmpty() {
+		return currentMagCapacity <= 0;
+	}
+
 	public void addAmmunition(int amount) {
 		currentMagCapacity = Math.min(maxMagCapacity, currentMagCapacity + amount);
 	}
@@ -311,7 +315,7 @@ public class Weapon implements Cloneable {
 	 * @return Whether a shot was consumed or not.
 	 */
 	public boolean consumeShot() {
-		if (currentMagCapacity <= 0) return false;
+		if (isMagazineEmpty()) return false;
 
 		currentMagCapacity = Math.max(0, currentMagCapacity - projectileConsumed);
 		return true;
@@ -406,7 +410,7 @@ public class Weapon implements Cloneable {
 	}
 
 	private void applyEffect(Player player, XPotion potion, int amplifier) {
-		Optional<XPotion> optional = XPotion.matchXPotion(potion.name());
+		Optional<XPotion> optional = XPotion.of(potion.name());
 		if (optional.isEmpty()) return;
 
 		PotionEffectType potionEffectType = optional.get().getPotionEffectType();
@@ -417,7 +421,7 @@ public class Weapon implements Cloneable {
 	}
 
 	private void removeEffect(Player player, XPotion potion) {
-		Optional<XPotion> optional = XPotion.matchXPotion(potion.name());
+		Optional<XPotion> optional = XPotion.of(potion.name());
 		if (optional.isEmpty()) return;
 
 		PotionEffectType potionEffectType = optional.get().getPotionEffectType();
