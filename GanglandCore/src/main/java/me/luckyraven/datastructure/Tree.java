@@ -19,9 +19,7 @@ public class Tree<E> implements Iterable<E>, Cloneable {
 	}
 
 	public void add(@NotNull E obj) {
-		Node<E> newNode = new Node<>(obj);
-		if (root == null) root = newNode;
-		else root.add(newNode);
+		add(new Node<>(obj));
 	}
 
 	public void add(Node<E> node) {
@@ -40,7 +38,9 @@ public class Tree<E> implements Iterable<E>, Cloneable {
 
 	public int getNumberOfDescendants(Node<E> root) {
 		int size = root.getChildren().size();
+
 		for (Node<E> child : root.getChildren()) size += getNumberOfDescendants(child);
+
 		return size;
 	}
 
@@ -284,6 +284,5 @@ public class Tree<E> implements Iterable<E>, Cloneable {
 		}
 
 	}
-
 
 }
