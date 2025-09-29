@@ -1,6 +1,9 @@
 package me.luckyraven.updater;
 
+import lombok.Getter;
 import me.luckyraven.Gangland;
+import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.BufferedReader;
@@ -12,18 +15,29 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class UpdateChecker {
 
-	private final JavaPlugin plugin;
-	private final int        resourceId;
+	private final JavaPlugin     plugin;
+	private final int            resourceId;
+	private final RepeatingTimer repeatingTimer;
+	private final AtomicBoolean  checked;
+	@Getter
+	private final String         checkPermission = "gangland.update.check";
 
-	public UpdateChecker(JavaPlugin plugin, int resourceId) {
-		this.plugin     = plugin;
-		this.resourceId = resourceId;
+	public UpdateChecker(JavaPlugin plugin, int resourceId, long interval) {
+		this.plugin         = plugin;
+		this.resourceId     = resourceId;
+		this.checked        = new AtomicBoolean();
+		this.repeatingTimer = new RepeatingTimer(plugin, interval, timer -> task());
 	}
 
 	public String getLatestVersion() {
+		String currentVersion = plugin.getDescription().getVersion();
+
+		if (!checkUpdate()) return currentVersion;
+
 		try {
 			// create the url link
 			URL url = new URI("https://api.spigotmc.org/legacy/update.php?resource=" + resourceId).toURL();
@@ -47,10 +61,12 @@ public class UpdateChecker {
 			Gangland.getLog4jLogger().error("Unable to check for the latest version.", exception);
 		}
 
-		return plugin.getDescription().getVersion();
+		return currentVersion;
 	}
 
 	public void downloadLatestVersion() {
+		if (!checkUpdate()) return;
+
 		try {
 			// get the url to download the resource from
 			URL url = new URI("").toURL();
@@ -72,6 +88,34 @@ public class UpdateChecker {
 		} catch (Exception exception) {
 			Gangland.getLog4jLogger().error("Unable to download the new file.", exception);
 		}
+	}
+
+	public void start() {
+		if (this.repeatingTimer == null) return;
+
+		Gangland.getLog4jLogger().info("Checking for updates");
+		task();
+		this.repeatingTimer.start(true);
+	}
+
+	private void task() {
+		String newVersion     = getLatestVersion();
+		String currentVersion = plugin.getDescription().getVersion();
+
+		if (newVersion != null && !newVersion.equals(currentVersion)) {
+			ChatUtil.sendToOperators(checkPermission, String.format(
+					"The current version is %s, please update to the newest version available: %s", currentVersion,
+					newVersion));
+		} else {
+			if (!checked.get()) {
+				ChatUtil.sendToOperators(checkPermission, "The plugin is up to date.");
+				checked.set(true);
+			}
+		}
+	}
+
+	private boolean checkUpdate() {
+		return resourceId > -1;
 	}
 
 }
