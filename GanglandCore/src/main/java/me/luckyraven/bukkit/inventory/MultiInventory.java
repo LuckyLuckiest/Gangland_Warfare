@@ -1,7 +1,5 @@
 package me.luckyraven.bukkit.inventory;
 
-import com.cryptomorin.xseries.XMaterial;
-import com.cryptomorin.xseries.XSound;
 import com.google.common.base.Preconditions;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
@@ -11,7 +9,6 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.InventoryUtil;
 import me.luckyraven.util.TriConsumer;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -49,27 +46,10 @@ public class MultiInventory extends InventoryHandler {
 //			Preconditions.checkArgument(staticItems.size() <= 6, "Can't add more items than max rows");
 		}
 
-		int maxRows    = 4;
-		int maxColumns = staticItemsAllowed ? 6 : 7;
-		int amount     = items.size();
-
-		int perPage = maxColumns * maxRows;
-		int pages   = (int) Math.ceil((double) amount / perPage);
-
-		int remainingAmount = amount % perPage;
-		// the inventory size of the other pages is determined according to which page is reached,
-		// it can be that the page reached is the final page that means the finalPage calculation is
-		// applied to it
-		int finalPage   = remainingAmount + 9 * 2 + (int) Math.ceil((double) remainingAmount / 9);
-		int initialPage = pages == 1 ? finalPage : InventoryHandler.MAX_SLOTS;
-
-		if (fixedSize) {
-			finalPage   = InventoryHandler.MAX_SLOTS;
-			initialPage = InventoryHandler.MAX_SLOTS;
-		}
+		PageConfig cfg = computeConfigForCreation(items.size(), staticItemsAllowed, fixedSize);
 
 		// the first page
-		MultiInventory multi = new MultiInventory(gangland, name, initialPage, user);
+		MultiInventory multi = new MultiInventory(gangland, name, cfg.initialPage, user);
 
 		multi.addItems(multi, items, 0, items.size(), staticItemsAllowed, staticItems);
 		InventoryUtil.createBoarder(multi);
@@ -78,14 +58,14 @@ public class MultiInventory extends InventoryHandler {
 														   SettingAddon.getInventoryFillName(), true);
 
 		// the other pages
-		for (int i = 1; i < pages; i++) {
-			int size = i == pages - 1 ? finalPage : initialPage;
+		for (int i = 1; i < cfg.pages; i++) {
+			int size = i == cfg.pages - 1 ? cfg.finalPage : cfg.initialPage;
 
 			NamespacedKey    key = new NamespacedKey(gangland, titleRefactor(String.format("%s_%d", name, ++ID)));
 			InventoryHandler inv = new InventoryHandler(gangland, name, size, user, key, false);
 
-			int startIndex = i * perPage;
-			int endIndex   = Math.min(startIndex + perPage, items.size());
+			int startIndex = i * cfg.perPage;
+			int endIndex   = Math.min(startIndex + cfg.perPage, items.size());
 
 			multi.addItems(inv, items, startIndex, endIndex, staticItemsAllowed, staticItems);
 			InventoryUtil.createBoarder(inv);
@@ -98,10 +78,43 @@ public class MultiInventory extends InventoryHandler {
 
 		// add the navigation buttons
 		for (LinkedList.Node<InventoryHandler> node : multi.inventories) {
-			if (node.getNext() != null) multi.addNavigationButtons(node.getData(), node.getNext().getData());
+			if (node.getNext() != null) {
+				MultiInventoryNavigation.addNavigationButtons(node.getData(), node.getNext().getData(),
+															  multi.getDisplayTitle(), multi.currentPage,
+															  multi.inventories.getSize(),
+															  player -> multi.nextPage().open(player),
+															  player -> multi.previousPage().open(player),
+															  player -> multi.homePage().open(player));
+			}
 		}
 
 		return multi;
+	}
+
+	private static PageConfig computeConfigForCreation(int itemsCount, boolean staticItemsAllowed, boolean fixedSize) {
+		int maxRows         = 4;
+		int maxColumns      = staticItemsAllowed ? 6 : 7;
+		int perPage         = maxColumns * maxRows;
+		int pages           = (int) Math.ceil((double) itemsCount / perPage);
+		int remainingAmount = itemsCount % perPage;
+		int finalPage       = remainingAmount + 9 * 2 + (int) Math.ceil((double) remainingAmount / 9);
+		int initialPage     = pages == 1 ? finalPage : InventoryHandler.MAX_SLOTS;
+		if (fixedSize) {
+			finalPage   = InventoryHandler.MAX_SLOTS;
+			initialPage = InventoryHandler.MAX_SLOTS;
+		}
+		return new PageConfig(maxRows, maxColumns, perPage, pages, remainingAmount, finalPage, initialPage);
+	}
+
+	private static PageConfig computeConfigForUpdate(int itemsCount, int inventorySize) {
+		int maxRows         = 4;
+		int maxColumns      = inventorySize / 9;
+		int perPage         = maxColumns * maxRows;
+		int pages           = (int) Math.ceil((double) itemsCount / perPage);
+		int remainingAmount = itemsCount % perPage;
+		int finalPage       = remainingAmount + 9 * 2 + (int) Math.ceil((double) remainingAmount / 9);
+		int initialPage     = pages == 1 ? finalPage : InventoryHandler.MAX_SLOTS;
+		return new PageConfig(maxRows, maxColumns, perPage, pages, remainingAmount, finalPage, initialPage);
 	}
 
 	public void updateItems(List<ItemStack> items, User<Player> user, boolean staticItemsAllowed,
@@ -110,15 +123,7 @@ public class MultiInventory extends InventoryHandler {
 			return; // No inventories to update
 		}
 
-		int maxRows    = 4;
-		int maxColumns = inventories.getHead().getData().getSize() / 9;
-
-		int perPage = maxColumns * maxRows;
-		int pages   = (int) Math.ceil((double) items.size() / perPage);
-
-		int remainingAmount = items.size() % perPage;
-		int finalPage       = remainingAmount + 9 * 2 + (int) Math.ceil((double) remainingAmount / 9);
-		int initialPage     = pages == 1 ? finalPage : InventoryHandler.MAX_SLOTS;
+		PageConfig cfg = computeConfigForUpdate(items.size(), inventories.getHead().getData().getSize());
 
 		int              inventoryIndex = 0;
 		InventoryHandler firstPage      = inventories.getHead().getData();
@@ -126,13 +131,13 @@ public class MultiInventory extends InventoryHandler {
 		// Update the first page with new items
 		firstPage.clear();
 
-		addItems(firstPage, items, 0, Math.min(perPage, items.size()), staticItemsAllowed, staticItems);
+		addItems(firstPage, items, 0, Math.min(cfg.perPage, items.size()), staticItemsAllowed, staticItems);
 		InventoryUtil.createBoarder(firstPage);
 		if (staticItemsAllowed) InventoryUtil.verticalLine(firstPage, 2, InventoryUtil.getFillItem(),
 														   SettingAddon.getInventoryFillName(), true);
 
-		for (int i = 1; i < pages; i++) {
-			int              size = i == pages - 1 ? finalPage : initialPage;
+		for (int i = 1; i < cfg.pages; i++) {
+			int              size = i == cfg.pages - 1 ? cfg.finalPage : cfg.initialPage;
 			InventoryHandler inv;
 
 			if (i >= inventories.getSize()) {
@@ -140,7 +145,7 @@ public class MultiInventory extends InventoryHandler {
 				NamespacedKey namespacedKey = new NamespacedKey(gangland, titleRefactor(
 						String.format("%s_%d", firstPage.getDisplayTitle(), ++ID)));
 				inv = new InventoryHandler(gangland, firstPage.getDisplayTitle(), size, user, namespacedKey, false);
-				addItems(inv, items, i * perPage, Math.min((i + 1) * perPage, items.size()), staticItemsAllowed,
+				addItems(inv, items, i * cfg.perPage, Math.min((i + 1) * cfg.perPage, items.size()), staticItemsAllowed,
 						 staticItems);
 				addPage(inv);
 			} else {
@@ -150,7 +155,7 @@ public class MultiInventory extends InventoryHandler {
 				if (inv == null) continue;
 
 				inv.clear();
-				addItems(inv, items, i * perPage, Math.min((i + 1) * perPage, items.size()), false, null);
+				addItems(inv, items, i * cfg.perPage, Math.min((i + 1) * cfg.perPage, items.size()), false, null);
 			}
 			InventoryUtil.createBoarder(inv);
 			if (staticItemsAllowed) InventoryUtil.verticalLine(inv, 2, InventoryUtil.getFillItem(),
@@ -268,76 +273,6 @@ public class MultiInventory extends InventoryHandler {
 										 SettingAddon.getInventoryLineName()).build());
 
 		}
-	}
-
-	private void addNextPageItem(InventoryHandler linkedInventory) {
-		ItemBuilder item = createItemHead("&a->", String.format("&7(%d/%d)", currentPage + 1, inventories.getSize()));
-		String arrow
-				= "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTYzMzlmZjJlNTM0MmJhMThiZGM0OGE5OWNjYTY1ZDEyM2NlNzgxZDg3ODI3MmY5ZDk2NGVhZDNiOGFkMzcwIn19fQ==";
-
-		item.customHead(arrow);
-		linkedInventory.setItem(linkedInventory.getSize() - 1, item.build(), false,
-								(player, inventory, itemBuilder) -> {
-									// open the next inventory
-									nextPage().open(player);
-
-									buttonClickSound(player);
-								});
-	}
-
-	private void addPreviousPageItem(InventoryHandler linkedInventory) {
-		ItemBuilder item = createItemHead("&c<-");
-		String arrow
-				= "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=";
-
-		item.customHead(arrow);
-		linkedInventory.setItem(linkedInventory.getSize() - 9, item.build(), false,
-								(player, inventory, itemBuilder) -> {
-									// open the previous inventory
-									previousPage().open(player);
-
-									buttonClickSound(player);
-								});
-	}
-
-	private void addHomePageItem(InventoryHandler linkedInventory) {
-		ItemBuilder item = createItemHead("&cBack to " + this.getDisplayTitle());
-		String home
-				= "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWUxNTZlYjVhZmZkZGYyMDg2MTdhYWI3YjQzMGZhZDlmMmM5OTFlYzJmMzgzMDRhMGMyMTNmMzFlNzZjYmJlNCJ9fX0=";
-
-		item.customHead(home);
-		linkedInventory.setItem(linkedInventory.getSize() - 5, item.build(), false,
-								(player, inventory, itemBuilder) -> {
-									// open the home inventory
-									homePage().open(player);
-
-									buttonClickSound(player);
-								});
-	}
-
-	private ItemBuilder createItemHead(String name, @Nullable String... lore) {
-		ItemBuilder item = new ItemBuilder(XMaterial.PLAYER_HEAD.get()).setDisplayName(name);
-
-		if (lore != null) item.setLore(lore);
-
-		return item;
-	}
-
-	private void addNavigationButtons(InventoryHandler currentInv, InventoryHandler nextInv) {
-		// next page -> gui
-		addNextPageItem(nextInv);
-
-		// home page
-		addHomePageItem(currentInv);
-
-		// prev page -> lastPage
-		addPreviousPageItem(currentInv);
-	}
-
-	private void buttonClickSound(Player player) {
-		// sound
-		Sound sound = XSound.BLOCK_WOODEN_BUTTON_CLICK_ON.get();
-		if (sound != null) player.playSound(player.getLocation(), sound, 1F, 1F);
 	}
 
 }

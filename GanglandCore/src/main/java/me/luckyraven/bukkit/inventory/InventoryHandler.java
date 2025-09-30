@@ -30,6 +30,8 @@ import java.util.*;
 
 public class InventoryHandler implements Listener, Comparable<InventoryHandler> {
 
+	// region Constants and Static State
+
 	public static final  int                                  MAX_SLOTS           = 54;
 	private static final Map<NamespacedKey, InventoryHandler> SPECIAL_INVENTORIES = new HashMap<>();
 
@@ -125,39 +127,21 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 			ItemStack item = inventoryHandler.getInventory().getItem(i);
 			if (item == null) continue;
 
-			// assume that item has a very special nbt which is the data
-			String      dataTag     = "color";
-			ItemBuilder itemBuilder = new ItemBuilder(item);
-			Material    type        = item.getType();
-			if (itemBuilder.hasNBTTag(dataTag)) {
-				// special treatment for colored data
-				String value = gangland.usePlaceholder(player, itemBuilder.getStringTagData(dataTag));
-
-				MaterialType material = MaterialType.WOOL;
-				for (MaterialType materialType : MaterialType.values()) {
-					if (type.name().contains(materialType.name())) {
-						material = materialType;
-						break;
-					}
-				}
-
-				type = ColorUtil.getMaterialByColor(value, material.name());
-			}
-
-			ItemMeta itemMeta = item.getItemMeta();
+			Material resolvedType = resolveMaterialWithColor(player, item);
+			ItemMeta meta         = item.getItemMeta();
 
 			String       displayName = null;
 			List<String> lore        = null;
 			boolean      enchanted   = false;
 
-			if (itemMeta != null) {
-				displayName = gangland.usePlaceholder(player, itemMeta.getDisplayName());
-				lore        = itemMeta.getLore();
-				if (lore != null) lore = lore.stream().map(line -> gangland.usePlaceholder(player, line)).toList();
-				enchanted = itemMeta.hasEnchants();
+			if (meta != null) {
+				displayName = applyPlaceholders(meta.getDisplayName(), player);
+				lore        = meta.getLore();
+				if (lore != null) lore = lore.stream().map(line -> applyPlaceholders(line, player)).toList();
+				enchanted = meta.hasEnchants();
 			}
 
-			setItem(i, type, displayName, lore, enchanted, inventoryHandler.draggableSlots.contains(i),
+			setItem(i, resolvedType, displayName, lore, enchanted, inventoryHandler.draggableSlots.contains(i),
 					inventoryHandler.clickableSlots.get(i));
 		}
 	}
@@ -262,5 +246,28 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 	public int compareTo(@NotNull InventoryHandler handler) {
 		if (this.title.equals(handler.title)) return 0;
 		return this.title.toString().compareTo(handler.title.toString());
+	}
+
+	private String applyPlaceholders(@Nullable String text, Player player) {
+		if (text == null) return null;
+		return gangland.usePlaceholder(player, text);
+	}
+
+	private Material resolveMaterialWithColor(Player player, ItemStack item) {
+		Material    type        = item.getType();
+		ItemBuilder itemBuilder = new ItemBuilder(item);
+		String      dataTag     = "color";
+		if (itemBuilder.hasNBTTag(dataTag)) {
+			String       value    = gangland.usePlaceholder(player, itemBuilder.getStringTagData(dataTag));
+			MaterialType material = MaterialType.WOOL;
+			for (MaterialType materialType : MaterialType.values()) {
+				if (type.name().contains(materialType.name())) {
+					material = materialType;
+					break;
+				}
+			}
+			type = ColorUtil.getMaterialByColor(value, material.name());
+		}
+		return type;
 	}
 }
