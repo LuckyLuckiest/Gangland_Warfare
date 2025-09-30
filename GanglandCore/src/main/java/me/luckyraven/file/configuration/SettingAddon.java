@@ -35,7 +35,8 @@ public class SettingAddon {
 	private static @Getter boolean sqliteBackup, sqliteFailedMysql, autoSave, autoSaveDebug;
 	private static @Getter int    autoSaveTime;
 	// inventory configuration
-	private static @Getter String inventoryFillItem, inventoryFillName, inventoryLineItem, inventoryLineName;
+	private static @Getter String inventoryFillItem, inventoryFillName, inventoryLineItem, inventoryLineName, nextPage,
+			previousPage, homePage;
 	// economy
 	private static @Getter String moneySymbol, balanceFormat;
 	// user configuration
@@ -132,6 +133,13 @@ public class SettingAddon {
 		inventoryFillName = inventory.getString("Fill.Name");
 		inventoryLineItem = inventory.getString("Line.Item");
 		inventoryLineName = inventory.getString("Line.Name");
+
+		ConfigurationSection multiInventory = inventory.getConfigurationSection("Multi_Inventory");
+		Objects.requireNonNull(multiInventory);
+
+		nextPage     = multiInventory.getString("Next_Page");
+		previousPage = multiInventory.getString("Previous_Page");
+		homePage     = multiInventory.getString("Home_Page");
 
 		// economy
 		moneySymbol   = Objects.requireNonNull(settings.getString("Money_Symbol")).substring(0, 1);
