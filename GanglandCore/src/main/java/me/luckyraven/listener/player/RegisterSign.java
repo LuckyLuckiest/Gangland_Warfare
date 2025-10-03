@@ -1,6 +1,8 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.bukkit.sign.Sign;
+import me.luckyraven.bukkit.sign.SignManager;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -24,21 +26,16 @@ public class RegisterSign implements Listener {
 		if (!lines[0].startsWith("glw-")) return;
 
 		try {
-//			SignManager.validateSign(gangland, lines);
+			SignManager.validateSign(gangland, lines);
 
 			Location signLocation = event.getBlock().getLocation();
-//			SignManager sign         = SignManager.createSign(gangland, lines, signLocation);
+			Sign     sign         = SignManager.createSign(gangland, lines, signLocation);
 
-//			event.setLine(0, ChatUtil.color("&b" + sign.type().name()));
-//			event.setLine(1, ChatUtil.color("&7" + sign.item()));
-
-//			if (sign.type() != SignManager.Type.VIEW) {
-//				event.setLine(2, ChatUtil.color("&5" + NumberUtil.valueFormat(sign.amount())));
-//				event.setLine(3, ChatUtil.color("&a$" + NumberUtil.valueFormat(sign.price())));
-//			}
+			// Translate creation form to display form on the placed sign
+			SignManager.translateCreationToDisplay(lines);
+			for (int i = 0; i < 4; i++) event.setLine(i, lines[i]);
 
 			player.sendMessage(ChatUtil.prefixMessage("Successfully created the sign!"));
-//			player.sendMessage(sign.location().toString());
 		} catch (IllegalArgumentException exception) {
 			player.sendMessage(ChatUtil.errorMessage("Invalid sign: " + exception.getMessage()));
 		}
