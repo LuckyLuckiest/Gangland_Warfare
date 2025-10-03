@@ -36,10 +36,17 @@ public class DriverV2 extends DriverHandler {
 				List<Line> lines = clusters.get(interval);
 
 				// update the lines in fastboard
-				if (lines.contains(getTitle())) getFastBoard().updateTitle(updateLine(getTitle()));
-				else lines.stream()
-						  .filter(line -> line != getTitle())
-						  .forEach(line -> getFastBoard().updateLine(line.getUsedIndex(), updateLine(line)));
+				if (lines.contains(getTitle())) {
+					String newTitle = updateLine(getTitle());
+					getFastBoard().updateTitle(newTitle);
+				} else {
+					lines.stream()
+							.filter(line -> line != getTitle())
+							.forEach(line -> {
+								String updatedLine = updateLine(line);
+								getFastBoard().updateLine(line.getUsedIndex(), updatedLine);
+							});
+				}
 			}
 
 			// increment the current interval value

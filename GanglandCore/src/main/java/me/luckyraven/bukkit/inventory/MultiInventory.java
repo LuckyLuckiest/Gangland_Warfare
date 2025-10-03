@@ -49,7 +49,7 @@ public class MultiInventory extends InventoryHandler {
 		PageConfig cfg = computeConfigForCreation(items.size(), staticItemsAllowed, fixedSize);
 
 		// the first page
-		MultiInventory multi = new MultiInventory(gangland, name, cfg.initialPage, user);
+		MultiInventory multi = new MultiInventory(gangland, name, cfg.initialPage(), user);
 
 		multi.addItems(multi, items, 0, items.size(), staticItemsAllowed, staticItems);
 		InventoryUtil.createBoarder(multi);
@@ -58,14 +58,14 @@ public class MultiInventory extends InventoryHandler {
 														   SettingAddon.getInventoryFillName(), true);
 
 		// the other pages
-		for (int i = 1; i < cfg.pages; i++) {
-			int size = i == cfg.pages - 1 ? cfg.finalPage : cfg.initialPage;
+		for (int i = 1; i < cfg.pages(); i++) {
+			int size = i == cfg.pages() - 1 ? cfg.finalPage() : cfg.initialPage();
 
 			NamespacedKey    key = new NamespacedKey(gangland, titleRefactor(String.format("%s_%d", name, ++ID)));
 			InventoryHandler inv = new InventoryHandler(gangland, name, size, user, key, false);
 
-			int startIndex = i * cfg.perPage;
-			int endIndex   = Math.min(startIndex + cfg.perPage, items.size());
+			int startIndex = i * cfg.perPage();
+			int endIndex   = Math.min(startIndex + cfg.perPage(), items.size());
 
 			multi.addItems(inv, items, startIndex, endIndex, staticItemsAllowed, staticItems);
 			InventoryUtil.createBoarder(inv);
@@ -131,13 +131,13 @@ public class MultiInventory extends InventoryHandler {
 		// Update the first page with new items
 		firstPage.clear();
 
-		addItems(firstPage, items, 0, Math.min(cfg.perPage, items.size()), staticItemsAllowed, staticItems);
+		addItems(firstPage, items, 0, Math.min(cfg.perPage(), items.size()), staticItemsAllowed, staticItems);
 		InventoryUtil.createBoarder(firstPage);
 		if (staticItemsAllowed) InventoryUtil.verticalLine(firstPage, 2, InventoryUtil.getFillItem(),
 														   SettingAddon.getInventoryFillName(), true);
 
-		for (int i = 1; i < cfg.pages; i++) {
-			int              size = i == cfg.pages - 1 ? cfg.finalPage : cfg.initialPage;
+		for (int i = 1; i < cfg.pages(); i++) {
+			int              size = i == cfg.pages() - 1 ? cfg.finalPage() : cfg.initialPage();
 			InventoryHandler inv;
 
 			if (i >= inventories.getSize()) {
@@ -145,7 +145,8 @@ public class MultiInventory extends InventoryHandler {
 				NamespacedKey namespacedKey = new NamespacedKey(gangland, titleRefactor(
 						String.format("%s_%d", firstPage.getDisplayTitle(), ++ID)));
 				inv = new InventoryHandler(gangland, firstPage.getDisplayTitle(), size, user, namespacedKey, false);
-				addItems(inv, items, i * cfg.perPage, Math.min((i + 1) * cfg.perPage, items.size()), staticItemsAllowed,
+				addItems(inv, items, i * cfg.perPage(), Math.min((i + 1) * cfg.perPage(), items.size()),
+						 staticItemsAllowed,
 						 staticItems);
 				addPage(inv);
 			} else {
@@ -155,7 +156,7 @@ public class MultiInventory extends InventoryHandler {
 				if (inv == null) continue;
 
 				inv.clear();
-				addItems(inv, items, i * cfg.perPage, Math.min((i + 1) * cfg.perPage, items.size()), false, null);
+				addItems(inv, items, i * cfg.perPage(), Math.min((i + 1) * cfg.perPage(), items.size()), false, null);
 			}
 			InventoryUtil.createBoarder(inv);
 			if (staticItemsAllowed) InventoryUtil.verticalLine(inv, 2, InventoryUtil.getFillItem(),
