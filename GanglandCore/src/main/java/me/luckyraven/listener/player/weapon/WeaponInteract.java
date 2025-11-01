@@ -91,6 +91,43 @@ public class WeaponInteract implements Listener {
 		}
 
 		// handle the BURST and SINGLE modes
+		shootOtherModes(weapon, player);
+	}
+
+	@EventHandler
+	public void onBlockPlace(BlockPlaceEvent event) {
+		if (!weaponManager.isWeapon(event.getPlayer().getInventory().getItemInMainHand())) return;
+
+		event.setCancelled(true);
+	}
+
+	@EventHandler
+	public void onBlockBreak(BlockBreakEvent event) {
+		if (!weaponManager.isWeapon(event.getPlayer().getInventory().getItemInMainHand())) return;
+
+		event.setCancelled(true);
+	}
+
+	@EventHandler
+	public void onWeaponHeld(PlayerItemHeldEvent event) {
+		// check if it was a weapon
+		Player    player = event.getPlayer();
+		ItemStack item   = player.getInventory().getItem(event.getPreviousSlot());
+		Weapon    weapon = weaponManager.validateAndGetWeapon(player, item);
+
+		if (weapon == null) return;
+
+		weapon.unScope(player, true);
+
+		// cancel any active auto fire
+		FullAutoTask autoTask = autoTasks.get(weapon.getUuid());
+
+		if (autoTask != null) {
+			autoTask.stop();
+		}
+	}
+
+	private void shootOtherModes(Weapon weapon, Player player) {
 		// check if the pair exists
 		AtomicReference<WeaponData> weaponData = continuousFire.get(weapon.getUuid());
 
@@ -141,39 +178,6 @@ public class WeaponInteract implements Listener {
 		} else {
 			// modify the value
 			weaponData.get().shooting = true;
-		}
-	}
-
-	@EventHandler
-	public void onBlockPlace(BlockPlaceEvent event) {
-		if (!weaponManager.isWeapon(event.getPlayer().getInventory().getItemInMainHand())) return;
-
-		event.setCancelled(true);
-	}
-
-	@EventHandler
-	public void onBlockBreak(BlockBreakEvent event) {
-		if (!weaponManager.isWeapon(event.getPlayer().getInventory().getItemInMainHand())) return;
-
-		event.setCancelled(true);
-	}
-
-	@EventHandler
-	public void onWeaponHeld(PlayerItemHeldEvent event) {
-		// check if it was a weapon
-		Player    player = event.getPlayer();
-		ItemStack item   = player.getInventory().getItem(event.getPreviousSlot());
-		Weapon    weapon = weaponManager.validateAndGetWeapon(player, item);
-
-		if (weapon == null) return;
-
-		weapon.unScope(player, true);
-
-		// cancel any active auto fire
-		FullAutoTask autoTask = autoTasks.get(weapon.getUuid());
-
-		if (autoTask != null) {
-			autoTask.stop();
 		}
 	}
 
