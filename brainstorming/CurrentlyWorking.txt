@@ -56,8 +56,8 @@
     - Make inventories work with a multi-inventory system.
     - Make custom inventories YAML file configuration flexible. (NOT DONE)
     - Experiment with guns.
-0.0.65-DEV:
-    - Work more on guns. (DONE - Need more tuning since I got burned out from it)
+0.0.65-DEV: (partially DONE)
+    - Work more on guns.
         - Saving the guns in a database (partially).
         - Loading the guns fully using a database and default data from the weapon itself.
         - Reload system.
@@ -65,12 +65,13 @@
         - Weapon interact system.
         - Ammo damage to surroundings and entities.
         - Weapon drop system.
+0.0.66-DEV:
     - Work on signs.
         - Be able to abstract sign creation.
         - Try to make it diverse.
         - Open inventory.
         - Do commands.
-0.0.66-DEV:
+0.0.67-DEV:
 	- Work on waypoint radius, used for displaying particles
     - Gang settings.
 	- A Taxi system added to contacts in phone.
