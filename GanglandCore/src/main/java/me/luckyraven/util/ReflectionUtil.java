@@ -93,6 +93,70 @@ public final class ReflectionUtil {
 		return Collections.emptySet();
 	}
 
+	public static Set<Class<?>> findClasses(String basePackage, ClassLoader classLoader) {
+		Set<Class<?>> classes = new HashSet<>();
+		String        path    = basePackage.replace('.', '/');
+
+		// get the jar file
+		URL resource = classLoader.getResource(path);
+		if (resource == null) {
+			return classes;
+		}
+
+		String protocol = resource.getProtocol();
+		if ("jar".equals(protocol)) {
+			// running from jar
+			String jarPath = resource.getPath().substring(5, resource.getPath().indexOf("!"));
+
+			try (JarFile jar = new JarFile(URLDecoder.decode(jarPath, StandardCharsets.UTF_8))) {
+				Enumeration<JarEntry> entries = jar.entries();
+
+				while (entries.hasMoreElements()) {
+					JarEntry entry = entries.nextElement();
+					String   name  = entry.getName();
+
+					if (!(name.startsWith(path) && name.endsWith(".class"))) continue;
+
+					String className = name.replace('/', '.').substring(0, name.length() - 6);
+
+					try {
+						classes.add(Class.forName(className, false, classLoader));
+					} catch (ClassNotFoundException | NoClassDefFoundError ignored) { }
+				}
+			} catch (IOException exception) {
+				Gangland.getLog4jLogger().error(exception);
+			}
+		} else {
+			// running from ide/file system
+			File directory = new File(resource.getFile());
+
+			if (directory.exists()) {
+				scanDirectory(directory, basePackage, classes, classLoader);
+			}
+		}
+
+		return classes;
+	}
+
+	private static void scanDirectory(File directory, String basePackage, Set<Class<?>> classes,
+									  ClassLoader classLoader) {
+		File[] files = directory.listFiles();
+
+		if (files == null) return;
+
+		for (File file : files) {
+			if (file.isDirectory()) {
+				scanDirectory(file, basePackage + "." + file.getName(), classes, classLoader);
+			} else if (file.getName().endsWith(".class")) {
+				String className = basePackage + '.' + file.getName().substring(0, file.getName().length() - 6);
+
+				try {
+					classes.add(Class.forName(className, false, classLoader));
+				} catch (ClassNotFoundException | NoClassDefFoundError exception) { }
+			}
+		}
+	}
+
 	private static Set<Class<?>> getClassesFromResource(URL resource, String packageName) {
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.openStream()))) {
 			return reader.lines()
