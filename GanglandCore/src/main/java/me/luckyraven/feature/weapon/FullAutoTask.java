@@ -2,11 +2,8 @@ package me.luckyraven.feature.weapon;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.util.timer.Timer;
-import org.bukkit.Location;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
 
 /**
  * I will not claim this class as an invention from my side, but it is made by CJCrafter from WeaponMechanics. A
@@ -54,7 +51,7 @@ public class FullAutoTask extends Timer {
 	private       int       tickIndex;
 
 	public FullAutoTask(Gangland gangland, Weapon weapon, Player player, ItemStack weaponItem, Runnable onCancel) {
-		super(gangland);
+		super(gangland, 0L, 1L);
 
 		this.gangland  = gangland;
 		this.weapon    = weapon;
@@ -102,43 +99,4 @@ public class FullAutoTask extends Timer {
 		super.stop();
 	}
 
-	private void applyRecoil() {
-		float recoil = (float) weapon.getRecoilAmount();
-
-		if (!player.isSneaking()) {
-			recoil(player, recoil, recoil);
-		} else {
-			float newValue = recoil / 2;
-
-			if (weapon.isScoped()) recoil(player, newValue, newValue);
-			else recoil(player, newValue / 2, newValue / 2);
-		}
-	}
-
-	private void applyPush() {
-		if (!player.isSneaking()) {
-			push(player, weapon.getPushPowerUp(), weapon.getPushVelocity());
-		} else {
-			if (weapon.isScoped()) push(player, weapon.getPushPowerUp() / 2, weapon.getPushVelocity() / 2);
-			else push(player, 0, 0);
-		}
-	}
-
-	private void recoil(Player player, float recoil, float recoilVelocity) {
-		gangland.getInitializer()
-				.getCompatibilityWorker()
-				.getRecoilCompatibility()
-				.modifyCameraRotation(player, recoil, recoilVelocity, false);
-	}
-
-	private void push(Player player, double powerUp, double push) {
-		if (push > 0) push *= -1;
-
-		Location location = player.getLocation();
-		Vector   vector   = new Vector(0, powerUp, 0);
-
-		if (location.getBlock().getRelative(BlockFace.DOWN).getType() != org.bukkit.Material.AIR) {
-			player.setVelocity(location.getDirection().multiply(push).add(vector));
-		}
-	}
 }
