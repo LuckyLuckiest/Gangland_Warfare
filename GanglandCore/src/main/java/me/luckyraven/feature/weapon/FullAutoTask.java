@@ -1,13 +1,21 @@
 package me.luckyraven.feature.weapon;
 
+import me.luckyraven.Gangland;
+import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.feature.weapon.events.WeaponShootEvent;
 import me.luckyraven.feature.weapon.projectile.WeaponProjectile;
 import me.luckyraven.file.configuration.SoundConfiguration;
 import me.luckyraven.util.timer.Timer;
+import org.bukkit.Location;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 
+/**
+ * I will not claim this class as an invention from my side, but it is made by CJCrafter from WeaponMechanics. A
+ * brilliant team that created sophisticated and efficient algorithms to make the user experience smooth.
+ */
 public class FullAutoTask extends Timer {
 
 	/**
@@ -42,17 +50,17 @@ public class FullAutoTask extends Timer {
 		}
 	}
 
-	private final JavaPlugin plugin;
-	private final Weapon     weapon;
-	private final Player     player;
-	private final ItemStack  itemStack;
-	private final Runnable   onCancel;
-	private       int        tickIndex;
+	private final Gangland  gangland;
+	private final Weapon    weapon;
+	private final Player    player;
+	private final ItemStack itemStack;
+	private final Runnable  onCancel;
+	private       int       tickIndex;
 
-	public FullAutoTask(JavaPlugin plugin, Weapon weapon, Player player, ItemStack weaponItem, Runnable onCancel) {
-		super(plugin);
+	public FullAutoTask(Gangland gangland, Weapon weapon, Player player, ItemStack weaponItem, Runnable onCancel) {
+		super(gangland);
 
-		this.plugin    = plugin;
+		this.gangland  = gangland;
 		this.weapon    = weapon;
 		this.player    = player;
 		this.itemStack = weaponItem;
@@ -78,29 +86,42 @@ public class FullAutoTask extends Timer {
 
 		if (AUTO[shotsPerSecond][tickIndex]) {
 			// Try to consume a bullet
-			if (!weapon.consumeShot()) {
+			boolean consumed = weapon.consumeShot();
+
+			if (!consumed) {
 				SoundConfiguration.playSounds(player, weapon.getEmptyMagCustomSound(),
 											  weapon.getEmptyMagDefaultSound());
 				cancel();
 				return;
 			}
 
-			WeaponProjectile<?> weaponProjectile = weapon.getProjectileType().createInstance(plugin, player, weapon);
+			WeaponProjectile<?> weaponProjectile = weapon.getProjectileType().createInstance(gangland, player, weapon);
 			WeaponShootEvent    weaponShootEvent = new WeaponShootEvent(weapon, weaponProjectile);
-			plugin.getServer().getPluginManager().callEvent(weaponShootEvent);
+			gangland.getServer().getPluginManager().callEvent(weaponShootEvent);
 
+			// launch the projectile
 			if (!weaponShootEvent.isCancelled()) {
 				weaponProjectile.launchProjectile();
+
+				// update weapon data
+				WeaponManager weaponManager = gangland.getInitializer().getWeaponManager();
+				ItemBuilder   heldWeapon    = weaponManager.getHeldWeaponItem(player);
+
+				if (heldWeapon != null) {
+					weapon.updateWeaponData(heldWeapon);
+					weapon.updateWeapon(player, heldWeapon, player.getInventory().getHeldItemSlot());
+				}
+
+				// apply recoil
+				applyRecoil();
+
+				// apply push
+				applyPush();
+
+				// shooting sound
 				SoundConfiguration.playSounds(player, weapon.getShotCustomSound(), weapon.getShotDefaultSound());
 			} else {
 				weapon.addAmmunition(1);
-			}
-
-			// Reload if empty
-			if (weapon.getCurrentMagCapacity() == 0) {
-				weapon.reload(plugin, player, true);
-				cancel();
-				return;
 			}
 		}
 
@@ -112,5 +133,51 @@ public class FullAutoTask extends Timer {
 	public synchronized void cancel() throws IllegalStateException {
 		onCancel.run();
 		super.cancel();
+	}
+
+	@Override
+	public void stop() {
+		onCancel.run();
+		super.stop();
+	}
+
+	private void applyRecoil() {
+		float recoil = (float) weapon.getRecoilAmount();
+
+		if (!player.isSneaking()) {
+			recoil(player, recoil, recoil);
+		} else {
+			float newValue = recoil / 2;
+
+			if (weapon.isScoped()) recoil(player, newValue, newValue);
+			else recoil(player, newValue / 2, newValue / 2);
+		}
+	}
+
+	private void applyPush() {
+		if (!player.isSneaking()) {
+			push(player, weapon.getPushPowerUp(), weapon.getPushVelocity());
+		} else {
+			if (weapon.isScoped()) push(player, weapon.getPushPowerUp() / 2, weapon.getPushVelocity() / 2);
+			else push(player, 0, 0);
+		}
+	}
+
+	private void recoil(Player player, float recoil, float recoilVelocity) {
+		gangland.getInitializer()
+				.getCompatibilityWorker()
+				.getRecoilCompatibility()
+				.modifyCameraRotation(player, recoil, recoilVelocity, false);
+	}
+
+	private void push(Player player, double powerUp, double push) {
+		if (push > 0) push *= -1;
+
+		Location location = player.getLocation();
+		Vector   vector   = new Vector(0, powerUp, 0);
+
+		if (location.getBlock().getRelative(BlockFace.DOWN).getType() != org.bukkit.Material.AIR) {
+			player.setVelocity(location.getDirection().multiply(push).add(vector));
+		}
 	}
 }
