@@ -4,7 +4,6 @@ import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.projectile.WeaponProjectile;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Projectile;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Flare extends WeaponProjectile<Firework> {
@@ -14,8 +13,4 @@ public class Flare extends WeaponProjectile<Firework> {
 			  Firework.class);
 	}
 
-	@Override
-	public void updatePosition(Projectile projectile) {
-
-	}
 }
