@@ -5,6 +5,8 @@ import com.google.common.base.Preconditions;
 import me.luckyraven.datastructure.SpellChecker;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -120,7 +122,10 @@ public final class ChatUtil {
 
 	public static void sendActionBar(JavaPlugin plugin, Player player, String message, long duration) {
 		ActionBar.clearActionBar(player);
-		ActionBar.sendActionBar(plugin, player, color(message), duration);
+
+		BaseComponent baseComponent = TextComponent.fromLegacy(color(message));
+
+		ActionBar.sendActionBar(plugin, player, baseComponent, duration);
 	}
 
 	public static String generateCommandSuggestion(String word, Set<String> dictionary, String command,
@@ -132,7 +137,8 @@ public final class ChatUtil {
 
 		Map<Integer, List<String>> suggestions = checker.getSuggestions();
 		// get the minimum length
-		int minimum = suggestions.keySet().stream().mapToInt(Integer::intValue).min().orElse(-1);
+		int minimum = suggestions.keySet()
+				.stream().mapToInt(Integer::intValue).min().orElse(-1);
 
 		StringBuilder builder = new StringBuilder("&eDid you mean ");
 
@@ -151,9 +157,9 @@ public final class ChatUtil {
 	public static void sendToOperators(String permission, String message) {
 		Bukkit.getServer()
 			  .getOnlinePlayers()
-			  .stream()
-			  .filter(player -> permission == null || permission.isEmpty() || player.hasPermission(permission))
-			  .forEach(player -> player.sendMessage(ChatUtil.commandMessage(message)));
+				.stream()
+				.filter(player -> permission == null || permission.isEmpty() || player.hasPermission(permission))
+				.forEach(player -> player.sendMessage(ChatUtil.commandMessage(message)));
 
 		Bukkit.getServer().getConsoleSender().sendMessage(ChatUtil.commandMessage(message));
 	}
