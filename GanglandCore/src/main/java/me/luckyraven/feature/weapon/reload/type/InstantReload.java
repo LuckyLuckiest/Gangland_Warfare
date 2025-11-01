@@ -10,8 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 public class InstantReload extends Reload {
 
 	private SequenceTimer timer;
@@ -29,9 +27,13 @@ public class InstantReload extends Reload {
 	}
 
 	@Override
+	public String toString() {
+		return String.format("InstantReload{isReloading=%s, timer=%s}", isReloading(), timer);
+	}
+
+	@Override
 	protected void executeReload(JavaPlugin plugin, Player player, boolean removeAmmunition) {
 		PlayerInventory inventory = player.getInventory();
-		AtomicInteger   slot      = new AtomicInteger();
 
 		timer = new SequenceTimer(plugin);
 
@@ -39,13 +41,11 @@ public class InstantReload extends Reload {
 		timer.addIntervalTaskPair(0, time -> {
 			super.startReloading(player);
 
-			// save the slot of the weapon
-			slot.set(inventory.getHeldItemSlot());
-
 			// remove the magazine the moment the reloading starts to prevent bugs
-			if (removeAmmunition)
+			if (removeAmmunition) {
 				// consume the item
 				inventory.removeItem(getAmmunition().buildItem(getWeapon().getReloadConsume()));
+			}
 		});
 
 		// the sound that plays at the middle
@@ -65,7 +65,13 @@ public class InstantReload extends Reload {
 			ItemBuilder heldWeapon = new ItemBuilder(getWeapon().buildItem());
 
 			getWeapon().updateWeaponData(heldWeapon);
-			getWeapon().updateWeapon(player, heldWeapon, slot.get());
+
+			int newSlot = findWeaponSlot(inventory);
+
+			// item is in inventory
+			if (newSlot > -1) {
+				getWeapon().updateWeapon(player, heldWeapon, newSlot);
+			}
 
 			// end reloading the gun
 			super.endReloading(player);

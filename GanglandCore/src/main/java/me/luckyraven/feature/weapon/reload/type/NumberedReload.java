@@ -4,12 +4,11 @@ import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.ammo.Ammunition;
 import me.luckyraven.feature.weapon.reload.Reload;
+import me.luckyraven.file.configuration.SoundConfiguration;
 import me.luckyraven.util.timer.SequenceTimer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class NumberedReload extends Reload {
 
@@ -32,27 +31,26 @@ public class NumberedReload extends Reload {
 	}
 
 	@Override
+	public String toString() {
+		return String.format("NumberedReload{isReloading=%s, amount=%d, timer=%s}", isReloading(), amount, timer);
+	}
+
+	@Override
 	protected void executeReload(JavaPlugin plugin, Player player, boolean removeAmmunition) {
 		PlayerInventory inventory = player.getInventory();
-		AtomicInteger   slot      = new AtomicInteger();
 
 		timer = new SequenceTimer(plugin);
 
 		// start reloading the gun
 		timer.addIntervalTaskPair(0, time -> {
 			super.startReloading(player);
-
-			// save the slot of the weapon
-			slot.set(inventory.getHeldItemSlot());
 		});
 
-		// calculate the number of inserts according to the time and restore value
-		double totalSeconds = Math.ceil((double) getWeapon().getMaxMagCapacity() / getWeapon().getReloadRestore() *
-										getWeapon().getReloadCooldown());
+		// calculate the number of inserts according to the mag capacity
+		int leftToInsert       = getWeapon().getMaxMagCapacity() - getWeapon().getCurrentMagCapacity();
+		int numberOfInsertions = leftToInsert / getWeapon().getReloadRestore();
 
-		int numberOfIntervals = (int) Math.ceil(totalSeconds / getWeapon().getReloadCooldown());
-
-		for (int i = 0; i < numberOfIntervals; ++i) {
+		for (int i = 0; i < numberOfInsertions; ++i) {
 			timer.addIntervalTaskPair(getWeapon().getReloadCooldown(), time -> {
 				// check if the user has the amount necessary to reload
 				if (!inventory.containsAtLeast(getAmmunition().buildItem(), amount)) {
@@ -61,10 +59,14 @@ public class NumberedReload extends Reload {
 					return;
 				}
 
+				// reload middle sound
+				SoundConfiguration.playSounds(player, getWeapon().getReloadCustomSoundMid(), null);
+
 				// take the item
-				if (removeAmmunition)
+				if (removeAmmunition) {
 					// consume the item
 					inventory.removeItem(getAmmunition().buildItem(amount));
+				}
 
 				// add to the weapon capacity
 				getWeapon().addAmmunition(getWeapon().getReloadRestore());
@@ -73,12 +75,15 @@ public class NumberedReload extends Reload {
 				ItemBuilder heldWeapon = new ItemBuilder(getWeapon().buildItem());
 
 				getWeapon().updateWeaponData(heldWeapon);
-				getWeapon().updateWeapon(player, heldWeapon, slot.get());
+
+				int newSlot = findWeaponSlot(inventory);
+
+				getWeapon().updateWeapon(player, heldWeapon, newSlot);
 			});
 		}
 
 		// end reloading the gun
-		timer.addIntervalTaskPair(0, time -> {
+		timer.addIntervalTaskPair(1, time -> {
 			super.endReloading(player);
 		});
 
