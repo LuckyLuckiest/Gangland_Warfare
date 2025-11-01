@@ -1,10 +1,6 @@
 package me.luckyraven.feature.weapon;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.feature.weapon.events.WeaponShootEvent;
-import me.luckyraven.feature.weapon.projectile.WeaponProjectile;
-import me.luckyraven.file.configuration.SoundConfiguration;
 import me.luckyraven.util.timer.Timer;
 import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
@@ -85,44 +81,9 @@ public class FullAutoTask extends Timer {
 		int shotsPerSecond = Math.max(1, Math.min(20, 20 / Math.max(1, weapon.getProjectileCooldown())));
 
 		if (AUTO[shotsPerSecond][tickIndex]) {
-			// Try to consume a bullet
-			boolean consumed = weapon.consumeShot();
+			WeaponAction weaponAction = new WeaponAction(gangland, weapon);
 
-			if (!consumed) {
-				SoundConfiguration.playSounds(player, weapon.getEmptyMagCustomSound(),
-											  weapon.getEmptyMagDefaultSound());
-				cancel();
-				return;
-			}
-
-			WeaponProjectile<?> weaponProjectile = weapon.getProjectileType().createInstance(gangland, player, weapon);
-			WeaponShootEvent    weaponShootEvent = new WeaponShootEvent(weapon, weaponProjectile);
-			gangland.getServer().getPluginManager().callEvent(weaponShootEvent);
-
-			// launch the projectile
-			if (!weaponShootEvent.isCancelled()) {
-				weaponProjectile.launchProjectile();
-
-				// update weapon data
-				WeaponManager weaponManager = gangland.getInitializer().getWeaponManager();
-				ItemBuilder   heldWeapon    = weaponManager.getHeldWeaponItem(player);
-
-				if (heldWeapon != null) {
-					weapon.updateWeaponData(heldWeapon);
-					weapon.updateWeapon(player, heldWeapon, player.getInventory().getHeldItemSlot());
-				}
-
-				// apply recoil
-				applyRecoil();
-
-				// apply push
-				applyPush();
-
-				// shooting sound
-				SoundConfiguration.playSounds(player, weapon.getShotCustomSound(), weapon.getShotDefaultSound());
-			} else {
-				weapon.addAmmunition(1);
-			}
+			weaponAction.weaponShoot(player);
 		}
 
 		// Advance tick

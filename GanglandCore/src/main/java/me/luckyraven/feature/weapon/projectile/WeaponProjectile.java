@@ -84,7 +84,7 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 		AtomicDouble              furthestDistance = new AtomicDouble(weapon.getProjectileDistance());
 		AtomicBoolean             falling          = new AtomicBoolean();
 
-		return new RepeatingTimer(plugin, 1, t -> {
+		return new RepeatingTimer(plugin, 1L, t -> {
 			if (projectile.isDead()) {
 				t.cancel();
 				return;

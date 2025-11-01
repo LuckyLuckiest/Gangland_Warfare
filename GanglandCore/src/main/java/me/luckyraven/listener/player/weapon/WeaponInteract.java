@@ -1,22 +1,13 @@
 package me.luckyraven.listener.player.weapon;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.feature.weapon.FullAutoTask;
-import me.luckyraven.feature.weapon.SelectiveFire;
-import me.luckyraven.feature.weapon.Weapon;
-import me.luckyraven.feature.weapon.WeaponManager;
-import me.luckyraven.feature.weapon.events.WeaponShootEvent;
-import me.luckyraven.feature.weapon.projectile.WeaponProjectile;
+import me.luckyraven.feature.weapon.*;
 import me.luckyraven.file.configuration.SoundConfiguration;
 import me.luckyraven.listener.ListenerHandler;
 import me.luckyraven.util.Pair;
 import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.timer.SequenceTimer;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -27,7 +18,6 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -96,53 +86,7 @@ public class WeaponInteract implements Listener {
 
 		// handle the AUTO mode with full auto task
 		if (selectiveFire == SelectiveFire.AUTO) {
-			if (!autoTasks.containsKey(weapon.getUuid())) {
-				FullAutoTask autoTask = new FullAutoTask(gangland, weapon, player, item, () -> {
-					autoTasks.remove(weapon.getUuid());
-					continuousFire.remove(weapon.getUuid());
-				});
-
-				autoTasks.put(weapon.getUuid(), autoTask);
-
-				Pair<Boolean, Boolean> continuityAndCooldown = getContinuityAndCooldownPair(selectiveFire);
-				AtomicReference<WeaponData> weaponDataAtomicReference = new AtomicReference<>(
-						new WeaponData(continuityAndCooldown.first(), continuityAndCooldown.second()));
-
-				continuousFire.put(weapon.getUuid(), weaponDataAtomicReference);
-
-				autoTask.start(false);
-
-				// watchdog timer for AUTO mode
-				new RepeatingTimer(gangland, 3L, time -> {
-					AtomicReference<WeaponData> stillShooting = continuousFire.get(weapon.getUuid());
-
-					if (stillShooting == null) {
-						time.stop();
-						return;
-					}
-
-					if (!stillShooting.get().shooting) {
-						FullAutoTask task = autoTasks.get(weapon.getUuid());
-
-						if (task != null) {
-							task.cancel();
-						}
-
-						time.stop();
-						continuousFire.remove(weapon.getUuid());
-						return;
-					}
-
-					stillShooting.get().shooting = false;
-				}).start(true);
-			} else {
-				AtomicReference<WeaponData> weaponData = continuousFire.get(weapon.getUuid());
-
-				if (weaponData != null) {
-					weaponData.get().shooting = true;
-				}
-			}
-
+			shootFullAuto(weapon, player, item, selectiveFire);
 			return;
 		}
 
@@ -230,6 +174,55 @@ public class WeaponInteract implements Listener {
 
 		if (autoTask != null) {
 			autoTask.stop();
+		}
+	}
+
+	private void shootFullAuto(Weapon weapon, Player player, ItemStack item, SelectiveFire selectiveFire) {
+		if (!autoTasks.containsKey(weapon.getUuid())) {
+			FullAutoTask autoTask = new FullAutoTask(gangland, weapon, player, item, () -> {
+				autoTasks.remove(weapon.getUuid());
+				continuousFire.remove(weapon.getUuid());
+			});
+
+			autoTasks.put(weapon.getUuid(), autoTask);
+
+			Pair<Boolean, Boolean> continuityAndCooldown = getContinuityAndCooldownPair(selectiveFire);
+			AtomicReference<WeaponData> weaponDataAtomicReference = new AtomicReference<>(
+					new WeaponData(continuityAndCooldown.first(), continuityAndCooldown.second()));
+
+			continuousFire.put(weapon.getUuid(), weaponDataAtomicReference);
+
+			autoTask.start(false);
+
+			// watchdog timer for AUTO mode
+			new RepeatingTimer(gangland, 3L, time -> {
+				AtomicReference<WeaponData> stillShooting = continuousFire.get(weapon.getUuid());
+
+				if (stillShooting == null) {
+					time.stop();
+					return;
+				}
+
+				if (!stillShooting.get().shooting) {
+					FullAutoTask task = autoTasks.get(weapon.getUuid());
+
+					if (task != null) {
+						task.cancel();
+					}
+
+					time.stop();
+					continuousFire.remove(weapon.getUuid());
+					return;
+				}
+
+				stillShooting.get().shooting = false;
+			}).start(true);
+		} else {
+			AtomicReference<WeaponData> weaponData = continuousFire.get(weapon.getUuid());
+
+			if (weaponData != null) {
+				weaponData.get().shooting = true;
+			}
 		}
 	}
 
@@ -332,45 +325,10 @@ public class WeaponInteract implements Listener {
 	}
 
 	private void shootInterval(Player player, Weapon weapon) {
-		// consume a bullet
-		boolean consumed = weapon.consumeShot();
+		WeaponAction weaponAction = new WeaponAction(gangland, weapon);
 
-		// no shot fired
-		if (!consumed) {
-			// empty magazine sound
-			SoundConfiguration.playSounds(player, weapon.getEmptyMagCustomSound(), weapon.getEmptyMagDefaultSound());
-			return;
-		}
-
-		WeaponProjectile<?> weaponProjectile = weapon.getProjectileType().createInstance(gangland, player, weapon);
-		WeaponShootEvent    weaponShootEvent = new WeaponShootEvent(weapon, weaponProjectile);
-		gangland.getServer().getPluginManager().callEvent(weaponShootEvent);
-
-		// launch the projectile
-		if (weaponShootEvent.isCancelled()) {
-			// substitute for the consumed shot
-			weapon.addAmmunition(1);
-			return;
-		}
-
-		weaponProjectile.launchProjectile();
-
-		// update data
-		ItemBuilder heldWeapon = weaponManager.getHeldWeaponItem(player);
-
-		if (heldWeapon != null) {
-			weapon.updateWeaponData(heldWeapon);
-			weapon.updateWeapon(player, heldWeapon, player.getInventory().getHeldItemSlot());
-		}
-
-		// apply recoil
-		applyRecoil(player, weapon);
-
-		// apply push
-		applyPush(player, weapon);
-
-		// shooting sound
-		SoundConfiguration.playSounds(player, weapon.getShotCustomSound(), weapon.getShotDefaultSound());
+		// shoot the weapon
+		weaponAction.weaponShoot(player);
 
 		// weapon consumption
 		if (weapon.getWeaponConsumedOnShot() > 0 &&
@@ -385,43 +343,6 @@ public class WeaponInteract implements Listener {
 																			  player.getInventory().getHeldItemSlot()));
 
 		timer.start(false);
-	}
-
-	private void applyPush(Player player, Weapon weapon) {
-		if (!player.isSneaking()) push(player, weapon.getPushPowerUp(), weapon.getPushVelocity());
-		else {
-			if (weapon.isScoped()) push(player, weapon.getPushPowerUp() / 2, weapon.getPushVelocity() / 2);
-			else push(player, 0, 0);
-		}
-	}
-
-	private void applyRecoil(Player player, Weapon weapon) {
-		float recoil = (float) weapon.getRecoilAmount();
-
-		if (!player.isSneaking()) recoil(player, recoil, recoil);
-		else {
-			float newValue = recoil / 2;
-
-			if (weapon.isScoped()) recoil(player, newValue, newValue);
-			else recoil(player, newValue / 2, newValue / 2);
-		}
-	}
-
-	private void recoil(Player player, float yaw, float pitch) {
-		gangland.getInitializer()
-				.getCompatibilityWorker()
-				.getRecoilCompatibility()
-				.modifyCameraRotation(player, yaw, pitch, true);
-	}
-
-	private void push(Player player, double powerUp, double push) {
-		if (push > 0) push *= -1;
-
-		Location location = player.getLocation();
-		Vector   vector   = new Vector(0, powerUp, 0);
-
-		if (location.getBlock().getRelative(BlockFace.DOWN).getType() != Material.AIR) player.setVelocity(
-				location.getDirection().multiply(push).add(vector));
 	}
 
 	private static class WeaponData {
