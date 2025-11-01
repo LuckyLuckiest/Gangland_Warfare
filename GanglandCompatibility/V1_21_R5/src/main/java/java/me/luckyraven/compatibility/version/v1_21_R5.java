@@ -1,0 +1,21 @@
+package java.me.luckyraven.compatibility.version;
+
+import me.luckyraven.compatibility.Compatibility;
+import me.luckyraven.feature.weapon.projectile.recoil.RecoilCompatibility;
+
+import java.me.luckyraven.compatibility.version.recoil.Recoil_1_21_R5;
+
+public class v1_21_R5 implements Compatibility {
+
+	private final RecoilCompatibility recoilCompatibility;
+
+	public v1_21_R5() {
+		this.recoilCompatibility = new Recoil_1_21_R5();
+	}
+
+	@Override
+	public RecoilCompatibility getRecoilCompatibility() {
+		return recoilCompatibility;
+	}
+
+}

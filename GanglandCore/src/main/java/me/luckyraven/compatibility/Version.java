@@ -9,7 +9,11 @@ public enum Version {
 
 	// support for 1.20.5+
 	v1_20_R4(new String[]{"v1_20_R5", "v1_20_R6"}),
-	v1_21_R1(new String[]{"v1_21", "v1_21_R1"});
+	v1_21_R1(new String[]{"v1_21", "v1_21_R1"}),
+	v1_21_R2(new String[]{"v1_21_R2", "v1_21_R3"}),
+	v1_21_R4(new String[]{"v1_21_R4"}),
+	v1_21_R5(new String[]{"v1_21_R5"}),
+	;
 
 	@Getter(value = AccessLevel.NONE)
 	private static final Version[] versions = Version.values();

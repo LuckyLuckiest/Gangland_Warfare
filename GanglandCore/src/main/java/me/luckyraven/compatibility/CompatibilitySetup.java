@@ -26,7 +26,11 @@ public final class CompatibilitySetup {
 
 			return interfaceClazz.cast(comp);
 		} catch (ClassNotFoundException | ClassCastException exception) {
-			Gangland.getLog4jLogger().warn("There was no {} found... Unsupported version?", version);
+			String bukkitVersion = this.gangland.getInitializer().getVersionSetup().getBukkitVersion();
+
+			Gangland.getLog4jLogger().warn("There was no {} found... Unsupported version?", bukkitVersion);
+		} catch (InternalError exception) {
+			Gangland.getLog4jLogger().error("Failed to load the compatible version.", exception);
 		}
 
 		return null;

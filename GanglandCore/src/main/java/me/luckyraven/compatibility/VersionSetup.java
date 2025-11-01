@@ -3,6 +3,7 @@ package me.luckyraven.compatibility;
 import lombok.Getter;
 import me.luckyraven.Gangland;
 import org.bukkit.Bukkit;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
@@ -39,6 +40,24 @@ public final class VersionSetup {
 		this.paper = isPaper;
 	}
 
+	public @NotNull String getBukkitVersion() {
+		String version;
+		// try to get the server version from bukkit
+		String bukkitVersion    = Bukkit.getVersion().split(" ")[0];
+		String processedVersion = bukkitVersion.split("-")[0];
+
+		// fix how the version would look, vX_XX_RX
+		StringBuilder builder    = new StringBuilder("v");
+		String[]      newVersion = processedVersion.split("\\.");
+
+		builder.append(newVersion[0]).append("_").append(newVersion[1]);
+
+		if (newVersion.length > 2) builder.append("_R").append(newVersion[2]);
+
+		version = builder.toString();
+		return version;
+	}
+
 	@Nullable
 	private String getVersion() {
 		try {
@@ -51,19 +70,7 @@ public final class VersionSetup {
 				Gangland.getLog4jLogger()
 						.warn("Unable to determine the server version... Trying to use bukkit version...");
 
-				// try to get the server version from bukkit
-				String bukkitVersion    = Bukkit.getVersion().split(" ")[0];
-				String processedVersion = bukkitVersion.split("-")[0];
-
-				// fix how the version would look, vX_XX_RX
-				StringBuilder builder    = new StringBuilder("v");
-				String[]      newVersion = processedVersion.split("\\.");
-
-				builder.append(newVersion[0]).append("_").append(newVersion[1]);
-
-				if (newVersion.length > 2) builder.append("_R").append(newVersion[2]);
-
-				version = builder.toString();
+				version = getBukkitVersion();
 
 				String value = Version.getDeterminedVersion(version);
 
