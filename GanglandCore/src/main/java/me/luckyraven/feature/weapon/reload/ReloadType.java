@@ -14,13 +14,14 @@ public enum ReloadType {
 	ONE,
 	NUM;
 
-	@Setter private int amount;
+	@Setter
+	private int amount;
 
 	public static ReloadType getType(String type) {
 		return switch (type.toLowerCase()) {
-			default -> INSTANT;
 			case "one" -> ONE;
 			case "num" -> NUM;
+			default -> INSTANT;
 		};
 	}
 
