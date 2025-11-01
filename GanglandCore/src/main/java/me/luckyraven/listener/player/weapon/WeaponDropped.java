@@ -49,9 +49,9 @@ public class WeaponDropped implements Listener {
 		if (!player.isSneaking()) return;
 
 		// check for full ammo
-		boolean fullAmmo = weapon.isMagazineFull();
+		boolean requiresReload = weapon.requiresReload(!player.getGameMode().equals(GameMode.CREATIVE));
 
-		if (fullAmmo) return;
+		if (requiresReload) return;
 
 		// check if the item is available or it was creative
 		boolean haveItem = weaponManager.hasAmmunition(player, weapon);

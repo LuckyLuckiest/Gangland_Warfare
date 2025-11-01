@@ -297,6 +297,15 @@ public class Weapon implements Cloneable {
 		return itemBuilder.hasNBTTag(getTagProperName(tag));
 	}
 
+	public boolean requiresReload(boolean normalCheck) {
+		boolean magazineFull = isMagazineFull();
+
+		if (!normalCheck) return magazineFull;
+
+		boolean canNotAddMore = maxMagCapacity - currentMagCapacity < reloadRestore;
+		return magazineFull || canNotAddMore;
+	}
+
 	public boolean isMagazineFull() {
 		return currentMagCapacity >= maxMagCapacity;
 	}
