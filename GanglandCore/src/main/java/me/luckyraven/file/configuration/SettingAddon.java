@@ -9,6 +9,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,6 +84,18 @@ public class SettingAddon {
 
 	public static String formatDouble(double value) {
 		return format(value).replaceAll("\\.?0*$", "");
+	}
+
+	public static Method getSetting(String methodName) {
+		Method[] methods = SettingAddon.class.getDeclaredMethods();
+
+		for (Method method : methods) {
+			if (!method.getName().endsWith(methodName)) continue;
+
+			return method;
+		}
+
+		return null;
 	}
 
 	private static String format(double value) {
