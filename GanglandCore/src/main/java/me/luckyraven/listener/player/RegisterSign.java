@@ -3,6 +3,7 @@ package me.luckyraven.listener.player;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.sign.Sign;
 import me.luckyraven.bukkit.sign.SignManager;
+import me.luckyraven.listener.ListenerHandler;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -10,6 +11,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.SignChangeEvent;
 
+@ListenerHandler
 public class RegisterSign implements Listener {
 
 	private final Gangland gangland;

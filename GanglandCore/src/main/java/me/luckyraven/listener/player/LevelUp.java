@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.user.User;
 import me.luckyraven.feature.level.LevelUpEvent;
+import me.luckyraven.listener.ListenerHandler;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -11,6 +12,7 @@ import org.bukkit.event.Listener;
 
 import java.util.List;
 
+@ListenerHandler
 public class LevelUp implements Listener {
 
 	private final Gangland gangland;
@@ -36,9 +38,7 @@ public class LevelUp implements Listener {
 
 		if (gang != null) {
 			List<Player> onlinePlayers = gang.getOnlineMembers(gangland.getInitializer().getUserManager())
-											 .stream()
-											 .map(User::getUser)
-											 .toList();
+					.stream().map(User::getUser).toList();
 
 			for (Player player : onlinePlayers)
 				player.sendMessage(ChatUtil.prefixMessage(

@@ -1,6 +1,7 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.listener.ListenerHandler;
 import me.luckyraven.util.ChatUtil;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -10,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 
+@ListenerHandler
 public class LoadResourcePack implements Listener {
 
 	@EventHandler

@@ -5,6 +5,7 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -12,6 +13,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
+@ListenerHandler(condition = "isGangEnabled")
 public class GangMembersDamage implements Listener {
 
 	private final UserManager<Player> userManager;
@@ -43,8 +45,7 @@ public class GangMembersDamage implements Listener {
 		Gang gang1 = gangManager.getGang(userDamager.getGangId());
 		Gang gang2 = gangManager.getGang(userDamaged.getGangId());
 
-		if (gang1.isAlly(gang2) || userDamager.getGangId() == userDamaged.getGangId()) event.setCancelled(
-				true);
+		if (gang1.isAlly(gang2) || userDamager.getGangId() == userDamaged.getGangId()) event.setCancelled(true);
 
 	}
 

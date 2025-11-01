@@ -53,13 +53,6 @@ import me.luckyraven.file.configuration.weapon.AmmunitionAddon;
 import me.luckyraven.file.configuration.weapon.WeaponAddon;
 import me.luckyraven.file.configuration.weapon.WeaponLoader;
 import me.luckyraven.listener.ListenerManager;
-import me.luckyraven.listener.gang.GangMembersDamage;
-import me.luckyraven.listener.inventory.InventoryOpenByCommand;
-import me.luckyraven.listener.player.*;
-import me.luckyraven.listener.player.weapon.ProjectileDamage;
-import me.luckyraven.listener.player.weapon.WeaponDropped;
-import me.luckyraven.listener.player.weapon.WeaponInteract;
-import me.luckyraven.listener.player.weapon.WeaponSelectiveFireChange;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
@@ -145,10 +138,10 @@ public final class Initializer {
 		// add all registered plugin permissions
 		permissionManager.addAllPermissions(Bukkit.getPluginManager()
 												  .getPermissions()
-												  .stream()
-												  .map(Permission::getName)
-												  .filter(permission -> permission.startsWith("gangland"))
-												  .collect(Collectors.toSet()));
+													.stream()
+													.map(Permission::getName)
+													.filter(permission -> permission.startsWith("gangland"))
+													.collect(Collectors.toSet()));
 
 		// User manager
 		userManager        = new UserManager<>(gangland);
@@ -299,10 +292,10 @@ public final class Initializer {
 
 	public <E> E getInstanceFromTables(Class<E> clazz, List<Table<?>> tables) {
 		return tables.stream()
-					 .filter(clazz::isInstance)
-					 .map(clazz::cast)
-					 .findFirst()
-					 .orElseThrow(() -> new RuntimeException("There was a problem finding class, " + clazz.getName()));
+				.filter(clazz::isInstance)
+				.map(clazz::cast)
+				.findFirst()
+				.orElseThrow(() -> new RuntimeException("There was a problem finding class, " + clazz.getName()));
 	}
 
 	private void databases() {
@@ -318,35 +311,12 @@ public final class Initializer {
 	}
 
 	private void events() {
-		// player events
-		listenerManager.addEvent(new CreateAccount(gangland));
-		listenerManager.addEvent(new RemoveAccount(gangland));
-		listenerManager.addEvent(new EntityDamage(gangland));
-		listenerManager.addEvent(new BountyIncrease(gangland));
-		listenerManager.addEvent(new PlayerDeath(gangland));
-		listenerManager.addEvent(new LevelUp(gangland));
-		listenerManager.addEvent(new LoadResourcePack());
+		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
+
+		// waypoint
 		listenerManager.addEvent(new WaypointTeleport(new Waypoint("dummy")));
-		listenerManager.addEvent(new RegisterSign(gangland));
-
-		// weapon events
-		listenerManager.addEvent(new WeaponInteract(gangland));
-		listenerManager.addEvent(new WeaponDropped(gangland));
-		listenerManager.addEvent(new WeaponSelectiveFireChange(gangland));
-		listenerManager.addEvent(new ProjectileDamage(gangland));
-
-		// switch events
-		if (SettingAddon.isPhoneEnabled()) listenerManager.addEvent(new PhoneItem(gangland));
-		if (SettingAddon.isScoreboardEnabled()) listenerManager.addEvent(new PlayerScoreboard(gangland));
-
-		// gang events
-		if (SettingAddon.isGangEnabled()) {
-			listenerManager.addEvent(new GangMembersDamage(gangland));
-		}
-
-		// inventory events
+		// inventory
 		listenerManager.addEvent(new InventoryHandler(gangland, "dummy", 9, "dummy_inventory", false));
-		listenerManager.addEvent(new InventoryOpenByCommand(gangland));
 	}
 
 	private void commands(Gangland gangland) {

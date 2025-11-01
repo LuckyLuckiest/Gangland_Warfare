@@ -4,7 +4,9 @@ import me.luckyraven.Gangland;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.WeaponManager;
 import me.luckyraven.feature.weapon.events.WeaponProjectileLaunchEvent;
+import me.luckyraven.listener.ListenerHandler;
 import me.luckyraven.util.timer.CountdownTimer;
+import org.bukkit.Location;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,6 +17,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
+@ListenerHandler
 public class ProjectileDamage implements Listener {
 
 	private final static Map<Integer, Weapon> weaponInstance = new ConcurrentHashMap<>();
@@ -64,9 +67,6 @@ public class ProjectileDamage implements Listener {
 		// set the fire damage
 		entity.setFireTicks(weapon.getProjectileFireTicks());
 
-		// set the explosive damage
-		// TODO
-
 		weaponInstance.remove(projectileId);
 	}
 
@@ -83,6 +83,31 @@ public class ProjectileDamage implements Listener {
 		projectile.remove();
 
 		timer.start(false);
+
+		// set the explosive damage
+		explosiveProjectile(event);
+	}
+
+	private void explosiveProjectile(ProjectileHitEvent event) {
+		if (!(event.getEntity() instanceof Fireball fireball)) return;
+		if (!(fireball.getShooter() instanceof LivingEntity)) return;
+
+		Location hitEntity = event.getHitEntity() != null ? event.getHitEntity().getLocation() : fireball.getLocation();
+		Location hitLoc    = event.getHitBlock() != null ? event.getHitBlock().getLocation() : hitEntity;
+
+		// damage nearby entities
+		int    entityId        = event.getEntity().getEntityId();
+		Weapon weapon          = weaponInstance.get(entityId);
+		double explosionRadius = weapon.getProjectileExplosionDamage();
+
+		for (Entity entity : fireball.getNearbyEntities(explosionRadius, explosionRadius, explosionRadius)) {
+			if (!(entity instanceof LivingEntity target && entity != fireball.getShooter())) continue;
+
+			double distance = target.getLocation().distance(hitLoc);
+			double damage   = 20 * (1 - (distance / explosionRadius));
+
+			target.damage(Math.max(damage, 0D), fireball);
+		}
 	}
 
 }

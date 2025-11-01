@@ -11,6 +11,7 @@ import me.luckyraven.database.tables.BankTable;
 import me.luckyraven.database.tables.UserTable;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.WeaponManager;
+import me.luckyraven.listener.ListenerHandler;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -21,6 +22,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
+@ListenerHandler
 public final class RemoveAccount implements Listener {
 
 	private final Gangland            gangland;

@@ -6,6 +6,7 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.listener.ListenerHandler;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.entity.LivingEntity;
@@ -15,6 +16,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
+@ListenerHandler
 public class EntityDamage implements Listener {
 
 	private final UserManager<Player> userManager;

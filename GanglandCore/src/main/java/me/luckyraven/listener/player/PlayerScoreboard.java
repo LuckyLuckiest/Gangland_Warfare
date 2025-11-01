@@ -4,10 +4,12 @@ import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.scoreboard.Scoreboard;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserDataInitEvent;
+import me.luckyraven.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
+@ListenerHandler(condition = "isScoreboardEnabled")
 public class PlayerScoreboard implements Listener {
 
 	private final Gangland gangland;

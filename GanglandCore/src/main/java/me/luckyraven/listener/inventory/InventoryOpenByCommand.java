@@ -8,6 +8,7 @@ import me.luckyraven.data.inventory.State;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
+import me.luckyraven.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,6 +17,7 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import java.util.Set;
 import java.util.stream.IntStream;
 
+@ListenerHandler
 public class InventoryOpenByCommand implements Listener {
 
 	private final Gangland            gangland;

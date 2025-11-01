@@ -12,6 +12,7 @@ import me.luckyraven.database.tables.BankTable;
 import me.luckyraven.database.tables.MemberTable;
 import me.luckyraven.database.tables.UserTable;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.listener.ListenerHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -21,6 +22,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.util.List;
 
+@ListenerHandler
 public final class CreateAccount implements Listener {
 
 	private final Gangland            gangland;

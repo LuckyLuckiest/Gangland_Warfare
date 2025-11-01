@@ -6,6 +6,7 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.ScientificCalculator;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.listener.ListenerHandler;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -17,6 +18,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import java.util.HashMap;
 import java.util.Map;
 
+@ListenerHandler
 public class PlayerDeath implements Listener {
 
 	private final Gangland            gangland;

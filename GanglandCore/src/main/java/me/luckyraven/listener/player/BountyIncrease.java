@@ -6,6 +6,7 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.listener.ListenerHandler;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,6 +14,7 @@ import org.bukkit.event.Listener;
 
 import java.util.Objects;
 
+@ListenerHandler
 public class BountyIncrease implements Listener {
 
 	private final Gangland gangland;

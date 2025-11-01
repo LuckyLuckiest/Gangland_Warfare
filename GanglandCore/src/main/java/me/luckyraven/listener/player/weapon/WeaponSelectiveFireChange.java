@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.WeaponManager;
+import me.luckyraven.listener.ListenerHandler;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -11,13 +12,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
 
+@ListenerHandler
 public class WeaponSelectiveFireChange implements Listener {
 
-	private final Gangland      gangland;
 	private final WeaponManager weaponManager;
 
 	public WeaponSelectiveFireChange(Gangland gangland) {
-		this.gangland      = gangland;
 		this.weaponManager = gangland.getInitializer().getWeaponManager();
 	}
 
