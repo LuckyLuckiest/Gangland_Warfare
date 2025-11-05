@@ -27,12 +27,19 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>exception-handler</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- XSeries -->
         <dependency>
             <groupId>com.github.cryptomorin</groupId>
             <artifactId>XSeries</artifactId>
             <version>13.5.1</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
 
         <!-- exp4j -->
@@ -52,11 +59,12 @@
             <version>2.15.3</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>com.viaversion</groupId>
             <artifactId>viaversion-api</artifactId>
             <version>5.5.1</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Required plugins dependencies (end) -->
