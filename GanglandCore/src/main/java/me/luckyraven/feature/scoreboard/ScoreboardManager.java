@@ -1,4 +1,4 @@
-package me.luckyraven.bukkit.scoreboard;
+package me.luckyraven.feature.scoreboard;
 
 import com.viaversion.viaversion.api.ViaAPI;
 import me.luckyraven.Gangland;
