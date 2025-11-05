@@ -1,10 +1,10 @@
 package me.luckyraven.command.sub.debug;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.datastructure.JsonFormatter;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

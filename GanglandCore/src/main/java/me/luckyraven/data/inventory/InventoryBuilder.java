@@ -2,11 +2,11 @@ package me.luckyraven.data.inventory;
 
 import com.cryptomorin.xseries.XEnchantment;
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.data.inventory.part.Slot;
 import me.luckyraven.data.user.User;
 import me.luckyraven.util.InventoryUtil;
+import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
 import org.bukkit.Material;

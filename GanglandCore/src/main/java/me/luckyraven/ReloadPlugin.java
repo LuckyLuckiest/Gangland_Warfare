@@ -1,7 +1,6 @@
 package me.luckyraven;
 
 import me.luckyraven.bukkit.inventory.InventoryHandler;
-import me.luckyraven.bukkit.scoreboard.ScoreboardManager;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
@@ -14,6 +13,7 @@ import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.*;
 import me.luckyraven.feature.phone.Phone;
+import me.luckyraven.feature.scoreboard.ScoreboardManager;
 import me.luckyraven.feature.weapon.WeaponManager;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;

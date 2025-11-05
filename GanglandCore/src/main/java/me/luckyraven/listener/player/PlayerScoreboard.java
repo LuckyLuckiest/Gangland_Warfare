@@ -1,9 +1,9 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.scoreboard.ScoreboardManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserDataInitEvent;
+import me.luckyraven.feature.scoreboard.ScoreboardManager;
 import me.luckyraven.listener.ListenerHandler;
 import me.luckyraven.scoreboard.Scoreboard;
 import me.luckyraven.scoreboard.driver.DriverHandler;

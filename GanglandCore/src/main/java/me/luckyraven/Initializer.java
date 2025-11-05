@@ -2,7 +2,6 @@ package me.luckyraven;
 
 import lombok.Getter;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
-import me.luckyraven.bukkit.scoreboard.ScoreboardManager;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.CommandTabCompleter;
 import me.luckyraven.command.data.InformationManager;
@@ -41,6 +40,7 @@ import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.*;
 import me.luckyraven.exception.PluginException;
+import me.luckyraven.feature.scoreboard.ScoreboardManager;
 import me.luckyraven.feature.weapon.WeaponManager;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;

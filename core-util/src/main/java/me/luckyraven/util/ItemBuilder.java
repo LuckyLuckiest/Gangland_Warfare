@@ -1,4 +1,4 @@
-package me.luckyraven.bukkit;
+package me.luckyraven.util;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.viaversion.viaversion.api.Via;
@@ -8,7 +8,7 @@ import de.tr7zw.nbtapi.iface.ReadWriteItemNBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
 import de.tr7zw.nbtapi.iface.ReadableItemNBT;
 import lombok.Getter;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;

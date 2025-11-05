@@ -1,9 +1,9 @@
 package me.luckyraven.feature.weapon;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.WeaponTable;
+import me.luckyraven.util.ItemBuilder;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;

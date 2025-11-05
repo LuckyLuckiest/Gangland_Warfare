@@ -1,11 +1,11 @@
 package me.luckyraven.feature.weapon;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.feature.weapon.events.WeaponShootEvent;
 import me.luckyraven.feature.weapon.projectile.WeaponProjectile;
 import me.luckyraven.feature.weapon.projectile.recoil.RecoilCompatibility;
 import me.luckyraven.file.configuration.SoundConfiguration;
+import me.luckyraven.util.ItemBuilder;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;

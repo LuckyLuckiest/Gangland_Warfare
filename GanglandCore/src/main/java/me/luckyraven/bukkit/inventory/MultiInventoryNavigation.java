@@ -2,8 +2,8 @@ package me.luckyraven.bukkit.inventory;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
-import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.ItemBuilder;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;

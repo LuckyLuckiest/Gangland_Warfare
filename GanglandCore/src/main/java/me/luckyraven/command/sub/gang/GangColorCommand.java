@@ -2,7 +2,6 @@ package me.luckyraven.command.sub.gang;
 
 import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
@@ -13,6 +12,7 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.InventoryUtil;
+import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.color.Color;
 import me.luckyraven.util.color.ColorUtil;
