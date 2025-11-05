@@ -4,7 +4,6 @@ import com.cryptomorin.xseries.particles.XParticle;
 import com.google.common.util.concurrent.AtomicDouble;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.events.WeaponProjectileLaunchEvent;
-import me.luckyraven.ray.RayTrace;
 import me.luckyraven.util.ParticleUtil;
 import me.luckyraven.util.color.Color;
 import me.luckyraven.util.timer.RepeatingTimer;
@@ -43,29 +42,45 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 		// Get the eye location
 		Location eyeLocation = getShooter().getEyeLocation();
 		Vector   velocity    = getVelocity();
-		// calculate the spawn location based on the view direction
-		Location   spawnLocation = eyeLocation.clone().add(eyeLocation.getDirection());
-		Projectile projectile    = getShooter().getWorld().spawn(spawnLocation, bulletType);
+
+		// Calculate the weapon position offset (right side of the player)
+		Vector rightVector = eyeLocation.getDirection()
+										.getCrossProduct(new Vector(0, 1, 0))
+										.normalize()
+										.multiply(0.3); // Distance from center (adjust as needed)
+
+		// Offset slightly downward to represent hand/weapon position
+		Vector downVector = new Vector(0, -0.2, 0);
+
+		// Calculate weapon position (side of player) - this is where projectile spawns
+		Location weaponPosition = eyeLocation.clone().add(rightVector).add(downVector);
+
+		// Spawn projectile at weapon position, not at center
+		Projectile projectile = getShooter().getWorld().spawn(weaponPosition, bulletType);
 
 		projectile.setSilent(true);
 		projectile.setGravity(false);
 		projectile.setShooter(getShooter());
 
 		// apply spread
-		Vector spread = applySpread(velocity, weapon.getSpreadStart());
+		Vector spread = weapon.getSpread().applySpread(velocity);
 
 		// set the velocity according to the modified values
 		setVelocity(spread.multiply(getSpeed()));
 		projectile.setVelocity(getVelocity());
 
-		if (weapon.isParticle()) if (getShooter() instanceof Player player) {
-			double x = 0.15, y = 0.15, z = 0.15;
+		if (weapon.isParticle()) {
+			if (getShooter() instanceof Player) {
+				// Calculate end location using the actual projectile velocity (with spread applied)
+				Location endLocation = weaponPosition.clone()
+													 .add(getVelocity().normalize()
+																	   .multiply(weapon.getProjectileDistance()));
 
-			Location location = RayTrace.cast(player, x, y, z);
-
-			// max distance is 100
-			ParticleUtil.spawnLine(spawnLocation, location, XParticle.DUST.get(), 100,
-								   new Particle.DustOptions(Color.GRAY.getBukkitColor(), 0.5F));
+				// Spawn particle line from weapon position following the projectile trajectory
+				ParticleUtil.spawnLine(weaponPosition, endLocation, XParticle.DUST.get(),
+									   weapon.getProjectileDistance(),
+									   new Particle.DustOptions(Color.GRAY.getBukkitColor(), 0.5F));
+			}
 		}
 
 		// call the projectile launch event
@@ -105,14 +120,5 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 			projectile.remove();
 			t.cancel();
 		});
-	}
-
-	// TODO work on the spread changing factor over time
-	private Vector applySpread(Vector originalVector, double spreadFactor) {
-		double offsetX = (random.nextDouble() - 0.5) * spreadFactor;
-		double offsetY = (random.nextDouble() - 0.5) * spreadFactor;
-		double offsetZ = (random.nextDouble() - 0.5) * spreadFactor;
-
-		return originalVector.add(new Vector(offsetX, offsetY, offsetZ)).normalize();
 	}
 }
