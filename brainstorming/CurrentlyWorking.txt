@@ -56,7 +56,7 @@
     - Make inventories work with a multi-inventory system.
     - Make custom inventories YAML file configuration flexible. (NOT DONE)
     - Experiment with guns.
-0.0.65-DEV: (partially DONE)
+0.0.65-DEV: (DONE)
     - Work more on guns.
         - Saving the guns in a database (partially).
         - Loading the guns fully using a database and default data from the weapon itself.
