@@ -24,7 +24,35 @@
         <module>scoreboard-api</module>
         <module>plugin-file</module>
         <module>plugin-exception</module>
+
+        <!-- -->
         <module>gangland-compatibility</module>
+        <module>gangland-compatibility/version-1_10_R1</module>
+        <module>gangland-compatibility/version-1_11_R1</module>
+        <module>gangland-compatibility/version-1_12_R1</module>
+        <module>gangland-compatibility/version-1_13_R1</module>
+        <module>gangland-compatibility/version-1_13_R2</module>
+        <module>gangland-compatibility/version-1_14_R1</module>
+        <module>gangland-compatibility/version-1_15_R1</module>
+        <module>gangland-compatibility/version-1_16_R1</module>
+        <module>gangland-compatibility/version-1_16_R2</module>
+        <module>gangland-compatibility/version-1_16_R3</module>
+        <module>gangland-compatibility/version-1_17_R1</module>
+        <module>gangland-compatibility/version-1_18_R1</module>
+        <module>gangland-compatibility/version-1_18_R2</module>
+        <module>gangland-compatibility/version-1_19_R1</module>
+        <module>gangland-compatibility/version-1_19_R2</module>
+        <module>gangland-compatibility/version-1_19_R3</module>
+        <module>gangland-compatibility/version-1_20_R1</module>
+        <module>gangland-compatibility/version-1_20_R2</module>
+        <module>gangland-compatibility/version-1_20_R3</module>
+        <module>gangland-compatibility/version-1_20_R4</module>
+        <module>gangland-compatibility/version-1_21_R1</module>
+        <module>gangland-compatibility/version-1_21_R2</module>
+        <module>gangland-compatibility/version-1_21_R3</module>
+        <module>gangland-compatibility/version-1_21_R4</module>
+        <module>gangland-compatibility/version-1_21_R5</module>
+        <module>gangland-compatibility/version-1_21_R6</module>
     </modules>
 
     <properties>
