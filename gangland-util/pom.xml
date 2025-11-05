@@ -10,7 +10,7 @@
         <version>0.0.6-DEV</version>
     </parent>
 
-    <artifactId>core-util</artifactId>
+    <artifactId>gangland-util</artifactId>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -29,7 +29,7 @@
 
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>exception-handler</artifactId>
+            <artifactId>plugin-exception</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
