@@ -6,9 +6,8 @@
 
     <parent>
         <groupId>me.luckyraven</groupId>
-        <artifactId>gangland_warfare</artifactId>
+        <artifactId>gangland-compatibility</artifactId>
         <version>0.0.6-DEV</version>
-        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>version-1_18_R1</artifactId>
