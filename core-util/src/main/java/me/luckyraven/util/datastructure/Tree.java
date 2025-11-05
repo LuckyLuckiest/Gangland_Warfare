@@ -2,6 +2,7 @@ package me.luckyraven.util.datastructure;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.exception.PluginException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -222,7 +223,7 @@ public class Tree<E> implements Iterable<E>, Cloneable {
 
 				return clonedNode;
 			} catch (CloneNotSupportedException exception) {
-				throw new RuntimeException(exception);
+				throw new PluginException(exception);
 			}
 
 //			Map<Node<T>, Node<T>> clonedNodes = new HashMap<>();
@@ -250,7 +251,7 @@ public class Tree<E> implements Iterable<E>, Cloneable {
 
 				return clonedNode;
 			} catch (CloneNotSupportedException exception) {
-				throw new RuntimeException(exception);
+				throw new PluginException(exception);
 			}
 		}
 
