@@ -58,11 +58,11 @@ public class WeaponAddon {
 				informationSection.getConfigurationSection("Durability"));
 		short                durability              = (short) durabilitySection.getInt("Base");
 		ConfigurationSection durabilityChangeSection = durabilitySection.getConfigurationSection("Change");
-		int                  onShotDurability        = 0;
-		int                  onRepairDurability      = 0;
+		short                onShotDurability        = 0;
+		short                onRepairDurability      = 0;
 		if (durabilityChangeSection != null) {
-			onShotDurability   = durabilityChangeSection.getInt("On_Shot");
-			onRepairDurability = durabilityChangeSection.getInt("On_Repair");
+			onShotDurability   = (short) durabilityChangeSection.getInt("On_Shot");
+			onRepairDurability = (short) durabilityChangeSection.getInt("On_Repair");
 		}
 
 		// lore
@@ -95,7 +95,6 @@ public class WeaponAddon {
 		int                  projectileExplosionDamage   = damageSection.getInt("Explosion_Damage");
 		int                  projectileFireTicks         = damageSection.getInt("Fire_Ticks");
 		int                  projectileHeadDamage        = damageSection.getInt("Head");
-		int                  projectileBodyDamage        = damageSection.getInt("Body");
 		ConfigurationSection criticalHitSection          = damageSection.getConfigurationSection("Critical_Hit");
 		int                  projectileCriticalHitChance = 0;
 		int                  projectileCriticalHitDamage = 0;
@@ -163,9 +162,10 @@ public class WeaponAddon {
 			recoilAmount  = recoilSection.getDouble("Amount");
 			pushVelocity  = recoilSection.getDouble("Push");
 			pushPowerUp   = recoilSection.getDouble("Power_Up");
-			recoilPattern = recoilSection.getStringList("Pattern").stream() // stream
-										 .map(string -> string.split(";")) // convert to array
-										 .toList(); // back to the list
+			recoilPattern = recoilSection.getStringList("Pattern")
+					.stream() // stream
+							  .map(string -> string.split(";")) // convert to array
+							  .toList(); // back to the list
 		}
 
 		// sound
@@ -371,7 +371,6 @@ public class WeaponAddon {
 		weapon.setProjectileExplosionDamage(projectileExplosionDamage);
 		weapon.setProjectileFireTicks(projectileFireTicks);
 		weapon.setProjectileHeadDamage(projectileHeadDamage);
-		weapon.setProjectileBodyDamage(projectileBodyDamage);
 		weapon.setProjectileCriticalHitChance(projectileCriticalHitChance);
 		weapon.setProjectileCriticalHitDamage(projectileCriticalHitDamage);
 
