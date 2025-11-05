@@ -1,18 +1,19 @@
-package me.luckyraven.bukkit.scoreboard;
+package me.luckyraven.scoreboard;
 
-import me.luckyraven.bukkit.scoreboard.driver.DriverHandler;
-import me.luckyraven.timer.RepeatingTimer;
+import me.luckyraven.scoreboard.driver.DriverHandler;
+import me.luckyraven.util.timer.RepeatingTimer;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public class Scoreboard {
 
 	private final DriverHandler  driver;
 	private final RepeatingTimer timer;
 
-	public Scoreboard(DriverHandler driver) {
+	public Scoreboard(JavaPlugin plugin, DriverHandler driver) {
 		this.driver = driver;
 
 		// repeating the task each tick
-		this.timer = new RepeatingTimer(driver.getGangland(), 0L, 1L, time -> this.driver.update());
+		this.timer = new RepeatingTimer(plugin, 0L, 1L, time -> this.driver.update());
 	}
 
 	public void start() {

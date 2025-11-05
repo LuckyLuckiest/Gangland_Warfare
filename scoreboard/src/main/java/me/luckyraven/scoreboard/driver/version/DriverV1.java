@@ -1,8 +1,9 @@
-package me.luckyraven.bukkit.scoreboard.driver.sub;
+package me.luckyraven.scoreboard.driver.version;
 
-import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.scoreboard.driver.DriverHandler;
-import me.luckyraven.bukkit.scoreboard.part.Line;
+import com.viaversion.viaversion.api.ViaAPI;
+import me.luckyraven.scoreboard.driver.DriverHandler;
+import me.luckyraven.scoreboard.part.Line;
+import me.luckyraven.util.Placeholder;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -12,8 +13,8 @@ public class DriverV1 extends DriverHandler {
 	private final Map<Long, List<Line>> clusters;
 	private final Map<Long, Integer>    clustersInterval;
 
-	public DriverV1(Gangland gangland, Player player) {
-		super(gangland, player);
+	public DriverV1(Placeholder placeholder, ViaAPI<?> viaAPI, Player player, Line title, List<Line> lines) {
+		super(placeholder, viaAPI, player, title, lines);
 
 		this.clusters         = createClusters(getLines());
 		this.clustersInterval = new HashMap<>();
@@ -36,8 +37,8 @@ public class DriverV1 extends DriverHandler {
 				// update the lines in fastboard
 				if (lines.contains(getTitle())) getFastBoard().updateTitle(updateLine(getTitle()));
 				else lines.stream()
-						  .filter(line -> line != getTitle())
-						  .forEach(line -> getFastBoard().updateLine(line.getUsedIndex(), updateLine(line)));
+						.filter(line -> line != getTitle())
+						.forEach(line -> getFastBoard().updateLine(line.getUsedIndex(), updateLine(line)));
 			}
 
 			// increment the current interval value

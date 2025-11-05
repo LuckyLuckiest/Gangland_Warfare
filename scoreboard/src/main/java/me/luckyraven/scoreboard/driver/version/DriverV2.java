@@ -1,8 +1,9 @@
-package me.luckyraven.bukkit.scoreboard.driver.sub;
+package me.luckyraven.scoreboard.driver.version;
 
-import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.scoreboard.driver.DriverHandler;
-import me.luckyraven.bukkit.scoreboard.part.Line;
+import com.viaversion.viaversion.api.ViaAPI;
+import me.luckyraven.scoreboard.driver.DriverHandler;
+import me.luckyraven.scoreboard.part.Line;
+import me.luckyraven.util.Placeholder;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -15,8 +16,8 @@ public class DriverV2 extends DriverHandler {
 	private final Map<Long, List<Line>> clusters;
 	private final Map<Long, Integer>    clustersInterval;
 
-	public DriverV2(Gangland gangland, Player player) {
-		super(gangland, player);
+	public DriverV2(Placeholder placeholder, ViaAPI<?> viaAPI, Player player, Line title, List<Line> lines) {
+		super(placeholder, viaAPI, player, title, lines);
 
 		this.clusters         = getLines().stream().collect(Collectors.groupingBy(Line::getInterval));
 		this.clustersInterval = new HashMap<>();
@@ -40,12 +41,10 @@ public class DriverV2 extends DriverHandler {
 					String newTitle = updateLine(getTitle());
 					getFastBoard().updateTitle(newTitle);
 				} else {
-					lines.stream()
-							.filter(line -> line != getTitle())
-							.forEach(line -> {
-								String updatedLine = updateLine(line);
-								getFastBoard().updateLine(line.getUsedIndex(), updatedLine);
-							});
+					lines.stream().filter(line -> line != getTitle()).forEach(line -> {
+						String updatedLine = updateLine(line);
+						getFastBoard().updateLine(line.getUsedIndex(), updatedLine);
+					});
 				}
 			}
 

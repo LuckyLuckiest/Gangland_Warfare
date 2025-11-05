@@ -1,12 +1,15 @@
 package me.luckyraven.bukkit.scoreboard;
 
+import com.viaversion.viaversion.api.ViaAPI;
 import me.luckyraven.Gangland;
-import me.luckyraven.ReflectionUtil;
-import me.luckyraven.bukkit.scoreboard.driver.DriverHandler;
-import me.luckyraven.bukkit.scoreboard.driver.sub.DriverV1;
-import me.luckyraven.bukkit.scoreboard.driver.sub.DriverV2;
-import me.luckyraven.bukkit.scoreboard.driver.sub.DriverV3;
+import me.luckyraven.file.configuration.ScoreboardAddon;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.scoreboard.driver.DriverHandler;
+import me.luckyraven.scoreboard.driver.version.DriverV1;
+import me.luckyraven.scoreboard.driver.version.DriverV2;
+import me.luckyraven.scoreboard.driver.version.DriverV3;
+import me.luckyraven.scoreboard.part.Line;
+import me.luckyraven.util.utilities.ReflectionUtil;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Modifier;
@@ -20,7 +23,7 @@ public class ScoreboardManager {
 	private static final List<String> DRIVERS = new ArrayList<>();
 
 	static {
-		String        packageName = "me.luckyraven.bukkit.scoreboard.driver.sub";
+		String        packageName = "me.luckyraven.scoreboard.driver.version";
 		Set<Class<?>> classes     = ReflectionUtil.findClasses(packageName, Gangland.class.getClassLoader());
 
 		for (Class<?> clazz : classes) {
@@ -44,10 +47,15 @@ public class ScoreboardManager {
 	}
 
 	public DriverHandler getDriverHandler(Player player) {
+		final ViaAPI<?> viaAPI          = gangland.getViaAPI();
+		ScoreboardAddon scoreboardAddon = gangland.getInitializer().getScoreboardAddon();
+
+		List<Line> lines = scoreboardAddon.getLines();
+		Line       title = scoreboardAddon.getTitle();
 		return switch (SettingAddon.getScoreboardDriver().toLowerCase()) {
-			case "driver_v3" -> new DriverV3(gangland, player);
-			case "driver_v2" -> new DriverV2(gangland, player);
-			default -> new DriverV1(gangland, player);
+			case "driver_v3" -> new DriverV3(gangland, viaAPI, player, title, lines);
+			case "driver_v2" -> new DriverV2(gangland, viaAPI, player, title, lines);
+			default -> new DriverV1(gangland, viaAPI, player, title, lines);
 		};
 	}
 

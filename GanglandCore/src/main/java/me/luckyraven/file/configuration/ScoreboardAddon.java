@@ -1,10 +1,10 @@
 package me.luckyraven.file.configuration;
 
 import lombok.Getter;
-import me.luckyraven.bukkit.scoreboard.part.Line;
-import me.luckyraven.bukkit.scoreboard.part.StaticLine;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.FileManager;
+import me.luckyraven.scoreboard.part.Line;
+import me.luckyraven.scoreboard.part.StaticLine;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 

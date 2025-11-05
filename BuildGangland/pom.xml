@@ -125,6 +125,12 @@
             <version>${project.parent.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>scoreboard</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
         <!-- Include Core Utilities -->
         <dependency>
             <groupId>me.luckyraven</groupId>

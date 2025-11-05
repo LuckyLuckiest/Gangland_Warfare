@@ -1,7 +1,7 @@
 package me.luckyraven;
 
 import me.luckyraven.bukkit.inventory.InventoryHandler;
-import me.luckyraven.bukkit.scoreboard.Scoreboard;
+import me.luckyraven.bukkit.scoreboard.ScoreboardManager;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
@@ -20,6 +20,8 @@ import me.luckyraven.file.FileManager;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
+import me.luckyraven.scoreboard.Scoreboard;
+import me.luckyraven.scoreboard.driver.DriverHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -267,7 +269,11 @@ public final class ReloadPlugin {
 		for (User<Player> user : initializer.getUserManager().getUsers().values()) {
 			killScoreboard(user);
 
-			user.setScoreboard(new Scoreboard(initializer.getScoreboardManager().getDriverHandler(user.getUser())));
+			ScoreboardManager scoreboardManager = initializer.getScoreboardManager();
+			DriverHandler     driverHandler     = scoreboardManager.getDriverHandler(user.getUser());
+			Scoreboard        scoreboard        = new Scoreboard(gangland, driverHandler);
+
+			user.setScoreboard(scoreboard);
 			user.getScoreboard().start();
 		}
 	}

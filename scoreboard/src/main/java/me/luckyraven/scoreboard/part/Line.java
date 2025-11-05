@@ -1,8 +1,8 @@
-package me.luckyraven.bukkit.scoreboard.part;
+package me.luckyraven.scoreboard.part;
 
 import lombok.Getter;
-import me.luckyraven.Gangland;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.Placeholder;
+import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -39,9 +39,9 @@ public class Line {
 		return contents.get(index);
 	}
 
-	public String update(Gangland gangland, Player player) {
+	public String update(Placeholder placeholder, Player player) {
 		String data       = getCurrentContent();
-		String newContent = gangland.usePlaceholder(player, data);
+		String newContent = placeholder.convert(player, data);
 
 		if (newContent.isEmpty()) newContent = data;
 

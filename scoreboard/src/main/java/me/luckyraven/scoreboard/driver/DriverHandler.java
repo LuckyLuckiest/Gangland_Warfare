@@ -1,11 +1,11 @@
-package me.luckyraven.bukkit.scoreboard.driver;
+package me.luckyraven.scoreboard.driver;
 
+import com.viaversion.viaversion.api.ViaAPI;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import fr.mrmicky.fastboard.FastBoard;
 import lombok.Getter;
-import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.scoreboard.part.Line;
-import me.luckyraven.file.configuration.ScoreboardAddon;
+import me.luckyraven.scoreboard.part.Line;
+import me.luckyraven.util.Placeholder;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -13,31 +13,28 @@ import java.util.List;
 @Getter
 public abstract class DriverHandler {
 
-	private final Gangland   gangland;
-	private final FastBoard  fastBoard;
-	private final List<Line> lines;
-	private final Line       title;
+	private final Placeholder placeholder;
+	private final FastBoard   fastBoard;
+	private final List<Line>  lines;
+	private final Line        title;
 
-	public DriverHandler(Gangland gangland, Player player) {
-		this.gangland  = gangland;
-		this.fastBoard = new FastBoard(player) {
+	public DriverHandler(Placeholder placeholder, ViaAPI<?> viaAPI, Player player, Line title, List<Line> lines) {
+		this.placeholder = placeholder;
+		this.fastBoard   = new FastBoard(player) {
 
 			@Override
 			protected boolean hasLinesMaxLength() {
 				// change the max line length according to the player version using ViaVersion
-				if (gangland.getViaAPI() != null)
-					return gangland.getViaAPI().getPlayerVersion(getPlayer().getUniqueId()) <
-						   ProtocolVersion.v1_13.getVersion();
+				if (viaAPI != null)
+					return viaAPI.getPlayerVersion(getPlayer().getUniqueId()) < ProtocolVersion.v1_13.getVersion();
 
 				// assuming the players are all >1.13
 				return false;
 			}
 		};
 
-		ScoreboardAddon addon = gangland.getInitializer().getScoreboardAddon();
-
-		this.lines = addon.getLines();
-		this.title = addon.getTitle();
+		this.title = title;
+		this.lines = lines;
 
 		this.lines.add(title);
 
@@ -53,7 +50,7 @@ public abstract class DriverHandler {
 	}
 
 	protected String updateLine(Line line) {
-		return line.update(gangland, fastBoard.getPlayer());
+		return line.update(placeholder, fastBoard.getPlayer());
 	}
 
 	private void updateBoard() {

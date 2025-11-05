@@ -1,10 +1,12 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.scoreboard.Scoreboard;
+import me.luckyraven.bukkit.scoreboard.ScoreboardManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserDataInitEvent;
 import me.luckyraven.listener.ListenerHandler;
+import me.luckyraven.scoreboard.Scoreboard;
+import me.luckyraven.scoreboard.driver.DriverHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -25,8 +27,11 @@ public class PlayerScoreboard implements Listener {
 		if (user.getScoreboard() != null) return;
 
 		// create a scoreboard when the player joins
-		user.setScoreboard(
-				new Scoreboard(gangland.getInitializer().getScoreboardManager().getDriverHandler(event.getPlayer())));
+		ScoreboardManager scoreboardManager = gangland.getInitializer().getScoreboardManager();
+		DriverHandler     driverHandler     = scoreboardManager.getDriverHandler(event.getPlayer());
+		Scoreboard        scoreboard        = new Scoreboard(gangland, driverHandler);
+
+		user.setScoreboard(scoreboard);
 		user.getScoreboard().start();
 	}
 

@@ -1,4 +1,4 @@
-package me.luckyraven.bukkit.scoreboard.part;
+package me.luckyraven.scoreboard.part;
 
 public class StaticLine extends Line {
 
