@@ -51,7 +51,7 @@ public class FullAutoTask extends Timer {
 	private       int       tickIndex;
 
 	public FullAutoTask(Gangland gangland, Weapon weapon, Player player, ItemStack weaponItem, Runnable onCancel) {
-		super(gangland, 0L, 1L);
+		super(gangland, weapon.getProjectileCooldown(), 1L);
 
 		this.gangland  = gangland;
 		this.weapon    = weapon;
@@ -97,6 +97,11 @@ public class FullAutoTask extends Timer {
 	public void stop() {
 		onCancel.run();
 		super.stop();
+	}
+
+	@Override
+	protected void onStop() {
+		cancel();
 	}
 
 }

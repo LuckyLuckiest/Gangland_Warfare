@@ -27,6 +27,8 @@ public abstract class Timer extends BukkitRunnable {
 		this.stopped = new AtomicBoolean(true);
 	}
 
+	protected abstract void onStop();
+
 	public boolean isRunning() {
 		return !stopped.get();
 	}
@@ -46,6 +48,8 @@ public abstract class Timer extends BukkitRunnable {
 
 		this.bukkitTask.cancel();
 		this.stopped.set(true);
+
+		onStop();
 
 		this.bukkitTask = null;
 	}

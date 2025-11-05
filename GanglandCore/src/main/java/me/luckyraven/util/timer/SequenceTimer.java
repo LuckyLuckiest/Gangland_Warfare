@@ -131,6 +131,11 @@ public class SequenceTimer extends Timer {
 		return newTimer;
 	}
 
+	@Override
+	protected void onStop() {
+		this.reset();
+	}
+
 	public enum Mode {
 		NORMAL,
 		CIRCULAR
