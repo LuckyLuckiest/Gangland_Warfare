@@ -2,11 +2,11 @@ package me.luckyraven.feature.weapon.projectile;
 
 import com.cryptomorin.xseries.particles.XParticle;
 import com.google.common.util.concurrent.AtomicDouble;
+import me.luckyraven.ParticleUtil;
+import me.luckyraven.color.Color;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.events.WeaponProjectileLaunchEvent;
-import me.luckyraven.util.ParticleUtil;
-import me.luckyraven.util.color.Color;
-import me.luckyraven.util.timer.RepeatingTimer;
+import me.luckyraven.timer.RepeatingTimer;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;
@@ -16,7 +16,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -25,7 +24,6 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 	private final JavaPlugin plugin;
 	private final Weapon     weapon;
 	private final Class<T>   bulletType;
-	private final Random     random;
 
 	public WeaponProjectile(JavaPlugin plugin, LivingEntity shooter, Weapon weapon, Location location, Vector velocity,
 							Class<T> bulletType) {
@@ -34,7 +32,6 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 		this.plugin     = plugin;
 		this.weapon     = weapon;
 		this.bulletType = bulletType;
-		this.random     = new Random();
 	}
 
 	@Override

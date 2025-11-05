@@ -1,7 +1,7 @@
 package me.luckyraven.bukkit.sign.sub;
 
+import me.luckyraven.NumberUtil;
 import me.luckyraven.bukkit.sign.Sign;
-import me.luckyraven.util.NumberUtil;
 import org.bukkit.Location;
 
 public class WantedSign extends Sign {

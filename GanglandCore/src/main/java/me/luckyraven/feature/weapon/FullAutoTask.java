@@ -1,7 +1,7 @@
 package me.luckyraven.feature.weapon;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.util.timer.Timer;
+import me.luckyraven.timer.Timer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 

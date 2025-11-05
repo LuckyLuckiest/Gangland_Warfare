@@ -3,7 +3,7 @@ package me.luckyraven.database.component;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.util.DatabaseUtil;
+import me.luckyraven.DatabaseUtil;
 
 import java.util.UUID;
 
@@ -11,7 +11,8 @@ import java.util.UUID;
 @Setter
 public class Attribute<T> {
 
-	@Getter(AccessLevel.NONE) private final Class<T> classType;
+	@Getter(AccessLevel.NONE)
+	private final Class<T> classType;
 
 	private final String   name;
 	private final int      type;
@@ -21,7 +22,8 @@ public class Attribute<T> {
 	private       T        defaultValue;
 	private       boolean  unique, canBeNull;
 
-	@Setter(AccessLevel.NONE) private Attribute<?> foreignKey;
+	@Setter(AccessLevel.NONE)
+	private Attribute<?> foreignKey;
 
 	public Attribute(String name, boolean primaryKey, Class<T> classType) {
 		this(name, primaryKey, getLocalSize(classType), classType);

@@ -4,12 +4,12 @@ import com.cryptomorin.xseries.XEnchantment;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
 import me.luckyraven.Gangland;
+import me.luckyraven.TriConsumer;
 import me.luckyraven.bukkit.ItemBuilder;
+import me.luckyraven.color.ColorUtil;
+import me.luckyraven.color.MaterialType;
 import me.luckyraven.data.user.User;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.TriConsumer;
-import me.luckyraven.util.color.ColorUtil;
-import me.luckyraven.util.color.MaterialType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -215,10 +215,10 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 		Player       player = (Player) event.getWhoClicked();
 		User<Player> user   = gangland.getInitializer().getUserManager().getUser(player);
 		InventoryHandler inv = user.getInventories()
-								   .stream()
-								   .filter(inventory -> clickedInventory.equals(inventory.getInventory()))
-								   .findFirst()
-								   .orElse(null);
+				.stream()
+				.filter(inventory -> clickedInventory.equals(inventory.getInventory()))
+				.findFirst()
+				.orElse(null);
 
 		if (inv == null) return;
 

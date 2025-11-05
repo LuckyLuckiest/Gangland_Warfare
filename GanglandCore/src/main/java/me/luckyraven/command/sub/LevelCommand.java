@@ -24,11 +24,11 @@ public final class LevelCommand extends CommandHandler {
 		super(gangland, "level", true);
 
 		List<CommandInformation> list = getCommands().entrySet()
-													 .stream()
-													 .filter(entry -> entry.getKey().startsWith("level"))
-													 .sorted(Map.Entry.comparingByKey())
-													 .map(Map.Entry::getValue)
-													 .toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("level"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 
 		getHelpInfo().addAll(list);
 	}

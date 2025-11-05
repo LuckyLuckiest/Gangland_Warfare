@@ -1,6 +1,6 @@
 package me.luckyraven.database;
 
-import me.luckyraven.util.DatabaseUtil;
+import me.luckyraven.DatabaseUtil;
 
 import java.io.IOException;
 import java.sql.*;

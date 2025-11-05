@@ -2,9 +2,9 @@ package me.luckyraven.data.inventory.part;
 
 import com.google.common.base.Preconditions;
 import lombok.Getter;
+import me.luckyraven.TriConsumer;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
-import me.luckyraven.util.TriConsumer;
 import org.bukkit.entity.Player;
 
 @Getter

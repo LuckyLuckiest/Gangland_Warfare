@@ -21,11 +21,11 @@ public final class DownloadPluginCommand extends CommandHandler {
 
 		this.containsUpdate = new HashMap<>();
 		List<CommandInformation> list = getCommands().entrySet()
-													 .stream()
-													 .filter(entry -> entry.getKey().startsWith("update"))
-													 .sorted(Map.Entry.comparingByKey())
-													 .map(Map.Entry::getValue)
-													 .toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("update"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 
 		getHelpInfo().addAll(list);
 	}

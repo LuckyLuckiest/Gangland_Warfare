@@ -2,7 +2,7 @@ package me.luckyraven.feature.bounty;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.util.timer.RepeatingTimer;
+import me.luckyraven.timer.RepeatingTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -14,8 +14,9 @@ public class Bounty {
 
 	private final Map<CommandSender, Double> userSetBounty;
 
-	private @Getter @Setter double         amount;
-	private @Getter         RepeatingTimer repeatingTimer;
+	private @Getter
+	@Setter         double         amount;
+	private @Getter RepeatingTimer repeatingTimer;
 
 	public Bounty() {
 		this.amount        = 0D;
@@ -46,8 +47,9 @@ public class Bounty {
 
 	public void addBounty(CommandSender sender, double amount) {
 		if (userSetBounty.containsKey(sender)) {
-			double value = userSetBounty.get(sender);
-			userSetBounty.put(sender, value + amount);
+			Double value          = userSetBounty.get(sender);
+			double primitiveValue = value == null ? 0D : value;
+			userSetBounty.put(sender, primitiveValue + amount);
 		} else userSetBounty.put(sender, amount);
 		this.amount += amount;
 	}

@@ -1,6 +1,7 @@
-package me.luckyraven.util;
+package me.luckyraven;
 
-import me.luckyraven.Gangland;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
@@ -19,6 +20,8 @@ import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 public final class ReflectionUtil {
+
+	private static Logger logger = LogManager.getLogger(ReflectionUtil.class);
 
 	private ReflectionUtil() { }
 
@@ -88,7 +91,7 @@ public final class ReflectionUtil {
 
 			return classes;
 		} catch (IOException exception) {
-			Gangland.getLog4jLogger().error(exception);
+			logger.error(exception);
 		}
 		return Collections.emptySet();
 	}
@@ -124,7 +127,7 @@ public final class ReflectionUtil {
 					} catch (ClassNotFoundException | NoClassDefFoundError ignored) { }
 				}
 			} catch (IOException exception) {
-				Gangland.getLog4jLogger().error(exception);
+				logger.error(exception);
 			}
 		} else {
 			// running from ide/file system
@@ -164,7 +167,7 @@ public final class ReflectionUtil {
 						 .map(line -> getClass(line, packageName))
 						 .collect(Collectors.toSet());
 		} catch (IOException exception) {
-			Gangland.getLog4jLogger().error(exception);
+			logger.error(exception);
 			return Collections.emptySet();
 		}
 	}
@@ -184,7 +187,7 @@ public final class ReflectionUtil {
 				classes.add(Class.forName(className));
 			}
 		} catch (Exception exception) {
-			Gangland.getLog4jLogger().error(exception);
+			logger.error(exception);
 		}
 		return classes;
 	}
@@ -208,7 +211,7 @@ public final class ReflectionUtil {
 				classes.add(Class.forName(className));
 			}
 		} catch (Exception exception) {
-			Gangland.getLog4jLogger().error(exception);
+			logger.error(exception);
 		}
 		return classes;
 	}

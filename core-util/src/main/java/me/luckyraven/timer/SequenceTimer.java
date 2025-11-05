@@ -1,4 +1,4 @@
-package me.luckyraven.util.timer;
+package me.luckyraven.timer;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,7 +1,7 @@
 package me.luckyraven.file;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.util.UnhandledError;
+import me.luckyraven.UnhandledError;
 
 import java.io.File;
 import java.io.IOException;

@@ -18,11 +18,11 @@ public final class ReloadCommand extends CommandHandler {
 		super(gangland, "reload", false, "rl");
 
 		List<CommandInformation> list = getCommands().entrySet()
-													 .stream()
-													 .filter(entry -> entry.getKey().startsWith("reload"))
-													 .sorted(Map.Entry.comparingByKey())
-													 .map(Map.Entry::getValue)
-													 .toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("reload"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 		getHelpInfo().addAll(list);
 	}
 

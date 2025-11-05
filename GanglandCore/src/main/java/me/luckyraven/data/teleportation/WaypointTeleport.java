@@ -2,7 +2,7 @@ package me.luckyraven.data.teleportation;
 
 import me.luckyraven.data.user.User;
 import me.luckyraven.file.configuration.MessageAddon;
-import me.luckyraven.util.timer.CountdownTimer;
+import me.luckyraven.timer.CountdownTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;

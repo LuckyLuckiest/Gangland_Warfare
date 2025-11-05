@@ -17,11 +17,11 @@ public final class DownloadResourceCommand extends CommandHandler {
 		super(gangland, "resource", true, "download");
 
 		List<CommandInformation> list = getCommands().entrySet()
-													 .stream()
-													 .filter(entry -> entry.getKey().startsWith("resource"))
-													 .sorted(Map.Entry.comparingByKey())
-													 .map(Map.Entry::getValue)
-													 .toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("resource"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 
 		getHelpInfo().addAll(list);
 	}

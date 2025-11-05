@@ -28,11 +28,11 @@ public final class EconomyCommand extends CommandHandler {
 		super(gangland, "economy", false, "eco");
 
 		List<CommandInformation> list = getCommands().entrySet()
-													 .stream()
-													 .filter(entry -> entry.getKey().startsWith("economy"))
-													 .sorted(Map.Entry.comparingByKey())
-													 .map(Map.Entry::getValue)
-													 .toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("economy"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 
 		getHelpInfo().addAll(list);
 	}
@@ -218,7 +218,8 @@ public final class EconomyCommand extends CommandHandler {
 	}
 
 	private void allPlayers(HashMap<String, Supplier<List<Player>>> specifiers) {
-		List<Player> players = Bukkit.getOnlinePlayers().stream().map(player -> (Player) player).toList();
+		List<Player> players = Bukkit.getOnlinePlayers()
+				.stream().map(player -> (Player) player).toList();
 
 		specifiers.put("*", () -> new ArrayList<>(players));
 	}
@@ -231,12 +232,12 @@ public final class EconomyCommand extends CommandHandler {
 
 	private void targetSpecifier(HashMap<String, Supplier<List<Player>>> specifiers, String target) {
 		List<Player> players = Bukkit.getOnlinePlayers()
-									 .stream()
-									 .filter(player -> player.getName().equalsIgnoreCase(target.substring(1)))
-									 .map(player -> (Player) player)
-									 .findFirst()
-									 .stream()
-									 .toList();
+				.stream()
+				.filter(player -> player.getName().equalsIgnoreCase(target.substring(1)))
+				.map(player -> (Player) player)
+				.findFirst()
+				.stream()
+				.toList();
 
 		specifiers.put(target, () -> new ArrayList<>(players));
 	}

@@ -4,11 +4,11 @@ import com.cryptomorin.xseries.XEnchantment;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
+import me.luckyraven.color.ColorUtil;
+import me.luckyraven.color.MaterialType;
 import me.luckyraven.data.inventory.part.Slot;
 import me.luckyraven.data.user.User;
 import me.luckyraven.util.InventoryUtil;
-import me.luckyraven.util.color.ColorUtil;
-import me.luckyraven.util.color.MaterialType;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -66,7 +66,8 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 				String itemDisplayName = gangland.usePlaceholder(player, item.getDisplayName());
 				newItem.setDisplayName(itemDisplayName);
 
-				List<String> lore = item.getLore().stream().map(s -> gangland.usePlaceholder(player, s)).toList();
+				List<String> lore = item.getLore()
+						.stream().map(s -> gangland.usePlaceholder(player, s)).toList();
 				newItem.setLore(lore);
 
 				if (!item.getEnchantments().isEmpty()) newItem.addEnchantment(XEnchantment.UNBREAKING.getEnchant(), 1)

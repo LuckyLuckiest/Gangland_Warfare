@@ -16,11 +16,11 @@ public final class AmmunitionCommand extends CommandHandler {
 		super(gangland, "ammo", true, "ammunition");
 
 		List<CommandInformation> list = getCommands().entrySet()
-													 .stream()
-													 .filter(entry -> entry.getKey().startsWith("ammunition"))
-													 .sorted(Map.Entry.comparingByKey())
-													 .map(Map.Entry::getValue)
-													 .toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("ammunition"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 
 		getHelpInfo().addAll(list);
 	}

@@ -12,7 +12,7 @@ import me.luckyraven.database.tables.UserTable;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.WeaponManager;
 import me.luckyraven.listener.ListenerHandler;
-import me.luckyraven.util.timer.RepeatingTimer;
+import me.luckyraven.timer.RepeatingTimer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

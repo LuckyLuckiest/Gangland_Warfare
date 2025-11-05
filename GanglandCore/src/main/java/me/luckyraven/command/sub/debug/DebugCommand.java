@@ -6,6 +6,9 @@ import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.inventory.MultiInventory;
+import me.luckyraven.color.Color;
+import me.luckyraven.color.ColorUtil;
+import me.luckyraven.color.MaterialType;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
@@ -22,10 +25,7 @@ import me.luckyraven.datastructure.JsonFormatter;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.ray.RayTrace;
-import me.luckyraven.util.color.Color;
-import me.luckyraven.util.color.ColorUtil;
-import me.luckyraven.util.color.MaterialType;
-import me.luckyraven.util.timer.CountdownTimer;
+import me.luckyraven.timer.CountdownTimer;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -139,10 +139,10 @@ public final class DebugCommand extends CommandHandler {
 				}
 
 				List<Material> swords = Arrays.stream(XMaterial.values())
-											  .map(XMaterial::get)
-											  .filter(Objects::nonNull)
-											  .filter(material -> material.name().contains("SWORD"))
-											  .toList();
+						.map(XMaterial::get)
+						.filter(Objects::nonNull)
+						.filter(material -> material.name().contains("SWORD"))
+						.toList();
 
 				items.addAll(swords.stream().map(ItemStack::new).toList());
 
@@ -188,11 +188,11 @@ public final class DebugCommand extends CommandHandler {
 		Argument permOptional = new Argument(getGangland(), "bukkit", getArgumentTree(), (argument, sender, args) -> {
 			String[] permissions = Bukkit.getPluginManager()
 										 .getPermissions()
-										 .stream()
-										 .map(Permission::getName)
-										 .filter(name -> name.startsWith("gangland"))
-										 .sorted(String::compareTo)
-										 .toArray(String[]::new);
+					.stream()
+					.map(Permission::getName)
+					.filter(name -> name.startsWith("gangland"))
+					.sorted(String::compareTo)
+					.toArray(String[]::new);
 			sender.sendMessage(permissions);
 		});
 
@@ -225,9 +225,10 @@ public final class DebugCommand extends CommandHandler {
 													String[] placeholders = {"%player%", "%info%", "%user_gang-id%"};
 
 													Arrays.stream(placeholders)
-														  .forEach(string -> sender.sendMessage(
-																  string + " -> " +
-																  handler.replacePlaceholder(player, string)));
+															.forEach(string -> sender.sendMessage(string + " -> " +
+																								  handler.replacePlaceholder(
+																										  player,
+																										  string)));
 												} else {
 													sender.sendMessage("Can't process non-player data.");
 												}
@@ -249,17 +250,17 @@ public final class DebugCommand extends CommandHandler {
 
 														sender.sendMessage("Normal inventories: ");
 														sender.sendMessage(user.getInventories()
-																			   .stream()
-																			   .map(InventoryHandler::getTitle)
-																			   .map(NamespacedKey::getKey)
-																			   .toArray(String[]::new));
+																				   .stream()
+																				   .map(InventoryHandler::getTitle)
+																				   .map(NamespacedKey::getKey)
+																				   .toArray(String[]::new));
 
 														sender.sendMessage("Special inventories: ");
 														sender.sendMessage(user.getSpecialInventories()
-																			   .stream()
-																			   .map(InventoryHandler::getTitle)
-																			   .map(NamespacedKey::getKey)
-																			   .toArray(String[]::new));
+																				   .stream()
+																				   .map(InventoryHandler::getTitle)
+																				   .map(NamespacedKey::getKey)
+																				   .toArray(String[]::new));
 													} else {
 														for (User<Player> user : getGangland().getInitializer()
 																							  .getUserManager()
@@ -268,15 +269,15 @@ public final class DebugCommand extends CommandHandler {
 															List<String> values = new ArrayList<>();
 
 															values.addAll(user.getInventories()
-																			  .stream()
-																			  .map(InventoryHandler::getTitle)
-																			  .map(NamespacedKey::getKey)
-																			  .toList());
+																				  .stream()
+																				  .map(InventoryHandler::getTitle)
+																				  .map(NamespacedKey::getKey)
+																				  .toList());
 															values.addAll(user.getSpecialInventories()
-																			  .stream()
-																			  .map(InventoryHandler::getTitle)
-																			  .map(NamespacedKey::getKey)
-																			  .toList());
+																				  .stream()
+																				  .map(InventoryHandler::getTitle)
+																				  .map(NamespacedKey::getKey)
+																				  .toList());
 
 															sender.sendMessage(user.getUser().getName() + ":");
 															sender.sendMessage(String.valueOf(values));
@@ -286,11 +287,12 @@ public final class DebugCommand extends CommandHandler {
 
 		Argument specialInventories = new Argument(getGangland(), "special", getArgumentTree(),
 												   (argument, sender, args) -> {
-													   sender.sendMessage(InventoryHandler.getSpecialInventories()
-																						  .keySet()
-																						  .stream()
-																						  .map(NamespacedKey::getKey)
-																						  .toArray(String[]::new));
+													   sender.sendMessage(
+															   InventoryHandler.getSpecialInventories()
+																			   .keySet()
+																	   .stream()
+																	   .map(NamespacedKey::getKey)
+																	   .toArray(String[]::new));
 												   });
 
 		inventoriesData.addSubArgument(specialInventories);

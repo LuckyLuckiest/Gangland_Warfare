@@ -2,6 +2,7 @@ package me.luckyraven.command;
 
 import lombok.Getter;
 import me.luckyraven.Gangland;
+import me.luckyraven.UnhandledError;
 import me.luckyraven.command.sub.DownloadPluginCommand;
 import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.OptionCommand;
@@ -9,7 +10,6 @@ import me.luckyraven.command.sub.debug.ReadNBTCommand;
 import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.UnhandledError;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -26,11 +26,12 @@ import static me.luckyraven.util.ChatUtil.color;
 public final class CommandManager implements CommandExecutor {
 
 	// classes that shouldn't be displayed in tab completion
-	@Getter private static final List<Class<? extends CommandHandler>> filters = Arrays.asList(DebugCommand.class,
-																							   OptionCommand.class,
-																							   ReadNBTCommand.class,
-																							   TimerCommand.class,
-																							   DownloadPluginCommand.class);
+	@Getter
+	private static final List<Class<? extends CommandHandler>> filters = Arrays.asList(DebugCommand.class,
+																					   OptionCommand.class,
+																					   ReadNBTCommand.class,
+																					   TimerCommand.class,
+																					   DownloadPluginCommand.class);
 
 	private static final Map<String, CommandHandler> commands = new HashMap<>();
 
@@ -105,14 +106,14 @@ public final class CommandManager implements CommandExecutor {
 				List<CommandHandler> commandHandlers = getPermissibleCommands(sender);
 
 				Set<String> dictionary = commandHandlers.stream()
-														.map(CommandHandler::getAlias)
-														.flatMap(Collection::stream)
-														.filter(s -> !s.equals("?"))
-														.collect(Collectors.toSet());
+						.map(CommandHandler::getAlias)
+						.flatMap(Collection::stream)
+						.filter(s -> !s.equals("?"))
+						.collect(Collectors.toSet());
 
 				dictionary.addAll(commandHandlers.stream()
-												 .map(handler -> handler.getArgument().getArguments()[0])
-												 .collect(Collectors.toSet()));
+										  .map(handler -> handler.getArgument().getArguments()[0])
+										  .collect(Collectors.toSet()));
 
 				sender.sendMessage(
 						ChatUtil.color(ChatUtil.generateCommandSuggestion(args[0], dictionary, label, null)));

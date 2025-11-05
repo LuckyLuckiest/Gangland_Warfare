@@ -1,6 +1,7 @@
 package me.luckyraven.command.sub.rank;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.TriConsumer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
@@ -9,7 +10,6 @@ import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
 
 class RankParentCommand extends SubArgument {

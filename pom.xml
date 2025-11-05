@@ -47,6 +47,7 @@
         <module>GanglandCompatibility/V1_12_R1</module>
         <module>GanglandCompatibility/V1_11_R1</module>
         <module>GanglandCompatibility/V1_10_R1</module>
+        <module>core-util</module>
     </modules>
 
     <properties>
@@ -82,7 +83,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.36</version>
+            <version>1.18.42</version>
             <scope>provided</scope>
         </dependency>
 
@@ -90,7 +91,7 @@
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
-            <version>26.0.1</version>
+            <version>26.0.2-1</version>
             <scope>provided</scope>
         </dependency>
 
@@ -106,19 +107,19 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
-            <version>4.2.2.Final</version>
+            <version>4.2.7.Final</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec</artifactId>
-            <version>4.2.2.Final</version>
+            <version>4.2.7.Final</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-handler</artifactId>
-            <version>4.2.2.Final</version>
+            <version>4.2.7.Final</version>
             <scope>provided</scope>
         </dependency>
 

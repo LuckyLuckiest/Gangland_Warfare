@@ -1,12 +1,12 @@
 package me.luckyraven.bukkit.scoreboard;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.ReflectionUtil;
 import me.luckyraven.bukkit.scoreboard.driver.DriverHandler;
 import me.luckyraven.bukkit.scoreboard.driver.sub.DriverV1;
 import me.luckyraven.bukkit.scoreboard.driver.sub.DriverV2;
 import me.luckyraven.bukkit.scoreboard.driver.sub.DriverV3;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.util.ReflectionUtil;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Modifier;

@@ -3,7 +3,7 @@ package me.luckyraven.feature.weapon.projectile.type;
 import com.cryptomorin.xseries.particles.XParticle;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.projectile.WeaponProjectile;
-import me.luckyraven.util.timer.RepeatingTimer;
+import me.luckyraven.timer.RepeatingTimer;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;

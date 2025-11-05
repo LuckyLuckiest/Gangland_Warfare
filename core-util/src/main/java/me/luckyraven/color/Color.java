@@ -1,4 +1,4 @@
-package me.luckyraven.util.color;
+package me.luckyraven.color;
 
 import lombok.Getter;
 

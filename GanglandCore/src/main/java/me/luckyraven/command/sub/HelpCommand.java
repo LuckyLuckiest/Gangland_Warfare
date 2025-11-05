@@ -22,7 +22,8 @@ public final class HelpCommand extends CommandHandler {
 		list.addAll(CommandManager.getCommands()
 								  .values()
 								  .parallelStream()
-								  .flatMap(entry -> entry.getHelpInfo().getList().stream())
+								  .flatMap(entry -> entry.getHelpInfo().getList()
+										  .stream())
 								  .toList());
 
 		getHelpInfo().addAll(list);

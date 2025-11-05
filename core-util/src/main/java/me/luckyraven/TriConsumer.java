@@ -1,4 +1,4 @@
-package me.luckyraven.util;
+package me.luckyraven;
 
 import java.util.Objects;
 

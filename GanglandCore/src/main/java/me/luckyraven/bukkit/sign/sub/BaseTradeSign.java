@@ -2,9 +2,9 @@ package me.luckyraven.bukkit.sign.sub;
 
 import lombok.Getter;
 import me.luckyraven.Gangland;
+import me.luckyraven.NumberUtil;
 import me.luckyraven.bukkit.sign.Sign;
 import me.luckyraven.feature.weapon.Weapon;
-import me.luckyraven.util.NumberUtil;
 import org.bukkit.Location;
 
 import java.util.Map;

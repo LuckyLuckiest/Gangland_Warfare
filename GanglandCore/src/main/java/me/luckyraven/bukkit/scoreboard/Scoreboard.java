@@ -1,7 +1,7 @@
 package me.luckyraven.bukkit.scoreboard;
 
 import me.luckyraven.bukkit.scoreboard.driver.DriverHandler;
-import me.luckyraven.util.timer.RepeatingTimer;
+import me.luckyraven.timer.RepeatingTimer;
 
 public class Scoreboard {
 

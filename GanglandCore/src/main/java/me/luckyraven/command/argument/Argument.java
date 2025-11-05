@@ -5,13 +5,13 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.Gangland;
+import me.luckyraven.TriConsumer;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.TriConsumer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.permissions.Permission;
@@ -109,7 +109,8 @@ public class Argument implements Cloneable {
 
 			PluginManager pluginManager = Bukkit.getPluginManager();
 			Permission    perm          = new Permission(permission);
-			List<String>  permissions   = pluginManager.getPermissions().stream().map(Permission::getName).toList();
+			List<String> permissions = pluginManager.getPermissions()
+					.stream().map(Permission::getName).toList();
 
 			// add the permission if it was not in the permission list
 			if (!permissions.contains(permission)) pluginManager.addPermission(perm);
@@ -185,7 +186,7 @@ public class Argument implements Cloneable {
 		if (!(obj instanceof Argument argument)) return false;
 
 		return Arrays.stream(argument.arguments)
-					 .anyMatch(arg -> Arrays.stream(this.arguments).anyMatch(arg::equalsIgnoreCase));
+				.anyMatch(arg -> Arrays.stream(this.arguments).anyMatch(arg::equalsIgnoreCase));
 	}
 
 	// TODO test this method
@@ -253,10 +254,10 @@ public class Argument implements Cloneable {
 			// get the last valid input children
 			List<Tree.Node<Argument>> children = lastValid.node.getChildren();
 			Set<String> dictionary = children.stream()
-											 .map(node -> node.getData().arguments)
-											 .flatMap(Stream::of)
-											 .filter(s -> !s.equals("?"))
-											 .collect(Collectors.toSet());
+					.map(node -> node.getData().arguments)
+					.flatMap(Stream::of)
+					.filter(s -> !s.equals("?"))
+					.collect(Collectors.toSet());
 			String[] validArguments = Arrays.stream(args).toList().subList(0, length).toArray(String[]::new);
 
 			sender.sendMessage(

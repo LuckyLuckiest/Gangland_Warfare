@@ -1,13 +1,13 @@
 package me.luckyraven.listener.player.weapon;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.Pair;
 import me.luckyraven.feature.weapon.*;
 import me.luckyraven.file.configuration.SoundConfiguration;
 import me.luckyraven.listener.ListenerHandler;
-import me.luckyraven.util.Pair;
-import me.luckyraven.util.timer.CountdownTimer;
-import me.luckyraven.util.timer.RepeatingTimer;
-import me.luckyraven.util.timer.SequenceTimer;
+import me.luckyraven.timer.CountdownTimer;
+import me.luckyraven.timer.RepeatingTimer;
+import me.luckyraven.timer.SequenceTimer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;

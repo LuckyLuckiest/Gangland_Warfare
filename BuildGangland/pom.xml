@@ -125,6 +125,13 @@
             <version>${project.parent.version}</version>
         </dependency>
 
+        <!-- Include Core Utilities -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>core-util</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
         <!-- Include NMS -->
         <!-- 1.21.x -->
         <dependency>

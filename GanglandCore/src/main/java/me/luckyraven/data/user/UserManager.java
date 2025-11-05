@@ -16,7 +16,7 @@ import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.util.timer.RepeatingTimer;
+import me.luckyraven.timer.RepeatingTimer;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
@@ -186,7 +186,8 @@ public class UserManager<T extends OfflinePlayer> {
 	@Override
 	public String toString() {
 		Map<T, User<T>> userMap = users;
-		List<String>    users   = userMap.values().stream().map(User::toString).toList();
+		List<String> users = userMap.values()
+				.stream().map(User::toString).toList();
 		return "users=" + users;
 	}
 

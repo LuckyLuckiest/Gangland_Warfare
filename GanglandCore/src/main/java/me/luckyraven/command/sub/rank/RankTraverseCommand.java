@@ -1,12 +1,12 @@
 package me.luckyraven.command.sub.rank;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.TriConsumer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.datastructure.Tree;
-import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
 
 import java.util.List;

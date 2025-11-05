@@ -1,4 +1,4 @@
-package me.luckyraven.util;
+package me.luckyraven;
 
 public enum UnhandledError {
 

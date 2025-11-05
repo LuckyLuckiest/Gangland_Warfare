@@ -1,7 +1,7 @@
 package me.luckyraven.command.argument;
 
+import me.luckyraven.TriConsumer;
 import me.luckyraven.datastructure.Tree;
-import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 

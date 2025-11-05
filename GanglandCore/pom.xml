@@ -37,7 +37,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.12.1</version>
+                <version>3.14.1</version>
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
@@ -52,7 +52,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.6.1</version>
                 <configuration>
                     <createDependencyReducedPom>false</createDependencyReducedPom>
                     <shadedArtifactAttached>true</shadedArtifactAttached>
@@ -126,7 +126,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.2</version>
+                <version>3.5.4</version>
             </plugin>
 
             <!-- Maven surefire plugin (end) -->
@@ -182,14 +182,6 @@
 
         <!-- Bukkit/Spigot/Paper builds (start) -->
 
-        <!-- Paper Build -->
-        <!--<dependency>-->
-        <!--    <groupId>io.papermc.paper</groupId>-->
-        <!--    <artifactId>paper-api</artifactId>-->
-        <!--    <version>${project.bukkit.version}</version>-->
-        <!--    <scope>provided</scope>-->
-        <!--</dependency>-->
-
         <!-- Spigot Build -->
         <dependency>
             <groupId>org.spigotmc</groupId>
@@ -199,6 +191,14 @@
         </dependency>
 
         <!-- Bukkit/Spigot/Paper builds (end) -->
+
+        <!-- Important local dependencies (start) -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>core-util</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <!-- Important local dependencies (end) -->
 
         <!-- Compile level dependencies (start) -->
 
@@ -218,27 +218,11 @@
             <scope>compile</scope>
         </dependency>
 
-        <!-- XSeries -->
-        <dependency>
-            <groupId>com.github.cryptomorin</groupId>
-            <artifactId>XSeries</artifactId>
-            <version>13.5.1</version>
-            <scope>compile</scope>
-        </dependency>
-
         <!-- FastBoard -->
         <dependency>
             <groupId>fr.mrmicky</groupId>
             <artifactId>fastboard</artifactId>
             <version>2.1.5</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <!-- exp4j -->
-        <dependency>
-            <groupId>net.objecthunter</groupId>
-            <artifactId>exp4j</artifactId>
-            <version>0.4.8</version>
             <scope>compile</scope>
         </dependency>
 

@@ -161,7 +161,7 @@ public class LinkedList<E extends Comparable<E>> implements Iterable<LinkedList.
 	}
 
 	@Override
-	public @NotNull Iterator<LinkedList.Node<E>> iterator() {
+	public @NotNull Iterator<Node<E>> iterator() {
 		return new LinkIterator<>(this.head);
 	}
 

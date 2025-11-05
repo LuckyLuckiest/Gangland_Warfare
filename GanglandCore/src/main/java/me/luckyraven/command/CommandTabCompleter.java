@@ -47,7 +47,8 @@ public final class CommandTabCompleter implements TabCompleter {
 		List<String> arguments = new ArrayList<>();
 
 		// loop through all the children
-		for (Argument argument : arg.getNode().getChildren().stream().map(Tree.Node::getData).toList()) {
+		for (Argument argument : arg.getNode().getChildren()
+				.stream().map(Tree.Node::getData).toList()) {
 			String permission = argument.getPermission();
 
 			if (permission.isEmpty() || sender.hasPermission(permission)) arguments.addAll(

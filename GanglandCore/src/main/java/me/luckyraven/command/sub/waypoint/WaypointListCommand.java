@@ -1,13 +1,13 @@
 package me.luckyraven.command.sub.waypoint;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.TriConsumer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
-import me.luckyraven.util.TriConsumer;
 import org.bukkit.command.CommandSender;
 
 import java.util.List;
@@ -30,10 +30,10 @@ class WaypointListCommand extends SubArgument {
 
 			List<Waypoint> waypoints = waypointManager.getWaypoints()
 													  .entrySet()
-													  .stream()
-													  .sorted(Map.Entry.comparingByKey())
-													  .map(Map.Entry::getValue)
-													  .toList();
+					.stream()
+					.sorted(Map.Entry.comparingByKey())
+					.map(Map.Entry::getValue)
+					.toList();
 			for (int i = 0; i < waypoints.size(); i++) {
 				builder.append(waypoints.get(i).getName()).append(':').append(i + 1);
 

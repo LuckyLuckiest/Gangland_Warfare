@@ -35,11 +35,11 @@ public final class BalanceCommand extends CommandHandler {
 		this.userManager = gangland.getInitializer().getUserManager();
 
 		List<CommandInformation> list = getCommands().entrySet()
-													 .stream()
-													 .filter(entry -> entry.getKey().startsWith("balance"))
-													 .sorted(Map.Entry.comparingByKey())
-													 .map(Map.Entry::getValue)
-													 .toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("balance"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -84,9 +84,9 @@ public final class BalanceCommand extends CommandHandler {
 
 				// get only the uuids
 				Map<UUID, Double> uuids = usersData.stream()
-												   .collect(Collectors.toMap(
-														   objects -> UUID.fromString(String.valueOf(objects[0])),
-														   objects -> (double) objects[1]));
+						.collect(Collectors.toMap(
+								objects -> UUID.fromString(String.valueOf(objects[0])),
+								objects -> (double) objects[1]));
 
 				// iterate over all uuids and check if the name is similar to target
 				boolean found = false;

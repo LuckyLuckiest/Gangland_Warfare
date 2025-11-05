@@ -3,9 +3,11 @@ package me.luckyraven.feature.phone;
 import com.cryptomorin.xseries.XMaterial;
 import lombok.Getter;
 import me.luckyraven.Gangland;
+import me.luckyraven.TriConsumer;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.inventory.MultiInventory;
+import me.luckyraven.color.ColorUtil;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
@@ -13,8 +15,6 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.InventoryUtil;
-import me.luckyraven.util.TriConsumer;
-import me.luckyraven.util.color.ColorUtil;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -44,7 +44,8 @@ public class Phone {
 	}
 
 	public static Material getPhoneMaterial() {
-		Material phoneItem = XMaterial.matchXMaterial(SettingAddon.getPhoneItem()).stream().toList().getFirst().get();
+		Material phoneItem = XMaterial.matchXMaterial(SettingAddon.getPhoneItem())
+				.stream().toList().getFirst().get();
 		if (phoneItem == null) return XMaterial.REDSTONE.get();
 		return phoneItem;
 	}
@@ -181,8 +182,9 @@ public class Phone {
 		newGang.setItem(23, XMaterial.BOOKSHELF.get(), "&b&lSearch Gang", null, true, false,
 						(player1, inv, it) -> {
 							// open a multi inventory that displays all the gangs
-							User<Player>    user1      = gangland.getInitializer().getUserManager().getUser(player1);
-							List<Gang>      gangs      = gangManager.getGangs().values().stream().toList();
+							User<Player> user1 = gangland.getInitializer().getUserManager().getUser(player1);
+							List<Gang> gangs = gangManager.getGangs().values()
+									.stream().toList();
 							List<ItemStack> gangsItems = new ArrayList<>();
 
 							for (Gang gang : gangs) {
@@ -193,14 +195,14 @@ public class Phone {
 																	.setLore("&e" + gang.getDescription());
 
 								UUID uuid = gang.getGroup()
-												.stream()
-												.filter(member -> Objects.requireNonNull(member.getRank())
-																		 .getName()
-																		 .equalsIgnoreCase(
-																				 SettingAddon.getGangRankTail()))
-												.findFirst()
-												.map(Member::getUuid)
-												.orElse(null);
+										.stream()
+										.filter(member -> Objects.requireNonNull(member.getRank())
+																 .getName()
+																 .equalsIgnoreCase(
+																		 SettingAddon.getGangRankTail()))
+										.findFirst()
+										.map(Member::getUuid)
+										.orElse(null);
 
 								String name = "";
 								if (uuid != null) {
@@ -240,13 +242,13 @@ public class Phone {
 									}
 
 									List<ItemStack> items = gangsItems.stream()
-																	  .filter(itemStack -> Objects.requireNonNull(
-																										  itemStack.getItemMeta())
-																								  .getDisplayName()
-																								  .toLowerCase()
-																								  .contains(
-																										  output.toLowerCase()))
-																	  .toList();
+											.filter(itemStack -> Objects.requireNonNull(
+																				itemStack.getItemMeta())
+																		.getDisplayName()
+																		.toLowerCase()
+																		.contains(
+																				output.toLowerCase()))
+											.toList();
 
 									multiInventory.updateItems(items, user2, true, staticItems);
 									callback.accept(stateSnapshot.getPlayer(), currInv, itemBuilder);

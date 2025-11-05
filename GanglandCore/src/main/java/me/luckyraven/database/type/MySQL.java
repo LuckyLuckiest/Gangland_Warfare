@@ -3,8 +3,8 @@ package me.luckyraven.database.type;
 import com.google.common.base.Preconditions;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import me.luckyraven.DatabaseUtil;
 import me.luckyraven.database.Database;
-import me.luckyraven.util.DatabaseUtil;
 
 import java.sql.*;
 import java.time.Duration;

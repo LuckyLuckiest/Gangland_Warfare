@@ -1,6 +1,7 @@
 package me.luckyraven.command.sub.gang;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.TriConsumer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
@@ -15,7 +16,6 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.TriConsumer;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.bukkit.Bukkit;
@@ -114,9 +114,9 @@ class GangPromoteCommand extends SubArgument {
 			List<Rank> nextRanks = Objects.requireNonNull(rankManager.getRankTree().find(currentRank))
 										  .getNode()
 										  .getChildren()
-										  .stream()
-										  .map(Tree.Node::getData)
-										  .toList();
+					.stream()
+					.map(Tree.Node::getData)
+					.toList();
 
 			if (nextRanks.isEmpty()) {
 				player.sendMessage(MessageAddon.GANG_PROMOTE_END.toString());
@@ -141,15 +141,16 @@ class GangPromoteCommand extends SubArgument {
 				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
 				String        offlineName   = offlinePlayer.getName();
 
+				Rank first = nextRanks.getFirst();
 				if (offlineName != null && !offlineName.isEmpty() && offlinePlayer.isOnline()) {
 					Player onlinePlayer = offlinePlayer.getPlayer();
 					String message = MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString()
 																			 .replace("%rank%",
-																					  nextRanks.get(0).getName());
+																					  first.getName());
 					// remove the previous rank attachments
 					User<Player> onlineUser = userManager.getUser(onlinePlayer);
 
-					onlineUser.flushPermissions(nextRanks.get(0));
+					onlineUser.flushPermissions(first);
 
 					Objects.requireNonNull(onlinePlayer).sendMessage(message);
 				}
@@ -157,9 +158,9 @@ class GangPromoteCommand extends SubArgument {
 				player.sendMessage(MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString()
 																		   .replace("%player%", targetStr)
 																		   .replace("%rank%",
-																					nextRanks.get(0).getName()));
+																					first.getName()));
 
-				targetMember.setRank(nextRanks.get(0));
+				targetMember.setRank(first);
 			}
 		});
 	}

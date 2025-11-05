@@ -1,7 +1,7 @@
 package me.luckyraven.file;
 
 import me.luckyraven.exception.PluginException;
-import me.luckyraven.util.timer.SequenceTimer;
+import me.luckyraven.timer.SequenceTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
