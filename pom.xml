@@ -18,7 +18,7 @@
     </developers>
 
     <modules>
-        <module>GanglandCore</module>
+        <module>gangland-impl</module>
         <module>gangland-build</module>
         <module>core-util</module>
         <module>scoreboard-api</module>

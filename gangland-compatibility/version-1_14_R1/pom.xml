@@ -35,7 +35,7 @@
         <!-- Core Module -->
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-core</artifactId>
+            <artifactId>gangland-impl</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
