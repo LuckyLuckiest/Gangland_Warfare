@@ -1,6 +1,8 @@
 package me.luckyraven.bukkit;
 
 import com.cryptomorin.xseries.XMaterial;
+import com.viaversion.viaversion.api.Via;
+import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteItemNBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
@@ -97,7 +99,11 @@ public class ItemBuilder {
 	}
 
 	public ItemBuilder setMaxStackSize(int size) {
-//		itemStack.set
+		boolean isAtLeast1_20_5 = ProtocolVersion.v1_20_5.getVersion() >=
+								  Via.getAPI().getServerVersion().lowestSupportedProtocolVersion().getVersion();
+		if (isAtLeast1_20_5) {
+			modifyNBT(nbt -> nbt.setInteger("max_stack_size", size));
+		}
 
 		return this;
 	}
@@ -105,6 +111,18 @@ public class ItemBuilder {
 	public ItemBuilder setAmount(int amount) {
 		itemStack.setAmount(amount);
 		return this;
+	}
+
+	public ItemBuilder decreaseDurability(short amount) {
+		short durability = getDurability();
+
+		modifyNBT(nbt -> nbt.setShort("Damage", (short) (durability + amount)));
+
+		return this;
+	}
+
+	public short getDurability() {
+		return NBT.get(itemStack, (Function<ReadableItemNBT, Short>) nbt -> nbt.getShort("Damage"));
 	}
 
 	public ItemBuilder setDurability(short durability) {
@@ -158,20 +176,22 @@ public class ItemBuilder {
 	 * @return this class instance
 	 */
 	public ItemBuilder addTag(String tag, Object value) {
-		if (value instanceof Byte) modifyNBT(nbt -> nbt.setByte(tag, (byte) value));
-		else if (value instanceof byte[]) modifyNBT(nbt -> nbt.setByteArray(tag, (byte[]) value));
-		else if (value instanceof Short) modifyNBT(nbt -> nbt.setShort(tag, (short) value));
-		else if (value instanceof Integer) modifyNBT(nbt -> nbt.setInteger(tag, (int) value));
-		else if (value instanceof int[]) modifyNBT(nbt -> nbt.setIntArray(tag, (int[]) value));
-		else if (value instanceof Long) modifyNBT(nbt -> nbt.setLong(tag, (long) value));
-		else if (value instanceof Double) modifyNBT(nbt -> nbt.setDouble(tag, (double) value));
-		else if (value instanceof Float) modifyNBT(nbt -> nbt.setFloat(tag, (float) value));
-		else if (value instanceof Boolean) modifyNBT(nbt -> nbt.setBoolean(tag, (boolean) value));
-		else if (value instanceof ItemStack) modifyNBT(nbt -> nbt.setItemStack(tag, (ItemStack) value));
-		else if (value instanceof ItemStack[]) modifyNBT(nbt -> nbt.setItemStackArray(tag, (ItemStack[]) value));
-		else if (value instanceof UUID) modifyNBT(nbt -> nbt.setUUID(tag, (UUID) value));
-		else if (value instanceof Enum) modifyNBT(nbt -> nbt.setEnum(tag, (Enum<?>) value));
-		else modifyNBT(nbt -> nbt.setString(tag, value.toString()));
+		switch (value) {
+			case Byte b -> modifyNBT(nbt -> nbt.setByte(tag, (byte) value));
+			case byte[] bytes -> modifyNBT(nbt -> nbt.setByteArray(tag, (byte[]) value));
+			case Short i -> modifyNBT(nbt -> nbt.setShort(tag, (short) value));
+			case Integer i -> modifyNBT(nbt -> nbt.setInteger(tag, (int) value));
+			case int[] ints -> modifyNBT(nbt -> nbt.setIntArray(tag, (int[]) value));
+			case Long l -> modifyNBT(nbt -> nbt.setLong(tag, (long) value));
+			case Double v -> modifyNBT(nbt -> nbt.setDouble(tag, (double) value));
+			case Float v -> modifyNBT(nbt -> nbt.setFloat(tag, (float) value));
+			case Boolean b -> modifyNBT(nbt -> nbt.setBoolean(tag, (boolean) value));
+			case ItemStack stack -> modifyNBT(nbt -> nbt.setItemStack(tag, (ItemStack) value));
+			case ItemStack[] itemStacks -> modifyNBT(nbt -> nbt.setItemStackArray(tag, (ItemStack[]) value));
+			case UUID uuid -> modifyNBT(nbt -> nbt.setUUID(tag, (UUID) value));
+			case Enum<?> anEnum -> modifyNBT(nbt -> nbt.setEnum(tag, (Enum<?>) value));
+			case null, default -> modifyNBT(nbt -> nbt.setString(tag, value != null ? value.toString() : "null"));
+		}
 
 		return this;
 	}
