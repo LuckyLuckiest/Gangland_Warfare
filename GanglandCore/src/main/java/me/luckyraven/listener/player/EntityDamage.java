@@ -13,6 +13,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
@@ -27,7 +28,7 @@ public class EntityDamage implements Listener {
 		this.userManager = gangland.getInitializer().getUserManager();
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerEntityDeath(EntityDamageByEntityEvent event) {
 		Player damager;
 		if (event.getDamager() instanceof Player player) damager = player;
@@ -35,6 +36,8 @@ public class EntityDamage implements Listener {
 			if (projectile.getShooter() instanceof Player player) damager = player;
 			else return;
 		} else return;
+
+		damager.sendMessage(ChatUtil.color("&c-" + event.getDamage()));
 
 		if (!(event.getEntity() instanceof LivingEntity livingEntity &&
 			  livingEntity.getHealth() <= event.getFinalDamage())) return;
