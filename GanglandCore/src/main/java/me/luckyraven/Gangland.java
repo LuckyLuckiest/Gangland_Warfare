@@ -86,8 +86,6 @@ public final class Gangland extends JavaPlugin {
 		// initialize bstats
 		bStats();
 
-		log4jLogger.info(ScoreboardManager.getDrivers());
-
 		// check for new updates
 		updateCheckerInitializer();
 	}

@@ -6,10 +6,8 @@ import me.luckyraven.bukkit.scoreboard.driver.sub.DriverV1;
 import me.luckyraven.bukkit.scoreboard.driver.sub.DriverV2;
 import me.luckyraven.bukkit.scoreboard.driver.sub.DriverV3;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.ReflectionUtil;
 import org.bukkit.entity.Player;
-import org.reflections.Reflections;
-import org.reflections.util.ConfigurationBuilder;
-import org.reflections.util.FilterBuilder;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -22,14 +20,10 @@ public class ScoreboardManager {
 	private static final List<String> DRIVERS = new ArrayList<>();
 
 	static {
-		String packageName = "me.luckyraven.bukkit.scoreboard.driver.sub";
-		Reflections reflections = new Reflections(new ConfigurationBuilder().forPackage(packageName)
-																			.filterInputsBy(
-																					new FilterBuilder().includePackage(
-																							packageName)));
-		Set<Class<?>> modules = reflections.getSubTypesOf(Object.class);
+		String        packageName = "me.luckyraven.bukkit.scoreboard.driver.sub";
+		Set<Class<?>> classes     = ReflectionUtil.findClasses(packageName, Gangland.class.getClassLoader());
 
-		for (Class<?> clazz : modules) {
+		for (Class<?> clazz : classes) {
 			if (!(DriverHandler.class.isAssignableFrom(clazz) && !clazz.isInterface() &&
 				  !Modifier.isAbstract(clazz.getModifiers()))) continue;
 
@@ -37,8 +31,6 @@ public class ScoreboardManager {
 			Class<? extends DriverHandler> driverClass = (Class<? extends DriverHandler>) clazz;
 			DRIVERS.add(driverClass.getSimpleName());
 		}
-
-		// TODO make this work!
 	}
 
 	private final Gangland gangland;
