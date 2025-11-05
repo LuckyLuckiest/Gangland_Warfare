@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.feature.weapon.events.WeaponShootEvent;
 import me.luckyraven.feature.weapon.projectile.WeaponProjectile;
+import me.luckyraven.feature.weapon.projectile.recoil.RecoilCompatibility;
 import me.luckyraven.file.configuration.SoundConfiguration;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -51,11 +52,21 @@ public class WeaponAction {
 
 		if (heldWeapon != null) {
 			weapon.updateWeaponData(heldWeapon);
+
+			// change durability of the weapon
+			if (weapon.getDurabilityOnShot() > (short) 0) {
+				heldWeapon.decreaseDurability(weapon.getDurabilityOnShot());
+			}
+
 			weapon.updateWeapon(shooter, heldWeapon, shooter.getInventory().getHeldItemSlot());
 		}
 
 		// apply recoil
-		applyRecoil(shooter, weapon);
+		RecoilCompatibility recoilCompatibility = gangland.getInitializer()
+														  .getCompatibilityWorker()
+														  .getRecoilCompatibility();
+
+		weapon.getRecoil().applyRecoil(recoilCompatibility, shooter);
 
 		// apply push
 		applyPush(shooter, weapon);
@@ -80,25 +91,6 @@ public class WeaponAction {
 
 		if (location.getBlock().getRelative(BlockFace.DOWN).getType() != Material.AIR) player.setVelocity(
 				location.getDirection().multiply(push).add(vector));
-	}
-
-	private void applyRecoil(Player player, Weapon weapon) {
-		float recoil = (float) weapon.getRecoilAmount();
-
-		if (!player.isSneaking()) recoil(player, recoil, recoil);
-		else {
-			float newValue = recoil / 2;
-
-			if (weapon.isScoped()) recoil(player, newValue, newValue);
-			else recoil(player, newValue / 2, newValue / 2);
-		}
-	}
-
-	private void recoil(Player player, float yaw, float pitch) {
-		gangland.getInitializer()
-				.getCompatibilityWorker()
-				.getRecoilCompatibility()
-				.modifyCameraRotation(player, yaw, pitch, true);
 	}
 
 }
