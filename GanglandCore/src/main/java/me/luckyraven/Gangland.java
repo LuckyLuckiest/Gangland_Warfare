@@ -13,6 +13,7 @@ import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.updater.UpdateChecker;
+import me.luckyraven.util.Placeholder;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -32,7 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Getter
-public final class Gangland extends JavaPlugin {
+public final class Gangland extends JavaPlugin implements Placeholder {
 
 	private static final @Getter Logger log4jLogger = LogManager.getLogger("Gangland_Warfare");
 
@@ -100,7 +101,8 @@ public final class Gangland extends JavaPlugin {
 	 *
 	 * @return the replaced placeholder text with the appropriate placeholder
 	 */
-	public String usePlaceholder(Player player, String text) {
+	@Override
+	public String convert(Player player, String text) {
 		if (placeholderAPIExpansion != null) {
 			if (PlaceholderAPI.containsPlaceholders(text)) return PlaceholderAPI.setPlaceholders(player, text);
 		} else {
