@@ -10,7 +10,7 @@
         <version>0.0.6-DEV</version>
     </parent>
 
-    <artifactId>gangland_core</artifactId>
+    <artifactId>gangland-core</artifactId>
     <packaging>jar</packaging>
 
     <name>Gangland Core</name>
