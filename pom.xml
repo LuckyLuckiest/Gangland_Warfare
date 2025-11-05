@@ -48,7 +48,7 @@
         <module>GanglandCompatibility/V1_11_R1</module>
         <module>GanglandCompatibility/V1_10_R1</module>
         <module>core-util</module>
-        <module>scoreboard</module>
+        <module>scoreboard-api</module>
     </modules>
 
     <properties>

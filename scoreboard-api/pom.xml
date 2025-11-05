@@ -9,7 +9,7 @@
         <version>0.0.6-DEV</version>
     </parent>
 
-    <artifactId>scoreboard</artifactId>
+    <artifactId>scoreboard-api</artifactId>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
