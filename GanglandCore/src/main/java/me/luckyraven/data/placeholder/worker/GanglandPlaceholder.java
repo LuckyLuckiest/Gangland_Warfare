@@ -1,8 +1,6 @@
 package me.luckyraven.data.placeholder.worker;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.NumberUtil;
-import me.luckyraven.color.ColorUtil;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
@@ -15,6 +13,8 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.wanted.Wanted;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.color.ColorUtil;
+import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;

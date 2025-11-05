@@ -6,8 +6,8 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.HelpInfo;
-import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 

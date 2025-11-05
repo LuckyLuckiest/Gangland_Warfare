@@ -1,7 +1,7 @@
 package me.luckyraven.compatibility;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.ReflectionUtil;
+import me.luckyraven.util.utilities.ReflectionUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;

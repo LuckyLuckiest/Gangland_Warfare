@@ -2,8 +2,8 @@ package me.luckyraven.file;
 
 import lombok.Getter;
 import me.luckyraven.Gangland;
-import me.luckyraven.UnhandledError;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;

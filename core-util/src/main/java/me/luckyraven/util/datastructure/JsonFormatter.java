@@ -1,4 +1,4 @@
-package me.luckyraven.datastructure;
+package me.luckyraven.util.datastructure;
 
 import java.lang.reflect.Array;
 import java.util.Map;

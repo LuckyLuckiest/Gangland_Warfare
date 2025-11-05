@@ -13,9 +13,9 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 

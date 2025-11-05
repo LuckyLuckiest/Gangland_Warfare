@@ -1,7 +1,7 @@
 package me.luckyraven.file;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.UnhandledError;
+import me.luckyraven.util.UnhandledError;
 
 import java.io.File;
 import java.io.IOException;
@@ -83,8 +83,7 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 		for (FileHandler fileHandler : folderFiles) {
 			try {
 				// check if the file is already in the file manager
-				if (!fileManager.contains(fileHandler.getName()))
-					fileManager.addFile(fileHandler, true);
+				if (!fileManager.contains(fileHandler.getName())) fileManager.addFile(fileHandler, true);
 
 				// process each file handler
 				consumer.accept(fileHandler);

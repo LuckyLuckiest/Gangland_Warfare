@@ -1,7 +1,7 @@
 package me.luckyraven.data.rank;
 
 import lombok.Getter;
-import me.luckyraven.datastructure.Tree;
+import me.luckyraven.util.datastructure.Tree;
 
 import java.util.ArrayList;
 import java.util.Collections;

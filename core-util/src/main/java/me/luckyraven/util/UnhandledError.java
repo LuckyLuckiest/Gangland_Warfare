@@ -1,7 +1,6 @@
-package me.luckyraven;
+package me.luckyraven.util;
 
 public enum UnhandledError {
-
 
 	FILE_LOADER_ERROR("files loader"),
 	FILE_CREATE_ERROR("file create"),

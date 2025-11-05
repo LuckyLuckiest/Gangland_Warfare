@@ -1,6 +1,6 @@
 package me.luckyraven.file;
 
-import me.luckyraven.UnhandledError;
+import me.luckyraven.util.UnhandledError;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;

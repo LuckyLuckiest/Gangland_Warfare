@@ -2,11 +2,11 @@ package me.luckyraven.feature.weapon.projectile;
 
 import com.cryptomorin.xseries.particles.XParticle;
 import com.google.common.util.concurrent.AtomicDouble;
-import me.luckyraven.ParticleUtil;
-import me.luckyraven.color.Color;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.events.WeaponProjectileLaunchEvent;
-import me.luckyraven.timer.RepeatingTimer;
+import me.luckyraven.util.color.Color;
+import me.luckyraven.util.timer.RepeatingTimer;
+import me.luckyraven.util.utilities.ParticleUtil;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;

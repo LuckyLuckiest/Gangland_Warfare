@@ -1,4 +1,4 @@
-package me.luckyraven;
+package me.luckyraven.util.utilities;
 
 import java.sql.Types;
 import java.time.LocalDateTime;

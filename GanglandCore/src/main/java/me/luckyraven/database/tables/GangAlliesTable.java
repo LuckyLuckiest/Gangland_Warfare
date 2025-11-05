@@ -1,9 +1,9 @@
 package me.luckyraven.database.tables;
 
-import me.luckyraven.Pair;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.database.component.Attribute;
 import me.luckyraven.database.component.Table;
+import me.luckyraven.util.Pair;
 
 import java.sql.Types;
 import java.util.Map;

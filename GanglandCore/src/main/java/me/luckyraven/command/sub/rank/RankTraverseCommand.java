@@ -1,12 +1,12 @@
 package me.luckyraven.command.sub.rank;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.TriConsumer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.datastructure.Tree;
+import me.luckyraven.util.TriConsumer;
+import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 
 import java.util.List;
@@ -25,7 +25,9 @@ class RankTraverseCommand extends SubArgument {
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
 			StringBuilder builder = new StringBuilder();
-			List<Rank>    ranks   = rankManager.getRankTree().getAllNodes().stream().map(Tree.Node::getData).toList();
+
+			List<Rank> ranks = rankManager.getRankTree().getAllNodes()
+					.stream().map(Tree.Node::getData).toList();
 
 			for (int i = 0; i < ranks.size(); i++) {
 				builder.append(ranks.get(i).getName());

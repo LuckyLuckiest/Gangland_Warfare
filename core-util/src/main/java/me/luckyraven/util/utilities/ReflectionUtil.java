@@ -1,4 +1,4 @@
-package me.luckyraven;
+package me.luckyraven.util.utilities;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 public final class ReflectionUtil {
 
-	private static Logger logger = LogManager.getLogger(ReflectionUtil.class);
+	private static final Logger logger = LogManager.getLogger(ReflectionUtil.class);
 
 	private ReflectionUtil() { }
 

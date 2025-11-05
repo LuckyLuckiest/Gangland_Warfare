@@ -4,7 +4,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
-import me.luckyraven.bukkit.scoreboard.Scoreboard;
 import me.luckyraven.data.account.Account;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.rank.Permission;
@@ -13,6 +12,7 @@ import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.phone.Phone;
 import me.luckyraven.feature.wanted.Wanted;
+import me.luckyraven.scoreboard.Scoreboard;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
@@ -42,7 +42,8 @@ public class User<T extends OfflinePlayer> {
 	private @Setter Scoreboard           scoreboard;
 	private @Setter PermissionAttachment permissionAttachment;
 
-	@Getter(value = AccessLevel.NONE) private @Setter boolean hasBank;
+	@Getter(value = AccessLevel.NONE)
+	private @Setter boolean hasBank;
 
 	/**
 	 * Instantiates a new Database.
@@ -155,9 +156,9 @@ public class User<T extends OfflinePlayer> {
 	@Nullable
 	public InventoryHandler getInventory(String name) {
 		return inventories.stream()
-						  .filter(handler -> handler.getTitle().getKey().equals(name.toLowerCase()))
-						  .findFirst()
-						  .orElse(null);
+				.filter(handler -> handler.getTitle().getKey().equals(name.toLowerCase()))
+				.findFirst()
+				.orElse(null);
 	}
 
 	/**
@@ -216,7 +217,8 @@ public class User<T extends OfflinePlayer> {
 		return String.format("User{data=%s,kd=%.2f,balance=%.2f,level=%d,bounty=%.2f,gangId=%d,permissions=%s}", user,
 							 getKillDeathRatio(), economy.getBalance(), level.getLevelValue(), bounty.getAmount(),
 							 gangId, permissionAttachment != null ?
-									 permissionAttachment.getPermissions().keySet().stream().toList() :
+									 permissionAttachment.getPermissions().keySet()
+											 .stream().toList() :
 									 "NA");
 	}
 

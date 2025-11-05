@@ -2,7 +2,7 @@ package me.luckyraven.file;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.UnhandledError;
+import me.luckyraven.util.UnhandledError;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;

@@ -2,14 +2,14 @@ package me.luckyraven.data.rank;
 
 import lombok.Getter;
 import me.luckyraven.Gangland;
-import me.luckyraven.Pair;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.PermissionTable;
 import me.luckyraven.database.tables.RankParentTable;
 import me.luckyraven.database.tables.RankPermissionTable;
 import me.luckyraven.database.tables.RankTable;
-import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.Pair;
+import me.luckyraven.util.datastructure.Tree;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;

@@ -1,6 +1,6 @@
 package datastructure;
 
-import me.luckyraven.datastructure.LinkedList;
+import me.luckyraven.util.datastructure.LinkedList;
 import org.junit.Test;
 
 public class LinkedListTest {
@@ -16,8 +16,9 @@ public class LinkedListTest {
 		list.add("Five");
 
 		for (LinkedList.Node<String> values : list) {
-			if (values.getNext() != null)
+			if (values.getNext() != null) {
 				System.out.println(values.getData() + " " + values.getNext().getData());
+			}
 		}
 	}
 

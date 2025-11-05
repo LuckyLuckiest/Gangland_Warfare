@@ -3,7 +3,7 @@ package me.luckyraven.feature.weapon.projectile.type;
 import com.cryptomorin.xseries.particles.XParticle;
 import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.projectile.WeaponProjectile;
-import me.luckyraven.timer.RepeatingTimer;
+import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -84,10 +84,10 @@ public class Rocket extends WeaponProjectile<Fireball> {
 			}
 
 			Vector currentVelocity = rocket.getVelocity();
-			Vector direction = target.getEyeLocation()
-									 .toVector()
-									 .subtract(rocket.getLocation().toVector())
-									 .normalize();
+			Vector direction       = target.getEyeLocation()
+										   .toVector()
+										   .subtract(rocket.getLocation().toVector())
+										   .normalize();
 
 			// Blend current velocity with target direction
 			Vector newVelocity = currentVelocity.multiply(1 - homingStrength)

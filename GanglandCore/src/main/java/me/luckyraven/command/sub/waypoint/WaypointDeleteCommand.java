@@ -2,7 +2,6 @@ package me.luckyraven.command.sub.waypoint;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
-import me.luckyraven.TriConsumer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
@@ -14,10 +13,11 @@ import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.WaypointTable;
-import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
-import me.luckyraven.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.TriConsumer;
+import me.luckyraven.util.datastructure.Tree;
+import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 
 import java.util.HashMap;

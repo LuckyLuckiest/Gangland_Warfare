@@ -4,7 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
-import me.luckyraven.timer.SequenceTimer;
+import me.luckyraven.util.timer.SequenceTimer;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;

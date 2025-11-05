@@ -2,8 +2,6 @@ package me.luckyraven.command.sub.gang;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
-import me.luckyraven.Pair;
-import me.luckyraven.TriConsumer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
@@ -23,12 +21,14 @@ import me.luckyraven.database.tables.GangAlliesTable;
 import me.luckyraven.database.tables.GangTable;
 import me.luckyraven.database.tables.MemberTable;
 import me.luckyraven.database.tables.UserTable;
-import me.luckyraven.datastructure.Tree;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.timer.CountdownTimer;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.Pair;
 import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.TriConsumer;
+import me.luckyraven.util.datastructure.Tree;
+import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -153,7 +153,8 @@ class GangDeleteCommand extends SubArgument {
 			List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
 
 			// get the contribution frequency for each user, and return that frequency according to the current balance
-			double total = gang.getGroup().stream().mapToDouble(Member::getContribution).sum();
+			double total = gang.getGroup()
+					.stream().mapToDouble(Member::getContribution).sum();
 
 			Initializer      initializer      = gangland.getInitializer();
 			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
@@ -197,9 +198,9 @@ class GangDeleteCommand extends SubArgument {
 				List<Object[]> allUsers   = userConfig.selectAll();
 				List<Object[]> gangUsers = allUsers.parallelStream()
 												   .filter(obj -> Arrays.stream(obj)
-																		.anyMatch(o -> o.toString()
-																						.equals(String.valueOf(
-																								gang.getId()))))
+														   .anyMatch(o -> o.toString()
+																		   .equals(String.valueOf(
+																				   gang.getId()))))
 												   .toList();
 
 				// update offline users

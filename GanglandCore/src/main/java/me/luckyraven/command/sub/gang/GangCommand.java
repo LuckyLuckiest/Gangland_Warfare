@@ -2,12 +2,9 @@ package me.luckyraven.command.sub.gang;
 
 import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.Gangland;
-import me.luckyraven.Pair;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.bukkit.inventory.MultiInventory;
-import me.luckyraven.color.ColorUtil;
-import me.luckyraven.color.MaterialType;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ArgumentUtil;
@@ -20,6 +17,9 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.InventoryUtil;
+import me.luckyraven.util.Pair;
+import me.luckyraven.util.color.ColorUtil;
+import me.luckyraven.util.color.MaterialType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -38,11 +38,11 @@ public final class GangCommand extends CommandHandler {
 		super(gangland, "gang", true);
 
 		List<CommandInformation> list = getCommands().entrySet()
-													 .stream()
-													 .filter(entry -> entry.getKey().startsWith("gang"))
-													 .sorted(Map.Entry.comparingByKey())
-													 .map(Map.Entry::getValue)
-													 .toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("gang"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -192,16 +192,15 @@ public final class GangCommand extends CommandHandler {
 									  SettingAddon.formatDouble(gang.getEconomy().getBalance())))), true, false);
 
 		// id
-		gui.setItem(13, XMaterial.CRAFTING_TABLE.get(), "&bID", new ArrayList<>(List.of("&e" + gang.getId())),
-					false, false);
+		gui.setItem(13, XMaterial.CRAFTING_TABLE.get(), "&bID", new ArrayList<>(List.of("&e" + gang.getId())), false,
+					false);
 
 		// description
-		gui.setItem(15, XMaterial.PAPER.get(), "&bDescription",
-					new ArrayList<>(List.of("&e" + gang.getDescription())), false, false,
-					(player, inventory, items) -> {
-						player.performCommand(ArgumentUtil.getArgumentSequence(Objects.requireNonNull(
-								getArgumentTree().find(new Argument(gangland, "desc", getArgumentTree())))));
-					});
+		gui.setItem(15, XMaterial.PAPER.get(), "&bDescription", new ArrayList<>(List.of("&e" + gang.getDescription())),
+					false, false, (player, inventory, items) -> {
+					player.performCommand(ArgumentUtil.getArgumentSequence(Objects.requireNonNull(
+							getArgumentTree().find(new Argument(gangland, "desc", getArgumentTree())))));
+				});
 
 		// members
 		gui.setItem(19, XMaterial.PLAYER_HEAD.get(), "&bMembers", new ArrayList<>(
@@ -243,30 +242,32 @@ public final class GangCommand extends CommandHandler {
 									  SettingAddon.formatDouble(gang.getBounty().getAmount())))), true, false);
 
 		// ally
-		gui.setItem(25, XMaterial.REDSTONE.get(), "&bAlly", List.of("&e" + gang.getAllies().size()), false,
-					false, (player, inventory, item) -> {
-					User<Player>    user1 = userManager.getUser(player);
-					Gang            gang1 = gangManager.getGang(userManager.getUser(player).getGangId());
-					List<ItemStack> items = new ArrayList<>();
+		gui.setItem(25, XMaterial.REDSTONE.get(), "&bAlly", List.of("&e" + gang.getAllies().size()), false, false,
+					(player, inventory, item) -> {
+						User<Player>    user1 = userManager.getUser(player);
+						Gang            gang1 = gangManager.getGang(userManager.getUser(player).getGangId());
+						List<ItemStack> items = new ArrayList<>();
 
-					for (Gang ally : gang1.getAllies().stream().map(Pair::first).toList()) {
-						List<String> data = new ArrayList<>();
-						data.add("&7ID:&e " + ally.getId());
-						data.add(String.format("&7Members:&a %d&7/&e%d", ally.getOnlineMembers(userManager).size(),
-											   ally.getGroup().size()));
-						data.add("&7Created:&e " + ally.getDateCreatedString());
+						for (Gang ally : gang1.getAllies()
+								.stream().map(Pair::first).toList()) {
+							List<String> data = new ArrayList<>();
+							data.add("&7ID:&e " + ally.getId());
+							data.add(String.format("&7Members:&a %d&7/&e%d", ally.getOnlineMembers(userManager).size(),
+												   ally.getGroup().size()));
+							data.add("&7Created:&e " + ally.getDateCreatedString());
 
-						ItemBuilder itemBuilder = new ItemBuilder(XMaterial.REDSTONE.get()).setDisplayName(
-								"&b" + ally.getDisplayNameString()).setLore(data);
+							ItemBuilder itemBuilder = new ItemBuilder(XMaterial.REDSTONE.get()).setDisplayName(
+									"&b" + ally.getDisplayNameString()).setLore(data);
 
-						items.add(itemBuilder.build());
-					}
+							items.add(itemBuilder.build());
+						}
 
-					MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, user1, items,
-																				"&6&lGang Allies", false, false, null);
+						MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, user1, items,
+																					"&6&lGang Allies", false, false,
+																					null);
 
-					multi.open(player);
-				});
+						multi.open(player);
+					});
 
 		// date created
 		gui.setItem(29, XMaterial.WRITABLE_BOOK.get(), "&bCreated",

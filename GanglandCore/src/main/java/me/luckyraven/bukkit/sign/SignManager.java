@@ -2,7 +2,6 @@ package me.luckyraven.bukkit.sign;
 
 import lombok.Getter;
 import me.luckyraven.Gangland;
-import me.luckyraven.NumberUtil;
 import me.luckyraven.bukkit.sign.sub.BuySign;
 import me.luckyraven.bukkit.sign.sub.SellSign;
 import me.luckyraven.bukkit.sign.sub.ViewSign;
@@ -10,6 +9,7 @@ import me.luckyraven.bukkit.sign.sub.WantedSign;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.SignTable;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.Location;
 
 import java.util.HashMap;

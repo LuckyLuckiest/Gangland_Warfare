@@ -2,12 +2,12 @@ package me.luckyraven.bukkit.inventory;
 
 import com.google.common.base.Preconditions;
 import me.luckyraven.Gangland;
-import me.luckyraven.TriConsumer;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.data.user.User;
-import me.luckyraven.datastructure.LinkedList;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.InventoryUtil;
+import me.luckyraven.util.TriConsumer;
+import me.luckyraven.util.datastructure.LinkedList;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;

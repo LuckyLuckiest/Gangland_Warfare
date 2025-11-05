@@ -4,12 +4,12 @@ import com.cryptomorin.xseries.XEnchantment;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
 import me.luckyraven.Gangland;
-import me.luckyraven.TriConsumer;
 import me.luckyraven.bukkit.ItemBuilder;
-import me.luckyraven.color.ColorUtil;
-import me.luckyraven.color.MaterialType;
 import me.luckyraven.data.user.User;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.TriConsumer;
+import me.luckyraven.util.color.ColorUtil;
+import me.luckyraven.util.color.MaterialType;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -250,7 +250,7 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 
 	private String applyPlaceholders(@Nullable String text, Player player) {
 		if (text == null) return null;
-		return gangland.usePlaceholder(player, text);
+		return gangland.convert(player, text);
 	}
 
 	private Material resolveMaterialWithColor(Player player, ItemStack item) {
@@ -258,7 +258,7 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 		ItemBuilder itemBuilder = new ItemBuilder(item);
 		String      dataTag     = "color";
 		if (itemBuilder.hasNBTTag(dataTag)) {
-			String       value    = gangland.usePlaceholder(player, itemBuilder.getStringTagData(dataTag));
+			String       value    = gangland.convert(player, itemBuilder.getStringTagData(dataTag));
 			MaterialType material = MaterialType.WOOL;
 			for (MaterialType materialType : MaterialType.values()) {
 				if (type.name().contains(materialType.name())) {

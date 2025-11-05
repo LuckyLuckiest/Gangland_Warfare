@@ -1,17 +1,17 @@
 package me.luckyraven.command.sub.bounty;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.TriConsumer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.datastructure.Tree;
 import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.TriConsumer;
+import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

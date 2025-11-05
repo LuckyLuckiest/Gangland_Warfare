@@ -1,4 +1,4 @@
-package me.luckyraven.timer;
+package me.luckyraven.util.timer;
 
 import org.bukkit.plugin.java.JavaPlugin;
 

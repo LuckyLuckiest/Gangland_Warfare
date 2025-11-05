@@ -4,11 +4,11 @@ import com.cryptomorin.xseries.XEnchantment;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
-import me.luckyraven.color.ColorUtil;
-import me.luckyraven.color.MaterialType;
 import me.luckyraven.data.inventory.part.Slot;
 import me.luckyraven.data.user.User;
 import me.luckyraven.util.InventoryUtil;
+import me.luckyraven.util.color.ColorUtil;
+import me.luckyraven.util.color.MaterialType;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -29,7 +29,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 			List<Slot> slots       = inventoryData.getSlots();
 
 			// it is special when there is a click event
-			handler = new InventoryHandler(gangland, gangland.usePlaceholder(player, displayName), size, user, false);
+			handler = new InventoryHandler(gangland, gangland.convert(player, displayName), size, user, false);
 
 			for (Slot slot : slots) {
 				int         usedSlot = slot.getSlot();
@@ -41,7 +41,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 				Material type     = item.getType();
 				if (item.hasNBTTag(colorTag)) {
 					// special treatment for colored data
-					String value = gangland.usePlaceholder(player, item.getStringTagData(colorTag));
+					String value = gangland.convert(player, item.getStringTagData(colorTag));
 
 					MaterialType material = MaterialType.WOOL;
 					for (MaterialType materialType : MaterialType.values()) {
@@ -57,17 +57,17 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 				// handles head data
 				String headTag = "head";
 				if (item.hasNBTTag(headTag)) {
-					String value = gangland.usePlaceholder(player, item.getStringTagData(headTag));
+					String value = gangland.convert(player, item.getStringTagData(headTag));
 					item.modifyNBT(nbt -> nbt.setString("SkullOwner", value));
 				}
 
 				ItemBuilder newItem = new ItemBuilder(type);
 
-				String itemDisplayName = gangland.usePlaceholder(player, item.getDisplayName());
+				String itemDisplayName = gangland.convert(player, item.getDisplayName());
 				newItem.setDisplayName(itemDisplayName);
 
 				List<String> lore = item.getLore()
-						.stream().map(s -> gangland.usePlaceholder(player, s)).toList();
+						.stream().map(s -> gangland.convert(player, s)).toList();
 				newItem.setLore(lore);
 
 				if (!item.getEnchantments().isEmpty()) newItem.addEnchantment(XEnchantment.UNBREAKING.getEnchant(), 1)

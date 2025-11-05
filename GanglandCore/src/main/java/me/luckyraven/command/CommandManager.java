@@ -2,7 +2,6 @@ package me.luckyraven.command;
 
 import lombok.Getter;
 import me.luckyraven.Gangland;
-import me.luckyraven.UnhandledError;
 import me.luckyraven.command.sub.DownloadPluginCommand;
 import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.OptionCommand;
@@ -10,6 +9,7 @@ import me.luckyraven.command.sub.debug.ReadNBTCommand;
 import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.UnhandledError;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;

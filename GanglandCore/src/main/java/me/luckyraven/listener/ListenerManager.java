@@ -1,8 +1,8 @@
 package me.luckyraven.listener;
 
 import lombok.Getter;
-import me.luckyraven.ReflectionUtil;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.utilities.ReflectionUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;

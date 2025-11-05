@@ -1,4 +1,4 @@
-package me.luckyraven.color;
+package me.luckyraven.util.color;
 
 import com.cryptomorin.xseries.XMaterial;
 import org.bukkit.Material;

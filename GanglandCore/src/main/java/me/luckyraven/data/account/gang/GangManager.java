@@ -1,10 +1,10 @@
 package me.luckyraven.data.account.gang;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.Pair;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.GangAlliesTable;
 import me.luckyraven.database.tables.GangTable;
+import me.luckyraven.util.Pair;
 
 import java.util.*;
 

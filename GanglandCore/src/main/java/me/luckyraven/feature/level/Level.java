@@ -2,8 +2,8 @@ package me.luckyraven.feature.level;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.datastructure.ScientificCalculator;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.datastructure.ScientificCalculator;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.Nullable;
 

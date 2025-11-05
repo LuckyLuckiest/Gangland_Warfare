@@ -1,6 +1,6 @@
 package me.luckyraven.command.argument;
 
-import me.luckyraven.datastructure.Tree;
+import me.luckyraven.util.datastructure.Tree;
 
 import java.util.ArrayList;
 import java.util.Collections;

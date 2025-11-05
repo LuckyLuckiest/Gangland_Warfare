@@ -2,7 +2,7 @@ package me.luckyraven.feature.bounty;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.timer.RepeatingTimer;
+import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 

@@ -1,11 +1,11 @@
 package me.luckyraven.database;
 
 import lombok.Getter;
-import me.luckyraven.UnhandledError;
 import me.luckyraven.database.type.MySQL;
 import me.luckyraven.database.type.SQLite;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.UnhandledError;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;

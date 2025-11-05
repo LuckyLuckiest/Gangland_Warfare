@@ -5,7 +5,7 @@ import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.ammo.Ammunition;
 import me.luckyraven.feature.weapon.reload.Reload;
 import me.luckyraven.file.configuration.SoundConfiguration;
-import me.luckyraven.timer.SequenceTimer;
+import me.luckyraven.util.timer.SequenceTimer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;

@@ -1,4 +1,4 @@
-package me.luckyraven.datastructure;
+package me.luckyraven.util.datastructure;
 
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;

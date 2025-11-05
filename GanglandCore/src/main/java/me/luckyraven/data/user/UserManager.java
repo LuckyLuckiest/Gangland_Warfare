@@ -16,7 +16,7 @@ import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.timer.RepeatingTimer;
+import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;

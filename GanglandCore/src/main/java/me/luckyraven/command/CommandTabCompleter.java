@@ -2,7 +2,7 @@ package me.luckyraven.command;
 
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
-import me.luckyraven.datastructure.Tree;
+import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;

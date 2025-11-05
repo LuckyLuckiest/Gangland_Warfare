@@ -2,8 +2,6 @@ package me.luckyraven.data.account.gang;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.Pair;
-import me.luckyraven.color.Color;
 import me.luckyraven.data.account.Account;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.rank.Rank;
@@ -13,6 +11,8 @@ import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.Pair;
+import me.luckyraven.util.color.Color;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;

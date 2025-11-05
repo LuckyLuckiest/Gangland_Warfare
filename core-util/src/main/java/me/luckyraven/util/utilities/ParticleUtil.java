@@ -1,4 +1,4 @@
-package me.luckyraven;
+package me.luckyraven.util.utilities;
 
 import org.bukkit.Location;
 import org.bukkit.Particle;
