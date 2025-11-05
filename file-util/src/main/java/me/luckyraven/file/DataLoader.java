@@ -2,13 +2,16 @@ package me.luckyraven.file;
 
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.util.timer.SequenceTimer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.function.Consumer;
-import java.util.logging.Level;
 
 public abstract class DataLoader<T> {
+
+	private static final Logger logger = LogManager.getLogger(DataLoader.class);
 
 	private final JavaPlugin plugin;
 
@@ -26,7 +29,7 @@ public abstract class DataLoader<T> {
 	/**
 	 * Loads data from the plugin.
 	 */
-	protected abstract void loadData(Consumer<T> consumer);
+	protected abstract void loadData(Consumer<T> consumer, FileManager fileManager);
 
 	/**
 	 * Used to communicate with the program if all the data is loaded inside the plugin.
@@ -43,16 +46,16 @@ public abstract class DataLoader<T> {
 	 *
 	 * @param disable disables the plugin upon finding an exception.
 	 */
-	public void load(boolean disable, Consumer<T> consumer) throws PluginException {
+	public void load(boolean disable, Consumer<T> consumer, FileManager fileManager) throws PluginException {
 		try {
-			loadData(consumer);
+			loadData(consumer, fileManager);
 			isLoaded = true;
 		} catch (Throwable throwable) {
 			String message = String.format(
 					"The plugin data has ran into a problem, please check the logs and report them to the developer." +
 					"\nVersion: %s", plugin.getDescription().getVersion());
 
-			plugin.getLogger().log(Level.SEVERE, message, throwable);
+			logger.error(message, throwable);
 
 			if (disable) Bukkit.getPluginManager().disablePlugin(plugin);
 			throw new PluginException(throwable);
@@ -65,7 +68,7 @@ public abstract class DataLoader<T> {
 	 *
 	 * @param disable disables the plugin upon finding an exception.
 	 */
-	public void tryAgain(boolean disable, Consumer<T> consumer) {
+	public void tryAgain(boolean disable, Consumer<T> consumer, FileManager fileManager) {
 		int           maxAttempts = 5, initialValue = 5;
 		SequenceTimer timer       = new SequenceTimer(plugin);
 
@@ -74,7 +77,7 @@ public abstract class DataLoader<T> {
 				// if the process was successful, then stop the timer
 				if (isLoaded) time.stop();
 
-				load(disable, consumer);
+				load(disable, consumer, fileManager);
 			});
 
 			initialValue += i * initialValue;

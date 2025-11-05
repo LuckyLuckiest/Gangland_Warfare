@@ -1,7 +1,9 @@
 package me.luckyraven.file;
 
-import me.luckyraven.Gangland;
 import me.luckyraven.util.UnhandledError;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,16 +14,18 @@ import java.util.function.Consumer;
 
 public abstract class FolderLoader extends DataLoader<FileHandler> {
 
-	private final Gangland gangland;
+	private static final Logger logger = LogManager.getLogger(FolderLoader.class);
+
+	private final JavaPlugin plugin;
 
 	private final String            folder;
 	private final List<FileHandler> folderFiles;
 	private final List<FileHandler> expectedFolderFiles;
 
-	public FolderLoader(Gangland gangland, String folder) {
-		super(gangland);
+	public FolderLoader(JavaPlugin plugin, String folder) {
+		super(plugin);
 
-		this.gangland            = gangland;
+		this.plugin              = plugin;
 		this.folder              = folder;
 		this.folderFiles         = new ArrayList<>();
 		this.expectedFolderFiles = new ArrayList<>();
@@ -51,13 +55,13 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 	}
 
 	@Override
-	protected void loadData(Consumer<FileHandler> consumer) {
+	protected void loadData(Consumer<FileHandler> consumer, FileManager fileManager) {
 		// check if the folder is available
-		File   folder = new File(gangland.getDataFolder(), this.folder);
+		File   folder = new File(plugin.getDataFolder(), this.folder);
 		File[] files  = folder.listFiles();
 
 		if (!folder.exists() || files == null || files.length == 0) {
-			Gangland.getLog4jLogger().info("No '{}' files were found... Creating new ones.", getFolderName());
+			logger.info("No '{}' files were found... Creating new ones.", getFolderName());
 
 			// add files to the folder files if they weren't already added
 			if (files != null) addFiles(files);
@@ -78,8 +82,7 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 		}
 
 		// add each file handler from the folder to the file manager
-		FileManager  fileManager = gangland.getInitializer().getFileManager();
-		List<String> temp        = new ArrayList<>();
+		List<String> temp = new ArrayList<>();
 		for (FileHandler fileHandler : folderFiles) {
 			try {
 				// check if the file is already in the file manager
@@ -89,29 +92,27 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 				consumer.accept(fileHandler);
 				temp.add(fileHandler.getName());
 			} catch (Exception exception) {
-				Gangland.getLog4jLogger()
-						.error("{}: There was a problem registering the {} {}", UnhandledError.FILE_LOADER_ERROR,
-							   getFolderName(), fileHandler.getName(), exception);
+				logger.error("{}: There was a problem registering the {} {}", UnhandledError.FILE_LOADER_ERROR,
+							 getFolderName(), fileHandler.getName(), exception);
 			}
 		}
 
-		if (temp.isEmpty()) Gangland.getLog4jLogger().info("No files were handled");
+		if (temp.isEmpty()) logger.info("No files were handled");
 		else {
-			Gangland.getLog4jLogger().info("Registered the following files from '{}' folder:", getFolderName());
-			Gangland.getLog4jLogger().info(temp);
+			logger.info("Registered the following files from '{}' folder:", getFolderName());
+			logger.info(temp);
 		}
 	}
 
 	private void addFiles(File[] files) {
 		for (File file : files) {
 			try {
-				FileHandler temp = new FileHandler(gangland, file);
+				FileHandler temp = new FileHandler(plugin, file);
 				// check if the file wasn't added, then add it
 				if (!folderFiles.contains(temp)) addFile(temp);
 			} catch (IOException exception) {
-				Gangland.getLog4jLogger()
-						.error(String.format("%s: There was a problem with loading the file %s.",
-											 UnhandledError.FILE_CREATE_ERROR, file.getName()), exception);
+				logger.error("{}: There was a problem with loading the file {}.", UnhandledError.FILE_CREATE_ERROR,
+							 file.getName(), exception);
 			}
 		}
 	}
@@ -121,8 +122,7 @@ public abstract class FolderLoader extends DataLoader<FileHandler> {
 			for (FileHandler file : files)
 				file.create(true);
 		} catch (IOException exception) {
-			Gangland.getLog4jLogger()
-					.info("{}: {}", UnhandledError.FILE_CREATE_ERROR, exception.getMessage(), exception);
+			logger.info("{}: {}", UnhandledError.FILE_CREATE_ERROR, exception.getMessage(), exception);
 		}
 	}
 

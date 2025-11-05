@@ -1,6 +1,8 @@
 package me.luckyraven.file;
 
 import me.luckyraven.util.UnhandledError;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -13,6 +15,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class FileManager {
+
+	private static final Logger logger = LogManager.getLogger(FileManager.class);
 
 	private final JavaPlugin       plugin;
 	private final Set<FileHandler> files;
@@ -30,9 +34,9 @@ public class FileManager {
 		try {
 			file.create(true);
 		} catch (IOException exception) {
-			plugin.getLogger()
-				  .warning(String.format(UnhandledError.FILE_CREATE_ERROR + " %s.%s: %s", file.getName(),
-										 file.getFileType(), exception.getMessage()));
+			String format = String.format(UnhandledError.FILE_CREATE_ERROR + " %s.%s: %s", file.getName(),
+										  file.getFileType(), exception.getMessage());
+			logger.warn(format);
 		}
 	}
 
@@ -69,9 +73,9 @@ public class FileManager {
 			try {
 				file.reloadData();
 			} catch (IOException exception) {
-				plugin.getLogger()
-					  .warning(String.format(UnhandledError.FILE_LOADER_ERROR + " %s.%s: %s", file.getName(),
-											 file.getFileType(), exception.getMessage()));
+				String format = String.format(UnhandledError.FILE_LOADER_ERROR + " %s.%s: %s", file.getName(),
+											  file.getFileType(), exception.getMessage());
+				logger.warn(format);
 			}
 	}
 

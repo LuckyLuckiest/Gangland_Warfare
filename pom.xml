@@ -49,6 +49,8 @@
         <module>GanglandCompatibility/V1_10_R1</module>
         <module>core-util</module>
         <module>scoreboard-api</module>
+        <module>file-util</module>
+        <module>exception-handler</module>
     </modules>
 
     <properties>

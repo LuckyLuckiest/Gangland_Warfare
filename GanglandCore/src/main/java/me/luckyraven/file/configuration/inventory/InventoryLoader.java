@@ -1,6 +1,7 @@
 package me.luckyraven.file.configuration.inventory;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.file.FileManager;
 import me.luckyraven.file.FolderLoader;
 
 public class InventoryLoader extends FolderLoader {
@@ -14,7 +15,8 @@ public class InventoryLoader extends FolderLoader {
 
 	@Override
 	public void initialize() {
-		this.load(true, fileHandler -> InventoryAddon.registerInventory(gangland, fileHandler));
+		FileManager fileManager = gangland.getInitializer().getFileManager();
+		this.load(true, fileHandler -> InventoryAddon.registerInventory(gangland, fileHandler), fileManager);
 	}
 
 }

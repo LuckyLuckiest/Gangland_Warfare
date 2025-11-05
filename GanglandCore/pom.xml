@@ -153,11 +153,25 @@
             <groupId>me.luckyraven</groupId>
             <artifactId>core-util</artifactId>
             <version>${project.parent.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>scoreboard-api</artifactId>
             <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>file-util</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>exception-handler</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
         </dependency>
         <!-- Important local dependencies (end) -->
 

@@ -3,6 +3,8 @@ package me.luckyraven.file;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.util.UnhandledError;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -18,6 +20,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 
 public class FileHandler {
+
+	private static final Logger logger = LogManager.getLogger(FileHandler.class);
 
 	private final JavaPlugin plugin;
 	private final String     fileType;
@@ -71,9 +75,8 @@ public class FileHandler {
 		if (fileConfiguration != null && file != null) try {
 			fileConfiguration.save(file);
 		} catch (IOException exception) {
-			plugin.getLogger()
-				  .warning(String.format(UnhandledError.FILE_SAVE_ERROR + " %s to %s: %s", name, file,
-										 exception.getMessage()));
+			logger.warn(String.format(UnhandledError.FILE_SAVE_ERROR + " %s to %s: %s", name, file,
+									  exception.getMessage()));
 		}
 	}
 
@@ -92,13 +95,13 @@ public class FileHandler {
 		} catch (IOException exception) {
 			String message = String.format(UnhandledError.FILE_EDIT_ERROR + " %s to %s: %s", oldFile.getName(),
 										   file.getName(), exception.getMessage());
-			plugin.getLogger().warning(message);
+			logger.warn(message);
 			return;
 		}
 
 		// create a new file since the previous one was moved
 		createNewFile(true);
-		plugin.getLogger().info(String.format("%s%s is an old build or corrupted, creating a new one", name, fileType));
+		logger.info(String.format("%s%s is an old build or corrupted, creating a new one", name, fileType));
 
 		try (FileInputStream inputStream = new FileInputStream(file);
 			 InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
