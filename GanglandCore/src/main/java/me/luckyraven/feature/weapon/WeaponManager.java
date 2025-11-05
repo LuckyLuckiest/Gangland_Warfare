@@ -23,6 +23,24 @@ public class WeaponManager {
 		this.weapons  = new HashMap<>();
 	}
 
+	@Nullable
+	public static UUID getWeaponUUID(ItemStack item) {
+		if (item == null || item.getType().equals(Material.AIR) || item.getAmount() == 0) return null;
+
+		String      tagProperName = Weapon.getTagProperName(WeaponTag.UUID);
+		ItemBuilder tempItem      = new ItemBuilder(item);
+
+		String stringTagData = tempItem.getStringTagData(tagProperName);
+		String value         = String.valueOf(stringTagData);
+		UUID   uuid          = null;
+
+		if (!(value == null || value.equals("null") || value.isEmpty())) {
+			uuid = UUID.fromString(value);
+		}
+
+		return uuid;
+	}
+
 	public void initialize(WeaponTable table) {
 		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
@@ -51,25 +69,16 @@ public class WeaponManager {
 		return isWeapon(item) ? new ItemBuilder(item).getStringTagData("weapon") : null;
 	}
 
-	@Nullable
-	public UUID getWeaponUUID(ItemStack item) {
-		if (item == null || item.getType().equals(Material.AIR) || item.getAmount() == 0) return null;
-
-		ItemBuilder tempItem = new ItemBuilder(item);
-		String      value    = String.valueOf(tempItem.getStringTagData(Weapon.getTagProperName(WeaponTag.UUID)));
-		UUID        uuid     = null;
-
-		if (!(value == null || value.equals("null") || value.isEmpty())) {
-			uuid = UUID.fromString(value);
-		}
-
-		return uuid;
-	}
-
 	public boolean isWeapon(ItemStack item) {
 		if (item == null || item.getType().equals(Material.AIR) || item.getAmount() == 0) return false;
 
-		return new ItemBuilder(item).hasNBTTag("weapon");
+		// check the uuid of the weapon, and if it is available or not
+		UUID weaponUuid = getWeaponUUID(item);
+
+		if (weaponUuid == null) return false;
+
+		// check if the uuid is in the weapons map
+		return weapons.containsKey(weaponUuid);
 	}
 
 	public boolean hasAmmunition(Player player, Weapon weapon) {
