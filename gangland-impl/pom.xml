@@ -151,7 +151,7 @@
         <!-- Important local dependencies (start) -->
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>core-util</artifactId>
+            <artifactId>gangland-util</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>
@@ -163,13 +163,13 @@
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>file-util</artifactId>
+            <artifactId>plugin-file</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>exception-handler</artifactId>
+            <artifactId>plugin-exception</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>

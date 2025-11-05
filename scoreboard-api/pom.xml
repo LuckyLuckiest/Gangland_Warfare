@@ -28,7 +28,7 @@
 
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>core-util</artifactId>
+            <artifactId>gangland-util</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
