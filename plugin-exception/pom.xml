@@ -10,7 +10,7 @@
         <version>0.0.6-DEV</version>
     </parent>
 
-    <artifactId>exception-handler</artifactId>
+    <artifactId>plugin-exception</artifactId>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
