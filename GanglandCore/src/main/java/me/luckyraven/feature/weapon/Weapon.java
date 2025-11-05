@@ -8,6 +8,8 @@ import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.feature.weapon.ammo.Ammunition;
 import me.luckyraven.feature.weapon.projectile.ProjectileType;
+import me.luckyraven.feature.weapon.projectile.recoil.RecoilManager;
+import me.luckyraven.feature.weapon.projectile.spread.SpreadManager;
 import me.luckyraven.feature.weapon.reload.Reload;
 import me.luckyraven.feature.weapon.reload.ReloadType;
 import me.luckyraven.file.configuration.SoundConfiguration;
@@ -28,7 +30,7 @@ public class Weapon implements Cloneable {
 	// Information configuration
 	private final UUID   uuid;
 	private final String name, displayName;
-	private final WeaponType   category;
+	private final WeaponType   category; // TODO functionality not implemented
 	private final Material     material;
 	private final short        durability;
 	private final List<String> lore;
@@ -45,7 +47,7 @@ public class Weapon implements Cloneable {
 	private final int            projectileDistance;
 	private final boolean        particle;
 
-
+	// Reload configuration
 	private final int                    maxMagCapacity;
 	private final int                    reloadCooldown;
 	private final Ammunition             reloadAmmoType;
@@ -54,7 +56,6 @@ public class Weapon implements Cloneable {
 	private final ReloadType             reloadType;
 	private final Map<WeaponTag, Object> tags;
 
-	// Reload configuration
 	@Getter(value = AccessLevel.NONE)
 	@Setter(value = AccessLevel.NONE)
 	private Reload reload;
@@ -66,8 +67,8 @@ public class Weapon implements Cloneable {
 	private int           currentMagCapacity;
 
 	// Information-durability configuration
-	private int durabilityOnShot;
-	private int durabilityOnRepair;
+	private short durabilityOnShot;
+	private short durabilityOnRepair; // TODO functionality not implemented
 
 	// Shoot-weapon consume configuration
 	private int weaponConsumeOnTime;
@@ -76,7 +77,6 @@ public class Weapon implements Cloneable {
 	private double projectileExplosionDamage;
 	private int    projectileFireTicks;
 	private double projectileHeadDamage;
-	private double projectileBodyDamage;
 	private int    projectileCriticalHitChance;
 	private double projectileCriticalHitDamage;
 
@@ -88,11 +88,17 @@ public class Weapon implements Cloneable {
 	private double  spreadBoundMinimum;
 	private double  spreadBoundMaximum;
 
+	@Setter(value = AccessLevel.NONE)
+	private SpreadManager spread;
+
 	// Shot-recoil configuration
 	private double         recoilAmount;
 	private double         pushVelocity;
 	private double         pushPowerUp;
 	private List<String[]> recoilPattern;
+
+	@Setter(value = AccessLevel.NONE)
+	private RecoilManager recoil;
 
 	// Shot-sound configuration
 	// shot
@@ -115,7 +121,7 @@ public class Weapon implements Cloneable {
 	private String reloadActionBarOpening;
 
 	// Scope configuration
-	private int     scopeLevel;
+	private int     scopeLevel; // TODO functionality not implemented
 	private boolean scoped;
 
 	// Scope-sound configuration
@@ -156,6 +162,8 @@ public class Weapon implements Cloneable {
 		this.tags                 = new TreeMap<>();
 		this.changingDisplayName  = updateDisplayName(displayName);
 		this.reload               = reloadType.createInstance(this, reloadAmmoType);
+		this.recoil               = new RecoilManager(this);
+		this.spread               = new SpreadManager(this);
 	}
 
 	public Weapon(String name, String displayName, WeaponType category, Material material, short durability,
@@ -184,7 +192,6 @@ public class Weapon implements Cloneable {
 		this.projectileExplosionDamage   = weapon.projectileExplosionDamage;
 		this.projectileFireTicks         = weapon.projectileFireTicks;
 		this.projectileHeadDamage        = weapon.projectileHeadDamage;
-		this.projectileBodyDamage        = weapon.projectileBodyDamage;
 		this.projectileCriticalHitChance = weapon.projectileCriticalHitChance;
 		this.projectileCriticalHitDamage = weapon.projectileCriticalHitDamage;
 		this.spreadStart                 = weapon.spreadStart;
@@ -211,6 +218,8 @@ public class Weapon implements Cloneable {
 		this.scopeLevel                  = weapon.scopeLevel;
 		this.scopeDefaultSound           = weapon.scopeDefaultSound.clone();
 		this.scopeCustomSound            = weapon.scopeCustomSound.clone();
+		this.recoil                      = new RecoilManager(weapon);
+		this.spread                      = new SpreadManager(weapon);
 	}
 
 	public static String getTagProperName(WeaponTag tag) {
@@ -298,12 +307,12 @@ public class Weapon implements Cloneable {
 	}
 
 	public boolean requiresReload(boolean normalCheck) {
-		boolean magazineFull = isMagazineFull();
+		boolean isMagazineUsed = !isMagazineFull();
 
-		if (!normalCheck) return magazineFull;
+		if (!normalCheck) return isMagazineUsed;
 
-		boolean canNotAddMore = maxMagCapacity - currentMagCapacity < reloadRestore;
-		return magazineFull || canNotAddMore;
+		boolean hasSpaceForAmmo = maxMagCapacity - currentMagCapacity < reloadRestore;
+		return isMagazineUsed || hasSpaceForAmmo;
 	}
 
 	public boolean isMagazineFull() {
@@ -366,6 +375,8 @@ public class Weapon implements Cloneable {
 			weapon.scopeCustomSound         = this.scopeCustomSound.clone();
 
 			weapon.reload = this.reload.clone();
+			weapon.recoil = new RecoilManager(weapon);
+			weapon.spread = new SpreadManager(weapon);
 
 			return weapon;
 		} catch (CloneNotSupportedException exception) {
@@ -377,26 +388,26 @@ public class Weapon implements Cloneable {
 	public String toString() {
 		return String.format(
 				"Weapon{uuid='%s',name='%s',displayName='%s',category='%s',material='%s',durability=%d,lore='%s'," +
-				"dropHologram=%b,weaponConsumedOnShot=%b,projectileSpeed=%.2f,projectileType='%s',projectileDamage=%.2f," +
-				"projectileConsumed=%d,projectilePerShot=%d,projectileCooldown=%d,projectileDistance=%d," +
-				"particle='%s',maxMagCapacity=%d,reloadCooldown=%d,reloadAmmoType='%s',reloadConsume=%d," +
-				"reloadRestore=%d,reloadType='%s',tags='%s',reload='%s',changingDisplayName='%s',currentSelectiveFire=%b," +
-				"currentMagCapacity=%d,durabilityOnShot=%d,durabilityOnRepair=%d,weaponConsumeOnTime=%b," +
+				"dropHologram=%b,weaponConsumedOnShot=%d,projectileSpeed=%.2f,projectileType='%s',projectileDamage=%.2f," +
+				"projectileConsumed=%d,projectilePerShot=%d,projectileCooldown=%d,projectileDistance=%d,particle=%b," +
+				"maxMagCapacity=%d,reloadCooldown=%d,reloadAmmoType='%s',reloadConsume=%d,reloadRestore=%d," +
+				"reloadType='%s',tags='%s',reload='%s',changingDisplayName='%s',currentSelectiveFire='%s'," +
+				"currentMagCapacity=%d,durabilityOnShot=%d,durabilityOnRepair=%d,weaponConsumeOnTime=%d," +
 				"projectileExplosionDamage=%.2f,projectileFireTicks=%d,projectileHeadDamage=%.2f," +
-				"projectileBodyDamage=%.2f,projectileCriticalHitChance=%d,projectileCriticalHitDamage=%.2f," +
-				"spreadStart=%.2f,spreadResetTime=%d,spreadChangeBase=%.2f,spreadResetOnBound=%b," +
-				"spreadBoundMinimum=%.2f,spreadBoundMaximum=%.2f,recoilAmount=%.2f,pushVelocity=%.2f,pushPowerUp=%b," +
-				"recoilPattern='%s',reloadActionBarReloading='%s',reloadActionBarOpening='%s',scopeLevel=%d,scoped=%b}",
-				uuid.toString(), name, displayName, category, material, durability, lore, dropHologram,
-				weaponConsumedOnShot, projectileSpeed, projectileType, projectileDamage, projectileConsumed,
-				projectilePerShot, projectileCooldown, projectileDistance, particle, maxMagCapacity, reloadCooldown,
-				reloadAmmoType, reloadConsume, reloadRestore, reloadType, tags, reload, changingDisplayName,
-				currentSelectiveFire, currentMagCapacity, durabilityOnShot, durabilityOnRepair, weaponConsumeOnTime,
-				projectileExplosionDamage, projectileFireTicks, projectileHeadDamage, projectileBodyDamage,
-				projectileCriticalHitChance, projectileCriticalHitDamage, spreadStart, spreadResetTime,
-				spreadChangeBase, spreadResetOnBound, spreadBoundMinimum, spreadBoundMaximum, recoilAmount,
-				pushVelocity, pushPowerUp, recoilPattern.stream().map(Arrays::toString).toList(),
-				reloadActionBarReloading, reloadActionBarOpening, scopeLevel, scoped);
+				"projectileCriticalHitChance=%d,projectileCriticalHitDamage=%.2f,spreadStart=%.2f,spreadResetTime=%d," +
+				"spreadChangeBase=%.2f,spreadResetOnBound=%b,spreadBoundMinimum=%.2f,spreadBoundMaximum=%.2f," +
+				"recoilAmount=%.2f,pushVelocity=%.2f,pushPowerUp=%.2f,recoilPattern='%s',reloadActionBarReloading='%s'," +
+				"reloadActionBarOpening='%s',scopeLevel=%d,scoped=%b,recoil='%s'}", uuid.toString(), name, displayName,
+				category, material, durability, lore, dropHologram, weaponConsumedOnShot, projectileSpeed,
+				projectileType, projectileDamage, projectileConsumed, projectilePerShot, projectileCooldown,
+				projectileDistance, particle, maxMagCapacity, reloadCooldown, reloadAmmoType, reloadConsume,
+				reloadRestore, reloadType, tags, reload, changingDisplayName, currentSelectiveFire, currentMagCapacity,
+				durabilityOnShot, durabilityOnRepair, weaponConsumeOnTime, projectileExplosionDamage,
+				projectileFireTicks, projectileHeadDamage, projectileCriticalHitChance, projectileCriticalHitDamage,
+				spreadStart, spreadResetTime, spreadChangeBase, spreadResetOnBound, spreadBoundMinimum,
+				spreadBoundMaximum, recoilAmount, pushVelocity, pushPowerUp,
+				recoilPattern.stream().map(Arrays::toString).toList(), reloadActionBarReloading, reloadActionBarOpening,
+				scopeLevel, scoped, recoil);
 	}
 
 	private void updateTag(ItemBuilder itemBuilder, WeaponTag tag, Object value) {
