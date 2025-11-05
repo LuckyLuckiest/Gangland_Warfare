@@ -116,9 +116,10 @@ Shoot:
       Power_Up: 0.0002
       # The pattern that would be used for recoil, and at the end it would reset to the first value
       Pattern:
-         - 0.05;0.05
+         - 2.5;1
+         - 0;0
          - 0.5;1
-         - 0.5;2
+         - 1;1
 
    Sound:
       # The default sound that would be used when there is no custom sound available
