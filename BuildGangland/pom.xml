@@ -129,6 +129,16 @@
         <!-- 1.21.x -->
         <dependency>
             <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_21_R6</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-1_21_R5</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
             <artifactId>gangland-1_21_R4</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
