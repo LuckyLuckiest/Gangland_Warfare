@@ -2,10 +2,9 @@ package me.luckyraven.feature.weapon.reload;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import me.luckyraven.bukkit.ItemBuilder;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.feature.weapon.Weapon;
-import me.luckyraven.feature.weapon.WeaponTag;
+import me.luckyraven.feature.weapon.WeaponManager;
 import me.luckyraven.feature.weapon.ammo.Ammunition;
 import me.luckyraven.file.configuration.SoundConfiguration;
 import me.luckyraven.util.ChatUtil;
@@ -14,6 +13,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Getter(value = AccessLevel.PROTECTED)
@@ -91,19 +91,20 @@ public abstract class Reload implements Cloneable {
 	 *
 	 * @return the slot index where the weapon is located, or -1 if not found
 	 */
-	protected int findWeaponSlot(PlayerInventory inventory) {
-		String      weaponUUID = Weapon.getTagProperName(WeaponTag.UUID);
+	protected int findWeaponSlot(PlayerInventory inventory, Weapon weapon) {
+		String      weaponUUID = weapon.getUuid().toString();
 		ItemStack[] contents   = inventory.getContents();
 
 		for (int i = 0; i < contents.length; i++) {
 			ItemStack item = contents[i];
-			if (item == null || item.getType().isAir()) continue;
 
-			ItemBuilder itemBuilder = new ItemBuilder(item);
-			if (!itemBuilder.hasNBTTag("UUID")) continue;
+			UUID itemUuid = WeaponManager.getWeaponUUID(item);
 
-			String uuid = itemBuilder.getStringTagData("UUID");
-			if (weaponUUID.equals(uuid)) {
+			if (itemUuid == null) continue;
+
+			UUID defaultWeaponUuid = UUID.fromString(weaponUUID);
+
+			if (defaultWeaponUuid.equals(itemUuid)) {
 				return i;
 			}
 		}

@@ -76,9 +76,11 @@ public class NumberedReload extends Reload {
 
 				getWeapon().updateWeaponData(heldWeapon);
 
-				int newSlot = findWeaponSlot(inventory);
+				int newSlot = findWeaponSlot(inventory, getWeapon());
 
-				getWeapon().updateWeapon(player, heldWeapon, newSlot);
+				if (newSlot > -1) {
+					getWeapon().updateWeapon(player, heldWeapon, newSlot);
+				}
 			});
 		}
 

@@ -66,7 +66,7 @@ public class InstantReload extends Reload {
 
 			getWeapon().updateWeaponData(heldWeapon);
 
-			int newSlot = findWeaponSlot(inventory);
+			int newSlot = findWeaponSlot(inventory, getWeapon());
 
 			// item is in inventory
 			if (newSlot > -1) {
