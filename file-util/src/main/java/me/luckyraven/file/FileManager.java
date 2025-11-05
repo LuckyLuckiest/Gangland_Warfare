@@ -16,7 +16,7 @@ import java.util.Set;
 
 public class FileManager {
 
-	private static final Logger logger = LogManager.getLogger(FileManager.class);
+	private static final Logger logger = LogManager.getLogger(FileManager.class.getSimpleName());
 
 	private final JavaPlugin       plugin;
 	private final Set<FileHandler> files;

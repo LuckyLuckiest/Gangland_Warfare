@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 
 public abstract class FolderLoader extends DataLoader<FileHandler> {
 
-	private static final Logger logger = LogManager.getLogger(FolderLoader.class);
+	private static final Logger logger = LogManager.getLogger(FolderLoader.class.getSimpleName());
 
 	private final JavaPlugin plugin;
 

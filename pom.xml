@@ -19,7 +19,7 @@
 
     <modules>
         <module>GanglandCore</module>
-        <module>BuildGangland</module>
+        <module>gangland-build</module>
         <module>GanglandCompatibility</module>
         <module>GanglandCompatibility/V1_21_R6</module>
         <module>GanglandCompatibility/V1_21_R5</module>

@@ -21,7 +21,7 @@ import java.util.Objects;
 
 public class FileHandler {
 
-	private static final Logger logger = LogManager.getLogger(FileHandler.class);
+	private static final Logger logger = LogManager.getLogger(FileHandler.class.getSimpleName());
 
 	private final JavaPlugin plugin;
 	private final String     fileType;
