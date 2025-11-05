@@ -16,10 +16,6 @@ import java.util.Set;
 
 public class Recoil_1_21_R4 extends RecoilCompatibility {
 
-	private final Set<Relative> ABSOLUTE_FLAGS = new HashSet<>(Arrays.asList(Relative.a, Relative.b, Relative.c));
-	private final Set<Relative> RELATIVE_FLAGS = new HashSet<>(
-			Arrays.asList(Relative.a, Relative.b, Relative.c, Relative.e, Relative.d));
-
 	@Override
 	public void modifyCameraRotation(@NotNull Player player, float yaw, float pitch, boolean position) {
 		float newYaw   = -yaw + 1;
@@ -29,8 +25,10 @@ public class Recoil_1_21_R4 extends RecoilCompatibility {
 		Vec3D    movePosition   = new Vec3D(playerLocation.getX(), playerLocation.getY(), playerLocation.getZ());
 
 		PositionMoveRotation moveRotation = new PositionMoveRotation(movePosition, movePosition, newYaw, newPitch);
-		PacketPlayOutPosition packet = new PacketPlayOutPosition(0, moveRotation,
-																 position ? RELATIVE_FLAGS : ABSOLUTE_FLAGS);
+
+		// move the yaw and pitch only
+		Set<Relative>         rotationFlags = new HashSet<>(Arrays.asList(Relative.e, Relative.d));
+		PacketPlayOutPosition packet        = new PacketPlayOutPosition(0, moveRotation, rotationFlags);
 
 		(((CraftPlayer) player).getHandle()).f.b(packet);
 	}

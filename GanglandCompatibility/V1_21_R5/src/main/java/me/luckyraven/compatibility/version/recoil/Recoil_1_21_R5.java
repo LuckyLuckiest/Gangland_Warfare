@@ -6,7 +6,7 @@ import net.minecraft.world.entity.PositionMoveRotation;
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.phys.Vec3D;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_21_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_21_R5.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Recoil_1_21_R2 extends RecoilCompatibility {
+public class Recoil_1_21_R5 extends RecoilCompatibility {
 
 	@Override
 	public void modifyCameraRotation(@NotNull Player player, float yaw, float pitch, boolean position) {
@@ -30,6 +30,7 @@ public class Recoil_1_21_R2 extends RecoilCompatibility {
 		Set<Relative>         rotationFlags = new HashSet<>(Arrays.asList(Relative.e, Relative.d));
 		PacketPlayOutPosition packet        = new PacketPlayOutPosition(0, moveRotation, rotationFlags);
 
-		(((CraftPlayer) player).getHandle()).f.b(packet);
+		(((CraftPlayer) player).getHandle()).g.b(packet);
 	}
+
 }

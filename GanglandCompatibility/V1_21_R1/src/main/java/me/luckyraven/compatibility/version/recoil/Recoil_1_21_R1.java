@@ -24,6 +24,7 @@ public class Recoil_1_21_R1 extends RecoilCompatibility {
 		float newYaw   = -yaw + 1;
 		float newPitch = pitch - 1;
 
+
 		PacketPlayOutPosition packet = new PacketPlayOutPosition(0D, 0D, 0D, newYaw, newPitch,
 																 position ? RELATIVE_FLAGS : ABSOLUTE_FLAGS, 0);
 
