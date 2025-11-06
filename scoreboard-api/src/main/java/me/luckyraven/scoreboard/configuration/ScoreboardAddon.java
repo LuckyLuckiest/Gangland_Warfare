@@ -1,4 +1,4 @@
-package me.luckyraven.file.configuration;
+package me.luckyraven.scoreboard.configuration;
 
 import lombok.Getter;
 import me.luckyraven.exception.PluginException;

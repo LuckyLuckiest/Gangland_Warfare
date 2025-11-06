@@ -2,8 +2,8 @@ package me.luckyraven.feature.scoreboard;
 
 import com.viaversion.viaversion.api.ViaAPI;
 import me.luckyraven.Gangland;
-import me.luckyraven.file.configuration.ScoreboardAddon;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
 import me.luckyraven.scoreboard.driver.DriverHandler;
 import me.luckyraven.scoreboard.driver.version.DriverV1;
 import me.luckyraven.scoreboard.driver.version.DriverV2;
