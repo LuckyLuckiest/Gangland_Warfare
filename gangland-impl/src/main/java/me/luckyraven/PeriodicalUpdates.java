@@ -20,6 +20,8 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.Pair;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.weapon.Weapon;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
@@ -29,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 
 public final class PeriodicalUpdates {
+
+	private static final Logger logger = LogManager.getLogger(PeriodicalUpdates.class.getSimpleName());
 
 	private final Gangland    gangland;
 	private final Initializer initializer;
@@ -115,7 +119,7 @@ public final class PeriodicalUpdates {
 	 * Updates the plugin information.
 	 */
 	public void forceUpdate() {
-		Gangland.getLog4jLogger().info("Force update...");
+		logger.info("Force update...");
 		task();
 	}
 
@@ -132,7 +136,7 @@ public final class PeriodicalUpdates {
 	public void start() {
 		if (this.repeatingTimer == null) return;
 
-		Gangland.getLog4jLogger().info("Initializing auto-save...");
+		logger.info("Initializing auto-save...");
 		this.repeatingTimer.start(true);
 	}
 
@@ -141,25 +145,25 @@ public final class PeriodicalUpdates {
 		boolean log   = SettingAddon.isAutoSaveDebug();
 
 		// auto-saving
-		if (log) Gangland.getLog4jLogger().info("Saving...");
+		if (log) logger.info("Saving...");
 		try {
 			updatingDatabase();
-			if (log) Gangland.getLog4jLogger().info("Data save complete");
+			if (log) logger.info("Data save complete");
 		} catch (Throwable throwable) {
-			Gangland.getLog4jLogger().error("There was an issue saving the data...");
+			logger.error("There was an issue saving the data...");
 		}
 
 		// resetting player inventories
-		if (log) Gangland.getLog4jLogger().info("Cache reset...");
+		if (log) logger.info("Cache reset...");
 		try {
 			resetCache();
 		} catch (Throwable exception) {
-			Gangland.getLog4jLogger().error("There was an issue resetting the cache...", exception);
+			logger.error("There was an issue resetting the cache...", exception);
 		}
 
 		long end = System.currentTimeMillis();
 
-		if (log) Gangland.getLog4jLogger().info("The process took {}ms", end - start);
+		if (log) logger.info("The process took {}ms", end - start);
 	}
 
 	private void updateUserData(UserManager<? extends OfflinePlayer> userManager, DatabaseHelper helper,

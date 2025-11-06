@@ -4,6 +4,8 @@ import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.UnhandledError;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -19,6 +21,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class LanguageLoader {
+
+	private static final Logger logger = LogManager.getLogger(LanguageLoader.class.getSimpleName());
 
 	private final Gangland gangland;
 
@@ -42,9 +46,9 @@ public class LanguageLoader {
 				if (i < files.size() - 1) languages.append(", ");
 			}
 
-			Gangland.getLog4jLogger()
-					.warn("Disabling plugin, reason: unidentifiable message file.\nPlease use languages from the list: {}",
-						  languages);
+			logger.warn(
+					"Disabling plugin, reason: unidentifiable message file.\nPlease use languages from the list: {}",
+					languages);
 			Bukkit.getServer().getPluginManager().disablePlugin(this.gangland);
 		}
 	}
@@ -79,9 +83,8 @@ public class LanguageLoader {
 				if (i++ != 0) files.add(name.substring(name.lastIndexOf("/") + 1));
 			}
 		} catch (IOException exception) {
-			Gangland.getLog4jLogger()
-					.error("{}: {}\nThis error occurred since the plugin jar file is not in the plugins folder.",
-						   UnhandledError.MISSING_JAR_ERROR, exception.getMessage());
+			logger.error("{}: {}\nThis error occurred since the plugin jar file is not in the plugins folder.",
+						 UnhandledError.MISSING_JAR_ERROR, exception.getMessage());
 		}
 		return files;
 	}

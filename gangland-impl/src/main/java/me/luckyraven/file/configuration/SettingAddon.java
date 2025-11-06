@@ -1,9 +1,10 @@
 package me.luckyraven.file.configuration;
 
 import lombok.Getter;
-import me.luckyraven.Gangland;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.FileManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -19,6 +20,8 @@ public class SettingAddon {
 
 	private static final @Getter Map<String, Object> settingsMap         = new LinkedHashMap<>();
 	private static final @Getter Map<String, Object> settingsPlaceholder = new LinkedHashMap<>();
+
+	private static final Logger logger = LogManager.getLogger(SettingAddon.class.getSimpleName());
 
 	private static         FileConfiguration settings;
 	// update configuration
@@ -233,7 +236,7 @@ public class SettingAddon {
 
 				settingsMap.put(field.getName(), value);
 			} catch (IllegalAccessException exception) {
-				Gangland.getLog4jLogger().error(exception);
+				logger.error(exception);
 			}
 		}
 

@@ -35,7 +35,7 @@ import java.util.Map;
 @Getter
 public final class Gangland extends JavaPlugin implements Placeholder {
 
-	private static final @Getter Logger log4jLogger = LogManager.getLogger("Gangland_Warfare");
+	private static final Logger logger = LogManager.getLogger("Gangland_Warfare");
 
 	private Initializer             initializer;
 	private ReloadPlugin            reloadPlugin;
@@ -248,16 +248,16 @@ public final class Gangland extends JavaPlugin implements Placeholder {
 
 		public void validate(@Nullable Runnable runnable) {
 			if (Bukkit.getPluginManager().getPlugin(name) != null) {
-				if (type == Type.SOFT) log4jLogger.info("Found {}, linking...", name);
+				if (type == Type.SOFT) logger.info("Found {}, linking...", name);
 				if (runnable != null) runnable.run();
 
-				log4jLogger.info("Linked {}", name);
+				logger.info("Linked {}", name);
 				return;
 			}
 
 			if (type != Type.REQUIRED) return;
 
-			log4jLogger.error("{} is a required dependency!", name);
+			logger.error("{} is a required dependency!", name);
 			getPluginLoader().disablePlugin(Gangland.this);
 		}
 

@@ -10,6 +10,8 @@ import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.UnhandledError;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -34,6 +36,8 @@ public final class CommandManager implements CommandExecutor {
 																					   DownloadPluginCommand.class);
 
 	private static final Map<String, CommandHandler> commands = new HashMap<>();
+
+	private static final Logger logger = LogManager.getLogger(CommandManager.class.getSimpleName());
 
 	private final Gangland gangland;
 
@@ -120,7 +124,7 @@ public final class CommandManager implements CommandExecutor {
 				return false;
 			}
 		} catch (Throwable throwable) {
-			Gangland.getLog4jLogger().error("{}: {}", UnhandledError.COMMANDS_ERROR, throwable.getMessage(), throwable);
+			logger.error("{}: {}", UnhandledError.COMMANDS_ERROR, throwable.getMessage(), throwable);
 			return false;
 		}
 		return true;

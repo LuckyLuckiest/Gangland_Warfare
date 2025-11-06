@@ -22,6 +22,8 @@ import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
 import me.luckyraven.scoreboard.Scoreboard;
 import me.luckyraven.scoreboard.driver.DriverHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -29,6 +31,8 @@ import java.io.IOException;
 import java.util.List;
 
 public final class ReloadPlugin {
+
+	private static final Logger logger = LogManager.getLogger(ReloadPlugin.class.getSimpleName());
 
 	private final Gangland         gangland;
 	private final Initializer      initializer;
@@ -260,7 +264,7 @@ public final class ReloadPlugin {
 			if (scoreboard == null) throw new IOException("scoreboard file is not loaded!");
 			scoreboard.reloadData();
 		} catch (IOException exception) {
-			Gangland.getLog4jLogger().error("scoreboard file is not loaded!", exception);
+			logger.error("scoreboard file is not loaded!", exception);
 			return;
 		}
 
