@@ -20,6 +20,7 @@
     <modules>
         <module>gangland-impl</module>
         <module>gangland-build</module>
+        <module>gangland-weapon</module>
         <module>gangland-util</module>
         <module>scoreboard-api</module>
         <module>plugin-file</module>
@@ -27,6 +28,7 @@
 
         <!-- -->
         <module>gangland-compatibility</module>
+        <module>gangland-compatibility/version-impl</module>
         <module>gangland-compatibility/version-1_10_R1</module>
         <module>gangland-compatibility/version-1_11_R1</module>
         <module>gangland-compatibility/version-1_12_R1</module>
