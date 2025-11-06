@@ -120,6 +120,9 @@ public final class Initializer {
 	 * This is used to safeguard the first initialization.
 	 */
 	public void postInitialize() {
+		// Compatibility loader
+		compatibilityWorker = new CompatibilityWorker(gangland.getViaAPI(), compatibilitySetup);
+
 		// permission manager
 		permissionManager = new PermissionManager(this.gangland, new PermissionWorker("gangland"));
 
@@ -198,7 +201,7 @@ public final class Initializer {
 		waypointManager.initialize(waypointTable);
 
 		// Weapon manager
-		weaponManager = new WeaponManager(gangland, weaponAddon);
+		weaponManager = new WeaponManager(gangland, ganglandDatabase, weaponAddon);
 
 		WeaponTable weaponTable = getInstanceFromTables(WeaponTable.class, tables);
 
@@ -216,9 +219,6 @@ public final class Initializer {
 
 		// Placeholder
 		placeholder = new GanglandPlaceholder(gangland, Replacer.Closure.PERCENT);
-
-		// Compatibility loader
-		compatibilityWorker = new CompatibilityWorker(gangland.getViaAPI(), compatibilitySetup);
 	}
 
 	/**
