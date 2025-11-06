@@ -1,5 +1,6 @@
 package me.luckyraven.weapon;
 
+import lombok.Getter;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.weapon.configuration.WeaponAddon;
 import org.bukkit.Location;
@@ -9,14 +10,15 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public abstract class WeaponService {
 
-	private final WeaponAddon       weaponAddon;
+	private final WeaponAddon weaponAddon;
+
+	@Getter
 	private final Map<UUID, Weapon> weapons;
 
 	public WeaponService(WeaponAddon weaponAddon) {
@@ -167,10 +169,6 @@ public abstract class WeaponService {
 
 	public void clear() {
 		weapons.clear();
-	}
-
-	public Map<UUID, Weapon> getWeapons() {
-		return Collections.unmodifiableMap(weapons);
 	}
 
 	public boolean isHeadPosition(Location l1, Location l2) {
