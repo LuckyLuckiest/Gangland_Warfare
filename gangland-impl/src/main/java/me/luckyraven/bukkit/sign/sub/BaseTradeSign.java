@@ -3,8 +3,8 @@ package me.luckyraven.bukkit.sign.sub;
 import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.bukkit.sign.Sign;
-import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.util.utilities.NumberUtil;
+import me.luckyraven.weapon.Weapon;
 import org.bukkit.Location;
 
 import java.util.Map;

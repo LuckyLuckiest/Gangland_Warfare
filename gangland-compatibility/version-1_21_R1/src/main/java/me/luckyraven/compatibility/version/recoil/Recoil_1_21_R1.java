@@ -1,6 +1,6 @@
 package me.luckyraven.compatibility.version.recoil;
 
-import me.luckyraven.feature.weapon.projectile.recoil.RecoilCompatibility;
+import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import net.minecraft.network.protocol.game.PacketPlayOutPosition;
 import net.minecraft.world.entity.RelativeMovement;
 import org.bukkit.craftbukkit.v1_21_R1.entity.CraftPlayer;

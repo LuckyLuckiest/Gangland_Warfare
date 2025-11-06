@@ -1,8 +1,8 @@
 package me.luckyraven.compatibility.version;
 
 import me.luckyraven.compatibility.Compatibility;
+import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.compatibility.version.recoil.Recoil_1_21_R2;
-import me.luckyraven.feature.weapon.projectile.recoil.RecoilCompatibility;
 
 public class v1_21_R2 implements Compatibility {
 
