@@ -1,4 +1,4 @@
-package me.luckyraven.file.configuration;
+package me.luckyraven.util.configuration;
 
 import com.cryptomorin.xseries.XSound;
 import me.luckyraven.exception.PluginException;
