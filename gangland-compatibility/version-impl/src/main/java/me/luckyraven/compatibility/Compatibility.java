@@ -1,6 +1,6 @@
 package me.luckyraven.compatibility;
 
-import me.luckyraven.feature.weapon.projectile.recoil.RecoilCompatibility;
+import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 
 public interface Compatibility {
 

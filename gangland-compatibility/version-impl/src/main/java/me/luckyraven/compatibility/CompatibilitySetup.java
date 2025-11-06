@@ -1,22 +1,25 @@
 package me.luckyraven.compatibility;
 
-import me.luckyraven.Gangland;
 import me.luckyraven.util.utilities.ReflectionUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
 
 public final class CompatibilitySetup {
 
-	private final Gangland gangland;
+	private static final Logger logger = LogManager.getLogger(CompatibilitySetup.class.getSimpleName());
 
-	public CompatibilitySetup(Gangland gangland) {
-		this.gangland = gangland;
+	private final VersionSetup versionSetup;
+
+	public CompatibilitySetup(VersionSetup versionSetup) {
+		this.versionSetup = versionSetup;
 	}
 
 	@Nullable
 	public <T> T getCompatibleVersion(Class<T> interfaceClazz, String directory) {
-		String version = this.gangland.getInitializer().getVersionSetup().getVersionString();
+		String version = versionSetup.getVersionString();
 
 		try {
 			String         classPath = directory + "." + version;
@@ -28,9 +31,9 @@ public final class CompatibilitySetup {
 		} catch (ClassNotFoundException | ClassCastException exception) {
 			String bukkitVersion = Version.getBukkitVersion();
 
-			Gangland.getLog4jLogger().warn("There was no {} found... Unsupported version?", bukkitVersion);
+			logger.warn("There was no {} found... Unsupported version?", bukkitVersion);
 		} catch (InternalError exception) {
-			Gangland.getLog4jLogger().error("Failed to load the compatible version.", exception);
+			logger.error("Failed to load the compatible version.", exception);
 		}
 
 		return null;
