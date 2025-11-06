@@ -102,6 +102,8 @@
                             <includes>
                                 <!-- AnvilGUI -->
                                 <include>net/wesjd/anvilgui/version/</include>
+                                <!-- Compatibility -->
+                                <include>me/luckyraven/</include>
                             </includes>
                         </filter>
                     </filters>
