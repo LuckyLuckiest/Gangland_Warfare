@@ -201,7 +201,7 @@ public final class Initializer {
 		waypointManager.initialize(waypointTable);
 
 		// Weapon manager
-		weaponManager = new WeaponManager(gangland, ganglandDatabase, weaponAddon);
+		weaponManager = new WeaponManager(gangland);
 
 		WeaponTable weaponTable = getInstanceFromTables(WeaponTable.class, tables);
 
