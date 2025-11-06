@@ -416,7 +416,7 @@ public class Weapon implements Cloneable {
 	}
 
 	private String updateDisplayName(String displayName) {
-		return displayName + " &8«&6" + currentMagCapacity + "&7/&6" + maxMagCapacity + "&8»";
+		return String.format("%s&r &8«&6%d&7/&6%d&8»&r", displayName, currentMagCapacity, maxMagCapacity);
 	}
 
 	private void initializeTags(ItemBuilder itemBuilder) {
