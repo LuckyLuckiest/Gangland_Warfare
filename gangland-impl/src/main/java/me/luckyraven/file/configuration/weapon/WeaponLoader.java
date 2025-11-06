@@ -3,6 +3,7 @@ package me.luckyraven.file.configuration.weapon;
 import me.luckyraven.Gangland;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.FolderLoader;
+import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import org.bukkit.configuration.InvalidConfigurationException;
 
 public class WeaponLoader extends FolderLoader {
@@ -19,7 +20,8 @@ public class WeaponLoader extends FolderLoader {
 		FileManager fileManager = gangland.getInitializer().getFileManager();
 		this.load(true, fileHandler -> {
 			try {
-				gangland.getInitializer().getWeaponAddon().registerWeapon(gangland, fileHandler);
+				AmmunitionAddon ammunitionAddon = gangland.getInitializer().getAmmunitionAddon();
+				gangland.getInitializer().getWeaponAddon().registerWeapon(ammunitionAddon, fileHandler);
 			} catch (InvalidConfigurationException exception) {
 				Gangland.getLog4jLogger()
 						.info("There was a problem loading the weapon: {}", exception.getMessage(), exception);

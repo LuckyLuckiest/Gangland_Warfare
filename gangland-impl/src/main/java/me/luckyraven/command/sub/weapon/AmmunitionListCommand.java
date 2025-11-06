@@ -3,10 +3,10 @@ package me.luckyraven.command.sub.weapon;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
-import me.luckyraven.feature.weapon.ammo.Ammunition;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
+import me.luckyraven.weapon.ammo.Ammunition;
 import org.bukkit.command.CommandSender;
 
 import java.util.Iterator;

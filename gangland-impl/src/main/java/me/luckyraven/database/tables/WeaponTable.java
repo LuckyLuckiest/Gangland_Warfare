@@ -2,7 +2,7 @@ package me.luckyraven.database.tables;
 
 import me.luckyraven.database.component.Attribute;
 import me.luckyraven.database.component.Table;
-import me.luckyraven.feature.weapon.Weapon;
+import me.luckyraven.weapon.Weapon;
 
 import java.sql.Types;
 import java.util.Map;

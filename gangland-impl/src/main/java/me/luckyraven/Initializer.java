@@ -49,10 +49,10 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.ScoreboardAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
-import me.luckyraven.file.configuration.weapon.AmmunitionAddon;
-import me.luckyraven.file.configuration.weapon.WeaponAddon;
 import me.luckyraven.file.configuration.weapon.WeaponLoader;
 import me.luckyraven.listener.ListenerManager;
+import me.luckyraven.weapon.configuration.AmmunitionAddon;
+import me.luckyraven.weapon.configuration.WeaponAddon;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
@@ -111,7 +111,7 @@ public final class Initializer {
 		this.informationManager.processCommands();
 
 		this.versionSetup       = new VersionSetup();
-		this.compatibilitySetup = new CompatibilitySetup(gangland);
+		this.compatibilitySetup = new CompatibilitySetup(versionSetup);
 	}
 
 	/**
@@ -198,7 +198,7 @@ public final class Initializer {
 		waypointManager.initialize(waypointTable);
 
 		// Weapon manager
-		weaponManager = new WeaponManager(gangland);
+		weaponManager = new WeaponManager(gangland, weaponAddon);
 
 		WeaponTable weaponTable = getInstanceFromTables(WeaponTable.class, tables);
 
@@ -218,7 +218,7 @@ public final class Initializer {
 		placeholder = new GanglandPlaceholder(gangland, Replacer.Closure.PERCENT);
 
 		// Compatibility loader
-		compatibilityWorker = new CompatibilityWorker(gangland);
+		compatibilityWorker = new CompatibilityWorker(gangland.getViaAPI(), compatibilitySetup);
 	}
 
 	/**

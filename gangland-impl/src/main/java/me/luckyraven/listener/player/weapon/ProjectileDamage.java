@@ -3,10 +3,10 @@ package me.luckyraven.listener.player.weapon;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.Gangland;
-import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.WeaponManager;
-import me.luckyraven.feature.weapon.events.WeaponProjectileLaunchEvent;
 import me.luckyraven.listener.ListenerHandler;
+import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.events.WeaponProjectileLaunchEvent;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -26,12 +26,10 @@ public class ProjectileDamage implements Listener {
 
 	private final static Map<Integer, Weapon> weaponInstance = new ConcurrentHashMap<>();
 
-	private final Gangland                           gangland;
 	private final WeaponManager                      weaponManager;
 	private final Map<Integer, ProjectileEventQueue> eventQueues;
 
 	public ProjectileDamage(Gangland gangland) {
-		this.gangland      = gangland;
 		this.weaponManager = gangland.getInitializer().getWeaponManager();
 		this.eventQueues   = new ConcurrentHashMap<>();
 	}

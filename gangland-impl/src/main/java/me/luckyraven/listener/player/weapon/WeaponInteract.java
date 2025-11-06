@@ -1,13 +1,18 @@
 package me.luckyraven.listener.player.weapon;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.feature.weapon.*;
-import me.luckyraven.file.configuration.SoundConfiguration;
+import me.luckyraven.compatibility.recoil.RecoilCompatibility;
+import me.luckyraven.feature.weapon.WeaponManager;
 import me.luckyraven.listener.ListenerHandler;
 import me.luckyraven.util.Pair;
+import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.timer.SequenceTimer;
+import me.luckyraven.weapon.FullAutoTask;
+import me.luckyraven.weapon.SelectiveFire;
+import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.WeaponAction;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -29,19 +34,21 @@ import java.util.concurrent.atomic.AtomicReference;
 @ListenerHandler
 public class WeaponInteract implements Listener {
 
-	private final Gangland      gangland;
-	private final WeaponManager weaponManager;
+	private final Gangland            gangland;
+	private final WeaponManager       weaponManager;
+	private final RecoilCompatibility recoilCompatibility;
 
 	private final Map<UUID, AtomicReference<WeaponData>> continuousFire;
 	private final Map<UUID, Boolean>                     singleShotLock;
 	private final Map<UUID, FullAutoTask>                autoTasks;
 
 	public WeaponInteract(Gangland gangland) {
-		this.gangland       = gangland;
-		this.weaponManager  = gangland.getInitializer().getWeaponManager();
-		this.continuousFire = new ConcurrentHashMap<>();
-		this.singleShotLock = new ConcurrentHashMap<>();
-		this.autoTasks      = new ConcurrentHashMap<>();
+		this.gangland            = gangland;
+		this.weaponManager       = gangland.getInitializer().getWeaponManager();
+		this.continuousFire      = new ConcurrentHashMap<>();
+		this.singleShotLock      = new ConcurrentHashMap<>();
+		this.autoTasks           = new ConcurrentHashMap<>();
+		this.recoilCompatibility = gangland.getInitializer().getCompatibilityWorker().getRecoilCompatibility();
 	}
 
 	@EventHandler
@@ -195,7 +202,7 @@ public class WeaponInteract implements Listener {
 	private void shootFullAuto(Weapon weapon, Player player, ItemStack item, SelectiveFire selectiveFire) {
 		UUID weaponUuid = weapon.getUuid();
 		if (!autoTasks.containsKey(weaponUuid)) {
-			FullAutoTask autoTask = new FullAutoTask(gangland, weapon, player, item, () -> {
+			var autoTask = new FullAutoTask(gangland, weaponManager, weapon, recoilCompatibility, player, item, () -> {
 				autoTasks.remove(weaponUuid);
 				continuousFire.remove(weaponUuid);
 			});
@@ -355,7 +362,8 @@ public class WeaponInteract implements Listener {
 	}
 
 	private void shootInterval(Player player, Weapon weapon) {
-		WeaponAction weaponAction = new WeaponAction(gangland, weapon);
+
+		WeaponAction weaponAction = new WeaponAction(gangland, weaponManager, weapon, recoilCompatibility);
 
 		// shoot the weapon
 		weaponAction.weaponShoot(player);

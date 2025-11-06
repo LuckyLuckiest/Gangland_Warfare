@@ -3,11 +3,12 @@ package me.luckyraven.command.sub.weapon;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
-import me.luckyraven.feature.weapon.ammo.Ammunition;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.JsonFormatter;
 import me.luckyraven.util.datastructure.Tree;
+import me.luckyraven.weapon.ammo.Ammunition;
+import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -36,7 +37,8 @@ class AmmunitionInfoCommand extends SubArgument {
 			}
 
 			// get the ammunition as the held item
-			Ammunition ammunition = Ammunition.getHeldAmmunition(gangland, itemStack);
+			AmmunitionAddon ammunitionAddon = gangland.getInitializer().getAmmunitionAddon();
+			Ammunition      ammunition      = Ammunition.getHeldAmmunition(ammunitionAddon, itemStack);
 
 			// display the necessary information
 			JsonFormatter jsonFormatter = new JsonFormatter();

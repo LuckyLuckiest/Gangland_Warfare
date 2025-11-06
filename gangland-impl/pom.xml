@@ -173,6 +173,18 @@
             <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>version-impl</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-weapon</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
         <!-- Important local dependencies (end) -->
 
         <!-- Compile level dependencies (start) -->

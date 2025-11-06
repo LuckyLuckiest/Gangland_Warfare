@@ -1,10 +1,10 @@
 package me.luckyraven.listener.player.weapon;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.feature.weapon.Weapon;
 import me.luckyraven.feature.weapon.WeaponManager;
 import me.luckyraven.listener.ListenerHandler;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.weapon.Weapon;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
