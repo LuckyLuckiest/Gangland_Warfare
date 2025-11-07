@@ -3,6 +3,7 @@ package me.luckyraven.weapon;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
+import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.events.WeaponShootEvent;
 import me.luckyraven.weapon.projectile.WeaponProjectile;
 import org.bukkit.Location;
@@ -28,6 +29,21 @@ public class WeaponAction {
 	}
 
 	public void weaponShoot(Player shooter) {
+		// update data
+		ItemBuilder heldWeapon = weaponService.getHeldWeaponItem(shooter);
+
+		if (heldWeapon == null) {
+			return;
+		}
+
+		// check the durability of the weapon
+		if (weapon.isBroken()) {
+			SoundConfiguration.playSounds(shooter, weapon.getEmptyMagCustomSound(), weapon.getEmptyMagDefaultSound());
+
+			ChatUtil.sendActionBar(shooter, "&cBroken");
+			return;
+		}
+
 		// consume a bullet
 		boolean consumed = weapon.consumeShot();
 
@@ -51,20 +67,15 @@ public class WeaponAction {
 
 		weaponProjectile.launchProjectile();
 
-		// update data
-		ItemBuilder heldWeapon = weaponService.getHeldWeaponItem(shooter);
+		weapon.updateWeaponData(heldWeapon);
 
-		if (heldWeapon != null) {
-			weapon.updateWeaponData(heldWeapon);
-
-			// change durability of the weapon
-			if (weapon.getDurabilityOnShot() > (short) 0) {
-				heldWeapon.decreaseDurability(weapon.getDurabilityOnShot());
-				heldWeapon.setDurability((short) (weapon.getCurrentDurability() + weapon.getDurabilityOnShot()));
-			}
-
-			weapon.updateWeapon(shooter, heldWeapon, shooter.getInventory().getHeldItemSlot());
+		// change durability of the weapon
+		short durabilityOnShot = weapon.getDurabilityOnShot();
+		if (durabilityOnShot > (short) 0) {
+			weapon.decreaseDurability(heldWeapon);
 		}
+
+		weapon.updateWeapon(shooter, heldWeapon, shooter.getInventory().getHeldItemSlot());
 
 		// apply recoil
 		weapon.getRecoil().applyRecoil(recoilCompatibility, shooter);

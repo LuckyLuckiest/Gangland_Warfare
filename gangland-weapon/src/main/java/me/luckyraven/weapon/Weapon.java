@@ -254,6 +254,57 @@ public class Weapon implements Cloneable {
 		applyEffect(player, XPotion.JUMP_BOOST, 250);
 	}
 
+	public void decreaseDurability(ItemBuilder itemBuilder) {
+		currentDurability = (short) Math.max(0, currentDurability - durabilityOnShot);
+
+		short newDamageValue = getWeaponDurability(itemBuilder);
+
+		itemBuilder.setDurability(newDamageValue);
+	}
+
+	public short getWeaponDurability(ItemBuilder itemBuilder) {
+		double weaponMaxDurability = this.durability;
+		double itemMaxDurability   = itemBuilder.getItemMaxDurability();
+
+		double weaponDurabilityLost = weaponMaxDurability - currentDurability;
+
+		double scale = itemMaxDurability / weaponMaxDurability;
+
+		double itemDamageValue = Math.floor(weaponDurabilityLost * scale);
+
+		return (short) itemDamageValue;
+	}
+
+	/**
+	 * Converts the item's current damage value back to weapon durability.
+	 * <p>Used when loading weapon data from an existing item.
+	 *
+	 * @param itemBuilder The item to read damage from
+	 *
+	 * @return The weapon's current durability
+	 */
+	public short calculateWeaponDurabilityFromItem(ItemBuilder itemBuilder) {
+		double weaponMaxDurability = this.durability;
+		double itemMaxDurability   = itemBuilder.getItemMaxDurability();
+		double itemCurrentDamage   = itemBuilder.getItemDamagedDurability();
+
+		// Calculate the scale factor
+		double scale = itemMaxDurability / weaponMaxDurability;
+
+		// Convert item damage back to weapon durability lost
+		double weaponDurabilityLost = itemCurrentDamage / scale;
+
+		// Calculate current weapon durability
+		double weaponCurrentDurability = weaponMaxDurability - weaponDurabilityLost;
+
+		// Ensure it is within valid bounds
+		return (short) Math.max(0, Math.min(weaponMaxDurability, weaponCurrentDurability));
+	}
+
+	public boolean isBroken() {
+		return currentDurability <= 0;
+	}
+
 	public void unScope(Player player, boolean bypass) {
 		if (!bypass) if (!scoped) return;
 
@@ -345,7 +396,12 @@ public class Weapon implements Cloneable {
 	public ItemStack buildItem() {
 		ItemBuilder builder = new ItemBuilder(material);
 
-		builder.setDisplayName(changingDisplayName).setLore(lore).setDurability(currentDurability);
+		builder.setDisplayName(changingDisplayName).setLore(lore);
+
+		short currentDamage = (short) Math.floor(
+				(durability - currentDurability) * (builder.getItemMaxDurability() / (double) durability));
+		builder.setDurability(currentDamage);
+
 		initializeTags(builder);
 		builder.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
 

@@ -190,7 +190,10 @@ public abstract class WeaponService {
 		// get the selective fire
 		SelectiveFire selectiveFire = SelectiveFire.getType(
 				itemBuilder.getStringTagData(Weapon.getTagProperName(WeaponTag.SELECTIVE_FIRE)));
+		// set weapon durability
+		short durability = weapon.calculateWeaponDurabilityFromItem(itemBuilder);
 
+		weapon.setCurrentDurability(durability);
 		weapon.setCurrentMagCapacity(amountLeft);
 		weapon.setCurrentSelectiveFire(selectiveFire);
 	}
