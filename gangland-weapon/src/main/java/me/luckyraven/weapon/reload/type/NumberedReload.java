@@ -6,7 +6,9 @@ import me.luckyraven.util.timer.SequenceTimer;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.ammo.Ammunition;
 import me.luckyraven.weapon.reload.Reload;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -50,15 +52,25 @@ public class NumberedReload extends Reload {
 		int leftToInsert       = getWeapon().getMaxMagCapacity() - getWeapon().getCurrentMagCapacity();
 		int numberOfInsertions = leftToInsert / getWeapon().getReloadRestore();
 
+		int numberOfAmmunition = 0;
+		for (int i = 0; i < inventory.getSize(); i++) {
+			ItemStack item = inventory.getItem(i);
+
+			if (item == null || item.getType() == Material.AIR || !Ammunition.isAmmunition(item)) continue;
+
+			Ammunition ammo = getAmmunition();
+
+			if (item.equals(ammo.buildItem(item.getAmount()))) {
+				numberOfAmmunition += item.getAmount();
+			}
+		}
+
+		int maxPossibleInsertions = numberOfAmmunition / amount;
+
+		numberOfInsertions = Math.min(numberOfInsertions, maxPossibleInsertions);
+
 		for (int i = 0; i < numberOfInsertions; ++i) {
 			timer.addIntervalTaskPair(getWeapon().getReloadCooldown(), time -> {
-				// check if the user has the amount necessary to reload
-				if (!inventory.containsAtLeast(getAmmunition().buildItem(), amount)) {
-					// stop the timer
-					time.stop();
-					return;
-				}
-
 				// reload middle sound
 				SoundConfiguration.playSounds(player, getWeapon().getReloadCustomSoundMid(), null);
 
@@ -72,13 +84,20 @@ public class NumberedReload extends Reload {
 				getWeapon().addAmmunition(getWeapon().getReloadRestore());
 
 				// update the weapon data
-				ItemBuilder heldWeapon = new ItemBuilder(getWeapon().buildItem());
-
-				getWeapon().updateWeaponData(heldWeapon);
-
 				int newSlot = findWeaponSlot(inventory, getWeapon());
 
 				if (newSlot > -1) {
+					ItemStack   existingItem = inventory.getItem(newSlot);
+					ItemBuilder heldWeapon;
+
+					if (existingItem != null) {
+						// retrieve the existing item rather than building a new one
+						heldWeapon = new ItemBuilder(existingItem);
+					} else {
+						heldWeapon = new ItemBuilder(getWeapon().buildItem());
+					}
+
+					getWeapon().updateWeaponData(heldWeapon);
 					getWeapon().updateWeapon(player, heldWeapon, newSlot);
 				}
 			});
