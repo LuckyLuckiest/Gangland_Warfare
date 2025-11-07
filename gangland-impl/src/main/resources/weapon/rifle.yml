@@ -19,7 +19,7 @@
 # All the information of the weapon
 Information:
    # The displayed name of the weapon
-   Name: "&7M4 Carbine"
+   Name: "&7M4 Carbine&r"
    # The category of the weapon:
    # gun, melee, projectile, incendiary
    Category: gun
@@ -33,8 +33,8 @@ Information:
          On_Repair: 0
    # The item lore
    Lore:
-      - "&7The M4 Carbine is a 5.56×45mm NATO, air-cooled, gas-operated,"
-      - "&7direct impingement, magazine-fed, select fire carbine."
+      - "&7The M4 Carbine is a 5.56×45mm NATO, air-cooled, gas-operated,&r"
+      - "&7direct impingement, magazine-fed, select fire carbine.&r"
    # The weapon would display its information when dropped
    Drop_Hologram: true
 
@@ -42,7 +42,7 @@ Information:
 Shoot:
    # The type of fire when using the weapon
    # SINGLE, BURST, AUTO
-   Selective_Fire: SINGLE
+   Selective_Fire: auto
 
    # Projectile configuration
    Projectile:
@@ -60,13 +60,13 @@ Shoot:
          Explosion_Damage: 0
          # The time the player would be on fire (ticks = 20 ~ 1 second)
          Fire_Ticks: 0
-         # Head bonus damage added to the base damage
+         # Head bonus damage
          Head: 5
          # Critical Hit damage
          Critical_Hit:
-            # The chance in percentage (%)
+            # The change in %
             Chance: 2
-            # Bonus amount added to the base damage
+            # Bonus amount
             Amount: 4
 
       # The number of projectiles consumed
@@ -74,7 +74,7 @@ Shoot:
       # The number of projectiles shot
       Per_Shot: 1
       # The cooldown of the bullet before shooting another one
-      Cooldown: 0
+      Cooldown: 0.5
       # The maximum travel distance of the projectile
       Distance: 10
       # A particle trail of the projectile
@@ -148,7 +148,7 @@ Reload:
    # The default magazine holding capacity
    Capacity: 45
    # The reload time taken
-   Cooldown: 3
+   Cooldown: 4
    # The ammo name from the ammunition YAML file
    Ammo_Type: "5,56"
    # The number of ammunition items that is required to insert one magazine
@@ -187,16 +187,16 @@ Reload:
    # Reloading action bar information
    Action_Bar:
       # Shows when the player is currently reloading the weapon
-      Reloading: "&cReloading..."
+      Reloading: "&cReloading...&r"
       # Shows before the weapon reloads
-      Opening: "&cOpening..."
+      Opening: "&cOpening...&r"
 
    # There are 3 types of reloads:
    # 1) instant - treats the reload as a magazine to reload weapon
    # 2) one - dynamically places ammunition in increments of one
    # 3) num - this requires two arguments separated by '-' to specify the amount of ammunition that is required to
    #          dynamically insert in the weapon. This would work similarly to type one.
-   Type: INSTANT
+   Type: instant
 
 # Weapon scope configuration
 Scope:
