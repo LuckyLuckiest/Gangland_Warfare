@@ -7,6 +7,7 @@ import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.ammo.Ammunition;
 import me.luckyraven.weapon.reload.Reload;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -62,14 +63,20 @@ public class InstantReload extends Reload {
 			getWeapon().addAmmunition(getWeapon().getReloadRestore());
 
 			// update the weapon data
-			ItemBuilder heldWeapon = new ItemBuilder(getWeapon().buildItem());
-
-			getWeapon().updateWeaponData(heldWeapon);
-
 			int newSlot = findWeaponSlot(inventory, getWeapon());
 
-			// item is in inventory
 			if (newSlot > -1) {
+				ItemStack   existingItem = inventory.getItem(newSlot);
+				ItemBuilder heldWeapon;
+
+				if (existingItem != null) {
+					// retrieve the existing item rather than building a new one
+					heldWeapon = new ItemBuilder(existingItem);
+				} else {
+					heldWeapon = new ItemBuilder(getWeapon().buildItem());
+				}
+
+				getWeapon().updateWeaponData(heldWeapon);
 				getWeapon().updateWeapon(player, heldWeapon, newSlot);
 			}
 
