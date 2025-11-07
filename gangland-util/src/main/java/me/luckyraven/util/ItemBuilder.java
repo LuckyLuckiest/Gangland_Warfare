@@ -122,18 +122,40 @@ public class ItemBuilder {
 
 		int currentDurability = damageable.getDamage();
 
-		damageable.setDamage(currentDurability + amount);
-		itemStack.setItemMeta(damageable);
-
-		return this;
+		return setDurability((short) (currentDurability + amount));
 	}
 
-	public short getDurability() {
-		return NBT.get(itemStack, (Function<ReadableItemNBT, Short>) nbt -> nbt.getShort("Damage"));
+	/**
+	 * The item durability is the current in-game durability set to the item.
+	 *
+	 * @return item durability
+	 */
+	public short getItemMaxDurability() {
+		if (itemStack == null || itemStack.getType() == Material.AIR) {
+			return (short) 0;
+		}
+
+		return itemStack.getType().getMaxDurability();
+	}
+
+	public short getItemDamagedDurability() {
+		if (itemStack == null || itemStack.getType() == Material.AIR ||
+			!(itemStack.getItemMeta() instanceof Damageable damageable)) {
+			return (short) 0;
+		}
+
+		return (short) damageable.getDamage();
 	}
 
 	public ItemBuilder setDurability(short durability) {
-		modifyNBT(nbt -> nbt.setShort("Damage", durability));
+		if (itemStack == null || itemStack.getType() == Material.AIR ||
+			!(itemStack.getItemMeta() instanceof Damageable damageable)) {
+			return this;
+		}
+
+		damageable.setDamage(durability);
+		itemStack.setItemMeta(damageable);
+
 		return this;
 	}
 
