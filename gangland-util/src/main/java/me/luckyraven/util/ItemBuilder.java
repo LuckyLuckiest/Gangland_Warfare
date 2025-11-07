@@ -13,6 +13,7 @@ import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.Nullable;
 
@@ -114,9 +115,15 @@ public class ItemBuilder {
 	}
 
 	public ItemBuilder decreaseDurability(short amount) {
-		short durability = getDurability();
+		if (itemStack == null || itemStack.getType() == Material.AIR ||
+			!(itemStack.getItemMeta() instanceof Damageable damageable)) {
+			return this;
+		}
 
-		modifyNBT(nbt -> nbt.setShort("Damage", (short) (durability + amount)));
+		int currentDurability = damageable.getDamage();
+
+		damageable.setDamage(currentDurability + amount);
+		itemStack.setItemMeta(damageable);
 
 		return this;
 	}

@@ -61,6 +61,7 @@ public class Weapon implements Cloneable {
 	private Reload reload;
 
 	private String changingDisplayName;
+	private short  currentDurability;
 
 	// Shoot configuration
 	private SelectiveFire currentSelectiveFire;
@@ -140,6 +141,7 @@ public class Weapon implements Cloneable {
 		this.category             = category;
 		this.material             = material;
 		this.durability           = durability;
+		this.currentDurability    = durability;
 		this.lore                 = lore;
 		this.dropHologram         = dropHologram;
 		this.currentSelectiveFire = selectiveFire;
@@ -188,6 +190,7 @@ public class Weapon implements Cloneable {
 
 		this.durabilityOnShot            = weapon.durabilityOnShot;
 		this.durabilityOnRepair          = weapon.durabilityOnRepair;
+		this.currentDurability           = weapon.currentDurability;
 		this.weaponConsumeOnTime         = weapon.weaponConsumeOnTime;
 		this.projectileExplosionDamage   = weapon.projectileExplosionDamage;
 		this.projectileFireTicks         = weapon.projectileFireTicks;
@@ -342,7 +345,7 @@ public class Weapon implements Cloneable {
 	public ItemStack buildItem() {
 		ItemBuilder builder = new ItemBuilder(material);
 
-		builder.setDisplayName(changingDisplayName).setLore(lore).setDurability(durability);
+		builder.setDisplayName(changingDisplayName).setLore(lore).setDurability(currentDurability);
 		initializeTags(builder);
 		builder.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
 
@@ -392,7 +395,7 @@ public class Weapon implements Cloneable {
 				"projectileConsumed=%d,projectilePerShot=%d,projectileCooldown=%d,projectileDistance=%d,particle=%b," +
 				"maxMagCapacity=%d,reloadCooldown=%d,reloadAmmoType='%s',reloadConsume=%d,reloadRestore=%d," +
 				"reloadType='%s',tags='%s',reload='%s',changingDisplayName='%s',currentSelectiveFire='%s'," +
-				"currentMagCapacity=%d,durabilityOnShot=%d,durabilityOnRepair=%d,weaponConsumeOnTime=%d," +
+				"currentMagCapacity=%d,durabilityOnShot=%d,durabilityOnRepair=%d,currentDurability=%d,weaponConsumeOnTime=%d," +
 				"projectileExplosionDamage=%.2f,projectileFireTicks=%d,projectileHeadDamage=%.2f," +
 				"projectileCriticalHitChance=%d,projectileCriticalHitDamage=%.2f,spreadStart=%.2f,spreadResetTime=%d," +
 				"spreadChangeBase=%.2f,spreadResetOnBound=%b,spreadBoundMinimum=%.2f,spreadBoundMaximum=%.2f," +
@@ -402,7 +405,7 @@ public class Weapon implements Cloneable {
 				projectileType, projectileDamage, projectileConsumed, projectilePerShot, projectileCooldown,
 				projectileDistance, particle, maxMagCapacity, reloadCooldown, reloadAmmoType, reloadConsume,
 				reloadRestore, reloadType, tags, reload, changingDisplayName, currentSelectiveFire, currentMagCapacity,
-				durabilityOnShot, durabilityOnRepair, weaponConsumeOnTime, projectileExplosionDamage,
+				durabilityOnShot, durabilityOnRepair, currentDurability, weaponConsumeOnTime, projectileExplosionDamage,
 				projectileFireTicks, projectileHeadDamage, projectileCriticalHitChance, projectileCriticalHitDamage,
 				spreadStart, spreadResetTime, spreadChangeBase, spreadResetOnBound, spreadBoundMinimum,
 				spreadBoundMaximum, recoilAmount, pushVelocity, pushPowerUp,
