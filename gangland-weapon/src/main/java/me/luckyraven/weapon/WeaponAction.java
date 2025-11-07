@@ -72,7 +72,7 @@ public class WeaponAction {
 		// change durability of the weapon
 		short durabilityOnShot = weapon.getDurabilityOnShot();
 		if (durabilityOnShot > (short) 0) {
-			weapon.decreaseDurability(heldWeapon);
+			weapon.decreaseDurability(heldWeapon, durabilityOnShot);
 		}
 
 		weapon.updateWeapon(shooter, heldWeapon, shooter.getInventory().getHeldItemSlot());

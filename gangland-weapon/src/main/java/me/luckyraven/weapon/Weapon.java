@@ -8,6 +8,7 @@ import me.luckyraven.exception.PluginException;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.weapon.ammo.Ammunition;
+import me.luckyraven.weapon.durability.DurabilityCalculator;
 import me.luckyraven.weapon.projectile.ProjectileType;
 import me.luckyraven.weapon.projectile.recoil.RecoilManager;
 import me.luckyraven.weapon.projectile.spread.SpreadManager;
@@ -66,6 +67,9 @@ public class Weapon implements Cloneable {
 	// Shoot configuration
 	private SelectiveFire currentSelectiveFire;
 	private int           currentMagCapacity;
+
+	@Setter(value = AccessLevel.NONE)
+	private DurabilityCalculator durabilityCalculator;
 
 	// Information-durability configuration
 	private short durabilityOnShot;
@@ -166,6 +170,7 @@ public class Weapon implements Cloneable {
 		this.reload               = reloadType.createInstance(this, reloadAmmoType);
 		this.recoil               = new RecoilManager(this);
 		this.spread               = new SpreadManager(this);
+		this.durabilityCalculator = new DurabilityCalculator(this);
 	}
 
 	public Weapon(String name, String displayName, WeaponType category, Material material, short durability,
@@ -223,6 +228,7 @@ public class Weapon implements Cloneable {
 		this.scopeCustomSound            = weapon.scopeCustomSound.clone();
 		this.recoil                      = new RecoilManager(weapon);
 		this.spread                      = new SpreadManager(weapon);
+		this.durabilityCalculator        = new DurabilityCalculator(weapon);
 	}
 
 	public static String getTagProperName(WeaponTag tag) {
@@ -254,57 +260,6 @@ public class Weapon implements Cloneable {
 		applyEffect(player, XPotion.JUMP_BOOST, 250);
 	}
 
-	public void decreaseDurability(ItemBuilder itemBuilder) {
-		currentDurability = (short) Math.max(0, currentDurability - durabilityOnShot);
-
-		short newDamageValue = getWeaponDurability(itemBuilder);
-
-		itemBuilder.setDurability(newDamageValue);
-	}
-
-	public short getWeaponDurability(ItemBuilder itemBuilder) {
-		double weaponMaxDurability = this.durability;
-		double itemMaxDurability   = itemBuilder.getItemMaxDurability();
-
-		double weaponDurabilityLost = weaponMaxDurability - currentDurability;
-
-		double scale = itemMaxDurability / weaponMaxDurability;
-
-		double itemDamageValue = Math.floor(weaponDurabilityLost * scale);
-
-		return (short) itemDamageValue;
-	}
-
-	/**
-	 * Converts the item's current damage value back to weapon durability.
-	 * <p>Used when loading weapon data from an existing item.
-	 *
-	 * @param itemBuilder The item to read damage from
-	 *
-	 * @return The weapon's current durability
-	 */
-	public short calculateWeaponDurabilityFromItem(ItemBuilder itemBuilder) {
-		double weaponMaxDurability = this.durability;
-		double itemMaxDurability   = itemBuilder.getItemMaxDurability();
-		double itemCurrentDamage   = itemBuilder.getItemDamagedDurability();
-
-		// Calculate the scale factor
-		double scale = itemMaxDurability / weaponMaxDurability;
-
-		// Convert item damage back to weapon durability lost
-		double weaponDurabilityLost = itemCurrentDamage / scale;
-
-		// Calculate current weapon durability
-		double weaponCurrentDurability = weaponMaxDurability - weaponDurabilityLost;
-
-		// Ensure it is within valid bounds
-		return (short) Math.max(0, Math.min(weaponMaxDurability, weaponCurrentDurability));
-	}
-
-	public boolean isBroken() {
-		return currentDurability <= 0;
-	}
-
 	public void unScope(Player player, boolean bypass) {
 		if (!bypass) if (!scoped) return;
 
@@ -312,6 +267,18 @@ public class Weapon implements Cloneable {
 
 		removeEffect(player, XPotion.SLOWNESS);
 		removeEffect(player, XPotion.JUMP_BOOST);
+	}
+
+	public void increaseDurability(ItemBuilder itemBuilder, int amount) {
+		durabilityCalculator.setDurability(itemBuilder, (short) (currentDurability + amount));
+	}
+
+	public void decreaseDurability(ItemBuilder itemBuilder, int amount) {
+		durabilityCalculator.setDurability(itemBuilder, (short) (currentDurability - amount));
+	}
+
+	public boolean isBroken() {
+		return currentDurability <= 0;
 	}
 
 	public void updateWeaponData(ItemBuilder itemBuilder) {
@@ -436,6 +403,8 @@ public class Weapon implements Cloneable {
 			weapon.reload = this.reload.clone();
 			weapon.recoil = new RecoilManager(weapon);
 			weapon.spread = new SpreadManager(weapon);
+
+			weapon.durabilityCalculator = new DurabilityCalculator(weapon);
 
 			return weapon;
 		} catch (CloneNotSupportedException exception) {
