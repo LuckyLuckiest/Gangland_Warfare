@@ -91,14 +91,13 @@ public class WeaponInteract implements Listener {
 
 		SelectiveFire selectiveFire = weapon.getCurrentSelectiveFire();
 
-		// handle the AUTO mode with full auto task
 		if (selectiveFire == SelectiveFire.AUTO) {
+			// handle the AUTO mode with full auto task
 			shootFullAuto(weapon, player, item, selectiveFire);
-			return;
+		} else {
+			// handle the BURST and SINGLE modes
+			shootOtherModes(weapon, player);
 		}
-
-		// handle the BURST and SINGLE modes
-		shootOtherModes(weapon, player);
 	}
 
 	@EventHandler
