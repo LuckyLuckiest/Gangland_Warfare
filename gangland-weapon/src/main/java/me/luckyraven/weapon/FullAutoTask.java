@@ -108,9 +108,4 @@ public class FullAutoTask extends Timer {
 		super.stop();
 	}
 
-	@Override
-	protected void onStop() {
-		cancel();
-	}
-
 }

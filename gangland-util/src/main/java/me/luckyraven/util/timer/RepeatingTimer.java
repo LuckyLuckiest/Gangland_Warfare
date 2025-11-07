@@ -34,9 +34,4 @@ public class RepeatingTimer extends Timer {
 		task.accept(this);
 	}
 
-	@Override
-	protected void onStop() {
-		this.justStarted = true;
-	}
-
 }

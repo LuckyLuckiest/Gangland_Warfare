@@ -58,9 +58,4 @@ public class CountdownTimer extends Timer {
 		--timeLeft;
 	}
 
-	@Override
-	protected void onStop() {
-		this.timeLeft = this.totalTime;
-	}
-
 }

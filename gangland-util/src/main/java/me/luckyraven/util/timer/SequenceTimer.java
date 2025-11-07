@@ -105,8 +105,8 @@ public class SequenceTimer extends Timer {
 
 	@Override
 	public void stop() {
-		super.stop();
 		this.reset();
+		super.stop();
 	}
 
 	public void reset() {
@@ -129,11 +129,6 @@ public class SequenceTimer extends Timer {
 			newTimer.addIntervalTaskPair(intervalTaskPair.interval, intervalTaskPair.task);
 
 		return newTimer;
-	}
-
-	@Override
-	protected void onStop() {
-		this.reset();
 	}
 
 	public enum Mode {
