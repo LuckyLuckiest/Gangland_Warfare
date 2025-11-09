@@ -14,6 +14,8 @@ import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.List;
+
 class WantedAddCommand extends SubArgument {
 
 	private final Gangland            gangland;
@@ -48,7 +50,7 @@ class WantedAddCommand extends SubArgument {
 	}
 
 	private void wantedValue() {
-		Argument optional = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		Argument amountValue = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			String amountStr = args[2];
 
 			int amount;
@@ -71,9 +73,9 @@ class WantedAddCommand extends SubArgument {
 
 			sender.sendMessage(String.format("Added %d wanted level%s.", realAmount, ChatUtil.plural(realAmount)),
 							   wanted.getLevelStr());
-		});
+		}, sender -> List.of("<amount>"));
 
-		this.addSubArgument(optional);
+		this.addSubArgument(amountValue);
 	}
 
 }

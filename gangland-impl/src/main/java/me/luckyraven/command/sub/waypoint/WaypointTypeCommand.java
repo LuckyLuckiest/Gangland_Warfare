@@ -13,6 +13,8 @@ import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Arrays;
+
 class WaypointTypeCommand extends SubArgument {
 
 	private final Gangland        gangland;
@@ -71,6 +73,10 @@ class WaypointTypeCommand extends SubArgument {
 			}
 
 			waypoint.setType(type);
+		}, sender -> {
+			Waypoint.WaypointType[] types = Waypoint.WaypointType.values();
+
+			return Arrays.stream(types).map(Waypoint.WaypointType::getName).toList();
 		});
 
 		this.addSubArgument(optional);

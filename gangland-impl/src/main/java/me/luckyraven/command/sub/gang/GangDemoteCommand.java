@@ -97,18 +97,20 @@ class GangDemoteCommand extends SubArgument {
 
 			// change the user rank by proceeding to the next node
 			Rank currentRank = targetMember.getRank();
+			Rank userRank    = userMember.getRank();
 			// cannot demote higher rank
-			if (currentRank == null || userMember.getRank() == null) return;
+			if (currentRank == null || userRank == null) return;
 
-			Tree.Node<Rank> playerRank = userMember.getRank().getNode();
+			Tree.Node<Rank> playerRank = userRank.getNode();
 			Tree.Node<Rank> targetRank = currentRank.getNode();
 
-			if (!force)
+			if (!force) {
 				// [player : Owner (descendant), target : Member (ancestor)] (Inverse)
 				if (!rankManager.getRankTree().isDescendant(targetRank, playerRank)) {
 					player.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
 					return;
 				}
+			}
 
 			Tree.Node<Rank> previousRankNode = currentRank.getNode().getParent();
 
@@ -138,7 +140,7 @@ class GangDemoteCommand extends SubArgument {
 																	  .replace("%player%", targetStr)
 																	  .replace("%rank%", previousRank.getName()));
 			targetMember.setRank(previousRank);
-		});
+		}, sender -> GangKickCommand.getDescendantRanks(userManager, memberManager, gangManager, rankManager, sender));
 	}
 
 }

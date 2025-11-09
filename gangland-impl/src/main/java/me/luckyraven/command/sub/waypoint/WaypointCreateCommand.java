@@ -19,6 +19,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
@@ -78,7 +79,7 @@ class WaypointCreateCommand extends SubArgument {
 			}
 
 			// create waypoint permission
-			gangland.getInitializer().getPermissionManager().addPermission("waypoint." + waypoint.getUsedId());
+			gangland.getInitializer().getPermissionManager().addPermission(waypoint.getPermission());
 
 			// select the waypoint
 			// using '/glw waypoint select <id>' command to the created waypoint, so it is selected
@@ -106,10 +107,10 @@ class WaypointCreateCommand extends SubArgument {
 			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
 				if (time.getTimeLeft() % 20 != 0) return;
 
-				sender.sendMessage(MessageAddon.WAYPOINT_CREATE_CONFIRM.toString()
-																	   .replace("%timer%",
-																				TimeUtil.formatTime(time.getTimeLeft(),
-																									true)));
+				String createConfirm = MessageAddon.WAYPOINT_CREATE_CONFIRM.toString();
+				String confirm       = createConfirm.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true));
+
+				sender.sendMessage(confirm);
 			}, time -> {
 				confirmWaypoint.setConfirmed(false);
 				createWaypointName.remove(player);
@@ -118,7 +119,7 @@ class WaypointCreateCommand extends SubArgument {
 
 			timer.start(false);
 			createWaypointTimer.put(sender, timer);
-		});
+		}, sender -> List.of("<name>"));
 
 		this.addSubArgument(createName);
 	}

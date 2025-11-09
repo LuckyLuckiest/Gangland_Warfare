@@ -78,71 +78,11 @@ public final class EconomyCommand extends CommandHandler {
 				return;
 			}
 
-			try {
-				double argAmount = Double.parseDouble(args[3]);
-				double value     = 0D;
-				String strValue  = "";
-
-				List<Player> players = specifiers.get(specifier).get();
-
-				if (players == null || players.isEmpty()) return;
-
-				for (Player player : players) {
-					User<Player> user         = userManager.getUser(player);
-					double       valueChanged = 0D;
-
-					switch (args[1].toLowerCase()) {
-						case "deposit", "add" -> {
-							if (user.getEconomy().getBalance() + argAmount <= SettingAddon.getUserMaxBalance())
-								valueChanged = argAmount;
-
-							value    = Math.min(user.getEconomy().getBalance() + argAmount,
-												SettingAddon.getUserMaxBalance());
-							strValue = "deposit";
-						}
-						case "withdraw", "take" -> {
-							if (argAmount > user.getEconomy().getBalance()) valueChanged = user.getEconomy()
-																							   .getBalance();
-							else if (user.getEconomy().getBalance() - argAmount > 0D) valueChanged = argAmount;
-
-							value    = Math.max(user.getEconomy().getBalance() - argAmount, 0D);
-							strValue = "withdraw";
-						}
-						case "set" -> {
-							value = Math.min(argAmount, SettingAddon.getUserMaxBalance());
-
-							if (argAmount > SettingAddon.getUserMaxBalance()) valueChanged
-									= SettingAddon.getUserMaxBalance();
-							else valueChanged = value;
-
-							strValue = "set";
-						}
-					}
-					user.getUser()
-						.sendMessage(MessageAddon.valueOf(strValue.toUpperCase() + "_MONEY_PLAYER")
-												 .toString()
-												 .replace("%amount%", SettingAddon.formatDouble(valueChanged)));
-					user.getEconomy().setBalance(value);
-				}
-			} catch (NumberFormatException exception) {
-				sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[3]));
-			}
-		});
+			operations(sender, args, specifiers, specifier, userManager);
+		}, sender -> List.of("*", "**"));
 
 		String[] optionalSpecifier = {"*", "**", "@[<name>]"};
-		Argument specifier = new OptionalArgument(getGangland(), optionalSpecifier, getArgumentTree(),
-												  (argument, sender, args) -> {
-													  sender.sendMessage(ChatUtil.setArguments(
-															  MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
-												  });
-
-		specifier.setExecuteOnPass((sender, args) -> {
-			try {
-				collectSpecifiers(specifiers, sender, args.length > 2 ? args[2] : null);
-			} catch (IllegalArgumentException exception) {
-				sender.sendMessage(ChatUtil.errorMessage(exception.getMessage()));
-			}
-		});
+		Argument specifier         = getArgument(optionalSpecifier, specifiers);
 
 		specifier.addSubArgument(amount);
 
@@ -172,6 +112,86 @@ public final class EconomyCommand extends CommandHandler {
 	@Override
 	protected void help(CommandSender sender, int page) {
 		getHelpInfo().displayHelp(sender, page, "Economy");
+	}
+
+	private void operations(CommandSender sender, String[] args, HashMap<String, Supplier<List<Player>>> specifiers,
+							String specifier, UserManager<Player> userManager) {
+		try {
+			double argAmount = Double.parseDouble(args[3]);
+			double value     = 0D;
+			String strValue  = "";
+
+			List<Player> players = specifiers.get(specifier).get();
+
+			if (players == null || players.isEmpty()) return;
+
+			for (Player player : players) {
+				User<Player> user         = userManager.getUser(player);
+				double       valueChanged = 0D;
+
+				switch (args[1].toLowerCase()) {
+					case "deposit", "add" -> {
+						if (user.getEconomy().getBalance() + argAmount <= SettingAddon.getUserMaxBalance()) valueChanged
+								= argAmount;
+
+						value    = Math.min(user.getEconomy().getBalance() + argAmount,
+											SettingAddon.getUserMaxBalance());
+						strValue = "deposit";
+					}
+					case "withdraw", "take" -> {
+						if (argAmount > user.getEconomy().getBalance()) valueChanged = user.getEconomy().getBalance();
+						else if (user.getEconomy().getBalance() - argAmount > 0D) valueChanged = argAmount;
+
+						value    = Math.max(user.getEconomy().getBalance() - argAmount, 0D);
+						strValue = "withdraw";
+					}
+					case "set" -> {
+						value = Math.min(argAmount, SettingAddon.getUserMaxBalance());
+
+						if (argAmount > SettingAddon.getUserMaxBalance()) valueChanged
+								= SettingAddon.getUserMaxBalance();
+						else valueChanged = value;
+
+						strValue = "set";
+					}
+				}
+				user.getUser()
+					.sendMessage(MessageAddon.valueOf(strValue.toUpperCase() + "_MONEY_PLAYER")
+											 .toString()
+											 .replace("%amount%", SettingAddon.formatDouble(valueChanged)));
+				user.getEconomy().setBalance(value);
+			}
+		} catch (NumberFormatException exception) {
+			sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[3]));
+		}
+	}
+
+	private @NotNull Argument getArgument(String[] optionalSpecifier,
+										  HashMap<String, Supplier<List<Player>>> specifiers) {
+		Argument specifier = new OptionalArgument(getGangland(), optionalSpecifier, getArgumentTree(),
+												  (argument, sender, args) -> {
+													  sender.sendMessage(ChatUtil.setArguments(
+															  MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
+												  }, sender -> {
+			List<String> list = new ArrayList<>();
+
+			list.add("*");
+			list.add("**");
+
+			list.addAll(Bukkit.getOnlinePlayers()
+								.stream().map(player -> "@" + player.getName()).toList());
+
+			return list;
+		});
+
+		specifier.setExecuteOnPass((sender, args) -> {
+			try {
+				collectSpecifiers(specifiers, sender, args.length > 2 ? args[2] : null);
+			} catch (IllegalArgumentException exception) {
+				sender.sendMessage(ChatUtil.errorMessage(exception.getMessage()));
+			}
+		});
+		return specifier;
 	}
 
 	@NotNull

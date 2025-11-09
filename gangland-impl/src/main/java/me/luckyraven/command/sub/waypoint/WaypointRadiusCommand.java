@@ -13,6 +13,8 @@ import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.List;
+
 class WaypointRadiusCommand extends SubArgument {
 
 	private final Gangland        gangland;
@@ -61,7 +63,7 @@ class WaypointRadiusCommand extends SubArgument {
 			// update the timer
 			waypoint.setRadius(changedValue);
 			player.sendMessage(MessageAddon.WAYPOINT_CONFIGURATION_SUCCESS.toString());
-		});
+		}, sender -> List.of("<radius>"));
 
 		this.addSubArgument(optional);
 	}

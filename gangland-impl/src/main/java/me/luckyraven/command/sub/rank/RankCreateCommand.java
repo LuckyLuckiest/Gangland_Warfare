@@ -16,6 +16,7 @@ import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 class RankCreateCommand extends SubArgument {
@@ -90,7 +91,7 @@ class RankCreateCommand extends SubArgument {
 
 			timer.start(false);
 			createRankTimer.put(sender, timer);
-		});
+		}, sender -> List.of("<name>"));
 
 		this.addSubArgument(createName);
 	}

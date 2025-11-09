@@ -13,6 +13,8 @@ import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.List;
+
 class WaypointShieldCommand extends SubArgument {
 
 	private final Gangland        gangland;
@@ -61,7 +63,7 @@ class WaypointShieldCommand extends SubArgument {
 			// update the timer
 			waypoint.setShield(changedValue);
 			player.sendMessage(MessageAddon.WAYPOINT_CONFIGURATION_SUCCESS.toString());
-		});
+		}, sender -> List.of("<shield>"));
 
 		this.addSubArgument(optional);
 	}

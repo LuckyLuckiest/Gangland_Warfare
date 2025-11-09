@@ -13,6 +13,8 @@ import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 
+import java.util.List;
+
 class RankPermissionCommand extends SubArgument {
 
 	private final Gangland       gangland;
@@ -75,7 +77,7 @@ class RankPermissionCommand extends SubArgument {
 			}
 
 			sender.sendMessage(message);
-		});
+		}, sender -> List.of("<add/remove>"));
 
 		Argument permName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<permission>"));

@@ -52,7 +52,7 @@ public final class CommandTabCompleter implements TabCompleter {
 			String permission = argument.getPermission();
 
 			if (permission.isEmpty() || sender.hasPermission(permission)) arguments.addAll(
-					argument.getArgumentString());
+					argument.getArgumentString(sender));
 		}
 		return collectedArguments(args, arguments);
 	}

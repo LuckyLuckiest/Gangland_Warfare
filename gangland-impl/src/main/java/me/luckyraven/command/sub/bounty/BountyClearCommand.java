@@ -80,13 +80,17 @@ class BountyClearCommand extends SubArgument {
 																				   SettingAddon.formatDouble(amount)));
 			}
 
-			if (userBounty.getAmount() == 0D) player.sendMessage(MessageAddon.BOUNTY_CLEAR.toString());
-			else player.sendMessage(MessageAddon.BOUNTY_LIFTED.toString()
-															  .replace("%amount%", SettingAddon.formatDouble(amount))
-															  .replace("%bounty%", SettingAddon.formatDouble(
-																	  userBounty.getAmount())));
+			if (userBounty.getAmount() == 0D) {
+				player.sendMessage(MessageAddon.BOUNTY_CLEAR.toString());
+			} else {
+				player.sendMessage(MessageAddon.BOUNTY_LIFTED.toString()
+															 .replace("%amount%", SettingAddon.formatDouble(amount))
+															 .replace("%bounty%", SettingAddon.formatDouble(
+																	 userBounty.getAmount())));
+			}
 
-		});
+		}, sender -> Bukkit.getOnlinePlayers()
+				.stream().map(Player::getName).toList());
 
 		this.addSubArgument(playerName);
 	}

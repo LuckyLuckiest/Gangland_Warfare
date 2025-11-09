@@ -15,6 +15,8 @@ import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.List;
+
 class GangDisplayCommand extends SubArgument {
 
 	private final Gangland            gangland;
@@ -64,6 +66,15 @@ class GangDisplayCommand extends SubArgument {
 
 			gang.setDisplayName(displayNameStr);
 			player.sendMessage(MessageAddon.GANG_DISPLAY_SET.toString().replace("%display%", displayNameStr));
+		}, sender -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				return null;
+			}
+
+			return List.of("<display-name>");
 		});
 
 		// glw gang display remove

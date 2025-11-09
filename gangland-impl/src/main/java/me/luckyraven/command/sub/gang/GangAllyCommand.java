@@ -11,14 +11,18 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.Pair;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 class GangAllyCommand extends SubArgument {
 
@@ -57,7 +61,33 @@ class GangAllyCommand extends SubArgument {
 	}
 
 	private void gangAlly() {
-		Argument requestAlly = new Argument(gangland, "request", tree, (argument, sender, args) -> {
+		Argument requestAlly = getRequestAlly();
+
+		// glw gang ally abandon <id>
+		Argument abandonAlly = getAbandonAlly();
+
+		// key -> the gang requesting alliance with, value -> the gang sending the request
+		HashMap<Gang, Gang>           gangsIdMap       = new HashMap<>();
+		HashMap<Gang, CountdownTimer> gangRequestTimer = new HashMap<>();
+
+		Argument allyId = getAllyId(gangsIdMap, gangRequestTimer);
+
+		requestAlly.addSubArgument(allyId);
+		abandonAlly.addSubArgument(allyId);
+
+		// glw gang ally accept
+		Argument allyAccept = getAllyAccept(gangsIdMap, gangRequestTimer);
+
+		Argument allyReject = getAllyReject(gangsIdMap, gangRequestTimer);
+
+		this.addSubArgument(requestAlly);
+		this.addSubArgument(abandonAlly);
+		this.addSubArgument(allyAccept);
+		this.addSubArgument(allyReject);
+	}
+
+	private @NotNull Argument getRequestAlly() {
+		return new Argument(gangland, "request", tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -68,9 +98,10 @@ class GangAllyCommand extends SubArgument {
 
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<id>"));
 		}, this.getPermission() + ".request");
+	}
 
-		// glw gang ally abandon <id>
-		Argument abandonAlly = new Argument(gangland, "abandon", tree, (argument, sender, args) -> {
+	private @NotNull Argument getAbandonAlly() {
+		return new Argument(gangland, "abandon", tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -81,11 +112,11 @@ class GangAllyCommand extends SubArgument {
 
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<id>"));
 		}, this.getPermission() + ".abandon");
+	}
 
-		// key -> the gang requesting alliance with, value -> the gang sending the request
-		HashMap<Gang, Gang>           gangsIdMap       = new HashMap<>();
-		HashMap<Gang, CountdownTimer> gangRequestTimer = new HashMap<>();
-		Argument allyId = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+	private @NotNull Argument getAllyId(HashMap<Gang, Gang> gangsIdMap,
+										HashMap<Gang, CountdownTimer> gangRequestTimer) {
+		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -183,13 +214,44 @@ class GangAllyCommand extends SubArgument {
 				}
 			}
 
+		}, sender -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				return null;
+			}
+
+			Gang gang = gangManager.getGang(user.getGangId());
+
+			return gang.getAllies()
+					.stream().map(Pair::first).map(Gang::getName).toList();
+		}, sender -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				return null;
+			}
+
+			Map<String, String> gangs = new HashMap<>();
+
+			Gang gang = gangManager.getGang(user.getGangId());
+
+			List<Gang> allies = gang.getAllies()
+					.stream().map(Pair::first).toList();
+
+			for (Gang ally : allies) {
+				gangs.put(ally.getName(), String.valueOf(ally.getId()));
+			}
+
+			return gangs;
 		});
+	}
 
-		requestAlly.addSubArgument(allyId);
-		abandonAlly.addSubArgument(allyId);
-
-		// glw gang ally accept
-		Argument allyAccept = new Argument(gangland, "accept", tree, (argument, sender, args) -> {
+	private @NotNull Argument getAllyAccept(HashMap<Gang, Gang> gangsIdMap,
+											HashMap<Gang, CountdownTimer> gangRequestTimer) {
+		return new Argument(gangland, "accept", tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -249,8 +311,11 @@ class GangAllyCommand extends SubArgument {
 				gangRequestTimer.remove(receiving);
 			}
 		}, this.getPermission() + ".accept");
+	}
 
-		Argument allyReject = new Argument(gangland, "reject", tree, (argument, sender, args) -> {
+	private @NotNull Argument getAllyReject(HashMap<Gang, Gang> gangsIdMap,
+											HashMap<Gang, CountdownTimer> gangRequestTimer) {
+		return new Argument(gangland, "reject", tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -306,11 +371,6 @@ class GangAllyCommand extends SubArgument {
 				gangRequestTimer.remove(receiving);
 			}
 		}, this.getPermission() + ".reject");
-
-		this.addSubArgument(requestAlly);
-		this.addSubArgument(abandonAlly);
-		this.addSubArgument(allyAccept);
-		this.addSubArgument(allyReject);
 	}
 
 }

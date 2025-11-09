@@ -23,6 +23,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -101,11 +102,22 @@ class GangPromoteCommand extends SubArgument {
 			Rank currentRank = targetMember.getRank();
 			// in the case there are more than one child then give options to the promoter
 			if (!force) {
-				if (userMember.getRank() == null) return;
+				Rank userMemberRank = userMember.getRank();
+
+				if (userMemberRank == null || currentRank == null) return;
 
 				// cannot promote more than your rank
-				if (userMember.getRank().equals(targetMember.getRank())) {
+				if (userMemberRank.equals(targetMember.getRank())) {
 					player.sendMessage(MessageAddon.GANG_SAME_RANK_ACTION.toString());
+					return;
+				}
+
+				// check if target has higher rank than user
+				Tree.Node<Rank> userNode   = userMemberRank.getNode();
+				Tree.Node<Rank> targetNode = currentRank.getNode();
+
+				if (rankManager.getRankTree().isDescendant(targetNode, userNode)) {
+					player.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
 					return;
 				}
 			}
@@ -129,9 +141,9 @@ class GangPromoteCommand extends SubArgument {
 				for (int i = 0; i < nextRanks.size(); i++) {
 					String rank = nextRanks.get(i).getName();
 
+					String value = "/glw option gang rank " + targetStr + " " + rank;
 					ComponentBuilder sep = new ComponentBuilder(rank).event(
-							new ClickEvent(ClickEvent.Action.RUN_COMMAND,
-										   "/glw option gang rank " + targetStr + " " + rank));
+							new ClickEvent(ClickEvent.Action.RUN_COMMAND, value));
 
 					ranks.append(sep.create());
 
@@ -145,8 +157,7 @@ class GangPromoteCommand extends SubArgument {
 				if (offlineName != null && !offlineName.isEmpty() && offlinePlayer.isOnline()) {
 					Player onlinePlayer = offlinePlayer.getPlayer();
 					String message = MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString()
-																			 .replace("%rank%",
-																					  first.getName());
+																			 .replace("%rank%", first.getName());
 					// remove the previous rank attachments
 					User<Player> onlineUser = userManager.getUser(onlinePlayer);
 
@@ -157,11 +168,56 @@ class GangPromoteCommand extends SubArgument {
 
 				player.sendMessage(MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString()
 																		   .replace("%player%", targetStr)
-																		   .replace("%rank%",
-																					first.getName()));
+																		   .replace("%rank%", first.getName()));
 
 				targetMember.setRank(first);
 			}
+		}, sender -> {
+			Player       player     = (Player) sender;
+			User<Player> user       = userManager.getUser(player);
+			Member       userMember = memberManager.getMember(player.getUniqueId());
+
+			if (!user.hasGang()) {
+				return null;
+			}
+
+			Gang userGang = gangManager.getGang(user.getGangId());
+			Rank userRank = userMember.getRank();
+
+			if (userRank == null) {
+				return null;
+			}
+
+			// get the members in the gang
+			List<Member> members = userGang.getValue();
+
+			// filter the members by rank
+			List<String> descendantRanks = new ArrayList<>();
+
+			for (Member member : members) {
+				Rank memberRank = member.getRank();
+
+				if (memberRank == null) continue;
+
+				Tree<Rank> rankTree = rankManager.getRankTree();
+
+				if (!rankTree.isDescendant(memberRank.getNode(), userRank.getNode())) continue;
+
+				OfflinePlayer offlinePlayer     = Bukkit.getOfflinePlayer(member.getUuid());
+				String        offlinePlayerName = offlinePlayer.getName();
+
+				if (offlinePlayerName == null) continue;
+
+				descendantRanks.add(offlinePlayer.getName());
+			}
+
+			// if no descendants found
+			if (descendantRanks.isEmpty()) {
+				descendantRanks.add("");
+			}
+
+			// return the rank names
+			return descendantRanks;
 		});
 	}
 

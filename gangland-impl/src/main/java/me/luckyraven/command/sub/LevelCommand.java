@@ -120,7 +120,7 @@ public final class LevelCommand extends CommandHandler {
 			player.sendMessage(MessageAddon.valueOf("LEVEL_EXP_" + type)
 										   .toString()
 										   .replace("%experience%", String.valueOf(argAmount)));
-		});
+		}, sender -> List.of("<amount>"));
 
 		expAdd.addSubArgument(expOptional);
 		expRemove.addSubArgument(expOptional);
@@ -162,7 +162,7 @@ public final class LevelCommand extends CommandHandler {
 			String type = args[1].toUpperCase();
 			player.sendMessage(
 					MessageAddon.valueOf("LEVEL_" + type).toString().replace("%level%", String.valueOf(levels)));
-		});
+		}, sender -> List.of("<amount>"));
 
 		levelAdd.addSubArgument(levelOptional);
 		levelRemove.addSubArgument(levelOptional);

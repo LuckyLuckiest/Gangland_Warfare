@@ -15,6 +15,8 @@ import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.List;
+
 class BankWithdrawCommand extends SubArgument {
 
 	private final Gangland            gangland;
@@ -77,6 +79,6 @@ class BankWithdrawCommand extends SubArgument {
 																	.replace("%amount%",
 																			 SettingAddon.formatDouble(argAmount)));
 
-		});
+		}, sender -> List.of("<amount>"));
 	}
 }

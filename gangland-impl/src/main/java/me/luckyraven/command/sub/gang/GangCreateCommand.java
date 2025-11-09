@@ -24,6 +24,7 @@ import org.bukkit.entity.Player;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -152,7 +153,7 @@ class GangCreateCommand extends SubArgument {
 
 			timer.start(false);
 			createGangTimer.put(sender, timer);
-		});
+		}, sender -> List.of("<name>"));
 
 		this.addSubArgument(createName);
 	}

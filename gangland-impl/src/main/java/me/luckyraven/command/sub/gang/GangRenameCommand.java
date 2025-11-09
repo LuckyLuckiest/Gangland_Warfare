@@ -16,6 +16,8 @@ import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.List;
+
 class GangRenameCommand extends SubArgument {
 
 	private final Gangland            gangland;
@@ -77,6 +79,15 @@ class GangRenameCommand extends SubArgument {
 							 .sendMessage(MessageAddon.GANG_RENAME.toString()
 																  .replace("%old_gang%", oldName)
 																  .replace("%gang%", gang.getName()));
+		}, sender -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				return null;
+			}
+
+			return List.of("<new-name>");
 		});
 
 		this.addSubArgument(changeName);

@@ -12,6 +12,8 @@ import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 
+import java.util.List;
+
 class RankParentCommand extends SubArgument {
 
 	private final Gangland       gangland;
@@ -75,11 +77,11 @@ class RankParentCommand extends SubArgument {
 																	  .replace("%rank%", rank.getName()));
 				}
 			}
-		});
+		}, sender -> List.of("<add/remove>"));
 
 		Argument parentName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<parent>"));
-		});
+		}, sender -> List.of("<parent>"));
 
 		parentName.addSubArgument(parentStr);
 

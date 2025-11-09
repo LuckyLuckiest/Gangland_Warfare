@@ -18,10 +18,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
-public final class OptionCommand extends CommandHandler {
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
 
-	public OptionCommand(Gangland gangland) {
+public final class ComponentExecutorCommand extends CommandHandler {
+
+	public ComponentExecutorCommand(Gangland gangland) {
 		super(gangland, "option", false);
 	}
 
@@ -70,12 +75,51 @@ public final class OptionCommand extends CommandHandler {
 
 		Argument rank = new Argument(getGangland(), "rank", getArgumentTree());
 
-		Argument target = new OptionalArgument(getGangland(), getArgumentTree());
+		Argument target = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<rank>"));
+		}, sender -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return null;
+			}
+
+			// get all the members in the gang
+			Gang         userGang = gangManager.getGang(user.getGangId());
+			List<Member> members  = userGang.getValue();
+			Stream<String> allMembers = members.stream()
+					.map(Member::getUuid)
+					.map(Bukkit::getOfflinePlayer)
+					.map(OfflinePlayer::getName);
+
+			return allMembers.toList();
+		});
 
 		rank.addSubArgument(target);
 
 		// glw option gang rank <target> <rank>
-		Argument rankType = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
+		Argument rankType = getRankType(userManager, memberManager, gangManager, rankManager);
+
+		target.addSubArgument(rankType);
+
+		gang.addSubArgument(rank);
+
+		return gang;
+	}
+
+	private @NotNull Argument getRankType(UserManager<Player> userManager, MemberManager memberManager,
+										  GangManager gangManager, RankManager rankManager) {
+		return new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
 			Player       player     = (Player) sender;
 			User<Player> user       = userManager.getUser(player);
 			Member       userMember = memberManager.getMember(player.getUniqueId());
@@ -131,13 +175,19 @@ public final class OptionCommand extends CommandHandler {
 			player.sendMessage(MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString()
 																	   .replace("%player%", targetStr)
 																	   .replace("%rank%", nextRank.getName()));
+		}, sender -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return null;
+			}
+
+			Collection<Rank> values = rankManager.getRanks().values();
+
+			return values.stream().map(Rank::getName).toList();
 		});
-
-		target.addSubArgument(rankType);
-
-		gang.addSubArgument(rank);
-
-		return gang;
 	}
 
 }

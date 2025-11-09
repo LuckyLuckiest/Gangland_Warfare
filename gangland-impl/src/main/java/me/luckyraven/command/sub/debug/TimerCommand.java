@@ -6,11 +6,9 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.util.timer.SequenceTimer;
 import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class TimerCommand extends CommandHandler {
 
@@ -38,20 +36,52 @@ public final class TimerCommand extends CommandHandler {
 
 	@Override
 	protected void initializeArguments() {
-		Argument create = new Argument(getGangland(), "create", getArgumentTree(), (argument, sender, args) -> {
+		Argument create = getCreate();
+
+		Argument delete = getDelete();
+
+		Argument mode = getMode();
+
+		Argument start = getStartTimer();
+
+		Argument stop = getStopTimer();
+
+		Argument addInterval = getAddInterval();
+
+		List<Argument> arguments = new ArrayList<>();
+
+		arguments.add(create);
+		arguments.add(delete);
+		arguments.add(mode);
+		arguments.add(start);
+		arguments.add(stop);
+		arguments.add(addInterval);
+
+		getArgument().addAllSubArguments(arguments);
+	}
+
+	@Override
+	protected void help(CommandSender sender, int page) { }
+
+	private @NotNull Argument getCreate() {
+		return new Argument(getGangland(), "create", getArgumentTree(), (argument, sender, args) -> {
 			SequenceTimer timer = new SequenceTimer(getGangland(), 0L, 20L, SequenceTimer.Mode.CIRCULAR);
 
 			timerMap.put(sender, timer);
 			sender.sendMessage("Added " + timer);
 		});
+	}
 
-		Argument delete = new Argument(getGangland(), "delete", getArgumentTree(), (argument, sender, args) -> {
+	private @NotNull Argument getDelete() {
+		return new Argument(getGangland(), "delete", getArgumentTree(), (argument, sender, args) -> {
 			SequenceTimer timer = timerMap.remove(sender);
 
 			startedTimers.remove(sender);
 			sender.sendMessage("Removed " + timer);
 		});
+	}
 
+	private @NotNull Argument getMode() {
 		Argument mode = new Argument(getGangland(), "mode", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage("Missing argument, <mode>");
 		});
@@ -75,11 +105,19 @@ public final class TimerCommand extends CommandHandler {
 
 			timer.setMode(md);
 			sender.sendMessage("Updated type to " + md.name());
+		}, sender -> {
+			SequenceTimer.Mode[] values = SequenceTimer.Mode.values();
+			List<String>         list   = Arrays.stream(values).map(SequenceTimer.Mode::name).toList();
+
+			return new ArrayList<>(list);
 		});
 
 		mode.addSubArgument(modeOptional);
+		return mode;
+	}
 
-		Argument start = new Argument(getGangland(), "start", getArgumentTree(), (argument, sender, args) -> {
+	private @NotNull Argument getStartTimer() {
+		return new Argument(getGangland(), "start", getArgumentTree(), (argument, sender, args) -> {
 			SequenceTimer timer = timerMap.get(sender);
 
 			if (timer == null) {
@@ -101,8 +139,10 @@ public final class TimerCommand extends CommandHandler {
 
 			sender.sendMessage("Started timer");
 		});
+	}
 
-		Argument stop = new Argument(getGangland(), "stop", getArgumentTree(), (argument, sender, args) -> {
+	private @NotNull Argument getStopTimer() {
+		return new Argument(getGangland(), "stop", getArgumentTree(), (argument, sender, args) -> {
 			SequenceTimer timer = timerMap.get(sender);
 
 			if (timer == null) {
@@ -113,7 +153,9 @@ public final class TimerCommand extends CommandHandler {
 			timer.stop();
 			sender.sendMessage("Stopped timer");
 		});
+	}
 
+	private @NotNull Argument getAddInterval() {
 		Argument addInterval = new Argument(getGangland(), "add", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage("Missing argument, <interval>");
 		});
@@ -141,23 +183,10 @@ public final class TimerCommand extends CommandHandler {
 					(t.getTaskInterval() == 0 ? 0 : t.getCurrentInterval() % t.getTaskInterval())));
 
 			sender.sendMessage("Added a new interval, " + val);
-		});
+		}, sender -> List.of("<interval>"));
 
 		addInterval.addSubArgument(interval);
-
-		List<Argument> arguments = new ArrayList<>();
-
-		arguments.add(create);
-		arguments.add(delete);
-		arguments.add(mode);
-		arguments.add(start);
-		arguments.add(stop);
-		arguments.add(addInterval);
-
-		getArgument().addAllSubArguments(arguments);
+		return addInterval;
 	}
-
-	@Override
-	protected void help(CommandSender sender, int page) { }
 
 }

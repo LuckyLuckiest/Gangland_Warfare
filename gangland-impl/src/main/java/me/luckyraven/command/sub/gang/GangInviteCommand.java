@@ -23,6 +23,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -92,10 +94,12 @@ class GangInviteCommand extends SubArgument {
 			// broadcast in gang join of the player
 			// don't broadcast to the joined member
 			List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
-			for (User<Player> onUser : gangOnlineMembers)
-				onUser.getUser()
-					  .sendMessage(
-							  MessageAddon.GANG_PLAYER_JOINED.toString().replace("%player%", user.getUser().getName()));
+			for (User<Player> onUser : gangOnlineMembers) {
+				String playerJoined = MessageAddon.GANG_PLAYER_JOINED.toString()
+																	 .replace("%player%", user.getUser().getName());
+
+				onUser.getUser().sendMessage(playerJoined);
+			}
 
 			member.setGangJoinDateLong(Instant.now().toEpochMilli());
 			gang.addMember(user, member, rank);
@@ -151,6 +155,31 @@ class GangInviteCommand extends SubArgument {
 
 			playerInvite.put(targetUser, gang);
 			inviteTimer.put(targetUser, timer);
+		}, sender -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				return null;
+			}
+
+			List<String> possibleUsers = new ArrayList<>();
+
+			Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
+
+			for (Player onlinePlayer : onlinePlayers) {
+				User<Player> onlineUser = userManager.getUser(onlinePlayer);
+
+				if (onlineUser.hasGang()) continue;
+
+				possibleUsers.add(onlinePlayer.getName());
+			}
+
+			if (possibleUsers.isEmpty()) {
+				return null;
+			}
+
+			return possibleUsers;
 		});
 
 		this.addSubArgument(inviteName);

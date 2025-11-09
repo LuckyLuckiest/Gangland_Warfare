@@ -26,6 +26,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -50,6 +51,56 @@ class GangKickCommand extends SubArgument {
 		this.rankManager   = gangland.getInitializer().getRankManager();
 
 		gangKick();
+	}
+
+	protected static List<String> getDescendantRanks(UserManager<Player> userManager, MemberManager memberManager,
+													 GangManager gangManager, RankManager rankManager,
+													 CommandSender sender) {
+		Player       player     = (Player) sender;
+		User<Player> user       = userManager.getUser(player);
+		Member       userMember = memberManager.getMember(player.getUniqueId());
+
+		if (!user.hasGang()) {
+			return null;
+		}
+
+		Gang userGang = gangManager.getGang(user.getGangId());
+		Rank userRank = userMember.getRank();
+
+		if (userRank == null) {
+			return null;
+		}
+
+		// get the members in the gang
+		List<Member> members = userGang.getValue();
+
+		// filter the members by rank
+		List<String> descendantRanks = new ArrayList<>();
+
+		for (Member member : members) {
+			Rank memberRank = member.getRank();
+
+			if (memberRank == null) continue;
+
+			Tree<Rank> rankTree = rankManager.getRankTree();
+
+			if (!rankTree.isDescendant(userRank.getNode(), memberRank.getNode())) continue;
+
+			OfflinePlayer offlinePlayer     = Bukkit.getOfflinePlayer(member.getUuid());
+			String        offlinePlayerName = offlinePlayer.getName();
+
+			if (offlinePlayerName == null) continue;
+
+			descendantRanks.add(offlinePlayer.getName());
+		}
+
+		// if no descendants found
+		if (descendantRanks.isEmpty()) {
+			descendantRanks.add("");
+		}
+
+		// return the rank names
+		return descendantRanks;
 	}
 
 	@Override
@@ -144,7 +195,7 @@ class GangKickCommand extends SubArgument {
 			player.sendMessage(MessageAddon.GANG_KICKED_TARGET.toString()
 															  .replace("%player%", Objects.requireNonNull(
 																	  offlinePlayer.getName())));
-		});
+		}, sender -> getDescendantRanks(userManager, memberManager, gangManager, rankManager, sender));
 
 		this.addSubArgument(kickName);
 	}

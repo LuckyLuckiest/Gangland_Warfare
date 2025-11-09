@@ -20,6 +20,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -109,6 +110,38 @@ public final class BalanceCommand extends CommandHandler {
 
 				if (!found) sender.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", target));
 			});
+		}, sender -> {
+			List<String> players = new ArrayList<>();
+
+			Initializer      initializer      = getGangland().getInitializer();
+			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
+			DatabaseHelper   helper           = new DatabaseHelper(getGangland(), ganglandDatabase);
+			List<Table<?>>   tables           = ganglandDatabase.getTables();
+
+			UserTable userTable = initializer.getInstanceFromTables(UserTable.class, tables);
+
+			helper.runQueries(database -> {
+				// get all the user's data
+				List<Object[]> usersData = database.table(userTable.getName()).selectAll();
+
+				// get only the uuids
+				Map<UUID, Double> uuids = usersData.stream()
+						.collect(Collectors.toMap(
+								objects -> UUID.fromString(String.valueOf(objects[0])),
+								objects -> (double) objects[1]));
+
+				for (UUID uuid : uuids.keySet()) {
+					OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+					String        offlineName   = offlinePlayer.getName();
+
+					if (offlineName == null || offlineName.isEmpty()) continue;
+
+					players.add(offlineName);
+				}
+
+			});
+
+			return players;
 		});
 
 		getArgument().addSubArgument(targetBalance);

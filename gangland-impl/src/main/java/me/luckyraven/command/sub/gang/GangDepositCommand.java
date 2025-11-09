@@ -101,6 +101,15 @@ class GangDepositCommand extends SubArgument {
 			} catch (NumberFormatException exception) {
 				player.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
 			}
+		}, sender -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				return null;
+			}
+
+			return List.of("<amount>");
 		});
 	}
 

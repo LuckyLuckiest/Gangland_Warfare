@@ -13,6 +13,8 @@ import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.List;
+
 class WaypointCooldownCommand extends SubArgument {
 
 	private final Gangland        gangland;
@@ -61,7 +63,7 @@ class WaypointCooldownCommand extends SubArgument {
 			// update the timer
 			waypoint.setCooldown(changedValue);
 			player.sendMessage(MessageAddon.WAYPOINT_CONFIGURATION_SUCCESS.toString());
-		});
+		}, sender -> List.of("<duration>"));
 
 		this.addSubArgument(optional);
 	}

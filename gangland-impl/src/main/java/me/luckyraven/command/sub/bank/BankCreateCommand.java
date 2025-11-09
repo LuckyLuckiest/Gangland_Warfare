@@ -19,6 +19,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 class BankCreateCommand extends SubArgument {
@@ -126,7 +127,7 @@ class BankCreateCommand extends SubArgument {
 
 			timer.start(false);
 			createBankTimer.put(sender, timer);
-		});
+		}, sender -> List.of("<name>"));
 
 		this.addSubArgument(createName);
 	}

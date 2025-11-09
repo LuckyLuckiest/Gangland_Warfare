@@ -118,7 +118,8 @@ class RankDeleteCommand extends SubArgument {
 
 			timer.start(false);
 			deleteRankTimer.put(sender, timer);
-		});
+		}, sender -> rankManager.getRanks().values()
+				.stream().map(Rank::getName).toList());
 
 		this.addSubArgument(deleteName);
 	}

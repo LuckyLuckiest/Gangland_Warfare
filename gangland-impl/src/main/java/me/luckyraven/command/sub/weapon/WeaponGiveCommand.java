@@ -9,11 +9,13 @@ import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.WeaponService;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import java.util.List;
 import java.util.Map;
 
 class WeaponGiveCommand extends SubArgument {
@@ -44,6 +46,11 @@ class WeaponGiveCommand extends SubArgument {
 
 			if (giveWeapon) player.sendMessage(ChatUtil.commandMessage("Given &b" + weaponName + "&7."));
 			else player.sendMessage(ChatUtil.errorMessage("Invalid weapon!"));
+		}, sender -> {
+			WeaponService weaponService = gangland.getInitializer().getWeaponManager();
+
+			return weaponService.getWeapons().values()
+					.stream().map(Weapon::getName).toList();
 		});
 
 		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
@@ -63,7 +70,7 @@ class WeaponGiveCommand extends SubArgument {
 			if (giveWeapon) player.sendMessage(
 					ChatUtil.commandMessage("Given &a" + weaponAmount + " &b" + weaponName + "&7."));
 			else player.sendMessage(ChatUtil.errorMessage("Invalid weapon!"));
-		});
+		}, sender -> List.of("<amount>"));
 
 		name.addSubArgument(amount);
 		this.addSubArgument(name);

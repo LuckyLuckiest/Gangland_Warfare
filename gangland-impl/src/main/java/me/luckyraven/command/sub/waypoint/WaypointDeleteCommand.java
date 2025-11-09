@@ -8,6 +8,8 @@ import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
+import me.luckyraven.data.user.User;
+import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.GanglandDatabase;
@@ -19,17 +21,17 @@ import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 class WaypointDeleteCommand extends SubArgument {
 
-	private final Gangland        gangland;
-	private final Tree<Argument>  tree;
-	private final WaypointManager waypointManager;
+	private final Gangland            gangland;
+	private final Tree<Argument>      tree;
+	private final UserManager<Player> userManager;
+	private final WaypointManager     waypointManager;
 
 	protected WaypointDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
@@ -37,7 +39,10 @@ class WaypointDeleteCommand extends SubArgument {
 		this.gangland = gangland;
 		this.tree     = tree;
 
-		this.waypointManager = gangland.getInitializer().getWaypointManager();
+		Initializer initializer = gangland.getInitializer();
+
+		this.userManager     = initializer.getUserManager();
+		this.waypointManager = initializer.getWaypointManager();
 
 		waypointDelete();
 	}
@@ -148,6 +153,60 @@ class WaypointDeleteCommand extends SubArgument {
 
 			timer.start(true);
 			deleteWaypointTimer.put(sender, timer);
+		}, sender -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			List<String> waypoints = new ArrayList<>();
+
+			Collection<Waypoint> allWaypoints = waypointManager.getWaypoints().values();
+			if (user.hasGang()) {
+				int gangId = user.getGangId();
+
+				List<String> list = allWaypoints.stream()
+						.filter(waypoint -> waypoint.getGangId() == gangId)
+						.map(Waypoint::getName)
+						.toList();
+
+				waypoints.addAll(list);
+			}
+
+			List<String> list = allWaypoints.stream()
+					.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
+					.map(Waypoint::getName)
+					.toList();
+
+			waypoints.addAll(list);
+
+			return waypoints;
+		}, sender -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			List<Waypoint> waypoints = new ArrayList<>();
+
+			Collection<Waypoint> allWaypoints = waypointManager.getWaypoints().values();
+			if (user.hasGang()) {
+				int gangId = user.getGangId();
+
+				List<Waypoint> list = allWaypoints.stream().filter(waypoint -> waypoint.getGangId() == gangId).toList();
+
+				waypoints.addAll(list);
+			}
+
+			List<Waypoint> list = allWaypoints.stream()
+					.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
+					.toList();
+
+			waypoints.addAll(list);
+
+			Map<String, String> waypointMap = new HashMap<>();
+
+			for (Waypoint waypoint : waypoints) {
+				waypointMap.put(waypoint.getName(), String.valueOf(waypoint.getUsedId()));
+			}
+
+			return waypointMap;
 		});
 
 		this.addSubArgument(optional);

@@ -17,6 +17,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.List;
+
 class BountySetCommand extends SubArgument {
 
 	private final Gangland            gangland;
@@ -52,7 +54,8 @@ class BountySetCommand extends SubArgument {
 			}
 
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
-		});
+		}, sender -> Bukkit.getOnlinePlayers()
+				.stream().map(Player::getName).toList());
 
 		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			String playerStr = args[2];
@@ -106,7 +109,7 @@ class BountySetCommand extends SubArgument {
 			if (!bountyEvent.isCancelled()) {
 				userBounty.addBounty(sender, value);
 			}
-		});
+		}, sender -> List.of("<amount>"));
 
 		playerName.addSubArgument(amount);
 		this.addSubArgument(playerName);

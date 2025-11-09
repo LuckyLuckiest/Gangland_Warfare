@@ -12,6 +12,8 @@ import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 
+import java.util.List;
+
 class RankInfoCommand extends SubArgument {
 
 	private final Gangland       gangland;
@@ -63,7 +65,7 @@ class RankInfoCommand extends SubArgument {
 															 .replace("%parent%", parentBuilder.toString()));
 			sender.sendMessage(
 					MessageAddon.RANK_INFO_SECONDARY.toString().replace("%permissions%", permBuilder.toString()));
-		});
+		}, sender -> List.of("<name>"));
 
 		this.addSubArgument(infoName);
 	}
