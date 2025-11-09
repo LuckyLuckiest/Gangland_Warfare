@@ -2,9 +2,10 @@ package me.luckyraven.command;
 
 import lombok.Getter;
 import me.luckyraven.Gangland;
+import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.sub.DownloadPluginCommand;
+import me.luckyraven.command.sub.debug.ComponentExecutorCommand;
 import me.luckyraven.command.sub.debug.DebugCommand;
-import me.luckyraven.command.sub.debug.OptionCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
 import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -30,7 +31,7 @@ public final class CommandManager implements CommandExecutor {
 	// classes that shouldn't be displayed in tab completion
 	@Getter
 	private static final List<Class<? extends CommandHandler>> filters = Arrays.asList(DebugCommand.class,
-																					   OptionCommand.class,
+																					   ComponentExecutorCommand.class,
 																					   ReadNBTCommand.class,
 																					   TimerCommand.class,
 																					   DownloadPluginCommand.class);
@@ -50,7 +51,9 @@ public final class CommandManager implements CommandExecutor {
 
 		for (CommandHandler handler : commands.values()) {
 			// filter the commands for non-dev users
-			if (!isDev(sender)) if (filters.stream().anyMatch(filterClass -> filterClass.isInstance(handler))) continue;
+			if (!isDev(sender)) {
+				if (filters.stream().anyMatch(filterClass -> filterClass.isInstance(handler))) continue;
+			}
 
 			String permission = handler.getPermission();
 
@@ -80,7 +83,9 @@ public final class CommandManager implements CommandExecutor {
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
 							 @NotNull String[] args) {
 		try {
-			if (!sender.hasPermission("gangland.command.main")) {
+			String mainCommandPermission = "gangland.command.main";
+
+			if (!sender.hasPermission(mainCommandPermission)) {
 				sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
 				return false;
 			}
@@ -112,15 +117,17 @@ public final class CommandManager implements CommandExecutor {
 				Set<String> dictionary = commandHandlers.stream()
 						.map(CommandHandler::getAlias)
 						.flatMap(Collection::stream)
-						.filter(s -> !s.equals("?"))
+						.filter(s -> !s.equals(Argument.OPTIONAL_ARGUMENT))
 						.collect(Collectors.toSet());
 
 				dictionary.addAll(commandHandlers.stream()
 										  .map(handler -> handler.getArgument().getArguments()[0])
 										  .collect(Collectors.toSet()));
 
-				sender.sendMessage(
-						ChatUtil.color(ChatUtil.generateCommandSuggestion(args[0], dictionary, label, null)));
+				String commandSuggestion = ChatUtil.generateCommandSuggestion(args[0], dictionary, label, null);
+
+				sender.sendMessage(ChatUtil.color(commandSuggestion));
+
 				return false;
 			}
 		} catch (Throwable throwable) {

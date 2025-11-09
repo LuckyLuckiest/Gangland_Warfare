@@ -1,10 +1,8 @@
-package me.luckyraven.feature.weapon;
+package me.luckyraven.weapon;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.WeaponTable;
-import me.luckyraven.weapon.Weapon;
-import me.luckyraven.weapon.WeaponService;
 
 import java.util.List;
 import java.util.UUID;

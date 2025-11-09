@@ -30,6 +30,8 @@ import java.util.stream.Stream;
 @Getter
 public class Argument implements Cloneable {
 
+	public static final String OPTIONAL_ARGUMENT = "?";
+
 	private final boolean    displayAllArguments;
 	@Getter(value = AccessLevel.NONE)
 	private final JavaPlugin plugin;
@@ -101,20 +103,20 @@ public class Argument implements Cloneable {
 	 * @param permission the permission representation
 	 */
 	public void addPermission(String permission) {
-		if (plugin instanceof Gangland gangland) gangland.getInitializer()
-														 .getPermissionManager()
-														 .addPermission(permission);
-		else {
-			if (permission.isEmpty()) return;
-
-			PluginManager pluginManager = Bukkit.getPluginManager();
-			Permission    perm          = new Permission(permission);
-			List<String> permissions = pluginManager.getPermissions()
-					.stream().map(Permission::getName).toList();
-
-			// add the permission if it was not in the permission list
-			if (!permissions.contains(permission)) pluginManager.addPermission(perm);
+		if (plugin instanceof Gangland gangland) {
+			gangland.getInitializer().getPermissionManager().addPermission(permission);
+			return;
 		}
+
+		if (permission.isEmpty()) return;
+
+		PluginManager pluginManager = Bukkit.getPluginManager();
+		Permission    perm          = new Permission(permission);
+		List<String> permissions = pluginManager.getPermissions()
+				.stream().map(Permission::getName).toList();
+
+		// add the permission if it was not in the permission list
+		if (!permissions.contains(permission)) pluginManager.addPermission(perm);
 	}
 
 	/**
@@ -124,7 +126,7 @@ public class Argument implements Cloneable {
 	 */
 	public void addSubArgument(Argument argument) {
 		if (tree.contains(argument)) return;
-		if (argument.toString().contains("?")) node.add(argument.getNode());
+		if (argument.toString().contains(OPTIONAL_ARGUMENT)) node.add(argument.getNode());
 		else node.add(0, argument.getNode());
 	}
 
@@ -138,7 +140,6 @@ public class Argument implements Cloneable {
 	}
 
 	/**
-	 * <p>
 	 * Executes the command according to the type of the argument string.
 	 * <p>
 	 * The argument tree would be traversed, and each argument according to its type would be executed on arrival or
@@ -211,7 +212,7 @@ public class Argument implements Cloneable {
 		return arguments[0];
 	}
 
-	public List<String> getArgumentString() {
+	public List<String> getArgumentString(CommandSender sender) {
 		return displayAllArguments ? List.of(arguments) : List.of(toString());
 	}
 
@@ -256,12 +257,14 @@ public class Argument implements Cloneable {
 			Set<String> dictionary = children.stream()
 					.map(node -> node.getData().arguments)
 					.flatMap(Stream::of)
-					.filter(s -> !s.equals("?"))
+					.filter(s -> !s.equals(OPTIONAL_ARGUMENT))
 					.collect(Collectors.toSet());
+
 			String[] validArguments = Arrays.stream(args).toList().subList(0, length).toArray(String[]::new);
 
-			sender.sendMessage(
-					ChatUtil.color(ChatUtil.generateCommandSuggestion(lastInput, dictionary, "glw", validArguments)));
+			String commandSuggestion = ChatUtil.generateCommandSuggestion(lastInput, dictionary, "glw", validArguments);
+
+			sender.sendMessage(ChatUtil.color(commandSuggestion));
 			break;
 		}
 	}

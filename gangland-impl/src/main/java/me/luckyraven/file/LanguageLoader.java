@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -91,7 +92,7 @@ public class LanguageLoader {
 
 	private YamlConfiguration loadMessage(FileManager manager) throws IOException, InvalidConfigurationException {
 		String lang    = SettingAddon.getLanguagePicked();
-		String fileLoc = "message" + File.separator + "message_" + lang + ".yml";
+		String fileLoc = Path.of("message", "message_" + lang + ".yml").toString();
 
 		return manager.loadFromResources(fileLoc);
 	}

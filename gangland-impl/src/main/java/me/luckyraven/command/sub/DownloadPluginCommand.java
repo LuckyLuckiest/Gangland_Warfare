@@ -7,6 +7,7 @@ import me.luckyraven.command.argument.types.DoubleArgument;
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.List;
@@ -49,16 +50,7 @@ public final class DownloadPluginCommand extends CommandHandler {
 
 	@Override
 	protected void initializeArguments() {
-		Argument confirm = new DoubleArgument(getGangland(), "download", getArgumentTree(),
-											  (argument, sender, args) -> {
-												  if (!containsUpdate.containsKey(sender)) return;
-
-												  boolean newUpdate = containsUpdate.get(sender);
-
-												  if (!newUpdate) return;
-
-												  getGangland().getUpdateChecker().downloadLatestVersion();
-											  }, getPermission() + ".download");
+		Argument confirm = getConfirm();
 
 		getArgument().addSubArgument(confirm);
 	}
@@ -66,5 +58,17 @@ public final class DownloadPluginCommand extends CommandHandler {
 	@Override
 	protected void help(CommandSender sender, int page) {
 		getHelpInfo().displayHelp(sender, page, "Update Checker");
+	}
+
+	private @NotNull Argument getConfirm() {
+		return new DoubleArgument(getGangland(), "download", getArgumentTree(), (argument, sender, args) -> {
+			if (!containsUpdate.containsKey(sender)) return;
+
+			boolean newUpdate = containsUpdate.get(sender);
+
+			if (!newUpdate) return;
+
+			getGangland().getUpdateChecker().downloadLatestVersion();
+		}, getPermission() + ".download");
 	}
 }

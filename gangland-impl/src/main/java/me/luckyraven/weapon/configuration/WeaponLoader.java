@@ -1,10 +1,9 @@
-package me.luckyraven.file.configuration.weapon;
+package me.luckyraven.weapon.configuration;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.FolderLoader;
-import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.configuration.InvalidConfigurationException;

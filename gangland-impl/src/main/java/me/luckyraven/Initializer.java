@@ -8,8 +8,8 @@ import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.command.sub.*;
 import me.luckyraven.command.sub.bank.BankCommand;
 import me.luckyraven.command.sub.bounty.BountyCommand;
+import me.luckyraven.command.sub.debug.ComponentExecutorCommand;
 import me.luckyraven.command.sub.debug.DebugCommand;
-import me.luckyraven.command.sub.debug.OptionCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
 import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.command.sub.gang.GangCommand;
@@ -22,6 +22,7 @@ import me.luckyraven.command.sub.weapon.WeaponCommand;
 import me.luckyraven.compatibility.CompatibilitySetup;
 import me.luckyraven.compatibility.CompatibilityWorker;
 import me.luckyraven.compatibility.VersionSetup;
+import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
@@ -41,25 +42,29 @@ import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.*;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.feature.scoreboard.ScoreboardManager;
-import me.luckyraven.feature.weapon.WeaponManager;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
-import me.luckyraven.file.configuration.weapon.WeaponLoader;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
+import me.luckyraven.util.listener.autowire.DependencyContainer;
+import me.luckyraven.weapon.WeaponManager;
+import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import me.luckyraven.weapon.configuration.WeaponAddon;
+import me.luckyraven.weapon.configuration.WeaponLoader;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class Initializer {
@@ -139,12 +144,13 @@ public final class Initializer {
 		MessageAddon.setPlugin(gangland);
 
 		// add all registered plugin permissions
-		permissionManager.addAllPermissions(Bukkit.getPluginManager()
-												  .getPermissions()
-													.stream()
-													.map(Permission::getName)
-													.filter(permission -> permission.startsWith("gangland"))
-													.collect(Collectors.toSet()));
+		Set<Permission> permissions = Bukkit.getPluginManager().getPermissions();
+		Set<String> ganglandPermissions = permissions.stream()
+				.map(Permission::getName)
+				.filter(permission -> permission.startsWith("gangland"))
+				.collect(Collectors.toSet());
+
+		permissionManager.addAllPermissions(ganglandPermissions);
 
 		// User manager
 		userManager        = new UserManager<>(gangland);
@@ -282,8 +288,12 @@ public final class Initializer {
 
 	public void weaponLoader() {
 		ammunitionAddon = new AmmunitionAddon(fileManager);
-		weaponAddon     = new WeaponAddon();
-		weaponLoader    = new WeaponLoader(gangland);
+
+		if (weaponAddon == null) {
+			weaponAddon = new WeaponAddon();
+		}
+
+		weaponLoader = new WeaponLoader(gangland);
 
 		weaponLoader.addExpectedFile(new FileHandler(gangland, "rifle", "weapon", ".yml"));
 
@@ -311,6 +321,17 @@ public final class Initializer {
 	}
 
 	private void events() {
+		// Register components first (order matters!)
+		// Register all the managers and services that listeners might need
+		DependencyContainer dependencyContainer = listenerManager.getDependencyContainer();
+
+		dependencyContainer.registerInstance(WeaponService.class, weaponManager);
+		dependencyContainer.registerInstance(GangManager.class, gangManager);
+		dependencyContainer.registerInstance(UserManager.class, userManager);
+		dependencyContainer.registerInstance(RankManager.class, rankManager);
+		dependencyContainer.registerInstance(JavaPlugin.class, gangland);
+		dependencyContainer.registerInstance(RecoilCompatibility.class, compatibilityWorker.getRecoilCompatibility());
+
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 
 		// waypoint
@@ -350,7 +371,7 @@ public final class Initializer {
 
 		// debug commands
 		commandManager.addCommand(new DebugCommand(gangland));
-		commandManager.addCommand(new OptionCommand(gangland));
+		commandManager.addCommand(new ComponentExecutorCommand(gangland));
 		commandManager.addCommand(new ReadNBTCommand(gangland));
 		commandManager.addCommand(new ReloadCommand(gangland));
 		commandManager.addCommand(new TimerCommand(gangland));
