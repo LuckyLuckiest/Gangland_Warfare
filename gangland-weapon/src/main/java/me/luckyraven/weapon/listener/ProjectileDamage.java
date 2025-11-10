@@ -1,11 +1,11 @@
-package me.luckyraven.listener.player.weapon;
+package me.luckyraven.weapon.listener;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.Gangland;
-import me.luckyraven.feature.weapon.WeaponManager;
-import me.luckyraven.listener.ListenerHandler;
+import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.util.listener.autowire.AutowireTarget;
 import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.events.WeaponProjectileLaunchEvent;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
@@ -22,15 +22,17 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ListenerHandler
+@AutowireTarget({WeaponService.class})
 public class ProjectileDamage implements Listener {
 
 	private final static Map<Integer, Weapon> weaponInstance = new ConcurrentHashMap<>();
 
-	private final WeaponManager                      weaponManager;
+	private final WeaponService weaponManager;
+
 	private final Map<Integer, ProjectileEventQueue> eventQueues;
 
-	public ProjectileDamage(Gangland gangland) {
-		this.weaponManager = gangland.getInitializer().getWeaponManager();
+	public ProjectileDamage(WeaponService weaponService) {
+		this.weaponManager = weaponService;
 		this.eventQueues   = new ConcurrentHashMap<>();
 	}
 

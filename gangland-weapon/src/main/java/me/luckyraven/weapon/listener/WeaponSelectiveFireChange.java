@@ -1,11 +1,11 @@
-package me.luckyraven.listener.player.weapon;
+package me.luckyraven.weapon.listener;
 
-import me.luckyraven.Gangland;
-import me.luckyraven.feature.weapon.WeaponManager;
-import me.luckyraven.listener.ListenerHandler;
-import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.util.listener.autowire.AutowireTarget;
+import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.WeaponService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -13,12 +13,13 @@ import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
 
 @ListenerHandler
+@AutowireTarget({WeaponService.class})
 public class WeaponSelectiveFireChange implements Listener {
 
-	private final WeaponManager weaponManager;
+	private final WeaponService weaponService;
 
-	public WeaponSelectiveFireChange(Gangland gangland) {
-		this.weaponManager = gangland.getInitializer().getWeaponManager();
+	public WeaponSelectiveFireChange(WeaponService weaponService) {
+		this.weaponService = weaponService;
 	}
 
 	@EventHandler
@@ -30,7 +31,7 @@ public class WeaponSelectiveFireChange implements Listener {
 
 		// check if the player is holding a weapon
 		ItemStack item   = player.getInventory().getItemInMainHand();
-		Weapon    weapon = weaponManager.validateAndGetWeapon(player, item);
+		Weapon    weapon = weaponService.validateAndGetWeapon(player, item);
 
 		if (weapon == null) return;
 
@@ -40,16 +41,15 @@ public class WeaponSelectiveFireChange implements Listener {
 		weapon.setCurrentSelectiveFire(weapon.getCurrentSelectiveFire().getNextState());
 
 		// update the weapon data
-		ItemBuilder itemBuilder = weaponManager.getHeldWeaponItem(player);
+		ItemBuilder itemBuilder = weaponService.getHeldWeaponItem(player);
 
 		if (itemBuilder == null) return;
 
 		weapon.updateWeaponData(itemBuilder);
 		weapon.updateWeapon(player, itemBuilder, player.getInventory().getHeldItemSlot());
 
-		ChatUtil.sendActionBar(player,
-							   "&6Selective Fire > &e" +
-							   ChatUtil.capitalize(weapon.getCurrentSelectiveFire().name().toLowerCase()));
+		ChatUtil.sendActionBar(player, "&6Selective Fire > &e" +
+									   ChatUtil.capitalize(weapon.getCurrentSelectiveFire().name().toLowerCase()));
 	}
 
 }

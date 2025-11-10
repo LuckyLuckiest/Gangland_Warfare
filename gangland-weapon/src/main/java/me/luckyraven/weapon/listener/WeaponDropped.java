@@ -1,10 +1,10 @@
-package me.luckyraven.listener.player.weapon;
+package me.luckyraven.weapon.listener;
 
-import me.luckyraven.Gangland;
-import me.luckyraven.feature.weapon.WeaponManager;
-import me.luckyraven.listener.ListenerHandler;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.util.listener.autowire.AutowireTarget;
+import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.WeaponService;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -12,16 +12,18 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 
 @ListenerHandler
+@AutowireTarget({WeaponService.class})
 public class WeaponDropped implements Listener {
 
-	private final Gangland      gangland;
-	private final WeaponManager weaponManager;
+	private final JavaPlugin    plugin;
+	private final WeaponService weaponService;
 
-	public WeaponDropped(Gangland gangland) {
-		this.gangland      = gangland;
-		this.weaponManager = gangland.getInitializer().getWeaponManager();
+	public WeaponDropped(JavaPlugin plugin, WeaponService weaponService) {
+		this.plugin        = plugin;
+		this.weaponService = weaponService;
 	}
 
 	@EventHandler
@@ -29,7 +31,7 @@ public class WeaponDropped implements Listener {
 		Player    player    = event.getPlayer();
 		Item      item      = event.getItemDrop();
 		ItemStack itemStack = item.getItemStack();
-		Weapon    weapon    = weaponManager.validateAndGetWeapon(player, itemStack);
+		Weapon    weapon    = weaponService.validateAndGetWeapon(player, itemStack);
 
 		if (weapon == null) return;
 
@@ -54,7 +56,7 @@ public class WeaponDropped implements Listener {
 		if (!requiresReload) return;
 
 		// check if the item is available or it was creative
-		boolean haveItem = weaponManager.hasAmmunition(player, weapon);
+		boolean haveItem = weaponService.hasAmmunition(player, weapon);
 		boolean creative = player.getGameMode() == GameMode.CREATIVE;
 
 		if (!(haveItem || creative)) return;
@@ -63,7 +65,7 @@ public class WeaponDropped implements Listener {
 		event.setCancelled(true);
 
 		// reload the weapon
-		weapon.reload(gangland, player, !creative);
+		weapon.reload(plugin, player, !creative);
 	}
 
 }

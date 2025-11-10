@@ -1,18 +1,14 @@
-package me.luckyraven.listener.player.weapon;
+package me.luckyraven.weapon.listener;
 
-import me.luckyraven.Gangland;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
-import me.luckyraven.feature.weapon.WeaponManager;
-import me.luckyraven.listener.ListenerHandler;
 import me.luckyraven.util.Pair;
 import me.luckyraven.util.configuration.SoundConfiguration;
+import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.util.listener.autowire.AutowireTarget;
 import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.timer.SequenceTimer;
-import me.luckyraven.weapon.FullAutoTask;
-import me.luckyraven.weapon.SelectiveFire;
-import me.luckyraven.weapon.Weapon;
-import me.luckyraven.weapon.WeaponAction;
+import me.luckyraven.weapon.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -23,6 +19,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,30 +29,31 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 @ListenerHandler
+@AutowireTarget({WeaponService.class, RecoilCompatibility.class})
 public class WeaponInteract implements Listener {
 
-	private final Gangland            gangland;
-	private final WeaponManager       weaponManager;
+	private final JavaPlugin          plugin;
+	private final WeaponService       weaponService;
 	private final RecoilCompatibility recoilCompatibility;
 
 	private final Map<UUID, AtomicReference<WeaponData>> continuousFire;
 	private final Map<UUID, Boolean>                     singleShotLock;
 	private final Map<UUID, FullAutoTask>                autoTasks;
 
-	public WeaponInteract(Gangland gangland) {
-		this.gangland            = gangland;
-		this.weaponManager       = gangland.getInitializer().getWeaponManager();
+	public WeaponInteract(JavaPlugin plugin, WeaponService weaponService, RecoilCompatibility recoilCompatibility) {
+		this.plugin              = plugin;
+		this.weaponService       = weaponService;
+		this.recoilCompatibility = recoilCompatibility;
 		this.continuousFire      = new ConcurrentHashMap<>();
 		this.singleShotLock      = new ConcurrentHashMap<>();
 		this.autoTasks           = new ConcurrentHashMap<>();
-		this.recoilCompatibility = gangland.getInitializer().getCompatibilityWorker().getRecoilCompatibility();
 	}
 
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		Player    player = event.getPlayer();
 		ItemStack item   = event.getItem();
-		Weapon    weapon = weaponManager.validateAndGetWeapon(player, item);
+		Weapon    weapon = weaponService.validateAndGetWeapon(player, item);
 
 		if (weapon == null) return;
 
@@ -102,14 +100,14 @@ public class WeaponInteract implements Listener {
 
 	@EventHandler
 	public void onBlockPlace(BlockPlaceEvent event) {
-		if (!weaponManager.isWeapon(event.getPlayer().getInventory().getItemInMainHand())) return;
+		if (!weaponService.isWeapon(event.getPlayer().getInventory().getItemInMainHand())) return;
 
 		event.setCancelled(true);
 	}
 
 	@EventHandler
 	public void onBlockBreak(BlockBreakEvent event) {
-		if (!weaponManager.isWeapon(event.getPlayer().getInventory().getItemInMainHand())) return;
+		if (!weaponService.isWeapon(event.getPlayer().getInventory().getItemInMainHand())) return;
 
 		event.setCancelled(true);
 	}
@@ -119,7 +117,7 @@ public class WeaponInteract implements Listener {
 		// check if it was a weapon
 		Player    player = event.getPlayer();
 		ItemStack item   = player.getInventory().getItem(event.getPreviousSlot());
-		Weapon    weapon = weaponManager.validateAndGetWeapon(player, item);
+		Weapon    weapon = weaponService.validateAndGetWeapon(player, item);
 
 		if (weapon == null) return;
 
@@ -172,7 +170,7 @@ public class WeaponInteract implements Listener {
 
 			// remove the weapon after 3 ticks of not pressing the button
 			long watchdog = weapon.getProjectileCooldown() + 3L;
-			new RepeatingTimer(gangland, watchdog, time -> {
+			new RepeatingTimer(plugin, watchdog, time -> {
 				// get the necessary information
 				AtomicReference<WeaponData> stillShooting = continuousFire.get(weaponUuid);
 
@@ -201,7 +199,7 @@ public class WeaponInteract implements Listener {
 	private void shootFullAuto(Weapon weapon, Player player, ItemStack item, SelectiveFire selectiveFire) {
 		UUID weaponUuid = weapon.getUuid();
 		if (!autoTasks.containsKey(weaponUuid)) {
-			var autoTask = new FullAutoTask(gangland, weaponManager, weapon, recoilCompatibility, player, item, () -> {
+			var autoTask = new FullAutoTask(plugin, weaponService, weapon, recoilCompatibility, player, item, () -> {
 				autoTasks.remove(weaponUuid);
 				continuousFire.remove(weaponUuid);
 			});
@@ -218,7 +216,7 @@ public class WeaponInteract implements Listener {
 
 			// watchdog timer for AUTO mode
 			long watchdog = weapon.getProjectileCooldown() + 2L;
-			new RepeatingTimer(gangland, watchdog, time -> {
+			new RepeatingTimer(plugin, watchdog, time -> {
 				AtomicReference<WeaponData> stillShooting = continuousFire.get(weaponUuid);
 
 				if (stillShooting == null) {
@@ -254,7 +252,7 @@ public class WeaponInteract implements Listener {
 	@NotNull
 	private RepeatingTimer getShootingTimer(AtomicReference<WeaponData> retrievedWeaponData, Weapon weapon,
 											Player player) {
-		return new RepeatingTimer(gangland, weapon.getProjectileCooldown(), time -> {
+		return new RepeatingTimer(plugin, weapon.getProjectileCooldown(), time -> {
 			if (retrievedWeaponData == null) {
 				time.stop();
 				return;
@@ -289,7 +287,7 @@ public class WeaponInteract implements Listener {
 				long burstDuration = (long) weapon.getProjectilePerShot() * weapon.getProjectileCooldown();
 
 				// reset after burst delay
-				new CountdownTimer(gangland, 0L, 0L, burstDuration, null, null, timer -> {
+				new CountdownTimer(plugin, 0L, 0L, burstDuration, null, null, timer -> {
 					data.cooldown = false;
 				}).start(false);
 			}
@@ -303,7 +301,7 @@ public class WeaponInteract implements Listener {
 				UUID weaponUuid     = weapon.getUuid();
 				long singleDuration = (long) weapon.getProjectilePerShot() * weapon.getProjectileCooldown();
 
-				new CountdownTimer(gangland, 0L, 0L, singleDuration, null, null, timer -> {
+				new CountdownTimer(plugin, 0L, 0L, singleDuration, null, null, timer -> {
 					data.cooldown = false;
 					singleShotLock.remove(weaponUuid);
 					weapon.getRecoil().resetRecoilPattern();
@@ -348,7 +346,7 @@ public class WeaponInteract implements Listener {
 
 		if (weapon.getCurrentSelectiveFire() == SelectiveFire.BURST) numberOfShots = weapon.getProjectilePerShot();
 
-		SequenceTimer sequenceTimer = new SequenceTimer(gangland, 1L, 1L);
+		SequenceTimer sequenceTimer = new SequenceTimer(plugin, 1L, 1L);
 
 		for (int i = 0; i < numberOfShots; ++i) {
 			// logically, the first shot should be instant
@@ -362,7 +360,7 @@ public class WeaponInteract implements Listener {
 
 	private void shootInterval(Player player, Weapon weapon) {
 
-		WeaponAction weaponAction = new WeaponAction(gangland, weaponManager, weapon, recoilCompatibility);
+		WeaponAction weaponAction = new WeaponAction(plugin, weaponService, weapon, recoilCompatibility);
 
 		// shoot the weapon
 		weaponAction.weaponShoot(player);
@@ -375,7 +373,7 @@ public class WeaponInteract implements Listener {
 
 		if (weapon.getWeaponConsumeOnTime() <= -1) return;
 
-		CountdownTimer timer = new CountdownTimer(gangland, 0L, 0L, weapon.getWeaponConsumeOnTime(), null, null,
+		CountdownTimer timer = new CountdownTimer(plugin, 0L, 0L, weapon.getWeaponConsumeOnTime(), null, null,
 												  time -> weapon.removeWeapon(player,
 																			  player.getInventory().getHeldItemSlot()));
 
