@@ -96,18 +96,6 @@ public class ChatUtil {
 				"&cYou need to confirm using &e/glw " + String.join(" ", args) + " confirm &cto execute the command.");
 	}
 
-	public static String commandDesign(String command) {
-		return color(command.replace("/glw", "&6/glw&7")
-							.replace("<", "&5<&7")
-							.replace(">", "&5>&7")
-							.replace(" - ", " &c-&r ")
-							.replaceAll("[\\[\\],]", ""));
-	}
-
-	public static String setArguments(String arguments, String command) {
-		return color(arguments + ChatUtil.commandDesign(command));
-	}
-
 	public static void sendActionBar(Player player, String message) {
 		ActionBar.clearActionBar(player);
 		ActionBar.sendActionBar(player, color(message));
@@ -121,6 +109,17 @@ public class ChatUtil {
 		ActionBar.sendActionBar(plugin, player, baseComponent, duration);
 	}
 
+	/**
+	 * Generates a command suggestion based on the words from the dictionary. This method uses a spell checker to find a
+	 * common word close to what you have written.
+	 *
+	 * @param word the word to check
+	 * @param dictionary looks for a word from the dictionary
+	 * @param command the whole command entered
+	 * @param args the arguments of the command
+	 *
+	 * @return the whole suggested command
+	 */
 	public static String generateCommandSuggestion(String word, Set<String> dictionary, String command,
 												   @Nullable String[] args) {
 		// generate suggestions
