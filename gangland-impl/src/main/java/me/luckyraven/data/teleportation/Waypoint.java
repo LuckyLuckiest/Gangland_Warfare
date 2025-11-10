@@ -14,6 +14,7 @@ public class Waypoint {
 
 	private final String           name;
 	private final WaypointTeleport waypointTeleport;
+	private final String           permission;
 
 	private double x, y, z;
 	private float yaw, pitch;
@@ -27,14 +28,16 @@ public class Waypoint {
 	public Waypoint(String name) {
 		this.name             = name;
 		this.waypointTeleport = new WaypointTeleport(this);
-		this.x                = this.y = this.z = 0D;
-		this.yaw              = this.pitch = 0F;
-		this.world            = "";
-		this.type             = WaypointType.SAFE_ZONE;
-		this.gangId           = -1;
-		this.timer            = this.cooldown = this.shield = 0;
-		this.cost             = this.radius = 0D;
-		this.usedId           = ++ID;
+		this.permission       = "gangland.waypoint." + name;
+
+		this.x      = this.y = this.z = 0D;
+		this.yaw    = this.pitch = 0F;
+		this.world  = "";
+		this.type   = WaypointType.SAFE_ZONE;
+		this.gangId = -1;
+		this.timer  = this.cooldown = this.shield = 0;
+		this.cost   = this.radius = 0D;
+		this.usedId = ++ID;
 	}
 
 	protected static void setID(int id) {
