@@ -1,8 +1,8 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.listener.ListenerHandler;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.listener.ListenerHandler;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.entity.Player;

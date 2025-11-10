@@ -8,7 +8,7 @@ import me.luckyraven.data.inventory.State;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
-import me.luckyraven.listener.ListenerHandler;
+import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

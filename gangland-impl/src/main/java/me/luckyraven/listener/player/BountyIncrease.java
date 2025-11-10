@@ -6,7 +6,7 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.listener.ListenerHandler;
+import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

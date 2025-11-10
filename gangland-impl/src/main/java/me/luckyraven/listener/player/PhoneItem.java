@@ -6,7 +6,7 @@ import me.luckyraven.data.user.UserDataInitEvent;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.phone.Phone;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.listener.ListenerHandler;
+import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
