@@ -50,7 +50,7 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
-import me.luckyraven.util.listener.autowire.DependencyContainer;
+import me.luckyraven.util.autowire.DependencyContainer;
 import me.luckyraven.weapon.WeaponManager;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
@@ -321,9 +321,12 @@ public final class Initializer {
 	}
 
 	private void events() {
+		String basePackage = this.getClass().getPackage().getName();
 		// Register components first (order matters!)
 		// Register all the managers and services that listeners might need
 		DependencyContainer dependencyContainer = listenerManager.getDependencyContainer();
+
+//		listenerManager.scanAndRegisterComponents(basePackage, gangland);
 
 		dependencyContainer.registerInstance(WeaponService.class, weaponManager);
 		dependencyContainer.registerInstance(GangManager.class, gangManager);

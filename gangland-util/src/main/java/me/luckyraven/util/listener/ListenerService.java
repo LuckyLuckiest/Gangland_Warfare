@@ -1,9 +1,8 @@
 package me.luckyraven.util.listener;
 
 import lombok.Getter;
-import me.luckyraven.util.listener.autowire.AutowireTarget;
-import me.luckyraven.util.listener.autowire.Component;
-import me.luckyraven.util.listener.autowire.DependencyContainer;
+import me.luckyraven.util.autowire.AutowireTarget;
+import me.luckyraven.util.autowire.DependencyContainer;
 import me.luckyraven.util.utilities.ReflectionUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -108,10 +107,10 @@ public abstract class ListenerService {
 			Set<Class<?>> classes = ReflectionUtil.findClasses(path, classLoader);
 
 			for (Class<?> clazz : classes) {
-				if (!clazz.isAnnotationPresent(Component.class)) continue;
+				if (!clazz.isAnnotationPresent(ListenerComponent.class)) continue;
 
-				Component annotation = clazz.getAnnotation(Component.class);
-				String    condition  = annotation.condition();
+				ListenerComponent annotation = clazz.getAnnotation(ListenerComponent.class);
+				String            condition  = annotation.condition();
 
 				// check if the condition is met
 				if (!condition.isEmpty()) {
