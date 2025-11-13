@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 /**
  * Marks a Listener class to be automatically registered with the ListenerManager. Classes annotated with this must
- * implement org.bukkit.event.Listener.
+ * implement {@link org.bukkit.event.Listener}.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
