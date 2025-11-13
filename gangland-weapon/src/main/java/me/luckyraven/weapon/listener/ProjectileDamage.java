@@ -2,8 +2,8 @@ package me.luckyraven.weapon.listener;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
-import me.luckyraven.util.listener.autowire.AutowireTarget;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.events.WeaponProjectileLaunchEvent;

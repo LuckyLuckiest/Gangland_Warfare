@@ -1,8 +1,8 @@
 package me.luckyraven.weapon.listener;
 
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
-import me.luckyraven.util.listener.autowire.AutowireTarget;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;

@@ -2,9 +2,9 @@ package me.luckyraven.weapon.listener;
 
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.util.Pair;
+import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.listener.ListenerHandler;
-import me.luckyraven.util.listener.autowire.AutowireTarget;
 import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.timer.SequenceTimer;
