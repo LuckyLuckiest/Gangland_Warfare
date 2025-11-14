@@ -1,0 +1,54 @@
+# ============================================
+# Weapon Repair Items Configuration
+# ============================================
+
+repair-items:
+
+   cleaning_kit:
+      display-name: "&a&lCleaning Kit"
+      material: PAPER
+      level: 1
+      durability: 5
+      lore:
+         - "&7A basic cleaning kit for weapons."
+         - "&7Restores a small amount of durability."
+      effects:
+         -  type: cleaning
+         -  type: durability_restore
+            amount: 15
+
+   mechanical_part:
+      display-name: "&6&lMechanical Part"
+      material: IRON_INGOT
+      level: 3
+      durability: 1
+      lore:
+         - "&7Advanced mechanical component."
+         - "&7Fixes weapon mechanisms."
+      effects:
+         -  type: component_fix
+
+   weapon_repair_kit:
+      display-name: "&b&lWeapon Repair Kit"
+      material: DIAMOND
+      level: 5
+      durability: 3
+      lore:
+         - "&7Professional weapon repair kit."
+         - "&7Fully restores weapon condition."
+      effects:
+         -  type: durability_restore
+            amount: 100
+         -  type: cleaning
+         -  type: component_fix
+
+   basic_repair_tool:
+      display-name: "&7Basic Repair Tool"
+      material: STICK
+      level: 1
+      durability: 10
+      lore:
+         - "&7A simple tool for minor repairs."
+      effects:
+         -  type: durability_restore
+            amount: 5
