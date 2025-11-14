@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>me.luckyraven</groupId>
+        <artifactId>gangland_warfare</artifactId>
+        <version>0.0.6-DEV</version>
+    </parent>
+
+    <artifactId>plugin-file</artifactId>
+
+    <name>Plugin File</name>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <!-- Spigot Build -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <version>${bukkit.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>plugin-exception</artifactId>
+            <version>0.0.6-DEV</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-util</artifactId>
+            <version>0.0.6-DEV</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+</project>

@@ -1,0 +1,166 @@
+package me.luckyraven.util.timer;
+
+import lombok.Getter;
+import lombok.Setter;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.function.Consumer;
+
+public class SequenceTimer extends Timer {
+
+	private final Queue<IntervalTaskPair> intervalTaskQueue;
+	private final List<IntervalTaskPair>  intervalTaskPairs;
+
+	private @Getter long currentInterval, totalInterval;
+	private @Getter
+	@Setter Mode             mode;
+	private IntervalTaskPair currentTask;
+	private boolean          added;
+	private boolean          totalIntervalChanged;
+
+	public SequenceTimer(JavaPlugin plugin) {
+		this(plugin, 0L, 20L);
+	}
+
+	public SequenceTimer(JavaPlugin plugin, long delay, long period) {
+		this(plugin, delay, period, Mode.NORMAL);
+	}
+
+	public SequenceTimer(JavaPlugin plugin, long delay, long period, Mode mode) {
+		super(plugin, delay, period);
+
+		this.intervalTaskQueue = new LinkedList<>();
+		this.intervalTaskPairs = new ArrayList<>();
+		this.mode              = mode;
+		this.currentInterval   = 0;
+		this.totalInterval     = 0;
+	}
+
+	public void addIntervalTaskPair(long interval, Consumer<SequenceTimer> task) {
+		IntervalTaskPair intervalTaskPair = new IntervalTaskPair(interval, task);
+
+		intervalTaskPairs.add(intervalTaskPair);
+
+		if (currentTask == null) {
+			currentTask = intervalTaskPair;
+			added       = true;
+		} else intervalTaskQueue.add(intervalTaskPair);
+
+		totalInterval += interval;
+	}
+
+	@Override
+	public void run() {
+		// cancel the timer if it was stopped
+		if (!isRunning() || currentTask == null) {
+			stop();
+			return;
+		}
+
+		++currentTask.currentInterval;
+
+		// run the task only when it reaches its interval
+		if (currentTask.getInterval() == currentTask.getCurrentInterval() || currentTask.getInterval() == 0) {
+			do {
+				// run the task
+				currentTask.runTask();
+
+				// check if the task was completed
+				if (!currentTask.isCompleted()) continue;
+
+				if (mode == Mode.CIRCULAR)
+					// move the task at the end (important for circular timer)
+					intervalTaskQueue.add(currentTask);
+
+				// change the state of the currentTask
+				currentTask.reset();
+				// get the head of the queue and remove it
+				if (intervalTaskPairs.isEmpty()) currentTask = null;
+				else currentTask = intervalTaskQueue.poll();
+			} while (currentTask != null && currentTask.getInterval() == 0);
+		}
+
+		currentInterval = (currentInterval + 1) % totalInterval;
+	}
+
+	@Override
+	public void start(boolean async) {
+		super.start(async);
+
+		// add the currentTask to the queue
+		if (!added) {
+			intervalTaskQueue.add(currentTask);
+			added = true;
+		}
+
+		if (totalInterval > 0) return;
+
+		totalInterval        = 1;
+		totalIntervalChanged = true;
+	}
+
+	@Override
+	public void stop() {
+		this.reset();
+		super.stop();
+	}
+
+	public void reset() {
+		intervalTaskQueue.clear();
+		intervalTaskQueue.addAll(intervalTaskPairs);
+		currentTask     = intervalTaskQueue.poll();
+		currentInterval = 0L;
+		added           = false;
+		totalInterval   = totalIntervalChanged ? 0 : totalInterval;
+	}
+
+	public long getTaskInterval() {
+		return currentTask.getInterval();
+	}
+
+	public SequenceTimer copy(JavaPlugin plugin) {
+		SequenceTimer newTimer = new SequenceTimer(plugin, this.getDelay(), this.getPeriod(), this.getMode());
+
+		for (IntervalTaskPair intervalTaskPair : this.intervalTaskPairs)
+			newTimer.addIntervalTaskPair(intervalTaskPair.interval, intervalTaskPair.task);
+
+		return newTimer;
+	}
+
+	public enum Mode {
+		NORMAL,
+		CIRCULAR
+	}
+
+	private class IntervalTaskPair {
+
+		private final @Getter long                    interval;
+		private final         Consumer<SequenceTimer> task;
+
+		private @Getter boolean completed;
+		private @Getter long    currentInterval;
+
+		public IntervalTaskPair(long interval, Consumer<SequenceTimer> task) {
+			this.interval        = interval;
+			this.task            = task;
+			this.completed       = false;
+			this.currentInterval = 0L;
+		}
+
+		public void runTask() {
+			task.accept(SequenceTimer.this);
+			completed = true;
+		}
+
+		public void reset() {
+			completed       = false;
+			currentInterval = 0L;
+		}
+
+	}
+
+}

@@ -1,0 +1,454 @@
+{
+	"general": {
+		"usage": "/glw help",
+		"description": "Shows main help page."
+	},
+	"general_page": {
+		"usage": "/glw help <page>",
+		"description": "Shows the specified page in general menu."
+	},
+	"reload": {
+		"usage": "/glw reload",
+		"description": "Reloads the whole plugin."
+	},
+	"reload_help": {
+		"usage": "/glw reload help",
+		"description": "Shows the reload help page."
+	},
+	"reload_files": {
+		"usage": "/glw reload files",
+		"description": "Reloads the files."
+	},
+	"reload_database": {
+		"usage": "/glw reload data",
+		"description": "Reloads the data related to the database."
+	},
+	"reload_scoreboard": {
+		"usage": "/glw reload scoreboard",
+		"description": "Reloads the scoreboard."
+	},
+	"economy": {
+		"usage": "/glw economy",
+		"description": "Shows economy help page."
+	},
+	"economy_help": {
+		"usage": "/glw economy help <page>",
+		"description": "Shows the specified page in economy menu."
+	},
+	"economy_add": {
+		"usage": "/glw economy deposit <specifier> <amount>",
+		"description": "Deposits the amount value to a user."
+	},
+	"economy_take": {
+		"usage": "/glw economy withdraw <specifier> <amount>",
+		"description": "Withdraws the amount value from the user."
+	},
+	"economy_set": {
+		"usage": "/glw economy set <specifier> <amount>",
+		"description": "Sets amount value for the user."
+	},
+	"economy_reset": {
+		"usage": "/glw economy reset <specifier>",
+		"description": "Resets account balance for the user."
+	},
+	"balance": {
+		"usage": "/glw balance",
+		"description": "Shows account balance."
+	},
+	"balance_others": {
+		"usage": "/glw balance <name>",
+		"description": "Shows the specified player account balance."
+	},
+	"bank": {
+		"usage": "/glw bank",
+		"description": "Shows current bank stats or help page."
+	},
+	"bank_help": {
+		"usage": "/glw bank help <page>",
+		"description": "Shows the specified page in bank menu."
+	},
+	"bank_create": {
+		"usage": "/glw bank create <name>",
+		"description": "Creates a bank with the specified name."
+	},
+	"bank_delete": {
+		"usage": "/glw bank delete",
+		"description": "Deletes current bank."
+	},
+	"bank_deposit": {
+		"usage": "/glw bank deposit <amount>",
+		"description": "Deposits the amount value to the bank."
+	},
+	"bank_withdraw": {
+		"usage": "/glw bank withdraw <amount>",
+		"description": "Withdraws the amount value from the bank."
+	},
+	"bank_balance": {
+		"usage": "/glw bank balance",
+		"description": "Shows bank balance."
+	},
+	"spawn": {
+		"usage": "/glw spawn",
+		"description": "Teleports to default spawn."
+	},
+	"spawn_set": {
+		"usage": "/glw spawn set <type>",
+		"description": "Sets the spawn location of the specified name."
+	},
+	"spawn_tp": {
+		"usage": "/glw spawn <type>",
+		"description": "Teleports to the specified spawn."
+	},
+	"spawn_remove": {
+		"usage": "/glw spawn remove <type>",
+		"description": "Removes the specified spawn location."
+	},
+	"spawn_list": {
+		"usage": "/glw spawn list",
+		"description": "Shows all the available spawns."
+	},
+	"warp": {
+		"usage": "/glw warp",
+		"description": "Shows warp help page."
+	},
+	"warp_tp": {
+		"usage": "/glw warp <name>",
+		"description": "Teleports to the specified warp."
+	},
+	"warp_set": {
+		"usage": "/glw warp set <name>",
+		"description": "Sets the warp location of the specified name."
+	},
+	"warp_remove": {
+		"usage": "/glw warp remove <name>",
+		"description": "Removes the specified warp location."
+	},
+	"warp_list": {
+		"usage": "/glw warp list",
+		"description": "Shows all the available warps."
+	},
+	"kit": {
+		"usage": "/glw kit",
+		"description": "Shows kit help page."
+	},
+	"kit_item": {
+		"usage": "/glw kit <name>",
+		"description": "Gives the user a kit."
+	},
+	"kit_create": {
+		"usage": "/glw kit create <name>",
+		"description": "Creates a kit using current inventory."
+	},
+	"kit_remove": {
+		"usage": "/glw kit delete <name>",
+		"description": "Deletes the kit with the specified name."
+	},
+	"kit_list": {
+		"usage": "/glw kit list",
+		"description": "Shows all available kits."
+	},
+	"dealer": {
+		"usage": "/glw dealer",
+		"description": "Shows dealer help page."
+	},
+	"dealer_create": {
+		"usage": "/glw dealer create",
+		"description": "Creates a dealer in the current location."
+	},
+	"dealer_remove": {
+		"usage": "/glw dealer remove <id>",
+		"description": "Removes the specified dealer by id."
+	},
+	"gang": {
+		"usage": "/glw gang",
+		"description": "Shows current gang stats or help page."
+	},
+	"gang_help": {
+		"usage": "/glw gang help <page>",
+		"description": "Shows the specified page in gang menu."
+	},
+	"gang_create": {
+		"usage": "/glw gang create <name>",
+		"description": "Creates a gang with the specified name."
+	},
+	"gang_remove": {
+		"usage": "/glw gang delete",
+		"description": "Deletes current gang."
+	},
+	"gang_display_name": {
+		"usage": "/glw gang display <name>",
+		"description": "Sets the display name of the gang."
+	},
+	"gang_display_remove": {
+		"usage": "/glw gang display remove",
+		"description": "Removes the display name of the gang."
+	},
+	"gang_color": {
+		"usage": "/glw gang color",
+		"description": "Select gang color."
+	},
+	"gang_economy_deposit": {
+		"usage": "/glw gang deposit <amount>",
+		"description": "Deposits the amount value to the gang."
+	},
+	"gang_economy_withdraw": {
+		"usage": "/glw gang withdraw <amount>",
+		"description": "Withdraws the amount value from the gang."
+	},
+	"gang_balance": {
+		"usage": "/glw gang balance",
+		"description": "Shows gang balance."
+	},
+	"gang_change_name": {
+		"usage": "/glw gang name <name>",
+		"description": "Changes the current gang name."
+	},
+	"gang_change_desc": {
+		"usage": "/glw gang desc",
+		"description": "Changes current gang description."
+	},
+	"gang_invite_player": {
+		"usage": "/glw gang invite <name>",
+		"description": "Invites the player to the gang."
+	},
+	"gang_invite_accept": {
+		"usage": "/glw gang accept",
+		"description": "Accept gang join invitation."
+	},
+	"gang_kick_player": {
+		"usage": "/glw gang kick <name>",
+		"description": "Kicks the player from the gang."
+	},
+	"gang_leave": {
+		"usage": "/glw gang leave",
+		"description": "Leaves the current gang."
+	},
+	"gang_rank_promote": {
+		"usage": "/glw gang promote <name>",
+		"description": "Promotes the player to the next rank."
+	},
+	"gang_rank_demote": {
+		"usage": "/glw gang demote <name>",
+		"description": "Demotes the player to the previous rank."
+	},
+	"gang_ally_request": {
+		"usage": "/glw gang ally request <id>",
+		"description": "Request alliances to the other gang."
+	},
+	"gang_ally_remove": {
+		"usage": "/glw gang ally abandon <id>",
+		"description": "Abandon alliances to that gang."
+	},
+	"safe_wand": {
+		"usage": "/glw safewand",
+		"description": "Gives the player a safe wand."
+	},
+	"wanted": {
+		"usage": "/glw wanted",
+		"description": "Shows the current wanted status."
+	},
+	"wanted_help": {
+		"usage": "/glw wanted help <page>",
+		"description": "Shows the specified page in wanted menu."
+	},
+	"wanted_add": {
+		"usage": "/glw wanted add <amount>",
+		"description": "Adds wanted level."
+	},
+	"wanted_remove": {
+		"usage": "/glw wanted remove <amount>",
+		"description": "Removes wanted level."
+	},
+	"resource_pack": {
+		"usage": "/glw resource",
+		"description": "Downloads the resource pack to the user."
+	},
+	"rank": {
+		"usage": "/glw rank",
+		"description": "Shows ranks help page."
+	},
+	"rank_help": {
+		"usage": "/glw rank help <page>",
+		"description": "Shows the specified page in ranks menu."
+	},
+	"rank_create": {
+		"usage": "/glw rank create <name>",
+		"description": "Creates a new rank with the specified name."
+	},
+	"rank_delete": {
+		"usage": "/glw rank delete <name>",
+		"description": "Deletes the specified rank."
+	},
+	"rank_list": {
+		"usage": "/glw rank list",
+		"description": "Displays all the available ranks."
+	},
+	"rank_add_permission": {
+		"usage": "/glw rank permission add <name> <permission>",
+		"description": "Adds the permission to the specified rank."
+	},
+	"rank_remove_permission": {
+		"usage": "/glw rank permission remove <name> <permission>",
+		"description": "Removes the permission from the specified rank."
+	},
+	"rank_info": {
+		"usage": "/glw rank info <name>",
+		"description": "Gives all the information about the specified rank."
+	},
+	"rank_traverse": {
+		"usage": "/glw rank traverse",
+		"description": "Shows the next rank(s)."
+	},
+	"bounty": {
+		"usage": "/glw bounty",
+		"description": "Shows the current bounty or help menu."
+	},
+	"bounty_help": {
+		"usage": "/glw bounty help <page>",
+		"description": "Shows the specified page in bounty menu."
+	},
+	"bounty_set": {
+		"usage": "/glw bounty set <player> <amount>",
+		"description": "Sets a bounty on the player head."
+	},
+	"bounty_remove": {
+		"usage": "/glw bounty remove <player>",
+		"description": "Removes the bounty you set."
+	},
+	"level": {
+		"usage": "/glw level",
+		"description": "View your current level."
+	},
+	"level_help": {
+		"usage": "/glw level help <page>",
+		"description": "Shows the specified page in level menu."
+	},
+	"level_add_experience": {
+		"usage": "/glw level exp add <amount>",
+		"description": "Adds experience to your level."
+	},
+	"level_remove_experience": {
+		"usage": "/glw level exp remove <amount>",
+		"description": "Removes experience from your level."
+	},
+	"level_add_levels": {
+		"usage": "/glw level add <amount>",
+		"description": "Adds levels."
+	},
+	"level_remove_levels": {
+		"usage": "/glw level remove <amount>",
+		"description": "Removes levels."
+	},
+	"level_next": {
+		"usage": "/glw level next",
+		"description": "Shows statistics about the next level."
+	},
+	"waypoint": {
+		"usage": "/glw waypoint",
+		"description": "Get the help page."
+	},
+	"waypoint_help": {
+		"usage": "/glw waypoint help <page>",
+		"description": "Shows the specified page in waypoint menu."
+	},
+	"waypoint_list": {
+		"usage": "/glw waypoint list",
+		"description": "Shows a list of registered waypoints."
+	},
+	"waypoint_create": {
+		"usage": "/glw waypoint create <name>",
+		"description": "Creates a new waypoint according to the current location."
+	},
+	"waypoint_remove": {
+		"usage": "/glw waypoint delete <id>",
+		"description": "Deletes the specified waypoint."
+	},
+	"waypoint_select": {
+		"usage": "/glw waypoint select <id>",
+		"description": "Selects the waypoint to easily configure."
+	},
+	"waypoint_deselect": {
+		"usage": "/glw waypoint deselect",
+		"description": "Deselects the selected waypoint."
+	},
+	"waypoint_info": {
+		"usage": "/glw waypoint info",
+		"description": "Shows a detailed information about the selected waypoint."
+	},
+	"waypoint_type": {
+		"usage": "/glw waypoint type <value>",
+		"description": "Sets the specified waypoint with the specific type."
+	},
+	"waypoint_gangId": {
+		"usage": "/glw waypoint gangId <gangId>",
+		"description": "Sets the gangId in that waypoint."
+	},
+	"waypoint_timer": {
+		"usage": "/glw waypoint timer <amount>",
+		"description": "Sets the timer in that waypoint."
+	},
+	"waypoint_cooldown": {
+		"usage": "/glw waypoint cooldown <amount>",
+		"description": "Sets the teleport cooldown."
+	},
+	"waypoint_shield": {
+		"usage": "/glw waypoint shield <amount>",
+		"description": "Sets the shield duration in that waypoint."
+	},
+	"waypoint_cost": {
+		"usage": "/glw waypoint cost <amount>",
+		"description": "Sets the cost to teleport to that waypoint."
+	},
+	"waypoint_radius": {
+		"usage": "/glw waypoint radius <amount>",
+		"description": "Sets the radius of affect for that waypoint."
+	},
+	"waypoint_teleport": {
+		"usage": "/glw tp",
+		"description": "Teleport to the selected waypoint."
+	},
+	"waypoint_teleport_unknown": {
+		"usage": "/glw tp <name>",
+		"description": "Teleport to the waypoint specified."
+	},
+	"weapon_help": {
+		"usage": "/glw weapon help <page>",
+		"description": "Shows the specified page in weapon menu."
+	},
+	"weapon_list": {
+		"usage": "/glw weapon list",
+		"description": "Shows a list of registered weapons."
+	},
+	"weapon_give": {
+		"usage": "/glw weapon give <name> <amount>",
+		"description": "Gives the specified weapon if registered."
+	},
+	"weapon_info": {
+		"usage": "/glw weapon info <name>",
+		"description": "Shows the information of the held weapon or of the specified name."
+	},
+	"ammunition_help": {
+		"usage": "/glw ammo help <page>",
+		"description": "Shows the specified page in ammo menu."
+	},
+	"ammunition_list": {
+		"usage": "/glw ammo list",
+		"description": "Shows all the available ammo."
+	},
+	"ammunition_give": {
+		"usage": "/glw ammo give <name> <amount>",
+		"description": "Gives the player the specified ammo if registered."
+	},
+	"ammunition_info": {
+		"usage": "/glw ammo info <name>",
+		"description": "Shows the information of the held ammo or of the specified name."
+	},
+	"update": {
+		"usage": "/glw update",
+		"description": "Checks for a new update for the plugin."
+	},
+	"update_download": {
+		"usage": "/glw update download",
+		"description": "If there was an update it would try to download it."
+	}
+}

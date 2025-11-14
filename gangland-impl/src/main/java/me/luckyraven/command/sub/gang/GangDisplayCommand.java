@@ -1,0 +1,100 @@
+package me.luckyraven.command.sub.gang;
+
+import me.luckyraven.Gangland;
+import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.command.argument.types.OptionalArgument;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.user.User;
+import me.luckyraven.data.user.UserManager;
+import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.TriConsumer;
+import me.luckyraven.util.datastructure.Tree;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
+import java.util.List;
+
+class GangDisplayCommand extends SubArgument {
+
+	private final Gangland            gangland;
+	private final Tree<Argument>      tree;
+	private final UserManager<Player> userManager;
+	private final GangManager         gangManager;
+
+	protected GangDisplayCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+		super(gangland, "display", tree, parent);
+
+		this.gangland = gangland;
+		this.tree     = tree;
+
+		this.userManager = gangland.getInitializer().getUserManager();
+		this.gangManager = gangland.getInitializer().getGangManager();
+
+		gangDisplay();
+	}
+
+	@Override
+	protected TriConsumer<Argument, CommandSender, String[]> action() {
+		return (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+		};
+	}
+
+	private void gangDisplay() {
+		Argument displayName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			String displayNameStr = args[2];
+			Gang   gang           = gangManager.getGang(user.getGangId());
+
+			gang.setDisplayName(displayNameStr);
+			player.sendMessage(MessageAddon.GANG_DISPLAY_SET.toString().replace("%display%", displayNameStr));
+		}, sender -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				return null;
+			}
+
+			return List.of("<display-name>");
+		});
+
+		// glw gang display remove
+		Argument removeDisplay = new Argument(gangland, "remove", tree, (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (!user.hasGang()) {
+				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			Gang gang = gangManager.getGang(user.getGangId());
+
+			gang.setDisplayName("");
+			player.sendMessage(MessageAddon.GANG_DISPLAY_REMOVED.toString());
+		});
+
+		this.addSubArgument(removeDisplay);
+		this.addSubArgument(displayName);
+	}
+
+}

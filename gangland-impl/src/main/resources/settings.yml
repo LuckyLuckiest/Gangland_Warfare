@@ -1,0 +1,335 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     / ________/      \_____   _____/      / __ \         | #
+# |    | /                     | |           / /  \ \        | #
+# |    | |  _______            | |          / /____\ \       | #
+# |    | |  \_____ \           | |         / ________ \      | #
+# |    | \_______/ ||          | |        / /        \ \     | #
+# |     \__________/           |_|       /_/          \_\    | #
+# |                                                          | #
+# |                    File: settings.yml                    | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+
+# +----------------------------------+ #
+# |      Settings Configuration      | #
+# +----------------------------------+ #
+
+# If you have faced any problem with the file, you can create a new one by changing [Config_Version] to a different
+# number.
+# However, when a new update comes out by default, the config version would have a different version resulting in a new
+# file.
+# The old version file would have a suffix '-old' to indicate they are from the old version.
+# Every YAML file from this plugin supports this feature, even if the configuration section of [Config_Version]
+# wasn't explicitly mentioned.
+# Adding this section and changing the value would result in the same functionality, otherwise it won't recreate the
+# file.
+Config_Version: '${project.version}'
+
+# +---------------+ #
+# | Update Config | #
+# +---------------+ #
+
+# Get notified and updated for a new release of the plugin.
+Update_Checker:
+   # It is recommended to be left enabled since it doesn't take any space in the RAM.
+   Enable: true
+   # Only privileged players will be notified when they join if there is a new update.
+   Notify_Privileged_Players: false
+   # This feature will auto-install the update into the plugin's own folder, inside a folder called 'release'.
+   Auto_Download: true
+
+# +-----------------+ #
+# | Language Config | #
+# +-----------------+ #
+
+# Messages language type. You can create a custom language by simply creating a folder called 'message' and inside it
+# the language.
+# You should respect the prefix of the file name, it should be message_xx.yml, and xx can be any letter you prefer. To
+# switch between the languages, you enter the xx values in the 'Language' configuration, and it would load that
+# configuration.
+# Any faulty written language names entered to this attribute 'Language' then the plugin would disable. To make the
+# plugin work, use any valid language. To get the list of the available languages, enter an invalid name, and a message
+# of the available list suffix would be displayed.
+Language: en
+
+# +----------------------+ #
+# | Resource Pack Config | #
+# +----------------------+ #
+
+# This plugin contains a custom resource pack that can be used in the server.
+# A manual download is applicable if there was any problem faced.
+Resource_Pack:
+   Enable: true
+   # This is the direct download url link.
+   URL: "https://drive.google.com/uc?export=download&id=1ynhOxjyvQn9QhIQ8y_Lf-iU97FQwMj-x"
+   # Kicks the player if they didn't accept the resource pack
+   Kick: false
+
+# +-----------------+ #
+# | Database Config | #
+# +-----------------+ #
+Database:
+   # Specify which type of database to be used, [mysql, sqlite]
+   Type: sqlite
+   MySQL:
+      # Necessary credentials to enter your database
+      Host: localhost
+      Port: 3306
+      Username: root
+      Password: ""
+   SQLite:
+      # Will create a backup if the type is mysql or sqlite
+      Backup: true
+      # Will use SQLite if unable to connect to MySQL
+      # It is recommended to set this true
+      Failed_MySQL: true
+   Auto_Save:
+      # Enabling auto save would clear update the databases.
+      # If disabled, it would write to the database and clear the cache only when the player leaves or when the server
+      # closes.
+      # Disabling this option is not recommended since it would create a lot of overhead to the CPU every time a user
+      # leaves.
+      # This effect takes place when the server contains a large number of player bases or players constantly joining
+      # and leaving the server.
+      Enable: true
+      # Time to auto save in minutes.
+      # Time in hours for removal of unnecessary data.
+      Time: 10
+      # Enable if you want to print periodical updates in the console.
+      Debug: true
+
+# +-------------------+ #
+# | Scoreboard Config | #
+# +-------------------+ #
+Scoreboard:
+   Enable: true
+   # The plugin supports multiple drivers, and each driver has its own algorithm and way of updating scoreboards.
+   # Drivers' list:
+   #  1) Driver_V1: Caches the lines into memory and uses a clustering algorithm that updates similar line intervals
+   #                each tick.
+   #  2) Driver_V2: Caches the lines into memory similar to Driver_V1 algorithm. The difference is it uses a built-in
+   #                library to manage the clusters.
+   #  3) Driver_V3: Uses interactive scoreboard to temporarily disable the main one and use the alternative scoreboard.
+   Driver: "Driver_V2"
+
+# +------------------+ #
+# | Inventory Config | #
+# +------------------+ #
+Inventory:
+   # Inventory fill item and its name
+   Fill:
+      Item: BLACK_STAINED_GLASS_PANE
+      Name: " "
+   # Inventory line item and its name
+   Line:
+      Item: WHITE_STAINED_GLASS_PANE
+      Name: " "
+   # MultiInventory heads data tags
+   Multi_Inventory:
+      Next_Page: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTYzMzlmZjJlNTM0MmJhMThiZGM0OGE5OWNjYTY1ZDEyM2NlNzgxZDg3ODI3MmY5ZDk2NGVhZDNiOGFkMzcwIn19fQ=="
+      Previous_Page: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0="
+      Home_Page: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0="
+
+# +-------------+ #
+# | User Config | #
+# +-------------+ #
+User:
+   # The user balance account config
+   Account:
+      # On Player Join his default account will have the amount of money that you set.
+      Initial_Balance: 0
+      # The maximum amount of money the player can have.
+      Maximum_Balance: 10_000_000
+   # The user bank account config
+   Bank:
+      # When a player creates a bank account, his account will have the amount of money that you set.
+      Initial_Balance: 0
+      # When a player wants to create a bank account, they are required to pay a fee.
+      # Set it to zero, and the requirement is lifted.
+      Create_Cost: 5_000
+      # The maximum amount of money the player can have.
+      Maximum_Balance: 1_000_000_000
+   # The user level config
+   Level:
+      # The maximum level the player can have.
+      Maximum_Level: 100
+      # The base amount to be used in calculation.
+      Base_Amount: 1_000
+
+      # This formula is used to calculate the levels linearly.
+      # It is possible to use mathematical functions; such as
+      # [neg: negation of the expression, logb: log base of x for y; logb(x, y), sin: sine function, etc...]
+      # Treat this string as a scientific calculator
+
+      # There are only four variables that can be used for the formula
+      # [base: base amount, max: maximum level, level: current level, experience: current experience]
+      Formula: "base * level ^ 1.5"
+      Skill:
+         Upgrade: 1
+         Cost: 500
+         Formula: "base * level ^ 1.8"
+   # When the user dies
+   Death:
+      Enable: true
+      # Money-related configuration upon death
+      Money:
+         # Command used when the user dies
+         Command:
+            # If the command was enabled, it would ignore the [Lose_Money] option.
+            Enable: false
+            # The server executes all the executables.
+            Executable:
+               - "/glw eco withdraw %player% 20"
+         # When the user dies, they will either lose or gain money according to the value set
+         Lose_Money: true
+         # The formula used when calculating the value to lose/gain.
+
+         # There are only five variables that can be used for the formula
+         # [balance: current balance, level: current level, experience: current experience, bounty: current
+         #  withholding bounty, wanted: current wanted level]
+         # Be careful that some values might be equal to zero
+         Formula: "balance * 0.15"
+         # The amount of money the user should at most have to not lose/gain money
+         Threshold: 1_000
+      Respawn:
+         Enable: false
+         Screen:
+            Enable: true
+            Title: "&cWASTED"
+            Subtitle: "&7Teleporting to %gangland_waypoint_spawn% after &a%gangland_time% &7%gangland_time_unit%&8(&7s&8)"
+         Chat:
+            Enable: true
+            Message:
+               - ""
+               - ""
+               - ""
+               - ""
+         GameMode:
+            Enable: true
+            Change_To: "spectator"
+         Health:
+            Enable: true
+            Amount: 20
+         Hunger:
+            Enable: true
+            Amount: 20
+
+# +---------------+ #
+# | Bounty Config | #
+# +---------------+ #
+Bounty:
+   Enable: true
+   Kill:
+      # Each kill committed will be added on the total bounty amount.
+      Each: 5
+      # The maximum total amount after each kill committed.
+      Max: 50_000
+   # This option is only for users
+   Repeating_Timer:
+      Enable: true
+      # Each time the timer gets to the [Time] value, it would multiply the current amount to the multiple.
+      Multiple: 2
+      Time: 300
+      # The maximum total amount after each timer multiple.
+      Max: 20_000
+
+# +--------------+ #
+# | Phone Config | #
+# +--------------+ #
+Phone:
+   Enable: true
+   Item: COMPASS
+   Name: "&6&k||| &rPhone &6&k|||"
+   # The slots are from 0-8, and they are in the hot-bar only.
+   Slot: 8
+   # If the item was movable
+   Movable: true
+   # If the item was droppable
+   Droppable: false
+
+# +---------------+ #
+# | Wanted Config | #
+# +---------------+ #
+Wanted:
+   Enable: true
+   Take_Money:
+      Amount: 50
+      # (amount * multiplier ^ (stars - 1))
+      Multiplier: 5
+   Countdown_Timer:
+      Enable: true
+      Time: 120
+      # (time * amount ^ (stars - 1))
+      Multiplier:
+         Enable: false
+         Amount: 2
+   Level:
+      Increment: 1
+      Max: 5
+   # The kill counter can be scaled linearly.
+   Kill_Counter:
+      - 2
+      - 5
+      - 10
+      - 15
+      - 20
+
+# +-------------+ #
+# | Safe Config | #
+# +-------------+ #
+Safe:
+   Enable: true
+   Safe_Block: "iron_block"
+   Item_To_Open_Safe:
+      Name: "Lock-pick"
+      Lore:
+         - "Breaks the safe"
+      Item: "iron_hoe"
+   Countdown_Timer:
+      Enable: true
+      Time: 1_200
+   Money:
+      Min: 25
+      Max: 2_500
+
+# +-------------+#
+# | Gang Config |#
+# +-------------+#
+Gang:
+   Enable: true
+   # Allow duplicating gang names.
+   Name_Duplicates: false
+   Display_Name_Char: '*'
+   # Hierarchy of ranks
+   Rank:
+      # The initial rank
+      Head: "member"
+      # The final rank
+      Tail: "owner"
+   Account:
+      # When a player creates a gang account, his account will have the amount of money that you set.
+      Initial_Balance: 0
+      # When a player wants to create a gang account, they are required to pay a fee.
+      # Set it to zero, and the requirement is lifted.
+      Create_Cost: 100_000
+      # Sets the maximum gang money.
+      Maximum_Balance: 100_000_000_000
+      # The total amount of money deposit for 1 contribution.
+      # ex: deposit $1 -> 0.001
+      # ex: deposit $1000 -> 1
+      Contribution_Rate: 1_000
+
+# +----------------+ #
+# | Economy Config | #
+# +----------------+ #
+
+# [Money_Symbol] used as %money_symbol% prefix.
+Money_Symbol: '$'
+Balance_Format:
+   Enable: true
+   Format: "%,.2f"
+Killing_Mob:
+   Min: 0
+   Max: 20

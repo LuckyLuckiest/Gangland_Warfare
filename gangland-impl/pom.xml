@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>me.luckyraven</groupId>
+        <artifactId>gangland_warfare</artifactId>
+        <version>0.0.6-DEV</version>
+    </parent>
+
+    <artifactId>gangland-impl</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Gangland Core</name>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <resources>
+            <resource>
+                <targetPath>.</targetPath>
+                <directory>${project.basedir}/src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
+        <plugins>
+
+            <!-- Maven plugin compiler (start) -->
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.14.1</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+
+            <!-- Maven plugin compiler (end) -->
+
+            <!-- Maven plugin shade (start) -->
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.1</version>
+                <configuration>
+                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                    <shadedClassifierName>shaded</shadedClassifierName>
+
+                    <relocations>
+                        <relocation>
+                            <pattern>net.wesjd.anvilgui</pattern>
+                            <shadedPattern>me.luckyraven.bukkit.anvilgui</shadedPattern>
+                        </relocation>
+
+                        <relocation>
+                            <pattern>com.zaxxer.hikari</pattern>
+                            <shadedPattern>me.luckyraven.database.hikari</shadedPattern>
+                        </relocation>
+
+                        <relocation>
+                            <pattern>com.cryptomorin.xseries</pattern>
+                            <shadedPattern>me.luckyraven.dependency.xseries</shadedPattern>
+                        </relocation>
+
+                        <relocation>
+                            <pattern>fr.mrmicky.fastboard</pattern>
+                            <shadedPattern>me.luckyraven.bukkit.scoreboard.fastboard</shadedPattern>
+                        </relocation>
+
+                        <relocation>
+                            <pattern>net.objecthunter.exp4j</pattern>
+                            <shadedPattern>me.luckyraven.datastructure.exp4j</shadedPattern>
+                        </relocation>
+
+                        <relocation>
+                            <pattern>org.bstats</pattern>
+                            <shadedPattern>me.luckyraven.dependency.bstats</shadedPattern>
+                        </relocation>
+
+                        <relocation>
+                            <pattern>org.reflections</pattern>
+                            <shadedPattern>me.luckyraven.util.reflections</shadedPattern>
+                        </relocation>
+                    </relocations>
+
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludeDefaults>false</excludeDefaults>
+                            <includes>
+                                <!-- AnvilGUI -->
+                                <include>net/wesjd/anvilgui/version/</include>
+                                <!-- Compatibility -->
+                                <include>me/luckyraven/</include>
+                            </includes>
+                        </filter>
+                    </filters>
+
+                    <minimizeJar>true</minimizeJar>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Maven plugin shade (end) -->
+
+            <!-- Maven surefire plugin (start) -->
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.4</version>
+            </plugin>
+
+            <!-- Maven surefire plugin (end) -->
+
+        </plugins>
+    </build>
+
+    <dependencies>
+
+        <!-- Bukkit/Spigot/Paper builds (start) -->
+
+        <!-- Spigot Build -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <version>${bukkit.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Bukkit/Spigot/Paper builds (end) -->
+
+        <!-- Important local dependencies (start) -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-util</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>scoreboard-api</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>plugin-file</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>plugin-exception</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>version-impl</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-weapon</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- Important local dependencies (end) -->
+
+        <!-- Compile level dependencies (start) -->
+
+        <!-- HikariCP -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>7.0.2</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- AnvilGUI -->
+        <dependency>
+            <groupId>net.wesjd</groupId>
+            <artifactId>anvilgui</artifactId>
+            <version>1.10.4-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- bStats -->
+        <dependency>
+            <groupId>org.bstats</groupId>
+            <artifactId>bstats-bukkit</artifactId>
+            <version>3.1.0</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- XSeries -->
+        <dependency>
+            <groupId>com.github.cryptomorin</groupId>
+            <artifactId>XSeries</artifactId>
+            <version>13.5.1</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- reflections -->
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>0.10.2</version>
+        </dependency>
+
+        <!-- Compile level dependencies (end) -->
+
+        <!-- Required plugins dependencies (start) -->
+
+        <!-- NBTAPI -->
+        <dependency>
+            <groupId>de.tr7zw</groupId>
+            <artifactId>item-nbt-api-plugin</artifactId>
+            <version>2.15.3</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Required plugins dependencies (end) -->
+
+        <!-- Soft plugins dependencies (start) -->
+
+        <!-- PlaceholderAPI -->
+        <dependency>
+            <groupId>me.clip</groupId>
+            <artifactId>placeholderapi</artifactId>
+            <version>2.11.7</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Vault -->
+        <dependency>
+            <groupId>com.github.MilkBowl</groupId>
+            <artifactId>VaultAPI</artifactId>
+            <version>1.7.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- CitizenAPI -->
+        <dependency>
+            <groupId>net.citizensnpcs</groupId>
+            <artifactId>citizens-main</artifactId>
+            <version>2.0.40-SNAPSHOT</version>
+            <type>jar</type>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- ViaVersion -->
+        <dependency>
+            <groupId>com.viaversion</groupId>
+            <artifactId>viaversion-api</artifactId>
+            <version>5.5.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Soft plugins dependencies (end) -->
+
+        <!-- Test dependencies (start) -->
+
+        <!-- Junit -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>6.0.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Mocking -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.20.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Test dependencies (end) -->
+
+    </dependencies>
+
+</project>

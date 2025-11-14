@@ -18,29 +18,43 @@
     </developers>
 
     <modules>
-        <module>GanglandCore</module>
-        <module>BuildGangland</module>
-        <module>GanglandCompatibility</module>
-        <module>GanglandCompatibility/V1_20_R4</module>
-        <module>GanglandCompatibility/V1_20_R3</module>
-        <module>GanglandCompatibility/V1_20_R2</module>
-        <module>GanglandCompatibility/V1_20_R1</module>
-        <module>GanglandCompatibility/V1_19_R3</module>
-        <module>GanglandCompatibility/V1_19_R2</module>
-        <module>GanglandCompatibility/V1_19_R1</module>
-        <module>GanglandCompatibility/V1_18_R2</module>
-        <module>GanglandCompatibility/V1_18_R1</module>
-        <module>GanglandCompatibility/V1_17_R1</module>
-        <module>GanglandCompatibility/V1_16_R3</module>
-        <module>GanglandCompatibility/V1_16_R2</module>
-        <module>GanglandCompatibility/V1_16_R1</module>
-        <module>GanglandCompatibility/V1_15_R1</module>
-        <module>GanglandCompatibility/V1_14_R1</module>
-        <module>GanglandCompatibility/V1_13_R2</module>
-        <module>GanglandCompatibility/V1_13_R1</module>
-        <module>GanglandCompatibility/V1_12_R1</module>
-        <module>GanglandCompatibility/V1_11_R1</module>
-        <module>GanglandCompatibility/V1_10_R1</module>
+        <module>gangland-impl</module>
+        <module>gangland-build</module>
+        <module>gangland-weapon</module>
+        <module>gangland-util</module>
+        <module>scoreboard-api</module>
+        <module>plugin-file</module>
+        <module>plugin-exception</module>
+
+        <!-- -->
+        <module>gangland-compatibility</module>
+        <module>gangland-compatibility/version-impl</module>
+        <module>gangland-compatibility/version-1_10_R1</module>
+        <module>gangland-compatibility/version-1_11_R1</module>
+        <module>gangland-compatibility/version-1_12_R1</module>
+        <module>gangland-compatibility/version-1_13_R1</module>
+        <module>gangland-compatibility/version-1_13_R2</module>
+        <module>gangland-compatibility/version-1_14_R1</module>
+        <module>gangland-compatibility/version-1_15_R1</module>
+        <module>gangland-compatibility/version-1_16_R1</module>
+        <module>gangland-compatibility/version-1_16_R2</module>
+        <module>gangland-compatibility/version-1_16_R3</module>
+        <module>gangland-compatibility/version-1_17_R1</module>
+        <module>gangland-compatibility/version-1_18_R1</module>
+        <module>gangland-compatibility/version-1_18_R2</module>
+        <module>gangland-compatibility/version-1_19_R1</module>
+        <module>gangland-compatibility/version-1_19_R2</module>
+        <module>gangland-compatibility/version-1_19_R3</module>
+        <module>gangland-compatibility/version-1_20_R1</module>
+        <module>gangland-compatibility/version-1_20_R2</module>
+        <module>gangland-compatibility/version-1_20_R3</module>
+        <module>gangland-compatibility/version-1_20_R4</module>
+        <module>gangland-compatibility/version-1_21_R1</module>
+        <module>gangland-compatibility/version-1_21_R2</module>
+        <module>gangland-compatibility/version-1_21_R3</module>
+        <module>gangland-compatibility/version-1_21_R4</module>
+        <module>gangland-compatibility/version-1_21_R5</module>
+        <module>gangland-compatibility/version-1_21_R6</module>
     </modules>
 
     <properties>
@@ -49,13 +63,24 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- The version used to run the plugin -->
-        <bukkit.version>1.20.6-R0.1-SNAPSHOT</bukkit.version>
+        <bukkit.version>1.21.10-R0.1-SNAPSHOT</bukkit.version>
     </properties>
 
     <repositories>
         <repository>
-            <id>central</id>
-            <url>https://repo.maven.apache.org/maven2</url>
+            <id>maven_central</id>
+            <name>Maven Central</name>
+            <url>https://repo.maven.apache.org/maven2/</url>
+        </repository>
+
+        <repository>
+            <id>sonatype</id>
+            <url>https://oss.sonatype.org/content/groups/public/</url>
+        </repository>
+
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
         </repository>
 
         <repository>
@@ -67,6 +92,32 @@
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
+
+        <repository>
+            <id>codemc-repo</id>
+            <url>https://repo.codemc.io/repository/maven-public/</url>
+            <layout>default</layout>
+        </repository>
+
+        <repository>
+            <id>placeholderapi</id>
+            <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
+        </repository>
+
+        <repository>
+            <id>citizens-repo</id>
+            <url>https://maven.citizensnpcs.co/repo</url>
+        </repository>
+
+        <repository>
+            <id>dmulloy2-repo</id>
+            <url>https://repo.dmulloy2.net/repository/public/</url>
+        </repository>
+
+        <repository>
+            <id>viaversion-repo</id>
+            <url>https://repo.viaversion.com</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -76,7 +127,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.32</version>
+            <version>1.18.42</version>
             <scope>provided</scope>
         </dependency>
 
@@ -84,7 +135,7 @@
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
-            <version>24.1.0</version>
+            <version>26.0.2-1</version>
             <scope>provided</scope>
         </dependency>
 
@@ -92,7 +143,7 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
-            <version>2.23.1</version>
+            <version>3.0.0-beta2</version>
             <scope>provided</scope>
         </dependency>
 
@@ -100,19 +151,19 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
-            <version>4.1.111.Final</version>
+            <version>4.2.7.Final</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-codec</artifactId>
-            <version>4.1.111.Final</version>
+            <version>4.2.7.Final</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-handler</artifactId>
-            <version>4.1.111.Final</version>
+            <version>4.2.7.Final</version>
             <scope>provided</scope>
         </dependency>
 
@@ -148,7 +199,7 @@
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-            <version>4.27.1</version>
+            <version>4.28.2</version>
             <scope>provided</scope>
         </dependency>
 
@@ -184,7 +235,7 @@
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
-            <version>8.4.0</version>
+            <version>9.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

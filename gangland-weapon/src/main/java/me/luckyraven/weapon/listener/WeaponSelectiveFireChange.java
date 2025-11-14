@@ -1,0 +1,55 @@
+package me.luckyraven.weapon.listener;
+
+import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.autowire.AutowireTarget;
+import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.util.utilities.ChatUtil;
+import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.WeaponService;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.inventory.ItemStack;
+
+@ListenerHandler
+@AutowireTarget({WeaponService.class})
+public class WeaponSelectiveFireChange implements Listener {
+
+	private final WeaponService weaponService;
+
+	public WeaponSelectiveFireChange(WeaponService weaponService) {
+		this.weaponService = weaponService;
+	}
+
+	@EventHandler
+	public void onSwapHand(PlayerSwapHandItemsEvent event) {
+		Player player = event.getPlayer();
+
+		// check if the player is shifting
+		if (!player.isSneaking()) return;
+
+		// check if the player is holding a weapon
+		ItemStack item   = player.getInventory().getItemInMainHand();
+		Weapon    weapon = weaponService.validateAndGetWeapon(player, item);
+
+		if (weapon == null) return;
+
+		// change the selective fire of the weapon and cancel opening the inventory
+		event.setCancelled(true);
+
+		weapon.setCurrentSelectiveFire(weapon.getCurrentSelectiveFire().getNextState());
+
+		// update the weapon data
+		ItemBuilder itemBuilder = weaponService.getHeldWeaponItem(player);
+
+		if (itemBuilder == null) return;
+
+		weapon.updateWeaponData(itemBuilder);
+		weapon.updateWeapon(player, itemBuilder, player.getInventory().getHeldItemSlot());
+
+		ChatUtil.sendActionBar(player, "&6Selective Fire > &e" +
+									   ChatUtil.capitalize(weapon.getCurrentSelectiveFire().name().toLowerCase()));
+	}
+
+}
