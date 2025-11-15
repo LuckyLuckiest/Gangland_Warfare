@@ -1,7 +1,10 @@
 package me.luckyraven;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import me.luckyraven.bukkit.inventory.InventoryHandler;
+import me.luckyraven.bukkit.sign.SignManager;
+import me.luckyraven.bukkit.sign.service.SignInteractionService;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.CommandTabCompleter;
 import me.luckyraven.command.data.InformationManager;
@@ -67,46 +70,49 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Getter
 public final class Initializer {
 
+	@Getter(value = AccessLevel.NONE)
 	private final Gangland gangland;
 
 	// on plugin load
-	private final @Getter InformationManager informationManager;
-	private final @Getter VersionSetup       versionSetup;
-	private final @Getter CompatibilitySetup compatibilitySetup;
+	private final InformationManager informationManager;
+	private final VersionSetup       versionSetup;
+	private final CompatibilitySetup compatibilitySetup;
 
 	// on plugin enable
 	// Managers
-	private @Getter PluginManager              pluginManager;
-	private @Getter UserManager<Player>        userManager;
-	private @Getter UserManager<OfflinePlayer> offlineUserManager;
-	private @Getter PermissionManager          permissionManager;
-	private @Getter FileManager                fileManager;
-	private @Getter DatabaseManager            databaseManager;
-	private @Getter GangManager                gangManager;
-	private @Getter MemberManager              memberManager;
-	private @Getter ListenerManager            listenerManager;
-	private @Getter CommandManager             commandManager;
-	private @Getter RankManager                rankManager;
-	private @Getter WaypointManager            waypointManager;
-	private @Getter ScoreboardManager          scoreboardManager;
-	private @Getter WeaponManager              weaponManager;
+	private PluginManager              pluginManager;
+	private UserManager<Player>        userManager;
+	private UserManager<OfflinePlayer> offlineUserManager;
+	private PermissionManager          permissionManager;
+	private FileManager                fileManager;
+	private DatabaseManager            databaseManager;
+	private GangManager                gangManager;
+	private MemberManager              memberManager;
+	private ListenerManager            listenerManager;
+	private CommandManager             commandManager;
+	private RankManager                rankManager;
+	private WaypointManager            waypointManager;
+	private ScoreboardManager          scoreboardManager;
+	private WeaponManager              weaponManager;
+	private SignManager                signManager;
 	// Addons
-	private @Getter SettingAddon               settingAddon;
-	private @Getter ScoreboardAddon            scoreboardAddon;
-	private @Getter AmmunitionAddon            ammunitionAddon;
-	private @Getter WeaponAddon                weaponAddon;
+	private SettingAddon               settingAddon;
+	private ScoreboardAddon            scoreboardAddon;
+	private AmmunitionAddon            ammunitionAddon;
+	private WeaponAddon                weaponAddon;
 	// Loader
-	private @Getter LanguageLoader             languageLoader;
-	private @Getter InventoryLoader            inventoryLoader;
-	private @Getter WeaponLoader               weaponLoader;
+	private LanguageLoader             languageLoader;
+	private InventoryLoader            inventoryLoader;
+	private WeaponLoader               weaponLoader;
 	// Database
-	private @Getter GanglandDatabase           ganglandDatabase;
+	private GanglandDatabase           ganglandDatabase;
 	// Placeholder
-	private @Getter GanglandPlaceholder        placeholder;
+	private GanglandPlaceholder        placeholder;
 	// Compatibility
-	private @Getter CompatibilityWorker        compatibilityWorker;
+	private CompatibilityWorker        compatibilityWorker;
 
 	public Initializer(Gangland gangland) {
 		this.gangland = gangland;
@@ -213,6 +219,11 @@ public final class Initializer {
 
 		// initialize the weapon class
 		weaponManager.initialize(weaponTable);
+
+		// sign manager
+		signManager = new SignManager(gangland);
+
+		signManager.initialize();
 
 		// Events
 		listenerManager = new ListenerManager(gangland);
@@ -332,8 +343,9 @@ public final class Initializer {
 		dependencyContainer.registerInstance(GangManager.class, gangManager);
 		dependencyContainer.registerInstance(UserManager.class, userManager);
 		dependencyContainer.registerInstance(RankManager.class, rankManager);
-		dependencyContainer.registerInstance(JavaPlugin.class, gangland);
+		dependencyContainer.registerInstance(SignInteractionService.class, signManager.getSignService());
 		dependencyContainer.registerInstance(RecoilCompatibility.class, compatibilityWorker.getRecoilCompatibility());
+		dependencyContainer.registerInstance(JavaPlugin.class, gangland);
 
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 

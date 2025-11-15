@@ -2,138 +2,194 @@ package me.luckyraven.bukkit.sign;
 
 import lombok.Getter;
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.sign.sub.BuySign;
-import me.luckyraven.bukkit.sign.sub.SellSign;
-import me.luckyraven.bukkit.sign.sub.ViewSign;
-import me.luckyraven.bukkit.sign.sub.WantedSign;
-import me.luckyraven.database.DatabaseHelper;
-import me.luckyraven.database.tables.SignTable;
-import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.utilities.NumberUtil;
-import org.bukkit.Location;
+import me.luckyraven.bukkit.sign.aspect.ItemTransferAspect;
+import me.luckyraven.bukkit.sign.aspect.MoneyAspect;
+import me.luckyraven.bukkit.sign.aspect.ViewInventoryAspect;
+import me.luckyraven.bukkit.sign.aspect.WantedLevelAspect;
+import me.luckyraven.bukkit.sign.handler.AspectBasedSignHandler;
+import me.luckyraven.bukkit.sign.parser.impl.BuySignParser;
+import me.luckyraven.bukkit.sign.parser.impl.ViewSignParser;
+import me.luckyraven.bukkit.sign.registry.SignTypeDefinition;
+import me.luckyraven.bukkit.sign.registry.SignTypeRegistry;
+import me.luckyraven.bukkit.sign.service.SignInteractionService;
+import me.luckyraven.bukkit.sign.validation.impl.BuySignValidator;
+import me.luckyraven.bukkit.sign.validation.impl.ViewSignValidator;
+import me.luckyraven.bukkit.sign.validation.impl.WantedSignValidator;
+import me.luckyraven.data.user.UserManager;
+import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.WeaponService;
+import me.luckyraven.weapon.configuration.AmmunitionAddon;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 public class SignManager {
 
-	private final Gangland           gangland;
+	private final Gangland               gangland;
 	@Getter
-	private final Map<Integer, Sign> signs;
+	private final SignTypeRegistry       registry;
+	@Getter
+	private final SignInteractionService signService;
 
-	public SignManager(Gangland gangland) {
-		this.gangland = gangland;
-		this.signs    = new HashMap<>();
+	public SignManager(Gangland plugin) {
+		this.gangland    = plugin;
+		this.registry    = new SignTypeRegistry();
+		this.signService = new SignInteractionService(registry);
 	}
 
-	// ===== Creation & validation helpers =====
-	public static void validateSign(Gangland gangland, String[] lines) throws IllegalArgumentException {
-		if (lines == null || lines.length < 4) throw new IllegalArgumentException("The sign must have 4 lines!");
-		String type = lines[0] == null ? "" : lines[0].toLowerCase();
+	/**
+	 * Initialize and register all sign types
+	 */
+	public void initialize() {
+		WeaponService       weaponService   = gangland.getInitializer().getWeaponManager();
+		AmmunitionAddon     ammunitionAddon = gangland.getInitializer().getAmmunitionAddon();
+		UserManager<Player> userManager     = gangland.getInitializer().getUserManager();
 
-		switch (type) {
-			case "glw-buy" -> {
-				int    amount = NumberUtil.parseFormattedInteger(lines[2]);
-				double price  = NumberUtil.parseFormattedDouble(lines[3]);
-				new BuySign(gangland, price, amount, new Location(null, 0, 0, 0)).validate(lines);
-			}
-			case "glw-sell" -> {
-				int    amount = NumberUtil.parseFormattedInteger(lines[2]);
-				double price  = NumberUtil.parseFormattedDouble(lines[3]);
-				new SellSign(gangland, price, amount, new Location(null, 0, 0, 0)).validate(lines);
-			}
-			case "glw-view" -> new ViewSign(gangland, new Location(null, 0, 0, 0)).validate(lines);
-			case "glw-wanted" -> new WantedSign(new Location(null, 0, 0, 0)).validate(lines);
-			default -> throw new IllegalArgumentException("Unknown sign type: " + lines[0]);
-		}
+		// Register Buy Sign
+		registerBuySign(weaponService, ammunitionAddon, userManager);
+
+		// Register Sell Sign
+		registerSellSign(weaponService, ammunitionAddon, userManager);
+
+		// Register Wanted Sign
+		registerWantedSign();
+
+		// Register View Sign
+		registerViewSign(weaponService, ammunitionAddon);
 	}
 
-	public static Sign createSign(Gangland gangland, String[] lines, Location location) {
-		String type = lines[0].toLowerCase();
-		switch (type) {
-			case "glw-buy" -> {
-				int    amount = NumberUtil.parseFormattedInteger(lines[2]);
-				double price  = NumberUtil.parseFormattedDouble(lines[3]);
-				return new BuySign(gangland, price, amount, location);
-			}
-			case "glw-sell" -> {
-				int    amount = NumberUtil.parseFormattedInteger(lines[2]);
-				double price  = NumberUtil.parseFormattedDouble(lines[3]);
-				return new SellSign(gangland, price, amount, location);
-			}
-			case "glw-view" -> {
-				return new ViewSign(gangland, location);
-			}
-			case "glw-wanted" -> {
-				return new WantedSign(location);
-			}
-			default -> throw new IllegalArgumentException("Unknown sign type: " + lines[0]);
-		}
+	private void registerBuySign(WeaponService weaponService, AmmunitionAddon ammunitionAddon,
+								 UserManager<Player> userManager) {
+		SignType buyType = new SignType("glw-buy", "[BUY]");
+
+		// Create validator
+		BuySignValidator validator = new BuySignValidator(buyType, weaponService, ammunitionAddon);
+
+		// Create parser
+		BuySignParser parser = new BuySignParser(buyType);
+
+		// Create aspects
+		MoneyAspect moneyAspect = new MoneyAspect(userManager, MoneyAspect.TransactionType.WITHDRAW);
+
+		ItemTransferAspect itemAspect = new ItemTransferAspect(
+				sign -> getWeaponItem(weaponService, ammunitionAddon, sign.getContent()),
+				ItemTransferAspect.TransferType.GIVE);
+
+		// Create handler
+		AspectBasedSignHandler handler = new AspectBasedSignHandler(java.util.Arrays.asList(moneyAspect, itemAspect));
+
+		// Build and register definition
+		SignTypeDefinition definition = SignTypeDefinition.builder()
+														  .signType(buyType)
+														  .signValidator(validator)
+														  .signParser(parser)
+														  .handler(handler)
+														  .displayFormat("&b[BUY]")
+														  .build();
+
+		definition.addAspect(moneyAspect);
+		definition.addAspect(itemAspect);
+
+		registry.register(definition);
 	}
 
-	public static void translateCreationToDisplay(String[] lines) {
-		// Mutates the given lines array into a colored/display form
-		if (lines == null || lines.length < 4) return;
-		String type = lines[0].toLowerCase();
-		lines[0] = ChatUtil.color("&b" + lines[0]);
-		lines[1] = ChatUtil.color("&7" + lines[1]);
-		if (!type.equals("glw-view")) {
-			// 3rd line: amount or wanted stars
-			try {
-				int amount = NumberUtil.parseFormattedInteger(lines[2]);
-				lines[2] = ChatUtil.color("&5" + NumberUtil.valueFormat(amount));
-			} catch (Exception ignored) { /* leave as-is */ }
-			// 4th line: price, with $ prefix
-			try {
-				double price = NumberUtil.parseFormattedDouble(lines[3].replace("$", ""));
-				lines[3] = ChatUtil.color("&a$" + NumberUtil.valueFormat(price));
-			} catch (Exception ignored) { /* leave as-is */ }
-		}
+	private void registerSellSign(WeaponService weaponService, AmmunitionAddon ammunitionAddon,
+								  UserManager<Player> userManager) {
+		SignType sellType = new SignType("glw-sell", "[SELL]");
+
+		BuySignValidator validator = new BuySignValidator(sellType, weaponService, ammunitionAddon);
+		BuySignParser    parser    = new BuySignParser(sellType);
+
+		ItemTransferAspect itemAspect = new ItemTransferAspect(
+				sign -> getWeaponItem(weaponService, ammunitionAddon, sign.getContent()),
+				ItemTransferAspect.TransferType.TAKE);
+
+		MoneyAspect moneyAspect = new MoneyAspect(userManager, MoneyAspect.TransactionType.DEPOSIT);
+
+		AspectBasedSignHandler handler = new AspectBasedSignHandler(List.of(itemAspect, moneyAspect));
+
+		SignTypeDefinition definition = SignTypeDefinition.builder()
+														  .signType(sellType)
+														  .signValidator(validator)
+														  .signParser(parser)
+														  .handler(handler)
+														  .displayFormat("&a[SELL]")
+														  .build();
+
+		definition.addAspect(itemAspect);
+		definition.addAspect(moneyAspect);
+
+		registry.register(definition);
 	}
 
-	public void initialize(SignTable signTable) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
+	private void registerWantedSign() {
+		SignType wantedType = new SignType("glw-wanted", "[WANTED]");
 
-		helper.runQueries(database -> {
-			List<Object[]> data = database.table(signTable.getName()).selectAll();
+		WantedSignValidator validator = new WantedSignValidator(wantedType);
 
-			int maxId = 0;
-			for (Object[] result : data) {
-				int    v            = 0;
-				int    id           = (int) result[v++];
-				String signType     = String.valueOf(result[v++]).toLowerCase();
-				String world        = String.valueOf(result[v++]);
-				double x            = (double) result[v++];
-				double y            = (double) result[v++];
-				double z            = (double) result[v++];
-				long   lastTimeUsed = (long) result[v];
+		// Wanted sign parser (simplified)
+		BuySignParser parser = new BuySignParser(wantedType);
 
-				Sign sign;
+		WantedLevelAspect wantedAspect = new WantedLevelAspect((player, amount, add) -> {
+			// Implement your wanted level logic here
+			// Example: plugin.getWantedManager().modifyLevel(player, amount, add);
+		}, true // add wanted level
+		);
 
-				Location dummy = new Location(null, x, y, z);
-				switch (signType) {
-					case "glw-buy" -> sign = new BuySign(gangland, 0D, 0, dummy);
-					case "glw-sell" -> sign = new SellSign(gangland, 0D, 0, dummy);
-					case "glw-view" -> sign = new ViewSign(gangland, dummy);
-					case "glw-wanted" -> sign = new WantedSign(dummy);
-					default -> {
-						continue; // unknown type; skip
-					}
-				}
+		AspectBasedSignHandler handler = new AspectBasedSignHandler(List.of(wantedAspect));
 
-				sign.setWorld(world);
-				sign.setX(x);
-				sign.setY(y);
-				sign.setZ(z);
-				sign.setLastTimeUsed(lastTimeUsed);
+		SignTypeDefinition definition = SignTypeDefinition.builder()
+														  .signType(wantedType)
+														  .signValidator(validator)
+														  .signParser(parser)
+														  .handler(handler)
+														  .displayFormat("&c[WANTED]")
+														  .build();
 
-				signs.put(id, sign);
-				if (id > maxId) maxId = id;
-			}
+		definition.addAspect(wantedAspect);
 
-			// keep ID sequence in sync with DB
-			Sign.setID(maxId);
-		});
+		registry.register(definition);
+	}
+
+	private void registerViewSign(WeaponService weaponService, AmmunitionAddon ammunitionAddon) {
+		SignType viewType = new SignType("glw-view", "[VIEW]");
+
+		// Create validator
+		ViewSignValidator validator = new ViewSignValidator(viewType, weaponService, ammunitionAddon);
+
+		// Create parser
+		ViewSignParser parser = new ViewSignParser(viewType);
+
+		// Create aspect - opens inventory
+		ViewInventoryAspect viewAspect = new ViewInventoryAspect(gangland, weaponService, ammunitionAddon);
+
+		// Create handler
+		AspectBasedSignHandler handler = new AspectBasedSignHandler(List.of(viewAspect));
+
+		// Build and register definition
+		SignTypeDefinition definition = SignTypeDefinition.builder()
+														  .signType(viewType)
+														  .signValidator(validator)
+														  .signParser(parser)
+														  .handler(handler)
+														  .displayFormat("&d[VIEW]")
+														  .build();
+
+		definition.addAspect(viewAspect);
+
+		registry.register(definition);
+	}
+
+	private ItemStack getWeaponItem(WeaponService weaponService, AmmunitionAddon ammunitionAddon, String itemName) {
+		// This is a simplified example
+		Collection<Weapon> values = weaponService.getWeapons().values();
+
+		return values.stream()
+				.filter(w -> w.getName().equalsIgnoreCase(itemName))
+				.findFirst()
+				.map(Weapon::buildItem)
+				.orElse(null);
 	}
 }
