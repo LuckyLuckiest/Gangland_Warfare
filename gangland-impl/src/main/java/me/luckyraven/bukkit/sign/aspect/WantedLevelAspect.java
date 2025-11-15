@@ -36,11 +36,6 @@ public class WantedLevelAspect implements SignAspect {
 		return "WantedLevelAspect-" + (add ? "Add" : "Remove");
 	}
 
-	@Override
-	public int getPriority() {
-		return 0;
-	}
-
 	@FunctionalInterface
 	public interface WantedLevelManager {
 

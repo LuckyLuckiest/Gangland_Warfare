@@ -73,11 +73,6 @@ public class ViewInventoryAspect implements SignAspect {
 	}
 
 	@Override
-	public int getPriority() {
-		return 0;
-	}
-
-	@Override
 	public String getName() {
 		return "ViewInventoryAspect";
 	}
