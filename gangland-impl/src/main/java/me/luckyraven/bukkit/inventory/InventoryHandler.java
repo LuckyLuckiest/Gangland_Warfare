@@ -20,6 +20,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -47,7 +48,8 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 	private @Getter NamespacedKey title;
 	private @Getter String        displayTitle;
 
-	public InventoryHandler(Gangland gangland, String title, int size, NamespacedKey namespacedKey) {
+	public InventoryHandler(Gangland gangland, InventoryHolder holder, String title, int size,
+							NamespacedKey namespacedKey) {
 		this.gangland     = gangland;
 		this.displayTitle = title;
 
@@ -56,21 +58,21 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 		int realSize = factorOfNine(size);
 		this.size = Math.min(realSize, MAX_SLOTS);
 
-		this.inventory      = Bukkit.createInventory(null, this.size, ChatUtil.color(title));
+		this.inventory      = Bukkit.createInventory(holder, this.size, ChatUtil.color(title));
 		this.draggableSlots = new ArrayList<>();
 		this.clickableSlots = new HashMap<>();
 		this.clickableItems = new HashMap<>();
 	}
 
 	public InventoryHandler(Gangland gangland, String title, int size, String special, boolean add) {
-		this(gangland, title, size, new NamespacedKey(gangland, special));
+		this(gangland, null, title, size, new NamespacedKey(gangland, titleRefactor(special)));
 
 		if (add) SPECIAL_INVENTORIES.put(this.title, this);
 	}
 
 	public InventoryHandler(Gangland gangland, String title, int size, User<Player> user, NamespacedKey namespacedKey,
 							boolean special) {
-		this(gangland, title, size, namespacedKey);
+		this(gangland, user.getUser(), title, size, namespacedKey);
 
 		if (special) {
 			user.addSpecialInventory(this);
@@ -209,25 +211,47 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onInventoryClick(InventoryClickEvent event) {
+		Inventory topInventory = event.getView().getTopInventory();
+
+		if (topInventory.getHolder() != null) {
+			return;
+		}
+
 		org.bukkit.inventory.Inventory clickedInventory = event.getClickedInventory();
-		if (clickedInventory == null) return;
 
 		Player       player = (Player) event.getWhoClicked();
 		User<Player> user   = gangland.getInitializer().getUserManager().getUser(player);
-		InventoryHandler inv = user.getInventories()
-				.stream()
-				.filter(inventory -> clickedInventory.equals(inventory.getInventory()))
+
+		List<InventoryHandler> allInventories = new ArrayList<>();
+
+		allInventories.addAll(user.getInventories());
+		allInventories.addAll(user.getSpecialInventories());
+
+		InventoryHandler inv = allInventories.stream()
+				.filter(inventory -> topInventory.equals(inventory.getInventory()))
 				.findFirst()
 				.orElse(null);
 
-		if (inv == null) return;
-
 		int rawSlot = event.getRawSlot();
 
-		TriConsumer<Player, InventoryHandler, ItemBuilder> slots = inv.clickableSlots.getOrDefault(rawSlot,
-																								   (pl, i, item) -> { });
-		slots.accept(player, inv, inv.clickableItems.getOrDefault(rawSlot, null));
-		event.setCancelled(!inv.draggableSlots.contains(rawSlot));
+		// Execute clickable action if defined for clicks in the custom inventory
+		boolean checkInventoryStatus = inv != null && clickedInventory != null &&
+									   clickedInventory.equals(inv.getInventory());
+
+		if (checkInventoryStatus) {
+			var slots = inv.clickableSlots.getOrDefault(rawSlot, (pl, i, item) -> { });
+
+			slots.accept(player, inv, inv.clickableItems.getOrDefault(rawSlot, null));
+		}
+
+		// Cancel all clicks to prevent item movement
+		// Only allow if it's a click in the custom inventory AND the slot is draggable
+		if (checkInventoryStatus) {
+			event.setCancelled(!inv.draggableSlots.contains(rawSlot));
+		} else {
+			// Always cancel clicks in the player's own inventory when viewing custom inventory
+			event.setCancelled(true);
+		}
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
