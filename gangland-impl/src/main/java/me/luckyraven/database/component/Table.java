@@ -86,10 +86,11 @@ public abstract class Table<T> {
 	}
 
 	public synchronized void insertTableQuery(Database database, T data) throws SQLException {
-		String[] columns         = getColumns().toArray(String[]::new);
-		Object[] allData         = getData(data);
-		int[]    columnsDataType = attributes.values().stream().mapToInt(Attribute::getType).toArray();
-		Database config          = database.table(name);
+		String[] columns = getColumns().toArray(String[]::new);
+		Object[] allData = getData(data);
+		int[] columnsDataType = attributes.values()
+				.stream().mapToInt(Attribute::getType).toArray();
+		Database config = database.table(name);
 
 		if (allData == null || allData.length == 0) return;
 
@@ -108,9 +109,10 @@ public abstract class Table<T> {
 		List<Object>  objectsTemp   = new ArrayList<>();
 		List<Integer> dataTypesTemp = new ArrayList<>();
 
-		int[]        indexes            = (int[]) search.get("index");
-		Set<Integer> indexSet           = Arrays.stream(indexes).boxed().collect(Collectors.toSet());
-		int[]        extractedDataTypes = attributes.values().stream().mapToInt(Attribute::getType).toArray();
+		int[]        indexes  = (int[]) search.get("index");
+		Set<Integer> indexSet = Arrays.stream(indexes).boxed().collect(Collectors.toSet());
+		int[] extractedDataTypes = attributes.values()
+				.stream().mapToInt(Attribute::getType).toArray();
 
 		boolean includedNonPrimaryKeyColumn = false;
 
@@ -125,7 +127,8 @@ public abstract class Table<T> {
 		}
 
 		if (!includedNonPrimaryKeyColumn && !columnsTemp.isEmpty()) {
-			List<Attribute<?>> attr = attributes.values().stream().toList();
+			List<Attribute<?>> attr = attributes.values()
+					.stream().toList();
 
 			for (int i = 0; i < columnsTemp.size(); i++) {
 				// ignore primary key
