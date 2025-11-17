@@ -25,7 +25,9 @@ public class SignTypeDefinition {
 	private final List<SignAspect> aspects = new ArrayList<>();
 
 	@Builder.Default
-	private final String displayFormat = "&b{type}";
+	private final String displayFormat = "&8[&r{type}&8]";
+
+	private final List<Integer> linesToRemove;
 
 	public List<SignAspect> getSortedAspects() {
 		List<SignAspect> sorted = new ArrayList<>(aspects);

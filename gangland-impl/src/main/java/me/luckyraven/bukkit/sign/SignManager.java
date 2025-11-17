@@ -54,7 +54,7 @@ public class SignManager {
 		registerSellSign(weaponService, ammunitionAddon, userManager);
 
 		// Register Wanted Sign
-		registerWantedSign();
+		registerWantedSign(userManager);
 
 		// Register View Sign
 		registerViewSign(weaponService, ammunitionAddon);
@@ -62,7 +62,7 @@ public class SignManager {
 
 	private void registerBuySign(WeaponService weaponService, AmmunitionAddon ammunitionAddon,
 								 UserManager<Player> userManager) {
-		SignType buyType = new SignType("glw-buy", "[BUY]");
+		SignType buyType = new SignType("glw-buy", "BUY");
 
 		// Create validator
 		BuySignValidator validator = new BuySignValidator(buyType, weaponService, ammunitionAddon);
@@ -86,7 +86,7 @@ public class SignManager {
 														  .signValidator(validator)
 														  .signParser(parser)
 														  .handler(handler)
-														  .displayFormat("&b[BUY]")
+														  .displayFormat("&8[&3BUY&8]")
 														  .build();
 
 		definition.addAspect(moneyAspect);
@@ -97,7 +97,7 @@ public class SignManager {
 
 	private void registerSellSign(WeaponService weaponService, AmmunitionAddon ammunitionAddon,
 								  UserManager<Player> userManager) {
-		SignType sellType = new SignType("glw-sell", "[SELL]");
+		SignType sellType = new SignType("glw-sell", "SELL");
 
 		BuySignValidator validator = new BuySignValidator(sellType, weaponService, ammunitionAddon);
 		BuySignParser    parser    = new BuySignParser(sellType);
@@ -115,7 +115,7 @@ public class SignManager {
 														  .signValidator(validator)
 														  .signParser(parser)
 														  .handler(handler)
-														  .displayFormat("&a[SELL]")
+														  .displayFormat("&8[&aSELL&8]")
 														  .build();
 
 		definition.addAspect(itemAspect);
@@ -124,37 +124,38 @@ public class SignManager {
 		registry.register(definition);
 	}
 
-	private void registerWantedSign() {
-		SignType wantedType = new SignType("glw-wanted", "[WANTED]");
+	private void registerWantedSign(UserManager<Player> userManager) {
+		SignType wantedType = new SignType("glw-wanted", "WANTED");
 
 		WantedSignValidator validator = new WantedSignValidator(wantedType);
 
 		// Wanted sign parser (simplified)
 		BuySignParser parser = new BuySignParser(wantedType);
 
-		WantedLevelAspect wantedAspect = new WantedLevelAspect((player, amount, add) -> {
-			// Implement your wanted level logic here
-			// Example: plugin.getWantedManager().modifyLevel(player, amount, add);
-		}, true // add wanted level
-		);
+		WantedLevelAspect wantedAspectInc   = new WantedLevelAspect(userManager, WantedLevelAspect.WantedType.INCREASE);
+		WantedLevelAspect wantedAspectDec   = new WantedLevelAspect(userManager, WantedLevelAspect.WantedType.DECREASE);
+		WantedLevelAspect wantedAspectClear = new WantedLevelAspect(userManager, WantedLevelAspect.WantedType.CLEAR);
 
-		AspectBasedSignHandler handler = new AspectBasedSignHandler(List.of(wantedAspect));
+		AspectBasedSignHandler handler = new AspectBasedSignHandler(
+				List.of(wantedAspectInc, wantedAspectDec, wantedAspectClear));
 
 		SignTypeDefinition definition = SignTypeDefinition.builder()
 														  .signType(wantedType)
 														  .signValidator(validator)
 														  .signParser(parser)
 														  .handler(handler)
-														  .displayFormat("&c[WANTED]")
+														  .displayFormat("&8[&cWANTED&8]")
 														  .build();
 
-		definition.addAspect(wantedAspect);
+		definition.addAspect(wantedAspectInc);
+		definition.addAspect(wantedAspectDec);
+		definition.addAspect(wantedAspectClear);
 
 		registry.register(definition);
 	}
 
 	private void registerViewSign(WeaponService weaponService, AmmunitionAddon ammunitionAddon) {
-		SignType viewType = new SignType("glw-view", "[VIEW]");
+		SignType viewType = new SignType("glw-view", "VIEW");
 
 		// Create validator
 		ViewSignValidator validator = new ViewSignValidator(viewType, weaponService, ammunitionAddon);
@@ -174,7 +175,7 @@ public class SignManager {
 														  .signValidator(validator)
 														  .signParser(parser)
 														  .handler(handler)
-														  .displayFormat("&d[VIEW]")
+														  .displayFormat("&8[&3VIEW&8]")
 														  .build();
 
 		definition.addAspect(viewAspect);

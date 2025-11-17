@@ -54,7 +54,7 @@ public class SignTypeRegistry {
 	}
 
 	private String normalize(String line) {
-		return ChatColor.stripColor(line).toLowerCase().trim();
+		return ChatColor.stripColor(line).toLowerCase().replaceAll("[\\[\\]]", "").trim();
 	}
 
 }
