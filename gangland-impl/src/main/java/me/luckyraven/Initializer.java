@@ -54,6 +54,7 @@ import me.luckyraven.file.configuration.inventory.InventoryLoader;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
 import me.luckyraven.util.autowire.DependencyContainer;
+import me.luckyraven.util.listener.ListenerPriority;
 import me.luckyraven.weapon.WeaponManager;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
@@ -339,20 +340,21 @@ public final class Initializer {
 
 //		listenerManager.scanAndRegisterComponents(basePackage, gangland);
 
-		dependencyContainer.registerInstance(WeaponService.class, weaponManager);
-		dependencyContainer.registerInstance(GangManager.class, gangManager);
+		dependencyContainer.registerInstance(JavaPlugin.class, gangland);
 		dependencyContainer.registerInstance(UserManager.class, userManager);
 		dependencyContainer.registerInstance(RankManager.class, rankManager);
+		dependencyContainer.registerInstance(GangManager.class, gangManager);
+		dependencyContainer.registerInstance(WeaponService.class, weaponManager);
 		dependencyContainer.registerInstance(SignInteractionService.class, signManager.getSignService());
 		dependencyContainer.registerInstance(RecoilCompatibility.class, compatibilityWorker.getRecoilCompatibility());
-		dependencyContainer.registerInstance(JavaPlugin.class, gangland);
 
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 
 		// waypoint
-		listenerManager.addEvent(new WaypointTeleport(new Waypoint("dummy")));
+		listenerManager.addEvent(new WaypointTeleport(new Waypoint("dummy")), ListenerPriority.NORMAL);
 		// inventory
-		listenerManager.addEvent(new InventoryHandler(gangland, "dummy", 9, "dummy_inventory", false));
+		listenerManager.addEvent(new InventoryHandler(gangland, "dummy", 9, "dummy_inventory", false),
+								 ListenerPriority.NORMAL);
 	}
 
 	private void commands(Gangland gangland) {
