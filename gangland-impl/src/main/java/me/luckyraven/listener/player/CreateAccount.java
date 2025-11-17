@@ -13,6 +13,7 @@ import me.luckyraven.database.tables.MemberTable;
 import me.luckyraven.database.tables.UserTable;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.util.listener.ListenerPriority;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,7 +23,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.util.List;
 
-@ListenerHandler
+@ListenerHandler(priority = ListenerPriority.LOWEST)
 public final class CreateAccount implements Listener {
 
 	private final Gangland            gangland;
@@ -54,10 +55,10 @@ public final class CreateAccount implements Listener {
 
 			UserDataInitEvent userDataInitEvent = new UserDataInitEvent(true, user);
 			Bukkit.getPluginManager().callEvent(userDataInitEvent);
+			
+			// Add the user to a user manager group
+			userManager.add(user);
 		});
-
-		// Add the user to a user manager group
-		userManager.add(user);
 
 		// need to check if the user already registered
 		Member member = memberManager.getMember(player.getUniqueId());
