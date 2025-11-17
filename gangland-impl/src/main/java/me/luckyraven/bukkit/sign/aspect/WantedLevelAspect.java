@@ -1,29 +1,36 @@
 package me.luckyraven.bukkit.sign.aspect;
 
 import me.luckyraven.bukkit.sign.model.ParsedSign;
+import me.luckyraven.data.user.User;
+import me.luckyraven.data.user.UserManager;
+import me.luckyraven.feature.wanted.Wanted;
 import org.bukkit.entity.Player;
 
-// TODO integrate it with the wanted level system
 public class WantedLevelAspect implements SignAspect {
 
-	private final WantedLevelManager wantedLevelManager;
-	// true = add, false = remove
-	private final boolean            add;
+	private final UserManager<Player> userManager;
+	private final WantedType          wantedType;
 
-	public WantedLevelAspect(WantedLevelManager wantedLevelManager, boolean add) {
-		this.wantedLevelManager = wantedLevelManager;
-		this.add                = add;
+	public WantedLevelAspect(UserManager<Player> userManager, WantedType wantedType) {
+		this.userManager = userManager;
+		this.wantedType  = wantedType;
 	}
 
 	@Override
 	public AspectResult execute(Player player, ParsedSign sign) {
-		int amount = sign.getAmount();
+		User<Player> user   = userManager.getUser(player);
+		Wanted       wanted = user.getWanted();
+		int          amount = sign.getAmount();
 
-		wantedLevelManager.modifyWantedLevel(player, amount, add);
+		wanted.setLevel(amount);
 
-		String action = add ? "increased" : "decreased";
+		String format = "Wanted level " + wantedType.name().toLowerCase();
 
-		return AspectResult.success("Wanted level " + action + " by " + amount);
+		if (wantedType == WantedType.CLEAR) {
+			return AspectResult.successContinue(format);
+		}
+
+		return AspectResult.success(format + " by " + amount);
 	}
 
 	@Override
@@ -33,13 +40,13 @@ public class WantedLevelAspect implements SignAspect {
 
 	@Override
 	public String getName() {
-		return "WantedLevelAspect-" + (add ? "Add" : "Remove");
+		return "WantedLevelAspect-" + wantedType.name();
 	}
 
-	@FunctionalInterface
-	public interface WantedLevelManager {
-
-		void modifyWantedLevel(Player player, int wantedLevel, boolean add);
-
+	public enum WantedType {
+		INCREASE,
+		DECREASE,
+		CLEAR;
 	}
+
 }
