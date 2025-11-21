@@ -1,7 +1,6 @@
-package me.luckyraven.bukkit.sign.model.impl;
+package me.luckyraven.sign.model;
 
-import me.luckyraven.bukkit.sign.SignType;
-import me.luckyraven.bukkit.sign.model.BaseParsedSign;
+import me.luckyraven.sign.SignType;
 import org.bukkit.Location;
 
 public class ViewParsedSign extends BaseParsedSign {

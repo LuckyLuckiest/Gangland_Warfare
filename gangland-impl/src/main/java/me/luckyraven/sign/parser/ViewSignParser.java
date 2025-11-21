@@ -1,10 +1,9 @@
-package me.luckyraven.bukkit.sign.parser.impl;
+package me.luckyraven.sign.parser;
 
-import me.luckyraven.bukkit.sign.SignType;
-import me.luckyraven.bukkit.sign.model.ParsedSign;
-import me.luckyraven.bukkit.sign.model.impl.ViewParsedSign;
-import me.luckyraven.bukkit.sign.parser.AbstractSignParser;
-import me.luckyraven.bukkit.sign.validation.SignValidationException;
+import me.luckyraven.sign.SignType;
+import me.luckyraven.sign.model.ParsedSign;
+import me.luckyraven.sign.model.ViewParsedSign;
+import me.luckyraven.sign.validation.SignValidationException;
 import org.bukkit.Location;
 
 public class ViewSignParser extends AbstractSignParser {

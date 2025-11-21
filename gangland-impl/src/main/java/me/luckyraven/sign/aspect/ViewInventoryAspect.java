@@ -1,11 +1,13 @@
-package me.luckyraven.bukkit.sign.aspect;
+package me.luckyraven.sign.aspect;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.inventory.InventoryHandler;
-import me.luckyraven.bukkit.sign.model.ParsedSign;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.util.InventoryUtil;
+import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.part.Fill;
+import me.luckyraven.inventory.util.InventoryUtil;
+import me.luckyraven.sign.model.ParsedSign;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
@@ -85,8 +87,9 @@ public class ViewInventoryAspect implements SignAspect {
 		int          inventorySize  = Math.max(9, InventoryHandler.factorOfNine(requiredSlots));
 
 		// Create inventory handler
-		InventoryHandler inventory = new InventoryHandler(gangland, "&6View: &e" + weapon.getDisplayName(),
-														  inventorySize, user, false);
+		String title = "&6View: &e" + weapon.getDisplayName();
+
+		InventoryHandler inventory = new InventoryHandler(gangland, title, inventorySize, player);
 
 		// Add weapon in center-left position
 		int       weaponSlot = 3;
@@ -116,7 +119,9 @@ public class ViewInventoryAspect implements SignAspect {
 		}
 
 		// Add decorative glass panes in empty slots
-		InventoryUtil.fillInventory(inventory);
+		Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+
+		InventoryUtil.fillInventory(inventory, fill);
 
 		// Register and open inventory
 		gangland.getServer().getPluginManager().registerEvents(inventory, gangland);
@@ -124,8 +129,10 @@ public class ViewInventoryAspect implements SignAspect {
 	}
 
 	private void openAmmunitionView(Player player, String ammoName) {
-		User<Player>     user      = userManager.getUser(player);
-		InventoryHandler inventory = new InventoryHandler(gangland, "&6View: &e" + ammoName, 9, user, false);
+		User<Player> user  = userManager.getUser(player);
+		String       title = "&6View: &e" + ammoName;
+
+		InventoryHandler inventory = new InventoryHandler(gangland, title, 9, player);
 
 		ItemStack ammoItem = createAmmunitionItem(ammoName, null);
 
@@ -133,15 +140,18 @@ public class ViewInventoryAspect implements SignAspect {
 			inventory.setItem(4, ammoItem, false, null);
 		}
 
-		InventoryUtil.fillInventory(inventory);
+		Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+
+		InventoryUtil.fillInventory(inventory, fill);
 
 		gangland.getServer().getPluginManager().registerEvents(inventory, gangland);
 		inventory.open(player);
 	}
 
 	private void openGenericItemView(Player player, String itemName) {
-		User<Player>     user      = userManager.getUser(player);
-		InventoryHandler inventory = new InventoryHandler(gangland, "&6View: &e" + itemName, 9, user, false);
+		String title = "&6View: &e" + itemName;
+
+		InventoryHandler inventory = new InventoryHandler(gangland, title, 9, player);
 
 		// Try to create item from material name
 		Material material = Material.matchMaterial(itemName.toUpperCase().replace(" ", "_"));
@@ -156,7 +166,9 @@ public class ViewInventoryAspect implements SignAspect {
 
 		inventory.setItem(4, material, "&e" + itemName, lore, false, false, null);
 
-		InventoryUtil.fillInventory(inventory);
+		Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+
+		InventoryUtil.fillInventory(inventory, fill);
 
 		gangland.getServer().getPluginManager().registerEvents(inventory, gangland);
 		inventory.open(player);

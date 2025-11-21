@@ -1,8 +1,6 @@
-package me.luckyraven.bukkit.sign.validation.impl;
+package me.luckyraven.sign.validation;
 
-import me.luckyraven.bukkit.sign.SignType;
-import me.luckyraven.bukkit.sign.validation.AbstractSignValidator;
-import me.luckyraven.bukkit.sign.validation.SignValidationException;
+import me.luckyraven.sign.SignType;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;

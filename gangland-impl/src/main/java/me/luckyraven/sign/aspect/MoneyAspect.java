@@ -1,9 +1,9 @@
-package me.luckyraven.bukkit.sign.aspect;
+package me.luckyraven.sign.aspect;
 
-import me.luckyraven.bukkit.sign.model.ParsedSign;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.sign.model.ParsedSign;
 import org.bukkit.entity.Player;
 
 public class MoneyAspect implements SignAspect {

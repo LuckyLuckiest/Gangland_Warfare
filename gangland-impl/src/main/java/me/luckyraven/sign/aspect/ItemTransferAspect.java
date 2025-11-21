@@ -1,6 +1,6 @@
-package me.luckyraven.bukkit.sign.aspect;
+package me.luckyraven.sign.aspect;
 
-import me.luckyraven.bukkit.sign.model.ParsedSign;
+import me.luckyraven.sign.model.ParsedSign;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
