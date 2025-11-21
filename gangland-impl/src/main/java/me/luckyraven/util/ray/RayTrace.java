@@ -1,4 +1,4 @@
-package me.luckyraven.ray;
+package me.luckyraven.util.ray;
 
 import org.bukkit.Location;
 import org.bukkit.World;
