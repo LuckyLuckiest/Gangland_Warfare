@@ -1,12 +1,12 @@
-package me.luckyraven.bukkit.sign.registry;
+package me.luckyraven.sign.registry;
 
 import lombok.Builder;
 import lombok.Getter;
-import me.luckyraven.bukkit.sign.SignType;
-import me.luckyraven.bukkit.sign.aspect.SignAspect;
-import me.luckyraven.bukkit.sign.handler.SignHandler;
-import me.luckyraven.bukkit.sign.parser.SignParser;
-import me.luckyraven.bukkit.sign.validation.SignValidator;
+import me.luckyraven.sign.SignType;
+import me.luckyraven.sign.aspect.SignAspect;
+import me.luckyraven.sign.handler.SignHandler;
+import me.luckyraven.sign.parser.SignParser;
+import me.luckyraven.sign.validation.SignValidator;
 
 import java.util.ArrayList;
 import java.util.Comparator;

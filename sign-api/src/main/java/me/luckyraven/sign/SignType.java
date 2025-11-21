@@ -1,4 +1,4 @@
-package me.luckyraven.bukkit.sign;
+package me.luckyraven.sign;
 
 /**
  * The point of having a sign type is to properly distinguish two possible values that can arise, which is the typed and

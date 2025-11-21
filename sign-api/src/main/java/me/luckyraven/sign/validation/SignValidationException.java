@@ -1,4 +1,4 @@
-package me.luckyraven.bukkit.sign.validation;
+package me.luckyraven.sign.validation;
 
 public class SignValidationException extends Exception {
 

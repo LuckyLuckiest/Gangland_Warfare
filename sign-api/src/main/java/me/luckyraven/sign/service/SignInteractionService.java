@@ -1,20 +1,28 @@
-package me.luckyraven.bukkit.sign.service;
+package me.luckyraven.sign.service;
 
-import me.luckyraven.bukkit.sign.aspect.AspectResult;
-import me.luckyraven.bukkit.sign.handler.SignHandler;
-import me.luckyraven.bukkit.sign.model.ParsedSign;
-import me.luckyraven.bukkit.sign.parser.SignParser;
-import me.luckyraven.bukkit.sign.registry.SignTypeDefinition;
-import me.luckyraven.bukkit.sign.registry.SignTypeRegistry;
-import me.luckyraven.bukkit.sign.validation.SignValidationException;
-import me.luckyraven.util.ChatUtil;
+import lombok.Getter;
+import me.luckyraven.sign.model.ParsedSign;
+import me.luckyraven.sign.parser.SignParser;
+import me.luckyraven.sign.registry.SignTypeDefinition;
+import me.luckyraven.sign.registry.SignTypeRegistry;
+import me.luckyraven.sign.validation.SignValidationException;
+import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-import java.util.List;
 import java.util.Optional;
 
-public record SignInteractionService(SignTypeRegistry registry) {
+@Getter
+public abstract class SignInteractionService {
+
+	private final SignTypeRegistry registry;
+
+	public SignInteractionService(SignTypeRegistry registry) {
+		this.registry = registry;
+	}
+
+	// This method is called to be overridden if there is a specific logic
+	public abstract boolean handlerInteraction(Player player, ParsedSign sign);
 
 	public void validateSign(String[] lines) throws SignValidationException {
 		if (lines == null || lines.length < 4) {
@@ -47,38 +55,6 @@ public record SignInteractionService(SignTypeRegistry registry) {
 		return Optional.of(parsed);
 	}
 
-	public boolean handlerInteraction(Player player, ParsedSign sign) {
-		Optional<SignTypeDefinition> definition = registry.getDefinition(sign.getSignType());
-
-		if (definition.isEmpty()) {
-			player.sendMessage(ChatUtil.errorMessage("Invalid sign type!"));
-			return false;
-		}
-
-		SignTypeDefinition def     = definition.get();
-		SignHandler        handler = def.getHandler();
-
-		if (!handler.canHandle(player, sign)) {
-			player.sendMessage(ChatUtil.errorMessage("You cannot use this sign right now!"));
-			return false;
-		}
-
-		List<AspectResult> results = handler.handle(player, sign);
-
-		boolean overallSuccess = true;
-		for (AspectResult result : results) {
-			if (!result.isSuccess()) {
-				player.sendMessage(ChatUtil.errorMessage(result.getMessage()));
-				overallSuccess = false;
-				break;
-			} else if (result.getMessage() != null && !result.getMessage().isEmpty()) {
-				player.sendMessage(ChatUtil.prefixMessage(result.getMessage()));
-			}
-		}
-
-		return overallSuccess;
-	}
-
 	public String[] formatForDisplay(String[] lines) {
 		if (lines == null || lines.length < 4) {
 			return lines;
@@ -91,12 +67,12 @@ public record SignInteractionService(SignTypeRegistry registry) {
 
 		SignTypeDefinition definition = defOpt.get();
 
-		String[] formatted = new String[4];
-
 		// Format line 0 (sign type)
 		String title     = definition.getDisplayFormat();
 		String generated = definition.getSignType().generated();
 		String type      = title.replace("{type}", generated);
+
+		String[] formatted = new String[4];
 
 		formatted[0] = ChatUtil.color(type);
 

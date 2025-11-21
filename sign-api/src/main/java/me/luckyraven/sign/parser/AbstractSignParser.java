@@ -1,9 +1,8 @@
-package me.luckyraven.bukkit.sign.parser;
+package me.luckyraven.sign.parser;
 
-import me.luckyraven.bukkit.sign.SignType;
-import me.luckyraven.bukkit.sign.validation.SignValidationException;
-import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.sign.SignType;
+import me.luckyraven.sign.validation.SignValidationException;
+import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.ChatColor;
 
 public abstract class AbstractSignParser implements SignParser {
@@ -18,8 +17,8 @@ public abstract class AbstractSignParser implements SignParser {
 		return ChatUtil.replaceColorCodes(ChatColor.stripColor(line), "").trim();
 	}
 
-	protected double parsePrice(String line) throws SignValidationException {
-		String cleaned = cleanLine(line).replace(SettingAddon.getMoneySymbol(), "").replace(",", "");
+	protected double parsePrice(String line, String moneySymbol) throws SignValidationException {
+		String cleaned = cleanLine(line).replace(moneySymbol, "").replace(",", "");
 
 		try {
 			return Double.parseDouble(cleaned);

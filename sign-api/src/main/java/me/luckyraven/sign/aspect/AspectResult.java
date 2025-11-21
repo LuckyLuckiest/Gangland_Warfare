@@ -1,4 +1,4 @@
-package me.luckyraven.bukkit.sign.aspect;
+package me.luckyraven.sign.aspect;
 
 import lombok.Getter;
 

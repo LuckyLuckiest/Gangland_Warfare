@@ -1,6 +1,6 @@
-package me.luckyraven.bukkit.sign.model;
+package me.luckyraven.sign.model;
 
-import me.luckyraven.bukkit.sign.SignType;
+import me.luckyraven.sign.SignType;
 import org.bukkit.Location;
 
 /**

@@ -1,6 +1,6 @@
-package me.luckyraven.bukkit.sign.validation;
+package me.luckyraven.sign.validation;
 
-import me.luckyraven.bukkit.sign.SignType;
+import me.luckyraven.sign.SignType;
 
 /**
  * Validates sign format and content

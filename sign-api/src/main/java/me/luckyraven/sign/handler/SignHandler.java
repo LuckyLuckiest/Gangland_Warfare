@@ -1,7 +1,7 @@
-package me.luckyraven.bukkit.sign.handler;
+package me.luckyraven.sign.handler;
 
-import me.luckyraven.bukkit.sign.aspect.AspectResult;
-import me.luckyraven.bukkit.sign.model.ParsedSign;
+import me.luckyraven.sign.aspect.AspectResult;
+import me.luckyraven.sign.model.ParsedSign;
 import org.bukkit.entity.Player;
 
 import java.util.List;

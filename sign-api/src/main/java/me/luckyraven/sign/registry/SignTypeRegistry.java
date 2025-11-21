@@ -1,6 +1,6 @@
-package me.luckyraven.bukkit.sign.registry;
+package me.luckyraven.sign.registry;
 
-import me.luckyraven.bukkit.sign.SignType;
+import me.luckyraven.sign.SignType;
 import org.bukkit.ChatColor;
 
 import java.util.HashMap;

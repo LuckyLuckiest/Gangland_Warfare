@@ -1,7 +1,7 @@
-package me.luckyraven.bukkit.sign.parser;
+package me.luckyraven.sign.parser;
 
-import me.luckyraven.bukkit.sign.model.ParsedSign;
-import me.luckyraven.bukkit.sign.validation.SignValidationException;
+import me.luckyraven.sign.model.ParsedSign;
+import me.luckyraven.sign.validation.SignValidationException;
 import org.bukkit.Location;
 
 /**
