@@ -110,7 +110,6 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 		}
 
 		String title = placeholder.convert(player, inventoryData.getDisplayName());
-		int    size  = inventoryData.getSize();
 
 		MultiInventory multiInventory;
 
