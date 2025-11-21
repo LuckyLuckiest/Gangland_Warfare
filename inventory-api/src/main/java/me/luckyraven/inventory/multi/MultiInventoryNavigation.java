@@ -7,6 +7,7 @@ import me.luckyraven.inventory.part.ButtonTags;
 import me.luckyraven.util.ItemBuilder;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
@@ -18,20 +19,33 @@ final class MultiInventoryNavigation {
 
 	private MultiInventoryNavigation() { }
 
-	static void addNavigationButtons(InventoryHandler currentInv, InventoryHandler nextInv, String homeTitle,
-									 int displayCurrentPageIndex, int totalPages, ButtonTags buttonTags,
-									 Consumer<Player> onNext, Consumer<Player> onPrev, Consumer<Player> onHome) {
-		// next page -> nextInv
-		addNextPageItem(nextInv, buttonTags.nextPage(), displayCurrentPageIndex, totalPages, onNext);
-		// home page
-		addHomePageItem(currentInv, buttonTags.homePage(), homeTitle, onHome);
-		// prev page -> currentInv (acts on previous page)
-		addPreviousPageItem(currentInv, buttonTags.previousPage(), onPrev);
+	static void addNavigationButtons(JavaPlugin plugin, InventoryHandler currentInv, InventoryHandler nextInv,
+									 String homeTitle, int displayCurrentPageIndex, int totalPages,
+									 ButtonTags buttonTags, Consumer<Player> onNext, Consumer<Player> onPrev,
+									 Consumer<Player> onHome) {
+		String titleWithPages = String.format("%s &8[&b%d&8/&3%d&8]&r", homeTitle, displayCurrentPageIndex + 1,
+											  totalPages);
+
+		currentInv.rename(plugin, titleWithPages);
+
+		// next page -> only show if there is a next page
+		if (nextInv != null && displayCurrentPageIndex < totalPages - 1) {
+			addNextPageItem(currentInv, buttonTags.nextPage(), displayCurrentPageIndex, totalPages, onNext);
+		}
+
+		// show on all pages except the first
+		if (displayCurrentPageIndex > 0) {
+			// home page
+			addHomePageItem(currentInv, buttonTags.homePage(), homeTitle, onHome);
+			// prev page
+			addPreviousPageItem(currentInv, buttonTags.previousPage(), displayCurrentPageIndex, totalPages, onPrev);
+		}
 	}
 
 	private static void addNextPageItem(InventoryHandler linkedInventory, String nextPageTag,
 										int displayCurrentPageIndex, int totalPages, Consumer<Player> onClick) {
-		ItemBuilder item = createItemHead("&a->", String.format("&7(%d/%d)", displayCurrentPageIndex + 1, totalPages));
+		String      page = String.format("&7(%d/%d)", displayCurrentPageIndex + 2, totalPages);
+		ItemBuilder item = createItemHead("&a->", page);
 
 		item.customHead(nextPageTag);
 		linkedInventory.setItem(linkedInventory.getSize() - 1, item.build(), false,
@@ -42,8 +56,9 @@ final class MultiInventoryNavigation {
 	}
 
 	private static void addPreviousPageItem(InventoryHandler linkedInventory, String previousPageTag,
-											Consumer<Player> onClick) {
-		ItemBuilder item = createItemHead("&c<-");
+											int displayCurrentPageIndex, int totalPages, Consumer<Player> onClick) {
+		String      page = String.format("&7(%d/%d)", displayCurrentPageIndex, totalPages);
+		ItemBuilder item = createItemHead("&c<-", page);
 
 		item.customHead(previousPageTag);
 		linkedInventory.setItem(linkedInventory.getSize() - 9, item.build(), false,

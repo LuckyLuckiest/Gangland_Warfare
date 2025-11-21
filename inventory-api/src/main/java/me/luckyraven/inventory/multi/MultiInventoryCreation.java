@@ -41,17 +41,20 @@ public class MultiInventoryCreation {
 		if (staticItemsAllowed) InventoryUtil.verticalLine(multi, fill, 2, true);
 
 		// the other pages
-		for (int i = 1; i < cfg.pages(); i++) {
-			int  size = i == cfg.pages() - 1 ? cfg.finalPage() : cfg.initialPage();
+		int totalPages = cfg.pages();
+
+		for (int page = 1; page < totalPages; page++) {
+			int  size = page == totalPages - 1 ? cfg.finalPage() : cfg.initialPage();
 			long id   = MultiInventory.ID;
 
-			String titleRefactored = titleRefactor(String.format("%s_%d", title, id));
+			String format          = String.format("%s_%d", title, id);
+			String titleRefactored = titleRefactor(format);
 
 			MultiInventory.ID = id + 1;
 
 			InventoryHandler inv = new InventoryHandler(plugin, titleRefactored, size, player);
 
-			int startIndex = i * cfg.perPage();
+			int startIndex = page * cfg.perPage();
 			int endIndex   = Math.min(startIndex + cfg.perPage(), items.size());
 
 			multi.addItems(inv, items, startIndex, endIndex, staticItemsAllowed, fill, staticItems);
@@ -65,13 +68,20 @@ public class MultiInventoryCreation {
 		// add the navigation buttons
 		var linkedInventories = multi.getLinkedInventories();
 
-		int size = linkedInventories.getSize();
+		int size      = linkedInventories.getSize();
+		int pageIndex = 0;
+
+		String originalTitle = multi.getDisplayTitle();
+
 		for (LinkedList.Node<InventoryHandler> node : linkedInventories) {
-			if (node.getNext() != null) {
-				addNavigationButtons(node.getData(), node.getNext().getData(), multi.getDisplayTitle(),
-									 multi.getCurrentPage(), size, buttonTags, p -> multi.nextPage().open(p),
-									 p -> multi.previousPage().open(p), p -> multi.homePage().open(p));
-			}
+			InventoryHandler currentInv = node.getData();
+			InventoryHandler nextInv    = node.getNext() == null ? null : node.getNext().getData();
+
+			addNavigationButtons(plugin, currentInv, nextInv, originalTitle, pageIndex, size, buttonTags,
+								 p -> multi.nextPage().open(p), p -> multi.previousPage().open(p),
+								 p -> multi.homePage().open(p));
+
+			pageIndex++;
 		}
 
 		return multi;
@@ -85,6 +95,7 @@ public class MultiInventoryCreation {
 		int remainingAmount = itemsCount % perPage;
 		int finalPage       = remainingAmount + 9 * 2 + (int) Math.ceil((double) remainingAmount / 9);
 		int initialPage     = pages == 1 ? finalPage : InventoryHandler.MAX_SLOTS;
+
 		if (fixedSize) {
 			finalPage   = InventoryHandler.MAX_SLOTS;
 			initialPage = InventoryHandler.MAX_SLOTS;
