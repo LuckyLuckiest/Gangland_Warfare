@@ -5,10 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import me.luckyraven.inventory.part.Slot;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Getter
@@ -23,6 +20,13 @@ public class InventoryData {
 	private OpenInventory openInventory;
 	private boolean       fill, border;
 	private List<Integer> verticalLine, horizontalLine;
+
+	// multi inventory
+	private boolean isMultiInventory;
+	private String  itemSource;
+	private int     perPage;
+
+	private Map<Integer, Slot> staticItems;
 
 	public void addAllSlots(Collection<Slot> slots) {
 		this.slots.addAll(slots);

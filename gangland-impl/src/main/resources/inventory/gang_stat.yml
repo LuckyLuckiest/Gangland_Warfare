@@ -1,0 +1,8 @@
+Information:
+   Display_Name: "&6&lGang Statistics"
+   Size: 54
+   Type: inventory
+   Configuration:
+      Fill: true
+      Border: false
+   Permission: "gangland.inventory.gang_stat"

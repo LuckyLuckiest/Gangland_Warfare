@@ -199,7 +199,6 @@ public class MultiInventory extends InventoryHandler {
 
 				inventoryHandler.getInventory().setItem(slot, item.build());
 			}
-
 		}
 	}
 

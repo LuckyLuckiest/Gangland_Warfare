@@ -1,0 +1,25 @@
+Information:
+   Display_Name: "&6&lGang Allies"
+   Size: 54
+   Type: multi-inventory
+   Configuration:
+      Fill: true
+      Border: true
+      Static_Items: false
+   Permission: "gangland.inventory.alliance_stat"
+   Multi:
+      Item_Source: "gang_allies"
+      Per_Page: 28
+
+Static_Items:
+   0:
+      Item: REDSTONE
+      Name: "&b%ally_name%"
+      Lore:
+         - "&7ID:&e %ally_id%"
+         - "&7Members:&a %ally_online%&7/&e%ally_total%"
+         - "&7Created:&e %ally_created%"
+         - ""
+         - "&eClick to view details"
+      OnClick:
+         Command: "/glw gang ally info %ally_id%"
