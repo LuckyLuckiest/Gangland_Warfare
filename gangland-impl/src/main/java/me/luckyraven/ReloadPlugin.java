@@ -1,6 +1,5 @@
 package me.luckyraven;
 
-import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
@@ -17,6 +16,7 @@ import me.luckyraven.feature.scoreboard.ScoreboardManager;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
 import me.luckyraven.scoreboard.Scoreboard;

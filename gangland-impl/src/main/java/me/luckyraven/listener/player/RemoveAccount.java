@@ -14,6 +14,7 @@ import me.luckyraven.util.listener.ListenerPriority;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponManager;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -36,6 +37,18 @@ public final class RemoveAccount implements Listener {
 		this.initializer   = gangland.getInitializer();
 		this.userManager   = initializer.getUserManager();
 		this.weaponManager = initializer.getWeaponManager();
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST)
+	public synchronized void onPlayerQuit(PlayerQuitEvent event) {
+		Player       player = event.getPlayer();
+		User<Player> user   = gangland.getInitializer().getUserManager().getUser(player);
+
+		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
+			// remove all the inventories of that player only
+			user.clearInventories();
+			user.clearSpecialInventories();
+		});
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)

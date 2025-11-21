@@ -2,9 +2,6 @@ package me.luckyraven;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import me.luckyraven.bukkit.inventory.InventoryHandler;
-import me.luckyraven.bukkit.sign.SignManager;
-import me.luckyraven.bukkit.sign.service.SignInteractionService;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.CommandTabCompleter;
 import me.luckyraven.command.data.InformationManager;
@@ -50,9 +47,15 @@ import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
+import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
+import me.luckyraven.sign.SignManager;
+import me.luckyraven.sign.registry.SignTypeRegistry;
+import me.luckyraven.sign.service.SignInteraction;
+import me.luckyraven.sign.service.SignInteractionService;
 import me.luckyraven.util.autowire.DependencyContainer;
 import me.luckyraven.util.listener.ListenerPriority;
 import me.luckyraven.weapon.WeaponManager;
@@ -222,7 +225,10 @@ public final class Initializer {
 		weaponManager.initialize(weaponTable);
 
 		// sign manager
-		signManager = new SignManager(gangland);
+		SignTypeRegistry registry        = new SignTypeRegistry();
+		SignInteraction  signInteraction = new SignInteraction(registry);
+
+		signManager = new SignManager(gangland, registry, signInteraction);
 
 		signManager.initialize();
 
@@ -289,6 +295,8 @@ public final class Initializer {
 	 * Loads the inventory handler.
 	 */
 	public void inventoryLoader() {
+		InventoryAddon.setItemSourceProvider(gangland);
+
 		inventoryLoader = new InventoryLoader(gangland);
 
 		inventoryLoader.addExpectedFile(new FileHandler(gangland, "gang_info", "inventory", ".yml"));
@@ -353,8 +361,7 @@ public final class Initializer {
 		// waypoint
 		listenerManager.addEvent(new WaypointTeleport(new Waypoint("dummy")), ListenerPriority.NORMAL);
 		// inventory
-		listenerManager.addEvent(new InventoryHandler(gangland, "dummy", 9, "dummy_inventory", false),
-								 ListenerPriority.NORMAL);
+		new InventoryHandler(gangland, "dummy", 9, "dummy_inventory", false);
 	}
 
 	private void commands(Gangland gangland) {

@@ -3,15 +3,18 @@ package me.luckyraven.feature.phone;
 import com.cryptomorin.xseries.XMaterial;
 import lombok.Getter;
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.inventory.InventoryHandler;
-import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.user.User;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.util.InventoryUtil;
+import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.multi.MultiInventory;
+import me.luckyraven.inventory.multi.MultiInventoryCreation;
+import me.luckyraven.inventory.part.ButtonTags;
+import me.luckyraven.inventory.part.Fill;
+import me.luckyraven.inventory.util.InventoryUtil;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.color.ColorUtil;
@@ -25,22 +28,25 @@ import java.util.*;
 
 public class Phone {
 
-	private final @Getter String           name;
-	private final         InventoryHandler inventoryHandler;
-	private final         ItemBuilder      item;
-	private final         Gangland         gangland;
-	private final         User<Player>     user;
+	@Getter
+	private final String           name;
+	private final InventoryHandler inventoryHandler;
+	private final ItemBuilder      item;
+	private final Gangland         gangland;
+	private final User<Player>     user;
 
 	private @Getter String displayName;
 
 	public Phone(Gangland gangland, User<Player> user, String name) {
-		this.name             = name;
-		this.displayName      = name;
-		this.gangland         = gangland;
-		this.user             = user;
-		this.inventoryHandler = new InventoryHandler(gangland, displayName, InventoryHandler.MAX_SLOTS, user, true);
-		this.item             = new ItemBuilder(getPhoneMaterial()).setDisplayName(displayName)
-																   .addTag("uniqueItem", "phone");
+		this.name        = name;
+		this.displayName = name;
+		this.gangland    = gangland;
+		this.user        = user;
+
+		int size = InventoryHandler.MAX_SLOTS;
+		this.inventoryHandler = new InventoryHandler(gangland, displayName, size, user.getUser());
+
+		this.item = new ItemBuilder(getPhoneMaterial()).setDisplayName(displayName).addTag("uniqueItem", "phone");
 	}
 
 	public static Material getPhoneMaterial() {
@@ -66,7 +72,7 @@ public class Phone {
 	}
 
 	public void setDisplayName(String displayName) {
-		InventoryHandler.rename(user, gangland, inventoryHandler, displayName);
+		inventoryHandler.rename(gangland, displayName);
 		this.displayName = displayName;
 		this.item.setDisplayName(displayName);
 	}
@@ -75,7 +81,7 @@ public class Phone {
 		PhoneInventoryEvent event = new PhoneInventoryEvent(user);
 		gangland.getServer().getPluginManager().callEvent(event);
 
-		populateInventory(user, (pl, inventory, item) -> inventory.open(pl));
+		populateInventory(user.getUser(), (pl, inventory, item) -> inventory.open(pl));
 		inventoryHandler.open(user.getUser());
 	}
 
@@ -101,14 +107,15 @@ public class Phone {
 	}
 
 	// TODO use the inventory system to avoid hardcoded inventories
-	private void populateInventory(User<Player> user, TriConsumer<Player, InventoryHandler, ItemBuilder> callback) {
+	private void populateInventory(Player player, TriConsumer<Player, InventoryHandler, ItemBuilder> callback) {
 		// missions
 		inventoryHandler.setItem(11, XMaterial.DIAMOND.get(), "&eMissions", null, false, false);
 
 		// gang
 		GangManager gangManager = gangland.getInitializer().getGangManager();
-		inventoryHandler.setItem(13, XMaterial.CAULDRON.get(), "&eGang", null, false, false,
-								 (player, inventory, item) -> gangInventory(user, gangManager, callback));
+		inventoryHandler.setItem(13, XMaterial.CAULDRON.get(), "&eGang", null, false, false, (p, inventory, item) -> {
+			gangInventory(user, gangManager, callback);
+		});
 
 		// property
 		inventoryHandler.setItem(15, XMaterial.FURNACE_MINECART.get(), "&eProperty", null, false, false);
@@ -117,32 +124,38 @@ public class Phone {
 		ItemBuilder itemBuilder = new ItemBuilder(XMaterial.PLAYER_HEAD.get());
 		itemBuilder.setDisplayName("&eAccount").modifyNBT(nbt -> nbt.setString("SkullOwner", user.getUser().getName()));
 
-		inventoryHandler.setItem(38, itemBuilder.build(), false, (player, inventory, item) -> {
+		inventoryHandler.setItem(38, itemBuilder.build(), false, (p, inventory, item) -> {
 			// show player data
 		});
 
 		// bounties
 		inventoryHandler.setItem(40, XMaterial.NETHER_STAR.get(), "&eBounties", null, false, false,
-								 (player, inventory, item) -> {
+								 (p, inventory, item) -> {
 									 // show current bounties and leaderboard
 								 });
 
 		// contacts
-		inventoryHandler.setItem(42, XMaterial.BOOK.get(), "&eContacts", null, false, false,
-								 (player, inventory, item) -> {
-									 // show taxi services
-								 });
+		inventoryHandler.setItem(42, XMaterial.BOOK.get(), "&eContacts", null, false, false, (p, inventory, item) -> {
+			// show taxi services
+		});
 
-		InventoryUtil.verticalLine(inventoryHandler, 2);
-		InventoryUtil.verticalLine(inventoryHandler, 8);
+		Fill line = new Fill(SettingAddon.getInventoryLineName(), SettingAddon.getInventoryLineItem());
 
-		InventoryUtil.fillInventory(inventoryHandler);
+		InventoryUtil.verticalLine(inventoryHandler, line, 2);
+		InventoryUtil.verticalLine(inventoryHandler, line, 8);
+
+		Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+
+		InventoryUtil.fillInventory(inventoryHandler, fill);
 	}
 
 	private void gangInventory(User<Player> user, GangManager gangManager,
 							   TriConsumer<Player, InventoryHandler, ItemBuilder> callback) {
 		// show create gang and search for gang
-		InventoryHandler newGang = new InventoryHandler(gangland, "&6&lGang", 5 * 9, user, false);
+		String title = "&6&lGang";
+		int    size  = 5 * 9;
+
+		InventoryHandler newGang = new InventoryHandler(gangland, title, size, user.getUser());
 
 		if (user.hasGang()) {
 			Gang gang = gangManager.getGang(user.getGangId());
@@ -178,106 +191,103 @@ public class Phone {
 							});
 		}
 
+		Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+
 		// search gang
-		newGang.setItem(23, XMaterial.BOOKSHELF.get(), "&b&lSearch Gang", null, true, false,
-						(player1, inv, it) -> {
-							// open a multi inventory that displays all the gangs
-							User<Player> user1 = gangland.getInitializer().getUserManager().getUser(player1);
-							List<Gang> gangs = gangManager.getGangs().values()
-									.stream().toList();
-							List<ItemStack> gangsItems = new ArrayList<>();
+		newGang.setItem(23, XMaterial.BOOKSHELF.get(), "&b&lSearch Gang", null, true, false, (player1, inv, it) -> {
+			// open a multi inventory that displays all the gangs
+			List<Gang> gangs = gangManager.getGangs().values()
+					.stream().toList();
+			List<ItemStack> gangsItems = new ArrayList<>();
 
-							for (Gang gang : gangs) {
-								ItemBuilder itemBuilder = new ItemBuilder(
-										XMaterial.PLAYER_HEAD.get()).setDisplayName(
-																			String.format("&r%s%s&7 Gang", ColorUtil.getColorCode(gang.getColor()),
-																						  gang.getDisplayNameString()))
-																	.setLore("&e" + gang.getDescription());
+			for (Gang gang : gangs) {
+				ItemBuilder itemBuilder = new ItemBuilder(XMaterial.PLAYER_HEAD.get()).setDisplayName(
+						String.format("&r%s%s&7 Gang", ColorUtil.getColorCode(gang.getColor()),
+									  gang.getDisplayNameString())).setLore("&e" + gang.getDescription());
 
-								UUID uuid = gang.getGroup()
-										.stream()
-										.filter(member -> Objects.requireNonNull(member.getRank())
-																 .getName()
-																 .equalsIgnoreCase(
-																		 SettingAddon.getGangRankTail()))
-										.findFirst()
-										.map(Member::getUuid)
-										.orElse(null);
+				UUID uuid = gang.getGroup()
+						.stream()
+						.filter(member -> Objects.requireNonNull(member.getRank())
+												 .getName()
+												 .equalsIgnoreCase(SettingAddon.getGangRankTail()))
+						.findFirst()
+						.map(Member::getUuid)
+						.orElse(null);
 
-								String name = "";
-								if (uuid != null) {
-									name = Bukkit.getOfflinePlayer(uuid).getName();
-									if (name == null) name = "";
-								}
+				String name = "";
+				if (uuid != null) {
+					name = Bukkit.getOfflinePlayer(uuid).getName();
+					if (name == null) name = "";
+				}
 
-								String finalName = name;
-								itemBuilder.modifyNBT(nbt -> nbt.setString("SkullOwner", finalName));
+				String finalName = name;
+				itemBuilder.modifyNBT(nbt -> nbt.setString("SkullOwner", finalName));
 
-								gangsItems.add(itemBuilder.build());
-							}
+				gangsItems.add(itemBuilder.build());
+			}
 
-							// need to use a list to save the location
-							Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems
-									= new LinkedHashMap<>();
-							MultiInventory multiInventory = MultiInventory.dynamicMultiInventory(gangland, user1,
-																								 gangsItems,
-																								 "&6&lGangs View", true,
-																								 true, staticItems);
+			// need to use a list to save the location
+			Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems = new LinkedHashMap<>();
 
-							if (multiInventory == null) return;
+			String title1 = "&6&lGangs View";
 
-							// search
-							ItemBuilder searchItem = new ItemBuilder(
-									XMaterial.WRITABLE_BOOK.get()).setDisplayName("&eSearch");
-							staticItems.put(searchItem.build(), (player2, currInv, itemBuilder) -> {
-								// opens an anvil and enters the query
-								new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
-									User<Player> user2 = gangland.getInitializer()
-																 .getUserManager()
-																 .getUser(stateSnapshot.getPlayer());
-									String output = stateSnapshot.getText();
+			ButtonTags buttonTags = new ButtonTags(SettingAddon.getPreviousPage(), SettingAddon.getHomePage(),
+												   SettingAddon.getNextPage());
 
-									if (output == null || output.isEmpty()) {
-										return Collections.emptyList();
-									}
+			MultiInventory multiInventory = MultiInventoryCreation.dynamicMultiInventory(gangland, player1, gangsItems,
+																						 title1, true, true, fill,
+																						 buttonTags, staticItems);
 
-									List<ItemStack> items = gangsItems.stream()
-											.filter(itemStack -> Objects.requireNonNull(
-																				itemStack.getItemMeta())
-																		.getDisplayName()
-																		.toLowerCase()
-																		.contains(
-																				output.toLowerCase()))
-											.toList();
+			if (multiInventory == null) return;
 
-									multiInventory.updateItems(items, user2, true, staticItems);
-									callback.accept(stateSnapshot.getPlayer(), currInv, itemBuilder);
+			// search
+			ItemBuilder searchItem = new ItemBuilder(XMaterial.WRITABLE_BOOK.get()).setDisplayName("&eSearch");
+			staticItems.put(searchItem.build(), (player2, currInv, itemBuilder) -> {
+				// opens an anvil and enters the query
+				new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
+					String output = stateSnapshot.getText();
 
-									return List.of(AnvilGUI.ResponseAction.close());
-								}).text("").title("Enter the query").plugin(gangland).open(player2);
+					if (output == null || output.isEmpty()) {
+						return Collections.emptyList();
+					}
 
-								// when done, close the anvil and change the items according to the query
-							});
-							// sort
-							ItemBuilder sortItem = new ItemBuilder(XMaterial.GLOW_ITEM_FRAME.get());
-							staticItems.put(sortItem.build(), (player2, currInv, itemBuilder) -> {
-								// sorts the items according to the name
-							});
+					List<ItemStack> items = gangsItems.stream()
+							.filter(itemStack -> Objects.requireNonNull(itemStack.getItemMeta())
+														.getDisplayName()
+														.toLowerCase()
+														.contains(output.toLowerCase()))
+							.toList();
 
-							// need to update because when initialized the process was not done accordingly,
-							// this way should be changed since you update the items after initialization
-							multiInventory.updateItems(gangsItems, user1, true, staticItems);
+					multiInventory.updateItems(gangland, items, stateSnapshot.getPlayer(), true, fill, staticItems);
+					callback.accept(stateSnapshot.getPlayer(), currInv, itemBuilder);
 
-							multiInventory.open(player1);
-						});
+					return List.of(AnvilGUI.ResponseAction.close());
+				}).text("").title("Enter the query").plugin(gangland).open(player2);
 
-		InventoryUtil.verticalLine(newGang, 2);
-		InventoryUtil.verticalLine(newGang, 8);
+				// when done, close the anvil and change the items according to the query
+			});
+			// sort
+			ItemBuilder sortItem = new ItemBuilder(XMaterial.GLOW_ITEM_FRAME.get());
+			staticItems.put(sortItem.build(), (player2, currInv, itemBuilder) -> {
+				// sorts the items according to the name
+			});
 
-		InventoryUtil.horizontalLine(newGang, 1);
-		InventoryUtil.horizontalLine(newGang, newGang.getSize() / 9);
+			// need to update because when initialized the process was not done accordingly,
+			// this way should be changed since you update the items after initialization
+			multiInventory.updateItems(gangland, gangsItems, player1, true, fill, staticItems);
 
-		InventoryUtil.fillInventory(newGang);
+			multiInventory.open(player1);
+		});
+
+		Fill line = new Fill(SettingAddon.getInventoryLineName(), SettingAddon.getInventoryLineItem());
+
+		InventoryUtil.verticalLine(newGang, line, 2);
+		InventoryUtil.verticalLine(newGang, line, 8);
+
+		InventoryUtil.horizontalLine(newGang, line, 1);
+		InventoryUtil.horizontalLine(newGang, line, newGang.getSize() / 9);
+
+		InventoryUtil.fillInventory(newGang, fill);
 
 		newGang.open(user.getUser());
 	}
