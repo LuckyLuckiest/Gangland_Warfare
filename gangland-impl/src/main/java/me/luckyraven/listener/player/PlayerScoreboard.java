@@ -7,11 +7,12 @@ import me.luckyraven.scoreboard.Scoreboard;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.driver.DriverHandler;
 import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.util.listener.ListenerPriority;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
-@ListenerHandler(condition = "isScoreboardEnabled")
+@ListenerHandler(condition = "isScoreboardEnabled", priority = ListenerPriority.LOW)
 public class PlayerScoreboard implements Listener {
 
 	private final Gangland gangland;
