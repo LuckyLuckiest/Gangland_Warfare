@@ -1,4 +1,4 @@
-package me.luckyraven.data.inventory;
+package me.luckyraven.inventory;
 
 public enum State {
 	COMMAND,

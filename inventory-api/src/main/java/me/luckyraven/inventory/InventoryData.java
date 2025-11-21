@@ -1,9 +1,9 @@
-package me.luckyraven.data.inventory;
+package me.luckyraven.inventory;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import me.luckyraven.data.inventory.part.Slot;
+import me.luckyraven.inventory.part.Slot;
 
 import java.util.ArrayList;
 import java.util.Collection;

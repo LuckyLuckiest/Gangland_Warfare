@@ -1,57 +1,56 @@
-package me.luckyraven.bukkit.inventory;
+package me.luckyraven.inventory;
 
 import com.cryptomorin.xseries.XEnchantment;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
-import me.luckyraven.Gangland;
-import me.luckyraven.data.user.User;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.inventory.service.InventoryRegistry;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.Placeholder;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
+import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+import static me.luckyraven.inventory.util.InventoryUtil.titleRefactor;
+
 public class InventoryHandler implements Listener, Comparable<InventoryHandler> {
 
 	// region Constants and Static State
 
-	public static final  int                                  MAX_SLOTS           = 54;
+	public static final int MAX_SLOTS = 54;
+
 	private static final Map<NamespacedKey, InventoryHandler> SPECIAL_INVENTORIES = new HashMap<>();
 
-	private final @Getter int size;
+	private final @Getter int  size;
+	private final @Getter UUID owner;
 
 	private final Map<Integer, TriConsumer<Player, InventoryHandler, ItemBuilder>> clickableSlots;
 
 	private final List<Integer>             draggableSlots;
 	private final Map<Integer, ItemBuilder> clickableItems;
-	private final Gangland                  gangland;
 
 	private @Getter Inventory     inventory;
 	private @Getter NamespacedKey title;
 	private @Getter String        displayTitle;
 
-	public InventoryHandler(Gangland gangland, String title, int size, NamespacedKey namespacedKey) {
-		this.gangland     = gangland;
+	public InventoryHandler(String title, int size, NamespacedKey namespacedKey, @Nullable UUID owner) {
 		this.displayTitle = title;
-
-		this.title = namespacedKey;
+		this.owner        = owner;
+		this.title        = namespacedKey;
 
 		int realSize = factorOfNine(size);
 		this.size = Math.min(realSize, MAX_SLOTS);
@@ -62,37 +61,28 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 		this.clickableItems = new HashMap<>();
 	}
 
-	public InventoryHandler(Gangland gangland, String title, int size, String special, boolean add) {
-		this(gangland, title, size, new NamespacedKey(gangland, titleRefactor(special)));
+	public InventoryHandler(JavaPlugin plugin, String title, int size, String special, boolean add) {
+		this(title, size, new NamespacedKey(plugin, titleRefactor(special)), null);
 
-		if (add) SPECIAL_INVENTORIES.put(this.title, this);
-	}
-
-	public InventoryHandler(Gangland gangland, String title, int size, User<Player> user, NamespacedKey namespacedKey,
-							boolean special) {
-		this(gangland, title, size, namespacedKey);
-
-		if (special) {
-			user.addSpecialInventory(this);
-			return;
+		if (add) {
+			SPECIAL_INVENTORIES.put(this.title, this);
 		}
-
-		user.addInventory(this);
 	}
 
-	public InventoryHandler(Gangland gangland, String title, int size, User<Player> user, boolean special) {
-		this(gangland, title, size, user, new NamespacedKey(gangland, titleRefactor(title)), special);
+	public InventoryHandler(String title, int size, Player player, NamespacedKey namespacedKey) {
+		this(title, size, namespacedKey, player != null ? player.getUniqueId() : null);
+
+		if (player != null) {
+			InventoryRegistry.getInstance().registerInventory(player.getUniqueId(), this);
+		}
 	}
 
-	public InventoryHandler(Gangland gangland, String title, int size) {
-		this(gangland, title, size, title, true);
+	public InventoryHandler(JavaPlugin plugin, String title, int size, Player player) {
+		this(title, size, player, new NamespacedKey(plugin, titleRefactor(title)));
 	}
 
-	public static String titleRefactor(@NotNull String title) {
-		Preconditions.checkNotNull(title, "Title can't be null");
-
-		String pattern = "[^a-z0-9/._-]";
-		return ChatUtil.replaceColorCodes(title, "").replaceAll(" ", "_").toLowerCase().replaceAll(pattern, "");
+	public InventoryHandler(JavaPlugin plugin, String title, int size) {
+		this(plugin, title, size, title, true);
 	}
 
 	public static Map<NamespacedKey, InventoryHandler> getSpecialInventories() {
@@ -103,31 +93,41 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 		SPECIAL_INVENTORIES.clear();
 	}
 
-	public static void rename(User<Player> user, Gangland gangland, InventoryHandler inventoryHandler, String name) {
-		Inventory   inventory = inventoryHandler.inventory;
-		ItemStack[] contents  = inventory.getContents();
-
-		inventory = Bukkit.createInventory(null, inventoryHandler.size, ChatUtil.color(name));
-		inventory.setContents(contents);
-
-		user.removeInventory(inventoryHandler);
-
-		inventoryHandler.displayTitle = name;
-		inventoryHandler.title        = new NamespacedKey(gangland, titleRefactor(name));
-	}
-
 	public static int factorOfNine(int value) {
 		return (int) Math.ceil((double) value / 9) * 9;
 	}
 
-	public void copyContent(InventoryHandler inventoryHandler, Player player) {
+	public void rename(JavaPlugin plugin, String name) {
+		ItemStack[] contents = inventory.getContents();
+
+		UUID ownerUUID = owner;
+
+		unregister();
+
+		inventory = Bukkit.createInventory(null, size, ChatUtil.color(name));
+		inventory.setContents(contents);
+		displayTitle = name;
+		title        = new NamespacedKey(plugin, titleRefactor(name));
+
+		if (ownerUUID != null) {
+			InventoryRegistry.getInstance().registerInventory(ownerUUID, this);
+		}
+	}
+
+	public void unregister() {
+		if (owner != null) {
+			InventoryRegistry.getInstance().unregisterInventory(owner, this);
+		}
+	}
+
+	public void copyContent(Placeholder placeholder, InventoryHandler inventoryHandler, Player player) {
 		Preconditions.checkArgument(inventoryHandler.getSize() == size, "Inventory sizes not equal.");
 
 		for (int i = 0; i < size; i++) {
 			ItemStack item = inventoryHandler.getInventory().getItem(i);
 			if (item == null) continue;
 
-			Material resolvedType = resolveMaterialWithColor(player, item);
+			Material resolvedType = resolveMaterialWithColor(placeholder, player, item);
 			ItemMeta meta         = item.getItemMeta();
 
 			String       displayName = null;
@@ -135,9 +135,11 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 			boolean      enchanted   = false;
 
 			if (meta != null) {
-				displayName = applyPlaceholders(meta.getDisplayName(), player);
+				displayName = applyPlaceholders(placeholder, meta.getDisplayName(), player);
 				lore        = meta.getLore();
-				if (lore != null) lore = lore.stream().map(line -> applyPlaceholders(line, player)).toList();
+				if (lore != null) lore = lore.stream()
+						.map(line -> applyPlaceholders(placeholder, line, player))
+						.toList();
 				enchanted = meta.hasEnchants();
 			}
 
@@ -207,55 +209,16 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 		player.closeInventory();
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST)
-	public void onInventoryClick(InventoryClickEvent event) {
-		var clickedInventory = event.getClickedInventory();
-		var player           = (Player) event.getWhoClicked();
-		var user             = gangland.getInitializer().getUserManager().getUser(player);
-		var topInventory     = event.getView().getTopInventory();
-
-		List<InventoryHandler> allInventories = new ArrayList<>();
-
-		allInventories.addAll(user.getInventories());
-		allInventories.addAll(user.getSpecialInventories());
-
-		InventoryHandler inv = allInventories.stream()
-				.filter(inventory -> topInventory.equals(inventory.getInventory()))
-				.findFirst()
-				.orElse(null);
-
-		int rawSlot = event.getRawSlot();
-
-		// Execute clickable action if defined for clicks in the custom inventory
-		boolean checkInventoryStatus = inv != null && clickedInventory != null &&
-									   clickedInventory.equals(inv.getInventory());
-
-		if (checkInventoryStatus) {
-			var slots = inv.clickableSlots.getOrDefault(rawSlot, (pl, i, item) -> { });
-
-			slots.accept(player, inv, inv.clickableItems.getOrDefault(rawSlot, null));
-		}
-
-		// Cancel all clicks to prevent item movement
-		// Only allow if it's a click in the custom inventory AND the slot is draggable
-		if (checkInventoryStatus) {
-			event.setCancelled(!inv.draggableSlots.contains(rawSlot));
-		} else {
-			// Always cancel clicks in the player's own inventory when viewing custom inventory
-			event.setCancelled(true);
-		}
+	public Map<Integer, TriConsumer<Player, InventoryHandler, ItemBuilder>> getClickableSlots() {
+		return new HashMap<>(clickableSlots);
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST)
-	public synchronized void onPlayerQuit(PlayerQuitEvent event) {
-		Player       player = event.getPlayer();
-		User<Player> user   = gangland.getInitializer().getUserManager().getUser(player);
+	public List<Integer> getDraggableSlots() {
+		return new ArrayList<>(draggableSlots);
+	}
 
-		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
-			// remove all the inventories of that player only
-			user.clearInventories();
-			user.clearSpecialInventories();
-		});
+	public Map<Integer, ItemBuilder> getClickableItems() {
+		return new HashMap<>(clickableItems);
 	}
 
 	@Override
@@ -264,17 +227,17 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 		return this.title.toString().compareTo(handler.title.toString());
 	}
 
-	private String applyPlaceholders(@Nullable String text, Player player) {
+	private String applyPlaceholders(Placeholder placeholder, @Nullable String text, Player player) {
 		if (text == null) return null;
-		return gangland.convert(player, text);
+		return placeholder.convert(player, text);
 	}
 
-	private Material resolveMaterialWithColor(Player player, ItemStack item) {
+	private Material resolveMaterialWithColor(Placeholder placeholder, Player player, ItemStack item) {
 		Material    type        = item.getType();
 		ItemBuilder itemBuilder = new ItemBuilder(item);
 		String      dataTag     = "color";
 		if (itemBuilder.hasNBTTag(dataTag)) {
-			String       value    = gangland.convert(player, itemBuilder.getStringTagData(dataTag));
+			String       value    = placeholder.convert(player, itemBuilder.getStringTagData(dataTag));
 			MaterialType material = MaterialType.WOOL;
 			for (MaterialType materialType : MaterialType.values()) {
 				if (type.name().contains(materialType.name())) {

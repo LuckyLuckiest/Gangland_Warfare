@@ -1,11 +1,14 @@
-package me.luckyraven.util;
+package me.luckyraven.inventory.util;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.google.common.base.Preconditions;
-import me.luckyraven.bukkit.inventory.InventoryHandler;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.part.Fill;
+import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -13,6 +16,13 @@ import java.util.Optional;
 public final class InventoryUtil {
 
 	private InventoryUtil() { }
+
+	public static String titleRefactor(@NotNull String title) {
+		Preconditions.checkNotNull(title, "Title can't be null");
+
+		String pattern = "[^a-z0-9/._-]";
+		return ChatUtil.replaceColorCodes(title, "").replaceAll(" ", "_").toLowerCase().replaceAll(pattern, "");
+	}
 
 	public static void aroundSlot(InventoryHandler inventoryHandler, int slot, Material material) {
 		ItemBuilder itemBuilder = new ItemBuilder(material);
@@ -33,10 +43,10 @@ public final class InventoryUtil {
 				} catch (ArrayIndexOutOfBoundsException ignored) { }
 	}
 
-	public static void fillInventory(InventoryHandler inventoryHandler) {
-		ItemBuilder itemBuilder = new ItemBuilder(getFillItem());
+	public static void fillInventory(InventoryHandler inventoryHandler, Fill fill) {
+		ItemBuilder itemBuilder = new ItemBuilder(getFillItem(fill.material()));
 
-		ItemStack item = itemBuilder.setDisplayName(SettingAddon.getInventoryFillName()).build();
+		ItemStack item = itemBuilder.setDisplayName(fill.name()).build();
 
 		for (int i = 0; i < inventoryHandler.getSize(); i++) {
 			if (inventoryHandler.getInventory().getItem(i) != null) continue;
@@ -45,7 +55,7 @@ public final class InventoryUtil {
 		}
 	}
 
-	public static void horizontalLine(InventoryHandler inventoryHandler, int row, ItemStack... items) {
+	public static void horizontalLine(InventoryHandler inventoryHandler, Fill line, int row, ItemStack... items) {
 		int rows = inventoryHandler.getSize() / 9;
 		Preconditions.checkArgument(row > 0 && row < rows + 1,
 									String.format("Rows need to be between 1 and %d inclusive", rows));
@@ -56,20 +66,22 @@ public final class InventoryUtil {
 
 			if (inventoryHandler.getInventory().getItem(slot + i) != null) continue;
 
-			if (i < items.length) inventoryHandler.getInventory().setItem(slot + i, items[i]);
-			else inventoryHandler.getInventory()
-								 .setItem(slot + i, new ItemBuilder(getLineItem()).setDisplayName(
-										 SettingAddon.getInventoryLineName()).build());
+			if (i < items.length) {
+				inventoryHandler.getInventory().setItem(slot + i, items[i]);
+			} else {
+				ItemBuilder itemBuilder = new ItemBuilder(getLineItem(line.material())).setDisplayName(line.name());
+				inventoryHandler.getInventory().setItem(slot + i, itemBuilder.build());
+			}
 		}
 	}
 
-	public static void horizontalLine(InventoryHandler inventoryHandler, int row, Material material, String name,
+	public static void horizontalLine(InventoryHandler inventoryHandler, Fill line, int row, Material material,
 									  boolean all) {
 		int rows = inventoryHandler.getSize() / 9;
 		Preconditions.checkArgument(row > 0 && row < rows + 1,
 									String.format("Rows need to be between 1 and %d inclusive", rows));
 		ItemBuilder itemBuilder = new ItemBuilder(material);
-		ItemStack   item        = itemBuilder.setDisplayName(name).build();
+		ItemStack   item        = itemBuilder.setDisplayName(line.name()).build();
 
 		ItemStack[] items = {item};
 		if (all) {
@@ -78,14 +90,14 @@ public final class InventoryUtil {
 			Arrays.fill(items, item);
 		}
 
-		horizontalLine(inventoryHandler, row, items);
+		horizontalLine(inventoryHandler, line, row, items);
 	}
 
-	public static void horizontalLine(InventoryHandler inventoryHandler, int row) {
-		horizontalLine(inventoryHandler, row, getLineItem(), SettingAddon.getInventoryLineName(), true);
+	public static void horizontalLine(InventoryHandler inventoryHandler, Fill line, int row) {
+		horizontalLine(inventoryHandler, line, row, getLineItem(line.material()), true);
 	}
 
-	public static void verticalLine(InventoryHandler inventoryHandler, int column, ItemStack... items) {
+	public static void verticalLine(InventoryHandler inventoryHandler, Fill line, int column, ItemStack... items) {
 		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
 
 		// from 1-6
@@ -96,18 +108,18 @@ public final class InventoryUtil {
 			if (inventoryHandler.getInventory().getItem(slot) != null) continue;
 
 			if (i < items.length) inventoryHandler.getInventory().setItem(slot, items[i]);
-			else inventoryHandler.getInventory()
-								 .setItem(slot, new ItemBuilder(getLineItem()).setDisplayName(
-										 SettingAddon.getInventoryLineName()).build());
+			else {
+				ItemBuilder itemBuilder = new ItemBuilder(getLineItem(line.material())).setDisplayName(line.name());
+				inventoryHandler.getInventory().setItem(slot, itemBuilder.build());
+			}
 		}
 	}
 
-	public static void verticalLine(InventoryHandler inventoryHandler, int column, Material material, String name,
-									boolean all) {
+	public static void verticalLine(InventoryHandler inventoryHandler, Fill line, int column, boolean all) {
 		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
 
-		ItemBuilder itemBuilder = new ItemBuilder(material);
-		ItemStack   item        = itemBuilder.setDisplayName(name).build();
+		ItemBuilder itemBuilder = new ItemBuilder(getLineItem(line.material()));
+		ItemStack   item        = itemBuilder.setDisplayName(line.name()).build();
 
 		ItemStack[] items = {item};
 		if (all) {
@@ -116,17 +128,17 @@ public final class InventoryUtil {
 			Arrays.fill(items, item);
 		}
 
-		verticalLine(inventoryHandler, column, items);
+		verticalLine(inventoryHandler, line, column, items);
 	}
 
-	public static void verticalLine(InventoryHandler inventoryHandler, int column) {
-		verticalLine(inventoryHandler, column, getLineItem(), SettingAddon.getInventoryLineName(), true);
+	public static void verticalLine(InventoryHandler inventoryHandler, Fill line, int column) {
+		verticalLine(inventoryHandler, line, column, true);
 	}
 
-	public static void createBoarder(InventoryHandler inventoryHandler) {
-		ItemBuilder itemBuilder = new ItemBuilder(getFillItem());
+	public static void createBoarder(InventoryHandler inventoryHandler, Fill fill) {
+		ItemBuilder itemBuilder = new ItemBuilder(getFillItem(fill.material()));
 
-		ItemStack item = itemBuilder.setDisplayName(SettingAddon.getInventoryFillName()).build();
+		ItemStack item = itemBuilder.setDisplayName(fill.name()).build();
 
 		int rows = inventoryHandler.getSize() / 9;
 
@@ -141,18 +153,18 @@ public final class InventoryUtil {
 		}
 	}
 
-	public static Material getFillItem() {
+	public static Material getFillItem(String inventoryFillItem) {
 		Material            material          = null;
-		Optional<XMaterial> xMaterialOptional = XMaterial.matchXMaterial(SettingAddon.getInventoryFillItem());
+		Optional<XMaterial> xMaterialOptional = XMaterial.matchXMaterial(inventoryFillItem);
 
 		if (xMaterialOptional.isPresent()) material = xMaterialOptional.get().get();
 
 		return material != null ? material : XMaterial.BLACK_STAINED_GLASS_PANE.get();
 	}
 
-	public static Material getLineItem() {
+	public static Material getLineItem(String inventoryLineItem) {
 		Material            material          = null;
-		Optional<XMaterial> xMaterialOptional = XMaterial.matchXMaterial(SettingAddon.getInventoryLineItem());
+		Optional<XMaterial> xMaterialOptional = XMaterial.matchXMaterial(inventoryLineItem);
 
 		if (xMaterialOptional.isPresent()) material = xMaterialOptional.get().get();
 
