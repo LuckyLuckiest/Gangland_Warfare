@@ -32,15 +32,8 @@ public class InventoryInteract implements Listener {
 
 			var clickableItems = inv.getClickableItems();
 			slots.accept(player, inv, clickableItems.getOrDefault(rawSlot, null));
-		}
 
-		// Cancel all clicks to prevent item movement
-		// Only allow if it's a click in the custom inventory AND the slot is draggable
-		if (checkInventoryStatus) {
 			event.setCancelled(!inv.getDraggableSlots().contains(rawSlot));
-		} else {
-			// Always cancel clicks in the player's own inventory when viewing custom inventory
-			event.setCancelled(true);
 		}
 	}
 
