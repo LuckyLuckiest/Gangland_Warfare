@@ -3,14 +3,16 @@ package me.luckyraven.file.configuration.inventory;
 import com.cryptomorin.xseries.XEnchantment;
 import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.inventory.InventoryHandler;
-import me.luckyraven.data.inventory.InventoryBuilder;
-import me.luckyraven.data.inventory.InventoryData;
-import me.luckyraven.data.inventory.OpenInventory;
-import me.luckyraven.data.inventory.State;
-import me.luckyraven.data.inventory.part.Slot;
 import me.luckyraven.data.user.User;
 import me.luckyraven.file.FileHandler;
+import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.inventory.itemsource.GangItemSourceProvider;
+import me.luckyraven.inventory.*;
+import me.luckyraven.inventory.multi.ItemSourceProvider;
+import me.luckyraven.inventory.multi.MultiInventory;
+import me.luckyraven.inventory.part.ButtonTags;
+import me.luckyraven.inventory.part.Fill;
+import me.luckyraven.inventory.part.Slot;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.color.MaterialType;
 import org.bukkit.configuration.ConfigurationSection;
@@ -23,6 +25,7 @@ import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -33,6 +36,8 @@ public class InventoryAddon {
 	private static final Map<String, Class<? extends PlayerEvent>>    playerEvents    = new HashMap<>();
 	private static final Map<String, Class<? extends InventoryEvent>> inventoryEvents = new HashMap<>();
 
+	private static ItemSourceProvider itemSourceProvider;
+
 	static {
 		// initialize player events
 		playerEvents.put("OnItemClick", PlayerInteractEvent.class);
@@ -42,6 +47,10 @@ public class InventoryAddon {
 		inventoryEvents.put("OnInteract", InventoryInteractEvent.class);
 		inventoryEvents.put("OnClose", InventoryCloseEvent.class);
 		inventoryEvents.put("OnInventory", InventoryEvent.class);
+	}
+
+	public static void setItemSourceProvider(Gangland gangland) {
+		itemSourceProvider = new GangItemSourceProvider(gangland);
 	}
 
 	@Nullable
@@ -96,36 +105,7 @@ public class InventoryAddon {
 		List<Slot> slots = new ArrayList<>();
 
 		// slots section
-		for (int slot = 0; slot < realSize; ++slot) {
-			String sectionStr = slotsStr + slot + ".";
-			ConfigurationSection section = config.getConfigurationSection(
-					sectionStr.substring(0, sectionStr.length() - 1));
-			if (section == null) continue;
-
-			String              item;
-			Map<String, Object> data = new HashMap<>();
-			if (section.isConfigurationSection("Item")) {
-				ConfigurationSection itemConfig = section.getConfigurationSection("Item");
-
-				if (itemConfig != null) {
-					item = itemConfig.getString("Type");
-
-					data.put("color", itemConfig.getString("Color"));
-					data.put("data", itemConfig.getString("Data"));
-				} else item = null;
-			} else if (section.isString("Item")) item = section.getString("Item");
-			else item = null;
-
-			if (item == null) continue;
-
-			String itemName = section.getString("Name");
-			if (itemName == null) itemName = item.toLowerCase().replace('_', ' ');
-			List<String> lore      = section.getStringList("Lore");
-			boolean      enchanted = section.getBoolean("Enchanted");
-			boolean      draggable = section.getBoolean("Draggable");
-
-			slots.add(processEventItems(gangland, config, slot, item, itemName, data, lore, enchanted, draggable));
-		}
+		configureSlots(gangland, realSize, slotsStr, config, slots);
 
 		boolean       configFill       = config.getBoolean(information + "Configuration.Fill");
 		boolean       configBorder     = config.getBoolean(information + "Configuration.Border");
@@ -151,18 +131,110 @@ public class InventoryAddon {
 		inventoryData.setFill(configFill);
 		inventoryData.setBorder(configBorder);
 
+		// Handle multi-inventory configuration
+		if (type.equalsIgnoreCase("multi-inventory")) {
+			configureMultiInventory(gangland, config, information, inventoryData);
+		}
+
 		if (state != null) inventoryData.setOpenInventory(new OpenInventory(state, value, openPermission));
 
 		inventories.put(name, new InventoryBuilder(inventoryData, permission));
 	}
 
-	private static Slot processEventItems(Gangland gangland, FileConfiguration config, int slotLoc, String item,
-										  String itemName, Map<String, Object> data, List<String> lore,
+	private static void configureMultiInventory(Gangland gangland, FileConfiguration config, String information,
+												InventoryData inventoryData) {
+		String itemSource = config.getString(information + "Multi.Item_Source");
+		int    perPage    = config.getInt(information + "Multi.Per_Page", 28);
+
+		inventoryData.setMultiInventory(true);
+		inventoryData.setItemSource(itemSource);
+		inventoryData.setPerPage(perPage);
+
+		// Process static items for multi-inventory
+		Map<Integer, Slot>   staticItems   = new HashMap<>();
+		ConfigurationSection staticSection = config.getConfigurationSection("Static_Items");
+
+		if (staticSection != null) {
+			for (String key : staticSection.getKeys(false)) {
+				int slotIndex = Integer.parseInt(key);
+
+
+				ConfigurationSection section = staticSection.getConfigurationSection(key);
+				if (section == null) continue;
+
+				Map<String, Object> data = new HashMap<>();
+				String              item = getItemInfo(section, data);
+
+				if (item == null) continue;
+
+				String itemName = section.getString("Name");
+				if (itemName == null) itemName = item.toLowerCase().replace('_', ' ');
+
+				List<String> lore      = section.getStringList("Lore");
+				boolean      enchanted = section.getBoolean("Enchanted");
+				boolean      draggable = section.getBoolean("Draggable");
+
+				Slot slot = processEventItems(gangland, "Static_Items", config, slotIndex, item, itemName, data, lore,
+											  enchanted, draggable);
+				staticItems.put(slotIndex, slot);
+			}
+		}
+
+		inventoryData.setStaticItems(staticItems);
+	}
+
+	private static @Nullable String getItemInfo(ConfigurationSection section, Map<String, Object> data) {
+		String item;
+
+		if (section.isConfigurationSection("Item")) {
+			ConfigurationSection itemConfig = section.getConfigurationSection("Item");
+
+			if (itemConfig != null) {
+				item = itemConfig.getString("Type");
+
+				data.put("color", itemConfig.getString("Color"));
+				data.put("data", itemConfig.getString("Data"));
+			} else item = null;
+		} else if (section.isString("Item")) item = section.getString("Item");
+		else item = null;
+
+		return item;
+	}
+
+	private static void configureSlots(Gangland gangland, int realSize, String slotsStr, FileConfiguration config,
+									   List<Slot> slots) {
+		for (int slot = 0; slot < realSize; ++slot) {
+			String sectionStr = slotsStr + slot + ".";
+			String substring  = sectionStr.substring(0, sectionStr.length() - 1);
+
+			ConfigurationSection section = config.getConfigurationSection(substring);
+			if (section == null) continue;
+
+			Map<String, Object> data = new HashMap<>();
+			String              item = getItemInfo(section, data);
+
+			if (item == null) continue;
+
+			String itemName = section.getString("Name");
+			if (itemName == null) itemName = item.toLowerCase().replace('_', ' ');
+			List<String> lore      = section.getStringList("Lore");
+			boolean      enchanted = section.getBoolean("Enchanted");
+			boolean      draggable = section.getBoolean("Draggable");
+
+			slots.add(processEventItems(gangland, "Slots", config, slot, item, itemName, data, lore, enchanted,
+										draggable));
+		}
+	}
+
+	private static Slot processEventItems(Gangland gangland, String basePath, FileConfiguration config, int slotLoc,
+										  String item, String itemName, Map<String, Object> data, List<String> lore,
 										  boolean enchanted, boolean draggable) {
+		String slotsBase = basePath + "." + slotLoc + ".";
+
 		for (String event : inventoryEvents.keySet()) {
-			String eventSectionStr = "Slots." + slotLoc + "." + event + ".";
-			ConfigurationSection eventSection = config.getConfigurationSection(
-					eventSectionStr.substring(0, eventSectionStr.length() - 1));
+			String eventSectionString = slotsBase + event + ".";
+			String substring          = eventSectionString.substring(0, eventSectionString.length() - 1);
+			var    eventSection       = config.getConfigurationSection(substring);
 			if (eventSection == null) continue;
 
 			// so far, there is support for clickable events
@@ -204,14 +276,45 @@ public class InventoryAddon {
 				String command = slotCommand.startsWith("/") ? slotCommand.substring(1) : slotCommand;
 				player.performCommand(command);
 			}
+
 			if (slotInventory != null) {
-				User<Player>     user       = gangland.getInitializer().getUserManager().getUser(player);
+				User<Player> user = gangland.getInitializer().getUserManager().getUser(player);
+
+				InventoryHandler existingInventory = user.getInventory(slotInventory);
+
+				if (existingInventory != null) {
+					existingInventory.open(player);
+					return;
+				}
+
 				InventoryBuilder invBuilder = inventories.get(slotInventory);
 
 				if (invBuilder == null) return;
 
-				InventoryHandler handler = invBuilder.createInventory(gangland, user, slotInventory);
-				handler.open(player);
+				Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+				Fill line = new Fill(SettingAddon.getInventoryLineName(), SettingAddon.getInventoryLineItem());
+
+				// Check if it's a multi-inventory
+				if (invBuilder.inventoryData().isMultiInventory()) {
+					String          itemSource = invBuilder.inventoryData().getItemSource();
+					List<ItemStack> items      = itemSourceProvider.getItems(player, itemSource);
+
+					ButtonTags buttonTags = new ButtonTags(SettingAddon.getPreviousPage(), SettingAddon.getHomePage(),
+														   SettingAddon.getNextPage());
+
+					MultiInventory multiInventory = invBuilder.createMultiInventory(gangland, gangland, player, items,
+																					buttonTags, fill);
+
+					if (multiInventory != null) {
+						multiInventory.open(player);
+						user.addInventory(multiInventory);
+					}
+				} else {
+					InventoryHandler handler = invBuilder.createInventory(gangland, gangland, user.getUser(), fill,
+																		  line);
+					handler.open(player);
+					user.addInventory(handler);
+				}
 			}
 		});
 
@@ -230,7 +333,7 @@ public class InventoryAddon {
 
 		itemBuilder.setDisplayName(itemName);
 		itemBuilder.setLore(lore);
-		if (enchanted) itemBuilder.addEnchantment(XEnchantment.UNBREAKING.getEnchant(), 1)
+		if (enchanted) itemBuilder.addEnchantment(XEnchantment.UNBREAKING.get(), 1)
 								  .addItemFlags(ItemFlag.HIDE_ENCHANTS);
 
 		return itemBuilder;

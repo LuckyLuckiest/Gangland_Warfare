@@ -2,8 +2,6 @@ package me.luckyraven.command.sub.gang;
 
 import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.inventory.InventoryHandler;
-import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ArgumentUtil;
@@ -15,7 +13,12 @@ import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.util.InventoryUtil;
+import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.multi.MultiInventory;
+import me.luckyraven.inventory.multi.MultiInventoryCreation;
+import me.luckyraven.inventory.part.ButtonTags;
+import me.luckyraven.inventory.part.Fill;
+import me.luckyraven.inventory.util.InventoryUtil;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.Pair;
 import me.luckyraven.util.color.ColorUtil;
@@ -55,7 +58,7 @@ public final class GangCommand extends CommandHandler {
 		User<Player> user   = userManager.getUser(player);
 
 		if (!user.hasGang())
-//			gangStat(getGangland(), user, userManager, gangManager);
+//			gangStat(user, userManager, gangManager);
 //		else
 			help(commandSender, 1);
 	}
@@ -178,11 +181,12 @@ public final class GangCommand extends CommandHandler {
 		return XMaterial.IRON_BLOCK.get();
 	}
 
-	private void gangStat(Gangland gangland, User<Player> user, UserManager<Player> userManager,
-						  GangManager gangManager) {
-		Gang gang = gangManager.getGang(user.getGangId());
-		InventoryHandler gui = new InventoryHandler(gangland, "&6&l" + gang.getDisplayNameString() + "&r gang", 5 * 9,
-													user, false);
+	private void gangStat(User<Player> user, UserManager<Player> userManager, GangManager gangManager) {
+		Gang   gang  = gangManager.getGang(user.getGangId());
+		String title = "&6&l" + gang.getDisplayNameString() + "&r gang";
+		int    size  = 5 * 9;
+
+		InventoryHandler gui = new InventoryHandler(getGangland(), title, size, user.getUser());
 
 		// balance
 		Material material = itemToBalance(gang);
@@ -199,15 +203,21 @@ public final class GangCommand extends CommandHandler {
 		gui.setItem(15, XMaterial.PAPER.get(), "&bDescription", new ArrayList<>(List.of("&e" + gang.getDescription())),
 					false, false, (player, inventory, items) -> {
 					player.performCommand(ArgumentUtil.getArgumentSequence(Objects.requireNonNull(
-							getArgumentTree().find(new Argument(gangland, "desc", getArgumentTree())))));
+							getArgumentTree().find(new Argument(getGangland(), "desc", getArgumentTree())))));
 				});
+
+		Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+
+		ButtonTags buttonTags = new ButtonTags(SettingAddon.getPreviousPage(), SettingAddon.getHomePage(),
+											   SettingAddon.getNextPage());
 
 		// members
 		gui.setItem(19, XMaterial.PLAYER_HEAD.get(), "&bMembers", new ArrayList<>(
 							List.of("&a" + gang.getOnlineMembers(userManager).size() + "&7/&e" + gang.getGroup().size())), false,
 					false, (player, inventory, item) -> {
-					User<Player>    user1 = userManager.getUser(player);
-					Gang            gang1 = gangManager.getGang(userManager.getUser(player).getGangId());
+					User<Player> user1 = userManager.getUser(player);
+					Gang         gang1 = gangManager.getGang(user1.getGangId());
+
 					List<ItemStack> items = new ArrayList<>();
 
 					for (Member member : gang1.getGroup()) {
@@ -230,8 +240,12 @@ public final class GangCommand extends CommandHandler {
 						items.add(itemBuilder.build());
 					}
 
-					MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, user1, items,
-																				"&6&lGang Members", false, false, null);
+					String title1 = "&6&lGang Members";
+					MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getGangland(), player, items,
+																						title1, false, false, fill,
+																						buttonTags, null);
+
+					if (multi == null) return;
 
 					multi.open(player);
 				});
@@ -244,8 +258,9 @@ public final class GangCommand extends CommandHandler {
 		// ally
 		gui.setItem(25, XMaterial.REDSTONE.get(), "&bAlly", List.of("&e" + gang.getAllies().size()), false, false,
 					(player, inventory, item) -> {
-						User<Player>    user1 = userManager.getUser(player);
-						Gang            gang1 = gangManager.getGang(userManager.getUser(player).getGangId());
+						User<Player> user1 = userManager.getUser(player);
+						Gang         gang1 = gangManager.getGang(user1.getGangId());
+
 						List<ItemStack> items = new ArrayList<>();
 
 						for (Gang ally : gang1.getAllies()
@@ -262,9 +277,12 @@ public final class GangCommand extends CommandHandler {
 							items.add(itemBuilder.build());
 						}
 
-						MultiInventory multi = MultiInventory.dynamicMultiInventory(gangland, user1, items,
-																					"&6&lGang Allies", false, false,
-																					null);
+						String title1 = "&6&lGang Allies";
+						MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getGangland(), player,
+																							items, title1, false, false,
+																							fill, buttonTags, null);
+
+						if (multi == null) return;
 
 						multi.open(player);
 					});
@@ -284,7 +302,7 @@ public final class GangCommand extends CommandHandler {
 		gui.setItem(33, ColorUtil.getMaterialByColor(gang.getColor(), MaterialType.BANNER.name()), "&bStatistics",
 					new ArrayList<>(List.of("&eGang stats")), false, false);
 
-		InventoryUtil.fillInventory(gui);
+		InventoryUtil.fillInventory(gui, fill);
 
 		gui.open(user.getUser());
 	}

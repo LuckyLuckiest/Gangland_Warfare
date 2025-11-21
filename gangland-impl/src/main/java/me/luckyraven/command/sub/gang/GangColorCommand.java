@@ -2,7 +2,6 @@ package me.luckyraven.command.sub.gang;
 
 import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.data.account.gang.Gang;
@@ -10,8 +9,11 @@ import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.part.Fill;
+import me.luckyraven.inventory.util.InventoryUtil;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.InventoryUtil;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.color.Color;
@@ -48,69 +50,81 @@ class GangColorCommand extends SubArgument {
 				return;
 			}
 
-			InventoryHandler colorGUI = new InventoryHandler(gangland, "&5&lChoose a color", InventoryHandler.MAX_SLOTS,
-															 user, false);
-
-			int row = 2, column = 2;
-			for (Color color : Color.values()) {
-				String colorName = color.name();
-				String colorCode = color.getColorCode();
-
-				MaterialType type         = MaterialType.WOOL;
-				String       materialName = type.name();
-
-				Material material = ColorUtil.getMaterialByColor(colorName, materialName);
-
-				if (material == null) return;
-
-				String name = colorCode + ChatUtil.capitalize(colorName.toLowerCase().replace('_', ' ')) + " " +
-							  ChatUtil.capitalize(materialName.toLowerCase().replace('_', ' '));
-
-				ItemBuilder itemBuilder = new ItemBuilder(material).setDisplayName(name);
-
-				colorGUI.setItem((row - 1) * 9 + (column - 1), itemBuilder, false, (player1, inventory, item) -> {
-					User<Player> user1 = userManager.getUser(player1);
-					InventoryHandler confirmGUI = new InventoryHandler(gangland, "&4&lAre you sure?",
-																	   InventoryHandler.MAX_SLOTS, user1, false);
-					confirmGUI.setItem(22, item.build(), false);
-
-					Material mat = ColorUtil.getMaterialByColor(colorName, MaterialType.STAINED_GLASS_PANE.name());
-					InventoryUtil.aroundSlot(confirmGUI, 22, mat);
-
-					confirmGUI.setItem(49, XMaterial.GREEN_CONCRETE.get(), "&aConfirm", null, false, false,
-									   (player2, inv, it) -> {
-										   Gang gang = gangManager.getGang(userManager.getUser(player2).getGangId());
-										   // save the data in gang
-										   gang.setColor(colorName);
-
-										   // inform player
-										   String colorSelected = ChatUtil.color(colorCode + ChatUtil.capitalize(
-												   colorName.toLowerCase().replace('_', ' ')));
-										   player2.sendMessage(MessageAddon.GANG_COLOR_SET.toString()
-																						  .replace("%color%",
-																								   colorSelected));
-
-										   inv.close(player2);
-									   });
-
-					InventoryUtil.fillInventory(confirmGUI);
-
-					confirmGUI.open(player1);
-				});
-
-				if (column % 8 == 0) {
-					column = 2;
-					++row;
-				} else ++column;
-			}
-
-			colorGUI.setItem((6 - 1) * 9, XMaterial.RED_CONCRETE.get(), "&4Exit", null, false, false,
-							 (player1, inventory, item) -> inventory.close(player1));
-
-			InventoryUtil.createBoarder(colorGUI);
-
-			colorGUI.open(player);
+			displayColors(player);
 		};
+	}
+
+	private void displayColors(Player player) {
+		String title = "&5&lChoose a color";
+		int    size  = InventoryHandler.MAX_SLOTS;
+
+		InventoryHandler colorGUI = new InventoryHandler(gangland, title, size, player);
+
+		int row = 2, column = 2;
+		for (Color color : Color.values()) {
+			String colorName = color.name();
+			String colorCode = color.getColorCode();
+
+			MaterialType type         = MaterialType.WOOL;
+			String       materialName = type.name();
+
+			Material material = ColorUtil.getMaterialByColor(colorName, materialName);
+
+			if (material == null) return;
+
+			String name = colorCode + ChatUtil.capitalize(colorName.toLowerCase().replace('_', ' ')) + " " +
+						  ChatUtil.capitalize(materialName.toLowerCase().replace('_', ' '));
+
+			ItemBuilder itemBuilder = new ItemBuilder(material).setDisplayName(name);
+
+			int slot = (row - 1) * 9 + (column - 1);
+
+			colorGUI.setItem(slot, itemBuilder, false, (player1, inventory, item) -> {
+				String title2 = "&4&lAre you sure?";
+
+				InventoryHandler confirmGUI = new InventoryHandler(gangland, title2, size, player1);
+				confirmGUI.setItem(22, item.build(), false);
+
+				Material mat = ColorUtil.getMaterialByColor(colorName, MaterialType.STAINED_GLASS_PANE.name());
+				InventoryUtil.aroundSlot(confirmGUI, 22, mat);
+
+				confirmGUI.setItem(49, XMaterial.GREEN_CONCRETE.get(), "&aConfirm", null, false, false,
+								   (player2, inv, it) -> {
+									   Gang gang = gangManager.getGang(userManager.getUser(player2).getGangId());
+									   // save the data in gang
+									   gang.setColor(colorName);
+
+									   // inform player
+									   String colorSelected = ChatUtil.color(colorCode + ChatUtil.capitalize(
+											   colorName.toLowerCase().replace('_', ' ')));
+									   player2.sendMessage(MessageAddon.GANG_COLOR_SET.toString()
+																					  .replace("%color%",
+																							   colorSelected));
+
+									   inv.close(player2);
+								   });
+
+				Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+
+				InventoryUtil.fillInventory(confirmGUI, fill);
+
+				confirmGUI.open(player1);
+			});
+
+			if (column % 8 == 0) {
+				column = 2;
+				++row;
+			} else ++column;
+		}
+
+		colorGUI.setItem((6 - 1) * 9, XMaterial.RED_CONCRETE.get(), "&4Exit", null, false, false,
+						 (player1, inventory, item) -> inventory.close(player1));
+
+		Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryLineName());
+
+		InventoryUtil.createBoarder(colorGUI, fill);
+
+		colorGUI.open(player);
 	}
 
 }

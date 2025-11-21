@@ -3,7 +3,6 @@ package me.luckyraven.data.user;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.bukkit.inventory.InventoryHandler;
 import me.luckyraven.data.account.Account;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.rank.Permission;
@@ -12,6 +11,8 @@ import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.phone.Phone;
 import me.luckyraven.feature.wanted.Wanted;
+import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.service.InventoryRegistry;
 import me.luckyraven.scoreboard.Scoreboard;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -124,6 +125,9 @@ public class User<T extends OfflinePlayer> {
 
 		// add the inventory to the set
 		inventories.add(inventoryHandler);
+
+		// register with the global registry
+		InventoryRegistry.getInstance().registerInventory(uuid, inventoryHandler);
 	}
 
 	/**
@@ -133,6 +137,9 @@ public class User<T extends OfflinePlayer> {
 	 */
 	public void removeInventory(InventoryHandler inventoryHandler) {
 		inventories.remove(inventoryHandler);
+
+		// unregister from the global registry
+		InventoryRegistry.getInstance().unregisterInventory(uuid, inventoryHandler);
 	}
 
 	/**
@@ -142,7 +149,9 @@ public class User<T extends OfflinePlayer> {
 	 */
 	public void removeInventory(String name) {
 		InventoryHandler inventory = getInventory(name);
+
 		if (inventory == null) return;
+
 		inventories.remove(inventory);
 	}
 
@@ -166,6 +175,9 @@ public class User<T extends OfflinePlayer> {
 	 */
 	public void clearInventories() {
 		inventories.clear();
+
+		// clear from the global registry
+		InventoryRegistry.getInstance().clear(uuid);
 	}
 
 	/**
