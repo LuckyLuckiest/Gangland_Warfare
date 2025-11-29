@@ -12,11 +12,16 @@ import me.luckyraven.data.rank.Rank;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.BankTable;
 import me.luckyraven.database.tables.UserTable;
+import me.luckyraven.feature.Executor;
 import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.bounty.BountyEvent;
+import me.luckyraven.feature.bounty.BountyExecutor;
 import me.luckyraven.feature.level.Level;
+import me.luckyraven.feature.wanted.Wanted;
+import me.luckyraven.feature.wanted.WantedEvent;
+import me.luckyraven.feature.wanted.WantedExecutor;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.util.timer.RepeatingTimer;
+import me.luckyraven.util.timer.Timer;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
@@ -37,7 +42,7 @@ public class UserManager<T extends OfflinePlayer> {
 		this.users    = new HashMap<>();
 	}
 
-	public void initializeUserData(User<? extends OfflinePlayer> user, UserTable userTable, BankTable bankTable) {
+	public void initializeUserData(User<T> user, UserTable userTable, BankTable bankTable) {
 		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
 		helper.runQueries(database -> {
@@ -113,19 +118,31 @@ public class UserManager<T extends OfflinePlayer> {
 
 				userBounty.setAmount(bounty);
 
-				if (!(userBounty.hasBounty() && SettingAddon.isBountyTimerEnabled())) return;
+				if (userBounty.hasBounty() && SettingAddon.isBountyTimerEnabled()) {
+					BountyEvent bountyEvent = new BountyEvent(true, userBounty);
 
-				BountyEvent bountyEvent = new BountyEvent(userBounty);
+					bountyEvent.setUserBounty(user);
 
-				bountyEvent.setUserBounty(user);
+					if (userBounty.getAmount() < SettingAddon.getBountyTimerMax()) {
+						Executor executor = new BountyExecutor(gangland, bountyEvent, user);
+						Timer    timer    = executor.createTimer();
 
-				if (userBounty.getAmount() >= SettingAddon.getBountyTimerMax()) return;
+						timer.start(true);
+					}
+				}
 
-				RepeatingTimer repeatingTimer = userBounty.createTimer(gangland, SettingAddon.getBountyTimeInterval(),
-																	   timer -> bountyExecutor(user, bountyEvent,
-																							   timer));
+				Wanted userWanted = user.getWanted();
 
-				repeatingTimer.start(false);
+				if (userWanted.isWanted() && SettingAddon.isWantedTimerEnabled()) {
+					WantedEvent wantedEvent = new WantedEvent(true, userWanted);
+
+					wantedEvent.setWantedUser(user);
+
+					Executor executor = new WantedExecutor(gangland, wantedEvent, user);
+					Timer    timer    = executor.createTimer();
+
+					timer.start(true);
+				}
 			}
 		});
 	}
@@ -189,24 +206,6 @@ public class UserManager<T extends OfflinePlayer> {
 		List<String> users = userMap.values()
 				.stream().map(User::toString).toList();
 		return "users=" + users;
-	}
-
-	private void bountyExecutor(User<? extends OfflinePlayer> user, BountyEvent bountyEvent, RepeatingTimer timer) {
-		Bounty bounty    = user.getBounty();
-		double oldAmount = bounty.getAmount();
-
-		if (bounty.getAmount() >= SettingAddon.getBountyTimerMax()) timer.stop();
-		else {
-			double amount = oldAmount * SettingAddon.getBountyTimerMultiple();
-			bountyEvent.setAmountApplied(amount - oldAmount);
-
-			// call the event
-			gangland.getServer().getPluginManager().callEvent(bountyEvent);
-
-			if (!bountyEvent.isCancelled())
-				// change the amount
-				bounty.setAmount(amount);
-		}
 	}
 
 }
