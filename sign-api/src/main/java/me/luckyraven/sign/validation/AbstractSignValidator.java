@@ -7,9 +7,11 @@ import org.bukkit.ChatColor;
 public abstract class AbstractSignValidator implements SignValidator {
 
 	protected final SignType signType;
+	private final   String   moneySymbol;
 
-	protected AbstractSignValidator(SignType signType) {
-		this.signType = signType;
+	protected AbstractSignValidator(SignType signType, String moneySymbol) {
+		this.signType    = signType;
+		this.moneySymbol = moneySymbol;
 	}
 
 	/**
@@ -29,7 +31,7 @@ public abstract class AbstractSignValidator implements SignValidator {
 
 		validateSignType(lines[0], 0);
 		validateContent(lines[1], 1);
-		validatePrice(lines[2], 2);
+		validatePrice(lines[2], 2, moneySymbol);
 		validateAmount(lines[3], 3);
 
 		performCustomValidation(lines);
@@ -65,9 +67,9 @@ public abstract class AbstractSignValidator implements SignValidator {
 		}
 	}
 
-	protected void validatePrice(String line, int lineNumber) throws SignValidationException {
+	protected void validatePrice(String line, int lineNumber, String moneySymbol) throws SignValidationException {
 		String cleaned = ChatUtil.replaceColorCodes(line, "").trim();
-		cleaned = cleaned.replace("$", "").replace(",", "");
+		cleaned = cleaned.replace(moneySymbol, "").replace(",", "");
 
 		if (cleaned.isEmpty()) {
 			throw new SignValidationException("Price cannot be empty", lineNumber, line);
