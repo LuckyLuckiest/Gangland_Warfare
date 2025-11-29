@@ -1,20 +1,20 @@
 package me.luckyraven.sign.aspect;
 
+import lombok.RequiredArgsConstructor;
+import me.luckyraven.data.economy.EconomyException;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.sign.model.ParsedSign;
 import org.bukkit.entity.Player;
 
+@RequiredArgsConstructor
 public class MoneyAspect implements SignAspect {
 
 	private final UserManager<Player> userManager;
 	private final TransactionType     transactionType;
-
-	public MoneyAspect(UserManager<Player> userManager, TransactionType transactionType) {
-		this.userManager     = userManager;
-		this.transactionType = transactionType;
-	}
 
 	@Override
 	public AspectResult execute(Player player, ParsedSign sign) {
@@ -23,18 +23,24 @@ public class MoneyAspect implements SignAspect {
 		double         amount  = sign.getPrice();
 
 		if (transactionType == TransactionType.WITHDRAW) {
-			if (economy.getBalance() < amount) {
-				return AspectResult.failure("You don't have enough money!");
+			if (amount == 0D) {
+				String string = MessageAddon.FREE_TRANSACTION.toString(MessageAddon.Type.NO_CHANGE);
+				return AspectResult.successContinue(string);
 			}
 
+			try {
+				economy.withdraw(amount);
+			} catch (EconomyException exception) {
+				return AspectResult.failure(exception.getMessage());
+			}
 
-			economy.withdraw(amount);
-
-			return AspectResult.successContinue("You have withdrawn " + amount + " from your account!");
+			String withdrawn = MessageAddon.WITHDRAW_MONEY_PLAYER.toString(MessageAddon.Type.NO_CHANGE);
+			return AspectResult.success(withdrawn.replace("%amount%", SettingAddon.formatDouble(amount)));
 		} else {
 			economy.deposit(amount);
 
-			return AspectResult.successContinue("You have deposited " + amount + " to your account!");
+			String deposit = MessageAddon.DEPOSIT_MONEY_PLAYER.toString(MessageAddon.Type.NO_CHANGE);
+			return AspectResult.successContinue(deposit.replace("%amount%", SettingAddon.formatDouble(amount)));
 		}
 	}
 
