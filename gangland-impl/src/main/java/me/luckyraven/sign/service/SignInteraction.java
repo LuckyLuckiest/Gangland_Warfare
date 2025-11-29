@@ -15,8 +15,8 @@ public class SignInteraction extends SignInteractionService {
 
 	private final SignTypeRegistry registry;
 
-	public SignInteraction(SignTypeRegistry registry) {
-		super(registry);
+	public SignInteraction(SignTypeRegistry registry, SignFormatterService formatterService) {
+		super(registry, formatterService);
 
 		this.registry = registry;
 	}
@@ -34,7 +34,7 @@ public class SignInteraction extends SignInteractionService {
 		SignHandler        handler = def.getHandler();
 
 		if (!handler.canHandle(player, sign)) {
-			player.sendMessage(ChatUtil.errorMessage("You cannot use this sign right now!"));
+			player.sendMessage(ChatUtil.errorMessage("Might be missing something!"));
 			return false;
 		}
 

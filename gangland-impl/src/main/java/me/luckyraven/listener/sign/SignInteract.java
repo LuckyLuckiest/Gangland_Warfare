@@ -12,7 +12,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 import java.util.Optional;
@@ -24,31 +23,6 @@ public class SignInteract implements Listener {
 
 	public SignInteract(SignInteractionService signService) {
 		this.signService = signService;
-	}
-
-	@EventHandler(priority = EventPriority.HIGHEST)
-	public void onSignCreate(SignChangeEvent event) {
-		String[] lines = event.getLines();
-
-		if (lines[0] == null || !lines[0].toLowerCase().startsWith("glw-")) {
-			return;
-		}
-
-		Player player = event.getPlayer();
-
-		try {
-			signService.validateSign(lines);
-			signService.formatForDisplay(lines);
-
-			for (int i = 0; i < lines.length; i++) {
-				event.setLine(i, lines[i]);
-			}
-
-			player.sendMessage(ChatUtil.prefixMessage("Sign created successfully!"));
-		} catch (SignValidationException exception) {
-			event.setCancelled(true);
-			player.sendMessage(ChatUtil.errorMessage("Invalid sign: " + exception.getMessage()));
-		}
 	}
 
 	@EventHandler(priority = EventPriority.HIGH)
