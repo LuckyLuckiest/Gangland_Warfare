@@ -12,7 +12,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import java.io.IOException;
 import java.util.*;
 
-public class AmmunitionAddon {
+public class AmmunitionAddon implements Comparator<Ammunition> {
 
 	private static final Logger logger = LogManager.getLogger(AmmunitionAddon.class.getSimpleName());
 
@@ -42,6 +42,11 @@ public class AmmunitionAddon {
 
 	public void clear() {
 		ammunition.clear();
+	}
+
+	@Override
+	public int compare(Ammunition ammunition1, Ammunition ammunition2) {
+		return ammunition1.compareTo(ammunition2);
 	}
 
 	private void registerAmmunition(FileConfiguration ammunition) {

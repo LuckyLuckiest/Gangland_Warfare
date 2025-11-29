@@ -10,11 +10,12 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public abstract class WeaponService {
+public abstract class WeaponService implements Comparator<Weapon> {
 
 	private final WeaponAddon weaponAddon;
 
@@ -42,6 +43,11 @@ public abstract class WeaponService {
 		}
 
 		return uuid;
+	}
+
+	@Override
+	public int compare(Weapon weapon1, Weapon weapon2) {
+		return weapon1.compareTo(weapon2);
 	}
 
 	@Nullable
