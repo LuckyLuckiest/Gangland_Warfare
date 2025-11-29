@@ -26,12 +26,13 @@ public class RepeatingTimer extends Timer {
 			return;
 		}
 
-		if (!justStarted) runTask();
-		if (justStarted) justStarted = false;
-	}
+		if (!justStarted) {
+			task.accept(this);
+		}
 
-	public void runTask() {
-		task.accept(this);
+		if (justStarted) {
+			justStarted = false;
+		}
 	}
 
 }
