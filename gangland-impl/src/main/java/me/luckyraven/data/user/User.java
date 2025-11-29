@@ -11,6 +11,7 @@ import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.phone.Phone;
 import me.luckyraven.feature.wanted.Wanted;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.service.InventoryRegistry;
 import me.luckyraven.scoreboard.Scoreboard;
@@ -54,9 +55,11 @@ public class User<T extends OfflinePlayer> {
 	public User(T user) {
 		this.user               = user;
 		this.uuid               = user.getUniqueId();
-		this.bounty             = new Bounty();
+		this.bounty             = new Bounty(SettingAddon.getBountyEachKillValue(),
+											 SettingAddon.getBountyTimerMultiple());
 		this.level              = new Level();
-		this.wanted             = new Wanted();
+		this.wanted             = new Wanted(SettingAddon.getWantedLevelIncrement(),
+											 SettingAddon.getWantedMaximumLevel());
 		this.economy            = new EconomyHandler(this);
 		this.linkedAccounts     = new ArrayList<>();
 		this.inventories        = new HashSet<>();
@@ -111,7 +114,11 @@ public class User<T extends OfflinePlayer> {
 	}
 
 	public void addSpecialInventory(InventoryHandler inventoryHandler) {
+		removeInventory(inventoryHandler.getTitle().getKey());
+
 		specialInventories.add(inventoryHandler);
+
+		InventoryRegistry.getInstance().registerInventory(uuid, inventoryHandler);
 	}
 
 	/**
