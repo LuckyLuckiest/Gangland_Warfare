@@ -65,7 +65,7 @@ Board:
       4:
          Interval: 10
          Lines:
-            - "   &7K/D: &e%gangland_user_kd%"
+            - "   &7Bounty: &2%gangland_money_symbol%&e%gangland_user_bounty%"
       5:
          Interval: 10
          Lines:
