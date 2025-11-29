@@ -1,7 +1,7 @@
 package me.luckyraven.sign.validation;
 
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.sign.SignType;
-import me.luckyraven.util.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
@@ -14,7 +14,7 @@ public class ViewSignValidator extends AbstractSignValidator {
 	private final AmmunitionAddon ammunitionAddon;
 
 	public ViewSignValidator(SignType signType, WeaponService weaponService, AmmunitionAddon ammunitionAddon) {
-		super(signType);
+		super(signType, SettingAddon.getMoneySymbol());
 
 		this.weaponService   = weaponService;
 		this.ammunitionAddon = ammunitionAddon;
@@ -51,21 +51,8 @@ public class ViewSignValidator extends AbstractSignValidator {
 	}
 
 	@Override
-	protected void validatePrice(String line, int lineNumber) throws SignValidationException {
-		// View signs don't use price, so this line can be anything
-		// We'll just check it's not empty
-		String cleaned = ChatUtil.replaceColorCodes(line, "").trim();
-		if (cleaned.isEmpty()) {
-			throw new SignValidationException("Line 3 cannot be empty (use '-' if not needed)", lineNumber, line);
-		}
-	}
+	protected void validatePrice(String line, int lineNumber, String moneySymbol) throws SignValidationException { }
 
 	@Override
-	protected void validateAmount(String line, int lineNumber) throws SignValidationException {
-		// View signs don't use amount, so this line can be anything
-		String cleaned = ChatUtil.replaceColorCodes(line, "").trim();
-		if (cleaned.isEmpty()) {
-			throw new SignValidationException("Line 4 cannot be empty (use '-' if not needed)", lineNumber, line);
-		}
-	}
+	protected void validateAmount(String line, int lineNumber) throws SignValidationException { }
 }

@@ -1,8 +1,6 @@
 package me.luckyraven.sign.aspect;
 
-import me.luckyraven.Gangland;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
+import lombok.RequiredArgsConstructor;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.part.Fill;
@@ -15,23 +13,17 @@ import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@RequiredArgsConstructor
 public class ViewInventoryAspect implements SignAspect {
 
-	private final Gangland            gangland;
-	private final UserManager<Player> userManager;
-	private final WeaponService       weaponService;
-	private final AmmunitionAddon     ammunitionAddon;
-
-	public ViewInventoryAspect(Gangland gangland, WeaponService weaponService, AmmunitionAddon ammunitionAddon) {
-		this.gangland        = gangland;
-		this.userManager     = gangland.getInitializer().getUserManager();
-		this.weaponService   = weaponService;
-		this.ammunitionAddon = ammunitionAddon;
-	}
+	private final JavaPlugin      plugin;
+	private final WeaponService   weaponService;
+	private final AmmunitionAddon ammunitionAddon;
 
 	@Override
 	public AspectResult execute(Player player, ParsedSign sign) {
@@ -80,7 +72,6 @@ public class ViewInventoryAspect implements SignAspect {
 	}
 
 	private void openWeaponView(Player player, Weapon weapon) {
-		User<Player> user = userManager.getUser(player);
 		// Determine inventory size based on ammunition types
 		List<String> compatibleAmmo = getCompatibleAmmunition(weapon);
 		int          requiredSlots  = 1 + compatibleAmmo.size(); // 1 for weapon + ammo types
@@ -89,7 +80,7 @@ public class ViewInventoryAspect implements SignAspect {
 		// Create inventory handler
 		String title = "&6View: &e" + weapon.getDisplayName();
 
-		InventoryHandler inventory = new InventoryHandler(gangland, title, inventorySize, player);
+		InventoryHandler inventory = new InventoryHandler(plugin, title, inventorySize, player);
 
 		// Add weapon in center-left position
 		int       weaponSlot = 3;
@@ -123,16 +114,13 @@ public class ViewInventoryAspect implements SignAspect {
 
 		InventoryUtil.fillInventory(inventory, fill);
 
-		// Register and open inventory
-		gangland.getServer().getPluginManager().registerEvents(inventory, gangland);
 		inventory.open(player);
 	}
 
 	private void openAmmunitionView(Player player, String ammoName) {
-		User<Player> user  = userManager.getUser(player);
-		String       title = "&6View: &e" + ammoName;
+		String title = "&6View: &e" + ammoName;
 
-		InventoryHandler inventory = new InventoryHandler(gangland, title, 9, player);
+		InventoryHandler inventory = new InventoryHandler(plugin, title, 9, player);
 
 		ItemStack ammoItem = createAmmunitionItem(ammoName, null);
 
@@ -144,14 +132,29 @@ public class ViewInventoryAspect implements SignAspect {
 
 		InventoryUtil.fillInventory(inventory, fill);
 
-		gangland.getServer().getPluginManager().registerEvents(inventory, gangland);
 		inventory.open(player);
+	}
+
+	private ItemStack createAmmunitionItem(String ammoName, Weapon forWeapon) {
+		// Get ammunition material from config or default
+		Material ammoMaterial = ammunitionAddon.getAmmunition(ammoName).getMaterial();
+
+		List<String> lore = new ArrayList<>();
+		lore.add("&7Type: &fAmmunition");
+		lore.add("&7Name: &e" + ammoName);
+
+		if (forWeapon != null) {
+			lore.add("");
+			lore.add("&aCompatible with " + forWeapon.getDisplayName());
+		}
+
+		return new ItemBuilder(ammoMaterial).setDisplayName("&e" + ammoName).setLore(lore).build();
 	}
 
 	private void openGenericItemView(Player player, String itemName) {
 		String title = "&6View: &e" + itemName;
 
-		InventoryHandler inventory = new InventoryHandler(gangland, title, 9, player);
+		InventoryHandler inventory = new InventoryHandler(plugin, title, 9, player);
 
 		// Try to create item from material name
 		Material material = Material.matchMaterial(itemName.toUpperCase().replace(" ", "_"));
@@ -170,7 +173,6 @@ public class ViewInventoryAspect implements SignAspect {
 
 		InventoryUtil.fillInventory(inventory, fill);
 
-		gangland.getServer().getPluginManager().registerEvents(inventory, gangland);
 		inventory.open(player);
 	}
 
@@ -196,22 +198,6 @@ public class ViewInventoryAspect implements SignAspect {
 		}
 
 		return compatible;
-	}
-
-	private ItemStack createAmmunitionItem(String ammoName, Weapon forWeapon) {
-		// Get ammunition material from config or default
-		Material ammoMaterial = ammunitionAddon.getAmmunition(ammoName).getMaterial();
-
-		List<String> lore = new ArrayList<>();
-		lore.add("&7Type: &fAmmunition");
-		lore.add("&7Name: &e" + ammoName);
-
-		if (forWeapon != null) {
-			lore.add("");
-			lore.add("&aCompatible with " + forWeapon.getDisplayName());
-		}
-
-		return new ItemBuilder(ammoMaterial).setDisplayName("&e" + ammoName.toUpperCase()).setLore(lore).build();
 	}
 
 }
