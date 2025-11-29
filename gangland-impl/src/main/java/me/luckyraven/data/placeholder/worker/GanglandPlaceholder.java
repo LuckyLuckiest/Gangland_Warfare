@@ -108,7 +108,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 		// wanted
 		Wanted wanted = user.getWanted();
-		if (parameter.equals(userStr + "wanted")) return wanted.getLevelStr();
+		if (parameter.equals(userStr + "wanted")) return wanted.getLevelStars();
 		if (parameter.equals(userStr + "wanted-level")) return String.valueOf(wanted.getLevel());
 		if (parameter.equals(userStr + "wanted-max-level")) return String.valueOf(wanted.getMaxLevel());
 		if (parameter.equals(userStr + "is-wanted")) return String.valueOf(wanted.isWanted());
