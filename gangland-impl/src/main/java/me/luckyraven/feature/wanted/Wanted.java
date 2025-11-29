@@ -29,10 +29,7 @@ public class Wanted {
 	}
 
 	public RepeatingTimer createTimer(JavaPlugin plugin, long seconds, Consumer<RepeatingTimer> timer) {
-		if (repeatingTimer != null) {
-			repeatingTimer.stop();
-			repeatingTimer = null;
-		}
+		stopTimer();
 
 		this.repeatingTimer = new RepeatingTimer(plugin, seconds * 20L, timer);
 
@@ -66,6 +63,13 @@ public class Wanted {
 		if (this.repeatingTimer != null) {
 			this.repeatingTimer.stop();
 		}
+	}
+
+	public void stopTimer() {
+		if (this.repeatingTimer == null) return;
+
+		this.repeatingTimer.stop();
+		this.repeatingTimer = null;
 	}
 
 }

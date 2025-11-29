@@ -34,10 +34,7 @@ public class Bounty {
 	}
 
 	public RepeatingTimer createTimer(JavaPlugin plugin, long seconds, Consumer<RepeatingTimer> timer) {
-		if (repeatingTimer != null) {
-			this.repeatingTimer.stop();
-			this.repeatingTimer = null;
-		}
+		stopTimer();
 
 		this.repeatingTimer = new RepeatingTimer(plugin, seconds * 20L, timer);
 
@@ -106,6 +103,13 @@ public class Bounty {
 
 	public boolean containsBounty(CommandSender sender) {
 		return userSetBounty.containsKey(sender);
+	}
+
+	public void stopTimer() {
+		if (repeatingTimer == null) return;
+
+		this.repeatingTimer.stop();
+		this.repeatingTimer = null;
 	}
 
 	@Override

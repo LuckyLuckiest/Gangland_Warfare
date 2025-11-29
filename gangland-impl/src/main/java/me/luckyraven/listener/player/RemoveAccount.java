@@ -48,6 +48,9 @@ public final class RemoveAccount implements Listener {
 			// remove all the inventories of that player only
 			user.clearInventories();
 			user.clearSpecialInventories();
+
+			user.getWanted().stopTimer();
+			user.getBounty().stopTimer();
 		});
 	}
 
