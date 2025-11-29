@@ -48,9 +48,7 @@ public class Bounty {
 	public void resetBounty() {
 		this.amount = 0D;
 
-		if (this.repeatingTimer != null) {
-			this.repeatingTimer.stop();
-		}
+		stopTimer();
 
 		this.userSetBounty.clear();
 	}

@@ -59,10 +59,7 @@ public class Wanted {
 
 	public void reset() {
 		setLevel(0);
-
-		if (this.repeatingTimer != null) {
-			this.repeatingTimer.stop();
-		}
+		stopTimer();
 	}
 
 	public void stopTimer() {
