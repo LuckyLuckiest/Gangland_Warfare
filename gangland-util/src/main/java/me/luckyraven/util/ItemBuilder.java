@@ -177,10 +177,23 @@ public class ItemBuilder {
 
 			skullOwnerCompound.setUUID("Id", UUID.randomUUID());
 
-			skullOwnerCompound.getOrCreateCompound("Properties")
-							  .getCompoundList("textures")
-							  .addCompound()
-							  .setString("Value", base64);
+			ReadWriteNBT propertiesCompound = skullOwnerCompound.getOrCreateCompound("Properties");
+
+			// clear existing textures
+			propertiesCompound.removeKey("textures");
+			propertiesCompound.getCompoundList("textures").addCompound().setString("Value", base64);
+		});
+
+		return this;
+	}
+
+	public ItemBuilder customHead(UUID uniqueId) {
+		if (itemStack.getType() != XMaterial.PLAYER_HEAD.get()) return this;
+
+		modifyNBT(nbt -> {
+			ReadWriteNBT skullOwnerCompound = nbt.getOrCreateCompound("SkullOwner");
+
+			skullOwnerCompound.setUUID("Id", uniqueId);
 		});
 
 		return this;
