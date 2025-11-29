@@ -41,6 +41,7 @@ import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.*;
 import me.luckyraven.exception.PluginException;
+import me.luckyraven.feature.entity.EntityMarkManager;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
@@ -53,7 +54,9 @@ import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
 import me.luckyraven.sign.SignManager;
+import me.luckyraven.sign.registry.SignFormatRegistry;
 import me.luckyraven.sign.registry.SignTypeRegistry;
+import me.luckyraven.sign.service.SignFormatterService;
 import me.luckyraven.sign.service.SignInteraction;
 import me.luckyraven.sign.service.SignInteractionService;
 import me.luckyraven.util.autowire.DependencyContainer;
@@ -102,6 +105,7 @@ public final class Initializer {
 	private ScoreboardManager          scoreboardManager;
 	private WeaponManager              weaponManager;
 	private SignManager                signManager;
+	private EntityMarkManager          entityMarkManager;
 	// Addons
 	private SettingAddon               settingAddon;
 	private ScoreboardAddon            scoreboardAddon;
@@ -225,12 +229,16 @@ public final class Initializer {
 		weaponManager.initialize(weaponTable);
 
 		// sign manager
-		SignTypeRegistry registry        = new SignTypeRegistry();
-		SignInteraction  signInteraction = new SignInteraction(registry);
+		SignTypeRegistry     registry         = new SignTypeRegistry();
+		SignFormatRegistry   formatRegistry   = new SignFormatRegistry();
+		SignFormatterService formatterService = new SignFormatterService(formatRegistry);
+		SignInteraction      signInteraction  = new SignInteraction(registry, formatterService);
 
 		signManager = new SignManager(gangland, registry, signInteraction);
 
 		signManager.initialize();
+
+		entityMarkManager = new EntityMarkManager(gangland);
 
 		// Events
 		listenerManager = new ListenerManager(gangland);
