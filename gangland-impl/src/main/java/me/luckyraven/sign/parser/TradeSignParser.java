@@ -7,9 +7,9 @@ import me.luckyraven.sign.model.WeaponParsedSign;
 import me.luckyraven.sign.validation.SignValidationException;
 import org.bukkit.Location;
 
-public class BuySignParser extends AbstractSignParser {
+public class TradeSignParser extends AbstractSignParser {
 
-	public BuySignParser(SignType signType) {
+	public TradeSignParser(SignType signType) {
 		super(signType);
 	}
 
@@ -18,7 +18,6 @@ public class BuySignParser extends AbstractSignParser {
 		String content = parseContent(lines[1]);
 		double price   = parsePrice(lines[2], SettingAddon.getMoneySymbol());
 		int    amount  = parseAmount(lines[3]);
-
 
 		return new WeaponParsedSign(signType, content, price, amount, location, lines);
 	}
