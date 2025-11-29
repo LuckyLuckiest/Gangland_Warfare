@@ -4,7 +4,11 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.data.teleportation.Waypoint;
+import me.luckyraven.data.teleportation.WaypointManager;
+import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,8 +16,12 @@ import java.util.Map;
 
 public final class WaypointCommand extends CommandHandler {
 
+	private final WaypointManager waypointManager;
+
 	public WaypointCommand(Gangland gangland) {
 		super(gangland, "waypoint", true);
+
+		this.waypointManager = gangland.getInitializer().getWaypointManager();
 
 		List<CommandInformation> list = getCommands().entrySet()
 				.stream()
@@ -26,6 +34,15 @@ public final class WaypointCommand extends CommandHandler {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
+		if (commandSender instanceof Player player) {
+			Waypoint selected = waypointManager.getSelected(player);
+
+			if (selected != null) {
+				player.sendMessage(ChatUtil.color("&6Selected waypoint: &7" + selected.getName()));
+				return;
+			}
+		}
+		
 		help(commandSender, 1);
 	}
 
