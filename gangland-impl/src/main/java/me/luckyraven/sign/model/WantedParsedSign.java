@@ -5,8 +5,9 @@ import org.bukkit.Location;
 
 public class WantedParsedSign extends BaseParsedSign {
 
-	public WantedParsedSign(SignType signType, String action, int stars, Location location, String[] rawLines) {
-		super(signType, action, 0.0, stars, location, rawLines);
+	public WantedParsedSign(SignType signType, String action, int stars, double price, Location location,
+							String[] rawLines) {
+		super(signType, action, price, stars, location, rawLines);
 
 		setMetadata("action", action);
 	}
