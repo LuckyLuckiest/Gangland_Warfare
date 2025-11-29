@@ -65,6 +65,8 @@ public class SequenceTimer extends Timer {
 
 		// run the task only when it reaches its interval
 		if (currentTask.getInterval() == currentTask.getCurrentInterval() || currentTask.getInterval() == 0) {
+			int tasksProcessed = 0;
+
 			do {
 				// run the task
 				currentTask.runTask();
@@ -79,8 +81,10 @@ public class SequenceTimer extends Timer {
 				// change the state of the currentTask
 				currentTask.reset();
 				// get the head of the queue and remove it
-				if (intervalTaskPairs.isEmpty()) currentTask = null;
-				else currentTask = intervalTaskQueue.poll();
+				currentTask = intervalTaskQueue.poll();
+
+				// safeguard: limit execution to one cycle per tick to prevent infinite loops with 0-interval tasks
+				if (++tasksProcessed >= intervalTaskPairs.size()) break;
 			} while (currentTask != null && currentTask.getInterval() == 0);
 		}
 
@@ -112,9 +116,10 @@ public class SequenceTimer extends Timer {
 	public void reset() {
 		intervalTaskQueue.clear();
 		intervalTaskQueue.addAll(intervalTaskPairs);
+
 		currentTask     = intervalTaskQueue.poll();
 		currentInterval = 0L;
-		added           = false;
+		added           = currentTask != null;
 		totalInterval   = totalIntervalChanged ? 0 : totalInterval;
 	}
 
