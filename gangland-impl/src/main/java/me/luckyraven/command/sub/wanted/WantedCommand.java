@@ -19,11 +19,11 @@ public final class WantedCommand extends CommandHandler {
 		super(gangland, "wanted", true);
 
 		List<CommandInformation> list = getCommands().entrySet()
-													 .stream()
-													 .filter(entry -> entry.getKey().startsWith("wanted"))
-													 .sorted(Map.Entry.comparingByKey())
-													 .map(Map.Entry::getValue)
-													 .toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("wanted"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -35,7 +35,7 @@ public final class WantedCommand extends CommandHandler {
 		User<Player> user   = userManager.getUser(player);
 
 		player.sendMessage(ChatUtil.commandMessage("Wanted Status:"));
-		player.sendMessage(ChatUtil.color(user.getWanted().getLevelStr()));
+		player.sendMessage(ChatUtil.color(user.getWanted().getLevelStars()));
 	}
 
 	@Override

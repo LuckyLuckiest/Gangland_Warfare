@@ -44,12 +44,14 @@ class BountySetCommand extends SubArgument {
 	}
 
 	private void bountySet() {
+		String string = MessageAddon.PLAYER_NOT_FOUND.toString();
 		Argument playerName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			String playerStr = args[2];
 			Player player    = Bukkit.getPlayer(playerStr);
 
 			if (player == null) {
-				sender.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", playerStr));
+				String replace = string.replace("%player%", playerStr);
+				sender.sendMessage(replace);
 				return;
 			}
 
@@ -62,7 +64,8 @@ class BountySetCommand extends SubArgument {
 			Player player    = Bukkit.getPlayer(playerStr);
 
 			if (player == null) {
-				sender.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", playerStr));
+				String replace = string.replace("%player%", playerStr);
+				sender.sendMessage(replace);
 				return;
 			}
 
@@ -71,13 +74,16 @@ class BountySetCommand extends SubArgument {
 			try {
 				value = Double.parseDouble(amountStr);
 			} catch (NumberFormatException exception) {
-				sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", amountStr));
+				String string1 = MessageAddon.MUST_BE_NUMBERS.toString();
+				String replace = string1.replace("%command%", amountStr);
+
+				sender.sendMessage(replace);
 				return;
 			}
 
 			User<Player> user        = userManager.getUser(player);
 			Bounty       userBounty  = user.getBounty();
-			BountyEvent  bountyEvent = new BountyEvent(userBounty);
+			BountyEvent  bountyEvent = new BountyEvent(false, userBounty);
 
 			bountyEvent.setUserBounty(user);
 
@@ -97,17 +103,18 @@ class BountySetCommand extends SubArgument {
 					return;
 				} else {
 					userSender.getEconomy().withdraw(value);
-					senderPlayer.sendMessage(MessageAddon.WITHDRAW_MONEY_PLAYER.toString()
-																			   .replace("%amount%",
-																						SettingAddon.formatDouble(
-																								value)));
+
+					String string1 = MessageAddon.WITHDRAW_MONEY_PLAYER.toString();
+					String replace = string1.replace("%amount%", SettingAddon.formatDouble(value));
+
+					senderPlayer.sendMessage(replace);
 				}
 			}
 
 			gangland.getServer().getPluginManager().callEvent(bountyEvent);
 
 			if (!bountyEvent.isCancelled()) {
-				userBounty.addBounty(sender, value);
+				userBounty.addBounty(sender, value, user.getLevel().getLevelValue());
 			}
 		}, sender -> List.of("<amount>"));
 

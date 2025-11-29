@@ -61,9 +61,13 @@ class RankParentCommand extends SubArgument {
 						return;
 					}
 					rank.getNode().add(childRank.getNode());
-					sender.sendMessage(MessageAddon.RANK_PARENT_ADD.toString()
-																   .replace("%parent%", childRank.getName())
-																   .replace("%rank%", rank.getName()));
+
+					String string = MessageAddon.RANK_PARENT_ADD.toString();
+					String replace = string
+							.replace("%parent%", childRank.getName())
+							.replace("%rank%", rank.getName());
+
+					sender.sendMessage(replace);
 				}
 
 				case "remove" -> {
@@ -72,9 +76,13 @@ class RankParentCommand extends SubArgument {
 						return;
 					}
 					rank.getNode().remove(childRank.getNode());
-					sender.sendMessage(MessageAddon.RANK_PARENT_REMOVE.toString()
-																	  .replace("%parent%", childRank.getName())
-																	  .replace("%rank%", rank.getName()));
+
+					String string = MessageAddon.RANK_PARENT_REMOVE.toString();
+					String replace = string
+							.replace("%parent%", childRank.getName())
+							.replace("%rank%", rank.getName());
+
+					sender.sendMessage(replace);
 				}
 			}
 		}, sender -> List.of("<add/remove>"));

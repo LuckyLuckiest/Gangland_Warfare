@@ -59,12 +59,17 @@ class RankInfoCommand extends SubArgument {
 				if (i < rank.getNode().getChildren().size() - 1) parentBuilder.append(", ");
 			}
 
-			sender.sendMessage(MessageAddon.RANK_INFO_PRIMARY.toString()
-															 .replace("%rank%", rank.getName())
-															 .replace("%id%", String.valueOf(rank.getUsedId()))
-															 .replace("%parent%", parentBuilder.toString()));
-			sender.sendMessage(
-					MessageAddon.RANK_INFO_SECONDARY.toString().replace("%permissions%", permBuilder.toString()));
+			String string = MessageAddon.RANK_INFO_PRIMARY.toString();
+			String replace = string.replace("%rank%", rank.getName())
+								   .replace("%id%", String.valueOf(rank.getUsedId()))
+								   .replace("%parent%", parentBuilder.toString());
+
+			sender.sendMessage(replace);
+
+			String string1  = MessageAddon.RANK_INFO_SECONDARY.toString();
+			String replace1 = string1.replace("%permissions%", permBuilder.toString());
+
+			sender.sendMessage(replace1);
 		}, sender -> List.of("<name>"));
 
 		this.addSubArgument(infoName);

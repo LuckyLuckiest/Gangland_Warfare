@@ -46,7 +46,9 @@ class BountyClearCommand extends SubArgument {
 			Player player    = Bukkit.getPlayer(playerStr);
 
 			if (player == null) {
-				sender.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", playerStr));
+				String string  = MessageAddon.PLAYER_NOT_FOUND.toString();
+				String replace = string.replace("%player%", playerStr);
+				sender.sendMessage(replace);
 				return;
 			}
 
@@ -65,28 +67,35 @@ class BountyClearCommand extends SubArgument {
 			}
 
 			double amount = userBounty.getSetAmount(sender);
+
 			// remove the user
 			userBounty.removeBounty(sender);
-			sender.sendMessage(MessageAddon.BOUNTY_PLAYER_LIFT.toString()
-															  .replace("%amount%", SettingAddon.formatDouble(amount))
-															  .replace("%player%", playerStr));
+
+			String string = MessageAddon.BOUNTY_PLAYER_LIFT.toString();
+			String replace = string.replace("%amount%", SettingAddon.formatDouble(amount))
+								   .replace("%player%", playerStr);
+
+			sender.sendMessage(replace);
 
 			if (sender instanceof Player senderPlayer) {
 				User<Player> userSender = userManager.getUser(senderPlayer);
 
 				userSender.getEconomy().deposit(amount);
-				senderPlayer.sendMessage(MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
-																		  .replace("%amount%",
-																				   SettingAddon.formatDouble(amount)));
+
+				String string1  = MessageAddon.DEPOSIT_MONEY_PLAYER.toString();
+				String replace1 = string1.replace("%amount%", SettingAddon.formatDouble(amount));
+
+				senderPlayer.sendMessage(replace1);
 			}
 
 			if (userBounty.getAmount() == 0D) {
 				player.sendMessage(MessageAddon.BOUNTY_CLEAR.toString());
 			} else {
-				player.sendMessage(MessageAddon.BOUNTY_LIFTED.toString()
-															 .replace("%amount%", SettingAddon.formatDouble(amount))
-															 .replace("%bounty%", SettingAddon.formatDouble(
-																	 userBounty.getAmount())));
+				String string1 = MessageAddon.BOUNTY_LIFTED.toString();
+				String replace1 = string1.replace("%amount%", SettingAddon.formatDouble(amount))
+										 .replace("%bounty%", SettingAddon.formatDouble(userBounty.getAmount()));
+
+				player.sendMessage(replace1);
 			}
 
 		}, sender -> Bukkit.getOnlinePlayers()

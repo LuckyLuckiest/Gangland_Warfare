@@ -8,7 +8,6 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.wanted.Wanted;
 import me.luckyraven.file.configuration.MessageAddon;
-import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -44,8 +43,11 @@ class WantedRemoveCommand extends SubArgument {
 			if (wanted.getLevel() - amount < 0) amount = 0;
 			wanted.setLevel(Math.max(0, wanted.getLevel() - amount));
 
-			sender.sendMessage(String.format("Removed %d wanted level%s.", amount, ChatUtil.plural(amount)),
-							   wanted.getLevelStr());
+			String decreased = MessageAddon.WANTED_DECREASED.toString();
+			String replace = decreased.replace("%amount%", String.valueOf(amount))
+									  .replace("%stars%", wanted.getLevelStars());
+
+			sender.sendMessage(replace);
 		};
 	}
 
@@ -70,8 +72,11 @@ class WantedRemoveCommand extends SubArgument {
 			int value = Math.max(0, wanted.getLevel() - amount);
 			wanted.setLevel(value);
 
-			sender.sendMessage(String.format("Removed %d wanted level%s.", realAmount, ChatUtil.plural(realAmount)),
-							   wanted.getLevelStr());
+			String decreased = MessageAddon.WANTED_DECREASED.toString();
+			String replace = decreased.replace("%amount%", String.valueOf(realAmount))
+									  .replace("%stars%", wanted.getLevelStars());
+
+			sender.sendMessage(replace);
 		}, sender -> List.of("<amount>"));
 
 		this.addSubArgument(amountValue);
