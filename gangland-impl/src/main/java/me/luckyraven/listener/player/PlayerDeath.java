@@ -1,6 +1,7 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.placeholder.PlaceholderHandler;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
@@ -8,6 +9,7 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.datastructure.ScientificCalculator;
 import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -34,11 +36,12 @@ public class PlayerDeath implements Listener {
 		Player       player = event.getEntity();
 		User<Player> user   = userManager.getUser(player);
 
-		// when a player dies, death counter increases
+		// when a player dies, the death counter increases
 		user.setDeaths(user.getDeaths() + 1);
 
 		// punish the player if they die
-		if (user.getEconomy().getBalance() <= SettingAddon.getDeathThreshold()) return;
+		EconomyHandler economy = user.getEconomy();
+		if (economy.getBalance() <= SettingAddon.getDeathThreshold()) return;
 
 		if (SettingAddon.isDeathMoneyCommandEnabled()) {
 			for (String executable : SettingAddon.getDeathMoneyCommandExecutables()) {
@@ -47,22 +50,30 @@ public class PlayerDeath implements Listener {
 				String exec = placeholder.replacePlaceholder(player, executable.replace("/", ""));
 				Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), exec);
 			}
-		} else {
-			// take money from their balance (NOT THEIR BANK)
-			double deduct = amountDeduction(user);
-			String type;
 
-			if (SettingAddon.isDeathLoseMoney()) {
-				type = "&c-";
-				user.getEconomy().withdraw(deduct);
-			} else {
-				type = "&a+";
-				user.getEconomy().deposit(deduct);
-			}
-
-			// inform the player
-			player.sendMessage(ChatUtil.color(type + deduct));
+			return;
 		}
+
+		// take money from their balance (NOT THEIR BANK)
+		double deduct = amountDeduction(user);
+		String type;
+
+		// ignore it if there was no money to be deducted
+		if (deduct == 0) return;
+
+		if (SettingAddon.isDeathLoseMoney()) {
+			type = "&c&l-";
+			economy.withdraw(deduct);
+		} else {
+			type = "&a&l+";
+			economy.deposit(deduct);
+		}
+
+		// inform the player
+		String info    = type + SettingAddon.getMoneySymbol() + NumberUtil.valueFormat(deduct);
+		String message = "&3Death penalty: " + info;
+
+		player.sendMessage(ChatUtil.color(message));
 	}
 
 	private double amountDeduction(User<Player> user) {

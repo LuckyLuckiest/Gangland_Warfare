@@ -9,7 +9,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class EconomyHandler {
 
-	private static @Getter @Setter Economy vaultEconomy;
+	private static @Getter
+	@Setter Economy vaultEconomy;
 
 	private final User<? extends OfflinePlayer> user;
 	private final boolean                       useUser;
@@ -49,8 +50,10 @@ public class EconomyHandler {
 
 		if (!(useUserInfo() && vaultEconomy != null)) return;
 
-		vaultEconomy.withdrawPlayer(user.getUser(), vaultEconomy.getBalance(user.getUser()));
-		vaultEconomy.depositPlayer(user.getUser(), amount);
+		OfflinePlayer offlinePlayer = user.getUser();
+
+		vaultEconomy.withdrawPlayer(offlinePlayer, vaultEconomy.getBalance(offlinePlayer));
+		vaultEconomy.depositPlayer(offlinePlayer, amount);
 	}
 
 	/**
@@ -67,7 +70,7 @@ public class EconomyHandler {
 	 *
 	 * @param amount the amount withdrawn
 	 */
-	public void withdraw(double amount) {
+	public void withdraw(double amount) throws EconomyException {
 		if (amount > getBalance()) throw new EconomyException("Amount exceeding balance");
 
 		setBalance(balance - amount);
