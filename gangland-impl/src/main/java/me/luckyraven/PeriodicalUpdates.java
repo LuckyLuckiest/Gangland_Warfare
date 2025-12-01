@@ -125,10 +125,10 @@ public final class PeriodicalUpdates {
 	 * Stops the periodical update timer.
 	 */
 	public void stop() {
-		if (this.repeatingTimer != null) {
-			this.repeatingTimer.stop();
-			this.repeatingTimer = null;
-		}
+		if (this.repeatingTimer == null) return;
+
+		this.repeatingTimer.stop();
+		this.repeatingTimer = null;
 	}
 
 	/**
