@@ -1,10 +1,12 @@
 package me.luckyraven.util.utilities;
 
+import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.particles.XParticle;
-import org.bukkit.Color;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.World;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
 
 public class ParticleUtil {
@@ -41,12 +43,15 @@ public class ParticleUtil {
 		double spread        = 0.3;
 
 		// Use XParticle for cross-version compatibility
-		Particle particle = XParticle.DUST.get();
-		if (particle == null) particle = Particle.DUST;
+		Particle particle = XParticle.BLOCK.get();
+		if (particle == null) particle = Particle.BLOCK;
 
 		// change the color
-		Particle.DustOptions redColor = new Particle.DustOptions(Color.fromRGB(255, 0, 0), 1.5f);
-		world.spawnParticle(particle, location, particleCount, spread, spread, spread, 0.1, redColor);
+		Material material = XMaterial.REDSTONE_BLOCK.get();
+		if (material == null) material = Material.REDSTONE_BLOCK;
+
+		BlockData blockData = material.createBlockData();
+		world.spawnParticle(particle, location, particleCount, spread, spread, spread, 0.1, blockData);
 	}
 
 }
