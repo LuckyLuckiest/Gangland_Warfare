@@ -15,6 +15,7 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.listener.ListenerPriority;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -26,16 +27,18 @@ import java.util.List;
 @ListenerHandler(priority = ListenerPriority.LOWEST)
 public final class CreateAccount implements Listener {
 
-	private final Gangland            gangland;
-	private final UserManager<Player> userManager;
-	private final MemberManager       memberManager;
-	private final GanglandDatabase    ganglandDatabase;
+	private final Gangland                   gangland;
+	private final UserManager<Player>        userManager;
+	private final UserManager<OfflinePlayer> offlineUserManager;
+	private final MemberManager              memberManager;
+	private final GanglandDatabase           ganglandDatabase;
 
 	public CreateAccount(Gangland gangland) {
-		this.gangland         = gangland;
-		this.memberManager    = gangland.getInitializer().getMemberManager();
-		this.userManager      = gangland.getInitializer().getUserManager();
-		this.ganglandDatabase = gangland.getInitializer().getGanglandDatabase();
+		this.gangland           = gangland;
+		this.userManager        = gangland.getInitializer().getUserManager();
+		this.offlineUserManager = gangland.getInitializer().getOfflineUserManager();
+		this.memberManager      = gangland.getInitializer().getMemberManager();
+		this.ganglandDatabase   = gangland.getInitializer().getGanglandDatabase();
 	}
 
 	// Need to create the account before any other event
@@ -46,6 +49,13 @@ public final class CreateAccount implements Listener {
 
 		user.getEconomy().setBalance(SettingAddon.getUserInitialBalance());
 
+		// remove the player from the offline user manager
+		User<OfflinePlayer> offlineUser = offlineUserManager.getUser(player);
+
+		if (offlineUser != null) {
+			offlineUserManager.remove(offlineUser);
+		}
+
 		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
 			List<Table<?>> tables    = ganglandDatabase.getTables();
 			UserTable      userTable = gangland.getInitializer().getInstanceFromTables(UserTable.class, tables);
@@ -55,7 +65,7 @@ public final class CreateAccount implements Listener {
 
 			UserDataInitEvent userDataInitEvent = new UserDataInitEvent(true, user);
 			Bukkit.getPluginManager().callEvent(userDataInitEvent);
-			
+
 			// Add the user to a user manager group
 			userManager.add(user);
 		});
@@ -63,20 +73,22 @@ public final class CreateAccount implements Listener {
 		// need to check if the user already registered
 		Member member = memberManager.getMember(player.getUniqueId());
 
-		if (member != null) userManager.initializeUserPermission(user, member);
-		else {
-			// if the member is new
-			Member newMember = new Member(player.getUniqueId());
-
-			Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
-				List<Table<?>> tables      = ganglandDatabase.getTables();
-				MemberTable    memberTable = gangland.getInitializer().getInstanceFromTables(MemberTable.class, tables);
-
-				memberManager.initializeMemberData(newMember, memberTable);
-			});
-
-			memberManager.add(newMember);
+		if (member != null) {
+			userManager.initializeUserPermission(user, member);
+			return;
 		}
+
+		// if the member is new
+		Member newMember = new Member(player.getUniqueId());
+
+		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
+			List<Table<?>> tables      = ganglandDatabase.getTables();
+			MemberTable    memberTable = gangland.getInitializer().getInstanceFromTables(MemberTable.class, tables);
+
+			memberManager.initializeMemberData(newMember, memberTable);
+		});
+
+		memberManager.add(newMember);
 	}
 
 }

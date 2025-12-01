@@ -8,12 +8,14 @@ import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserDataInitEvent;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.*;
 import me.luckyraven.feature.phone.Phone;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
+import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.listener.ListenerManager;
@@ -25,10 +27,12 @@ import me.luckyraven.weapon.WeaponManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 public final class ReloadPlugin {
 
@@ -68,6 +72,7 @@ public final class ReloadPlugin {
 		// second, reload the files
 		initializer.getFileManager().reloadFiles();
 		initializer.addonsLoader();
+		MessageAddon.reload(gangland);
 	}
 
 	/**
@@ -178,39 +183,74 @@ public final class ReloadPlugin {
 		BankTable      bankTable   = initializer.getInstanceFromTables(BankTable.class, tables);
 		MemberTable    memberTable = initializer.getInstanceFromTables(MemberTable.class, tables);
 
-		for (Player player : Bukkit.getOnlinePlayers())
-			if (!userManager.contains(userManager.getUser(player))) {
-				User<Player> newUser = new User<>(player);
-				Phone        phone   = new Phone(gangland, newUser, SettingAddon.getPhoneName());
+		// get the online users
+		for (Player player : Bukkit.getOnlinePlayers()) {
+			User<Player> onlineUser = userManager.getUser(player);
 
-				if (SettingAddon.isPhoneEnabled()) {
-					newUser.setPhone(phone);
-					if (!Phone.hasPhone(player)) phone.addPhoneToInventory(player);
-				}
+			if (onlineUser != null) continue;
 
-				initializer.getUserManager().initializeUserData(newUser, userTable, bankTable);
+			User<Player> newUser = new User<>(player);
+			Phone        phone   = new Phone(gangland, newUser, SettingAddon.getPhoneName());
 
-				UserDataInitEvent userDataInitEvent = new UserDataInitEvent(false, newUser);
-				Bukkit.getPluginManager().callEvent(userDataInitEvent);
-
-				userManager.add(newUser);
-
-				// this member doesn't have a gang because they are new
-				Member member = memberManager.getMember(player.getUniqueId());
-
-				// initialize the rank permissions
-				if (member != null) {
-					initializer.getUserManager().initializeUserPermission(newUser, member);
-					continue;
-				}
-
-				// for a new member
-				Member newMember = new Member(player.getUniqueId());
-
-				initializer.getMemberManager().initializeMemberData(newMember, memberTable);
-
-				memberManager.add(newMember);
+			if (SettingAddon.isPhoneEnabled()) {
+				newUser.setPhone(phone);
+				if (!Phone.hasPhone(player)) phone.addPhoneToInventory(player);
 			}
+
+			initializer.getUserManager().initializeUserData(newUser, userTable, bankTable);
+
+			UserDataInitEvent userDataInitEvent = new UserDataInitEvent(false, newUser);
+			Bukkit.getPluginManager().callEvent(userDataInitEvent);
+
+			userManager.add(newUser);
+
+			// this member doesn't have a gang because they are new
+			Member member = memberManager.getMember(player.getUniqueId());
+
+			// initialize the rank permissions
+			if (member != null) {
+				initializer.getUserManager().initializeUserPermission(newUser, member);
+				continue;
+			}
+
+			// for a new member
+			Member newMember = new Member(player.getUniqueId());
+
+			initializer.getMemberManager().initializeMemberData(newMember, memberTable);
+
+			memberManager.add(newMember);
+		}
+
+		// get the offline users
+		UserManager<OfflinePlayer> offlineUserManager = initializer.getOfflineUserManager();
+
+		if (resetCache) {
+			offlineUserManager.clear();
+		}
+
+		DatabaseHelper helper = new DatabaseHelper(gangland, ganglandDatabase);
+
+		helper.runQueries(database -> {
+			// select all users from the user table
+			List<Object[]> allUsers = database.table(userTable.getName()).selectAll();
+
+			for (Object[] userData : allUsers) {
+				String uuidString = String.valueOf(userData[0]);
+				UUID   uuid       = UUID.fromString(uuidString);
+
+				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+				if (offlinePlayer.isOnline()) continue;
+
+				User<OfflinePlayer> existingUser = offlineUserManager.getUser(offlinePlayer);
+				if (existingUser != null) continue;
+
+				User<OfflinePlayer> offlineUser = new User<>(offlinePlayer);
+
+				offlineUserManager.initializeUserData(offlineUser, userTable, bankTable);
+
+				offlineUserManager.add(offlineUser);
+			}
+		});
 	}
 
 	/**
