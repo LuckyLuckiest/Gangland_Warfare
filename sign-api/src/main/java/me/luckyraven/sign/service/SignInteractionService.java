@@ -14,10 +14,12 @@ import java.util.Optional;
 @Getter
 public abstract class SignInteractionService {
 
+	private final String               prefix;
 	private final SignTypeRegistry     registry;
 	private final SignFormatterService formatterService;
 
-	public SignInteractionService(SignTypeRegistry registry, SignFormatterService formatterService) {
+	public SignInteractionService(String prefix, SignTypeRegistry registry, SignFormatterService formatterService) {
+		this.prefix           = prefix;
 		this.registry         = registry;
 		this.formatterService = formatterService;
 	}

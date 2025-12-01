@@ -24,7 +24,7 @@ public class SignCreation implements Listener {
 	public void onSignCreate(SignChangeEvent event) {
 		String[] lines = event.getLines();
 
-		if (lines[0] == null || !lines[0].toLowerCase().startsWith("glw-")) {
+		if (lines[0] == null || !lines[0].toLowerCase().startsWith(signService.getPrefix().toLowerCase())) {
 			return;
 		}
 

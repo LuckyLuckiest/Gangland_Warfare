@@ -88,6 +88,8 @@ public final class Initializer {
 	private final VersionSetup       versionSetup;
 	private final CompatibilitySetup compatibilitySetup;
 
+	private final String prefix;
+
 	// on plugin enable
 	// Managers
 	private PluginManager              pluginManager;
@@ -131,6 +133,10 @@ public final class Initializer {
 
 		this.versionSetup       = new VersionSetup();
 		this.compatibilitySetup = new CompatibilitySetup(versionSetup);
+
+		this.prefix = "glw";
+
+		MessageAddon.setPlaceholder(gangland);
 	}
 
 	/**
@@ -153,9 +159,6 @@ public final class Initializer {
 		databaseManager = new DatabaseManager(gangland);
 		databases();
 		databaseManager.initializeDatabases();
-
-		// Addons
-		MessageAddon.setPlugin(gangland);
 
 		// add all registered plugin permissions
 		Set<Permission> permissions = Bukkit.getPluginManager().getPermissions();
@@ -232,7 +235,10 @@ public final class Initializer {
 		SignTypeRegistry     registry         = new SignTypeRegistry();
 		SignFormatRegistry   formatRegistry   = new SignFormatRegistry();
 		SignFormatterService formatterService = new SignFormatterService(formatRegistry);
-		SignInteraction      signInteraction  = new SignInteraction(registry, formatterService);
+
+		String signPrefix = prefix + "-";
+
+		SignInteraction signInteraction = new SignInteraction(signPrefix, registry, formatterService);
 
 		signManager = new SignManager(gangland, registry, signInteraction);
 
@@ -273,6 +279,10 @@ public final class Initializer {
 	public void addonsLoader() {
 		settingAddon   = new SettingAddon(fileManager);
 		languageLoader = new LanguageLoader(gangland);
+
+		languageLoader.initialize();
+
+		MessageAddon.setMessageConfiguration(languageLoader.getMessage());
 
 		scoreboardLoader();
 		inventoryLoader();
@@ -373,8 +383,7 @@ public final class Initializer {
 	}
 
 	private void commands(Gangland gangland) {
-		String        startValue = "glw";
-		PluginCommand command    = this.gangland.getCommand(startValue);
+		PluginCommand command = this.gangland.getCommand(prefix);
 
 		if (command == null) return;
 

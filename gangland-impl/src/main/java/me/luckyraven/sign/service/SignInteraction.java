@@ -15,8 +15,8 @@ public class SignInteraction extends SignInteractionService {
 
 	private final SignTypeRegistry registry;
 
-	public SignInteraction(SignTypeRegistry registry, SignFormatterService formatterService) {
-		super(registry, formatterService);
+	public SignInteraction(String prefix, SignTypeRegistry registry, SignFormatterService formatterService) {
+		super(prefix, registry, formatterService);
 
 		this.registry = registry;
 	}
