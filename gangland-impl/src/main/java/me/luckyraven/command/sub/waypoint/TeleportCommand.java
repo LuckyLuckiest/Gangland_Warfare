@@ -173,16 +173,18 @@ public final class TeleportCommand extends CommandHandler {
 				if (teleportResult.success()) {
 					if (waypoint1.getCost() != 0D) {
 						user1.getEconomy().withdraw(waypoint1.getCost());
-						player.sendMessage(MessageAddon.WITHDRAW_MONEY_PLAYER.toString()
-																			 .replace("%amount%",
-																					  SettingAddon.formatDouble(
-																							  waypoint1.getCost())));
+
+						String string  = MessageAddon.WITHDRAW_MONEY_PLAYER.toString();
+						String replace = string.replace("%amount%", SettingAddon.formatDouble(waypoint1.getCost()));
+
+						player.sendMessage(replace);
 					}
 
-					message = MessageAddon.WAYPOINT_TELEPORT.toString().replace("%location%", waypoint1.getName());
+					String string = MessageAddon.WAYPOINT_TELEPORT.toString();
+					message = string.replace("%location%", waypoint1.getName());
 				} else {
-					message = MessageAddon.UNABLE_TELEPORT_WAYPOINT.toString()
-																   .replace("%location%", waypoint1.getName());
+					String string = MessageAddon.UNABLE_TELEPORT_WAYPOINT.toString();
+					message = string.replace("%location%", waypoint1.getName());
 
 				}
 
@@ -194,7 +196,8 @@ public final class TeleportCommand extends CommandHandler {
 			if (timer == null) return;
 
 			String time    = TimeUtil.formatTime(timer.getTimeLeft(), true);
-			String message = MessageAddon.WAYPOINT_TELEPORT_COOLDOWN.toString().replace("%timer%", time);
+			String string  = MessageAddon.WAYPOINT_TELEPORT_COOLDOWN.toString();
+			String message = string.replace("%timer%", time);
 
 			user.getUser().sendMessage(message);
 		}

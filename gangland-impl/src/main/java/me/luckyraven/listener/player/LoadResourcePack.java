@@ -21,21 +21,37 @@ public class LoadResourcePack implements Listener {
 		Player player = event.getPlayer();
 
 		switch (event.getStatus()) {
-			case ACCEPTED -> player.sendMessage(ChatUtil.prefixMessage("&eDownloading custom resource pack..."));
-			case SUCCESSFULLY_LOADED -> player.sendMessage(
-					ChatUtil.prefixMessage("&aResource pack has been downloaded successfully."));
-			case FAILED_DOWNLOAD -> player.sendMessage(ChatUtil.errorMessage("Could not download the resource pack."));
+			case ACCEPTED -> {
+				String message = ChatUtil.prefixMessage("&eDownloading custom resource pack...");
+
+				player.sendMessage(message);
+			}
+			case SUCCESSFULLY_LOADED -> {
+				String message = ChatUtil.prefixMessage("&aResource pack has been downloaded successfully.");
+
+				player.sendMessage(message);
+			}
+			case FAILED_DOWNLOAD -> {
+				String message = ChatUtil.errorMessage("Could not download the resource pack.");
+
+				player.sendMessage(message);
+			}
 			case DECLINED -> {
-				if (SettingAddon.isResourcePackKick()) player.kickPlayer(
-						ChatUtil.color("&cYou have to accept the resource pack request!"));
-				else {
+				if (SettingAddon.isResourcePackKick()) {
+					String message = ChatUtil.color("&cYou have to accept the resource pack request!");
+
+					player.kickPlayer(message);
+				} else {
 					String message = ChatUtil.color(
 							"&7If you changed your mind &aclick &7to check how to download the resource pack.");
-					TextComponent click = new TextComponent(message);
 
+					TextComponent click = new TextComponent(message);
 					click.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/glw option click resource"));
-					player.sendMessage(ChatUtil.color(
-							"&cYou will miss some custom features if you did not download the resource pack!"));
+
+					String messageSpigot = ChatUtil.color(
+							"&cYou will miss some custom features if you did not download the resource pack!");
+
+					player.sendMessage(messageSpigot);
 					player.spigot().sendMessage(click);
 				}
 			}

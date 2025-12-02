@@ -3,17 +3,20 @@ package me.luckyraven.weapon.listener;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.util.autowire.AutowireTarget;
+import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.events.WeaponProjectileLaunchEvent;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.projectiles.ProjectileSource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,36 +59,40 @@ public class ProjectileDamage implements Listener {
 		if (!(event.getDamager() instanceof Projectile projectile)) return;
 		if (entity instanceof ItemFrame || entity instanceof ArmorStand) return;
 
-		int                  projectileId = projectile.getEntityId();
-		ProjectileEventQueue queue        = eventQueues.get(projectileId);
-
-		if (queue == null) return;
+		int projectileId = projectile.getEntityId();
+		var queue        = eventQueues.computeIfAbsent(projectileId, ProjectileEventQueue::new);
 
 		// Add damage event to queue
 		queue.addDamageEvent(event);
 
 		// Try to process queue
-		tryProcessQueue(projectileId);
+		boolean isPlayer = event.getDamager() instanceof Player;
+		tryProcessQueue(projectileId, isPlayer ? (Player) event.getDamager() : null);
 	}
 
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onProjectileHit(ProjectileHitEvent event) {
-		Projectile           projectile   = event.getEntity();
-		int                  projectileId = projectile.getEntityId();
-		ProjectileEventQueue queue        = eventQueues.get(projectileId);
+		var projectile   = event.getEntity();
+		int projectileId = projectile.getEntityId();
 
-		if (queue == null) return;
+		var queue = eventQueues.computeIfAbsent(projectileId, ProjectileEventQueue::new);
 
 		// Add hit event to queue
 		queue.addHitEvent(event);
 
 		// Try to process queue
-		tryProcessQueue(projectileId);
+		boolean isPlayer = event.getEntity().getShooter() instanceof Player;
+		tryProcessQueue(projectileId, isPlayer ? (Player) event.getEntity().getShooter() : null);
 	}
 
-	private void tryProcessQueue(int projectileId) {
+	private void tryProcessQueue(int projectileId, Player shooter) {
 		ProjectileEventQueue queue = eventQueues.get(projectileId);
-		if (queue == null || queue.isProcessed()) return;
+
+		if (queue != null && queue.isProcessed()) return;
+
+		if (queue == null) {
+			eventQueues.put(projectileId, queue = new ProjectileEventQueue(projectileId));
+		}
 
 		// Check if we have both events OR if hit event happened without damage (block hit)
 		boolean hasDamageEvent = queue.hasDamageEvent();
@@ -96,7 +103,7 @@ public class ProjectileDamage implements Listener {
 			// Check if hit was on a block (not entity)
 			if (queue.getHitEvent().getHitEntity() == null) {
 				// Block hit only - process immediately
-				executeQueue(projectileId, queue);
+				executeQueue(projectileId, queue, shooter);
 				return;
 			}
 			// Hit entity but no damage event yet - wait for damage event
@@ -110,11 +117,11 @@ public class ProjectileDamage implements Listener {
 
 		// We have both events - process them in order
 		if (hasDamageEvent && hasHitEvent) {
-			executeQueue(projectileId, queue);
+			executeQueue(projectileId, queue, shooter);
 		}
 	}
 
-	private void executeQueue(int projectileId, ProjectileEventQueue queue) {
+	private void executeQueue(int projectileId, ProjectileEventQueue queue, Player shooter) {
 		if (queue.isProcessed()) return;
 		queue.setProcessed(true);
 
@@ -126,7 +133,7 @@ public class ProjectileDamage implements Listener {
 
 		// Process damage events FIRST (in order they were added)
 		for (EntityDamageByEntityEvent damageEvent : queue.getDamageEvents()) {
-			processDamageEvent(damageEvent, weapon);
+			processDamageEvent(damageEvent, weapon, shooter);
 		}
 
 		// Then process hit event
@@ -139,12 +146,15 @@ public class ProjectileDamage implements Listener {
 		cleanup(projectileId);
 	}
 
-	private void processDamageEvent(EntityDamageByEntityEvent event, Weapon weapon) {
+	private void processDamageEvent(EntityDamageByEntityEvent event, Weapon weapon, Player shooter) {
 		if (!(event.getEntity() instanceof LivingEntity entity)) return;
 		if (!(event.getDamager() instanceof Projectile projectile)) return;
 
 		Random random = new Random();
-		double damage = random.nextDouble() < weapon.getProjectileCriticalHitChance() / 100D ?
+
+		boolean criticalHitOccurred = random.nextDouble() < weapon.getProjectileCriticalHitChance() / 100D;
+
+		double damage = criticalHitOccurred ?
 						weapon.getProjectileDamage() + weapon.getProjectileCriticalHitDamage() :
 						weapon.getProjectileDamage();
 
@@ -153,8 +163,19 @@ public class ProjectileDamage implements Listener {
 						damage + weapon.getProjectileHeadDamage() :
 						damage);
 
+		if (criticalHitOccurred && shooter != null) {
+			SoundConfiguration sound = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, "ITEM_SHIELD_BREAK",
+															  1F, 1F);
+
+			sound.playSound(shooter);
+		}
+
 		// set the fire damage
 		entity.setFireTicks(weapon.getProjectileFireTicks());
+
+		entity.setNoDamageTicks(0);
+
+//		Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> entity.setNoDamageTicks(20), 2L);
 	}
 
 	private void processHitEvent(ProjectileHitEvent event, int projectileId) {
@@ -169,19 +190,27 @@ public class ProjectileDamage implements Listener {
 	}
 
 	private void explosiveProjectile(ProjectileHitEvent event) {
-		if (!(event.getEntity() instanceof Fireball fireball)) return;
-		if (!(fireball.getShooter() instanceof LivingEntity)) return;
+		Projectile projectile = event.getEntity();
 
-		Location hitEntity = event.getHitEntity() != null ? event.getHitEntity().getLocation() : fireball.getLocation();
-		Location hitLoc    = event.getHitBlock() != null ? event.getHitBlock().getLocation() : hitEntity;
+		if (!(projectile instanceof Fireball fireball)) return;
+
+		ProjectileSource shooter = fireball.getShooter();
+
+		if (!(shooter instanceof LivingEntity)) return;
+
+		Entity   targetEntity = event.getHitEntity();
+		Location hitEntity    = targetEntity != null ? targetEntity.getLocation() : fireball.getLocation();
+
+		Block    hitBlock = event.getHitBlock();
+		Location hitLoc   = hitBlock != null ? hitBlock.getLocation() : hitEntity;
 
 		// damage nearby entities
-		int    entityId        = event.getEntity().getEntityId();
+		int    entityId        = projectile.getEntityId();
 		Weapon weapon          = weaponInstance.get(entityId);
 		double explosionRadius = weapon.getProjectileExplosionDamage();
 
 		for (Entity entity : fireball.getNearbyEntities(explosionRadius, explosionRadius, explosionRadius)) {
-			if (!(entity instanceof LivingEntity target && entity != fireball.getShooter())) continue;
+			if (!(entity instanceof LivingEntity target && entity != shooter)) continue;
 
 			double distance = target.getLocation().distance(hitLoc);
 			double damage   = 20 * (1 - (distance / explosionRadius));

@@ -65,7 +65,10 @@ class BankDepositCommand extends SubArgument {
 			try {
 				argAmount = Double.parseDouble(args[2]);
 			} catch (NumberFormatException exception) {
-				player.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
+				String string  = MessageAddon.MUST_BE_NUMBERS.toString();
+				String replace = string.replace("%command%", args[2]);
+
+				player.sendMessage(replace);
 				return;
 			}
 
@@ -79,10 +82,10 @@ class BankDepositCommand extends SubArgument {
 			BankCommand.processMoney(user, bank, user.getEconomy().getBalance(), argAmount, inBank,
 									 user.getEconomy().getBalance() - argAmount);
 
-			user.getUser()
-				.sendMessage(MessageAddon.BANK_MONEY_DEPOSIT_PLAYER.toString()
-																   .replace("%amount%",
-																			SettingAddon.formatDouble(argAmount)));
+			String string  = MessageAddon.BANK_MONEY_DEPOSIT_PLAYER.toString();
+			String replace = string.replace("%amount%", SettingAddon.formatDouble(argAmount));
+
+			user.getUser().sendMessage(replace);
 
 		}, sender -> List.of("<amount>"));
 	}

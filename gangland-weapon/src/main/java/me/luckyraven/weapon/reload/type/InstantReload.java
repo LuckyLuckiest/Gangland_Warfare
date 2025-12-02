@@ -42,6 +42,14 @@ public class InstantReload extends Reload {
 		timer.addIntervalTaskPair(0, time -> {
 			super.startReloading(player);
 
+			// TODO a bug that doesn't allow the weapon to leave reload state even after explicitly saying to end the reload
+//			boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1), getWeapon().getReloadConsume());
+//			if (removeAmmunition && !contains) {
+//				stopReloading();
+//				super.endReloading(player);
+//				return;
+//			}
+
 			// remove the magazine the moment the reloading starts to prevent bugs
 			if (removeAmmunition) {
 				// consume the item

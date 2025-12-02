@@ -111,9 +111,7 @@ public final class PeriodicalUpdates {
 	/**
 	 * Resets the cache data.
 	 */
-	public void resetCache() {
-		removeInventories();
-	}
+	public void resetCache() { }
 
 	/**
 	 * Updates the plugin information.
@@ -127,7 +125,10 @@ public final class PeriodicalUpdates {
 	 * Stops the periodical update timer.
 	 */
 	public void stop() {
-		if (this.repeatingTimer != null) this.repeatingTimer.stop();
+		if (this.repeatingTimer == null) return;
+
+		this.repeatingTimer.stop();
+		this.repeatingTimer = null;
 	}
 
 	/**
@@ -316,18 +317,6 @@ public final class PeriodicalUpdates {
 				else weaponTable.updateTableQuery(database, weapon);
 			}
 		});
-	}
-
-	private void removeInventories() {
-		for (User<Player> user : initializer.getUserManager().getUsers().values())
-			removeInventory(user);
-	}
-
-	private void removeInventory(User<Player> user) {
-		if (userViewingInventory(user)) return;
-
-		// remove the inventories
-		user.clearInventories();
 	}
 
 	private boolean userViewingInventory(User<Player> user) {

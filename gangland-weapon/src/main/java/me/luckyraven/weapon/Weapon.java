@@ -21,12 +21,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
 @Getter
 @Setter
-public class Weapon implements Cloneable {
+public class Weapon implements Cloneable, Comparable<Weapon> {
 
 	// Information configuration
 	private final UUID   uuid;
@@ -437,6 +438,73 @@ public class Weapon implements Cloneable {
 				recoilPattern.stream().map(Arrays::toString).toList(), reloadActionBarReloading, reloadActionBarOpening,
 				scopeLevel, scoped, recoil);
 	}
+
+	@Override
+	public int compareTo(@NotNull Weapon other) {
+		int result;
+
+		// Compare by internal weapon name (most important identity)
+		result = this.name.compareToIgnoreCase(other.name);
+		if (result != 0) return result;
+
+		// Compare weapon category
+		result = this.category.compareTo(other.category);
+		if (result != 0) return result;
+
+		// Compare material
+		result = this.material.compareTo(other.material);
+		if (result != 0) return result;
+
+		// Compare durability
+		result = Short.compare(this.durability, other.durability);
+		if (result != 0) return result;
+
+		// Projectile data
+		result = Double.compare(this.projectileSpeed, other.projectileSpeed);
+		if (result != 0) return result;
+
+		result = this.projectileType.compareTo(other.projectileType);
+		if (result != 0) return result;
+
+		result = Double.compare(this.projectileDamage, other.projectileDamage);
+		if (result != 0) return result;
+
+		result = Integer.compare(this.projectileConsumed, other.projectileConsumed);
+		if (result != 0) return result;
+
+		result = Integer.compare(this.projectilePerShot, other.projectilePerShot);
+		if (result != 0) return result;
+
+		result = Integer.compare(this.projectileCooldown, other.projectileCooldown);
+		if (result != 0) return result;
+
+		result = Integer.compare(this.projectileDistance, other.projectileDistance);
+		if (result != 0) return result;
+
+		result = Boolean.compare(this.particle, other.particle);
+		if (result != 0) return result;
+
+		// Reload configuration
+		result = Integer.compare(this.maxMagCapacity, other.maxMagCapacity);
+		if (result != 0) return result;
+
+		result = Integer.compare(this.reloadCooldown, other.reloadCooldown);
+		if (result != 0) return result;
+
+		result = this.reloadAmmoType.compareTo(other.reloadAmmoType);
+		if (result != 0) return result;
+
+		result = Integer.compare(this.reloadConsume, other.reloadConsume);
+		if (result != 0) return result;
+
+		result = Integer.compare(this.reloadRestore, other.reloadRestore);
+		if (result != 0) return result;
+
+		result = this.reloadType.compareTo(other.reloadType);
+
+		return result;
+	}
+
 
 	private void updateTag(ItemBuilder itemBuilder, WeaponTag tag, Object value) {
 		tags.replace(tag, value);

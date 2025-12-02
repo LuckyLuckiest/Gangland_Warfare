@@ -3,6 +3,7 @@ package me.luckyraven.file.configuration;
 import lombok.Getter;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.FileManager;
+import me.luckyraven.util.utilities.NumberUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.configuration.ConfigurationSection;
@@ -23,53 +24,72 @@ public class SettingAddon {
 
 	private static final Logger logger = LogManager.getLogger(SettingAddon.class.getSimpleName());
 
-	private static         FileConfiguration settings;
+	private static FileConfiguration settings;
+
 	// update configuration
-	private static @Getter boolean           updaterEnabled, notifyPrivilegedPlayers, updaterAutoUpdate;
+	private static @Getter boolean updaterEnabled, notifyPrivilegedPlayers, updaterAutoUpdate;
+
 	// language picked
-	private static @Getter String  languagePicked;
+	private static @Getter String languagePicked;
+
 	// resource pack
 	private static @Getter boolean resourcePackEnabled;
 	private static @Getter String  resourcePackUrl;
 	private static @Getter boolean resourcePackKick;
+
 	// database configuration
-	private static @Getter String  databaseType;
-	private static @Getter String  mysqlHost, mysqlUsername, mysqlPassword;
+	private static @Getter String databaseType;
+	private static @Getter String mysqlHost, mysqlUsername, mysqlPassword;
 	private static @Getter int     mysqlPort;
 	private static @Getter boolean sqliteBackup, sqliteFailedMysql, autoSave, autoSaveDebug;
-	private static @Getter int    autoSaveTime;
+	private static @Getter int autoSaveTime;
+
 	// inventory configuration
 	private static @Getter String inventoryFillItem, inventoryFillName, inventoryLineItem, inventoryLineName, nextPage,
 			previousPage, homePage;
+
 	// economy
 	private static @Getter String moneySymbol, balanceFormat;
+
 	// user configuration
 	private static @Getter double userInitialBalance, userMaxBalance;
 	private static @Getter double bankInitialBalance, bankCreateFee, bankMaxBalance;
+
 	// user levels
 	private static @Getter int userMaxLevel, userLevelBaseAmount;
 	private static @Getter String userLevelFormula;
 	private static @Getter int    userSkillUpgrade;
 	private static @Getter double userSkillCost, userSkillExponential;
+
 	// user death
 	private static @Getter boolean deathEnabled, deathMoneyCommandEnabled, deathLoseMoney;
 	private static @Getter List<String> deathMoneyCommandExecutables;
 	private static @Getter String       deathLoseMoneyFormula;
 	private static @Getter double       deathThreshold;
+
 	// bounty configuration
-	private static @Getter double       bountyEachKillValue, bountyMaxKill;
+	private static @Getter double bountyEachKillValue, bountyMaxKill;
 	private static @Getter boolean bountyTimerEnabled;
 	private static @Getter double  bountyTimerMultiple, bountyTimerMax;
-	private static @Getter int     bountyTimeInterval;
+	private static @Getter int bountyTimeInterval;
+
+	// wanted configuration
+	private static @Getter double wantedTakeMoneyAmount, wantedTakeMoneyMultiplier, wantedTimerMultiplierAmount;
+	private static @Getter boolean wantedEnabled, wantedTimerEnabled, wantedTimerMultiplierEnabled;
+	private static @Getter int wantedTimerTime, wantedLevelIncrement, wantedMaximumLevel;
+	private static @Getter List<Integer> wantedKillCounter;
+
 	// phone configuration
 	private static @Getter boolean phoneEnabled;
 	private static @Getter String  phoneItem, phoneName;
 	private static @Getter int     phoneSlot;
 	private static @Getter boolean phoneMovable, phoneDroppable;
+
 	// gang configuration
 	private static @Getter boolean gangEnabled, gangNameDuplicates;
 	private static @Getter String gangRankHead, gangRankTail, gangDisplayNameChar;
 	private static @Getter double gangInitialBalance, gangCreateFee, gangMaxBalance, gangContributionRate;
+
 	// scoreboard configuration
 	private static @Getter boolean scoreboardEnabled;
 	private static @Getter String  scoreboardDriver;
@@ -86,7 +106,7 @@ public class SettingAddon {
 	}
 
 	public static String formatDouble(double value) {
-		return format(value).replaceAll("\\.?0*$", "");
+		return NumberUtil.formatDouble(format(value), value);
 	}
 
 	public static Method getSetting(String methodName) {
@@ -195,6 +215,21 @@ public class SettingAddon {
 		bountyTimerMultiple = bounty.getDouble("Repeating_Timer.Multiple");
 		bountyTimeInterval  = bounty.getInt("Repeating_Timer.Time");
 		bountyTimerMax      = bounty.getDouble("Repeating_Timer.Max");
+
+		// wanted
+		ConfigurationSection wanted = settings.getConfigurationSection("Wanted");
+		Objects.requireNonNull(wanted);
+
+		wantedEnabled                = wanted.getBoolean("Enable");
+		wantedTakeMoneyAmount        = wanted.getDouble("Take_Money.Amount");
+		wantedTakeMoneyMultiplier    = wanted.getDouble("Take_Money.Multiplier");
+		wantedTimerEnabled           = wanted.getBoolean("Countdown_Timer.Enable");
+		wantedTimerTime              = wanted.getInt("Countdown_Timer.Time");
+		wantedTimerMultiplierEnabled = wanted.getBoolean("Countdown_Timer.Multiplier.Enable");
+		wantedTimerMultiplierAmount  = wanted.getDouble("Countdown_Timer.Multiplier.Amount");
+		wantedLevelIncrement         = wanted.getInt("Level.Increment");
+		wantedMaximumLevel           = wanted.getInt("Level.Max");
+		wantedKillCounter            = wanted.getIntegerList("Kill_Counter");
 
 		// phone
 		ConfigurationSection phone = settings.getConfigurationSection("Phone");

@@ -50,7 +50,9 @@ class RankCreateCommand extends SubArgument {
 		ConfirmArgument confirmCreate = new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
 			Rank rank = new Rank(createRankName.get(sender).get(), Rank.getNewId());
 
-			sender.sendMessage(MessageAddon.RANK_CREATED.toString().replace("%rank%", rank.getName()));
+			String string  = MessageAddon.RANK_CREATED.toString();
+			String replace = string.replace("%rank%", rank.getName());
+			sender.sendMessage(replace);
 			rankManager.add(rank);
 			createRankName.remove(sender);
 
@@ -80,10 +82,10 @@ class RankCreateCommand extends SubArgument {
 			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
 				if (time.getTimeLeft() % 20 != 0) return;
 
-				sender.sendMessage(MessageAddon.RANK_CREATE_CONFIRM.toString()
-																   .replace("%timer%",
-																			TimeUtil.formatTime(time.getTimeLeft(),
-																								true)));
+				String string  = MessageAddon.RANK_CREATE_CONFIRM.toString();
+				String replace = string.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true));
+
+				sender.sendMessage(replace);
 			}, time -> {
 				confirmCreate.setConfirmed(false);
 				createRankName.remove(sender);

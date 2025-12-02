@@ -17,4 +17,7 @@ public @interface ListenerHandler {
 	 * Whether this listener should only be registered if certain conditions are met.
 	 */
 	String condition() default "";
+
+	ListenerPriority priority() default ListenerPriority.NORMAL;
+
 }

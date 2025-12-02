@@ -1,0 +1,24 @@
+Information:
+   Display_Name: "&6&lGang Members"
+   Size: 54
+   Type: multi-inventory
+   Configuration:
+      Fill: true
+      Border: true
+      Static_Items: false
+   Permission: "gangland.inventory.users_stat"
+   Multi:
+      Item_Source: "gang_members"
+      Per_Page: 28
+
+Static_Items:
+   0:
+      Item: PLAYER_HEAD
+      Name: "&b%member_name%"
+      Data: "%member_name%"
+      Lore:
+         - "&7Rank:&e %member_rank%"
+         - "&7Contribution:&e %member_contribution%"
+         - "&7Joined:&e %member_join_date%"
+         - ""
+         - "&7Status: %member_online_status%"

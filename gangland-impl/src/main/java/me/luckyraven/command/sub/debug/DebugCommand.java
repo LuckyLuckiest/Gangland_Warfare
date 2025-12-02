@@ -4,8 +4,6 @@ import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.particles.XParticle;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.inventory.InventoryHandler;
-import me.luckyraven.bukkit.inventory.MultiInventory;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
@@ -19,11 +17,16 @@ import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.ray.RayTrace;
+import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.multi.MultiInventory;
+import me.luckyraven.inventory.multi.MultiInventoryCreation;
+import me.luckyraven.inventory.part.ButtonTags;
+import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.util.color.Color;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
 import me.luckyraven.util.datastructure.JsonFormatter;
+import me.luckyraven.util.ray.RayTrace;
 import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.weapon.Weapon;
 import net.wesjd.anvilgui.AnvilGUI;
@@ -214,7 +217,6 @@ public final class DebugCommand extends CommandHandler {
 	private @NotNull Argument getMultiInv() {
 		return new Argument(getGangland(), "multi", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
-				User<Player>    user  = getGangland().getInitializer().getUserManager().getUser(player);
 				List<ItemStack> items = new ArrayList<>();
 
 				for (Color color : Color.values()) {
@@ -231,8 +233,15 @@ public final class DebugCommand extends CommandHandler {
 
 				items.addAll(swords.stream().map(ItemStack::new).toList());
 
-				MultiInventory multi = MultiInventory.dynamicMultiInventory(getGangland(), user, items,
-																			"&6&lDebug items", false, false, null);
+				String title = "&6&lDebug items";
+				Fill   fill  = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+
+				ButtonTags buttonTags = new ButtonTags(SettingAddon.getPreviousPage(), SettingAddon.getHomePage(),
+													   SettingAddon.getNextPage());
+
+				MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getGangland(), player, items, title,
+																					false, false, fill, buttonTags,
+																					null);
 
 				if (multi == null) return;
 

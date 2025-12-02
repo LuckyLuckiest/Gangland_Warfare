@@ -58,9 +58,8 @@ class RankPermissionCommand extends SubArgument {
 
 					rank.addPermission(newPermission);
 
-					message = MessageAddon.RANK_PERMISSION_ADD.toString()
-															  .replace("%rank%", rank.getName())
-															  .replace("%permission%", permString);
+					String string = MessageAddon.RANK_PERMISSION_ADD.toString();
+					message = string.replace("%rank%", rank.getName()).replace("%permission%", permString);
 				}
 				case "remove" -> {
 					if (!rank.contains(permString)) {
@@ -70,9 +69,8 @@ class RankPermissionCommand extends SubArgument {
 
 					rank.removePermission(permString);
 
-					message = MessageAddon.RANK_PERMISSION_REMOVE.toString()
-																 .replace("%rank%", rank.getName())
-																 .replace("%permission%", permString);
+					String string = MessageAddon.RANK_PERMISSION_REMOVE.toString();
+					message = string.replace("%rank%", rank.getName()).replace("%permission%", permString);
 				}
 			}
 

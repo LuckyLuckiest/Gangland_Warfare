@@ -44,8 +44,13 @@ class AmmunitionGiveCommand extends SubArgument {
 			String  ammoName       = args[2];
 			boolean giveAmmunition = giveAmmunition(player, ammoName.toLowerCase(), 1);
 
-			if (giveAmmunition) player.sendMessage(ChatUtil.commandMessage("Given &a1 &b" + ammoName + "&7."));
-			else player.sendMessage(ChatUtil.errorMessage("Invalid ammunition!"));
+			if (giveAmmunition) {
+				String gaveAmmo = MessageAddon.RECEIVED_AMMO.toString();
+				player.sendMessage(gaveAmmo.replace("%ammo%", ammoName).replace("%amount%", "1"));
+			} else {
+				String invalidAmmo = MessageAddon.INVALID_AMMO.toString();
+				player.sendMessage(invalidAmmo.replace("%args%", ammoName));
+			}
 		}, sender -> {
 			AmmunitionAddon ammunitionAddon = gangland.getInitializer().getAmmunitionAddon();
 
@@ -67,9 +72,14 @@ class AmmunitionGiveCommand extends SubArgument {
 
 			boolean giveAmmunition = giveAmmunition(player, ammoName.toLowerCase(), ammoAmount);
 
-			if (giveAmmunition) player.sendMessage(
-					ChatUtil.commandMessage("Given &a" + ammoAmount + " &b" + ammoName + "&7."));
-			else player.sendMessage(ChatUtil.errorMessage("Invalid ammunition!"));
+			if (giveAmmunition) {
+				String gaveAmmo = MessageAddon.RECEIVED_AMMO.toString();
+				player.sendMessage(
+						gaveAmmo.replace("%ammo%", ammoName).replace("%amount%", String.valueOf(ammoAmount)));
+			} else {
+				String invalidAmmo = MessageAddon.INVALID_AMMO.toString();
+				player.sendMessage(invalidAmmo.replace("%args%", ammoName));
+			}
 		}, sender -> List.of("<amount>"));
 
 		name.addSubArgument(amount);

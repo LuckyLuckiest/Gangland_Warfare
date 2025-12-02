@@ -46,7 +46,6 @@ public class GangMembersDamage implements Listener {
 		Gang gang2 = gangManager.getGang(userDamaged.getGangId());
 
 		if (gang1.isAlly(gang2) || userDamager.getGangId() == userDamaged.getGangId()) event.setCancelled(true);
-
 	}
 
 }

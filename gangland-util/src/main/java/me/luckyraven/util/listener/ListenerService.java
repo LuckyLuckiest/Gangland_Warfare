@@ -12,7 +12,9 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 
 public abstract class ListenerService {
@@ -21,13 +23,13 @@ public abstract class ListenerService {
 
 	private final JavaPlugin          plugin;
 	@Getter
-	private final Set<Listener>       listeners;
+	private final List<ListenerEntry> listeners;
 	@Getter
 	private final DependencyContainer dependencyContainer;
 
 	public ListenerService(JavaPlugin plugin) {
 		this.plugin              = plugin;
-		this.listeners           = new HashSet<>();
+		this.listeners           = new ArrayList<>();
 		this.dependencyContainer = new DependencyContainer();
 	}
 
@@ -35,12 +37,16 @@ public abstract class ListenerService {
 
 	public void registerEvents() {
 		PluginManager pluginManager = Bukkit.getPluginManager();
-		for (Listener listener : listeners)
-			pluginManager.registerEvents(listener, plugin);
+
+		listeners.sort(Comparator.comparingInt(entry -> entry.priority.getPriority()));
+
+		for (ListenerEntry entry : listeners) {
+			pluginManager.registerEvents(entry.listener, plugin);
+		}
 	}
 
-	public void addEvent(Listener listener) {
-		listeners.add(listener);
+	public void addEvent(Listener listener, ListenerPriority priority) {
+		listeners.add(new ListenerEntry(listener, priority));
 	}
 
 	/**
@@ -66,8 +72,9 @@ public abstract class ListenerService {
 					continue;
 				}
 
-				ListenerHandler annotation = clazz.getAnnotation(ListenerHandler.class);
-				String          condition  = annotation.condition();
+				ListenerHandler  annotation = clazz.getAnnotation(ListenerHandler.class);
+				ListenerPriority priority   = annotation.priority();
+				String           condition  = annotation.condition();
 
 				// check if the condition is met
 				if (!condition.isEmpty()) {
@@ -81,7 +88,7 @@ public abstract class ListenerService {
 					Listener listener = instantiateListener(clazz, plugin);
 
 					if (listener != null) {
-						addEvent(listener);
+						addEvent(listener, priority);
 					}
 				} catch (Exception exception) {
 					logger.warn("Failed to instantiate class {}: {}", clazz.getName(), exception.getMessage());
@@ -184,6 +191,16 @@ public abstract class ListenerService {
 					}
 				}
 			}
+		}
+	}
+
+	private static class ListenerEntry {
+		final Listener         listener;
+		final ListenerPriority priority;
+
+		ListenerEntry(Listener listener, ListenerPriority priority) {
+			this.listener = listener;
+			this.priority = priority;
 		}
 	}
 

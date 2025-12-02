@@ -168,8 +168,9 @@ class GangKickCommand extends SubArgument {
 			User<? extends OfflinePlayer> targetUser;
 			OfflinePlayer                 offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
 
-			if (offlinePlayer.isOnline()) targetUser = userManager.getUser(offlinePlayer.getPlayer());
-			else {
+			if (offlinePlayer.isOnline()) {
+				targetUser = userManager.getUser(offlinePlayer.getPlayer());
+			} else {
 				targetUser = new User<>(offlinePlayer);
 
 				Initializer      initializer      = gangland.getInitializer();
@@ -179,11 +180,15 @@ class GangKickCommand extends SubArgument {
 				UserTable userTable = initializer.getInstanceFromTables(UserTable.class, tables);
 				BankTable bankTable = initializer.getInstanceFromTables(BankTable.class, tables);
 
-				initializer.getUserManager().initializeUserData(targetUser, userTable, bankTable);
+				User<OfflinePlayer> offlineUser = (User<OfflinePlayer>) targetUser;
+
+				UserManager<OfflinePlayer> offlineUserManager = initializer.getOfflineUserManager();
+
+				offlineUserManager.initializeUserData(offlineUser, userTable, bankTable);
 
 				// no user initializer event called so far (need to work with it until fully compatible)
 
-				initializer.getOfflineUserManager().add((User<OfflinePlayer>) targetUser);
+				offlineUserManager.add(offlineUser);
 			}
 
 			if (targetUser.getUser() instanceof Player p) {

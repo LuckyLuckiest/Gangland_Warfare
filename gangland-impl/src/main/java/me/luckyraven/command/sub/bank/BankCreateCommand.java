@@ -80,7 +80,10 @@ class BankCreateCommand extends SubArgument {
 			user.addAccount(bank);
 			bank.getEconomy().setBalance(SettingAddon.getBankInitialBalance());
 
-			player.sendMessage(MessageAddon.BANK_CREATED.toString().replace("%bank%", createBankName.get(user).get()));
+			String string  = MessageAddon.BANK_CREATED.toString();
+			String replace = string.replace("%bank%", createBankName.get(user).get());
+
+			player.sendMessage(replace);
 
 			createBankName.remove(user);
 
@@ -107,9 +110,10 @@ class BankCreateCommand extends SubArgument {
 			createBankName.put(user, new AtomicReference<>(args[2]));
 
 			// Need to notify the player and give access to confirm
-			player.sendMessage(MessageAddon.BANK_CREATE_FEE.toString()
-														   .replace("%amount%", SettingAddon.formatDouble(
-																   SettingAddon.getBankCreateFee())));
+			String string  = MessageAddon.BANK_CREATE_FEE.toString();
+			String replace = string.replace("%amount%", SettingAddon.formatDouble(SettingAddon.getBankCreateFee()));
+
+			player.sendMessage(replace);
 			player.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "create"}));
 			confirmCreate.setConfirmed(true);
 

@@ -7,6 +7,7 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.phone.Phone;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.util.listener.ListenerPriority;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,7 +20,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-@ListenerHandler(condition = "isPhoneEnabled")
+@ListenerHandler(condition = "isPhoneEnabled", priority = ListenerPriority.LOW)
 public class PhoneItem implements Listener {
 
 	private final Gangland            gangland;

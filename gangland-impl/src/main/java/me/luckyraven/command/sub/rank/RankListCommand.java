@@ -36,7 +36,10 @@ class RankListCommand extends SubArgument {
 				if (i < ranks.size() - 1) builder.append(", ");
 			}
 
-			sender.sendMessage(MessageAddon.RANK_LIST_SECONDARY.toString().replace("%ranks%", builder.toString()));
+			String string  = MessageAddon.RANK_LIST_SECONDARY.toString();
+			String replace = string.replace("%ranks%", builder.toString());
+
+			sender.sendMessage(replace);
 		};
 	}
 }

@@ -88,21 +88,28 @@ Commands:
       Page_Invalid: "&4Invalid Page&7: "
       Doesnt_Exist: "&4Doesn't Exist&7: "
    Weapons:
-      Gave_Ammo: "You gave &8(&c%amount%&8) &e%ammo% &7ammunition to &3%player%&7."
-      Gave_Weapon: "You gave a &8[&c%weapon%&8] &7weapon to &3%player%&7."
+      Ammo:
+         Received: "You received &8(&7%amount%&8) &e%ammo% &7ammunition."
+         Gave: "You gave &8(&7%amount%&8) &e%ammo% &7ammunition to &3%player%&7."
+      Weapon:
+         Received: "You received &8(&7%amount%&8) &e%weapon% &7weapon."
+         Gave: "You gave a &8(&7%amount%&8) &e%weapon% &7weapon to &3%player%&7."
    Economy:
       Balance:
          Player: "Your balance is: &b%money_symbol%%balance%"
          Target: "&6%target%'s &7balance is: &b%money_symbol%%balance%"
       Money:
-         Player_Add: "&a%money_symbol%%amount% &7has been added to your account."
-         Player_Take: "&a%money_symbol%%amount% &7has been taken from your account."
-         Player_Set: "Your account balance has been set to &a%money_symbol%%amount%&7."
-         Player_Reset: "Your account has been reset."
-         Target_Add: "&a%money_symbol%%amount% &7has been added to &6%target%'s &7account."
-         Target_Take: "&a%money_symbol%%amount% &7has been taken from &6%target%'s &7account."
-         Target_Set: "&6%target%'s &7account balance has been set to &a%money_symbol%%amount%&7."
-         Target_Reset: "&6%target%'s &7account has been reset."
+         Free: "A free transaction has been initiated."
+         Player:
+            Add: "&a%money_symbol%%amount% &7has been added to your account."
+            Take: "&a%money_symbol%%amount% &7has been taken from your account."
+            Set: "Your account balance has been set to &a%money_symbol%%amount%&7."
+            Reset: "Your account has been reset."
+         Target:
+            Add: "&a%money_symbol%%amount% &7has been added to &6%target%'s &7account."
+            Take: "&a%money_symbol%%amount% &7has been taken from &6%target%'s &7account."
+            Set: "&6%target%'s &7account balance has been set to &a%money_symbol%%amount%&7."
+            Reset: "&6%target%'s &7account has been reset."
    Bank:
       Create:
          Created_Bank: "Created a new bank &8[&a%bank%&8]&7."
@@ -286,7 +293,11 @@ Safe:
    Respawned: "A safe has respawned."
 
 Wanted_Level:
+   Wanted: "You have a wanted level."
+   Increased: "Your wanted level has been increased &b%stars%&7."
+   Decreased: "Your wanted level has been decreased &b%stars%&7."
    Not_Wanted: "You don't have a wanted level."
+   Cleared: "Your wanted level has been cleared."
    Paid: "Paid wanted level fees, totaling &a%money_symbol%%amount%&7."
 
 Weapons:
@@ -302,6 +313,11 @@ Weapons:
    Ammo_Sold: "You just sold &8(&b%ammo%&ex%amount_1%&8)&7 for &a%money_symbol%%amount_2%&7."
    Not_Enough_Ammo: "You don't have enough ammo to sell!"
 
+Death:
+   Weapon:
+      - "%killer% killed %victim% vigorously using %item%."
+      - "%victim% was killed by %killer% using %item%."
+
 Level:
    Stats:
       - ""
@@ -314,6 +330,9 @@ Level:
       Bar: "▬"
       Complete_Color: "&b"
       Incomplete_Color: "&f"
+   Level_Up:
+      Player: "You have leveled up to level &b%next_level%&7."
+      Gang: "The gang has leveled up to level &b%next_level%&7."
 
 Waypoint:
    Cooldown: "&7You are on a cooldown. Wait &b%timer&7."

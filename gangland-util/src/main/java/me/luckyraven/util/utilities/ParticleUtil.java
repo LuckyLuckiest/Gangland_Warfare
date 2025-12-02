@@ -1,8 +1,13 @@
 package me.luckyraven.util.utilities;
 
+import com.cryptomorin.xseries.XMaterial;
+import com.cryptomorin.xseries.particles.XParticle;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.World;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.entity.Entity;
 
 public class ParticleUtil {
 
@@ -25,6 +30,28 @@ public class ParticleUtil {
 
 			world.spawnParticle(particle, particleLocation, 1, data);
 		}
+	}
+
+	public static void createBloodSplash(Entity entity, double damage) {
+		Location location = entity.getLocation().add(0, entity.getHeight() / 2, 0);
+		World    world    = location.getWorld();
+
+		if (world == null) return;
+
+		// Scale particle count based on damage (minimum 5, scales up with damage)
+		int    particleCount = Math.max(5, (int) (damage * 2));
+		double spread        = 0.3;
+
+		// Use XParticle for cross-version compatibility
+		Particle particle = XParticle.BLOCK.get();
+		if (particle == null) particle = Particle.BLOCK;
+
+		// change the color
+		Material material = XMaterial.REDSTONE_BLOCK.get();
+		if (material == null) material = Material.REDSTONE_BLOCK;
+
+		BlockData blockData = material.createBlockData();
+		world.spawnParticle(particle, location, particleCount, spread, spread, spread, 0.1, blockData);
 	}
 
 }

@@ -35,9 +35,11 @@ class BankBalanceCommand extends SubArgument {
 				return;
 			}
 
-			player.sendMessage(MessageAddon.BANK_BALANCE_PLAYER.toString()
-															   .replace("%balance%", SettingAddon.formatDouble(
-																	   bank.getEconomy().getBalance())));
+			String string      = MessageAddon.BANK_BALANCE_PLAYER.toString();
+			String replacement = SettingAddon.formatDouble(bank.getEconomy().getBalance());
+			String replace     = string.replace("%balance%", replacement);
+
+			player.sendMessage(replace);
 		};
 	}
 }

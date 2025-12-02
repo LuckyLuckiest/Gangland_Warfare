@@ -1,13 +1,13 @@
 package me.luckyraven.listener.inventory;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.bukkit.inventory.InventoryHandler;
-import me.luckyraven.data.inventory.InventoryBuilder;
-import me.luckyraven.data.inventory.OpenInventory;
-import me.luckyraven.data.inventory.State;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
+import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
+import me.luckyraven.inventory.InventoryBuilder;
+import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.OpenInventory;
+import me.luckyraven.inventory.State;
+import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -20,26 +20,23 @@ import java.util.stream.IntStream;
 @ListenerHandler
 public class InventoryOpenByCommand implements Listener {
 
-	private final Gangland            gangland;
-	private final UserManager<Player> userManager;
+	private final Gangland gangland;
 
 	public InventoryOpenByCommand(Gangland gangland) {
-		this.gangland    = gangland;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.gangland = gangland;
 	}
 
 	@EventHandler
 	public void onInventoryCommand(PlayerCommandPreprocessEvent event) {
 		// includes the '/' at the beginning
-		String[]     command = event.getMessage().strip().split(" ");
-		Player       player  = event.getPlayer();
-		User<Player> user    = userManager.getUser(player);
+		String[] command = event.getMessage().strip().split(" ");
+		Player   player  = event.getPlayer();
 
 		// this event runs before the event
 		Set<String> inventoryKeys = InventoryAddon.getInventoryKeys();
 
-		for (String inventory : inventoryKeys) {
-			InventoryBuilder builder = InventoryAddon.getInventory(inventory);
+		for (String inventoryKey : inventoryKeys) {
+			InventoryBuilder builder = InventoryAddon.getInventory(inventoryKey);
 			if (builder == null) continue;
 
 			OpenInventory openInventory = builder.inventoryData().getOpenInventory();
@@ -65,7 +62,10 @@ public class InventoryOpenByCommand implements Listener {
 			if (openInventory.permission() != null && !player.hasPermission(openInventory.permission())) break;
 
 			try {
-				InventoryHandler inventoryHandler = builder.createInventory(gangland, user, inventory);
+				Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+				Fill line = new Fill(SettingAddon.getInventoryLineName(), SettingAddon.getInventoryLineItem());
+
+				InventoryHandler inventoryHandler = builder.createInventory(gangland, gangland, player, fill, line);
 
 				inventoryHandler.open(player);
 				event.setCancelled(true);

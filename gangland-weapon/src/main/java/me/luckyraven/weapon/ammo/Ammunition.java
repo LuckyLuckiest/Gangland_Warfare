@@ -7,6 +7,7 @@ import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Objects;
@@ -14,8 +15,7 @@ import java.util.Objects;
 @AllArgsConstructor
 @RequiredArgsConstructor
 @Getter
-public class Ammunition {
-
+public class Ammunition implements Comparable<Ammunition> {
 	private final String       name;
 	private final String       displayName;
 	private final Material     material;
@@ -36,6 +36,21 @@ public class Ammunition {
 
 		return ammunitionAddon.getAmmunition(ammunitionName);
 	}
+
+	@Override
+	public int compareTo(@NotNull Ammunition other) {
+		int result;
+
+		// Compare by ammo internal name (identity)
+		result = this.name.compareToIgnoreCase(other.name);
+		if (result != 0) return result;
+
+		// Compare by material
+		result = this.material.compareTo(other.material);
+
+		return result;
+	}
+
 
 	public ItemStack buildItem() {
 		return buildItem(1);

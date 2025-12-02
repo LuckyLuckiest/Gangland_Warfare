@@ -1,6 +1,5 @@
 package me.luckyraven.file.configuration;
 
-import me.luckyraven.Gangland;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -29,20 +28,23 @@ public enum MessageAddon {
 	ARGUMENTS_DONT_EXIST("Commands.Syntax.Doesnt_Exist", Type.COMMAND),
 
 	// commands - weapons
-	GIVE_AMMO("Commands.Weapons.Gave_Ammo", Type.COMMAND),
-	GIVE_WEAPON("Commands.Weapons.Gave_Weapon", Type.COMMAND),
+	RECEIVED_AMMO("Commands.Weapons.Ammo.Received", Type.COMMAND),
+	GAVE_AMMO("Commands.Weapons.Ammo.Gave", Type.COMMAND),
+	RECEIVED_WEAPON("Commands.Weapons.Weapon.Received", Type.COMMAND),
+	GAVE_WEAPON("Commands.Weapons.Weapon.Gave", Type.COMMAND),
 
 	// commands - economy
 	BALANCE_PLAYER("Commands.Economy.Balance.Player", Type.COMMAND),
 	BALANCE_TARGET("Commands.Economy.Balance.Target", Type.COMMAND),
-	DEPOSIT_MONEY_PLAYER("Commands.Economy.Money.Player_Add", Type.COMMAND),
-	WITHDRAW_MONEY_PLAYER("Commands.Economy.Money.Player_Take", Type.COMMAND),
-	SET_MONEY_PLAYER("Commands.Economy.Money.Player_Set", Type.COMMAND),
-	RESET_MONEY_PLAYER("Commands.Economy.Money.Player_Reset", Type.COMMAND),
-	DEPOSIT_MONEY_TARGET("Commands.Economy.Money.Target_Add", Type.COMMAND),
-	WITHDRAW_MONEY_TARGET("Commands.Economy.Money.Target_Take", Type.COMMAND),
-	SET_MONEY_TARGET("Commands.Economy.Money.Target_Set", Type.COMMAND),
-	RESET_MONEY_TARGET("Commands.Economy.Money.Target_Reset", Type.COMMAND),
+	FREE_TRANSACTION("Commands.Economy.Money.Free", Type.COMMAND),
+	DEPOSIT_MONEY_PLAYER("Commands.Economy.Money.Player.Add", Type.COMMAND),
+	WITHDRAW_MONEY_PLAYER("Commands.Economy.Money.Player.Take", Type.COMMAND),
+	SET_MONEY_PLAYER("Commands.Economy.Money.Player.Set", Type.COMMAND),
+	RESET_MONEY_PLAYER("Commands.Economy.Money.Player.Reset", Type.COMMAND),
+	DEPOSIT_MONEY_TARGET("Commands.Economy.Money.Target.Add", Type.COMMAND),
+	WITHDRAW_MONEY_TARGET("Commands.Economy.Money.Target.Take", Type.COMMAND),
+	SET_MONEY_TARGET("Commands.Economy.Money.Target.Set", Type.COMMAND),
+	RESET_MONEY_TARGET("Commands.Economy.Money.Target.Reset", Type.COMMAND),
 
 	// commands - bank
 	BANK_CREATED("Commands.Bank.Create.Created_Bank", Type.COMMAND),
@@ -221,7 +223,11 @@ public enum MessageAddon {
 	SAFE_RESPAWNED("Safe.Respawned", Type.PREFIX),
 
 	// wanted level
+	WANTED("Wanted_Level.Wanted", Type.PREFIX),
+	WANTED_INCREASED("Wanted_Level.Increased", Type.PREFIX),
+	WANTED_DECREASED("Wanted_Level.Decreased", Type.PREFIX),
 	NOT_WANTED("Wanted_Level.Not_Wanted", Type.PREFIX),
+	WANTED_CLEARED("Wanted_Level.Cleared", Type.PREFIX),
 	PAID_WANTED("Wanted_Level.Paid", Type.PREFIX),
 
 	// weapons
@@ -237,11 +243,16 @@ public enum MessageAddon {
 	AMMO_SOLD("Weapons.Ammo_Sold", Type.PREFIX),
 	NOT_ENOUGH_AMMO("Weapons.Not_Enough_Ammo", Type.PREFIX),
 
+	// death
+	DEAD_USING_WEAPON("Death.Weapon", Type.OTHER, true),
+
 	// level
 	LEVEL_STATS("Level.Stats", Type.OTHER, true),
 	LEVEL_METER_BAR("Level.Meter.Bar", Type.NO_CHANGE),
 	LEVEL_COMPLETE_COLOR("Level.Meter.Complete_Color", Type.NO_CHANGE),
 	LEVEL_INCOMPLETE_COLOR("Level.Meter.Incomplete_Color", Type.NO_CHANGE),
+	LEVEL_UP_PLAYER("Level.Level_Up.Player", Type.PREFIX),
+	LEVEL_UP_GANG("Level.Level_Up.Gang", Type.PREFIX),
 
 	// waypoint
 	WAYPOINT_TELEPORT_COOLDOWN("Waypoint.Cooldown", Type.OTHER),
@@ -249,9 +260,11 @@ public enum MessageAddon {
 	;
 
 	private static YamlConfiguration message;
-	private final  String            path;
-	private final  Type              type;
-	private        boolean           isList;
+
+	private final String path;
+	private final Type   type;
+
+	private boolean isList;
 
 	MessageAddon(String path, Type type) {
 		this.path   = path;
@@ -264,16 +277,33 @@ public enum MessageAddon {
 		this.isList = isList;
 	}
 
-	// Need to set the plugin inorder to run the messages
-	public static void setPlugin(Gangland gangland) {
-		message = gangland.getInitializer().getLanguageLoader().getMessage();
+	public static void setMessageConfiguration(YamlConfiguration yamlConfiguration) {
+		message = yamlConfiguration;
 	}
 
 	@Override
 	public String toString() {
+		return toString(type);
+	}
+
+	public String toString(Type type) {
 		String data;
+
 		if (isList) data = convertFromList(message.getStringList(path));
 		else data = message.getString(path);
+
+		return getValue(type, data);
+	}
+
+	public List<String> toStringList() {
+		List<String> list = message.getStringList(path);
+
+		list.replaceAll(data -> getValue(type, data));
+
+		return list;
+	}
+
+	private String getValue(Type type, String data) {
 		String value;
 
 		switch (type) {
@@ -299,15 +329,16 @@ public enum MessageAddon {
 
 		return builder.toString();
 	}
-}
 
-enum Type {
+	public enum Type {
 
-	PREFIX,
-	COMMAND,
-	ERROR,
-	INFORMATION,
-	OTHER,
-	NO_CHANGE
+		PREFIX,
+		COMMAND,
+		ERROR,
+		INFORMATION,
+		OTHER,
+		NO_CHANGE
+
+	}
 
 }

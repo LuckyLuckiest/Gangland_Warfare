@@ -69,7 +69,9 @@ class WaypointGangIdCommand extends SubArgument {
 				return;
 			}
 
-			String value = args[2].toUpperCase();
+			OptionalArgument optionalArgument = (OptionalArgument) argument;
+
+			String value = optionalArgument.getActualValue(args[2], sender);
 
 			// verify if it was a number
 			int id;
@@ -103,12 +105,10 @@ class WaypointGangIdCommand extends SubArgument {
 				return null;
 			}
 
-			int gangId = user.getGangId();
+			int    gangId = user.getGangId();
+			String name   = gangManager.getGang(gangId).getName();
 
-			List<String> waypointsByGang = waypointManager.getWaypoints().values()
-					.stream().filter(waypoint -> waypoint.getGangId() == gangId).map(Waypoint::getName).toList();
-
-			return new ArrayList<>(waypointsByGang);
+			return new ArrayList<>(List.of(name));
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
@@ -121,12 +121,9 @@ class WaypointGangIdCommand extends SubArgument {
 
 			Map<String, String> waypoints = new HashMap<>();
 
-			List<Waypoint> waypointsByGang = waypointManager.getWaypoints().values()
-					.stream().filter(waypoint -> waypoint.getGangId() == gangId).toList();
+			String name = gangManager.getGang(gangId).getName();
 
-			for (Waypoint waypoint : waypointsByGang) {
-				waypoints.put(waypoint.getName(), String.valueOf(waypoint.getUsedId()));
-			}
+			waypoints.put(name, String.valueOf(gangId));
 
 			return waypoints;
 		});

@@ -1,26 +1,39 @@
 package me.luckyraven.feature.wanted;
 
-import lombok.Getter;
+import lombok.AccessLevel;
+import lombok.Data;
 import lombok.Setter;
+import me.luckyraven.util.timer.RepeatingTimer;
+import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.function.Consumer;
+
+@Data
 public class Wanted {
 
-	private @Getter int level;
-	private @Setter int increments;
+	private int level;
+	@Setter(AccessLevel.NONE)
+	private int increments;
 
-	@Getter @Setter private int     maxLevel;
-	@Getter @Setter private boolean wanted;
+	private int     maxLevel;
+	private boolean wanted;
 
-	public Wanted(int level) {
-		this();
-		setLevel(level);
+	@Setter(AccessLevel.NONE)
+	private RepeatingTimer repeatingTimer;
+
+	public Wanted(int increments, int maxLevel) {
+		this.level      = 0;
+		this.increments = increments;
+		this.maxLevel   = maxLevel;
+		this.wanted     = false;
 	}
 
-	public Wanted() {
-		this.level      = 0;
-		this.increments = 1;
-		this.maxLevel   = 5;
-		this.wanted     = false;
+	public RepeatingTimer createTimer(JavaPlugin plugin, long seconds, Consumer<RepeatingTimer> timer) {
+		stopTimer();
+
+		this.repeatingTimer = new RepeatingTimer(plugin, seconds * 20L, timer);
+
+		return repeatingTimer;
 	}
 
 	public void setLevel(int level) {
@@ -32,10 +45,28 @@ public class Wanted {
 		setLevel(increments + level);
 	}
 
-	public String getLevelStr() {
+	public void decrementLevel() {
+		setLevel(level - 1);
+	}
+
+	public String getLevelStars() {
 		StringBuilder builder = new StringBuilder(maxLevel);
+
 		builder.append("★".repeat(level)).append("☆".repeat(Math.max(0, maxLevel - builder.length())));
+
 		return builder.toString();
+	}
+
+	public void reset() {
+		setLevel(0);
+		stopTimer();
+	}
+
+	public void stopTimer() {
+		if (this.repeatingTimer == null) return;
+
+		this.repeatingTimer.stop();
+		this.repeatingTimer = null;
 	}
 
 }

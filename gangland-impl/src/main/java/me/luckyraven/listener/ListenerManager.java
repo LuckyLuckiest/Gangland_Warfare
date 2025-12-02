@@ -17,7 +17,8 @@ public class ListenerManager extends ListenerService {
 	public boolean invokeMethod(String condition) throws InvocationTargetException, IllegalAccessException {
 		Method method = SettingAddon.getSetting(condition);
 
-		if (method != null && method.getReturnType() == Boolean.class) {
+		if (method != null && (method.getReturnType().getSimpleName().equalsIgnoreCase("boolean") ||
+							   method.getReturnType() == Boolean.class)) {
 			return (boolean) method.invoke(null);
 		}
 

@@ -58,7 +58,7 @@ public class Gang extends Account<Integer, List<Member>> {
 		this.description = "Conquering the hood";
 		this.created     = Instant.now().toEpochMilli();
 		this.economy     = new EconomyHandler(null);
-		this.bounty      = new Bounty();
+		this.bounty      = new Bounty(SettingAddon.getBountyEachKillValue(), SettingAddon.getBountyTimerMultiple());
 		this.level       = new Level();
 		this.allies      = new HashSet<>();
 	}

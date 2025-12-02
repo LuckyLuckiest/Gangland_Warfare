@@ -117,6 +117,8 @@ class GangAllyCommand extends SubArgument {
 	private @NotNull Argument getAllyId(HashMap<Gang, Gang> gangsIdMap,
 										HashMap<Gang, CountdownTimer> gangRequestTimer) {
 		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+			OptionalArgument optionalArgument = (OptionalArgument) argument;
+
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -125,8 +127,10 @@ class GangAllyCommand extends SubArgument {
 				return;
 			}
 
-			String value = args[3];
-			int    id;
+			String value = optionalArgument.getActualValue(args[3], sender);
+
+			int id;
+
 			try {
 				id = Integer.parseInt(value);
 			} catch (NumberFormatException exception) {
@@ -234,15 +238,25 @@ class GangAllyCommand extends SubArgument {
 				return null;
 			}
 
-			Map<String, String> gangs = new HashMap<>();
-
 			Gang gang = gangManager.getGang(user.getGangId());
 
 			List<Gang> allies = gang.getAllies()
 					.stream().map(Pair::first).toList();
 
+			// First pass: count how many times each name appears
+			Map<String, Integer> nameCount = new HashMap<>();
 			for (Gang ally : allies) {
-				gangs.put(ally.getName(), String.valueOf(ally.getId()));
+				String name = ally.getName();
+				nameCount.put(name, nameCount.getOrDefault(name, 0) + 1);
+			}
+
+			Map<String, String> gangs = new HashMap<>();
+
+			for (Gang ally : allies) {
+				String name        = ally.getName();
+				String displayName = nameCount.get(name) > 1 ? name + ":" + ally.getId() : name;
+
+				gangs.put(displayName, String.valueOf(ally.getId()));
 			}
 
 			return gangs;

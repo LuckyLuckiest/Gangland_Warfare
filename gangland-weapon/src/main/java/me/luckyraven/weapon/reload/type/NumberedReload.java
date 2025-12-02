@@ -71,6 +71,18 @@ public class NumberedReload extends Reload {
 
 		for (int i = 0; i < numberOfInsertions; ++i) {
 			timer.addIntervalTaskPair(getWeapon().getReloadCooldown(), time -> {
+				if (!isReloading()) {
+					return;
+				}
+
+				// TODO a bug that doesn't allow the weapon to leave reload state even after explicitly saying to end the reload
+//				boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1), amount);
+//				if (removeAmmunition && !contains) {
+//					stopReloading();
+//					super.endReloading(player);
+//					return;
+//				}
+
 				// reload middle sound
 				SoundConfiguration.playSounds(player, getWeapon().getReloadCustomSoundMid(), null);
 

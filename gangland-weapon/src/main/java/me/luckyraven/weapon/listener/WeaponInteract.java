@@ -16,6 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
@@ -86,12 +87,13 @@ public class WeaponInteract implements Listener {
 
 		// cancel block interaction
 		event.setUseInteractedBlock(Event.Result.DENY);
+		event.setUseItemInHand(Event.Result.DENY);
 
 		SelectiveFire selectiveFire = weapon.getCurrentSelectiveFire();
 
 		if (selectiveFire == SelectiveFire.AUTO) {
 			// handle the AUTO mode with full auto task
-			shootFullAuto(weapon, player, item, selectiveFire);
+			shootFullAuto(weapon, player, item);
 		} else {
 			// handle the BURST and SINGLE modes
 			shootOtherModes(weapon, player);
@@ -110,6 +112,34 @@ public class WeaponInteract implements Listener {
 		if (!weaponService.isWeapon(event.getPlayer().getInventory().getItemInMainHand())) return;
 
 		event.setCancelled(true);
+	}
+
+	@EventHandler
+	public void onPlayerInteractWithEntity(PlayerInteractEntityEvent event) {
+		Player    player = event.getPlayer();
+		ItemStack item   = player.getInventory().getItemInMainHand();
+
+		if (!weaponService.isWeapon(item)) return;
+
+		event.setCancelled(true);
+
+		Weapon weapon = weaponService.validateAndGetWeapon(player, item);
+
+		if (weapon == null) return;
+
+		if (weapon.isReloading()) {
+			return;
+		}
+
+		// ignore the actions since this event is for right click interactions with entity
+
+		SelectiveFire selectiveFire = weapon.getCurrentSelectiveFire();
+
+		if (selectiveFire == SelectiveFire.AUTO) {
+			shootFullAuto(weapon, player, item);
+		} else {
+			shootOtherModes(weapon, player);
+		}
 	}
 
 	@EventHandler
@@ -196,7 +226,7 @@ public class WeaponInteract implements Listener {
 		}
 	}
 
-	private void shootFullAuto(Weapon weapon, Player player, ItemStack item, SelectiveFire selectiveFire) {
+	private void shootFullAuto(Weapon weapon, Player player, ItemStack item) {
 		UUID weaponUuid = weapon.getUuid();
 		if (!autoTasks.containsKey(weaponUuid)) {
 			var autoTask = new FullAutoTask(plugin, weaponService, weapon, recoilCompatibility, player, item, () -> {
@@ -206,7 +236,8 @@ public class WeaponInteract implements Listener {
 
 			autoTasks.put(weaponUuid, autoTask);
 
-			Pair<Boolean, Boolean> continuityAndCooldown = getContinuityAndCooldownPair(selectiveFire);
+			Pair<Boolean, Boolean> continuityAndCooldown = getContinuityAndCooldownPair(
+					weapon.getCurrentSelectiveFire());
 			AtomicReference<WeaponData> weaponDataAtomicReference = new AtomicReference<>(
 					new WeaponData(continuityAndCooldown.first(), continuityAndCooldown.second()));
 

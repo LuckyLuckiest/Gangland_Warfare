@@ -117,8 +117,10 @@ class WaypointDeleteCommand extends SubArgument {
 		Argument optional = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			if (confirm.isConfirmed()) return;
 
+			OptionalArgument optionalArgument = (OptionalArgument) argument;
+
 			// the id would be the second argument
-			String argId = args[2];
+			String argId = optionalArgument.getActualValue(args[2], sender);
 
 			// verify if it was a number
 			int id;
@@ -200,10 +202,20 @@ class WaypointDeleteCommand extends SubArgument {
 
 			waypoints.addAll(list);
 
-			Map<String, String> waypointMap = new HashMap<>();
-
+			// First pass: count how many times each name appears
+			Map<String, Integer> nameCount = new HashMap<>();
 			for (Waypoint waypoint : waypoints) {
-				waypointMap.put(waypoint.getName(), String.valueOf(waypoint.getUsedId()));
+				String name = waypoint.getName();
+				nameCount.put(name, nameCount.getOrDefault(name, 0) + 1);
+			}
+
+			// Second pass: build the map with name:id for duplicates
+			Map<String, String> waypointMap = new HashMap<>();
+			for (Waypoint waypoint : waypoints) {
+				String name        = waypoint.getName();
+				String displayName = nameCount.get(name) > 1 ? name + ":" + waypoint.getUsedId() : name;
+
+				waypointMap.put(displayName, String.valueOf(waypoint.getUsedId()));
 			}
 
 			return waypointMap;

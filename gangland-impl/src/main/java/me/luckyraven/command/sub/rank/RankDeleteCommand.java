@@ -77,7 +77,9 @@ class RankDeleteCommand extends SubArgument {
 					database.table(rankPermissionTable.getName()).delete("rank_id", String.valueOf(rank.getUsedId()));
 				});
 
-				sender.sendMessage(MessageAddon.RANK_REMOVED.toString().replace("%rank%", rank.getName()));
+				String string  = MessageAddon.RANK_REMOVED.toString();
+				String replace = string.replace("%rank%", rank.getName());
+				sender.sendMessage(replace);
 				deleteRankName.remove(sender);
 
 				CountdownTimer timer = deleteRankTimer.get(sender);
@@ -107,10 +109,10 @@ class RankDeleteCommand extends SubArgument {
 			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
 				if (time.getTimeLeft() % 20 != 0) return;
 
-				sender.sendMessage(MessageAddon.RANK_REMOVE_CONFIRM.toString()
-																   .replace("%timer%",
-																			TimeUtil.formatTime(time.getTimeLeft(),
-																								true)));
+				String string  = MessageAddon.RANK_REMOVE_CONFIRM.toString();
+				String replace = string.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true));
+
+				sender.sendMessage(replace);
 			}, time -> {
 				confirmDelete.setConfirmed(false);
 				deleteRankName.remove(sender);

@@ -80,9 +80,9 @@ class BankDeleteCommand extends SubArgument {
 		}, time -> {
 			if (time.getTimeLeft() % 20 != 0) return;
 
-			sender.sendMessage(MessageAddon.BANK_REMOVE_CONFIRM.toString()
-															   .replace("%timer%",
-																		TimeUtil.formatTime(time.getTimeLeft(), true)));
+			String string  = MessageAddon.BANK_REMOVE_CONFIRM.toString();
+			String replace = string.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true));
+			sender.sendMessage(replace);
 		}, time -> {
 			confirmDelete.setConfirmed(false);
 			deleteBankName.remove(user);
@@ -118,7 +118,10 @@ class BankDeleteCommand extends SubArgument {
 				database.table(bankTable.getName()).delete("uuid = ?", user.getUser().getUniqueId().toString());
 			});
 
-			player.sendMessage(MessageAddon.BANK_REMOVED.toString().replace("%bank%", deleteBankName.get(user).get()));
+			String string  = MessageAddon.BANK_REMOVED.toString();
+			String replace = string.replace("%bank%", deleteBankName.get(user).get());
+
+			player.sendMessage(replace);
 
 			deleteBankName.remove(user);
 
