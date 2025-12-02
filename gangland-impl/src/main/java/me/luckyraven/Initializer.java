@@ -135,8 +135,6 @@ public final class Initializer {
 		this.compatibilitySetup = new CompatibilitySetup(versionSetup);
 
 		this.prefix = "glw";
-
-		MessageAddon.setPlaceholder(gangland);
 	}
 
 	/**

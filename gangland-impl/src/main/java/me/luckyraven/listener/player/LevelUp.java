@@ -3,8 +3,9 @@ package me.luckyraven.listener.player;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.user.User;
+import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.level.LevelUpEvent;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -23,28 +24,39 @@ public class LevelUp implements Listener {
 
 	@EventHandler
 	public void onPlayerLevelUp(LevelUpEvent event) {
-		User<?> user = event.getUser();
+		User<?> user  = event.getUser();
+		Level   level = event.getLevel();
 
 		if (user != null) {
 			Player player = user.getUser().getPlayer();
 
 			if (player == null) return;
 
-			player.sendMessage(
-					ChatUtil.prefixMessage("You have leveled up to level &b" + event.getLevel().nextLevel() + "&7."));
+			String message = MessageAddon.LEVEL_UP_PLAYER.toString();
+
+			player.sendMessage(replacePlaceholders(player, message, level));
 		}
 
 		Gang gang = event.getGang();
 
-		if (gang != null) {
-			List<Player> onlinePlayers = gang.getOnlineMembers(gangland.getInitializer().getUserManager())
-					.stream().map(User::getUser).toList();
+		if (gang == null) return;
 
-			for (Player player : onlinePlayers)
-				player.sendMessage(ChatUtil.prefixMessage(
-						"The gang has leveled up to level &b" + event.getLevel().nextLevel() + "&7."));
+		List<Player> onlinePlayers = gang.getOnlineMembers(gangland.getInitializer().getUserManager())
+				.stream().map(User::getUser).toList();
+
+		for (Player player : onlinePlayers) {
+			String message = MessageAddon.LEVEL_UP_GANG.toString();
+
+			player.sendMessage(replacePlaceholders(player, message, level));
 		}
+	}
 
+	private String replacePlaceholders(Player player, String message, Level level) {
+		String replace = gangland.convert(player, message);
+
+		return replace.replace("%level%", String.valueOf(level.getLevelValue()))
+					  .replace("%next_level%", String.valueOf(level.nextLevel()))
+					  .replace("%max_level%", String.valueOf(level.getMaxLevel()));
 	}
 
 }

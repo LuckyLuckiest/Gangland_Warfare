@@ -1,6 +1,7 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.Initializer;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.Executor;
@@ -11,11 +12,13 @@ import me.luckyraven.feature.entity.EntityMarkManager;
 import me.luckyraven.feature.wanted.Wanted;
 import me.luckyraven.feature.wanted.WantedEvent;
 import me.luckyraven.feature.wanted.WantedExecutor;
+import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.timer.Timer;
 import me.luckyraven.util.utilities.ParticleUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -33,9 +36,12 @@ public class EntityDamage implements Listener {
 	private final EntityMarkManager   entityMarkManager;
 
 	public EntityDamage(Gangland gangland) {
-		this.gangland          = gangland;
-		this.userManager       = gangland.getInitializer().getUserManager();
-		this.entityMarkManager = gangland.getInitializer().getEntityMarkManager();
+		this.gangland = gangland;
+
+		Initializer initializer = gangland.getInitializer();
+
+		this.userManager       = initializer.getUserManager();
+		this.entityMarkManager = initializer.getEntityMarkManager();
 	}
 
 	@EventHandler(priority = EventPriority.HIGH)
@@ -61,19 +67,20 @@ public class EntityDamage implements Listener {
 		User<Player> damagerUser = userManager.getUser(damager);
 
 		// the entity killed is not a player
-		if (!(entity instanceof Player player)) {
-			damagerUser.setMobKills(damagerUser.getMobKills() + 1);
+		boolean checkEntityType = handleMobKills(entity, damagerUser);
 
-			// check if the entity is a civilian and increase wanted level
-			if (entityMarkManager.countsForWanted(entity)) {
-				handleWantedLevelIncrease(damagerUser);
-			}
-
+		if (!checkEntityType) {
 			return;
 		}
 
 		// check if it was a player or a mob
-		User<Player> deadUser = userManager.getUser(player);
+		Player deadPlayer = (Player) entity;
+
+		handlePlayerKills(deadPlayer, damagerUser);
+	}
+
+	private void handlePlayerKills(Player deadPlayer, User<Player> damagerUser) {
+		User<Player> deadUser = userManager.getUser(deadPlayer);
 
 		damagerUser.setKills(damagerUser.getKills() + 1);
 
@@ -84,23 +91,40 @@ public class EntityDamage implements Listener {
 
 			damagerUser.getEconomy().deposit(amount);
 			bounty.resetBounty();
-			damagerUser.getUser().sendMessage(ChatUtil.color("&a+" + amount));
+
+			String message = MessageAddon.BANK_MONEY_DEPOSIT_PLAYER.toString();
+			String replace = message.replace("%amount%", SettingAddon.formatDouble(amount));
+
+			damagerUser.getUser().sendMessage(replace);
 
 			// reset the wanted level of the dead player
 			deadUser.getWanted().reset();
 		} else {
-			handleBountyIncrease(damagerUser);
+			handleBounty(damagerUser);
 		}
 
 		// increase the wanted level for killing another player
-		handleWantedLevelIncrease(damagerUser);
+		handleWanted(damagerUser);
+	}
+
+	private boolean handleMobKills(Entity victim, User<Player> attacker) {
+		if (victim instanceof Player) return true;
+
+		attacker.setMobKills(attacker.getMobKills() + 1);
+
+		// check if the entity is a civilian and increase the wanted level
+		if (!entityMarkManager.countsForWanted(victim)) return false;
+
+		handleWanted(attacker);
+
+		return false;
 	}
 
 	private void createBloodParticle(Entity entity, double damage) {
 		ParticleUtil.createBloodSplash(entity, damage);
 	}
 
-	private void handleWantedLevelIncrease(User<Player> damagerUser) {
+	private void handleWanted(User<Player> damagerUser) {
 		Wanted      wanted      = damagerUser.getWanted();
 		WantedEvent wantedEvent = new WantedEvent(true, wanted);
 
@@ -139,7 +163,7 @@ public class EntityDamage implements Listener {
 		damagerUser.getUser().sendMessage(message);
 	}
 
-	private void handleBountyIncrease(User<Player> damagerUser) {
+	private void handleBounty(User<Player> damagerUser) {
 		Bounty      userBounty  = damagerUser.getBounty();
 		BountyEvent bountyEvent = new BountyEvent(true, userBounty);
 
@@ -161,7 +185,10 @@ public class EntityDamage implements Listener {
 		if (amount > SettingAddon.getBountyMaxKill()) return;
 
 		bountyEvent.setAmountApplied(scaledBounty);
-		gangland.getServer().getPluginManager().callEvent(bountyEvent);
+
+		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
+			gangland.getServer().getPluginManager().callEvent(bountyEvent);
+		});
 
 		if (bountyEvent.isCancelled()) return;
 

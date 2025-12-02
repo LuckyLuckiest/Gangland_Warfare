@@ -31,7 +31,9 @@ public class LanguageLoader {
 
 	public LanguageLoader(Gangland gangland) {
 		this.gangland = gangland;
+	}
 
+	public void initialize() {
 		try {
 			message = loadMessage(gangland.getInitializer().getFileManager());
 		} catch (IOException | InvalidConfigurationException exception) {
