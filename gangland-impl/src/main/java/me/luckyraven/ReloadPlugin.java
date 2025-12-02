@@ -72,7 +72,8 @@ public final class ReloadPlugin {
 		// second, reload the files
 		initializer.getFileManager().reloadFiles();
 		initializer.addonsLoader();
-		MessageAddon.reload(gangland);
+		// third, update message addon with new language configuration
+		MessageAddon.setMessageConfiguration(initializer.getLanguageLoader().getMessage());
 	}
 
 	/**
