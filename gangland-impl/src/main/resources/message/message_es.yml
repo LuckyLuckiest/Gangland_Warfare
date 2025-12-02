@@ -313,6 +313,11 @@ Weapons:
    Ammo_Sold: "You just sold &8(&b%ammo%&ex%amount_1%&8)&7 for &a%money_symbol%%amount_2%&7."
    Not_Enough_Ammo: "You don't have enough ammo to sell!"
 
+Death:
+   Weapon:
+      - "%killer% killed %victim% vigorously using %item%."
+      - "%victim% was killed by %killer% using %item%."
+
 Level:
    Stats:
       - ""
@@ -325,6 +330,9 @@ Level:
       Bar: "▬"
       Complete_Color: "&b"
       Incomplete_Color: "&f"
+   Level_Up:
+      Player: "You have leveled up to level &b%next_level%&7."
+      Gang: "The gang has leveled up to level &b%next_level%&7."
 
 Waypoint:
    Cooldown: "&7You are on a cooldown. Wait &b%timer&7."
