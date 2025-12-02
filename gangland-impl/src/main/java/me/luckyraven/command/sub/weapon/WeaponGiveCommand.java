@@ -46,7 +46,7 @@ class WeaponGiveCommand extends SubArgument {
 
 			if (giveWeapon) {
 				String receivedWeapon = MessageAddon.RECEIVED_WEAPON.toString();
-				player.sendMessage(receivedWeapon.replace("%ammo%", weaponName).replace("%amount%", "1"));
+				player.sendMessage(receivedWeapon.replace("%weapon%", weaponName).replace("%amount%", "1"));
 			} else {
 				String invalidWeapon = MessageAddon.INVALID_WEAPON.toString();
 				player.sendMessage(invalidWeapon.replace("%args%", weaponName));
