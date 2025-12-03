@@ -65,13 +65,13 @@
         - Weapon interact system.
         - Ammo damage to surroundings and entities.
         - Weapon drop system.
-0.0.66-DEV:
+0.0.66-DEV: (DONE)
     - Work on signs.
         - Be able to abstract sign creation.
         - Try to make it diverse.
         - Open inventory.
         - Do commands.
-0.0.67-DEV:
+0.0.67-DEV: (SCRAPED)
 	- Work on waypoint radius, used for displaying particles
     - Gang settings.
 	- A Taxi system added to contacts in phone.
@@ -82,9 +82,12 @@
 0.7.1-DEV:
 	- Gang spawn and home.
 0.7.2-DEV:
-	- Enhance wanted level.
+	- Make the inventory system workable.
+	- Configure phone items in files.
+	- Taxi system which is the waypoint system simply.
+	- Squash bugs as much as possible.
 0.7-BETA:
-    - The release of the plugin
+    - The release of the plugin.
 
 ... Before the end of the summer holidays ...
 
