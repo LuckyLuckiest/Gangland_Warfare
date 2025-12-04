@@ -6,6 +6,8 @@ import me.luckyraven.database.type.SQLite;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.UnhandledError;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -17,6 +19,8 @@ import java.util.Map;
 public abstract class DatabaseHandler {
 
 	public static final int MYSQL = 0, SQLITE = 1;
+
+	private static final Logger logger = LogManager.getLogger(DatabaseHandler.class.getSimpleName());
 
 	private final JavaPlugin plugin;
 
@@ -46,7 +50,7 @@ public abstract class DatabaseHandler {
 				createSchema();
 				createTables();
 			} catch (IOException exception) {
-				plugin.getLogger().warning(UnhandledError.FILE_CREATE_ERROR + ": " + exception.getMessage());
+				logger.warn("{}: {}", UnhandledError.FILE_CREATE_ERROR, exception.getMessage());
 			}
 		});
 
@@ -88,7 +92,7 @@ public abstract class DatabaseHandler {
 										  UnhandledError.SQL_ERROR :
 										  UnhandledError.FILE_CREATE_ERROR;
 
-					plugin.getLogger().warning(inst + ": " + exception.getMessage());
+					logger.warn("{}: {}", inst, exception.getMessage());
 
 					throw new PluginException(exception.getMessage(), exception);
 				}
@@ -123,7 +127,7 @@ public abstract class DatabaseHandler {
 		if (!SettingAddon.isSqliteFailedMysql()) return;
 
 		setType(SQLITE);
-		plugin.getLogger().info(String.format("Referring to SQLite for '%s' database", schema));
+		logger.info("Referring to SQLite for '{}' database", schema);
 	}
 
 	private Map<String, Object> credentials() {

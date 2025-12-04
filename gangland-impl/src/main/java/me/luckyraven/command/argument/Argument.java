@@ -12,6 +12,8 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.permissions.Permission;
@@ -23,7 +25,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -32,16 +33,21 @@ public class Argument implements Cloneable {
 
 	public static final String OPTIONAL_ARGUMENT = "?";
 
+	private static final Logger logger = LogManager.getLogger(Argument.class.getSimpleName());
+
 	private final boolean    displayAllArguments;
 	@Getter(value = AccessLevel.NONE)
 	private final JavaPlugin plugin;
-	TriConsumer<Argument, CommandSender, String[]> action;
-	private Tree.Node<Argument>                 node;
-	private String[]                            arguments;
+
+	protected TriConsumer<Argument, CommandSender, String[]> action;
+
+	private Tree.Node<Argument> node;
+	private String[]            arguments;
 	@Getter(value = AccessLevel.NONE)
-	private Tree<Argument>                      tree;
+	private Tree<Argument>      tree;
 	@NotNull
-	private String                              permission;
+	private String              permission;
+
 	@Setter
 	private BiConsumer<CommandSender, String[]> executeOnPass;
 
@@ -172,7 +178,7 @@ public class Argument implements Cloneable {
 			if (throwable.getMessage() != null) sender.sendMessage(throwable.getMessage());
 			else sender.sendMessage("null");
 
-			Bukkit.getLogger().log(Level.WARNING, throwable.getMessage(), throwable);
+			logger.warn(throwable.getMessage(), throwable);
 		}
 	}
 

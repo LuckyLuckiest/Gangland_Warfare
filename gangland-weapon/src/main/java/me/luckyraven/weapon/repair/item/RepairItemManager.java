@@ -2,6 +2,8 @@ package me.luckyraven.weapon.repair.item;
 
 import me.luckyraven.weapon.repair.config.RepairItemConfig;
 import me.luckyraven.weapon.repair.config.RepairItemData;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -9,19 +11,18 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 
 /**
  * Manages all repair items in the system.
  */
 public class RepairItemManager {
 
-	private final JavaPlugin              plugin;
+	private static final Logger logger = LogManager.getLogger(RepairItemManager.class.getSimpleName());
+
 	private final RepairItemConfig        config;
 	private final Map<String, RepairItem> repairItems;
 
 	public RepairItemManager(@NotNull JavaPlugin plugin) {
-		this.plugin      = plugin;
 		this.config      = new RepairItemConfig(plugin);
 		this.repairItems = new HashMap<>();
 	}
@@ -79,7 +80,6 @@ public class RepairItemManager {
 	 */
 	public void registerRepairItem(@NotNull String id, @NotNull RepairItem item) {
 		repairItems.put(id, item);
-		plugin.getLogger().info("Registered repair item: " + id);
 	}
 
 	/**
@@ -89,7 +89,6 @@ public class RepairItemManager {
 	 */
 	public void unregisterRepairItem(@NotNull String id) {
 		repairItems.remove(id);
-		plugin.getLogger().info("Unregistered repair item: " + id);
 	}
 
 	/**
@@ -122,23 +121,15 @@ public class RepairItemManager {
 		for (Map.Entry<String, RepairItemData> entry : dataMap.entrySet()) {
 			try {
 				RepairItemData data = entry.getValue();
-				RepairItem item = new RepairItem(
-						data.getId(),
-						data.getDisplayName(),
-						data.getMaterial(),
-						data.getLevel(),
-						data.getDurability(),
-						data.getLore(),
-						data.getEffects(),
-						data.getMetadata(),
-						data.getCustomModelData()
-				);
+				RepairItem item = new RepairItem(data.getId(), data.getDisplayName(), data.getMaterial(),
+												 data.getLevel(), data.getDurability(), data.getLore(),
+												 data.getEffects(), data.getMetadata(), data.getCustomModelData());
 				repairItems.put(entry.getKey(), item);
 			} catch (Exception e) {
-				plugin.getLogger().log(Level.SEVERE, "Failed to create repair item: " + entry.getKey(), e);
+				logger.warn("Failed to create repair item: {}", entry.getKey(), e);
 			}
 		}
 
-		plugin.getLogger().info("Loaded " + repairItems.size() + " repair items");
+		logger.info("Loaded {} repair items", repairItems.size());
 	}
 }

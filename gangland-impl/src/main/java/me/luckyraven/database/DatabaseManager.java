@@ -1,6 +1,8 @@
 package me.luckyraven.database;
 
 import me.luckyraven.file.configuration.SettingAddon;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,6 +13,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 public class DatabaseManager {
+
+	private static final Logger logger = LogManager.getLogger(DatabaseManager.class.getSimpleName());
 
 	private final List<DatabaseHandler> databases;
 	private final JavaPlugin            plugin;
@@ -48,7 +52,7 @@ public class DatabaseManager {
 				case DatabaseHandler.SQLITE -> backup(handler, DatabaseHandler.MYSQL);
 			}
 
-			plugin.getLogger().info(String.format("Backup done for '%s' database", handler.getSchemaName()));
+			logger.info("Backup done for '{}' database", handler.getSchemaName());
 		} catch (Throwable throwable) {
 			String type = "";
 			switch (handler.getType()) {
@@ -57,9 +61,7 @@ public class DatabaseManager {
 				case DatabaseHandler.SQLITE -> type = "MySQL";
 			}
 
-			plugin.getLogger()
-				  .info(String.format("Failed to create a backup for '%s' in '%s' database.", type,
-									  handler.getSchema()));
+			logger.info("Failed to create a backup for '{}' in '{}' database.", type, handler.getSchema());
 		}
 
 		return handler;

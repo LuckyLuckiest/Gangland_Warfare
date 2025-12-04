@@ -38,15 +38,11 @@ public class RepairManager {
 	 * Initializes the repair system.
 	 */
 	public void initialize() {
-		plugin.getLogger().info("Initializing weapon repair system...");
-
 		// Register default effects
 		registerDefaultEffects();
 
 		// Initialize repair item manager
 		repairItemManager.initialize();
-
-		plugin.getLogger().info("Weapon repair system initialized successfully!");
 	}
 
 	/**
@@ -57,7 +53,6 @@ public class RepairManager {
 	 */
 	public void registerRepairEffect(@NotNull String id, @NotNull RepairEffect effect) {
 		registeredEffects.put(id.toLowerCase(), effect);
-		plugin.getLogger().fine("Registered repair effect: " + id);
 	}
 
 	/**

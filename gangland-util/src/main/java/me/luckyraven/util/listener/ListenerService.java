@@ -66,9 +66,7 @@ public abstract class ListenerService {
 				if (!clazz.isAnnotationPresent(ListenerHandler.class)) continue;
 
 				if (!Listener.class.isAssignableFrom(clazz)) {
-					String format = String.format("Class %s has @ListenerHandler but doesn't implement Listener!",
-												  clazz.getName());
-					plugin.getLogger().warning(format);
+					logger.warn("Class {} has @ListenerHandler but doesn't implement Listener!", clazz.getName());
 					continue;
 				}
 
@@ -130,6 +128,7 @@ public abstract class ListenerService {
 					Object instance = dependencyContainer.createInstance(clazz, plugin);
 
 					dependencyContainer.registerInstance((Class<? super Object>) clazz, instance);
+
 					logger.info("Registered component: {}", clazz.getName());
 				} catch (Exception exception) {
 					logger.warn("Failed to register component {}: {}", clazz.getName(), exception.getMessage());

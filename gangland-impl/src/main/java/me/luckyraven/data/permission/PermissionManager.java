@@ -1,21 +1,21 @@
 package me.luckyraven.data.permission;
 
-import org.bukkit.plugin.java.JavaPlugin;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class PermissionManager {
 
-	private final JavaPlugin        plugin;
+	private static final Logger logger = LogManager.getLogger(PermissionManager.class.getSimpleName());
+
 	private final PermissionHandler permissionHandler;
 	private final Set<String>       permissions;
 
-	public PermissionManager(JavaPlugin plugin, PermissionHandler permissionHandler) {
-		this.plugin            = plugin;
+	public PermissionManager(PermissionHandler permissionHandler) {
 		this.permissionHandler = permissionHandler;
 		this.permissions       = new HashSet<>();
 	}
@@ -37,7 +37,7 @@ public class PermissionManager {
 		if (removeFromHandler) try {
 			permissionHandler.removePermission(permission);
 		} catch (IllegalAccessException exception) {
-			plugin.getLogger().log(Level.WARNING, exception.getMessage(), exception);
+			logger.warn(exception.getMessage(), exception);
 		}
 
 		permissions.remove(permission);
