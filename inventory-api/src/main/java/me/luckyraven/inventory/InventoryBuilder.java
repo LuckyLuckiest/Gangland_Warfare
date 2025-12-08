@@ -1,6 +1,8 @@
 package me.luckyraven.inventory;
 
 import com.cryptomorin.xseries.XEnchantment;
+import me.luckyraven.inventory.condition.ConditionEvaluator;
+import me.luckyraven.inventory.condition.ConditionalSlotData;
 import me.luckyraven.inventory.multi.MultiInventory;
 import me.luckyraven.inventory.multi.MultiInventoryCreation;
 import me.luckyraven.inventory.part.ButtonTags;
@@ -12,12 +14,14 @@ import me.luckyraven.util.Placeholder;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
+import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,19 +29,22 @@ import java.util.Map;
 public record InventoryBuilder(InventoryData inventoryData, String permission) {
 
 	public InventoryHandler createInventory(JavaPlugin plugin, Placeholder placeholder, Player player, Fill fill,
-											Fill line) {
+											Fill line, ConditionEvaluator evaluator, InventoryOpener inventoryOpener) {
 		// create a new instance
 		String     displayName = inventoryData.getDisplayName();
 		int        size        = inventoryData.getSize();
 		List<Slot> slots       = inventoryData.getSlots();
 
 		// it is special when there is a click event
-		String           title   = placeholder.convert(player, displayName);
-		InventoryHandler handler = new InventoryHandler(plugin, title, size, player);
+		var title   = placeholder.convert(player, displayName);
+		var handler = new InventoryHandler(plugin, title, size, player);
 
 		for (Slot slot : slots) {
+			// get conditional result for this slot
+			var result = slot.getConditionalResult(player, evaluator);
+
 			int         usedSlot = slot.getSlot();
-			ItemBuilder item     = slot.getItem();
+			ItemBuilder item     = result.item();
 			if (item == null) continue;
 
 			// handles color tag
@@ -74,24 +81,38 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 					.stream().map(s -> placeholder.convert(player, s)).toList();
 			newItem.setLore(lore);
 
-			if (!item.getEnchantments().isEmpty()) newItem.addEnchantment(XEnchantment.UNBREAKING.get(), 1)
-														  .addItemFlags(ItemFlag.HIDE_ENCHANTS,
-																		ItemFlag.HIDE_ATTRIBUTES);
+			if (!item.getEnchantments().isEmpty()) {
+				newItem.addEnchantment(XEnchantment.UNBREAKING.get(), 1)
+					   .addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+			}
 
-			handler.setItem(usedSlot, newItem, slot.isDraggable(), slot.getClickableSlot());
+			// handle click actions, including anvil inventories
+			var clickAction = result.clickAction();
+
+			if (result.rawClickAction() instanceof ConditionalSlotData.AnvilAction anvilAction) {
+				clickAction = (p, inv, builder) -> openAnvilInventory(plugin, placeholder, p, anvilAction);
+			} else if (result.rawClickAction() != null) {
+				// Wrap the action to pass the opener
+				ConditionalSlotData.ClickAction rawAction = result.rawClickAction();
+				clickAction = (p, inv, builder) -> rawAction.execute(p, inv, builder, inventoryOpener);
+			}
+
+			handler.setItem(usedSlot, newItem, result.draggable(), clickAction);
 		}
 
 		List<Integer> verticalLine   = inventoryData.getVerticalLine();
 		List<Integer> horizontalLine = inventoryData.getHorizontalLine();
 
 		if (!verticalLine.isEmpty()) {
-			for (int l : verticalLine)
+			for (int l : verticalLine) {
 				InventoryUtil.verticalLine(handler, line, l);
+			}
 		}
 
 		if (!horizontalLine.isEmpty()) {
-			for (int l : horizontalLine)
+			for (int l : horizontalLine) {
 				InventoryUtil.horizontalLine(handler, line, l);
+			}
 		}
 
 		if (inventoryData.isBorder()) {
@@ -142,6 +163,32 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 																	  staticItemsMap);
 
 		return multiInventory;
+	}
+
+	private void openAnvilInventory(JavaPlugin plugin, Placeholder placeholder, Player player,
+									ConditionalSlotData.AnvilAction anvilAction) {
+		String title          = placeholder.convert(player, anvilAction.title());
+		String text           = placeholder.convert(player, anvilAction.text());
+		String successCommand = anvilAction.successCommand();
+
+		new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
+			if (slot != AnvilGUI.Slot.OUTPUT) {
+				return Collections.emptyList();
+			}
+
+			String output = stateSnapshot.getText();
+
+			if (successCommand != null) {
+				// Replace %gangland_anvil_output% with the actual output
+				String command = successCommand.replace("%gangland_anvil_output%", output);
+				command = placeholder.convert(player, command);
+
+				if (command.startsWith("/")) command = command.substring(1);
+				stateSnapshot.getPlayer().performCommand(command);
+			}
+
+			return List.of(AnvilGUI.ResponseAction.close());
+		}).text(text).title(title).plugin(plugin).open(player);
 	}
 
 	private ItemStack processItemStack(ItemBuilder item, Placeholder placeholder, Player player) {
