@@ -71,6 +71,8 @@
         - Try to make it diverse.
         - Open inventory.
         - Do commands.
+    - Make the inventory system workable.
+    - Configure phone items in files.
 0.0.67-DEV: (SCRAPED)
 	- Work on waypoint radius, used for displaying particles
     - Gang settings.
@@ -79,13 +81,22 @@
 ... Switch the versions system to 'MAJOR.MINOR.patch' ...
 -> Check this link and learn more about versions: "https://en.wikipedia.org/wiki/Software_versioning"
 
+0.7.0-DEV:
+    - Implement all the settings non-working features.
+    - Implement custom entities according to the settings.
+    - Integrate kill combo counter into the wanted level.
+    - Add the remaining messages to the message file.
 0.7.1-DEV:
-	- Gang spawn and home.
+	- Add gang spawn and home.
+	- Add gang settings.
 0.7.2-DEV:
-	- Make the inventory system workable.
-	- Configure phone items in files.
-	- Taxi system which is the waypoint system simply.
+	- Improve the waypoint system.
+	- Add a waypoint radius.
+	- Add a taxi system into the phone.
 	- Squash bugs as much as possible.
+0.7.3-DEV:
+	- Add chests functionality.
+	- Add safes.
 0.7-BETA:
     - The release of the plugin.
 
