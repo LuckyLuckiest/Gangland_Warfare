@@ -42,25 +42,35 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 		String param = parameter.toLowerCase();
 
-		if (param.contains("user_")) return getUser(player, param);
-		else if (param.contains("bank_")) return getBank(player, param);
-		else if (param.contains("gang_")) return getGang(player, param);
-		else return getSetting(parameter);
+		String value = null;
+
+		if (param.contains("user_")) value = getUser(player, param);
+		if (value != null) return value;
+
+		if (param.contains("bank_")) value = getBank(player, param);
+		if (value != null) return value;
+
+		if (param.contains("gang_")) value = getGang(player, param);
+		if (value != null) return value;
+
+		return getSetting(param);
 	}
 
 	@Nullable
 	private String getSetting(String parameter) {
-		Object value = SettingAddon.getSettingsPlaceholder()
-								   .entrySet()
-				.stream()
-				.filter(entry -> entry.getKey().equals(parameter))
-				.map(Map.Entry::getValue)
-				.findFirst()
-				.orElse(null);
+		Object value = SettingAddon.getSettingsPlaceholder().entrySet()
+				.stream().filter(entry -> {
+					// place _ before capital letters
+					String key   = entry.getKey().replaceAll("(?<=[a-z])(?=[A-Z])", "_");
+					String lower = key.toLowerCase();
+
+					return lower.equals(parameter);
+				}).map(Map.Entry::getValue).findFirst().orElse(null);
 
 		if (value == null) return null;
 
 		if (value instanceof Double) return SettingAddon.formatDouble((double) value);
+
 		return String.valueOf(value);
 	}
 

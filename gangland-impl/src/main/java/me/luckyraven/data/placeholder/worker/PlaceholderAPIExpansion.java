@@ -21,7 +21,7 @@ public class PlaceholderAPIExpansion extends PlaceholderExpansion {
 
 	@Override
 	public @NotNull String getAuthor() {
-		return gangland.getDescription().getAuthors().get(0);
+		return gangland.getDescription().getAuthors().getFirst();
 	}
 
 	@Override
