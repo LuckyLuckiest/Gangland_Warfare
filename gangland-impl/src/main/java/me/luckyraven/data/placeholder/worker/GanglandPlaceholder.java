@@ -58,14 +58,13 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 	@Nullable
 	private String getSetting(String parameter) {
-		Object value = SettingAddon.getSettingsPlaceholder().entrySet()
-				.stream().filter(entry -> {
-					// place _ before capital letters
-					String key   = entry.getKey().replaceAll("(?<=[a-z])(?=[A-Z])", "_");
-					String lower = key.toLowerCase();
-
-					return lower.equals(parameter);
-				}).map(Map.Entry::getValue).findFirst().orElse(null);
+		Object value = SettingAddon.getSettingsPlaceholder()
+								   .entrySet()
+				.stream()
+				.filter(entry -> entry.getKey().equals(parameter))
+				.map(Map.Entry::getValue)
+				.findFirst()
+				.orElse(null);
 
 		if (value == null) return null;
 
