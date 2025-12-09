@@ -111,7 +111,7 @@ class BountySetCommand extends SubArgument {
 				}
 			}
 
-			gangland.getServer().getPluginManager().callEvent(bountyEvent);
+			Bukkit.getPluginManager().callEvent(bountyEvent);
 
 			if (!bountyEvent.isCancelled()) {
 				userBounty.addBounty(sender, value, user.getLevel().getLevelValue());

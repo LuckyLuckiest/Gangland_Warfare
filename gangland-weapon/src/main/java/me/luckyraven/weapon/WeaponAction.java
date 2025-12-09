@@ -6,6 +6,7 @@ import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.events.WeaponShootEvent;
 import me.luckyraven.weapon.projectile.WeaponProjectile;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
@@ -56,7 +57,7 @@ public class WeaponAction {
 
 		WeaponProjectile<?> weaponProjectile = weapon.getProjectileType().createInstance(plugin, shooter, weapon);
 		WeaponShootEvent    weaponShootEvent = new WeaponShootEvent(weapon, weaponProjectile);
-		plugin.getServer().getPluginManager().callEvent(weaponShootEvent);
+		Bukkit.getPluginManager().callEvent(weaponShootEvent);
 
 		// launch the projectile
 		if (weaponShootEvent.isCancelled()) {

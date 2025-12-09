@@ -7,6 +7,7 @@ import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.events.WeaponProjectileLaunchEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;
@@ -82,7 +83,7 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 
 		// call the projectile launch event
 		WeaponProjectileLaunchEvent event = new WeaponProjectileLaunchEvent(weapon, projectile, this);
-		plugin.getServer().getPluginManager().callEvent(event);
+		Bukkit.getPluginManager().callEvent(event);
 	}
 
 	@Override

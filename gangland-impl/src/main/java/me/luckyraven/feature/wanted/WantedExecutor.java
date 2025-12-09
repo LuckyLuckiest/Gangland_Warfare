@@ -8,6 +8,7 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.timer.Timer;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -50,7 +51,7 @@ public class WantedExecutor extends Executor {
 			moneyTaken = takeAmount * Math.pow(SettingAddon.getWantedTakeMoneyMultiplier(), wanted.getLevel());
 		}
 
-		getPlugin().getServer().getPluginManager().callEvent(event);
+		Bukkit.getPluginManager().callEvent(event);
 
 		if (event.isCancelled()) return;
 
