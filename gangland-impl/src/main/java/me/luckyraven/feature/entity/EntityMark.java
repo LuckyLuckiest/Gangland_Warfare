@@ -2,12 +2,9 @@ package me.luckyraven.feature.entity;
 
 public enum EntityMark {
 
-	CIVILIAN,       // regular civilian NPCs that contribute to the wanted level
-	CRIMINAL,       // Criminal NPCs
-	POLICE,         // Police/law enforcement NPCs
-	GANG_MEMBER,    // Gang members NPCs
-	NEUTRAL,        // Neutral entities
-	UNSET;          // Not yet classified
+	CIVILIAN,
+	POLICE,
+	UNSET;
 
 	public boolean isCivilian() {
 		return this == CIVILIAN || this == POLICE;
