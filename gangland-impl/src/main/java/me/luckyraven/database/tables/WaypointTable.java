@@ -28,7 +28,7 @@ public class WaypointTable extends Table<Waypoint> {
 		Attribute<Double>  cost     = new Attribute<>("cost", false, Double.class);
 		Attribute<Double>  radius   = new Attribute<>("radius", false, Double.class);
 
-		gangId.setDefaultValue(-1);
+		gangId.setCanBeNull(true);
 		x.setDefaultValue(0D);
 		y.setDefaultValue(0D);
 		z.setDefaultValue(0D);
