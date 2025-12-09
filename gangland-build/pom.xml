@@ -125,32 +125,6 @@
             <version>${project.parent.version}</version>
         </dependency>
 
-        <!-- Include Core Utilities -->
-
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>scoreboard-api</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-util</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>plugin-file</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>plugin-exception</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
         <!-- Include NMS -->
         <!-- 1.21.x -->
         <dependency>

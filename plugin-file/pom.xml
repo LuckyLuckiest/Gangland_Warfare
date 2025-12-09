@@ -32,13 +32,13 @@
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>plugin-exception</artifactId>
-            <version>0.7.0-DEV</version>
+            <version>${parent.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-util</artifactId>
-            <version>0.7.0-DEV</version>
+            <version>${parent.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

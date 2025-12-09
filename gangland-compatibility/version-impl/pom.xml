@@ -38,7 +38,7 @@
         <dependency>
             <groupId>com.viaversion</groupId>
             <artifactId>viaversion-api</artifactId>
-            <version>5.5.1</version>
+            <version>${viaversion.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

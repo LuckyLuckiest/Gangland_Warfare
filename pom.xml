@@ -68,6 +68,25 @@
 
         <!-- The version used to run the plugin -->
         <bukkit.version>1.21.10-R0.1-SNAPSHOT</bukkit.version>
+
+        <!-- Dependencies/Libraries versions -->
+        <nbt.version>2.15.3</nbt.version>
+        <xseries.version>13.5.1</xseries.version>
+        <anvilgui.version>1.10.10-SNAPSHOT</anvilgui.version>
+        <fastboard.version>2.1.5</fastboard.version>
+        <viaversion.version>5.5.1</viaversion.version>
+        <placeholderapi.version>2.11.7</placeholderapi.version>
+        <vault.version>1.7.1</vault.version>
+        <citizen.version>2.0.40-SNAPSHOT</citizen.version>
+
+        <bstats.version>3.1.0</bstats.version>
+
+        <hikaricp.version>7.0.2</hikaricp.version>
+        <org.reflections.version>0.10.2</org.reflections.version>
+        <exp4j.version>0.4.8</exp4j.version>
+
+        <junit.version>6.0.0</junit.version>
+        <mockito.version>5.20.0</mockito.version>
     </properties>
 
     <repositories>
