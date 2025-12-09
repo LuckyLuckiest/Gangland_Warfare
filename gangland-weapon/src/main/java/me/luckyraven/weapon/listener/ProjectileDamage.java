@@ -7,7 +7,9 @@ import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
+import me.luckyraven.weapon.events.WeaponProjectileHitEvent;
 import me.luckyraven.weapon.events.WeaponProjectileLaunchEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
@@ -94,11 +96,11 @@ public class ProjectileDamage implements Listener {
 			eventQueues.put(projectileId, queue = new ProjectileEventQueue(projectileId));
 		}
 
-		// Check if we have both events OR if hit event happened without damage (block hit)
+		// Check if we have both events OR if the hit event happened without damage (block hit)
 		boolean hasDamageEvent = queue.hasDamageEvent();
 		boolean hasHitEvent    = queue.hasHitEvent();
 
-		// If we have hit event but no damage event, it's a block/miss hit
+		// If we have a hit event but no damage event, it is a block/miss hit
 		if (hasHitEvent && !hasDamageEvent) {
 			// Check if hit was on a block (not entity)
 			if (queue.getHitEvent().getHitEntity() == null) {
@@ -106,19 +108,17 @@ public class ProjectileDamage implements Listener {
 				executeQueue(projectileId, queue, shooter);
 				return;
 			}
+
 			// Hit entity but no damage event yet - wait for damage event
 			return;
 		}
 
-		// If we have damage event but no hit event - wait for hit event
-		if (hasDamageEvent && !hasHitEvent) {
-			return;
-		}
+		// If we have a damage event but no hit event - wait for the hit event
+		if (hasDamageEvent && !hasHitEvent) return;
 
-		// We have both events - process them in order
-		if (hasDamageEvent && hasHitEvent) {
-			executeQueue(projectileId, queue, shooter);
-		}
+		if (!hasDamageEvent) return;
+
+		executeQueue(projectileId, queue, shooter);
 	}
 
 	private void executeQueue(int projectileId, ProjectileEventQueue queue, Player shooter) {
@@ -131,6 +131,11 @@ public class ProjectileDamage implements Listener {
 			return;
 		}
 
+		var newEvent = new WeaponProjectileHitEvent(weapon);
+		Bukkit.getPluginManager().callEvent(newEvent);
+
+		if (newEvent.isCancelled()) return;
+
 		// Process damage events FIRST (in order they were added)
 		for (EntityDamageByEntityEvent damageEvent : queue.getDamageEvents()) {
 			processDamageEvent(damageEvent, weapon, shooter);
@@ -139,7 +144,7 @@ public class ProjectileDamage implements Listener {
 		// Then process hit event
 		ProjectileHitEvent hitEvent = queue.getHitEvent();
 		if (hitEvent != null) {
-			processHitEvent(hitEvent, projectileId);
+			processHitEvent(hitEvent);
 		}
 
 		// Cleanup
@@ -164,8 +169,7 @@ public class ProjectileDamage implements Listener {
 						damage);
 
 		if (criticalHitOccurred && shooter != null) {
-			SoundConfiguration sound = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, "ITEM_SHIELD_BREAK",
-															  1F, 1F);
+			var sound = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, "ITEM_SHIELD_BREAK", 1F, 1F);
 
 			sound.playSound(shooter);
 		}
@@ -174,11 +178,9 @@ public class ProjectileDamage implements Listener {
 		entity.setFireTicks(weapon.getProjectileFireTicks());
 
 		entity.setNoDamageTicks(0);
-
-//		Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> entity.setNoDamageTicks(20), 2L);
 	}
 
-	private void processHitEvent(ProjectileHitEvent event, int projectileId) {
+	private void processHitEvent(ProjectileHitEvent event) {
 		Projectile projectile = event.getEntity();
 
 		if (!projectile.isDead()) {
@@ -224,15 +226,14 @@ public class ProjectileDamage implements Listener {
 		eventQueues.remove(projectileId);
 	}
 
+	@Getter
 	private static class ProjectileEventQueue {
 		private final int                             projectileId;
-		@Getter
 		private final List<EntityDamageByEntityEvent> damageEvents;
-		@Getter
-		private       ProjectileHitEvent              hitEvent;
+
+		private ProjectileHitEvent hitEvent;
 		@Setter
-		@Getter
-		private       boolean                         processed;
+		private boolean            processed;
 
 		public ProjectileEventQueue(int projectileId) {
 			this.projectileId = projectileId;

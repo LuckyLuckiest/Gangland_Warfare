@@ -6,6 +6,8 @@ import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
+import me.luckyraven.weapon.events.WeaponChangeSelectiveFireEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -34,6 +36,11 @@ public class WeaponSelectiveFireChange implements Listener {
 		Weapon    weapon = weaponService.validateAndGetWeapon(player, item);
 
 		if (weapon == null) return;
+
+		var newEvent = new WeaponChangeSelectiveFireEvent(weapon);
+		Bukkit.getPluginManager().callEvent(newEvent);
+
+		if (newEvent.isCancelled()) return;
 
 		// change the selective fire of the weapon and cancel opening the inventory
 		event.setCancelled(true);
