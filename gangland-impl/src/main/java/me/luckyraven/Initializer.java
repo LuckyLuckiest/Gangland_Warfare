@@ -50,6 +50,8 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
+import me.luckyraven.inventory.condition.ConditionEvaluator;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
@@ -123,6 +125,8 @@ public final class Initializer {
 	private GanglandPlaceholder        placeholder;
 	// Compatibility
 	private CompatibilityWorker        compatibilityWorker;
+	// Condition Evaluator
+	private ConditionEvaluator         evaluator;
 
 	public Initializer(Gangland gangland) {
 		this.gangland = gangland;
@@ -147,7 +151,10 @@ public final class Initializer {
 		compatibilityWorker = new CompatibilityWorker(gangland.getViaAPI(), compatibilitySetup);
 
 		// permission manager
-		permissionManager = new PermissionManager(this.gangland, new PermissionWorker("gangland"));
+		var ganglandString   = "gangland";
+		var permissionWorker = new PermissionWorker(ganglandString);
+
+		permissionManager = new PermissionManager(permissionWorker);
 
 		// File
 		fileManager = new FileManager(gangland);
@@ -162,7 +169,7 @@ public final class Initializer {
 		Set<Permission> permissions = Bukkit.getPluginManager().getPermissions();
 		Set<String> ganglandPermissions = permissions.stream()
 				.map(Permission::getName)
-				.filter(permission -> permission.startsWith("gangland"))
+				.filter(permission -> permission.startsWith(ganglandString))
 				.collect(Collectors.toSet());
 
 		permissionManager.addAllPermissions(ganglandPermissions);
@@ -312,6 +319,10 @@ public final class Initializer {
 	 */
 	public void inventoryLoader() {
 		InventoryAddon.setItemSourceProvider(gangland);
+
+		evaluator = new BooleanExpressionEvaluator(gangland);
+
+		InventoryAddon.setConditionEvaluator(evaluator);
 
 		inventoryLoader = new InventoryLoader(gangland);
 
