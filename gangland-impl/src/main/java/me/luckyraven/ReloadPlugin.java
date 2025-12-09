@@ -191,7 +191,7 @@ public final class ReloadPlugin {
 			if (onlineUser != null) continue;
 
 			User<Player> newUser = new User<>(player);
-			Phone        phone   = new Phone(gangland, newUser, SettingAddon.getPhoneName());
+			Phone        phone   = new Phone(gangland, SettingAddon.getPhoneName());
 
 			if (SettingAddon.isPhoneEnabled()) {
 				newUser.setPhone(phone);
