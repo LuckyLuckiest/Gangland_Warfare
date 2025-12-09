@@ -13,12 +13,10 @@ import java.util.UUID;
 
 public class EntityMarkManager {
 
-	private final JavaPlugin            plugin;
 	private final NamespacedKey         entityMarkKey;
 	private final Map<UUID, EntityMark> entityMarks;
 
 	public EntityMarkManager(JavaPlugin plugin) {
-		this.plugin        = plugin;
 		this.entityMarkKey = new NamespacedKey(plugin, "entity_mark");
 		this.entityMarks   = new HashMap<>();
 	}
@@ -79,10 +77,9 @@ public class EntityMarkManager {
 	protected EntityMark getDefaultMarkForType(EntityType type) {
 		return switch (type) {
 			case VILLAGER, WANDERING_TRADER, PLAYER -> EntityMark.CIVILIAN;
-			case ZOMBIE, SKELETON, CREEPER, SPIDER, WITHER_SKELETON, ENDERMAN -> EntityMark.NEUTRAL;
 			case PILLAGER -> EntityMark.POLICE;
-			case VINDICATOR, EVOKER -> EntityMark.CRIMINAL;
 			default -> EntityMark.UNSET;
 		};
 	}
+
 }

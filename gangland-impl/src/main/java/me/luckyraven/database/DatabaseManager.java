@@ -37,7 +37,7 @@ public class DatabaseManager {
 			Database        database = databaseHandler.getDatabase();
 			DatabaseHandler backup   = null;
 
-			if (database != null && database.getConnection() != null) backup = startBackup(plugin, databaseHandler);
+			if (database != null && database.getConnection() != null) backup = startBackup(databaseHandler);
 
 			if (backup != null && backup.getDatabase() != null &&
 				backup.getDatabase().getConnection() != null) backup.getDatabase().disconnect();
@@ -45,7 +45,7 @@ public class DatabaseManager {
 	}
 
 	@Nullable
-	public DatabaseHandler startBackup(JavaPlugin plugin, DatabaseHandler handler) {
+	public DatabaseHandler startBackup(DatabaseHandler handler) {
 		if (SettingAddon.isSqliteBackup()) try {
 			switch (handler.getType()) {
 				case DatabaseHandler.MYSQL -> backup(handler, DatabaseHandler.SQLITE);
@@ -93,7 +93,7 @@ public class DatabaseManager {
 
 	private void backup(DatabaseHandler handler, int databaseType) throws SQLException {
 		// save all the database data in a map, name: data
-		LinkedHashMap<String, List<Object[]>> data = databaseInformation(handler);
+		var data = databaseInformation(handler);
 
 		// check if a database exists if they don't handle them
 		handler.enforceType(databaseType);
@@ -105,24 +105,49 @@ public class DatabaseManager {
 		DatabaseHelper helper = new DatabaseHelper(plugin, handler);
 
 		helper.runQueries(database -> {
-			for (String table : data.keySet()) {
-				Database config = database.table(table);
+			// Temporarily disable foreign key checks for MySQL, enable for SQLite
+			if (databaseType == DatabaseHandler.MYSQL) {
+				database.executeStatement("SET FOREIGN_KEY_CHECKS=0");
+			} else if (databaseType == DatabaseHandler.SQLITE) {
+				database.executeStatement("PRAGMA foreign_keys = OFF");
+			}
 
-				String[]      columns         = config.getColumns().toArray(String[]::new);
-				List<Integer> columnsDataType = config.getColumnsDataType(columns);
+			try {
+				for (String table : data.keySet()) {
+					Database config = database.table(table);
 
-				int[] dataTypes = new int[columnsDataType.size()];
-				for (int i = 0; i < dataTypes.length; i++)
-					 dataTypes[i] = columnsDataType.get(i);
+					String[]      columns         = config.getColumns().toArray(String[]::new);
+					List<Integer> columnsDataType = config.getColumnsDataType(columns);
 
-				// if they don't exist, we create them otherwise update the data
-				for (Object[] objects : data.get(table)) {
-					Object[] row = config.select(columns[0] + " = ?", new Object[]{objects[0]}, new int[]{dataTypes[0]},
-												 new String[]{"*"});
+					int[] dataTypes = new int[columnsDataType.size()];
 
-					if (row.length == 0) config.insert(columns, objects, dataTypes);
-					else config.update(columns[0] + " = ?", new Object[]{objects[0]}, new int[]{dataTypes[0]}, columns,
-									   objects, dataTypes);
+					for (int i = 0; i < dataTypes.length; i++) {
+						dataTypes[i] = columnsDataType.get(i);
+					}
+
+					// if they don't exist, we create them otherwise update the data
+					for (Object[] objects : data.get(table)) {
+						try {
+							Object[] row = config.select(columns[0] + " = ?", new Object[]{objects[0]},
+														 new int[]{dataTypes[0]}, new String[]{"*"});
+
+							if (row.length == 0) {
+								config.insert(columns, objects, dataTypes);
+							} else {
+								config.update(columns[0] + " = ?", new Object[]{objects[0]}, new int[]{dataTypes[0]},
+											  columns, objects, dataTypes);
+							}
+						} catch (SQLException exception) {
+							logger.warn("Failed to backup row in table '{}': {}", table, exception.getMessage());
+						}
+					}
+				}
+			} finally {
+				// Re-enable foreign key checks
+				if (databaseType == DatabaseHandler.MYSQL) {
+					database.executeStatement("SET FOREIGN_KEY_CHECKS=1");
+				} else if (databaseType == DatabaseHandler.SQLITE) {
+					database.executeStatement("PRAGMA foreign_keys = ON");
 				}
 			}
 		});
