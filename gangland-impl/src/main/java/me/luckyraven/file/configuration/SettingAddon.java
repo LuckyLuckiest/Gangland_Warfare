@@ -2,6 +2,8 @@ package me.luckyraven.file.configuration;
 
 import lombok.Getter;
 import me.luckyraven.exception.PluginException;
+import me.luckyraven.file.FileHandler;
+import me.luckyraven.file.FileInitializer;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.util.utilities.NumberUtil;
 import org.apache.logging.log4j.LogManager;
@@ -16,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class SettingAddon {
+public class SettingAddon implements FileInitializer {
 
 	private static final @Getter Map<String, Object> settingsMap         = new LinkedHashMap<>();
 	private static final @Getter Map<String, Object> settingsPlaceholder = new LinkedHashMap<>();
@@ -79,12 +81,6 @@ public class SettingAddon {
 	private static @Getter int wantedTimerTime, wantedLevelIncrement, wantedMaximumLevel, wantedKillComboResetAfter;
 	private static @Getter List<Integer> wantedKillCounter;
 
-	// phone configuration
-	private static @Getter boolean phoneEnabled;
-	private static @Getter String  phoneItem, phoneName;
-	private static @Getter int     phoneSlot;
-	private static @Getter boolean phoneMovable, phoneDroppable;
-
 	// gang configuration
 	private static @Getter boolean gangEnabled, gangNameDuplicates;
 	private static @Getter String gangRankHead, gangRankTail, gangDisplayNameChar;
@@ -94,12 +90,23 @@ public class SettingAddon {
 	private static @Getter boolean scoreboardEnabled;
 	private static @Getter String  scoreboardDriver;
 
+	// entity marker configuration
+	private static @Getter List<String> defaultPoliceEntities, defaultCivilianEntities;
+	private static @Getter String policeName, civilianName;
+	private static @Getter List<String> policeWearables, civilianWearables;
+	private static @Getter double policeExperienceDropsMinimum, policeExperienceDropsMaximum,
+			civilianExperienceDropsMinimum, civilianExperienceDropsMaximum;
+	private static @Getter List<String> policeItemDrops, civilianItemDrops;
+
 	public SettingAddon(FileManager fileManager) {
 		try {
-			fileManager.checkFileLoaded("settings");
-			settings = Objects.requireNonNull(fileManager.getFile("settings")).getFileConfiguration();
+			String fileName = "settings";
 
-			initialize();
+			fileManager.checkFileLoaded(fileName);
+
+			FileHandler file = Objects.requireNonNull(fileManager.getFile(fileName));
+
+			settings = file.getFileConfiguration();
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
@@ -126,7 +133,18 @@ public class SettingAddon {
 		return String.valueOf(value);
 	}
 
-	private void initialize() {
+	@Override
+	public void initialize() {
+		try {
+			init();
+		} catch (Exception exception) {
+			// create a new file
+			// initialize again
+//			init();
+		}
+	}
+
+	private void init() {
 		// update configuration
 		var updateChecker = settings.getConfigurationSection("Update_Checker");
 		Objects.requireNonNull(updateChecker);
@@ -249,17 +267,6 @@ public class SettingAddon {
 		wantedKillComboResetAfter = wantedKillCombo.getInt("Reset_After");
 		wantedKillCounter         = wantedKillCombo.getIntegerList("Kill_Counter");
 
-		// phone
-		var phone = settings.getConfigurationSection("Phone");
-		Objects.requireNonNull(phone);
-
-		phoneEnabled   = phone.getBoolean("Enable");
-		phoneItem      = phone.getString("Item");
-		phoneName      = phone.getString("Name");
-		phoneSlot      = phone.getInt("Slot");
-		phoneMovable   = !phone.getBoolean("Movable");
-		phoneDroppable = !phone.getBoolean("Droppable");
-
 		// gang
 		gangEnabled          = settings.getBoolean("Gang.Enable");
 		gangNameDuplicates   = settings.getBoolean("Gang.Name_Duplicates");
@@ -274,6 +281,38 @@ public class SettingAddon {
 		// scoreboard
 		scoreboardEnabled = settings.getBoolean("Scoreboard.Enable");
 		scoreboardDriver  = settings.getString("Scoreboard.Driver");
+
+		// entity marker
+		var entityMarker = settings.getConfigurationSection("Entity_Marker");
+		Objects.requireNonNull(entityMarker);
+
+		var police = entityMarker.getConfigurationSection("Police");
+		Objects.requireNonNull(police);
+
+		defaultPoliceEntities = police.getStringList("Default_Entities");
+		policeName            = police.getString("Name");
+		policeWearables       = police.getStringList("Wear");
+
+		var policeDrops = police.getConfigurationSection("Drops");
+		Objects.requireNonNull(policeDrops);
+
+		policeExperienceDropsMinimum = policeDrops.getDouble("Experience.Minimum");
+		policeExperienceDropsMaximum = policeDrops.getDouble("Experience.Maximum");
+		policeItemDrops              = policeDrops.getStringList("Items");
+
+		var civilian = entityMarker.getConfigurationSection("Civilian");
+		Objects.requireNonNull(civilian);
+
+		defaultCivilianEntities = civilian.getStringList("Default_Entities");
+		civilianName            = civilian.getString("Name");
+		civilianWearables       = civilian.getStringList("Wear");
+
+		var civilianDrops = civilian.getConfigurationSection("Drops");
+		Objects.requireNonNull(civilianDrops);
+
+		civilianExperienceDropsMinimum = civilianDrops.getDouble("Experience.Minimum");
+		civilianExperienceDropsMaximum = civilianDrops.getDouble("Experience.Maximum");
+		civilianItemDrops              = civilianDrops.getStringList("Items");
 
 		addEachFieldReflection();
 		convertToPlaceholder();
