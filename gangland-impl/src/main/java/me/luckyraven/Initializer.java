@@ -27,6 +27,7 @@ import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.permission.PermissionWorker;
+import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.data.placeholder.replacer.Replacer;
 import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
 import me.luckyraven.data.plugin.PluginManager;
@@ -127,6 +128,7 @@ public final class Initializer {
 	private GanglandDatabase           ganglandDatabase;
 	// Placeholder
 	private GanglandPlaceholder        placeholder;
+	private PlaceholderService         placeholderService;
 	// Compatibility
 	private CompatibilityWorker        compatibilityWorker;
 	// Condition Evaluator
@@ -269,7 +271,8 @@ public final class Initializer {
 		commands(gangland);
 
 		// Placeholder
-		placeholder = new GanglandPlaceholder(gangland, Replacer.Closure.PERCENT);
+		placeholder        = new GanglandPlaceholder(gangland, Replacer.Closure.PERCENT);
+		placeholderService = new PlaceholderService(gangland);
 	}
 
 	/**
@@ -354,7 +357,7 @@ public final class Initializer {
 	public void inventoryLoader() {
 		InventoryAddon.setItemSourceProvider(gangland);
 
-		evaluator = new BooleanExpressionEvaluator(gangland);
+		evaluator = new BooleanExpressionEvaluator(placeholderService);
 
 		InventoryAddon.setConditionEvaluator(evaluator);
 

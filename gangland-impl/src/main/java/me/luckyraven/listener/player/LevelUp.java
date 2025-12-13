@@ -52,7 +52,7 @@ public class LevelUp implements Listener {
 	}
 
 	private String replacePlaceholders(Player player, String message, Level level) {
-		String replace = gangland.convert(player, message);
+		String replace = gangland.getInitializer().getPlaceholderService().convert(player, message);
 
 		return replace.replace("%level%", String.valueOf(level.getLevelValue()))
 					  .replace("%next_level%", String.valueOf(level.nextLevel()))

@@ -4,16 +4,13 @@ import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.ViaAPI;
 import com.zaxxer.hikari.HikariConfig;
 import lombok.Getter;
-import me.clip.placeholderapi.PlaceholderAPI;
 import me.luckyraven.data.economy.EconomyHandler;
-import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
 import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
 import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.updater.UpdateChecker;
-import me.luckyraven.util.Placeholder;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -23,7 +20,6 @@ import org.bstats.bukkit.Metrics;
 import org.bstats.charts.AdvancedPie;
 import org.bstats.charts.SingleLineChart;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Getter
-public final class Gangland extends JavaPlugin implements Placeholder {
+public final class Gangland extends JavaPlugin {
 
 	private static final Logger logger = LogManager.getLogger("Gangland_Warfare");
 
@@ -91,28 +87,6 @@ public final class Gangland extends JavaPlugin implements Placeholder {
 
 		// check for new updates
 		updateCheckerInitializer();
-	}
-
-	/**
-	 * Uses PlaceholderAPI if configured to replace the text with the appropriate placeholder configured.
-	 * </b>
-	 * If PlaceholderAPI wasn't configured, then it is replaced with the default placeholder handled by the plugin.
-	 *
-	 * @param player the player object
-	 * @param text the string that contains the placeholder(s)
-	 *
-	 * @return the replaced placeholder text with the appropriate placeholder
-	 */
-	@Override
-	public String convert(Player player, String text) {
-		if (placeholderAPIExpansion != null) {
-			if (PlaceholderAPI.containsPlaceholders(text)) return PlaceholderAPI.setPlaceholders(player, text);
-		} else {
-			GanglandPlaceholder placeholder = initializer.getPlaceholder();
-			if (placeholder.containsPlaceholder(text)) return placeholder.replacePlaceholder(player, text);
-		}
-
-		return text;
 	}
 
 	/**

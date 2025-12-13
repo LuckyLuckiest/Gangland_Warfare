@@ -19,6 +19,7 @@ import me.luckyraven.inventory.part.Slot;
 import me.luckyraven.inventory.unique.UniqueItemHandler;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.Pair;
+import me.luckyraven.util.Placeholder;
 import me.luckyraven.util.color.MaterialType;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -211,7 +212,8 @@ public class InventoryAddon {
 		Fill line = new Fill(SettingAddon.getInventoryLineName(), SettingAddon.getInventoryLineItem());
 
 		// Create the opener callback
-		InventoryOpener opener = (p, invName) -> openInventoryForPlayer(gangland, p, invName);
+		InventoryOpener opener      = (p, invName) -> openInventoryForPlayer(gangland, p, invName);
+		Placeholder     placeholder = gangland.getInitializer().getPlaceholderService();
 
 		// Check if it's a multi-inventory
 		if (invBuilder.inventoryData().isMultiInventory()) {
@@ -221,7 +223,7 @@ public class InventoryAddon {
 			ButtonTags buttonTags = new ButtonTags(SettingAddon.getPreviousPage(), SettingAddon.getHomePage(),
 												   SettingAddon.getNextPage());
 
-			MultiInventory multiInventory = invBuilder.createMultiInventory(gangland, gangland, player, items,
+			MultiInventory multiInventory = invBuilder.createMultiInventory(gangland, placeholder, player, items,
 																			buttonTags, fill);
 
 			if (multiInventory != null) {
@@ -229,7 +231,7 @@ public class InventoryAddon {
 				user.addInventory(multiInventory);
 			}
 		} else {
-			InventoryHandler handler = invBuilder.createInventory(gangland, gangland, user.getUser(), fill, line,
+			InventoryHandler handler = invBuilder.createInventory(gangland, placeholder, user.getUser(), fill, line,
 																  conditionEvaluator, opener);
 			handler.open(player);
 			user.addInventory(handler);

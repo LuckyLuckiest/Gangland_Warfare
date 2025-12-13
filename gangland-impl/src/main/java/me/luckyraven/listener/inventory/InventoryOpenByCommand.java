@@ -73,8 +73,10 @@ public class InventoryOpenByCommand implements Listener {
 					InventoryOpener opener = (p, invName) -> InventoryAddon.openInventoryForPlayer(gangland, p,
 																								   invName);
 
-					var evaluator = gangland.getInitializer().getEvaluator();
-					var inventoryHandler = builder.createInventory(gangland, gangland, player, fill, line, evaluator,
+					var placeholder = gangland.getInitializer().getPlaceholderService();
+					var evaluator   = gangland.getInitializer().getEvaluator();
+
+					var inventoryHandler = builder.createInventory(gangland, placeholder, player, fill, line, evaluator,
 																   opener);
 
 					inventoryHandler.open(player);
