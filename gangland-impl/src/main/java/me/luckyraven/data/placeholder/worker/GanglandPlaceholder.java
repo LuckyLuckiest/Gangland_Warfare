@@ -1,6 +1,7 @@
 package me.luckyraven.data.placeholder.worker;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.Initializer;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
@@ -13,7 +14,9 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.wanted.Wanted;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.util.color.ColorUtil;
+import me.luckyraven.util.item.unique.UniqueItem;
 import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -27,13 +30,17 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
+	private final UniqueItemAddon     uniqueItemAddon;
 
 	public GanglandPlaceholder(Gangland gangland, Replacer.Closure closure) {
 		super(closure);
 
-		this.userManager   = gangland.getInitializer().getUserManager();
-		this.memberManager = gangland.getInitializer().getMemberManager();
-		this.gangManager   = gangland.getInitializer().getGangManager();
+		Initializer initializer = gangland.getInitializer();
+
+		this.userManager     = initializer.getUserManager();
+		this.memberManager   = initializer.getMemberManager();
+		this.gangManager     = initializer.getGangManager();
+		this.uniqueItemAddon = initializer.getUniqueItemAddon();
 	}
 
 	@Override
@@ -53,7 +60,13 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (param.contains("gang_")) value = getGang(player, param);
 		if (value != null) return value;
 
-		return getSetting(param);
+		if (param.contains("unique-item_")) value = getUniqueItem(param);
+		if (value != null) return value;
+
+		value = getSetting(param);
+		if (value == null) return "NA";
+
+		return value;
 	}
 
 	@Nullable
@@ -82,18 +95,18 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (member == null) return null;
 
 		if (parameter.equals(userStr + "has-gang")) return String.valueOf(member.hasGang());
-		if (parameter.equals(userStr + "gang-id")) return !member.hasGang() ? "NA" : String.valueOf(member.getGangId());
+		if (parameter.equals(userStr + "gang-id")) return !member.hasGang() ? null : String.valueOf(member.getGangId());
 		if (parameter.equals(userStr + "gang-join-date"))
-			return !member.hasGang() ? "NA" : member.getGangJoinDateString();
+			return !member.hasGang() ? null : member.getGangJoinDateString();
 		if (parameter.equals(userStr + "contribution"))
-			return !member.hasGang() ? "NA" : SettingAddon.formatDouble(member.getContribution());
-		if (parameter.equals(userStr + "contributed-amount")) return !member.hasGang() ?
-																	 "NA" :
-																	 NumberUtil.valueFormat(
-																			 SettingAddon.getGangContributionRate() *
-																			 member.getContribution());
+			return !member.hasGang() ? null : SettingAddon.formatDouble(member.getContribution());
+		if (parameter.equals(userStr + "contributed-amount")) {
+			return !member.hasGang() ?
+				   null :
+				   NumberUtil.valueFormat(SettingAddon.getGangContributionRate() * member.getContribution());
+		}
 		if (parameter.equals(userStr + "has-rank")) return String.valueOf(member.hasRank());
-		if (parameter.equals(userStr + "rank")) return member.getRank() == null ? "NA" : member.getRank().getName();
+		if (parameter.equals(userStr + "rank")) return member.getRank() == null ? null : member.getRank().getName();
 
 		// for user
 		Player onlinePlayer = player.getPlayer();
@@ -139,7 +152,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		Bank   bank    = Bank.getInstance(user);
 		String bankStr = "bank_";
 
-		if (bank == null) return "NA";
+		if (bank == null) return null;
 
 		if (parameter.equals(bankStr + "name")) return bank.getName();
 		if (parameter.equals(bankStr + "balance")) return NumberUtil.valueFormat(bank.getEconomy().getBalance());
@@ -157,7 +170,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		Gang   gang    = gangManager.getGang(member.getGangId());
 		String gangStr = "gang_";
 
-		if (gang == null) return "NA";
+		if (gang == null) return null;
 
 		// info
 		if (parameter.equals(gangStr + "id")) return String.valueOf(gang.getId());
@@ -212,12 +225,48 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 			try {
 				value = Integer.parseInt(param);
 			} catch (NumberFormatException exception) {
-				return "NA";
+				return null;
 			}
 			return NumberUtil.valueFormat(level.experienceCalculation(value));
 		}
 
 		return null;
+	}
+
+	@Nullable
+	private String getUniqueItem(String parameter) {
+		String prefix = "unique-item_";
+
+		if (!parameter.startsWith(prefix)) return null;
+
+		String   remainder = parameter.substring(prefix.length());
+		String[] parts     = remainder.split("_");
+
+		if (parts.length < 2) return null;
+
+		String itemKey  = parts[0];
+		String property = parts[1];
+
+		UniqueItem uniqueItem = uniqueItemAddon.getUniqueItem(itemKey);
+
+		if (uniqueItem == null) return null;
+
+		return switch (property) {
+			case "name" -> uniqueItem.getName();
+			case "permission" -> uniqueItem.getPermission();
+			case "material" -> uniqueItem.getMaterial().name();
+			case "add-on-join" -> String.valueOf(uniqueItem.isAddOnJoin());
+			case "add-on-respawn" -> String.valueOf(uniqueItem.isAddOnRespawn());
+			case "drop-on-death" -> String.valueOf(uniqueItem.isDropOnDeath());
+			case "allow-duplicates" -> String.valueOf(uniqueItem.isAllowDuplicates());
+			case "add-to-inventory" -> String.valueOf(uniqueItem.isAddToInventory());
+			case "lore" -> String.join("\n", uniqueItem.getLore());
+			case "inventory-slot" -> String.valueOf(uniqueItem.getInventorySlot());
+			case "overrides-slot" -> String.valueOf(uniqueItem.isOverridesSlot());
+			case "movable" -> String.valueOf(uniqueItem.isMovable());
+			case "droppable" -> String.valueOf(uniqueItem.isDroppable());
+			default -> null;
+		};
 	}
 
 }
