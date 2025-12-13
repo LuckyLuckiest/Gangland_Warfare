@@ -1,5 +1,6 @@
 package me.luckyraven.feature.entity;
 
+import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -7,9 +8,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class EntityMarkManager {
 
@@ -75,11 +74,32 @@ public class EntityMarkManager {
 	}
 
 	protected EntityMark getDefaultMarkForType(EntityType type) {
+		List<EntityType> policeEntityTypes = processEntityTypes(SettingAddon.getDefaultPoliceEntities());
+
+		Optional<EntityType> police = policeEntityTypes.stream()
+				.filter(entityType -> entityType.equals(type))
+				.findFirst();
+
+		if (police.isPresent()) return EntityMark.POLICE;
+
+		List<EntityType> civilianEntityTypes = processEntityTypes(SettingAddon.getDefaultCivilianEntities());
+
+		Optional<EntityType> civilian = civilianEntityTypes.stream()
+				.filter(entityType -> entityType.equals(type))
+				.findFirst();
+
+		if (civilian.isPresent()) return EntityMark.CIVILIAN;
+
+		// default search
 		return switch (type) {
 			case VILLAGER, WANDERING_TRADER, PLAYER -> EntityMark.CIVILIAN;
 			case PILLAGER -> EntityMark.POLICE;
 			default -> EntityMark.UNSET;
 		};
+	}
+
+	private List<EntityType> processEntityTypes(List<String> entityTypes) {
+		return entityTypes.stream().map(String::toUpperCase).map(EntityType::valueOf).toList();
 	}
 
 }
