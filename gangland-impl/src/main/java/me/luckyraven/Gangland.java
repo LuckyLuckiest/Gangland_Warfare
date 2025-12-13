@@ -60,8 +60,10 @@ public final class Gangland extends JavaPlugin implements Placeholder {
 		if (EconomyHandler.getVaultEconomy() != null) EconomyHandler.setVaultEconomy(null);
 
 		// force save
-		this.periodicalUpdates.forceUpdate();
-		this.periodicalUpdates.stop();
+		if (this.periodicalUpdates != null) {
+			this.periodicalUpdates.forceUpdate();
+			this.periodicalUpdates.stop();
+		}
 
 		// closing all connections
 		DatabaseManager databaseManager = initializer.getDatabaseManager();
@@ -120,7 +122,7 @@ public final class Gangland extends JavaPlugin implements Placeholder {
 		// periodical updates
 		int minutes = SettingAddon.getAutoSaveTime();
 
-		if (SettingAddon.isAutoSave()) this.periodicalUpdates = new PeriodicalUpdates(this, minutes * 60 * 20L);
+		if (SettingAddon.isAutoSave()) this.periodicalUpdates = new PeriodicalUpdates(this, minutes * 60L);
 		else this.periodicalUpdates = new PeriodicalUpdates(this);
 
 		periodicalUpdates.start();
@@ -224,7 +226,7 @@ public final class Gangland extends JavaPlugin implements Placeholder {
 		int hours = 6;
 
 		// initialize the update checker
-		updateChecker = new UpdateChecker(this, -1, hours * 60 * 60 * 20L);
+		updateChecker = new UpdateChecker(this, -1, hours * 60 * 60L);
 
 		// add the necessary permissions for checking for updates
 		initializer.getPermissionManager().addPermission(updateChecker.getCheckPermission());
