@@ -2,7 +2,9 @@ package me.luckyraven.feature.combo;
 
 import lombok.Setter;
 import me.luckyraven.data.user.User;
+import me.luckyraven.feature.wanted.Wanted;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -100,21 +102,26 @@ public class KillCombo {
 		int pointKillCount = tracker.getPointKillCount();
 
 		// Check against configured thresholds
-		if (!shouldTriggerWantedLevel(pointKillCount)) return;
+		Wanted wanted = killer.getWanted();
+		if (!shouldTriggerWantedLevel(wanted, pointKillCount)) return;
 		if (onWantedLevelTrigger == null) return;
 
 		KillComboEvent event = new KillComboEvent(killer.getUser(), tracker);
 		onWantedLevelTrigger.accept(event);
 	}
 
-	private boolean shouldTriggerWantedLevel(int pointsKillCount) {
+	private boolean shouldTriggerWantedLevel(Wanted wanted, int pointsKillCount) {
 		List<Integer> thresholds = SettingAddon.getWantedKillCounter();
 
-		for (int threshold : thresholds) {
-			if (pointsKillCount >= threshold) return true;
+		if (thresholds.isEmpty()) return false;
+		if (thresholds.size() < wanted.getMaxLevel()) {
+			// create a linear list of thresholds if not enough thresholds are configured
+			thresholds = NumberUtil.resizeLinear(thresholds, wanted.getMaxLevel());
 		}
 
-		return false;
+		int level = Math.min(wanted.getLevel(), thresholds.size() - 1);
+
+		return pointsKillCount >= thresholds.get(level);
 	}
 
 	/**
