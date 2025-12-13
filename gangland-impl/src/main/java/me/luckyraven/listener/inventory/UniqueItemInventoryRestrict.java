@@ -1,38 +1,53 @@
 package me.luckyraven.listener.inventory;
 
-import me.luckyraven.file.configuration.inventory.InventoryAddon;
+import lombok.RequiredArgsConstructor;
+import me.luckyraven.Gangland;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.item.unique.UniqueItemUtil;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 @ListenerHandler
+@RequiredArgsConstructor
 public class UniqueItemInventoryRestrict implements Listener {
+
+	private final Gangland gangland;
 
 	@EventHandler(priority = EventPriority.LOW)
 	public void onUniqueItemInventoryClick(InventoryClickEvent event) {
-		if (event.getClickedInventory() == null) return;
-
 		Inventory clickedInventory = event.getClickedInventory();
-		ItemStack clickedItem      = event.getCurrentItem();
+
+		if (clickedInventory == null) return;
+
+		ItemStack clickedItem = event.getCurrentItem();
+
+		// check the cursor item (for drag operations)
+		if (clickedItem == null) {
+			clickedItem = event.getCursor();
+		}
 
 		if (clickedItem == null || clickedItem.getType().name().contains("AIR") || clickedItem.getAmount() == 0) return;
 		if (!clickedInventory.equals(event.getWhoClicked().getInventory())) return;
 
+		// only restrict movement in player inventory
+		if (clickedInventory.getType() != InventoryType.PLAYER) return;
+
 		// Check if it's a unique item
-		ItemBuilder itemBuilder = new ItemBuilder(clickedItem);
-		if (!itemBuilder.hasNBTTag("uniqueItem")) return;
+		if (!UniqueItemUtil.isUniqueItem(clickedItem)) return;
 
+		var itemBuilder   = new ItemBuilder(clickedItem);
 		var uniqueItemKey = itemBuilder.getStringTagData("uniqueItem");
-		var handler       = InventoryAddon.getUniqueItemHandler(uniqueItemKey);
+		var uniqueItem    = gangland.getInitializer().getUniqueItemAddon().getUniqueItem(uniqueItemKey);
 
-		if (handler == null) return;
-		if (handler.isMovable()) return;
+		if (uniqueItem == null) return;
+		if (uniqueItem.isMovable()) return;
 
 		event.setCancelled(true);
 	}
@@ -42,14 +57,14 @@ public class UniqueItemInventoryRestrict implements Listener {
 		ItemStack droppedItem = event.getItemDrop().getItemStack();
 
 		// Check if it's a unique item
-		ItemBuilder itemBuilder = new ItemBuilder(droppedItem);
-		if (!itemBuilder.hasNBTTag("uniqueItem")) return;
+		if (!UniqueItemUtil.isUniqueItem(droppedItem)) return;
 
+		var itemBuilder   = new ItemBuilder(droppedItem);
 		var uniqueItemKey = itemBuilder.getStringTagData("uniqueItem");
-		var handler       = InventoryAddon.getUniqueItemHandler(uniqueItemKey);
+		var uniqueItem    = gangland.getInitializer().getUniqueItemAddon().getUniqueItem(uniqueItemKey);
 
-		if (handler == null) return;
-		if (handler.isDroppable()) return;
+		if (uniqueItem == null) return;
+		if (uniqueItem.isDroppable()) return;
 
 		event.setCancelled(true);
 	}

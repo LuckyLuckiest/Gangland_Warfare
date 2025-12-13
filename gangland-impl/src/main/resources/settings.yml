@@ -95,7 +95,6 @@ Database:
       # and leaving the server.
       Enable: true
       # Time to auto save in minutes.
-      # Time in hours for removal of unnecessary data.
       Time: 10
       # Enable if you want to print periodical updates in the console.
       Debug: true
@@ -235,20 +234,6 @@ Bounty:
       # The maximum total amount after each timer multiple.
       Maximum: 20_000
 
-# +--------------+ #
-# | Phone Config | #
-# +--------------+ #
-Phone:
-   Enable: true
-   Item: COMPASS
-   Name: "&6&k||| &rPhone &6&k|||"
-   # The slots are from 0-8, and they're in the hot-bar only.
-   Slot: 8
-   # If the item was movable
-   Movable: true
-   # If the item was droppable
-   Droppable: false
-
 # +---------------+ #
 # | Wanted Config | #
 # +---------------+ #
@@ -355,17 +340,15 @@ Entity_Marker:
          - "PILLAGER"
       Name: "&8&l[&cPolice&8&l]"
       Wear:
-         - ""
-         - ""
-         - ""
-         - ""
-         - ""
+         - "LEATHER_HELMET:blue"
+         - "IRON_BOOTS"
+         - "weapon:baton"
       Drops:
          Experience:
             Minimum: 15
             Maximum: 60
          Items:
-            - ""
+            - "weapon:baton"
    Civilian:
       Default_Entities:
          - "VILLAGER"
@@ -373,10 +356,6 @@ Entity_Marker:
          - "PLAYER"
       Name: "&7Civilian"
       Wear:
-         - ""
-         - ""
-         - ""
-         - ""
          - ""
       Drops:
          Experience:

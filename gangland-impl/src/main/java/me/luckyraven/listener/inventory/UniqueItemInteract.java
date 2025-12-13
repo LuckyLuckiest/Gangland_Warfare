@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.luckyraven.Gangland;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.item.unique.UniqueItemUtil;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -25,20 +26,27 @@ public class UniqueItemInteract implements Listener {
 
 		Player player = event.getPlayer();
 
+		if (!UniqueItemUtil.isUniqueItem(heldItem)) return;
+
 		// check if the item has a unique item tag
 		ItemBuilder itemBuilder = new ItemBuilder(heldItem);
 
-		if (!itemBuilder.hasNBTTag("uniqueItem")) return;
-
 		var uniqueItemKey = itemBuilder.getStringTagData("uniqueItem");
-		var handler       = InventoryAddon.getUniqueItemHandler(uniqueItemKey);
+		var uniqueItem    = gangland.getInitializer().getUniqueItemAddon().getUniqueItem(uniqueItemKey);
+
+		// check if the item is movable
+		if (uniqueItem != null && !uniqueItem.isMovable()) {
+			return;
+		}
+
+		var handler = InventoryAddon.getUniqueItemHandler(uniqueItemKey);
 
 		if (handler == null) return;
 		if (!handler.isActionAllowed(event.getAction())) return;
 
-		if (handler.getPermission() != null && !player.hasPermission(handler.getPermission())) return;
+		if (handler.permission() != null && !player.hasPermission(handler.permission())) return;
 
-		InventoryAddon.openInventoryForPlayer(gangland, player, handler.getInventoryName());
+		InventoryAddon.openInventoryForPlayer(gangland, player, handler.inventoryName());
 		event.setCancelled(true);
 	}
 
