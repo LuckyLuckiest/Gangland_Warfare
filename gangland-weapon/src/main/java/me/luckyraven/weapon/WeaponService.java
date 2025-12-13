@@ -97,6 +97,11 @@ public abstract class WeaponService implements Comparator<Weapon> {
 	}
 
 	@Nullable
+	public Weapon getWeapon(@Nullable String type) {
+		return getWeapon(null, null, type);
+	}
+
+	@Nullable
 	public Weapon getWeapon(Player player, @Nullable String type) {
 		return getWeapon(player, null, type);
 	}
@@ -108,24 +113,29 @@ public abstract class WeaponService implements Comparator<Weapon> {
 
 	/**
 	 * Getting a weapon from the saved data is a hectic procedure, thus making sure if the weapon is already generated
-	 * would be better for the system. <br/> It is fine if the weapon wasn't already registered since there can be
-	 * specific ones that need an uuid attached, and these weapons are generated from this function.
+	 * would be better for the system.
+	 * <p/>
+	 * It is fine if the weapon wasn't already registered since there can be specific ones that need an uuid attached,
+	 * and these weapons are generated from this function.
 	 *
-	 * @param player Gets the player that called this instruction.
+	 * @param player Gets the player that called this instruction and can be null if it was a new instance.
 	 * @param uuid Get already saved weapon UUID.
 	 * @param type Can be nullable if the uuid was valid, otherwise use a valid type.
 	 * @param newInstance Changes the data according to the currently held item.
 	 *
-	 * @return A weapon from the stored data. There is a chance to return null values in two cases: <br/> 1) Invalid
-	 * 		UUID and null type. <br/> 2) Invalid UUID and invalid type.
+	 * @return A weapon from the stored data. There is a chance to return null values in two cases:
+	 * 		<p/>
+	 * 		1) Invalid UUID and null type.
+	 * 		<p/>
+	 * 		2) Invalid UUID and invalid type.
 	 */
 	@Nullable
-	public Weapon getWeapon(Player player, UUID uuid, @Nullable String type, boolean newInstance) {
+	public Weapon getWeapon(@Nullable Player player, UUID uuid, @Nullable String type, boolean newInstance) {
 		// the weapon is already created
 		if (uuid != null) {
 			Weapon existing = weapons.get(uuid);
 			if (existing != null) {
-				setWeaponData(existing, player);
+				if (player != null && !newInstance) setWeaponData(existing, player);
 				// when the weapon is already saved
 				return existing;
 			}
@@ -150,7 +160,7 @@ public abstract class WeaponService implements Comparator<Weapon> {
 
 		// check if the weapon is new or not
 		// if it was new, then no need to set the data of the uuid since it is not even created/built
-		if (!newInstance) setWeaponData(finalWeapon, player);
+		if (player != null && !newInstance) setWeaponData(finalWeapon, player);
 
 		weapons.put(finalUuid, finalWeapon);
 
@@ -189,6 +199,10 @@ public abstract class WeaponService implements Comparator<Weapon> {
 		// need to collect data and save their values
 		ItemBuilder itemBuilder = getHeldWeaponItem(player);
 
+		setWeaponData(weapon, itemBuilder);
+	}
+
+	private void setWeaponData(Weapon weapon, @Nullable ItemBuilder itemBuilder) {
 		if (itemBuilder == null) return;
 
 		// get the ammo left
