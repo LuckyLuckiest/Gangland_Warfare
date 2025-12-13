@@ -30,6 +30,8 @@ public class DatabaseManager {
 
 	public void initializeDatabases() {
 		for (DatabaseHandler database : databases) database.initialize();
+
+		logger.info("Database initialization complete.");
 	}
 
 	public void closeConnections() {
@@ -52,7 +54,7 @@ public class DatabaseManager {
 				case DatabaseHandler.SQLITE -> backup(handler, DatabaseHandler.MYSQL);
 			}
 
-			logger.info("Backup done for '{}' database", handler.getSchemaName());
+			logger.info("Backup done for '{}' database.", handler.getSchemaName());
 		} catch (Throwable throwable) {
 			String type = "";
 			switch (handler.getType()) {
