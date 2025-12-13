@@ -118,6 +118,8 @@ public class UserManager<T extends OfflinePlayer> {
 
 				userBounty.setAmount(bounty);
 
+				if (!user.getUser().isOnline()) return;
+
 				if (userBounty.hasBounty() && SettingAddon.isBountyTimerEnabled()) {
 					BountyEvent bountyEvent = new BountyEvent(true, userBounty);
 
