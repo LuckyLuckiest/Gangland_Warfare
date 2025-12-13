@@ -342,27 +342,13 @@ public final class DebugCommand extends CommandHandler {
 										   .map(InventoryHandler::getTitle)
 										   .map(NamespacedKey::getKey)
 										   .toArray(String[]::new));
-
-				sender.sendMessage("Special inventories: ");
-				sender.sendMessage(user.getSpecialInventories()
-										   .stream()
-										   .map(InventoryHandler::getTitle)
-										   .map(NamespacedKey::getKey)
-										   .toArray(String[]::new));
 			} else {
 				for (User<Player> user : getGangland().getInitializer().getUserManager().getUsers().values()) {
-					List<String> values = new ArrayList<>();
 
-					values.addAll(user.getInventories()
-										  .stream()
-										  .map(InventoryHandler::getTitle)
-										  .map(NamespacedKey::getKey)
-										  .toList());
-					values.addAll(user.getSpecialInventories()
-										  .stream()
-										  .map(InventoryHandler::getTitle)
-										  .map(NamespacedKey::getKey)
-										  .toList());
+					List<String> inventories = user.getInventories()
+							.stream().map(InventoryHandler::getTitle).map(NamespacedKey::getKey).toList();
+
+					List<String> values = new ArrayList<>(inventories);
 
 					sender.sendMessage(user.getUser().getName() + ":");
 					sender.sendMessage(String.valueOf(values));
