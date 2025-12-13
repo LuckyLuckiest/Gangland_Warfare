@@ -43,7 +43,7 @@ class GangDisplayCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -57,7 +57,7 @@ class GangDisplayCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -65,7 +65,7 @@ class GangDisplayCommand extends SubArgument {
 			Gang   gang           = gangManager.getGang(user.getGangId());
 
 			gang.setDisplayName(displayNameStr);
-			player.sendMessage(MessageAddon.GANG_DISPLAY_SET.toString().replace("%display%", displayNameStr));
+			user.sendMessage(MessageAddon.GANG_DISPLAY_SET.toString().replace("%display%", displayNameStr));
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
@@ -83,14 +83,14 @@ class GangDisplayCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
 			Gang gang = gangManager.getGang(user.getGangId());
 
 			gang.setDisplayName("");
-			player.sendMessage(MessageAddon.GANG_DISPLAY_REMOVED.toString());
+			user.sendMessage(MessageAddon.GANG_DISPLAY_REMOVED.toString());
 		});
 
 		this.addSubArgument(removeDisplay);

@@ -59,7 +59,7 @@ class BankDeleteCommand extends SubArgument {
 			Bank         bank   = Bank.getInstance(user);
 
 			if (!user.hasBank() || bank == null) {
-				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
 
@@ -76,7 +76,7 @@ class BankDeleteCommand extends SubArgument {
 	@NotNull
 	private CountdownTimer getCountdownTimer(CommandSender sender, Player player, User<Player> user) {
 		CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
-			player.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "delete"}));
+			user.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "delete"}));
 		}, time -> {
 			if (time.getTimeLeft() % 20 != 0) return;
 
@@ -99,7 +99,7 @@ class BankDeleteCommand extends SubArgument {
 			Bank         bank   = Bank.getInstance(user);
 
 			if (!user.hasBank() || bank == null) {
-				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
 
@@ -121,7 +121,7 @@ class BankDeleteCommand extends SubArgument {
 			String string  = MessageAddon.BANK_REMOVED.toString();
 			String replace = string.replace("%bank%", deleteBankName.get(user).get());
 
-			player.sendMessage(replace);
+			user.sendMessage(replace);
 
 			deleteBankName.remove(user);
 

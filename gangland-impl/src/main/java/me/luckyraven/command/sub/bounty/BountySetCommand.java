@@ -87,7 +87,7 @@ class BountySetCommand extends SubArgument {
 
 			bountyEvent.setUserBounty(user);
 
-			if (userBounty.size() == 0) player.sendMessage(MessageAddon.BOUNTY_SET.toString());
+			if (userBounty.size() == 0) user.sendMessage(MessageAddon.BOUNTY_SET.toString());
 
 			// call the event
 			bountyEvent.setAmountApplied(value);

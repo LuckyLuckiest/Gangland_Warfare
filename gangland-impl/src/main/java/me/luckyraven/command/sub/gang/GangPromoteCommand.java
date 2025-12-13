@@ -57,7 +57,7 @@ class GangPromoteCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -75,7 +75,7 @@ class GangPromoteCommand extends SubArgument {
 			boolean force     = player.hasPermission(forceRank);
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -94,7 +94,7 @@ class GangPromoteCommand extends SubArgument {
 			}
 
 			if (targetMember == null) {
-				player.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
+				user.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
 				return;
 			}
 
@@ -108,7 +108,7 @@ class GangPromoteCommand extends SubArgument {
 
 				// cannot promote more than your rank
 				if (userMemberRank.equals(targetMember.getRank())) {
-					player.sendMessage(MessageAddon.GANG_SAME_RANK_ACTION.toString());
+					user.sendMessage(MessageAddon.GANG_SAME_RANK_ACTION.toString());
 					return;
 				}
 
@@ -117,7 +117,7 @@ class GangPromoteCommand extends SubArgument {
 				Tree.Node<Rank> targetNode = currentRank.getNode();
 
 				if (rankManager.getRankTree().isDescendant(targetNode, userNode)) {
-					player.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
+					user.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
 					return;
 				}
 			}
@@ -131,7 +131,7 @@ class GangPromoteCommand extends SubArgument {
 					.toList();
 
 			if (nextRanks.isEmpty()) {
-				player.sendMessage(MessageAddon.GANG_PROMOTE_END.toString());
+				user.sendMessage(MessageAddon.GANG_PROMOTE_END.toString());
 				return;
 			}
 
@@ -166,9 +166,9 @@ class GangPromoteCommand extends SubArgument {
 					Objects.requireNonNull(onlinePlayer).sendMessage(message);
 				}
 
-				player.sendMessage(MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString()
-																		   .replace("%player%", targetStr)
-																		   .replace("%rank%", first.getName()));
+				String string  = MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString();
+				String replace = string.replace("%player%", targetStr).replace("%rank%", first.getName());
+				user.sendMessage(replace);
 
 				targetMember.setRank(first);
 			}

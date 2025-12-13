@@ -6,6 +6,8 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
+import me.luckyraven.data.user.User;
+import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -17,9 +19,10 @@ import java.util.List;
 
 class WaypointCostCommand extends SubArgument {
 
-	private final Gangland        gangland;
-	private final Tree<Argument>  tree;
-	private final WaypointManager waypointManager;
+	private final Gangland            gangland;
+	private final Tree<Argument>      tree;
+	private final UserManager<Player> userManager;
+	private final WaypointManager     waypointManager;
 
 	protected WaypointCostCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "cost", tree, parent);
@@ -27,6 +30,7 @@ class WaypointCostCommand extends SubArgument {
 		this.gangland = gangland;
 		this.tree     = tree;
 
+		this.userManager     = gangland.getInitializer().getUserManager();
 		this.waypointManager = gangland.getInitializer().getWaypointManager();
 
 		waypointCost();
@@ -41,11 +45,12 @@ class WaypointCostCommand extends SubArgument {
 
 	private void waypointCost() {
 		Argument optional = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			Player   player   = (Player) sender;
-			Waypoint waypoint = waypointManager.getSelected(player);
+			Player       player   = (Player) sender;
+			User<Player> user     = userManager.getUser(player);
+			Waypoint     waypoint = waypointManager.getSelected(player);
 
 			if (waypoint == null) {
-				player.sendMessage(MessageAddon.NOT_SELECTED_WAYPOINT.toString());
+				user.sendMessage(MessageAddon.NOT_SELECTED_WAYPOINT.toString());
 				return;
 			}
 
@@ -62,7 +67,7 @@ class WaypointCostCommand extends SubArgument {
 
 			// update the timer
 			waypoint.setCost(changedValue);
-			player.sendMessage(MessageAddon.WAYPOINT_CONFIGURATION_SUCCESS.toString());
+			user.sendMessage(MessageAddon.WAYPOINT_CONFIGURATION_SUCCESS.toString());
 		}, sender -> List.of("<cost>"));
 
 		this.addSubArgument(optional);

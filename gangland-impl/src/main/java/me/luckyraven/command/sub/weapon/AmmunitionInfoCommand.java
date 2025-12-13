@@ -3,6 +3,8 @@ package me.luckyraven.command.sub.weapon;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.data.user.User;
+import me.luckyraven.data.user.UserManager;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.JsonFormatter;
@@ -15,24 +17,27 @@ import org.bukkit.inventory.ItemStack;
 
 class AmmunitionInfoCommand extends SubArgument {
 
-	private final Gangland gangland;
+	private final Gangland            gangland;
+	private final UserManager<Player> userManager;
 
 	protected AmmunitionInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "info", tree, parent);
 
-		this.gangland = gangland;
+		this.gangland    = gangland;
+		this.userManager = gangland.getInitializer().getUserManager();
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			Player player = (Player) sender;
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
 			// get the held item
 			ItemStack itemStack = player.getInventory().getItemInMainHand();
 
 			// check if it was an ammunition
 			if (!Ammunition.isAmmunition(itemStack)) {
-				player.sendMessage(ChatUtil.prefixMessage("Not ammunition!"));
+				user.sendMessage(ChatUtil.prefixMessage("Not ammunition!"));
 				return;
 			}
 
@@ -43,7 +48,7 @@ class AmmunitionInfoCommand extends SubArgument {
 			// display the necessary information
 			JsonFormatter jsonFormatter = new JsonFormatter();
 
-			player.sendMessage(jsonFormatter.formatToJson(ChatUtil.color(ammunition.toString()), " ".repeat(3)));
+			user.sendMessage(jsonFormatter.formatToJson(ChatUtil.color(ammunition.toString()), " ".repeat(3)));
 		};
 	}
 

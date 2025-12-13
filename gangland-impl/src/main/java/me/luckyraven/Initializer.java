@@ -35,6 +35,7 @@ import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.teleportation.WaypointTeleport;
+import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseManager;
@@ -271,8 +272,7 @@ public final class Initializer {
 		commands(gangland);
 
 		// Placeholder
-		placeholder        = new GanglandPlaceholder(gangland, Replacer.Closure.PERCENT);
-		placeholderService = new PlaceholderService(gangland);
+		placeholder();
 	}
 
 	/**
@@ -472,6 +472,14 @@ public final class Initializer {
 
 		// initialize the tab completer
 		command.setTabCompleter(new CommandTabCompleter(gangland, CommandManager.getCommands()));
+	}
+
+	private void placeholder() {
+		placeholder        = new GanglandPlaceholder(gangland, Replacer.Closure.PERCENT);
+		placeholderService = new PlaceholderService(gangland);
+
+		// set the user placeholder
+		User.setPlaceholder(placeholderService);
 	}
 
 }

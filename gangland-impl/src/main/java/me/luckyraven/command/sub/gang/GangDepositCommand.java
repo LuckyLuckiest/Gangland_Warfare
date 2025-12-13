@@ -48,7 +48,7 @@ class GangDepositCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -63,7 +63,7 @@ class GangDepositCommand extends SubArgument {
 			Member       member = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -80,10 +80,10 @@ class GangDepositCommand extends SubArgument {
 				List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
 
 				if (user.getEconomy().getBalance() < argAmount) {
-					player.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
+					user.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 					return;
 				} else if (gang.getEconomy().getBalance() + argAmount > SettingAddon.getGangMaxBalance()) {
-					player.sendMessage(MessageAddon.CANNOT_EXCEED_MAXIMUM.toString());
+					user.sendMessage(MessageAddon.CANNOT_EXCEED_MAXIMUM.toString());
 					return;
 				}
 
@@ -97,9 +97,9 @@ class GangDepositCommand extends SubArgument {
 																		.replace("%amount%",
 																				 SettingAddon.formatDouble(argAmount)));
 				}
-				player.sendMessage(ChatUtil.color("&a+" + contribution));
+				user.sendMessage(ChatUtil.color("&a+" + contribution));
 			} catch (NumberFormatException exception) {
-				player.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
+				user.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
 			}
 		}, sender -> {
 			Player       player = (Player) sender;

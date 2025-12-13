@@ -80,7 +80,7 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			User<Player> user   = userManager.getUser(player);
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -90,7 +90,7 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			User<Player> user   = userManager.getUser(player);
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return null;
 			}
 
@@ -125,7 +125,7 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			Member       userMember = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -145,7 +145,7 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			}
 
 			if (targetMember == null) {
-				player.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
+				user.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
 				return;
 			}
 
@@ -154,7 +154,7 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			// cannot promote more than your rank
 
 			if (userMember.getRank().equals(targetMember.getRank())) {
-				player.sendMessage(MessageAddon.GANG_SAME_RANK_ACTION.toString());
+				user.sendMessage(MessageAddon.GANG_SAME_RANK_ACTION.toString());
 				return;
 			}
 
@@ -166,21 +166,23 @@ public final class ComponentExecutorCommand extends CommandHandler {
 
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
 			Player        onlinePlayer  = offlinePlayer.getPlayer();
+			User<Player>  onlineUser    = userManager.getUser(onlinePlayer);
 
 			if (onlinePlayer != null && offlinePlayer.isOnline()) {
-				onlinePlayer.sendMessage(
-						MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString().replace("%rank%", nextRank.getName()));
+				String string  = MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString();
+				String replace = string.replace("%rank%", nextRank.getName());
+				onlineUser.sendMessage(replace);
 			}
 
-			player.sendMessage(MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString()
-																	   .replace("%player%", targetStr)
-																	   .replace("%rank%", nextRank.getName()));
+			user.sendMessage(MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString()
+																	 .replace("%player%", targetStr)
+																	 .replace("%rank%", nextRank.getName()));
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return null;
 			}
 

@@ -53,7 +53,7 @@ class GangDemoteCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -72,7 +72,7 @@ class GangDemoteCommand extends SubArgument {
 			boolean force = player.hasPermission(forceRank);
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -91,7 +91,7 @@ class GangDemoteCommand extends SubArgument {
 			}
 
 			if (targetMember == null) {
-				player.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
+				user.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
 				return;
 			}
 
@@ -107,7 +107,7 @@ class GangDemoteCommand extends SubArgument {
 			if (!force) {
 				// [player : Owner (descendant), target : Member (ancestor)] (Inverse)
 				if (!rankManager.getRankTree().isDescendant(targetRank, playerRank)) {
-					player.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
+					user.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
 					return;
 				}
 			}
@@ -115,7 +115,7 @@ class GangDemoteCommand extends SubArgument {
 			Tree.Node<Rank> previousRankNode = currentRank.getNode().getParent();
 
 			if (previousRankNode == null) {
-				player.sendMessage(MessageAddon.GANG_DEMOTE_END.toString());
+				user.sendMessage(MessageAddon.GANG_DEMOTE_END.toString());
 				return;
 			}
 
@@ -136,9 +136,9 @@ class GangDemoteCommand extends SubArgument {
 				Objects.requireNonNull(onlinePlayer).sendMessage(message);
 			}
 
-			player.sendMessage(MessageAddon.GANG_DEMOTE_PLAYER_SUCCESS.toString()
-																	  .replace("%player%", targetStr)
-																	  .replace("%rank%", previousRank.getName()));
+			user.sendMessage(MessageAddon.GANG_DEMOTE_PLAYER_SUCCESS.toString()
+																	.replace("%player%", targetStr)
+																	.replace("%rank%", previousRank.getName()));
 			targetMember.setRank(previousRank);
 		}, sender -> GangKickCommand.getDescendantRanks(userManager, memberManager, gangManager, rankManager, sender));
 	}

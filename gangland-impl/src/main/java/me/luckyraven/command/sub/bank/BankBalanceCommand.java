@@ -31,7 +31,7 @@ class BankBalanceCommand extends SubArgument {
 			Bank         bank   = Bank.getInstance(user);
 
 			if (!user.hasBank() || bank == null) {
-				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
 
@@ -39,7 +39,7 @@ class BankBalanceCommand extends SubArgument {
 			String replacement = SettingAddon.formatDouble(bank.getEconomy().getBalance());
 			String replace     = string.replace("%balance%", replacement);
 
-			player.sendMessage(replace);
+			user.sendMessage(replace);
 		};
 	}
 }

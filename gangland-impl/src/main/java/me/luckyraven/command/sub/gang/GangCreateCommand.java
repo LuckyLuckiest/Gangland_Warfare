@@ -59,7 +59,7 @@ class GangCreateCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (user.hasGang()) {
-				player.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
+				user.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
 				return;
 			}
 
@@ -77,7 +77,7 @@ class GangCreateCommand extends SubArgument {
 			Member       member = memberManager.getMember(player.getUniqueId());
 
 			if (user.hasGang()) {
-				player.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
+				user.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
 				return;
 			}
 
@@ -90,7 +90,7 @@ class GangCreateCommand extends SubArgument {
 					createGangTimer.remove(sender);
 				}
 
-				player.sendMessage(MessageAddon.CANNOT_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.CANNOT_CREATE_GANG.toString());
 				return;
 			}
 
@@ -105,7 +105,7 @@ class GangCreateCommand extends SubArgument {
 
 			gangManager.add(gang);
 
-			player.sendMessage(MessageAddon.GANG_CREATED.toString().replace("%gang%", gang.getDisplayNameString()));
+			user.sendMessage(MessageAddon.GANG_CREATED.toString().replace("%gang%", gang.getDisplayNameString()));
 
 			createGangName.remove(user);
 
@@ -123,7 +123,7 @@ class GangCreateCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (user.hasGang()) {
-				player.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
+				user.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
 				return;
 			}
 
@@ -133,7 +133,7 @@ class GangCreateCommand extends SubArgument {
 
 			if (!SettingAddon.isGangNameDuplicates()) for (Gang gang : gangManager.getGangs().values())
 				if (gang.getName().equalsIgnoreCase(name.get())) {
-					player.sendMessage(MessageAddon.DUPLICATE_GANG_NAME.toString().replace("%gang%", name.get()));
+					user.sendMessage(MessageAddon.DUPLICATE_GANG_NAME.toString().replace("%gang%", name.get()));
 					return;
 				}
 
@@ -143,8 +143,8 @@ class GangCreateCommand extends SubArgument {
 			String string  = MessageAddon.GANG_CREATE_FEE.toString();
 			String replace = string.replace("%amount%", SettingAddon.formatDouble(SettingAddon.getGangCreateFee()));
 
-			player.sendMessage(replace);
-			player.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "create"}));
+			user.sendMessage(replace);
+			user.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "create"}));
 			confirmCreate.setConfirmed(true);
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {

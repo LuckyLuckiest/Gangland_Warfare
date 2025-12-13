@@ -34,8 +34,8 @@ public final class WantedCommand extends CommandHandler {
 		Player       player = (Player) commandSender;
 		User<Player> user   = userManager.getUser(player);
 
-		player.sendMessage(ChatUtil.commandMessage("Wanted Status:"));
-		player.sendMessage(ChatUtil.color(user.getWanted().getLevelStars()));
+		user.sendMessage(ChatUtil.commandMessage("Wanted Status:"));
+		user.sendMessage(ChatUtil.color(user.getWanted().getLevelStars()));
 	}
 
 	@Override

@@ -63,7 +63,7 @@ class GangInviteCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -78,12 +78,12 @@ class GangInviteCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (!playerInvite.containsKey(user)) {
-				player.sendMessage(MessageAddon.NO_GANG_INVITATION.toString());
+				user.sendMessage(MessageAddon.NO_GANG_INVITATION.toString());
 				return;
 			}
 
 			if (user.hasGang()) {
-				player.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
+				user.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
 				return;
 			}
 
@@ -98,7 +98,7 @@ class GangInviteCommand extends SubArgument {
 				String playerJoined = MessageAddon.GANG_PLAYER_JOINED.toString()
 																	 .replace("%player%", user.getUser().getName());
 
-				onUser.getUser().sendMessage(playerJoined);
+				onUser.sendMessage(playerJoined);
 			}
 
 			member.setGangJoinDateLong(Instant.now().toEpochMilli());
@@ -122,7 +122,7 @@ class GangInviteCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -143,9 +143,10 @@ class GangInviteCommand extends SubArgument {
 			}
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
-				player.sendMessage(MessageAddon.GANG_INVITE_PLAYER.toString().replace("%player%", targetStr));
-				target.sendMessage(
-						MessageAddon.GANG_INVITE_TARGET.toString().replace("%gang%", gang.getDisplayNameString()));
+				user.sendMessage(MessageAddon.GANG_INVITE_PLAYER.toString().replace("%player%", targetStr));
+				String replace = MessageAddon.GANG_INVITE_TARGET.toString()
+																.replace("%gang%", gang.getDisplayNameString());
+				targetUser.sendMessage(replace);
 			}, null, time -> {
 				playerInvite.remove(targetUser);
 				inviteTimer.remove(targetUser);

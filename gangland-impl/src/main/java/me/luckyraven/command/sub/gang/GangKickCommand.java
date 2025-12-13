@@ -110,7 +110,7 @@ class GangKickCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -126,7 +126,7 @@ class GangKickCommand extends SubArgument {
 			Member       userMember = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -145,7 +145,7 @@ class GangKickCommand extends SubArgument {
 			}
 
 			if (targetMember == null) {
-				player.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
+				user.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
 				return;
 			}
 
@@ -153,7 +153,7 @@ class GangKickCommand extends SubArgument {
 			Rank targetRank = targetMember.getRank();
 
 			if (playerRank == null || targetRank == null) {
-				player.sendMessage(MessageAddon.INVALID_RANK.toString());
+				user.sendMessage(MessageAddon.INVALID_RANK.toString());
 				return;
 			}
 
@@ -161,7 +161,7 @@ class GangKickCommand extends SubArgument {
 			Tree.Node<Rank> targetNode = targetMember.getRank().getNode();
 
 			if (!rankManager.getRankTree().isDescendant(targetNode, playerNode)) {
-				player.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
+				user.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
 				return;
 			}
 
@@ -197,9 +197,9 @@ class GangKickCommand extends SubArgument {
 
 			gang.removeMember(targetUser, targetMember);
 
-			player.sendMessage(MessageAddon.GANG_KICKED_TARGET.toString()
-															  .replace("%player%", Objects.requireNonNull(
-																	  offlinePlayer.getName())));
+			user.sendMessage(MessageAddon.GANG_KICKED_TARGET.toString()
+															.replace("%player%", Objects.requireNonNull(
+																	offlinePlayer.getName())));
 		}, sender -> getDescendantRanks(userManager, memberManager, gangManager, rankManager, sender));
 
 		this.addSubArgument(kickName);

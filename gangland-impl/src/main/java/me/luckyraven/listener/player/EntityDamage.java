@@ -102,7 +102,7 @@ public class EntityDamage implements Listener {
 			String message = MessageAddon.BANK_MONEY_DEPOSIT_PLAYER.toString();
 			String replace = message.replace("%amount%", SettingAddon.formatDouble(amount));
 
-			damagerUser.getUser().sendMessage(replace);
+			damagerUser.sendMessage(replace);
 
 			// reset the wanted level of the dead player
 			deadUser.getWanted().reset();
@@ -154,9 +154,11 @@ public class EntityDamage implements Listener {
 	}
 
 	private void onKillComboReset(KillComboEvent event) {
-		Player player  = event.getPlayer();
-		String message = ChatUtil.color("&e&lKill combo reset!");
-		player.sendMessage(message);
+		Player       player  = event.getPlayer();
+		User<Player> user    = userManager.getUser(player);
+		String       message = ChatUtil.color("&e&lKill combo reset!");
+
+		user.sendMessage(message);
 	}
 
 	private void handleWanted(User<Player> damagerUser) {
@@ -199,7 +201,7 @@ public class EntityDamage implements Listener {
 									  SettingAddon.getMoneySymbol(), autoBounty);
 		String message = ChatUtil.color(format);
 
-		damagerUser.getUser().sendMessage(message);
+		damagerUser.sendMessage(message);
 	}
 
 	private void handleBounty(User<Player> damagerUser) {

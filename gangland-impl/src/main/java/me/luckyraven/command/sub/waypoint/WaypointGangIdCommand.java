@@ -60,12 +60,12 @@ class WaypointGangIdCommand extends SubArgument {
 			Waypoint     waypoint = waypointManager.getSelected(player);
 
 			if (waypoint == null) {
-				player.sendMessage(MessageAddon.NOT_SELECTED_WAYPOINT.toString());
+				user.sendMessage(MessageAddon.NOT_SELECTED_WAYPOINT.toString());
 				return;
 			}
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -84,19 +84,19 @@ class WaypointGangIdCommand extends SubArgument {
 
 			// check if the gang is valid
 			if (user.getGangId() != id) {
-				player.sendMessage(MessageAddon.INVALID_GANG_NAME.toString());
+				user.sendMessage(MessageAddon.INVALID_GANG_NAME.toString());
 				return;
 			}
 
 			Gang gang = gangManager.getGang(id);
 
 			if (gang == null) {
-				player.sendMessage(MessageAddon.GANG_DOESNT_EXIST.toString());
+				user.sendMessage(MessageAddon.GANG_DOESNT_EXIST.toString());
 				return;
 			}
 
 			waypoint.setGangId(id);
-			player.sendMessage(MessageAddon.WAYPOINT_CONFIGURATION_SUCCESS.toString());
+			user.sendMessage(MessageAddon.WAYPOINT_CONFIGURATION_SUCCESS.toString());
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);

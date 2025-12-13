@@ -57,7 +57,7 @@ class GangLeaveCommand extends SubArgument {
 			Member       member = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -70,7 +70,7 @@ class GangLeaveCommand extends SubArgument {
 			if (tail == null) return;
 
 			if (member.getRank().match(tail.getUsedId())) {
-				player.sendMessage(MessageAddon.GANG_TRANSFER_OWNERSHIP.toString());
+				user.sendMessage(MessageAddon.GANG_TRANSFER_OWNERSHIP.toString());
 				return;
 			}
 
@@ -79,7 +79,7 @@ class GangLeaveCommand extends SubArgument {
 			leaveConfirm.setConfirmed(true);
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
-				player.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "leave"}));
+				user.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "leave"}));
 			}, null, time -> {
 				leaveConfirm.setConfirmed(false);
 				leaveTimer.remove(user);
@@ -97,7 +97,7 @@ class GangLeaveCommand extends SubArgument {
 			Member       member = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -112,14 +112,14 @@ class GangLeaveCommand extends SubArgument {
 			if (tail == null) return;
 
 			if (member.getRank().match(tail.getUsedId())) {
-				player.sendMessage(MessageAddon.GANG_TRANSFER_OWNERSHIP.toString());
+				user.sendMessage(MessageAddon.GANG_TRANSFER_OWNERSHIP.toString());
 				return;
 			}
 
 			// if they were not the owner, they can leave
 			// anyone leaving will not get a piece of the pie, thus the contribution would not be counted
 			gang.removeMember(user, member);
-			player.sendMessage(MessageAddon.GANG_LEAVE.toString());
+			user.sendMessage(MessageAddon.GANG_LEAVE.toString());
 
 			CountdownTimer timer = leaveTimer.get(user);
 			if (timer != null) {

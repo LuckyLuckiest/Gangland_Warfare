@@ -80,12 +80,12 @@ public class WantedExecutor extends Executor {
 		String replace = string.replace("%level%", String.valueOf(wanted.getLevel()))
 							   .replace("%stars%", wanted.getLevelStars());
 
-		player.sendMessage(replace);
+		user.sendMessage(replace);
 
 		if (moneyTaken == 0) return;
 
 		String message = "&c&l-" + SettingAddon.getMoneySymbol() + SettingAddon.formatDouble(moneyTaken);
-		player.sendMessage(ChatUtil.color(message));
+		user.sendMessage(ChatUtil.color(message));
 
 		isWanted(timer, wanted);
 	}

@@ -5,6 +5,8 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
+import me.luckyraven.data.user.User;
+import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -14,23 +16,26 @@ import org.bukkit.entity.Player;
 
 class WaypointInfoCommand extends SubArgument {
 
-	private final WaypointManager waypointManager;
+	private final UserManager<Player> userManager;
+	private final WaypointManager     waypointManager;
 
 	protected WaypointInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "info", tree, parent);
 
+		this.userManager     = gangland.getInitializer().getUserManager();
 		this.waypointManager = gangland.getInitializer().getWaypointManager();
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			Player   player   = (Player) sender;
-			Waypoint waypoint = waypointManager.getSelected(player);
+			Player       player   = (Player) sender;
+			User<Player> user     = userManager.getUser(player);
+			Waypoint     waypoint = waypointManager.getSelected(player);
 
 			// check if the user already selected a waypoint
 			if (waypoint == null) {
-				player.sendMessage(MessageAddon.NOT_SELECTED_WAYPOINT.toString());
+				user.sendMessage(MessageAddon.NOT_SELECTED_WAYPOINT.toString());
 				return;
 			}
 
@@ -46,7 +51,7 @@ class WaypointInfoCommand extends SubArgument {
 							 "&7Cooldown:&b " + waypoint.getCooldown(), "&7Shield:&b " + waypoint.getShield(),
 							 "&7Cost:&b " + waypoint.getCost(), "&7Radius:&b " + waypoint.getRadius()};
 
-			player.sendMessage(ChatUtil.color(info));
+			user.sendMessage(ChatUtil.color(info));
 		};
 	}
 

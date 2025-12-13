@@ -52,7 +52,7 @@ public class PlayerDeath implements Listener {
 		if (handleCommandExecution(user, player)) return;
 
 		// take money from their balance (NOT THEIR BANK)
-		if (handleMoney(user, player)) return;
+		if (handleMoney(user)) return;
 
 		// change the death message according to the weapon
 		changeDeathMessage(event, player);
@@ -75,7 +75,7 @@ public class PlayerDeath implements Listener {
 		return false;
 	}
 
-	private boolean handleMoney(User<Player> user, Player player) {
+	private boolean handleMoney(User<Player> user) {
 		EconomyHandler economy = user.getEconomy();
 		double         deduct  = amountDeduction(user);
 
@@ -96,7 +96,7 @@ public class PlayerDeath implements Listener {
 		String info    = type + SettingAddon.getMoneySymbol() + NumberUtil.valueFormat(deduct);
 		String message = "&3Death penalty: " + info;
 
-		player.sendMessage(ChatUtil.color(message));
+		user.sendMessage(ChatUtil.color(message));
 		return false;
 	}
 

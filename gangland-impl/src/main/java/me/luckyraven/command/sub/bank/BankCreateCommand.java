@@ -46,7 +46,7 @@ class BankCreateCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (user.hasBank()) {
-				player.sendMessage(MessageAddon.BANK_EXIST.toString());
+				user.sendMessage(MessageAddon.BANK_EXIST.toString());
 				return;
 			}
 
@@ -63,12 +63,12 @@ class BankCreateCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (user.hasBank()) {
-				player.sendMessage(MessageAddon.BANK_EXIST.toString());
+				user.sendMessage(MessageAddon.BANK_EXIST.toString());
 				return;
 			}
 
 			if (user.getEconomy().getBalance() < SettingAddon.getBankCreateFee()) {
-				player.sendMessage(MessageAddon.CANNOT_CREATE_BANK.toString());
+				user.sendMessage(MessageAddon.CANNOT_CREATE_BANK.toString());
 				return;
 			}
 
@@ -83,7 +83,7 @@ class BankCreateCommand extends SubArgument {
 			String string  = MessageAddon.BANK_CREATED.toString();
 			String replace = string.replace("%bank%", createBankName.get(user).get());
 
-			player.sendMessage(replace);
+			user.sendMessage(replace);
 
 			createBankName.remove(user);
 
@@ -101,7 +101,7 @@ class BankCreateCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (user.hasBank()) {
-				player.sendMessage(MessageAddon.BANK_EXIST.toString());
+				user.sendMessage(MessageAddon.BANK_EXIST.toString());
 				return;
 			}
 
@@ -113,8 +113,8 @@ class BankCreateCommand extends SubArgument {
 			String string  = MessageAddon.BANK_CREATE_FEE.toString();
 			String replace = string.replace("%amount%", SettingAddon.formatDouble(SettingAddon.getBankCreateFee()));
 
-			player.sendMessage(replace);
-			player.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "create"}));
+			user.sendMessage(replace);
+			user.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "create"}));
 			confirmCreate.setConfirmed(true);
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {

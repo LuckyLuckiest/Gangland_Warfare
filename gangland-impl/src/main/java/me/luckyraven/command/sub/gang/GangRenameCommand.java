@@ -68,7 +68,7 @@ class GangRenameCommand extends SubArgument {
 
 			if (!SettingAddon.isGangNameDuplicates()) for (Gang checkGangName : gangManager.getGangs().values())
 				if (checkGangName.getName().equalsIgnoreCase(newName)) {
-					player.sendMessage(MessageAddon.DUPLICATE_GANG_NAME.toString().replace("%gang%", newName));
+					user.sendMessage(MessageAddon.DUPLICATE_GANG_NAME.toString().replace("%gang%", newName));
 					return;
 				}
 

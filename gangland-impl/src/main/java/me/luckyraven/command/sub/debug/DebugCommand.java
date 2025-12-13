@@ -148,10 +148,11 @@ public final class DebugCommand extends CommandHandler {
 			if (sender instanceof Player player) {
 				User<Player> user = userManager.getUser(player);
 
-				player.sendMessage(convertToJson(user.toString()));
+				user.sendMessage(convertToJson(user.toString()));
 			} else {
-				for (User<Player> user : userManager.getUsers().values())
-					sender.sendMessage(user.toString());
+				for (User<Player> user : userManager.getUsers().values()) {
+					user.sendMessage(user.toString());
+				}
 			}
 		});
 	}
@@ -165,13 +166,15 @@ public final class DebugCommand extends CommandHandler {
 				if (user.hasGang()) {
 					Gang gang = gangManager.getGang(user.getGangId());
 
-					player.sendMessage(convertToJson(gang.toString()));
+					user.sendMessage(convertToJson(gang.toString()));
 				} else {
-					player.sendMessage("Not in a gang...");
+					user.sendMessage("Not in a gang...");
 				}
 			} else {
-				for (Gang gang : getGangland().getInitializer().getGangManager().getGangs().values())
+				Collection<Gang> values = getGangland().getInitializer().getGangManager().getGangs().values();
+				for (Gang gang : values) {
 					sender.sendMessage(gang.toString());
+				}
 			}
 		});
 	}
@@ -184,32 +187,40 @@ public final class DebugCommand extends CommandHandler {
 
 				player.sendMessage(convertToJson(member.toString()));
 			} else {
-				for (Member member : memberManager.getMembers().values())
+				Collection<Member> values = memberManager.getMembers().values();
+				for (Member member : values) {
 					sender.sendMessage(member.toString());
+				}
 			}
 		});
 	}
 
 	private @NotNull Argument getRankData() {
 		return new Argument(getGangland(), "rank-data", getArgumentTree(), (argument, sender, args) -> {
+			Collection<Rank> values = getGangland().getInitializer().getRankManager().getRanks().values();
 			if (sender instanceof Player) {
-				for (Rank rank : getGangland().getInitializer().getRankManager().getRanks().values())
+				for (Rank rank : values) {
 					sender.sendMessage(convertToJson(rank.toString()));
+				}
 			} else {
-				for (Rank rank : getGangland().getInitializer().getRankManager().getRanks().values())
+				for (Rank rank : values) {
 					sender.sendMessage(rank.toString());
+				}
 			}
 		});
 	}
 
 	private @NotNull Argument getWaypointData() {
 		return new Argument(getGangland(), "waypoint-data", getArgumentTree(), (argument, sender, args) -> {
+			Collection<Waypoint> values = getGangland().getInitializer().getWaypointManager().getWaypoints().values();
 			if (sender instanceof Player) {
-				for (Waypoint waypoint : getGangland().getInitializer().getWaypointManager().getWaypoints().values())
+				for (Waypoint waypoint : values) {
 					sender.sendMessage(convertToJson(waypoint.toString()));
+				}
 			} else {
-				for (Waypoint waypoint : getGangland().getInitializer().getWaypointManager().getWaypoints().values())
+				for (Waypoint waypoint : values) {
 					sender.sendMessage(waypoint.toString());
+				}
 			}
 		});
 	}
@@ -277,8 +288,11 @@ public final class DebugCommand extends CommandHandler {
 
 	private @NotNull Argument getPerm() {
 		return new Argument(getGangland(), "perms", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(
-					getGangland().getInitializer().getPermissionManager().getPermissions().toArray(String[]::new));
+			String[] array = getGangland().getInitializer()
+										  .getPermissionManager()
+										  .getPermissions()
+										  .toArray(String[]::new);
+			sender.sendMessage(array);
 		});
 	}
 
@@ -297,15 +311,19 @@ public final class DebugCommand extends CommandHandler {
 
 	private @NotNull Argument getArgument(String[] setOpt) {
 		return new Argument(getGangland(), setOpt, getArgumentTree(), (argument, sender, args) -> {
-			JsonFormatter jsonFormatter = new JsonFormatter();
-			sender.sendMessage(convertToJson(jsonFormatter.createJson(SettingAddon.getSettingsMap())));
+			var jsonFormatter = new JsonFormatter();
+			var message       = convertToJson(jsonFormatter.createJson(SettingAddon.getSettingsMap()));
+
+			sender.sendMessage(message);
 		});
 	}
 
 	private @NotNull Argument getSetPlaceholder() {
 		return new Argument(getGangland(), "placeholder", getArgumentTree(), (argument, sender, args) -> {
-			JsonFormatter jsonFormatter = new JsonFormatter();
-			sender.sendMessage(convertToJson(jsonFormatter.createJson(SettingAddon.getSettingsPlaceholder())));
+			var jsonFormatter = new JsonFormatter();
+			var message       = convertToJson(jsonFormatter.createJson(SettingAddon.getSettingsPlaceholder()));
+
+			sender.sendMessage(message);
 		});
 	}
 
@@ -336,12 +354,12 @@ public final class DebugCommand extends CommandHandler {
 			if (sender instanceof Player player) {
 				User<Player> user = getGangland().getInitializer().getUserManager().getUser(player);
 
-				sender.sendMessage("Normal inventories: ");
-				sender.sendMessage(user.getInventories()
-										   .stream()
-										   .map(InventoryHandler::getTitle)
-										   .map(NamespacedKey::getKey)
-										   .toArray(String[]::new));
+				user.sendMessage("Normal inventories: ");
+				user.sendMessage(user.getInventories()
+										 .stream()
+										 .map(InventoryHandler::getTitle)
+										 .map(NamespacedKey::getKey)
+										 .toArray(String[]::new));
 			} else {
 				for (User<Player> user : getGangland().getInitializer().getUserManager().getUsers().values()) {
 
@@ -350,8 +368,8 @@ public final class DebugCommand extends CommandHandler {
 
 					List<String> values = new ArrayList<>(inventories);
 
-					sender.sendMessage(user.getUser().getName() + ":");
-					sender.sendMessage(String.valueOf(values));
+					user.sendMessage(user.getUser().getName() + ":");
+					user.sendMessage(String.valueOf(values));
 				}
 			}
 		});
@@ -359,8 +377,9 @@ public final class DebugCommand extends CommandHandler {
 
 	private @NotNull Argument getSpecialInventories() {
 		return new Argument(getGangland(), "special", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(InventoryHandler.getSpecialInventories().keySet()
-									   .stream().map(NamespacedKey::getKey).toArray(String[]::new));
+			String[] array = InventoryHandler.getSpecialInventories().keySet()
+					.stream().map(NamespacedKey::getKey).toArray(String[]::new);
+			sender.sendMessage(array);
 		});
 	}
 
@@ -382,7 +401,8 @@ public final class DebugCommand extends CommandHandler {
 
 	private @NotNull Argument getGiveGun() {
 		return new Argument(getGangland(), "weapon", getArgumentTree(), (argument, sender, args) -> {
-			for (Weapon weapon : getGangland().getInitializer().getWeaponManager().getWeapons().values()) {
+			Collection<Weapon> values = getGangland().getInitializer().getWeaponManager().getWeapons().values();
+			for (Weapon weapon : values) {
 				sender.sendMessage(weapon.getUuid().toString());
 			}
 		});
@@ -418,7 +438,7 @@ public final class DebugCommand extends CommandHandler {
 			if (location != null) {
 				for (int i = 0; i < 100; i++) {
 					player.getWorld()
-						  .spawnParticle(XParticle.DUST.get(), location, 50,
+						  .spawnParticle(Objects.requireNonNull(XParticle.DUST.get()), location, 50,
 										 new Particle.DustOptions(Color.RED.getBukkitColor(), 0.5F));
 				}
 

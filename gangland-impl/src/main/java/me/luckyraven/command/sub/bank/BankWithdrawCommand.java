@@ -41,7 +41,7 @@ class BankWithdrawCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (!user.hasBank()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
 
@@ -56,7 +56,7 @@ class BankWithdrawCommand extends SubArgument {
 			Bank         bank   = Bank.getInstance(user);
 
 			if (!user.hasBank() || bank == null) {
-				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
 
@@ -68,7 +68,7 @@ class BankWithdrawCommand extends SubArgument {
 				String string  = MessageAddon.MUST_BE_NUMBERS.toString();
 				String replace = string.replace("%command%", args[2]);
 
-				player.sendMessage(replace);
+				user.sendMessage(replace);
 				return;
 			}
 

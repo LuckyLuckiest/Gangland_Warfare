@@ -91,14 +91,14 @@ class GangDeleteCommand extends SubArgument {
 			if (tail == null) return;
 
 			if (!member.getRank().match(tail.getUsedId())) {
-				player.sendMessage(MessageAddon.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
+				user.sendMessage(MessageAddon.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
 				return;
 			}
 
 			if (confirmDelete.isConfirmed()) return;
 
 			confirmDelete.setConfirmed(true);
-			player.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "delete"}));
+			user.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "delete"}));
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
 				if (time.getTimeLeft() % 20 != 0) return;
@@ -129,7 +129,7 @@ class GangDeleteCommand extends SubArgument {
 			Member       member = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -141,7 +141,7 @@ class GangDeleteCommand extends SubArgument {
 			if (tail == null) return;
 
 			if (!member.getRank().match(tail.getUsedId())) {
-				player.sendMessage(MessageAddon.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
+				user.sendMessage(MessageAddon.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
 				return;
 			}
 
@@ -187,7 +187,7 @@ class GangDeleteCommand extends SubArgument {
 				String gangRemoved         = MessageAddon.GANG_REMOVED.toString();
 				String gangRemovedReplace  = gangRemoved.replace("%gang%", deleteGangName.get(user).get());
 				String depositMoneyReplace = depositMoney.replace("%amount%", SettingAddon.formatDouble(amount));
-				currentPlayer.sendMessage(kickedFromGang, gangRemovedReplace, depositMoneyReplace);
+				gangUser.sendMessage(kickedFromGang, gangRemovedReplace, depositMoneyReplace);
 			}
 
 			helper.runQueriesAsync(database -> {
@@ -228,7 +228,7 @@ class GangDeleteCommand extends SubArgument {
 			double amount = SettingAddon.getGangCreateFee() / 4;
 
 			user.getEconomy().deposit(amount);
-			player.sendMessage(depositMoney.replace("%amount%", SettingAddon.formatDouble(amount)));
+			user.sendMessage(depositMoney.replace("%amount%", SettingAddon.formatDouble(amount)));
 
 			// remove the gang information
 			helper.runQueriesAsync(database -> {

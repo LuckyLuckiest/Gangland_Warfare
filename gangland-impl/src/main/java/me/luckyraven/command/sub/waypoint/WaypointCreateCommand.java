@@ -8,6 +8,8 @@ import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
+import me.luckyraven.data.user.User;
+import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeUtil;
@@ -26,9 +28,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 class WaypointCreateCommand extends SubArgument {
 
-	private final Gangland        gangland;
-	private final Tree<Argument>  tree;
-	private final WaypointManager waypointManager;
+	private final Gangland            gangland;
+	private final Tree<Argument>      tree;
+	private final UserManager<Player> userManager;
+	private final WaypointManager     waypointManager;
 
 	protected WaypointCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "create", tree, parent);
@@ -36,6 +39,7 @@ class WaypointCreateCommand extends SubArgument {
 		this.gangland = gangland;
 		this.tree     = tree;
 
+		this.userManager     = gangland.getInitializer().getUserManager();
 		this.waypointManager = gangland.getInitializer().getWaypointManager();
 
 		waypointCreate();
@@ -55,7 +59,8 @@ class WaypointCreateCommand extends SubArgument {
 
 		// create a new waypoint class after confirmation
 		ConfirmArgument confirmWaypoint = new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
-			Player player = (Player) sender;
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
 
 			String   name     = createWaypointName.get(player).get();
 			Waypoint waypoint = new Waypoint(name);
@@ -68,7 +73,7 @@ class WaypointCreateCommand extends SubArgument {
 			waypointManager.add(waypoint);
 
 			// inform the player that the waypoint is created
-			player.sendMessage(MessageAddon.WAYPOINT_CREATED.toString().replace("%waypoint%", name));
+			user.sendMessage(MessageAddon.WAYPOINT_CREATED.toString().replace("%waypoint%", name));
 
 			createWaypointName.remove(player);
 
@@ -92,7 +97,8 @@ class WaypointCreateCommand extends SubArgument {
 
 		// get the proposed waypoint name
 		Argument createName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			Player player = (Player) sender;
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
 
 			if (confirmWaypoint.isConfirmed()) return;
 
@@ -101,7 +107,7 @@ class WaypointCreateCommand extends SubArgument {
 			createWaypointName.put(player, name);
 
 			// notify the player to confirm the waypoint
-			player.sendMessage(ChatUtil.confirmCommand(new String[]{"waypoint", "create"}));
+			user.sendMessage(ChatUtil.confirmCommand(new String[]{"waypoint", "create"}));
 			confirmWaypoint.setConfirmed(true);
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
