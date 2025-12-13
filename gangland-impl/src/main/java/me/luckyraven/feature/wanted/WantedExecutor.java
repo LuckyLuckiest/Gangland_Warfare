@@ -29,7 +29,10 @@ public class WantedExecutor extends Executor {
 	public Timer createTimer() {
 		Wanted wanted = user.getWanted();
 
-		double pow = Math.pow(SettingAddon.getWantedTimerMultiplierAmount(), wanted.getLevel() + 1);
+		double pow = 1D;
+		if (SettingAddon.isWantedTimerMultiplierEnabled()) {
+			pow = Math.pow(SettingAddon.getWantedTimerMultiplierAmount(), wanted.getLevel());
+		}
 
 		double time     = SettingAddon.getWantedTimerTime() * pow;
 		long   interval = (long) time;

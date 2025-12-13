@@ -77,7 +77,8 @@ public class KillComboTracker {
 	}
 
 	private void initializeTimer() {
-		this.timer = new CountdownTimer(plugin, SettingAddon.getWantedKillComboResetAfter(), null, null, timer -> {
+		long time = 20L * SettingAddon.getWantedKillComboResetAfter();
+		this.timer = new CountdownTimer(plugin, time, null, null, timer -> {
 			if (onReset == null) return;
 
 			onReset.accept(this);

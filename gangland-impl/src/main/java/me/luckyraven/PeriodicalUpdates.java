@@ -41,7 +41,7 @@ public final class PeriodicalUpdates {
 
 	public PeriodicalUpdates(Gangland gangland, long interval) {
 		this(gangland);
-		this.repeatingTimer = new RepeatingTimer(gangland, interval, timer -> task());
+		this.repeatingTimer = new RepeatingTimer(gangland, 20L * interval, timer -> task());
 	}
 
 	public PeriodicalUpdates(Gangland gangland) {

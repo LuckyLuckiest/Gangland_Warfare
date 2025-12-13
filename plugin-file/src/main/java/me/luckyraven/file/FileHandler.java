@@ -75,8 +75,7 @@ public class FileHandler {
 		if (fileConfiguration != null && file != null) try {
 			fileConfiguration.save(file);
 		} catch (IOException exception) {
-			logger.warn(String.format(UnhandledError.FILE_SAVE_ERROR + " %s to %s: %s", name, file,
-									  exception.getMessage()));
+			logger.warn("{} {} to {}: {}", UnhandledError.FILE_SAVE_ERROR, name, file, exception.getMessage());
 		}
 	}
 
@@ -93,15 +92,14 @@ public class FileHandler {
 		try {
 			Files.move(file.toPath(), oldFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException exception) {
-			String message = String.format(UnhandledError.FILE_EDIT_ERROR + " %s to %s: %s", oldFile.getName(),
-										   file.getName(), exception.getMessage());
-			logger.warn(message);
+			logger.warn("{} {} to {}: {}", UnhandledError.FILE_EDIT_ERROR, oldFile.getName(), file.getName(),
+						exception.getMessage());
 			return;
 		}
 
 		// create a new file since the previous one was moved
 		createNewFile(true);
-		logger.info(String.format("%s%s is an old build or corrupted, creating a new one", name, fileType));
+		logger.info("{}{} is an old build or corrupted, creating a new one", name, fileType);
 
 		try (FileInputStream inputStream = new FileInputStream(file);
 			 InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
@@ -141,16 +139,19 @@ public class FileHandler {
 
 		if (!Objects.equals(name, that.name)) return false;
 		if (!Objects.equals(fileType, that.fileType)) return false;
+
 		return Objects.equals(directory, that.directory);
 	}
 
+	@SuppressWarnings("ResultOfMethodCallIgnored")
 	private void createNewFile(boolean inJar) throws IOException {
 		String resourceFile = directory + fileType;
-		if (file == null) file = new File(plugin.getDataFolder().getAbsolutePath(), resourceFile);
 
+		if (file == null) file = new File(plugin.getDataFolder().getAbsolutePath(), resourceFile);
 		if (file.exists()) return;
 
 		file.getParentFile().mkdirs();
+
 		if (plugin.getResource(resourceFile.replace(File.separator, "/")) != null && inJar) plugin.saveResource(
 				resourceFile, false);
 		else {
@@ -162,13 +163,16 @@ public class FileHandler {
 				// create a new folder
 				if (!folder.exists()) folder.mkdir();
 			}
+
 			file.createNewFile();
 		}
 	}
 
 	private void registerYamlFile() throws IOException {
 		if (!fileType.equals(".yml")) return;
+
 		fileConfiguration = new YamlConfiguration();
+
 		try (FileInputStream inputStream = new FileInputStream(file);
 			 InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
 			fileConfiguration.load(reader);
@@ -182,11 +186,13 @@ public class FileHandler {
 
 	private boolean validateConfigVersion() throws IOException {
 		String configVersion = fileConfiguration.getString("Config_Version");
-		if (configVersion != null)
+
+		if (configVersion != null) {
 			if (!Objects.equals(fileConfiguration.getString("Config_Version"), this.configVersion)) {
 				createNewFile();
 				return true;
 			}
+		}
 
 		return false;
 	}

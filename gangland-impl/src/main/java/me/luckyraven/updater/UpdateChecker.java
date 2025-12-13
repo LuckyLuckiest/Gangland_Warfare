@@ -33,7 +33,7 @@ public class UpdateChecker {
 		this.plugin         = plugin;
 		this.resourceId     = resourceId;
 		this.checked        = new AtomicBoolean();
-		this.repeatingTimer = new RepeatingTimer(plugin, interval, timer -> task());
+		this.repeatingTimer = new RepeatingTimer(plugin, interval * 20L, timer -> task());
 	}
 
 	public String getLatestVersion() {

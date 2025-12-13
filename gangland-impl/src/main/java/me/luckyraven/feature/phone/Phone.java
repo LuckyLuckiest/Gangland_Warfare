@@ -7,7 +7,6 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.user.User;
-import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.multi.MultiInventory;
@@ -20,7 +19,6 @@ import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.color.ColorUtil;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -29,9 +27,8 @@ import java.util.*;
 public class Phone {
 
 	@Getter
-	private final String      name;
-	private final ItemBuilder item;
-	private final Gangland    gangland;
+	private final String   name;
+	private final Gangland gangland;
 
 	private @Getter String displayName;
 
@@ -39,48 +36,6 @@ public class Phone {
 		this.name        = name;
 		this.displayName = name;
 		this.gangland    = gangland;
-
-		this.item = new ItemBuilder(getPhoneMaterial()).setDisplayName(displayName).addTag("uniqueItem", "phone");
-	}
-
-	public static Material getPhoneMaterial() {
-		Material phoneItem = XMaterial.matchXMaterial(SettingAddon.getPhoneItem())
-				.stream().toList().getFirst().get();
-		if (phoneItem == null) return XMaterial.REDSTONE.get();
-		return phoneItem;
-	}
-
-	public static boolean isPhone(ItemStack item) {
-		ItemBuilder itemBuilder = new ItemBuilder(item);
-		return itemBuilder.hasNBTTag("uniqueItem") && itemBuilder.getStringTagData("uniqueItem").equals("phone");
-	}
-
-	public static boolean hasPhone(Player player) {
-		Material    phoneItem = getPhoneMaterial();
-		ItemStack[] contents  = player.getInventory().getContents();
-
-		for (ItemStack item : contents)
-			if (item != null && item.getType() == phoneItem) if (isPhone(item)) return true;
-
-		return false;
-	}
-
-	public void setDisplayName(String displayName) {
-		this.displayName = displayName;
-		this.item.setDisplayName(displayName);
-	}
-
-	public void addPhoneToInventory(Player player) {
-		if (!addItem(player, SettingAddon.getPhoneSlot())) player.sendMessage(MessageAddon.INVENTORY_FULL.toString());
-	}
-
-	private boolean addItem(Player player, int slot) {
-		if (slot >= player.getInventory().getSize() || slot > 35) return false;
-
-		if (player.getInventory().getItem(slot) != null) return addItem(player, slot + 1);
-		else player.getInventory().setItem(slot, item.build());
-
-		return true;
 	}
 
 	private void gangInventory(User<Player> user, GangManager gangManager,
