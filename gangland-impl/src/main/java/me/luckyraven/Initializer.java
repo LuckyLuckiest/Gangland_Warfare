@@ -52,6 +52,8 @@ import me.luckyraven.file.configuration.inventory.InventoryLoader;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
+import me.luckyraven.item.ItemParserManager;
+import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
@@ -110,11 +112,13 @@ public final class Initializer {
 	private WeaponManager              weaponManager;
 	private SignManager                signManager;
 	private EntityMarkManager          entityMarkManager;
+	private ItemParserManager          itemParserManager;
 	// Addons
 	private SettingAddon               settingAddon;
 	private ScoreboardAddon            scoreboardAddon;
 	private AmmunitionAddon            ammunitionAddon;
 	private WeaponAddon                weaponAddon;
+	private UniqueItemAddon            uniqueItemAddon;
 	// Loader
 	private LanguageLoader             languageLoader;
 	private InventoryLoader            inventoryLoader;
@@ -249,7 +253,11 @@ public final class Initializer {
 
 		signManager.initialize();
 
+		// entity mark manager
 		entityMarkManager = new EntityMarkManager(gangland);
+
+		// item parser
+		itemParserManager = new ItemParserManager(weaponManager, ammunitionAddon);
 
 		// Events
 		listenerManager = new ListenerManager(gangland);
@@ -270,9 +278,18 @@ public final class Initializer {
 	 * plugin functionality work.
 	 */
 	public void files() {
-		fileManager.addFile(new FileHandler(gangland, "settings", ".yml"), true);
-		fileManager.addFile(new FileHandler(gangland, "scoreboard", ".yml"), true);
-		fileManager.addFile(new FileHandler(gangland, "ammunition", ".yml"), true);
+		FileHandler settingsFile = new FileHandler(gangland, "settings", ".yml");
+		fileManager.addFile(settingsFile, true);
+
+		FileHandler scoreboardFile = new FileHandler(gangland, "scoreboard", ".yml");
+		fileManager.addFile(scoreboardFile, true);
+
+		FileHandler ammunitionFile = new FileHandler(gangland, "ammunition", ".yml");
+		fileManager.addFile(ammunitionFile, true);
+
+		FileHandler uniqueItemsFile = new FileHandler(gangland, "unique_items", ".yml");
+		fileManager.addFile(uniqueItemsFile, true);
+
 		scoreboardManager = new ScoreboardManager(gangland);
 
 		addonsLoader();
@@ -282,16 +299,31 @@ public final class Initializer {
 	 * Helps the plugin features to properly load.
 	 */
 	public void addonsLoader() {
-		settingAddon   = new SettingAddon(fileManager);
-		languageLoader = new LanguageLoader(gangland);
+		// initialize settings addon
+		settingAddon = new SettingAddon(fileManager);
+		settingAddon.initialize();
 
+		// initialize language addon
+		languageLoader = new LanguageLoader(gangland);
 		languageLoader.initialize();
 
 		MessageAddon.setMessageConfiguration(languageLoader.getMessage());
 
+		// initialize scoreboard addon
 		scoreboardLoader();
+
+		// initialize inventory addon
 		inventoryLoader();
+
+		// initialize weapon addon
 		weaponLoader();
+
+		// initialize unique item addon
+		if (uniqueItemAddon == null) {
+			uniqueItemAddon = new UniqueItemAddon(permissionManager, fileManager);
+		}
+
+		uniqueItemAddon.initialize();
 	}
 
 	/**
@@ -305,6 +337,8 @@ public final class Initializer {
 		// clear the weapon addons
 		weaponAddon.clear();
 		weaponLoader.clear();
+		// clear the unique item addons
+		uniqueItemAddon.clear();
 	}
 
 	/**
@@ -334,7 +368,11 @@ public final class Initializer {
 	}
 
 	public void weaponLoader() {
-		ammunitionAddon = new AmmunitionAddon(fileManager);
+		if (ammunitionAddon == null) {
+			ammunitionAddon = new AmmunitionAddon(fileManager);
+		}
+
+		ammunitionAddon.initialize();
 
 		if (weaponAddon == null) {
 			weaponAddon = new WeaponAddon();
@@ -343,7 +381,6 @@ public final class Initializer {
 		weaponLoader = new WeaponLoader(gangland);
 
 		weaponLoader.addExpectedFile(new FileHandler(gangland, "rifle", "weapon", ".yml"));
-
 		weaponLoader.initialize();
 	}
 
