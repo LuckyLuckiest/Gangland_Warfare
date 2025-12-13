@@ -97,7 +97,6 @@ public class InventoryAddon {
 		Objects.requireNonNull(informationSection);
 
 		var slotsSection = config.getConfigurationSection("Slots");
-		Objects.requireNonNull(slotsSection);
 
 		// information section
 		String name = informationSection.getString("Name");
@@ -130,7 +129,7 @@ public class InventoryAddon {
 		List<Slot> slots = new ArrayList<>();
 
 		// slots section
-		configureSlots(gangland, realSize, slotsSection.getName(), config, slots);
+		if (slotsSection != null) configureSlots(gangland, realSize, slotsSection.getName(), config, slots);
 
 		var configurationSection = informationSection.getConfigurationSection("Configuration");
 		Objects.requireNonNull(configurationSection);
@@ -157,12 +156,8 @@ public class InventoryAddon {
 				String uniqueItemKey = eventSection.getString("UniqueItem");
 
 				if (uniqueItemKey != null) {
-					var     allowedActions = parseActions(eventSection);
-					boolean movable        = eventSection.getBoolean("Movable", false);
-					boolean droppable      = eventSection.getBoolean("Droppable", false);
-
-					var uniqueItem = new UniqueItemHandler(name, uniqueItemKey, allowedActions, openPermission, movable,
-														   droppable);
+					var allowedActions = parseActions(eventSection);
+					var uniqueItem     = new UniqueItemHandler(name, uniqueItemKey, allowedActions, openPermission);
 
 					uniqueItemHandler.put(uniqueItemKey, uniqueItem);
 				}
