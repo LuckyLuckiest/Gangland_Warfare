@@ -93,6 +93,7 @@ public final class Initializer {
 	private final InformationManager informationManager;
 	private final VersionSetup       versionSetup;
 	private final CompatibilitySetup compatibilitySetup;
+	private final PlaceholderService placeholderService;
 
 	private final String prefix;
 
@@ -129,7 +130,6 @@ public final class Initializer {
 	private GanglandDatabase           ganglandDatabase;
 	// Placeholder
 	private GanglandPlaceholder        placeholder;
-	private PlaceholderService         placeholderService;
 	// Compatibility
 	private CompatibilityWorker        compatibilityWorker;
 	// Condition Evaluator
@@ -144,6 +144,9 @@ public final class Initializer {
 
 		this.versionSetup       = new VersionSetup();
 		this.compatibilitySetup = new CompatibilitySetup(versionSetup);
+
+		this.placeholderService = new PlaceholderService(gangland);
+		User.setPlaceholder(placeholderService);
 
 		this.prefix = "glw";
 	}
@@ -272,7 +275,7 @@ public final class Initializer {
 		commands(gangland);
 
 		// Placeholder
-		placeholder();
+		placeholder = new GanglandPlaceholder(gangland, Replacer.Closure.PERCENT);
 	}
 
 	/**
@@ -472,14 +475,6 @@ public final class Initializer {
 
 		// initialize the tab completer
 		command.setTabCompleter(new CommandTabCompleter(gangland, CommandManager.getCommands()));
-	}
-
-	private void placeholder() {
-		placeholder        = new GanglandPlaceholder(gangland, Replacer.Closure.PERCENT);
-		placeholderService = new PlaceholderService(gangland);
-
-		// set the user placeholder
-		User.setPlaceholder(placeholderService);
 	}
 
 }
