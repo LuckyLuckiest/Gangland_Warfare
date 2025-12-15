@@ -1,7 +1,7 @@
-package me.luckyraven.data.placeholder;
+package me.luckyraven.util.placeholder;
 
-import me.luckyraven.data.placeholder.replacer.CharReplacer;
-import me.luckyraven.data.placeholder.replacer.Replacer;
+import me.luckyraven.util.placeholder.replacer.CharReplacer;
+import me.luckyraven.util.placeholder.replacer.Replacer;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,10 +14,12 @@ public class PlaceholderHandler extends PlaceholderRequest {
 	private static final String PLACEHOLDER_PATTERN         = "%([^%]+)%";
 	private static final String BRACKET_PLACEHOLDER_PATTERN = "\\{([^{}]+)}";
 
+	private final String           prefix;
 	private final Replacer         replacer;
 	private final Replacer.Closure closure;
 
-	public PlaceholderHandler(Replacer.Closure closure) {
+	public PlaceholderHandler(String prefix, Replacer.Closure closure) {
+		this.prefix   = prefix;
 		this.replacer = new CharReplacer(closure);
 		this.closure  = closure;
 	}
@@ -38,7 +40,8 @@ public class PlaceholderHandler extends PlaceholderRequest {
 	}
 
 	public String replacePlaceholder(OfflinePlayer player, @NotNull String text) {
-		return replacer.apply(player, text.replace("%gangland_", "%"), this);
+		String format = String.format("%%%s_", prefix);
+		return replacer.apply(player, text.replace(format, "%"), this);
 	}
 
 	public List<String> replacePlaceholders(OfflinePlayer player, @NotNull List<String> text) {
