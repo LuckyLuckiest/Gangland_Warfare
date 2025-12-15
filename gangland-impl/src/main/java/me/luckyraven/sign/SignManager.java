@@ -46,8 +46,11 @@ public class SignManager extends SignService {
 
 		List<SignTypeDefinition> definitions = new ArrayList<>();
 
+		String signPrefix = gangland.getShortPrefix() + "-";
+
 		// buy
-		SignType buyType = new SignType("glw-buy", "BUY");
+		String   buyKey  = signPrefix + "buy";
+		SignType buyType = new SignType(buyKey, "BUY");
 		Sign     buy     = new BuySign(userManager, weaponService, ammunitionAddon, buyType);
 
 		formatRegistry.register(buy.createFormat());
@@ -55,7 +58,8 @@ public class SignManager extends SignService {
 		definitions.add(buy.createDefinition());
 
 		// sell
-		SignType sellType = new SignType("glw-sell", "SELL");
+		String   sellKey  = signPrefix + "sell";
+		SignType sellType = new SignType(sellKey, "SELL");
 		Sign     sell     = new SellSign(userManager, weaponService, ammunitionAddon, sellType);
 
 		formatRegistry.register(sell.createFormat());
@@ -63,7 +67,8 @@ public class SignManager extends SignService {
 		definitions.add(sell.createDefinition());
 
 		// view
-		SignType viewType = new SignType("glw-view", "VIEW");
+		String   viewKey  = signPrefix + "view";
+		SignType viewType = new SignType(viewKey, "VIEW");
 		Sign     view     = new ViewSign(gangland, weaponService, ammunitionAddon, viewType);
 
 		formatRegistry.register(view.createFormat());
@@ -71,7 +76,8 @@ public class SignManager extends SignService {
 		definitions.add(view.createDefinition());
 
 		// wanted
-		SignType wantedType = new SignType("glw-wanted", "WANTED");
+		String   wantedKey  = signPrefix + "wanted";
+		SignType wantedType = new SignType(wantedKey, "WANTED");
 		Sign     wanted     = new WantedSign(userManager, wantedType);
 
 		formatRegistry.register(wanted.createFormat());
@@ -79,7 +85,8 @@ public class SignManager extends SignService {
 		definitions.add(wanted.createDefinition());
 
 		// bounty
-		SignType bountyType = new SignType("glw-bounty", "BOUNTY");
+		String   bountyKey  = signPrefix + "bounty";
+		SignType bountyType = new SignType(bountyKey, "BOUNTY");
 		Sign     bounty     = new BountySign(gangland, offlineUserManager, userManager, bountyType);
 
 		formatRegistry.register(bounty.createFormat());

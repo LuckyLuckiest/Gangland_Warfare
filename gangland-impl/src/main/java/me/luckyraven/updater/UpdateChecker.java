@@ -27,13 +27,15 @@ public class UpdateChecker {
 	private final RepeatingTimer repeatingTimer;
 	private final AtomicBoolean  checked;
 	@Getter
-	private final String         checkPermission = "gangland.update.check";
+	private final String         checkPermission;
 
-	public UpdateChecker(JavaPlugin plugin, int resourceId, long interval) {
-		this.plugin         = plugin;
-		this.resourceId     = resourceId;
-		this.checked        = new AtomicBoolean();
-		this.repeatingTimer = new RepeatingTimer(plugin, interval * 20L, timer -> task());
+	public UpdateChecker(JavaPlugin plugin, String permissionPrefix, int resourceId, long interval) {
+		this.plugin     = plugin;
+		this.resourceId = resourceId;
+
+		this.checked         = new AtomicBoolean();
+		this.repeatingTimer  = new RepeatingTimer(plugin, interval * 20L, timer -> task());
+		this.checkPermission = String.format("%s.update.check", permissionPrefix);
 	}
 
 	public String getLatestVersion() {

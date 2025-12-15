@@ -67,9 +67,8 @@ class GangDemoteCommand extends SubArgument {
 			User<Player> user       = userManager.getUser(player);
 			Member       userMember = memberManager.getMember(player.getUniqueId());
 
-			String forceRank = "gangland.command.gang.force_rank";
-
-			boolean force = player.hasPermission(forceRank);
+			String  forceRank = String.format("%s.command.gang.force_rank", gangland.getFullPrefix());
+			boolean force     = player.hasPermission(forceRank);
 
 			if (!user.hasGang()) {
 				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());

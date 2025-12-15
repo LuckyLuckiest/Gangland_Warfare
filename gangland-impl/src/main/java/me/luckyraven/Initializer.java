@@ -28,7 +28,6 @@ import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.permission.PermissionWorker;
 import me.luckyraven.data.placeholder.PlaceholderService;
-import me.luckyraven.data.placeholder.replacer.Replacer;
 import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
 import me.luckyraven.data.plugin.PluginManager;
 import me.luckyraven.data.rank.RankManager;
@@ -51,7 +50,6 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
-import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
 import me.luckyraven.item.ItemParserManager;
@@ -67,6 +65,7 @@ import me.luckyraven.sign.service.SignInteraction;
 import me.luckyraven.sign.service.SignInteractionService;
 import me.luckyraven.util.autowire.DependencyContainer;
 import me.luckyraven.util.listener.ListenerPriority;
+import me.luckyraven.util.placeholder.replacer.Replacer;
 import me.luckyraven.weapon.WeaponManager;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
@@ -94,8 +93,6 @@ public final class Initializer {
 	private final VersionSetup       versionSetup;
 	private final CompatibilitySetup compatibilitySetup;
 	private final PlaceholderService placeholderService;
-
-	private final String prefix;
 
 	// on plugin enable
 	// Managers
@@ -147,8 +144,6 @@ public final class Initializer {
 
 		this.placeholderService = new PlaceholderService(gangland);
 		User.setPlaceholder(placeholderService);
-
-		this.prefix = "glw";
 	}
 
 	/**
@@ -161,8 +156,7 @@ public final class Initializer {
 		compatibilityWorker = new CompatibilityWorker(gangland.getViaAPI(), compatibilitySetup);
 
 		// permission manager
-		var ganglandString   = "gangland";
-		var permissionWorker = new PermissionWorker(ganglandString);
+		var permissionWorker = new PermissionWorker(gangland.getFullPrefix());
 
 		permissionManager = new PermissionManager(permissionWorker);
 
@@ -179,7 +173,7 @@ public final class Initializer {
 		Set<Permission> permissions = Bukkit.getPluginManager().getPermissions();
 		Set<String> ganglandPermissions = permissions.stream()
 				.map(Permission::getName)
-				.filter(permission -> permission.startsWith(ganglandString))
+				.filter(permission -> permission.startsWith(gangland.getFullPrefix()))
 				.collect(Collectors.toSet());
 
 		permissionManager.addAllPermissions(ganglandPermissions);
@@ -251,7 +245,7 @@ public final class Initializer {
 		SignFormatRegistry   formatRegistry   = new SignFormatRegistry();
 		SignFormatterService formatterService = new SignFormatterService(formatRegistry);
 
-		String signPrefix = prefix + "-";
+		String signPrefix = gangland.getShortPrefix() + "-";
 
 		SignInteraction signInteraction = new SignInteraction(signPrefix, registry, formatterService);
 
@@ -275,7 +269,7 @@ public final class Initializer {
 		commands(gangland);
 
 		// Placeholder
-		placeholder = new GanglandPlaceholder(gangland, Replacer.Closure.PERCENT);
+		placeholder = new GanglandPlaceholder(gangland, gangland.getFullPrefix(), Replacer.Closure.PERCENT);
 	}
 
 	/**
@@ -405,7 +399,7 @@ public final class Initializer {
 		else type = DatabaseHandler.SQLITE;
 
 		// Primary database
-		GanglandDatabase ganglandDatabase = new GanglandDatabase(gangland);
+		GanglandDatabase ganglandDatabase = new GanglandDatabase(gangland, gangland.getFullPrefix());
 		ganglandDatabase.setType(type);
 		databaseManager.addDatabase(ganglandDatabase);
 	}
@@ -429,13 +423,16 @@ public final class Initializer {
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 
 		// waypoint
-		listenerManager.addEvent(new WaypointTeleport(new Waypoint("dummy")), ListenerPriority.NORMAL);
+		Waypoint         dummy         = new Waypoint("dummy", gangland.getFullPrefix());
+		WaypointTeleport dummyTeleport = new WaypointTeleport(dummy);
+
+		listenerManager.addEvent(dummyTeleport, ListenerPriority.NORMAL);
 		// inventory
-		new InventoryHandler(gangland, "dummy", 9, "dummy_inventory", false);
+//		new InventoryHandler(gangland, "dummy", 9, "dummy_inventory", false);
 	}
 
 	private void commands(Gangland gangland) {
-		PluginCommand command = this.gangland.getCommand(prefix);
+		PluginCommand command = this.gangland.getCommand(gangland.getShortPrefix());
 
 		if (command == null) return;
 

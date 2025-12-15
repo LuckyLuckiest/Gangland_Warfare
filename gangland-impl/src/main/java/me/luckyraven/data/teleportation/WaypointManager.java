@@ -48,7 +48,7 @@ public class WaypointManager {
 				double cost     = (double) result[v++];
 				double radius   = (double) result[v];
 
-				Waypoint waypoint = new Waypoint(name);
+				Waypoint waypoint = new Waypoint(name, gangland.getFullPrefix());
 
 				waypoint.setCoordinates(world, x, y, z, (float) yaw, (float) pitch);
 				waypoint.setType(Waypoint.WaypointType.valueOf(type.toUpperCase()));
@@ -89,10 +89,10 @@ public class WaypointManager {
 	@Nullable
 	public Waypoint get(String name) {
 		return waypoints.values()
-						.stream()
-						.filter(waypoint -> waypoint.getName().equalsIgnoreCase(name))
-						.findFirst()
-						.orElse(null);
+				.stream()
+				.filter(waypoint -> waypoint.getName().equalsIgnoreCase(name))
+				.findFirst()
+				.orElse(null);
 	}
 
 	public void refactorIds(WaypointTable waypointTable) {

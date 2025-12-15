@@ -71,7 +71,7 @@ class GangPromoteCommand extends SubArgument {
 			User<Player> user       = userManager.getUser(player);
 			Member       userMember = memberManager.getMember(player.getUniqueId());
 
-			String  forceRank = "gangland.command.gang.force_rank";
+			String  forceRank = String.format("%s.command.gang.force_rank", gangland.getFullPrefix());
 			boolean force     = player.hasPermission(forceRank);
 
 			if (!user.hasGang()) {
@@ -141,9 +141,8 @@ class GangPromoteCommand extends SubArgument {
 				for (int i = 0; i < nextRanks.size(); i++) {
 					String rank = nextRanks.get(i).getName();
 
-					String value = "/glw option gang rank " + targetStr + " " + rank;
-					ComponentBuilder sep = new ComponentBuilder(rank).event(
-							new ClickEvent(ClickEvent.Action.RUN_COMMAND, value));
+					var value = String.format("/%s option gang rank %s %s", gangland.getShortPrefix(), targetStr, rank);
+					var sep   = new ComponentBuilder(rank).event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, value));
 
 					ranks.append(sep.create());
 

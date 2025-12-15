@@ -1,22 +1,21 @@
 package me.luckyraven.data.placeholder.worker;
 
+import lombok.RequiredArgsConstructor;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.luckyraven.Gangland;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@RequiredArgsConstructor
 public class PlaceholderAPIExpansion extends PlaceholderExpansion {
 
 	private final Gangland gangland;
-
-	public PlaceholderAPIExpansion(Gangland gangland) {
-		this.gangland = gangland;
-	}
+	private final String   prefix;
 
 	@Override
 	public @NotNull String getIdentifier() {
-		return "gangland";
+		return prefix;
 	}
 
 	@Override

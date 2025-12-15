@@ -33,6 +33,9 @@ public final class Gangland extends JavaPlugin {
 
 	private static final Logger logger = LogManager.getLogger("Gangland_Warfare");
 
+	private final String fullPrefix;
+	private final String shortPrefix;
+
 	private Initializer             initializer;
 	private ReloadPlugin            reloadPlugin;
 	private PeriodicalUpdates       periodicalUpdates;
@@ -40,11 +43,14 @@ public final class Gangland extends JavaPlugin {
 	private PlaceholderAPIExpansion placeholderAPIExpansion;
 	private ViaAPI<?>               viaAPI;
 
-	public Gangland() { }
+	public Gangland() {
+		this.fullPrefix  = "gangland";
+		this.shortPrefix = "glw";
+	}
 
 	@Override
 	public void onLoad() {
-		// disable hikaricp logs
+		// disable HikariCP logs
 		disableAllLogs(HikariConfig.class);
 
 		initializer = new Initializer(this);
@@ -170,7 +176,7 @@ public final class Gangland extends JavaPlugin {
 		// soft dependencies
 		Dependency placeholderApi = new Dependency("PlaceholderAPI", Dependency.Type.SOFT);
 		placeholderApi.validate(() -> {
-			this.placeholderAPIExpansion = new PlaceholderAPIExpansion(this);
+			this.placeholderAPIExpansion = new PlaceholderAPIExpansion(this, this.fullPrefix);
 			this.placeholderAPIExpansion.register();
 		});
 
@@ -200,7 +206,7 @@ public final class Gangland extends JavaPlugin {
 		int hours = 6;
 
 		// initialize the update checker
-		updateChecker = new UpdateChecker(this, -1, hours * 60 * 60L);
+		updateChecker = new UpdateChecker(this, fullPrefix, -1, hours * 60 * 60L);
 
 		// add the necessary permissions for checking for updates
 		initializer.getPermissionManager().addPermission(updateChecker.getCheckPermission());

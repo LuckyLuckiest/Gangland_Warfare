@@ -63,7 +63,7 @@ class WaypointCreateCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			String   name     = createWaypointName.get(player).get();
-			Waypoint waypoint = new Waypoint(name);
+			Waypoint waypoint = new Waypoint(name, gangland.getFullPrefix());
 			Location location = player.getLocation();
 
 			waypoint.setCoordinates(player.getWorld().getName(), location.getX(), location.getY(), location.getZ(),
@@ -88,9 +88,11 @@ class WaypointCreateCommand extends SubArgument {
 
 			// select the waypoint
 			// using '/glw waypoint select <id>' command to the created waypoint, so it is selected
-			player.performCommand(ArgumentUtil.getArgumentSequence(
-					Objects.requireNonNull(tree.find(new Argument(gangland, "select", tree)))) + " " +
-								  waypoint.getUsedId());
+			var selectedArgument = Objects.requireNonNull(tree.find(new Argument(gangland, "select", tree)));
+			var select = ArgumentUtil.getArgumentSequence(selectedArgument, gangland.getShortPrefix()) + " " +
+						 waypoint.getUsedId();
+
+			player.performCommand(select);
 		});
 
 		this.addSubArgument(confirmWaypoint);

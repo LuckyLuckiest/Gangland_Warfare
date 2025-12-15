@@ -31,10 +31,10 @@ public class GanglandDatabase extends DatabaseHandler {
 	private final WaypointTable       waypointTable;
 	private final WeaponTable         weaponTable;
 
-	public GanglandDatabase(JavaPlugin plugin) {
+	public GanglandDatabase(JavaPlugin plugin, String schema) {
 		super(plugin);
 
-		this.schema = "gangland";
+		this.schema = schema;
 		this.tables = new ArrayList<>();
 
 		this.pluginDataTable     = new PluginDataTable();
@@ -67,11 +67,11 @@ public class GanglandDatabase extends DatabaseHandler {
 	@Nullable
 	public static GanglandDatabase findInstance(DatabaseManager manager) {
 		return manager.getDatabases()
-					  .stream()
-					  .filter(handler -> handler instanceof GanglandDatabase)
-					  .map(GanglandDatabase.class::cast)
-					  .findFirst()
-					  .orElse(null);
+				.stream()
+				.filter(handler -> handler instanceof GanglandDatabase)
+				.map(GanglandDatabase.class::cast)
+				.findFirst()
+				.orElse(null);
 	}
 
 	@Override

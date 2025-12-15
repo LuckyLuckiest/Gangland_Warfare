@@ -9,20 +9,20 @@ import java.util.List;
 public class ArgumentUtil {
 
 	/**
-	 * Gets the argument sequence starting from the command "glw" till the command specified as a parameter.
+	 * Gets the argument sequence starting from the command prefix till the command specified as a parameter.
 	 *
 	 * @param argument the argument to fetch the root of
 	 *
 	 * @return the string representation of the argument
 	 */
-	public static String getArgumentSequence(Argument argument) {
+	public static String getArgumentSequence(Argument argument, String commandPrefix) {
 		List<String> sequence = new ArrayList<>();
 
 		getArgumentSequence(sequence, argument.getNode());
 
 		Collections.reverse(sequence);
 
-		return "glw " + String.join(" ", sequence) + " " + argument.getArguments()[0];
+		return String.format("%s %s %s", commandPrefix, String.join(" ", sequence), argument.getArguments()[0]);
 	}
 
 	private static void getArgumentSequence(List<String> list, Tree.Node<Argument> node) {

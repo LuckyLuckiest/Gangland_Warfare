@@ -11,7 +11,6 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
-import me.luckyraven.data.placeholder.PlaceholderHandler;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.user.User;
@@ -26,6 +25,7 @@ import me.luckyraven.util.color.Color;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
 import me.luckyraven.util.datastructure.JsonFormatter;
+import me.luckyraven.util.placeholder.PlaceholderHandler;
 import me.luckyraven.util.ray.RayTrace;
 import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.weapon.Weapon;
@@ -302,7 +302,7 @@ public final class DebugCommand extends CommandHandler {
 										 .getPermissions()
 					.stream()
 					.map(Permission::getName)
-					.filter(name -> name.startsWith("gangland"))
+					.filter(name -> name.startsWith(getGangland().getFullPrefix()))
 					.sorted(String::compareTo)
 					.toArray(String[]::new);
 			sender.sendMessage(permissions);
