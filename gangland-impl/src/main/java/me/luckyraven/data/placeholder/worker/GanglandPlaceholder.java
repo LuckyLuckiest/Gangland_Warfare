@@ -7,8 +7,6 @@ import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.account.type.Bank;
-import me.luckyraven.data.placeholder.PlaceholderHandler;
-import me.luckyraven.data.placeholder.replacer.Replacer;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.level.Level;
@@ -17,6 +15,10 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.item.unique.UniqueItem;
+import me.luckyraven.util.placeholder.PlaceholderHandler;
+import me.luckyraven.util.placeholder.effect.ConditionalFlashWrapper;
+import me.luckyraven.util.placeholder.effect.FlashPlaceholderWrapper;
+import me.luckyraven.util.placeholder.replacer.Replacer;
 import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -32,8 +34,8 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	private final GangManager         gangManager;
 	private final UniqueItemAddon     uniqueItemAddon;
 
-	public GanglandPlaceholder(Gangland gangland, Replacer.Closure closure) {
-		super(closure);
+	public GanglandPlaceholder(Gangland gangland, String prefix, Replacer.Closure closure) {
+		super(prefix, closure);
 
 		Initializer initializer = gangland.getInitializer();
 
@@ -45,6 +47,32 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 	@Override
 	public @Nullable String onRequest(OfflinePlayer player, @NotNull String parameter) {
+		if (player == null) return null;
+
+		String param = parameter.toLowerCase();
+
+		if (ConditionalFlashWrapper.isConditionalFlash(param)) {
+			return ConditionalFlashWrapper.processConditionalFlash(param, this::resolveInnerPlaceholder, player);
+		}
+
+		// check for flash effect first
+		if (FlashPlaceholderWrapper.isFlashPlaceholder(param)) {
+			return FlashPlaceholderWrapper.processFlash(param, this::resolveInnerPlaceholder, player);
+		}
+
+		return resolveInnerPlaceholder(player, param);
+	}
+
+	/**
+	 * Internal method to resolve placeholders without effects.
+	 *
+	 * @param player the player data.
+	 * @param parameter the placeholder parameter.
+	 *
+	 * @return the resolved placeholder.
+	 */
+	@Nullable
+	private String resolveInnerPlaceholder(OfflinePlayer player, @NotNull String parameter) {
 		if (player == null) return null;
 
 		String param = parameter.toLowerCase();
