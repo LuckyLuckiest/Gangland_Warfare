@@ -61,7 +61,7 @@ Board:
       3:
          Interval: 10
          Lines:
-            - "   &7Wanted: &f%gangland_user_wanted%"
+            - "   &7Wanted: %gangland_flashif:user_wanted-level>0:5:5:user_wanted%"
       4:
          Interval: 10
          Lines:
