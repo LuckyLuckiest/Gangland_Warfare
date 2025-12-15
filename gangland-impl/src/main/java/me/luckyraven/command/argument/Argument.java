@@ -46,7 +46,7 @@ public class Argument implements Cloneable {
 	@Getter(value = AccessLevel.NONE)
 	private Tree<Argument>      tree;
 	@NotNull
-	private String              permission;
+	private String              permission = "";
 
 	@Setter
 	private BiConsumer<CommandSender, String[]> executeOnPass;
@@ -160,7 +160,7 @@ public class Argument implements Cloneable {
 	 * @param sender the command sender
 	 * @param args the argument string array
 	 */
-	public void execute(CommandSender sender, String[] args) {
+	public void execute(String commandPrefix, CommandSender sender, String[] args) {
 		Argument[] modifiedArg = Arrays.stream(args).map(arg -> {
 			if (arg.toLowerCase().contains("confirm")) return new ConfirmArgument(plugin, tree);
 			return new Argument(plugin, arg, tree);
@@ -172,7 +172,7 @@ public class Argument implements Cloneable {
 			switch (argument.getState()) {
 				case SUCCESS -> argument.getArgument().executeArgument(sender, args);
 				case NO_PERMISSION -> sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
-				case NOT_FOUND -> notFound(sender, args, modifiedArg);
+				case NOT_FOUND -> notFound(commandPrefix, sender, args, modifiedArg);
 			}
 		} catch (Throwable throwable) {
 			if (throwable.getMessage() != null) sender.sendMessage(throwable.getMessage());
@@ -232,7 +232,7 @@ public class Argument implements Cloneable {
 		if (executeOnPass != null) executeOnPass.accept(sender, args);
 	}
 
-	private void notFound(CommandSender sender, String[] args, Argument[] modifiedArg) {
+	private void notFound(String commandPrefix, CommandSender sender, String[] args, Argument[] modifiedArg) {
 		StringBuilder invalidArg = new StringBuilder(MessageAddon.ARGUMENTS_WRONG.toString());
 		Argument      lastValid  = tree.traverseLastValid(modifiedArg);
 
@@ -268,7 +268,8 @@ public class Argument implements Cloneable {
 
 			String[] validArguments = Arrays.stream(args).toList().subList(0, length).toArray(String[]::new);
 
-			String commandSuggestion = ChatUtil.generateCommandSuggestion(lastInput, dictionary, "glw", validArguments);
+			String commandSuggestion = ChatUtil.generateCommandSuggestion(lastInput, dictionary, commandPrefix,
+																		  validArguments);
 
 			sender.sendMessage(ChatUtil.color(commandSuggestion));
 			break;

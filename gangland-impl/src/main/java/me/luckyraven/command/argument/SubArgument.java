@@ -26,7 +26,8 @@ public abstract class SubArgument extends Argument {
 		super(plugin, arguments, tree, null);
 		super.action = action();
 
-		setPermission(parent.getPermission() + "." + subPermission);
+		String permission = String.format("%s.%s", parent.getPermission(), subPermission);
+		setPermission(permission);
 	}
 
 	protected abstract TriConsumer<Argument, CommandSender, String[]> action();
