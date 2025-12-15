@@ -1,6 +1,7 @@
 package me.luckyraven.scoreboard;
 
 import me.luckyraven.scoreboard.driver.DriverHandler;
+import me.luckyraven.util.placeholder.effect.FlashPlaceholderWrapper;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -13,7 +14,11 @@ public class Scoreboard {
 		this.driver = driver;
 
 		// repeating the task each tick
-		this.timer = new RepeatingTimer(plugin, 0L, 1L, time -> this.driver.update());
+		this.timer = new RepeatingTimer(plugin, 0L, 1L, time -> {
+			FlashPlaceholderWrapper.setCurrentTick(time.getTickCount());
+
+			this.driver.update();
+		});
 	}
 
 	public void start() {
