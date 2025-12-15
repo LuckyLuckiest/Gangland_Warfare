@@ -128,7 +128,7 @@ public final class LevelCommand extends CommandHandler {
 		experience.addSubArgument(expAdd);
 		experience.addSubArgument(expRemove);
 
-		String levelPerm = getPermission() + ".level";
+		String levelPerm = getPermission() + ".level_value";
 		getArgument().addPermission(levelPerm);
 
 		Argument levelAdd = new Argument(getGangland(), "add", getArgumentTree(), (argument, sender, args) -> {
