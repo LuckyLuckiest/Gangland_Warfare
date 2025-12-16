@@ -41,8 +41,10 @@ public final class DownloadPluginCommand extends CommandHandler {
 		containsUpdate.put(commandSender, newUpdate);
 
 		if (newUpdate) {
-			commandSender.sendMessage(
-					ChatUtil.commandMessage("There is a new update, please type:\n&7/glw update download"));
+			String message = ChatUtil.commandMessage(
+					"There is a new update, please type:\n&7/" + getGangland().getShortPrefix() + " update download");
+
+			commandSender.sendMessage(message);
 		} else {
 			commandSender.sendMessage(ChatUtil.commandMessage("You are running the latest version."));
 		}

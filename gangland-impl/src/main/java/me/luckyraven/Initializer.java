@@ -27,13 +27,14 @@ import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.permission.PermissionWorker;
-import me.luckyraven.data.placeholder.replacer.Replacer;
+import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
 import me.luckyraven.data.plugin.PluginManager;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.teleportation.WaypointTeleport;
+import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHandler;
 import me.luckyraven.database.DatabaseManager;
@@ -49,7 +50,10 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
-import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
+import me.luckyraven.inventory.condition.ConditionEvaluator;
+import me.luckyraven.item.ItemParserManager;
+import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
@@ -61,6 +65,7 @@ import me.luckyraven.sign.service.SignInteraction;
 import me.luckyraven.sign.service.SignInteractionService;
 import me.luckyraven.util.autowire.DependencyContainer;
 import me.luckyraven.util.listener.ListenerPriority;
+import me.luckyraven.util.placeholder.replacer.Replacer;
 import me.luckyraven.weapon.WeaponManager;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
@@ -87,8 +92,7 @@ public final class Initializer {
 	private final InformationManager informationManager;
 	private final VersionSetup       versionSetup;
 	private final CompatibilitySetup compatibilitySetup;
-
-	private final String prefix;
+	private final PlaceholderService placeholderService;
 
 	// on plugin enable
 	// Managers
@@ -108,11 +112,13 @@ public final class Initializer {
 	private WeaponManager              weaponManager;
 	private SignManager                signManager;
 	private EntityMarkManager          entityMarkManager;
+	private ItemParserManager          itemParserManager;
 	// Addons
 	private SettingAddon               settingAddon;
 	private ScoreboardAddon            scoreboardAddon;
 	private AmmunitionAddon            ammunitionAddon;
 	private WeaponAddon                weaponAddon;
+	private UniqueItemAddon            uniqueItemAddon;
 	// Loader
 	private LanguageLoader             languageLoader;
 	private InventoryLoader            inventoryLoader;
@@ -123,6 +129,8 @@ public final class Initializer {
 	private GanglandPlaceholder        placeholder;
 	// Compatibility
 	private CompatibilityWorker        compatibilityWorker;
+	// Condition Evaluator
+	private ConditionEvaluator         evaluator;
 
 	public Initializer(Gangland gangland) {
 		this.gangland = gangland;
@@ -134,7 +142,8 @@ public final class Initializer {
 		this.versionSetup       = new VersionSetup();
 		this.compatibilitySetup = new CompatibilitySetup(versionSetup);
 
-		this.prefix = "glw";
+		this.placeholderService = new PlaceholderService(gangland);
+		User.setPlaceholder(placeholderService);
 	}
 
 	/**
@@ -147,7 +156,9 @@ public final class Initializer {
 		compatibilityWorker = new CompatibilityWorker(gangland.getViaAPI(), compatibilitySetup);
 
 		// permission manager
-		permissionManager = new PermissionManager(this.gangland, new PermissionWorker("gangland"));
+		var permissionWorker = new PermissionWorker(gangland.getFullPrefix());
+
+		permissionManager = new PermissionManager(permissionWorker);
 
 		// File
 		fileManager = new FileManager(gangland);
@@ -162,7 +173,7 @@ public final class Initializer {
 		Set<Permission> permissions = Bukkit.getPluginManager().getPermissions();
 		Set<String> ganglandPermissions = permissions.stream()
 				.map(Permission::getName)
-				.filter(permission -> permission.startsWith("gangland"))
+				.filter(permission -> permission.startsWith(gangland.getFullPrefix()))
 				.collect(Collectors.toSet());
 
 		permissionManager.addAllPermissions(ganglandPermissions);
@@ -234,7 +245,7 @@ public final class Initializer {
 		SignFormatRegistry   formatRegistry   = new SignFormatRegistry();
 		SignFormatterService formatterService = new SignFormatterService(formatRegistry);
 
-		String signPrefix = prefix + "-";
+		String signPrefix = gangland.getShortPrefix() + "-";
 
 		SignInteraction signInteraction = new SignInteraction(signPrefix, registry, formatterService);
 
@@ -242,7 +253,11 @@ public final class Initializer {
 
 		signManager.initialize();
 
+		// entity mark manager
 		entityMarkManager = new EntityMarkManager(gangland);
+
+		// item parser
+		itemParserManager = new ItemParserManager(weaponManager, ammunitionAddon);
 
 		// Events
 		listenerManager = new ListenerManager(gangland);
@@ -254,7 +269,7 @@ public final class Initializer {
 		commands(gangland);
 
 		// Placeholder
-		placeholder = new GanglandPlaceholder(gangland, Replacer.Closure.PERCENT);
+		placeholder = new GanglandPlaceholder(gangland, gangland.getFullPrefix(), Replacer.Closure.PERCENT);
 	}
 
 	/**
@@ -263,9 +278,18 @@ public final class Initializer {
 	 * plugin functionality work.
 	 */
 	public void files() {
-		fileManager.addFile(new FileHandler(gangland, "settings", ".yml"), true);
-		fileManager.addFile(new FileHandler(gangland, "scoreboard", ".yml"), true);
-		fileManager.addFile(new FileHandler(gangland, "ammunition", ".yml"), true);
+		FileHandler settingsFile = new FileHandler(gangland, "settings", ".yml");
+		fileManager.addFile(settingsFile, true);
+
+		FileHandler scoreboardFile = new FileHandler(gangland, "scoreboard", ".yml");
+		fileManager.addFile(scoreboardFile, true);
+
+		FileHandler ammunitionFile = new FileHandler(gangland, "ammunition", ".yml");
+		fileManager.addFile(ammunitionFile, true);
+
+		FileHandler uniqueItemsFile = new FileHandler(gangland, "unique_items", ".yml");
+		fileManager.addFile(uniqueItemsFile, true);
+
 		scoreboardManager = new ScoreboardManager(gangland);
 
 		addonsLoader();
@@ -275,16 +299,31 @@ public final class Initializer {
 	 * Helps the plugin features to properly load.
 	 */
 	public void addonsLoader() {
-		settingAddon   = new SettingAddon(fileManager);
-		languageLoader = new LanguageLoader(gangland);
+		// initialize settings addon
+		settingAddon = new SettingAddon(fileManager);
+		settingAddon.initialize();
 
+		// initialize language addon
+		languageLoader = new LanguageLoader(gangland);
 		languageLoader.initialize();
 
 		MessageAddon.setMessageConfiguration(languageLoader.getMessage());
 
+		// initialize scoreboard addon
 		scoreboardLoader();
+
+		// initialize inventory addon
 		inventoryLoader();
+
+		// initialize weapon addon
 		weaponLoader();
+
+		// initialize unique item addon
+		if (uniqueItemAddon == null) {
+			uniqueItemAddon = new UniqueItemAddon(permissionManager, fileManager);
+		}
+
+		uniqueItemAddon.initialize();
 	}
 
 	/**
@@ -298,6 +337,8 @@ public final class Initializer {
 		// clear the weapon addons
 		weaponAddon.clear();
 		weaponLoader.clear();
+		// clear the unique item addons
+		uniqueItemAddon.clear();
 	}
 
 	/**
@@ -313,6 +354,10 @@ public final class Initializer {
 	public void inventoryLoader() {
 		InventoryAddon.setItemSourceProvider(gangland);
 
+		evaluator = new BooleanExpressionEvaluator(placeholderService);
+
+		InventoryAddon.setConditionEvaluator(evaluator);
+
 		inventoryLoader = new InventoryLoader(gangland);
 
 		inventoryLoader.addExpectedFile(new FileHandler(gangland, "gang_info", "inventory", ".yml"));
@@ -323,7 +368,11 @@ public final class Initializer {
 	}
 
 	public void weaponLoader() {
-		ammunitionAddon = new AmmunitionAddon(fileManager);
+		if (ammunitionAddon == null) {
+			ammunitionAddon = new AmmunitionAddon(fileManager);
+		}
+
+		ammunitionAddon.initialize();
 
 		if (weaponAddon == null) {
 			weaponAddon = new WeaponAddon();
@@ -332,7 +381,6 @@ public final class Initializer {
 		weaponLoader = new WeaponLoader(gangland);
 
 		weaponLoader.addExpectedFile(new FileHandler(gangland, "rifle", "weapon", ".yml"));
-
 		weaponLoader.initialize();
 	}
 
@@ -351,7 +399,7 @@ public final class Initializer {
 		else type = DatabaseHandler.SQLITE;
 
 		// Primary database
-		GanglandDatabase ganglandDatabase = new GanglandDatabase(gangland);
+		GanglandDatabase ganglandDatabase = new GanglandDatabase(gangland, gangland.getFullPrefix());
 		ganglandDatabase.setType(type);
 		databaseManager.addDatabase(ganglandDatabase);
 	}
@@ -375,13 +423,16 @@ public final class Initializer {
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 
 		// waypoint
-		listenerManager.addEvent(new WaypointTeleport(new Waypoint("dummy")), ListenerPriority.NORMAL);
+		Waypoint         dummy         = new Waypoint("dummy", gangland.getFullPrefix());
+		WaypointTeleport dummyTeleport = new WaypointTeleport(dummy);
+
+		listenerManager.addEvent(dummyTeleport, ListenerPriority.NORMAL);
 		// inventory
-		new InventoryHandler(gangland, "dummy", 9, "dummy_inventory", false);
+//		new InventoryHandler(gangland, "dummy", 9, "dummy_inventory", false);
 	}
 
 	private void commands(Gangland gangland) {
-		PluginCommand command = this.gangland.getCommand(prefix);
+		PluginCommand command = this.gangland.getCommand(gangland.getShortPrefix());
 
 		if (command == null) return;
 

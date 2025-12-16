@@ -202,8 +202,11 @@ public final class GangCommand extends CommandHandler {
 		// description
 		gui.setItem(15, XMaterial.PAPER.get(), "&bDescription", new ArrayList<>(List.of("&e" + gang.getDescription())),
 					false, false, (player, inventory, items) -> {
-					player.performCommand(ArgumentUtil.getArgumentSequence(Objects.requireNonNull(
-							getArgumentTree().find(new Argument(getGangland(), "desc", getArgumentTree())))));
+					var desc = Objects.requireNonNull(
+							getArgumentTree().find(new Argument(getGangland(), "desc", getArgumentTree())));
+					var argumentSequence = ArgumentUtil.getArgumentSequence(desc, getGangland().getShortPrefix());
+
+					player.performCommand(argumentSequence);
 				});
 
 		Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
@@ -295,8 +298,11 @@ public final class GangCommand extends CommandHandler {
 		gui.setItem(31, ColorUtil.getMaterialByColor(gang.getColor(), MaterialType.WOOL.name()), "&bColor",
 					new ArrayList<>(List.of("&e" + gang.getColor().toLowerCase().replace("_", " "))), false, false,
 					(player, inventory, item) -> {
-						player.performCommand(ArgumentUtil.getArgumentSequence(Objects.requireNonNull(
-								getArgumentTree().find(new Argument(getGangland(), "color", getArgumentTree())))));
+						var color = Objects.requireNonNull(
+								getArgumentTree().find(new Argument(getGangland(), "color", getArgumentTree())));
+						var argumentSequence = ArgumentUtil.getArgumentSequence(color, getGangland().getShortPrefix());
+
+						player.performCommand(argumentSequence);
 					});
 
 		gui.setItem(33, ColorUtil.getMaterialByColor(gang.getColor(), MaterialType.BANNER.name()), "&bStatistics",

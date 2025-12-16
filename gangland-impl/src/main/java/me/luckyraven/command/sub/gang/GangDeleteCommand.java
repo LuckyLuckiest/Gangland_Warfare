@@ -91,14 +91,14 @@ class GangDeleteCommand extends SubArgument {
 			if (tail == null) return;
 
 			if (!member.getRank().match(tail.getUsedId())) {
-				player.sendMessage(MessageAddon.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
+				user.sendMessage(MessageAddon.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
 				return;
 			}
 
 			if (confirmDelete.isConfirmed()) return;
 
 			confirmDelete.setConfirmed(true);
-			player.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "delete"}));
+			user.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "delete"}));
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
 				if (time.getTimeLeft() % 20 != 0) return;
@@ -129,7 +129,7 @@ class GangDeleteCommand extends SubArgument {
 			Member       member = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -141,7 +141,7 @@ class GangDeleteCommand extends SubArgument {
 			if (tail == null) return;
 
 			if (!member.getRank().match(tail.getUsedId())) {
-				player.sendMessage(MessageAddon.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
+				user.sendMessage(MessageAddon.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
 				return;
 			}
 
@@ -167,8 +167,10 @@ class GangDeleteCommand extends SubArgument {
 			GangAlliesTable gangAlliesTable = initializer.getInstanceFromTables(GangAlliesTable.class, tables);
 
 			// change the online users gang id
+			String depositMoney = MessageAddon.DEPOSIT_MONEY_PLAYER.toString();
 			for (User<Player> gangUser : gangOnlineMembers) {
-				Member mem = memberManager.getMember(gangUser.getUser().getUniqueId());
+				Player currentPlayer = gangUser.getUser();
+				Member mem           = memberManager.getMember(currentPlayer.getUniqueId());
 
 				gang.removeMember(gangUser, mem);
 
@@ -181,16 +183,11 @@ class GangDeleteCommand extends SubArgument {
 				gangUser.getEconomy().deposit(amount);
 
 				// inform the online users
-				gangUser.getUser()
-						.sendMessage(MessageAddon.KICKED_FROM_GANG.toString(), MessageAddon.GANG_REMOVED.toString()
-																										.replace(
-																												"%gang%",
-																												deleteGangName.get(
-																																	  user)
-																															  .get()),
-									 MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
-																	  .replace("%amount%",
-																			   SettingAddon.formatDouble(amount)));
+				String kickedFromGang      = MessageAddon.KICKED_FROM_GANG.toString();
+				String gangRemoved         = MessageAddon.GANG_REMOVED.toString();
+				String gangRemovedReplace  = gangRemoved.replace("%gang%", deleteGangName.get(user).get());
+				String depositMoneyReplace = depositMoney.replace("%amount%", SettingAddon.formatDouble(amount));
+				gangUser.sendMessage(kickedFromGang, gangRemovedReplace, depositMoneyReplace);
 			}
 
 			helper.runQueriesAsync(database -> {
@@ -199,8 +196,7 @@ class GangDeleteCommand extends SubArgument {
 				List<Object[]> gangUsers = allUsers.parallelStream()
 												   .filter(obj -> Arrays.stream(obj)
 														   .anyMatch(o -> o.toString()
-																		   .equals(String.valueOf(
-																				   gang.getId()))))
+																		   .equals(String.valueOf(gang.getId()))))
 												   .toList();
 
 				// update offline users
@@ -232,9 +228,7 @@ class GangDeleteCommand extends SubArgument {
 			double amount = SettingAddon.getGangCreateFee() / 4;
 
 			user.getEconomy().deposit(amount);
-			player.sendMessage(MessageAddon.DEPOSIT_MONEY_PLAYER.toString()
-																.replace("%amount%",
-																		 SettingAddon.formatDouble(amount)));
+			user.sendMessage(depositMoney.replace("%amount%", SettingAddon.formatDouble(amount)));
 
 			// remove the gang information
 			helper.runQueriesAsync(database -> {

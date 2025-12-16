@@ -130,12 +130,12 @@ public final class TeleportCommand extends CommandHandler {
 									   waypoint.getCost() + "&7.";
 			String confirmationMessage = "&7To confirm the command re-type it again.";
 
-			player.sendMessage(ChatUtil.commandMessage(teleportationCost));
-			player.sendMessage(ChatUtil.color(confirmationMessage));
+			user.sendMessage(ChatUtil.commandMessage(teleportationCost));
+			user.sendMessage(ChatUtil.color(confirmationMessage));
 		} else {
-			if (user.getEconomy().getBalance() < waypoint.getCost()) player.sendMessage(
-					MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
-			else {
+			if (user.getEconomy().getBalance() < waypoint.getCost()) {
+				user.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
+			} else {
 				reconfirm.remove(player);
 				CountdownTimer timer = reconfirmTimer.get(player);
 
@@ -156,7 +156,7 @@ public final class TeleportCommand extends CommandHandler {
 		}
 
 		try {
-			String cooldownBypass = "gangland.command.teleport.cooldown_bypass";
+			var cooldownBypass = String.format("%s.command.%s.force_rank", getGangland().getFullPrefix(), getLabel());
 			if (user.getUser().hasPermission(cooldownBypass)) WaypointTeleport.removeCooldown(user.getUser());
 
 			waypoint.getWaypointTeleport().teleport(getGangland(), user, (u, t) -> {
@@ -177,7 +177,7 @@ public final class TeleportCommand extends CommandHandler {
 						String string  = MessageAddon.WITHDRAW_MONEY_PLAYER.toString();
 						String replace = string.replace("%amount%", SettingAddon.formatDouble(waypoint1.getCost()));
 
-						player.sendMessage(replace);
+						user.sendMessage(replace);
 					}
 
 					String string = MessageAddon.WAYPOINT_TELEPORT.toString();
@@ -188,7 +188,7 @@ public final class TeleportCommand extends CommandHandler {
 
 				}
 
-				player.sendMessage(message);
+				user.sendMessage(message);
 			});
 		} catch (IllegalTeleportException exception) {
 			CountdownTimer timer = WaypointTeleport.getCooldownTimer(user.getUser());

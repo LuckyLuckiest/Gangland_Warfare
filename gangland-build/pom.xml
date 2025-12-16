@@ -6,7 +6,7 @@
     <parent>
         <groupId>me.luckyraven</groupId>
         <artifactId>gangland_warfare</artifactId>
-        <version>0.0.6-DEV</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>gangland-build</artifactId>
@@ -122,32 +122,6 @@
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-impl</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
-        <!-- Include Core Utilities -->
-
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>scoreboard-api</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-util</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>plugin-file</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>plugin-exception</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 

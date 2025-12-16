@@ -2,6 +2,7 @@ package me.luckyraven.weapon.configuration;
 
 import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.exception.PluginException;
+import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.weapon.ammo.Ammunition;
 import org.apache.logging.log4j.LogManager;
@@ -17,19 +18,27 @@ public class AmmunitionAddon implements Comparator<Ammunition> {
 	private static final Logger logger = LogManager.getLogger(AmmunitionAddon.class.getSimpleName());
 
 	private final Map<String, Ammunition> ammunition;
+	private final FileManager             fileManager;
 
 	public AmmunitionAddon(FileManager fileManager) {
-		this.ammunition = new HashMap<>();
+		this.ammunition  = new HashMap<>();
+		this.fileManager = fileManager;
+	}
 
-		FileConfiguration ammunition;
+	public void initialize() {
+		FileConfiguration fileConfiguration;
 		try {
-			fileManager.checkFileLoaded("ammunition");
-			ammunition = Objects.requireNonNull(fileManager.getFile("ammunition")).getFileConfiguration();
+			String fileName = "ammunition";
+
+			fileManager.checkFileLoaded(fileName);
+
+			FileHandler file = Objects.requireNonNull(fileManager.getFile(fileName));
+			fileConfiguration = file.getFileConfiguration();
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
 
-		registerAmmunition(ammunition);
+		registerAmmunition(fileConfiguration);
 	}
 
 	public Ammunition getAmmunition(String key) {
@@ -56,15 +65,15 @@ public class AmmunitionAddon implements Comparator<Ammunition> {
 		for (String key : ammunition.getKeys(false)) {
 			ConfigurationSection section = ammunition.getConfigurationSection(key);
 
-			if (section == null) return;
+			if (section == null) continue;
 
 			String name           = section.getString("Name");
 			String materialString = section.getString("Material");
 
-			if (materialString == null || materialString.isEmpty()) return;
+			if (materialString == null || materialString.isEmpty()) continue;
 
-			Optional<XMaterial> xMaterialOptional = XMaterial.matchXMaterial(materialString);
-			XMaterial           xMaterial         = xMaterialOptional.orElse(XMaterial.IRON_PICKAXE);
+			var xMaterialOptional = XMaterial.matchXMaterial(materialString);
+			var xMaterial         = xMaterialOptional.orElse(XMaterial.IRON_PICKAXE);
 
 			List<String> lore = section.getStringList("Lore");
 

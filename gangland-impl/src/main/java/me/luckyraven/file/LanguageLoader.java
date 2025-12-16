@@ -37,7 +37,7 @@ public class LanguageLoader {
 		try {
 			message = loadMessage(gangland.getInitializer().getFileManager());
 		} catch (IOException | InvalidConfigurationException exception) {
-			this.gangland.getLogger().warning(UnhandledError.FILE_LOADER_ERROR + ": " + exception.getMessage());
+			logger.warn("{}: {}", UnhandledError.FILE_LOADER_ERROR, exception.getMessage());
 
 			Set<String>   files     = getMessageFiles();
 			StringBuilder languages = new StringBuilder();

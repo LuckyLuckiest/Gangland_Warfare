@@ -9,12 +9,13 @@ import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.level.Level;
-import me.luckyraven.feature.phone.Phone;
 import me.luckyraven.feature.wanted.Wanted;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.service.InventoryRegistry;
 import me.luckyraven.scoreboard.Scoreboard;
+import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.Placeholder;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
@@ -30,6 +31,9 @@ import java.util.*;
 @Getter
 public class User<T extends OfflinePlayer> {
 
+	@Setter
+	private static Placeholder placeholder;
+
 	private final T                     user;
 	private final UUID                  uuid;
 	private final Bounty                bounty;
@@ -37,10 +41,9 @@ public class User<T extends OfflinePlayer> {
 	private final Wanted                wanted;
 	private final EconomyHandler        economy;
 	private final List<Account<?, ?>>   linkedAccounts;
-	private final Set<InventoryHandler> inventories, specialInventories;
+	private final Set<InventoryHandler> inventories;
 
 	private @Setter int kills, deaths, mobKills, gangId;
-	private @Setter Phone                phone;
 	private @Setter Scoreboard           scoreboard;
 	private @Setter PermissionAttachment permissionAttachment;
 
@@ -53,17 +56,14 @@ public class User<T extends OfflinePlayer> {
 	 * @param user the user
 	 */
 	public User(T user) {
-		this.user               = user;
-		this.uuid               = user.getUniqueId();
-		this.bounty             = new Bounty(SettingAddon.getBountyEachKillValue(),
-											 SettingAddon.getBountyTimerMultiple());
-		this.level              = new Level();
-		this.wanted             = new Wanted(SettingAddon.getWantedLevelIncrement(),
-											 SettingAddon.getWantedMaximumLevel());
-		this.economy            = new EconomyHandler(this);
-		this.linkedAccounts     = new ArrayList<>();
-		this.inventories        = new HashSet<>();
-		this.specialInventories = new HashSet<>();
+		this.user           = user;
+		this.uuid           = user.getUniqueId();
+		this.bounty         = new Bounty(SettingAddon.getBountyEachKillValue(), SettingAddon.getBountyTimerMultiple());
+		this.level          = new Level();
+		this.wanted         = new Wanted(SettingAddon.getWantedLevelIncrement(), SettingAddon.getWantedMaximumLevel());
+		this.economy        = new EconomyHandler(this);
+		this.linkedAccounts = new ArrayList<>();
+		this.inventories    = new HashSet<>();
 
 		this.kills   = this.deaths = this.mobKills = 0;
 		this.gangId  = -1;
@@ -113,12 +113,17 @@ public class User<T extends OfflinePlayer> {
 		linkedAccounts.remove(account);
 	}
 
-	public void addSpecialInventory(InventoryHandler inventoryHandler) {
-		removeInventory(inventoryHandler.getTitle().getKey());
+	public void sendMessage(String text) {
+		if (!(user instanceof Player player)) return;
 
-		specialInventories.add(inventoryHandler);
+		String placeholder = User.placeholder.convert(player, text);
+		String message     = ChatUtil.color(placeholder);
 
-		InventoryRegistry.getInstance().registerInventory(uuid, inventoryHandler);
+		player.sendMessage(message);
+	}
+
+	public void sendMessage(String... texts) {
+		for (String text : texts) sendMessage(text);
 	}
 
 	/**
@@ -194,14 +199,6 @@ public class User<T extends OfflinePlayer> {
 	 */
 	public List<InventoryHandler> getInventories() {
 		return inventories.stream().toList();
-	}
-
-	public List<InventoryHandler> getSpecialInventories() {
-		return specialInventories.stream().toList();
-	}
-
-	public void clearSpecialInventories() {
-		specialInventories.clear();
 	}
 
 	/**

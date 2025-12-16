@@ -5,6 +5,8 @@ import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
+import me.luckyraven.weapon.events.WeaponReloadEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -34,6 +36,11 @@ public class WeaponDropped implements Listener {
 		Weapon    weapon    = weaponService.validateAndGetWeapon(player, itemStack);
 
 		if (weapon == null) return;
+
+		var newEvent = new WeaponReloadEvent(weapon);
+		Bukkit.getPluginManager().callEvent(newEvent);
+
+		if (newEvent.isCancelled()) return;
 
 		// no interruption while the weapon is reloading
 		if (weapon.isReloading()) {

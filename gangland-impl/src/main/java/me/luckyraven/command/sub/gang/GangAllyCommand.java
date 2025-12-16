@@ -134,7 +134,7 @@ class GangAllyCommand extends SubArgument {
 			try {
 				id = Integer.parseInt(value);
 			} catch (NumberFormatException exception) {
-				player.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", value));
+				user.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", value));
 				return;
 			}
 
@@ -144,7 +144,7 @@ class GangAllyCommand extends SubArgument {
 			Gang receiving = gangManager.getGang(id);
 
 			if (receiving == null) {
-				player.sendMessage(MessageAddon.GANG_DOESNT_EXIST.toString());
+				user.sendMessage(MessageAddon.GANG_DOESNT_EXIST.toString());
 				return;
 			}
 
@@ -152,12 +152,12 @@ class GangAllyCommand extends SubArgument {
 				case "request" -> {
 					// check if they are allied before proceeding
 					if (receiving.isAlly(sending)) {
-						player.sendMessage(MessageAddon.ALREADY_ALLIED_GANG.toString());
+						user.sendMessage(MessageAddon.ALREADY_ALLIED_GANG.toString());
 						return;
 					}
 
 					if (gangsIdMap.containsKey(receiving)) {
-						player.sendMessage(MessageAddon.GANG_ALLIANCE_ALREADY_SENT.toString());
+						user.sendMessage(MessageAddon.GANG_ALLIANCE_ALREADY_SENT.toString());
 						return;
 					}
 
@@ -281,7 +281,7 @@ class GangAllyCommand extends SubArgument {
 					.stream().filter(gang -> gang == userGang).findFirst().orElse(null);
 
 			if (receiving == null) {
-				player.sendMessage(MessageAddon.NO_GANG_INVITATION.toString());
+				user.sendMessage(MessageAddon.NO_GANG_INVITATION.toString());
 				return;
 			}
 
@@ -289,7 +289,7 @@ class GangAllyCommand extends SubArgument {
 
 			// check if they are allied before proceeding
 			if (receiving.isAlly(sending)) {
-				player.sendMessage(MessageAddon.ALREADY_ALLIED_GANG.toString());
+				user.sendMessage(MessageAddon.ALREADY_ALLIED_GANG.toString());
 				return;
 			}
 
@@ -345,7 +345,7 @@ class GangAllyCommand extends SubArgument {
 					.stream().filter(gang -> gang == userGang).findFirst().orElse(null);
 
 			if (receiving == null) {
-				player.sendMessage(MessageAddon.NO_GANG_INVITATION.toString());
+				user.sendMessage(MessageAddon.NO_GANG_INVITATION.toString());
 				return;
 			}
 
@@ -353,7 +353,7 @@ class GangAllyCommand extends SubArgument {
 
 			// check if they are allied before proceeding
 			if (receiving.isAlly(sending)) {
-				player.sendMessage(MessageAddon.ALREADY_ALLIED_GANG.toString());
+				user.sendMessage(MessageAddon.ALREADY_ALLIED_GANG.toString());
 				return;
 			}
 

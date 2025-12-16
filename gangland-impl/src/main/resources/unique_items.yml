@@ -1,0 +1,43 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     / ________/      \_____   _____/      / __ \         | #
+# |    | /                     | |           / /  \ \        | #
+# |    | |  _______            | |          / /____\ \       | #
+# |    | |  \_____ \           | |         / ________ \      | #
+# |    | \_______/ ||          | |        / /        \ \     | #
+# |     \__________/           |_|       /_/          \_\    | #
+# |                                                          | #
+# |                  File: unique_items.yml                  | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+
+# A unique item tag is added based on this key, which in this case is 'phone'.
+phone:
+   Permission: "gangland.uniqueitem.phone"
+   # The material type of this unique item.
+   Material: COMPASS
+   # The display name of this unique item.
+   Name: "&6&k||| &8&lPhone &6&k|||"
+   # The lore of this unique item.
+   Lore:
+      - "&7Your personal communication device"
+      - "&7Right-click to open"
+   # The inventory configuration of this unique item.
+   Inventory:
+      # Adds the item to the player's inventory when they join the server.
+      Add_On_Join: true
+      # Adds the item to the player's inventory when they respawn.
+      Add_On_Respawn: true
+      # Drops the item on player death.
+      Drop_On_Death: false
+      # Allows the player to have multiple of this item in their inventory.
+      Allow_Duplicates: false
+      # The slot of the item in the inventory.
+      Slot: 8
+      # Overrides the item in the slot of the item in the inventory.
+      Overrides: false
+      # The item can be moved around the inventory.
+      Movable: true
+      # The item cannot be dropped.
+      Droppable: false

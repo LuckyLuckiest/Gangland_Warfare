@@ -8,7 +8,6 @@ import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -22,11 +21,11 @@ public final class BankCommand extends CommandHandler {
 		super(gangland, "bank", true);
 
 		List<CommandInformation> list = getCommands().entrySet()
-													 .stream()
-													 .filter(entry -> entry.getKey().startsWith("bank"))
-													 .sorted(Map.Entry.comparingByKey())
-													 .map(Map.Entry::getValue)
-													 .toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("bank"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -51,10 +50,10 @@ public final class BankCommand extends CommandHandler {
 			return;
 		}
 
-		player.sendMessage(ChatUtil.color(String.format("&6%s&7 bank information", player.getName()),
-										  String.format("&7%s&8: &a%s", "Name", bank.getName()),
-										  String.format("&7%s&8: &a%s%s", "Balance", SettingAddon.getMoneySymbol(),
-														SettingAddon.formatDouble(bank.getEconomy().getBalance()))));
+		user.sendMessage(String.format("&6%s&7 bank information", player.getName()),
+						 String.format("&7%s&8: &a%s", "Name", bank.getName()),
+						 String.format("&7%s&8: &a%s%s", "Balance", SettingAddon.getMoneySymbol(),
+									   SettingAddon.formatDouble(bank.getEconomy().getBalance())));
 	}
 
 	@Override

@@ -98,9 +98,9 @@ class WaypointDeleteCommand extends SubArgument {
 			// inform the player
 			sender.sendMessage(ChatUtil.commandMessage("Removed the waypoint!"));
 
-			gangland.getInitializer()
-					.getPermissionManager()
-					.removePermission("gangland.waypoint." + waypoint.getUsedId(), true);
+			String format = String.format("%s.waypoint.%d", gangland.getFullPrefix(), waypoint.getUsedId());
+
+			gangland.getInitializer().getPermissionManager().removePermission(format, true);
 
 			waypointManager.remove(waypoint);
 			deleteWaypointId.remove(sender);

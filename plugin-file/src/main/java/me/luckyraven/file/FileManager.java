@@ -63,20 +63,28 @@ public class FileManager {
 	}
 
 	public void checkFileLoaded(String name) throws IOException {
-		FileHandler file = getFile(name);
-		if (file == null) throw new FileNotFoundException(String.format("%s does not exist!", name));
-		if (!file.isLoaded()) throw new IOException(String.format("%s file is not loaded!", name));
+		// remove the extension
+		String cleanedName;
+
+		if (name.contains(".")) cleanedName = name.substring(0, name.lastIndexOf('.'));
+		else cleanedName = name;
+
+		FileHandler file = getFile(cleanedName);
+
+		if (file == null) throw new FileNotFoundException(String.format("%s does not exist!", cleanedName));
+		if (!file.isLoaded()) throw new IOException(String.format("%s file is not loaded!", cleanedName));
 	}
 
 	public void reloadFiles() {
-		for (FileHandler file : files)
+		for (FileHandler file : files) {
 			try {
 				file.reloadData();
 			} catch (IOException exception) {
-				String format = String.format(UnhandledError.FILE_LOADER_ERROR + " %s.%s: %s", file.getName(),
+				String format = String.format("%s %s.%s: %s", UnhandledError.FILE_LOADER_ERROR, file.getName(),
 											  file.getFileType(), exception.getMessage());
 				logger.warn(format);
 			}
+		}
 	}
 
 	public YamlConfiguration loadFromResources(String resourceFile) throws IOException, InvalidConfigurationException {

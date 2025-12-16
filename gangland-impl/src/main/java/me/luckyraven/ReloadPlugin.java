@@ -12,17 +12,18 @@ import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.*;
-import me.luckyraven.feature.phone.Phone;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
 import me.luckyraven.scoreboard.Scoreboard;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.driver.DriverHandler;
+import me.luckyraven.util.item.unique.UniqueItemUtil;
 import me.luckyraven.weapon.WeaponManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -170,6 +171,11 @@ public final class ReloadPlugin {
 
 		if (resetCache) {
 			for (User<Player> user : userManager.getUsers().values()) {
+				// stop the timers
+				user.getWanted().stopTimer();
+				user.getBounty().stopTimer();
+
+				// stop scoreboard
 				if (user.getScoreboard() == null) continue;
 
 				user.getScoreboard().end();
@@ -179,10 +185,11 @@ public final class ReloadPlugin {
 			userManager.clear();
 		}
 
-		List<Table<?>> tables      = ganglandDatabase.getTables();
-		UserTable      userTable   = initializer.getInstanceFromTables(UserTable.class, tables);
-		BankTable      bankTable   = initializer.getInstanceFromTables(BankTable.class, tables);
-		MemberTable    memberTable = initializer.getInstanceFromTables(MemberTable.class, tables);
+		List<Table<?>>  tables          = ganglandDatabase.getTables();
+		UserTable       userTable       = initializer.getInstanceFromTables(UserTable.class, tables);
+		BankTable       bankTable       = initializer.getInstanceFromTables(BankTable.class, tables);
+		MemberTable     memberTable     = initializer.getInstanceFromTables(MemberTable.class, tables);
+		UniqueItemAddon uniqueItemAddon = initializer.getUniqueItemAddon();
 
 		// get the online users
 		for (Player player : Bukkit.getOnlinePlayers()) {
@@ -190,12 +197,18 @@ public final class ReloadPlugin {
 
 			if (onlineUser != null) continue;
 
-			User<Player> newUser = new User<>(player);
-			Phone        phone   = new Phone(gangland, newUser, SettingAddon.getPhoneName());
+			var newUser = new User<>(player);
 
-			if (SettingAddon.isPhoneEnabled()) {
-				newUser.setPhone(phone);
-				if (!Phone.hasPhone(player)) phone.addPhoneToInventory(player);
+			// add all the unique items
+			var uniqueItems = uniqueItemAddon.getUniqueItems();
+
+			for (var uniqueItem : uniqueItems.values()) {
+				if (!uniqueItem.isAddOnJoin()) continue;
+				if (!uniqueItem.isAddToInventory()) continue;
+
+				if (UniqueItemUtil.hasUniqueItem(player, uniqueItem) && !uniqueItem.isAllowDuplicates()) continue;
+
+				uniqueItem.addItemToInventory(player);
 			}
 
 			initializer.getUserManager().initializeUserData(newUser, userTable, bankTable);

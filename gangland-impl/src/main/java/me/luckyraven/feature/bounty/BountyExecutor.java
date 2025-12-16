@@ -4,6 +4,7 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.feature.Executor;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.timer.Timer;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -51,7 +52,7 @@ public class BountyExecutor extends Executor {
 		event.setAmountApplied(amount - currentBounty);
 
 		// call the event
-		getPlugin().getServer().getPluginManager().callEvent(event);
+		Bukkit.getPluginManager().callEvent(event);
 
 		if (event.isCancelled()) return;
 

@@ -12,6 +12,8 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.permissions.Permission;
@@ -23,7 +25,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -32,16 +33,21 @@ public class Argument implements Cloneable {
 
 	public static final String OPTIONAL_ARGUMENT = "?";
 
+	private static final Logger logger = LogManager.getLogger(Argument.class.getSimpleName());
+
 	private final boolean    displayAllArguments;
 	@Getter(value = AccessLevel.NONE)
 	private final JavaPlugin plugin;
-	TriConsumer<Argument, CommandSender, String[]> action;
-	private Tree.Node<Argument>                 node;
-	private String[]                            arguments;
+
+	protected TriConsumer<Argument, CommandSender, String[]> action;
+
+	private Tree.Node<Argument> node;
+	private String[]            arguments;
 	@Getter(value = AccessLevel.NONE)
-	private Tree<Argument>                      tree;
+	private Tree<Argument>      tree;
 	@NotNull
-	private String                              permission;
+	private String              permission = "";
+
 	@Setter
 	private BiConsumer<CommandSender, String[]> executeOnPass;
 
@@ -154,7 +160,7 @@ public class Argument implements Cloneable {
 	 * @param sender the command sender
 	 * @param args the argument string array
 	 */
-	public void execute(CommandSender sender, String[] args) {
+	public void execute(String commandPrefix, CommandSender sender, String[] args) {
 		Argument[] modifiedArg = Arrays.stream(args).map(arg -> {
 			if (arg.toLowerCase().contains("confirm")) return new ConfirmArgument(plugin, tree);
 			return new Argument(plugin, arg, tree);
@@ -166,13 +172,13 @@ public class Argument implements Cloneable {
 			switch (argument.getState()) {
 				case SUCCESS -> argument.getArgument().executeArgument(sender, args);
 				case NO_PERMISSION -> sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
-				case NOT_FOUND -> notFound(sender, args, modifiedArg);
+				case NOT_FOUND -> notFound(commandPrefix, sender, args, modifiedArg);
 			}
 		} catch (Throwable throwable) {
 			if (throwable.getMessage() != null) sender.sendMessage(throwable.getMessage());
 			else sender.sendMessage("null");
 
-			Bukkit.getLogger().log(Level.WARNING, throwable.getMessage(), throwable);
+			logger.warn(throwable.getMessage(), throwable);
 		}
 	}
 
@@ -226,7 +232,7 @@ public class Argument implements Cloneable {
 		if (executeOnPass != null) executeOnPass.accept(sender, args);
 	}
 
-	private void notFound(CommandSender sender, String[] args, Argument[] modifiedArg) {
+	private void notFound(String commandPrefix, CommandSender sender, String[] args, Argument[] modifiedArg) {
 		StringBuilder invalidArg = new StringBuilder(MessageAddon.ARGUMENTS_WRONG.toString());
 		Argument      lastValid  = tree.traverseLastValid(modifiedArg);
 
@@ -262,7 +268,8 @@ public class Argument implements Cloneable {
 
 			String[] validArguments = Arrays.stream(args).toList().subList(0, length).toArray(String[]::new);
 
-			String commandSuggestion = ChatUtil.generateCommandSuggestion(lastInput, dictionary, "glw", validArguments);
+			String commandSuggestion = ChatUtil.generateCommandSuggestion(lastInput, dictionary, commandPrefix,
+																		  validArguments);
 
 			sender.sendMessage(ChatUtil.color(commandSuggestion));
 			break;

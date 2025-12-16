@@ -91,11 +91,6 @@ public class ChatUtil {
 		return message.replaceAll("[^a-zA-Z\\d\\s]*", "");
 	}
 
-	public static String confirmCommand(String[] args) {
-		return color(
-				"&cYou need to confirm using &e/glw " + String.join(" ", args) + " confirm &cto execute the command.");
-	}
-
 	public static void sendActionBar(Player player, String message) {
 		ActionBar.clearActionBar(player);
 		ActionBar.sendActionBar(player, color(message));

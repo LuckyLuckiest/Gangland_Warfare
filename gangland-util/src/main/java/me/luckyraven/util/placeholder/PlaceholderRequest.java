@@ -1,4 +1,4 @@
-package me.luckyraven.data.placeholder;
+package me.luckyraven.util.placeholder;
 
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;

@@ -52,6 +52,11 @@ public final class ChatUtil extends me.luckyraven.util.utilities.ChatUtil {
 							.replaceAll("[\\[\\],]", ""));
 	}
 
+	public static String confirmCommand(String[] args) {
+		return color(
+				"&cYou need to confirm using &e/glw " + String.join(" ", args) + " confirm &cto execute the command.");
+	}
+
 	public static String setArguments(String arguments, String command) {
 		return color(arguments + commandDesign(command));
 	}

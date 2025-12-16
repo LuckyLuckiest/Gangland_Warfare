@@ -4,16 +4,13 @@ import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.ViaAPI;
 import com.zaxxer.hikari.HikariConfig;
 import lombok.Getter;
-import me.clip.placeholderapi.PlaceholderAPI;
 import me.luckyraven.data.economy.EconomyHandler;
-import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
 import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
 import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.updater.UpdateChecker;
-import me.luckyraven.util.Placeholder;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -23,7 +20,6 @@ import org.bstats.bukkit.Metrics;
 import org.bstats.charts.AdvancedPie;
 import org.bstats.charts.SingleLineChart;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -33,9 +29,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Getter
-public final class Gangland extends JavaPlugin implements Placeholder {
+public final class Gangland extends JavaPlugin {
 
 	private static final Logger logger = LogManager.getLogger("Gangland_Warfare");
+
+	private final String fullPrefix;
+	private final String shortPrefix;
 
 	private Initializer             initializer;
 	private ReloadPlugin            reloadPlugin;
@@ -44,11 +43,14 @@ public final class Gangland extends JavaPlugin implements Placeholder {
 	private PlaceholderAPIExpansion placeholderAPIExpansion;
 	private ViaAPI<?>               viaAPI;
 
-	public Gangland() { }
+	public Gangland() {
+		this.fullPrefix  = "gangland";
+		this.shortPrefix = "glw";
+	}
 
 	@Override
 	public void onLoad() {
-		// disable hikaricp logs
+		// disable HikariCP logs
 		disableAllLogs(HikariConfig.class);
 
 		initializer = new Initializer(this);
@@ -60,8 +62,10 @@ public final class Gangland extends JavaPlugin implements Placeholder {
 		if (EconomyHandler.getVaultEconomy() != null) EconomyHandler.setVaultEconomy(null);
 
 		// force save
-		this.periodicalUpdates.forceUpdate();
-		this.periodicalUpdates.stop();
+		if (this.periodicalUpdates != null) {
+			this.periodicalUpdates.forceUpdate();
+			this.periodicalUpdates.stop();
+		}
 
 		// closing all connections
 		DatabaseManager databaseManager = initializer.getDatabaseManager();
@@ -92,35 +96,13 @@ public final class Gangland extends JavaPlugin implements Placeholder {
 	}
 
 	/**
-	 * Uses PlaceholderAPI if configured to replace the text with the appropriate placeholder configured.
-	 * </b>
-	 * If PlaceholderAPI wasn't configured, then it is replaced with the default placeholder handled by the plugin.
-	 *
-	 * @param player the player object
-	 * @param text the string that contains the placeholder(s)
-	 *
-	 * @return the replaced placeholder text with the appropriate placeholder
-	 */
-	@Override
-	public String convert(Player player, String text) {
-		if (placeholderAPIExpansion != null) {
-			if (PlaceholderAPI.containsPlaceholders(text)) return PlaceholderAPI.setPlaceholders(player, text);
-		} else {
-			GanglandPlaceholder placeholder = initializer.getPlaceholder();
-			if (placeholder.containsPlaceholder(text)) return placeholder.replacePlaceholder(player, text);
-		}
-
-		return text;
-	}
-
-	/**
 	 * Initializes the plugin periodical update cycle.
 	 */
 	void periodicalUpdatesInitializer() {
 		// periodical updates
 		int minutes = SettingAddon.getAutoSaveTime();
 
-		if (SettingAddon.isAutoSave()) this.periodicalUpdates = new PeriodicalUpdates(this, minutes * 60 * 20L);
+		if (SettingAddon.isAutoSave()) this.periodicalUpdates = new PeriodicalUpdates(this, minutes * 60L);
 		else this.periodicalUpdates = new PeriodicalUpdates(this);
 
 		periodicalUpdates.start();
@@ -194,7 +176,7 @@ public final class Gangland extends JavaPlugin implements Placeholder {
 		// soft dependencies
 		Dependency placeholderApi = new Dependency("PlaceholderAPI", Dependency.Type.SOFT);
 		placeholderApi.validate(() -> {
-			this.placeholderAPIExpansion = new PlaceholderAPIExpansion(this);
+			this.placeholderAPIExpansion = new PlaceholderAPIExpansion(this, this.fullPrefix);
 			this.placeholderAPIExpansion.register();
 		});
 
@@ -224,7 +206,7 @@ public final class Gangland extends JavaPlugin implements Placeholder {
 		int hours = 6;
 
 		// initialize the update checker
-		updateChecker = new UpdateChecker(this, -1, hours * 60 * 60 * 20L);
+		updateChecker = new UpdateChecker(this, fullPrefix, -1, hours * 60 * 60L);
 
 		// add the necessary permissions for checking for updates
 		initializer.getPermissionManager().addPermission(updateChecker.getCheckPermission());

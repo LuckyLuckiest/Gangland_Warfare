@@ -3,7 +3,6 @@ package me.luckyraven.listener.player;
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
 import me.luckyraven.data.economy.EconomyHandler;
-import me.luckyraven.data.placeholder.PlaceholderHandler;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -11,6 +10,7 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.datastructure.ScientificCalculator;
 import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.util.placeholder.PlaceholderHandler;
 import me.luckyraven.util.utilities.NumberUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponManager;
@@ -52,7 +52,7 @@ public class PlayerDeath implements Listener {
 		if (handleCommandExecution(user, player)) return;
 
 		// take money from their balance (NOT THEIR BANK)
-		if (handleMoney(user, player)) return;
+		if (handleMoney(user)) return;
 
 		// change the death message according to the weapon
 		changeDeathMessage(event, player);
@@ -75,7 +75,7 @@ public class PlayerDeath implements Listener {
 		return false;
 	}
 
-	private boolean handleMoney(User<Player> user, Player player) {
+	private boolean handleMoney(User<Player> user) {
 		EconomyHandler economy = user.getEconomy();
 		double         deduct  = amountDeduction(user);
 
@@ -96,7 +96,7 @@ public class PlayerDeath implements Listener {
 		String info    = type + SettingAddon.getMoneySymbol() + NumberUtil.valueFormat(deduct);
 		String message = "&3Death penalty: " + info;
 
-		player.sendMessage(ChatUtil.color(message));
+		user.sendMessage(ChatUtil.color(message));
 		return false;
 	}
 

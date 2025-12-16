@@ -2,14 +2,17 @@ package me.luckyraven.database;
 
 import lombok.Getter;
 import me.luckyraven.util.UnhandledError;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.SQLException;
-import java.util.logging.Level;
 
 public class DatabaseHelper {
+
+	private static final Logger logger = LogManager.getLogger(DatabaseHelper.class.getSimpleName());
 
 	private final JavaPlugin      plugin;
 	@Getter
@@ -51,10 +54,12 @@ public class DatabaseHelper {
 			queryRunnable.run(database);
 		} catch (SQLException exception) {
 			exceptionCaught = true;
-			plugin.getLogger().log(Level.WARNING, UnhandledError.SQL_ERROR + ": " + exception.getMessage(), exception);
+
+			logger.warn("{}: {}", UnhandledError.SQL_ERROR, exception.getMessage(), exception);
 		} catch (Throwable throwable) {
 			exceptionCaught = true;
-			plugin.getLogger().log(Level.WARNING, UnhandledError.ERROR + ": " + throwable.getMessage(), throwable);
+
+			logger.warn("{}: {}", UnhandledError.ERROR, throwable.getMessage(), throwable);
 		} finally {
 			if (exceptionCaught) rollbackConnection();
 			if (database.getConnection() != null && !database.handlesConnectionPool()) database.disconnect();
@@ -74,9 +79,8 @@ public class DatabaseHelper {
 				database.getConnection().setAutoCommit(true);
 			}
 		} catch (SQLException exception) {
-			plugin.getLogger()
-				  .warning(UnhandledError.SQL_ERROR + ": Failed to rollback database connection, " +
-						   exception.getMessage());
+			logger.warn("{}: Failed to rollback database connection, {}", UnhandledError.SQL_ERROR,
+						exception.getMessage());
 		}
 	}
 

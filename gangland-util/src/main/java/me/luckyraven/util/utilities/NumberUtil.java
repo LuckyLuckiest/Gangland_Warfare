@@ -1,5 +1,8 @@
 package me.luckyraven.util.utilities;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class NumberUtil {
 
 	private static final String[] SUFFIXES = {"", "K", "M", "B", "T", "P", "E", "Z", "Y"};
@@ -58,7 +61,7 @@ public final class NumberUtil {
 
 	/**
 	 * <a href="https://en.wikipedia.org/wiki/Linear_interpolation">Linear interpolation</a>
-	 * implementation. The returned number will be between min inclusively, and max inclusively.
+	 * implementation. The returned number will be between min inclusively and max inclusively.
 	 *
 	 * <p>The factor decides where, relative to <code>min</code> and <code>max</code>, the returned point will be. The
 	 * factor should be a number between 0 inclusively and 1 inclusively. Values approaching 0.0 will return a point
@@ -83,6 +86,54 @@ public final class NumberUtil {
 	 */
 	public static double square(double num) {
 		return num * num;
+	}
+
+	/**
+	 * Increases the size of the original list by linear interpolation.
+	 *
+	 * @param original the original list.
+	 * @param targetSize the target size of the new list.
+	 *
+	 * @return the new resized linearly interpolated list.
+	 */
+	public static List<Integer> resizeLinear(List<Integer> original, int targetSize) {
+		if (targetSize <= 0) {
+			throw new IllegalArgumentException("Target size must be > 0");
+		}
+
+		List<Integer> result = new ArrayList<>(targetSize);
+
+		// Case 1: Only one number → increment by itself
+		if (original.size() == 1) {
+			int step = original.getFirst();
+
+			for (int i = 1; i <= targetSize; i++) {
+				result.add(step * i);
+			}
+
+			return result;
+		}
+
+		int originalSize = original.size();
+
+		for (int i = 0; i < targetSize; i++) {
+			// Map new index to old index range
+			double position   = (double) i * (originalSize - 1) / (targetSize - 1);
+			int    leftIndex  = (int) Math.floor(position);
+			int    rightIndex = Math.min(leftIndex + 1, originalSize - 1);
+
+			double fraction = position - leftIndex;
+
+			int leftValue  = original.get(leftIndex);
+			int rightValue = original.get(rightIndex);
+
+			// Linear interpolation
+			int value = (int) Math.round(leftValue + fraction * (rightValue - leftValue));
+
+			result.add(value);
+		}
+
+		return result;
 	}
 
 }

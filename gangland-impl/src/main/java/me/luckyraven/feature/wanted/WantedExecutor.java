@@ -8,6 +8,7 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.timer.Timer;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -28,7 +29,10 @@ public class WantedExecutor extends Executor {
 	public Timer createTimer() {
 		Wanted wanted = user.getWanted();
 
-		double pow = Math.pow(SettingAddon.getWantedTimerMultiplierAmount(), wanted.getLevel() + 1);
+		double pow = 1D;
+		if (SettingAddon.isWantedTimerMultiplierEnabled()) {
+			pow = Math.pow(SettingAddon.getWantedTimerMultiplierAmount(), wanted.getLevel());
+		}
 
 		double time     = SettingAddon.getWantedTimerTime() * pow;
 		long   interval = (long) time;
@@ -50,7 +54,7 @@ public class WantedExecutor extends Executor {
 			moneyTaken = takeAmount * Math.pow(SettingAddon.getWantedTakeMoneyMultiplier(), wanted.getLevel());
 		}
 
-		getPlugin().getServer().getPluginManager().callEvent(event);
+		Bukkit.getPluginManager().callEvent(event);
 
 		if (event.isCancelled()) return;
 
@@ -76,12 +80,12 @@ public class WantedExecutor extends Executor {
 		String replace = string.replace("%level%", String.valueOf(wanted.getLevel()))
 							   .replace("%stars%", wanted.getLevelStars());
 
-		player.sendMessage(replace);
+		user.sendMessage(replace);
 
 		if (moneyTaken == 0) return;
 
 		String message = "&c&l-" + SettingAddon.getMoneySymbol() + SettingAddon.formatDouble(moneyTaken);
-		player.sendMessage(ChatUtil.color(message));
+		user.sendMessage(ChatUtil.color(message));
 
 		isWanted(timer, wanted);
 	}

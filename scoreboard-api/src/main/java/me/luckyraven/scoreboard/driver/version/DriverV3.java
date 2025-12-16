@@ -41,6 +41,8 @@ public class DriverV3 extends DriverHandler {
 
 	@Override
 	public void update() {
+		updateFlashLines();
+
 		for (Map.Entry<Long, Integer> entry : clustersInterval.entrySet()) {
 			long interval        = entry.getKey();
 			int  currentInterval = entry.getValue();
@@ -65,7 +67,8 @@ public class DriverV3 extends DriverHandler {
 
 				// Update only the lines whose value changed
 				for (Line line : lines) {
-					if (line == getTitle()) continue; // already handled as title
+					if (line == getTitle()) continue;
+					if (isFlashLine(line)) continue;
 
 					String newValue = updateLine(line);
 					String oldValue = cache.get(line);
@@ -78,7 +81,42 @@ public class DriverV3 extends DriverHandler {
 			}
 
 			// increment the current interval value
-			clustersInterval.replace(interval, (int) ((currentInterval + 1) % (interval + 1)));
+			int  current = currentInterval + 1;
+			long inter   = interval + 1;
+			int  value   = (int) (current % inter);
+
+			clustersInterval.replace(interval, value);
 		}
 	}
+
+	/**
+	 * Update all lines containing flash effects every tick for smooth animation
+	 */
+	private void updateFlashLines() {
+		for (Line line : getLines()) {
+			if (line == getTitle()) continue;
+
+			// Check if this line contains flash effects
+			if (!isFlashLine(line)) continue;
+
+			String newValue = updateLine(line);
+			String oldValue = cache.get(line);
+
+			// Always update if value changed (flash effect changes every tick)
+			if (!(oldValue == null || !oldValue.equals(newValue))) continue;
+
+			getFastBoard().updateLine(line.getUsedIndex(), newValue);
+			cache.put(line, newValue);
+		}
+	}
+
+	/**
+	 * Check if a line contains flash effects
+	 */
+	private boolean isFlashLine(Line line) {
+		String content = line.getCurrentContent();
+
+		return content != null && (content.contains("flashif:") || content.contains("flash:"));
+	}
+
 }

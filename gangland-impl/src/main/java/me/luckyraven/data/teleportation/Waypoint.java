@@ -25,10 +25,10 @@ public class Waypoint {
 	private @Setter double cost, radius;
 	private @Setter int usedId;
 
-	public Waypoint(String name) {
+	public Waypoint(String name, String permissionPrefix) {
 		this.name             = name;
 		this.waypointTeleport = new WaypointTeleport(this);
-		this.permission       = "gangland.waypoint." + name;
+		this.permission       = String.format("%s.waypoint.%s", permissionPrefix, name);
 
 		this.x      = this.y = this.z = 0D;
 		this.yaw    = this.pitch = 0F;

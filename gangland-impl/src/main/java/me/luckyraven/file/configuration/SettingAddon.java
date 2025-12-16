@@ -2,11 +2,12 @@ package me.luckyraven.file.configuration;
 
 import lombok.Getter;
 import me.luckyraven.exception.PluginException;
+import me.luckyraven.file.FileHandler;
+import me.luckyraven.file.FileInitializer;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.util.utilities.NumberUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.IOException;
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class SettingAddon {
+public class SettingAddon implements FileInitializer {
 
 	private static final @Getter Map<String, Object> settingsMap         = new LinkedHashMap<>();
 	private static final @Getter Map<String, Object> settingsPlaceholder = new LinkedHashMap<>();
@@ -75,15 +76,10 @@ public class SettingAddon {
 
 	// wanted configuration
 	private static @Getter double wantedTakeMoneyAmount, wantedTakeMoneyMultiplier, wantedTimerMultiplierAmount;
-	private static @Getter boolean wantedEnabled, wantedTimerEnabled, wantedTimerMultiplierEnabled;
-	private static @Getter int wantedTimerTime, wantedLevelIncrement, wantedMaximumLevel;
+	private static @Getter boolean wantedEnabled, wantedTimerEnabled, wantedTimerMultiplierEnabled,
+			wantedKillComboEnabled;
+	private static @Getter int wantedTimerTime, wantedLevelIncrement, wantedMaximumLevel, wantedKillComboResetAfter;
 	private static @Getter List<Integer> wantedKillCounter;
-
-	// phone configuration
-	private static @Getter boolean phoneEnabled;
-	private static @Getter String  phoneItem, phoneName;
-	private static @Getter int     phoneSlot;
-	private static @Getter boolean phoneMovable, phoneDroppable;
 
 	// gang configuration
 	private static @Getter boolean gangEnabled, gangNameDuplicates;
@@ -94,12 +90,23 @@ public class SettingAddon {
 	private static @Getter boolean scoreboardEnabled;
 	private static @Getter String  scoreboardDriver;
 
+	// entity marker configuration
+	private static @Getter List<String> defaultPoliceEntities, defaultCivilianEntities;
+	private static @Getter String policeName, civilianName;
+	private static @Getter List<String> policeWearables, civilianWearables;
+	private static @Getter double policeExperienceDropsMinimum, policeExperienceDropsMaximum,
+			civilianExperienceDropsMinimum, civilianExperienceDropsMaximum;
+	private static @Getter List<String> policeItemDrops, civilianItemDrops;
+
 	public SettingAddon(FileManager fileManager) {
 		try {
-			fileManager.checkFileLoaded("settings");
-			settings = Objects.requireNonNull(fileManager.getFile("settings")).getFileConfiguration();
+			String fileName = "settings";
 
-			initialize();
+			fileManager.checkFileLoaded(fileName);
+
+			FileHandler file = Objects.requireNonNull(fileManager.getFile(fileName));
+
+			settings = file.getFileConfiguration();
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
@@ -126,9 +133,20 @@ public class SettingAddon {
 		return String.valueOf(value);
 	}
 
-	private void initialize() {
+	@Override
+	public void initialize() {
+		try {
+			init();
+		} catch (Exception exception) {
+			// create a new file
+			// initialize again
+//			init();
+		}
+	}
+
+	private void init() {
 		// update configuration
-		ConfigurationSection updateChecker = settings.getConfigurationSection("Update_Checker");
+		var updateChecker = settings.getConfigurationSection("Update_Checker");
 		Objects.requireNonNull(updateChecker);
 
 		updaterEnabled          = updateChecker.getBoolean("Enable");
@@ -139,7 +157,7 @@ public class SettingAddon {
 		languagePicked = settings.getString("Language");
 
 		// resource pack
-		ConfigurationSection resourcePack = settings.getConfigurationSection("Resource_Pack");
+		var resourcePack = settings.getConfigurationSection("Resource_Pack");
 		Objects.requireNonNull(resourcePack);
 
 		resourcePackEnabled = resourcePack.getBoolean("Enable");
@@ -147,7 +165,7 @@ public class SettingAddon {
 		resourcePackKick    = resourcePack.getBoolean("Kick");
 
 		// database
-		ConfigurationSection database = settings.getConfigurationSection("Database");
+		var database = settings.getConfigurationSection("Database");
 		Objects.requireNonNull(database);
 
 		databaseType      = database.getString("Type");
@@ -162,7 +180,7 @@ public class SettingAddon {
 		autoSaveTime      = database.getInt("Auto_Save.Time");
 
 		// inventory
-		ConfigurationSection inventory = settings.getConfigurationSection("Inventory");
+		var inventory = settings.getConfigurationSection("Inventory");
 		Objects.requireNonNull(inventory);
 
 		inventoryFillItem = inventory.getString("Fill.Item");
@@ -170,7 +188,7 @@ public class SettingAddon {
 		inventoryLineItem = inventory.getString("Line.Item");
 		inventoryLineName = inventory.getString("Line.Name");
 
-		ConfigurationSection multiInventory = inventory.getConfigurationSection("Multi_Inventory");
+		var multiInventory = inventory.getConfigurationSection("Multi_Inventory");
 		Objects.requireNonNull(multiInventory);
 
 		nextPage     = multiInventory.getString("Next_Page");
@@ -182,7 +200,7 @@ public class SettingAddon {
 		balanceFormat = settings.getString("Balance_Format.Format");
 
 		// user
-		ConfigurationSection user = settings.getConfigurationSection("User");
+		var user = settings.getConfigurationSection("User");
 		Objects.requireNonNull(user);
 
 		userInitialBalance = user.getDouble("Account.Initial_Balance");
@@ -206,41 +224,48 @@ public class SettingAddon {
 		deathThreshold               = user.getDouble("Death.Money.Threshold");
 
 		// bounty
-		ConfigurationSection bounty = settings.getConfigurationSection("Bounty");
+		var bounty = settings.getConfigurationSection("Bounty");
 		Objects.requireNonNull(bounty);
 
 		bountyEachKillValue = bounty.getDouble("Kill.Each");
-		bountyMaxKill       = bounty.getDouble("Kill.Max");
+		bountyMaxKill       = bounty.getDouble("Kill.Maximum");
 		bountyTimerEnabled  = bounty.getBoolean("Repeating_Timer.Enable");
 		bountyTimerMultiple = bounty.getDouble("Repeating_Timer.Multiple");
 		bountyTimeInterval  = bounty.getInt("Repeating_Timer.Time");
-		bountyTimerMax      = bounty.getDouble("Repeating_Timer.Max");
+		bountyTimerMax      = bounty.getDouble("Repeating_Timer.Maximum");
 
 		// wanted
-		ConfigurationSection wanted = settings.getConfigurationSection("Wanted");
+		var wanted = settings.getConfigurationSection("Wanted");
 		Objects.requireNonNull(wanted);
 
-		wantedEnabled                = wanted.getBoolean("Enable");
-		wantedTakeMoneyAmount        = wanted.getDouble("Take_Money.Amount");
-		wantedTakeMoneyMultiplier    = wanted.getDouble("Take_Money.Multiplier");
-		wantedTimerEnabled           = wanted.getBoolean("Countdown_Timer.Enable");
-		wantedTimerTime              = wanted.getInt("Countdown_Timer.Time");
-		wantedTimerMultiplierEnabled = wanted.getBoolean("Countdown_Timer.Multiplier.Enable");
-		wantedTimerMultiplierAmount  = wanted.getDouble("Countdown_Timer.Multiplier.Amount");
-		wantedLevelIncrement         = wanted.getInt("Level.Increment");
-		wantedMaximumLevel           = wanted.getInt("Level.Max");
-		wantedKillCounter            = wanted.getIntegerList("Kill_Counter");
+		wantedEnabled = wanted.getBoolean("Enable");
 
-		// phone
-		ConfigurationSection phone = settings.getConfigurationSection("Phone");
-		Objects.requireNonNull(phone);
+		var wantedTakeMoney = wanted.getConfigurationSection("Take_Money");
+		Objects.requireNonNull(wantedTakeMoney);
 
-		phoneEnabled   = phone.getBoolean("Enable");
-		phoneItem      = phone.getString("Item");
-		phoneName      = phone.getString("Name");
-		phoneSlot      = phone.getInt("Slot");
-		phoneMovable   = !phone.getBoolean("Movable");
-		phoneDroppable = !phone.getBoolean("Droppable");
+		wantedTakeMoneyAmount     = wantedTakeMoney.getDouble("Amount");
+		wantedTakeMoneyMultiplier = wantedTakeMoney.getDouble("Multiplier");
+
+		var wantedTimer = wanted.getConfigurationSection("Repeating_Timer");
+		Objects.requireNonNull(wantedTimer);
+
+		wantedTimerEnabled           = wantedTimer.getBoolean("Enable");
+		wantedTimerTime              = wantedTimer.getInt("Time");
+		wantedTimerMultiplierEnabled = wantedTimer.getBoolean("Multiplier.Enable");
+		wantedTimerMultiplierAmount  = wantedTimer.getDouble("Multiplier.Amount");
+
+		var wantedLevel = wanted.getConfigurationSection("Level");
+		Objects.requireNonNull(wantedLevel);
+
+		wantedLevelIncrement = wantedLevel.getInt("Increment");
+		wantedMaximumLevel   = wantedLevel.getInt("Maximum");
+
+		var wantedKillCombo = wanted.getConfigurationSection("Kill_Combo");
+		Objects.requireNonNull(wantedKillCombo);
+
+		wantedKillComboEnabled    = wantedKillCombo.getBoolean("Enable");
+		wantedKillComboResetAfter = wantedKillCombo.getInt("Reset_After");
+		wantedKillCounter         = wantedKillCombo.getIntegerList("Kill_Counter");
 
 		// gang
 		gangEnabled          = settings.getBoolean("Gang.Enable");
@@ -256,6 +281,38 @@ public class SettingAddon {
 		// scoreboard
 		scoreboardEnabled = settings.getBoolean("Scoreboard.Enable");
 		scoreboardDriver  = settings.getString("Scoreboard.Driver");
+
+		// entity marker
+		var entityMarker = settings.getConfigurationSection("Entity_Marker");
+		Objects.requireNonNull(entityMarker);
+
+		var police = entityMarker.getConfigurationSection("Police");
+		Objects.requireNonNull(police);
+
+		defaultPoliceEntities = police.getStringList("Default_Entities");
+		policeName            = police.getString("Name");
+		policeWearables       = police.getStringList("Wear");
+
+		var policeDrops = police.getConfigurationSection("Drops");
+		Objects.requireNonNull(policeDrops);
+
+		policeExperienceDropsMinimum = policeDrops.getDouble("Experience.Minimum");
+		policeExperienceDropsMaximum = policeDrops.getDouble("Experience.Maximum");
+		policeItemDrops              = policeDrops.getStringList("Items");
+
+		var civilian = entityMarker.getConfigurationSection("Civilian");
+		Objects.requireNonNull(civilian);
+
+		defaultCivilianEntities = civilian.getStringList("Default_Entities");
+		civilianName            = civilian.getString("Name");
+		civilianWearables       = civilian.getStringList("Wear");
+
+		var civilianDrops = civilian.getConfigurationSection("Drops");
+		Objects.requireNonNull(civilianDrops);
+
+		civilianExperienceDropsMinimum = civilianDrops.getDouble("Experience.Minimum");
+		civilianExperienceDropsMaximum = civilianDrops.getDouble("Experience.Maximum");
+		civilianItemDrops              = civilianDrops.getStringList("Items");
 
 		addEachFieldReflection();
 		convertToPlaceholder();
@@ -283,29 +340,13 @@ public class SettingAddon {
 
 	private void convertToPlaceholder() {
 		for (Map.Entry<String, Object> entry : settingsMap.entrySet()) {
-			String        key         = entry.getKey();
-			Object        value       = entry.getValue();
-			StringBuilder modifiedKey = new StringBuilder();
+			String key     = entry.getKey();
+			String replace = key.replaceAll("(?<=[a-z])(?=[A-Z])", "_");
+			String lower   = replace.toLowerCase();
 
-			int change = 0;
-			for (int i = 0; i < key.length(); i++) {
-				char c = key.charAt(i);
+			Object value = entry.getValue();
 
-				if (!Character.isUpperCase(c)) continue;
-
-				modifiedKey.append(key, change, i).append("_").append(Character.toLowerCase(c));
-
-				char[] chars = key.toCharArray();
-
-				chars[i] = Character.toLowerCase(chars[i]);
-				key      = String.valueOf(chars);
-
-				change = i + 1;
-			}
-
-			if (change <= key.length()) modifiedKey.append(key.substring(change));
-
-			settingsPlaceholder.put(modifiedKey.toString(), value);
+			settingsPlaceholder.put(lower, value);
 		}
 	}
 

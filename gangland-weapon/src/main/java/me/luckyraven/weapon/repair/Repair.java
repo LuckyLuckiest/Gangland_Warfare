@@ -37,15 +37,11 @@ public class Repair {
 	 * Initializes the repair system. Call this during plugin startup.
 	 */
 	public void initialize() {
-		plugin.getLogger().info("Starting weapon repair system...");
-
 		// Initialize repair manager
 		repairManager.initialize();
 
 		// Register listeners
 		registerListeners();
-
-		plugin.getLogger().info("Weapon repair system started successfully!");
 	}
 
 	/**
@@ -89,12 +85,10 @@ public class Repair {
 	 */
 	private void registerListeners() {
 		// Register crafting table support
-		Bukkit.getPluginManager().registerEvents(
-				new CraftingRepairListener(repairManager, weaponService), plugin);
+		Bukkit.getPluginManager().registerEvents(new CraftingRepairListener(repairManager, weaponService), plugin);
 
 		// Register anvil support
-		Bukkit.getPluginManager().registerEvents(
-				new AnvilRepairListener(repairManager, weaponService), plugin);
+		Bukkit.getPluginManager().registerEvents(new AnvilRepairListener(repairManager, weaponService), plugin);
 
 		plugin.getLogger().info("Registered repair station listeners");
 	}

@@ -73,7 +73,7 @@ public final class LevelCommand extends CommandHandler {
 											   .replace("%required_experience%", requiredExperience)
 											   .replace("%percentage%", percentageStr)
 											   .replace("%progress_bar%", progressBar);
-		player.sendMessage(stats);
+		user.sendMessage(stats);
 	}
 
 	@Override
@@ -102,7 +102,7 @@ public final class LevelCommand extends CommandHandler {
 			try {
 				argAmount = Double.parseDouble(args[3]);
 			} catch (NumberFormatException exception) {
-				player.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString());
+				user.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString());
 				return;
 			}
 
@@ -117,9 +117,9 @@ public final class LevelCommand extends CommandHandler {
 			}
 
 			String type = args[2].toUpperCase();
-			player.sendMessage(MessageAddon.valueOf("LEVEL_EXP_" + type)
-										   .toString()
-										   .replace("%experience%", String.valueOf(argAmount)));
+			user.sendMessage(MessageAddon.valueOf("LEVEL_EXP_" + type)
+										 .toString()
+										 .replace("%experience%", String.valueOf(argAmount)));
 		}, sender -> List.of("<amount>"));
 
 		expAdd.addSubArgument(expOptional);
@@ -128,7 +128,7 @@ public final class LevelCommand extends CommandHandler {
 		experience.addSubArgument(expAdd);
 		experience.addSubArgument(expRemove);
 
-		String levelPerm = getPermission() + ".level";
+		String levelPerm = getPermission() + ".level_value";
 		getArgument().addPermission(levelPerm);
 
 		Argument levelAdd = new Argument(getGangland(), "add", getArgumentTree(), (argument, sender, args) -> {
@@ -148,7 +148,7 @@ public final class LevelCommand extends CommandHandler {
 			try {
 				argAmount = Integer.parseInt(args[2]);
 			} catch (NumberFormatException exception) {
-				player.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString());
+				user.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString());
 				return;
 			}
 
@@ -160,7 +160,7 @@ public final class LevelCommand extends CommandHandler {
 			}
 
 			String type = args[1].toUpperCase();
-			player.sendMessage(
+			user.sendMessage(
 					MessageAddon.valueOf("LEVEL_" + type).toString().replace("%level%", String.valueOf(levels)));
 		}, sender -> List.of("<amount>"));
 
@@ -185,7 +185,7 @@ public final class LevelCommand extends CommandHandler {
 													.replace("%max_level%", maxLevel)
 													.replace("%experience%", exp)
 													.replace("%required_experience%", requiredExperience);
-			player.sendMessage(message);
+			user.sendMessage(message);
 		});
 
 		// add sub arguments

@@ -1,6 +1,6 @@
-package me.luckyraven.data.placeholder.replacer;
+package me.luckyraven.util.placeholder.replacer;
 
-import me.luckyraven.data.placeholder.PlaceholderRequest;
+import me.luckyraven.util.placeholder.PlaceholderRequest;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 

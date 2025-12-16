@@ -72,11 +72,12 @@ class WaypointSelectCommand extends SubArgument {
 			}
 
 			// add the waypoint to waypoint manager
-			Player player = (Player) sender;
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
 			waypointManager.playerSelect(player, waypoint);
 
 			// inform the player
-			player.sendMessage(MessageAddon.WAYPOINT_SELECTED.toString().replace("%waypoint%", waypoint.getName()));
+			user.sendMessage(MessageAddon.WAYPOINT_SELECTED.toString().replace("%waypoint%", waypoint.getName()));
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);

@@ -3,6 +3,7 @@ package me.luckyraven.listener.player;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.user.User;
+import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.level.LevelUpEvent;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -16,10 +17,12 @@ import java.util.List;
 @ListenerHandler
 public class LevelUp implements Listener {
 
-	private final Gangland gangland;
+	private final Gangland            gangland;
+	private final UserManager<Player> userManager;
 
 	public LevelUp(Gangland gangland) {
-		this.gangland = gangland;
+		this.gangland    = gangland;
+		this.userManager = gangland.getInitializer().getUserManager();
 	}
 
 	@EventHandler
@@ -34,7 +37,7 @@ public class LevelUp implements Listener {
 
 			String message = MessageAddon.LEVEL_UP_PLAYER.toString();
 
-			player.sendMessage(replacePlaceholders(player, message, level));
+			user.sendMessage(replacePlaceholders(player, message, level));
 		}
 
 		Gang gang = event.getGang();
@@ -45,14 +48,16 @@ public class LevelUp implements Listener {
 				.stream().map(User::getUser).toList();
 
 		for (Player player : onlinePlayers) {
+			User<Player> onlineUser = userManager.getUser(player);
+
 			String message = MessageAddon.LEVEL_UP_GANG.toString();
 
-			player.sendMessage(replacePlaceholders(player, message, level));
+			onlineUser.sendMessage(replacePlaceholders(player, message, level));
 		}
 	}
 
 	private String replacePlaceholders(Player player, String message, Level level) {
-		String replace = gangland.convert(player, message);
+		String replace = gangland.getInitializer().getPlaceholderService().convert(player, message);
 
 		return replace.replace("%level%", String.valueOf(level.getLevelValue()))
 					  .replace("%next_level%", String.valueOf(level.nextLevel()))

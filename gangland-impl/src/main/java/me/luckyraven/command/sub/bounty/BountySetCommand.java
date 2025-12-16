@@ -87,7 +87,7 @@ class BountySetCommand extends SubArgument {
 
 			bountyEvent.setUserBounty(user);
 
-			if (userBounty.size() == 0) player.sendMessage(MessageAddon.BOUNTY_SET.toString());
+			if (userBounty.size() == 0) user.sendMessage(MessageAddon.BOUNTY_SET.toString());
 
 			// call the event
 			bountyEvent.setAmountApplied(value);
@@ -111,7 +111,7 @@ class BountySetCommand extends SubArgument {
 				}
 			}
 
-			gangland.getServer().getPluginManager().callEvent(bountyEvent);
+			Bukkit.getPluginManager().callEvent(bountyEvent);
 
 			if (!bountyEvent.isCancelled()) {
 				userBounty.addBounty(sender, value, user.getLevel().getLevelValue());

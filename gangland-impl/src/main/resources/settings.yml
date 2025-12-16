@@ -95,7 +95,6 @@ Database:
       # and leaving the server.
       Enable: true
       # Time to auto save in minutes.
-      # Time in hours for removal of unnecessary data.
       Time: 10
       # Enable if you want to print periodical updates in the console.
       Debug: true
@@ -112,7 +111,7 @@ Scoreboard:
    #  2) Driver_V2: Caches the lines into memory similar to Driver_V1 algorithm. The difference is it uses a built-in
    #                library to manage the clusters.
    #  3) Driver_V3: Uses interactive scoreboard to temporarily disable the main one and use the alternative scoreboard.
-   Driver: "Driver_V2"
+   Driver: "Driver_V3"
 
 # +------------------+ #
 # | Inventory Config | #
@@ -146,7 +145,7 @@ User:
    Bank:
       # When a player creates a bank account, his account will have the amount of money that you set.
       Initial_Balance: 0
-      # When a player wants to create a bank account, they are required to pay a fee.
+      # When a player wants to create a bank account, they're required to pay a fee.
       # Set it to zero, and the requirement is lifted.
       Create_Cost: 5_000
       # The maximum amount of money the player can have.
@@ -225,7 +224,7 @@ Bounty:
       # Each kill committed will be added on the total bounty amount.
       Each: 5
       # The maximum total amount after each kill committed.
-      Max: 50_000
+      Maximum: 50_000
    # This option is only for users
    Repeating_Timer:
       Enable: true
@@ -233,21 +232,7 @@ Bounty:
       Multiple: 2
       Time: 300
       # The maximum total amount after each timer multiple.
-      Max: 20_000
-
-# +--------------+ #
-# | Phone Config | #
-# +--------------+ #
-Phone:
-   Enable: true
-   Item: COMPASS
-   Name: "&6&k||| &rPhone &6&k|||"
-   # The slots are from 0-8, and they are in the hot-bar only.
-   Slot: 8
-   # If the item was movable
-   Movable: true
-   # If the item was droppable
-   Droppable: false
+      Maximum: 20_000
 
 # +---------------+ #
 # | Wanted Config | #
@@ -255,26 +240,36 @@ Phone:
 Wanted:
    Enable: true
    Take_Money:
+      # The amount of money taken from the player when they are wanted.
       Amount: 50
-      # (amount * multiplier ^ (stars - 1))
+      # The multiplier used to calculate the amount of money taken from the player.
+      # (amount * multiplier ^ stars)
       Multiplier: 5
-   Countdown_Timer:
+   # A timer that reduces the wanted level after the specified time.
+   Repeating_Timer:
       Enable: true
+      # The default time to wait before reducing the wanted level.
       Time: 120
-      # (time * amount ^ (stars - 1))
+      # (time * amount ^ stars)
       Multiplier:
-         Enable: false
-         Amount: 2
+         Enable: true
+         Amount: 1.1
+   # Wanted level scaling.
    Level:
       Increment: 1
-      Max: 5
-   # The kill counter can be scaled linearly.
-   Kill_Counter:
-      - 2
-      - 5
-      - 10
-      - 15
-      - 20
+      Maximum: 5
+   # Number of kills to get a wanted level.
+   Kill_Combo:
+      Enable: true
+      # The time till the kill combo resets.
+      Reset_After: 10
+      # The kill counter to increment the wanted level.
+      Kill_Counter:
+         - 2
+         - 5
+         - 10
+         - 15
+         - 20
 
 # +-------------+ #
 # | Safe Config | #
@@ -291,8 +286,8 @@ Safe:
       Enable: true
       Time: 1_200
    Money:
-      Min: 25
-      Max: 2_500
+      Minimum: 25
+      Maximum: 2_500
 
 # +-------------+#
 # | Gang Config |#
@@ -331,5 +326,40 @@ Balance_Format:
    Enable: true
    Format: "%,.2f"
 Killing_Mob:
-   Min: 0
-   Max: 20
+   Minimum: 0
+   Maximum: 20
+
+# +---------------+ #
+# | Entity Marker | #
+# +---------------+ #
+
+# There are different types of entities that can be marked with specific attributes.
+Entity_Marker:
+   Police:
+      Default_Entities:
+         - "PILLAGER"
+      Name: "&8&l[&cPolice&8&l]"
+      Wear:
+         - "LEATHER_HELMET:blue"
+         - "IRON_BOOTS"
+         - "weapon:baton"
+      Drops:
+         Experience:
+            Minimum: 15
+            Maximum: 60
+         Items:
+            - "weapon:baton"
+   Civilian:
+      Default_Entities:
+         - "VILLAGER"
+         - "WANDERING_TRADER"
+         - "PLAYER"
+      Name: "&7Civilian"
+      Wear:
+         - ""
+      Drops:
+         Experience:
+            Minimum: 1
+            Maximum: 15
+         Items:
+            - ""

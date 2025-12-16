@@ -41,7 +41,7 @@ class BankDepositCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (!user.hasBank()) {
-				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
 
@@ -56,7 +56,7 @@ class BankDepositCommand extends SubArgument {
 			Bank         bank   = Bank.getInstance(user);
 
 			if (!user.hasBank() || bank == null) {
-				player.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
+				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
 			}
 
@@ -68,14 +68,14 @@ class BankDepositCommand extends SubArgument {
 				String string  = MessageAddon.MUST_BE_NUMBERS.toString();
 				String replace = string.replace("%command%", args[2]);
 
-				player.sendMessage(replace);
+				user.sendMessage(replace);
 				return;
 			}
 
 			double inBank = bank.getEconomy().getBalance() + argAmount;
 
 			if (inBank > SettingAddon.getBankMaxBalance()) {
-				player.sendMessage(MessageAddon.CANNOT_EXCEED_MAXIMUM.toString());
+				user.sendMessage(MessageAddon.CANNOT_EXCEED_MAXIMUM.toString());
 
 			}
 

@@ -4,6 +4,8 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
+import me.luckyraven.data.user.User;
+import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -20,14 +22,17 @@ import java.util.Map;
 
 class WeaponGiveCommand extends SubArgument {
 
-	private final Gangland       gangland;
-	private final Tree<Argument> tree;
+	private final Gangland            gangland;
+	private final Tree<Argument>      tree;
+	private final UserManager<Player> userManager;
 
 	protected WeaponGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "give", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
+
+		this.userManager = gangland.getInitializer().getUserManager();
 
 		weaponGive();
 	}
@@ -40,16 +45,17 @@ class WeaponGiveCommand extends SubArgument {
 
 	private void weaponGive() {
 		Argument name = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			Player  player     = (Player) sender;
-			String  weaponName = args[2];
-			boolean giveWeapon = giveWeapon(player, weaponName.toLowerCase(), 1);
+			Player       player     = (Player) sender;
+			User<Player> user       = userManager.getUser(player);
+			String       weaponName = args[2];
+			boolean      giveWeapon = giveWeapon(player, weaponName.toLowerCase(), 1);
 
 			if (giveWeapon) {
 				String receivedWeapon = MessageAddon.RECEIVED_WEAPON.toString();
-				player.sendMessage(receivedWeapon.replace("%weapon%", weaponName).replace("%amount%", "1"));
+				user.sendMessage(receivedWeapon.replace("%weapon%", weaponName).replace("%amount%", "1"));
 			} else {
 				String invalidWeapon = MessageAddon.INVALID_WEAPON.toString();
-				player.sendMessage(invalidWeapon.replace("%args%", weaponName));
+				user.sendMessage(invalidWeapon.replace("%args%", weaponName));
 			}
 		}, sender -> {
 			WeaponService weaponService = gangland.getInitializer().getWeaponManager();
@@ -59,14 +65,15 @@ class WeaponGiveCommand extends SubArgument {
 		});
 
 		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			Player player     = (Player) sender;
-			String weaponName = args[2];
-			int    weaponAmount;
+			Player       player     = (Player) sender;
+			User<Player> user       = userManager.getUser(player);
+			String       weaponName = args[2];
+			int          weaponAmount;
 
 			try {
 				weaponAmount = Integer.parseInt(args[3]);
 			} catch (NumberFormatException exception) {
-				player.sendMessage(ChatUtil.commandMessage(MessageAddon.MUST_BE_NUMBERS.toString()));
+				user.sendMessage(ChatUtil.commandMessage(MessageAddon.MUST_BE_NUMBERS.toString()));
 				return;
 			}
 
@@ -76,10 +83,10 @@ class WeaponGiveCommand extends SubArgument {
 				String receivedWeapon = MessageAddon.RECEIVED_WEAPON.toString();
 				String replace = receivedWeapon.replace("%weapon%", weaponName)
 											   .replace("%amount%", String.valueOf(weaponAmount));
-				player.sendMessage(replace);
+				user.sendMessage(replace);
 			} else {
 				String invalidWeapon = MessageAddon.INVALID_WEAPON.toString();
-				player.sendMessage(invalidWeapon.replace("%args%", weaponName));
+				user.sendMessage(invalidWeapon.replace("%args%", weaponName));
 			}
 		}, sender -> List.of("<amount>"));
 

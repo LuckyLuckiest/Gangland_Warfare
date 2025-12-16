@@ -9,6 +9,7 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.economy.EconomyException;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
@@ -58,7 +59,7 @@ class GangCreateCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (user.hasGang()) {
-				player.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
+				user.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
 				return;
 			}
 
@@ -76,12 +77,20 @@ class GangCreateCommand extends SubArgument {
 			Member       member = memberManager.getMember(player.getUniqueId());
 
 			if (user.hasGang()) {
-				player.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
+				user.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
 				return;
 			}
 
-			if (user.getEconomy().getBalance() < SettingAddon.getGangCreateFee()) {
-				player.sendMessage(MessageAddon.CANNOT_CREATE_GANG.toString());
+			try {
+				user.getEconomy().withdraw(SettingAddon.getGangCreateFee());
+			} catch (EconomyException exception) {
+				CountdownTimer timer = createGangTimer.get(sender);
+				if (timer != null) {
+					timer.stop();
+					createGangTimer.remove(sender);
+				}
+
+				user.sendMessage(MessageAddon.CANNOT_CREATE_GANG.toString());
 				return;
 			}
 
@@ -93,17 +102,16 @@ class GangCreateCommand extends SubArgument {
 			gang.addMember(user, member, rankManager.get(SettingAddon.getGangRankTail()));
 			gang.setName(createGangName.get(user).get());
 			gang.getEconomy().setBalance(SettingAddon.getGangInitialBalance());
-			user.getEconomy().withdraw(SettingAddon.getGangCreateFee());
 
 			gangManager.add(gang);
 
-			player.sendMessage(MessageAddon.GANG_CREATED.toString().replace("%gang%", gang.getDisplayNameString()));
+			user.sendMessage(MessageAddon.GANG_CREATED.toString().replace("%gang%", gang.getDisplayNameString()));
 
 			createGangName.remove(user);
 
 			CountdownTimer timer = createGangTimer.get(sender);
 			if (timer != null) {
-				if (!timer.isCancelled()) timer.cancel();
+				timer.stop();
 				createGangTimer.remove(sender);
 			}
 		});
@@ -115,7 +123,7 @@ class GangCreateCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (user.hasGang()) {
-				player.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
+				user.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
 				return;
 			}
 
@@ -125,26 +133,28 @@ class GangCreateCommand extends SubArgument {
 
 			if (!SettingAddon.isGangNameDuplicates()) for (Gang gang : gangManager.getGangs().values())
 				if (gang.getName().equalsIgnoreCase(name.get())) {
-					player.sendMessage(MessageAddon.DUPLICATE_GANG_NAME.toString().replace("%gang%", name.get()));
+					user.sendMessage(MessageAddon.DUPLICATE_GANG_NAME.toString().replace("%gang%", name.get()));
 					return;
 				}
 
 			createGangName.put(user, name);
 
 			// Need to notify the player and give access to confirm
-			player.sendMessage(MessageAddon.GANG_CREATE_FEE.toString()
-														   .replace("%amount%", SettingAddon.formatDouble(
-																   SettingAddon.getGangCreateFee())));
-			player.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "create"}));
+			String string  = MessageAddon.GANG_CREATE_FEE.toString();
+			String replace = string.replace("%amount%", SettingAddon.formatDouble(SettingAddon.getGangCreateFee()));
+
+			user.sendMessage(replace);
+			user.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "create"}));
 			confirmCreate.setConfirmed(true);
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
 				if (time.getTimeLeft() % 20 != 0) return;
 
-				sender.sendMessage(MessageAddon.GANG_CREATE_CONFIRM.toString()
-																   .replace("%timer%",
-																			TimeUtil.formatTime(time.getTimeLeft(),
-																								true)));
+				String string1     = MessageAddon.GANG_CREATE_CONFIRM.toString();
+				String replacement = TimeUtil.formatTime(time.getTimeLeft(), true);
+				String replace1    = string1.replace("%timer%", replacement);
+
+				sender.sendMessage(replace1);
 			}, time -> {
 				confirmCreate.setConfirmed(false);
 				createGangName.remove(user);

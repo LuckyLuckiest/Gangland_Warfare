@@ -49,8 +49,8 @@ public final class BalanceCommand extends CommandHandler {
 		if (commandSender instanceof Player player) {
 			// Initialize a user
 			User<Player> user = getGangland().getInitializer().getUserManager().getUser(player);
-			player.sendMessage(ChatUtil.color("&6" + player.getName() + "&7 balance:"));
-			player.sendMessage(ChatUtil.color(
+			user.sendMessage(ChatUtil.color("&6" + player.getName() + "&7 balance:"));
+			user.sendMessage(ChatUtil.color(
 					"&a" + SettingAddon.getMoneySymbol() + SettingAddon.formatDouble(user.getEconomy().getBalance())));
 		} else {
 			commandSender.sendMessage(ChatUtil.informationMessage("Balance are for registered users"));

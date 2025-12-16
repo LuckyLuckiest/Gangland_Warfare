@@ -83,7 +83,7 @@ public final class CommandManager implements CommandExecutor {
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
 							 @NotNull String[] args) {
 		try {
-			String mainCommandPermission = "gangland.command.main";
+			String mainCommandPermission = String.format("%s.command.main", gangland.getFullPrefix());
 
 			if (!sender.hasPermission(mainCommandPermission)) {
 				sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
@@ -155,7 +155,7 @@ public final class CommandManager implements CommandExecutor {
 
 		cs.sendMessage(color("&7Author" + ChatUtil.plural(authors.size()) + "&8: &b" + authorStr));
 		cs.sendMessage(color("&7Version&8: &b" + pdf.getVersion()));
-		cs.sendMessage(color("&7Type &6/glw help &7to start."));
+		cs.sendMessage(color("&7Type &6/" + gangland.getShortPrefix() + " help &7to start."));
 		cs.sendMessage("");
 	}
 
