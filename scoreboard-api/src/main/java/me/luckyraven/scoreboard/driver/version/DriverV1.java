@@ -25,6 +25,8 @@ public class DriverV1 extends DriverHandler {
 
 	@Override
 	public void update() {
+		updateFlashLines();
+
 		// this method should work each and every tick
 		for (Map.Entry<Long, Integer> entry : clustersInterval.entrySet()) {
 			long interval        = entry.getKey();
@@ -68,6 +70,28 @@ public class DriverV1 extends DriverHandler {
 		}
 
 		return clusters;
+	}
+
+	/**
+	 * Update all lines containing flash effects every tick for smooth animation
+	 */
+	private void updateFlashLines() {
+		for (Line line : getLines()) {
+			if (line == getTitle()) continue;
+
+			if (!isFlashLine(line)) continue;
+
+			getFastBoard().updateLine(line.getUsedIndex(), updateLine(line));
+		}
+	}
+
+	/**
+	 * Check if a line contains flash effects
+	 */
+	private boolean isFlashLine(Line line) {
+		String content = line.getCurrentContent();
+
+		return content != null && (content.contains("flashif:") || content.contains("flash:"));
 	}
 
 }

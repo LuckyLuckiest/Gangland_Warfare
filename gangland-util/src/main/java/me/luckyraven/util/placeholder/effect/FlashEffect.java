@@ -15,6 +15,7 @@ public class FlashEffect {
 	private final String key;
 	private final long   flashDuration;
 	private final long   hideDuration;
+	private final long   ticksPerState;
 
 	/**
 	 * Creates a flash effect with custom timing
@@ -27,6 +28,7 @@ public class FlashEffect {
 		this.key           = key;
 		this.flashDuration = flashDuration;
 		this.hideDuration  = hideDuration;
+		this.ticksPerState = Math.max(1, flashDuration / Brightness.getVisibleStates().length);
 
 		flashStates.putIfAbsent(key, new FlashState());
 	}
@@ -58,44 +60,29 @@ public class FlashEffect {
 	public String apply(String content, long currentTick) {
 		FlashState state = flashStates.get(key);
 
-		if (state.lastUpdate == 0) {
-			state.lastUpdate = currentTick;
-			state.visible    = true;
-		}
-
-		long elapsed       = currentTick - state.lastUpdate;
 		long cycleDuration = flashDuration + hideDuration;
-		long position      = elapsed % cycleDuration;
+		long position      = currentTick % cycleDuration;
 
-		state.visible = position < flashDuration;
-
-		return state.visible ? content : "";
+		return position < flashDuration ? content : "";
 	}
 
 	/**
-	 * Apply the flash effect with fade-in/fade-out using color codes Creates a smoother GTA-style effect
+	 * Apply the flash effect with fade-in/fade-out using brightness states Creates a smoother GTA-style effect with
+	 * sequential state transitions
 	 */
 	public String applyWithFade(String content, long currentTick) {
 		FlashState state = flashStates.get(key);
 
-		if (state.lastUpdate == 0) {
-			state.lastUpdate = currentTick;
-			state.visible    = true;
-		}
-
-		long elapsed       = currentTick - state.lastUpdate;
 		long cycleDuration = flashDuration + hideDuration;
-		long position      = elapsed % cycleDuration;
+		long position      = currentTick % cycleDuration;
 
 		if (position < flashDuration) {
-			// Visible phase - apply brightness fade
-			long fadeIn  = Math.min(position, 3); // Fade in over 3 ticks
-			long fadeOut = Math.min(flashDuration - position, 3); // Fade out in last 3 ticks
-			long fade    = Math.min(fadeIn, fadeOut);
-
-			return applyBrightness(content, fade);
+			// Visible phase - cycle through brightness states
+			state.updateBrightness(position, ticksPerState);
+			return applyBrightness(content, state.currentBrightness);
 		} else {
 			// Hidden phase
+			state.currentBrightness = Brightness.HIDDEN;
 			return "";
 		}
 	}
@@ -107,19 +94,104 @@ public class FlashEffect {
 		flashStates.remove(key);
 	}
 
-	private String applyBrightness(String content, long brightness) {
-		// Apply color intensity based on brightness (0-3)
-		// This creates a smooth fade effect
-		return switch ((int) brightness) {
-			case 0 -> ChatUtil.color("&8" + content);
-			case 1 -> ChatUtil.color("&7" + content);
-			case 2 -> ChatUtil.color("&f" + content);
-			default -> content; // Full brightness
+	private String applyBrightness(String content, Brightness brightness) {
+		return switch (brightness) {
+			case HIDDEN -> "";
+			case VERY_DIM -> ChatUtil.color("&8" + content);
+			case DIM -> ChatUtil.color("&7" + content);
+			case NORMAL -> ChatUtil.color("&f" + content);
+			case FULL -> content;
 		};
 	}
 
+	/**
+	 * Brightness levels for fade effects - transitions sequentially
+	 */
+	private enum Brightness {
+		HIDDEN,
+		VERY_DIM,
+		DIM,
+		NORMAL,
+		FULL;
+
+		private static final Brightness[] VISIBLE_STATES = {VERY_DIM, DIM, NORMAL, FULL};
+
+		/**
+		 * Get visible states for calculating transitions
+		 */
+		public static Brightness[] getVisibleStates() {
+			return VISIBLE_STATES;
+		}
+
+		/**
+		 * Get brightness state by phase (0 = fade in, 1 = full, 2 = fade out)
+		 */
+		public static Brightness fromPhase(int stateIndex) {
+			if (stateIndex < 0 || stateIndex >= VISIBLE_STATES.length) {
+				return FULL;
+			}
+			return VISIBLE_STATES[stateIndex];
+		}
+
+		/**
+		 * Get the next brightness state in sequence
+		 */
+		public Brightness next() {
+			int currentIndex = getVisibleIndex();
+			if (currentIndex == -1) return VERY_DIM; // Start from beginning
+
+			int nextIndex = currentIndex + 1;
+			return nextIndex >= VISIBLE_STATES.length ? FULL : VISIBLE_STATES[nextIndex];
+		}
+
+		/**
+		 * Get the previous brightness state in sequence
+		 */
+		public Brightness previous() {
+			int currentIndex = getVisibleIndex();
+			if (currentIndex <= 0) return VERY_DIM;
+
+			return VISIBLE_STATES[currentIndex - 1];
+		}
+
+		/**
+		 * Get this state's index in the visible states array
+		 */
+		private int getVisibleIndex() {
+			for (int i = 0; i < VISIBLE_STATES.length; i++) {
+				if (VISIBLE_STATES[i] == this) return i;
+			}
+			return -1;
+		}
+	}
+
 	private static class FlashState {
-		long    lastUpdate = 0;
-		boolean visible    = true;
+		Brightness currentBrightness = Brightness.VERY_DIM;
+		long       lastTickUpdate    = -1;
+
+		/**
+		 * Update brightness based on position in the flash cycle Transitions through states sequentially for even
+		 * animation
+		 */
+		void updateBrightness(long position, long ticksPerState) {
+			// Determine which state we should be in based on position
+			int totalStates = Brightness.getVisibleStates().length;
+
+			// Calculate state index: cycles through 0,1,2,3,3,2,1,0 for smooth fade in/out
+			long statePosition = position / ticksPerState;
+			int  stateIndex;
+
+			if (statePosition < totalStates) {
+				// Fade in: 0 -> 1 -> 2 -> 3
+				stateIndex = (int) statePosition;
+			} else {
+				// Fade out: 3 -> 2 -> 1 -> 0
+				long fadeOutPosition = statePosition - totalStates;
+				stateIndex = totalStates - 1 - (int) Math.min(fadeOutPosition, totalStates - 1);
+			}
+
+			currentBrightness = Brightness.fromPhase(stateIndex);
+			lastTickUpdate    = position;
+		}
 	}
 }

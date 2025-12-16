@@ -28,6 +28,8 @@ public class DriverV2 extends DriverHandler {
 
 	@Override
 	public void update() {
+		updateFlashLines();
+
 		for (Map.Entry<Long, Integer> entry : clustersInterval.entrySet()) {
 			long interval        = entry.getKey();
 			int  currentInterval = entry.getValue();
@@ -51,6 +53,28 @@ public class DriverV2 extends DriverHandler {
 			// increment the current interval value
 			clustersInterval.replace(interval, (int) ((currentInterval + 1) % (interval + 1)));
 		}
+	}
+
+	/**
+	 * Update all lines containing flash effects every tick for smooth animation
+	 */
+	private void updateFlashLines() {
+		for (Line line : getLines()) {
+			if (line == getTitle()) continue;
+
+			if (!isFlashLine(line)) continue;
+
+			getFastBoard().updateLine(line.getUsedIndex(), updateLine(line));
+		}
+	}
+
+	/**
+	 * Check if a line contains flash effects
+	 */
+	private boolean isFlashLine(Line line) {
+		String content = line.getCurrentContent();
+
+		return content != null && (content.contains("flashif:") || content.contains("flash:"));
 	}
 
 }
