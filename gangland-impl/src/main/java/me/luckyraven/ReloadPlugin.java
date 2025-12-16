@@ -171,6 +171,11 @@ public final class ReloadPlugin {
 
 		if (resetCache) {
 			for (User<Player> user : userManager.getUsers().values()) {
+				// stop the timers
+				user.getWanted().stopTimer();
+				user.getBounty().stopTimer();
+
+				// stop scoreboard
 				if (user.getScoreboard() == null) continue;
 
 				user.getScoreboard().end();
