@@ -5,7 +5,6 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ArgumentUtil;
-import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
@@ -40,12 +39,12 @@ public final class GangCommand extends CommandHandler {
 	public GangCommand(Gangland gangland) {
 		super(gangland, "gang", true);
 
-		List<CommandInformation> list = getCommands().entrySet()
-				.stream()
-				.filter(entry -> entry.getKey().startsWith("gang"))
-				.sorted(Map.Entry.comparingByKey())
-				.map(Map.Entry::getValue)
-				.toList();
+		var list = getCommands().entrySet()
+								.stream()
+								.filter(entry -> entry.getKey().startsWith("gang"))
+								.sorted(Map.Entry.comparingByKey())
+								.map(Map.Entry::getValue)
+								.toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -267,7 +266,7 @@ public final class GangCommand extends CommandHandler {
 						List<ItemStack> items = new ArrayList<>();
 
 						for (Gang ally : gang1.getAllies()
-								.stream().map(Pair::first).toList()) {
+											  .stream().map(Pair::first).toList()) {
 							List<String> data = new ArrayList<>();
 							data.add("&7ID:&e " + ally.getId());
 							data.add(String.format("&7Members:&a %d&7/&e%d", ally.getOnlineMembers(userManager).size(),

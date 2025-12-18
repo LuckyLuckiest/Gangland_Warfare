@@ -125,7 +125,7 @@ public class ChatUtil {
 		Map<Integer, List<String>> suggestions = checker.getSuggestions();
 		// get the minimum length
 		int minimum = suggestions.keySet()
-				.stream().mapToInt(Integer::intValue).min().orElse(-1);
+								 .stream().mapToInt(Integer::intValue).min().orElse(-1);
 
 		StringBuilder builder = new StringBuilder("&eDid you mean ");
 

@@ -36,11 +36,11 @@ public class GangAlliesTable extends Table<Pair<Gang, Gang>> {
 
 		// get the allied gang date
 		long alliedDate = originalGang.getAllies()
-				.stream()
-				.filter(pair -> pair.first().equals(alliedGang))
-				.map(Pair::second)
-				.mapToLong(Long::longValue)
-				.toArray()[0];
+									  .stream()
+									  .filter(pair -> pair.first().equals(alliedGang))
+									  .map(Pair::second)
+									  .mapToLong(Long::longValue)
+									  .toArray()[0];
 
 		return new Object[]{data.first().getId(), data.second().getId(), alliedDate};
 	}

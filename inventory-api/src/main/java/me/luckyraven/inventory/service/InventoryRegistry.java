@@ -36,11 +36,11 @@ public class InventoryRegistry {
 
 	public InventoryHandler findByInventory(Inventory inventory) {
 		return playerInventories.values()
-				.stream()
-				.flatMap(Set::stream)
-				.filter(handler -> inventory.equals(handler.getInventory()))
-				.findFirst()
-				.orElse(null);
+								.stream()
+								.flatMap(Set::stream)
+								.filter(handler -> inventory.equals(handler.getInventory()))
+								.findFirst()
+								.orElse(null);
 	}
 
 	public void clear(UUID uuid) {

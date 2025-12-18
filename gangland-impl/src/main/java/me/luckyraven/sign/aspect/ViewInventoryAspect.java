@@ -179,11 +179,11 @@ public class ViewInventoryAspect implements SignAspect {
 	private Weapon findWeapon(String identifier) {
 		return weaponService.getWeapons()
 							.values()
-				.stream()
-				.filter(w -> w.getName().equalsIgnoreCase(identifier) ||
-							 w.getDisplayName().equalsIgnoreCase(identifier))
-				.findFirst()
-				.orElse(null);
+							.stream()
+							.filter(w -> w.getName().equalsIgnoreCase(identifier) ||
+										 w.getDisplayName().equalsIgnoreCase(identifier))
+							.findFirst()
+							.orElse(null);
 	}
 
 	private List<String> getCompatibleAmmunition(Weapon weapon) {

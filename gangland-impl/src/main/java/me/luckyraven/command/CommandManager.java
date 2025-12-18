@@ -115,14 +115,14 @@ public final class CommandManager implements CommandExecutor {
 				List<CommandHandler> commandHandlers = getPermissibleCommands(sender);
 
 				Set<String> dictionary = commandHandlers.stream()
-						.map(CommandHandler::getAlias)
-						.flatMap(Collection::stream)
-						.filter(s -> !s.equals(Argument.OPTIONAL_ARGUMENT))
-						.collect(Collectors.toSet());
+														.map(CommandHandler::getAlias)
+														.flatMap(Collection::stream)
+														.filter(s -> !s.equals(Argument.OPTIONAL_ARGUMENT))
+														.collect(Collectors.toSet());
 
 				dictionary.addAll(commandHandlers.stream()
-										  .map(handler -> handler.getArgument().getArguments()[0])
-										  .collect(Collectors.toSet()));
+												 .map(handler -> handler.getArgument().getArguments()[0])
+												 .collect(Collectors.toSet()));
 
 				String commandSuggestion = ChatUtil.generateCommandSuggestion(args[0], dictionary, label, null);
 

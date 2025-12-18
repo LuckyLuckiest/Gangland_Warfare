@@ -177,9 +177,9 @@ public class User<T extends OfflinePlayer> {
 	@Nullable
 	public InventoryHandler getInventory(String name) {
 		return inventories.stream()
-				.filter(handler -> handler.getTitle().getKey().equals(name.toLowerCase()))
-				.findFirst()
-				.orElse(null);
+						  .filter(handler -> handler.getTitle().getKey().equals(name.toLowerCase()))
+						  .findFirst()
+						  .orElse(null);
 	}
 
 	/**
@@ -234,7 +234,7 @@ public class User<T extends OfflinePlayer> {
 							 getKillDeathRatio(), economy.getBalance(), level.getLevelValue(), bounty.getAmount(),
 							 gangId, permissionAttachment != null ?
 									 permissionAttachment.getPermissions().keySet()
-											 .stream().toList() :
+														 .stream().toList() :
 									 "NA");
 	}
 

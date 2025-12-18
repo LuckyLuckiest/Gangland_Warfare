@@ -172,9 +172,10 @@ public final class Initializer {
 		// add all registered plugin permissions
 		Set<Permission> permissions = Bukkit.getPluginManager().getPermissions();
 		Set<String> ganglandPermissions = permissions.stream()
-				.map(Permission::getName)
-				.filter(permission -> permission.startsWith(gangland.getFullPrefix()))
-				.collect(Collectors.toSet());
+													 .map(Permission::getName)
+													 .filter(permission -> permission.startsWith(
+															 gangland.getFullPrefix()))
+													 .collect(Collectors.toSet());
 
 		permissionManager.addAllPermissions(ganglandPermissions);
 
@@ -386,10 +387,10 @@ public final class Initializer {
 
 	public <E> E getInstanceFromTables(Class<E> clazz, List<Table<?>> tables) {
 		return tables.stream()
-				.filter(clazz::isInstance)
-				.map(clazz::cast)
-				.findFirst()
-				.orElseThrow(() -> new RuntimeException("There was a problem finding class, " + clazz.getName()));
+					 .filter(clazz::isInstance)
+					 .map(clazz::cast)
+					 .findFirst()
+					 .orElseThrow(() -> new RuntimeException("There was a problem finding class, " + clazz.getName()));
 	}
 
 	private void databases() {

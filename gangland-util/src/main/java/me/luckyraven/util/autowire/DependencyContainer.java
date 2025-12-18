@@ -131,7 +131,7 @@ public class DependencyContainer {
 	 */
 	public int getTotalInstanceCount() {
 		return instances.values()
-				.stream().mapToInt(List::size).sum();
+						.stream().mapToInt(List::size).sum();
 	}
 
 	/**

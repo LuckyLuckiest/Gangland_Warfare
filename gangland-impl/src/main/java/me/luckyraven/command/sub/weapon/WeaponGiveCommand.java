@@ -61,7 +61,7 @@ class WeaponGiveCommand extends SubArgument {
 			WeaponService weaponService = gangland.getInitializer().getWeaponManager();
 
 			return weaponService.getWeapons().values()
-					.stream().map(Weapon::getName).toList();
+								.stream().map(Weapon::getName).toList();
 		});
 
 		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {

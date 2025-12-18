@@ -99,7 +99,7 @@ class BountyClearCommand extends SubArgument {
 			}
 
 		}, sender -> Bukkit.getOnlinePlayers()
-				.stream().map(Player::getName).toList());
+						   .stream().map(Player::getName).toList());
 
 		this.addSubArgument(playerName);
 	}

@@ -3,7 +3,6 @@ package me.luckyraven.command.sub.weapon;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.command.data.CommandInformation;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
@@ -15,12 +14,12 @@ public final class WeaponCommand extends CommandHandler {
 	public WeaponCommand(Gangland gangland) {
 		super(gangland, "weapon", true);
 
-		List<CommandInformation> list = getCommands().entrySet()
-				.stream()
-				.filter(entry -> entry.getKey().startsWith("weapon"))
-				.sorted(Map.Entry.comparingByKey())
-				.map(Map.Entry::getValue)
-				.toList();
+		var list = getCommands().entrySet()
+								.stream()
+								.filter(entry -> entry.getKey().startsWith("weapon"))
+								.sorted(Map.Entry.comparingByKey())
+								.map(Map.Entry::getValue)
+								.toList();
 
 		getHelpInfo().addAll(list);
 	}

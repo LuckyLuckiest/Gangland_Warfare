@@ -138,8 +138,8 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 				displayName = applyPlaceholders(placeholder, meta.getDisplayName(), player);
 				lore        = meta.getLore();
 				if (lore != null) lore = lore.stream()
-						.map(line -> applyPlaceholders(placeholder, line, player))
-						.toList();
+											 .map(line -> applyPlaceholders(placeholder, line, player))
+											 .toList();
 				enchanted = meta.hasEnchants();
 			}
 

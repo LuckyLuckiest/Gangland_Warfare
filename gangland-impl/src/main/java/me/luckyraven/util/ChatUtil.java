@@ -37,9 +37,9 @@ public final class ChatUtil extends me.luckyraven.util.utilities.ChatUtil {
 	public static void sendToOperators(String permission, String message) {
 		Bukkit.getServer()
 			  .getOnlinePlayers()
-				.stream()
-				.filter(player -> permission == null || permission.isEmpty() || player.hasPermission(permission))
-				.forEach(player -> player.sendMessage(ChatUtil.commandMessage(message)));
+			  .stream()
+			  .filter(player -> permission == null || permission.isEmpty() || player.hasPermission(permission))
+			  .forEach(player -> player.sendMessage(ChatUtil.commandMessage(message)));
 
 		Bukkit.getServer().getConsoleSender().sendMessage(ChatUtil.commandMessage(message));
 	}

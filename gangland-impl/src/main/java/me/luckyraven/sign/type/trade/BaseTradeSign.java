@@ -26,32 +26,32 @@ public abstract class BaseTradeSign implements Sign {
 
 		// check if it is a weapon
 		ItemStack itemStack = values.stream()
-				.filter(w -> w.getName().equalsIgnoreCase(itemName))
-				.findFirst()
-				.map(Weapon::buildItem)
-				.orElse(null);
+									.filter(w -> w.getName().equalsIgnoreCase(itemName))
+									.findFirst()
+									.map(Weapon::buildItem)
+									.orElse(null);
 
 		// check if it is ammunition
 		if (itemStack == null) {
 			Collection<String> ammunition = ammunitionAddon.getAmmunitionKeys();
 
 			itemStack = ammunition.stream()
-					.map(ammunitionAddon::getAmmunition)
-					.filter(ammo -> ammo.getName().equalsIgnoreCase(itemName))
-					.findFirst()
-					.map(Ammunition::buildItem)
-					.orElse(null);
+								  .map(ammunitionAddon::getAmmunition)
+								  .filter(ammo -> ammo.getName().equalsIgnoreCase(itemName))
+								  .findFirst()
+								  .map(Ammunition::buildItem)
+								  .orElse(null);
 		}
 
 		// last hope check if it is an item
 		if (itemStack == null) {
 			itemStack = Arrays.stream(XMaterial.values())
-					.map(XMaterial::get)
-					.filter(Objects::nonNull)
-					.filter(material -> material.name().equalsIgnoreCase(itemName))
-					.findFirst()
-					.map(ItemStack::new)
-					.orElse(null);
+							  .map(XMaterial::get)
+							  .filter(Objects::nonNull)
+							  .filter(material -> material.name().equalsIgnoreCase(itemName))
+							  .findFirst()
+							  .map(ItemStack::new)
+							  .orElse(null);
 		}
 
 		return itemStack;

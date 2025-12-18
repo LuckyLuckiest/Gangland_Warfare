@@ -3,7 +3,6 @@ package me.luckyraven.command.sub.bank;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -20,12 +19,12 @@ public final class BankCommand extends CommandHandler {
 	public BankCommand(Gangland gangland) {
 		super(gangland, "bank", true);
 
-		List<CommandInformation> list = getCommands().entrySet()
-				.stream()
-				.filter(entry -> entry.getKey().startsWith("bank"))
-				.sorted(Map.Entry.comparingByKey())
-				.map(Map.Entry::getValue)
-				.toList();
+		var list = getCommands().entrySet()
+								.stream()
+								.filter(entry -> entry.getKey().startsWith("bank"))
+								.sorted(Map.Entry.comparingByKey())
+								.map(Map.Entry::getValue)
+								.toList();
 		getHelpInfo().addAll(list);
 	}
 

@@ -29,7 +29,7 @@ class RankListCommand extends SubArgument {
 
 			StringBuilder builder = new StringBuilder();
 			List<Rank> ranks = rankManager.getRanks().values()
-					.stream().toList();
+										  .stream().toList();
 
 			for (int i = 0; i < ranks.size(); i++) {
 				builder.append(ranks.get(i).getName());

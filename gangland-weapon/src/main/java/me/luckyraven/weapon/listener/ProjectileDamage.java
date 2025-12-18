@@ -72,7 +72,8 @@ public class ProjectileDamage implements Listener {
 		tryProcessQueue(projectileId, isPlayer ? (Player) event.getDamager() : null);
 	}
 
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.HIGHEST,
+				  ignoreCancelled = true)
 	public void onProjectileHit(ProjectileHitEvent event) {
 		var projectile   = event.getEntity();
 		int projectileId = projectile.getEntityId();

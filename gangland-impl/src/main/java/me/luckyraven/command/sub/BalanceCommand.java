@@ -5,7 +5,6 @@ import me.luckyraven.Initializer;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
-import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHelper;
@@ -35,12 +34,12 @@ public final class BalanceCommand extends CommandHandler {
 
 		this.userManager = gangland.getInitializer().getUserManager();
 
-		List<CommandInformation> list = getCommands().entrySet()
-				.stream()
-				.filter(entry -> entry.getKey().startsWith("balance"))
-				.sorted(Map.Entry.comparingByKey())
-				.map(Map.Entry::getValue)
-				.toList();
+		var list = getCommands().entrySet()
+								.stream()
+								.filter(entry -> entry.getKey().startsWith("balance"))
+								.sorted(Map.Entry.comparingByKey())
+								.map(Map.Entry::getValue)
+								.toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -85,9 +84,9 @@ public final class BalanceCommand extends CommandHandler {
 
 				// get only the uuids
 				Map<UUID, Double> uuids = usersData.stream()
-						.collect(Collectors.toMap(
-								objects -> UUID.fromString(String.valueOf(objects[0])),
-								objects -> (double) objects[1]));
+												   .collect(Collectors.toMap(
+														   objects -> UUID.fromString(String.valueOf(objects[0])),
+														   objects -> (double) objects[1]));
 
 				// iterate over all uuids and check if the name is similar to target
 				boolean found = false;
@@ -126,9 +125,9 @@ public final class BalanceCommand extends CommandHandler {
 
 				// get only the uuids
 				Map<UUID, Double> uuids = usersData.stream()
-						.collect(Collectors.toMap(
-								objects -> UUID.fromString(String.valueOf(objects[0])),
-								objects -> (double) objects[1]));
+												   .collect(Collectors.toMap(
+														   objects -> UUID.fromString(String.valueOf(objects[0])),
+														   objects -> (double) objects[1]));
 
 				for (UUID uuid : uuids.keySet()) {
 					OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);

@@ -45,7 +45,7 @@ public class LevelUp implements Listener {
 		if (gang == null) return;
 
 		List<Player> onlinePlayers = gang.getOnlineMembers(gangland.getInitializer().getUserManager())
-				.stream().map(User::getUser).toList();
+										 .stream().map(User::getUser).toList();
 
 		for (Player player : onlinePlayers) {
 			User<Player> onlineUser = userManager.getUser(player);

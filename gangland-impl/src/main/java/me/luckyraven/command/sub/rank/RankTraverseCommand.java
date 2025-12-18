@@ -27,7 +27,7 @@ class RankTraverseCommand extends SubArgument {
 			StringBuilder builder = new StringBuilder();
 
 			List<Rank> ranks = rankManager.getRankTree().getAllNodes()
-					.stream().map(Tree.Node::getData).toList();
+										  .stream().map(Tree.Node::getData).toList();
 
 			for (int i = 0; i < ranks.size(); i++) {
 				builder.append(ranks.get(i).getName());

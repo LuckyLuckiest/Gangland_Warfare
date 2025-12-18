@@ -72,17 +72,17 @@ public class GangManager {
 			// add the gang allies to the specified gang
 			for (int gangId : gangs.keySet()) {
 				// get data associated to specific id
-				List<Pair<Integer, Long>> alliedGangsIdData = gangsAllie.stream()
-						.filter(pair -> pair.first() == gangId)
-						.map(Pair::second)
-						.toList();
+				var alliedGangsIdData = gangsAllie.stream()
+												  .filter(pair -> pair.first() == gangId)
+												  .map(Pair::second)
+												  .toList();
 
 				// convert each id to Gang instance
-				List<Pair<Gang, Long>> alliedGangsData = alliedGangsIdData.stream()
-						.map(pair -> new Pair<>(
-								gangs.get(pair.first()),
-								pair.second()))
-						.toList();
+				var alliedGangsData = alliedGangsIdData.stream()
+													   .map(pair -> new Pair<>(
+															   gangs.get(pair.first()),
+															   pair.second()))
+													   .toList();
 
 				// add the gang to the new gang
 				gangs.get(gangId).addAllAllies(alliedGangsData);

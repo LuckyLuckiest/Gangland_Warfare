@@ -101,11 +101,11 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	private String getSetting(String parameter) {
 		Object value = SettingAddon.getSettingsPlaceholder()
 								   .entrySet()
-				.stream()
-				.filter(entry -> entry.getKey().equals(parameter))
-				.map(Map.Entry::getValue)
-				.findFirst()
-				.orElse(null);
+								   .stream()
+								   .filter(entry -> entry.getKey().equals(parameter))
+								   .map(Map.Entry::getValue)
+								   .findFirst()
+								   .orElse(null);
 
 		if (value == null) return null;
 

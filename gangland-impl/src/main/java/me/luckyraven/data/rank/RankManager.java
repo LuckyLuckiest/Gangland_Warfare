@@ -91,15 +91,15 @@ public class RankManager {
 				// set up the permissions
 				// get the permissions which have this rank id
 				List<Integer> permIds = ranksPermissions.stream()
-						.filter(pair -> pair.first() == id)
-						.map(Pair::second)
-						.toList();
+														.filter(pair -> pair.first() == id)
+														.map(Pair::second)
+														.toList();
 				// group them together and add them as a permissions list
 				List<Permission> perms = this.permissions.keySet()
-						.stream()
-						.filter(permIds::contains)
-						.map(this.permissions::get)
-						.toList();
+														 .stream()
+														 .filter(permIds::contains)
+														 .map(this.permissions::get)
+														 .toList();
 				List<Permission> permissions = new ArrayList<>(perms);
 
 				Rank rank = new Rank(name, id, permissions);
@@ -115,24 +115,24 @@ public class RankManager {
 			for (int rankId : ranks.keySet()) {
 				// get the rank parents of the specified id
 				List<String> children = this.ranksParent.stream()
-						// need only the ranks which are under this rank id
-						.filter(pair -> pair.first() == rankId)
-						// get the name of the ranks under this id
-						.map(pair -> this.ranks.get(pair.second()).getName()).toList();
+														// need only the ranks which are under this rank id
+														.filter(pair -> pair.first() == rankId)
+														// get the name of the ranks under this id
+														.map(pair -> this.ranks.get(pair.second()).getName()).toList();
 
 				nodeMap.put(this.ranks.get(rankId).getNode(), children);
 			}
 
 			// add the rank head
 			rankTree.add(nodeMap.keySet()
-								 .stream()
-								 .filter(node -> node.getData()
-													 .getName()
-													 .equalsIgnoreCase(SettingAddon.getGangRankHead()))
-								 .findFirst()
-								 // what if there was a node that doesn't have this specific head!
-								 // need to find the node that would be attached to this default rank
-								 .orElse(new Rank(SettingAddon.getGangRankHead(), Rank.getNewId()).getNode()));
+								.stream()
+								.filter(node -> node.getData()
+													.getName()
+													.equalsIgnoreCase(SettingAddon.getGangRankHead()))
+								.findFirst()
+								// what if there was a node that doesn't have this specific head!
+								// need to find the node that would be attached to this default rank
+								.orElse(new Rank(SettingAddon.getGangRankHead(), Rank.getNewId()).getNode()));
 
 			// map information
 			// the map saves the node and the child of that node
@@ -195,7 +195,7 @@ public class RankManager {
 	@Nullable
 	public Rank get(String name) {
 		return ranks.values()
-				.stream().filter(rank -> rank.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
+					.stream().filter(rank -> rank.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
 	}
 
 	public Map<Integer, Rank> getRanks() {
@@ -226,10 +226,10 @@ public class RankManager {
 	@Nullable
 	private Tree.Node<Rank> findChildNode(Map<Tree.Node<Rank>, List<String>> nodeMap, String child) {
 		return nodeMap.keySet()
-				.stream()
-				.filter(node -> node.getData().getName().equalsIgnoreCase(child))
-				.findFirst()
-				.orElse(null);
+					  .stream()
+					  .filter(node -> node.getData().getName().equalsIgnoreCase(child))
+					  .findFirst()
+					  .orElse(null);
 	}
 
 }

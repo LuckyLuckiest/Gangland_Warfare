@@ -163,9 +163,9 @@ public class WeaponAddon {
 			pushVelocity  = recoilSection.getDouble("Push");
 			pushPowerUp   = recoilSection.getDouble("Power_Up");
 			recoilPattern = recoilSection.getStringList("Pattern")
-					.stream() // stream
-							  .map(string -> string.split(";")) // convert to array
-							  .toList(); // back to the list
+										 .stream() // stream
+										 .map(string -> string.split(";")) // convert to array
+										 .toList(); // back to the list
 		}
 
 		// sound
