@@ -67,15 +67,17 @@ public class WeaponInteract implements Listener {
 		// left-click scopes
 		boolean leftClick = event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK;
 		if (leftClick) {
-			if (!weapon.isScoped()) {
+			if (!weapon.getScopeData().isScoped()) {
 				weapon.scope(player, true);
-				SoundConfiguration.playSounds(player, weapon.getScopeCustomSound(), weapon.getScopeDefaultSound());
+				SoundConfiguration.playSounds(player, weapon.getSoundData().getScopeCustom(),
+											  weapon.getSoundData().getScopeDefault());
 
 				return;
 			}
 
 			weapon.unScope(player, true);
-			SoundConfiguration.playSounds(player, weapon.getScopeCustomSound(), weapon.getScopeDefaultSound());
+			SoundConfiguration.playSounds(player, weapon.getSoundData().getScopeCustom(),
+										  weapon.getSoundData().getScopeDefault());
 
 			return;
 		}
@@ -199,7 +201,7 @@ public class WeaponInteract implements Listener {
 			shootingTimer.start(false);
 
 			// remove the weapon after 3 ticks of not pressing the button
-			long watchdog = weapon.getProjectileCooldown() + 3L;
+			long watchdog = weapon.getProjectileData().getCooldown() + 3L;
 			new RepeatingTimer(plugin, watchdog, time -> {
 				// get the necessary information
 				AtomicReference<WeaponData> stillShooting = continuousFire.get(weaponUuid);
@@ -246,7 +248,7 @@ public class WeaponInteract implements Listener {
 			autoTask.start(false);
 
 			// watchdog timer for AUTO mode
-			long watchdog = weapon.getProjectileCooldown() + 2L;
+			long watchdog = weapon.getProjectileData().getCooldown() + 2L;
 			new RepeatingTimer(plugin, watchdog, time -> {
 				AtomicReference<WeaponData> stillShooting = continuousFire.get(weaponUuid);
 
@@ -283,7 +285,7 @@ public class WeaponInteract implements Listener {
 	@NotNull
 	private RepeatingTimer getShootingTimer(AtomicReference<WeaponData> retrievedWeaponData, Weapon weapon,
 											Player player) {
-		return new RepeatingTimer(plugin, weapon.getProjectileCooldown(), time -> {
+		return new RepeatingTimer(plugin, weapon.getProjectileData().getCooldown(), time -> {
 			if (retrievedWeaponData == null) {
 				time.stop();
 				return;
@@ -306,6 +308,7 @@ public class WeaponInteract implements Listener {
 
 	private void selectiveFireShooter(Weapon weapon, Player player, RepeatingTimer time, SelectiveFire selectiveFire,
 									  WeaponData data) {
+		var projectileData = weapon.getProjectileData();
 		switch (selectiveFire) {
 			case AUTO -> { }
 			case BURST -> {
@@ -315,7 +318,7 @@ public class WeaponInteract implements Listener {
 				shoot(player, weapon);
 
 				// calculate total burst time
-				long burstDuration = (long) weapon.getProjectilePerShot() * weapon.getProjectileCooldown();
+				long burstDuration = (long) projectileData.getPerShot() * projectileData.getCooldown();
 
 				// reset after burst delay
 				new CountdownTimer(plugin, 0L, 0L, burstDuration, null, null, timer -> {
@@ -330,7 +333,7 @@ public class WeaponInteract implements Listener {
 				data.shooting = false;
 
 				UUID weaponUuid     = weapon.getUuid();
-				long singleDuration = (long) weapon.getProjectilePerShot() * weapon.getProjectileCooldown();
+				long singleDuration = (long) projectileData.getPerShot() * projectileData.getCooldown();
 
 				new CountdownTimer(plugin, 0L, 0L, singleDuration, null, null, timer -> {
 					data.cooldown = false;
@@ -375,13 +378,14 @@ public class WeaponInteract implements Listener {
 		// have only multiple shots for when the weapon is burst
 		int numberOfShots = 1;
 
-		if (weapon.getCurrentSelectiveFire() == SelectiveFire.BURST) numberOfShots = weapon.getProjectilePerShot();
+		if (weapon.getCurrentSelectiveFire() == SelectiveFire.BURST) numberOfShots = weapon.getProjectileData()
+																						   .getPerShot();
 
 		SequenceTimer sequenceTimer = new SequenceTimer(plugin, 1L, 1L);
 
 		for (int i = 0; i < numberOfShots; ++i) {
 			// logically, the first shot should be instant
-			int cooldown = i == 0 ? 0 : weapon.getProjectileCooldown();
+			int cooldown = i == 0 ? 0 : weapon.getProjectileData().getCooldown();
 
 			sequenceTimer.addIntervalTaskPair(cooldown, time -> shootInterval(player, weapon));
 		}
@@ -402,9 +406,10 @@ public class WeaponInteract implements Listener {
 			weapon.removeWeapon(player, player.getInventory().getHeldItemSlot());
 		}
 
-		if (weapon.getWeaponConsumeOnTime() <= -1) return;
+		int consumeOnTime = weapon.getDurabilityData().getConsumeOnTime();
+		if (consumeOnTime <= -1) return;
 
-		CountdownTimer timer = new CountdownTimer(plugin, 0L, 0L, weapon.getWeaponConsumeOnTime(), null, null,
+		CountdownTimer timer = new CountdownTimer(plugin, 0L, 0L, consumeOnTime, null, null,
 												  time -> weapon.removeWeapon(player,
 																			  player.getInventory().getHeldItemSlot()));
 

@@ -155,17 +155,19 @@ public class ProjectileDamage implements Listener {
 		if (!(event.getEntity() instanceof LivingEntity entity)) return;
 		if (!(event.getDamager() instanceof Projectile projectile)) return;
 
-		Random random = new Random();
+		var random         = new Random();
+		var projectileData = weapon.getProjectileData();
+		var damageData     = weapon.getDamageData();
 
-		boolean criticalHitOccurred = random.nextDouble() < weapon.getProjectileCriticalHitChance() / 100D;
+		boolean criticalHitOccurred = random.nextDouble() < damageData.getCriticalHitChance() / 100D;
 
 		double damage = criticalHitOccurred ?
-						weapon.getProjectileDamage() + weapon.getProjectileCriticalHitDamage() :
-						weapon.getProjectileDamage();
+						projectileData.getDamage() + damageData.getCriticalHitDamage() :
+						projectileData.getDamage();
 
 		// set the damage
 		event.setDamage(weaponManager.isHeadPosition(projectile.getLocation(), entity.getLocation()) ?
-						damage + weapon.getProjectileHeadDamage() :
+						damage + damageData.getHeadDamage() :
 						damage);
 
 		if (criticalHitOccurred && shooter != null) {
@@ -175,7 +177,7 @@ public class ProjectileDamage implements Listener {
 		}
 
 		// set the fire damage
-		entity.setFireTicks(weapon.getProjectileFireTicks());
+		entity.setFireTicks(damageData.getFireTicks());
 
 		entity.setNoDamageTicks(0);
 	}
@@ -209,7 +211,7 @@ public class ProjectileDamage implements Listener {
 		// damage nearby entities
 		int    entityId        = projectile.getEntityId();
 		Weapon weapon          = weaponInstance.get(entityId);
-		double explosionRadius = weapon.getProjectileExplosionDamage();
+		double explosionRadius = weapon.getDamageData().getExplosionDamage();
 
 		for (Entity entity : fireball.getNearbyEntities(explosionRadius, explosionRadius, explosionRadius)) {
 			if (!(entity instanceof LivingEntity target && entity != shooter)) continue;

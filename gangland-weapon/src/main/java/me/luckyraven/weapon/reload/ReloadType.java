@@ -26,7 +26,7 @@ public enum ReloadType {
 	}
 
 	public Reload createInstance(Weapon weapon, Ammunition ammunition) {
-		return switch (weapon.getReloadType()) {
+		return switch (weapon.getReloadData().getType()) {
 			case INSTANT -> new InstantReload(weapon, ammunition);
 			case ONE, NUM -> new NumberedReload(weapon, ammunition, amount);
 		};

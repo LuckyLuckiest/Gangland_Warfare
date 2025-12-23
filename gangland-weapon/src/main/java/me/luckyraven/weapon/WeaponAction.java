@@ -4,6 +4,8 @@ import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.utilities.ChatUtil;
+import me.luckyraven.weapon.dto.RecoilData;
+import me.luckyraven.weapon.dto.SoundData;
 import me.luckyraven.weapon.events.WeaponShootEvent;
 import me.luckyraven.weapon.projectile.WeaponProjectile;
 import org.bukkit.Bukkit;
@@ -38,8 +40,9 @@ public class WeaponAction {
 		}
 
 		// check the durability of the weapon
+		SoundData soundData = weapon.getSoundData();
 		if (weapon.isBroken()) {
-			SoundConfiguration.playSounds(shooter, weapon.getEmptyMagCustomSound(), weapon.getEmptyMagDefaultSound());
+			SoundConfiguration.playSounds(shooter, soundData.getEmptyMagCustom(), soundData.getEmptyMagDefault());
 
 			ChatUtil.sendActionBar(shooter, "&cBroken");
 			return;
@@ -51,12 +54,14 @@ public class WeaponAction {
 		// no shot fired
 		if (!consumed) {
 			// empty magazine sound
-			SoundConfiguration.playSounds(shooter, weapon.getEmptyMagCustomSound(), weapon.getEmptyMagDefaultSound());
+			SoundConfiguration.playSounds(shooter, soundData.getEmptyMagCustom(), soundData.getEmptyMagDefault());
 			return;
 		}
 
-		WeaponProjectile<?> weaponProjectile = weapon.getProjectileType().createInstance(plugin, shooter, weapon);
-		WeaponShootEvent    weaponShootEvent = new WeaponShootEvent(weapon, weaponProjectile);
+		WeaponProjectile<?> weaponProjectile = weapon.getProjectileData()
+													 .getType()
+													 .createInstance(plugin, shooter, weapon);
+		WeaponShootEvent weaponShootEvent = new WeaponShootEvent(weapon, weaponProjectile);
 		Bukkit.getPluginManager().callEvent(weaponShootEvent);
 
 		// launch the projectile
@@ -71,7 +76,7 @@ public class WeaponAction {
 		weapon.updateWeaponData(heldWeapon);
 
 		// change durability of the weapon
-		short durabilityOnShot = weapon.getDurabilityOnShot();
+		short durabilityOnShot = weapon.getDurabilityData().getOnShot();
 		if (durabilityOnShot > (short) 0) {
 			weapon.decreaseDurability(heldWeapon, durabilityOnShot);
 		}
@@ -85,15 +90,19 @@ public class WeaponAction {
 		applyPush(shooter, weapon);
 
 		// shooting sound
-		SoundConfiguration.playSounds(shooter, weapon.getShotCustomSound(), weapon.getShotDefaultSound());
+		SoundConfiguration.playSounds(shooter, weapon.getSoundData().getShotCustom(),
+									  weapon.getSoundData().getShotDefault());
 	}
 
 	private void applyPush(Player player, Weapon weapon) {
-		if (!player.isSneaking()) push(player, weapon.getPushPowerUp(), weapon.getPushVelocity());
-		else {
-			if (weapon.isScoped()) push(player, weapon.getPushPowerUp() / 2, weapon.getPushVelocity() / 2);
-			else push(player, 0, 0);
+		RecoilData recoilData = weapon.getRecoilData();
+		if (!player.isSneaking()) {
+			push(player, recoilData.getPushPowerUp(), recoilData.getPushVelocity());
+			return;
 		}
+		if (weapon.getScopeData().isScoped()) push(player, recoilData.getPushPowerUp() / 2,
+												   recoilData.getPushVelocity() / 2);
+		else push(player, 0, 0);
 	}
 
 	private void push(Player player, double powerUp, double push) {

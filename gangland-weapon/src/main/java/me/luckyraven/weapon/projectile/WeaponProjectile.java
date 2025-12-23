@@ -67,16 +67,16 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 		setVelocity(spread.multiply(getSpeed()));
 		projectile.setVelocity(getVelocity());
 
-		if (weapon.isParticle()) {
+		if (weapon.getProjectileData().isParticle()) {
 			if (getShooter() instanceof Player) {
 				// Calculate end location using the actual projectile velocity (with spread applied)
-				Location endLocation = weaponPosition.clone()
-													 .add(getVelocity().normalize()
-																	   .multiply(weapon.getProjectileDistance()));
+				Location clone = weaponPosition.clone();
+				Location endLocation = clone.add(
+						getVelocity().normalize().multiply(weapon.getProjectileData().getDistance()));
 
 				// Spawn particle line from weapon position following the projectile trajectory
 				ParticleUtil.spawnLine(weaponPosition, endLocation, XParticle.DUST.get(),
-									   weapon.getProjectileDistance(),
+									   weapon.getProjectileData().getDistance(),
 									   new Particle.DustOptions(Color.GRAY.getBukkitColor(), 0.5F));
 			}
 		}
@@ -88,13 +88,13 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 
 	@Override
 	public double getSpeed() {
-		return weapon.getProjectileSpeed();
+		return weapon.getProjectileData().getSpeed();
 	}
 
 	@NotNull
 	private RepeatingTimer applyGravity(Weapon weapon, Projectile projectile) {
 		AtomicReference<Location> initialLocation  = new AtomicReference<>(projectile.getLocation());
-		AtomicDouble              furthestDistance = new AtomicDouble(weapon.getProjectileDistance());
+		AtomicDouble              furthestDistance = new AtomicDouble(weapon.getProjectileData().getDistance());
 		AtomicBoolean             falling          = new AtomicBoolean();
 
 		return new RepeatingTimer(plugin, 1L, t -> {

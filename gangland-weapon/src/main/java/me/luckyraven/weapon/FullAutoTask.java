@@ -57,7 +57,7 @@ public class FullAutoTask extends Timer {
 	public FullAutoTask(JavaPlugin plugin, WeaponService weaponService, Weapon weapon,
 						RecoilCompatibility recoilCompatibility, Player player, ItemStack weaponItem,
 						Runnable onCancel) {
-		super(plugin, weapon.getProjectileCooldown(), 1L);
+		super(plugin, weapon.getProjectileData().getCooldown(), 1L);
 
 		this.plugin              = plugin;
 		this.weaponService       = weaponService;
@@ -84,7 +84,7 @@ public class FullAutoTask extends Timer {
 			return;
 		}
 
-		int shotsPerSecond = Math.max(1, Math.min(20, 20 / Math.max(1, weapon.getProjectileCooldown())));
+		int shotsPerSecond = Math.max(1, Math.min(20, 20 / Math.max(1, weapon.getProjectileData().getCooldown())));
 
 		if (AUTO[shotsPerSecond][tickIndex]) {
 			WeaponAction weaponAction = new WeaponAction(plugin, weaponService, weapon, recoilCompatibility);

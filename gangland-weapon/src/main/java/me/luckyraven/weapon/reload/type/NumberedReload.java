@@ -49,8 +49,8 @@ public class NumberedReload extends Reload {
 		});
 
 		// calculate the number of inserts according to the mag capacity
-		int leftToInsert       = getWeapon().getMaxMagCapacity() - getWeapon().getCurrentMagCapacity();
-		int numberOfInsertions = leftToInsert / getWeapon().getReloadRestore();
+		int leftToInsert       = getWeapon().getReloadData().getMaxMagCapacity() - getWeapon().getCurrentMagCapacity();
+		int numberOfInsertions = leftToInsert / getWeapon().getReloadData().getRestore();
 
 		int numberOfAmmunition = 0;
 		for (int i = 0; i < inventory.getSize(); i++) {
@@ -70,7 +70,7 @@ public class NumberedReload extends Reload {
 		numberOfInsertions = Math.min(numberOfInsertions, maxPossibleInsertions);
 
 		for (int i = 0; i < numberOfInsertions; ++i) {
-			timer.addIntervalTaskPair(getWeapon().getReloadCooldown(), time -> {
+			timer.addIntervalTaskPair(getWeapon().getReloadData().getCooldown(), time -> {
 				if (!isReloading()) {
 					return;
 				}
@@ -84,7 +84,7 @@ public class NumberedReload extends Reload {
 //				}
 
 				// reload middle sound
-				SoundConfiguration.playSounds(player, getWeapon().getReloadCustomSoundMid(), null);
+				SoundConfiguration.playSounds(player, getWeapon().getSoundData().getReloadCustomMid(), null);
 
 				// take the item
 				if (removeAmmunition) {
@@ -93,7 +93,7 @@ public class NumberedReload extends Reload {
 				}
 
 				// add to the weapon capacity
-				getWeapon().addAmmunition(getWeapon().getReloadRestore());
+				getWeapon().addAmmunition(getWeapon().getReloadData().getRestore());
 
 				// update the weapon data
 				int newSlot = findWeaponSlot(inventory, getWeapon());

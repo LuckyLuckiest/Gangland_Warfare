@@ -36,7 +36,8 @@ public abstract class Reload implements Cloneable {
 
 	public void reload(JavaPlugin plugin, Player player, boolean removeAmmunition) {
 		// reload the weapon action bar status
-		ChatUtil.sendActionBar(plugin, player, weapon.getReloadActionBarReloading(), weapon.getReloadCooldown());
+		ChatUtil.sendActionBar(plugin, player, weapon.getReloadActionBarData().getReloading(),
+							   weapon.getReloadData().getCooldown());
 
 		// start executing the reload process
 		executeReload(plugin, player, removeAmmunition);
@@ -64,10 +65,11 @@ public abstract class Reload implements Cloneable {
 		this.reloading.set(true);
 
 		// open the reload chamber action bar status
-		ChatUtil.sendActionBar(player, weapon.getReloadActionBarOpening());
+		ChatUtil.sendActionBar(player, weapon.getReloadActionBarData().getOpening());
 
 		// start reloading sound
-		SoundConfiguration.playSounds(player, weapon.getReloadCustomSoundStart(), weapon.getReloadDefaultSoundBefore());
+		SoundConfiguration.playSounds(player, weapon.getSoundData().getReloadCustomStart(),
+									  weapon.getSoundData().getReloadDefaultBefore());
 
 		// scope the player and make them slow down
 		weapon.scope(player, false);
@@ -75,7 +77,8 @@ public abstract class Reload implements Cloneable {
 
 	protected void endReloading(Player player) {
 		// end reloading sound
-		SoundConfiguration.playSounds(player, weapon.getReloadCustomSoundEnd(), weapon.getReloadDefaultSoundAfter());
+		SoundConfiguration.playSounds(player, weapon.getSoundData().getReloadCustomEnd(),
+									  weapon.getSoundData().getReloadDefaultAfter());
 
 		// un-scope the player to resume the showdown
 		weapon.unScope(player, true);

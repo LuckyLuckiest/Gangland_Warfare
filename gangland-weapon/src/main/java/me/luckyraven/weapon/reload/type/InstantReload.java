@@ -5,6 +5,7 @@ import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.timer.SequenceTimer;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.ammo.Ammunition;
+import me.luckyraven.weapon.dto.ReloadData;
 import me.luckyraven.weapon.reload.Reload;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -39,6 +40,7 @@ public class InstantReload extends Reload {
 		timer = new SequenceTimer(plugin);
 
 		// start reloading the gun
+		ReloadData reloadData = getWeapon().getReloadData();
 		timer.addIntervalTaskPair(0, time -> {
 			super.startReloading(player);
 
@@ -53,22 +55,22 @@ public class InstantReload extends Reload {
 			// remove the magazine the moment the reloading starts to prevent bugs
 			if (removeAmmunition) {
 				// consume the item
-				inventory.removeItem(getAmmunition().buildItem(getWeapon().getReloadConsume()));
+				inventory.removeItem(getAmmunition().buildItem(reloadData.getConsume()));
 			}
 		});
 
 		// the sound that plays at the middle
-		long midSound = getWeapon().getReloadCooldown() / 2;
+		long midSound = reloadData.getCooldown() / 2;
 		timer.addIntervalTaskPair(midSound, time -> {
 			// play the sound at the middle
-			SoundConfiguration.playSounds(player, getWeapon().getReloadCustomSoundMid(), null);
+			SoundConfiguration.playSounds(player, getWeapon().getSoundData().getReloadCustomMid(), null);
 		});
 
-		long remaining = Math.max(0, getWeapon().getReloadCooldown() - midSound);
+		long remaining = Math.max(0, reloadData.getCooldown() - midSound);
 		// continue execution after the sound had finished
 		timer.addIntervalTaskPair(remaining, time -> {
 			// add to the weapon capacity
-			getWeapon().addAmmunition(getWeapon().getReloadRestore());
+			getWeapon().addAmmunition(reloadData.getRestore());
 
 			// update the weapon data
 			int newSlot = findWeaponSlot(inventory, getWeapon());

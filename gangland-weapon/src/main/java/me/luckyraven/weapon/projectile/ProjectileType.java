@@ -25,7 +25,7 @@ public enum ProjectileType {
 	}
 
 	public WeaponProjectile<?> createInstance(JavaPlugin plugin, LivingEntity shooter, Weapon weapon) {
-		return switch (weapon.getProjectileType()) {
+		return switch (weapon.getProjectileData().getType()) {
 			case BULLET -> new Bullet(plugin, shooter, weapon);
 			case SPREAD -> new Spread(plugin, shooter, weapon);
 			case FLARE -> new Flare(plugin, shooter, weapon);

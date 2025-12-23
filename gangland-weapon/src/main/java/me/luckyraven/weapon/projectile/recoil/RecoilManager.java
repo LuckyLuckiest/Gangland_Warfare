@@ -24,7 +24,7 @@ public class RecoilManager {
 	}
 
 	public void applyRecoil(RecoilCompatibility recoilCompatibility, Player player) {
-		List<String[]> recoilPattern = weapon.getRecoilPattern();
+		List<String[]> recoilPattern = weapon.getRecoilData().getPattern();
 
 		// Check if a recoil pattern is available and not empty
 		if (!(recoilPattern != null && !recoilPattern.isEmpty())) {
@@ -48,7 +48,7 @@ public class RecoilManager {
 			float finalPitch = patternPitch;
 
 			if (player.isSneaking()) {
-				if (weapon.isScoped()) {
+				if (weapon.getScopeData().isScoped()) {
 					finalYaw /= 2;
 					finalPitch /= 2;
 				} else {
@@ -84,13 +84,13 @@ public class RecoilManager {
 	}
 
 	private void applyDefaultRecoil(RecoilCompatibility recoilCompatibility, Player player, Weapon weapon) {
-		float recoil = (float) weapon.getRecoilAmount();
+		float recoil = (float) weapon.getRecoilData().getAmount();
 
 		if (!player.isSneaking()) recoil(recoilCompatibility, player, recoil, recoil);
 		else {
 			float newValue = recoil / 2;
 
-			if (weapon.isScoped()) recoil(recoilCompatibility, player, newValue, newValue);
+			if (weapon.getScopeData().isScoped()) recoil(recoilCompatibility, player, newValue, newValue);
 			else recoil(recoilCompatibility, player, newValue / 2, newValue / 2);
 		}
 	}

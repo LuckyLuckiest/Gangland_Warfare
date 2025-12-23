@@ -2,6 +2,7 @@ package me.luckyraven.weapon.projectile.spread;
 
 import lombok.Getter;
 import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.dto.SpreadData;
 import org.bukkit.util.Vector;
 
 import java.util.Random;
@@ -11,8 +12,9 @@ import java.util.Random;
  */
 public class SpreadManager {
 
-	private final Weapon weapon;
-	private final Random random;
+	private final Weapon     weapon;
+	private final Random     random;
+	private final SpreadData spreadData;
 
 	@Getter
 	private double currentSpread;
@@ -21,7 +23,8 @@ public class SpreadManager {
 	public SpreadManager(Weapon weapon) {
 		this.weapon        = weapon;
 		this.random        = new Random();
-		this.currentSpread = weapon.getSpreadStart();
+		this.spreadData    = weapon.getSpreadData();
+		this.currentSpread = spreadData.getStart();
 		this.lastShotTime  = System.currentTimeMillis();
 	}
 
@@ -51,7 +54,7 @@ public class SpreadManager {
 	 * Manually resets the spread to its starting value.
 	 */
 	public void resetSpread() {
-		this.currentSpread = weapon.getSpreadStart();
+		this.currentSpread = spreadData.getStart();
 		this.lastShotTime  = System.currentTimeMillis();
 	}
 
@@ -63,8 +66,8 @@ public class SpreadManager {
 		long timeSinceLastShot = currentTime - lastShotTime;
 
 		// If enough time has passed, reset spread to starting value
-		if (timeSinceLastShot >= weapon.getSpreadResetTime()) {
-			currentSpread = weapon.getSpreadStart();
+		if (timeSinceLastShot >= spreadData.getResetTime()) {
+			currentSpread = spreadData.getStart();
 		}
 
 		lastShotTime = currentTime;
@@ -74,13 +77,13 @@ public class SpreadManager {
 	 * Updates the spread value after a shot is fired.
 	 */
 	private void updateSpread() {
-		double newSpread = currentSpread + weapon.getSpreadChangeBase();
+		double newSpread = currentSpread + spreadData.getChangeBase();
 
 		// Check if spread exceeds bounds
-		if (newSpread >= weapon.getSpreadBoundMaximum()) {
-			currentSpread = weapon.isSpreadResetOnBound() ? weapon.getSpreadStart() : weapon.getSpreadBoundMaximum();
-		} else if (newSpread <= weapon.getSpreadBoundMinimum()) {
-			currentSpread = weapon.isSpreadResetOnBound() ? weapon.getSpreadStart() : weapon.getSpreadBoundMinimum();
+		if (newSpread >= spreadData.getBoundMaximum()) {
+			currentSpread = spreadData.isResetOnBound() ? spreadData.getStart() : spreadData.getBoundMaximum();
+		} else if (newSpread <= spreadData.getBoundMinimum()) {
+			currentSpread = spreadData.isResetOnBound() ? spreadData.getStart() : spreadData.getBoundMinimum();
 		} else {
 			currentSpread = newSpread;
 		}
