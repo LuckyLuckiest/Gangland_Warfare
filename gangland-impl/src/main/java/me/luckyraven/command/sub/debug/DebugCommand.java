@@ -237,10 +237,10 @@ public final class DebugCommand extends CommandHandler {
 				}
 
 				List<Material> swords = Arrays.stream(XMaterial.values())
-						.map(XMaterial::get)
-						.filter(Objects::nonNull)
-						.filter(material -> material.name().contains("SWORD"))
-						.toList();
+											  .map(XMaterial::get)
+											  .filter(Objects::nonNull)
+											  .filter(material -> material.name().contains("SWORD"))
+											  .toList();
 
 				items.addAll(swords.stream().map(ItemStack::new).toList());
 
@@ -300,11 +300,11 @@ public final class DebugCommand extends CommandHandler {
 		return new Argument(getGangland(), "bukkit", getArgumentTree(), (argument, sender, args) -> {
 			String[] permissions = Bukkit.getPluginManager()
 										 .getPermissions()
-					.stream()
-					.map(Permission::getName)
-					.filter(name -> name.startsWith(getGangland().getFullPrefix()))
-					.sorted(String::compareTo)
-					.toArray(String[]::new);
+										 .stream()
+										 .map(Permission::getName)
+										 .filter(name -> name.startsWith(getGangland().getFullPrefix()))
+										 .sorted(String::compareTo)
+										 .toArray(String[]::new);
 			sender.sendMessage(permissions);
 		});
 	}
@@ -335,8 +335,8 @@ public final class DebugCommand extends CommandHandler {
 				String[] placeholders = {"%player%", "%info%", "%user_gang-id%"};
 
 				Arrays.stream(placeholders)
-						.forEach(string -> sender.sendMessage(
-								string + " -> " + handler.replacePlaceholder(player, string)));
+					  .forEach(string -> sender.sendMessage(
+							  string + " -> " + handler.replacePlaceholder(player, string)));
 			} else {
 				sender.sendMessage("Can't process non-player data.");
 			}
@@ -356,15 +356,18 @@ public final class DebugCommand extends CommandHandler {
 
 				user.sendMessage("Normal inventories: ");
 				user.sendMessage(user.getInventories()
-										 .stream()
-										 .map(InventoryHandler::getTitle)
-										 .map(NamespacedKey::getKey)
-										 .toArray(String[]::new));
+									 .stream()
+									 .map(InventoryHandler::getTitle)
+									 .map(NamespacedKey::getKey)
+									 .toArray(String[]::new));
 			} else {
 				for (User<Player> user : getGangland().getInitializer().getUserManager().getUsers().values()) {
 
 					List<String> inventories = user.getInventories()
-							.stream().map(InventoryHandler::getTitle).map(NamespacedKey::getKey).toList();
+												   .stream()
+												   .map(InventoryHandler::getTitle)
+												   .map(NamespacedKey::getKey)
+												   .toList();
 
 					List<String> values = new ArrayList<>(inventories);
 
@@ -378,7 +381,7 @@ public final class DebugCommand extends CommandHandler {
 	private @NotNull Argument getSpecialInventories() {
 		return new Argument(getGangland(), "special", getArgumentTree(), (argument, sender, args) -> {
 			String[] array = InventoryHandler.getSpecialInventories().keySet()
-					.stream().map(NamespacedKey::getKey).toArray(String[]::new);
+											 .stream().map(NamespacedKey::getKey).toArray(String[]::new);
 			sender.sendMessage(array);
 		});
 	}

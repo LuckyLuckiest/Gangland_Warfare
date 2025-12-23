@@ -98,9 +98,9 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			Gang         userGang = gangManager.getGang(user.getGangId());
 			List<Member> members  = userGang.getValue();
 			Stream<String> allMembers = members.stream()
-					.map(Member::getUuid)
-					.map(Bukkit::getOfflinePlayer)
-					.map(OfflinePlayer::getName);
+											   .map(Member::getUuid)
+											   .map(Bukkit::getOfflinePlayer)
+											   .map(OfflinePlayer::getName);
 
 			return allMembers.toList();
 		});

@@ -5,7 +5,6 @@ import me.luckyraven.Initializer;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
-import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.teleportation.IllegalTeleportException;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
@@ -41,12 +40,12 @@ public final class TeleportCommand extends CommandHandler {
 		this.userManager     = initializer.getUserManager();
 		this.waypointManager = initializer.getWaypointManager();
 
-		List<CommandInformation> list = getCommands().entrySet()
-				.stream()
-				.filter(entry -> entry.getKey().startsWith("waypoint"))
-				.sorted(Map.Entry.comparingByKey())
-				.map(Map.Entry::getValue)
-				.toList();
+		var list = getCommands().entrySet()
+								.stream()
+								.filter(entry -> entry.getKey().startsWith("waypoint"))
+								.sorted(Map.Entry.comparingByKey())
+								.map(Map.Entry::getValue)
+								.toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -81,17 +80,17 @@ public final class TeleportCommand extends CommandHandler {
 				int gangId = user.getGangId();
 
 				List<String> list = allWaypoints.stream()
-						.filter(waypoint -> waypoint.getGangId() == gangId)
-						.map(Waypoint::getName)
-						.toList();
+												.filter(waypoint -> waypoint.getGangId() == gangId)
+												.map(Waypoint::getName)
+												.toList();
 
 				waypoints.addAll(list);
 			}
 
 			List<String> list = allWaypoints.stream()
-					.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
-					.map(Waypoint::getName)
-					.toList();
+											.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
+											.map(Waypoint::getName)
+											.toList();
 
 			waypoints.addAll(list);
 

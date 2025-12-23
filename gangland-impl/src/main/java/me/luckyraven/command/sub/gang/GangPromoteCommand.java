@@ -126,9 +126,9 @@ class GangPromoteCommand extends SubArgument {
 			List<Rank> nextRanks = Objects.requireNonNull(rankManager.getRankTree().find(currentRank))
 										  .getNode()
 										  .getChildren()
-					.stream()
-					.map(Tree.Node::getData)
-					.toList();
+										  .stream()
+										  .map(Tree.Node::getData)
+										  .toList();
 
 			if (nextRanks.isEmpty()) {
 				user.sendMessage(MessageAddon.GANG_PROMOTE_END.toString());

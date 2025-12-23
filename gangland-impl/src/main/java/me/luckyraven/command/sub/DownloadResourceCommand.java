@@ -3,12 +3,10 @@ package me.luckyraven.command.sub;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.List;
 import java.util.Map;
 
 public final class DownloadResourceCommand extends CommandHandler {
@@ -16,12 +14,12 @@ public final class DownloadResourceCommand extends CommandHandler {
 	public DownloadResourceCommand(Gangland gangland) {
 		super(gangland, "resource", true, "download");
 
-		List<CommandInformation> list = getCommands().entrySet()
-				.stream()
-				.filter(entry -> entry.getKey().startsWith("resource"))
-				.sorted(Map.Entry.comparingByKey())
-				.map(Map.Entry::getValue)
-				.toList();
+		var list = getCommands().entrySet()
+								.stream()
+								.filter(entry -> entry.getKey().startsWith("resource"))
+								.sorted(Map.Entry.comparingByKey())
+								.map(Map.Entry::getValue)
+								.toList();
 
 		getHelpInfo().addAll(list);
 	}

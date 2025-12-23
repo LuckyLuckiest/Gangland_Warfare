@@ -4,7 +4,6 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
-import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.level.Level;
@@ -23,12 +22,12 @@ public final class LevelCommand extends CommandHandler {
 	public LevelCommand(Gangland gangland) {
 		super(gangland, "level", true);
 
-		List<CommandInformation> list = getCommands().entrySet()
-				.stream()
-				.filter(entry -> entry.getKey().startsWith("level"))
-				.sorted(Map.Entry.comparingByKey())
-				.map(Map.Entry::getValue)
-				.toList();
+		var list = getCommands().entrySet()
+								.stream()
+								.filter(entry -> entry.getKey().startsWith("level"))
+								.sorted(Map.Entry.comparingByKey())
+								.map(Map.Entry::getValue)
+								.toList();
 
 		getHelpInfo().addAll(list);
 	}

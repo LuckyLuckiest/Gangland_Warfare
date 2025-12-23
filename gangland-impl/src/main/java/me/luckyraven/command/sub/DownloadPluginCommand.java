@@ -4,13 +4,11 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.DoubleArgument;
-import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public final class DownloadPluginCommand extends CommandHandler {
@@ -21,12 +19,12 @@ public final class DownloadPluginCommand extends CommandHandler {
 		super(gangland, "update", false);
 
 		this.containsUpdate = new HashMap<>();
-		List<CommandInformation> list = getCommands().entrySet()
-				.stream()
-				.filter(entry -> entry.getKey().startsWith("update"))
-				.sorted(Map.Entry.comparingByKey())
-				.map(Map.Entry::getValue)
-				.toList();
+		var list = getCommands().entrySet()
+								.stream()
+								.filter(entry -> entry.getKey().startsWith("update"))
+								.sorted(Map.Entry.comparingByKey())
+								.map(Map.Entry::getValue)
+								.toList();
 
 		getHelpInfo().addAll(list);
 	}

@@ -78,7 +78,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 			newItem.setDisplayName(itemDisplayName);
 
 			List<String> lore = item.getLore()
-					.stream().map(s -> placeholder.convert(player, s)).toList();
+									.stream().map(s -> placeholder.convert(player, s)).toList();
 			newItem.setLore(lore);
 
 			if (!item.getEnchantments().isEmpty()) {
@@ -222,7 +222,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 		newItem.setDisplayName(itemDisplayName);
 
 		List<String> lore = item.getLore()
-				.stream().map(s -> placeholder.convert(player, s)).toList();
+								.stream().map(s -> placeholder.convert(player, s)).toList();
 		newItem.setLore(lore);
 
 		if (!item.getEnchantments().isEmpty()) {

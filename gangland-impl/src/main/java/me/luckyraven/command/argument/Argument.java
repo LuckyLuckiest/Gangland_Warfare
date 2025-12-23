@@ -119,7 +119,7 @@ public class Argument implements Cloneable {
 		PluginManager pluginManager = Bukkit.getPluginManager();
 		Permission    perm          = new Permission(permission);
 		List<String> permissions = pluginManager.getPermissions()
-				.stream().map(Permission::getName).toList();
+												.stream().map(Permission::getName).toList();
 
 		// add the permission if it was not in the permission list
 		if (!permissions.contains(permission)) pluginManager.addPermission(perm);
@@ -193,7 +193,7 @@ public class Argument implements Cloneable {
 		if (!(obj instanceof Argument argument)) return false;
 
 		return Arrays.stream(argument.arguments)
-				.anyMatch(arg -> Arrays.stream(this.arguments).anyMatch(arg::equalsIgnoreCase));
+					 .anyMatch(arg -> Arrays.stream(this.arguments).anyMatch(arg::equalsIgnoreCase));
 	}
 
 	// TODO test this method
@@ -261,10 +261,10 @@ public class Argument implements Cloneable {
 			// get the last valid input children
 			List<Tree.Node<Argument>> children = lastValid.node.getChildren();
 			Set<String> dictionary = children.stream()
-					.map(node -> node.getData().arguments)
-					.flatMap(Stream::of)
-					.filter(s -> !s.equals(OPTIONAL_ARGUMENT))
-					.collect(Collectors.toSet());
+											 .map(node -> node.getData().arguments)
+											 .flatMap(Stream::of)
+											 .filter(s -> !s.equals(OPTIONAL_ARGUMENT))
+											 .collect(Collectors.toSet());
 
 			String[] validArguments = Arrays.stream(args).toList().subList(0, length).toArray(String[]::new);
 

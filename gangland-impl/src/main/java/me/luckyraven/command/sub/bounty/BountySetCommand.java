@@ -57,7 +57,7 @@ class BountySetCommand extends SubArgument {
 
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
 		}, sender -> Bukkit.getOnlinePlayers()
-				.stream().map(Player::getName).toList());
+						   .stream().map(Player::getName).toList());
 
 		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			String playerStr = args[2];

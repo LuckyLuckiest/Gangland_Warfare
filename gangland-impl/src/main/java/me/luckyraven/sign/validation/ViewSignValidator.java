@@ -31,8 +31,8 @@ public class ViewSignValidator extends AbstractSignValidator {
 		// Check if it's a weapon
 		Collection<Weapon> values = weaponService.getWeapons().values();
 		boolean isWeapon = values.stream()
-				.anyMatch(weapon -> weapon.getName().equalsIgnoreCase(content) ||
-									weapon.getDisplayName().equalsIgnoreCase(content));
+								 .anyMatch(weapon -> weapon.getName().equalsIgnoreCase(content) ||
+													 weapon.getDisplayName().equalsIgnoreCase(content));
 
 		if (isWeapon) {
 			return true;
@@ -40,7 +40,7 @@ public class ViewSignValidator extends AbstractSignValidator {
 
 		// Check if it's ammunition
 		boolean isAmmo = ammunitionAddon.getAmmunitionKeys()
-				.stream().anyMatch(ammo -> ammo.equalsIgnoreCase(content));
+										.stream().anyMatch(ammo -> ammo.equalsIgnoreCase(content));
 
 		if (isAmmo) {
 			return true;

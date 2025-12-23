@@ -154,7 +154,7 @@ class GangDeleteCommand extends SubArgument {
 
 			// get the contribution frequency for each user, and return that frequency according to the current balance
 			double total = gang.getGroup()
-					.stream().mapToDouble(Member::getContribution).sum();
+							   .stream().mapToDouble(Member::getContribution).sum();
 
 			Initializer      initializer      = gangland.getInitializer();
 			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
@@ -195,8 +195,9 @@ class GangDeleteCommand extends SubArgument {
 				List<Object[]> allUsers   = userConfig.selectAll();
 				List<Object[]> gangUsers = allUsers.parallelStream()
 												   .filter(obj -> Arrays.stream(obj)
-														   .anyMatch(o -> o.toString()
-																		   .equals(String.valueOf(gang.getId()))))
+																		.anyMatch(o -> o.toString()
+																						.equals(String.valueOf(
+																								gang.getId()))))
 												   .toList();
 
 				// update offline users

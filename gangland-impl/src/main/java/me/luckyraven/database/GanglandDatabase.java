@@ -67,11 +67,11 @@ public class GanglandDatabase extends DatabaseHandler {
 	@Nullable
 	public static GanglandDatabase findInstance(DatabaseManager manager) {
 		return manager.getDatabases()
-				.stream()
-				.filter(handler -> handler instanceof GanglandDatabase)
-				.map(GanglandDatabase.class::cast)
-				.findFirst()
-				.orElse(null);
+					  .stream()
+					  .filter(handler -> handler instanceof GanglandDatabase)
+					  .map(GanglandDatabase.class::cast)
+					  .findFirst()
+					  .orElse(null);
 	}
 
 	@Override

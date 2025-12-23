@@ -61,7 +61,7 @@ class AmmunitionGiveCommand extends SubArgument {
 			AmmunitionAddon ammunitionAddon = gangland.getInitializer().getAmmunitionAddon();
 
 			return ammunitionAddon.getAmmunitionKeys()
-					.stream().toList();
+								  .stream().toList();
 		});
 
 		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {

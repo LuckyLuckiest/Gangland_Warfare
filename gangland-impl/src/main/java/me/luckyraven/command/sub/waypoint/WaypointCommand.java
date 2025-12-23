@@ -3,7 +3,6 @@ package me.luckyraven.command.sub.waypoint;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.user.User;
@@ -27,12 +26,12 @@ public final class WaypointCommand extends CommandHandler {
 		this.userManager     = gangland.getInitializer().getUserManager();
 		this.waypointManager = gangland.getInitializer().getWaypointManager();
 
-		List<CommandInformation> list = getCommands().entrySet()
-				.stream()
-				.filter(entry -> entry.getKey().startsWith("waypoint"))
-				.sorted(Map.Entry.comparingByKey())
-				.map(Map.Entry::getValue)
-				.toList();
+		var list = getCommands().entrySet()
+								.stream()
+								.filter(entry -> entry.getKey().startsWith("waypoint"))
+								.sorted(Map.Entry.comparingByKey())
+								.map(Map.Entry::getValue)
+								.toList();
 		getHelpInfo().addAll(list);
 	}
 

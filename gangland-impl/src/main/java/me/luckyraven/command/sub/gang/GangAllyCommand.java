@@ -163,23 +163,23 @@ class GangAllyCommand extends SubArgument {
 
 					// send a message to every member in the sending gang
 					Bukkit.getOnlinePlayers()
-							.stream()
-							.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
-													sending.getId())
-							.toList()
-							.forEach(pl -> pl.sendMessage(MessageAddon.GANG_ALLY_SEND_REQUEST.toString()
-																							 .replace("%gang%",
-																									  receiving.getDisplayNameString())));
+						  .stream()
+						  .filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
+												  sending.getId())
+						  .toList()
+						  .forEach(pl -> pl.sendMessage(MessageAddon.GANG_ALLY_SEND_REQUEST.toString()
+																						   .replace("%gang%",
+																									receiving.getDisplayNameString())));
 
 					// send a message to every member in receiving gang
 					Bukkit.getOnlinePlayers()
-							.stream()
-							.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
-													receiving.getId())
-							.toList()
-							.forEach(pl -> pl.sendMessage(MessageAddon.GANG_ALLY_RECEIVE_REQUEST.toString()
-																								.replace("%gang%",
-																										 sending.getDisplayNameString())));
+						  .stream()
+						  .filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
+												  receiving.getId())
+						  .toList()
+						  .forEach(pl -> pl.sendMessage(MessageAddon.GANG_ALLY_RECEIVE_REQUEST.toString()
+																							  .replace("%gang%",
+																									   sending.getDisplayNameString())));
 
 					gangsIdMap.put(receiving, sending);
 
@@ -195,23 +195,23 @@ class GangAllyCommand extends SubArgument {
 				case "abandon" -> {
 					// send a message to every member in the sending gang
 					Bukkit.getOnlinePlayers()
-							.stream()
-							.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
-													sending.getId())
-							.toList()
-							.forEach(pl -> pl.sendMessage(MessageAddon.GANG_ALLY_ABANDON.toString()
-																						.replace("%gang%",
-																								 receiving.getDisplayNameString())));
+						  .stream()
+						  .filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
+												  sending.getId())
+						  .toList()
+						  .forEach(pl -> pl.sendMessage(MessageAddon.GANG_ALLY_ABANDON.toString()
+																					  .replace("%gang%",
+																							   receiving.getDisplayNameString())));
 
 					// send a message to every member in receiving gang
 					Bukkit.getOnlinePlayers()
-							.stream()
-							.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
-													receiving.getId())
-							.toList()
-							.forEach(pl -> pl.sendMessage(MessageAddon.GANG_ALLY_ABANDON.toString()
-																						.replace("%gang%",
-																								 sending.getDisplayNameString())));
+						  .stream()
+						  .filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
+												  receiving.getId())
+						  .toList()
+						  .forEach(pl -> pl.sendMessage(MessageAddon.GANG_ALLY_ABANDON.toString()
+																					  .replace("%gang%",
+																							   sending.getDisplayNameString())));
 
 					sending.removeAlly(receiving);
 					receiving.removeAlly(sending);
@@ -229,7 +229,7 @@ class GangAllyCommand extends SubArgument {
 			Gang gang = gangManager.getGang(user.getGangId());
 
 			return gang.getAllies()
-					.stream().map(Pair::first).map(Gang::getName).toList();
+					   .stream().map(Pair::first).map(Gang::getName).toList();
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
@@ -241,7 +241,7 @@ class GangAllyCommand extends SubArgument {
 			Gang gang = gangManager.getGang(user.getGangId());
 
 			List<Gang> allies = gang.getAllies()
-					.stream().map(Pair::first).toList();
+									.stream().map(Pair::first).toList();
 
 			// First pass: count how many times each name appears
 			Map<String, Integer> nameCount = new HashMap<>();
@@ -278,7 +278,7 @@ class GangAllyCommand extends SubArgument {
 
 			// finds the key if it was similar to acceptor gang
 			Gang receiving = gangsIdMap.keySet()
-					.stream().filter(gang -> gang == userGang).findFirst().orElse(null);
+									   .stream().filter(gang -> gang == userGang).findFirst().orElse(null);
 
 			if (receiving == null) {
 				user.sendMessage(MessageAddon.NO_GANG_INVITATION.toString());
@@ -299,23 +299,23 @@ class GangAllyCommand extends SubArgument {
 
 			// send a message to every member in the sending gang
 			Bukkit.getOnlinePlayers()
-					.stream()
-					.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
-											sending.getId())
-					.toList()
-					.forEach(pl -> pl.sendMessage(MessageAddon.GANG_ALLY_ACCEPT.toString()
-																			   .replace("%gang%",
-																						receiving.getDisplayNameString())));
+				  .stream()
+				  .filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
+										  sending.getId())
+				  .toList()
+				  .forEach(pl -> pl.sendMessage(MessageAddon.GANG_ALLY_ACCEPT.toString()
+																			 .replace("%gang%",
+																					  receiving.getDisplayNameString())));
 
 			// send a message to every member in receiving gang
 			Bukkit.getOnlinePlayers()
-					.stream()
-					.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
-											receiving.getId())
-					.toList()
-					.forEach(pl -> pl.sendMessage(MessageAddon.GANG_ALLY_ACCEPT.toString()
-																			   .replace("%gang%",
-																						sending.getDisplayNameString())));
+				  .stream()
+				  .filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
+										  receiving.getId())
+				  .toList()
+				  .forEach(pl -> pl.sendMessage(MessageAddon.GANG_ALLY_ACCEPT.toString()
+																			 .replace("%gang%",
+																					  sending.getDisplayNameString())));
 
 			gangsIdMap.remove(receiving);
 
@@ -342,7 +342,7 @@ class GangAllyCommand extends SubArgument {
 
 			// finds the key if it was similar to acceptor gang
 			Gang receiving = gangsIdMap.keySet()
-					.stream().filter(gang -> gang == userGang).findFirst().orElse(null);
+									   .stream().filter(gang -> gang == userGang).findFirst().orElse(null);
 
 			if (receiving == null) {
 				user.sendMessage(MessageAddon.NO_GANG_INVITATION.toString());
@@ -359,23 +359,23 @@ class GangAllyCommand extends SubArgument {
 
 			// send a message to every member in the sending gang
 			Bukkit.getOnlinePlayers()
-					.stream()
-					.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
-											sending.getId())
-					.toList()
-					.forEach(pl -> pl.sendMessage(MessageAddon.GANG_ALLY_REJECT.toString()
-																			   .replace("%gang%",
-																						receiving.getDisplayNameString())));
+				  .stream()
+				  .filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
+										  sending.getId())
+				  .toList()
+				  .forEach(pl -> pl.sendMessage(MessageAddon.GANG_ALLY_REJECT.toString()
+																			 .replace("%gang%",
+																					  receiving.getDisplayNameString())));
 
 			// send a message to every member in receiving gang
 			Bukkit.getOnlinePlayers()
-					.stream()
-					.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
-											receiving.getId())
-					.toList()
-					.forEach(pl -> pl.sendMessage(MessageAddon.GANG_ALLY_REJECT.toString()
-																			   .replace("%gang%",
-																						sending.getDisplayNameString())));
+				  .stream()
+				  .filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
+										  receiving.getId())
+				  .toList()
+				  .forEach(pl -> pl.sendMessage(MessageAddon.GANG_ALLY_REJECT.toString()
+																			 .replace("%gang%",
+																					  sending.getDisplayNameString())));
 
 			gangsIdMap.remove(receiving);
 

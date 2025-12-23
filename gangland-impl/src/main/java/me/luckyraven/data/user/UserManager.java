@@ -206,7 +206,7 @@ public class UserManager<T extends OfflinePlayer> {
 	public String toString() {
 		Map<T, User<T>> userMap = users;
 		List<String> users = userMap.values()
-				.stream().map(User::toString).toList();
+									.stream().map(User::toString).toList();
 		return "users=" + users;
 	}
 

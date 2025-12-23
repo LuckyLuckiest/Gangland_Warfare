@@ -86,7 +86,7 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 		List<ItemStack> items = new ArrayList<>();
 
 		for (Gang ally : gang.getAllies()
-				.stream().map(Pair::first).toList()) {
+							 .stream().map(Pair::first).toList()) {
 			List<String> data = new ArrayList<>();
 			data.add("&7ID:&e " + ally.getId());
 			data.add(String.format("&7Members:&a %d&7/&e%d", ally.getOnlineMembers(userManager).size(),

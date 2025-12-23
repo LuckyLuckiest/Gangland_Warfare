@@ -89,17 +89,17 @@ class WaypointSelectCommand extends SubArgument {
 				int gangId = user.getGangId();
 
 				List<String> list = allWaypoints.stream()
-						.filter(waypoint -> waypoint.getGangId() == gangId)
-						.map(Waypoint::getName)
-						.toList();
+												.filter(waypoint -> waypoint.getGangId() == gangId)
+												.map(Waypoint::getName)
+												.toList();
 
 				waypoints.addAll(list);
 			}
 
 			List<String> list = allWaypoints.stream()
-					.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
-					.map(Waypoint::getName)
-					.toList();
+											.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
+											.map(Waypoint::getName)
+											.toList();
 
 			waypoints.addAll(list);
 
@@ -120,8 +120,8 @@ class WaypointSelectCommand extends SubArgument {
 			}
 
 			List<Waypoint> list = allWaypoints.stream()
-					.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
-					.toList();
+											  .filter(waypoint -> player.hasPermission(waypoint.getPermission()))
+											  .toList();
 
 			waypoints.addAll(list);
 

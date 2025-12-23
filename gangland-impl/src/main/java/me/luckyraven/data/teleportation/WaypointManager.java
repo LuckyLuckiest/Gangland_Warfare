@@ -89,10 +89,10 @@ public class WaypointManager {
 	@Nullable
 	public Waypoint get(String name) {
 		return waypoints.values()
-				.stream()
-				.filter(waypoint -> waypoint.getName().equalsIgnoreCase(name))
-				.findFirst()
-				.orElse(null);
+						.stream()
+						.filter(waypoint -> waypoint.getName().equalsIgnoreCase(name))
+						.findFirst()
+						.orElse(null);
 	}
 
 	public void refactorIds(WaypointTable waypointTable) {

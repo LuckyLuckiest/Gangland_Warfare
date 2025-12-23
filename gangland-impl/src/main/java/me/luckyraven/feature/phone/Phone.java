@@ -52,7 +52,7 @@ public class Phone {
 		newGang.setItem(23, XMaterial.BOOKSHELF.get(), "&b&lSearch Gang", null, true, false, (player1, inv, it) -> {
 			// open a multi inventory that displays all the gangs
 			List<Gang> gangs = gangManager.getGangs().values()
-					.stream().toList();
+										  .stream().toList();
 			List<ItemStack> gangsItems = new ArrayList<>();
 
 			for (Gang gang : gangs) {
@@ -61,13 +61,13 @@ public class Phone {
 									  gang.getDisplayNameString())).setLore("&e" + gang.getDescription());
 
 				UUID uuid = gang.getGroup()
-						.stream()
-						.filter(member -> Objects.requireNonNull(member.getRank())
-												 .getName()
-												 .equalsIgnoreCase(SettingAddon.getGangRankTail()))
-						.findFirst()
-						.map(Member::getUuid)
-						.orElse(null);
+								.stream()
+								.filter(member -> Objects.requireNonNull(member.getRank())
+														 .getName()
+														 .equalsIgnoreCase(SettingAddon.getGangRankTail()))
+								.findFirst()
+								.map(Member::getUuid)
+								.orElse(null);
 
 				String name = "";
 				if (uuid != null) {
@@ -107,11 +107,12 @@ public class Phone {
 					}
 
 					List<ItemStack> items = gangsItems.stream()
-							.filter(itemStack -> Objects.requireNonNull(itemStack.getItemMeta())
-														.getDisplayName()
-														.toLowerCase()
-														.contains(output.toLowerCase()))
-							.toList();
+													  .filter(itemStack -> Objects.requireNonNull(
+																						  itemStack.getItemMeta())
+																				  .getDisplayName()
+																				  .toLowerCase()
+																				  .contains(output.toLowerCase()))
+													  .toList();
 
 					multiInventory.updateItems(gangland, items, stateSnapshot.getPlayer(), true, fill, staticItems);
 					callback.accept(stateSnapshot.getPlayer(), currInv, itemBuilder);

@@ -27,11 +27,11 @@ public class Bank extends Account<UUID, User<? extends OfflinePlayer>> {
 	@Nullable
 	public static Bank getInstance(User<? extends OfflinePlayer> user) {
 		return user.getLinkedAccounts()
-				.stream()
-				.filter(account -> account instanceof Bank)
-				.map(bank -> (Bank) bank)
-				.findFirst()
-				.orElse(null);
+				   .stream()
+				   .filter(account -> account instanceof Bank)
+				   .map(bank -> (Bank) bank)
+				   .findFirst()
+				   .orElse(null);
 	}
 
 	@Override

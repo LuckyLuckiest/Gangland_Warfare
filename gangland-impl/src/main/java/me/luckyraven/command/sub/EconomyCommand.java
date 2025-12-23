@@ -4,7 +4,6 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
-import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -27,12 +26,12 @@ public final class EconomyCommand extends CommandHandler {
 	public EconomyCommand(Gangland gangland) {
 		super(gangland, "economy", false, "eco");
 
-		List<CommandInformation> list = getCommands().entrySet()
-				.stream()
-				.filter(entry -> entry.getKey().startsWith("economy"))
-				.sorted(Map.Entry.comparingByKey())
-				.map(Map.Entry::getValue)
-				.toList();
+		var list = getCommands().entrySet()
+								.stream()
+								.filter(entry -> entry.getKey().startsWith("economy"))
+								.sorted(Map.Entry.comparingByKey())
+								.map(Map.Entry::getValue)
+								.toList();
 
 		getHelpInfo().addAll(list);
 	}
@@ -179,7 +178,7 @@ public final class EconomyCommand extends CommandHandler {
 			list.add("**");
 
 			list.addAll(Bukkit.getOnlinePlayers()
-								.stream().map(player -> "@" + player.getName()).toList());
+							  .stream().map(player -> "@" + player.getName()).toList());
 
 			return list;
 		});
@@ -239,7 +238,7 @@ public final class EconomyCommand extends CommandHandler {
 
 	private void allPlayers(HashMap<String, Supplier<List<Player>>> specifiers) {
 		List<Player> players = Bukkit.getOnlinePlayers()
-				.stream().map(player -> (Player) player).toList();
+									 .stream().map(player -> (Player) player).toList();
 
 		specifiers.put("*", () -> new ArrayList<>(players));
 	}
@@ -252,12 +251,12 @@ public final class EconomyCommand extends CommandHandler {
 
 	private void targetSpecifier(HashMap<String, Supplier<List<Player>>> specifiers, String target) {
 		List<Player> players = Bukkit.getOnlinePlayers()
-				.stream()
-				.filter(player -> player.getName().equalsIgnoreCase(target.substring(1)))
-				.map(player -> (Player) player)
-				.findFirst()
-				.stream()
-				.toList();
+									 .stream()
+									 .filter(player -> player.getName().equalsIgnoreCase(target.substring(1)))
+									 .map(player -> (Player) player)
+									 .findFirst()
+									 .stream()
+									 .toList();
 
 		specifiers.put(target, () -> new ArrayList<>(players));
 	}

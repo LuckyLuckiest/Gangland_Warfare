@@ -39,7 +39,7 @@ public class SignFormatRegistry {
 		String normalized = prefix.toLowerCase();
 
 		return formats.values()
-				.stream().filter(format -> format.getSignTypePrefix().equalsIgnoreCase(normalized)).findFirst();
+					  .stream().filter(format -> format.getSignTypePrefix().equalsIgnoreCase(normalized)).findFirst();
 	}
 
 	public boolean hasFormat(String formatName) {
