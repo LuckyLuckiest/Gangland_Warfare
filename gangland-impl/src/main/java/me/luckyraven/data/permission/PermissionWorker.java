@@ -51,10 +51,10 @@ public class PermissionWorker implements PermissionHandler {
 	public boolean permissionExists(@NotNull String permission) {
 		return Bukkit.getPluginManager()
 					 .getPermissions()
-					 .stream()
-					 .map(Permission::getName)
-					 .toList()
-					 .contains(permission);
+				.stream()
+				.map(Permission::getName)
+				.toList()
+				.contains(permission);
 	}
 
 }
