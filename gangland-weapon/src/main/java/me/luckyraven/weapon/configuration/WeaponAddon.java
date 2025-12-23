@@ -7,6 +7,8 @@ import me.luckyraven.weapon.SelectiveFire;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponType;
 import me.luckyraven.weapon.ammo.Ammunition;
+import me.luckyraven.weapon.dto.ProjectileData;
+import me.luckyraven.weapon.dto.ReloadData;
 import me.luckyraven.weapon.projectile.ProjectileType;
 import me.luckyraven.weapon.reload.ReloadType;
 import org.bukkit.Material;
@@ -358,54 +360,70 @@ public class WeaponAddon {
 			}
 		}
 
-		// initialize the object
-		Weapon weapon = new Weapon(fileName, displayName, category, material, durability, lore, dropHologram,
-								   selectiveFire, weaponConsumedOnShot, projectileSpeed, projectileType,
-								   projectileDamage, projectileConsumed, projectilePerShot, projectileCooldown,
-								   projectileDistance, projectileParticle, reloadCapacity, reloadCooldown, ammoType,
-								   reloadConsume, reloadRestore, reloadType);
+		// Build the immutable data objects first
+		ProjectileData projectileData = ProjectileData.builder()
+													  .speed(projectileSpeed)
+													  .type(projectileType)
+													  .damage(projectileDamage)
+													  .consumed(projectileConsumed)
+													  .perShot(projectilePerShot)
+													  .cooldown(projectileCooldown)
+													  .distance(projectileDistance)
+													  .particle(projectileParticle)
+													  .build();
 
-		weapon.setDurabilityOnShot(onShotDurability);
-		weapon.setDurabilityOnRepair(onRepairDurability);
+		ReloadData reloadData = ReloadData.builder()
+										  .maxMagCapacity(reloadCapacity)
+										  .cooldown(reloadCooldown)
+										  .ammoType(ammoType)
+										  .consume(reloadConsume)
+										  .restore(reloadRestore)
+										  .type(reloadType)
+										  .build();
 
-		weapon.setProjectileExplosionDamage(projectileExplosionDamage);
-		weapon.setProjectileFireTicks(projectileFireTicks);
-		weapon.setProjectileHeadDamage(projectileHeadDamage);
-		weapon.setProjectileCriticalHitChance(projectileCriticalHitChance);
-		weapon.setProjectileCriticalHitDamage(projectileCriticalHitDamage);
+		// Create the weapon with the new constructor
+		Weapon weapon = new Weapon(null, fileName, displayName, category, material, durability, lore, dropHologram,
+								   selectiveFire, weaponConsumedOnShot, projectileData, reloadData);
 
-		weapon.setWeaponConsumeOnTime(weaponConsumedTime);
+		// Set mutable data via the data objects
+		weapon.getDurabilityData().setOnShot(onShotDurability);
+		weapon.getDurabilityData().setOnRepair(onRepairDurability);
+		weapon.getDurabilityData().setConsumeOnTime(weaponConsumedTime);
 
-		weapon.setSpreadStart(spreadStart);
-		weapon.setSpreadResetTime(spreadResetTime);
-		weapon.setSpreadChangeBase(spreadChangeBase);
-		weapon.setSpreadResetOnBound(spreadResetOnBound);
-		weapon.setSpreadBoundMinimum(spreadBoundMinimum);
-		weapon.setSpreadBoundMaximum(spreadBoundMaximum);
+		weapon.getDamageData().setExplosionDamage(projectileExplosionDamage);
+		weapon.getDamageData().setFireTicks(projectileFireTicks);
+		weapon.getDamageData().setHeadDamage(projectileHeadDamage);
+		weapon.getDamageData().setCriticalHitChance(projectileCriticalHitChance);
+		weapon.getDamageData().setCriticalHitDamage(projectileCriticalHitDamage);
 
-		weapon.setRecoilAmount(recoilAmount);
-		weapon.setPushVelocity(pushVelocity);
-		weapon.setPushPowerUp(pushPowerUp);
-		weapon.setRecoilPattern(recoilPattern);
+		weapon.getSpreadData().setStart(spreadStart);
+		weapon.getSpreadData().setResetTime(spreadResetTime);
+		weapon.getSpreadData().setChangeBase(spreadChangeBase);
+		weapon.getSpreadData().setResetOnBound(spreadResetOnBound);
+		weapon.getSpreadData().setBoundMinimum(spreadBoundMinimum);
+		weapon.getSpreadData().setBoundMaximum(spreadBoundMaximum);
 
-		weapon.setShotDefaultSound(defaultShotSound);
-		weapon.setShotCustomSound(customShotSound);
-		weapon.setEmptyMagDefaultSound(defaultMagSound);
-		weapon.setEmptyMagCustomSound(customMagSound);
+		weapon.getRecoilData().setAmount(recoilAmount);
+		weapon.getRecoilData().setPushVelocity(pushVelocity);
+		weapon.getRecoilData().setPushPowerUp(pushPowerUp);
+		weapon.getRecoilData().setPattern(recoilPattern);
 
-		weapon.setReloadDefaultSoundBefore(reloadDefaultSoundBefore);
-		weapon.setReloadDefaultSoundAfter(reloadDefaultSoundAfter);
-		weapon.setReloadCustomSoundStart(reloadCustomSoundStart);
-		weapon.setReloadCustomSoundMid(reloadCustomSoundMid);
-		weapon.setReloadCustomSoundEnd(reloadCustomSoundEnd);
+		weapon.getSoundData().setShotDefault(defaultShotSound);
+		weapon.getSoundData().setShotCustom(customShotSound);
+		weapon.getSoundData().setEmptyMagDefault(defaultMagSound);
+		weapon.getSoundData().setEmptyMagCustom(customMagSound);
+		weapon.getSoundData().setReloadDefaultBefore(reloadDefaultSoundBefore);
+		weapon.getSoundData().setReloadDefaultAfter(reloadDefaultSoundAfter);
+		weapon.getSoundData().setReloadCustomStart(reloadCustomSoundStart);
+		weapon.getSoundData().setReloadCustomMid(reloadCustomSoundMid);
+		weapon.getSoundData().setReloadCustomEnd(reloadCustomSoundEnd);
+		weapon.getSoundData().setScopeDefault(scopeDefaultSound);
+		weapon.getSoundData().setScopeCustom(scopeCustomSound);
 
-		weapon.setReloadActionBarReloading(reloadActionBarReloading);
-		weapon.setReloadActionBarOpening(reloadActionBarOpening);
+		weapon.getReloadActionBarData().setReloading(reloadActionBarReloading);
+		weapon.getReloadActionBarData().setOpening(reloadActionBarOpening);
 
-		weapon.setScopeLevel(scopeLevel);
-
-		weapon.setScopeDefaultSound(scopeDefaultSound);
-		weapon.setScopeCustomSound(scopeCustomSound);
+		weapon.getScopeData().setLevel(scopeLevel);
 
 		weapons.put(fileName, weapon);
 	}
