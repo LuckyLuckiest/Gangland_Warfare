@@ -1,9 +1,10 @@
-package me.luckyraven.listener.sign;
+package me.luckyraven.sign.listener;
 
+import lombok.RequiredArgsConstructor;
 import me.luckyraven.sign.model.ParsedSign;
+import me.luckyraven.sign.service.SignInformation;
 import me.luckyraven.sign.service.SignInteractionService;
 import me.luckyraven.sign.validation.SignValidationException;
-import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -17,13 +18,11 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import java.util.Optional;
 
 @ListenerHandler
+@RequiredArgsConstructor
 public class SignInteract implements Listener {
 
 	private final SignInteractionService signService;
-
-	public SignInteract(SignInteractionService signService) {
-		this.signService = signService;
-	}
+	private final SignInformation        information;
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onSignInteract(PlayerInteractEvent event) {
@@ -59,7 +58,7 @@ public class SignInteract implements Listener {
 		} catch (SignValidationException ignored) { }
 
 		if (optParsed.isEmpty()) {
-			player.sendMessage(ChatUtil.errorMessage("Invalid sign!"));
+			information.sendError(player, "Invalid sign!");
 
 			return;
 		}

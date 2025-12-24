@@ -1,9 +1,9 @@
-package me.luckyraven.listener.sign;
+package me.luckyraven.sign.listener;
 
-import me.luckyraven.file.configuration.SettingAddon;
+import lombok.RequiredArgsConstructor;
+import me.luckyraven.sign.service.SignInformation;
 import me.luckyraven.sign.service.SignInteractionService;
 import me.luckyraven.sign.validation.SignValidationException;
-import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,13 +12,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.SignChangeEvent;
 
 @ListenerHandler
+@RequiredArgsConstructor
 public class SignCreation implements Listener {
 
 	private final SignInteractionService signService;
-
-	public SignCreation(SignInteractionService signService) {
-		this.signService = signService;
-	}
+	private final SignInformation        information;
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onSignCreate(SignChangeEvent event) {
@@ -33,15 +31,15 @@ public class SignCreation implements Listener {
 		try {
 			signService.validateSign(lines);
 
-			String[] newLines = signService.formatForDisplay(lines, SettingAddon.getMoneySymbol());
+			String[] newLines = signService.formatForDisplay(lines, information.getMoneySymbol());
 
 			for (int i = 0; i < newLines.length; i++) {
 				event.setLine(i, newLines[i]);
 			}
 
-			player.sendMessage(ChatUtil.prefixMessage("Sign created successfully!"));
+			information.sendSuccess(player, "Sign created successfully!");
 		} catch (SignValidationException exception) {
-			player.sendMessage(ChatUtil.errorMessage("Invalid sign: " + exception.getMessage()));
+			information.sendError(player, "Invalid sign: " + exception.getMessage());
 			event.setCancelled(true);
 		}
 	}

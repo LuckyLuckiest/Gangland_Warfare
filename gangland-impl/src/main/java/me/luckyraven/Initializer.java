@@ -57,10 +57,12 @@ import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
+import me.luckyraven.sign.GanglandSignInformation;
 import me.luckyraven.sign.SignManager;
 import me.luckyraven.sign.registry.SignFormatRegistry;
 import me.luckyraven.sign.registry.SignTypeRegistry;
 import me.luckyraven.sign.service.SignFormatterService;
+import me.luckyraven.sign.service.SignInformation;
 import me.luckyraven.sign.service.SignInteraction;
 import me.luckyraven.sign.service.SignInteractionService;
 import me.luckyraven.util.autowire.DependencyContainer;
@@ -131,6 +133,8 @@ public final class Initializer {
 	private CompatibilityWorker        compatibilityWorker;
 	// Condition Evaluator
 	private ConditionEvaluator         evaluator;
+	// Sign Information
+	private SignInformation            signInformation;
 
 	public Initializer(Gangland gangland) {
 		this.gangland = gangland;
@@ -172,10 +176,9 @@ public final class Initializer {
 		// add all registered plugin permissions
 		Set<Permission> permissions = Bukkit.getPluginManager().getPermissions();
 		Set<String> ganglandPermissions = permissions.stream()
-													 .map(Permission::getName)
-													 .filter(permission -> permission.startsWith(
-															 gangland.getFullPrefix()))
-													 .collect(Collectors.toSet());
+				.map(Permission::getName)
+				.filter(permission -> permission.startsWith(gangland.getFullPrefix()))
+				.collect(Collectors.toSet());
 
 		permissionManager.addAllPermissions(ganglandPermissions);
 
@@ -259,6 +262,9 @@ public final class Initializer {
 
 		// item parser
 		itemParserManager = new ItemParserManager(weaponManager, ammunitionAddon);
+
+		// Sign Information
+		signInformation = new GanglandSignInformation();
 
 		// Events
 		listenerManager = new ListenerManager(gangland);
@@ -387,10 +393,10 @@ public final class Initializer {
 
 	public <E> E getInstanceFromTables(Class<E> clazz, List<Table<?>> tables) {
 		return tables.stream()
-					 .filter(clazz::isInstance)
-					 .map(clazz::cast)
-					 .findFirst()
-					 .orElseThrow(() -> new RuntimeException("There was a problem finding class, " + clazz.getName()));
+				.filter(clazz::isInstance)
+				.map(clazz::cast)
+				.findFirst()
+				.orElseThrow(() -> new RuntimeException("There was a problem finding class, " + clazz.getName()));
 	}
 
 	private void databases() {
@@ -420,6 +426,7 @@ public final class Initializer {
 		dependencyContainer.registerInstance(WeaponService.class, weaponManager);
 		dependencyContainer.registerInstance(SignInteractionService.class, signManager.getSignService());
 		dependencyContainer.registerInstance(RecoilCompatibility.class, compatibilityWorker.getRecoilCompatibility());
+		dependencyContainer.registerInstance(SignInformation.class, signInformation);
 
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 
