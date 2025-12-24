@@ -9,6 +9,7 @@ import me.luckyraven.sign.model.ParsedSign;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
+import me.luckyraven.weapon.ammo.Ammunition;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -88,9 +89,9 @@ public class ViewInventoryAspect implements SignAspect {
 
 		List<String> weaponLore = new ArrayList<>();
 		weaponLore.add("&7Type: &f" + weapon.getCategory().name());
-		weaponLore.add("&7Damage: &c" + weapon.getProjectileDamage());
-		weaponLore.add("&7Magazine: &e" + weapon.getMaxMagCapacity());
-		weaponLore.add("&7Fire Rate: &a" + weapon.getProjectileCooldown() + "ms");
+		weaponLore.add("&7Damage: &c" + weapon.getProjectileData().getDamage());
+		weaponLore.add("&7Magazine: &e" + weapon.getReloadData().getMaxMagCapacity());
+		weaponLore.add("&7Fire Rate: &a" + weapon.getProjectileData().getCooldown() + "ms");
 		weaponLore.add("");
 		weaponLore.add("&7Compatible Ammo: " + compatibleAmmo);
 
@@ -179,19 +180,20 @@ public class ViewInventoryAspect implements SignAspect {
 	private Weapon findWeapon(String identifier) {
 		return weaponService.getWeapons()
 							.values()
-							.stream()
-							.filter(w -> w.getName().equalsIgnoreCase(identifier) ||
-										 w.getDisplayName().equalsIgnoreCase(identifier))
-							.findFirst()
-							.orElse(null);
+				.stream()
+				.filter(w -> w.getName().equalsIgnoreCase(identifier) ||
+							 w.getDisplayName().equalsIgnoreCase(identifier))
+				.findFirst()
+				.orElse(null);
 	}
 
 	private List<String> getCompatibleAmmunition(Weapon weapon) {
 		List<String> compatible = new ArrayList<>();
 
 		// Add the weapon's primary ammunition type
-		if (weapon.getReloadAmmoType() != null) {
-			String ammoName = weapon.getReloadAmmoType().getName().toLowerCase();
+		Ammunition ammoType = weapon.getReloadData().getAmmoType();
+		if (ammoType != null) {
+			String ammoName = ammoType.getName().toLowerCase();
 			if (ammunitionAddon.getAmmunitionKeys().contains(ammoName)) {
 				compatible.add(ammoName);
 			}
