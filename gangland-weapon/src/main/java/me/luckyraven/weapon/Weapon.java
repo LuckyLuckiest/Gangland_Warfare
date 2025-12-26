@@ -86,8 +86,8 @@ public class Weapon implements Cloneable, Comparable<Weapon> {
 		this.tags                = new TreeMap<>();
 		this.changingDisplayName = updateDisplayName(displayName);
 
-		initializeManagers();
 		initializeMutableData();
+		initializeManagers();
 	}
 
 	public Weapon(UUID uuid, Weapon weapon) {
