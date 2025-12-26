@@ -12,7 +12,6 @@ import java.util.Random;
  */
 public class SpreadManager {
 
-	private final Weapon     weapon;
 	private final Random     random;
 	private final SpreadData spreadData;
 
@@ -21,7 +20,6 @@ public class SpreadManager {
 	private long   lastShotTime;
 
 	public SpreadManager(Weapon weapon) {
-		this.weapon        = weapon;
 		this.random        = new Random();
 		this.spreadData    = weapon.getSpreadData();
 		this.currentSpread = spreadData.getStart();
