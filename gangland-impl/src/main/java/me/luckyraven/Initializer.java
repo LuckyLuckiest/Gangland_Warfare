@@ -479,7 +479,7 @@ public final class Initializer {
 		commandManager.addCommand(new HelpCommand(gangland));
 
 		// initialize the tab completer
-		command.setTabCompleter(new CommandTabCompleter(gangland, CommandManager.getCommands()));
+		command.setTabCompleter(new CommandTabCompleter(CommandManager.getCommands()));
 	}
 
 }
