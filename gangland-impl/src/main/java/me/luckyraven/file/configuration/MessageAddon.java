@@ -111,6 +111,7 @@ public enum MessageAddon {
 	RANK_INFO_SECONDARY("Commands.Rank.Info.Secondary", Type.OTHER),
 	RANK_PARENT_ADD("Commands.Rank.Parent.Add", Type.COMMAND),
 	RANK_PARENT_REMOVE("Commands.Rank.Parent.Remove", Type.COMMAND),
+	RANK_PERMISSION_EXISTS("Commands.Rank.Permission.Exists", Type.COMMAND),
 
 	// commands - bounty
 	BOUNTY_CURRENT("Commands.Bounty.Current", Type.COMMAND),
