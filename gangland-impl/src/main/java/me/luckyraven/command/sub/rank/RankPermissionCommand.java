@@ -56,7 +56,7 @@ class RankPermissionCommand extends SubArgument {
 				case "add" -> {
 					Permission newPermission = new Permission(Permission.getNewId(), permString);
 
-					rank.addPermission(newPermission);
+					rankManager.addPermission(rank, newPermission);
 
 					String string = MessageAddon.RANK_PERMISSION_ADD.toString();
 					message = string.replace("%rank%", rank.getName()).replace("%permission%", permString);
@@ -67,7 +67,7 @@ class RankPermissionCommand extends SubArgument {
 						return;
 					}
 
-					rank.removePermission(permString);
+					rankManager.removePermission(rank, permString);
 
 					String string = MessageAddon.RANK_PERMISSION_REMOVE.toString();
 					message = string.replace("%rank%", rank.getName()).replace("%permission%", permString);
@@ -75,11 +75,11 @@ class RankPermissionCommand extends SubArgument {
 			}
 
 			sender.sendMessage(message);
-		}, sender -> List.of("<add/remove>"));
+		}, sender -> List.of("<permission>"));
 
 		Argument permName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<permission>"));
-		});
+		}, sender -> List.of("<rank>"));
 
 		permName.addSubArgument(perm);
 
