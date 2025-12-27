@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
+import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -47,10 +48,11 @@ class RankInfoCommand extends SubArgument {
 				return;
 			}
 
-			StringBuilder permBuilder = new StringBuilder();
-			for (int i = 0; i < rank.getPermissions().size(); i++) {
-				permBuilder.append(rank.getPermissions().get(i));
-				if (i < rank.getPermissions().size() - 1) permBuilder.append(", ");
+			StringBuilder    permBuilder = new StringBuilder();
+			List<Permission> permissions = rank.getPermissions();
+			for (int i = 0; i < permissions.size(); i++) {
+				permBuilder.append(permissions.get(i));
+				if (i < permissions.size() - 1) permBuilder.append(", ");
 			}
 
 			StringBuilder parentBuilder = new StringBuilder();
