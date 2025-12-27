@@ -23,4 +23,9 @@ public class Permission {
 		Permission.ID = id;
 	}
 
+	@Override
+	public String toString() {
+		return String.format("Permission{usedId=%d, permission='%s'}", usedId, permission);
+	}
+
 }
