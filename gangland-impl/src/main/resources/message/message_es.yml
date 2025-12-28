@@ -186,6 +186,7 @@ Commands:
       Permission:
          Add: "You have added &8[&a%permission%&8]&7 to &8[&a%rank%&8]&7 rank."
          Remove: "You have removed &8[&a%permission%&8]&7 from &8[&a%rank%&8]&7 rank."
+         Exists: "&cThe permission %permission% already exists on rank %rank%!"
       List:
          Primary: "All the ranks:"
          Secondary: "%ranks%"

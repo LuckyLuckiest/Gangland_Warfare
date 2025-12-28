@@ -2,6 +2,7 @@ package me.luckyraven.data.rank;
 
 import lombok.Getter;
 import me.luckyraven.Gangland;
+import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.PermissionTable;
 import me.luckyraven.database.tables.RankParentTable;
@@ -17,6 +18,7 @@ import java.util.*;
 public class RankManager {
 
 	private final Gangland                    gangland;
+	private final PermissionManager           permissionManager;
 	private final Map<Integer, Rank>          ranks;
 	private final Set<Pair<Integer, Integer>> ranksParent;
 	private final Map<Integer, Permission>    permissions;
@@ -25,12 +27,13 @@ public class RankManager {
 	private final @Getter Tree<Rank> rankTree;
 
 	public RankManager(Gangland gangland) {
-		this.gangland         = gangland;
-		this.ranks            = new HashMap<>();
-		this.ranksParent      = new HashSet<>();
-		this.rankTree         = new Tree<>();
-		this.permissions      = new HashMap<>();
-		this.ranksPermissions = new HashSet<>();
+		this.gangland          = gangland;
+		this.permissionManager = gangland.getInitializer().getPermissionManager();
+		this.ranks             = new HashMap<>();
+		this.ranksParent       = new HashSet<>();
+		this.rankTree          = new Tree<>();
+		this.permissions       = new HashMap<>();
+		this.ranksPermissions  = new HashSet<>();
 	}
 
 	public void initialize(RankTable rankTable, RankParentTable rankParentTable, PermissionTable permissionTable,
@@ -91,15 +94,12 @@ public class RankManager {
 				// set up the permissions
 				// get the permissions which have this rank id
 				List<Integer> permIds = ranksPermissions.stream()
-														.filter(pair -> pair.first() == id)
-														.map(Pair::second)
-														.toList();
+						.filter(pair -> pair.first() == id)
+						.map(Pair::second)
+						.toList();
 				// group them together and add them as a permissions list
 				List<Permission> perms = this.permissions.keySet()
-														 .stream()
-														 .filter(permIds::contains)
-														 .map(this.permissions::get)
-														 .toList();
+						.stream().filter(permIds::contains).map(this.permissions::get).toList();
 				List<Permission> permissions = new ArrayList<>(perms);
 
 				Rank rank = new Rank(name, id, permissions);
@@ -115,24 +115,24 @@ public class RankManager {
 			for (int rankId : ranks.keySet()) {
 				// get the rank parents of the specified id
 				List<String> children = this.ranksParent.stream()
-														// need only the ranks which are under this rank id
-														.filter(pair -> pair.first() == rankId)
-														// get the name of the ranks under this id
-														.map(pair -> this.ranks.get(pair.second()).getName()).toList();
+						// need only the ranks which are under this rank id
+						.filter(pair -> pair.first() == rankId)
+						// get the name of the ranks under this id
+						.map(pair -> this.ranks.get(pair.second()).getName()).toList();
 
 				nodeMap.put(this.ranks.get(rankId).getNode(), children);
 			}
 
 			// add the rank head
 			rankTree.add(nodeMap.keySet()
-								.stream()
-								.filter(node -> node.getData()
-													.getName()
-													.equalsIgnoreCase(SettingAddon.getGangRankHead()))
-								.findFirst()
-								// what if there was a node that doesn't have this specific head!
-								// need to find the node that would be attached to this default rank
-								.orElse(new Rank(SettingAddon.getGangRankHead(), Rank.getNewId()).getNode()));
+								 .stream()
+								 .filter(node -> node.getData()
+													 .getName()
+													 .equalsIgnoreCase(SettingAddon.getGangRankHead()))
+								 .findFirst()
+								 // what if there was a node that doesn't have this specific head!
+								 // need to find the node that would be attached to this default rank
+								 .orElse(new Rank(SettingAddon.getGangRankHead(), Rank.getNewId()).getNode()));
 
 			// map information
 			// the map saves the node and the child of that node
@@ -173,6 +173,84 @@ public class RankManager {
 		ranks.put(rank.getUsedId(), rank);
 	}
 
+	/**
+	 * Checks if a permission string already exists in the global permissions map.
+	 *
+	 * @param permissionString the permission string to check
+	 *
+	 * @return true if the permission exists, false otherwise
+	 */
+	public boolean permissionExists(String permissionString) {
+		boolean rankPermissions = permissions.values()
+				.stream().anyMatch(p -> p.getPermission().equalsIgnoreCase(permissionString));
+
+		if (!rankPermissions) rankPermissions = permissionManager.contains(permissionString);
+
+		return rankPermissions;
+	}
+
+	/**
+	 * Finds an existing permission by its string value.
+	 *
+	 * @param permissionString the permission string to find
+	 *
+	 * @return the Permission object if found, null otherwise
+	 */
+	@Nullable
+	public Permission findPermission(String permissionString) {
+		return permissions.values()
+				.stream().filter(p -> p.getPermission().equalsIgnoreCase(permissionString)).findFirst().orElse(null);
+	}
+
+	/**
+	 * Adds a permission to a rank. If the permission already exists globally, it reuses the existing permission. If the
+	 * rank already has this permission, no action is taken.
+	 *
+	 * @param rank the rank to add the permission to
+	 * @param permissionString the permission string to add
+	 *
+	 * @return true if the permission was added, false if it already existed on the rank
+	 */
+	public boolean addPermission(Rank rank, String permissionString) {
+		// Check if the rank already has this permission
+		if (rank.contains(permissionString)) {
+			return false;
+		}
+
+		// Check if the permission already exists globally
+		Permission permission = findPermission(permissionString);
+
+		if (permission == null) {
+			// Create a new permission
+			permission = new Permission(Permission.getNewId(), permissionString);
+			permissions.put(permission.getUsedId(), permission);
+		}
+
+		// Add the rank-permission relationship
+		ranksPermissions.add(new Pair<>(rank.getUsedId(), permission.getUsedId()));
+		// Add permission to the rank itself
+		rank.addPermission(permission);
+
+		return true;
+	}
+
+	public void removePermission(Rank rank, String permission) {
+		Permission perm = rank.getPermissions()
+				.stream()
+				.filter(currentPerm -> currentPerm.getPermission().equalsIgnoreCase(permission))
+				.findFirst()
+				.orElse(null);
+
+		if (perm == null) return;
+
+		ranksPermissions.removeIf(pair -> pair.first() == rank.getUsedId() && pair.second() == perm.getUsedId());
+		rank.removePermission(perm);
+
+		if (ranksPermissions.stream().anyMatch(pair -> pair.second() == perm.getUsedId())) return;
+
+		permissions.remove(perm.getUsedId());
+	}
+
 	public boolean remove(Rank rank) {
 		Rank r = ranks.remove(rank.getUsedId());
 		return r != null;
@@ -195,7 +273,7 @@ public class RankManager {
 	@Nullable
 	public Rank get(String name) {
 		return ranks.values()
-					.stream().filter(rank -> rank.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
+				.stream().filter(rank -> rank.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
 	}
 
 	public Map<Integer, Rank> getRanks() {
@@ -226,10 +304,7 @@ public class RankManager {
 	@Nullable
 	private Tree.Node<Rank> findChildNode(Map<Tree.Node<Rank>, List<String>> nodeMap, String child) {
 		return nodeMap.keySet()
-					  .stream()
-					  .filter(node -> node.getData().getName().equalsIgnoreCase(child))
-					  .findFirst()
-					  .orElse(null);
+				.stream().filter(node -> node.getData().getName().equalsIgnoreCase(child)).findFirst().orElse(null);
 	}
 
 }

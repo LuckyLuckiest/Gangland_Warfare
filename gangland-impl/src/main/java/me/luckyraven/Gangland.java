@@ -206,7 +206,7 @@ public final class Gangland extends JavaPlugin {
 		int hours = 6;
 
 		// initialize the update checker
-		updateChecker = new UpdateChecker(this, fullPrefix, -1, hours * 60 * 60L);
+		updateChecker = new UpdateChecker(this, fullPrefix, 131157, hours * 60 * 60L);
 
 		// add the necessary permissions for checking for updates
 		initializer.getPermissionManager().addPermission(updateChecker.getCheckPermission());

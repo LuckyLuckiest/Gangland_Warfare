@@ -4,7 +4,6 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
-import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -54,9 +53,15 @@ class RankPermissionCommand extends SubArgument {
 			String message    = "";
 			switch (args[2].toLowerCase()) {
 				case "add" -> {
-					Permission newPermission = new Permission(Permission.getNewId(), permString);
+					if (rank.contains(permString)) {
+						String string  = MessageAddon.RANK_PERMISSION_EXISTS.toString();
+						String replace = string.replace("%rank%", rank.getName()).replace("%permission%", permString);
 
-					rank.addPermission(newPermission);
+						sender.sendMessage(replace);
+						return;
+					}
+
+					rankManager.addPermission(rank, permString);
 
 					String string = MessageAddon.RANK_PERMISSION_ADD.toString();
 					message = string.replace("%rank%", rank.getName()).replace("%permission%", permString);
@@ -67,7 +72,7 @@ class RankPermissionCommand extends SubArgument {
 						return;
 					}
 
-					rank.removePermission(permString);
+					rankManager.removePermission(rank, permString);
 
 					String string = MessageAddon.RANK_PERMISSION_REMOVE.toString();
 					message = string.replace("%rank%", rank.getName()).replace("%permission%", permString);
@@ -75,11 +80,11 @@ class RankPermissionCommand extends SubArgument {
 			}
 
 			sender.sendMessage(message);
-		}, sender -> List.of("<add/remove>"));
+		}, sender -> List.of("<permission>"));
 
 		Argument permName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<permission>"));
-		});
+		}, sender -> List.of("<rank>"));
 
 		permName.addSubArgument(perm);
 

@@ -40,18 +40,6 @@ public class Rank {
 		return id == usedId;
 	}
 
-	public void addPermission(Permission permission) {
-		permissions.add(permission);
-	}
-
-	public void removePermission(String permission) {
-		permissions.removeIf(perm -> perm.getPermission().equalsIgnoreCase(permission));
-	}
-
-	public void removePermission(Permission permission) {
-		permissions.remove(permission);
-	}
-
 	public boolean contains(String permission) {
 		return permissions.stream().anyMatch(perm -> perm.getPermission().equalsIgnoreCase(permission));
 	}
@@ -67,6 +55,14 @@ public class Rank {
 	@Override
 	public String toString() {
 		return String.format("Rank{id=%d,name='%s',permissions=%s}", usedId, name, permissions);
+	}
+
+	protected void addPermission(Permission permission) {
+		permissions.add(permission);
+	}
+
+	protected void removePermission(Permission permission) {
+		permissions.remove(permission);
 	}
 
 }
