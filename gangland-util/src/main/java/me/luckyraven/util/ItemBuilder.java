@@ -8,6 +8,7 @@ import de.tr7zw.nbtapi.iface.ReadWriteItemNBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
 import de.tr7zw.nbtapi.iface.ReadableItemNBT;
 import lombok.Getter;
+import me.luckyraven.exception.PluginException;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -24,7 +25,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class ItemBuilder {
+public class ItemBuilder implements Cloneable {
 
 	private final ItemStack itemStack;
 
@@ -261,6 +262,15 @@ public class ItemBuilder {
 	@Override
 	public String toString() {
 		return NBT.itemStackToNBT(itemStack).toString();
+	}
+
+	@Override
+	public ItemBuilder clone() {
+		try {
+			return (ItemBuilder) super.clone();
+		} catch (CloneNotSupportedException exception) {
+			throw new PluginException();
+		}
 	}
 
 }
