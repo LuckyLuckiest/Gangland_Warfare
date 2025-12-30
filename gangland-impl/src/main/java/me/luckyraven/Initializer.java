@@ -50,8 +50,10 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
+import me.luckyraven.file.configuration.inventory.lootchest.LootChestLoader;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
+import me.luckyraven.inventory.loot.LootChestManager;
 import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
@@ -115,6 +117,7 @@ public final class Initializer {
 	private SignManager                signManager;
 	private EntityMarkManager          entityMarkManager;
 	private ItemParserManager          itemParserManager;
+	private LootChestManager           lootChestManager;
 	// Addons
 	private SettingAddon               settingAddon;
 	private ScoreboardAddon            scoreboardAddon;
@@ -125,6 +128,7 @@ public final class Initializer {
 	private LanguageLoader             languageLoader;
 	private InventoryLoader            inventoryLoader;
 	private WeaponLoader               weaponLoader;
+	private LootChestLoader            lootChestLoader;
 	// Database
 	private GanglandDatabase           ganglandDatabase;
 	// Placeholder
@@ -297,6 +301,12 @@ public final class Initializer {
 		FileHandler uniqueItemsFile = new FileHandler(gangland, "unique_items", ".yml");
 		fileManager.addFile(uniqueItemsFile, true);
 
+		FileHandler lootChestFile = new FileHandler(gangland, "loot-chests", "loot", ".yml");
+		fileManager.addFile(lootChestFile, true);
+
+		FileHandler tiersFile = new FileHandler(gangland, "tiers", "loot", ".yml");
+		fileManager.addFile(tiersFile, true);
+
 		scoreboardManager = new ScoreboardManager(gangland);
 
 		addonsLoader();
@@ -372,6 +382,15 @@ public final class Initializer {
 		inventoryLoader.addExpectedFile(new FileHandler(gangland, "phone_gang", "inventory", ".yml"));
 
 		inventoryLoader.initialize();
+
+		lootChestLoader();
+	}
+
+	public void lootChestLoader() {
+		lootChestManager = new LootChestManager(gangland, gangland.getFullPrefix());
+		lootChestLoader  = new LootChestLoader(gangland, lootChestManager);
+
+		lootChestLoader.load(false, null, fileManager);
 	}
 
 	public void weaponLoader() {
@@ -425,6 +444,7 @@ public final class Initializer {
 		dependencyContainer.registerInstance(GangManager.class, gangManager);
 		dependencyContainer.registerInstance(WeaponService.class, weaponManager);
 		dependencyContainer.registerInstance(SignInteractionService.class, signManager.getSignService());
+		dependencyContainer.registerInstance(LootChestManager.class, lootChestManager);
 		dependencyContainer.registerInstance(RecoilCompatibility.class, compatibilityWorker.getRecoilCompatibility());
 		dependencyContainer.registerInstance(SignInformation.class, signInformation);
 
