@@ -363,3 +363,22 @@ Entity_Marker:
             Maximum: 15
          Items:
             - ""
+
+# +------------+ #
+# | Loot Chest | #
+# +------------+ #
+
+Loot_Chest:
+   # The amount of time to wait before opening the loot chest in seconds.
+   Countdown_Timer: 300
+   # The sounds when interacting with a loot chest.
+   Sound:
+      Opening: "BLOCK_CHEST_OPEN"
+      Locked: "BLOCK_CHEST_LOCKED"
+   # The blocks that can be as loot chests.
+   Allowed_Blocks:
+      - "CHEST"
+      - "TRAPPED_CHEST"
+      - "BARREL"
+      - "SHULKER_BOX"
+      - "ENDER_CHEST"

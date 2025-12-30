@@ -98,6 +98,11 @@ public class SettingAddon implements FileInitializer {
 			civilianExperienceDropsMinimum, civilianExperienceDropsMaximum;
 	private static @Getter List<String> policeItemDrops, civilianItemDrops;
 
+	// loot chest configuration
+	private static @Getter long   lootChestCountdownTimer;
+	private static @Getter String lootChestOpeningSound, lootChestLockedSound;
+	private static @Getter List<String> lootChestAllowedBlocks;
+
 	public SettingAddon(FileManager fileManager) {
 		try {
 			String fileName = "settings";
@@ -313,6 +318,15 @@ public class SettingAddon implements FileInitializer {
 		civilianExperienceDropsMinimum = civilianDrops.getDouble("Experience.Minimum");
 		civilianExperienceDropsMaximum = civilianDrops.getDouble("Experience.Maximum");
 		civilianItemDrops              = civilianDrops.getStringList("Items");
+
+		// loot chest
+		var lootChest = settings.getConfigurationSection("Loot_Chest");
+		Objects.requireNonNull(lootChest);
+
+		lootChestCountdownTimer = lootChest.getLong("Countdown_Timer");
+		lootChestOpeningSound   = lootChest.getString("Sound.Opening");
+		lootChestLockedSound    = lootChest.getString("Sound.Locked");
+		lootChestAllowedBlocks  = lootChest.getStringList("Allowed_Blocks");
 
 		addEachFieldReflection();
 		convertToPlaceholder();
