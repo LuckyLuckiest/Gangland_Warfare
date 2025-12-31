@@ -3,8 +3,10 @@ package me.luckyraven.inventory.loot;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.loot.data.*;
 import me.luckyraven.inventory.loot.item.LootItemProvider;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.hologram.HologramService;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -13,33 +15,43 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
  * Manages all loot chests, sessions, and configuration
  */
-public class LootChestManager {
+public abstract class LootChestService {
 
 	private final JavaPlugin                  plugin;
 	private final String                      prefix;
 	private final Map<UUID, LootChestData>    registeredChests;
 	private final Map<Location, UUID>         chestsByLocation;
-	private final Map<UUID, LootChestSession> activeSessions;
+	private final Map<UUID, LootChestSession> activeSessions;   // Player sessions (for opening animation)
 	private final Map<String, LootTable>      lootTables;
 	private final Map<String, LootTier>       tiers;
 
 	@Getter
-	private LootChestConfig            config;
-	@Setter
-	private LootItemProvider           itemProvider;
-	@Setter
-	private Consumer<LootChestSession> onCountdownTick;
-	@Setter
-	private Consumer<LootChestSession> onSessionComplete;
-	@Setter
-	private Consumer<LootChestSession> onSessionStart;
+	private final HologramService      hologramService;
+	@Getter
+	private final ChestCooldownManager cooldownManager;
 
-	public LootChestManager(JavaPlugin plugin, String prefix) {
+	@Getter
+	private LootChestConfig                 config;
+	@Setter
+	private LootItemProvider                itemProvider;
+	@Setter
+	private Consumer<LootChestSession>      onCountdownTick;
+	@Setter
+	private Consumer<LootChestSession>      onSessionComplete;
+	@Setter
+	private Consumer<LootChestSession>      onSessionStart;
+	@Setter
+	private BiConsumer<LootChestData, Long> onChestCooldownTick;
+	@Setter
+	private Consumer<LootChestData>         onChestCooldownComplete;
+
+	public LootChestService(JavaPlugin plugin, String prefix) {
 		this.plugin = plugin;
 		this.prefix = prefix;
 
@@ -48,14 +60,32 @@ public class LootChestManager {
 		this.activeSessions   = new ConcurrentHashMap<>();
 		this.lootTables       = new HashMap<>();
 		this.tiers            = new LinkedHashMap<>();
+
+		// Initialize hologram and cooldown services
+		this.hologramService = new HologramService(plugin);
+		this.cooldownManager = new ChestCooldownManager(plugin, hologramService);
+
+		// Wire up cooldown callbacks
+		this.cooldownManager.setOnCooldownTick((chest, remaining) -> {
+			if (onChestCooldownTick != null) {
+				onChestCooldownTick.accept(chest, remaining);
+			}
+		});
+		this.cooldownManager.setOnCooldownComplete(chest -> {
+			if (onChestCooldownComplete != null) {
+				onChestCooldownComplete.accept(chest);
+			}
+		});
 	}
 
 	public void setConfig(LootChestConfig config) {
 		this.config = config;
+
 		this.tiers.clear();
-		this.tiers.putAll(config.getTiers());
+		config.getTiers().values().forEach(this::registerTier);
+
 		this.lootTables.clear();
-		this.lootTables.putAll(config.getLootTables());
+		config.getLootTables().values().forEach(this::registerLootTable);
 	}
 
 	public void registerTier(LootTier tier) {
@@ -77,6 +107,17 @@ public class LootChestManager {
 	public void registerChest(LootChestData chestData) {
 		registeredChests.put(chestData.getId(), chestData);
 		chestsByLocation.put(chestData.getLocation(), chestData.getId());
+
+		// Show initial hologram if chest is available
+		if (!chestData.isOnCooldown() && !chestData.isLooted()) {
+			cooldownManager.showAvailableHologram(chestData);
+		} else if (chestData.isOnCooldown()) {
+			// Resume cooldown timer if chest was on cooldown
+			long remaining = chestData.getRemainingCooldownSeconds();
+			if (remaining > 0) {
+				cooldownManager.startCooldown(chestData, remaining);
+			}
+		}
 	}
 
 	public void unregisterChest(UUID chestId) {
@@ -85,6 +126,8 @@ public class LootChestManager {
 		if (data == null) return;
 
 		chestsByLocation.remove(data.getLocation());
+		cooldownManager.cancelCooldown(chestId);
+		cooldownManager.removeChestHologram(chestId);
 	}
 
 	public Optional<LootChestData> getChestAt(Location location) {
@@ -108,7 +151,8 @@ public class LootChestManager {
 	}
 
 	/**
-	 * Attempts to open a loot chest for a player
+	 * Attempts to open a loot chest for a player. Players can open chests that are not on global cooldown. Once loot is
+	 * taken, a global cooldown starts for that chest.
 	 */
 	public OpenResult tryOpenChest(Player player, LootChestData chestData) {
 		if (itemProvider == null) {
@@ -119,12 +163,9 @@ public class LootChestManager {
 			return OpenResult.ALREADY_IN_SESSION;
 		}
 
-		if (chestData.isLooted() && !chestData.canRespawn()) {
-			return OpenResult.ALREADY_LOOTED;
-		}
-
-		if (chestData.canRespawn()) {
-			chestData.respawn();
+		// Check if chest is on global cooldown
+		if (chestData.isOnCooldown()) {
+			return OpenResult.ON_COOLDOWN;
 		}
 
 		// Check tier requirements
@@ -152,7 +193,7 @@ public class LootChestManager {
 		InventoryHandler inventory = new InventoryHandler(title, chestData.getInventorySize(), key,
 														  player.getUniqueId());
 
-		// Create session with countdown
+		// Create session with countdown (for opening animation)
 		long countdownTime = config != null ? config.getDefaultCountdownTime() : 3L;
 
 		var session = new LootChestSession(plugin, player, chestData, inventory, items, countdownTime, timer -> {
@@ -173,12 +214,23 @@ public class LootChestManager {
 		return OpenResult.SUCCESS;
 	}
 
+	/**
+	 * Closes the session and starts the global chest cooldown
+	 */
 	public void closeSession(Player player) {
 		LootChestSession session = activeSessions.remove(player.getUniqueId());
 
 		if (session == null) return;
 
 		session.close();
+
+		// Start global cooldown for this chest
+		LootChestData chestData    = session.getChestData();
+		long          cooldownTime = chestData.getRespawnTime(); // Use respawnTime as cooldown duration
+
+		if (cooldownTime > 0) {
+			cooldownManager.startCooldown(chestData, cooldownTime);
+		}
 	}
 
 	public void cancelSession(Player player) {
@@ -187,6 +239,7 @@ public class LootChestManager {
 		if (session == null) return;
 
 		session.cancel();
+		// Don't start cooldown on cancelled sessions
 	}
 
 	public void clear() {
@@ -197,6 +250,9 @@ public class LootChestManager {
 		chestsByLocation.clear();
 		lootTables.clear();
 		tiers.clear();
+
+		cooldownManager.clear();
+		hologramService.clear();
 	}
 
 	public Collection<LootChestData> getAllChests() {
@@ -250,6 +306,7 @@ public class LootChestManager {
 		SUCCESS,
 		ALREADY_IN_SESSION,
 		ALREADY_LOOTED,
+		ON_COOLDOWN,
 		REQUIRES_LOCKPICK,
 		REQUIRES_KEY,
 		NO_PERMISSION,

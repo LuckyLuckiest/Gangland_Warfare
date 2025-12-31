@@ -2,8 +2,8 @@ package me.luckyraven.inventory.listener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import me.luckyraven.inventory.loot.LootChestManager;
-import me.luckyraven.inventory.loot.LootChestSession;
+import me.luckyraven.inventory.loot.LootChestService;
+import me.luckyraven.inventory.loot.data.LootChestSession;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.block.Block;
@@ -26,10 +26,10 @@ import java.util.function.BiConsumer;
 @RequiredArgsConstructor
 public class LootChestListener implements Listener {
 
-	private final LootChestManager manager;
+	private final LootChestService manager;
 
 	@Setter
-	private BiConsumer<Player, LootChestManager.OpenResult> onOpenAttempt;
+	private BiConsumer<Player, LootChestService.OpenResult> onOpenAttempt;
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerInteract(PlayerInteractEvent event) {
@@ -76,6 +76,8 @@ public class LootChestListener implements Listener {
 
 	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent event) {
+		// Only cancel the player's session, not the chest cooldown
+		// The chest cooldown continues even when the player leaves
 		manager.cancelSession(event.getPlayer());
 	}
 
