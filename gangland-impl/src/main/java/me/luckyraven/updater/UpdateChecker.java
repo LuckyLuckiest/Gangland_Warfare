@@ -108,15 +108,17 @@ public class UpdateChecker {
 		String currentVersion = plugin.getDescription().getVersion();
 
 		if (newVersion != null && !newVersion.equals(currentVersion)) {
-			ChatUtil.sendToOperators(checkPermission, String.format(
+			String format = String.format(
 					"The current version is %s, please update to the newest version available: %s", currentVersion,
-					newVersion));
-		} else {
-			if (!checked.get()) {
-				ChatUtil.sendToOperators(checkPermission, "The plugin is up to date.");
-				checked.set(true);
-			}
+					newVersion);
+			ChatUtil.sendToOperators(checkPermission, format, logger, true);
+			return;
 		}
+
+		if (checked.get()) return;
+
+		ChatUtil.sendToOperators(checkPermission, "The plugin is up to date.");
+		checked.set(true);
 	}
 
 	private boolean checkUpdate() {
