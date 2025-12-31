@@ -1,4 +1,4 @@
-package me.luckyraven.inventory.loot;
+package me.luckyraven.inventory.loot.data;
 
 /**
  * Represents a tier/level for loot chests with unlock requirements

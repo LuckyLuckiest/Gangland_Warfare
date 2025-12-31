@@ -1,7 +1,8 @@
-package me.luckyraven.inventory.loot;
+package me.luckyraven.inventory.loot.data;
 
 import lombok.Builder;
 import lombok.Getter;
+import me.luckyraven.inventory.loot.LootChestSettingProvider;
 import me.luckyraven.inventory.loot.item.LootItemReference;
 
 import java.util.List;
