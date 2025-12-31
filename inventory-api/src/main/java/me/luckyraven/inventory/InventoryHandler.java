@@ -39,6 +39,7 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 	private final @Getter UUID owner;
 
 	private final Map<Integer, TriConsumer<Player, InventoryHandler, ItemBuilder>> clickableSlots;
+	private final Map<Integer, TriConsumer<Player, InventoryHandler, ItemBuilder>> rightClickSlots;
 
 	private final List<Integer>             draggableSlots;
 	private final Map<Integer, ItemBuilder> clickableItems;
@@ -55,10 +56,11 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 		int realSize = factorOfNine(size);
 		this.size = Math.min(realSize, MAX_SLOTS);
 
-		this.inventory      = Bukkit.createInventory(null, this.size, ChatUtil.color(title));
-		this.draggableSlots = new ArrayList<>();
-		this.clickableSlots = new HashMap<>();
-		this.clickableItems = new HashMap<>();
+		this.inventory       = Bukkit.createInventory(null, this.size, ChatUtil.color(title));
+		this.draggableSlots  = new ArrayList<>();
+		this.clickableSlots  = new HashMap<>();
+		this.rightClickSlots = new HashMap<>();
+		this.clickableItems  = new HashMap<>();
 	}
 
 	public InventoryHandler(JavaPlugin plugin, String title, int size, String special, boolean add) {
@@ -138,8 +140,8 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 				displayName = applyPlaceholders(placeholder, meta.getDisplayName(), player);
 				lore        = meta.getLore();
 				if (lore != null) lore = lore.stream()
-											 .map(line -> applyPlaceholders(placeholder, line, player))
-											 .toList();
+						.map(line -> applyPlaceholders(placeholder, line, player))
+						.toList();
 				enchanted = meta.hasEnchants();
 			}
 
@@ -172,6 +174,23 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 		if (clickable != null) {
 			clickableSlots.put(slot, clickable);
 			clickableItems.put(slot, itemBuilder);
+		}
+	}
+
+	public void setItem(int slot, ItemBuilder itemBuilder, boolean draggable,
+						TriConsumer<Player, InventoryHandler, ItemBuilder> leftClick,
+						TriConsumer<Player, InventoryHandler, ItemBuilder> rightClick) {
+		setItem(slot, itemBuilder.build(), draggable);
+
+		if (leftClick != null) {
+			clickableSlots.put(slot, leftClick);
+			clickableItems.put(slot, itemBuilder);
+		}
+		if (rightClick != null) {
+			rightClickSlots.put(slot, rightClick);
+			if (leftClick == null) {
+				clickableItems.put(slot, itemBuilder);
+			}
 		}
 	}
 
@@ -211,6 +230,10 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 
 	public Map<Integer, TriConsumer<Player, InventoryHandler, ItemBuilder>> getClickableSlots() {
 		return new HashMap<>(clickableSlots);
+	}
+
+	public Map<Integer, TriConsumer<Player, InventoryHandler, ItemBuilder>> getRightClickSlots() {
+		return new HashMap<>(rightClickSlots);
 	}
 
 	public List<Integer> getDraggableSlots() {

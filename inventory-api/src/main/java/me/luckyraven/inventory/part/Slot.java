@@ -24,6 +24,7 @@ public class Slot {
 	private ConditionalSlotData conditionalData;
 
 	private TriConsumer<Player, InventoryHandler, ItemBuilder> clickableSlot;
+	private TriConsumer<Player, InventoryHandler, ItemBuilder> rightClickSlot;
 
 	/**
 	 * Gets the appropriate item and click action based on conditions
@@ -45,15 +46,19 @@ public class Slot {
 			}
 
 			return new ConditionalSlotResult(resolvedItem, resolvedClickable, resolvedDraggable, action,
-											 resolved.getClickAction());
+											 resolved.getClickAction(), resolved.getRightClickAction());
 		}
 
-		return new ConditionalSlotResult(item, clickable, draggable, clickableSlot, null);
+		return new ConditionalSlotResult(item, clickable, draggable, clickableSlot, null, null);
 	}
 
 	public void setClickable(TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
 		Preconditions.checkArgument(this.clickable, "The slot is not clickable");
 		this.clickableSlot = clickable;
+	}
+
+	public void setRightClickable(TriConsumer<Player, InventoryHandler, ItemBuilder> rightClickable) {
+		this.rightClickSlot = rightClickable;
 	}
 
 }
