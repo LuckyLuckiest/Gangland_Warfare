@@ -364,7 +364,14 @@ public interface Database {
 				case Types.BIGINT -> statement.setLong(index, (long) value);
 				case Types.FLOAT, Types.REAL -> statement.setFloat(index, (float) value);
 				case Types.DOUBLE, Types.NUMERIC -> statement.setDouble(index, (double) value);
-				case Types.BOOLEAN -> statement.setBoolean(index, (boolean) value);
+				case Types.BOOLEAN -> {
+					switch (value) {
+						case Boolean b -> statement.setBoolean(index, (boolean) value);
+						case Integer integer -> statement.setBoolean(index, integer != 0);
+						case Number number -> statement.setBoolean(index, number.intValue() != 0);
+						default -> statement.setBoolean(index, Boolean.parseBoolean(String.valueOf(value)));
+					}
+				}
 				case Types.DATE, Types.TIME, Types.TIMESTAMP -> {
 					LocalDateTime dateTime  = (LocalDateTime) value;
 					Timestamp     timestamp = Timestamp.valueOf(dateTime);
