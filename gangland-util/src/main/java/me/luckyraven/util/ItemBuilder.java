@@ -240,11 +240,7 @@ public class ItemBuilder implements Cloneable {
 	}
 
 	public boolean hasNBTTag(String tag) {
-		String value = getStringTagData(tag);
-
-		if (value == null) return false;
-
-		return !value.isEmpty();
+		return NBT.get(itemStack, (Function<ReadableItemNBT, Boolean>) nbt -> nbt.hasTag(tag));
 	}
 
 	public String getStringTagData(String tag) {
@@ -253,6 +249,33 @@ public class ItemBuilder implements Cloneable {
 
 	public int getIntegerTagData(String tag) {
 		return NBT.get(itemStack, (Function<ReadableItemNBT, Integer>) nbt -> nbt.getInteger(tag));
+	}
+
+	/**
+	 * Gets the NBT tag value regardless of its type. Returns the value as its native type (Boolean, Integer, Long,
+	 * Double, String, etc.) or null if the tag doesn't exist.
+	 *
+	 * @param tag the tag name
+	 *
+	 * @return the tag value as Object, or null if not found
+	 */
+	@Nullable
+	public Object getTagData(String tag) {
+		return NBT.get(itemStack, (Function<ReadableItemNBT, Object>) nbt -> {
+			if (!nbt.hasTag(tag)) return null;
+
+			return switch (nbt.getType(tag)) {
+				case NBTTagByte -> nbt.getBoolean(tag);
+				case NBTTagShort -> nbt.getShort(tag);
+				case NBTTagInt -> nbt.getInteger(tag);
+				case NBTTagLong -> nbt.getLong(tag);
+				case NBTTagFloat -> nbt.getFloat(tag);
+				case NBTTagDouble -> nbt.getDouble(tag);
+				case NBTTagByteArray -> nbt.getByteArray(tag);
+				case NBTTagIntArray -> nbt.getIntArray(tag);
+				default -> nbt.getString(tag);
+			};
+		});
 	}
 
 	public Material getType() {
