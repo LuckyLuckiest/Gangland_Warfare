@@ -13,6 +13,7 @@ import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
 import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.command.sub.gang.GangCommand;
+import me.luckyraven.command.sub.lootchest.LootChestWandCommand;
 import me.luckyraven.command.sub.rank.RankCommand;
 import me.luckyraven.command.sub.wanted.WantedCommand;
 import me.luckyraven.command.sub.waypoint.TeleportCommand;
@@ -53,10 +54,11 @@ import me.luckyraven.file.configuration.inventory.InventoryLoader;
 import me.luckyraven.file.configuration.inventory.lootchest.LootChestLoader;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
-import me.luckyraven.inventory.loot.LootChestManager;
+import me.luckyraven.inventory.loot.LootChestService;
 import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
+import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
 import me.luckyraven.sign.GanglandSignInformation;
@@ -245,27 +247,19 @@ public final class Initializer {
 
 		WeaponTable weaponTable = getInstanceFromTables(WeaponTable.class, tables);
 
-		// initialize the weapon class
 		weaponManager.initialize(weaponTable);
 
 		// sign manager
-		SignTypeRegistry     registry         = new SignTypeRegistry();
-		SignFormatRegistry   formatRegistry   = new SignFormatRegistry();
-		SignFormatterService formatterService = new SignFormatterService(formatRegistry);
-
-		String signPrefix = gangland.getShortPrefix() + "-";
-
-		SignInteraction signInteraction = new SignInteraction(signPrefix, registry, formatterService);
-
-		signManager = new SignManager(gangland, registry, signInteraction);
-
-		signManager.initialize();
+		signLoader();
 
 		// entity mark manager
 		entityMarkManager = new EntityMarkManager(gangland);
 
 		// item parser
 		itemParserManager = new ItemParserManager(weaponManager, ammunitionAddon);
+
+		// loot chest manager
+		lootChestLoader();
 
 		// Sign Information
 		signInformation = new GanglandSignInformation();
@@ -382,13 +376,17 @@ public final class Initializer {
 		inventoryLoader.addExpectedFile(new FileHandler(gangland, "phone_gang", "inventory", ".yml"));
 
 		inventoryLoader.initialize();
-
-		lootChestLoader();
 	}
 
 	public void lootChestLoader() {
-		lootChestManager = new LootChestManager(gangland, gangland.getFullPrefix());
-		lootChestLoader  = new LootChestLoader(gangland, lootChestManager);
+		lootChestManager = new LootChestManager(gangland);
+
+		List<Table<?>> tables         = ganglandDatabase.getTables();
+		LootChestTable lootChestTable = getInstanceFromTables(LootChestTable.class, tables);
+
+		lootChestManager.initialize(lootChestTable);
+
+		lootChestLoader = new LootChestLoader(gangland, lootChestManager);
 
 		lootChestLoader.load(false, null, fileManager);
 	}
@@ -418,6 +416,20 @@ public final class Initializer {
 				.orElseThrow(() -> new RuntimeException("There was a problem finding class, " + clazz.getName()));
 	}
 
+	private void signLoader() {
+		SignTypeRegistry     registry         = new SignTypeRegistry();
+		SignFormatRegistry   formatRegistry   = new SignFormatRegistry();
+		SignFormatterService formatterService = new SignFormatterService(formatRegistry);
+
+		String signPrefix = gangland.getShortPrefix() + "-";
+
+		SignInteraction signInteraction = new SignInteraction(signPrefix, registry, formatterService);
+
+		signManager = new SignManager(gangland, registry, signInteraction);
+
+		signManager.initialize();
+	}
+
 	private void databases() {
 		int type;
 
@@ -444,7 +456,7 @@ public final class Initializer {
 		dependencyContainer.registerInstance(GangManager.class, gangManager);
 		dependencyContainer.registerInstance(WeaponService.class, weaponManager);
 		dependencyContainer.registerInstance(SignInteractionService.class, signManager.getSignService());
-		dependencyContainer.registerInstance(LootChestManager.class, lootChestManager);
+		dependencyContainer.registerInstance(LootChestService.class, lootChestManager);
 		dependencyContainer.registerInstance(RecoilCompatibility.class, compatibilityWorker.getRecoilCompatibility());
 		dependencyContainer.registerInstance(SignInformation.class, signInformation);
 
@@ -455,8 +467,6 @@ public final class Initializer {
 		WaypointTeleport dummyTeleport = new WaypointTeleport(dummy);
 
 		listenerManager.addEvent(dummyTeleport, ListenerPriority.NORMAL);
-		// inventory
-//		new InventoryHandler(gangland, "dummy", 9, "dummy_inventory", false);
 	}
 
 	private void commands(Gangland gangland) {
@@ -481,6 +491,7 @@ public final class Initializer {
 		commandManager.addCommand(new WeaponCommand(gangland));
 		commandManager.addCommand(new AmmunitionCommand(gangland));
 		commandManager.addCommand(new DownloadResourceCommand(gangland));
+		commandManager.addCommand(new LootChestWandCommand(gangland));
 
 		// gang commands
 		if (SettingAddon.isGangEnabled()) {
