@@ -16,6 +16,8 @@ import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.*;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.inventory.loot.LootChestService;
+import me.luckyraven.inventory.loot.data.LootChestData;
 import me.luckyraven.util.Pair;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.weapon.Weapon;
@@ -106,6 +108,13 @@ public final class PeriodicalUpdates {
 
 		// weapon data
 		updateWeaponData(weaponManager, helper, weaponTable);
+
+		// update the loot chest data
+		LootChestService lootChestManager = initializer.getLootChestManager();
+		LootChestTable   lootChestTable   = initializer.getInstanceFromTables(LootChestTable.class, tables);
+
+		// loot chest data
+		updateLootChestData(lootChestManager, helper, lootChestTable);
 	}
 
 	/**
@@ -315,6 +324,21 @@ public final class PeriodicalUpdates {
 
 				if (data.length == 0) weaponTable.insertTableQuery(database, weapon);
 				else weaponTable.updateTableQuery(database, weapon);
+			}
+		});
+	}
+
+	private void updateLootChestData(LootChestService lootChestManager, DatabaseHelper helper,
+									 LootChestTable lootChestTable) {
+		helper.runQueries(database -> {
+			for (LootChestData chestData : lootChestManager.getAllChests()) {
+				Map<String, Object> search = lootChestTable.searchCriteria(chestData);
+				Object[] data = database.table(lootChestTable.getName())
+										.select((String) search.get("search"), (Object[]) search.get("info"),
+												(int[]) search.get("type"), new String[]{"*"});
+
+				if (data.length == 0) lootChestTable.insertTableQuery(database, chestData);
+				else lootChestTable.updateTableQuery(database, chestData);
 			}
 		});
 	}
