@@ -75,7 +75,7 @@ public class FileHandler {
 		if (fileConfiguration != null && file != null) try {
 			fileConfiguration.save(file);
 		} catch (IOException exception) {
-			logger.warn("{} {} to {}: {}", UnhandledError.FILE_SAVE_ERROR, name, file, exception.getMessage());
+			logException(exception, UnhandledError.FILE_SAVE_ERROR, name, file);
 		}
 	}
 
@@ -92,8 +92,7 @@ public class FileHandler {
 		try {
 			Files.move(file.toPath(), oldFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException exception) {
-			logger.warn("{} {} to {}: {}", UnhandledError.FILE_EDIT_ERROR, oldFile.getName(), file.getName(),
-						exception.getMessage());
+			logException(exception, UnhandledError.FILE_EDIT_ERROR, oldFile.getName(), file);
 			return;
 		}
 
@@ -141,6 +140,10 @@ public class FileHandler {
 		if (!Objects.equals(fileType, that.fileType)) return false;
 
 		return Objects.equals(directory, that.directory);
+	}
+
+	private void logException(IOException exception, UnhandledError unhandledError, String fileName, File file) {
+		logger.warn("{} {} to {}: {}", unhandledError, fileName, file, exception.getMessage());
 	}
 
 	@SuppressWarnings("ResultOfMethodCallIgnored")
