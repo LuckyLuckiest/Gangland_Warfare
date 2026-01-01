@@ -382,8 +382,13 @@ public final class Initializer {
 	}
 
 	public void lootChestLoader() {
-		hologramService  = new HologramService(gangland);
-		lootChestManager = new LootChestManager(gangland, hologramService);
+		if (hologramService == null) {
+			hologramService = new HologramService(gangland);
+		}
+
+		if (lootChestManager == null) {
+			lootChestManager = new LootChestManager(gangland, hologramService);
+		}
 
 		List<Table<?>> tables         = ganglandDatabase.getTables();
 		LootChestTable lootChestTable = getInstanceFromTables(LootChestTable.class, tables);
