@@ -5,6 +5,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
+import org.bukkit.inventory.EquipmentSlot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -156,6 +157,18 @@ public class Hologram {
 		// Won't save to disk
 		armorStand.setPersistent(false);
 
+		// Disable all equipment slots to prevent item placement
+		for (EquipmentSlot slot : EquipmentSlot.values()) {
+			armorStand.addEquipmentLock(slot, ArmorStand.LockType.ADDING_OR_CHANGING);
+			armorStand.addEquipmentLock(slot, ArmorStand.LockType.REMOVING_OR_CHANGING);
+		}
+
+		// Prevent any arms from showing (and thus being interactable)
+		armorStand.setArms(false);
+		// Make it so the base plate doesn't show
+		armorStand.setBasePlate(false);
+
 		return armorStand;
 	}
+
 }
