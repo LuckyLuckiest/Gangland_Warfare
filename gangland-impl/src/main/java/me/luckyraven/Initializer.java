@@ -58,6 +58,7 @@ import me.luckyraven.inventory.loot.LootChestService;
 import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
+import me.luckyraven.lootchest.GanglandLootItemProvider;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
@@ -70,6 +71,7 @@ import me.luckyraven.sign.service.SignInformation;
 import me.luckyraven.sign.service.SignInteraction;
 import me.luckyraven.sign.service.SignInteractionService;
 import me.luckyraven.util.autowire.DependencyContainer;
+import me.luckyraven.util.hologram.HologramService;
 import me.luckyraven.util.listener.ListenerPriority;
 import me.luckyraven.util.placeholder.replacer.Replacer;
 import me.luckyraven.weapon.WeaponManager;
@@ -119,6 +121,7 @@ public final class Initializer {
 	private SignManager                signManager;
 	private EntityMarkManager          entityMarkManager;
 	private ItemParserManager          itemParserManager;
+	private HologramService            hologramService;
 	private LootChestManager           lootChestManager;
 	// Addons
 	private SettingAddon               settingAddon;
@@ -379,7 +382,8 @@ public final class Initializer {
 	}
 
 	public void lootChestLoader() {
-		lootChestManager = new LootChestManager(gangland);
+		hologramService  = new HologramService(gangland);
+		lootChestManager = new LootChestManager(gangland, hologramService);
 
 		List<Table<?>> tables         = ganglandDatabase.getTables();
 		LootChestTable lootChestTable = getInstanceFromTables(LootChestTable.class, tables);
@@ -389,6 +393,10 @@ public final class Initializer {
 		lootChestLoader = new LootChestLoader(gangland, lootChestManager);
 
 		lootChestLoader.load(false, null, fileManager);
+
+		// set the item provider so loot can be generated
+		var itemProvider = new GanglandLootItemProvider(weaponManager, ammunitionAddon, uniqueItemAddon);
+		lootChestManager.setItemProvider(itemProvider);
 	}
 
 	public void weaponLoader() {
@@ -459,6 +467,7 @@ public final class Initializer {
 		dependencyContainer.registerInstance(LootChestService.class, lootChestManager);
 		dependencyContainer.registerInstance(RecoilCompatibility.class, compatibilityWorker.getRecoilCompatibility());
 		dependencyContainer.registerInstance(SignInformation.class, signInformation);
+		dependencyContainer.registerInstance(HologramService.class, hologramService);
 
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 

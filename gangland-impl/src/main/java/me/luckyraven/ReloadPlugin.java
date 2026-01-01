@@ -93,6 +93,7 @@ public final class ReloadPlugin {
 		userInitialize(resetCache);
 		waypointInitialize(resetCache);
 		weaponInitialize(resetCache);
+		// required to be after weapon
 		lootChestInitialize(resetCache);
 	}
 
