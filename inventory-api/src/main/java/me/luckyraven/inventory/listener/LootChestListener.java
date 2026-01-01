@@ -12,9 +12,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.function.BiConsumer;
@@ -31,7 +31,7 @@ public class LootChestListener implements Listener {
 	@Setter
 	private BiConsumer<Player, LootChestService.OpenResult> onOpenAttempt;
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
@@ -44,9 +44,28 @@ public class LootChestListener implements Listener {
 			var player = event.getPlayer();
 			var result = manager.tryOpenChest(player, chestData);
 
+			// Handle result directly
+			handleOpenResult(player, result);
+
 			if (onOpenAttempt == null) return;
 
 			onOpenAttempt.accept(player, result);
+		});
+	}
+
+	@EventHandler
+	public void onInventoryClick(InventoryClickEvent event) {
+		if (!(event.getWhoClicked() instanceof Player player)) return;
+
+		manager.getActiveSession(player).ifPresent(session -> {
+			if (session.getState() != LootChestSession.SessionState.LOOTING) return;
+			// Check if player is taking an item (clicking on the chest inventory, not their own)
+			if (event.getRawSlot() >= session.getInventory().getSize()) return;
+			// Player clicked on the loot chest inventory
+			if (!(event.getCurrentItem() != null && !event.getCurrentItem().getType().isAir())) return;
+
+			// Mark that an item was taken
+			session.markItemTaken();
 		});
 	}
 
@@ -62,23 +81,25 @@ public class LootChestListener implements Listener {
 	}
 
 	@EventHandler
-	public void onPlayerMove(PlayerMoveEvent event) {
-		Player player = event.getPlayer();
-
-		manager.getActiveSession(player).ifPresent(session -> {
-			if (session.getState() != LootChestSession.SessionState.COUNTDOWN) return;
-			if (!(event.getTo() != null && event.getFrom().distanceSquared(event.getTo()) > 0.01)) return;
-
-			manager.cancelSession(player);
-			player.sendMessage(ChatUtil.color("&cChest opening cancelled - you moved!"));
-		});
+	public void onPlayerQuit(PlayerQuitEvent event) {
+		manager.cancelSession(event.getPlayer());
 	}
 
-	@EventHandler
-	public void onPlayerQuit(PlayerQuitEvent event) {
-		// Only cancel the player's session, not the chest cooldown
-		// The chest cooldown continues even when the player leaves
-		manager.cancelSession(event.getPlayer());
+	private void handleOpenResult(Player player, LootChestService.OpenResult result) {
+		switch (result) {
+			case SUCCESS -> {
+				// Chest opened successfully
+			}
+			case ALREADY_IN_SESSION -> player.sendMessage(ChatUtil.color("&cYou are already opening a chest!"));
+			case ON_COOLDOWN -> player.sendMessage(ChatUtil.color("&cThis chest is on cooldown!"));
+			case REQUIRES_LOCKPICK -> player.sendMessage(ChatUtil.color("&cYou need a lockpick to open this chest!"));
+			case REQUIRES_KEY -> player.sendMessage(ChatUtil.color("&cYou need a key to open this chest!"));
+			case NO_PERMISSION -> player.sendMessage(ChatUtil.color("&cYou don't have permission to open this chest!"));
+			case INVALID_LOOT_TABLE -> player.sendMessage(ChatUtil.color("&cThis chest has an invalid loot table!"));
+			case INVALID_CHEST -> player.sendMessage(ChatUtil.color("&cThis chest is invalid!"));
+			case NO_ITEM_PROVIDER -> player.sendMessage(ChatUtil.color("&cLoot system is not configured properly!"));
+			case ALREADY_LOOTED -> player.sendMessage(ChatUtil.color("&cThis chest has already been looted!"));
+		}
 	}
 
 }

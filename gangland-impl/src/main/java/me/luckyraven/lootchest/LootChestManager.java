@@ -8,6 +8,7 @@ import me.luckyraven.inventory.loot.LootChestService;
 import me.luckyraven.inventory.loot.data.LootChestData;
 import me.luckyraven.inventory.loot.data.LootTier;
 import me.luckyraven.util.configuration.SoundConfiguration;
+import me.luckyraven.util.hologram.HologramService;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -21,8 +22,8 @@ public class LootChestManager extends LootChestService {
 
 	private final Gangland gangland;
 
-	public LootChestManager(Gangland gangland) {
-		super(gangland, gangland.getFullPrefix());
+	public LootChestManager(Gangland gangland, HologramService hologramService) {
+		super(gangland, hologramService, gangland.getFullPrefix());
 
 		this.gangland = gangland;
 	}
@@ -52,8 +53,7 @@ public class LootChestManager extends LootChestService {
 
 		// Player session countdown tick (for opening animation)
 		setOnCountdownTick(session -> {
-			Player player   = session.getPlayer();
-			long   timeLeft = session.getTimeLeft();
+			Player player = session.getPlayer();
 
 			// Show countdown to the player (action bar, title, etc.)
 		});
