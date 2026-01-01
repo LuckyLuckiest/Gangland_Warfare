@@ -35,7 +35,17 @@ public enum LootChestWandTag {
 	/**
 	 * Whether the wand has been configured.
 	 */
-	CONFIGURED("loot_chest_configured");
+	CONFIGURED("loot_chest_configured"),
+
+	/**
+	 * Whether cracking minigame is enabled for this chest.
+	 */
+	CRACKING_ENABLED("loot_chest_cracking_enabled"),
+
+	/**
+	 * The time limit for cracking minigame in seconds.
+	 */
+	CRACKING_TIME("loot_chest_cracking_time");
 
 	private final String tagName;
 

@@ -4,7 +4,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
+import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -29,6 +31,20 @@ public class LootChestData {
 	private boolean isLooted;
 	@Setter
 	private long    cooldownEndTime;
+
+	// Persistent inventory state - keeps items until cooldown ends
+	@Setter
+	private List<ItemStack> currentInventory;
+	@Setter
+	private int[]           currentSlotMapping;
+
+	// Cracking/Lockpick minigame settings (optional per-chest override)
+	@Setter
+	@Builder.Default
+	private boolean crackingEnabled     = false;
+	@Setter
+	@Builder.Default
+	private long    crackingTimeSeconds = 0;
 
 	public void markAsLooted() {
 		this.isLooted   = true;
@@ -69,6 +85,28 @@ public class LootChestData {
 	}
 
 	/**
+	 * Checks if the chest has any items remaining
+	 */
+	public boolean hasItemsRemaining() {
+		if (currentInventory == null) return false;
+		return currentInventory.stream().anyMatch(item -> item != null && !item.getType().isAir());
+	}
+
+	/**
+	 * Checks if the chest is completely empty
+	 */
+	public boolean isEmpty() {
+		return !hasItemsRemaining();
+	}
+
+	/**
+	 * Checks if the chest should block opening (empty AND on cooldown)
+	 */
+	public boolean isBlocked() {
+		return isEmpty() && isOnCooldown();
+	}
+
+	/**
 	 * Checks if the chest can be respawned based on old respawnTime logic
 	 */
 	public boolean canRespawn() {
@@ -86,8 +124,18 @@ public class LootChestData {
 	}
 
 	public void respawn() {
-		this.isLooted        = false;
-		this.cooldownEndTime = 0;
+		this.isLooted           = false;
+		this.cooldownEndTime    = 0;
+		this.currentInventory   = null;
+		this.currentSlotMapping = null;
+	}
+
+	/**
+	 * Clears the persistent inventory (used when cooldown ends)
+	 */
+	public void clearInventory() {
+		this.currentInventory   = null;
+		this.currentSlotMapping = null;
 	}
 
 }
