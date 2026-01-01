@@ -56,10 +56,11 @@ public class LootChestWandHandler implements Listener {
 		Block block = event.getClickedBlock();
 		if (block == null) return;
 
-		// If a loot chest already exists here, let LootChestListener handle opening it
+		// If a loot chest already exists here, cancel the event and let LootChestListener handle opening it
 		LootChestManager manager = gangland.getInitializer().getLootChestManager();
 		if (manager.getChestAt(block.getLocation()).isPresent()) {
-			// Don't cancel - let the LootChestListener handle it
+			// Cancel event to prevent vanilla chest from opening, LootChestListener will handle the rest
+			event.setCancelled(true);
 			return;
 		}
 
