@@ -31,8 +31,6 @@ public class LootChestWandHandler implements Listener {
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerInteract(PlayerInteractEvent event) {
-		if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
-
 		Player    player   = event.getPlayer();
 		ItemStack heldItem = player.getInventory().getItemInMainHand();
 
@@ -55,10 +53,17 @@ public class LootChestWandHandler implements Listener {
 		// Handle right click - place loot chest
 		if (action != Action.RIGHT_CLICK_BLOCK) return;
 
-		event.setCancelled(true);
-
 		Block block = event.getClickedBlock();
 		if (block == null) return;
+
+		// If a loot chest already exists here, let LootChestListener handle opening it
+		LootChestManager manager = gangland.getInitializer().getLootChestManager();
+		if (manager.getChestAt(block.getLocation()).isPresent()) {
+			// Don't cancel - let the LootChestListener handle it
+			return;
+		}
+
+		event.setCancelled(true);
 
 		// Check if block is allowed
 		List<String> allowedBlocks = SettingAddon.getLootChestAllowedBlocks();
@@ -88,7 +93,6 @@ public class LootChestWandHandler implements Listener {
 		}
 
 		// Check if chest already exists at location
-		LootChestManager manager = gangland.getInitializer().getLootChestManager();
 		if (manager.getChestAt(block.getLocation()).isPresent()) {
 			player.sendMessage("§cA loot chest already exists at this location!");
 			return;

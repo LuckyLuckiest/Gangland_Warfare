@@ -44,9 +44,11 @@ public class LootChestWandCommand extends CommandHandler {
 
 	@Override
 	protected void initializeArguments() {
-		Argument editArg = new LootChestWandEditCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument editArg   = new LootChestWandEditCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument removeArg = new LootChestRemoveCommand(getGangland(), getArgumentTree(), getArgument());
 
 		getArgument().addSubArgument(editArg);
+		getArgument().addSubArgument(removeArg);
 	}
 
 	@Override
