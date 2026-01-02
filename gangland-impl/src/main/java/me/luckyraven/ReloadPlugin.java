@@ -328,7 +328,7 @@ public final class ReloadPlugin {
 		List<Table<?>> tables         = ganglandDatabase.getTables();
 		LootChestTable lootChestTable = initializer.getInstanceFromTables(LootChestTable.class, tables);
 
-		lootChestManager.initialize(lootChestTable);
+		lootChestManager.initialize(lootChestTable, true);
 	}
 
 	/**

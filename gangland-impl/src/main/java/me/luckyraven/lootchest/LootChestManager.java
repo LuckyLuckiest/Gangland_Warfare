@@ -9,6 +9,7 @@ import me.luckyraven.inventory.loot.data.LootChestData;
 import me.luckyraven.inventory.loot.data.LootTier;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.hologram.HologramService;
+import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -28,17 +29,20 @@ public class LootChestManager extends LootChestService {
 		this.gangland = gangland;
 	}
 
-	public void initialize(LootChestTable table) {
+	public void initialize(LootChestTable table, boolean reload) {
 		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
-		helper.runQueries(database -> {
-			List<Object[]> data = database.table(table.getName()).selectAll();
+		if (reload) registerLootChests(table, helper);
+		else {
+			// in seconds
+			int timeToWait = 5;
+			CountdownTimer waitForWorld = new CountdownTimer(gangland, timeToWait, null, null, timer -> {
+				registerLootChests(table, helper);
+			});
 
-			for (Object[] row : data) {
-				LootChestData chestData = createFromDatabaseRow(row);
-				registerChest(chestData);
-			}
-		});
+			// waits for the world to load to spawn the holograms
+			waitForWorld.start(false);
+		}
 
 		// Global cooldown tick - updates hologram automatically via ChestCooldownManager
 		setOnChestCooldownTick((chestData, remainingSeconds) -> {
@@ -51,13 +55,6 @@ public class LootChestManager extends LootChestService {
 			// Add any additional effects (sounds, particles, etc.)
 		});
 
-		// Player session countdown tick (for opening animation)
-		setOnCountdownTick(session -> {
-			Player player = session.getPlayer();
-
-			// Show countdown to the player (action bar, title, etc.)
-		});
-
 		// When player finishes opening the chest
 		setOnSessionComplete(session -> {
 			Player player = session.getPlayer();
@@ -68,10 +65,21 @@ public class LootChestManager extends LootChestService {
 		setOnSessionStart(session -> {
 			Player player = session.getPlayer();
 
-			var soundConfig = new SoundConfiguration(SoundConfiguration.SoundType.CUSTOM,
+			var soundConfig = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
 													 SettingAddon.getLootChestOpeningSound(), 1.0f, 1.0f);
 
 			soundConfig.playSound(player);
+		});
+	}
+
+	private void registerLootChests(LootChestTable table, DatabaseHelper helper) {
+		helper.runQueries(database -> {
+			List<Object[]> data = database.table(table.getName()).selectAll();
+
+			for (Object[] row : data) {
+				LootChestData chestData = createFromDatabaseRow(row);
+				registerChest(chestData);
+			}
 		});
 	}
 

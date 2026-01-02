@@ -393,7 +393,7 @@ public final class Initializer {
 		List<Table<?>> tables         = ganglandDatabase.getTables();
 		LootChestTable lootChestTable = getInstanceFromTables(LootChestTable.class, tables);
 
-		lootChestManager.initialize(lootChestTable);
+		lootChestManager.initialize(lootChestTable, false);
 
 		lootChestLoader = new LootChestLoader(gangland, lootChestManager);
 
