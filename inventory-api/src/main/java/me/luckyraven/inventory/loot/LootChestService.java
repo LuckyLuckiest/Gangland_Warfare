@@ -29,7 +29,7 @@ public abstract class LootChestService {
 	private final String                      prefix;
 	private final Map<UUID, LootChestData>    registeredChests;
 	private final Map<Location, UUID>         chestsByLocation;
-	private final Map<UUID, LootChestSession> activeSessions;   // Player sessions (for opening animation)
+	private final Map<UUID, LootChestSession> activeSessions;
 	private final Map<String, LootTable>      lootTables;
 	private final Map<String, LootTier>       tiers;
 
@@ -45,8 +45,6 @@ public abstract class LootChestService {
 	private LootChestConfig                 config;
 	@Setter
 	private LootItemProvider                itemProvider;
-	@Setter
-	private Consumer<LootChestSession>      onCountdownTick;
 	@Setter
 	private Consumer<LootChestSession>      onSessionComplete;
 	@Setter
