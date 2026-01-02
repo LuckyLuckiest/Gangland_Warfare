@@ -6,12 +6,13 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.weapon.Weapon;
-import me.luckyraven.weapon.WeaponService;
+import me.luckyraven.weapon.configuration.WeaponLoader;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -58,10 +59,10 @@ class WeaponGiveCommand extends SubArgument {
 				user.sendMessage(invalidWeapon.replace("%args%", weaponName));
 			}
 		}, sender -> {
-			WeaponService weaponService = gangland.getInitializer().getWeaponManager();
+			WeaponLoader weaponLoader = gangland.getInitializer().getWeaponLoader();
 
-			return weaponService.getWeapons().values()
-								.stream().map(Weapon::getName).toList();
+			return weaponLoader.getFiles()
+					.stream().map(FileHandler::getName).toList();
 		});
 
 		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
