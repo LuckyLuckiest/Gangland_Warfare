@@ -12,6 +12,8 @@ import me.luckyraven.database.tables.BankTable;
 import me.luckyraven.database.tables.MemberTable;
 import me.luckyraven.database.tables.UserTable;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.updater.UpdateChecker;
+import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.listener.ListenerPriority;
 import org.bukkit.Bukkit;
@@ -46,6 +48,12 @@ public final class CreateAccount implements Listener {
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		Player       player = event.getPlayer();
 		User<Player> user   = new User<>(player);
+
+		UpdateChecker updateChecker = gangland.getUpdateChecker();
+
+		if (player.hasPermission(updateChecker.getCheckPermission()) && updateChecker.updateAvailable()) {
+			player.sendMessage(ChatUtil.prefixMessage(updateChecker.getUpdateMessage()));
+		}
 
 		user.getEconomy().setBalance(SettingAddon.getUserInitialBalance());
 
