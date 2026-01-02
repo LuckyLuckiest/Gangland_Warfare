@@ -1,6 +1,7 @@
 package me.luckyraven.util.hologram;
 
 import lombok.Getter;
+import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
@@ -73,7 +74,7 @@ public class Hologram {
 			ArmorStand armorStand = lines.get(i);
 			if (isArmorStandDead(armorStand)) continue;
 
-			armorStand.setCustomName(text[i]);
+			armorStand.setCustomName(ChatUtil.color(text[i]));
 		}
 	}
 
@@ -87,7 +88,7 @@ public class Hologram {
 
 		if (isArmorStandDead(armorStand)) return;
 
-		armorStand.setCustomName(text);
+		armorStand.setCustomName(ChatUtil.color(text));
 	}
 
 	/**
@@ -147,7 +148,7 @@ public class Hologram {
 
 		armorStand.setVisible(false);
 		armorStand.setGravity(false);
-		armorStand.setCustomName(text);
+		armorStand.setCustomName(ChatUtil.color(text));
 		armorStand.setCustomNameVisible(true);
 		// Makes it non-collidable and non-interactable
 		armorStand.setMarker(true);
