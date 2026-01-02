@@ -29,14 +29,15 @@ public record SoundConfiguration(SoundType type, @NotNull String sound, float vo
 
 				player.playSound(player.getLocation(), sound, volume, pitch);
 			}
-		} else {
-			// check if the custom sound hasn't played
-			try {
-				player.playSound(player.getLocation(), sound, volume, pitch);
-				return true;
-			} catch (Exception exception) {
-				return false;
-			}
+
+			return true;
+		}
+
+		// check if the custom sound hasn't played
+		try {
+			player.playSound(player.getLocation(), sound, volume, pitch);
+		} catch (Exception exception) {
+			return false;
 		}
 
 		return true;
