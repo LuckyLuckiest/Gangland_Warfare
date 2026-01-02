@@ -33,7 +33,7 @@ public class LootChestListener implements Listener {
 	@Setter
 	private BiConsumer<Player, LootChestService.OpenResult> onOpenAttempt;
 
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
@@ -46,19 +46,21 @@ public class LootChestListener implements Listener {
 		// MUST cancel the event first to prevent the vanilla chest from opening
 		event.setCancelled(true);
 
-		LootChestData chestData = chestOptional.get();
-		Player        player    = event.getPlayer();
+		var chestData = chestOptional.get();
+		var player    = event.getPlayer();
 
-		// Schedule the chest opening for the next tick to ensure event is fully cancelled
+		// Schedule the chest opening for the next tick to ensure the event is fully canceled
 		manager.getPlugin().getServer().getScheduler().runTask(manager.getPlugin(), () -> {
 			var result = manager.tryOpenChest(player, chestData);
 
+			// handle the results internally with custom messages
+			if (onOpenAttempt != null) {
+				onOpenAttempt.accept(player, result);
+				return;
+			}
+
 			// Handle result directly
 			handleOpenResult(player, result, chestData);
-
-			if (onOpenAttempt == null) return;
-
-			onOpenAttempt.accept(player, result);
 		});
 	}
 
