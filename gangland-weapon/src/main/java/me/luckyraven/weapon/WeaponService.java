@@ -70,9 +70,11 @@ public abstract class WeaponService implements Comparator<Weapon> {
 	}
 
 	public boolean hasAmmunition(Player player, Weapon weapon) {
-		return player.getInventory()
-					 .containsAtLeast(weapon.getReloadData().getAmmoType().buildItem(),
-									  weapon.getReloadData().getConsume());
+		var reloadData = weapon.getReloadData();
+		var item       = reloadData.getAmmoType().buildItem();
+		var consume    = reloadData.getConsume();
+
+		return player.getInventory().containsAtLeast(item, consume);
 	}
 
 	/**

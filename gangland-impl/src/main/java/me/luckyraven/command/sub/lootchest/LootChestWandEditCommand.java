@@ -3,6 +3,8 @@ package me.luckyraven.command.sub.lootchest;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.lootchest.LootChestWand;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -38,7 +40,8 @@ class LootChestWandEditCommand extends SubArgument {
 
 			if (wand == null) return;
 
-			wand.openConfigInventory(player);
+			Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+			wand.openConfigInventory(player, fill);
 		});
 	}
 
