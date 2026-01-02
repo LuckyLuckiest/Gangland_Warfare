@@ -4,9 +4,9 @@ import lombok.Setter;
 import me.luckyraven.inventory.loot.data.LootChestData;
 import me.luckyraven.util.hologram.Hologram;
 import me.luckyraven.util.hologram.HologramService;
-import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Map;
 import java.util.UUID;
@@ -20,10 +20,10 @@ import java.util.function.Consumer;
  */
 public class ChestCooldownManager {
 
-	private final JavaPlugin                plugin;
-	private final HologramService           hologramService;
-	private final Map<UUID, RepeatingTimer> cooldownTasks;
-	private final Map<UUID, Hologram>       chestHolograms;
+	private final JavaPlugin            plugin;
+	private final HologramService       hologramService;
+	private final Map<UUID, BukkitTask> cooldownTasks;
+	private final Map<UUID, Hologram>   chestHolograms;
 
 	@Setter
 	private BiConsumer<LootChestData, Long> onCooldownTick;
@@ -57,7 +57,7 @@ public class ChestCooldownManager {
 		chestData.startCooldown(cooldownSeconds);
 
 		// Create the cooldown task
-		RepeatingTimer timer = new RepeatingTimer(plugin, 20L, t -> {
+		BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
 			long remaining = chestData.getRemainingCooldownSeconds();
 
 			if (remaining <= 0) {
@@ -71,9 +71,10 @@ public class ChestCooldownManager {
 
 			// Update hologram
 			updateCooldownHologram(chestData, remaining);
-		});
 
-		cooldownTasks.put(chestId, timer);
+		}, 0L, 20L);
+
+		cooldownTasks.put(chestId, task);
 	}
 
 	/**
@@ -87,7 +88,7 @@ public class ChestCooldownManager {
 	 * Cancels a chest's cooldown
 	 */
 	public void cancelCooldown(UUID chestId) {
-		RepeatingTimer task = cooldownTasks.remove(chestId);
+		BukkitTask task = cooldownTasks.remove(chestId);
 
 		if (task != null) {
 			task.cancel();
@@ -104,17 +105,15 @@ public class ChestCooldownManager {
 		Hologram hologram = chestHolograms.get(chestId);
 
 		String timerText  = formatTime(remainingSeconds);
-		String statusText = "&c&lON COOLDOWN";
+		String statusText = "§c§lON COOLDOWN";
 
 		if (hologram == null || !hologram.isSpawned()) {
 			Location holoLocation = chestData.getLocation().clone().add(0.5, hologramYOffset, 0.5);
 			hologram = hologramService.createHologram(holoLocation, statusText, timerText);
-
 			chestHolograms.put(chestId, hologram);
-			return;
+		} else {
+			hologram.update(statusText, timerText);
 		}
-
-		hologram.update(statusText, timerText);
 	}
 
 	/**
@@ -125,7 +124,7 @@ public class ChestCooldownManager {
 		removeChestHologram(chestId);
 
 		Location holoLocation = chestData.getLocation().clone().add(0.5, hologramYOffset, 0.5);
-		Hologram hologram     = hologramService.createHologram(holoLocation, "&a&lAVAILABLE", "&7Right-click to open");
+		Hologram hologram     = hologramService.createHologram(holoLocation, "§a§lAVAILABLE", "§7Right-click to open");
 
 		chestHolograms.put(chestId, hologram);
 	}
@@ -145,7 +144,7 @@ public class ChestCooldownManager {
 	 * Clears all cooldowns and holograms
 	 */
 	public void clear() {
-		cooldownTasks.values().forEach(RepeatingTimer::stop);
+		cooldownTasks.values().forEach(BukkitTask::cancel);
 		cooldownTasks.clear();
 
 		chestHolograms.values().forEach(Hologram::despawn);
@@ -156,7 +155,7 @@ public class ChestCooldownManager {
 		UUID chestId = chestData.getId();
 
 		// Cancel the task
-		RepeatingTimer task = cooldownTasks.remove(chestId);
+		BukkitTask task = cooldownTasks.remove(chestId);
 
 		if (task != null) {
 			task.cancel();
@@ -176,16 +175,15 @@ public class ChestCooldownManager {
 
 	private String formatTime(long seconds) {
 		if (seconds < 60) {
-			return "&e" + seconds + "s";
+			return "§e" + seconds + "s";
 		} else if (seconds < 3600) {
 			long minutes = seconds / 60;
 			long secs    = seconds % 60;
-			return "&e" + minutes + "m " + secs + "s";
+			return "§e" + minutes + "m " + secs + "s";
 		} else {
 			long hours   = seconds / 3600;
 			long minutes = (seconds % 3600) / 60;
-			return "&e" + hours + "h " + minutes + "m";
+			return "§e" + hours + "h " + minutes + "m";
 		}
 	}
-
 }

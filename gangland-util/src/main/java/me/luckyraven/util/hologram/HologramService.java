@@ -1,9 +1,9 @@
 package me.luckyraven.util.hologram;
 
 import lombok.Getter;
-import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Map;
 import java.util.Optional;
@@ -16,12 +16,11 @@ import java.util.function.BiConsumer;
  */
 public class HologramService {
 
-	private final JavaPlugin plugin;
-
+	private final JavaPlugin              plugin;
 	@Getter
-	private final Map<UUID, Hologram>       holograms;
-	private final Map<UUID, RepeatingTimer> updateTasks;
-	private final Map<Location, Hologram>   hologramsByLocation;
+	private final Map<UUID, Hologram>     holograms;
+	private final Map<UUID, BukkitTask>   updateTasks;
+	private final Map<Location, Hologram> hologramsByLocation;
 
 	public HologramService(JavaPlugin plugin) {
 		this.plugin              = plugin;
@@ -54,13 +53,13 @@ public class HologramService {
 										   BiConsumer<Hologram, Long> updater, String... initialLines) {
 		Hologram hologram = createHologram(location, initialLines);
 
-		RepeatingTimer task = new RepeatingTimer(plugin, updateIntervalTicks, updateIntervalTicks, timer -> {
+		BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
 			if (!hologram.isSpawned()) {
 				cancelUpdateTask(hologram.getId());
 				return;
 			}
 			updater.accept(hologram, System.currentTimeMillis());
-		});
+		}, updateIntervalTicks, updateIntervalTicks);
 
 		updateTasks.put(hologram.getId(), task);
 		return hologram;
@@ -106,7 +105,7 @@ public class HologramService {
 	 * Cancels the update task for a hologram
 	 */
 	public void cancelUpdateTask(UUID hologramId) {
-		RepeatingTimer task = updateTasks.remove(hologramId);
+		BukkitTask task = updateTasks.remove(hologramId);
 
 		if (task == null) return;
 
@@ -117,7 +116,7 @@ public class HologramService {
 	 * Clears all holograms
 	 */
 	public void clear() {
-		updateTasks.values().forEach(RepeatingTimer::stop);
+		updateTasks.values().forEach(BukkitTask::cancel);
 		updateTasks.clear();
 
 		holograms.values().forEach(Hologram::despawn);
