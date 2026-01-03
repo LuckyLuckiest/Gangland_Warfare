@@ -3,6 +3,8 @@ package me.luckyraven.loot.item;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.Random;
+
 /**
  * Represents a reference to an item from existing configurations (weapons, ammo, etc.) Items are not defined here -
  * they are fetched from their respective managers
@@ -31,8 +33,9 @@ public class LootItemReference {
 	 * Generates a random amount within the configured range
 	 */
 	public int generateAmount() {
-		if (minAmount >= maxAmount) return minAmount;
-		return minAmount + (int) (Math.random() * (maxAmount - minAmount + 1));
+		Random random = new Random();
+
+		return random.nextInt(minAmount, maxAmount + 1);
 	}
 
 	public enum LootCategory {
