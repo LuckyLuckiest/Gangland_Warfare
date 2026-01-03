@@ -1,4 +1,4 @@
-package me.luckyraven.listener.inventory;
+package me.luckyraven.listener.loot;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.Gangland;

@@ -1,4 +1,4 @@
-package me.luckyraven.inventory.loot;
+package me.luckyraven.loot;
 
 import java.util.List;
 

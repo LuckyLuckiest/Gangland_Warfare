@@ -1,10 +1,10 @@
-package me.luckyraven.inventory.loot;
+package me.luckyraven.loot;
 
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.inventory.InventoryHandler;
-import me.luckyraven.inventory.loot.data.*;
-import me.luckyraven.inventory.loot.item.LootItemProvider;
+import me.luckyraven.loot.data.*;
+import me.luckyraven.loot.item.LootItemProvider;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.hologram.HologramService;
 import org.bukkit.Location;
@@ -361,9 +361,10 @@ public abstract class LootChestService {
 	private OpenResult openChestDirectly(Player player, LootChestData chestData, LootTable lootTable, LootTier tier) {
 		// Check if chest already has items (reusing existing inventory)
 		List<ItemStack> items;
-		if (chestData.getCurrentInventory() != null && !chestData.getCurrentInventory().isEmpty()) {
+		List<ItemStack> currentInventory = chestData.getCurrentInventory();
+		if (currentInventory != null && !currentInventory.isEmpty()) {
 			// Use existing inventory
-			items = chestData.getCurrentInventory();
+			items = currentInventory;
 		} else {
 			// Generate new loot
 			String tierId = tier != null ? tier.id() : "default";

@@ -5,12 +5,12 @@ import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.DataLoader;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
-import me.luckyraven.inventory.loot.LootChestService;
-import me.luckyraven.inventory.loot.LootChestSettingProvider;
-import me.luckyraven.inventory.loot.data.LootChestConfig;
-import me.luckyraven.inventory.loot.data.LootTable;
-import me.luckyraven.inventory.loot.data.LootTier;
-import me.luckyraven.inventory.loot.item.LootItemReference;
+import me.luckyraven.loot.LootChestService;
+import me.luckyraven.loot.LootChestSettingProvider;
+import me.luckyraven.loot.data.LootChestConfig;
+import me.luckyraven.loot.data.LootTable;
+import me.luckyraven.loot.data.LootTier;
+import me.luckyraven.loot.item.LootItemReference;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.configuration.ConfigurationSection;
@@ -29,7 +29,6 @@ public class LootChestLoader extends DataLoader<LootChestConfig> {
 
 	private static final Logger logger = LogManager.getLogger(LootChestLoader.class.getSimpleName());
 
-	private final JavaPlugin               plugin;
 	private final LootChestService         manager;
 	private final LootChestSettingProvider settingsProvider;
 
@@ -39,7 +38,6 @@ public class LootChestLoader extends DataLoader<LootChestConfig> {
 	public LootChestLoader(JavaPlugin plugin, LootChestService manager) {
 		super(plugin);
 
-		this.plugin           = plugin;
 		this.manager          = manager;
 		this.settingsProvider = new LootChestSettingAddon();
 	}

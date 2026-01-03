@@ -2,7 +2,7 @@ package me.luckyraven.database.tables;
 
 import me.luckyraven.database.component.Attribute;
 import me.luckyraven.database.component.Table;
-import me.luckyraven.inventory.loot.data.LootChestData;
+import me.luckyraven.loot.data.LootChestData;
 
 import java.sql.Types;
 import java.util.Map;

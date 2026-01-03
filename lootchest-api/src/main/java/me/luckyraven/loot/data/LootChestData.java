@@ -1,4 +1,4 @@
-package me.luckyraven.inventory.loot.data;
+package me.luckyraven.loot.data;
 
 import lombok.Builder;
 import lombok.Getter;

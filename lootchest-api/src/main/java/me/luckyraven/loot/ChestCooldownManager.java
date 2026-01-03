@@ -1,7 +1,7 @@
-package me.luckyraven.inventory.loot;
+package me.luckyraven.loot;
 
 import lombok.Setter;
-import me.luckyraven.inventory.loot.data.LootChestData;
+import me.luckyraven.loot.data.LootChestData;
 import me.luckyraven.util.hologram.Hologram;
 import me.luckyraven.util.hologram.HologramService;
 import org.bukkit.Location;

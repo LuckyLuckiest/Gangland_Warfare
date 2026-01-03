@@ -1,10 +1,10 @@
-package me.luckyraven.inventory.listener;
+package me.luckyraven.loot.listener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import me.luckyraven.inventory.loot.LootChestService;
-import me.luckyraven.inventory.loot.data.LootChestData;
-import me.luckyraven.inventory.loot.data.LootChestSession;
+import me.luckyraven.loot.LootChestService;
+import me.luckyraven.loot.data.LootChestData;
+import me.luckyraven.loot.data.LootChestSession;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.block.Block;

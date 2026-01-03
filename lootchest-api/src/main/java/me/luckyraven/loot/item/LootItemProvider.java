@@ -1,4 +1,4 @@
-package me.luckyraven.inventory.loot.item;
+package me.luckyraven.loot.item;
 
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;

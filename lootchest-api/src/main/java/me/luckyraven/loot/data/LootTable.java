@@ -1,9 +1,9 @@
-package me.luckyraven.inventory.loot.data;
+package me.luckyraven.loot.data;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.inventory.loot.item.LootItemProvider;
-import me.luckyraven.inventory.loot.item.LootItemReference;
+import me.luckyraven.loot.item.LootItemProvider;
+import me.luckyraven.loot.item.LootItemReference;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
@@ -44,15 +44,15 @@ public class LootTable {
 		List<LootItemReference> spawnableItems = filterByRarity(availableItems);
 		if (spawnableItems.isEmpty()) return Collections.emptyList();
 
-		int             itemCount = minItems + random.nextInt(Math.max(1, maxItems - minItems + 1));
-		List<ItemStack> result    = new ArrayList<>();
+		int itemCount = random.nextInt(minItems, maxItems + 1);
+
+		List<ItemStack> result = new ArrayList<>();
 
 		// Calculate total effective weight
-		double totalWeight = spawnableItems.stream()
-				.mapToDouble(LootItemReference::getEffectiveWeight)
-				.sum();
+		double totalWeight = spawnableItems.stream().mapToDouble(LootItemReference::getEffectiveWeight).sum();
 
-		Set<String> selectedIds = new HashSet<>(); // Prevent duplicate weapons/unique items
+		// Prevent duplicate weapons/unique items
+		Set<String> selectedIds = new HashSet<>();
 
 		for (int i = 0; i < itemCount; i++) {
 			LootItemReference selected = selectWeightedRandom(spawnableItems, totalWeight);
@@ -66,10 +66,11 @@ public class LootTable {
 			}
 
 			ItemStack item = createItemFromReference(selected, provider);
-			if (item != null) {
-				result.add(item);
-				selectedIds.add(selected.getReferenceId());
-			}
+
+			if (item == null) continue;
+
+			result.add(item);
+			selectedIds.add(selected.getReferenceId());
 		}
 
 		return result;
@@ -79,29 +80,26 @@ public class LootTable {
 	 * Filters items based on tier requirements
 	 */
 	private List<LootItemReference> filterByTier(String tierId) {
-		return itemReferences.stream()
-				.filter(item -> {
-					if (item.getTierRequirement() == null) return true;
-					if (allowedTiers.isEmpty()) return true;
+		return itemReferences.stream().filter(item -> {
+			if (item.getTierRequirement() == null) return true;
+			if (allowedTiers.isEmpty()) return true;
 
-					int currentTierIndex  = allowedTiers.indexOf(tierId);
-					int requiredTierIndex = allowedTiers.indexOf(item.getTierRequirement());
+			int currentTierIndex  = allowedTiers.indexOf(tierId);
+			int requiredTierIndex = allowedTiers.indexOf(item.getTierRequirement());
 
-					return currentTierIndex >= requiredTierIndex;
-				})
-				.toList();
+			return currentTierIndex >= requiredTierIndex;
+		}).toList();
 	}
 
 	/**
 	 * Filters items based on rarity spawn chance Each item has a chance to be excluded based on its rarity
 	 */
 	private List<LootItemReference> filterByRarity(List<LootItemReference> items) {
-		return items.stream()
-				.filter(item -> {
-					double spawnChance = getSpawnChance(item.getRarity());
-					return random.nextDouble() <= spawnChance;
-				})
-				.toList();
+		return items.stream().filter(item -> {
+			double spawnChance = getSpawnChance(item.getRarity());
+
+			return random.nextDouble() <= spawnChance;
+		}).toList();
 	}
 
 	/**
@@ -111,6 +109,7 @@ public class LootTable {
 		if (rarityOverrides != null && rarityOverrides.containsKey(rarity)) {
 			return rarityOverrides.get(rarity);
 		}
+
 		return rarity.getSpawnMultiplier();
 	}
 
@@ -123,12 +122,13 @@ public class LootTable {
 
 		for (LootItemReference item : items) {
 			cumulativeWeight += item.getEffectiveWeight();
-			if (randomValue <= cumulativeWeight) {
-				return item;
-			}
+
+			if (randomValue > cumulativeWeight) continue;
+
+			return item;
 		}
 
-		return items.isEmpty() ? null : items.get(items.size() - 1);
+		return items.isEmpty() ? null : items.getLast();
 	}
 
 	/**

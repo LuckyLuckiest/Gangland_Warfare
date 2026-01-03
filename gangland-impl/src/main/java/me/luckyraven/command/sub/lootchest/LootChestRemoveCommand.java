@@ -7,7 +7,7 @@ import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.LootChestTable;
-import me.luckyraven.inventory.loot.data.LootChestData;
+import me.luckyraven.loot.data.LootChestData;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
