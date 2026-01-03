@@ -169,17 +169,14 @@ Reload:
       # The custom sound played when reloading a gun
       Custom_Sound:
          Start:
-            Cooldown: 0
             Sound: sound.gta.m4_reload_start
             Volume: 1
             Pitch: 1
          Mid:
-            Cooldown: 0
             Sound: sound.gta.m4_reload_mid
             Volume: 1
             Pitch: 1
          End:
-            Cooldown: 1
             Sound: sound.gta.m4_reload_end
             Volume: 1
             Pitch: 1
