@@ -95,8 +95,6 @@ public abstract class LootChestService {
 		});
 	}
 
-	// ... existing code ...
-
 	public void setConfig(LootChestConfig config) {
 		this.config = config;
 
