@@ -79,6 +79,7 @@ import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import me.luckyraven.weapon.configuration.WeaponAddon;
 import me.luckyraven.weapon.configuration.WeaponLoader;
+import me.luckyraven.weapon.projectile.BlockDamageManager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
@@ -123,6 +124,7 @@ public final class Initializer {
 	private ItemParserManager          itemParserManager;
 	private HologramService            hologramService;
 	private LootChestManager           lootChestManager;
+	private BlockDamageManager         blockDamageManager;
 	// Addons
 	private SettingAddon               settingAddon;
 	private ScoreboardAddon            scoreboardAddon;
@@ -246,7 +248,8 @@ public final class Initializer {
 		waypointManager.initialize(waypointTable);
 
 		// Weapon manager
-		weaponManager = new WeaponManager(gangland);
+		weaponManager      = new WeaponManager(gangland);
+		blockDamageManager = new BlockDamageManager(gangland);
 
 		WeaponTable weaponTable = getInstanceFromTables(WeaponTable.class, tables);
 
@@ -473,6 +476,7 @@ public final class Initializer {
 		dependencyContainer.registerInstance(RecoilCompatibility.class, compatibilityWorker.getRecoilCompatibility());
 		dependencyContainer.registerInstance(SignInformation.class, signInformation);
 		dependencyContainer.registerInstance(HologramService.class, hologramService);
+		dependencyContainer.registerInstance(BlockDamageManager.class, blockDamageManager);
 
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 
