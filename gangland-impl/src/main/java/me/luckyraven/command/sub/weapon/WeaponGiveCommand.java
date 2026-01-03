@@ -100,18 +100,25 @@ class WeaponGiveCommand extends SubArgument {
 
 		if (weapon == null) return false;
 
-		int             slots      = (int) Math.ceil(amount / 64D);
-		int             amountLeft = amount;
-		PlayerInventory inventory  = player.getInventory();
-		ItemStack[]     items      = new ItemStack[slots];
+		ItemStack       sampleItem   = weapon.buildItem();
+		int             maxStackSize = sampleItem.getMaxStackSize();
+		int             slots        = (int) Math.ceil(amount / (double) maxStackSize);
+		int             amountLeft   = amount;
+		PlayerInventory inventory    = player.getInventory();
+		ItemStack[]     items        = new ItemStack[slots];
 
-		for (int i = 0; i < inventory.getStorageContents().length; i++) {
-			int amountGive = amountLeft % 65;
+		for (int i = 0; i < slots; i++) {
+			int amountGive = Math.min(amountLeft, maxStackSize);
 
 			if (amountGive <= 0) break;
 
-			items[i]   = weapon.buildItem();
-			amountLeft = Math.max(0, amountLeft - 1);
+			ItemStack item = weapon.buildItem();
+
+			item.setAmount(amountGive);
+
+			items[i] = item;
+
+			amountLeft -= amountGive;
 		}
 
 		Map<Integer, ItemStack> left = inventory.addItem(items);
