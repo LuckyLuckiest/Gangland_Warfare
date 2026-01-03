@@ -4,9 +4,23 @@ import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.loot.data.*;
+import me.luckyraven.loot.events.cracking.*;
+import me.luckyraven.loot.events.lootchest.LootChestCloseEvent;
+import me.luckyraven.loot.events.lootchest.LootChestCooldownCompleteEvent;
+import me.luckyraven.loot.events.lootchest.LootChestDuringCooldownEvent;
+import me.luckyraven.loot.events.lootchest.LootChestOpenEvent;
+import me.luckyraven.loot.handler.cracking.CrackingFailedHandler;
+import me.luckyraven.loot.handler.cracking.CrackingStartHandler;
+import me.luckyraven.loot.handler.cracking.CrackingSuccessHandler;
+import me.luckyraven.loot.handler.cracking.CrackingTickHandler;
+import me.luckyraven.loot.handler.lootchest.ChestCooldownCompleteHandler;
+import me.luckyraven.loot.handler.lootchest.ChestCooldownTickHandler;
+import me.luckyraven.loot.handler.lootchest.SessionCompleteHandler;
+import me.luckyraven.loot.handler.lootchest.SessionStartHandler;
 import me.luckyraven.loot.item.LootItemProvider;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.hologram.HologramService;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -15,8 +29,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 /**
  * Manages all loot chests, sessions, and configuration
@@ -42,27 +54,26 @@ public abstract class LootChestService {
 	private final ChestCooldownManager cooldownManager;
 
 	@Getter
-	private LootChestConfig                 config;
-	@Setter
-	private LootItemProvider                itemProvider;
-	@Setter
-	private Consumer<LootChestSession>      onSessionComplete;
-	@Setter
-	private Consumer<LootChestSession>      onSessionStart;
-	@Setter
-	private BiConsumer<LootChestData, Long> onChestCooldownTick;
-	@Setter
-	private Consumer<LootChestData>         onChestCooldownComplete;
+	private final SessionCompleteHandler       sessionCompleteHandler;
+	@Getter
+	private final SessionStartHandler          sessionStartHandler;
+	@Getter
+	private final ChestCooldownTickHandler     chestCooldownTickHandler;
+	@Getter
+	private final ChestCooldownCompleteHandler chestCooldownCompleteHandler;
+	@Getter
+	private final CrackingStartHandler         crackingStartHandler;
+	@Getter
+	private final CrackingTickHandler          crackingTickHandler;
+	@Getter
+	private final CrackingSuccessHandler       crackingSuccessHandler;
+	@Getter
+	private final CrackingFailedHandler        crackingFailedHandler;
 
-	// Cracking minigame callbacks
+	@Getter
+	private LootChestConfig  config;
 	@Setter
-	private Consumer<CrackingSession>         onCrackingStart;
-	@Setter
-	private BiConsumer<CrackingSession, Long> onCrackingTick;
-	@Setter
-	private Consumer<CrackingSession>         onCrackingSuccess;
-	@Setter
-	private Consumer<CrackingSession>         onCrackingFailed;
+	private LootItemProvider itemProvider;
 
 	public LootChestService(JavaPlugin plugin, HologramService hologramService, String prefix) {
 		this.plugin = plugin;
@@ -75,24 +86,32 @@ public abstract class LootChestService {
 		this.tiers            = new LinkedHashMap<>();
 		this.crackingSessions = new ConcurrentHashMap<>();
 
+		// Initialize handler chains
+		this.sessionCompleteHandler       = new SessionCompleteHandler();
+		this.sessionStartHandler          = new SessionStartHandler();
+		this.chestCooldownTickHandler     = new ChestCooldownTickHandler();
+		this.chestCooldownCompleteHandler = new ChestCooldownCompleteHandler();
+		this.crackingStartHandler         = new CrackingStartHandler();
+		this.crackingTickHandler          = new CrackingTickHandler();
+		this.crackingSuccessHandler       = new CrackingSuccessHandler();
+		this.crackingFailedHandler        = new CrackingFailedHandler();
+
 		// Initialize hologram and cooldown services
 		this.hologramService = hologramService;
 		this.cooldownManager = new ChestCooldownManager(plugin, hologramService);
 
 		// Wire up cooldown callbacks
-		this.cooldownManager.setOnCooldownTick((chest, remaining) -> {
-			if (onChestCooldownTick != null) {
-				onChestCooldownTick.accept(chest, remaining);
-			}
+		this.cooldownManager.setOnCooldownTick((lootChestData, remaining) -> {
+			chestCooldownTickHandler.handle(lootChestData);
 		});
-		this.cooldownManager.setOnCooldownComplete(chest -> {
+		this.cooldownManager.setOnCooldownComplete(lootChestData -> {
 			// Clear the persistent inventory when cooldown ends
-			chest.clearInventory();
+			lootChestData.clearInventory();
 
-			if (onChestCooldownComplete != null) {
-				onChestCooldownComplete.accept(chest);
-			}
+			chestCooldownCompleteHandler.handle(lootChestData);
 		});
+
+		callEvents();
 	}
 
 	public void setConfig(LootChestConfig config) {
@@ -271,7 +290,7 @@ public abstract class LootChestService {
 			cooldownManager.startCooldown(chestData, cooldownTime);
 		}
 
-		if (onSessionComplete != null) onSessionComplete.accept(session);
+		sessionCompleteHandler.handle(session);
 	}
 
 	public void cancelSession(Player player) {
@@ -324,33 +343,71 @@ public abstract class LootChestService {
 		// Start the cracking timer
 		crackingSession.start(
 				// On tick
-				(session, remaining) -> {
-					if (onCrackingTick != null) {
-						onCrackingTick.accept(session, remaining);
-					}
-				},
+				(session, remaining) -> crackingTickHandler.handle(session),
 				// On success (completed in time)
 				session -> {
 					crackingSessions.remove(player.getUniqueId());
-					if (onCrackingSuccess != null) {
-						onCrackingSuccess.accept(session);
-					}
+					crackingSuccessHandler.handle(session);
 					// Open the chest
 					openChestDirectly(player, chestData, lootTable, tier);
 				},
 				// On failure (time ran out)
 				session -> {
 					crackingSessions.remove(player.getUniqueId());
-					if (onCrackingFailed != null) {
-						onCrackingFailed.accept(session);
-					}
+					crackingFailedHandler.handle(session);
 				});
 
-		if (onCrackingStart != null) {
-			onCrackingStart.accept(crackingSession);
-		}
+		crackingStartHandler.handle(crackingSession);
 
 		return OpenResult.CRACKING_STARTED;
+	}
+
+	private void callEvents() {
+		// loot chest session
+		sessionStartHandler.addHandler(lootChestSession -> {
+			var event = new LootChestOpenEvent(lootChestSession.getChestData(), lootChestSession);
+			Bukkit.getPluginManager().callEvent(event);
+		});
+
+		sessionCompleteHandler.addHandler(lootChestSession -> {
+			var event = new LootChestCloseEvent(lootChestSession.getChestData(), lootChestSession);
+			Bukkit.getPluginManager().callEvent(event);
+		});
+
+		chestCooldownTickHandler.addHandler(lootChestData -> {
+			var event = new LootChestDuringCooldownEvent(lootChestData);
+			Bukkit.getPluginManager().callEvent(event);
+		});
+
+		chestCooldownCompleteHandler.addHandler(lootChestData -> {
+			var event = new LootChestCooldownCompleteEvent(lootChestData);
+			Bukkit.getPluginManager().callEvent(event);
+		});
+
+		// cracking session
+		crackingStartHandler.addHandler(crackingSession -> {
+			var event = new LootChestCrackingStartEvent(crackingSession.getChestData(), crackingSession);
+			Bukkit.getPluginManager().callEvent(event);
+		});
+
+		crackingTickHandler.addHandler(crackingSession -> {
+			var event = new LootChestDuringCrackingEvent(crackingSession.getChestData(), crackingSession);
+			Bukkit.getPluginManager().callEvent(event);
+		});
+
+		crackingSuccessHandler.addHandler(crackingSession -> {
+			var event    = new LootChestCrackingSuccessEvent(crackingSession.getChestData(), crackingSession);
+			var endEvent = new LootChestCrackingEndEvent(crackingSession.getChestData(), crackingSession);
+			Bukkit.getPluginManager().callEvent(event);
+			Bukkit.getPluginManager().callEvent(endEvent);
+		});
+
+		crackingFailedHandler.addHandler(crackingSession -> {
+			var event    = new LootChestCrackingFailureEvent(crackingSession.getChestData(), crackingSession);
+			var endEvent = new LootChestCrackingEndEvent(crackingSession.getChestData(), crackingSession);
+			Bukkit.getPluginManager().callEvent(event);
+			Bukkit.getPluginManager().callEvent(endEvent);
+		});
 	}
 
 	/**
@@ -380,7 +437,7 @@ public abstract class LootChestService {
 
 		activeSessions.put(player.getUniqueId(), session);
 
-		if (onSessionStart != null) onSessionStart.accept(session);
+		sessionStartHandler.handle(session);
 
 		// Open the chest immediately
 		session.open();

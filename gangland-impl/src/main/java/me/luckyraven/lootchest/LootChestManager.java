@@ -44,32 +44,14 @@ public class LootChestManager extends LootChestService {
 			waitForWorld.start(false);
 		}
 
-		// Global cooldown tick - updates hologram automatically via ChestCooldownManager
-		setOnChestCooldownTick((chestData, remainingSeconds) -> {
-			// You can add additional effects here (particles, sounds, etc.)
-		});
-
-		// When global cooldown completes
-		setOnChestCooldownComplete(chestData -> {
-			// Hologram is already updated to "AVAILABLE" by ChestCooldownManager
-			// Add any additional effects (sounds, particles, etc.)
-		});
-
-		// When player finishes opening the chest
-		setOnSessionComplete(session -> {
-			Player player = session.getPlayer();
-
-			// The chest inventory is now open for the player
-		});
-
-		setOnSessionStart(session -> {
-			Player player = session.getPlayer();
+		getSessionStartHandler().addHandler((lootChestSession -> {
+			Player player = lootChestSession.getPlayer();
 
 			var soundConfig = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
 													 SettingAddon.getLootChestOpeningSound(), 1.0f, 1.0f);
 
 			soundConfig.playSound(player);
-		});
+		}));
 	}
 
 	private void registerLootChests(LootChestTable table, DatabaseHelper helper) {
