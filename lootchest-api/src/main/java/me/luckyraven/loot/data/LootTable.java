@@ -54,7 +54,7 @@ public class LootTable {
 		// Prevent duplicate weapons/unique items
 		Set<String> selectedIds = new HashSet<>();
 
-		for (int i = 0; i < itemCount; i++) {
+		while (result.size() < itemCount) {
 			LootItemReference selected = selectWeightedRandom(spawnableItems, totalWeight);
 			if (selected == null) continue;
 
