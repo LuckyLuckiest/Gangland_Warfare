@@ -7,7 +7,6 @@ import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.level.LevelUpEvent;
 import me.luckyraven.feature.level.UserLevelUpEvent;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.loot.data.LootChestData;
 import me.luckyraven.loot.data.LootChestSession;
 import me.luckyraven.loot.events.lootchest.LootChestCooldownCompleteEvent;
 import me.luckyraven.loot.events.lootchest.LootChestOpenEvent;
@@ -19,14 +18,16 @@ import org.bukkit.event.Listener;
 
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ListenerHandler
 public class LootChestEarnGoods implements Listener {
 
-	private final Random                     random;
-	private final UserManager<Player>        userManager;
-	private final Map<Player, LootChestData> openedLootChests;
+	private final Random                 random;
+	private final UserManager<Player>    userManager;
+	private final Map<Player, Set<UUID>> openedLootChests;
 
 	public LootChestEarnGoods(Gangland gangland) {
 		this.random           = new Random();
@@ -39,8 +40,14 @@ public class LootChestEarnGoods implements Listener {
 		LootChestSession session = event.getLootChestSession();
 		Player           player  = session.getPlayer();
 		User<Player>     user    = userManager.getUser(player);
+		UUID             chestId = session.getChestData().getId();
 
-		if (openedLootChests.containsKey(player)) return;
+		Set<UUID> playerOpenedChests = openedLootChests.get(player);
+		if (playerOpenedChests != null && playerOpenedChests.contains(chestId)) {
+			return;
+		}
+
+		openedLootChests.computeIfAbsent(player, k -> ConcurrentHashMap.newKeySet()).add(chestId);
 
 		// add experience and money
 		int    money = random.nextInt(1_000);
@@ -58,21 +65,18 @@ public class LootChestEarnGoods implements Listener {
 		player.sendMessage(ChatUtil.prefixMessage("Opened a loot chest and earned:"));
 		player.sendMessage(ChatUtil.color(String.format("&a%s +%d", SettingAddon.getMoneySymbol(), money)));
 		player.sendMessage(ChatUtil.color(String.format("&aXP +%.2f", exp)));
-
-		openedLootChests.put(player, session.getChestData());
 	}
 
 	@EventHandler
 	public void onLootSessionEnd(LootChestCooldownCompleteEvent event) {
-		LootChestData chestData = event.getLootChestData();
+		var chestData = event.getLootChestData();
+		var chestId   = chestData.getId();
 
-		openedLootChests.entrySet().removeIf(entry -> {
-			var lootChestData = entry.getValue();
-			var checkedId     = lootChestData.getId();
-			var currentId     = chestData.getId();
+		// remove this chest ID from all players opened sets
+		openedLootChests.values().forEach(chestIds -> chestIds.remove(chestId));
 
-			return checkedId.equals(currentId);
-		});
+		// clean up empty sets
+		openedLootChests.entrySet().removeIf(entry -> entry.getValue().isEmpty());
 	}
 
 }
