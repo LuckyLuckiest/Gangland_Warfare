@@ -23,6 +23,11 @@ public class LootChestSettingAddon implements LootChestSettingProvider {
 	}
 
 	@Override
+	public String getClosingSound() {
+		return SettingAddon.getLootChestClosingSound();
+	}
+
+	@Override
 	public List<String> getAllowedBlocks() {
 		return SettingAddon.getLootChestAllowedBlocks();
 	}

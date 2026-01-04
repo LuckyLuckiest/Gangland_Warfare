@@ -19,6 +19,7 @@ import me.luckyraven.loot.handler.lootchest.SessionCompleteHandler;
 import me.luckyraven.loot.handler.lootchest.SessionStartHandler;
 import me.luckyraven.loot.item.LootItemProvider;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.hologram.HologramService;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -117,6 +118,7 @@ public abstract class LootChestService {
 		});
 
 		callEvents();
+		addSounds();
 	}
 
 	public void setConfig(LootChestConfig config) {
@@ -417,6 +419,26 @@ public abstract class LootChestService {
 		crackingStartHandler.handle(crackingSession);
 
 		return OpenResult.CRACKING_STARTED;
+	}
+
+	private void addSounds() {
+		sessionStartHandler.addHandler(session -> {
+			Player player = session.getPlayer();
+
+			var soundConfig = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, config.getOpeningSound(),
+													 1.0f, 1.0f);
+
+			soundConfig.playSound(player);
+		});
+
+		sessionCompleteHandler.addHandler(session -> {
+			Player player = session.getPlayer();
+
+			var soundConfig = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, config.getClosingSound(),
+													 1.0f, 1.0f);
+
+			soundConfig.playSound(player);
+		});
 	}
 
 	private void callEvents() {

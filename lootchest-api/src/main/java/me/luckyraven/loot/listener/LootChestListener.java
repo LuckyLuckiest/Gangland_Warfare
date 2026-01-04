@@ -5,6 +5,7 @@ import lombok.Setter;
 import me.luckyraven.loot.LootChestService;
 import me.luckyraven.loot.data.LootChestData;
 import me.luckyraven.loot.data.LootChestSession;
+import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.block.Block;
@@ -115,14 +116,33 @@ public class LootChestListener implements Listener {
 				player.sendMessage(
 						ChatUtil.color("&cThis chest is empty and on cooldown! &7(" + formatTime(remaining) + ")"));
 			}
-			case REQUIRES_LOCKPICK -> player.sendMessage(ChatUtil.color("&cYou need a lockpick to open this chest!"));
-			case REQUIRES_KEY -> player.sendMessage(ChatUtil.color("&cYou need a key to open this chest!"));
-			case NO_PERMISSION -> player.sendMessage(ChatUtil.color("&cYou don't have permission to open this chest!"));
+			case REQUIRES_LOCKPICK -> {
+				playLockedSound(player);
+				player.sendMessage(ChatUtil.color("&cYou need a lockpick to open this chest!"));
+			}
+			case REQUIRES_KEY -> {
+				playLockedSound(player);
+				player.sendMessage(ChatUtil.color("&cYou need a key to open this chest!"));
+			}
+			case NO_PERMISSION -> {
+				playLockedSound(player);
+				player.sendMessage(ChatUtil.color("&cYou don't have permission to open this chest!"));
+			}
 			case INVALID_LOOT_TABLE -> player.sendMessage(ChatUtil.color("&cThis chest has an invalid loot table!"));
 			case INVALID_CHEST -> player.sendMessage(ChatUtil.color("&cThis chest is invalid!"));
 			case NO_ITEM_PROVIDER -> player.sendMessage(ChatUtil.color("&cLoot system is not configured properly!"));
 			case ALREADY_LOOTED -> player.sendMessage(ChatUtil.color("&cThis chest has already been looted!"));
 		}
+	}
+
+	private void playLockedSound(Player player) {
+		String lockedSound = manager.getConfig().getLockedSound();
+
+		if (!(lockedSound != null && !lockedSound.isEmpty())) return;
+
+		var soundConfig = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, lockedSound, 1.0f, 1.0f);
+
+		soundConfig.playSound(player);
 	}
 
 	private String formatTime(long seconds) {

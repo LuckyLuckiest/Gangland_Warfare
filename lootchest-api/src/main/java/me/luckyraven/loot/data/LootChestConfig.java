@@ -20,6 +20,7 @@ public class LootChestConfig {
 	private final long                   defaultCountdownTime;
 	private final String                 openingSound;
 	private final String                 lockedSound;
+	private final String                 closingSound;
 	private final List<String>           allowedBlockTypes;
 
 	// Global rarity settings
@@ -38,6 +39,7 @@ public class LootChestConfig {
 							  .defaultCountdownTime(settingsProvider.getCountdownTimer())
 							  .openingSound(settingsProvider.getOpeningSound())
 							  .lockedSound(settingsProvider.getLockedSound())
+							  .closingSound(settingsProvider.getClosingSound())
 							  .allowedBlockTypes(settingsProvider.getAllowedBlocks())
 							  .globalRarityChances(globalRarityChances)
 							  .build();

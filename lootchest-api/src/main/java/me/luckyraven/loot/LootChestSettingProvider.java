@@ -10,6 +10,8 @@ public interface LootChestSettingProvider {
 
 	String getLockedSound();
 
+	String getClosingSound();
+
 	List<String> getAllowedBlocks();
 
 	/**
