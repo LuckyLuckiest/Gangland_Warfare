@@ -100,8 +100,11 @@ public class SettingAddon implements FileInitializer {
 
 	// loot chest configuration
 	private static @Getter long   lootChestCountdownTimer;
-	private static @Getter String lootChestOpeningSound, lootChestLockedSound;
+	private static @Getter String lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
 	private static @Getter List<String> lootChestAllowedBlocks;
+	private static @Getter double       lootChestRewardMoneyMinimum, lootChestRewardMoneyMaximum,
+			lootChestRewardExperienceMinimum, lootChestRewardExperienceMaximum;
+	private static @Getter List<String> lootChestRewardCommands;
 
 	public SettingAddon(FileManager fileManager) {
 		try {
@@ -327,6 +330,15 @@ public class SettingAddon implements FileInitializer {
 		lootChestOpeningSound   = lootChest.getString("Sound.Opening");
 		lootChestLockedSound    = lootChest.getString("Sound.Locked");
 		lootChestAllowedBlocks  = lootChest.getStringList("Allowed_Blocks");
+
+		var lootChestRewards = lootChest.getConfigurationSection("Rewards");
+		Objects.requireNonNull(lootChestRewards);
+
+		lootChestRewardMoneyMinimum      = lootChestRewards.getDouble("Money.Minimum");
+		lootChestRewardMoneyMaximum      = lootChestRewards.getDouble("Money.Maximum");
+		lootChestRewardExperienceMinimum = lootChestRewards.getDouble("Experience.Minimum");
+		lootChestRewardExperienceMaximum = lootChestRewards.getDouble("Experience.Maximum");
+		lootChestRewardCommands          = lootChestRewards.getStringList("Commands");
 
 		addEachFieldReflection();
 		convertToPlaceholder();

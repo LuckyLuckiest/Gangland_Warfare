@@ -50,8 +50,11 @@ public class LootChestEarnGoods implements Listener {
 		openedLootChests.computeIfAbsent(player, k -> ConcurrentHashMap.newKeySet()).add(chestId);
 
 		// add experience and money
-		int    money = random.nextInt(1_000);
-		double exp   = random.nextDouble(100D);
+		double money = random.nextDouble(SettingAddon.getLootChestRewardMoneyMinimum(),
+										 SettingAddon.getLootChestRewardMoneyMaximum());
+
+		double exp = random.nextDouble(SettingAddon.getLootChestRewardExperienceMinimum(),
+									   SettingAddon.getLootChestRewardExperienceMaximum());
 
 		// deposit money
 		user.getEconomy().deposit(money);
@@ -63,7 +66,8 @@ public class LootChestEarnGoods implements Listener {
 		level.addExperience(exp, levelUpEvent);
 
 		player.sendMessage(ChatUtil.prefixMessage("Opened a loot chest and earned:"));
-		player.sendMessage(ChatUtil.color(String.format("&a%s +%d", SettingAddon.getMoneySymbol(), money)));
+		player.sendMessage(ChatUtil.color(
+				String.format("&a%s +%s", SettingAddon.getMoneySymbol(), SettingAddon.formatDouble(money))));
 		player.sendMessage(ChatUtil.color(String.format("&aXP +%.2f", exp)));
 	}
 
