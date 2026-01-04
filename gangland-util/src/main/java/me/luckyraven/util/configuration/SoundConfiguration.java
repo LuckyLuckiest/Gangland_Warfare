@@ -33,6 +33,10 @@ public record SoundConfiguration(SoundType type, @NotNull String sound, float vo
 			return true;
 		}
 
+		if (!ResourcePackTracker.hasResourcePack(player)) {
+			return false;
+		}
+
 		// check if the custom sound hasn't played
 		try {
 			player.playSound(player.getLocation(), sound, volume, pitch);
