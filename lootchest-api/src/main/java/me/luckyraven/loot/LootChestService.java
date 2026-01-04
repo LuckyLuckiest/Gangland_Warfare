@@ -38,15 +38,15 @@ public abstract class LootChestService {
 	@Getter
 	protected final JavaPlugin plugin;
 
-	private final String                      prefix;
-	private final Map<UUID, LootChestData>    registeredChests;
-	private final Map<Location, UUID>         chestsByLocation;
-	private final Map<UUID, LootChestSession> activeSessions;
-	private final Map<String, LootTable>      lootTables;
-	private final Map<String, LootTier>       tiers;
-
-	// Cracking sessions - player UUID -> cracking session
-	private final Map<UUID, CrackingSession> crackingSessions;
+	private final String                           prefix;
+	private final Map<UUID, LootChestData>         registeredChests;
+	private final Map<Location, UUID>              chestsByLocation;
+	private final Map<UUID, LootChestSession>      activeSessions;
+	private final Map<String, LootTable>           lootTables;
+	private final Map<String, LootTier>            tiers;
+	private final Map<UUID, CrackingSession>       crackingSessions;
+	private final Map<UUID, Set<LootChestSession>> activeSessionsByChest;
+	private final Map<UUID, InventoryHandler>      sharedChestInventories;
 
 	@Getter
 	private final HologramService      hologramService;
@@ -79,12 +79,14 @@ public abstract class LootChestService {
 		this.plugin = plugin;
 		this.prefix = prefix;
 
-		this.registeredChests = new ConcurrentHashMap<>();
-		this.chestsByLocation = new ConcurrentHashMap<>();
-		this.activeSessions   = new ConcurrentHashMap<>();
-		this.lootTables       = new HashMap<>();
-		this.tiers            = new LinkedHashMap<>();
-		this.crackingSessions = new ConcurrentHashMap<>();
+		this.registeredChests       = new ConcurrentHashMap<>();
+		this.chestsByLocation       = new ConcurrentHashMap<>();
+		this.activeSessions         = new ConcurrentHashMap<>();
+		this.lootTables             = new HashMap<>();
+		this.tiers                  = new LinkedHashMap<>();
+		this.crackingSessions       = new ConcurrentHashMap<>();
+		this.activeSessionsByChest  = new ConcurrentHashMap<>();
+		this.sharedChestInventories = new ConcurrentHashMap<>();
 
 		// Initialize handler chains
 		this.sessionCompleteHandler       = new SessionCompleteHandler();
@@ -105,6 +107,9 @@ public abstract class LootChestService {
 			chestCooldownTickHandler.handle(lootChestData);
 		});
 		this.cooldownManager.setOnCooldownComplete(lootChestData -> {
+			// Close all active sessions for this chest before clearing inventory
+			closeAllSessionsForChest(lootChestData.getId());
+
 			// Clear the persistent inventory when cooldown ends
 			lootChestData.clearInventory();
 
@@ -274,12 +279,25 @@ public abstract class LootChestService {
 
 		if (session == null) return;
 
+		LootChestData chestData = session.getChestData();
+		UUID          chestId   = chestData.getId();
+
+		// Remove from chest's active sessions
+		Set<LootChestSession> chestSessions = activeSessionsByChest.get(chestId);
+		if (chestSessions != null) {
+			chestSessions.remove(session);
+
+			// If no more players viewing this chest, clean up shared inventory
+			if (chestSessions.isEmpty()) {
+				activeSessionsByChest.remove(chestId);
+				sharedChestInventories.remove(chestId);
+			}
+		}
+
 		session.close();
 
 		// Only start cooldown if player actually took an item AND cooldown not already started
 		if (!session.hasItemBeenTaken()) return;
-
-		LootChestData chestData = session.getChestData();
 
 		// Only start cooldown if not already on cooldown
 		if (chestData.isOnCooldown()) return;
@@ -301,6 +319,45 @@ public abstract class LootChestService {
 		}
 
 		cancelCracking(player);
+	}
+
+	/**
+	 * Closes all active sessions for a specific chest. Used when cooldown ends to force-close inventories for all
+	 * viewers.
+	 *
+	 * @param chestId the chest UUID
+	 */
+	public void closeAllSessionsForChest(UUID chestId) {
+		// Find all sessions viewing this chest
+		List<UUID> playersToClose = new ArrayList<>();
+
+		for (Map.Entry<UUID, LootChestSession> entry : activeSessions.entrySet()) {
+			LootChestSession session = entry.getValue();
+
+			if (!session.getChestData().getId().equals(chestId)) continue;
+
+			playersToClose.add(entry.getKey());
+		}
+
+		// Close each session and force-close the player's inventory
+		for (UUID playerId : playersToClose) {
+			LootChestSession session = activeSessions.remove(playerId);
+			if (session == null) continue;
+
+			Player player = session.getPlayer();
+
+			// Force close the inventory on the main thread
+			if (player != null && player.isOnline()) {
+				plugin.getServer().getScheduler().runTask(plugin, player::closeInventory);
+			}
+
+			// Mark session as closed without triggering cooldown logic
+			session.cancel();
+		}
+
+		// Clean up shared inventory and session tracking for this chest
+		sharedChestInventories.remove(chestId);
+		activeSessionsByChest.remove(chestId);
 	}
 
 	public void clear() {
@@ -414,28 +471,43 @@ public abstract class LootChestService {
 	 * Opens the chest directly without cracking minigame
 	 */
 	private OpenResult openChestDirectly(Player player, LootChestData chestData, LootTable lootTable, LootTier tier) {
-		// Check if chest already has items (reusing existing inventory)
-		List<ItemStack> items;
-		List<ItemStack> currentInventory = chestData.getCurrentInventory();
-		if (currentInventory != null && !currentInventory.isEmpty()) {
-			// Use existing inventory
-			items = currentInventory;
+		UUID chestId = chestData.getId();
+
+		// Check if there's already a shared inventory for this chest
+		InventoryHandler inventory = sharedChestInventories.get(chestId);
+		List<ItemStack>  items;
+		boolean          isShared  = false;
+
+		if (inventory != null) {
+			// Reuse existing shared inventory - another player has it open
+			items    = chestData.getCurrentInventory();
+			isShared = true;
 		} else {
-			// Generate new loot
-			String tierId = tier != null ? tier.id() : "default";
-			items = lootTable.generateLoot(tierId, itemProvider);
+			// Check if chest already has items (reusing existing inventory from previous session)
+			List<ItemStack> currentInventory = chestData.getCurrentInventory();
+			if (currentInventory != null && !currentInventory.isEmpty()) {
+				// Use existing inventory
+				items = currentInventory;
+			} else {
+				// Generate new loot
+				String tierId = tier != null ? tier.id() : "default";
+				items = lootTable.generateLoot(tierId, itemProvider);
+			}
+
+			// Create new shared inventory
+			String        title = chestData.getDisplayName();
+			NamespacedKey key   = new NamespacedKey(plugin, "loot_chest_" + chestId.toString());
+			inventory = new InventoryHandler(title, chestData.getInventorySize(), key, player.getUniqueId());
+			sharedChestInventories.put(chestId, inventory);
 		}
 
-		// Create inventory
-		String        title = chestData.getDisplayName();
-		NamespacedKey key   = new NamespacedKey(plugin, "loot_chest_" + chestData.getId().toString());
-		InventoryHandler inventory = new InventoryHandler(title, chestData.getInventorySize(), key,
-														  player.getUniqueId());
-
-		// Create session and open immediately (no countdown)
-		var session = new LootChestSession(player, chestData, inventory, items);
+		// Create session with shared inventory - pass isShared flag explicitly
+		var session = new LootChestSession(player, chestData, inventory, items, isShared);
 
 		activeSessions.put(player.getUniqueId(), session);
+
+		// Track session by chest
+		activeSessionsByChest.computeIfAbsent(chestId, k -> ConcurrentHashMap.newKeySet()).add(session);
 
 		sessionStartHandler.handle(session);
 

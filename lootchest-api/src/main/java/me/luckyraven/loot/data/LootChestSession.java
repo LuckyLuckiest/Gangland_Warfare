@@ -19,6 +19,7 @@ public class LootChestSession {
 	private final LootChestData    chestData;
 	private final InventoryHandler inventory;
 	private final List<ItemStack>  generatedLoot;
+	private final boolean          usingSharedInventory;
 
 	// Slot mapping: maps inventory slot -> generated loot index
 	private int[] slotMapping;
@@ -35,24 +36,30 @@ public class LootChestSession {
 	private long    crackingStartTime;
 
 	public LootChestSession(Player player, LootChestData chestData, InventoryHandler inventory,
-							List<ItemStack> generatedLoot) {
-		this.sessionId     = UUID.randomUUID();
-		this.player        = player;
-		this.chestData     = chestData;
-		this.inventory     = inventory;
-		this.generatedLoot = generatedLoot;
-		this.state         = SessionState.OPEN;
-		this.itemTaken     = false;
+							List<ItemStack> generatedLoot, boolean usingSharedInventory) {
+		this.sessionId            = UUID.randomUUID();
+		this.player               = player;
+		this.chestData            = chestData;
+		this.inventory            = inventory;
+		this.generatedLoot        = generatedLoot;
+		this.state                = SessionState.OPEN;
+		this.itemTaken            = false;
+		this.usingSharedInventory = usingSharedInventory;
 
 		this.crackingRequired  = false;
 		this.crackingCompleted = false;
+
 	}
 
 	/**
 	 * Opens the chest immediately and populates with loot
 	 */
 	public void open() {
-		populateInventory();
+		// Only populate if not using shared inventory
+		if (!usingSharedInventory) {
+			populateInventory();
+		}
+
 		inventory.open(player);
 		state = SessionState.LOOTING;
 	}
@@ -90,7 +97,7 @@ public class LootChestSession {
 	/**
 	 * Syncs the current inventory state back to the chest data for persistence
 	 */
-	private void syncInventoryToChestData() {
+	public void syncInventoryToChestData() {
 		List<ItemStack> currentItems = new ArrayList<>();
 		int[]           mapping      = new int[inventory.getSize()];
 		Arrays.fill(mapping, -1);

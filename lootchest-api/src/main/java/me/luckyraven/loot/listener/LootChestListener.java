@@ -77,6 +77,12 @@ public class LootChestListener implements Listener {
 
 			// Mark that an item was taken
 			session.markItemTaken();
+
+			// Sync inventory state immediately after the click is processed
+			manager.getPlugin()
+				   .getServer()
+				   .getScheduler()
+				   .runTask(manager.getPlugin(), session::syncInventoryToChestData);
 		});
 	}
 
