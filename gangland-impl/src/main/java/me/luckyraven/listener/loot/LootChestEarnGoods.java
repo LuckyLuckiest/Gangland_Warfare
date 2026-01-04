@@ -69,6 +69,10 @@ public class LootChestEarnGoods implements Listener {
 		player.sendMessage(ChatUtil.color(
 				String.format("&a%s +%s", SettingAddon.getMoneySymbol(), SettingAddon.formatDouble(money))));
 		player.sendMessage(ChatUtil.color(String.format("&aXP +%.2f", exp)));
+
+		for (String command : SettingAddon.getLootChestRewardCommands()) {
+			player.performCommand(command);
+		}
 	}
 
 	@EventHandler
