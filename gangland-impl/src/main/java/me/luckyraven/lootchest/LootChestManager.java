@@ -3,17 +3,14 @@ package me.luckyraven.lootchest;
 import me.luckyraven.Gangland;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.LootChestTable;
-import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.loot.LootChestService;
 import me.luckyraven.loot.data.LootChestData;
 import me.luckyraven.loot.data.LootTier;
-import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.hologram.HologramService;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,15 +40,6 @@ public class LootChestManager extends LootChestService {
 			// waits for the world to load to spawn the holograms
 			waitForWorld.start(false);
 		}
-
-		getSessionStartHandler().addHandler((lootChestSession -> {
-			Player player = lootChestSession.getPlayer();
-
-			var soundConfig = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
-													 SettingAddon.getLootChestOpeningSound(), 1.0f, 1.0f);
-
-			soundConfig.playSound(player);
-		}));
 	}
 
 	private void registerLootChests(LootChestTable table, DatabaseHelper helper) {
