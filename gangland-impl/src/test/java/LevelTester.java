@@ -1,6 +1,11 @@
+import me.luckyraven.data.user.User;
 import me.luckyraven.feature.level.Level;
+import me.luckyraven.feature.level.LevelUpEvent;
+import me.luckyraven.feature.level.UserLevelUpEvent;
 
 import java.util.Scanner;
+
+import static org.mockito.ArgumentMatchers.any;
 
 public class LevelTester {
 
@@ -44,7 +49,8 @@ public class LevelTester {
 						amount = 0;
 					}
 
-					System.out.printf("Added %d experience level.\n", level.addLevels(amount));
+					LevelUpEvent event = new UserLevelUpEvent(new User<>(any()), level);
+					System.out.printf("Added %d experience level.\n", level.addLevels(amount, event));
 				}
 				case 2 -> {
 					System.out.print("Amount: ");

@@ -4,8 +4,9 @@ import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.feature.level.GangLevelUpEvent;
 import me.luckyraven.feature.level.Level;
-import me.luckyraven.feature.level.LevelUpEvent;
+import me.luckyraven.feature.level.UserLevelUpEvent;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
@@ -26,40 +27,42 @@ public class LevelUp implements Listener {
 	}
 
 	@EventHandler
-	public void onPlayerLevelUp(LevelUpEvent event) {
+	public void onPlayerLevelUp(UserLevelUpEvent event) {
 		User<?> user  = event.getUser();
 		Level   level = event.getLevel();
 
-		if (user != null) {
-			Player player = user.getUser().getPlayer();
+		if (user == null) return;
 
-			if (player == null) return;
+		Player player = user.getUser().getPlayer();
 
-			String message = MessageAddon.LEVEL_UP_PLAYER.toString();
+		if (player == null) return;
 
-			user.sendMessage(replacePlaceholders(player, message, level));
-		}
+		String message = MessageAddon.LEVEL_UP_PLAYER.toString();
 
-		Gang gang = event.getGang();
+		user.sendMessage(replacePlaceholders(message, level));
+	}
+
+	@EventHandler
+	public void onGangLevelUp(GangLevelUpEvent event) {
+		Gang  gang  = event.getGang();
+		Level level = event.getLevel();
 
 		if (gang == null) return;
 
 		List<Player> onlinePlayers = gang.getOnlineMembers(gangland.getInitializer().getUserManager())
-										 .stream().map(User::getUser).toList();
+				.stream().map(User::getUser).toList();
 
 		for (Player player : onlinePlayers) {
 			User<Player> onlineUser = userManager.getUser(player);
 
 			String message = MessageAddon.LEVEL_UP_GANG.toString();
 
-			onlineUser.sendMessage(replacePlaceholders(player, message, level));
+			onlineUser.sendMessage(replacePlaceholders(message, level));
 		}
 	}
 
-	private String replacePlaceholders(Player player, String message, Level level) {
-		String replace = gangland.getInitializer().getPlaceholderService().convert(player, message);
-
-		return replace.replace("%level%", String.valueOf(level.getLevelValue()))
+	private String replacePlaceholders(String message, Level level) {
+		return message.replace("%level%", String.valueOf(level.getLevelValue()))
 					  .replace("%next_level%", String.valueOf(level.nextLevel()))
 					  .replace("%max_level%", String.valueOf(level.getMaxLevel()));
 	}

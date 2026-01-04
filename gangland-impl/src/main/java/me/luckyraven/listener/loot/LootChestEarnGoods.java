@@ -5,6 +5,7 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.level.LevelUpEvent;
+import me.luckyraven.feature.level.UserLevelUpEvent;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.loot.data.LootChestData;
 import me.luckyraven.loot.data.LootChestSession;
@@ -50,8 +51,11 @@ public class LootChestEarnGoods implements Listener {
 
 		// add experience
 		Level level = user.getLevel();
-		level.addExperience(exp, new LevelUpEvent(level));
 
+		LevelUpEvent levelUpEvent = new UserLevelUpEvent(user, level);
+		level.addExperience(exp, levelUpEvent);
+
+		player.sendMessage(ChatUtil.prefixMessage("Opened a loot chest and earned:"));
 		player.sendMessage(ChatUtil.color(String.format("&a%s +%d", SettingAddon.getMoneySymbol(), money)));
 		player.sendMessage(ChatUtil.color(String.format("&aXP +%.2f", exp)));
 
