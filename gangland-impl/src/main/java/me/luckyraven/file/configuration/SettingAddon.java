@@ -329,6 +329,7 @@ public class SettingAddon implements FileInitializer {
 		lootChestCountdownTimer = lootChest.getLong("Countdown_Timer");
 		lootChestOpeningSound   = lootChest.getString("Sound.Opening");
 		lootChestLockedSound    = lootChest.getString("Sound.Locked");
+		lootChestClosingSound   = lootChest.getString("Sound.Closing");
 		lootChestAllowedBlocks  = lootChest.getStringList("Allowed_Blocks");
 
 		var lootChestRewards = lootChest.getConfigurationSection("Rewards");
