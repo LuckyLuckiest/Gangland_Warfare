@@ -62,7 +62,7 @@ public class PluginManager {
 
 	public Date nextPlannedDate(Date currentDate) {
 		LocalDateTime localDateTime = currentDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-		LocalDateTime updatedTime   = localDateTime.plusHours(SettingAddon.getAutoSaveTime());
+		LocalDateTime updatedTime   = localDateTime.plusDays(SettingAddon.getCleanUpTime());
 
 		return Date.from(updatedTime.atZone(ZoneId.systemDefault()).toInstant());
 	}
