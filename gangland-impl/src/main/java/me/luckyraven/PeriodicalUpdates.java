@@ -1,5 +1,6 @@
 package me.luckyraven;
 
+import lombok.Getter;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
@@ -22,6 +23,7 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.loot.LootChestService;
 import me.luckyraven.loot.data.LootChestData;
 import me.luckyraven.util.Pair;
+import me.luckyraven.util.TimeUtil;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponManager;
@@ -29,9 +31,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryType;
 
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +43,7 @@ public final class PeriodicalUpdates {
 	private final Gangland    gangland;
 	private final Initializer initializer;
 
+	@Getter
 	private PluginDataCleanupService cleanupService;
 	private RepeatingTimer           repeatingTimer;
 
@@ -171,8 +173,9 @@ public final class PeriodicalUpdates {
 
 		PluginManager pluginManager = initializer.getPluginManager();
 		WeaponTable   weaponTable   = initializer.getInstanceFromTables(WeaponTable.class, tables);
+		WeaponManager weaponManager = initializer.getWeaponManager();
 
-		cleanupService = new PluginDataCleanupService(pluginManager, helper, weaponTable);
+		cleanupService = new PluginDataCleanupService(pluginManager, helper, weaponTable, weaponManager);
 	}
 
 	private void task() {
@@ -380,6 +383,9 @@ public final class PeriodicalUpdates {
 	private void updatePluginData(PluginManager pluginManager, DatabaseHelper helper, PluginDataTable pluginDataTable) {
 		helper.runQueries(database -> {
 			for (PluginData pluginData : pluginManager.getPluginDataList()) {
+				// adjust the scheduled scan date based on current time
+				adjustScheduledScanDate(pluginData);
+
 				Map<String, Object> search = pluginDataTable.searchCriteria(pluginData);
 				Object[] data = database.table(pluginDataTable.getName())
 										.select((String) search.get("search"), (Object[]) search.get("info"),
@@ -391,17 +397,29 @@ public final class PeriodicalUpdates {
 		});
 	}
 
-	private boolean userViewingInventory(User<Player> user) {
-		List<InventoryType> inventoryTypes = new ArrayList<>();
+	/**
+	 * Adjusts the scheduled scan date if the current scheduled time has passed or needs recalculation based on the last
+	 * scan date.
+	 */
+	private void adjustScheduledScanDate(PluginData pluginData) {
+		long now = System.currentTimeMillis();
 
-		// the plugin uses only anvil and chest so far
-		inventoryTypes.add(InventoryType.ANVIL);
-		inventoryTypes.add(InventoryType.CHEST);
+		// If scheduled time has already passed, let the cleanup service handle it
+		if (now >= pluginData.getScheduledScanDate()) return;
 
-		for (InventoryType type : inventoryTypes)
-			if (user.getUser().getOpenInventory().getTopInventory().getType() == type) return true;
+		// Calculate what the scheduled date SHOULD be based on last scan and current config
+		long lastScanDate          = pluginData.getScanDate();
+		long expectedScheduledDate = TimeUtil.addDays(lastScanDate, SettingAddon.getCleanUpTime());
 
-		return false;
+		// Only adjust if the config has changed (expected != stored)
+		if (expectedScheduledDate == pluginData.getScheduledScanDate()) return;
+
+		pluginData.setScheduledScanDate(expectedScheduledDate);
+
+		if (SettingAddon.isAutoSaveDebug()) {
+			logger.info("Cleanup interval config changed. Adjusted scheduled scan date to: {}",
+						new Date(expectedScheduledDate));
+		}
 	}
 
 }
