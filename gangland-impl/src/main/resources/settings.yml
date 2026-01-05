@@ -98,6 +98,9 @@ Database:
       Time: 10
       # Enable if you want to print periodical updates in the console.
       Debug: true
+   Clean_Up:
+      # Time to clean up the database from old data in days.
+      Time: 30
 
 # +-------------------+ #
 # | Scoreboard Config | #
