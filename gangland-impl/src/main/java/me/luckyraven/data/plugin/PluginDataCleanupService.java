@@ -5,6 +5,7 @@ import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.WeaponTable;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.TimeUtil;
+import me.luckyraven.weapon.WeaponManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,12 +25,14 @@ public final class PluginDataCleanupService {
 	private final PluginManager  pluginManager;
 	private final DatabaseHelper databaseHelper;
 	private final WeaponTable    weaponTable;
+	private final WeaponManager  weaponManager;
 
-	public PluginDataCleanupService(PluginManager pluginManager, DatabaseHelper databaseHelper,
-									WeaponTable weaponTable) {
+	public PluginDataCleanupService(PluginManager pluginManager, DatabaseHelper databaseHelper, WeaponTable weaponTable,
+									WeaponManager weaponManager) {
 		this.pluginManager  = pluginManager;
 		this.databaseHelper = databaseHelper;
 		this.weaponTable    = weaponTable;
+		this.weaponManager  = weaponManager;
 	}
 
 	/**
@@ -38,7 +41,7 @@ public final class PluginDataCleanupService {
 	public void checkAndPerformCleanup() {
 		if (validatePluginData()) return;
 
-		PluginData pluginData = pluginManager.getPluginDataList().getFirst();
+		PluginData pluginData = pluginManager.getPluginDataList().getLast();
 		long       now        = System.currentTimeMillis();
 
 		if (now >= pluginData.getScheduledScanDate()) {
@@ -62,7 +65,7 @@ public final class PluginDataCleanupService {
 
 		if (log) logger.info("Forcing immediate cleanup scan...");
 
-		performCleanup(pluginManager.getPluginDataList().getFirst());
+		performCleanup(pluginManager.getPluginDataList().getLast());
 	}
 
 	private boolean validatePluginData() {
@@ -101,6 +104,7 @@ public final class PluginDataCleanupService {
 
 		// Delete all rows by passing empty column - this triggers DELETE without WHERE
 		database.table(weaponTable.getName()).delete("", null, Types.NULL);
+		weaponManager.clear();
 
 		if (log) logger.info("Cleared {} weapons from weapon table", totalBefore);
 		return totalBefore;
