@@ -8,7 +8,32 @@ import java.util.List;
 
 public final class TimeUtil {
 
+	private static final long MILLIS_PER_DAY = 24L * 60L * 60L * 1000L;
+
 	private TimeUtil() { }
+
+	/**
+	 * Converts a fractional number of days to milliseconds. Supports decimal values (e.g., 1.5 days = 36 hours).
+	 *
+	 * @param days the number of days (can be fractional)
+	 *
+	 * @return the equivalent time in milliseconds
+	 */
+	public static long daysToMillis(double days) {
+		return (long) (days * MILLIS_PER_DAY);
+	}
+
+	/**
+	 * Adds a fractional number of days to a timestamp.
+	 *
+	 * @param timestampMillis the base timestamp in milliseconds
+	 * @param days the number of days to add (can be fractional)
+	 *
+	 * @return the new timestamp in milliseconds
+	 */
+	public static long addDays(long timestampMillis, double days) {
+		return timestampMillis + daysToMillis(days);
+	}
 
 	public static String formatTime(long valueInSeconds, boolean customValues) {
 		Duration duration = Duration.ofSeconds(valueInSeconds);

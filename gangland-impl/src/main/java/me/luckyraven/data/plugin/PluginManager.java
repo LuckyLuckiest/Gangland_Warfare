@@ -4,10 +4,9 @@ import me.luckyraven.Gangland;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.PluginDataTable;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.TimeUtil;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -61,10 +60,8 @@ public class PluginManager {
 	}
 
 	public Date nextPlannedDate(Date currentDate) {
-		LocalDateTime localDateTime = currentDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-		LocalDateTime updatedTime   = localDateTime.plusDays(SettingAddon.getCleanUpTime());
-
-		return Date.from(updatedTime.atZone(ZoneId.systemDefault()).toInstant());
+		long resultMillis = TimeUtil.addDays(currentDate.getTime(), SettingAddon.getCleanUpTime());
+		return new Date(resultMillis);
 	}
 
 }

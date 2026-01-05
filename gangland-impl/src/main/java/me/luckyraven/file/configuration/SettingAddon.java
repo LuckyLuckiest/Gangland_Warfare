@@ -43,8 +43,8 @@ public class SettingAddon implements FileInitializer {
 	private static @Getter String mysqlHost, mysqlUsername, mysqlPassword;
 	private static @Getter int     mysqlPort;
 	private static @Getter boolean sqliteBackup, sqliteFailedMysql, autoSave, autoSaveDebug;
-	private static @Getter int autoSaveTime;
-	private static @Getter int cleanUpTime;
+	private static @Getter int    autoSaveTime;
+	private static @Getter double cleanUpTime;
 
 	// inventory configuration
 	private static @Getter String inventoryFillItem, inventoryFillName, inventoryLineItem, inventoryLineName, nextPage,
@@ -187,7 +187,7 @@ public class SettingAddon implements FileInitializer {
 		autoSave          = database.getBoolean("Auto_Save.Enable");
 		autoSaveDebug     = database.getBoolean("Auto_Save.Debug");
 		autoSaveTime      = database.getInt("Auto_Save.Time");
-		cleanUpTime       = database.getInt("Clean_Up.Time");
+		cleanUpTime       = database.getDouble("Clean_Up.Time");
 
 		// inventory
 		var inventory = settings.getConfigurationSection("Inventory");
