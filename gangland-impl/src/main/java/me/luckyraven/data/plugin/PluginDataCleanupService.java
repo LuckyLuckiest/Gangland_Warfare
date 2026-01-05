@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Date;
 
 /**
@@ -88,7 +89,8 @@ public class PluginDataCleanupService {
 	private int resetWeapons(Database database) throws SQLException {
 		int totalBefore = database.table(weaponTable.getName()).totalRows();
 
-		database.table(weaponTable.getName()).delete("1", "1");
+		// Delete all rows by passing empty column - this triggers DELETE without WHERE
+		database.table(weaponTable.getName()).delete("", null, Types.NULL);
 
 		logger.debug("Cleared {} weapons from weapon table", totalBefore);
 		return totalBefore;

@@ -22,6 +22,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -115,7 +116,8 @@ class BankDeleteCommand extends SubArgument {
 			BankTable bankTable = initializer.getInstanceFromTables(BankTable.class, ganglandDatabase.getTables());
 
 			helper.runQueriesAsync(database -> {
-				database.table(bankTable.getName()).delete("uuid", "'" + user.getUser().getUniqueId() + "'");
+				database.table(bankTable.getName())
+						.delete("uuid", "'" + user.getUser().getUniqueId() + "'", Types.VARCHAR);
 			});
 
 			String string  = MessageAddon.BANK_REMOVED.toString();

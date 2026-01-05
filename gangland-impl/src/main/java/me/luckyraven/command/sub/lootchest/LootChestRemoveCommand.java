@@ -17,6 +17,7 @@ import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.sql.Types;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,7 +68,7 @@ class LootChestRemoveCommand extends SubArgument {
 													.getInstanceFromTables(LootChestTable.class, tables);
 
 			helper.runQueries(database -> {
-				database.table(lootChestTable.getName()).delete("id", "'" + chestData.getId().toString() + "'");
+				database.table(lootChestTable.getName()).delete("id", chestData.getId(), Types.INTEGER);
 			});
 
 			player.sendMessage(ChatUtil.commandMessage("&aLoot chest removed successfully!"));
