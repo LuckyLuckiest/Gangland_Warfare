@@ -54,7 +54,7 @@ public abstract class WeaponService implements Comparator<Weapon> {
 	public String getHeldWeaponName(ItemStack item) {
 		if (item == null || item.getType().equals(Material.AIR) || item.getAmount() == 0) return null;
 
-		return isWeapon(item) ? new ItemBuilder(item).getStringTagData("weapon") : null;
+		return new ItemBuilder(item).getStringTagData("weapon");
 	}
 
 	public boolean isWeapon(ItemStack item) {
@@ -174,7 +174,6 @@ public abstract class WeaponService implements Comparator<Weapon> {
 	@Nullable
 	public Weapon validateAndGetWeapon(Player player, ItemStack heldItem) {
 		if (heldItem == null || heldItem.getType().equals(Material.AIR) || heldItem.getAmount() == 0) return null;
-		if (!isWeapon(heldItem)) return null;
 
 		String weaponName = getHeldWeaponName(heldItem);
 		if (weaponName == null) return null;
@@ -183,7 +182,7 @@ public abstract class WeaponService implements Comparator<Weapon> {
 		UUID uuid = getWeaponUUID(heldItem);
 		if (uuid == null) return null;
 
-		// get or load the new weapon
+		// get or load the new weapon (this will re-register if needed after cleanup)
 		return getWeapon(player, uuid, weaponName);
 	}
 
