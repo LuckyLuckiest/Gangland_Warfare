@@ -3,6 +3,8 @@ package me.luckyraven.data.plugin;
 import me.luckyraven.database.Database;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.WeaponTable;
+import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.TimeUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,9 +15,11 @@ import java.util.Date;
 /**
  * Service responsible for cleaning up unused data from the database based on the plugin's scheduled scan dates.
  */
-public class PluginDataCleanupService {
+public final class PluginDataCleanupService {
 
 	private static final Logger logger = LogManager.getLogger(PluginDataCleanupService.class.getSimpleName());
+
+	private final boolean log = SettingAddon.isAutoSaveDebug();
 
 	private final PluginManager  pluginManager;
 	private final DatabaseHelper databaseHelper;
@@ -32,36 +36,42 @@ public class PluginDataCleanupService {
 	 * Checks if a cleanup scan is due and performs it if necessary.
 	 */
 	public void checkAndPerformCleanup() {
-		if (pluginManager.getPluginDataList().isEmpty()) {
-			logger.warn("Plugin data not initialized.");
-			return;
-		}
+		if (validatePluginData()) return;
 
 		PluginData pluginData = pluginManager.getPluginDataList().getFirst();
 		long       now        = System.currentTimeMillis();
 
 		if (now >= pluginData.getScheduledScanDate()) {
-			logger.info("Scheduled cleanup scan is due. Starting cleanup...");
+			if (log) logger.info("Scheduled cleanup scan is due. Starting cleanup...");
 			performCleanup(pluginData);
 			return;
 		}
 
-		long timeUntilScan  = pluginData.getScheduledScanDate() - now;
-		long hoursUntilScan = timeUntilScan / (1000 * 60 * 60);
-		logger.debug("Next cleanup scan in approximately {} hours", hoursUntilScan);
+		long   timeUntilScanMillis  = pluginData.getScheduledScanDate() - now;
+		long   timeUntilScanSeconds = Math.max(0, timeUntilScanMillis / 1000);
+		String expectedValue        = TimeUtil.formatTime(timeUntilScanSeconds, true);
+
+		if (log) logger.info("Next cleanup scan in approximately {}.", expectedValue);
 	}
 
 	/**
 	 * Forces an immediate cleanup regardless of the scheduled time.
 	 */
 	public void forceCleanup() {
+		if (validatePluginData()) return;
+
+		if (log) logger.info("Forcing immediate cleanup scan...");
+
+		performCleanup(pluginManager.getPluginDataList().getFirst());
+	}
+
+	private boolean validatePluginData() {
 		if (pluginManager.getPluginDataList().isEmpty()) {
 			logger.warn("Plugin data not initialized.");
-			return;
+			return true;
 		}
 
-		logger.info("Forcing immediate cleanup scan...");
-		performCleanup(pluginManager.getPluginDataList().getFirst());
+		return false;
 	}
 
 	private void performCleanup(PluginData pluginData) {
@@ -70,7 +80,7 @@ public class PluginDataCleanupService {
 		databaseHelper.runQueries(database -> {
 			// Reset weapons in the database
 			int weaponsReset = resetWeapons(database);
-			logger.info("Reset {} weapons from database", weaponsReset);
+			if (log) logger.info("Reset {} weapons from database", weaponsReset);
 		});
 
 		// Update plugin data with new scan dates (will be persisted by PeriodicalUpdates)
@@ -80,10 +90,10 @@ public class PluginDataCleanupService {
 		pluginData.setScanDate(now);
 		pluginData.setScheduledScanDate(nextScanDate.getTime());
 
-		logger.info("Cleanup completed. Next scan scheduled for: {}", nextScanDate);
+		if (log) logger.info("Cleanup completed. Next scan scheduled for: {}", nextScanDate);
 
 		long duration = System.currentTimeMillis() - startTime;
-		logger.info("Cleanup scan completed in {}ms", duration);
+		if (log) logger.info("Cleanup scan completed in {}ms", duration);
 	}
 
 	private int resetWeapons(Database database) throws SQLException {
@@ -92,7 +102,7 @@ public class PluginDataCleanupService {
 		// Delete all rows by passing empty column - this triggers DELETE without WHERE
 		database.table(weaponTable.getName()).delete("", null, Types.NULL);
 
-		logger.debug("Cleared {} weapons from weapon table", totalBefore);
+		if (log) logger.info("Cleared {} weapons from weapon table", totalBefore);
 		return totalBefore;
 	}
 
