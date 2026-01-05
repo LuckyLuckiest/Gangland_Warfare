@@ -4,6 +4,9 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.plugin.PluginData;
+import me.luckyraven.data.plugin.PluginDataCleanupService;
+import me.luckyraven.data.plugin.PluginManager;
 import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
@@ -39,7 +42,8 @@ public final class PeriodicalUpdates {
 	private final Gangland    gangland;
 	private final Initializer initializer;
 
-	private RepeatingTimer repeatingTimer;
+	private PluginDataCleanupService cleanupService;
+	private RepeatingTimer           repeatingTimer;
 
 	public PeriodicalUpdates(Gangland gangland, long interval) {
 		this(gangland);
@@ -115,6 +119,13 @@ public final class PeriodicalUpdates {
 
 		// loot chest data
 		updateLootChestData(lootChestManager, helper, lootChestTable);
+
+		// update plugin data
+		PluginManager   pluginManager   = initializer.getPluginManager();
+		PluginDataTable pluginDataTable = initializer.getInstanceFromTables(PluginDataTable.class, tables);
+
+		// plugin data
+		updatePluginData(pluginManager, helper, pluginDataTable);
 	}
 
 	/**
@@ -147,12 +158,35 @@ public final class PeriodicalUpdates {
 		if (this.repeatingTimer == null) return;
 
 		logger.info("Initializing auto-save...");
+
+		initializeCleanupService();
+
 		this.repeatingTimer.start(true);
+	}
+
+	private void initializeCleanupService() {
+		GanglandDatabase database = initializer.getGanglandDatabase();
+		DatabaseHelper   helper   = new DatabaseHelper(gangland, database);
+		List<Table<?>>   tables   = database.getTables();
+
+		PluginManager pluginManager = initializer.getPluginManager();
+		WeaponTable   weaponTable   = initializer.getInstanceFromTables(WeaponTable.class, tables);
+
+		cleanupService = new PluginDataCleanupService(pluginManager, helper, weaponTable);
 	}
 
 	private void task() {
 		long    start = System.currentTimeMillis();
 		boolean log   = SettingAddon.isAutoSaveDebug();
+
+		// Check for scheduled cleanup
+		if (cleanupService != null) {
+			try {
+				cleanupService.checkAndPerformCleanup();
+			} catch (Throwable throwable) {
+				logger.error("There was an issue during cleanup check...", throwable);
+			}
+		}
 
 		// auto-saving
 		if (log) logger.info("Saving...");
@@ -339,6 +373,20 @@ public final class PeriodicalUpdates {
 
 				if (data.length == 0) lootChestTable.insertTableQuery(database, chestData);
 				else lootChestTable.updateTableQuery(database, chestData);
+			}
+		});
+	}
+
+	private void updatePluginData(PluginManager pluginManager, DatabaseHelper helper, PluginDataTable pluginDataTable) {
+		helper.runQueries(database -> {
+			for (PluginData pluginData : pluginManager.getPluginDataList()) {
+				Map<String, Object> search = pluginDataTable.searchCriteria(pluginData);
+				Object[] data = database.table(pluginDataTable.getName())
+										.select((String) search.get("search"), (Object[]) search.get("info"),
+												(int[]) search.get("type"), new String[]{"*"});
+
+				if (data.length == 0) pluginDataTable.insertTableQuery(database, pluginData);
+				else pluginDataTable.updateTableQuery(database, pluginData);
 			}
 		});
 	}
