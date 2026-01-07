@@ -22,6 +22,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -68,13 +69,13 @@ class BankDeleteCommand extends SubArgument {
 			deleteBankName.put(user, new AtomicReference<>(bank.getName()));
 			confirmDelete.setConfirmed(true);
 
-			CountdownTimer timer = getCountdownTimer(sender, player, user);
+			CountdownTimer timer = getCountdownTimer(sender, user);
 			deleteBankTimer.put(sender, timer);
 		};
 	}
 
 	@NotNull
-	private CountdownTimer getCountdownTimer(CommandSender sender, Player player, User<Player> user) {
+	private CountdownTimer getCountdownTimer(CommandSender sender, User<Player> user) {
 		CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
 			user.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "delete"}));
 		}, time -> {
@@ -115,7 +116,8 @@ class BankDeleteCommand extends SubArgument {
 			BankTable bankTable = initializer.getInstanceFromTables(BankTable.class, ganglandDatabase.getTables());
 
 			helper.runQueriesAsync(database -> {
-				database.table(bankTable.getName()).delete("uuid = ?", user.getUser().getUniqueId().toString());
+				database.table(bankTable.getName())
+						.delete("uuid", "'" + user.getUser().getUniqueId() + "'", Types.VARCHAR);
 			});
 
 			String string  = MessageAddon.BANK_REMOVED.toString();

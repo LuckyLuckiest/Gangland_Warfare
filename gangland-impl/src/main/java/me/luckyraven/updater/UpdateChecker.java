@@ -41,7 +41,7 @@ public class UpdateChecker {
 	public String getLatestVersion() {
 		String currentVersion = plugin.getDescription().getVersion();
 
-		if (!checkUpdate()) return currentVersion;
+		if (!isResourceIdSet()) return currentVersion;
 
 		try {
 			// create the url link
@@ -70,7 +70,7 @@ public class UpdateChecker {
 	}
 
 	public void downloadLatestVersion() {
-		if (!checkUpdate()) return;
+		if (!isResourceIdSet()) return;
 
 		try {
 			// get the url to download the resource from
@@ -103,23 +103,35 @@ public class UpdateChecker {
 		this.repeatingTimer.start(true);
 	}
 
-	private void task() {
+	public boolean updateAvailable() {
+		return !getLatestVersion().equals(plugin.getDescription().getVersion());
+	}
+
+	public String getUpdateMessage() {
+		if (!updateAvailable()) return "The plugin is up to date.";
+
 		String newVersion     = getLatestVersion();
 		String currentVersion = plugin.getDescription().getVersion();
 
-		if (newVersion != null && !newVersion.equals(currentVersion)) {
-			ChatUtil.sendToOperators(checkPermission, String.format(
-					"The current version is %s, please update to the newest version available: %s", currentVersion,
-					newVersion));
-		} else {
-			if (!checked.get()) {
-				ChatUtil.sendToOperators(checkPermission, "The plugin is up to date.");
-				checked.set(true);
-			}
-		}
+		return String.format("The current version is %s, please update to the newest version available: %s",
+							 currentVersion, newVersion);
 	}
 
-	private boolean checkUpdate() {
+	private void task() {
+		String updateMessage = getUpdateMessage();
+
+		if (updateAvailable()) {
+			ChatUtil.sendToOperators(checkPermission, updateMessage, logger, true);
+			return;
+		}
+
+		if (checked.get()) return;
+
+		ChatUtil.sendToOperators(checkPermission, updateMessage);
+		checked.set(true);
+	}
+
+	private boolean isResourceIdSet() {
 		return resourceId > -1;
 	}
 

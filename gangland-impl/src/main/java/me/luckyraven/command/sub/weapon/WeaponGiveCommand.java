@@ -6,12 +6,13 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
+import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.weapon.Weapon;
-import me.luckyraven.weapon.WeaponService;
+import me.luckyraven.weapon.configuration.WeaponLoader;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -58,10 +59,10 @@ class WeaponGiveCommand extends SubArgument {
 				user.sendMessage(invalidWeapon.replace("%args%", weaponName));
 			}
 		}, sender -> {
-			WeaponService weaponService = gangland.getInitializer().getWeaponManager();
+			WeaponLoader weaponLoader = gangland.getInitializer().getWeaponLoader();
 
-			return weaponService.getWeapons().values()
-								.stream().map(Weapon::getName).toList();
+			return weaponLoader.getFiles()
+					.stream().map(FileHandler::getName).toList();
 		});
 
 		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
@@ -99,18 +100,25 @@ class WeaponGiveCommand extends SubArgument {
 
 		if (weapon == null) return false;
 
-		int             slots      = (int) Math.ceil(amount / 64D);
-		int             amountLeft = amount;
-		PlayerInventory inventory  = player.getInventory();
-		ItemStack[]     items      = new ItemStack[slots];
+		ItemStack       sampleItem   = weapon.buildItem();
+		int             maxStackSize = sampleItem.getMaxStackSize();
+		int             slots        = (int) Math.ceil(amount / (double) maxStackSize);
+		int             amountLeft   = amount;
+		PlayerInventory inventory    = player.getInventory();
+		ItemStack[]     items        = new ItemStack[slots];
 
-		for (int i = 0; i < inventory.getStorageContents().length; i++) {
-			int amountGive = amountLeft % 65;
+		for (int i = 0; i < slots; i++) {
+			int amountGive = Math.min(amountLeft, maxStackSize);
 
 			if (amountGive <= 0) break;
 
-			items[i]   = weapon.buildItem();
-			amountLeft = Math.max(0, amountLeft - 1);
+			ItemStack item = weapon.buildItem();
+
+			item.setAmount(amountGive);
+
+			items[i] = item;
+
+			amountLeft -= amountGive;
 		}
 
 		Map<Integer, ItemStack> left = inventory.addItem(items);

@@ -1,0 +1,60 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     //________/      \_____(!)_____/      //__\\         | #
+# |    |// |              |    |_|    |      ///  \\\        | #
+# |    ||| o_______       |    |_|    |     ///____\\\       | #
+# |    |||  \_____,\      |    |_|    |    //________\\      | #
+# |    |\\_______/ ||     o    |_|    o   /// |    | \\\     | #
+# |     \__________/           |_|       /_/  o    o  \_\    | #
+# |                                                          | #
+# |                     File: tiers.yml                      | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+
+# +--------------+
+# |    Rarity    |
+# +--------------+
+
+# These control the base spawn chance of an item for each rarity.
+# Values are 0.0 to 1.0 (0% to 100%)
+Rarity:
+   common: 1.0
+   uncommon: 0.7
+   rare: 0.4
+   epic: 0.15
+   legendary: 0.05
+
+# +-------------+
+# |    Tiers    |
+# +-------------+
+
+# These control the display name, level, and unlock requirements for each tier.
+Tiers:
+   common:
+      Display_Name: "&7Common"
+      Level: 0
+      Unlock_Requirement: NONE
+
+   uncommon:
+      Display_Name: "&aUncommon"
+      Level: 5
+      Unlock_Requirement: NONE
+
+   rare:
+      Display_Name: "&9Rare"
+      Level: 10
+      Unlock_Requirement: LOCKPICK
+      Unlock_Item: "lockpick"
+
+   epic:
+      Display_Name: "&5Epic"
+      Level: 15
+      Unlock_Requirement: KEY
+      Unlock_Item: "epic_key"
+
+   legendary:
+      Display_Name: "&6Legendary"
+      Level: 25
+      Unlock_Requirement: PERMISSION
+      Unlock_Item: "legendary_key"

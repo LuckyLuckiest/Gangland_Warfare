@@ -169,17 +169,14 @@ Reload:
       # The custom sound played when reloading a gun
       Custom_Sound:
          Start:
-            Cooldown: 0
             Sound: sound.gta.m4_reload_start
             Volume: 1
             Pitch: 1
          Mid:
-            Cooldown: 0
             Sound: sound.gta.m4_reload_mid
             Volume: 1
             Pitch: 1
          End:
-            Cooldown: 1
             Sound: sound.gta.m4_reload_end
             Volume: 1
             Pitch: 1
@@ -215,6 +212,24 @@ Scope:
          Volume: 1
          Pitch: 1
 
+
 Modifiers:
+   # Block breaking - MATERIAL-hitsRequired
    Break_Blocks:
       - GLASS-3
+      - ICE-5
+      - TERRACOTTA-10
+
+   # Penetration - blocksThrough-entitiesThrough-damageReductionPerPenetration
+   Penetration: 2-3-0.25
+
+   # Ricochet (list) - maxBounces-MATERIAL1,MATERIAL2-damageRetention
+   Ricochet:
+      - 3-STONE,COBBLESTONE,IRON_BLOCK-0.8
+      - 2-CONCRETE-0.7
+
+   # Tracer - RRGGBB-glowing-particleSize
+   Tracer: FF5500-true-0.8
+
+   # Armor Piercing - bypassPercentage (0.0-1.0)
+   Armor_Piercing: 0.4

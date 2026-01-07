@@ -13,6 +13,7 @@ import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
 import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.command.sub.gang.GangCommand;
+import me.luckyraven.command.sub.lootchest.LootChestWandCommand;
 import me.luckyraven.command.sub.rank.RankCommand;
 import me.luckyraven.command.sub.wanted.WantedCommand;
 import me.luckyraven.command.sub.waypoint.TeleportCommand;
@@ -50,11 +51,15 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
+import me.luckyraven.file.configuration.inventory.lootchest.LootChestLoader;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
 import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
+import me.luckyraven.loot.LootChestService;
+import me.luckyraven.lootchest.GanglandLootItemProvider;
+import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
 import me.luckyraven.sign.GanglandSignInformation;
@@ -66,6 +71,7 @@ import me.luckyraven.sign.service.SignInformation;
 import me.luckyraven.sign.service.SignInteraction;
 import me.luckyraven.sign.service.SignInteractionService;
 import me.luckyraven.util.autowire.DependencyContainer;
+import me.luckyraven.util.hologram.HologramService;
 import me.luckyraven.util.listener.ListenerPriority;
 import me.luckyraven.util.placeholder.replacer.Replacer;
 import me.luckyraven.weapon.WeaponManager;
@@ -73,6 +79,7 @@ import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import me.luckyraven.weapon.configuration.WeaponAddon;
 import me.luckyraven.weapon.configuration.WeaponLoader;
+import me.luckyraven.weapon.projectile.BlockDamageManager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
@@ -115,6 +122,9 @@ public final class Initializer {
 	private SignManager                signManager;
 	private EntityMarkManager          entityMarkManager;
 	private ItemParserManager          itemParserManager;
+	private HologramService            hologramService;
+	private LootChestManager           lootChestManager;
+	private BlockDamageManager         blockDamageManager;
 	// Addons
 	private SettingAddon               settingAddon;
 	private ScoreboardAddon            scoreboardAddon;
@@ -125,6 +135,7 @@ public final class Initializer {
 	private LanguageLoader             languageLoader;
 	private InventoryLoader            inventoryLoader;
 	private WeaponLoader               weaponLoader;
+	private LootChestLoader            lootChestLoader;
 	// Database
 	private GanglandDatabase           ganglandDatabase;
 	// Placeholder
@@ -237,31 +248,24 @@ public final class Initializer {
 		waypointManager.initialize(waypointTable);
 
 		// Weapon manager
-		weaponManager = new WeaponManager(gangland);
+		weaponManager      = new WeaponManager(gangland);
+		blockDamageManager = new BlockDamageManager(gangland);
 
 		WeaponTable weaponTable = getInstanceFromTables(WeaponTable.class, tables);
 
-		// initialize the weapon class
 		weaponManager.initialize(weaponTable);
 
 		// sign manager
-		SignTypeRegistry     registry         = new SignTypeRegistry();
-		SignFormatRegistry   formatRegistry   = new SignFormatRegistry();
-		SignFormatterService formatterService = new SignFormatterService(formatRegistry);
-
-		String signPrefix = gangland.getShortPrefix() + "-";
-
-		SignInteraction signInteraction = new SignInteraction(signPrefix, registry, formatterService);
-
-		signManager = new SignManager(gangland, registry, signInteraction);
-
-		signManager.initialize();
+		signLoader();
 
 		// entity mark manager
 		entityMarkManager = new EntityMarkManager(gangland);
 
 		// item parser
 		itemParserManager = new ItemParserManager(weaponManager, ammunitionAddon);
+
+		// loot chest manager
+		lootChestLoader();
 
 		// Sign Information
 		signInformation = new GanglandSignInformation();
@@ -296,6 +300,12 @@ public final class Initializer {
 
 		FileHandler uniqueItemsFile = new FileHandler(gangland, "unique_items", ".yml");
 		fileManager.addFile(uniqueItemsFile, true);
+
+		FileHandler lootChestFile = new FileHandler(gangland, "loot-chests", "loot", ".yml");
+		fileManager.addFile(lootChestFile, true);
+
+		FileHandler tiersFile = new FileHandler(gangland, "tiers", "loot", ".yml");
+		fileManager.addFile(tiersFile, true);
 
 		scoreboardManager = new ScoreboardManager(gangland);
 
@@ -374,6 +384,29 @@ public final class Initializer {
 		inventoryLoader.initialize();
 	}
 
+	public void lootChestLoader() {
+		if (hologramService == null) {
+			hologramService = new HologramService(gangland);
+		}
+
+		if (lootChestManager == null) {
+			lootChestManager = new LootChestManager(gangland, hologramService);
+		}
+
+		List<Table<?>> tables         = ganglandDatabase.getTables();
+		LootChestTable lootChestTable = getInstanceFromTables(LootChestTable.class, tables);
+
+		lootChestManager.initialize(lootChestTable, false);
+
+		lootChestLoader = new LootChestLoader(gangland, lootChestManager);
+
+		lootChestLoader.load(false, null, fileManager);
+
+		// set the item provider so loot can be generated
+		var itemProvider = new GanglandLootItemProvider(weaponManager, ammunitionAddon, uniqueItemAddon);
+		lootChestManager.setItemProvider(itemProvider);
+	}
+
 	public void weaponLoader() {
 		if (ammunitionAddon == null) {
 			ammunitionAddon = new AmmunitionAddon(fileManager);
@@ -397,6 +430,20 @@ public final class Initializer {
 				.map(clazz::cast)
 				.findFirst()
 				.orElseThrow(() -> new RuntimeException("There was a problem finding class, " + clazz.getName()));
+	}
+
+	private void signLoader() {
+		SignTypeRegistry     registry         = new SignTypeRegistry();
+		SignFormatRegistry   formatRegistry   = new SignFormatRegistry();
+		SignFormatterService formatterService = new SignFormatterService(formatRegistry);
+
+		String signPrefix = gangland.getShortPrefix() + "-";
+
+		SignInteraction signInteraction = new SignInteraction(signPrefix, registry, formatterService);
+
+		signManager = new SignManager(gangland, registry, signInteraction);
+
+		signManager.initialize();
 	}
 
 	private void databases() {
@@ -425,8 +472,11 @@ public final class Initializer {
 		dependencyContainer.registerInstance(GangManager.class, gangManager);
 		dependencyContainer.registerInstance(WeaponService.class, weaponManager);
 		dependencyContainer.registerInstance(SignInteractionService.class, signManager.getSignService());
+		dependencyContainer.registerInstance(LootChestService.class, lootChestManager);
 		dependencyContainer.registerInstance(RecoilCompatibility.class, compatibilityWorker.getRecoilCompatibility());
 		dependencyContainer.registerInstance(SignInformation.class, signInformation);
+		dependencyContainer.registerInstance(HologramService.class, hologramService);
+		dependencyContainer.registerInstance(BlockDamageManager.class, blockDamageManager);
 
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 
@@ -435,8 +485,6 @@ public final class Initializer {
 		WaypointTeleport dummyTeleport = new WaypointTeleport(dummy);
 
 		listenerManager.addEvent(dummyTeleport, ListenerPriority.NORMAL);
-		// inventory
-//		new InventoryHandler(gangland, "dummy", 9, "dummy_inventory", false);
 	}
 
 	private void commands(Gangland gangland) {
@@ -461,6 +509,7 @@ public final class Initializer {
 		commandManager.addCommand(new WeaponCommand(gangland));
 		commandManager.addCommand(new AmmunitionCommand(gangland));
 		commandManager.addCommand(new DownloadResourceCommand(gangland));
+		commandManager.addCommand(new LootChestWandCommand(gangland));
 
 		// gang commands
 		if (SettingAddon.isGangEnabled()) {

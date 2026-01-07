@@ -78,7 +78,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 			newItem.setDisplayName(itemDisplayName);
 
 			List<String> lore = item.getLore()
-									.stream().map(s -> placeholder.convert(player, s)).toList();
+					.stream().map(s -> placeholder.convert(player, s)).toList();
 			newItem.setLore(lore);
 
 			if (!item.getEnchantments().isEmpty()) {
@@ -87,7 +87,8 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 			}
 
 			// handle click actions, including anvil inventories
-			var clickAction = result.clickAction();
+			var clickAction      = result.clickAction();
+			var rightClickAction = (TriConsumer<Player, InventoryHandler, ItemBuilder>) null;
 
 			if (result.rawClickAction() instanceof ConditionalSlotData.AnvilAction anvilAction) {
 				clickAction = (p, inv, builder) -> openAnvilInventory(plugin, placeholder, p, anvilAction);
@@ -97,7 +98,22 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 				clickAction = (p, inv, builder) -> rawAction.execute(p, inv, builder, inventoryOpener);
 			}
 
-			handler.setItem(usedSlot, newItem, result.draggable(), clickAction);
+			// Handle right-click action
+			if (result.rawRightClickAction() instanceof ConditionalSlotData.AnvilAction anvilAction) {
+				rightClickAction = (p, inv, builder) -> openAnvilInventory(plugin, placeholder, p, anvilAction);
+			} else if (result.rawRightClickAction() != null) {
+				ConditionalSlotData.ClickAction rawRightAction = result.rawRightClickAction();
+				rightClickAction = (p, inv, builder) -> rawRightAction.execute(p, inv, builder, inventoryOpener);
+			} else if (slot.getRightClickSlot() != null) {
+				rightClickAction = slot.getRightClickSlot();
+			}
+
+			// Use the overload that supports both left and right click
+			if (rightClickAction != null) {
+				handler.setItem(usedSlot, newItem, result.draggable(), clickAction, rightClickAction);
+			} else {
+				handler.setItem(usedSlot, newItem, result.draggable(), clickAction);
+			}
 		}
 
 		List<Integer> verticalLine   = inventoryData.getVerticalLine();
@@ -222,7 +238,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 		newItem.setDisplayName(itemDisplayName);
 
 		List<String> lore = item.getLore()
-								.stream().map(s -> placeholder.convert(player, s)).toList();
+				.stream().map(s -> placeholder.convert(player, s)).toList();
 		newItem.setLore(lore);
 
 		if (!item.getEnchantments().isEmpty()) {

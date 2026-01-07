@@ -4,10 +4,9 @@ import me.luckyraven.Gangland;
 import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.PluginDataTable;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.util.TimeUtil;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -31,25 +30,26 @@ public class PluginManager {
 
 			if (data.isEmpty()) {
 				Instant    now        = Instant.now();
-				long       nowDate    = now.getEpochSecond();
+				long       nowDate    = now.toEpochMilli();
 				long       nextScan   = nextPlannedDate(new Date(nowDate)).getTime();
 				PluginData pluginData = new PluginData(nowDate, nowDate, nextScan);
 
 				pluginDataList.add(pluginData);
-			} else {
-				for (Object[] result : data) {
-					int  v              = 0;
-					int  id             = (int) result[v++];
-					long dateActivation = (long) result[v++];
-					long scanDate       = (long) result[v++];
-					long scheduledDate  = (long) result[v];
+				return;
+			}
 
-					PluginData pluginData = new PluginData(id, dateActivation, scanDate, scheduledDate);
+			for (Object[] result : data) {
+				int  v              = 0;
+				int  id             = (int) result[v++];
+				long dateActivation = (long) result[v++];
+				long scanDate       = (long) result[v++];
+				long scheduledDate  = (long) result[v];
 
-					pluginDataList.add(pluginData);
+				PluginData pluginData = new PluginData(id, dateActivation, scanDate, scheduledDate);
 
-					PluginData.setID(id);
-				}
+				pluginDataList.add(pluginData);
+
+				PluginData.setID(id);
 			}
 		});
 
@@ -60,10 +60,8 @@ public class PluginManager {
 	}
 
 	public Date nextPlannedDate(Date currentDate) {
-		LocalDateTime localDateTime = currentDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-		LocalDateTime updatedTime   = localDateTime.plusHours(SettingAddon.getAutoSaveTime());
-
-		return Date.from(updatedTime.atZone(ZoneId.systemDefault()).toInstant());
+		long resultMillis = TimeUtil.addDays(currentDate.getTime(), SettingAddon.getCleanUpTime());
+		return new Date(resultMillis);
 	}
 
 }

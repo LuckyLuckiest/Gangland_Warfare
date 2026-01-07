@@ -5,7 +5,6 @@ import net.minecraft.network.protocol.game.PacketPlayOutPosition;
 import net.minecraft.world.entity.PositionMoveRotation;
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.phys.Vec3D;
-import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_21_R6.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -21,14 +20,17 @@ public class Recoil_1_21_R6 extends RecoilCompatibility {
 		float newYaw   = -yaw + 1;
 		float newPitch = pitch - 1;
 
-		Location playerLocation = player.getLocation();
-		Vec3D    movePosition   = new Vec3D(playerLocation.getX(), playerLocation.getY(), playerLocation.getZ());
+		// Use zero vector for position since we only want to change rotation (relative movement)
+		Vec3D zeroPosition = new Vec3D(0, 0, 0);
 
-		PositionMoveRotation moveRotation = new PositionMoveRotation(movePosition, movePosition, newYaw, newPitch);
+		PositionMoveRotation moveRotation = new PositionMoveRotation(zeroPosition, zeroPosition, newYaw, newPitch);
 
-		// move the yaw and pitch only
-		Set<Relative>         rotationFlags = new HashSet<>(Arrays.asList(Relative.e, Relative.d));
-		PacketPlayOutPosition packet        = new PacketPlayOutPosition(0, moveRotation, rotationFlags);
+		// move the yaw and pitch only - include position flags as relative
+		Set<Relative> rotationFlags = new HashSet<>(Arrays.asList(
+				Relative.a, Relative.b, Relative.c, // X, Y, Z (relative)
+				Relative.d, Relative.e              // Yaw, Pitch (relative)
+		));
+		PacketPlayOutPosition packet = new PacketPlayOutPosition(0, moveRotation, rotationFlags);
 
 		(((CraftPlayer) player).getHandle()).g.b(packet);
 	}

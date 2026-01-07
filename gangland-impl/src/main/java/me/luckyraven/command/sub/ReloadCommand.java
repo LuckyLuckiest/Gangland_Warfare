@@ -21,11 +21,11 @@ public final class ReloadCommand extends CommandHandler {
 		super(gangland, "reload", false, "rl");
 
 		var list = getCommands().entrySet()
-								.stream()
-								.filter(entry -> entry.getKey().startsWith("reload"))
-								.sorted(Map.Entry.comparingByKey())
-								.map(Map.Entry::getValue)
-								.toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("reload"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -62,12 +62,19 @@ public final class ReloadCommand extends CommandHandler {
 			}, false);
 		});
 
+		Argument cleanup = new Argument(getGangland(), "cleanup", getArgumentTree(), (argument, sender, args) -> {
+			reloadProcess("cleanup", () -> {
+				getGangland().getPeriodicalUpdates().getCleanupService().forceCleanup();
+			}, false);
+		});
+
 		List<Argument> arguments = new ArrayList<>();
 
 		arguments.add(files);
 		arguments.add(data);
 		arguments.add(scoreboard);
 		arguments.add(inventory);
+		arguments.add(cleanup);
 
 		getArgument().addAllSubArguments(arguments);
 	}

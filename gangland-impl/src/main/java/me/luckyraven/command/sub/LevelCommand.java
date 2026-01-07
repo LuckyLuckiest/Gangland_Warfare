@@ -8,6 +8,7 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.level.LevelUpEvent;
+import me.luckyraven.feature.level.UserLevelUpEvent;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
@@ -23,11 +24,11 @@ public final class LevelCommand extends CommandHandler {
 		super(gangland, "level", true);
 
 		var list = getCommands().entrySet()
-								.stream()
-								.filter(entry -> entry.getKey().startsWith("level"))
-								.sorted(Map.Entry.comparingByKey())
-								.map(Map.Entry::getValue)
-								.toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("level"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 
 		getHelpInfo().addAll(list);
 	}
@@ -107,8 +108,7 @@ public final class LevelCommand extends CommandHandler {
 
 			switch (args[2].toLowerCase()) {
 				case "add" -> {
-					LevelUpEvent event = new LevelUpEvent(user.getLevel());
-					event.setUser(user);
+					LevelUpEvent event = new UserLevelUpEvent(user, user.getLevel());
 
 					user.getLevel().addExperience(argAmount, event);
 				}
@@ -154,7 +154,10 @@ public final class LevelCommand extends CommandHandler {
 			int levels = 0;
 
 			switch (args[1].toLowerCase()) {
-				case "add" -> levels = user.getLevel().addLevels(argAmount);
+				case "add" -> {
+					LevelUpEvent event = new UserLevelUpEvent(user, user.getLevel());
+					levels = user.getLevel().addLevels(argAmount, event);
+				}
 				case "remove" -> levels = user.getLevel().removeLevels(argAmount);
 			}
 

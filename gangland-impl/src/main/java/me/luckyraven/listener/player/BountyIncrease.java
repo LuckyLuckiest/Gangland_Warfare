@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
+import java.util.List;
 import java.util.Objects;
 
 
@@ -37,10 +38,13 @@ public class BountyIncrease implements Listener {
 		}
 
 		Gang gang = event.getGangBounty();
-		if (gang != null) if (!event.isCancelled()) {
-			for (User<Player> member : gang.getOnlineMembers(gangland.getInitializer().getUserManager())) {
-				member.getUser().sendMessage(bountyIncrement);
-			}
+
+		if (gang == null || event.isCancelled()) return;
+
+		List<User<Player>> onlineMembers = gang.getOnlineMembers(gangland.getInitializer().getUserManager());
+
+		for (User<Player> member : onlineMembers) {
+			member.getUser().sendMessage(bountyIncrement);
 		}
 	}
 

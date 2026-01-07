@@ -22,6 +22,7 @@ import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 
+import java.sql.Types;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -72,9 +73,9 @@ class RankDeleteCommand extends SubArgument {
 				helper.runQueriesAsync(database -> {
 					rankManager.remove(rank);
 
-					database.table(rankTable.getName()).delete("id", String.valueOf(rank.getUsedId()));
-					database.table(rankParentTable.getName()).delete("id", String.valueOf(rank.getUsedId()));
-					database.table(rankPermissionTable.getName()).delete("rank_id", String.valueOf(rank.getUsedId()));
+					database.table(rankTable.getName()).delete("id", rank.getUsedId(), Types.INTEGER);
+					database.table(rankParentTable.getName()).delete("id", rank.getUsedId(), Types.INTEGER);
+					database.table(rankPermissionTable.getName()).delete("rank_id", rank.getUsedId(), Types.INTEGER);
 				});
 
 				String string  = MessageAddon.RANK_REMOVED.toString();
@@ -121,7 +122,7 @@ class RankDeleteCommand extends SubArgument {
 			timer.start(false);
 			deleteRankTimer.put(sender, timer);
 		}, sender -> rankManager.getRanks().values()
-								.stream().map(Rank::getName).toList());
+				.stream().map(Rank::getName).toList());
 
 		this.addSubArgument(deleteName);
 	}

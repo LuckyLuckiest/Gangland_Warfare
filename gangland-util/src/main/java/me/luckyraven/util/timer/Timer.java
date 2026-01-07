@@ -16,10 +16,25 @@ public abstract class Timer extends BukkitRunnable {
 
 	private BukkitTask bukkitTask;
 
+	/**
+	 * Schedules this to repeatedly run until canceled, starting after the specified number of server ticks.
+	 * <p>
+	 * This method defaults the delay to 0 and the period to 20 ticks.
+	 * </p>
+	 *
+	 * @param plugin the reference to the plugin scheduling task
+	 */
 	public Timer(JavaPlugin plugin) {
 		this(plugin, 0L, 20L);
 	}
 
+	/**
+	 * Schedules this to repeatedly run until canceled, starting after the specified number of server ticks.
+	 *
+	 * @param plugin the reference to the plugin scheduling task
+	 * @param delay the ticks to wait before running the task for the first time
+	 * @param period the ticks to wait between runs
+	 */
 	public Timer(JavaPlugin plugin, long delay, long period) {
 		this.plugin  = plugin;
 		this.delay   = delay;

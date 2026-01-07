@@ -9,4 +9,5 @@ import org.jetbrains.annotations.Nullable;
 
 public record ConditionalSlotResult(ItemBuilder item, boolean clickable, boolean draggable,
 									TriConsumer<Player, InventoryHandler, ItemBuilder> clickAction,
-									@Nullable ConditionalSlotData.ClickAction rawClickAction) { }
+									@Nullable ConditionalSlotData.ClickAction rawClickAction,
+									@Nullable ConditionalSlotData.ClickAction rawRightClickAction) { }

@@ -44,49 +44,55 @@ public class InventoryOpenByCommand implements Listener {
 
 			if (openInventories == null) continue;
 
-			for (OpenInventory openInventory : openInventories) {
-				if (openInventory == null) continue;
-				// only check command types
-				if (openInventory.state() != State.COMMAND) continue;
+			if (checkCommand(event, openInventories, command, builder, player)) return;
+		}
+	}
 
-				// check if the command array is equal to an inventory command array
-				String[] inventoryCommandArr = openInventory.output().split(" ");
+	private boolean checkCommand(PlayerCommandPreprocessEvent event, List<OpenInventory> openInventories,
+								 String[] command, InventoryBuilder builder, Player player) {
+		for (OpenInventory openInventory : openInventories) {
+			if (openInventory == null) continue;
+			// only check command types
+			if (openInventory.state() != State.COMMAND) continue;
 
-				// check length
-				if (command.length != inventoryCommandArr.length) continue;
+			// check if the command array is equal to an inventory command array
+			String[] inventoryCommandArr = openInventory.output().split(" ");
 
-				// check each content
-				boolean arraysEqual = IntStream.range(0, command.length)
-											   .allMatch(i -> command[i].equals(inventoryCommandArr[i]));
-				if (!arraysEqual) continue;
+			// check length
+			if (command.length != inventoryCommandArr.length) continue;
 
-				String permission = builder.permission();
-				if (permission != null && !player.hasPermission(permission)) break;
+			// check each content
+			boolean arraysEqual = IntStream.range(0, command.length)
+										   .allMatch(i -> command[i].equals(inventoryCommandArr[i]));
+			if (!arraysEqual) continue;
 
-				if (openInventory.permission() != null && !player.hasPermission(openInventory.permission())) break;
+			String permission = builder.permission();
+			if (permission != null && !player.hasPermission(permission)) break;
 
-				try {
-					Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
-					Fill line = new Fill(SettingAddon.getInventoryLineName(), SettingAddon.getInventoryLineItem());
+			if (openInventory.permission() != null && !player.hasPermission(openInventory.permission())) break;
 
-					// Create the opener callback
-					InventoryOpener opener = (p, invName) -> InventoryAddon.openInventoryForPlayer(gangland, p,
-																								   invName);
+			try {
+				Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+				Fill line = new Fill(SettingAddon.getInventoryLineName(), SettingAddon.getInventoryLineItem());
 
-					var placeholder = gangland.getInitializer().getPlaceholderService();
-					var evaluator   = gangland.getInitializer().getEvaluator();
+				// Create the opener callback
+				InventoryOpener opener = (p, invName) -> InventoryAddon.openInventoryForPlayer(gangland, p, invName);
 
-					var inventoryHandler = builder.createInventory(gangland, placeholder, player, fill, line, evaluator,
-																   opener);
+				var placeholder = gangland.getInitializer().getPlaceholderService();
+				var evaluator   = gangland.getInitializer().getEvaluator();
 
-					inventoryHandler.open(player);
-					event.setCancelled(true);
-					break;
-				} catch (Exception exception) {
-					return;
-				}
+				var inventoryHandler = builder.createInventory(gangland, placeholder, player, fill, line, evaluator,
+															   opener);
+
+				inventoryHandler.open(player);
+				event.setCancelled(true);
+				break;
+			} catch (Exception exception) {
+				return true;
 			}
 		}
+
+		return false;
 	}
 
 }

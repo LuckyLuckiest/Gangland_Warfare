@@ -2,6 +2,7 @@ package me.luckyraven.listener.player;
 
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.configuration.ResourcePackTracker;
 import me.luckyraven.util.listener.ListenerHandler;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -9,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 
 @ListenerHandler
@@ -30,6 +32,7 @@ public class LoadResourcePack implements Listener {
 				String message = ChatUtil.prefixMessage("&aResource pack has been downloaded successfully.");
 
 				player.sendMessage(message);
+				ResourcePackTracker.markLoaded(player);
 			}
 			case FAILED_DOWNLOAD -> {
 				String message = ChatUtil.errorMessage("Could not download the resource pack.");
@@ -65,6 +68,11 @@ public class LoadResourcePack implements Listener {
 		if (!SettingAddon.isResourcePackEnabled()) return;
 
 		player.setResourcePack(SettingAddon.getResourcePackUrl());
+	}
+
+	@EventHandler
+	public void onPlayerQuit(PlayerQuitEvent event) {
+		ResourcePackTracker.markUnloaded(event.getPlayer());
 	}
 
 }

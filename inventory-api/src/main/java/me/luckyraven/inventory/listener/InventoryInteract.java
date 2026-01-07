@@ -27,11 +27,26 @@ public class InventoryInteract implements Listener {
 									   clickedInventory.equals(inv.getInventory());
 
 		if (checkInventoryStatus) {
+			var clickableItems = inv.getClickableItems();
+			var itemBuilder    = clickableItems.getOrDefault(rawSlot, null);
+
+			// Check if it's a right click
+			if (event.isRightClick()) {
+				var rightClickSlots  = inv.getRightClickSlots();
+				var rightClickAction = rightClickSlots.getOrDefault(rawSlot, null);
+
+				if (rightClickAction != null) {
+					rightClickAction.accept(player, inv, itemBuilder);
+					event.setCancelled(!inv.getDraggableSlots().contains(rawSlot));
+					return;
+				}
+			}
+
+			// Default to left click action (or any click if no right click handler)
 			var clickableSlots = inv.getClickableSlots();
 			var slots          = clickableSlots.getOrDefault(rawSlot, (pl, i, item) -> { });
 
-			var clickableItems = inv.getClickableItems();
-			slots.accept(player, inv, clickableItems.getOrDefault(rawSlot, null));
+			slots.accept(player, inv, itemBuilder);
 
 			event.setCancelled(!inv.getDraggableSlots().contains(rawSlot));
 		}

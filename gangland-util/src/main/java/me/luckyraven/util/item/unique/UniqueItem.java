@@ -36,6 +36,8 @@ public class UniqueItem implements Comparable<ItemStack> {
 	private boolean      movable;
 	private boolean      droppable;
 
+	private String lootKey;
+
 	@Override
 	public int compareTo(@NonNull ItemStack itemStack) {
 		ItemMeta meta = itemStack.getItemMeta();
@@ -66,6 +68,10 @@ public class UniqueItem implements Comparable<ItemStack> {
 		if (lore != null) itemBuilder.setLore(lore);
 
 		itemBuilder.addTag("uniqueItem", uniqueItem);
+
+		if (lootKey != null && !lootKey.isEmpty()) {
+			itemBuilder.addTag("loot_key", lootKey);
+		}
 
 		return itemBuilder.build();
 	}

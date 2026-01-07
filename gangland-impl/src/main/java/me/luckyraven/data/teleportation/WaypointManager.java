@@ -7,6 +7,7 @@ import me.luckyraven.database.tables.WaypointTable;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
+import java.sql.Types;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -89,10 +90,7 @@ public class WaypointManager {
 	@Nullable
 	public Waypoint get(String name) {
 		return waypoints.values()
-						.stream()
-						.filter(waypoint -> waypoint.getName().equalsIgnoreCase(name))
-						.findFirst()
-						.orElse(null);
+				.stream().filter(waypoint -> waypoint.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
 	}
 
 	public void refactorIds(WaypointTable waypointTable) {
@@ -104,8 +102,8 @@ public class WaypointManager {
 			List<Object[]> rowsData = config.selectAll();
 
 			// remove all the data from the table
-			config.delete("", "");
 
+			config.delete("", null, Types.NULL);
 			int tempId = 1;
 			for (Object[] result : rowsData) {
 				int id = (int) result[0];

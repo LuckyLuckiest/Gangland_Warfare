@@ -9,8 +9,11 @@ import me.luckyraven.weapon.WeaponType;
 import me.luckyraven.weapon.ammo.Ammunition;
 import me.luckyraven.weapon.dto.ProjectileData;
 import me.luckyraven.weapon.dto.ReloadData;
+import me.luckyraven.weapon.modifiers.*;
 import me.luckyraven.weapon.projectile.ProjectileType;
 import me.luckyraven.weapon.reload.ReloadType;
+import me.luckyraven.weapon.util.BlockGroupResolver;
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -165,9 +168,7 @@ public class WeaponAddon {
 			pushVelocity  = recoilSection.getDouble("Push");
 			pushPowerUp   = recoilSection.getDouble("Power_Up");
 			recoilPattern = recoilSection.getStringList("Pattern")
-										 .stream() // stream
-										 .map(string -> string.split(";")) // convert to array
-										 .toList(); // back to the list
+					.stream().map(string -> string.split(";")).toList();
 		}
 
 		// sound
@@ -360,6 +361,102 @@ public class WeaponAddon {
 			}
 		}
 
+		/* modifiers section */
+		ConfigurationSection     modifiersSection      = config.getConfigurationSection("Modifiers");
+		List<BlockBreakModifier> breakBlockModifiers   = new ArrayList<>();
+		PenetrationModifier      penetrationModifier   = null;
+		List<RicochetModifier>   ricochetModifiers     = new ArrayList<>();
+		TracerModifier           tracerModifier        = null;
+		ArmorPiercingModifier    armorPiercingModifier = null;
+
+		if (modifiersSection != null) {
+			// Break Blocks parsing
+			List<String> breakBlocksList = modifiersSection.getStringList("Break_Blocks");
+			for (String entry : breakBlocksList) {
+				// Format: MATERIAL-hits (e.g., GLASS-3)
+				String[] parts = entry.split("-");
+				if (parts.length != 2) continue;
+
+				String materialName = parts[0].trim();
+				int    hitsRequired;
+				try {
+					hitsRequired = Integer.parseInt(parts[1].trim());
+				} catch (NumberFormatException e) {
+					continue;
+				}
+
+				Set<Material> materials = BlockGroupResolver.resolve(materialName);
+				if (!materials.isEmpty()) {
+					breakBlockModifiers.add(new BlockBreakModifier(materials, hitsRequired));
+				}
+			}
+
+			// Penetration parsing - Format: blocks-entities-damageReduction (e.g., 2-3-0.25)
+			String penetrationString = modifiersSection.getString("Penetration");
+			if (penetrationString != null) {
+				String[] parts = penetrationString.split("-");
+				if (parts.length == 3) {
+					try {
+						int    penetrateBlocks   = Integer.parseInt(parts[0].trim());
+						int    penetrateEntities = Integer.parseInt(parts[1].trim());
+						double damageReduction   = Double.parseDouble(parts[2].trim());
+						penetrationModifier = new PenetrationModifier(penetrateBlocks, penetrateEntities,
+																	  damageReduction);
+					} catch (NumberFormatException ignored) { }
+				}
+			}
+
+			// Ricochet parsing - Format list: maxBounces-MATERIAL1,MATERIAL2-damageRetention
+			List<String> ricochetList = modifiersSection.getStringList("Ricochet");
+			for (String entry : ricochetList) {
+				String[] parts = entry.split("-");
+				if (parts.length == 3) {
+					try {
+						int maxBounces = Integer.parseInt(parts[0].trim());
+
+						Set<Material> bounceOffBlocks = new HashSet<>();
+						String[]      materialNames   = parts[1].trim().split(",");
+						for (String matName : materialNames) {
+							Set<Material> resolved = BlockGroupResolver.resolve(matName.trim());
+							bounceOffBlocks.addAll(resolved);
+						}
+
+						double damageRetention = Double.parseDouble(parts[2].trim());
+						ricochetModifiers.add(new RicochetModifier(maxBounces, bounceOffBlocks, damageRetention));
+					} catch (NumberFormatException ignored) { }
+				}
+			}
+
+			// Tracer parsing - Format: RRGGBB-glowing-particleSize (e.g., FF0000-true-1.5)
+			String tracerString = modifiersSection.getString("Tracer");
+			if (tracerString != null) {
+				String[] parts = tracerString.split("-");
+				if (parts.length == 3) {
+					try {
+						// Parse hex color
+						String colorHex = parts[0].trim();
+						int    red      = Integer.parseInt(colorHex.substring(0, 2), 16);
+						int    green    = Integer.parseInt(colorHex.substring(2, 4), 16);
+						int    blue     = Integer.parseInt(colorHex.substring(4, 6), 16);
+						Color  color    = Color.fromRGB(red, green, blue);
+
+						boolean glowing      = Boolean.parseBoolean(parts[1].trim());
+						float   particleSize = Float.parseFloat(parts[2].trim());
+						tracerModifier = new TracerModifier(color, glowing, particleSize);
+					} catch (NumberFormatException | IndexOutOfBoundsException ignored) { }
+				}
+			}
+
+			// Armor Piercing parsing - Format: bypassPercentage (e.g., 0.5)
+			String armorPiercingString = modifiersSection.getString("Armor_Piercing");
+			if (armorPiercingString != null) {
+				try {
+					double armorBypass = Double.parseDouble(armorPiercingString.trim());
+					armorPiercingModifier = new ArmorPiercingModifier(armorBypass);
+				} catch (NumberFormatException ignored) { }
+			}
+		}
+
 		// Build the immutable data objects first
 		ProjectileData projectileData = ProjectileData.builder()
 													  .speed(projectileSpeed)
@@ -424,6 +521,19 @@ public class WeaponAddon {
 		weapon.getReloadActionBarData().setOpening(reloadActionBarOpening);
 
 		weapon.getScopeData().setLevel(scopeLevel);
+
+		for (BlockBreakModifier modifier : breakBlockModifiers) {
+			weapon.getModifiersData().addBreakBlock(modifier);
+		}
+
+		weapon.getModifiersData().setPenetration(penetrationModifier);
+
+		for (RicochetModifier modifier : ricochetModifiers) {
+			weapon.getModifiersData().addRicochet(modifier);
+		}
+
+		weapon.getModifiersData().setTracer(tracerModifier);
+		weapon.getModifiersData().setArmorPiercing(armorPiercingModifier);
 
 		weapons.put(fileName, weapon);
 	}

@@ -30,6 +30,7 @@ public class GanglandDatabase extends DatabaseHandler {
 	private final MemberTable         memberTable;
 	private final WaypointTable       waypointTable;
 	private final WeaponTable         weaponTable;
+	private final LootChestTable      lootChestTable;
 
 	public GanglandDatabase(JavaPlugin plugin, String schema) {
 		super(plugin);
@@ -49,6 +50,7 @@ public class GanglandDatabase extends DatabaseHandler {
 		this.memberTable         = new MemberTable(userTable, rankTable);
 		this.waypointTable       = new WaypointTable(gangTable);
 		this.weaponTable         = new WeaponTable();
+		this.lootChestTable      = new LootChestTable();
 
 		tables.add(pluginDataTable);
 		tables.add(userTable);
@@ -62,16 +64,17 @@ public class GanglandDatabase extends DatabaseHandler {
 		tables.add(memberTable);
 		tables.add(waypointTable);
 		tables.add(weaponTable);
+		tables.add(lootChestTable);
 	}
 
 	@Nullable
 	public static GanglandDatabase findInstance(DatabaseManager manager) {
 		return manager.getDatabases()
-					  .stream()
-					  .filter(handler -> handler instanceof GanglandDatabase)
-					  .map(GanglandDatabase.class::cast)
-					  .findFirst()
-					  .orElse(null);
+				.stream()
+				.filter(handler -> handler instanceof GanglandDatabase)
+				.map(GanglandDatabase.class::cast)
+				.findFirst()
+				.orElse(null);
 	}
 
 	@Override
@@ -132,6 +135,10 @@ public class GanglandDatabase extends DatabaseHandler {
 		// (12) rank permission table
 		Database rankPermissionDatabase = getDatabase().table(rankPermissionTable.getName());
 		rankPermissionDatabase.createTable(rankPermissionTable.createTableQuery(rankPermissionDatabase));
+
+		// (13) loot chest table
+		Database lootChestDatabase = getDatabase().table(lootChestTable.getName());
+		lootChestDatabase.createTable(lootChestTable.createTableQuery(lootChestDatabase));
 	}
 
 	@Override
