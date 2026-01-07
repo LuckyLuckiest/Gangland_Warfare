@@ -23,6 +23,7 @@ import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.sql.Types;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -89,7 +90,7 @@ class WaypointDeleteCommand extends SubArgument {
 				// if the data was already saved into the database
 				if (info.length == 0) return;
 
-				config.delete("id", String.valueOf(waypoint.getUsedId()));
+				config.delete("id", waypoint.getUsedId(), Types.INTEGER);
 
 				// refactor the ids
 				waypointManager.refactorIds(waypointTable);
@@ -166,17 +167,17 @@ class WaypointDeleteCommand extends SubArgument {
 				int gangId = user.getGangId();
 
 				List<String> list = allWaypoints.stream()
-												.filter(waypoint -> waypoint.getGangId() == gangId)
-												.map(Waypoint::getName)
-												.toList();
+						.filter(waypoint -> waypoint.getGangId() == gangId)
+						.map(Waypoint::getName)
+						.toList();
 
 				waypoints.addAll(list);
 			}
 
 			List<String> list = allWaypoints.stream()
-											.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
-											.map(Waypoint::getName)
-											.toList();
+					.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
+					.map(Waypoint::getName)
+					.toList();
 
 			waypoints.addAll(list);
 
@@ -197,8 +198,8 @@ class WaypointDeleteCommand extends SubArgument {
 			}
 
 			List<Waypoint> list = allWaypoints.stream()
-											  .filter(waypoint -> player.hasPermission(waypoint.getPermission()))
-											  .toList();
+					.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
+					.toList();
 
 			waypoints.addAll(list);
 

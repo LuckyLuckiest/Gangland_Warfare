@@ -58,7 +58,7 @@ public class Level {
 		return experience / experienceCalculation(nextLevel()) * 100;
 	}
 
-	public int addLevels(int levels) {
+	public int addLevels(int levels, LevelUpEvent event) {
 		int counter = 0;
 
 		while (levels > 0) {
@@ -67,7 +67,6 @@ public class Level {
 
 			if (counter >= maxLevel) break;
 
-			LevelUpEvent event = new LevelUpEvent(this);
 			Bukkit.getPluginManager().callEvent(event);
 
 			if (!event.isCancelled()) ++levelValue;

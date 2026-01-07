@@ -26,6 +26,7 @@
         <module>scoreboard-api</module>
         <module>inventory-api</module>
         <module>sign-api</module>
+        <module>lootchest-api</module>
 
         <module>plugin-file</module>
         <module>plugin-exception</module>
@@ -62,7 +63,7 @@
     </modules>
 
     <properties>
-        <revision>0.7.1-DEV</revision>
+        <revision>0.7.2-DEV</revision>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

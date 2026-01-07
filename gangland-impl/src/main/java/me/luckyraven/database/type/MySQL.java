@@ -122,17 +122,29 @@ public class MySQL implements Database {
 
 	@Override
 	public void createSchema(String name) throws SQLException {
-		executeStatement("CREATE DATABASE IF NOT EXISTS " + name + ";");
+		// Validate schema name to prevent SQL injection
+		// Schema names should only contain alphanumeric characters and underscores
+		if (!isValidIdentifier(name)) {
+			throw new SQLException("Invalid schema name: " + name);
+		}
+		executeStatement("CREATE DATABASE IF NOT EXISTS `" + name + "`;");
 	}
 
 	@Override
 	public void dropSchema(String name) throws SQLException {
-		executeStatement("DROP DATABASE IF EXISTS " + name + ";");
+		// Validate schema name to prevent SQL injection
+		if (!isValidIdentifier(name)) {
+			throw new SQLException("Invalid schema name: " + name);
+		}
+		executeStatement("DROP DATABASE IF EXISTS `" + name + "`;");
 	}
 
 	@Override
 	public Database table(String tableName) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
+		if (!isValidIdentifier(tableName)) {
+			throw new SQLException("Invalid table name: " + tableName);
+		}
 
 		this.table = tableName;
 		return this;
@@ -382,17 +394,23 @@ public class MySQL implements Database {
 		return 0;
 	}
 
-
 	@Override
-	public Database delete(String column, String value) throws SQLException {
+	public Database delete(String column, Object value, int type) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
 		Preconditions.checkNotNull(table, "Invalid table");
 
-		StringBuilder query = new StringBuilder("DELETE FROM " + table);
-		if (!column.isEmpty()) query.append(" WHERE ").append(column).append(" = ").append(value);
-		query.append(";");
-
-		executeUpdate(query.toString());
+		if (column.isEmpty()) {
+			// Delete all rows - no WHERE clause needed
+			String query = "DELETE FROM " + table + ";";
+			executeUpdate(query);
+		} else {
+			// Use parameterized query to prevent SQL injection
+			String query = "DELETE FROM " + table + " WHERE " + column + " = ?;";
+			try (PreparedStatement statement = connection.prepareStatement(query)) {
+				preparePlaceholderStatements(statement, new Object[]{value}, new int[]{type}, 0);
+				statement.executeUpdate();
+			}
+		}
 
 		return this;
 	}

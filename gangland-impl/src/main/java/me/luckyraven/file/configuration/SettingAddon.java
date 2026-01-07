@@ -43,7 +43,8 @@ public class SettingAddon implements FileInitializer {
 	private static @Getter String mysqlHost, mysqlUsername, mysqlPassword;
 	private static @Getter int     mysqlPort;
 	private static @Getter boolean sqliteBackup, sqliteFailedMysql, autoSave, autoSaveDebug;
-	private static @Getter int autoSaveTime;
+	private static @Getter int    autoSaveTime;
+	private static @Getter double cleanUpTime;
 
 	// inventory configuration
 	private static @Getter String inventoryFillItem, inventoryFillName, inventoryLineItem, inventoryLineName, nextPage,
@@ -97,6 +98,14 @@ public class SettingAddon implements FileInitializer {
 	private static @Getter double policeExperienceDropsMinimum, policeExperienceDropsMaximum,
 			civilianExperienceDropsMinimum, civilianExperienceDropsMaximum;
 	private static @Getter List<String> policeItemDrops, civilianItemDrops;
+
+	// loot chest configuration
+	private static @Getter long   lootChestCountdownTimer;
+	private static @Getter String lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
+	private static @Getter List<String> lootChestAllowedBlocks;
+	private static @Getter double       lootChestRewardMoneyMinimum, lootChestRewardMoneyMaximum,
+			lootChestRewardExperienceMinimum, lootChestRewardExperienceMaximum;
+	private static @Getter List<String> lootChestRewardCommands;
 
 	public SettingAddon(FileManager fileManager) {
 		try {
@@ -178,6 +187,7 @@ public class SettingAddon implements FileInitializer {
 		autoSave          = database.getBoolean("Auto_Save.Enable");
 		autoSaveDebug     = database.getBoolean("Auto_Save.Debug");
 		autoSaveTime      = database.getInt("Auto_Save.Time");
+		cleanUpTime       = database.getDouble("Clean_Up.Time");
 
 		// inventory
 		var inventory = settings.getConfigurationSection("Inventory");
@@ -313,6 +323,25 @@ public class SettingAddon implements FileInitializer {
 		civilianExperienceDropsMinimum = civilianDrops.getDouble("Experience.Minimum");
 		civilianExperienceDropsMaximum = civilianDrops.getDouble("Experience.Maximum");
 		civilianItemDrops              = civilianDrops.getStringList("Items");
+
+		// loot chest
+		var lootChest = settings.getConfigurationSection("Loot_Chest");
+		Objects.requireNonNull(lootChest);
+
+		lootChestCountdownTimer = lootChest.getLong("Countdown_Timer");
+		lootChestOpeningSound   = lootChest.getString("Sound.Opening");
+		lootChestLockedSound    = lootChest.getString("Sound.Locked");
+		lootChestClosingSound   = lootChest.getString("Sound.Closing");
+		lootChestAllowedBlocks  = lootChest.getStringList("Allowed_Blocks");
+
+		var lootChestRewards = lootChest.getConfigurationSection("Rewards");
+		Objects.requireNonNull(lootChestRewards);
+
+		lootChestRewardMoneyMinimum      = lootChestRewards.getDouble("Money.Minimum");
+		lootChestRewardMoneyMaximum      = lootChestRewards.getDouble("Money.Maximum");
+		lootChestRewardExperienceMinimum = lootChestRewards.getDouble("Experience.Minimum");
+		lootChestRewardExperienceMaximum = lootChestRewards.getDouble("Experience.Maximum");
+		lootChestRewardCommands          = lootChestRewards.getStringList("Commands");
 
 		addEachFieldReflection();
 		convertToPlaceholder();

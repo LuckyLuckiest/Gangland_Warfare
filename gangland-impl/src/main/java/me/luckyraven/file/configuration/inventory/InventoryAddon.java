@@ -416,7 +416,7 @@ public class InventoryAddon {
 			ItemBuilder defaultBuilder = createItem(defaultItem, defaultName, defaultData, defaultLore,
 													defaultEnchanted);
 			return new ConditionalSlotData.BranchData(defaultBuilder, defaultName, defaultLore, false, defaultDraggable,
-													  null, null);
+													  null, null, null);
 		}
 
 		// Parse item info for this branch first
@@ -442,12 +442,18 @@ public class InventoryAddon {
 											  draggable);
 		}
 
-		// Parse click action
+		// Parse click action (left click / default)
 		ConfigurationSection            onClickSection = branchSection.getConfigurationSection("OnClick");
 		ConditionalSlotData.ClickAction clickAction    = parseClickAction(onClickSection);
 
-		return new ConditionalSlotData.BranchData(itemBuilder, name, lore, clickAction != null, draggable, clickAction,
-												  nestedData);
+		// Parse right click action
+		ConfigurationSection            onRightClickSection = branchSection.getConfigurationSection("OnRightClick");
+		ConditionalSlotData.ClickAction rightClickAction    = parseClickAction(onRightClickSection);
+
+		boolean hasClickAction = clickAction != null || rightClickAction != null;
+
+		return new ConditionalSlotData.BranchData(itemBuilder, name, lore, hasClickAction, draggable, clickAction,
+												  rightClickAction, nestedData);
 	}
 
 	/**
@@ -491,6 +497,10 @@ public class InventoryAddon {
 										  boolean enchanted, boolean draggable) {
 		String slotsBase = basePath + "." + slotLoc + ".";
 
+		// Check for OnRightClick event
+		String rightClickPath    = slotsBase + "OnRightClick";
+		var    rightClickSection = config.getConfigurationSection(rightClickPath);
+
 		for (String event : inventoryEvents.keySet()) {
 			String eventSectionString = slotsBase + event + ".";
 			String substring          = eventSectionString.substring(0, eventSectionString.length() - 1);
@@ -499,8 +509,8 @@ public class InventoryAddon {
 
 			// so far, there is support for clickable events
 			if (inventoryEvents.get(event).equals(InventoryClickEvent.class)) {
-				return inventoryClickEvent(gangland, eventSection, slotLoc, item, itemName, data, lore, enchanted,
-										   draggable);
+				return inventoryClickEvent(gangland, eventSection, rightClickSection, slotLoc, item, itemName, data,
+										   lore, enchanted, draggable);
 			} else if (inventoryEvents.get(event).equals(InventoryInteractEvent.class)) {
 
 			} else if (inventoryEvents.get(event).equals(InventoryCloseEvent.class)) {
@@ -510,14 +520,21 @@ public class InventoryAddon {
 			}
 		}
 
+		// Check if only right-click is defined (no OnClick)
+		if (rightClickSection != null) {
+			return inventoryRightClickOnly(gangland, rightClickSection, slotLoc, item, itemName, data, lore, enchanted,
+										   draggable);
+		}
+
 		// add the slot if it doesn't contain an event
 		ItemBuilder itemBuilder = createItem(item, itemName, data, lore, enchanted);
 
 		return new Slot(slotLoc, false, draggable, itemBuilder);
 	}
 
-	private static Slot inventoryClickEvent(Gangland gangland, ConfigurationSection eventSection, int slotLoc,
-											String item, String itemName, Map<String, Object> data, List<String> lore,
+	private static Slot inventoryClickEvent(Gangland gangland, ConfigurationSection eventSection,
+											@Nullable ConfigurationSection rightClickSection, int slotLoc, String item,
+											String itemName, Map<String, Object> data, List<String> lore,
 											boolean enchanted, boolean draggable) {
 		String slotCommand    = eventSection.getString("Command");
 		String slotInventory  = eventSection.getString("Inventory");
@@ -539,6 +556,56 @@ public class InventoryAddon {
 
 			if (slotInventory != null) {
 				openInventoryForPlayer(gangland, player, slotInventory);
+			}
+		});
+
+		// Handle right click action if defined
+		if (rightClickSection != null) {
+			String rightCommand    = rightClickSection.getString("Command");
+			String rightInventory  = rightClickSection.getString("Inventory");
+			String rightPermission = rightClickSection.getString("Permission");
+
+			slot.setRightClickable((player, inventoryHandler, builder) -> {
+				if (rightPermission != null && !player.hasPermission(rightPermission)) return;
+
+				if (rightCommand != null) {
+					String command = rightCommand.startsWith("/") ? rightCommand.substring(1) : rightCommand;
+					player.performCommand(command);
+				}
+
+				if (rightInventory != null) {
+					openInventoryForPlayer(gangland, player, rightInventory);
+				}
+			});
+		}
+
+		return slot;
+	}
+
+	private static Slot inventoryRightClickOnly(Gangland gangland, ConfigurationSection rightClickSection, int slotLoc,
+												String item, String itemName, Map<String, Object> data,
+												List<String> lore, boolean enchanted, boolean draggable) {
+		String rightCommand    = rightClickSection.getString("Command");
+		String rightInventory  = rightClickSection.getString("Inventory");
+		String rightPermission = rightClickSection.getString("Permission");
+
+		ItemBuilder itemBuilder = createItem(item, itemName, data, lore, enchanted);
+
+		Slot slot = new Slot(slotLoc, true, draggable, itemBuilder);
+
+		// Empty left click handler
+		slot.setClickable((player, inventoryHandler, builder) -> { });
+
+		slot.setRightClickable((player, inventoryHandler, builder) -> {
+			if (rightPermission != null && !player.hasPermission(rightPermission)) return;
+
+			if (rightCommand != null) {
+				String command = rightCommand.startsWith("/") ? rightCommand.substring(1) : rightCommand;
+				player.performCommand(command);
+			}
+
+			if (rightInventory != null) {
+				openInventoryForPlayer(gangland, player, rightInventory);
 			}
 		});
 

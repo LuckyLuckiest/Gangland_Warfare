@@ -2,6 +2,7 @@ package me.luckyraven.util;
 
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 
 public final class ChatUtil extends me.luckyraven.util.utilities.ChatUtil {
@@ -35,13 +36,18 @@ public final class ChatUtil extends me.luckyraven.util.utilities.ChatUtil {
 	}
 
 	public static void sendToOperators(String permission, String message) {
+		sendToOperators(permission, message, null, false);
+	}
+
+	public static void sendToOperators(String permission, String message, Logger logger, boolean sendAsWarn) {
 		Bukkit.getServer()
 			  .getOnlinePlayers()
-			  .stream()
-			  .filter(player -> permission == null || permission.isEmpty() || player.hasPermission(permission))
-			  .forEach(player -> player.sendMessage(ChatUtil.commandMessage(message)));
+				.stream()
+				.filter(player -> permission == null || permission.isEmpty() || player.hasPermission(permission))
+				.forEach(player -> player.sendMessage(commandMessage(message)));
 
-		Bukkit.getServer().getConsoleSender().sendMessage(ChatUtil.commandMessage(message));
+		if (sendAsWarn && logger != null) logger.warn(message);
+		else Bukkit.getServer().getConsoleSender().sendMessage(commandMessage(message));
 	}
 
 	public static String commandDesign(String command) {

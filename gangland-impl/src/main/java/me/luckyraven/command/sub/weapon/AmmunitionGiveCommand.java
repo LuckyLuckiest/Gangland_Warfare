@@ -61,7 +61,7 @@ class AmmunitionGiveCommand extends SubArgument {
 			AmmunitionAddon ammunitionAddon = gangland.getInitializer().getAmmunitionAddon();
 
 			return ammunitionAddon.getAmmunitionKeys()
-								  .stream().toList();
+					.stream().toList();
 		});
 
 		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
@@ -97,18 +97,25 @@ class AmmunitionGiveCommand extends SubArgument {
 
 		if (ammunition == null) return false;
 
-		int             slots      = (int) Math.ceil(amount / 64D);
-		int             amountLeft = amount;
-		PlayerInventory inventory  = player.getInventory();
-		ItemStack[]     items      = new ItemStack[slots];
+		ItemStack       sampleItem   = ammunition.buildItem();
+		int             maxStackSize = sampleItem.getMaxStackSize();
+		int             slots        = (int) Math.ceil(amount / (double) maxStackSize);
+		int             amountLeft   = amount;
+		PlayerInventory inventory    = player.getInventory();
+		ItemStack[]     items        = new ItemStack[slots];
 
 		for (int i = 0; i < items.length; ++i) {
-			int amountGive = amountLeft % 65;
+			int amountGive = Math.min(amountLeft, maxStackSize);
 
-			if (amountLeft <= 0) break;
+			if (amountGive <= 0) break;
 
-			items[i]   = ammunition.buildItem(amountGive);
-			amountLeft = Math.max(0, amountLeft - amountGive);
+			ItemStack item = ammunition.buildItem();
+
+			item.setAmount(amountGive);
+
+			items[i] = item;
+
+			amountLeft -= amountGive;
 		}
 
 		Map<Integer, ItemStack> left = inventory.addItem(items);

@@ -49,6 +49,7 @@ public class Weapon implements Cloneable, Comparable<Weapon> {
 	private       SoundData              soundData;
 	private       ScopeData              scopeData;
 	private       ReloadActionBarData    reloadActionBarData;
+	private       ModifiersData          modifiersData;
 	private       String                 changingDisplayName;
 	private       short                  currentDurability;
 	private       SelectiveFire          currentSelectiveFire;
@@ -275,6 +276,7 @@ public class Weapon implements Cloneable, Comparable<Weapon> {
 		this.soundData           = new SoundData();
 		this.scopeData           = new ScopeData();
 		this.reloadActionBarData = new ReloadActionBarData();
+		this.modifiersData       = new ModifiersData();
 	}
 
 	private void copyMutableData(Weapon source) {
@@ -285,6 +287,7 @@ public class Weapon implements Cloneable, Comparable<Weapon> {
 		this.soundData           = source.soundData.clone();
 		this.scopeData           = source.scopeData.clone();
 		this.reloadActionBarData = source.reloadActionBarData.clone();
+		this.modifiersData       = source.modifiersData.clone();
 	}
 
 	private void updateTag(ItemBuilder itemBuilder, WeaponTag tag, Object value) {

@@ -78,6 +78,7 @@ Time_Unit:
    Hour: "hour"
    Day: "day"
    Week: "week"
+   Year: "year"
 
 Commands:
    Prefix: "&6GLW &8&l>>&7 "

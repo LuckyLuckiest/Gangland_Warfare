@@ -154,7 +154,7 @@ class GangDeleteCommand extends SubArgument {
 
 			// get the contribution frequency for each user, and return that frequency according to the current balance
 			double total = gang.getGroup()
-							   .stream().mapToDouble(Member::getContribution).sum();
+					.stream().mapToDouble(Member::getContribution).sum();
 
 			Initializer      initializer      = gangland.getInitializer();
 			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
@@ -195,9 +195,8 @@ class GangDeleteCommand extends SubArgument {
 				List<Object[]> allUsers   = userConfig.selectAll();
 				List<Object[]> gangUsers = allUsers.parallelStream()
 												   .filter(obj -> Arrays.stream(obj)
-																		.anyMatch(o -> o.toString()
-																						.equals(String.valueOf(
-																								gang.getId()))))
+														   .anyMatch(o -> o.toString()
+																		   .equals(String.valueOf(gang.getId()))))
 												   .toList();
 
 				// update offline users
@@ -236,17 +235,17 @@ class GangDeleteCommand extends SubArgument {
 				int removedGang = gang.getId();
 
 				// remove the gang itself
-				database.table(gangTable.getName()).delete("id", String.valueOf(removedGang));
+				database.table(gangTable.getName()).delete("id", removedGang, Types.INTEGER);
 
 				// remove allied gangs to itself
 				for (Pair<Gang, Long> alliedGangPair : gang.getAllies()) {
 					int      alliedGangId = alliedGangPair.first().getId();
 					Database config       = database.table(gangAlliesTable.getName());
 
-					config.delete("gang_id", String.valueOf(alliedGangId));
+					config.delete("gang_id", alliedGangId, Types.INTEGER);
 					// remove other gangs who're allied to the removed gang
 					// the number of gangs allied with the removed gang is equal to the opposite
-					config.delete("allie_id", String.valueOf(removedGang));
+					config.delete("allie_id", removedGang, Types.INTEGER);
 				}
 			});
 

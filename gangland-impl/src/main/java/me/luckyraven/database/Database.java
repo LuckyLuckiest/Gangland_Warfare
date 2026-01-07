@@ -267,12 +267,13 @@ public interface Database {
 	 *
 	 * @param column the specific column.
 	 * @param value all data from the table or specific data.
+	 * @param type the type of the value provided.
 	 *
 	 * @return database instance
 	 *
 	 * @throws SQLException the sql exception
 	 */
-	Database delete(String column, String value) throws SQLException;
+	Database delete(String column, Object value, int type) throws SQLException;
 
 	/**
 	 * Executes a query that you wish to execute.
@@ -364,7 +365,14 @@ public interface Database {
 				case Types.BIGINT -> statement.setLong(index, (long) value);
 				case Types.FLOAT, Types.REAL -> statement.setFloat(index, (float) value);
 				case Types.DOUBLE, Types.NUMERIC -> statement.setDouble(index, (double) value);
-				case Types.BOOLEAN -> statement.setBoolean(index, (boolean) value);
+				case Types.BOOLEAN -> {
+					switch (value) {
+						case Boolean b -> statement.setBoolean(index, (boolean) value);
+						case Integer integer -> statement.setBoolean(index, integer != 0);
+						case Number number -> statement.setBoolean(index, number.intValue() != 0);
+						default -> statement.setBoolean(index, Boolean.parseBoolean(String.valueOf(value)));
+					}
+				}
 				case Types.DATE, Types.TIME, Types.TIMESTAMP -> {
 					LocalDateTime dateTime  = (LocalDateTime) value;
 					Timestamp     timestamp = Timestamp.valueOf(dateTime);
@@ -471,6 +479,16 @@ public interface Database {
 	 */
 	default List<String> getList(String list) {
 		return Arrays.stream(list.split(",")).toList();
+	}
+
+	/**
+	 * Validates that an identifier (table name, schema name, column name) contains only safe characters. This prevents
+	 * SQL injection in DDL statements where parameterized queries cannot be used.
+	 */
+	default boolean isValidIdentifier(String identifier) {
+		if (identifier == null || identifier.isEmpty()) return false;
+		// Allow only alphanumeric characters and underscores
+		return identifier.matches("^[a-zA-Z_][a-zA-Z0-9_]*$");
 	}
 
 }

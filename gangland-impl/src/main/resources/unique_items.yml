@@ -41,3 +41,61 @@ phone:
       Movable: true
       # The item cannot be dropped.
       Droppable: false
+
+# Lockpick for opening rare tier chests
+lockpick:
+   Permission: "gangland.uniqueitem.lockpick"
+   Material: TRIPWIRE_HOOK
+   Name: "&7&lLockpick"
+   Lore:
+      - "&7A makeshift lockpick"
+      - "&7Used to open &9Rare &7tier chests"
+   # This tells the system this item can unlock loot chests
+   Loot_Key: "lockpick"
+   Inventory:
+      Add_On_Join: false
+      Add_On_Respawn: false
+      Drop_On_Death: true
+      Allow_Duplicates: true
+      Slot: -1
+      Overrides: false
+      Movable: true
+      Droppable: true
+
+# Key for epic tier chests
+epic_key:
+   Permission: "gangland.uniqueitem.epic_key"
+   Material: GOLD_NUGGET
+   Name: "&5&lEpic Key"
+   Lore:
+      - "&7A special key"
+      - "&7Used to open &5Epic &7tier chests"
+   Loot_Key: "epic_key"
+   Inventory:
+      Add_On_Join: false
+      Add_On_Respawn: false
+      Drop_On_Death: true
+      Allow_Duplicates: true
+      Slot: -1
+      Overrides: false
+      Movable: true
+      Droppable: true
+
+# Key for legendary tier chests
+legendary_key:
+   Permission: "gangland.uniqueitem.legendary_key"
+   Material: GOLDEN_APPLE
+   Name: "&6&lLegendary Key"
+   Lore:
+      - "&7A legendary key"
+      - "&7Used to open &6Legendary &7tier chests"
+   Loot_Key: "legendary_key"
+   Inventory:
+      Add_On_Join: false
+      Add_On_Respawn: false
+      Drop_On_Death: true
+      Allow_Duplicates: true
+      Slot: -1
+      Overrides: false
+      Movable: true
+      Droppable: true

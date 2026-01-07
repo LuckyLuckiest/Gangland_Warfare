@@ -50,17 +50,20 @@ public class ConditionalSlotData {
 		private final boolean             clickable;
 		private final boolean             draggable;
 		private final ClickAction         clickAction;
+		private final ClickAction         rightClickAction;
 		private final ConditionalSlotData nestedCondition;
 
 		public BranchData(ItemBuilder item, String name, List<String> lore, boolean clickable, boolean draggable,
-						  @Nullable ClickAction clickAction, @Nullable ConditionalSlotData nestedCondition) {
-			this.item            = item;
-			this.name            = name;
-			this.lore            = lore;
-			this.clickable       = clickable;
-			this.draggable       = draggable;
-			this.clickAction     = clickAction;
-			this.nestedCondition = nestedCondition;
+						  @Nullable ClickAction clickAction, @Nullable ClickAction rightClickAction,
+						  @Nullable ConditionalSlotData nestedCondition) {
+			this.item             = item;
+			this.name             = name;
+			this.lore             = lore;
+			this.clickable        = clickable;
+			this.draggable        = draggable;
+			this.clickAction      = clickAction;
+			this.rightClickAction = rightClickAction;
+			this.nestedCondition  = nestedCondition;
 		}
 
 		/**

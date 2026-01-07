@@ -20,6 +20,8 @@ import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
+import me.luckyraven.loot.LootChestService;
+import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.scoreboard.Scoreboard;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.driver.DriverHandler;
@@ -91,6 +93,8 @@ public final class ReloadPlugin {
 		userInitialize(resetCache);
 		waypointInitialize(resetCache);
 		weaponInitialize(resetCache);
+		// required to be after weapon
+		lootChestInitialize(resetCache);
 	}
 
 	/**
@@ -303,6 +307,28 @@ public final class ReloadPlugin {
 		WeaponTable    weaponTable = initializer.getInstanceFromTables(WeaponTable.class, tables);
 
 		weaponManager.initialize(weaponTable);
+	}
+
+	/**
+	 * Initializes the loot chest data (effective for reloads).
+	 *
+	 * @param resetCache if old data needs to be cleared
+	 *
+	 * @implNote Very important to run this method after {@link LootChestService} and {@link LootChestTable}
+	 * 		initialization.
+	 */
+	public void lootChestInitialize(boolean resetCache) {
+		LootChestManager lootChestManager = initializer.getLootChestManager();
+
+		if (resetCache) lootChestManager.clear();
+
+		// Reload config from files first
+		initializer.lootChestLoader();
+
+		List<Table<?>> tables         = ganglandDatabase.getTables();
+		LootChestTable lootChestTable = initializer.getInstanceFromTables(LootChestTable.class, tables);
+
+		lootChestManager.initialize(lootChestTable, true);
 	}
 
 	/**

@@ -76,6 +76,9 @@ public class UniqueItemAddon implements Comparator<UniqueItem> {
 			// configuration items that can be not available
 			List<String> lore = section.getStringList("Lore");
 
+			// read the loot key for lockpick/key functionality
+			String lootKey = section.getString("Loot_Key");
+
 			var inventorySection = section.getConfigurationSection("Inventory");
 
 			if (inventorySection == null) continue;
@@ -113,6 +116,7 @@ public class UniqueItemAddon implements Comparator<UniqueItem> {
 									   .overridesSlot(overrides)
 									   .movable(movable)
 									   .droppable(droppable)
+									   .lootKey(lootKey)
 									   .build();
 
 			this.uniqueItems.put(key, uniqueItem);

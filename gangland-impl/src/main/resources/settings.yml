@@ -98,6 +98,9 @@ Database:
       Time: 10
       # Enable if you want to print periodical updates in the console.
       Debug: true
+   Clean_Up:
+      # Time to clean up the database from old data in days.
+      Time: 30
 
 # +-------------------+ #
 # | Scoreboard Config | #
@@ -271,24 +274,6 @@ Wanted:
          - 15
          - 20
 
-# +-------------+ #
-# | Safe Config | #
-# +-------------+ #
-Safe:
-   Enable: true
-   Safe_Block: "iron_block"
-   Item_To_Open_Safe:
-      Name: "Lock-pick"
-      Lore:
-         - "Breaks the safe"
-      Item: "iron_hoe"
-   Countdown_Timer:
-      Enable: true
-      Time: 1_200
-   Money:
-      Minimum: 25
-      Maximum: 2_500
-
 # +-------------+#
 # | Gang Config |#
 # +-------------+#
@@ -363,3 +348,36 @@ Entity_Marker:
             Maximum: 15
          Items:
             - ""
+
+# +------------+ #
+# | Loot Chest | #
+# +------------+ #
+# The loot chest is a block that players can open to receive random rewards. These rewards can be configured from types
+# of items in loot-chest.yml.
+Loot_Chest:
+   # The amount of time to wait before opening the loot chest in seconds.
+   Countdown_Timer: 300
+   # The sounds when interacting with a loot chest.
+   Sound:
+      Opening: "BLOCK_CHEST_OPEN"
+      Locked: "BLOCK_CHEST_LOCKED"
+      Closing: "BLOCK_CHEST_CLOSE"
+   # The blocks that can be as loot chests.
+   Allowed_Blocks:
+      - "CHEST"
+      - "TRAPPED_CHEST"
+      - "BARREL"
+      - "SHULKER_BOX"
+      - "ENDER_CHEST"
+   Rewards:
+      # The amount of money to reward players for opening a loot chest.
+      Money:
+         Minimum: 10
+         Maximum: 1_000
+      # The amount of experience to reward players for opening a loot chest.
+      Experience:
+         Minimum: 5
+         Maximum: 100
+      # The commands to execute when a player opens a loot chest.
+      Commands:
+         - ""
