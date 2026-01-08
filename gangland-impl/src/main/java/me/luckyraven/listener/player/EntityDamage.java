@@ -46,7 +46,7 @@ public class EntityDamage implements Listener {
 		this.userManager       = initializer.getUserManager();
 		this.entityMarkManager = initializer.getEntityMarkManager();
 
-		this.killCombo = new KillCombo(gangland);
+		this.killCombo = new KillCombo(gangland, SettingAddon.getWantedKillCounter());
 		setupKillComboCallbacks();
 	}
 

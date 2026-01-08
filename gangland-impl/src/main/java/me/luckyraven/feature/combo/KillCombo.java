@@ -3,7 +3,6 @@ package me.luckyraven.feature.combo;
 import lombok.Setter;
 import me.luckyraven.data.user.User;
 import me.luckyraven.feature.wanted.Wanted;
-import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -20,14 +19,16 @@ public class KillCombo {
 
 	private final JavaPlugin                  plugin;
 	private final Map<UUID, KillComboTracker> activeTrackers;
+	private final List<Integer>               wantedKillCounter;
 
 	private Consumer<KillComboEvent> onWantedLevelTrigger;
 	private Consumer<KillComboEvent> onComboIncrement;
 	private Consumer<KillComboEvent> onComboReset;
 
-	public KillCombo(JavaPlugin plugin) {
-		this.plugin         = plugin;
-		this.activeTrackers = new HashMap<>();
+	public KillCombo(JavaPlugin plugin, List<Integer> wantedKillCounter) {
+		this.plugin            = plugin;
+		this.activeTrackers    = new HashMap<>();
+		this.wantedKillCounter = wantedKillCounter;
 	}
 
 	/**
@@ -111,7 +112,7 @@ public class KillCombo {
 	}
 
 	private boolean shouldTriggerWantedLevel(Wanted wanted, int pointsKillCount) {
-		List<Integer> thresholds = SettingAddon.getWantedKillCounter();
+		List<Integer> thresholds = wantedKillCounter;
 
 		if (thresholds.isEmpty()) return false;
 		if (thresholds.size() < wanted.getMaxLevel()) {
