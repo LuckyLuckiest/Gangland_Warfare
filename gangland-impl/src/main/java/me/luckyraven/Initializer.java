@@ -23,7 +23,11 @@ import me.luckyraven.command.sub.weapon.WeaponCommand;
 import me.luckyraven.compatibility.CompatibilitySetup;
 import me.luckyraven.compatibility.CompatibilityWorker;
 import me.luckyraven.compatibility.VersionSetup;
+import me.luckyraven.compatibility.pathfinding.PathfindingHandler;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
+import me.luckyraven.copsncrooks.entity.EntityMarkManager;
+import me.luckyraven.copsncrooks.police.PoliceManager;
+import me.luckyraven.copsncrooks.police.PoliceService;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
@@ -43,7 +47,6 @@ import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.*;
 import me.luckyraven.exception.PluginException;
-import me.luckyraven.feature.entity.EntityMarkManager;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
@@ -125,6 +128,7 @@ public final class Initializer {
 	private HologramService            hologramService;
 	private LootChestManager           lootChestManager;
 	private BlockDamageManager         blockDamageManager;
+	private PoliceService              policeService;
 	// Addons
 	private SettingAddon               settingAddon;
 	private ScoreboardAddon            scoreboardAddon;
@@ -259,13 +263,19 @@ public final class Initializer {
 		signLoader();
 
 		// entity mark manager
-		entityMarkManager = new EntityMarkManager(gangland);
+		entityMarkManager = new EntityMarkManager(gangland, SettingAddon.getDefaultPoliceEntities(),
+												  SettingAddon.getDefaultCivilianEntities());
 
 		// item parser
 		itemParserManager = new ItemParserManager(weaponManager, ammunitionAddon);
 
 		// loot chest manager
 		lootChestLoader();
+
+		// police service
+		policeService = new PoliceService(gangland);
+
+		policeService.initialize(entityMarkManager, compatibilityWorker.getPathfindingHandler());
 
 		// Sign Information
 		signInformation = new GanglandSignInformation();
@@ -474,9 +484,11 @@ public final class Initializer {
 		dependencyContainer.registerInstance(SignInteractionService.class, signManager.getSignService());
 		dependencyContainer.registerInstance(LootChestService.class, lootChestManager);
 		dependencyContainer.registerInstance(RecoilCompatibility.class, compatibilityWorker.getRecoilCompatibility());
+		dependencyContainer.registerInstance(PathfindingHandler.class, compatibilityWorker.getPathfindingHandler());
 		dependencyContainer.registerInstance(SignInformation.class, signInformation);
 		dependencyContainer.registerInstance(HologramService.class, hologramService);
 		dependencyContainer.registerInstance(BlockDamageManager.class, blockDamageManager);
+		dependencyContainer.registerInstance(PoliceManager.class, policeService.getPoliceManager());
 
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 

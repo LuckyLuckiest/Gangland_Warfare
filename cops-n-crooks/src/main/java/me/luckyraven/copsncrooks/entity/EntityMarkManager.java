@@ -1,6 +1,5 @@
 package me.luckyraven.copsncrooks.entity;
 
-import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -14,10 +13,15 @@ public class EntityMarkManager {
 
 	private final NamespacedKey         entityMarkKey;
 	private final Map<UUID, EntityMark> entityMarks;
+	private final List<String>          defaultPoliceEntities;
+	private final List<String>          defaultCivilianEntities;
 
-	public EntityMarkManager(JavaPlugin plugin) {
-		this.entityMarkKey = new NamespacedKey(plugin, "entity_mark");
-		this.entityMarks   = new HashMap<>();
+	public EntityMarkManager(JavaPlugin plugin, List<String> defaultPoliceEntities,
+							 List<String> defaultCivilianEntities) {
+		this.entityMarkKey           = new NamespacedKey(plugin, "entity_mark");
+		this.entityMarks             = new HashMap<>();
+		this.defaultPoliceEntities   = defaultPoliceEntities;
+		this.defaultCivilianEntities = defaultCivilianEntities;
 	}
 
 	public void setEntityMark(Entity entity, EntityMark mark) {
@@ -74,7 +78,7 @@ public class EntityMarkManager {
 	}
 
 	protected EntityMark getDefaultMarkForType(EntityType type) {
-		List<EntityType> policeEntityTypes = processEntityTypes(SettingAddon.getDefaultPoliceEntities());
+		List<EntityType> policeEntityTypes = processEntityTypes(defaultPoliceEntities);
 
 		Optional<EntityType> police = policeEntityTypes.stream()
 				.filter(entityType -> entityType.equals(type))
@@ -82,7 +86,7 @@ public class EntityMarkManager {
 
 		if (police.isPresent()) return EntityMark.POLICE;
 
-		List<EntityType> civilianEntityTypes = processEntityTypes(SettingAddon.getDefaultCivilianEntities());
+		List<EntityType> civilianEntityTypes = processEntityTypes(defaultCivilianEntities);
 
 		Optional<EntityType> civilian = civilianEntityTypes.stream()
 				.filter(entityType -> entityType.equals(type))
