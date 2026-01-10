@@ -1,4 +1,4 @@
-package me.luckyraven.feature.entity;
+package me.luckyraven.copsncrooks.entity;
 
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.NamespacedKey;
@@ -77,16 +77,16 @@ public class EntityMarkManager {
 		List<EntityType> policeEntityTypes = processEntityTypes(SettingAddon.getDefaultPoliceEntities());
 
 		Optional<EntityType> police = policeEntityTypes.stream()
-													   .filter(entityType -> entityType.equals(type))
-													   .findFirst();
+				.filter(entityType -> entityType.equals(type))
+				.findFirst();
 
 		if (police.isPresent()) return EntityMark.POLICE;
 
 		List<EntityType> civilianEntityTypes = processEntityTypes(SettingAddon.getDefaultCivilianEntities());
 
 		Optional<EntityType> civilian = civilianEntityTypes.stream()
-														   .filter(entityType -> entityType.equals(type))
-														   .findFirst();
+				.filter(entityType -> entityType.equals(type))
+				.findFirst();
 
 		if (civilian.isPresent()) return EntityMark.CIVILIAN;
 

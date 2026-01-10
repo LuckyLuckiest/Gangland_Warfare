@@ -1,9 +1,11 @@
-package me.luckyraven.feature.wanted;
+package me.luckyraven.copsncrooks.wanted;
 
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
 import me.luckyraven.util.timer.RepeatingTimer;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.function.Consumer;
@@ -17,6 +19,7 @@ public class Wanted {
 
 	private int     maxLevel;
 	private boolean wanted;
+	private Player  owner;
 
 	@Setter(AccessLevel.NONE)
 	private RepeatingTimer repeatingTimer;
@@ -37,8 +40,29 @@ public class Wanted {
 	}
 
 	public void setLevel(int level) {
-		this.level  = Math.max(0, Math.min(level, maxLevel));
+		int oldLevel = this.level;
+		int newLevel = Math.max(0, Math.min(level, maxLevel));
+
+		// Fire change event if owner is set
+		if (owner != null && oldLevel != newLevel) {
+			WantedLevelChangeEvent changeEvent = new WantedLevelChangeEvent(owner, this, oldLevel, newLevel);
+			Bukkit.getPluginManager().callEvent(changeEvent);
+
+			if (changeEvent.isCancelled()) return;
+		}
+
+		boolean wasWanted = this.wanted;
+		this.level  = newLevel;
 		this.wanted = this.level > 0;
+
+		// Fire start/end events
+		if (owner != null) {
+			if (!wasWanted && this.wanted) {
+				Bukkit.getPluginManager().callEvent(new WantedStartEvent(owner, this, this.level));
+			} else if (wasWanted && !this.wanted) {
+				Bukkit.getPluginManager().callEvent(new WantedEndEvent(owner, this));
+			}
+		}
 	}
 
 	public void incrementLevel() {

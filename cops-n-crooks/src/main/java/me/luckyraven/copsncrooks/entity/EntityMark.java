@@ -1,4 +1,4 @@
-package me.luckyraven.feature.entity;
+package me.luckyraven.copsncrooks.entity;
 
 public enum EntityMark {
 

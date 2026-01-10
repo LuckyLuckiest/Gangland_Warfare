@@ -1,8 +1,7 @@
-package me.luckyraven.feature.combo;
+package me.luckyraven.copsncrooks.combo;
 
 import lombok.Setter;
-import me.luckyraven.data.user.User;
-import me.luckyraven.feature.wanted.Wanted;
+import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -37,11 +36,10 @@ public class KillCombo {
 	 * @param killer The player who made the kill
 	 * @param killed The entity that was killed
 	 */
-	public void recordKill(User<Player> killer, Entity killed) {
-		Player player   = killer.getUser();
-		UUID   playerId = player.getUniqueId();
+	public void recordKill(Player killer, Wanted wantedKiller, Entity killed, int wantedKillComboResetAfter) {
+		UUID playerId = killer.getUniqueId();
 
-		var killComboTracker = new KillComboTracker(plugin, player, this::handleComboReset);
+		var killComboTracker = new KillComboTracker(plugin, killer, this::handleComboReset, wantedKillComboResetAfter);
 		var tracker          = activeTrackers.computeIfAbsent(playerId, id -> killComboTracker);
 
 		// Determine kill points based on entity type
@@ -52,12 +50,12 @@ public class KillCombo {
 
 		// Trigger combo increment callback
 		if (onComboIncrement != null) {
-			KillComboEvent event = new KillComboEvent(player, tracker);
+			KillComboEvent event = new KillComboEvent(killer, tracker);
 			onComboIncrement.accept(event);
 		}
 
 		// Check if wanted level should be triggered
-		checkWantedLevelTrigger(killer, tracker);
+		checkWantedLevelTrigger(killer, wantedKiller, tracker);
 
 		// Restart the countdown timer
 		tracker.restartTimer();
@@ -99,15 +97,14 @@ public class KillCombo {
 	/**
 	 * Checks if the combo should trigger a wanted level increase.
 	 */
-	private void checkWantedLevelTrigger(User<Player> killer, KillComboTracker tracker) {
+	private void checkWantedLevelTrigger(Player killer, Wanted wantedKiller, KillComboTracker tracker) {
 		int pointKillCount = tracker.getPointKillCount();
 
 		// Check against configured thresholds
-		Wanted wanted = killer.getWanted();
-		if (!shouldTriggerWantedLevel(wanted, pointKillCount)) return;
+		if (!shouldTriggerWantedLevel(wantedKiller, pointKillCount)) return;
 		if (onWantedLevelTrigger == null) return;
 
-		KillComboEvent event = new KillComboEvent(killer.getUser(), tracker);
+		KillComboEvent event = new KillComboEvent(killer, tracker);
 		onWantedLevelTrigger.accept(event);
 	}
 

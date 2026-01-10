@@ -1,7 +1,6 @@
-package me.luckyraven.feature.combo;
+package me.luckyraven.copsncrooks.combo;
 
 import lombok.Getter;
-import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -22,21 +21,24 @@ public class KillComboTracker {
 	private final Player                     player;
 	private final Consumer<KillComboTracker> onReset;
 	private final List<KillRecord>           killHistory;
+	private final int                        wantedKillComboResetAfter;
 
 	private int            normalKillCount;
 	private int            pointKillCount;
 	private CountdownTimer timer;
 
-	public KillComboTracker(JavaPlugin plugin, Player player, Consumer<KillComboTracker> onReset) {
-		this.plugin          = plugin;
-		this.player          = player;
-		this.onReset         = onReset;
-		this.normalKillCount = 0;
-		this.pointKillCount  = 0;
-		this.killHistory     = new ArrayList<>();
+	public KillComboTracker(JavaPlugin plugin, Player player, Consumer<KillComboTracker> onReset,
+							int wantedKillComboResetAfter) {
+		this.plugin                    = plugin;
+		this.player                    = player;
+		this.onReset                   = onReset;
+		this.normalKillCount           = 0;
+		this.pointKillCount            = 0;
+		this.killHistory               = new ArrayList<>();
+		this.wantedKillComboResetAfter = wantedKillComboResetAfter;
 
 		// Initialize countdown timer
-		initializeTimer();
+		initializeTimer(wantedKillComboResetAfter);
 	}
 
 	/**
@@ -59,7 +61,7 @@ public class KillComboTracker {
 			timer = null;
 		}
 
-		initializeTimer();
+		initializeTimer(wantedKillComboResetAfter);
 		timer.start(true);
 	}
 
@@ -76,8 +78,8 @@ public class KillComboTracker {
 		return timer != null ? timer.getTimeLeft() : 0;
 	}
 
-	private void initializeTimer() {
-		long time = 20L * SettingAddon.getWantedKillComboResetAfter();
+	private void initializeTimer(int wantedKillComboResetAfter) {
+		long time = 20L * wantedKillComboResetAfter;
 		this.timer = new CountdownTimer(plugin, time, null, null, timer -> {
 			if (onReset == null) return;
 

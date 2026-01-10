@@ -1,4 +1,4 @@
-package me.luckyraven.feature.combo;
+package me.luckyraven.copsncrooks.combo;
 
 import lombok.Getter;
 import org.bukkit.entity.Player;
