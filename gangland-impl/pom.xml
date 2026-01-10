@@ -204,6 +204,11 @@
             <artifactId>lootchest-api</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>cops-n-crooks</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
         <!-- Important local dependencies (end) -->
 
         <!-- Compile level dependencies (start) -->
