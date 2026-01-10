@@ -2,6 +2,7 @@ package me.luckyraven.data.placeholder.worker;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
+import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
@@ -10,7 +11,6 @@ import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.level.Level;
-import me.luckyraven.feature.wanted.Wanted;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.util.color.ColorUtil;
@@ -101,11 +101,11 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	private String getSetting(String parameter) {
 		Object value = SettingAddon.getSettingsPlaceholder()
 								   .entrySet()
-								   .stream()
-								   .filter(entry -> entry.getKey().equals(parameter))
-								   .map(Map.Entry::getValue)
-								   .findFirst()
-								   .orElse(null);
+				.stream()
+				.filter(entry -> entry.getKey().equals(parameter))
+				.map(Map.Entry::getValue)
+				.findFirst()
+				.orElse(null);
 
 		if (value == null) return null;
 

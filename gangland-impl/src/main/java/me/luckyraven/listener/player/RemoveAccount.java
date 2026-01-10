@@ -2,6 +2,7 @@ package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
+import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.DatabaseHelper;
@@ -10,7 +11,6 @@ import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.BankTable;
 import me.luckyraven.database.tables.UserTable;
 import me.luckyraven.feature.bounty.Bounty;
-import me.luckyraven.feature.wanted.Wanted;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.listener.ListenerPriority;
 import me.luckyraven.weapon.Weapon;

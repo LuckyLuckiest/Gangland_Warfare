@@ -2,17 +2,17 @@ package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
+import me.luckyraven.copsncrooks.combo.KillCombo;
+import me.luckyraven.copsncrooks.combo.KillComboEvent;
+import me.luckyraven.copsncrooks.entity.EntityMarkManager;
+import me.luckyraven.copsncrooks.wanted.Wanted;
+import me.luckyraven.copsncrooks.wanted.WantedEvent;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.Executor;
 import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.feature.bounty.BountyExecutor;
-import me.luckyraven.feature.combo.KillCombo;
-import me.luckyraven.feature.combo.KillComboEvent;
-import me.luckyraven.feature.entity.EntityMarkManager;
-import me.luckyraven.feature.wanted.Wanted;
-import me.luckyraven.feature.wanted.WantedEvent;
 import me.luckyraven.feature.wanted.WantedExecutor;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
@@ -114,8 +114,10 @@ public class EntityDamage implements Listener {
 		} else handleBounty(damagerUser);
 
 		// increase the wanted level for killing another player
-		if (SettingAddon.isWantedKillComboEnabled()) killCombo.recordKill(damagerUser, deadPlayer);
-		else handleWanted(damagerUser);
+		if (SettingAddon.isWantedKillComboEnabled()) {
+			killCombo.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
+								 SettingAddon.getWantedKillComboResetAfter());
+		} else handleWanted(damagerUser);
 	}
 
 	private boolean handleMobKills(Entity victim, User<Player> attacker) {
@@ -127,8 +129,10 @@ public class EntityDamage implements Listener {
 		if (!entityMarkManager.countsForWanted(victim)) return false;
 
 		// Record kill in combo system if enabled
-		if (SettingAddon.isWantedKillComboEnabled()) killCombo.recordKill(attacker, victim);
-		else handleWanted(attacker);
+		if (SettingAddon.isWantedKillComboEnabled()) {
+			killCombo.recordKill(attacker.getUser(), attacker.getWanted(), victim,
+								 SettingAddon.getWantedKillComboResetAfter());
+		} else handleWanted(attacker);
 
 		return false;
 	}
@@ -164,8 +168,6 @@ public class EntityDamage implements Listener {
 	private void handleWanted(User<Player> damagerUser) {
 		Wanted      wanted      = damagerUser.getWanted();
 		WantedEvent wantedEvent = new WantedEvent(true, wanted);
-
-		wantedEvent.setWantedUser(damagerUser);
 
 		// Increment wanted level
 		wanted.incrementLevel();

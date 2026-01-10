@@ -3,13 +3,13 @@ package me.luckyraven.data.user;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.data.account.Account;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.level.Level;
-import me.luckyraven.feature.wanted.Wanted;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.service.InventoryRegistry;
@@ -64,6 +64,8 @@ public class User<T extends OfflinePlayer> {
 		this.economy        = new EconomyHandler(this);
 		this.linkedAccounts = new ArrayList<>();
 		this.inventories    = new HashSet<>();
+
+		this.wanted.setOwner(user.getPlayer());
 
 		this.kills   = this.deaths = this.mobKills = 0;
 		this.gangId  = -1;

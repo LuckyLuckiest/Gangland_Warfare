@@ -1,5 +1,7 @@
 package me.luckyraven.feature.wanted;
 
+import me.luckyraven.copsncrooks.wanted.Wanted;
+import me.luckyraven.copsncrooks.wanted.WantedEvent;
 import me.luckyraven.data.economy.EconomyException;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.user.User;

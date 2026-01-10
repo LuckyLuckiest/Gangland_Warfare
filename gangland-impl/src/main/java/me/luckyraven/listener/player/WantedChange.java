@@ -2,7 +2,7 @@ package me.luckyraven.listener.player;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.Gangland;
-import me.luckyraven.feature.wanted.WantedEvent;
+import me.luckyraven.copsncrooks.wanted.WantedEvent;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

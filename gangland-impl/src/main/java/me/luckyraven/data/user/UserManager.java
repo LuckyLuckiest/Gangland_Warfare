@@ -2,6 +2,8 @@ package me.luckyraven.data.user;
 
 import com.google.common.base.Preconditions;
 import me.luckyraven.Gangland;
+import me.luckyraven.copsncrooks.wanted.Wanted;
+import me.luckyraven.copsncrooks.wanted.WantedEvent;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
@@ -17,8 +19,6 @@ import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.feature.bounty.BountyExecutor;
 import me.luckyraven.feature.level.Level;
-import me.luckyraven.feature.wanted.Wanted;
-import me.luckyraven.feature.wanted.WantedEvent;
 import me.luckyraven.feature.wanted.WantedExecutor;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.timer.Timer;
@@ -137,8 +137,6 @@ public class UserManager<T extends OfflinePlayer> {
 
 				if (userWanted.isWanted() && SettingAddon.isWantedTimerEnabled()) {
 					WantedEvent wantedEvent = new WantedEvent(true, userWanted);
-
-					wantedEvent.setWantedUser(user);
 
 					Executor executor = new WantedExecutor(gangland, wantedEvent, user);
 					Timer    timer    = executor.createTimer();
