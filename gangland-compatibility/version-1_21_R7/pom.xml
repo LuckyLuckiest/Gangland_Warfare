@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>me.luckyraven</groupId>
+        <artifactId>gangland_warfare</artifactId>
+        <version>0.7.3-DEV</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>version-1_21_R7</artifactId>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <spigot.version>1.21.11-R0.1-SNAPSHOT</spigot.version>
+    </properties>
+
+    <dependencies>
+        <!-- Bukkit/Spigot/Paper builds (start) -->
+
+        <!-- Spigot Build -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot</artifactId>
+            <version>${spigot.version}</version>
+            <classifier>remapped-mojang</classifier>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Bukkit/Spigot/Paper builds (end) -->
+
+        <!-- Core Module -->
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-impl</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Remap back to obfuscated names for runtime -->
+            <plugin>
+                <groupId>net.md-5</groupId>
+                <artifactId>specialsource-maven-plugin</artifactId>
+                <version>2.0.3</version>
+                <executions>
+                    <!-- Remap mojang -> obf -->
+                    <execution>
+                        <id>remap-obf</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>remap</goal>
+                        </goals>
+                        <configuration>
+                            <srgIn>org.spigotmc:minecraft-server:${spigot.version}:txt:maps-mojang</srgIn>
+                            <reverse>true</reverse>
+                            <remappedDependencies>org.spigotmc:spigot:${spigot.version}:jar:remapped-mojang
+                            </remappedDependencies>
+                            <remappedArtifactAttached>false</remappedArtifactAttached>
+                        </configuration>
+                    </execution>
+                    <!-- Remap obf -> spigot -->
+                    <execution>
+                        <id>remap-spigot</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>remap</goal>
+                        </goals>
+                        <configuration>
+                            <inputFile>${project.build.directory}/${project.artifactId}-${project.version}.jar
+                            </inputFile>
+                            <srgIn>org.spigotmc:minecraft-server:${spigot.version}:csrg:maps-spigot</srgIn>
+                            <remappedDependencies>org.spigotmc:spigot:${spigot.version}:jar:remapped-obf
+                            </remappedDependencies>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

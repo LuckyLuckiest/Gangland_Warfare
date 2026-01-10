@@ -1,16 +1,14 @@
 package me.luckyraven.compatibility.version.recoil;
 
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
-import net.minecraft.network.protocol.game.PacketPlayOutPosition;
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.world.entity.PositionMoveRotation;
 import net.minecraft.world.entity.Relative;
-import net.minecraft.world.phys.Vec3D;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.craftbukkit.v1_21_R6.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 
 public class Recoil_1_21_R6 extends RecoilCompatibility {
@@ -20,19 +18,22 @@ public class Recoil_1_21_R6 extends RecoilCompatibility {
 		float newYaw   = -yaw + 1;
 		float newPitch = pitch - 1;
 
-		// Use zero vector for position since we only want to change rotation (relative movement)
-		Vec3D zeroPosition = new Vec3D(0, 0, 0);
+		// Zero position vector since we only modify rotation
+		Vec3 zeroPosition = Vec3.ZERO;
+		Vec3 zeroDelta    = Vec3.ZERO;
 
-		PositionMoveRotation moveRotation = new PositionMoveRotation(zeroPosition, zeroPosition, newYaw, newPitch);
+		// Create position move rotation with only yaw/pitch changes
+		PositionMoveRotation moveRotation = new PositionMoveRotation(zeroPosition, zeroDelta, newYaw, newPitch);
 
-		// move the yaw and pitch only - include position flags as relative
-		Set<Relative> rotationFlags = new HashSet<>(Arrays.asList(
-				Relative.a, Relative.b, Relative.c, // X, Y, Z (relative)
-				Relative.d, Relative.e              // Yaw, Pitch (relative)
-		));
-		PacketPlayOutPosition packet = new PacketPlayOutPosition(0, moveRotation, rotationFlags);
+		// All values are relative (player's current position/rotation + the delta we provide)
+		Set<Relative> relativeFlags = Set.of(Relative.X, Relative.Y, Relative.Z, Relative.Y_ROT, Relative.X_ROT);
 
-		(((CraftPlayer) player).getHandle()).g.b(packet);
+		// Create the position packet (teleport ID 0 for immediate)
+		ClientboundPlayerPositionPacket packet = new ClientboundPlayerPositionPacket(0, moveRotation, relativeFlags);
+
+		// Send packet to player
+		CraftPlayer craftPlayer = (CraftPlayer) player;
+		craftPlayer.getHandle().connection.send(packet);
 	}
 
 }
