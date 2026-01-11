@@ -129,6 +129,11 @@
         <!-- 1.21.x -->
         <dependency>
             <groupId>me.luckyraven</groupId>
+            <artifactId>version-1_21_R7</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
             <artifactId>version-1_21_R6</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
