@@ -2,6 +2,7 @@ package me.luckyraven.copsncrooks.wanted;
 
 import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.Bukkit;
@@ -12,6 +13,9 @@ import java.util.function.Consumer;
 
 @Data
 public class Wanted {
+
+	@Getter(AccessLevel.NONE)
+	private final JavaPlugin plugin;
 
 	private int level;
 	@Setter(AccessLevel.NONE)
@@ -24,14 +28,16 @@ public class Wanted {
 	@Setter(AccessLevel.NONE)
 	private RepeatingTimer repeatingTimer;
 
-	public Wanted(int increments, int maxLevel) {
+	public Wanted(JavaPlugin plugin, int increments, int maxLevel) {
+		this.plugin = plugin;
+
 		this.level      = 0;
 		this.increments = increments;
 		this.maxLevel   = maxLevel;
 		this.wanted     = false;
 	}
 
-	public RepeatingTimer createTimer(JavaPlugin plugin, long seconds, Consumer<RepeatingTimer> timer) {
+	public RepeatingTimer createTimer(long seconds, Consumer<RepeatingTimer> timer) {
 		stopTimer();
 
 		this.repeatingTimer = new RepeatingTimer(plugin, seconds * 20L, timer);
@@ -46,9 +52,16 @@ public class Wanted {
 		// Fire change event if owner is set
 		if (owner != null && oldLevel != newLevel) {
 			WantedLevelChangeEvent changeEvent = new WantedLevelChangeEvent(owner, this, oldLevel, newLevel);
-			Bukkit.getPluginManager().callEvent(changeEvent);
 
-			if (changeEvent.isCancelled()) return;
+			// Must call event synchronously
+			if (Bukkit.isPrimaryThread()) {
+				Bukkit.getPluginManager().callEvent(changeEvent);
+				if (changeEvent.isCancelled()) return;
+			} else {
+				// Schedule sync and return - the sync task will handle the level change
+				Bukkit.getScheduler().runTask(plugin, () -> setLevel(level));
+				return;
+			}
 		}
 
 		boolean wasWanted = this.wanted;

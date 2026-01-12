@@ -90,7 +90,7 @@ public final class RemoveAccount implements Listener {
 		}
 
 		// add to offline user manager
-		User<OfflinePlayer> offlineUser = new User<>(player);
+		User<OfflinePlayer> offlineUser = new User<>(gangland, player);
 
 		// initialize offline user data
 		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {

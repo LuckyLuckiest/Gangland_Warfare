@@ -19,6 +19,7 @@ import me.luckyraven.util.Placeholder;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -55,12 +56,13 @@ public class User<T extends OfflinePlayer> {
 	 *
 	 * @param user the user
 	 */
-	public User(T user) {
+	public User(JavaPlugin plugin, T user) {
 		this.user           = user;
 		this.uuid           = user.getUniqueId();
 		this.bounty         = new Bounty(SettingAddon.getBountyEachKillValue(), SettingAddon.getBountyTimerMultiple());
 		this.level          = new Level();
-		this.wanted         = new Wanted(SettingAddon.getWantedLevelIncrement(), SettingAddon.getWantedMaximumLevel());
+		this.wanted         = new Wanted(plugin, SettingAddon.getWantedLevelIncrement(),
+										 SettingAddon.getWantedMaximumLevel());
 		this.economy        = new EconomyHandler(this);
 		this.linkedAccounts = new ArrayList<>();
 		this.inventories    = new HashSet<>();

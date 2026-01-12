@@ -201,7 +201,7 @@ public final class ReloadPlugin {
 
 			if (onlineUser != null) continue;
 
-			var newUser = new User<>(player);
+			var newUser = new User<>(gangland, player);
 
 			// add all the unique items
 			var uniqueItems = uniqueItemAddon.getUniqueItems();
@@ -262,7 +262,7 @@ public final class ReloadPlugin {
 				User<OfflinePlayer> existingUser = offlineUserManager.getUser(offlinePlayer);
 				if (existingUser != null) continue;
 
-				User<OfflinePlayer> offlineUser = new User<>(offlinePlayer);
+				User<OfflinePlayer> offlineUser = new User<>(gangland, offlinePlayer);
 
 				offlineUserManager.initializeUserData(offlineUser, userTable, bankTable);
 

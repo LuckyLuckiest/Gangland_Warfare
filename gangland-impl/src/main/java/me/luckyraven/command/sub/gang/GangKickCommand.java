@@ -171,7 +171,7 @@ class GangKickCommand extends SubArgument {
 			if (offlinePlayer.isOnline()) {
 				targetUser = userManager.getUser(offlinePlayer.getPlayer());
 			} else {
-				targetUser = new User<>(offlinePlayer);
+				targetUser = new User<>(gangland, offlinePlayer);
 
 				Initializer      initializer      = gangland.getInitializer();
 				GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();

@@ -39,7 +39,7 @@ public class WantedExecutor extends Executor {
 		double time     = SettingAddon.getWantedTimerTime() * pow;
 		long   interval = (long) time;
 
-		return wanted.createTimer(getPlugin(), interval, this::execute);
+		return wanted.createTimer(interval, this::execute);
 	}
 
 	@Override

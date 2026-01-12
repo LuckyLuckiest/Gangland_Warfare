@@ -49,7 +49,7 @@ public class LevelTester {
 						amount = 0;
 					}
 
-					LevelUpEvent event = new UserLevelUpEvent(new User<>(any()), level);
+					LevelUpEvent event = new UserLevelUpEvent(new User<>(any(), any()), level);
 					System.out.printf("Added %d experience level.\n", level.addLevels(amount, event));
 				}
 				case 2 -> {
