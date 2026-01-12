@@ -2,6 +2,8 @@ package me.luckyraven.copsncrooks.police;
 
 import me.luckyraven.compatibility.pathfinding.PathfindingHandler;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -12,6 +14,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class PoliceSpawner {
+
+	private final Logger logger = LogManager.getLogger(PoliceSpawner.class.getSimpleName());
 
 	private final JavaPlugin         plugin;
 	private final EntityMarkManager  entityMarkManager;
@@ -26,11 +30,17 @@ public class PoliceSpawner {
 
 	public PoliceUnit spawnPoliceUnit(Player target, int wantedLevel) {
 		Location spawnLoc = findSpawnLocation(target);
-		if (spawnLoc == null) return null;
+		if (spawnLoc == null) {
+			logger.warn("Failed to find spawn location for police unit");
+			return null;
+		}
 
 		World world = target.getWorld();
 
 		Mob policeEntity = (Mob) world.spawnEntity(spawnLoc, PoliceConfig.POLICE_ENTITY_TYPE);
+
+		logger.info("Spawned police at {}, {}, {} (distance: {})", spawnLoc.getBlockX(), spawnLoc.getBlockY(),
+					spawnLoc.getBlockZ(), spawnLoc.distance(target.getLocation()));
 
 		return new PoliceUnit(plugin, policeEntity, target, wantedLevel, entityMarkManager, pathfindingHandler);
 	}
@@ -54,30 +64,54 @@ public class PoliceSpawner {
 
 			if (!world.isChunkLoaded(chunkX, chunkZ)) continue;
 
-			// Find ground level
-			int      groundY  = world.getHighestBlockYAt((int) x, (int) z);
-			Location spawnLoc = new Location(world, x, groundY + 1, z);
+			// Find ground level near player's Y level, not surface
+			Location spawnLoc = findGroundNearY(world, x, z, playerLoc.getBlockY());
+			if (spawnLoc == null) continue;
 
 			// Validate spawn location
-			if (isValidSpawnLocation(spawnLoc, player)) {
-				return spawnLoc;
-			}
+			if (!isValidSpawnLocation(spawnLoc, player)) continue;
+
+			return spawnLoc;
 		}
 
 		return null;
 	}
 
+	private Location findGroundNearY(World world, double x, double z, int targetY) {
+		int blockX = (int) Math.floor(x);
+		int blockZ = (int) Math.floor(z);
+
+		// Search within a vertical range around player's Y level
+		int searchRange = 10;
+
+		// Search downward from player's level first
+		for (int y = targetY; y >= targetY - searchRange && y >= world.getMinHeight(); y--) {
+			if (!isValidGround(world, blockX, y, blockZ)) continue;
+
+			return new Location(world, x, y + 1, z);
+		}
+
+		// Then search upward
+		for (int y = targetY + 1; y <= targetY + searchRange && y < world.getMaxHeight() - 2; y++) {
+			if (!isValidGround(world, blockX, y, blockZ)) continue;
+
+			return new Location(world, x, y + 1, z);
+		}
+
+		return null;
+	}
+
+	private boolean isValidGround(World world, int x, int y, int z) {
+		Block ground = world.getBlockAt(x, y, z);
+		Block feet   = world.getBlockAt(x, y + 1, z);
+		Block head   = world.getBlockAt(x, y + 2, z);
+
+		return ground.getType().isSolid() && feet.isPassable() && head.isPassable();
+	}
+
 	private boolean isValidSpawnLocation(Location loc, Player player) {
 		World world = loc.getWorld();
 		if (world == null) return false;
-
-		Block ground = world.getBlockAt(loc.clone().subtract(0, 1, 0));
-		Block feet   = world.getBlockAt(loc);
-		Block head   = world.getBlockAt(loc.clone().add(0, 1, 0));
-
-		// Ground must be solid, space above must be passable
-		if (!ground.getType().isSolid()) return false;
-		if (!feet.isPassable() || !head.isPassable()) return false;
 
 		// Must be outside player's direct view (behind or to the side)
 		Location playerLoc = player.getLocation();
