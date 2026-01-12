@@ -134,7 +134,6 @@ public class PoliceManager {
 					units.add(newUnit);
 				}
 			}
-
 		}, 20L, PoliceConfig.SPAWN_CHECK_RATE);
 
 		playerSpawnTasks.put(playerId, task);
