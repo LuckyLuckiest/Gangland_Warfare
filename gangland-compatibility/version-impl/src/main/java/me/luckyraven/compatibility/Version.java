@@ -18,6 +18,7 @@ public enum Version {
 	v1_21_R4(new String[]{"v1_21_R5"}),
 	v1_21_R5(new String[]{"v1_21_R6", "v1_21_R7", "v1_21_R8"}),
 	v1_21_R6(new String[]{"v1_21_R9", "v1_21_R10"}),
+	v1_21_R7(new String[]{"v1_21_R11"}),
 	;
 
 	@Getter(value = AccessLevel.NONE)
@@ -31,6 +32,14 @@ public enum Version {
 
 	@Nullable
 	public static String getDeterminedVersion(String version) {
+		// First check if it matches an enum name directly
+		for (Version versionEnum : versions) {
+			if (version.equalsIgnoreCase(versionEnum.name())) {
+				return versionEnum.name();
+			}
+		}
+
+		// Then check compatibility aliases
 		for (Version versionEnum : versions) {
 			for (String versionStr : versionEnum.compatibility) {
 				if (version.equalsIgnoreCase(versionStr)) return versionEnum.name();
