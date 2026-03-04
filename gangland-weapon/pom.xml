@@ -62,6 +62,7 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- ViaVersion -->
         <dependency>
             <groupId>com.viaversion</groupId>
             <artifactId>viaversion-api</artifactId>

@@ -105,13 +105,17 @@ public class Weapon implements Cloneable, Comparable<Weapon> {
 	}
 
 	// Reload operations
-	public boolean isReloading() { return reload.isReloading(); }
+	public boolean isReloading() {
+		return reload.isReloading();
+	}
 
 	public void reload(JavaPlugin plugin, Player player, boolean removeAmmunition) {
 		reload.reload(plugin, player, removeAmmunition);
 	}
 
-	public void stopReloading() { reload.stopReloading(); }
+	public void stopReloading() {
+		reload.stopReloading();
+	}
 
 	// Scope operations
 	public void scope(Player player, boolean bypass) {
@@ -137,12 +141,18 @@ public class Weapon implements Cloneable, Comparable<Weapon> {
 		durabilityCalculator.setDurability(itemBuilder, (short) (currentDurability - amount));
 	}
 
-	public boolean isBroken() { return currentDurability <= 0; }
+	public boolean isBroken() {
+		return currentDurability <= 0;
+	}
 
 	// Magazine operations
-	public boolean isMagazineFull() { return currentMagCapacity >= reloadData.getMaxMagCapacity(); }
+	public boolean isMagazineFull() {
+		return currentMagCapacity >= reloadData.getMaxMagCapacity();
+	}
 
-	public boolean isMagazineEmpty() { return currentMagCapacity <= 0; }
+	public boolean isMagazineEmpty() {
+		return currentMagCapacity <= 0;
+	}
 
 	public void addAmmunition(int amount) {
 		currentMagCapacity = Math.min(reloadData.getMaxMagCapacity(), currentMagCapacity + amount);
