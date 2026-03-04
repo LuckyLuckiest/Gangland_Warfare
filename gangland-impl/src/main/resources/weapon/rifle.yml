@@ -212,7 +212,7 @@ Scope:
          Volume: 1
          Pitch: 1
 
-
+# The modifiers of the projectiles/weapon that would be applied on hit
 Modifiers:
    # Block breaking - MATERIAL-hitsRequired
    Break_Blocks:

@@ -23,11 +23,10 @@ import me.luckyraven.command.sub.weapon.WeaponCommand;
 import me.luckyraven.compatibility.CompatibilitySetup;
 import me.luckyraven.compatibility.CompatibilityWorker;
 import me.luckyraven.compatibility.VersionSetup;
-import me.luckyraven.compatibility.pathfinding.PathfindingHandler;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
-import me.luckyraven.copsncrooks.police.PoliceManager;
-import me.luckyraven.copsncrooks.police.PoliceService;
+import me.luckyraven.copsncrooks.police.CopManager;
+import me.luckyraven.copsncrooks.police.CopService;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
@@ -91,6 +90,7 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -128,7 +128,7 @@ public final class Initializer {
 	private HologramService            hologramService;
 	private LootChestManager           lootChestManager;
 	private BlockDamageManager         blockDamageManager;
-	private PoliceService              policeService;
+	private CopService                 copService;
 	// Addons
 	private SettingAddon               settingAddon;
 	private ScoreboardAddon            scoreboardAddon;
@@ -273,9 +273,10 @@ public final class Initializer {
 		lootChestLoader();
 
 		// police service
-		policeService = new PoliceService(gangland);
+		copService = new CopService();
 
-		policeService.initialize(entityMarkManager, compatibilityWorker.getPathfindingHandler());
+		FileHandler copsFile = fileManager.getFile("cops");
+		copService.initialize(gangland, Objects.requireNonNull(copsFile).getFileConfiguration(), entityMarkManager);
 
 		// Sign Information
 		signInformation = new GanglandSignInformation();
@@ -316,6 +317,9 @@ public final class Initializer {
 
 		FileHandler tiersFile = new FileHandler(gangland, "tiers", "loot", ".yml");
 		fileManager.addFile(tiersFile, true);
+
+		FileHandler copsFile = new FileHandler(gangland, "cops", ".yml");
+		fileManager.addFile(copsFile, true);
 
 		scoreboardManager = new ScoreboardManager(gangland);
 
@@ -484,11 +488,10 @@ public final class Initializer {
 		dependencyContainer.registerInstance(SignInteractionService.class, signManager.getSignService());
 		dependencyContainer.registerInstance(LootChestService.class, lootChestManager);
 		dependencyContainer.registerInstance(RecoilCompatibility.class, compatibilityWorker.getRecoilCompatibility());
-		dependencyContainer.registerInstance(PathfindingHandler.class, compatibilityWorker.getPathfindingHandler());
 		dependencyContainer.registerInstance(SignInformation.class, signInformation);
 		dependencyContainer.registerInstance(HologramService.class, hologramService);
 		dependencyContainer.registerInstance(BlockDamageManager.class, blockDamageManager);
-		dependencyContainer.registerInstance(PoliceManager.class, policeService.getPoliceManager());
+		dependencyContainer.registerInstance(CopManager.class, copService.getCopManager());
 
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 

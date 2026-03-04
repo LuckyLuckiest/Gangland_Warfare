@@ -1,0 +1,241 @@
+package me.luckyraven.copsncrooks.police.spawn;
+
+import me.luckyraven.copsncrooks.police.config.CopConfigProvider;
+import me.luckyraven.copsncrooks.police.npc.CopNpc;
+import me.luckyraven.copsncrooks.police.npc.CopNpcFactory;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
+
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+
+/**
+ * Handles spawning cop NPCs at appropriate locations relative to players.
+ */
+public class CopSpawnManager {
+
+	private static final double MIN_SPAWN_DISTANCE    = 30.0;
+	private static final double MAX_SPAWN_DISTANCE    = 50.0;
+	private static final int    VERTICAL_SEARCH_RANGE = 10;
+	private static final int    SPAWN_Y_OFFSET        = 2;
+
+	private final CopNpcFactory     copNpcFactory;
+	private final CopConfigProvider configProvider;
+
+	public CopSpawnManager(CopNpcFactory copNpcFactory, CopConfigProvider configProvider) {
+		this.copNpcFactory  = copNpcFactory;
+		this.configProvider = configProvider;
+	}
+
+	/**
+	 * Spawns a cop NPC near the given player with the specified tier.
+	 *
+	 * @param target the player to spawn near
+	 * @param tier the cop tier
+	 *
+	 * @return the spawned CopNpc, or null if no valid location was found
+	 */
+	public CopNpc spawnNearPlayer(Player target, int tier) {
+		Location spawnLoc = findSpawnLocation(target);
+
+		if (spawnLoc == null) {
+			List<Location> configuredSpawns = configProvider.getSpawnLocations();
+			if (!configuredSpawns.isEmpty()) {
+				spawnLoc = configuredSpawns.get(ThreadLocalRandom.current().nextInt(configuredSpawns.size()));
+			}
+		}
+
+		if (spawnLoc == null) return null;
+
+		return copNpcFactory.createCop(spawnLoc, tier);
+	}
+
+	/**
+	 * Spawns a cop NPC at a specific configured spawn location.
+	 *
+	 * @param location the spawn location
+	 * @param tier the cop tier
+	 *
+	 * @return the spawned CopNpc, or null on failure
+	 */
+	public CopNpc spawnAtLocation(Location location, int tier) {
+		return copNpcFactory.createCop(location, tier);
+	}
+
+	/**
+	 * Returns the number of cops that should be active for a given wanted level.
+	 *
+	 * @param wantedLevel the player's wanted level
+	 *
+	 * @return the target cop count
+	 */
+	public int getTargetCopCount(int wantedLevel) {
+		return configProvider.getCopsPerWantedLevel()
+							 .getOrDefault(wantedLevel,
+										   Math.min(wantedLevel + 1, configProvider.getMaxCopsPerPlayer()));
+	}
+
+	/**
+	 * Determines the cop tier that should be spawned for a given wanted level.
+	 *
+	 * @param wantedLevel the player's wanted level
+	 *
+	 * @return the tier number
+	 */
+	public int getTierForWantedLevel(int wantedLevel) {
+		return Math.min(wantedLevel, configProvider.getMaxTier());
+	}
+
+	/**
+	 * Checks whether any online player (other than the target) can directly see the given location. Used to prevent
+	 * despawning in front of bystanders.
+	 *
+	 * @param location the location to check
+	 * @param excludePlayer the player to exclude from the check (the cop's target)
+	 *
+	 * @return true if visible to another player
+	 */
+	public boolean isVisibleToOtherPlayers(Location location, Player excludePlayer) {
+		if (location == null || location.getWorld() == null) return false;
+
+		for (Player player : location.getWorld().getPlayers()) {
+			if (player.equals(excludePlayer)) continue;
+
+			double distance = player.getLocation().distance(location);
+			if (distance > 48) continue; // Beyond render/awareness distance
+
+			// Check if the cop is in the player's forward FOV
+			Location playerLoc  = player.getLocation();
+			double   playerYaw  = Math.toRadians(playerLoc.getYaw());
+			double   toLocAngle = Math.atan2(location.getZ() - playerLoc.getZ(), location.getX() - playerLoc.getX());
+			double   angleDiff  = Math.abs(normalizeAngle(toLocAngle - playerYaw));
+
+			// Within ~110 degree forward cone
+			if (angleDiff < Math.PI / 3) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Finds a valid spawn location around the target player. Spawns near the player's Y level but offset upward to
+	 * avoid clipping into blocks. Ensures the cop spawns outside the player's direct forward vision.
+	 *
+	 * @param player the player
+	 *
+	 * @return a spawn location, or null
+	 */
+	private Location findSpawnLocation(Player player) {
+		Location          playerLoc = player.getLocation();
+		World             world     = player.getWorld();
+		ThreadLocalRandom random    = ThreadLocalRandom.current();
+
+		for (int attempt = 0; attempt < 20; attempt++) {
+			double angle    = random.nextDouble(0, 2 * Math.PI);
+			double distance = random.nextDouble(MIN_SPAWN_DISTANCE, MAX_SPAWN_DISTANCE);
+
+			double x = playerLoc.getX() + Math.cos(angle) * distance;
+			double z = playerLoc.getZ() + Math.sin(angle) * distance;
+
+			int chunkX = (int) x >> 4;
+			int chunkZ = (int) z >> 4;
+
+			if (!world.isChunkLoaded(chunkX, chunkZ)) continue;
+
+			// Find ground near player's Y level + small offset so the NPC spawns slightly above
+			Location spawnLoc = findGroundNearY(world, x, z, playerLoc.getBlockY() + SPAWN_Y_OFFSET);
+			if (spawnLoc == null) continue;
+
+			if (!isSpawnBehindPlayer(spawnLoc, player)) continue;
+
+			return spawnLoc;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Finds ground level near the target Y coordinate. Searches upward first from the offset Y to find a safe position
+	 * above the player level, then falls back to searching downward.
+	 *
+	 * @param world the world
+	 * @param x the x coordinate
+	 * @param z the z coordinate
+	 * @param targetY the target y level (already offset)
+	 *
+	 * @return the ground location, or null
+	 */
+	private Location findGroundNearY(World world, double x, double z, int targetY) {
+		int blockX = (int) Math.floor(x);
+		int blockZ = (int) Math.floor(z);
+
+		// Search upward from offset Y first — prefer spawning above the player level
+		for (int y = targetY; y <= targetY + VERTICAL_SEARCH_RANGE && y < world.getMaxHeight() - 2; y++) {
+			if (isValidGround(world, blockX, y, blockZ)) {
+				return new Location(world, x, y + 1, z);
+			}
+		}
+
+		// Then search downward
+		for (int y = targetY - 1; y >= targetY - VERTICAL_SEARCH_RANGE && y >= world.getMinHeight(); y--) {
+			if (isValidGround(world, blockX, y, blockZ)) {
+				return new Location(world, x, y + 1, z);
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Checks if the block at the given coordinates forms valid ground for spawning. Requires solid ground with two
+	 * passable blocks above (feet + head space).
+	 *
+	 * @param world the world
+	 * @param x x coordinate
+	 * @param y y coordinate
+	 * @param z z coordinate
+	 *
+	 * @return true if valid
+	 */
+	private boolean isValidGround(World world, int x, int y, int z) {
+		Block ground = world.getBlockAt(x, y, z);
+		Block feet   = world.getBlockAt(x, y + 1, z);
+		Block head   = world.getBlockAt(x, y + 2, z);
+
+		return ground.getType().isSolid() && feet.isPassable() && head.isPassable();
+	}
+
+	/**
+	 * Verifies the spawn location is outside the player's direct forward vision.
+	 *
+	 * @param spawnLoc the candidate spawn location
+	 * @param player the player
+	 *
+	 * @return true if the spawn is behind the player
+	 */
+	private boolean isSpawnBehindPlayer(Location spawnLoc, Player player) {
+		Location playerLoc    = player.getLocation();
+		double   playerYaw    = Math.toRadians(playerLoc.getYaw());
+		double   toSpawnAngle = Math.atan2(spawnLoc.getZ() - playerLoc.getZ(), spawnLoc.getX() - playerLoc.getX());
+		double   angleDiff    = Math.abs(normalizeAngle(toSpawnAngle - playerYaw));
+
+		return angleDiff > Math.PI / 2;
+	}
+
+	/**
+	 * Normalizes an angle to the range [-PI, PI].
+	 *
+	 * @param angle the angle in radians
+	 *
+	 * @return the normalized angle
+	 */
+	private double normalizeAngle(double angle) {
+		while (angle > Math.PI) angle -= 2 * Math.PI;
+		while (angle < -Math.PI) angle += 2 * Math.PI;
+		return angle;
+	}
+}

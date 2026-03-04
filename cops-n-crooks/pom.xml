@@ -11,12 +11,6 @@
 
     <artifactId>cops-n-crooks</artifactId>
 
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <dependencies>
         <!-- Spigot Build -->
         <dependency>
@@ -26,17 +20,29 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Local dependencies -->
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-util</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>version-impl</artifactId>
             <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>plugin-file</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <!-- Citizens dependency -->
+        <dependency>
+            <groupId>net.citizensnpcs</groupId>
+            <artifactId>citizens-main</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
