@@ -71,6 +71,7 @@ public class EntityDamage implements Listener {
 
 		// the current damager
 		User<Player> damagerUser = userManager.getUser(damager);
+		if (damagerUser == null) return;
 
 		// the entity killed is not a player
 		boolean checkEntityType = handleMobKills(entity, damagerUser);
@@ -88,6 +89,24 @@ public class EntityDamage implements Listener {
 	private void handlePlayerKills(Player deadPlayer, User<Player> damagerUser) {
 		User<Player> deadUser = userManager.getUser(deadPlayer);
 
+		// If the "player" isn't a real User, treat it as an NPC death (e.g., cop NPC),
+		// but still apply wanted/bounty logic to the damager when appropriate.
+		if (deadUser == null) {
+			damagerUser.setMobKills(damagerUser.getMobKills() + 1);
+
+			// Only increase wanted if this NPC counts towards wanted (cops should, civilians may, etc.)
+			if (entityMarkManager.countsForWanted(deadPlayer)) {
+				if (SettingAddon.isWantedKillComboEnabled()) {
+					killCombo.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
+										 SettingAddon.getWantedKillComboResetAfter());
+				} else {
+					handleWanted(damagerUser);
+				}
+			}
+			return;
+		}
+
+		// Real player kill
 		damagerUser.setKills(damagerUser.getKills() + 1);
 
 		// when does the attacked user have a bounty

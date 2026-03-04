@@ -39,7 +39,7 @@ public class GangMembersDamage implements Listener {
 		User<Player> userDamaged = userManager.getUser(damaged);
 
 		// checks if they are in a gang
-		if (!(userDamager.hasGang() && userDamaged.hasGang())) return;
+		if (userDamager == null || userDamaged == null || !(userDamager.hasGang() && userDamaged.hasGang())) return;
 
 		// checks if they are alias or in the same gang
 		Gang gang1 = gangManager.getGang(userDamager.getGangId());

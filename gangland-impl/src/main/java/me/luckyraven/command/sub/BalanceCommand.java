@@ -35,11 +35,11 @@ public final class BalanceCommand extends CommandHandler {
 		this.userManager = gangland.getInitializer().getUserManager();
 
 		var list = getCommands().entrySet()
-								.stream()
-								.filter(entry -> entry.getKey().startsWith("balance"))
-								.sorted(Map.Entry.comparingByKey())
-								.map(Map.Entry::getValue)
-								.toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("balance"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -47,7 +47,10 @@ public final class BalanceCommand extends CommandHandler {
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		if (commandSender instanceof Player player) {
 			// Initialize a user
-			User<Player> user = getGangland().getInitializer().getUserManager().getUser(player);
+			User<Player> user = userManager.getUser(player);
+
+			if (user == null) return;
+
 			user.sendMessage(ChatUtil.color("&6" + player.getName() + "&7 balance:"));
 			user.sendMessage(ChatUtil.color(
 					"&a" + SettingAddon.getMoneySymbol() + SettingAddon.formatDouble(user.getEconomy().getBalance())));
@@ -84,9 +87,8 @@ public final class BalanceCommand extends CommandHandler {
 
 				// get only the uuids
 				Map<UUID, Double> uuids = usersData.stream()
-												   .collect(Collectors.toMap(
-														   objects -> UUID.fromString(String.valueOf(objects[0])),
-														   objects -> (double) objects[1]));
+						.collect(Collectors.toMap(objects -> UUID.fromString(String.valueOf(objects[0])),
+												  objects -> (double) objects[1]));
 
 				// iterate over all uuids and check if the name is similar to target
 				boolean found = false;
@@ -125,9 +127,8 @@ public final class BalanceCommand extends CommandHandler {
 
 				// get only the uuids
 				Map<UUID, Double> uuids = usersData.stream()
-												   .collect(Collectors.toMap(
-														   objects -> UUID.fromString(String.valueOf(objects[0])),
-														   objects -> (double) objects[1]));
+						.collect(Collectors.toMap(objects -> UUID.fromString(String.valueOf(objects[0])),
+												  objects -> (double) objects[1]));
 
 				for (UUID uuid : uuids.keySet()) {
 					OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
