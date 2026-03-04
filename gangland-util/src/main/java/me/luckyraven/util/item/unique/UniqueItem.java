@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -39,7 +39,7 @@ public class UniqueItem implements Comparable<ItemStack> {
 	private String lootKey;
 
 	@Override
-	public int compareTo(@NonNull ItemStack itemStack) {
+	public int compareTo(@NotNull ItemStack itemStack) {
 		ItemMeta meta = itemStack.getItemMeta();
 
 		if (meta == null) return 0;

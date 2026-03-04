@@ -6,7 +6,7 @@ import me.luckyraven.loot.data.LootChestData;
 import me.luckyraven.loot.events.LootChestEvent;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 public class LootChestCrackingEndEvent extends LootChestEvent implements Cancellable {
 
@@ -38,7 +38,7 @@ public class LootChestCrackingEndEvent extends LootChestEvent implements Cancell
 	}
 
 	@Override
-	public @NonNull HandlerList getHandlers() {
+	public @NotNull HandlerList getHandlers() {
 		return handler;
 	}
 
