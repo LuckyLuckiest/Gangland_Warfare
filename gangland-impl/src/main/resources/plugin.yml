@@ -5,10 +5,10 @@ database: true
 api-version: 1.13
 depend:
    - NBTAPI
+   - Citizens
 softdepend:
    - PlaceholderAPI
    - Vault
-   - Citizens
 author: LuckyRaven10
 description: ${project.description}
 

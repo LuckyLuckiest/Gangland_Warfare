@@ -173,6 +173,9 @@ public final class Gangland extends JavaPlugin {
 		Dependency nbtApi = new Dependency("NBTAPI", Dependency.Type.REQUIRED);
 		nbtApi.validate(null);
 
+		Dependency citizens = new Dependency("Citizens", Dependency.Type.REQUIRED);
+		citizens.validate(null);
+
 		// soft dependencies
 		Dependency placeholderApi = new Dependency("PlaceholderAPI", Dependency.Type.SOFT);
 		placeholderApi.validate(() -> {
@@ -190,9 +193,6 @@ public final class Gangland extends JavaPlugin {
 			EconomyHandler.setVaultEconomy(rsp.getProvider());
 		});
 
-		Dependency citizens = new Dependency("Citizens", Dependency.Type.SOFT);
-		citizens.validate(null);
-
 		Dependency viaVersion = new Dependency("ViaVersion", Dependency.Type.SOFT);
 		viaVersion.validate(() -> this.viaAPI = Via.getAPI());
 	}
@@ -203,10 +203,11 @@ public final class Gangland extends JavaPlugin {
 	private void updateCheckerInitializer() {
 		// there needs to be checks every 6 hours
 		// give an option if there was an update
-		int hours = 6;
+		int hours      = 6;
+		int resourceId = 131157;
 
 		// initialize the update checker
-		updateChecker = new UpdateChecker(this, fullPrefix, 131157, hours * 60 * 60L);
+		updateChecker = new UpdateChecker(this, fullPrefix, resourceId, hours * 60 * 60L);
 
 		// add the necessary permissions for checking for updates
 		initializer.getPermissionManager().addPermission(updateChecker.getCheckPermission());
