@@ -1,7 +1,6 @@
 package me.luckyraven.compatibility.version;
 
 import me.luckyraven.compatibility.Compatibility;
-import me.luckyraven.compatibility.pathfinding.PathfindingHandler;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.compatibility.version.recoil.Recoil_1_20_R3;
 
@@ -16,11 +15,6 @@ public class v1_20_R3 implements Compatibility {
 	@Override
 	public RecoilCompatibility getRecoilCompatibility() {
 		return recoilCompatibility;
-	}
-
-	@Override
-	public PathfindingHandler getPathfindingHandler() {
-		return null;
 	}
 
 }
