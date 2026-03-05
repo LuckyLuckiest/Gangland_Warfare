@@ -104,6 +104,14 @@ public class ChatUtil {
 		ActionBar.sendActionBar(plugin, player, baseComponent, duration);
 	}
 
+	public static void sendTitle(Player player, String title, String subtitle) {
+		sendTitle(player, title, subtitle, 5, 20, 5);
+	}
+
+	public static void sendTitle(Player player, String title, String subtitle, int fadeIn, int stay, int fadeOut) {
+		player.sendTitle(color(title), color(subtitle), fadeIn, stay, fadeOut);
+	}
+
 	/**
 	 * Generates a command suggestion based on the words from the dictionary. This method uses a spell checker to find a
 	 * common word close to what you have written.
@@ -125,7 +133,7 @@ public class ChatUtil {
 		Map<Integer, List<String>> suggestions = checker.getSuggestions();
 		// get the minimum length
 		int minimum = suggestions.keySet()
-								 .stream().mapToInt(Integer::intValue).min().orElse(-1);
+				.stream().mapToInt(Integer::intValue).min().orElse(-1);
 
 		StringBuilder builder = new StringBuilder("&eDid you mean ");
 
