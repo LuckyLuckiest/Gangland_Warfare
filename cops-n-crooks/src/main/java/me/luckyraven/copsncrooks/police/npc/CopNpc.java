@@ -178,7 +178,12 @@ public class CopNpc {
 	 */
 	public double distanceTo(Player player) {
 		if (!isValid() || player == null) return Double.MAX_VALUE;
-		return getEntity().getLocation().distance(player.getLocation());
+
+		LivingEntity entity = getEntity();
+
+		if (entity == null) return Double.MAX_VALUE;
+
+		return entity.getLocation().distance(player.getLocation());
 	}
 
 	/**
@@ -190,7 +195,12 @@ public class CopNpc {
 	 */
 	public boolean hasLineOfSight(Player player) {
 		if (!isValid() || player == null) return false;
-		return getEntity().hasLineOfSight(player);
+
+		LivingEntity entity = getEntity();
+
+		if (entity == null) return false;
+
+		return entity.hasLineOfSight(player);
 	}
 
 	/**
@@ -216,7 +226,7 @@ public class CopNpc {
 		if (!isValid() || !canAttack() || player == null) return;
 
 		if (tierConfig.canUseWeapons() && heldWeapon != null && hasLineOfSight(player)) {
-			performGanglandWeaponAttack(player);
+			performGanglandWeaponAttack();
 			return;
 		}
 
@@ -306,7 +316,7 @@ public class CopNpc {
 	 * Fires the gangland weapon at the player. Consumes ammo, launches the real projectile through the
 	 * {@link WeaponShootEvent} pipeline, and triggers a reload when the magazine empties.
 	 */
-	private void performGanglandWeaponAttack(Player player) {
+	private void performGanglandWeaponAttack() {
 		if (heldWeapon.isBroken() || heldWeapon.isMagazineEmpty()) {
 			triggerReload();
 			return;
@@ -319,6 +329,9 @@ public class CopNpc {
 		}
 
 		LivingEntity shooter = getEntity();
+
+		if (shooter == null) return;
+
 		WeaponProjectile<?> projectile = heldWeapon.getProjectileData()
 												   .getType()
 												   .createInstance(plugin, shooter, heldWeapon);
@@ -370,8 +383,10 @@ public class CopNpc {
 	 */
 	private void refreshHeldItem() {
 		if (!isValid() || heldWeapon == null) return;
+
 		Entity entity = npc.getEntity();
 		if (!(entity instanceof LivingEntity livingEntity)) return;
+
 		EntityEquipment equipment = livingEntity.getEquipment();
 		if (equipment == null) return;
 
@@ -386,12 +401,16 @@ public class CopNpc {
 	private void performMeleeAttack(Player player) {
 		if (!isValid() || player == null) return;
 
-		player.damage(tierConfig.damage(), getEntity());
+		LivingEntity entity = getEntity();
+
+		if (entity == null) return;
+
+		player.damage(tierConfig.damage(), entity);
 		attackCooldown = 5;
 
 		Vector knockback = player.getLocation()
 								 .toVector()
-								 .subtract(getEntity().getLocation().toVector())
+								 .subtract(entity.getLocation().toVector())
 								 .normalize()
 								 .multiply(0.3)
 								 .setY(0.1);
@@ -402,10 +421,13 @@ public class CopNpc {
 	 * Hitscan attack for vanilla ranged weapons (bow / crossbow). Does not consume arrows.
 	 */
 	private void performVanillaRangedAttack(Player player) {
-		LivingEntity shooter   = getEntity();
-		World        world     = shooter.getWorld();
-		Location     eye       = shooter.getEyeLocation();
-		Vector       direction = eye.getDirection().normalize();
+		LivingEntity shooter = getEntity();
+
+		if (shooter == null) return;
+
+		World    world     = shooter.getWorld();
+		Location eye       = shooter.getEyeLocation();
+		Vector   direction = eye.getDirection().normalize();
 
 		var result = world.rayTrace(eye, direction, 35.0, FluidCollisionMode.NEVER, true, 0.25, entity -> {
 			return entity instanceof Player p && p.getUniqueId().equals(player.getUniqueId());

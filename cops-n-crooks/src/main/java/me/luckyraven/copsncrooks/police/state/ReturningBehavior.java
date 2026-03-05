@@ -4,6 +4,7 @@ import me.luckyraven.copsncrooks.police.npc.CopNpc;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.Comparator;
@@ -38,7 +39,11 @@ public class ReturningBehavior implements CopBehavior {
 
 		// If there's a station to go to, navigate there
 		if (selectedStation != null) {
-			double distance = cop.getEntity().getLocation().distance(selectedStation);
+			LivingEntity entity = cop.getEntity();
+
+			if (entity == null) return;
+
+			double distance = entity.getLocation().distance(selectedStation);
 
 			if (distance <= 3.0) {
 				// Arrived at station — try to despawn
@@ -77,12 +82,14 @@ public class ReturningBehavior implements CopBehavior {
 			return;
 		}
 
-		Location copLocation = cop.getEntity().getLocation();
+		LivingEntity entity = cop.getEntity();
+
+		if (entity == null) return;
+
+		Location copLocation = entity.getLocation();
 
 		// Resolve the cop's target player to exclude from visibility check
-		Player excludePlayer = cop.getTargetPlayerId() != null
-							   ? Bukkit.getPlayer(cop.getTargetPlayerId())
-							   : null;
+		Player excludePlayer = cop.getTargetPlayerId() != null ? Bukkit.getPlayer(cop.getTargetPlayerId()) : null;
 
 		// Don't despawn if another player is watching
 		if (spawnManager.isVisibleToOtherPlayers(copLocation, excludePlayer)) {
@@ -104,7 +111,11 @@ public class ReturningBehavior implements CopBehavior {
 			return cop.getSpawnLocation();
 		}
 
-		Location copLoc = cop.getEntity().getLocation();
+		LivingEntity entity = cop.getEntity();
+
+		if (entity == null) return null;
+
+		Location copLoc = entity.getLocation();
 
 		return spawnStations.stream()
 				.filter(loc -> loc.getWorld() != null && loc.getWorld().equals(copLoc.getWorld()))
