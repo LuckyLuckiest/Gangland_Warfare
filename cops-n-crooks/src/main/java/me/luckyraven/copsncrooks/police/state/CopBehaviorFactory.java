@@ -30,10 +30,10 @@ public class CopBehaviorFactory {
 		behaviors.put(CopState.IDLE, new IdleBehavior(configProvider.getAlertRange()));
 		behaviors.put(CopState.PURSUING, new PursuingBehavior(configProvider.getCuffRadius()));
 		behaviors.put(CopState.CUFFING,
-					  new CuffingBehavior(configProvider.getCuffRadius(), configProvider.getMaxCuffAttempts()));
+					  new CuffingBehavior(configProvider.getCuffRadius(), configProvider.getMaxCuffAttempts(),
+										  configProvider.getCuffCooldownTicks()));
 		behaviors.put(CopState.COMBAT, new CombatBehavior(configProvider.getCombatRange()));
-		behaviors.put(CopState.RETURNING,
-					  new ReturningBehavior(configProvider.getSpawnLocations(), spawnManager));
+		behaviors.put(CopState.RETURNING, new ReturningBehavior(configProvider.getSpawnLocations(), spawnManager));
 
 		return behaviors;
 	}

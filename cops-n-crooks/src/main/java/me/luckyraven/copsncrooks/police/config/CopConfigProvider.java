@@ -76,6 +76,13 @@ public interface CopConfigProvider {
 	int getMaxCuffAttempts();
 
 	/**
+	 * Returns the cuffing cooldown in ticks.
+	 *
+	 * @return the cooldown duration in ticks
+	 */
+	int getCuffCooldownTicks();
+
+	/**
 	 * Returns the alert range in blocks.
 	 *
 	 * @return the range at which cops become alert

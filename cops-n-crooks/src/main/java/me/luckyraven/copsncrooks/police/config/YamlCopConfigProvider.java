@@ -23,6 +23,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final int                         spawnCheckRate;
 	private final double                      cuffRadius;
 	private final int                         maxCuffAttempts;
+	private final int                         cuffCooldownTicks;
 	private final double                      alertRange;
 	private final double                      combatRange;
 	private final int                         attackCooldownTicks;
@@ -39,6 +40,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.spawnCheckRate      = config.getInt(head + "Spawn_Check_Rate", 40);
 		this.cuffRadius          = config.getDouble(head + "Cuff_Radius", 3.0);
 		this.maxCuffAttempts     = config.getInt(head + "Max_Cuff_Attempts", 3);
+		this.cuffCooldownTicks   = config.getInt(head + "Cuff_Cooldown_Ticks", 100);
 		this.alertRange          = config.getDouble(head + "Alert_Range", 40.0);
 		this.combatRange         = config.getDouble(head + "Combat_Range", 4.0);
 		this.attackCooldownTicks = config.getInt(head + "Attack_Cooldown_Ticks", 20);
@@ -96,6 +98,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	}
 
 	@Override
+	public int getCuffCooldownTicks() {
+		return cuffCooldownTicks;
+	}
+
+	@Override
 	public double getAlertRange() {
 		return alertRange;
 	}
@@ -125,24 +132,29 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 			int tierNum = Integer.parseInt(key);
 
-			List<ItemStack> weaponPool = new ArrayList<>();
-			List<String>    weapons    = section.getStringList("Weapon_Pool");
-			for (String mat : weapons) {
+			// Keep all entries as weapon names (for gangland-weapon lookup).
+			// Also build the vanilla ItemStack pool for any names that are plain Materials.
+			List<String>    weaponNamePool = new ArrayList<>(section.getStringList("Weapon_Pool"));
+			List<ItemStack> weaponPool     = new ArrayList<>();
+			for (String entry : weaponNamePool) {
 				try {
-					weaponPool.add(new ItemStack(Material.valueOf(mat.toUpperCase())));
+					weaponPool.add(new ItemStack(Material.valueOf(entry.toUpperCase())));
 				} catch (IllegalArgumentException ignored) {
+					// Not a vanilla material — it is a gangland weapon name; skip vanilla pool
 				}
 			}
 
+			String helmet     = section.getString("Helmet");
+			String chestplate = section.getString("Chestplate");
+			String leggings   = section.getString("Leggings");
+			String boots      = section.getString("Boots");
 			var tierConfig = new CopTierConfig(tierNum, section.getString("Display_Name", "&9Police"),
 											   section.getDouble("Health", 20.0), section.getDouble("Damage", 2.0),
 											   section.getDouble("Speed", 1.0),
 											   section.getDouble("Cuff_Radius", cuffRadius),
-											   section.getBoolean("Can_Use_Weapons", false), weaponPool,
-											   parseMaterial(section.getString("Helmet")),
-											   parseMaterial(section.getString("Chestplate")),
-											   parseMaterial(section.getString("Leggings")),
-											   parseMaterial(section.getString("Boots")));
+											   section.getBoolean("Can_Use_Weapons", false), weaponNamePool, weaponPool,
+											   parseMaterial(helmet), parseMaterial(chestplate),
+											   parseMaterial(leggings), parseMaterial(boots));
 
 			tiers.put(tierNum, tierConfig);
 		}

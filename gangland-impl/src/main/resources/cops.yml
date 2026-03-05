@@ -18,6 +18,7 @@ Cops:
    Spawn_Check_Rate: 40
    Cuff_Radius: 3.0
    Max_Cuff_Attempts: 3
+   Cuff_Cooldown_Ticks: 100
    Alert_Range: 40.0
    Combat_Range: 4.0
    Attack_Cooldown_Ticks: 20
