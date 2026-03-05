@@ -70,6 +70,10 @@ public final class Gangland extends JavaPlugin {
 		// closing all connections
 		DatabaseManager databaseManager = initializer.getDatabaseManager();
 		if (databaseManager != null && !databaseManager.getDatabases().isEmpty()) databaseManager.closeConnections();
+
+		// shutdown unneeded tasks
+		initializer.getHologramService().clear();
+		initializer.getCopService().shutdown();
 	}
 
 	@Override
