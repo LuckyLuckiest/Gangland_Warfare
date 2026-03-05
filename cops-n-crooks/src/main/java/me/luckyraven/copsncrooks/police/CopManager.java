@@ -30,17 +30,19 @@ public class CopManager {
 	private final Map<UUID, List<CopNpc>> playerCops;
 	private final Map<UUID, BukkitTask>   aiTasks;
 	private final Map<UUID, BukkitTask>   spawnTasks;
+	private final Set<UUID>               activeCombatAlerts;
 
 	public CopManager(JavaPlugin plugin, CopSpawnManager spawnManager, TargetingManager targetingManager,
 					  CopConfigProvider configProvider, EntityMarkManager entityMarkManager) {
-		this.plugin            = plugin;
-		this.spawnManager      = spawnManager;
-		this.targetingManager  = targetingManager;
-		this.configProvider    = configProvider;
-		this.entityMarkManager = entityMarkManager;
-		this.playerCops        = new ConcurrentHashMap<>();
-		this.aiTasks           = new ConcurrentHashMap<>();
-		this.spawnTasks        = new ConcurrentHashMap<>();
+		this.plugin             = plugin;
+		this.spawnManager       = spawnManager;
+		this.targetingManager   = targetingManager;
+		this.configProvider     = configProvider;
+		this.entityMarkManager  = entityMarkManager;
+		this.playerCops         = new ConcurrentHashMap<>();
+		this.aiTasks            = new ConcurrentHashMap<>();
+		this.spawnTasks         = new ConcurrentHashMap<>();
+		this.activeCombatAlerts = ConcurrentHashMap.newKeySet();
 	}
 
 	/**
@@ -67,9 +69,11 @@ public class CopManager {
 	 */
 	public void onWantedEnd(Player player) {
 		UUID playerId = player.getUniqueId();
+
 		targetingManager.unregisterWanted(playerId);
 		stopSpawnTask(playerId);
 		stopAITask(playerId);
+		clearCombatAlert(playerId);
 		despawnAllForPlayer(playerId);
 	}
 
@@ -90,6 +94,33 @@ public class CopManager {
 	}
 
 	/**
+	 * Called when a cop NPC is attacked by a player. Forces ALL cops assigned to that player into combat mode (alert
+	 * system).
+	 *
+	 * @param copNpc the attacked cop
+	 * @param attacker the attacking player
+	 */
+	public void onCopAttackedAlert(CopNpc copNpc, Player attacker) {
+		// Find the target player that this cop is guarding
+		UUID targetPlayerId = copNpc.getTargetPlayerId();
+		if (targetPlayerId == null) return;
+
+		// Get all cops assigned to this target player
+		List<CopNpc> cops = playerCops.get(targetPlayerId);
+		if (cops == null || cops.isEmpty()) return;
+
+		// Mark this player's cops as being in active combat alert
+		activeCombatAlerts.add(targetPlayerId);
+
+		// Alert ALL cops for this player
+		for (CopNpc alertedCop : cops) {
+			if (!alertedCop.isValid()) continue;
+
+			onCopAttacked(alertedCop, attacker);
+		}
+	}
+
+	/**
 	 * Called when a cop NPC is attacked by a player. Forces the cop into combat mode.
 	 *
 	 * @param copNpc the attacked cop
@@ -98,6 +129,17 @@ public class CopManager {
 	public void onCopAttacked(CopNpc copNpc, Player attacker) {
 		copNpc.setTargetPlayerId(attacker.getUniqueId());
 		copNpc.transitionTo(CopState.COMBAT);
+	}
+
+	/**
+	 * Checks if there's an active combat alert for a given player.
+	 *
+	 * @param playerId the player UUID
+	 *
+	 * @return true if combat alert is active
+	 */
+	public boolean hasCombatAlert(UUID playerId) {
+		return activeCombatAlerts.contains(playerId);
 	}
 
 	/**
@@ -163,6 +205,15 @@ public class CopManager {
 		}
 	}
 
+	/**
+	 * Clears the combat alert for a player when wanted status ends.
+	 *
+	 * @param playerId the player UUID
+	 */
+	private void clearCombatAlert(UUID playerId) {
+		activeCombatAlerts.remove(playerId);
+	}
+
 	private boolean validateEntityCop(Entity entity, CopNpc cop) {
 		return cop.isValid() && cop.getNpc().getEntity().getUniqueId().equals(entity.getUniqueId());
 	}
@@ -203,6 +254,12 @@ public class CopManager {
 				CopNpc newCop = spawnManager.spawnNearPlayer(player, tier);
 				if (newCop != null) {
 					newCop.setTargetPlayerId(playerId);
+
+					// New spawns start in IDLE, unless there's an active combat alert
+					if (hasCombatAlert(playerId)) {
+						newCop.transitionTo(CopState.COMBAT);
+					}
+
 					cops.add(newCop);
 				}
 			}
@@ -252,7 +309,7 @@ public class CopManager {
 				Player target = resolveTarget(cop, player);
 				cop.tick(target);
 			}
-		}, 5L, configProvider.getAiTickRate());
+		}, 0L, configProvider.getAiTickRate());
 
 		aiTasks.put(playerId, task);
 	}
