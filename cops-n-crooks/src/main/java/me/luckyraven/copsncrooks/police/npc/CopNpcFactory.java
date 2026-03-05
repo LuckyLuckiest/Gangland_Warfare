@@ -15,6 +15,8 @@ import me.luckyraven.weapon.ammo.Ammunition;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -31,6 +33,8 @@ import java.util.concurrent.ThreadLocalRandom;
  * Factory for creating CopNpc instances backed by Citizens NPCs.
  */
 public class CopNpcFactory {
+
+	private static final int MIN_OPEN_HORIZONTAL_SIDES = 2;
 
 	private final CopConfigProvider  configProvider;
 	private final CopBehaviorFactory behaviorFactory;
@@ -70,6 +74,8 @@ public class CopNpcFactory {
 			return null;
 		}
 
+		scheduleDelayedSpawnValidation(npc);
+
 		if (npc.getEntity() != null) {
 			entityMarkManager.setEntityMark(npc.getEntity(), EntityMark.POLICE);
 		}
@@ -90,6 +96,69 @@ public class CopNpcFactory {
 		npc.getNavigator().getLocalParameters().speedModifier((float) tierConfig.speed());
 
 		return copNpc;
+	}
+
+	/**
+	 * Schedules a 1-tick delayed validation of the NPC's actual spawned position. This acts as a fail-safe for cases
+	 * where the entity is nudged into an unsafe location immediately after spawning.
+	 *
+	 * @param npc the spawned npc
+	 */
+	private void scheduleDelayedSpawnValidation(NPC npc) {
+		plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+			if (npc == null || !npc.isSpawned()) return;
+			if (npc.getEntity() == null || !isSafeSpawnPosition(npc.getEntity())) {
+				npc.destroy();
+			}
+		}, 1L);
+	}
+
+	/**
+	 * Validates the actual spawned entity position using the entity's real block coordinates.
+	 *
+	 * @param entity the spawned entity
+	 *
+	 * @return true if the entity has safe breathing room and enough horizontal clearance
+	 */
+	private boolean isSafeSpawnPosition(Entity entity) {
+		if (entity == null) return false;
+
+		Location location = entity.getLocation();
+		World    world    = location.getWorld();
+		if (world == null) return false;
+
+		int x = location.getBlockX();
+		int y = location.getBlockY();
+		int z = location.getBlockZ();
+
+		Block feet      = world.getBlockAt(x, y, z);
+		Block head      = world.getBlockAt(x, y + 1, z);
+		Block aboveHead = world.getBlockAt(x, y + 2, z);
+
+		if (!feet.isEmpty() || !head.isEmpty() || !aboveHead.isEmpty()) return false;
+
+		return hasEnoughHorizontalClearance(world, x, y, z) && hasEnoughHorizontalClearance(world, x, y + 1, z);
+	}
+
+	/**
+	 * Counts the open horizontal sides around the given block position.
+	 *
+	 * @param world the world
+	 * @param x center x
+	 * @param y center y
+	 * @param z center z
+	 *
+	 * @return true if at least the minimum number of sides are open
+	 */
+	private boolean hasEnoughHorizontalClearance(World world, int x, int y, int z) {
+		int openSides = 0;
+
+		if (world.getBlockAt(x + 1, y, z).isEmpty()) openSides++;
+		if (world.getBlockAt(x - 1, y, z).isEmpty()) openSides++;
+		if (world.getBlockAt(x, y, z + 1).isEmpty()) openSides++;
+		if (world.getBlockAt(x, y, z - 1).isEmpty()) openSides++;
+
+		return openSides >= MIN_OPEN_HORIZONTAL_SIDES;
 	}
 
 	/**

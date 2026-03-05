@@ -16,10 +16,11 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class CopSpawnManager {
 
-	private static final double MIN_SPAWN_DISTANCE    = 30.0;
-	private static final double MAX_SPAWN_DISTANCE    = 50.0;
-	private static final int    VERTICAL_SEARCH_RANGE = 10;
-	private static final int    SPAWN_Y_OFFSET        = 2;
+	private static final double MIN_SPAWN_DISTANCE        = 30.0;
+	private static final double MAX_SPAWN_DISTANCE        = 50.0;
+	private static final int    VERTICAL_SEARCH_RANGE     = 10;
+	private static final int    SPAWN_Y_OFFSET            = 0;
+	private static final int    MIN_OPEN_HORIZONTAL_SIDES = 2;
 
 	private final CopNpcFactory     copNpcFactory;
 	private final CopConfigProvider configProvider;
@@ -122,8 +123,9 @@ public class CopSpawnManager {
 	}
 
 	/**
-	 * Finds a valid spawn location around the target player. Spawns near the player's Y level but offset upward to
-	 * avoid clipping into blocks. Ensures the cop spawns outside the player's direct forward vision.
+	 * Finds a valid spawn location around the target player. Prefers locations close to the player's current Y level,
+	 * including inside buildings, and avoids placing the NPC inside walls by spawning at the center of the block
+	 * column.
 	 *
 	 * @param player the player
 	 *
@@ -141,12 +143,11 @@ public class CopSpawnManager {
 			double x = playerLoc.getX() + Math.cos(angle) * distance;
 			double z = playerLoc.getZ() + Math.sin(angle) * distance;
 
-			int chunkX = (int) x >> 4;
-			int chunkZ = (int) z >> 4;
+			int chunkX = ((int) Math.floor(x)) >> 4;
+			int chunkZ = ((int) Math.floor(z)) >> 4;
 
 			if (!world.isChunkLoaded(chunkX, chunkZ)) continue;
 
-			// Find ground near player's Y level + small offset so the NPC spawns slightly above
 			Location spawnLoc = findGroundNearY(world, x, z, playerLoc.getBlockY() + SPAWN_Y_OFFSET);
 			if (spawnLoc == null) continue;
 
@@ -159,13 +160,14 @@ public class CopSpawnManager {
 	}
 
 	/**
-	 * Finds ground level near the target Y coordinate. Searches upward first from the offset Y to find a safe position
-	 * above the player level, then falls back to searching downward.
+	 * Finds ground level near the target Y coordinate. Prefers the closest valid Y to the player, checking the same
+	 * level first, then moving downward before upward. This allows indoor spawns and avoids preferring rooftops above
+	 * buildings.
 	 *
 	 * @param world the world
 	 * @param x the x coordinate
 	 * @param z the z coordinate
-	 * @param targetY the target y level (already offset)
+	 * @param targetY the target y level
 	 *
 	 * @return the ground location, or null
 	 */
@@ -173,17 +175,20 @@ public class CopSpawnManager {
 		int blockX = (int) Math.floor(x);
 		int blockZ = (int) Math.floor(z);
 
-		// Search upward from offset Y first — prefer spawning above the player level
-		for (int y = targetY; y <= targetY + VERTICAL_SEARCH_RANGE && y < world.getMaxHeight() - 2; y++) {
-			if (isValidGround(world, blockX, y, blockZ)) {
-				return new Location(world, x, y + 1, z);
-			}
-		}
+		int minY = Math.max(world.getMinHeight(), targetY - VERTICAL_SEARCH_RANGE);
+		int maxY = Math.min(world.getMaxHeight() - 3, targetY + VERTICAL_SEARCH_RANGE);
 
-		// Then search downward
-		for (int y = targetY - 1; y >= targetY - VERTICAL_SEARCH_RANGE && y >= world.getMinHeight(); y--) {
-			if (isValidGround(world, blockX, y, blockZ)) {
-				return new Location(world, x, y + 1, z);
+		for (int offset = 0; offset <= VERTICAL_SEARCH_RANGE; offset++) {
+			int downY = targetY - offset;
+			if (downY >= minY && isValidGround(world, blockX, downY, blockZ)) {
+				return createCenteredSpawnLocation(world, blockX, downY, blockZ);
+			}
+
+			if (offset == 0) continue;
+
+			int upY = targetY + offset;
+			if (upY <= maxY && isValidGround(world, blockX, upY, blockZ)) {
+				return createCenteredSpawnLocation(world, blockX, upY, blockZ);
 			}
 		}
 
@@ -191,8 +196,8 @@ public class CopSpawnManager {
 	}
 
 	/**
-	 * Checks if the block at the given coordinates forms valid ground for spawning. Requires solid ground with two
-	 * passable blocks above (feet + head space).
+	 * Checks if the block at the given coordinates forms valid ground for spawning. Requires solid ground, open feet
+	 * and head space, one extra air block above the head, and enough horizontal clearance so the NPC is not boxed in.
 	 *
 	 * @param world the world
 	 * @param x x coordinate
@@ -202,11 +207,52 @@ public class CopSpawnManager {
 	 * @return true if valid
 	 */
 	private boolean isValidGround(World world, int x, int y, int z) {
-		Block ground = world.getBlockAt(x, y, z);
-		Block feet   = world.getBlockAt(x, y + 1, z);
-		Block head   = world.getBlockAt(x, y + 2, z);
+		Block ground    = world.getBlockAt(x, y, z);
+		Block feet      = world.getBlockAt(x, y + 1, z);
+		Block head      = world.getBlockAt(x, y + 2, z);
+		Block aboveHead = world.getBlockAt(x, y + 3, z);
 
-		return ground.getType().isSolid() && feet.isPassable() && head.isPassable();
+		if (!ground.getType().isSolid()) return false;
+		if (!feet.isEmpty() || !head.isEmpty() || !aboveHead.isEmpty()) return false;
+
+		return hasEnoughHorizontalClearance(world, x, y + 1, z) && hasEnoughHorizontalClearance(world, x, y + 2, z);
+	}
+
+	/**
+	 * Requires at least a minimum amount of horizontal open space around the spawn column. This keeps indoor spawning
+	 * possible while rejecting cramped wall pockets and tight cages.
+	 *
+	 * @param world the world
+	 * @param x center x
+	 * @param y y level to validate
+	 * @param z center z
+	 *
+	 * @return true if enough sides are open
+	 */
+	private boolean hasEnoughHorizontalClearance(World world, int x, int y, int z) {
+		int openSides = 0;
+
+		if (world.getBlockAt(x + 1, y, z).isEmpty()) openSides++;
+		if (world.getBlockAt(x - 1, y, z).isEmpty()) openSides++;
+		if (world.getBlockAt(x, y, z + 1).isEmpty()) openSides++;
+		if (world.getBlockAt(x, y, z - 1).isEmpty()) openSides++;
+
+		return openSides >= MIN_OPEN_HORIZONTAL_SIDES;
+	}
+
+	/**
+	 * Creates a spawn location centered within the target block column to reduce the chance of spawning clipped into a
+	 * neighbouring wall or corner.
+	 *
+	 * @param world the world
+	 * @param blockX x coordinate of the ground block
+	 * @param groundY y coordinate of the ground block
+	 * @param blockZ z coordinate of the ground block
+	 *
+	 * @return centered spawn location
+	 */
+	private Location createCenteredSpawnLocation(World world, int blockX, int groundY, int blockZ) {
+		return new Location(world, blockX + 0.5, groundY + 1, blockZ + 0.5);
 	}
 
 	/**
