@@ -164,10 +164,8 @@ public class Weapon implements Cloneable, Comparable<Weapon> {
 		return true;
 	}
 
-	public boolean requiresReload(boolean normalCheck) {
-		if (!normalCheck) return !isMagazineFull();
-		boolean hasSpaceForAmmo = reloadData.getMaxMagCapacity() - currentMagCapacity < reloadData.getRestore();
-		return !isMagazineFull() || hasSpaceForAmmo;
+	public boolean requiresReload() {
+		return !isMagazineFull();
 	}
 
 	// Weapon item operations

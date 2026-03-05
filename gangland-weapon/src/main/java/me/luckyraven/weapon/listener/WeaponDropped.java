@@ -57,10 +57,12 @@ public class WeaponDropped implements Listener {
 		// drop the weapon normally
 		if (!player.isSneaking()) return;
 
-		// check for full ammo
-		boolean requiresReload = weapon.requiresReload(!player.getGameMode().equals(GameMode.CREATIVE));
-
-		if (!requiresReload) return;
+		// check if the magazine is already full
+		if (weapon.isMagazineFull()) {
+			ChatUtil.sendActionBar(player, "&cMagazine is full!");
+			event.setCancelled(true);
+			return;
+		}
 
 		// check if the item is available or it was creative
 		boolean haveItem = weaponService.hasAmmunition(player, weapon);
