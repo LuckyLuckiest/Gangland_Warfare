@@ -29,9 +29,12 @@ class WaypointInfoCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			Player       player   = (Player) sender;
-			User<Player> user     = userManager.getUser(player);
-			Waypoint     waypoint = waypointManager.getSelected(player);
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
+
+			Waypoint waypoint = waypointManager.getSelected(player);
 
 			// check if the user already selected a waypoint
 			if (waypoint == null) {

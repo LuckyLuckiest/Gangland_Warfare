@@ -37,7 +37,10 @@ class WantedAddCommand extends SubArgument {
 		return (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
-			Wanted       wanted = user.getWanted();
+
+			if (user == null) return;
+
+			Wanted wanted = user.getWanted();
 
 			int amount = 1;
 			if (wanted.getLevel() + amount > wanted.getMaxLevel()) amount = 0;
@@ -65,7 +68,10 @@ class WantedAddCommand extends SubArgument {
 
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
-			Wanted       wanted = user.getWanted();
+
+			if (user == null) return;
+
+			Wanted wanted = user.getWanted();
 
 			int realAmount = amount;
 			if (wanted.getLevel() + realAmount > wanted.getMaxLevel()) realAmount = wanted.getMaxLevel() -

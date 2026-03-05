@@ -45,10 +45,13 @@ class AmmunitionGiveCommand extends SubArgument {
 
 	private void ammunitionGive() {
 		Argument name = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			Player       player         = (Player) sender;
-			User<Player> user           = userManager.getUser(player);
-			String       ammoName       = args[2];
-			boolean      giveAmmunition = giveAmmunition(player, ammoName.toLowerCase(), 1);
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
+
+			String  ammoName       = args[2];
+			boolean giveAmmunition = giveAmmunition(player, ammoName.toLowerCase(), 1);
 
 			if (giveAmmunition) {
 				String gaveAmmo = MessageAddon.RECEIVED_AMMO.toString();
@@ -65,10 +68,13 @@ class AmmunitionGiveCommand extends SubArgument {
 		});
 
 		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			Player       player   = (Player) sender;
-			User<Player> user     = userManager.getUser(player);
-			String       ammoName = args[2];
-			int          ammoAmount;
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
+
+			String ammoName = args[2];
+			int    ammoAmount;
 
 			try {
 				ammoAmount = Integer.parseInt(args[3]);

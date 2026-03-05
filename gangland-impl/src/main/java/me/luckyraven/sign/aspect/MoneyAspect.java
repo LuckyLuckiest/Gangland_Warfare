@@ -18,7 +18,10 @@ public class MoneyAspect implements SignAspect {
 
 	@Override
 	public AspectResult execute(Player player, ParsedSign sign) {
-		User<Player>   user    = userManager.getUser(player);
+		User<Player> user = userManager.getUser(player);
+
+		if (user == null) return AspectResult.failure(MessageAddon.PLAYER_NOT_FOUND.toString());
+
 		EconomyHandler economy = user.getEconomy();
 		double         amount  = sign.getPrice();
 
@@ -46,7 +49,10 @@ public class MoneyAspect implements SignAspect {
 
 	@Override
 	public boolean canExecute(Player player, ParsedSign sign) {
-		User<Player>   user    = userManager.getUser(player);
+		User<Player> user = userManager.getUser(player);
+
+		if (user == null) return false;
+
 		EconomyHandler economy = user.getEconomy();
 
 		if (transactionType == TransactionType.WITHDRAW) {

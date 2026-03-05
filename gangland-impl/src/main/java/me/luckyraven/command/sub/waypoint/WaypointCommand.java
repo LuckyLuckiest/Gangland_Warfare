@@ -27,19 +27,22 @@ public final class WaypointCommand extends CommandHandler {
 		this.waypointManager = gangland.getInitializer().getWaypointManager();
 
 		var list = getCommands().entrySet()
-								.stream()
-								.filter(entry -> entry.getKey().startsWith("waypoint"))
-								.sorted(Map.Entry.comparingByKey())
-								.map(Map.Entry::getValue)
-								.toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("waypoint"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 		getHelpInfo().addAll(list);
 	}
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		if (commandSender instanceof Player player) {
-			User<Player> user     = userManager.getUser(player);
-			Waypoint     selected = waypointManager.getSelected(player);
+			User<Player> user = userManager.getUser(player);
+
+			if (user == null) return;
+
+			Waypoint selected = waypointManager.getSelected(player);
 
 			if (selected != null) {
 				user.sendMessage(ChatUtil.color("&6Selected waypoint: &7" + selected.getName()));

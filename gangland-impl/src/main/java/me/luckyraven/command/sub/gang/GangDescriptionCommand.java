@@ -38,6 +38,8 @@ class GangDescriptionCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			if (!user.hasGang()) {
 				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
@@ -47,7 +49,11 @@ class GangDescriptionCommand extends SubArgument {
 
 			// display an anvil
 			new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
-				Gang   gang1  = gangManager.getGang(userManager.getUser(stateSnapshot.getPlayer()).getGangId());
+				User<Player> user1 = userManager.getUser(stateSnapshot.getPlayer());
+
+				if (user1 == null) return Collections.emptyList();
+
+				Gang   gang1  = gangManager.getGang(user1.getGangId());
 				String output = stateSnapshot.getText();
 				String old    = gang1.getDescription();
 

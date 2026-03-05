@@ -57,7 +57,7 @@ public class LevelUp implements Listener {
 
 			String message = MessageAddon.LEVEL_UP_GANG.toString();
 
-			onlineUser.sendMessage(replacePlaceholders(message, level));
+			if (onlineUser != null) onlineUser.sendMessage(replacePlaceholders(message, level));
 		}
 	}
 

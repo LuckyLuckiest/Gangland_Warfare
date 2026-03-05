@@ -45,6 +45,8 @@ class BankCreateCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			if (user.hasBank()) {
 				user.sendMessage(MessageAddon.BANK_EXIST.toString());
 				return;
@@ -61,6 +63,8 @@ class BankCreateCommand extends SubArgument {
 		ConfirmArgument confirmCreate = new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
 
 			if (user.hasBank()) {
 				user.sendMessage(MessageAddon.BANK_EXIST.toString());
@@ -99,6 +103,8 @@ class BankCreateCommand extends SubArgument {
 		Argument createName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
 
 			if (user.hasBank()) {
 				user.sendMessage(MessageAddon.BANK_EXIST.toString());

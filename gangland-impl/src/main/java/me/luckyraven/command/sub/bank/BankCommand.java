@@ -20,11 +20,11 @@ public final class BankCommand extends CommandHandler {
 		super(gangland, "bank", true);
 
 		var list = getCommands().entrySet()
-								.stream()
-								.filter(entry -> entry.getKey().startsWith("bank"))
-								.sorted(Map.Entry.comparingByKey())
-								.map(Map.Entry::getValue)
-								.toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("bank"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -42,7 +42,10 @@ public final class BankCommand extends CommandHandler {
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		Player       player = (Player) commandSender;
 		User<Player> user   = getGangland().getInitializer().getUserManager().getUser(player);
-		Bank         bank   = Bank.getInstance(user);
+
+		if (user == null) return;
+
+		Bank bank = Bank.getInstance(user);
 
 		if (!user.hasBank() || bank == null) {
 			help(commandSender, 1);

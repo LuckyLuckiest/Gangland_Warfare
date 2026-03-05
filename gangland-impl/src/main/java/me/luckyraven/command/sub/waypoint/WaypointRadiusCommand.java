@@ -45,9 +45,12 @@ class WaypointRadiusCommand extends SubArgument {
 
 	private void waypointRadius() {
 		Argument optional = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			Player       player   = (Player) sender;
-			User<Player> user     = userManager.getUser(player);
-			Waypoint     waypoint = waypointManager.getSelected(player);
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
+
+			Waypoint waypoint = waypointManager.getSelected(player);
 
 			if (waypoint == null) {
 				user.sendMessage(MessageAddon.NOT_SELECTED_WAYPOINT.toString());

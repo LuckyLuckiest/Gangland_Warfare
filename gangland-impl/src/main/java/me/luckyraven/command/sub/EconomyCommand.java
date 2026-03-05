@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
+import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -27,11 +28,11 @@ public final class EconomyCommand extends CommandHandler {
 		super(gangland, "economy", false, "eco");
 
 		var list = getCommands().entrySet()
-								.stream()
-								.filter(entry -> entry.getKey().startsWith("economy"))
-								.sorted(Map.Entry.comparingByKey())
-								.map(Map.Entry::getValue)
-								.toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("economy"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 
 		getHelpInfo().addAll(list);
 	}
@@ -128,20 +129,23 @@ public final class EconomyCommand extends CommandHandler {
 				User<Player> user         = userManager.getUser(player);
 				double       valueChanged = 0D;
 
+				if (user == null) return;
+
+				EconomyHandler economy = user.getEconomy();
 				switch (args[1].toLowerCase()) {
 					case "deposit", "add" -> {
-						if (user.getEconomy().getBalance() + argAmount <= SettingAddon.getUserMaxBalance()) valueChanged
+						if (economy.getBalance() + argAmount <= SettingAddon.getUserMaxBalance()) valueChanged
 								= argAmount;
 
-						value    = Math.min(user.getEconomy().getBalance() + argAmount,
+						value    = Math.min(economy.getBalance() + argAmount,
 											SettingAddon.getUserMaxBalance());
 						strValue = "deposit";
 					}
 					case "withdraw", "take" -> {
-						if (argAmount > user.getEconomy().getBalance()) valueChanged = user.getEconomy().getBalance();
-						else if (user.getEconomy().getBalance() - argAmount > 0D) valueChanged = argAmount;
+						if (argAmount > economy.getBalance()) valueChanged = economy.getBalance();
+						else if (economy.getBalance() - argAmount > 0D) valueChanged = argAmount;
 
-						value    = Math.max(user.getEconomy().getBalance() - argAmount, 0D);
+						value    = Math.max(economy.getBalance() - argAmount, 0D);
 						strValue = "withdraw";
 					}
 					case "set" -> {
@@ -158,7 +162,7 @@ public final class EconomyCommand extends CommandHandler {
 					.sendMessage(MessageAddon.valueOf(strValue.toUpperCase() + "_MONEY_PLAYER")
 											 .toString()
 											 .replace("%amount%", SettingAddon.formatDouble(valueChanged)));
-				user.getEconomy().setBalance(value);
+				economy.setBalance(value);
 			}
 		} catch (NumberFormatException exception) {
 			sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[3]));
@@ -178,7 +182,7 @@ public final class EconomyCommand extends CommandHandler {
 			list.add("**");
 
 			list.addAll(Bukkit.getOnlinePlayers()
-							  .stream().map(player -> "@" + player.getName()).toList());
+								.stream().map(player -> "@" + player.getName()).toList());
 
 			return list;
 		});
@@ -207,6 +211,8 @@ public final class EconomyCommand extends CommandHandler {
 
 			for (Player player : players) {
 				User<Player> user = userManager.getUser(player);
+
+				if (user == null) continue;
 
 				user.getEconomy().setBalance(0D);
 				user.getUser().sendMessage(MessageAddon.RESET_MONEY_PLAYER.toString());
@@ -238,7 +244,7 @@ public final class EconomyCommand extends CommandHandler {
 
 	private void allPlayers(HashMap<String, Supplier<List<Player>>> specifiers) {
 		List<Player> players = Bukkit.getOnlinePlayers()
-									 .stream().map(player -> (Player) player).toList();
+				.stream().map(player -> (Player) player).toList();
 
 		specifiers.put("*", () -> new ArrayList<>(players));
 	}
@@ -251,12 +257,12 @@ public final class EconomyCommand extends CommandHandler {
 
 	private void targetSpecifier(HashMap<String, Supplier<List<Player>>> specifiers, String target) {
 		List<Player> players = Bukkit.getOnlinePlayers()
-									 .stream()
-									 .filter(player -> player.getName().equalsIgnoreCase(target.substring(1)))
-									 .map(player -> (Player) player)
-									 .findFirst()
-									 .stream()
-									 .toList();
+				.stream()
+				.filter(player -> player.getName().equalsIgnoreCase(target.substring(1)))
+				.map(player -> (Player) player)
+				.findFirst()
+				.stream()
+				.toList();
 
 		specifiers.put(target, () -> new ArrayList<>(players));
 	}

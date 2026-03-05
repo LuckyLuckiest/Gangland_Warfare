@@ -45,6 +45,8 @@ class GangColorCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			if (!user.hasGang()) {
 				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
@@ -90,7 +92,11 @@ class GangColorCommand extends SubArgument {
 
 				confirmGUI.setItem(49, XMaterial.GREEN_CONCRETE.get(), "&aConfirm", null, false, false,
 								   (player2, inv, it) -> {
-									   Gang gang = gangManager.getGang(userManager.getUser(player2).getGangId());
+									   User<Player> user = userManager.getUser(player2);
+
+									   if (user == null) return;
+
+									   Gang gang = gangManager.getGang(user.getGangId());
 									   // save the data in gang
 									   gang.setColor(colorName);
 

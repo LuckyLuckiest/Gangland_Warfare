@@ -192,6 +192,8 @@ public class InventoryAddon {
 	public static void openInventoryForPlayer(Gangland gangland, Player player, String inventoryName) {
 		User<Player> user = gangland.getInitializer().getUserManager().getUser(player);
 
+		if (user == null) return;
+
 		// Check if user already has this inventory open
 		InventoryHandler existingInventory = user.getInventory(inventoryName);
 		if (existingInventory != null) {

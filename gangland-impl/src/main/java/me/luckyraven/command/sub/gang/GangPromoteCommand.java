@@ -56,6 +56,8 @@ class GangPromoteCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			if (!user.hasGang()) {
 				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
@@ -67,9 +69,12 @@ class GangPromoteCommand extends SubArgument {
 
 	private OptionalArgument gangPromote() {
 		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			Player       player     = (Player) sender;
-			User<Player> user       = userManager.getUser(player);
-			Member       userMember = memberManager.getMember(player.getUniqueId());
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
+
+			Member userMember = memberManager.getMember(player.getUniqueId());
 
 			String  forceRank = String.format("%s.command.gang.force_rank", gangland.getFullPrefix());
 			boolean force     = player.hasPermission(forceRank);
@@ -126,9 +131,9 @@ class GangPromoteCommand extends SubArgument {
 			List<Rank> nextRanks = Objects.requireNonNull(rankManager.getRankTree().find(currentRank))
 										  .getNode()
 										  .getChildren()
-										  .stream()
-										  .map(Tree.Node::getData)
-										  .toList();
+					.stream()
+					.map(Tree.Node::getData)
+					.toList();
 
 			if (nextRanks.isEmpty()) {
 				user.sendMessage(MessageAddon.GANG_PROMOTE_END.toString());
@@ -160,7 +165,7 @@ class GangPromoteCommand extends SubArgument {
 					// remove the previous rank attachments
 					User<Player> onlineUser = userManager.getUser(onlinePlayer);
 
-					onlineUser.flushPermissions(first);
+					if (onlineUser != null) onlineUser.flushPermissions(first);
 
 					Objects.requireNonNull(onlinePlayer).sendMessage(message);
 				}
@@ -172,9 +177,12 @@ class GangPromoteCommand extends SubArgument {
 				targetMember.setRank(first);
 			}
 		}, sender -> {
-			Player       player     = (Player) sender;
-			User<Player> user       = userManager.getUser(player);
-			Member       userMember = memberManager.getMember(player.getUniqueId());
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return null;
+
+			Member userMember = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
 				return null;

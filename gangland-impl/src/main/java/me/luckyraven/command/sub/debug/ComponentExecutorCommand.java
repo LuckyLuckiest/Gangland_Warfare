@@ -79,6 +79,8 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			if (!user.hasGang()) {
 				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
@@ -89,6 +91,8 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return null;
+
 			if (!user.hasGang()) {
 				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return null;
@@ -98,9 +102,9 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			Gang         userGang = gangManager.getGang(user.getGangId());
 			List<Member> members  = userGang.getValue();
 			Stream<String> allMembers = members.stream()
-											   .map(Member::getUuid)
-											   .map(Bukkit::getOfflinePlayer)
-											   .map(OfflinePlayer::getName);
+					.map(Member::getUuid)
+					.map(Bukkit::getOfflinePlayer)
+					.map(OfflinePlayer::getName);
 
 			return allMembers.toList();
 		});
@@ -120,9 +124,12 @@ public final class ComponentExecutorCommand extends CommandHandler {
 	private @NotNull Argument getRankType(UserManager<Player> userManager, MemberManager memberManager,
 										  GangManager gangManager, RankManager rankManager) {
 		return new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
-			Player       player     = (Player) sender;
-			User<Player> user       = userManager.getUser(player);
-			Member       userMember = memberManager.getMember(player.getUniqueId());
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
+
+			Member userMember = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
 				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
@@ -168,7 +175,7 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			Player        onlinePlayer  = offlinePlayer.getPlayer();
 			User<Player>  onlineUser    = userManager.getUser(onlinePlayer);
 
-			if (onlinePlayer != null && offlinePlayer.isOnline()) {
+			if (onlinePlayer != null && onlineUser != null && offlinePlayer.isOnline()) {
 				String string  = MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString();
 				String replace = string.replace("%rank%", nextRank.getName());
 				onlineUser.sendMessage(replace);
@@ -180,6 +187,8 @@ public final class ComponentExecutorCommand extends CommandHandler {
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return null;
 
 			if (!user.hasGang()) {
 				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());

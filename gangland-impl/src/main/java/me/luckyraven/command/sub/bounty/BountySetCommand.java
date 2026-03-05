@@ -57,7 +57,7 @@ class BountySetCommand extends SubArgument {
 
 			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
 		}, sender -> Bukkit.getOnlinePlayers()
-						   .stream().map(Player::getName).toList());
+				.stream().map(Player::getName).toList());
 
 		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			String playerStr = args[2];
@@ -81,9 +81,12 @@ class BountySetCommand extends SubArgument {
 				return;
 			}
 
-			User<Player> user        = userManager.getUser(player);
-			Bounty       userBounty  = user.getBounty();
-			BountyEvent  bountyEvent = new BountyEvent(false, userBounty);
+			User<Player> user = userManager.getUser(player);
+
+			if (user == null) return;
+
+			Bounty      userBounty  = user.getBounty();
+			BountyEvent bountyEvent = new BountyEvent(false, userBounty);
 
 			bountyEvent.setUserBounty(user);
 
@@ -94,6 +97,8 @@ class BountySetCommand extends SubArgument {
 
 			if (sender instanceof Player senderPlayer) {
 				User<Player> userSender = userManager.getUser(senderPlayer);
+
+				if (userSender == null) return;
 
 				if (userSender.getEconomy().getBalance() == 0D) {
 					senderPlayer.sendMessage(MessageAddon.CANNOT_TAKE_LESS_THAN_ZERO.toString());

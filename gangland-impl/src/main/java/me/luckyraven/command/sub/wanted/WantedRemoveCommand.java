@@ -37,7 +37,10 @@ class WantedRemoveCommand extends SubArgument {
 		return (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
-			Wanted       wanted = user.getWanted();
+
+			if (user == null) return;
+
+			Wanted wanted = user.getWanted();
 
 			int amount = 1;
 			if (wanted.getLevel() - amount < 0) amount = 0;
@@ -65,7 +68,10 @@ class WantedRemoveCommand extends SubArgument {
 
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
-			Wanted       wanted = user.getWanted();
+
+			if (user == null) return;
+
+			Wanted wanted = user.getWanted();
 
 			int realAmount = amount;
 			if (wanted.getLevel() - realAmount < 0) realAmount = wanted.getLevel();

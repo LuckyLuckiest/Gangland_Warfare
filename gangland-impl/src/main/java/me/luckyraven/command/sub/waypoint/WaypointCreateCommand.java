@@ -62,6 +62,8 @@ class WaypointCreateCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			String   name     = createWaypointName.get(player).get();
 			Waypoint waypoint = new Waypoint(name, gangland.getFullPrefix());
 			Location location = player.getLocation();
@@ -101,6 +103,8 @@ class WaypointCreateCommand extends SubArgument {
 		Argument createName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
 
 			if (confirmWaypoint.isConfirmed()) return;
 

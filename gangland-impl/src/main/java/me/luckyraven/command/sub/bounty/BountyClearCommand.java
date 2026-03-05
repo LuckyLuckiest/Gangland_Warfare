@@ -54,6 +54,8 @@ class BountyClearCommand extends SubArgument {
 
 			User<Player> user = userManager.getUser(player);
 
+			if (user == null) return;
+
 			if (!user.getBounty().hasBounty()) {
 				sender.sendMessage(MessageAddon.NO_BOUNTY.toString());
 				return;
@@ -80,6 +82,8 @@ class BountyClearCommand extends SubArgument {
 			if (sender instanceof Player senderPlayer) {
 				User<Player> userSender = userManager.getUser(senderPlayer);
 
+				if (userSender == null) return;
+
 				userSender.getEconomy().deposit(amount);
 
 				String string1  = MessageAddon.DEPOSIT_MONEY_PLAYER.toString();
@@ -99,7 +103,7 @@ class BountyClearCommand extends SubArgument {
 			}
 
 		}, sender -> Bukkit.getOnlinePlayers()
-						   .stream().map(Player::getName).toList());
+				.stream().map(Player::getName).toList());
 
 		this.addSubArgument(playerName);
 	}

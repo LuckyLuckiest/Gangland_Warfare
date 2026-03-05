@@ -40,6 +40,8 @@ class BankWithdrawCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			if (!user.hasBank()) {
 				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
 				return;
@@ -53,7 +55,10 @@ class BankWithdrawCommand extends SubArgument {
 		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
-			Bank         bank   = Bank.getInstance(user);
+
+			if (user == null) return;
+
+			Bank bank = Bank.getInstance(user);
 
 			if (!user.hasBank() || bank == null) {
 				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());

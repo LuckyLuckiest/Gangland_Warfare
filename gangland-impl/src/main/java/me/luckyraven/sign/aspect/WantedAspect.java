@@ -16,9 +16,12 @@ public class WantedAspect implements SignAspect {
 
 	@Override
 	public AspectResult execute(Player player, ParsedSign sign) {
-		User<Player> user   = userManager.getUser(player);
-		Wanted       wanted = user.getWanted();
-		int          amount = sign.getAmount();
+		User<Player> user = userManager.getUser(player);
+
+		if (user == null) return AspectResult.failure(MessageAddon.PLAYER_NOT_FOUND.toString());
+
+		Wanted wanted = user.getWanted();
+		int    amount = sign.getAmount();
 
 		WantedSign.WantedType wantedType = WantedSign.WantedType.valueOf(sign.getContent().toUpperCase());
 

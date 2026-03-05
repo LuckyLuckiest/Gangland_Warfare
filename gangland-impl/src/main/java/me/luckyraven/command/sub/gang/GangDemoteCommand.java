@@ -52,6 +52,8 @@ class GangDemoteCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			if (!user.hasGang()) {
 				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
@@ -63,9 +65,12 @@ class GangDemoteCommand extends SubArgument {
 
 	private OptionalArgument gangDemote() {
 		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			Player       player     = (Player) sender;
-			User<Player> user       = userManager.getUser(player);
-			Member       userMember = memberManager.getMember(player.getUniqueId());
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
+
+			Member userMember = memberManager.getMember(player.getUniqueId());
 
 			String  forceRank = String.format("%s.command.gang.force_rank", gangland.getFullPrefix());
 			boolean force     = player.hasPermission(forceRank);
@@ -130,7 +135,7 @@ class GangDemoteCommand extends SubArgument {
 				// remove the previous rank attachments
 				User<Player> onlineUser = userManager.getUser(onlinePlayer);
 
-				onlineUser.flushPermissions(previousRank);
+				if (onlineUser != null) onlineUser.flushPermissions(previousRank);
 
 				Objects.requireNonNull(onlinePlayer).sendMessage(message);
 			}

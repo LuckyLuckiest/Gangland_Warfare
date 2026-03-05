@@ -43,6 +43,8 @@ class GangRenameCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			if (!user.hasGang()) {
 				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
@@ -56,6 +58,8 @@ class GangRenameCommand extends SubArgument {
 		Argument changeName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
 
 			if (!user.hasGang()) {
 				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
@@ -82,6 +86,8 @@ class GangRenameCommand extends SubArgument {
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return null;
 
 			if (!user.hasGang()) {
 				return null;

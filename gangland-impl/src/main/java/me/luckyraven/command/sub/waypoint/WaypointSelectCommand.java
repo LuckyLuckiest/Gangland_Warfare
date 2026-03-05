@@ -74,6 +74,9 @@ class WaypointSelectCommand extends SubArgument {
 			// add the waypoint to waypoint manager
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
+
 			waypointManager.playerSelect(player, waypoint);
 
 			// inform the player
@@ -82,6 +85,8 @@ class WaypointSelectCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return null;
+
 			List<String> waypoints = new ArrayList<>();
 
 			Collection<Waypoint> allWaypoints = waypointManager.getWaypoints().values();
@@ -89,17 +94,17 @@ class WaypointSelectCommand extends SubArgument {
 				int gangId = user.getGangId();
 
 				List<String> list = allWaypoints.stream()
-												.filter(waypoint -> waypoint.getGangId() == gangId)
-												.map(Waypoint::getName)
-												.toList();
+						.filter(waypoint -> waypoint.getGangId() == gangId)
+						.map(Waypoint::getName)
+						.toList();
 
 				waypoints.addAll(list);
 			}
 
 			List<String> list = allWaypoints.stream()
-											.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
-											.map(Waypoint::getName)
-											.toList();
+					.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
+					.map(Waypoint::getName)
+					.toList();
 
 			waypoints.addAll(list);
 
@@ -107,6 +112,8 @@ class WaypointSelectCommand extends SubArgument {
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return null;
 
 			List<Waypoint> waypoints = new ArrayList<>();
 
@@ -120,8 +127,8 @@ class WaypointSelectCommand extends SubArgument {
 			}
 
 			List<Waypoint> list = allWaypoints.stream()
-											  .filter(waypoint -> player.hasPermission(waypoint.getPermission()))
-											  .toList();
+					.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
+					.toList();
 
 			waypoints.addAll(list);
 

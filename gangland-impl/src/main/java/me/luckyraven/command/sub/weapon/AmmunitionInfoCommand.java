@@ -32,6 +32,9 @@ class AmmunitionInfoCommand extends SubArgument {
 		return (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
+
 			// get the held item
 			ItemStack itemStack = player.getInventory().getItemInMainHand();
 

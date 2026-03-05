@@ -32,6 +32,8 @@ class GangBalanceCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			if (!user.hasGang()) {
 				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;

@@ -40,11 +40,11 @@ public final class GangCommand extends CommandHandler {
 		super(gangland, "gang", true);
 
 		var list = getCommands().entrySet()
-								.stream()
-								.filter(entry -> entry.getKey().startsWith("gang"))
-								.sorted(Map.Entry.comparingByKey())
-								.map(Map.Entry::getValue)
-								.toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("gang"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -55,6 +55,8 @@ public final class GangCommand extends CommandHandler {
 
 		Player       player = (Player) commandSender;
 		User<Player> user   = userManager.getUser(player);
+
+		if (user == null) return;
 
 		if (!user.hasGang())
 //			gangStat(user, userManager, gangManager);
@@ -218,7 +220,10 @@ public final class GangCommand extends CommandHandler {
 							List.of("&a" + gang.getOnlineMembers(userManager).size() + "&7/&e" + gang.getGroup().size())), false,
 					false, (player, inventory, item) -> {
 					User<Player> user1 = userManager.getUser(player);
-					Gang         gang1 = gangManager.getGang(user1.getGangId());
+
+					if (user1 == null) return;
+
+					Gang gang1 = gangManager.getGang(user1.getGangId());
 
 					List<ItemStack> items = new ArrayList<>();
 
@@ -261,12 +266,15 @@ public final class GangCommand extends CommandHandler {
 		gui.setItem(25, XMaterial.REDSTONE.get(), "&bAlly", List.of("&e" + gang.getAllies().size()), false, false,
 					(player, inventory, item) -> {
 						User<Player> user1 = userManager.getUser(player);
-						Gang         gang1 = gangManager.getGang(user1.getGangId());
+
+						if (user1 == null) return;
+
+						Gang gang1 = gangManager.getGang(user1.getGangId());
 
 						List<ItemStack> items = new ArrayList<>();
 
 						for (Gang ally : gang1.getAllies()
-											  .stream().map(Pair::first).toList()) {
+								.stream().map(Pair::first).toList()) {
 							List<String> data = new ArrayList<>();
 							data.add("&7ID:&e " + ally.getId());
 							data.add(String.format("&7Members:&a %d&7/&e%d", ally.getOnlineMembers(userManager).size(),

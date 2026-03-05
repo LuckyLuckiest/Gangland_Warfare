@@ -56,9 +56,12 @@ class GangKickCommand extends SubArgument {
 	protected static List<String> getDescendantRanks(UserManager<Player> userManager, MemberManager memberManager,
 													 GangManager gangManager, RankManager rankManager,
 													 CommandSender sender) {
-		Player       player     = (Player) sender;
-		User<Player> user       = userManager.getUser(player);
-		Member       userMember = memberManager.getMember(player.getUniqueId());
+		Player       player = (Player) sender;
+		User<Player> user   = userManager.getUser(player);
+
+		if (user == null) return null;
+
+		Member userMember = memberManager.getMember(player.getUniqueId());
 
 		if (!user.hasGang()) {
 			return null;
@@ -109,6 +112,8 @@ class GangKickCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			if (!user.hasGang()) {
 				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
@@ -121,9 +126,12 @@ class GangKickCommand extends SubArgument {
 	@SuppressWarnings("unchecked")
 	private void gangKick() {
 		Argument kickName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			Player       player     = (Player) sender;
-			User<Player> user       = userManager.getUser(player);
-			Member       userMember = memberManager.getMember(player.getUniqueId());
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
+
+			Member userMember = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
 				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
@@ -191,15 +199,17 @@ class GangKickCommand extends SubArgument {
 				offlineUserManager.add(offlineUser);
 			}
 
-			if (targetUser.getUser() instanceof Player p) {
-				p.sendMessage(MessageAddon.KICKED_FROM_GANG.toString());
+			if (targetUser == null) return;
+
+			if (targetUser.getUser() instanceof Player targetPlayer) {
+				targetPlayer.sendMessage(MessageAddon.KICKED_FROM_GANG.toString());
 			}
 
 			gang.removeMember(targetUser, targetMember);
 
 			user.sendMessage(MessageAddon.GANG_KICKED_TARGET.toString()
-															.replace("%player%", Objects.requireNonNull(
-																	offlinePlayer.getName())));
+															.replace("%player%",
+																	 Objects.requireNonNull(offlinePlayer.getName())));
 		}, sender -> getDescendantRanks(userManager, memberManager, gangManager, rankManager, sender));
 
 		this.addSubArgument(kickName);

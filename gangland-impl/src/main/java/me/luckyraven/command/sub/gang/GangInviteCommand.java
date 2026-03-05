@@ -62,6 +62,8 @@ class GangInviteCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			if (!user.hasGang()) {
 				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
@@ -76,6 +78,8 @@ class GangInviteCommand extends SubArgument {
 		return new Argument(gangland, "accept", tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
 
 			if (!playerInvite.containsKey(user)) {
 				user.sendMessage(MessageAddon.NO_GANG_INVITATION.toString());
@@ -121,6 +125,8 @@ class GangInviteCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			if (!user.hasGang()) {
 				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
 				return;
@@ -136,6 +142,8 @@ class GangInviteCommand extends SubArgument {
 
 			Gang         gang       = gangManager.getGang(user.getGangId());
 			User<Player> targetUser = userManager.getUser(target);
+
+			if (targetUser == null) return;
 
 			if (targetUser.hasGang()) {
 				sender.sendMessage(MessageAddon.TARGET_IN_GANG.toString().replace("%player%", targetStr));
@@ -160,6 +168,8 @@ class GangInviteCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return null;
+
 			if (!user.hasGang()) {
 				return null;
 			}
@@ -171,7 +181,7 @@ class GangInviteCommand extends SubArgument {
 			for (Player onlinePlayer : onlinePlayers) {
 				User<Player> onlineUser = userManager.getUser(onlinePlayer);
 
-				if (onlineUser.hasGang()) continue;
+				if (onlineUser == null || onlineUser.hasGang()) continue;
 
 				possibleUsers.add(onlinePlayer.getName());
 			}

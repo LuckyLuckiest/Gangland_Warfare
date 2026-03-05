@@ -41,11 +41,11 @@ public final class TeleportCommand extends CommandHandler {
 		this.waypointManager = initializer.getWaypointManager();
 
 		var list = getCommands().entrySet()
-								.stream()
-								.filter(entry -> entry.getKey().startsWith("waypoint"))
-								.sorted(Map.Entry.comparingByKey())
-								.map(Map.Entry::getValue)
-								.toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("waypoint"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 		getHelpInfo().addAll(list);
 	}
 
@@ -73,6 +73,8 @@ public final class TeleportCommand extends CommandHandler {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return null;
+
 			List<String> waypoints = new ArrayList<>();
 
 			Collection<Waypoint> allWaypoints = waypointManager.getWaypoints().values();
@@ -80,17 +82,17 @@ public final class TeleportCommand extends CommandHandler {
 				int gangId = user.getGangId();
 
 				List<String> list = allWaypoints.stream()
-												.filter(waypoint -> waypoint.getGangId() == gangId)
-												.map(Waypoint::getName)
-												.toList();
+						.filter(waypoint -> waypoint.getGangId() == gangId)
+						.map(Waypoint::getName)
+						.toList();
 
 				waypoints.addAll(list);
 			}
 
 			List<String> list = allWaypoints.stream()
-											.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
-											.map(Waypoint::getName)
-											.toList();
+					.filter(waypoint -> player.hasPermission(waypoint.getPermission()))
+					.map(Waypoint::getName)
+					.toList();
 
 			waypoints.addAll(list);
 

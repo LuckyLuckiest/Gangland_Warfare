@@ -31,12 +31,13 @@ class WaypointDeselectCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			// player has a selected waypoint
 			Waypoint waypoint = waypointManager.playerDeselect(player);
 
 			if (waypoint != null) {
-				user.sendMessage(
-						MessageAddon.WAYPOINT_DESELECTED.toString().replace("%waypoint%", waypoint.getName()));
+				user.sendMessage(MessageAddon.WAYPOINT_DESELECTED.toString().replace("%waypoint%", waypoint.getName()));
 			}
 			// player didn't select a waypoint
 			else {

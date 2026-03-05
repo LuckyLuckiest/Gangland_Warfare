@@ -20,11 +20,11 @@ public final class BountyCommand extends CommandHandler {
 		super(gangland, "bounty", false);
 
 		var list = getCommands().entrySet()
-								.stream()
-								.filter(entry -> entry.getKey().startsWith("bounty"))
-								.sorted(Map.Entry.comparingByKey())
-								.map(Map.Entry::getValue)
-								.toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("bounty"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 
 		getHelpInfo().addAll(list);
 	}
@@ -35,6 +35,8 @@ public final class BountyCommand extends CommandHandler {
 
 		if (commandSender instanceof Player player) {
 			User<Player> user = userManager.getUser(player);
+
+			if (user == null) return;
 
 			String string      = MessageAddon.BOUNTY_CURRENT.toString();
 			String replacement = SettingAddon.formatDouble(user.getBounty().getAmount());

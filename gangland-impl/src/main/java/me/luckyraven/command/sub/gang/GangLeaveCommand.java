@@ -54,7 +54,10 @@ class GangLeaveCommand extends SubArgument {
 		return (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
-			Member       member = memberManager.getMember(player.getUniqueId());
+
+			if (user == null) return;
+
+			Member member = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
 				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
@@ -94,7 +97,10 @@ class GangLeaveCommand extends SubArgument {
 		return new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
-			Member       member = memberManager.getMember(player.getUniqueId());
+
+			if (user == null) return;
+
+			Member member = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
 				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());

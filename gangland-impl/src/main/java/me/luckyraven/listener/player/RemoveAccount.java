@@ -48,6 +48,8 @@ public final class RemoveAccount implements Listener {
 		Player       player = event.getPlayer();
 		User<Player> user   = gangland.getInitializer().getUserManager().getUser(player);
 
+		if (user == null) return;
+
 		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
 			// remove all the inventories of that player only
 			user.clearInventories();
@@ -61,6 +63,8 @@ public final class RemoveAccount implements Listener {
 	public void onPlayerLeave(PlayerQuitEvent event) {
 		Player       player = event.getPlayer();
 		User<Player> user   = userManager.getUser(player);
+
+		if (user == null) return;
 
 		Bounty bounty = user.getBounty();
 		Wanted wanted = user.getWanted();

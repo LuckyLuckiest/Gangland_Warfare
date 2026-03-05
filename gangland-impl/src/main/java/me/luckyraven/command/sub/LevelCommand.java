@@ -39,6 +39,8 @@ public final class LevelCommand extends CommandHandler {
 		Player              player      = (Player) commandSender;
 		User<Player>        user        = userManager.getUser(player);
 
+		if (user == null) return;
+
 		Level  level        = user.getLevel();
 		String currentLevel = String.valueOf(level.getLevelValue());
 		String maxLevel     = String.valueOf(level.getMaxLevel());
@@ -97,6 +99,8 @@ public final class LevelCommand extends CommandHandler {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			double argAmount;
 
 			try {
@@ -142,6 +146,8 @@ public final class LevelCommand extends CommandHandler {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			int argAmount;
 
 			try {
@@ -173,6 +179,8 @@ public final class LevelCommand extends CommandHandler {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			Level  level        = user.getLevel();
 			String currentLevel = String.valueOf(level.getLevelValue());
 			String maxLevel     = String.valueOf(level.getMaxLevel());
@@ -202,8 +210,6 @@ public final class LevelCommand extends CommandHandler {
 	}
 
 	@Override
-	protected void help(CommandSender sender, int page) {
-
-	}
+	protected void help(CommandSender sender, int page) { }
 
 }

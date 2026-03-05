@@ -58,6 +58,8 @@ class GangCreateCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return;
+
 			if (user.hasGang()) {
 				user.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
 				return;
@@ -74,7 +76,10 @@ class GangCreateCommand extends SubArgument {
 		ConfirmArgument confirmCreate = new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
-			Member       member = memberManager.getMember(player.getUniqueId());
+
+			if (user == null) return;
+
+			Member member = memberManager.getMember(player.getUniqueId());
 
 			if (user.hasGang()) {
 				user.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
@@ -121,6 +126,8 @@ class GangCreateCommand extends SubArgument {
 		Argument createName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
 
 			if (user.hasGang()) {
 				user.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());

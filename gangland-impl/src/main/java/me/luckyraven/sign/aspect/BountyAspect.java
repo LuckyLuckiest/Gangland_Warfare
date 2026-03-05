@@ -38,6 +38,8 @@ public class BountyAspect implements SignAspect {
 	public AspectResult execute(Player player, ParsedSign sign) {
 		User<Player> user = onlinePlayerUserManager.getUser(player);
 
+		if (user == null) return AspectResult.failure(MessageAddon.PLAYER_NOT_FOUND.toString());
+
 		BountySign.BountyType bountyType = BountySign.BountyType.valueOf(sign.getContent().toUpperCase());
 
 		switch (bountyType) {

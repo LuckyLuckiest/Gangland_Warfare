@@ -160,6 +160,8 @@ class WaypointDeleteCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
+			if (user == null) return null;
+
 			List<String> waypoints = new ArrayList<>();
 
 			Collection<Waypoint> allWaypoints = waypointManager.getWaypoints().values();
@@ -185,6 +187,8 @@ class WaypointDeleteCommand extends SubArgument {
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return null;
 
 			List<Waypoint> waypoints = new ArrayList<>();
 

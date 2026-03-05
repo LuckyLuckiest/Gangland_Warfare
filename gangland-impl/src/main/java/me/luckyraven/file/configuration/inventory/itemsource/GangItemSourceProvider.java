@@ -78,7 +78,8 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 		GangManager         gangManager = gangland.getInitializer().getGangManager();
 
 		User<Player> user = userManager.getUser(player);
-		if (!user.hasGang()) return new ArrayList<>();
+
+		if (user == null || !user.hasGang()) return new ArrayList<>();
 
 		Gang gang = gangManager.getGang(user.getGangId());
 		if (gang == null) return new ArrayList<>();
@@ -86,7 +87,7 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 		List<ItemStack> items = new ArrayList<>();
 
 		for (Gang ally : gang.getAllies()
-							 .stream().map(Pair::first).toList()) {
+				.stream().map(Pair::first).toList()) {
 			List<String> data = new ArrayList<>();
 			data.add("&7ID:&e " + ally.getId());
 			data.add(String.format("&7Members:&a %d&7/&e%d", ally.getOnlineMembers(userManager).size(),

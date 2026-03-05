@@ -40,7 +40,10 @@ public class LootChestEarnGoods implements Listener {
 		LootChestSession session = event.getLootChestSession();
 		Player           player  = session.getPlayer();
 		User<Player>     user    = userManager.getUser(player);
-		UUID             chestId = session.getChestData().getId();
+
+		if (user == null) return;
+
+		UUID chestId = session.getChestData().getId();
 
 		Set<UUID> playerOpenedChests = openedLootChests.get(player);
 		if (playerOpenedChests != null && playerOpenedChests.contains(chestId)) {
