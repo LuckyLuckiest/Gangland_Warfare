@@ -5,6 +5,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.type.Bank;
+import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -12,10 +13,12 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
+import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.NavigableSet;
 
 class BankDepositCommand extends SubArgument {
 
@@ -91,8 +94,24 @@ class BankDepositCommand extends SubArgument {
 			String replace = string.replace("%amount%", SettingAddon.formatDouble(argAmount));
 
 			user.getUser().sendMessage(replace);
+		}, sender -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
 
-		}, sender -> List.of("<amount>"));
+			if (user == null || !user.hasBank()) return null;
+
+			EconomyHandler economy = user.getEconomy();
+			double         balance = economy.getBalance();
+
+			if (balance <= 0D) return List.of("<amount>");
+
+			NavigableSet<Double> values = NumberUtil.getSetOfNumbers(balance);
+
+			return values.stream()
+					.map(value -> String.valueOf(value % 1D == 0D ? (long) value.doubleValue() : value))
+					.sorted()
+					.toList();
+		});
 	}
 
 }

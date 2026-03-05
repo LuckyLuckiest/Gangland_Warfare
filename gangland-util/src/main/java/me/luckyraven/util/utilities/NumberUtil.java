@@ -2,6 +2,8 @@ package me.luckyraven.util.utilities;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NavigableSet;
+import java.util.TreeSet;
 
 public final class NumberUtil {
 
@@ -25,6 +27,30 @@ public final class NumberUtil {
 		}
 
 		return formatDouble(format, modValue) + SUFFIXES[index];
+	}
+
+	public static NavigableSet<Double> getSetOfNumbers(double balance) {
+		NavigableSet<Double> values = new TreeSet<>((a, b) -> Double.compare(b, a));
+		values.add(balance);
+
+		double[] steps = {1.0D, 0.75D, 0.5D, 0.25D, 0.1D};
+		double   scale = Math.pow(10, Math.floor(Math.log10(balance)));
+
+		double roundedTop = Math.floor(balance / scale) * scale;
+		if (roundedTop > 0D) values.add(roundedTop);
+
+		while (scale >= 1D) {
+			for (double step : steps) {
+				double value = scale * step;
+
+				if (value <= balance) {
+					values.add(value);
+				}
+			}
+
+			scale /= 10D;
+		}
+		return values;
 	}
 
 	public static boolean isValueFormatted(String value) {

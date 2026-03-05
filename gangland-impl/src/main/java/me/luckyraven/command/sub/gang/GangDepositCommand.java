@@ -8,6 +8,7 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -15,10 +16,12 @@ import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
+import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.NavigableSet;
 
 class GangDepositCommand extends SubArgument {
 
@@ -110,13 +113,19 @@ class GangDepositCommand extends SubArgument {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
-			if (user == null) return null;
+			if (user == null || !user.hasGang()) return null;
 
-			if (!user.hasGang()) {
-				return null;
-			}
+			EconomyHandler economy = user.getEconomy();
+			double         balance = economy.getBalance();
 
-			return List.of("<amount>");
+			if (balance <= 0D) return List.of("<amount>");
+
+			NavigableSet<Double> values = NumberUtil.getSetOfNumbers(balance);
+
+			return values.stream()
+					.map(value -> String.valueOf(value % 1D == 0D ? (long) value.doubleValue() : value))
+					.sorted()
+					.toList();
 		});
 	}
 
