@@ -2,8 +2,8 @@ package me.luckyraven.data.user;
 
 import com.google.common.base.Preconditions;
 import me.luckyraven.Gangland;
+import me.luckyraven.copsncrooks.events.wanted.WantedEvent;
 import me.luckyraven.copsncrooks.wanted.Wanted;
-import me.luckyraven.copsncrooks.wanted.WantedEvent;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
@@ -26,6 +26,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -183,6 +184,7 @@ public class UserManager<T extends OfflinePlayer> {
 		return users.containsKey(user.getUser());
 	}
 
+	@Nullable
 	public User<T> getUser(T userPred) {
 		return users.get(userPred);
 	}
