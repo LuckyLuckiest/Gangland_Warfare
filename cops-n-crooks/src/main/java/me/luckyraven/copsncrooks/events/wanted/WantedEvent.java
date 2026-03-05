@@ -1,6 +1,7 @@
-package me.luckyraven.copsncrooks.wanted;
+package me.luckyraven.copsncrooks.events.wanted;
 
 import lombok.Getter;
+import me.luckyraven.copsncrooks.wanted.Wanted;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;

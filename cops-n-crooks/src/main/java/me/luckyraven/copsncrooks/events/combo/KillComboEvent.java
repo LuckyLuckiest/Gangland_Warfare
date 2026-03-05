@@ -1,6 +1,7 @@
-package me.luckyraven.copsncrooks.combo;
+package me.luckyraven.copsncrooks.events.combo;
 
 import lombok.Getter;
+import me.luckyraven.copsncrooks.combo.KillComboTracker;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;

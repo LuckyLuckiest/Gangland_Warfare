@@ -1,26 +1,25 @@
-package me.luckyraven.copsncrooks.wanted;
+package me.luckyraven.copsncrooks.events.wanted;
 
 import lombok.Getter;
+import me.luckyraven.copsncrooks.wanted.Wanted;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 @Getter
-public class WantedStartEvent extends Event {
+public class WantedEndEvent extends Event {
 
 	private static final HandlerList handlers = new HandlerList();
 
 	private final Player player;
 	private final Wanted wanted;
-	private final int    wantedLevel;
 
-	public WantedStartEvent(Player player, Wanted wanted, int wantedLevel) {
+	public WantedEndEvent(Player player, Wanted wanted) {
 		super(false);
 
-		this.player      = player;
-		this.wanted      = wanted;
-		this.wantedLevel = wantedLevel;
+		this.player = player;
+		this.wanted = wanted;
 	}
 
 	public static HandlerList getHandlerList() {
