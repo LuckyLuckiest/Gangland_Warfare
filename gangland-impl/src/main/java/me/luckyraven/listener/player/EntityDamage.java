@@ -3,10 +3,10 @@ package me.luckyraven.listener.player;
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
 import me.luckyraven.copsncrooks.combo.KillCombo;
-import me.luckyraven.copsncrooks.combo.KillComboEvent;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
+import me.luckyraven.copsncrooks.events.combo.KillComboEvent;
+import me.luckyraven.copsncrooks.events.wanted.WantedEvent;
 import me.luckyraven.copsncrooks.wanted.Wanted;
-import me.luckyraven.copsncrooks.wanted.WantedEvent;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.Executor;
@@ -30,6 +30,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
+import java.util.UUID;
+
 @ListenerHandler
 public class EntityDamage implements Listener {
 
@@ -38,7 +40,7 @@ public class EntityDamage implements Listener {
 	private final EntityMarkManager   entityMarkManager;
 	private final KillCombo           killCombo;
 
-	public EntityDamage(Gangland gangland) {
+	public EntityDamage(Gangland gangland, KillCombo killCombo) {
 		this.gangland = gangland;
 
 		Initializer initializer = gangland.getInitializer();
@@ -46,7 +48,7 @@ public class EntityDamage implements Listener {
 		this.userManager       = initializer.getUserManager();
 		this.entityMarkManager = initializer.getEntityMarkManager();
 
-		this.killCombo = new KillCombo(gangland, SettingAddon.getWantedKillCounter());
+		this.killCombo = killCombo;
 		setupKillComboCallbacks();
 	}
 
@@ -123,9 +125,6 @@ public class EntityDamage implements Listener {
 
 			damagerUser.sendMessage(replace);
 
-			// reset the wanted level of the dead player
-			deadUser.getWanted().reset();
-
 			// Reset kill combo if player was killed by someone with bounty
 			if (SettingAddon.isWantedKillComboEnabled()) {
 				killCombo.resetCombo(deadPlayer.getUniqueId());
@@ -166,11 +165,16 @@ public class EntityDamage implements Listener {
 
 		// Callback when combo resets
 		killCombo.setOnComboReset(this::onKillComboReset);
+
+		// Callback when player dies
+		killCombo.setOnPlayerDeath(this::onPlayerDeathResetWanted);
 	}
 
 	private void onKillComboWantedTrigger(KillComboEvent event) {
 		Player       player      = event.getPlayer();
 		User<Player> damagerUser = userManager.getUser(player);
+
+		if (damagerUser == null) return;
 
 		// Apply wanted level increase based on kill combo
 		handleWanted(damagerUser);
@@ -181,7 +185,19 @@ public class EntityDamage implements Listener {
 		User<Player> user    = userManager.getUser(player);
 		String       message = ChatUtil.color("&e&lKill combo reset!");
 
+		if (user == null) return;
+
 		user.sendMessage(message);
+	}
+
+	private void onPlayerDeathResetWanted(UUID deadPlayerId) {
+		Player       deadPlayer = Bukkit.getPlayer(deadPlayerId);
+		User<Player> deadUser   = userManager.getUser(deadPlayer);
+
+		if (deadUser == null) return;
+
+		// Reset the wanted level no matter how the player died
+		deadUser.getWanted().reset();
 	}
 
 	private void handleWanted(User<Player> damagerUser) {

@@ -1,6 +1,7 @@
 package me.luckyraven.copsncrooks.combo;
 
 import lombok.Setter;
+import me.luckyraven.copsncrooks.events.combo.KillComboEvent;
 import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.entity.Entity;
@@ -23,6 +24,7 @@ public class KillCombo {
 	private Consumer<KillComboEvent> onWantedLevelTrigger;
 	private Consumer<KillComboEvent> onComboIncrement;
 	private Consumer<KillComboEvent> onComboReset;
+	private Consumer<UUID>           onPlayerDeath;
 
 	public KillCombo(JavaPlugin plugin, List<Integer> wantedKillCounter) {
 		this.plugin            = plugin;
@@ -59,6 +61,19 @@ public class KillCombo {
 
 		// Restart the countdown timer
 		tracker.restartTimer();
+	}
+
+	/**
+	 * Handles a player's death by resetting their combo. This callback should be triggered when a player dies.
+	 *
+	 * @param playerId The UUID of the player who died
+	 */
+	public void handlePlayerDeath(UUID playerId) {
+		resetCombo(playerId);
+
+		if (onPlayerDeath == null) return;
+
+		onPlayerDeath.accept(playerId);
 	}
 
 	/**

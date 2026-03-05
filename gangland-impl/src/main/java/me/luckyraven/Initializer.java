@@ -24,6 +24,7 @@ import me.luckyraven.compatibility.CompatibilitySetup;
 import me.luckyraven.compatibility.CompatibilityWorker;
 import me.luckyraven.compatibility.VersionSetup;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
+import me.luckyraven.copsncrooks.combo.KillCombo;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.police.CopManager;
 import me.luckyraven.copsncrooks.police.CopService;
@@ -129,6 +130,7 @@ public final class Initializer {
 	private LootChestManager           lootChestManager;
 	private BlockDamageManager         blockDamageManager;
 	private CopService                 copService;
+	private KillCombo                  killCombo;
 	// Addons
 	private SettingAddon               settingAddon;
 	private ScoreboardAddon            scoreboardAddon;
@@ -276,7 +278,11 @@ public final class Initializer {
 		copService = new CopService();
 
 		FileHandler copsFile = fileManager.getFile("cops");
-		copService.initialize(gangland, Objects.requireNonNull(copsFile).getFileConfiguration(), entityMarkManager);
+		copService.initialize(gangland, Objects.requireNonNull(copsFile).getFileConfiguration(), entityMarkManager,
+							  weaponManager);
+
+		// kill combo
+		killCombo = new KillCombo(gangland, SettingAddon.getWantedKillCounter());
 
 		// Sign Information
 		signInformation = new GanglandSignInformation();
@@ -492,6 +498,7 @@ public final class Initializer {
 		dependencyContainer.registerInstance(HologramService.class, hologramService);
 		dependencyContainer.registerInstance(BlockDamageManager.class, blockDamageManager);
 		dependencyContainer.registerInstance(CopManager.class, copService.getCopManager());
+		dependencyContainer.registerInstance(KillCombo.class, killCombo);
 
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 
