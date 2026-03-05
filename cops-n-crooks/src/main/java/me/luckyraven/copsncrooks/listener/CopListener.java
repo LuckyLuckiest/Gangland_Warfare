@@ -1,12 +1,13 @@
 package me.luckyraven.copsncrooks.listener;
 
+import me.luckyraven.copsncrooks.events.wanted.WantedEndEvent;
+import me.luckyraven.copsncrooks.events.wanted.WantedLevelChangeEvent;
+import me.luckyraven.copsncrooks.events.wanted.WantedStartEvent;
 import me.luckyraven.copsncrooks.police.CopManager;
 import me.luckyraven.copsncrooks.police.npc.CopNpc;
-import me.luckyraven.copsncrooks.wanted.WantedEndEvent;
-import me.luckyraven.copsncrooks.wanted.WantedLevelChangeEvent;
-import me.luckyraven.copsncrooks.wanted.WantedStartEvent;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -77,29 +78,19 @@ public class CopListener implements Listener {
 		if (!copManager.isCopNpc(victim)) return;
 
 		Entity damager = event.getDamager();
-		if (!(damager instanceof Player attacker)) return;
+
+		Player attacker;
+		if (damager instanceof Player player) {
+			attacker = player;
+		} else if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player player) {
+			attacker = player;
+		} else return;
 
 		CopNpc cop = copManager.findCopByEntity(victim);
 		if (cop == null) return;
 
-		copManager.onCopAttacked(cop, attacker);
-	}
-
-	/**
-	 * Caps cop damage against players to prevent instant kills.
-	 *
-	 * @param event the damage event
-	 */
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onCopAttackPlayer(EntityDamageByEntityEvent event) {
-		if (!copManager.isCopNpc(event.getDamager())) return;
-		if (!(event.getEntity() instanceof Player player)) return;
-
-		double newHealth = player.getHealth() - event.getFinalDamage();
-
-		if (newHealth <= 0 && player.getHealth() > 10) {
-			event.setDamage(player.getHealth() - 1);
-		}
+		// Alert system: put ALL cops for this player into combat mode
+		copManager.onCopAttackedAlert(cop, attacker);
 	}
 
 	/**

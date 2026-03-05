@@ -9,9 +9,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Tracks wanted players and resolves targeting priorities for cops.
- */
 public class WantedTargetingManager implements TargetingManager {
 
 	private final Map<UUID, Wanted> wantedPlayers;
@@ -52,14 +49,16 @@ public class WantedTargetingManager implements TargetingManager {
 			if (!entry.getValue().isWanted()) continue;
 
 			Player candidate = Bukkit.getPlayer(entry.getKey());
+
 			if (candidate == null || !candidate.isOnline()) continue;
 			if (!candidate.getWorld().equals(from.getWorld())) continue;
 
 			double distance = candidate.getLocation().distanceSquared(from.getLocation());
-			if (distance < bestDistance) {
-				bestDistance = distance;
-				bestTarget   = candidate;
-			}
+
+			if (distance >= bestDistance) continue;
+
+			bestDistance = distance;
+			bestTarget   = candidate;
 		}
 
 		return bestTarget;

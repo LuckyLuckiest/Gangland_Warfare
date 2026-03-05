@@ -37,6 +37,11 @@
             <artifactId>plugin-file</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-weapon</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
 
         <!-- Citizens dependency -->
         <dependency>

@@ -6,12 +6,20 @@ import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.police.config.CopTierConfig;
 import me.luckyraven.copsncrooks.police.state.CopBehavior;
 import me.luckyraven.copsncrooks.police.state.CopState;
+import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.events.WeaponShootEvent;
+import me.luckyraven.weapon.projectile.WeaponProjectile;
 import net.citizensnpcs.api.npc.NPC;
-import org.bukkit.Location;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 import java.util.Map;
@@ -23,6 +31,8 @@ import java.util.concurrent.ThreadLocalRandom;
  * instances.
  */
 public class CopNpc {
+
+	private static final Logger logger = LogManager.getLogger(CopNpc.class.getSimpleName());
 
 	@Getter
 	private final NPC                        npc;
@@ -44,6 +54,11 @@ public class CopNpc {
 	@Setter
 	private int      despawnTicks;
 
+	@Getter
+	private Weapon     heldWeapon;
+	private boolean    reloading;
+	private JavaPlugin plugin;
+
 	public CopNpc(NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors, Location spawnLocation) {
 		this.npc              = npc;
 		this.tierConfig       = tierConfig;
@@ -53,6 +68,19 @@ public class CopNpc {
 		this.attackCooldown   = 0;
 		this.markedForRemoval = false;
 		this.despawnTicks     = 0;
+		this.reloading        = false;
+	}
+
+	/**
+	 * Assigns the gangland Weapon this cop will fire and the plugin needed for reload scheduling. Call this before
+	 * {@link #equip()} so the weapon item ends up in the main hand.
+	 *
+	 * @param weapon the weapon instance, or null to clear
+	 * @param plugin the owning plugin
+	 */
+	public void setHeldWeapon(Weapon weapon, JavaPlugin plugin) {
+		this.heldWeapon = weapon;
+		this.plugin     = plugin;
 	}
 
 	/**
@@ -86,6 +114,7 @@ public class CopNpc {
 	 * @param newState the target state
 	 */
 	public void transitionTo(CopState newState) {
+		logger.info("Transitioning cop {} to state: {} from: {}", npc.getName(), newState, currentState);
 		if (currentState == newState) return;
 
 		CopBehavior oldBehavior = behaviors.get(currentState);
@@ -96,9 +125,10 @@ public class CopNpc {
 		currentState = newState;
 
 		CopBehavior newBehavior = behaviors.get(currentState);
-		if (newBehavior != null) {
-			newBehavior.onEnter(this);
-		}
+
+		if (newBehavior == null) return;
+
+		newBehavior.onEnter(this);
 	}
 
 	/**
@@ -115,9 +145,10 @@ public class CopNpc {
 		decrementAttackCooldown();
 
 		CopBehavior behavior = behaviors.get(currentState);
-		if (behavior != null) {
-			behavior.tick(this, target);
-		}
+
+		if (behavior == null) return;
+
+		behavior.tick(this, target);
 	}
 
 	/**
@@ -163,32 +194,38 @@ public class CopNpc {
 	}
 
 	/**
-	 * Returns whether the attack cooldown has elapsed.
+	 * Returns whether the attack cooldown has elapsed and the cop is not reloading.
 	 *
 	 * @return true if the cop can attack
 	 */
 	public boolean canAttack() {
-		return attackCooldown <= 0;
+		return attackCooldown <= 0 && !reloading;
 	}
 
 	/**
-	 * Attacks the target player with the cop's configured damage.
+	 * Attacks the target player using the highest-priority available attack:
+	 * <ol>
+	 *   <li>Gangland weapon — fires the real projectile through the weapon event pipeline.</li>
+	 *   <li>Vanilla ranged weapon (bow / crossbow) — hitscan with particle trail.</li>
+	 *   <li>Melee fallback.</li>
+	 * </ol>
 	 *
 	 * @param player the target player
 	 */
 	public void attack(Player player) {
 		if (!isValid() || !canAttack() || player == null) return;
 
-		player.damage(tierConfig.damage(), getEntity());
-		attackCooldown = 20;
+		if (tierConfig.canUseWeapons() && heldWeapon != null && hasLineOfSight(player)) {
+			performGanglandWeaponAttack(player);
+			return;
+		}
 
-		Vector knockback = player.getLocation()
-								 .toVector()
-								 .subtract(getEntity().getLocation().toVector())
-								 .normalize()
-								 .multiply(0.3)
-								 .setY(0.1);
-		player.setVelocity(player.getVelocity().add(knockback));
+		if (tierConfig.canUseWeapons() && isHoldingVanillaRangedWeapon() && hasLineOfSight(player)) {
+			performVanillaRangedAttack(player);
+			return;
+		}
+
+		performMeleeAttack(player);
 	}
 
 	/**
@@ -207,7 +244,8 @@ public class CopNpc {
 	}
 
 	/**
-	 * Equips the cop with its tier's loadout including a random weapon from the pool.
+	 * Equips the cop with its tier's loadout. If a gangland weapon was assigned via {@link #setHeldWeapon}, its built
+	 * item is placed in the main hand. Otherwise a random item from the vanilla weapon pool is used.
 	 */
 	public void equip() {
 		if (!isValid()) return;
@@ -222,7 +260,9 @@ public class CopNpc {
 		equipment.setLeggings(tierConfig.leggings());
 		equipment.setBoots(tierConfig.boots());
 
-		if (!tierConfig.weaponPool().isEmpty()) {
+		if (heldWeapon != null) {
+			equipment.setItemInMainHand(heldWeapon.buildItem());
+		} else if (!tierConfig.weaponPool().isEmpty()) {
 			int index = ThreadLocalRandom.current().nextInt(tierConfig.weaponPool().size());
 			equipment.setItemInMainHand(tierConfig.weaponPool().get(index));
 		}
@@ -243,6 +283,9 @@ public class CopNpc {
 	 * @param entityMarkManager the entity mark manager for cleanup, may be null
 	 */
 	public void destroy(EntityMarkManager entityMarkManager) {
+		if (heldWeapon != null) {
+			heldWeapon.stopReloading();
+		}
 		if (npc.isSpawned()) {
 			if (entityMarkManager != null && npc.getEntity() != null) {
 				entityMarkManager.removeEntityMark(npc.getEntity());
@@ -257,6 +300,142 @@ public class CopNpc {
 	 */
 	public void destroy() {
 		destroy(null);
+	}
+
+	/**
+	 * Fires the gangland weapon at the player. Consumes ammo, launches the real projectile through the
+	 * {@link WeaponShootEvent} pipeline, and triggers a reload when the magazine empties.
+	 */
+	private void performGanglandWeaponAttack(Player player) {
+		if (heldWeapon.isBroken() || heldWeapon.isMagazineEmpty()) {
+			triggerReload();
+			return;
+		}
+
+		boolean consumed = heldWeapon.consumeShot();
+		if (!consumed) {
+			triggerReload();
+			return;
+		}
+
+		LivingEntity shooter = getEntity();
+		WeaponProjectile<?> projectile = heldWeapon.getProjectileData()
+												   .getType()
+												   .createInstance(plugin, shooter, heldWeapon);
+
+		WeaponShootEvent event = new WeaponShootEvent(heldWeapon, projectile);
+		Bukkit.getPluginManager().callEvent(event);
+
+		if (event.isCancelled()) {
+			// Refund the consumed shot
+			heldWeapon.addAmmunition(1);
+		} else {
+			projectile.launchProjectile();
+			refreshHeldItem();
+		}
+
+		// Use the weapon's own cooldown; fall back to a sensible minimum
+		int cooldown = heldWeapon.getProjectileData().getCooldown();
+		attackCooldown = Math.max(cooldown, 5);
+
+		if (heldWeapon.isMagazineEmpty()) {
+			triggerReload();
+		}
+	}
+
+	/**
+	 * Schedules a reload: the cop is blocked from attacking until the weapon's reload cooldown expires, after which the
+	 * magazine is topped up. No physical ammo items are consumed because the cop's ammo is managed internally.
+	 */
+	private void triggerReload() {
+		if (reloading || plugin == null) return;
+
+		reloading = true;
+
+		int reloadTicks = heldWeapon.getReloadData().getCooldown();
+
+		Bukkit.getScheduler().runTaskLater(plugin, () -> {
+			if (!isValid()) {
+				reloading = false;
+				return;
+			}
+			heldWeapon.addAmmunition(heldWeapon.getReloadData().getMaxMagCapacity());
+			refreshHeldItem();
+			reloading = false;
+		}, reloadTicks);
+	}
+
+	/**
+	 * Updates the NPC's main-hand item so the ammo count display stays current.
+	 */
+	private void refreshHeldItem() {
+		if (!isValid() || heldWeapon == null) return;
+		Entity entity = npc.getEntity();
+		if (!(entity instanceof LivingEntity livingEntity)) return;
+		EntityEquipment equipment = livingEntity.getEquipment();
+		if (equipment == null) return;
+
+		ItemStack current = equipment.getItemInMainHand();
+		if (current.getType() == Material.AIR) return;
+
+		ItemBuilder builder = new ItemBuilder(current);
+		heldWeapon.updateWeaponData(builder);
+		equipment.setItemInMainHand(builder.build());
+	}
+
+	private void performMeleeAttack(Player player) {
+		if (!isValid() || player == null) return;
+
+		player.damage(tierConfig.damage(), getEntity());
+		attackCooldown = 5;
+
+		Vector knockback = player.getLocation()
+								 .toVector()
+								 .subtract(getEntity().getLocation().toVector())
+								 .normalize()
+								 .multiply(0.3)
+								 .setY(0.1);
+		player.setVelocity(player.getVelocity().add(knockback));
+	}
+
+	/**
+	 * Hitscan attack for vanilla ranged weapons (bow / crossbow). Does not consume arrows.
+	 */
+	private void performVanillaRangedAttack(Player player) {
+		LivingEntity shooter   = getEntity();
+		World        world     = shooter.getWorld();
+		Location     eye       = shooter.getEyeLocation();
+		Vector       direction = eye.getDirection().normalize();
+
+		var result = world.rayTrace(eye, direction, 35.0, FluidCollisionMode.NEVER, true, 0.25, entity -> {
+			return entity instanceof Player p && p.getUniqueId().equals(player.getUniqueId());
+		});
+
+		world.spawnParticle(Particle.CRIT, eye.clone().add(direction.clone().multiply(0.5)), 6, 0.05, 0.05, 0.05, 0.0);
+		world.playSound(eye, Sound.ENTITY_FIREWORK_ROCKET_BLAST, 0.6f, 1.6f);
+
+		if (result != null && result.getHitEntity() != null) {
+			player.damage(tierConfig.damage(), shooter);
+		}
+
+		attackCooldown = 15;
+	}
+
+	private boolean isHoldingVanillaRangedWeapon() {
+		if (!isValid()) return false;
+
+		Entity entity = npc.getEntity();
+
+		if (!(entity instanceof LivingEntity livingEntity)) return false;
+
+		EntityEquipment equipment = livingEntity.getEquipment();
+
+		if (equipment == null) return false;
+
+		ItemStack mainHand = equipment.getItemInMainHand();
+		Material  type     = mainHand.getType();
+
+		return type == Material.BOW || type == Material.CROSSBOW;
 	}
 
 	/**

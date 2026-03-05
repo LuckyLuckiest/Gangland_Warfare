@@ -9,6 +9,7 @@ import me.luckyraven.copsncrooks.police.npc.CopNpcFactory;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
 import me.luckyraven.copsncrooks.police.targeting.TargetingManager;
 import me.luckyraven.copsncrooks.police.targeting.WantedTargetingManager;
+import me.luckyraven.weapon.WeaponService;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -23,27 +24,23 @@ public class CopService {
 	 * @param plugin the owning plugin
 	 * @param config the cops configuration file
 	 * @param entityMarkManager the entity mark manager for marking cop entities
+	 * @param weaponService resolves gangland weapon instances by name
 	 *
 	 * @return the initialized CopManager
 	 */
-	public CopManager initialize(JavaPlugin plugin, FileConfiguration config, EntityMarkManager entityMarkManager) {
+	public CopManager initialize(JavaPlugin plugin, FileConfiguration config, EntityMarkManager entityMarkManager,
+								 WeaponService weaponService) {
 		CopConfigProvider configProvider   = new YamlCopConfigProvider(config);
 		TargetingManager  targetingManager = new WantedTargetingManager();
 
-		// CopSpawnManager is created first but needs the factory — use two-phase init
-		CopNpcFactory   copNpcFactory;
+		// Two-phase init: CopSpawnManager and CopNpcFactory mutually reference each other
 		CopSpawnManager spawnManager = new CopSpawnManager(null, configProvider);
+		CopNpcFactory copNpcFactory = new CopNpcFactory(configProvider, entityMarkManager, spawnManager, plugin,
+														weaponService);
 
-		copNpcFactory = new CopNpcFactory(configProvider, entityMarkManager, spawnManager);
-
-		// Now reconstruct the spawn manager with the real factory
-		spawnManager = new CopSpawnManager(copNpcFactory, configProvider);
-
-		// Rebuild the factory with the final spawn manager reference for behavior factory
-		copNpcFactory = new CopNpcFactory(configProvider, entityMarkManager, spawnManager);
-
-		// Reassign the factory in the spawn manager
-		spawnManager = new CopSpawnManager(copNpcFactory, configProvider);
+		spawnManager  = new CopSpawnManager(copNpcFactory, configProvider);
+		copNpcFactory = new CopNpcFactory(configProvider, entityMarkManager, spawnManager, plugin, weaponService);
+		spawnManager  = new CopSpawnManager(copNpcFactory, configProvider);
 
 		copManager = new CopManager(plugin, spawnManager, targetingManager, configProvider, entityMarkManager);
 
