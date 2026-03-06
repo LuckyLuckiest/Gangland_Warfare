@@ -1,5 +1,6 @@
 package me.luckyraven;
 
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
@@ -8,12 +9,8 @@ import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserDataInitEvent;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.*;
-import me.luckyraven.file.FileHandler;
-import me.luckyraven.file.FileManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.inventory.InventoryHandler;
@@ -22,13 +19,15 @@ import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
 import me.luckyraven.loot.LootChestService;
 import me.luckyraven.lootchest.LootChestManager;
+import me.luckyraven.persistence.FileHandler;
+import me.luckyraven.persistence.FileManager;
+import me.luckyraven.persistence.database.DatabaseHelper;
+import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.scoreboard.Scoreboard;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.driver.DriverHandler;
 import me.luckyraven.util.item.unique.UniqueItemUtil;
 import me.luckyraven.weapon.WeaponManager;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -37,9 +36,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+@Log4j2
 public final class ReloadPlugin {
-
-	private static final Logger logger = LogManager.getLogger(ReloadPlugin.class.getSimpleName());
 
 	private final Gangland         gangland;
 	private final Initializer      initializer;
@@ -344,7 +342,7 @@ public final class ReloadPlugin {
 			if (scoreboard == null) throw new IOException("scoreboard file is not loaded!");
 			scoreboard.reloadData();
 		} catch (IOException exception) {
-			logger.error("scoreboard file is not loaded!", exception);
+			log.error("scoreboard file is not loaded!", exception);
 			return;
 		}
 

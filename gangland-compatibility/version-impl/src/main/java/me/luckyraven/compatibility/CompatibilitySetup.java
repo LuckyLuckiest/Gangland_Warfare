@@ -1,15 +1,13 @@
 package me.luckyraven.compatibility;
 
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.util.utilities.ReflectionUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
 
+@Log4j2
 public final class CompatibilitySetup {
-
-	private static final Logger logger = LogManager.getLogger(CompatibilitySetup.class.getSimpleName());
 
 	private final VersionSetup versionSetup;
 
@@ -31,9 +29,9 @@ public final class CompatibilitySetup {
 		} catch (ClassNotFoundException | ClassCastException exception) {
 			String bukkitVersion = Version.getBukkitVersion();
 
-			logger.warn("There was no {} found... Unsupported version?", bukkitVersion);
+			log.warn("There was no {} found... Unsupported version?", bukkitVersion);
 		} catch (InternalError exception) {
-			logger.error("Failed to load the compatible version.", exception);
+			log.error("Failed to load the compatible version.", exception);
 		}
 
 		return null;

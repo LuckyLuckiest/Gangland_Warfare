@@ -1,6 +1,7 @@
 package me.luckyraven;
 
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
@@ -15,20 +16,18 @@ import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.*;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.loot.LootChestService;
 import me.luckyraven.loot.data.LootChestData;
+import me.luckyraven.persistence.database.DatabaseHelper;
+import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.util.Pair;
 import me.luckyraven.util.TimeUtil;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponManager;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
@@ -36,9 +35,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+@Log4j2
 public final class PeriodicalUpdates {
-
-	private static final Logger logger = LogManager.getLogger(PeriodicalUpdates.class.getSimpleName());
 
 	private final Gangland    gangland;
 	private final Initializer initializer;
@@ -139,7 +137,7 @@ public final class PeriodicalUpdates {
 	 * Updates the plugin information.
 	 */
 	public void forceUpdate() {
-		logger.info("Force update...");
+		log.info("Force update...");
 		task();
 	}
 
@@ -159,7 +157,7 @@ public final class PeriodicalUpdates {
 	public void start() {
 		if (this.repeatingTimer == null) return;
 
-		logger.info("Initializing auto-save...");
+		log.info("Initializing auto-save...");
 
 		initializeCleanupService();
 
@@ -179,38 +177,38 @@ public final class PeriodicalUpdates {
 	}
 
 	private void task() {
-		long    start = System.currentTimeMillis();
-		boolean log   = SettingAddon.isAutoSaveDebug();
+		long    start    = System.currentTimeMillis();
+		boolean logDebug = SettingAddon.isAutoSaveDebug();
 
 		// Check for scheduled cleanup
 		if (cleanupService != null) {
 			try {
 				cleanupService.checkAndPerformCleanup();
 			} catch (Throwable throwable) {
-				logger.error("There was an issue during cleanup check...", throwable);
+				log.error("There was an issue during cleanup check...", throwable);
 			}
 		}
 
 		// auto-saving
-		if (log) logger.info("Saving...");
+		if (logDebug) log.info("Saving...");
 		try {
 			updatingDatabase();
-			if (log) logger.info("Data save complete");
+			if (logDebug) log.info("Data save complete");
 		} catch (Throwable throwable) {
-			logger.error("There was an issue saving the data...");
+			log.error("There was an issue saving the data...");
 		}
 
 		// resetting player inventories
-		if (log) logger.info("Cache reset...");
+		if (logDebug) log.info("Cache reset...");
 		try {
 			resetCache();
 		} catch (Throwable exception) {
-			logger.error("There was an issue resetting the cache...", exception);
+			log.error("There was an issue resetting the cache...", exception);
 		}
 
 		long end = System.currentTimeMillis();
 
-		if (log) logger.info("The process took {}ms", end - start);
+		if (logDebug) log.info("The process took {}ms", end - start);
 	}
 
 	private void updateUserData(UserManager<? extends OfflinePlayer> userManager, DatabaseHelper helper,
@@ -417,8 +415,8 @@ public final class PeriodicalUpdates {
 		pluginData.setScheduledScanDate(expectedScheduledDate);
 
 		if (SettingAddon.isAutoSaveDebug()) {
-			logger.info("Cleanup interval config changed. Adjusted scheduled scan date to: {}",
-						new Date(expectedScheduledDate));
+			log.info("Cleanup interval config changed. Adjusted scheduled scan date to: {}",
+					 new Date(expectedScheduledDate));
 		}
 	}
 

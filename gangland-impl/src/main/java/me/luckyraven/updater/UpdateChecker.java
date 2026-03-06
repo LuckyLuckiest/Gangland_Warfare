@@ -1,10 +1,9 @@
 package me.luckyraven.updater;
 
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.timer.RepeatingTimer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.BufferedReader;
@@ -18,9 +17,8 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Log4j2
 public class UpdateChecker {
-
-	private static final Logger logger = LogManager.getLogger(UpdateChecker.class.getSimpleName());
 
 	private final JavaPlugin     plugin;
 	private final int            resourceId;
@@ -63,7 +61,7 @@ public class UpdateChecker {
 			// return the version specified from the first line
 			return latestVersion;
 		} catch (Exception exception) {
-			logger.error("Unable to check for the latest version.", exception);
+			log.error("Unable to check for the latest version.", exception);
 		}
 
 		return currentVersion;
@@ -89,16 +87,16 @@ public class UpdateChecker {
 			fileOutputStream.close();
 			readableByteChannel.close();
 		} catch (FileNotFoundException exception) {
-			logger.error("Unable to find the new file.", exception);
+			log.error("Unable to find the new file.", exception);
 		} catch (Exception exception) {
-			logger.error("Unable to download the new file.", exception);
+			log.error("Unable to download the new file.", exception);
 		}
 	}
 
 	public void start() {
 		if (this.repeatingTimer == null) return;
 
-		logger.info("Checking for updates");
+		log.info("Checking for updates");
 		task();
 		this.repeatingTimer.start(true);
 	}
@@ -121,7 +119,7 @@ public class UpdateChecker {
 		String updateMessage = getUpdateMessage();
 
 		if (updateAvailable()) {
-			ChatUtil.sendToOperators(checkPermission, updateMessage, logger, true);
+			ChatUtil.sendToOperators(checkPermission, updateMessage, log, true);
 			return;
 		}
 

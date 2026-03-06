@@ -1,13 +1,12 @@
 package me.luckyraven.data.plugin;
 
-import me.luckyraven.database.Database;
-import me.luckyraven.database.DatabaseHelper;
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.database.tables.WeaponTable;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.persistence.database.Database;
+import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.util.TimeUtil;
 import me.luckyraven.weapon.WeaponManager;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.sql.SQLException;
 import java.sql.Types;
@@ -16,11 +15,10 @@ import java.util.Date;
 /**
  * Service responsible for cleaning up unused data from the database based on the plugin's scheduled scan dates.
  */
+@Log4j2
 public final class PluginDataCleanupService {
 
-	private static final Logger logger = LogManager.getLogger(PluginDataCleanupService.class.getSimpleName());
-
-	private final boolean log = SettingAddon.isAutoSaveDebug();
+	private final boolean logDebug = SettingAddon.isAutoSaveDebug();
 
 	private final PluginManager  pluginManager;
 	private final DatabaseHelper databaseHelper;
@@ -45,7 +43,7 @@ public final class PluginDataCleanupService {
 		long       now        = System.currentTimeMillis();
 
 		if (now >= pluginData.getScheduledScanDate()) {
-			if (log) logger.info("Scheduled cleanup scan is due. Starting cleanup...");
+			if (logDebug) log.info("Scheduled cleanup scan is due. Starting cleanup...");
 			performCleanup(pluginData);
 			return;
 		}
@@ -54,7 +52,7 @@ public final class PluginDataCleanupService {
 		long   timeUntilScanSeconds = Math.max(0, timeUntilScanMillis / 1000);
 		String expectedValue        = TimeUtil.formatTime(timeUntilScanSeconds, true);
 
-		if (log) logger.info("Next cleanup scan in approximately {}.", expectedValue);
+		if (logDebug) log.info("Next cleanup scan in approximately {}.", expectedValue);
 	}
 
 	/**
@@ -63,14 +61,14 @@ public final class PluginDataCleanupService {
 	public void forceCleanup() {
 		if (validatePluginData()) return;
 
-		if (log) logger.info("Forcing immediate cleanup scan...");
+		if (logDebug) log.info("Forcing immediate cleanup scan...");
 
 		performCleanup(pluginManager.getPluginDataList().getLast());
 	}
 
 	private boolean validatePluginData() {
 		if (pluginManager.getPluginDataList().isEmpty()) {
-			logger.warn("Plugin data not initialized.");
+			log.warn("Plugin data not initialized.");
 			return true;
 		}
 
@@ -83,7 +81,7 @@ public final class PluginDataCleanupService {
 		databaseHelper.runQueries(database -> {
 			// Reset weapons in the database
 			int weaponsReset = resetWeapons(database);
-			if (log) logger.info("Reset {} weapons from database", weaponsReset);
+			if (logDebug) log.info("Reset {} weapons from database", weaponsReset);
 		});
 
 		// Update plugin data with new scan dates (will be persisted by PeriodicalUpdates)
@@ -93,10 +91,10 @@ public final class PluginDataCleanupService {
 		pluginData.setScanDate(now);
 		pluginData.setScheduledScanDate(nextScanDate.getTime());
 
-		if (log) logger.info("Cleanup completed. Next scan scheduled for: {}", nextScanDate);
+		if (logDebug) log.info("Cleanup completed. Next scan scheduled for: {}", nextScanDate);
 
 		long duration = System.currentTimeMillis() - startTime;
-		if (log) logger.info("Cleanup scan completed in {}ms", duration);
+		if (logDebug) log.info("Cleanup scan completed in {}ms", duration);
 	}
 
 	private int resetWeapons(Database database) throws SQLException {
@@ -106,7 +104,7 @@ public final class PluginDataCleanupService {
 		database.table(weaponTable.getName()).delete("", null, Types.NULL);
 		weaponManager.clear();
 
-		if (log) logger.info("Cleared {} weapons from weapon table", totalBefore);
+		if (logDebug) log.info("Cleared {} weapons from weapon table", totalBefore);
 		return totalBefore;
 	}
 

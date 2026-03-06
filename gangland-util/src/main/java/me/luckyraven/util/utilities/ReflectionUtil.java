@@ -1,7 +1,6 @@
 package me.luckyraven.util.utilities;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
@@ -19,9 +18,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
+@Log4j2
 public final class ReflectionUtil {
-
-	private static final Logger logger = LogManager.getLogger(ReflectionUtil.class);
 
 	private ReflectionUtil() { }
 
@@ -91,7 +89,7 @@ public final class ReflectionUtil {
 
 			return classes;
 		} catch (IOException exception) {
-			logger.error(exception);
+			log.error(exception);
 		}
 		return Collections.emptySet();
 	}
@@ -127,7 +125,7 @@ public final class ReflectionUtil {
 					} catch (ClassNotFoundException | NoClassDefFoundError ignored) { }
 				}
 			} catch (IOException exception) {
-				logger.error(exception);
+				log.error(exception);
 			}
 		} else {
 			// running from ide/file system
@@ -155,7 +153,7 @@ public final class ReflectionUtil {
 
 				try {
 					classes.add(Class.forName(className, false, classLoader));
-				} catch (ClassNotFoundException | NoClassDefFoundError exception) { }
+				} catch (ClassNotFoundException | NoClassDefFoundError ignored) { }
 			}
 		}
 	}
@@ -167,7 +165,7 @@ public final class ReflectionUtil {
 						 .map(line -> getClass(line, packageName))
 						 .collect(Collectors.toSet());
 		} catch (IOException exception) {
-			logger.error(exception);
+			log.error(exception);
 			return Collections.emptySet();
 		}
 	}
@@ -187,7 +185,7 @@ public final class ReflectionUtil {
 				classes.add(Class.forName(className));
 			}
 		} catch (Exception exception) {
-			logger.error(exception);
+			log.error(exception);
 		}
 		return classes;
 	}
@@ -211,7 +209,7 @@ public final class ReflectionUtil {
 				classes.add(Class.forName(className));
 			}
 		} catch (Exception exception) {
-			logger.error(exception);
+			log.error(exception);
 		}
 		return classes;
 	}

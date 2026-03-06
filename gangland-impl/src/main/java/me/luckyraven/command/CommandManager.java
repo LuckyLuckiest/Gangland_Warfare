@@ -1,6 +1,7 @@
 package me.luckyraven.command;
 
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.sub.DownloadPluginCommand;
@@ -11,8 +12,6 @@ import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.UnhandledError;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -26,6 +25,7 @@ import java.util.stream.IntStream;
 
 import static me.luckyraven.util.ChatUtil.color;
 
+@Log4j2
 public final class CommandManager implements CommandExecutor {
 
 	// classes that shouldn't be displayed in tab completion
@@ -37,8 +37,6 @@ public final class CommandManager implements CommandExecutor {
 																					   DownloadPluginCommand.class);
 
 	private static final Map<String, CommandHandler> commands = new HashMap<>();
-
-	private static final Logger logger = LogManager.getLogger(CommandManager.class.getSimpleName());
 
 	private final Gangland gangland;
 
@@ -115,14 +113,14 @@ public final class CommandManager implements CommandExecutor {
 				List<CommandHandler> commandHandlers = getPermissibleCommands(sender);
 
 				Set<String> dictionary = commandHandlers.stream()
-														.map(CommandHandler::getAlias)
-														.flatMap(Collection::stream)
-														.filter(s -> !s.equals(Argument.OPTIONAL_ARGUMENT))
-														.collect(Collectors.toSet());
+						.map(CommandHandler::getAlias)
+						.flatMap(Collection::stream)
+						.filter(s -> !s.equals(Argument.OPTIONAL_ARGUMENT))
+						.collect(Collectors.toSet());
 
 				dictionary.addAll(commandHandlers.stream()
-												 .map(handler -> handler.getArgument().getArguments()[0])
-												 .collect(Collectors.toSet()));
+										  .map(handler -> handler.getArgument().getArguments()[0])
+										  .collect(Collectors.toSet()));
 
 				String commandSuggestion = ChatUtil.generateCommandSuggestion(args[0], dictionary, label, null);
 
@@ -131,7 +129,7 @@ public final class CommandManager implements CommandExecutor {
 				return false;
 			}
 		} catch (Throwable throwable) {
-			logger.error("{}: {}", UnhandledError.COMMANDS_ERROR, throwable.getMessage(), throwable);
+			log.error("{}: {}", UnhandledError.COMMANDS_ERROR, throwable.getMessage(), throwable);
 			return false;
 		}
 		return true;

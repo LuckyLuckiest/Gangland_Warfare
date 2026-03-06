@@ -1,16 +1,15 @@
 package me.luckyraven.loot.config;
 
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.exception.PluginException;
-import me.luckyraven.file.DataLoader;
-import me.luckyraven.file.FileHandler;
-import me.luckyraven.file.FileManager;
 import me.luckyraven.loot.LootChestService;
 import me.luckyraven.loot.data.LootTable;
 import me.luckyraven.loot.data.LootTier;
 import me.luckyraven.loot.item.LootItemReference;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import me.luckyraven.persistence.FileHandler;
+import me.luckyraven.persistence.FileLoader;
+import me.luckyraven.persistence.FileManager;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -19,21 +18,16 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 
-/**
- * Loader for loot chest configuration files. Follows the same pattern as other DataLoaders in the project. Settings are
- * loaded from SettingAddon, while loot tables and tiers are loaded from loot-chests.yml and tiers.yml.
- */
-public class LootChestLoader extends DataLoader<LootChestConfig> {
+@Log4j2
+public class LootChestLoader extends FileLoader<LootChestConfig> {
 
-	private static final Logger logger = LogManager.getLogger(LootChestLoader.class.getSimpleName());
-
-	private final LootChestService         manager;
-	private final LootChestSettingProvider settingsProvider;
+	private final LootChestService          manager;
+	private final LootChestSettingsProvider settingsProvider;
 
 	@Getter
 	private LootChestConfig loadedConfig;
 
-	public LootChestLoader(JavaPlugin plugin, LootChestService manager, LootChestSettingProvider settingsProvider) {
+	public LootChestLoader(JavaPlugin plugin, LootChestService manager, LootChestSettingsProvider settingsProvider) {
 		super(plugin);
 
 		this.manager          = manager;
@@ -81,7 +75,7 @@ public class LootChestLoader extends DataLoader<LootChestConfig> {
 
 		manager.setConfig(loadedConfig);
 
-		logger.info("Loaded {} tiers and {} loot tables", tiers.size(), lootTables.size());
+		log.info("Loaded {} tiers and {} loot tables", tiers.size(), lootTables.size());
 
 		if (consumer != null) {
 			consumer.accept(loadedConfig);

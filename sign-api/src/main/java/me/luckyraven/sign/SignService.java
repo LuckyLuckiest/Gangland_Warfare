@@ -1,19 +1,17 @@
 package me.luckyraven.sign;
 
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.sign.registry.SignTypeDefinition;
 import me.luckyraven.sign.registry.SignTypeRegistry;
 import me.luckyraven.sign.service.SignInteractionService;
 import me.luckyraven.sign.validation.SignValidationException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 
+@Log4j2
 @Getter
 public abstract class SignService {
-
-	private static final Logger logger = LogManager.getLogger(SignService.class.getSimpleName());
 
 	private final SignTypeRegistry       registry;
 	private final SignInteractionService signService;
@@ -32,7 +30,7 @@ public abstract class SignService {
 		try {
 			registerEntries();
 		} catch (SignValidationException exception) {
-			logger.warn("There was a problem registering the sign type");
+			log.warn("There was a problem registering the sign type");
 		}
 	}
 

@@ -1,8 +1,7 @@
 package me.luckyraven.compatibility;
 
 import lombok.Getter;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.log4j.Log4j2;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,10 +9,9 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 
+@Log4j2
 @Getter
 public final class VersionSetup {
-
-	private static final Logger logger = LogManager.getLogger(VersionSetup.class.getSimpleName());
 
 	@Getter
 	private static final String compatibilityFolder = "me.luckyraven.compatibility.version";
@@ -51,7 +49,7 @@ public final class VersionSetup {
 			// check for known version structure changes
 			if (version.equals("craftbukkit")) {
 				// attempt to use reflection to get the version
-				logger.warn("Unable to determine the server version... Trying to use bukkit version...");
+				log.warn("Unable to determine the server version... Trying to use bukkit version...");
 
 				version = Version.getBukkitVersion();
 
@@ -59,11 +57,11 @@ public final class VersionSetup {
 
 				// get last valid version
 				if (value == null) {
-					logger.warn("This version hasn't been tested... Loading latest valid version...");
+					log.warn("This version hasn't been tested... Loading latest valid version...");
 
 					version = Version.getLastValidVersion();
 				} else {
-					logger.info("Found a valid version... {}", value);
+					log.info("Found a valid version... {}", value);
 
 					version = value;
 				}
@@ -71,7 +69,7 @@ public final class VersionSetup {
 
 			return version;
 		} catch (ArrayIndexOutOfBoundsException exception) {
-			logger.error(exception);
+			log.error(exception);
 		}
 
 		return null;

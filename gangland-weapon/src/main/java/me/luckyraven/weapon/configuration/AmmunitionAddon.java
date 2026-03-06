@@ -1,21 +1,19 @@
 package me.luckyraven.weapon.configuration;
 
 import com.cryptomorin.xseries.XMaterial;
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.exception.PluginException;
-import me.luckyraven.file.FileHandler;
-import me.luckyraven.file.FileManager;
+import me.luckyraven.persistence.FileHandler;
+import me.luckyraven.persistence.FileManager;
 import me.luckyraven.weapon.ammo.Ammunition;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.IOException;
 import java.util.*;
 
+@Log4j2
 public class AmmunitionAddon implements Comparator<Ammunition> {
-
-	private static final Logger logger = LogManager.getLogger(AmmunitionAddon.class.getSimpleName());
 
 	private final Map<String, Ammunition> ammunition;
 	private final FileManager             fileManager;
@@ -83,8 +81,8 @@ public class AmmunitionAddon implements Comparator<Ammunition> {
 			temp.add(key);
 		}
 
-		logger.info("Loaded the following ammunition:");
-		logger.info(temp);
+		log.info("Loaded the following ammunition:");
+		log.info(temp);
 	}
 
 }

@@ -1,16 +1,14 @@
 package me.luckyraven.weapon.configuration;
 
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
-import me.luckyraven.file.FileManager;
-import me.luckyraven.file.FolderLoader;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import me.luckyraven.persistence.FileManager;
+import me.luckyraven.persistence.FolderLoader;
 import org.bukkit.configuration.InvalidConfigurationException;
 
+@Log4j2
 public class WeaponLoader extends FolderLoader {
-
-	private static final Logger logger = LogManager.getLogger(WeaponLoader.class.getSimpleName());
 
 	private final Gangland gangland;
 
@@ -29,7 +27,7 @@ public class WeaponLoader extends FolderLoader {
 				AmmunitionAddon ammunitionAddon = initializer.getAmmunitionAddon();
 				initializer.getWeaponAddon().registerWeapon(ammunitionAddon, fileHandler);
 			} catch (InvalidConfigurationException exception) {
-				logger.info("There was a problem loading the weapon: {}", exception.getMessage(), exception);
+				log.info("There was a problem loading the weapon: {}", exception.getMessage(), exception);
 			}
 		}, fileManager);
 	}

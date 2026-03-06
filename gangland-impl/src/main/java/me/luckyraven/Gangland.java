@@ -4,17 +4,16 @@ import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.ViaAPI;
 import com.zaxxer.hikari.HikariConfig;
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
-import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
+import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.updater.UpdateChecker;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.AdvancedPie;
@@ -28,10 +27,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
+@Log4j2
 @Getter
 public final class Gangland extends JavaPlugin {
-
-	private static final Logger logger = LogManager.getLogger("Gangland_Warfare");
 
 	private final String fullPrefix;
 	private final String shortPrefix;
@@ -235,16 +233,16 @@ public final class Gangland extends JavaPlugin {
 
 		public void validate(@Nullable Runnable runnable) {
 			if (Bukkit.getPluginManager().getPlugin(name) != null) {
-				if (type == Type.SOFT) logger.info("Found {}, linking...", name);
+				if (type == Type.SOFT) log.info("Found {}, linking...", name);
 				if (runnable != null) runnable.run();
 
-				logger.info("Linked {}", name);
+				log.info("Linked {}", name);
 				return;
 			}
 
 			if (type != Type.REQUIRED) return;
 
-			logger.error("{} is a required dependency!", name);
+			log.error("{} is a required dependency!", name);
 			getPluginLoader().disablePlugin(Gangland.this);
 		}
 
@@ -252,7 +250,6 @@ public final class Gangland extends JavaPlugin {
 			REQUIRED,
 			SOFT
 		}
-
 	}
 
 }

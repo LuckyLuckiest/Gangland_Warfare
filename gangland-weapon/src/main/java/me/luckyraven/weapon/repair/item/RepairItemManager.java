@@ -1,9 +1,8 @@
 package me.luckyraven.weapon.repair.item;
 
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.weapon.repair.config.RepairItemConfig;
 import me.luckyraven.weapon.repair.config.RepairItemData;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -12,12 +11,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Manages all repair items in the system.
- */
+@Log4j2
 public class RepairItemManager {
-
-	private static final Logger logger = LogManager.getLogger(RepairItemManager.class.getSimpleName());
 
 	private final RepairItemConfig        config;
 	private final Map<String, RepairItem> repairItems;
@@ -126,10 +121,10 @@ public class RepairItemManager {
 												 data.getEffects(), data.getMetadata(), data.getCustomModelData());
 				repairItems.put(entry.getKey(), item);
 			} catch (Exception e) {
-				logger.warn("Failed to create repair item: {}", entry.getKey(), e);
+				log.warn("Failed to create repair item: {}", entry.getKey(), e);
 			}
 		}
 
-		logger.info("Loaded {} repair items", repairItems.size());
+		log.info("Loaded {} repair items", repairItems.size());
 	}
 }

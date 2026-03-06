@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
@@ -12,8 +13,6 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.permissions.Permission;
@@ -28,12 +27,11 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Log4j2
 @Getter
 public class Argument implements Cloneable {
 
 	public static final String OPTIONAL_ARGUMENT = "?";
-
-	private static final Logger logger = LogManager.getLogger(Argument.class.getSimpleName());
 
 	private final boolean    displayAllArguments;
 	@Getter(value = AccessLevel.NONE)
@@ -119,7 +117,7 @@ public class Argument implements Cloneable {
 		PluginManager pluginManager = Bukkit.getPluginManager();
 		Permission    perm          = new Permission(permission);
 		List<String> permissions = pluginManager.getPermissions()
-												.stream().map(Permission::getName).toList();
+				.stream().map(Permission::getName).toList();
 
 		// add the permission if it was not in the permission list
 		if (!permissions.contains(permission)) pluginManager.addPermission(perm);
@@ -178,7 +176,7 @@ public class Argument implements Cloneable {
 			if (throwable.getMessage() != null) sender.sendMessage(throwable.getMessage());
 			else sender.sendMessage("null");
 
-			logger.warn(throwable.getMessage(), throwable);
+			log.warn(throwable.getMessage(), throwable);
 		}
 	}
 
@@ -193,7 +191,7 @@ public class Argument implements Cloneable {
 		if (!(obj instanceof Argument argument)) return false;
 
 		return Arrays.stream(argument.arguments)
-					 .anyMatch(arg -> Arrays.stream(this.arguments).anyMatch(arg::equalsIgnoreCase));
+				.anyMatch(arg -> Arrays.stream(this.arguments).anyMatch(arg::equalsIgnoreCase));
 	}
 
 	// TODO test this method
@@ -261,10 +259,10 @@ public class Argument implements Cloneable {
 			// get the last valid input children
 			List<Tree.Node<Argument>> children = lastValid.node.getChildren();
 			Set<String> dictionary = children.stream()
-											 .map(node -> node.getData().arguments)
-											 .flatMap(Stream::of)
-											 .filter(s -> !s.equals(OPTIONAL_ARGUMENT))
-											 .collect(Collectors.toSet());
+					.map(node -> node.getData().arguments)
+					.flatMap(Stream::of)
+					.filter(s -> !s.equals(OPTIONAL_ARGUMENT))
+					.collect(Collectors.toSet());
 
 			String[] validArguments = Arrays.stream(args).toList().subList(0, length).toArray(String[]::new);
 

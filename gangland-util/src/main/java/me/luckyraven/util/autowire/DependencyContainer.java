@@ -1,7 +1,6 @@
 package me.luckyraven.util.autowire;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.log4j.Log4j2;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
@@ -16,9 +15,8 @@ import java.util.stream.Collectors;
  * A lightweight dependency injection container that manages component instances and performs automatic dependency
  * injection.
  */
+@Log4j2
 public class DependencyContainer {
-
-	private static final Logger logger = LogManager.getLogger(DependencyContainer.class.getSimpleName());
 
 	// Store instances by type
 	private final Map<Class<?>, List<Object>> instances = new ConcurrentHashMap<>();
@@ -35,7 +33,7 @@ public class DependencyContainer {
 		// Also register by all superclasses and interfaces
 		registerHierarchy(instance.getClass(), instance);
 
-		logger.debug("Registered instance of type: {}", type.getName());
+		log.debug("Registered instance of type: {}", type.getName());
 	}
 
 	/**
@@ -44,7 +42,7 @@ public class DependencyContainer {
 	public <T> void registerInstance(String name, Class<T> type, T instance) {
 		registerInstance(type, instance);
 		namedInstances.put(name, instance);
-		logger.debug("Registered named instance '{}' of type: {}", name, type.getName());
+		log.debug("Registered named instance '{}' of type: {}", name, type.getName());
 	}
 
 	/**
@@ -116,7 +114,7 @@ public class DependencyContainer {
 	public void clear() {
 		instances.clear();
 		namedInstances.clear();
-		logger.debug("Cleared all registered instances");
+		log.debug("Cleared all registered instances");
 	}
 
 	/**
@@ -131,7 +129,7 @@ public class DependencyContainer {
 	 */
 	public int getTotalInstanceCount() {
 		return instances.values()
-						.stream().mapToInt(List::size).sum();
+				.stream().mapToInt(List::size).sum();
 	}
 
 	/**

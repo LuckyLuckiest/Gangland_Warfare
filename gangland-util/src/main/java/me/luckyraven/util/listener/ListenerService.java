@@ -1,11 +1,10 @@
 package me.luckyraven.util.listener;
 
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.autowire.DependencyContainer;
 import me.luckyraven.util.utilities.ReflectionUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginManager;
@@ -17,9 +16,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
+@Log4j2
 public abstract class ListenerService {
-
-	private static final Logger logger = LogManager.getLogger(ListenerService.class.getSimpleName());
 
 	private final JavaPlugin          plugin;
 	@Getter
@@ -66,7 +64,7 @@ public abstract class ListenerService {
 				if (!clazz.isAnnotationPresent(ListenerHandler.class)) continue;
 
 				if (!Listener.class.isAssignableFrom(clazz)) {
-					logger.warn("Class {} has @ListenerHandler but doesn't implement Listener!", clazz.getName());
+					log.warn("Class {} has @ListenerHandler but doesn't implement Listener!", clazz.getName());
 					continue;
 				}
 
@@ -89,11 +87,11 @@ public abstract class ListenerService {
 						addEvent(listener, priority);
 					}
 				} catch (Exception exception) {
-					logger.warn("Failed to instantiate class {}: {}", clazz.getName(), exception.getMessage());
+					log.warn("Failed to instantiate class {}: {}", clazz.getName(), exception.getMessage());
 				}
 			}
 		} catch (Exception exception) {
-			logger.warn("Error scanning listeners: {}", exception.getMessage());
+			log.warn("Error scanning listeners: {}", exception.getMessage());
 		}
 	}
 
@@ -123,19 +121,19 @@ public abstract class ListenerService {
 					if (!invoke) continue;
 				}
 
-				// Create instance with autowiring
+				// Create an instance with autowiring
 				try {
 					Object instance = dependencyContainer.createInstance(clazz, plugin);
 
 					dependencyContainer.registerInstance((Class<? super Object>) clazz, instance);
 
-					logger.info("Registered component: {}", clazz.getName());
+					log.info("Registered component: {}", clazz.getName());
 				} catch (Exception exception) {
-					logger.warn("Failed to register component {}: {}", clazz.getName(), exception.getMessage());
+					log.warn("Failed to register component {}: {}", clazz.getName(), exception.getMessage());
 				}
 			}
 		} catch (Exception exception) {
-			logger.warn("Error scanning components: {}", exception.getMessage());
+			log.warn("Error scanning components: {}", exception.getMessage());
 		}
 	}
 
@@ -152,7 +150,7 @@ public abstract class ListenerService {
 			boolean allAvailable = true;
 			for (Class<?> type : targetTypes) {
 				if (!dependencyContainer.hasInstance(type)) {
-					logger.warn("Required autowire target {} not available for {}", type.getName(), clazz.getName());
+					log.warn("Required autowire target {} not available for {}", type.getName(), clazz.getName());
 					allAvailable = false;
 					break;
 				}
@@ -162,7 +160,7 @@ public abstract class ListenerService {
 				try {
 					return (Listener) dependencyContainer.createInstance(clazz, plugin);
 				} catch (Exception e) {
-					logger.warn("Failed to create listener with autowiring: {}", e.getMessage());
+					log.warn("Failed to create listener with autowiring: {}", e.getMessage());
 					// Fall through to traditional instantiation
 				}
 			}
@@ -185,7 +183,7 @@ public abstract class ListenerService {
 					try {
 						return (Listener) dependencyContainer.createInstance(clazz, plugin);
 					} catch (Exception e4) {
-						logger.warn("No suitable constructor found for {}", clazz.getName());
+						log.warn("No suitable constructor found for {}", clazz.getName());
 						return null;
 					}
 				}
@@ -193,14 +191,6 @@ public abstract class ListenerService {
 		}
 	}
 
-	private static class ListenerEntry {
-		final Listener         listener;
-		final ListenerPriority priority;
-
-		ListenerEntry(Listener listener, ListenerPriority priority) {
-			this.listener = listener;
-			this.priority = priority;
-		}
-	}
+	private record ListenerEntry(Listener listener, ListenerPriority priority) { }
 
 }

@@ -1,13 +1,11 @@
 package me.luckyraven.compatibility;
 
 import com.viaversion.viaversion.api.ViaAPI;
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
+@Log4j2
 public class CompatibilityWorker implements Compatibility {
-
-	private static final Logger logger = LogManager.getLogger(CompatibilityWorker.class.getSimpleName());
 
 	private final RecoilCompatibility recoilCompatibility;
 
@@ -23,14 +21,14 @@ public class CompatibilityWorker implements Compatibility {
 			}
 
 			if (recoilCompatibility == null) {
-				logger.info("Using default recoil (limited functionality).");
+				log.info("Using default recoil (limited functionality).");
 
 				recoilCompatibility = new RecoilCompatibility();
 				recoilCompatibility.setViaAPI(viaAPI);
 			}
 
 		} catch (Exception exception) {
-			logger.warn("There was a problem loading Compatibility class... {}", exception.getMessage(), exception);
+			log.warn("There was a problem loading Compatibility class... {}", exception.getMessage(), exception);
 		}
 
 		this.recoilCompatibility = recoilCompatibility;
