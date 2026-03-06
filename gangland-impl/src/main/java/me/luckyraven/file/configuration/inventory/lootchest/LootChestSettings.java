@@ -1,11 +1,11 @@
 package me.luckyraven.file.configuration.inventory.lootchest;
 
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.loot.config.LootChestSettingProvider;
+import me.luckyraven.loot.config.LootChestSettingsProvider;
 
 import java.util.List;
 
-public class LootChestSettingAddon implements LootChestSettingProvider {
+public class LootChestSettings implements LootChestSettingsProvider {
 
 	@Override
 	public long getCountdownTimer() {

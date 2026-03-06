@@ -2,7 +2,7 @@ package me.luckyraven.loot.config;
 
 import java.util.List;
 
-public interface LootChestSettingProvider {
+public interface LootChestSettingsProvider {
 
 	long getCountdownTimer();
 
