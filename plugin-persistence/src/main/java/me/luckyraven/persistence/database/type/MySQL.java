@@ -1,9 +1,9 @@
-package me.luckyraven.database.type;
+package me.luckyraven.persistence.database.type;
 
 import com.google.common.base.Preconditions;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import me.luckyraven.database.Database;
+import me.luckyraven.persistence.database.Database;
 import me.luckyraven.util.utilities.DatabaseUtil;
 
 import java.sql.*;
