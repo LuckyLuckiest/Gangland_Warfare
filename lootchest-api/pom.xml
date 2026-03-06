@@ -42,7 +42,7 @@
 
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>plugin-file</artifactId>
+            <artifactId>plugin-persistence</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>

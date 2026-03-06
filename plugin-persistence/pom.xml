@@ -3,13 +3,17 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>me.luckyraven</groupId>
         <artifactId>gangland_warfare</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <artifactId>cops-n-crooks</artifactId>
+    <artifactId>plugin-persistence</artifactId>
+
+    <name>Plugin Persistence</name>
+    <description>Persistence layer for Gangland Warfare plugin</description>
 
     <dependencies>
         <!-- Spigot Build -->
@@ -23,31 +27,29 @@
         <!-- Local dependencies -->
         <dependency>
             <groupId>me.luckyraven</groupId>
+            <artifactId>plugin-exception</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
             <artifactId>gangland-util</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>version-impl</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>plugin-persistence</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-weapon</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
 
-        <!-- Citizens dependency -->
+        <!-- Database dependencies -->
         <dependency>
-            <groupId>net.citizensnpcs</groupId>
-            <artifactId>citizens-main</artifactId>
-            <scope>provided</scope>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${hikaricp.version}</version>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>mysql</groupId>
+                    <artifactId>mysql-connector-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 

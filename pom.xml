@@ -29,7 +29,7 @@
         <module>lootchest-api</module>
         <module>cops-n-crooks</module>
 
-        <module>plugin-file</module>
+        <module>plugin-persistence</module>
         <module>plugin-exception</module>
 
         <!-- Compatibility modules -->
@@ -95,6 +95,15 @@
         <annotations.version>26.1.0</annotations.version>
         <log4j-slf4j-impl.version>3.0.0-beta2</log4j-slf4j-impl.version>
     </properties>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+    </build>
 
     <repositories>
         <repository>
