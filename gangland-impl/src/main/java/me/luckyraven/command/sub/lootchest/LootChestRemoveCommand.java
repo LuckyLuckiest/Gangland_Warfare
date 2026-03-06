@@ -68,7 +68,7 @@ class LootChestRemoveCommand extends SubArgument {
 													.getInstanceFromTables(LootChestTable.class, tables);
 
 			helper.runQueries(database -> {
-				database.table(lootChestTable.getName()).delete("id", chestData.getId(), Types.INTEGER);
+				database.table(lootChestTable.getName()).delete("id", chestData.getId(), Types.VARCHAR);
 			});
 
 			player.sendMessage(ChatUtil.commandMessage("&aLoot chest removed successfully!"));
