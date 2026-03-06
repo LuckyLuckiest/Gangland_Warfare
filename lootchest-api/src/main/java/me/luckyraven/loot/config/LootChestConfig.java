@@ -30,7 +30,7 @@ public class LootChestConfig {
 	/**
 	 * Creates a LootChestConfig from a settings provider and loaded data.
 	 */
-	public static LootChestConfig fromProvider(LootChestSettingProvider settingsProvider, Map<String, LootTier> tiers,
+	public static LootChestConfig fromProvider(LootChestSettingsProvider settingsProvider, Map<String, LootTier> tiers,
 											   Map<String, LootTable> lootTables,
 											   Map<LootItemReference.Rarity, Double> globalRarityChances) {
 
