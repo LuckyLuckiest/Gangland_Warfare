@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Configuration status="INFO">
+
+    <Properties>
+        <Property name="projectName">@project.name@</Property>
+    </Properties>
+
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d[HH:mm:ss %level]: [%logger] %msg%n%ex"/>
+            <PatternLayout pattern="%d{HH:mm:ss} [%level]: [${projectName}] [%logger{1}] %msg%n%ex"/>
         </Console>
     </Appenders>
 
@@ -11,4 +16,5 @@
             <AppenderRef ref="Console"/>
         </Root>
     </Loggers>
+
 </Configuration>
