@@ -3,6 +3,7 @@ package me.luckyraven.loot;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.loot.config.LootChestConfig;
 import me.luckyraven.loot.data.*;
 import me.luckyraven.loot.events.cracking.*;
 import me.luckyraven.loot.events.lootchest.LootChestCloseEvent;

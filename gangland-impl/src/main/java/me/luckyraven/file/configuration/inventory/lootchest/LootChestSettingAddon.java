@@ -1,7 +1,7 @@
 package me.luckyraven.file.configuration.inventory.lootchest;
 
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.loot.LootChestSettingProvider;
+import me.luckyraven.loot.config.LootChestSettingProvider;
 
 import java.util.List;
 

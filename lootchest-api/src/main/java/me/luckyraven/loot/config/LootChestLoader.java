@@ -1,4 +1,4 @@
-package me.luckyraven.file.configuration.inventory.lootchest;
+package me.luckyraven.loot.config;
 
 import lombok.Getter;
 import me.luckyraven.exception.PluginException;
@@ -6,8 +6,6 @@ import me.luckyraven.file.DataLoader;
 import me.luckyraven.file.FileHandler;
 import me.luckyraven.file.FileManager;
 import me.luckyraven.loot.LootChestService;
-import me.luckyraven.loot.LootChestSettingProvider;
-import me.luckyraven.loot.data.LootChestConfig;
 import me.luckyraven.loot.data.LootTable;
 import me.luckyraven.loot.data.LootTier;
 import me.luckyraven.loot.item.LootItemReference;
@@ -35,11 +33,11 @@ public class LootChestLoader extends DataLoader<LootChestConfig> {
 	@Getter
 	private LootChestConfig loadedConfig;
 
-	public LootChestLoader(JavaPlugin plugin, LootChestService manager) {
+	public LootChestLoader(JavaPlugin plugin, LootChestService manager, LootChestSettingProvider settingsProvider) {
 		super(plugin);
 
 		this.manager          = manager;
-		this.settingsProvider = new LootChestSettingAddon();
+		this.settingsProvider = settingsProvider;
 	}
 
 	@Override
