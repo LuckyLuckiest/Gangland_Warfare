@@ -1,11 +1,11 @@
 package me.luckyraven.lootchest;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.LootChestTable;
 import me.luckyraven.loot.LootChestService;
 import me.luckyraven.loot.data.LootChestData;
 import me.luckyraven.loot.data.LootTier;
+import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.util.hologram.HologramService;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.Bukkit;

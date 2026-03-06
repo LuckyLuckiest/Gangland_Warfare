@@ -2,7 +2,7 @@ package me.luckyraven.scoreboard.configuration;
 
 import lombok.Getter;
 import me.luckyraven.exception.PluginException;
-import me.luckyraven.file.FileManager;
+import me.luckyraven.persistence.FileManager;
 import me.luckyraven.scoreboard.part.Line;
 import me.luckyraven.scoreboard.part.StaticLine;
 import org.bukkit.configuration.ConfigurationSection;

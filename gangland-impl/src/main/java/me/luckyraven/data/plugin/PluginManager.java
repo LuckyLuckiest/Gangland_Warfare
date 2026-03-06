@@ -1,9 +1,9 @@
 package me.luckyraven.data.plugin;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.PluginDataTable;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.util.TimeUtil;
 
 import java.time.Instant;

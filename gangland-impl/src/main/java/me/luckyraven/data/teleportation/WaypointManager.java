@@ -1,9 +1,9 @@
 package me.luckyraven.data.teleportation;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.database.Database;
-import me.luckyraven.database.DatabaseHelper;
 import me.luckyraven.database.tables.WaypointTable;
+import me.luckyraven.persistence.database.Database;
+import me.luckyraven.persistence.database.DatabaseHelper;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 

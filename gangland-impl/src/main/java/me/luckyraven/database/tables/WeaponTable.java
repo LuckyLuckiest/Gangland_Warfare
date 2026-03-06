@@ -1,7 +1,7 @@
 package me.luckyraven.database.tables;
 
-import me.luckyraven.database.component.Attribute;
-import me.luckyraven.database.component.Table;
+import me.luckyraven.persistence.database.component.Attribute;
+import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.weapon.Weapon;
 
 import java.sql.Types;

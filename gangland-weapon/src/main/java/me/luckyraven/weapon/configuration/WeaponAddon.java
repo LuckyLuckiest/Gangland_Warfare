@@ -1,7 +1,7 @@
 package me.luckyraven.weapon.configuration;
 
 import com.cryptomorin.xseries.XMaterial;
-import me.luckyraven.file.FileHandler;
+import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.weapon.SelectiveFire;
 import me.luckyraven.weapon.Weapon;

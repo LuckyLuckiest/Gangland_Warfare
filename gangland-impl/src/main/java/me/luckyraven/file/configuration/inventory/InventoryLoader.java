@@ -1,8 +1,8 @@
 package me.luckyraven.file.configuration.inventory;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.file.FileManager;
-import me.luckyraven.file.FolderLoader;
+import me.luckyraven.persistence.FileManager;
+import me.luckyraven.persistence.FolderLoader;
 
 public class InventoryLoader extends FolderLoader {
 

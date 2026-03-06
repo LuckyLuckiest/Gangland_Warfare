@@ -2,8 +2,8 @@ package me.luckyraven.database.tables;
 
 import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
-import me.luckyraven.database.component.Attribute;
-import me.luckyraven.database.component.Table;
+import me.luckyraven.persistence.database.component.Attribute;
+import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.util.Pair;
 
 import java.sql.Types;

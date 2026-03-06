@@ -1,8 +1,12 @@
 package me.luckyraven.database;
 
-import me.luckyraven.database.component.Table;
 import me.luckyraven.database.tables.*;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.persistence.database.Database;
+import me.luckyraven.persistence.database.DatabaseHandler;
+import me.luckyraven.persistence.database.DatabaseManager;
+import me.luckyraven.persistence.database.DatabaseSettingsProvider;
+import me.luckyraven.persistence.database.component.Table;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,8 +36,8 @@ public class GanglandDatabase extends DatabaseHandler {
 	private final WeaponTable         weaponTable;
 	private final LootChestTable      lootChestTable;
 
-	public GanglandDatabase(JavaPlugin plugin, String schema) {
-		super(plugin);
+	public GanglandDatabase(JavaPlugin plugin, String schema, DatabaseSettingsProvider settings) {
+		super(plugin, settings);
 
 		this.schema = schema;
 		this.tables = new ArrayList<>();

@@ -2,8 +2,8 @@ package me.luckyraven.database.tables;
 
 import me.luckyraven.data.account.type.Bank;
 import me.luckyraven.data.user.User;
-import me.luckyraven.database.component.Attribute;
-import me.luckyraven.database.component.Table;
+import me.luckyraven.persistence.database.component.Attribute;
+import me.luckyraven.persistence.database.component.Table;
 import org.bukkit.OfflinePlayer;
 
 import java.sql.Types;
