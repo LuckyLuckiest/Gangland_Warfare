@@ -2,6 +2,7 @@ package me.luckyraven.copsncrooks.police.npc;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.police.config.CopTierConfig;
 import me.luckyraven.copsncrooks.police.state.CopBehavior;
@@ -11,9 +12,8 @@ import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.events.WeaponShootEvent;
 import me.luckyraven.weapon.projectile.WeaponProjectile;
 import net.citizensnpcs.api.npc.NPC;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -23,16 +23,20 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * Represents a single cop NPC backed by Citizens. Manages state transitions and delegates behavior to CopBehavior
- * instances.
- */
+@Log4j2
 public class CopNpc {
 
-	private static final Logger logger = LogManager.getLogger(CopNpc.class.getSimpleName());
+	private static final int    NAVIGATION_RECALCULATION_TICKS = 10;
+	private static final int    STUCK_CHECK_INTERVAL_TICKS     = 10;
+	private static final int    MAX_STUCK_CHECKS               = 4;
+	private static final double MIN_PROGRESS_DISTANCE_SQUARED  = 0.75 * 0.75;
+	private static final double RANGED_MIN_DISTANCE            = 7.0;
+	private static final double RANGED_MAX_DISTANCE            = 12.0;
+	private static final double RANGED_IDEAL_DISTANCE          = 9.0;
 
 	@Getter
 	private final NPC                        npc;
@@ -59,16 +63,25 @@ public class CopNpc {
 	private boolean    reloading;
 	private JavaPlugin plugin;
 
+	private Location lastNavigationTarget;
+	private Location lastProgressLocation;
+	private int      navigationThrottleTicks;
+	private int      stuckSampleTicks;
+	private int      consecutiveStuckChecks;
+
 	public CopNpc(NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors, Location spawnLocation) {
-		this.npc              = npc;
-		this.tierConfig       = tierConfig;
-		this.behaviors        = behaviors;
-		this.spawnLocation    = spawnLocation;
-		this.currentState     = CopState.IDLE;
-		this.attackCooldown   = 0;
-		this.markedForRemoval = false;
-		this.despawnTicks     = 0;
-		this.reloading        = false;
+		this.npc                     = npc;
+		this.tierConfig              = tierConfig;
+		this.behaviors               = behaviors;
+		this.spawnLocation           = spawnLocation;
+		this.currentState            = CopState.IDLE;
+		this.attackCooldown          = 0;
+		this.markedForRemoval        = false;
+		this.despawnTicks            = 0;
+		this.reloading               = false;
+		this.navigationThrottleTicks = NAVIGATION_RECALCULATION_TICKS;
+		this.stuckSampleTicks        = 0;
+		this.consecutiveStuckChecks  = 0;
 	}
 
 	/**
@@ -114,7 +127,8 @@ public class CopNpc {
 	 * @param newState the target state
 	 */
 	public void transitionTo(CopState newState) {
-		logger.info("Transitioning cop {} to state: {} from: {}", npc.getName(), newState, currentState);
+		log.info("Transitioning cop {}-{} from {} state to {} state.", npc.getName(), npc.getId(), currentState,
+				 newState);
 		if (currentState == newState) return;
 
 		CopBehavior oldBehavior = behaviors.get(currentState);
@@ -143,6 +157,7 @@ public class CopNpc {
 		}
 
 		decrementAttackCooldown();
+		updateNavigationProgress();
 
 		CopBehavior behavior = behaviors.get(currentState);
 
@@ -152,13 +167,93 @@ public class CopNpc {
 	}
 
 	/**
+	 * Returns whether this cop is currently using a ranged weapon.
+	 */
+	public boolean isUsingRangedWeapon() {
+		if (!tierConfig.canUseWeapons()) {
+			return false;
+		}
+
+		return heldWeapon != null || isHoldingVanillaRangedWeapon();
+	}
+
+	/**
+	 * Returns whether the cop should hold position instead of closing distance further. Intended for ranged cops that
+	 * already have a good firing angle.
+	 */
+	public boolean shouldHoldPursuitPosition(Player player) {
+		if (!isUsingRangedWeapon() || !hasLineOfSight(player)) {
+			return false;
+		}
+
+		double distance = distanceTo(player);
+		return distance >= RANGED_MIN_DISTANCE && distance <= RANGED_MAX_DISTANCE;
+	}
+
+	/**
+	 * Returns whether the current navigation appears stuck.
+	 */
+	public boolean isNavigationStuck() {
+		return consecutiveStuckChecks >= MAX_STUCK_CHECKS;
+	}
+
+	/**
+	 * Resolves the best navigation target while pursuing a player. Uses a direct approach first, then a circular search
+	 * around the player, and broadens the search if navigation has been stuck.
+	 *
+	 * @param player the target player
+	 *
+	 * @return a safe pursuit target, or the player's location if no better fallback was found
+	 */
+	public Location resolvePursuitLocation(Player player) {
+		if (!isValid() || player == null) return null;
+
+		LivingEntity entity = getEntity();
+
+		if (entity == null) return null;
+
+		Location copLocation    = entity.getLocation().clone();
+		Location playerLocation = player.getLocation().clone();
+
+		if (copLocation.getWorld() == null || !copLocation.getWorld().equals(playerLocation.getWorld())) {
+			return playerLocation;
+		}
+
+		if (isUsingRangedWeapon()) {
+			Location ringApproach = findBestRingApproachLocation(copLocation, playerLocation, 7.0, 12.0, 9.0);
+
+			if (ringApproach != null) {
+				return ringApproach;
+			}
+		}
+
+		Location edgeApproach = findLastReachableGroundBeforeGap(copLocation, playerLocation, 32.0);
+
+		if (edgeApproach != null) {
+			return edgeApproach;
+		}
+
+		Location safePlayerSpot = normalizeToStandableLocation(playerLocation);
+		return safePlayerSpot != null ? safePlayerSpot : playerLocation;
+	}
+
+	/**
 	 * Navigates the NPC to the given location using Citizens pathfinding.
 	 *
 	 * @param location the target location
 	 */
 	public void navigateTo(Location location) {
 		if (!isValid() || location == null) return;
+
+		if (!shouldRecalculateNavigation(location)) {
+			return;
+		}
+
 		npc.getNavigator().setTarget(location);
+		lastNavigationTarget    = location.clone();
+		navigationThrottleTicks = 0;
+		stuckSampleTicks        = 0;
+		lastProgressLocation    = getEntity() != null ? getEntity().getLocation().clone() : null;
 	}
 
 	/**
@@ -167,6 +262,7 @@ public class CopNpc {
 	public void stopNavigation() {
 		if (!isValid()) return;
 		npc.getNavigator().cancelNavigation();
+		resetNavigationTracking();
 	}
 
 	/**
@@ -310,6 +406,337 @@ public class CopNpc {
 	 */
 	public void destroy() {
 		destroy(null);
+	}
+
+	/**
+	 * Finds the last safe walkable location on the horizontal path from the cop toward the player. If a gap, cliff, or
+	 * blocked step is encountered, the previous safe location is returned.
+	 */
+	private Location findLastReachableGroundBeforeGap(Location from, Location to, double maxDistance) {
+		if (from == null || to == null || from.getWorld() == null || !from.getWorld().equals(to.getWorld())) {
+			return null;
+		}
+
+		Vector horizontal = to.toVector().subtract(from.toVector());
+		horizontal.setY(0.0);
+
+		if (horizontal.lengthSquared() <= 0.0001) {
+			return normalizeToStandableLocation(from);
+		}
+
+		double totalDistance = Math.min(horizontal.length(), maxDistance);
+		Vector direction     = horizontal.normalize().multiply(0.5);
+
+		Location lastSafe = normalizeToStandableLocation(from);
+		Location cursor   = from.clone();
+
+		for (double travelled = 0.5; travelled <= totalDistance; travelled += 0.5) {
+			cursor = cursor.clone().add(direction);
+
+			Location standable = normalizeToStandableLocation(cursor);
+
+			if (standable == null) {
+				return lastSafe;
+			}
+
+			if (!hasWalkableConnection(lastSafe, standable)) {
+				return lastSafe;
+			}
+
+			lastSafe = standable;
+		}
+
+		return lastSafe;
+	}
+
+	/**
+	 * Returns whether two nearby locations are connected by walkable ground without requiring an unsafe jump/drop.
+	 */
+	private boolean hasWalkableConnection(Location from, Location to) {
+		if (from == null || to == null || from.getWorld() == null || !from.getWorld().equals(to.getWorld())) {
+			return false;
+		}
+
+		int deltaY = to.getBlockY() - from.getBlockY();
+
+		if (deltaY > 1) {
+			return false;
+		}
+
+		if (deltaY < -1) {
+			return false;
+		}
+
+		double horizontalDistanceSquared = horizontalDistanceSquared(from, to);
+
+		if (horizontalDistanceSquared > 1.25 * 1.25) {
+			return false;
+		}
+
+		return isSafeStandLocation(to);
+	}
+
+	/**
+	 * Returns squared horizontal distance ignoring Y.
+	 */
+	private double horizontalDistanceSquared(Location first, Location second) {
+		double dx = first.getX() - second.getX();
+		double dz = first.getZ() - second.getZ();
+		return dx * dx + dz * dz;
+	}
+
+	/**
+	 * Attempts to convert a raw location into a safe standable destination for an NPC.
+	 */
+	private Location normalizeToStandableLocation(Location location) {
+		if (location == null || location.getWorld() == null) return null;
+
+		World world = location.getWorld();
+		int   baseX = location.getBlockX();
+		int   baseZ = location.getBlockZ();
+
+		for (int yOffset = 2; yOffset >= -4; yOffset--) {
+			Location candidate = new Location(world, baseX + 0.5, location.getY() + yOffset, baseZ + 0.5,
+											  location.getYaw(), location.getPitch());
+
+			if (isSafeStandLocation(candidate)) {
+				return candidate;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns whether the location is safe for the NPC to stand at.
+	 */
+	private boolean isSafeStandLocation(Location location) {
+		if (location == null || location.getWorld() == null) return false;
+
+		Block feet  = location.getBlock();
+		Block head  = feet.getRelative(0, 1, 0);
+		Block below = feet.getRelative(0, -1, 0);
+
+		if (!feet.isPassable() || !head.isPassable()) {
+			return false;
+		}
+
+		if (below.isPassable() || !below.getType().isSolid()) {
+			return false;
+		}
+
+		Material supportType = below.getType();
+
+		if (supportType == Material.LAVA || supportType == Material.WATER || supportType == Material.CACTUS ||
+			supportType == Material.MAGMA_BLOCK) {
+			return false;
+		}
+
+		return !isFrontedByImmediateGap(location);
+	}
+
+	/**
+	 * Returns whether there is an immediate horizontal gap directly in front of the location. This helps prevent
+	 * selecting edge positions that force the cop to step into open air on the next move.
+	 */
+	private boolean isFrontedByImmediateGap(Location location) {
+		LivingEntity entity = getEntity();
+
+		if (entity == null) {
+			return false;
+		}
+
+		Vector facing = entity.getLocation().toVector().subtract(location.toVector());
+		facing.setY(0.0);
+
+		if (facing.lengthSquared() <= 0.0001) {
+			return false;
+		}
+
+		Vector   step  = facing.normalize();
+		Location front = location.clone().add(step.getX(), 0.0, step.getZ());
+
+		Location frontStandable = normalizeToStandableLocation(front);
+
+		return frontStandable == null;
+	}
+
+	/**
+	 * Finds a safe point on the line between the player and the cop.
+	 */
+	private Location findLineApproachLocation(Location copLocation, Location playerLocation, double maxDistance) {
+		Vector direction = copLocation.toVector().subtract(playerLocation.toVector());
+
+		if (direction.lengthSquared() <= 0.0001) {
+			return normalizeToStandableLocation(playerLocation);
+		}
+
+		direction.normalize();
+
+		double searchDistance = Math.min(copLocation.distance(playerLocation), maxDistance);
+
+		for (double offset = 0.0; offset <= searchDistance; offset += 1.0) {
+			Location candidate     = playerLocation.clone().add(direction.clone().multiply(offset));
+			Location safeCandidate = normalizeToStandableLocation(candidate);
+
+			if (safeCandidate != null) {
+				return safeCandidate;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Finds the best safe point on a ring around the player.
+	 */
+	private Location findBestRingApproachLocation(Location copLocation, Location playerLocation, double minRadius,
+												  double maxRadius, double idealRadius) {
+		Location bestLocation = null;
+		double   bestScore    = Double.MAX_VALUE;
+
+		for (double radius = minRadius; radius <= maxRadius; radius += 1.5) {
+			for (int angle = 0; angle < 360; angle += 22) {
+				double radians = Math.toRadians(angle);
+
+				Location candidate = playerLocation.clone()
+												   .add(Math.cos(radians) * radius, 0.0, Math.sin(radians) * radius);
+
+				Location safeCandidate = normalizeToStandableLocation(candidate);
+
+				if (safeCandidate == null) {
+					continue;
+				}
+
+				double score = safeCandidate.distanceSquared(copLocation);
+				score += Math.abs(radius - idealRadius) * 3.0;
+
+				if (isUsingRangedWeapon()) {
+					if (!hasClearShot(safeCandidate, playerLocation)) {
+						score += 20.0;
+					}
+				} else {
+					score += radius * 2.0;
+				}
+
+				if (bestLocation == null || score < bestScore) {
+					bestLocation = safeCandidate;
+					bestScore    = score;
+				}
+			}
+		}
+
+		return bestLocation;
+	}
+
+	/**
+	 * Returns whether a location has a clear block line to the target.
+	 */
+	private boolean hasClearShot(Location from, Location to) {
+		if (from == null || to == null || from.getWorld() == null || !from.getWorld().equals(to.getWorld())) {
+			return false;
+		}
+
+		Location start = from.clone().add(0.0, 1.2, 0.0);
+		Location end   = to.clone().add(0.0, 1.0, 0.0);
+		Vector   delta = end.toVector().subtract(start.toVector());
+
+		double length = delta.length();
+		if (length <= 0.0001) {
+			return true;
+		}
+
+		var hit = from.getWorld().rayTraceBlocks(start, delta.normalize(), length, FluidCollisionMode.NEVER, true);
+		return hit == null;
+	}
+
+	/**
+	 * Updates navigation progress tracking for throttling and stuck detection.
+	 */
+	private void updateNavigationProgress() {
+		navigationThrottleTicks++;
+
+		if (!npc.getNavigator().isNavigating()) {
+			resetNavigationTracking();
+			return;
+		}
+
+		LivingEntity entity = getEntity();
+
+		if (entity == null) {
+			resetNavigationTracking();
+			return;
+		}
+
+		stuckSampleTicks++;
+
+		if (lastProgressLocation == null) {
+			lastProgressLocation = entity.getLocation().clone();
+			stuckSampleTicks     = 0;
+			return;
+		}
+
+		if (stuckSampleTicks < STUCK_CHECK_INTERVAL_TICKS) {
+			return;
+		}
+
+		Location currentLocation = entity.getLocation();
+
+		if (!Objects.equals(currentLocation.getWorld(), lastProgressLocation.getWorld())) {
+			lastProgressLocation   = currentLocation.clone();
+			stuckSampleTicks       = 0;
+			consecutiveStuckChecks = 0;
+			return;
+		}
+
+		double progress = currentLocation.distanceSquared(lastProgressLocation);
+
+		if (progress < MIN_PROGRESS_DISTANCE_SQUARED) {
+			consecutiveStuckChecks++;
+		} else {
+			consecutiveStuckChecks = 0;
+			lastProgressLocation   = currentLocation.clone();
+		}
+
+		stuckSampleTicks = 0;
+	}
+
+	/**
+	 * Returns whether navigation should be recalculated right now.
+	 */
+	private boolean shouldRecalculateNavigation(Location target) {
+		if (target == null) {
+			return false;
+		}
+
+		if (isNavigationStuck()) {
+			return true;
+		}
+
+		if (navigationThrottleTicks >= NAVIGATION_RECALCULATION_TICKS) {
+			return true;
+		}
+
+		if (lastNavigationTarget == null || lastNavigationTarget.getWorld() == null || target.getWorld() == null) {
+			return true;
+		}
+
+		if (!lastNavigationTarget.getWorld().equals(target.getWorld())) {
+			return true;
+		}
+
+		return lastNavigationTarget.distanceSquared(target) >= 2.25;
+	}
+
+	/**
+	 * Clears transient navigation tracking state.
+	 */
+	private void resetNavigationTracking() {
+		lastNavigationTarget    = null;
+		lastProgressLocation    = null;
+		navigationThrottleTicks = NAVIGATION_RECALCULATION_TICKS;
+		stuckSampleTicks        = 0;
+		consecutiveStuckChecks  = 0;
 	}
 
 	/**
