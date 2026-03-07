@@ -1,5 +1,7 @@
 package me.luckyraven.copsncrooks.listener;
 
+import lombok.RequiredArgsConstructor;
+import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.events.police.CuffedEvent;
 import me.luckyraven.copsncrooks.events.police.DuringCuffingEvent;
 import me.luckyraven.util.listener.ListenerHandler;
@@ -12,9 +14,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ListenerHandler
+@RequiredArgsConstructor
 public class CuffingListener implements Listener {
 
 	private final Map<Player, Long> currentCuffCooldown = new ConcurrentHashMap<>();
+	private final DetainmentService detainmentService;
 
 	@EventHandler
 	public void onPlayerCuffing(DuringCuffingEvent event) {
@@ -44,6 +48,7 @@ public class CuffingListener implements Listener {
 		if (target.isDead()) return;
 
 		currentCuffCooldown.remove(target);
+		detainmentService.handcuff(target);
 
 		ChatUtil.sendTitle(target, "&aCuffed", "&7You are restrained");
 	}
