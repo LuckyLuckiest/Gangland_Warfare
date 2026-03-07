@@ -187,7 +187,7 @@ public final class Initializer {
 		compatibilityWorker = new CompatibilityWorker(gangland.getViaAPI(), compatibilitySetup);
 
 		// permission manager
-		var permissionWorker = new PermissionWorker(gangland.getFullPrefix());
+		var permissionWorker = new PermissionWorker(Gangland.FULL_PREFIX);
 
 		permissionManager = new PermissionManager(permissionWorker);
 
@@ -205,7 +205,7 @@ public final class Initializer {
 		Set<Permission> permissions = Bukkit.getPluginManager().getPermissions();
 		Set<String> ganglandPermissions = permissions.stream()
 				.map(Permission::getName)
-				.filter(permission -> permission.startsWith(gangland.getFullPrefix()))
+				.filter(permission -> permission.startsWith(Gangland.FULL_PREFIX))
 				.collect(Collectors.toSet());
 
 		permissionManager.addAllPermissions(ganglandPermissions);
@@ -257,7 +257,7 @@ public final class Initializer {
 		memberManager.initialize(memberTable, gangManager, rankManager);
 
 		// Waypoint manager
-		waypointManager = new WaypointManager(gangland);
+		waypointManager = new WaypointManager(gangland, Gangland.FULL_PREFIX);
 
 		WaypointTable waypointTable = getInstanceFromTables(WaypointTable.class, tables);
 
@@ -305,11 +305,11 @@ public final class Initializer {
 		listenerManager.registerEvents();
 
 		// Commands
-		commandManager = new CommandManager(gangland);
+		commandManager = new CommandManager(gangland, Gangland.FULL_PREFIX, Gangland.SHORT_PREFIX);
 		commands(gangland);
 
 		// Placeholder
-		placeholder = new GanglandPlaceholder(gangland, gangland.getFullPrefix(), Replacer.Closure.PERCENT);
+		placeholder = new GanglandPlaceholder(gangland, Gangland.FULL_PREFIX, Replacer.Closure.PERCENT);
 	}
 
 	/**
@@ -423,7 +423,7 @@ public final class Initializer {
 		}
 
 		if (lootChestManager == null) {
-			lootChestManager = new LootChestManager(gangland, hologramService);
+			lootChestManager = new LootChestManager(gangland, Gangland.FULL_PREFIX, hologramService);
 		}
 
 		List<Table<?>> tables         = ganglandDatabase.getTables();
@@ -484,11 +484,11 @@ public final class Initializer {
 		SignFormatRegistry   formatRegistry   = new SignFormatRegistry();
 		SignFormatterService formatterService = new SignFormatterService(formatRegistry);
 
-		String signPrefix = gangland.getShortPrefix() + "-";
+		String signPrefix = Gangland.SHORT_PREFIX + "-";
 
 		SignInteraction signInteraction = new SignInteraction(signPrefix, registry, formatterService);
 
-		signManager = new SignManager(gangland, registry, signInteraction);
+		signManager = new SignManager(gangland, Gangland.SHORT_PREFIX, registry, signInteraction);
 
 		signManager.initialize();
 	}
@@ -500,7 +500,7 @@ public final class Initializer {
 		else type = DatabaseHandler.SQLITE;
 
 		// Primary database
-		GanglandDatabase ganglandDatabase = new GanglandDatabase(gangland, gangland.getFullPrefix(), settings);
+		GanglandDatabase ganglandDatabase = new GanglandDatabase(gangland, Gangland.FULL_PREFIX, settings);
 		ganglandDatabase.setType(type);
 		databaseManager.addDatabase(ganglandDatabase);
 	}
@@ -530,14 +530,14 @@ public final class Initializer {
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 
 		// waypoint
-		Waypoint         dummy         = new Waypoint("dummy", gangland.getFullPrefix());
+		Waypoint         dummy         = new Waypoint("dummy", Gangland.FULL_PREFIX);
 		WaypointTeleport dummyTeleport = new WaypointTeleport(dummy);
 
 		listenerManager.addEvent(dummyTeleport, ListenerPriority.NORMAL);
 	}
 
 	private void commands(Gangland gangland) {
-		PluginCommand command = this.gangland.getCommand(gangland.getShortPrefix());
+		PluginCommand command = this.gangland.getCommand(Gangland.SHORT_PREFIX);
 
 		if (command == null) return;
 
@@ -571,7 +571,7 @@ public final class Initializer {
 		commandManager.addCommand(new ReadNBTCommand(gangland));
 		commandManager.addCommand(new ReloadCommand(gangland));
 		commandManager.addCommand(new TimerCommand(gangland));
-		commandManager.addCommand(new DownloadPluginCommand(gangland));
+		commandManager.addCommand(new DownloadPluginCommand(gangland, Gangland.SHORT_PREFIX));
 
 		// Needs to be the final command to add all the help information
 		commandManager.addCommand(new HelpCommand(gangland));

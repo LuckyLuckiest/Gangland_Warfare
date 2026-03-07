@@ -26,9 +26,9 @@ public class LootChestWand {
 	private final Gangland gangland;
 	private final String   prefix;
 
-	public LootChestWand(Gangland gangland) {
+	public LootChestWand(Gangland gangland, String prefix) {
 		this.gangland = gangland;
-		this.prefix   = gangland.getShortPrefix();
+		this.prefix   = prefix;
 	}
 
 	public static boolean isLootChestWand(ItemStack item) {
@@ -49,7 +49,7 @@ public class LootChestWand {
 	public static LootChestWand getWand(ItemStack item, Gangland gangland) {
 		if (!isLootChestWand(item)) return null;
 
-		return new LootChestWand(gangland);
+		return new LootChestWand(gangland, Gangland.SHORT_PREFIX);
 	}
 
 	public ItemStack createWand() {

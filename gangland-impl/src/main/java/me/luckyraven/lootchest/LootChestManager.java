@@ -20,8 +20,8 @@ public class LootChestManager extends LootChestService {
 
 	private final Gangland gangland;
 
-	public LootChestManager(Gangland gangland, HologramService hologramService) {
-		super(gangland, hologramService, gangland.getFullPrefix());
+	public LootChestManager(Gangland gangland, String prefix, HologramService hologramService) {
+		super(gangland, hologramService, prefix);
 
 		this.gangland = gangland;
 	}

@@ -1,5 +1,6 @@
 package me.luckyraven.util;
 
+import me.luckyraven.Gangland;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.apache.logging.log4j.Logger;
@@ -9,10 +10,6 @@ public final class ChatUtil extends me.luckyraven.util.utilities.ChatUtil {
 
 	private ChatUtil() {
 		super();
-	}
-
-	public static String replaceColorCodes(String message, String replaceWith) {
-		return message.replace('§', '&').replaceAll("&[0-9a-fA-Fk-oK-OrR]", replaceWith);
 	}
 
 	public static String color(final String message) {
@@ -51,7 +48,7 @@ public final class ChatUtil extends me.luckyraven.util.utilities.ChatUtil {
 	}
 
 	public static String commandDesign(String command) {
-		return color(command.replace("/glw", "&6/glw&7")
+		return color(command.replace("/" + Gangland.SHORT_PREFIX, "&6/" + Gangland.SHORT_PREFIX + "&7")
 							.replace("<", "&5<&7")
 							.replace(">", "&5>&7")
 							.replace(" - ", " &c-&r ")
@@ -59,8 +56,8 @@ public final class ChatUtil extends me.luckyraven.util.utilities.ChatUtil {
 	}
 
 	public static String confirmCommand(String[] args) {
-		return color(
-				"&cYou need to confirm using &e/glw " + String.join(" ", args) + " confirm &cto execute the command.");
+		return color("&cYou need to confirm using &e/" + Gangland.SHORT_PREFIX + " " + String.join(" ", args) +
+					 " confirm &cto execute the command.");
 	}
 
 	public static String setArguments(String arguments, String command) {

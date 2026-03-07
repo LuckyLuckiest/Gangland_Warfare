@@ -39,9 +39,13 @@ public final class CommandManager implements CommandExecutor {
 	private static final Map<String, CommandHandler> commands = new HashMap<>();
 
 	private final Gangland gangland;
+	private final String   fullPrefix;
+	private final String   shortPrefix;
 
-	public CommandManager(Gangland gangland) {
-		this.gangland = gangland;
+	public CommandManager(Gangland gangland, String fullPrefix, String shortPrefix) {
+		this.gangland    = gangland;
+		this.fullPrefix  = fullPrefix;
+		this.shortPrefix = shortPrefix;
 	}
 
 	public static List<CommandHandler> getPermissibleCommands(CommandSender sender) {
@@ -81,7 +85,7 @@ public final class CommandManager implements CommandExecutor {
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
 							 @NotNull String[] args) {
 		try {
-			String mainCommandPermission = String.format("%s.command.main", gangland.getFullPrefix());
+			String mainCommandPermission = String.format("%s.command.main", fullPrefix.toLowerCase());
 
 			if (!sender.hasPermission(mainCommandPermission)) {
 				sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
@@ -153,7 +157,7 @@ public final class CommandManager implements CommandExecutor {
 
 		cs.sendMessage(color("&7Author" + ChatUtil.plural(authors.size()) + "&8: &b" + authorStr));
 		cs.sendMessage(color("&7Version&8: &b" + pdf.getVersion()));
-		cs.sendMessage(color("&7Type &6/" + gangland.getShortPrefix() + " help &7to start."));
+		cs.sendMessage(color("&7Type &6/" + shortPrefix + " help &7to start."));
 		cs.sendMessage("");
 	}
 

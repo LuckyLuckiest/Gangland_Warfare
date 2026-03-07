@@ -158,7 +158,7 @@ public final class TeleportCommand extends CommandHandler {
 		}
 
 		try {
-			var cooldownBypass = String.format("%s.command.%s.force_rank", getGangland().getFullPrefix(), getLabel());
+			var cooldownBypass = String.format("%s.command.%s.force_rank", Gangland.FULL_PREFIX, getLabel());
 			if (user.getUser().hasPermission(cooldownBypass)) WaypointTeleport.removeCooldown(user.getUser());
 
 			waypoint.getWaypointTeleport().teleport(getGangland(), user, (u, t) -> {

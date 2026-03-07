@@ -31,8 +31,8 @@ import java.util.Map;
 @Getter
 public final class Gangland extends JavaPlugin {
 
-	private final String fullPrefix;
-	private final String shortPrefix;
+	public static final String FULL_PREFIX  = "gangland";
+	public static final String SHORT_PREFIX = "glw";
 
 	private Initializer             initializer;
 	private ReloadPlugin            reloadPlugin;
@@ -40,11 +40,6 @@ public final class Gangland extends JavaPlugin {
 	private UpdateChecker           updateChecker;
 	private PlaceholderAPIExpansion placeholderAPIExpansion;
 	private ViaAPI<?>               viaAPI;
-
-	public Gangland() {
-		this.fullPrefix  = "gangland";
-		this.shortPrefix = "glw";
-	}
 
 	@Override
 	public void onLoad() {
@@ -181,7 +176,7 @@ public final class Gangland extends JavaPlugin {
 		// soft dependencies
 		Dependency placeholderApi = new Dependency("PlaceholderAPI", Dependency.Type.SOFT);
 		placeholderApi.validate(() -> {
-			this.placeholderAPIExpansion = new PlaceholderAPIExpansion(this, this.fullPrefix);
+			this.placeholderAPIExpansion = new PlaceholderAPIExpansion(this, FULL_PREFIX);
 			this.placeholderAPIExpansion.register();
 		});
 
@@ -209,7 +204,7 @@ public final class Gangland extends JavaPlugin {
 		int resourceId = 131157;
 
 		// initialize the update checker
-		updateChecker = new UpdateChecker(this, fullPrefix, resourceId, hours * 60 * 60L);
+		updateChecker = new UpdateChecker(this, FULL_PREFIX, resourceId, hours * 60 * 60L);
 
 		// add the necessary permissions for checking for updates
 		initializer.getPermissionManager().addPermission(updateChecker.getCheckPermission());

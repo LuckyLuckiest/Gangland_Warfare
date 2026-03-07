@@ -72,7 +72,7 @@ class GangDemoteCommand extends SubArgument {
 
 			Member userMember = memberManager.getMember(player.getUniqueId());
 
-			String  forceRank = String.format("%s.command.gang.force_rank", gangland.getFullPrefix());
+			String  forceRank = String.format("%s.command.gang.force_rank", Gangland.FULL_PREFIX);
 			boolean force     = player.hasPermission(forceRank);
 
 			if (!user.hasGang()) {

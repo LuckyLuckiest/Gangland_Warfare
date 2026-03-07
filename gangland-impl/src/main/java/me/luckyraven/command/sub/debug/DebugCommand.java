@@ -312,7 +312,7 @@ public final class DebugCommand extends CommandHandler {
 										 .getPermissions()
 					.stream()
 					.map(Permission::getName)
-					.filter(name -> name.startsWith(getGangland().getFullPrefix()))
+					.filter(name -> name.startsWith(Gangland.FULL_PREFIX))
 					.sorted(String::compareTo)
 					.toArray(String[]::new);
 			sender.sendMessage(permissions);

@@ -30,12 +30,12 @@ public class LootChestWandCommand extends CommandHandler {
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		Player player = (Player) commandSender;
 
-		LootChestWand lootChestWand = new LootChestWand(getGangland());
+		LootChestWand lootChestWand = new LootChestWand(getGangland(), Gangland.SHORT_PREFIX);
 		ItemStack     wand          = lootChestWand.createWand();
 
 		player.getInventory().addItem(wand);
 
-		String command = "/" + getGangland().getShortPrefix() + " wand edit";
+		String command = "/" + Gangland.SHORT_PREFIX + " wand edit";
 		String hold    = "&7Hold the wand and use '&e" + command + "' &7to configure settings.";
 
 		player.sendMessage(ChatUtil.color("&a&lLoot Chest Wand &7has been added to your inventory!",

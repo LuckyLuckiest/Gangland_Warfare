@@ -14,17 +14,19 @@ import java.util.Map;
 public final class DownloadPluginCommand extends CommandHandler {
 
 	private final Map<CommandSender, Boolean> containsUpdate;
+	private final String                      shortPrefix;
 
-	public DownloadPluginCommand(Gangland gangland) {
+	public DownloadPluginCommand(Gangland gangland, String shortPrefix) {
 		super(gangland, "update", false);
 
+		this.shortPrefix    = shortPrefix;
 		this.containsUpdate = new HashMap<>();
 		var list = getCommands().entrySet()
-								.stream()
-								.filter(entry -> entry.getKey().startsWith("update"))
-								.sorted(Map.Entry.comparingByKey())
-								.map(Map.Entry::getValue)
-								.toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("update"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 
 		getHelpInfo().addAll(list);
 	}
@@ -40,7 +42,7 @@ public final class DownloadPluginCommand extends CommandHandler {
 
 		if (newUpdate) {
 			String message = ChatUtil.commandMessage(
-					"There is a new update, please type:\n&7/" + getGangland().getShortPrefix() + " update download");
+					"There is a new update, please type:\n&7/" + shortPrefix + " update download");
 
 			commandSender.sendMessage(message);
 		} else {

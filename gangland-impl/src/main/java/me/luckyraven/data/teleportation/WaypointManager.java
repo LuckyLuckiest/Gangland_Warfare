@@ -18,9 +18,11 @@ public class WaypointManager {
 	private final Gangland               gangland;
 	private final Map<Integer, Waypoint> waypoints;
 	private final Map<Player, Waypoint>  selectedWaypoints;
+	private final String                 prefix;
 
-	public WaypointManager(Gangland gangland) {
+	public WaypointManager(Gangland gangland, String prefix) {
 		this.gangland          = gangland;
+		this.prefix            = prefix;
 		this.waypoints         = new HashMap<>();
 		this.selectedWaypoints = new HashMap<>();
 	}
@@ -49,7 +51,7 @@ public class WaypointManager {
 				double cost     = (double) result[v++];
 				double radius   = (double) result[v];
 
-				Waypoint waypoint = new Waypoint(name, gangland.getFullPrefix());
+				Waypoint waypoint = new Waypoint(name, prefix);
 
 				waypoint.setCoordinates(world, x, y, z, (float) yaw, (float) pitch);
 				waypoint.setType(Waypoint.WaypointType.valueOf(type.toUpperCase()));

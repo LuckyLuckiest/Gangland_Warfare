@@ -28,12 +28,15 @@ public class SignManager extends SignService {
 
 	@Getter(AccessLevel.NONE)
 	private final Gangland           gangland;
+	private final String             shortPrefix;
 	private final SignFormatRegistry formatRegistry;
 
-	public SignManager(Gangland gangland, SignTypeRegistry registry, SignInteraction signInteraction) {
+	public SignManager(Gangland gangland, String shortPrefix, SignTypeRegistry registry,
+					   SignInteraction signInteraction) {
 		super(registry, signInteraction);
 
 		this.gangland       = gangland;
+		this.shortPrefix    = shortPrefix;
 		this.formatRegistry = signInteraction.getFormatterService().getFormatRegistry();
 	}
 
@@ -46,7 +49,7 @@ public class SignManager extends SignService {
 
 		List<SignTypeDefinition> definitions = new ArrayList<>();
 
-		String signPrefix = gangland.getShortPrefix() + "-";
+		String signPrefix = shortPrefix + "-";
 
 		// buy
 		String   buyKey  = signPrefix + "buy";

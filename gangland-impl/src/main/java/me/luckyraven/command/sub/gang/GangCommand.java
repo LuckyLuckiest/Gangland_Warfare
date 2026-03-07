@@ -205,7 +205,7 @@ public final class GangCommand extends CommandHandler {
 					false, false, (player, inventory, items) -> {
 					var desc = Objects.requireNonNull(
 							getArgumentTree().find(new Argument(getGangland(), "desc", getArgumentTree())));
-					var argumentSequence = ArgumentUtil.getArgumentSequence(desc, getGangland().getShortPrefix());
+					var argumentSequence = ArgumentUtil.getArgumentSequence(desc, Gangland.SHORT_PREFIX);
 
 					player.performCommand(argumentSequence);
 				});
@@ -307,7 +307,7 @@ public final class GangCommand extends CommandHandler {
 					(player, inventory, item) -> {
 						var color = Objects.requireNonNull(
 								getArgumentTree().find(new Argument(getGangland(), "color", getArgumentTree())));
-						var argumentSequence = ArgumentUtil.getArgumentSequence(color, getGangland().getShortPrefix());
+						var argumentSequence = ArgumentUtil.getArgumentSequence(color, Gangland.SHORT_PREFIX);
 
 						player.performCommand(argumentSequence);
 					});

@@ -35,7 +35,7 @@ public abstract class CommandHandler {
 		this.alias = new HashSet<>();
 		for (String s : alias) this.alias.add(s.toLowerCase());
 
-		this.permission = String.format("%s.command.%s", gangland.getFullPrefix(), label);
+		this.permission = String.format("%s.command.%s", Gangland.FULL_PREFIX.toLowerCase(), label);
 
 		this.user         = user;
 		this.helpInfo     = new HelpInfo();
@@ -71,7 +71,7 @@ public abstract class CommandHandler {
 		}
 
 		// execute if all checks out
-		argument.execute(gangland.getShortPrefix(), sender, args);
+		argument.execute(Gangland.SHORT_PREFIX, sender, args);
 	}
 
 	public CommandInformation getCommandInformation(String info) {
