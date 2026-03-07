@@ -9,7 +9,7 @@
     <version>${revision}</version>
     <packaging>pom</packaging>
 
-    <name>Gangland_Warfare</name>
+    <name>Gangland Warfare</name>
     <description>Rival gangs battling for control in minecraft.</description>
     <developers>
         <developer>
