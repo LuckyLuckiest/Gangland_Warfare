@@ -25,9 +25,14 @@ import me.luckyraven.compatibility.CompatibilityWorker;
 import me.luckyraven.compatibility.VersionSetup;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.copsncrooks.combo.KillCombo;
+import me.luckyraven.copsncrooks.detainment.DetainmentRepository;
+import me.luckyraven.copsncrooks.detainment.DetainmentService;
+import me.luckyraven.copsncrooks.detainment.InMemoryDetainmentRepository;
+import me.luckyraven.copsncrooks.detainment.jail.JailService;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.police.CopManager;
 import me.luckyraven.copsncrooks.police.CopService;
+import me.luckyraven.copsncrooks.police.config.CopLoader;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
@@ -41,28 +46,31 @@ import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.teleportation.WaypointTeleport;
 import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
-import me.luckyraven.database.DatabaseHandler;
-import me.luckyraven.database.DatabaseManager;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.component.Table;
+import me.luckyraven.database.GanglandDatabaseSettings;
 import me.luckyraven.database.tables.*;
 import me.luckyraven.exception.PluginException;
-import me.luckyraven.file.FileHandler;
-import me.luckyraven.file.FileManager;
 import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
-import me.luckyraven.file.configuration.inventory.lootchest.LootChestLoader;
+import me.luckyraven.file.configuration.inventory.lootchest.LootChestSettings;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
 import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.loot.LootChestService;
+import me.luckyraven.loot.config.LootChestLoader;
 import me.luckyraven.lootchest.GanglandLootItemProvider;
 import me.luckyraven.lootchest.LootChestManager;
+import me.luckyraven.persistence.FileHandler;
+import me.luckyraven.persistence.FileManager;
+import me.luckyraven.persistence.database.DatabaseHandler;
+import me.luckyraven.persistence.database.DatabaseManager;
+import me.luckyraven.persistence.database.DatabaseSettingsProvider;
+import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
 import me.luckyraven.sign.GanglandSignInformation;
@@ -91,7 +99,6 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -131,6 +138,7 @@ public final class Initializer {
 	private BlockDamageManager         blockDamageManager;
 	private CopService                 copService;
 	private KillCombo                  killCombo;
+	private DetainmentService          detainmentService;
 	// Addons
 	private SettingAddon               settingAddon;
 	private ScoreboardAddon            scoreboardAddon;
@@ -142,6 +150,7 @@ public final class Initializer {
 	private InventoryLoader            inventoryLoader;
 	private WeaponLoader               weaponLoader;
 	private LootChestLoader            lootChestLoader;
+	private CopLoader                  copLoader;
 	// Database
 	private GanglandDatabase           ganglandDatabase;
 	// Placeholder
@@ -186,8 +195,9 @@ public final class Initializer {
 		files();
 
 		// Database
-		databaseManager = new DatabaseManager(gangland);
-		databases();
+		DatabaseSettingsProvider settings = new GanglandDatabaseSettings();
+		databaseManager = new DatabaseManager(gangland, settings);
+		databases(settings);
 		databaseManager.initializeDatabases();
 
 		// add all registered plugin permissions
@@ -274,15 +284,16 @@ public final class Initializer {
 		// loot chest manager
 		lootChestLoader();
 
-		// police service
-		copService = new CopService();
-
-		FileHandler copsFile = fileManager.getFile("cops");
-		copService.initialize(gangland, Objects.requireNonNull(copsFile).getFileConfiguration(), entityMarkManager,
-							  weaponManager);
+		// cop service
+		copLoader();
 
 		// kill combo
 		killCombo = new KillCombo(gangland, SettingAddon.getWantedKillCounter());
+
+		// detainment
+		DetainmentRepository repository  = new InMemoryDetainmentRepository();
+		JailService          jailService = new JailService();
+		detainmentService = new DetainmentService(gangland, repository, jailService);
 
 		// Sign Information
 		signInformation = new GanglandSignInformation();
@@ -418,13 +429,27 @@ public final class Initializer {
 
 		lootChestManager.initialize(lootChestTable, false);
 
-		lootChestLoader = new LootChestLoader(gangland, lootChestManager);
+		var provider = new LootChestSettings();
+		lootChestLoader = new LootChestLoader(gangland, lootChestManager, provider);
 
 		lootChestLoader.load(false, null, fileManager);
 
 		// set the item provider so loot can be generated
 		var itemProvider = new GanglandLootItemProvider(weaponManager, ammunitionAddon, uniqueItemAddon);
 		lootChestManager.setItemProvider(itemProvider);
+	}
+
+	public void copLoader() {
+		List<Table<?>>  tables          = ganglandDatabase.getTables();
+		CopSpawnerTable copSpawnerTable = getInstanceFromTables(CopSpawnerTable.class, tables);
+		JailTable       jailTable       = getInstanceFromTables(JailTable.class, tables);
+
+		copLoader = new CopLoader(gangland);
+
+		copLoader.load(false, null, fileManager);
+
+		copService = new CopService();
+		copService.initialize(gangland, copLoader.getLoadedProvider(), entityMarkManager, weaponManager);
 	}
 
 	public void weaponLoader() {
@@ -466,14 +491,14 @@ public final class Initializer {
 		signManager.initialize();
 	}
 
-	private void databases() {
+	private void databases(DatabaseSettingsProvider settings) {
 		int type;
 
 		if (SettingAddon.getDatabaseType().equalsIgnoreCase("mysql")) type = DatabaseHandler.MYSQL;
 		else type = DatabaseHandler.SQLITE;
 
 		// Primary database
-		GanglandDatabase ganglandDatabase = new GanglandDatabase(gangland, gangland.getFullPrefix());
+		GanglandDatabase ganglandDatabase = new GanglandDatabase(gangland, gangland.getFullPrefix(), settings);
 		ganglandDatabase.setType(type);
 		databaseManager.addDatabase(ganglandDatabase);
 	}
@@ -552,5 +577,4 @@ public final class Initializer {
 		// initialize the tab completer
 		command.setTabCompleter(new CommandTabCompleter(CommandManager.getCommands()));
 	}
-
 }
