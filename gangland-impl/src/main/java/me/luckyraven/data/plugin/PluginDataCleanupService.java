@@ -5,7 +5,8 @@ import me.luckyraven.database.tables.WeaponTable;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHelper;
-import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.TimeMessages;
+import me.luckyraven.util.utilities.TimeUtil;
 import me.luckyraven.weapon.WeaponManager;
 
 import java.sql.SQLException;
@@ -50,7 +51,7 @@ public final class PluginDataCleanupService {
 
 		long   timeUntilScanMillis  = pluginData.getScheduledScanDate() - now;
 		long   timeUntilScanSeconds = Math.max(0, timeUntilScanMillis / 1000);
-		String expectedValue        = TimeUtil.formatTime(timeUntilScanSeconds, true);
+		String expectedValue        = TimeUtil.formatTime(timeUntilScanSeconds, true, TimeMessages.getInstance());
 
 		if (logDebug) log.info("Next cleanup scan in approximately {}.", expectedValue);
 	}

@@ -14,10 +14,11 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.util.timer.CountdownTimer;
+import me.luckyraven.util.utilities.TimeUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -84,8 +85,9 @@ class BankDeleteCommand extends SubArgument {
 		}, time -> {
 			if (time.getTimeLeft() % 20 != 0) return;
 
-			String string  = MessageAddon.BANK_REMOVE_CONFIRM.toString();
-			String replace = string.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true));
+			String string = MessageAddon.BANK_REMOVE_CONFIRM.toString();
+			String replace = string.replace("%timer%",
+											TimeUtil.formatTime(time.getTimeLeft(), true, TimeMessages.getInstance()));
 			sender.sendMessage(replace);
 		}, time -> {
 			confirmDelete.setConfirmed(false);

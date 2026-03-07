@@ -9,10 +9,11 @@ import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.util.timer.CountdownTimer;
+import me.luckyraven.util.utilities.TimeUtil;
 import org.bukkit.command.CommandSender;
 
 import java.util.HashMap;
@@ -82,8 +83,9 @@ class RankCreateCommand extends SubArgument {
 			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
 				if (time.getTimeLeft() % 20 != 0) return;
 
-				String string  = MessageAddon.RANK_CREATE_CONFIRM.toString();
-				String replace = string.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true));
+				String string = MessageAddon.RANK_CREATE_CONFIRM.toString();
+				String replace = string.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
+																			   TimeMessages.getInstance()));
 
 				sender.sendMessage(replace);
 			}, time -> {

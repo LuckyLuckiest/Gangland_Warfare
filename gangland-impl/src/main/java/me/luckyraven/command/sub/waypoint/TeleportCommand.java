@@ -14,8 +14,9 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.timer.CountdownTimer;
+import me.luckyraven.util.utilities.TimeUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -161,7 +162,7 @@ public final class TeleportCommand extends CommandHandler {
 			if (user.getUser().hasPermission(cooldownBypass)) WaypointTeleport.removeCooldown(user.getUser());
 
 			waypoint.getWaypointTeleport().teleport(getGangland(), user, (u, t) -> {
-				String time    = TimeUtil.formatTime(t.getTimeLeft(), true);
+				String time    = TimeUtil.formatTime(t.getTimeLeft(), true, TimeMessages.getInstance());
 				String message = MessageAddon.WAYPOINT_TELEPORT_TIMER.toString().replace("%timer%", time);
 
 				u.getUser().sendMessage(message);
@@ -196,7 +197,7 @@ public final class TeleportCommand extends CommandHandler {
 
 			if (timer == null) return;
 
-			String time    = TimeUtil.formatTime(timer.getTimeLeft(), true);
+			String time    = TimeUtil.formatTime(timer.getTimeLeft(), true, TimeMessages.getInstance());
 			String string  = MessageAddon.WAYPOINT_TELEPORT_COOLDOWN.toString();
 			String message = string.replace("%timer%", time);
 

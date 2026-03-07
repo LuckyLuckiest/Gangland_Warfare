@@ -8,6 +8,8 @@ import me.luckyraven.loot.data.LootChestSession;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ChatUtil;
+import me.luckyraven.util.utilities.TimeUtil;
+import me.luckyraven.util.utilities.messages.MessagesProvider;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -113,8 +115,8 @@ public class LootChestListener implements Listener {
 			case ALREADY_IN_SESSION -> player.sendMessage(ChatUtil.color("&cYou are already opening a chest!"));
 			case ON_COOLDOWN -> {
 				long remaining = chestData.getRemainingCooldownSeconds();
-				player.sendMessage(
-						ChatUtil.color("&cThis chest is empty and on cooldown! &7(" + formatTime(remaining) + ")"));
+				player.sendMessage(ChatUtil.color("&cThis chest is empty and on cooldown! &7(" +
+												  TimeUtil.formatTime(remaining, true, new TimeMessages()) + ")"));
 			}
 			case REQUIRES_LOCKPICK -> {
 				playLockedSound(player);
@@ -145,17 +147,36 @@ public class LootChestListener implements Listener {
 		soundConfig.playSound(player);
 	}
 
-	private String formatTime(long seconds) {
-		if (seconds < 60) {
-			return seconds + "s";
-		} else if (seconds < 3600) {
-			long minutes = seconds / 60;
-			long secs    = seconds % 60;
-			return minutes + "m " + secs + "s";
-		} else {
-			long hours   = seconds / 3600;
-			long minutes = (seconds % 3600) / 60;
-			return hours + "h " + minutes + "m";
+	private static class TimeMessages implements MessagesProvider {
+
+		@Override
+		public String getYear() {
+			return "y";
+		}
+
+		@Override
+		public String getWeek() {
+			return "w";
+		}
+
+		@Override
+		public String getDay() {
+			return "d";
+		}
+
+		@Override
+		public String getHour() {
+			return "h";
+		}
+
+		@Override
+		public String getMinute() {
+			return "m";
+		}
+
+		@Override
+		public String getSecond() {
+			return "s";
 		}
 	}
 

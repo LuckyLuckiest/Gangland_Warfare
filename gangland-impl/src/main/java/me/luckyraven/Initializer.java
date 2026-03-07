@@ -81,6 +81,7 @@ import me.luckyraven.sign.service.SignFormatterService;
 import me.luckyraven.sign.service.SignInformation;
 import me.luckyraven.sign.service.SignInteraction;
 import me.luckyraven.sign.service.SignInteractionService;
+import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.autowire.DependencyContainer;
 import me.luckyraven.util.hologram.HologramService;
 import me.luckyraven.util.listener.ListenerPriority;
@@ -356,6 +357,7 @@ public final class Initializer {
 		languageLoader.initialize();
 
 		MessageAddon.setMessageConfiguration(languageLoader.getMessage());
+		TimeMessages.initialize();
 
 		// initialize scoreboard addon
 		scoreboardLoader();

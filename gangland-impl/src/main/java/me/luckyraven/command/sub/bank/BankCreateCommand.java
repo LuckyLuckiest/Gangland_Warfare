@@ -11,10 +11,11 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.util.timer.CountdownTimer;
+import me.luckyraven.util.utilities.TimeUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -126,10 +127,10 @@ class BankCreateCommand extends SubArgument {
 			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
 				if (time.getTimeLeft() % 20 != 0) return;
 
-				sender.sendMessage(MessageAddon.BANK_CREATE_CONFIRM.toString()
-																   .replace("%timer%",
-																			TimeUtil.formatTime(time.getTimeLeft(),
-																								true)));
+				String string1 = MessageAddon.BANK_CREATE_CONFIRM.toString();
+				String replace1 = string1.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
+																				 TimeMessages.getInstance()));
+				sender.sendMessage(replace1);
 			}, time -> {
 				confirmCreate.setConfirmed(false);
 				createBankName.remove(user);

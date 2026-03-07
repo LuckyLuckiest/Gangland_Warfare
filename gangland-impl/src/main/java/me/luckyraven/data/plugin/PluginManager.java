@@ -4,7 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.database.tables.PluginDataTable;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.database.DatabaseHelper;
-import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.utilities.TimeUtil;
 
 import java.time.Instant;
 import java.util.ArrayList;

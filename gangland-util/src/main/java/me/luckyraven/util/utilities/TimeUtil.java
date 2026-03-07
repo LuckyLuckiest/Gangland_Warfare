@@ -1,6 +1,6 @@
-package me.luckyraven.util;
+package me.luckyraven.util.utilities;
 
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.util.utilities.messages.MessagesProvider;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -35,15 +35,15 @@ public final class TimeUtil {
 		return timestampMillis + daysToMillis(days);
 	}
 
-	public static String formatTime(long valueInSeconds, boolean customValues) {
+	public static String formatTime(long valueInSeconds, boolean customValues, MessagesProvider provider) {
 		Duration duration = Duration.ofSeconds(valueInSeconds);
 
-		String year   = customValues ? MessageAddon.YEAR.toString() : "year";
-		String week   = customValues ? MessageAddon.WEEK.toString() : "week";
-		String day    = customValues ? MessageAddon.DAY.toString() : "day";
-		String hour   = customValues ? MessageAddon.HOUR.toString() : "hour";
-		String minute = customValues ? MessageAddon.MINUTE.toString() : "minute";
-		String second = customValues ? MessageAddon.SECOND.toString() : "second";
+		String year   = customValues ? provider.getYear() : "year";
+		String week   = customValues ? provider.getWeek() : "week";
+		String day    = customValues ? provider.getDay() : "day";
+		String hour   = customValues ? provider.getHour() : "hour";
+		String minute = customValues ? provider.getMinute() : "minute";
+		String second = customValues ? provider.getSecond() : "second";
 
 		long totalDays = duration.toDays();
 

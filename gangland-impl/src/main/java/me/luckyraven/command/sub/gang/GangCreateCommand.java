@@ -16,10 +16,11 @@ import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.util.timer.CountdownTimer;
+import me.luckyraven.util.utilities.TimeUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -158,7 +159,7 @@ class GangCreateCommand extends SubArgument {
 				if (time.getTimeLeft() % 20 != 0) return;
 
 				String string1     = MessageAddon.GANG_CREATE_CONFIRM.toString();
-				String replacement = TimeUtil.formatTime(time.getTimeLeft(), true);
+				String replacement = TimeUtil.formatTime(time.getTimeLeft(), true, TimeMessages.getInstance());
 				String replace1    = string1.replace("%timer%", replacement);
 
 				sender.sendMessage(replace1);

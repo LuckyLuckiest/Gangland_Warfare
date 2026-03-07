@@ -16,10 +16,11 @@ import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.util.timer.CountdownTimer;
+import me.luckyraven.util.utilities.TimeUtil;
 import org.bukkit.command.CommandSender;
 
 import java.sql.Types;
@@ -110,8 +111,9 @@ class RankDeleteCommand extends SubArgument {
 			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
 				if (time.getTimeLeft() % 20 != 0) return;
 
-				String string  = MessageAddon.RANK_REMOVE_CONFIRM.toString();
-				String replace = string.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true));
+				String string = MessageAddon.RANK_REMOVE_CONFIRM.toString();
+				String replace = string.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
+																			   TimeMessages.getInstance()));
 
 				sender.sendMessage(replace);
 			}, time -> {

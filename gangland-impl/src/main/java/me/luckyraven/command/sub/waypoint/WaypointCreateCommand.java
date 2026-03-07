@@ -12,10 +12,11 @@ import me.luckyraven.data.user.User;
 import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.TimeUtil;
+import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.util.timer.CountdownTimer;
+import me.luckyraven.util.utilities.TimeUtil;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -120,7 +121,8 @@ class WaypointCreateCommand extends SubArgument {
 				if (time.getTimeLeft() % 20 != 0) return;
 
 				String createConfirm = MessageAddon.WAYPOINT_CREATE_CONFIRM.toString();
-				String confirm       = createConfirm.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true));
+				String confirm = createConfirm.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
+																					  TimeMessages.getInstance()));
 
 				sender.sendMessage(confirm);
 			}, time -> {
