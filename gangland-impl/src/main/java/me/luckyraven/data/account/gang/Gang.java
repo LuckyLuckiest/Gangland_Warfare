@@ -103,7 +103,13 @@ public class Gang extends Account<Integer, List<Member>> {
 	public void addMember(Member member, Rank rank) {
 		member.setGangId(this.getId());
 		member.setRank(rank);
-		getGroup().add(member);
+
+		List<Member> group        = getGroup();
+		boolean      memberExists = group.contains(member);
+
+		if (memberExists) return;
+
+		group.add(member);
 	}
 
 	public void addMember(User<? extends OfflinePlayer> user, Member member, Rank rank) {
