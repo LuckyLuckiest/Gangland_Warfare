@@ -68,13 +68,11 @@ class BankDeleteCommand extends SubArgument {
 				return;
 			}
 
-			if (confirmDelete.isConfirmed()) return;
+			if (confirmDelete.isLocked(sender)) return;
 
 			deleteBankName.put(user, new AtomicReference<>(bank.getName()));
-			confirmDelete.setConfirmed(true);
 
-			CountdownTimer timer = getCountdownTimer(sender, user);
-			deleteBankTimer.put(sender, timer);
+			confirmDelete.lock(sender, s -> deleteBankTimer.put(s, getCountdownTimer(s, user)));
 		};
 	}
 
@@ -90,7 +88,7 @@ class BankDeleteCommand extends SubArgument {
 											TimeUtil.formatTime(time.getTimeLeft(), true, TimeMessages.getInstance()));
 			sender.sendMessage(replace);
 		}, time -> {
-			confirmDelete.setConfirmed(false);
+			confirmDelete.unlock(sender);
 			deleteBankName.remove(user);
 		});
 

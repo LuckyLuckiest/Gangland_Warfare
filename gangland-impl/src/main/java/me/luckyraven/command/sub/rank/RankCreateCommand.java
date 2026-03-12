@@ -74,27 +74,28 @@ class RankCreateCommand extends SubArgument {
 				return;
 			}
 
-			if (confirmCreate.isConfirmed()) return;
+			if (confirmCreate.isLocked(sender)) return;
 
 			sender.sendMessage(ChatUtil.confirmCommand(new String[]{"rank", "create"}));
-			confirmCreate.setConfirmed(true);
 			createRankName.put(sender, new AtomicReference<>(args[2]));
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
-				if (time.getTimeLeft() % 20 != 0) return;
+			confirmCreate.lock(sender, s -> {
+				CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
+					if (time.getTimeLeft() % 20 != 0) return;
 
-				String string = MessageAddon.RANK_CREATE_CONFIRM.toString();
-				String replace = string.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
-																			   TimeMessages.getInstance()));
+					String string = MessageAddon.RANK_CREATE_CONFIRM.toString();
+					String replace = string.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
+																				   TimeMessages.getInstance()));
 
-				sender.sendMessage(replace);
-			}, time -> {
-				confirmCreate.setConfirmed(false);
-				createRankName.remove(sender);
+					s.sendMessage(replace);
+				}, time -> {
+					confirmCreate.unlock(s);
+					createRankName.remove(s);
+				});
+
+				timer.start(false);
+				createRankTimer.put(s, timer);
 			});
-
-			timer.start(false);
-			createRankTimer.put(sender, timer);
 		}, sender -> List.of("<name>"));
 
 		this.addSubArgument(createName);

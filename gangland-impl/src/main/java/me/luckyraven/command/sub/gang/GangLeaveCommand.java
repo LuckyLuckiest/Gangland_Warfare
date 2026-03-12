@@ -77,19 +77,19 @@ class GangLeaveCommand extends SubArgument {
 				return;
 			}
 
-			if (leaveConfirm.isConfirmed()) return;
+			if (leaveConfirm.isLocked(sender)) return;
 
-			leaveConfirm.setConfirmed(true);
+			leaveConfirm.lock(sender, s -> {
+				CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
+					user.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "leave"}));
+				}, null, time -> {
+					leaveConfirm.unlock(s);
+					leaveTimer.remove(user);
+				});
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
-				user.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "leave"}));
-			}, null, time -> {
-				leaveConfirm.setConfirmed(false);
-				leaveTimer.remove(user);
+				timer.start(false);
+				leaveTimer.put(user, timer);
 			});
-
-			timer.start(false);
-			leaveTimer.put(user, timer);
 		};
 	}
 

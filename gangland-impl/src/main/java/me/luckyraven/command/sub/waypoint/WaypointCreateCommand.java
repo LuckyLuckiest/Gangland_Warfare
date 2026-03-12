@@ -107,7 +107,7 @@ class WaypointCreateCommand extends SubArgument {
 
 			if (user == null) return;
 
-			if (confirmWaypoint.isConfirmed()) return;
+			if (confirmWaypoint.isLocked(sender)) return;
 
 			AtomicReference<String> name = new AtomicReference<>(args[2]);
 
@@ -115,24 +115,25 @@ class WaypointCreateCommand extends SubArgument {
 
 			// notify the player to confirm the waypoint
 			user.sendMessage(ChatUtil.confirmCommand(new String[]{"waypoint", "create"}));
-			confirmWaypoint.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
-				if (time.getTimeLeft() % 20 != 0) return;
+			confirmWaypoint.lock(sender, s -> {
+				CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
+					if (time.getTimeLeft() % 20 != 0) return;
 
-				String createConfirm = MessageAddon.WAYPOINT_CREATE_CONFIRM.toString();
-				String confirm = createConfirm.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
-																					  TimeMessages.getInstance()));
+					String createConfirm = MessageAddon.WAYPOINT_CREATE_CONFIRM.toString();
+					String confirm = createConfirm.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
+																						  TimeMessages.getInstance()));
 
-				sender.sendMessage(confirm);
-			}, time -> {
-				confirmWaypoint.setConfirmed(false);
-				createWaypointName.remove(player);
-				createWaypointTimer.remove(sender);
+					s.sendMessage(confirm);
+				}, time -> {
+					confirmWaypoint.unlock(s);
+					createWaypointName.remove(player);
+					createWaypointTimer.remove(s);
+				});
+
+				timer.start(false);
+				createWaypointTimer.put(s, timer);
 			});
-
-			timer.start(false);
-			createWaypointTimer.put(sender, timer);
 		}, sender -> List.of("<name>"));
 
 		this.addSubArgument(createName);

@@ -139,7 +139,7 @@ class GangCreateCommand extends SubArgument {
 				return;
 			}
 
-			if (confirmCreate.isConfirmed()) return;
+			if (confirmCreate.isLocked(sender)) return;
 
 			AtomicReference<String> name = new AtomicReference<>(args[2]);
 
@@ -157,24 +157,25 @@ class GangCreateCommand extends SubArgument {
 
 			user.sendMessage(replace);
 			user.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "create"}));
-			confirmCreate.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
-				if (time.getTimeLeft() % 20 != 0) return;
+			confirmCreate.lock(sender, s -> {
+				CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
+					if (time.getTimeLeft() % 20 != 0) return;
 
-				String string1     = MessageAddon.GANG_CREATE_CONFIRM.toString();
-				String replacement = TimeUtil.formatTime(time.getTimeLeft(), true, TimeMessages.getInstance());
-				String replace1    = string1.replace("%timer%", replacement);
+					String string1     = MessageAddon.GANG_CREATE_CONFIRM.toString();
+					String replacement = TimeUtil.formatTime(time.getTimeLeft(), true, TimeMessages.getInstance());
+					String replace1    = string1.replace("%timer%", replacement);
 
-				sender.sendMessage(replace1);
-			}, time -> {
-				confirmCreate.setConfirmed(false);
-				createGangName.remove(user);
-				createGangTimer.remove(sender);
+					s.sendMessage(replace1);
+				}, time -> {
+					confirmCreate.unlock(s);
+					createGangName.remove(user);
+					createGangTimer.remove(s);
+				});
+
+				timer.start(false);
+				createGangTimer.put(s, timer);
 			});
-
-			timer.start(false);
-			createGangTimer.put(sender, timer);
 		}, sender -> List.of("<name>"));
 
 		this.addSubArgument(createName);

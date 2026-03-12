@@ -59,9 +59,6 @@ class WaypointDeleteCommand extends SubArgument {
 		Map<CommandSender, AtomicReference<Integer>> deleteWaypointId    = new HashMap<>();
 		Map<CommandSender, CountdownTimer>           deleteWaypointTimer = new HashMap<>();
 
-		// TODO for all confirm values, they should have a sender and the confirm argument, because you can unlock and
-		//  lock for all users who are trying to use the confirm argument, thus make it user specific to take care of
-		//  such scenario
 		ConfirmArgument confirm = new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
 			int id = deleteWaypointId.get(sender).get();
 
@@ -116,7 +113,7 @@ class WaypointDeleteCommand extends SubArgument {
 		this.addSubArgument(confirm);
 
 		Argument optional = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			if (confirm.isConfirmed()) return;
+			if (confirm.isLocked(sender)) return;
 
 			OptionalArgument optionalArgument = (OptionalArgument) argument;
 
@@ -146,16 +143,17 @@ class WaypointDeleteCommand extends SubArgument {
 
 			// notify the player to confirm the waypoint
 			sender.sendMessage(ChatUtil.confirmCommand(new String[]{"waypoint", "create"}));
-			confirm.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, null, null, time -> {
-				confirm.setConfirmed(false);
-				deleteWaypointId.remove(sender);
-				deleteWaypointTimer.remove(sender);
+			confirm.lock(sender, s -> {
+				CountdownTimer timer = new CountdownTimer(gangland, 60, null, null, time -> {
+					confirm.unlock(s);
+					deleteWaypointId.remove(s);
+					deleteWaypointTimer.remove(s);
+				});
+
+				timer.start(true);
+				deleteWaypointTimer.put(s, timer);
 			});
-
-			timer.start(true);
-			deleteWaypointTimer.put(sender, timer);
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);

@@ -113,7 +113,7 @@ class BankCreateCommand extends SubArgument {
 				return;
 			}
 
-			if (confirmCreate.isConfirmed()) return;
+			if (confirmCreate.isLocked(sender)) return;
 
 			createBankName.put(user, new AtomicReference<>(args[2]));
 
@@ -123,22 +123,23 @@ class BankCreateCommand extends SubArgument {
 
 			user.sendMessage(replace);
 			user.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "create"}));
-			confirmCreate.setConfirmed(true);
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
-				if (time.getTimeLeft() % 20 != 0) return;
+			confirmCreate.lock(sender, s -> {
+				CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
+					if (time.getTimeLeft() % 20 != 0) return;
 
-				String string1 = MessageAddon.BANK_CREATE_CONFIRM.toString();
-				String replace1 = string1.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
-																				 TimeMessages.getInstance()));
-				sender.sendMessage(replace1);
-			}, time -> {
-				confirmCreate.setConfirmed(false);
-				createBankName.remove(user);
+					String string1 = MessageAddon.BANK_CREATE_CONFIRM.toString();
+					String replace1 = string1.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
+																					 TimeMessages.getInstance()));
+					s.sendMessage(replace1);
+				}, time -> {
+					confirmCreate.unlock(s);
+					createBankName.remove(user);
+				});
+
+				timer.start(false);
+				createBankTimer.put(s, timer);
 			});
-
-			timer.start(false);
-			createBankTimer.put(sender, timer);
 		}, sender -> List.of("<name>"));
 
 		this.addSubArgument(createName);

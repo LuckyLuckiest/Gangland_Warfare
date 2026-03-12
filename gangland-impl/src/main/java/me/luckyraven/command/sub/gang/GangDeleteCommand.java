@@ -95,30 +95,30 @@ class GangDeleteCommand extends SubArgument {
 				return;
 			}
 
-			if (confirmDelete.isConfirmed()) return;
+			if (confirmDelete.isLocked(sender)) return;
 
-			confirmDelete.setConfirmed(true);
 			user.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "delete"}));
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
-				if (time.getTimeLeft() % 20 != 0) return;
-
-				String string = MessageAddon.GANG_REMOVE_CONFIRM.toString();
-				String replace = string.replace("%timer%", TimeUtil.formatTime(time.getPeriod(), true,
-																			   TimeMessages.getInstance()));
-				sender.sendMessage(replace);
-			}, time -> {
-				confirmDelete.setConfirmed(false);
-				deleteGangName.remove(user);
-				deleteGangTimer.remove(sender);
-			});
-
-			timer.start(false);
-
 			Gang gang = gangManager.getGang(user.getGangId());
-
 			deleteGangName.put(user, new AtomicReference<>(gang.getName()));
-			deleteGangTimer.put(sender, timer);
+
+			confirmDelete.lock(sender, s -> {
+				CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
+					if (time.getTimeLeft() % 20 != 0) return;
+
+					String string = MessageAddon.GANG_REMOVE_CONFIRM.toString();
+					String replace = string.replace("%timer%", TimeUtil.formatTime(time.getPeriod(), true,
+																				   TimeMessages.getInstance()));
+					s.sendMessage(replace);
+				}, time -> {
+					confirmDelete.unlock(s);
+					deleteGangName.remove(user);
+					deleteGangTimer.remove(s);
+				});
+
+				timer.start(false);
+				deleteGangTimer.put(s, timer);
+			});
 		};
 	}
 

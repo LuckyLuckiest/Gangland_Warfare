@@ -102,27 +102,28 @@ class RankDeleteCommand extends SubArgument {
 				return;
 			}
 
-			if (confirmDelete.isConfirmed()) return;
+			if (confirmDelete.isLocked(sender)) return;
 
 			sender.sendMessage(ChatUtil.confirmCommand(new String[]{"rank", "delete"}));
-			confirmDelete.setConfirmed(true);
 			deleteRankName.put(sender, new AtomicReference<>(args[2]));
 
-			CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
-				if (time.getTimeLeft() % 20 != 0) return;
+			confirmDelete.lock(sender, s -> {
+				CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
+					if (time.getTimeLeft() % 20 != 0) return;
 
-				String string = MessageAddon.RANK_REMOVE_CONFIRM.toString();
-				String replace = string.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
-																			   TimeMessages.getInstance()));
+					String string = MessageAddon.RANK_REMOVE_CONFIRM.toString();
+					String replace = string.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
+																				   TimeMessages.getInstance()));
 
-				sender.sendMessage(replace);
-			}, time -> {
-				confirmDelete.setConfirmed(false);
-				deleteRankName.remove(sender);
+					s.sendMessage(replace);
+				}, time -> {
+					confirmDelete.unlock(s);
+					deleteRankName.remove(s);
+				});
+
+				timer.start(false);
+				deleteRankTimer.put(s, timer);
 			});
-
-			timer.start(false);
-			deleteRankTimer.put(sender, timer);
 		}, sender -> rankManager.getRanks().values()
 				.stream().map(Rank::getName).toList());
 
