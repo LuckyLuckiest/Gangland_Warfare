@@ -1,6 +1,6 @@
 package me.luckyraven.feature.bounty;
 
-import me.luckyraven.data.user.User;
+import me.luckyraven.data.account.user.User;
 import me.luckyraven.feature.Executor;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.timer.Timer;

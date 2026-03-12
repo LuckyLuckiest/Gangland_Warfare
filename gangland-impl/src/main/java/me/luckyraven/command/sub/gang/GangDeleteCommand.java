@@ -5,26 +5,22 @@ import me.luckyraven.Initializer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.Member;
-import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.account.gang.*;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.tables.GangAlliesTable;
-import me.luckyraven.database.tables.GangTable;
-import me.luckyraven.database.tables.MemberTable;
-import me.luckyraven.database.tables.UserTable;
+import me.luckyraven.database.tables.gang.GangAllianceTable;
+import me.luckyraven.database.tables.gang.GangTable;
+import me.luckyraven.database.tables.player.MemberTable;
+import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.Pair;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -160,7 +156,7 @@ class GangDeleteCommand extends SubArgument {
 			List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
 
 			// get the contribution frequency for each user, and return that frequency according to the current balance
-			double total = gang.getGroup()
+			double total = gang.getMembers()
 					.stream().mapToDouble(Member::getContribution).sum();
 
 			Initializer      initializer      = gangland.getInitializer();
@@ -168,10 +164,10 @@ class GangDeleteCommand extends SubArgument {
 			DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
 			List<Table<?>>   tables           = ganglandDatabase.getTables();
 
-			UserTable       userTable       = initializer.getInstanceFromTables(UserTable.class, tables);
-			MemberTable     memberTable     = initializer.getInstanceFromTables(MemberTable.class, tables);
-			GangTable       gangTable       = initializer.getInstanceFromTables(GangTable.class, tables);
-			GangAlliesTable gangAlliesTable = initializer.getInstanceFromTables(GangAlliesTable.class, tables);
+			UserTable         userTable         = initializer.getInstanceFromTables(UserTable.class, tables);
+			MemberTable       memberTable       = initializer.getInstanceFromTables(MemberTable.class, tables);
+			GangTable         gangTable         = initializer.getInstanceFromTables(GangTable.class, tables);
+			GangAllianceTable gangAllianceTable = initializer.getInstanceFromTables(GangAllianceTable.class, tables);
 
 			// change the online users gang id
 			String depositMoney = MessageAddon.DEPOSIT_MONEY_PLAYER.toString();
@@ -245,9 +241,9 @@ class GangDeleteCommand extends SubArgument {
 				database.table(gangTable.getName()).delete("id", removedGang, Types.INTEGER);
 
 				// remove allied gangs to itself
-				for (Pair<Gang, Long> alliedGangPair : gang.getAllies()) {
-					int      alliedGangId = alliedGangPair.first().getId();
-					Database config       = database.table(gangAlliesTable.getName());
+				for (GangAlliance alliedGangPair : gang.getAllies()) {
+					int      alliedGangId = alliedGangPair.gang().getId();
+					Database config       = database.table(gangAllianceTable.getName());
 
 					config.delete("gang_id", alliedGangId, Types.INTEGER);
 					// remove other gangs who're allied to the removed gang

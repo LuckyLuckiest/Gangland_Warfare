@@ -9,10 +9,10 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyException;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
@@ -100,9 +100,13 @@ class GangCreateCommand extends SubArgument {
 				return;
 			}
 
-			Gang gang = new Gang();
+			int id = Gang.generateId();
 
-			while (gangManager.contains(gang)) gang.setId(Gang.generateId());
+			while (gangManager.getGang(id) == null) {
+				id = Gang.generateId();
+			}
+
+			Gang gang = new Gang(id);
 
 			member.setGangJoinDateLong(Instant.now().toEpochMilli());
 			gang.addMember(user, member, rankManager.get(SettingAddon.getGangRankTail()));

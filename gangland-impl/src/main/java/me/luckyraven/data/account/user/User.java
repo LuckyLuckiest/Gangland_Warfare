@@ -1,10 +1,9 @@
-package me.luckyraven.data.user;
+package me.luckyraven.data.account.user;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.copsncrooks.wanted.Wanted;
-import me.luckyraven.data.account.Account;
+import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
@@ -22,7 +21,10 @@ import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Handles all users registered data, only for online users.
@@ -30,6 +32,7 @@ import java.util.*;
  * @param <T> type of the user
  */
 @Getter
+@Setter
 public class User<T extends OfflinePlayer> {
 
 	@Setter
@@ -41,15 +44,13 @@ public class User<T extends OfflinePlayer> {
 	private final Level                 level;
 	private final Wanted                wanted;
 	private final EconomyHandler        economy;
-	private final List<Account<?, ?>>   linkedAccounts;
 	private final Set<InventoryHandler> inventories;
 
-	private @Setter int kills, deaths, mobKills, gangId;
-	private @Setter Scoreboard           scoreboard;
-	private @Setter PermissionAttachment permissionAttachment;
-
-	@Getter(value = AccessLevel.NONE)
-	private @Setter boolean hasBank;
+	@Nullable
+	private Bank bank;
+	private int  kills, deaths, mobKills, gangId;
+	private Scoreboard           scoreboard;
+	private PermissionAttachment permissionAttachment;
 
 	/**
 	 * Instantiates a new Database.
@@ -57,21 +58,20 @@ public class User<T extends OfflinePlayer> {
 	 * @param user the user
 	 */
 	public User(JavaPlugin plugin, T user) {
-		this.user           = user;
-		this.uuid           = user.getUniqueId();
-		this.bounty         = new Bounty(SettingAddon.getBountyEachKillValue(), SettingAddon.getBountyTimerMultiple());
-		this.level          = new Level();
-		this.wanted         = new Wanted(plugin, SettingAddon.getWantedLevelIncrement(),
-										 SettingAddon.getWantedMaximumLevel());
-		this.economy        = new EconomyHandler(this);
-		this.linkedAccounts = new ArrayList<>();
-		this.inventories    = new HashSet<>();
+		this.user        = user;
+		this.uuid        = user.getUniqueId();
+		this.bounty      = new Bounty(SettingAddon.getBountyEachKillValue(), SettingAddon.getBountyTimerMultiple());
+		this.level       = new Level();
+		this.wanted      = new Wanted(plugin, SettingAddon.getWantedLevelIncrement(),
+									  SettingAddon.getWantedMaximumLevel());
+		this.economy     = new EconomyHandler(this);
+		this.inventories = new HashSet<>();
 
 		this.wanted.setOwner(user.getPlayer());
 
-		this.kills   = this.deaths = this.mobKills = 0;
-		this.gangId  = -1;
-		this.hasBank = false;
+		this.kills  = this.deaths = this.mobKills = 0;
+		this.gangId = -1;
+		this.bank   = null;
 	}
 
 	/**
@@ -80,7 +80,7 @@ public class User<T extends OfflinePlayer> {
 	 * @return the boolean
 	 */
 	public boolean hasBank() {
-		return hasBank;
+		return this.bank != null;
 	}
 
 	/**
@@ -97,24 +97,6 @@ public class User<T extends OfflinePlayer> {
 	 */
 	public boolean hasGang() {
 		return this.gangId != -1;
-	}
-
-	/**
-	 * Add account.
-	 *
-	 * @param account the account
-	 */
-	public void addAccount(Account<?, ?> account) {
-		linkedAccounts.add(account);
-	}
-
-	/**
-	 * Remove account.
-	 *
-	 * @param account the account
-	 */
-	public void removeAccount(Account<?, ?> account) {
-		linkedAccounts.remove(account);
 	}
 
 	public void sendMessage(String text) {

@@ -1,8 +1,8 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserDataInitEvent;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserDataInitEvent;
 import me.luckyraven.scoreboard.Scoreboard;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.driver.DriverHandler;

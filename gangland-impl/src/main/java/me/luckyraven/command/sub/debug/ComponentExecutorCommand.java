@@ -8,10 +8,10 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
@@ -100,7 +100,7 @@ public final class ComponentExecutorCommand extends CommandHandler {
 
 			// get all the members in the gang
 			Gang         userGang = gangManager.getGang(user.getGangId());
-			List<Member> members  = userGang.getValue();
+			List<Member> members  = userGang.getMembers();
 			Stream<String> allMembers = members.stream()
 					.map(Member::getUuid)
 					.map(Bukkit::getOfflinePlayer)
@@ -141,7 +141,7 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			String targetStr    = args[3];
 			String rankStr      = args[4];
 			Member targetMember = null;
-			for (Member member : userGang.getGroup()) {
+			for (Member member : userGang.getMembers()) {
 				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
 				String        offlineName   = offlinePlayer.getName();
 

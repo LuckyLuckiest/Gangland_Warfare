@@ -1,7 +1,7 @@
 package me.luckyraven.feature.level;
 
 import lombok.Getter;
-import me.luckyraven.data.user.User;
+import me.luckyraven.data.account.user.User;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 

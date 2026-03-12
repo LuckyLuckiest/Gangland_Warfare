@@ -3,13 +3,13 @@ package me.luckyraven.data.placeholder.worker;
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
 import me.luckyraven.copsncrooks.wanted.Wanted;
+import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
-import me.luckyraven.data.account.type.Bank;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.item.configuration.UniqueItemAddon;
@@ -177,7 +177,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 		if (user == null) return null;
 
-		Bank   bank    = Bank.getInstance(user);
+		Bank   bank    = user.getBank();
 		String bankStr = "bank_";
 
 		if (bank == null) return null;
@@ -219,11 +219,11 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (parameter.equals(gangStr + "has-bounty")) return String.valueOf(gang.getBounty().hasBounty());
 
 		// members
-		if (parameter.equals(gangStr + "members-size")) return String.valueOf(gang.getGroup().size());
+		if (parameter.equals(gangStr + "members-size")) return String.valueOf(gang.getMembers().size());
 		if (parameter.equals(gangStr + "online-members-size"))
 			return String.valueOf(gang.getOnlineMembers(userManager).size());
 		if (parameter.equals(gangStr + "offline-members-size"))
-			return String.valueOf(gang.getGroup().size() - gang.getOnlineMembers(userManager).size());
+			return String.valueOf(gang.getMembers().size() - gang.getOnlineMembers(userManager).size());
 
 		// ally
 		if (parameter.equals(gangStr + "ally-list")) return gang.getAllyListString();

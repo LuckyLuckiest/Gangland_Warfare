@@ -1,21 +1,27 @@
 package me.luckyraven.data.economy;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.data.user.User;
+import me.luckyraven.data.account.user.User;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.Nullable;
 
+@Getter
+@Setter
 public class EconomyHandler {
 
-	private static @Getter
-	@Setter Economy vaultEconomy;
+	@Getter
+	@Setter
+	private static Economy vaultEconomy;
 
-	private final User<? extends OfflinePlayer> user;
-	private final boolean                       useUser;
+	@Getter(AccessLevel.NONE)
+	private final boolean useUser;
 
-	private double balance;
+	@Nullable
+	private User<? extends OfflinePlayer> user;
+	private double                        balance;
 
 	/**
 	 * Instantiates a new Economy.

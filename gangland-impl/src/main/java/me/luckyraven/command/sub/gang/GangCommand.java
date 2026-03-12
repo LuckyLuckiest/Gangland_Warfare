@@ -6,11 +6,12 @@ import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ArgumentUtil;
 import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangAlliance;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.multi.MultiInventory;
@@ -19,7 +20,6 @@ import me.luckyraven.inventory.part.ButtonTags;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
 import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.Pair;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
 import org.bukkit.Bukkit;
@@ -217,7 +217,7 @@ public final class GangCommand extends CommandHandler {
 
 		// members
 		gui.setItem(19, XMaterial.PLAYER_HEAD.get(), "&bMembers", new ArrayList<>(
-							List.of("&a" + gang.getOnlineMembers(userManager).size() + "&7/&e" + gang.getGroup().size())), false,
+							List.of("&a" + gang.getOnlineMembers(userManager).size() + "&7/&e" + gang.getMembers().size())), false,
 					false, (player, inventory, item) -> {
 					User<Player> user1 = userManager.getUser(player);
 
@@ -227,7 +227,7 @@ public final class GangCommand extends CommandHandler {
 
 					List<ItemStack> items = new ArrayList<>();
 
-					for (Member member : gang1.getGroup()) {
+					for (Member member : gang1.getMembers()) {
 						OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
 						Rank          userRank      = member.getRank();
 						String        rank          = "null";
@@ -274,11 +274,11 @@ public final class GangCommand extends CommandHandler {
 						List<ItemStack> items = new ArrayList<>();
 
 						for (Gang ally : gang1.getAllies()
-								.stream().map(Pair::first).toList()) {
+								.stream().map(GangAlliance::ally).toList()) {
 							List<String> data = new ArrayList<>();
 							data.add("&7ID:&e " + ally.getId());
 							data.add(String.format("&7Members:&a %d&7/&e%d", ally.getOnlineMembers(userManager).size(),
-												   ally.getGroup().size()));
+												   ally.getMembers().size()));
 							data.add("&7Created:&e " + ally.getDateCreatedString());
 
 							ItemBuilder itemBuilder = new ItemBuilder(XMaterial.REDSTONE.get()).setDisplayName(

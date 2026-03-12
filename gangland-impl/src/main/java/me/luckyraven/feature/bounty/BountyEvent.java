@@ -3,7 +3,7 @@ package me.luckyraven.feature.bounty;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.user.User;
+import me.luckyraven.data.account.user.User;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;

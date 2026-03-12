@@ -5,9 +5,9 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
-import me.luckyraven.data.account.type.Bank;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
+import me.luckyraven.data.account.Bank;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
@@ -77,13 +77,14 @@ class BankCreateCommand extends SubArgument {
 				return;
 			}
 
-			Bank bank = new Bank(user, createBankName.get(user).get());
+			Bank bank = new Bank(user.getUser().getUniqueId(), createBankName.get(user).get());
+			bank.getEconomy().setUser(user);
 
 			// create the bank
 			user.getEconomy().withdraw(SettingAddon.getBankCreateFee());
-			user.setHasBank(true);
-			user.addAccount(bank);
 			bank.getEconomy().setBalance(SettingAddon.getBankInitialBalance());
+
+			user.setBank(bank);
 
 			String string  = MessageAddon.BANK_CREATED.toString();
 			String replace = string.replace("%bank%", createBankName.get(user).get());

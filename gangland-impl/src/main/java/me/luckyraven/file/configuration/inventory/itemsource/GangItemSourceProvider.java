@@ -3,14 +3,14 @@ package me.luckyraven.file.configuration.inventory.itemsource;
 import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangAlliance;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
 import me.luckyraven.inventory.multi.ItemSourceProvider;
 import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -41,14 +41,15 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 		GangManager         gangManager = gangland.getInitializer().getGangManager();
 
 		User<Player> user = userManager.getUser(player);
-		if (!user.hasGang()) return new ArrayList<>();
+
+		if (user == null || !user.hasGang()) return new ArrayList<>();
 
 		Gang gang = gangManager.getGang(user.getGangId());
 		if (gang == null) return new ArrayList<>();
 
 		List<ItemStack> items = new ArrayList<>();
 
-		for (Member member : gang.getGroup()) {
+		for (Member member : gang.getMembers()) {
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
 			Rank          userRank      = member.getRank();
 			String        rank          = userRank != null ? userRank.getName() : "null";
@@ -87,11 +88,11 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 		List<ItemStack> items = new ArrayList<>();
 
 		for (Gang ally : gang.getAllies()
-				.stream().map(Pair::first).toList()) {
+				.stream().map(GangAlliance::ally).toList()) {
 			List<String> data = new ArrayList<>();
 			data.add("&7ID:&e " + ally.getId());
 			data.add(String.format("&7Members:&a %d&7/&e%d", ally.getOnlineMembers(userManager).size(),
-								   ally.getGroup().size()));
+								   ally.getMembers().size()));
 			data.add("&7Created:&e " + ally.getDateCreatedString());
 			data.add("");
 			data.add("&eClick to view details");

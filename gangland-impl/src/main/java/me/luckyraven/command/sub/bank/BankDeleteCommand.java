@@ -5,11 +5,11 @@ import me.luckyraven.Initializer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
-import me.luckyraven.data.account.type.Bank;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
+import me.luckyraven.data.account.Bank;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.tables.BankTable;
+import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.database.DatabaseHelper;
@@ -61,7 +61,7 @@ class BankDeleteCommand extends SubArgument {
 
 			if (user == null) return;
 
-			Bank bank = Bank.getInstance(user);
+			Bank bank = user.getBank();
 
 			if (!user.hasBank() || bank == null) {
 				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
@@ -105,7 +105,7 @@ class BankDeleteCommand extends SubArgument {
 
 			if (user == null) return;
 
-			Bank bank = Bank.getInstance(user);
+			Bank bank = user.getBank();
 
 			if (!user.hasBank() || bank == null) {
 				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
@@ -113,8 +113,7 @@ class BankDeleteCommand extends SubArgument {
 			}
 
 			user.getEconomy().deposit(bank.getEconomy().getBalance() + SettingAddon.getBankCreateFee() / 2);
-			user.setHasBank(false);
-			user.removeAccount(bank);
+			user.setBank(null);
 
 			// remove the bank from the database
 			Initializer      initializer      = gangland.getInitializer();

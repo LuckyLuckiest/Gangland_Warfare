@@ -2,8 +2,8 @@ package me.luckyraven.sign.aspect;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.wanted.Wanted;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.sign.model.ParsedSign;
 import me.luckyraven.sign.type.WantedSign;

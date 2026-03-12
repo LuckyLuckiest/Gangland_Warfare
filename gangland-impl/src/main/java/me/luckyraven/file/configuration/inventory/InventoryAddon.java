@@ -3,7 +3,7 @@ package me.luckyraven.file.configuration.inventory;
 import com.cryptomorin.xseries.XEnchantment;
 import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.Gangland;
-import me.luckyraven.data.user.User;
+import me.luckyraven.data.account.user.User;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.inventory.itemsource.GangItemSourceProvider;
 import me.luckyraven.inventory.*;

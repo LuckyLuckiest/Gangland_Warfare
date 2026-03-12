@@ -8,10 +8,10 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -88,7 +88,7 @@ class GangPromoteCommand extends SubArgument {
 
 			String targetStr    = args[2];
 			Member targetMember = null;
-			for (Member member : gang.getGroup()) {
+			for (Member member : gang.getMembers()) {
 				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
 				String        offlineName   = offlinePlayer.getName();
 
@@ -196,7 +196,7 @@ class GangPromoteCommand extends SubArgument {
 			}
 
 			// get the members in the gang
-			List<Member> members = userGang.getValue();
+			List<Member> members = userGang.getMembers();
 
 			// filter the members by rank
 			List<String> descendantRanks = new ArrayList<>();

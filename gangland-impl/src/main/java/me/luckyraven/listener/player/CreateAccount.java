@@ -3,13 +3,13 @@ package me.luckyraven.listener.player;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserDataInitEvent;
-import me.luckyraven.data.user.UserManager;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserDataInitEvent;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.tables.BankTable;
-import me.luckyraven.database.tables.MemberTable;
-import me.luckyraven.database.tables.UserTable;
+import me.luckyraven.database.tables.player.BankTable;
+import me.luckyraven.database.tables.player.MemberTable;
+import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.updater.UpdateChecker;
@@ -64,6 +64,9 @@ public final class CreateAccount implements Listener {
 			offlineUserManager.remove(offlineUser);
 		}
 
+		// Add the user to the manager immediately so other handlers can find them
+		userManager.add(user);
+
 		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
 			List<Table<?>> tables    = ganglandDatabase.getTables();
 			UserTable      userTable = gangland.getInitializer().getInstanceFromTables(UserTable.class, tables);
@@ -71,11 +74,11 @@ public final class CreateAccount implements Listener {
 
 			userManager.initializeUserData(user, userTable, bankTable);
 
-			UserDataInitEvent userDataInitEvent = new UserDataInitEvent(true, user);
-			Bukkit.getPluginManager().callEvent(userDataInitEvent);
-
-			// Add the user to a user manager group
-			userManager.add(user);
+			// Bukkit events must be fired on the main thread
+			Bukkit.getScheduler().runTask(gangland, () -> {
+				UserDataInitEvent userDataInitEvent = new UserDataInitEvent(true, user);
+				Bukkit.getPluginManager().callEvent(userDataInitEvent);
+			});
 		});
 
 		// need to check if the user already registered

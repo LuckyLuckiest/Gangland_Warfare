@@ -3,7 +3,7 @@ package me.luckyraven.sign;
 import lombok.AccessLevel;
 import lombok.Getter;
 import me.luckyraven.Gangland;
-import me.luckyraven.data.user.UserManager;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.sign.registry.SignFormatRegistry;
 import me.luckyraven.sign.registry.SignTypeDefinition;
 import me.luckyraven.sign.registry.SignTypeRegistry;

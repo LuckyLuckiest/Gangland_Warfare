@@ -2,9 +2,9 @@ package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;

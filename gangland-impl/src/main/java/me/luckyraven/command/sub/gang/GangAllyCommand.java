@@ -5,13 +5,13 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangAlliance;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.MemberManager;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.Pair;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.util.timer.CountdownTimer;
@@ -239,7 +239,7 @@ class GangAllyCommand extends SubArgument {
 			Gang gang = gangManager.getGang(user.getGangId());
 
 			return gang.getAllies()
-					.stream().map(Pair::first).map(Gang::getName).toList();
+					.stream().map(GangAlliance::ally).map(Gang::getName).toList();
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
@@ -253,7 +253,7 @@ class GangAllyCommand extends SubArgument {
 			Gang gang = gangManager.getGang(user.getGangId());
 
 			List<Gang> allies = gang.getAllies()
-					.stream().map(Pair::first).toList();
+					.stream().map(GangAlliance::ally).toList();
 
 			// First pass: count how many times each name appears
 			Map<String, Integer> nameCount = new HashMap<>();

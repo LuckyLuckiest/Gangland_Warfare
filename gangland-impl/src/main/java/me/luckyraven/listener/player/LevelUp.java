@@ -2,8 +2,8 @@ package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.feature.level.GangLevelUpEvent;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.level.UserLevelUpEvent;

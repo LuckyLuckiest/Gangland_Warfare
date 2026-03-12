@@ -2,16 +2,14 @@ package me.luckyraven.data.account.gang;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.data.account.Account;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
 import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
-import me.luckyraven.util.Pair;
 import me.luckyraven.util.color.Color;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -23,44 +21,47 @@ import java.util.*;
 
 @Getter
 @Setter
-public class Gang extends Account<Integer, List<Member>> {
+public class Gang {
 
-	private final Set<Pair<Gang, Long>> allies;
-	private final Level                 level;
-	private final Bounty                bounty;
-	private final EconomyHandler        economy;
+	private final int               id;
+	private final Set<GangAlliance> allies;
+	private final Level             level;
+	private final Bounty            bounty;
+	private final EconomyHandler    economy;
+	private final List<Member>      members;
 
 	private String name, displayName, color, description;
 	private long  created;
 	private State state;
 
-	public Gang(int id, List<Member> users, String name) {
-		this(id, users);
+	public Gang(int id, List<Member> members, String name) {
+		this(id, members);
 		this.name = name;
 	}
 
-	public Gang(int id, List<Member> users) {
+	public Gang(int id, List<Member> members) {
 		this(id);
-		setValue(users);
-	}
 
-	public Gang(int id) {
-		this();
-		setKey(id);
+		this.members.addAll(members);
 	}
 
 	public Gang() {
-		super(generateId(), new ArrayList<>());
+		this(generateId());
+	}
+
+	public Gang(int id) {
+		this.id      = id;
+		this.allies  = new HashSet<>();
+		this.level   = new Level();
+		this.bounty  = new Bounty(SettingAddon.getBountyEachKillValue(), SettingAddon.getBountyTimerMultiple());
+		this.economy = new EconomyHandler(null);
+		this.members = new ArrayList<>();
 
 		this.name        = null;
 		this.displayName = "";
 		this.color       = Color.LIGHT_BLUE.name();
 		this.description = "Conquering the hood";
 		this.created     = Instant.now().toEpochMilli();
-		this.economy     = new EconomyHandler(null);
-		this.bounty      = new Bounty(SettingAddon.getBountyEachKillValue(), SettingAddon.getBountyTimerMultiple());
-		this.level       = new Level();
-		this.allies      = new HashSet<>();
 	}
 
 	public static int generateId() {
@@ -68,43 +69,35 @@ public class Gang extends Account<Integer, List<Member>> {
 		return random.nextInt(Integer.MAX_VALUE);
 	}
 
-	public void addAlly(Pair<Gang, Long> allieDate) {
-		allies.add(allieDate);
+	public void addAlly(GangAlliance gangAlliance) {
+		allies.add(gangAlliance);
 	}
 
-	public void addAllAllies(List<Pair<Gang, Long>> allieDateList) {
-		allieDateList.forEach(this::addAlly);
+	public void addAllAllies(List<GangAlliance> gangAlliances) {
+		gangAlliances.forEach(this::addAlly);
 	}
 
 	public void addAlly(Gang gang) {
-		addAlly(new Pair<>(gang, Instant.now().toEpochMilli()));
+		addAlly(new GangAlliance(this, gang, Instant.now().toEpochMilli()));
 	}
 
 	public void removeAlly(Gang gang) {
-		allies.removeIf(pair -> pair.first().getId() == gang.getId());
+		allies.removeIf(gangAlliance -> gangAlliance.ally().getId() == gang.getId());
 	}
 
 	public boolean isAlly(Gang gang) {
-		return !allies.stream().filter(pair -> pair.first().getId() == gang.getId()).toList().isEmpty();
+		return !allies.stream().filter(gangAlliance -> gangAlliance.ally().getId() == gang.getId()).toList().isEmpty();
 	}
 
-	public Set<Pair<Gang, Long>> getAllies() {
+	public Set<GangAlliance> getAllies() {
 		return Collections.unmodifiableSet(allies);
-	}
-
-	public int getId() {
-		return super.getKey();
-	}
-
-	public void setId(int id) {
-		setKey(id);
 	}
 
 	public void addMember(Member member, Rank rank) {
 		member.setGangId(this.getId());
 		member.setRank(rank);
 
-		List<Member> group        = getGroup();
+		List<Member> group        = getMembers();
 		boolean      memberExists = group.contains(member);
 
 		if (memberExists) return;
@@ -114,7 +107,6 @@ public class Gang extends Account<Integer, List<Member>> {
 
 	public void addMember(User<? extends OfflinePlayer> user, Member member, Rank rank) {
 		user.setGangId(this.getId());
-		user.addAccount(this);
 		addMember(member, rank);
 	}
 
@@ -122,30 +114,25 @@ public class Gang extends Account<Integer, List<Member>> {
 		addMember(member, member.getRank());
 	}
 
-	public List<Member> getGroup() {
-		return super.getValue();
-	}
-
-	public void setGroup(List<Member> users) {
-		setValue(users);
+	public List<Member> getMembers() {
+		return new ArrayList<>(members);
 	}
 
 	public void removeMember(User<? extends OfflinePlayer> user, Member member) {
-		if (!getGroup().contains(member)) return;
+		if (!getMembers().contains(member)) return;
 
 		user.flushPermissions(null);
 		user.resetGang();
-		user.removeAccount(this);
 		removeMember(member);
 	}
 
 	public void removeMember(Member member) {
-		if (!getGroup().contains(member)) return;
+		if (!getMembers().contains(member)) return;
 
 		member.resetGang();
 		member.setContribution(0D);
 		member.setRank(null);
-		getGroup().remove(member);
+		getMembers().remove(member);
 	}
 
 	public List<User<Player>> getOnlineMembers(UserManager<Player> userManager) {
@@ -178,7 +165,7 @@ public class Gang extends Account<Integer, List<Member>> {
 	}
 
 	public String getAllyListString() {
-		return allies.stream().map(Pair::first).map(Gang::getDisplayNameString).toList().toString();
+		return allies.stream().map(GangAlliance::ally).map(Gang::getDisplayNameString).toList().toString();
 	}
 
 	@Override
@@ -195,7 +182,7 @@ public class Gang extends Account<Integer, List<Member>> {
 	public String toString() {
 		return String.format(
 				"Gang{id=%d,name=%s,description=%s,members=%s,created=%s,balance=%.2f,level=%.2f,bounty=%,.2f,allies=%s}",
-				getId(), name, description, getGroup(), getDateCreatedString(), economy.getBalance(),
+				getId(), name, description, getMembers(), getDateCreatedString(), economy.getBalance(),
 				level.getExperience(), bounty.getAmount(), getAllyListString());
 	}
 

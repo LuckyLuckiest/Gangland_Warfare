@@ -2,9 +2,9 @@ package me.luckyraven.sign.aspect;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyException;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.inventory.multi.MultiInventory;

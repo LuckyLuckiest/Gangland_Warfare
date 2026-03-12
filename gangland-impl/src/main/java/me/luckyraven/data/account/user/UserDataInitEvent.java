@@ -1,4 +1,4 @@
-package me.luckyraven.data.user;
+package me.luckyraven.data.account.user;
 
 import lombok.Getter;
 import org.bukkit.entity.Player;

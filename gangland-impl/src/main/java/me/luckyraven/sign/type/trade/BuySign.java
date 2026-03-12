@@ -1,6 +1,6 @@
 package me.luckyraven.sign.type.trade;
 
-import me.luckyraven.data.user.UserManager;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.aspect.ItemTransferAspect;
 import me.luckyraven.sign.aspect.MoneyAspect;

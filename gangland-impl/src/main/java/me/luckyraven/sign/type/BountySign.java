@@ -1,7 +1,7 @@
 package me.luckyraven.sign.type;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.data.user.UserManager;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.aspect.BountyAspect;
 import me.luckyraven.sign.aspect.SignAspect;

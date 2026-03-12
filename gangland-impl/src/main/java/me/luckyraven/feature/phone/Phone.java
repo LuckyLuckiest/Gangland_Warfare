@@ -6,7 +6,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
-import me.luckyraven.data.user.User;
+import me.luckyraven.data.account.user.User;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.multi.MultiInventory;
@@ -52,7 +52,7 @@ public class Phone {
 		newGang.setItem(23, XMaterial.BOOKSHELF.get(), "&b&lSearch Gang", null, true, false, (player1, inv, it) -> {
 			// open a multi inventory that displays all the gangs
 			List<Gang> gangs = gangManager.getGangs().values()
-										  .stream().toList();
+					.stream().toList();
 			List<ItemStack> gangsItems = new ArrayList<>();
 
 			for (Gang gang : gangs) {
@@ -60,14 +60,14 @@ public class Phone {
 						String.format("&r%s%s&7 Gang", ColorUtil.getColorCode(gang.getColor()),
 									  gang.getDisplayNameString())).setLore("&e" + gang.getDescription());
 
-				UUID uuid = gang.getGroup()
-								.stream()
-								.filter(member -> Objects.requireNonNull(member.getRank())
-														 .getName()
-														 .equalsIgnoreCase(SettingAddon.getGangRankTail()))
-								.findFirst()
-								.map(Member::getUuid)
-								.orElse(null);
+				UUID uuid = gang.getMembers()
+						.stream()
+						.filter(member -> Objects.requireNonNull(member.getRank())
+												 .getName()
+												 .equalsIgnoreCase(SettingAddon.getGangRankTail()))
+						.findFirst()
+						.map(Member::getUuid)
+						.orElse(null);
 
 				String name = "";
 				if (uuid != null) {
@@ -107,12 +107,12 @@ public class Phone {
 					}
 
 					List<ItemStack> items = gangsItems.stream()
-													  .filter(itemStack -> Objects.requireNonNull(
-																						  itemStack.getItemMeta())
-																				  .getDisplayName()
-																				  .toLowerCase()
-																				  .contains(output.toLowerCase()))
-													  .toList();
+							.filter(itemStack -> Objects.requireNonNull(
+																itemStack.getItemMeta())
+														.getDisplayName()
+														.toLowerCase()
+														.contains(output.toLowerCase()))
+							.toList();
 
 					multiInventory.updateItems(gangland, items, stateSnapshot.getPlayer(), true, fill, staticItems);
 					callback.accept(stateSnapshot.getPlayer(), currInv, itemBuilder);

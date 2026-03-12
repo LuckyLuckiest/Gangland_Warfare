@@ -2,9 +2,9 @@ package me.luckyraven.feature.wanted;
 
 import me.luckyraven.copsncrooks.events.wanted.WantedEvent;
 import me.luckyraven.copsncrooks.wanted.Wanted;
+import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.economy.EconomyException;
 import me.luckyraven.data.economy.EconomyHandler;
-import me.luckyraven.data.user.User;
 import me.luckyraven.feature.Executor;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
