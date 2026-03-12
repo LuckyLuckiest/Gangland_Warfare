@@ -18,10 +18,11 @@ public class Member {
 
 	private final UUID uuid;
 
-	private           int    gangId;
-	private           double contribution;
-	private @Nullable Rank   rank;
-	private           long   gangJoinDateLong;
+	private int    gangId;
+	private double contribution;
+	@Nullable
+	private Rank   rank;
+	private long   gangJoinDateLong;
 
 	/**
 	 * Instantiates a new Member.

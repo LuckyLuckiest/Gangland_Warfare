@@ -4,7 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.tables.LootChestTable;
+import me.luckyraven.database.tables.lootchest.LootChestTable;
 import me.luckyraven.loot.data.LootChestData;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.persistence.database.DatabaseHelper;
