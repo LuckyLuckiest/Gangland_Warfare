@@ -1,10 +1,12 @@
 package me.luckyraven.copsncrooks.listener;
 
+import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.events.wanted.WantedEndEvent;
 import me.luckyraven.copsncrooks.events.wanted.WantedLevelChangeEvent;
 import me.luckyraven.copsncrooks.events.wanted.WantedStartEvent;
 import me.luckyraven.copsncrooks.police.CopManager;
 import me.luckyraven.copsncrooks.police.npc.CopNpc;
+import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -15,16 +17,11 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-/**
- * Listens for relevant game events and delegates to the CopManager.
- */
+@ListenerHandler
+@RequiredArgsConstructor
 public class CopListener implements Listener {
 
 	private final CopManager copManager;
-
-	public CopListener(CopManager copManager) {
-		this.copManager = copManager;
-	}
 
 	/**
 	 * Starts cop pursuit when a player becomes wanted.

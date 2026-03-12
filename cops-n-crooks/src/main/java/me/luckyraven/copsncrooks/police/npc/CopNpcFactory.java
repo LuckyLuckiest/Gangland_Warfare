@@ -4,7 +4,6 @@ import me.luckyraven.copsncrooks.entity.EntityMark;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.police.config.CopConfigProvider;
 import me.luckyraven.copsncrooks.police.config.CopTierConfig;
-import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
 import me.luckyraven.copsncrooks.police.state.CopBehavior;
 import me.luckyraven.copsncrooks.police.state.CopBehaviorFactory;
 import me.luckyraven.copsncrooks.police.state.CopState;
@@ -42,12 +41,12 @@ public class CopNpcFactory {
 	private final JavaPlugin         plugin;
 	private final WeaponService      weaponService;
 
-	public CopNpcFactory(CopConfigProvider configProvider, EntityMarkManager entityMarkManager,
-						 CopSpawnManager spawnManager, JavaPlugin plugin, WeaponService weaponService) {
-		this.configProvider    = configProvider;
-		this.behaviorFactory   = new CopBehaviorFactory(configProvider, spawnManager);
-		this.entityMarkManager = entityMarkManager;
+	public CopNpcFactory(JavaPlugin plugin, CopConfigProvider configProvider, CopBehaviorFactory behaviorFactory,
+						 EntityMarkManager entityMarkManager, WeaponService weaponService) {
 		this.plugin            = plugin;
+		this.configProvider    = configProvider;
+		this.behaviorFactory   = behaviorFactory;
+		this.entityMarkManager = entityMarkManager;
 		this.weaponService     = weaponService;
 	}
 

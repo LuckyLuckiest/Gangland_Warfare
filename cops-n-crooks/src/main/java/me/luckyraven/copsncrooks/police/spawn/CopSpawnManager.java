@@ -3,17 +3,20 @@ package me.luckyraven.copsncrooks.police.spawn;
 import me.luckyraven.copsncrooks.police.config.CopConfigProvider;
 import me.luckyraven.copsncrooks.police.npc.CopNpc;
 import me.luckyraven.copsncrooks.police.npc.CopNpcFactory;
+import me.luckyraven.persistence.repository.IRepository;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * Handles spawning cop NPCs at appropriate locations relative to players.
- */
 public class CopSpawnManager {
 
 	private static final double MIN_SPAWN_DISTANCE        = 30.0;
@@ -22,12 +25,58 @@ public class CopSpawnManager {
 	private static final int    SPAWN_Y_OFFSET            = 0;
 	private static final int    MIN_OPEN_HORIZONTAL_SIDES = 2;
 
-	private final CopNpcFactory     copNpcFactory;
-	private final CopConfigProvider configProvider;
+	public static int ID = 0;
 
-	public CopSpawnManager(CopNpcFactory copNpcFactory, CopConfigProvider configProvider) {
+	private final CopNpcFactory            copNpcFactory;
+	private final CopConfigProvider        configProvider;
+	private final IRepository<CopSpawner>  repository;
+	private final Map<Integer, CopSpawner> spawners;
+
+	public CopSpawnManager(CopNpcFactory copNpcFactory, CopConfigProvider configProvider,
+						   IRepository<CopSpawner> repository) {
 		this.copNpcFactory  = copNpcFactory;
 		this.configProvider = configProvider;
+		this.repository     = repository;
+		this.spawners       = new ConcurrentHashMap<>();
+
+		loadStoredSpawners();
+
+		repository.setDataSupplier(spawners::values);
+	}
+
+	public void reloadSpawners() {
+		loadStoredSpawners();
+	}
+
+	public void setSpawnerLocation(Location location) {
+		ID++;
+
+		CopSpawner spawner = spawners.computeIfAbsent(ID, ignored -> new CopSpawner(ID, location));
+
+		spawner.setLocation(location);
+	}
+
+	public void removeSpawner(int id) {
+		CopSpawner spawner = spawners.remove(id);
+		if (spawner != null) {
+			repository.delete(spawner);
+		}
+	}
+
+	public List<Location> getSpawnerLocations() {
+		List<Location> locations = new ArrayList<>();
+
+		for (CopSpawner spawner : spawners.values()) {
+			locations.add(spawner.getLocation());
+		}
+
+		return locations;
+	}
+
+	@Nullable
+	public Location getSpawnerLocation(int id) {
+		CopSpawner spawner = spawners.get(id);
+		return spawner == null ? null : spawner.getLocation();
 	}
 
 	/**
@@ -42,10 +91,7 @@ public class CopSpawnManager {
 		Location spawnLoc = findSpawnLocation(target);
 
 		if (spawnLoc == null) {
-			List<Location> configuredSpawns = configProvider.getSpawnLocations();
-			if (!configuredSpawns.isEmpty()) {
-				spawnLoc = configuredSpawns.get(ThreadLocalRandom.current().nextInt(configuredSpawns.size()));
-			}
+			spawnLoc = findStoredSpawnerLocation(target.getWorld());
 		}
 
 		if (spawnLoc == null) return null;
@@ -105,7 +151,7 @@ public class CopSpawnManager {
 			if (player.equals(excludePlayer)) continue;
 
 			double distance = player.getLocation().distance(location);
-			if (distance > 48) continue; // Beyond render/awareness distance
+			if (distance > 48) continue;
 
 			// Check if the cop is in the player's forward FOV
 			Location playerLoc  = player.getLocation();
@@ -122,15 +168,43 @@ public class CopSpawnManager {
 		return false;
 	}
 
+	private void loadStoredSpawners() {
+		spawners.clear();
+
+		Collection<CopSpawner> loadedSpawners = repository.loadAll();
+		for (CopSpawner spawner : loadedSpawners) {
+			spawners.put(spawner.getId(), spawner);
+		}
+	}
+
 	/**
 	 * Finds a valid spawn location around the target player. Prefers locations close to the player's current Y level,
 	 * including inside buildings, and avoids placing the NPC inside walls by spawning at the center of the block
 	 * column.
 	 *
-	 * @param player the player
+	 * @param world the world
 	 *
 	 * @return a spawn location, or null
 	 */
+	@Nullable
+	private Location findStoredSpawnerLocation(World world) {
+		List<Location> candidates = new ArrayList<>();
+
+		for (CopSpawner spawner : spawners.values()) {
+			Location location = spawner.getLocation();
+			if (location.getWorld() == null) continue;
+			if (!location.getWorld().getUID().equals(world.getUID())) continue;
+
+			candidates.add(location);
+		}
+
+		if (candidates.isEmpty()) {
+			return null;
+		}
+
+		return candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
+	}
+
 	private Location findSpawnLocation(Player player) {
 		Location          playerLoc = player.getLocation();
 		World             world     = player.getWorld();
@@ -242,7 +316,7 @@ public class CopSpawnManager {
 
 	/**
 	 * Creates a spawn location centered within the target block column to reduce the chance of spawning clipped into a
-	 * neighbouring wall or corner.
+	 * neighboring wall or corner.
 	 *
 	 * @param world the world
 	 * @param blockX x coordinate of the ground block

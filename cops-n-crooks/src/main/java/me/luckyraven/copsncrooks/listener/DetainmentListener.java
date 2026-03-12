@@ -209,7 +209,7 @@ public class DetainmentListener implements Listener {
 		Player player = event.getPlayer();
 
 		if (!detainmentService.isRestrained(player)) return;
-		if (player.hasPermission(DetainmentService.COMMAND_BYPASS_PERMISSION)) return;
+		if (player.hasPermission(detainmentService.getCommandBypassPermission())) return;
 
 		event.setCancelled(true);
 		detainmentService.tickVisuals(player);
