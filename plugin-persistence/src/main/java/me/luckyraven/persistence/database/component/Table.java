@@ -1,12 +1,15 @@
 package me.luckyraven.persistence.database.component;
 
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import me.luckyraven.persistence.database.Database;
 
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Log4j2
 @Getter
 public abstract class Table<T> {
 
@@ -149,6 +152,58 @@ public abstract class Table<T> {
 					  colTemp.toArray(String[]::new), objectsTemp.toArray(), dataTypes);
 	}
 
+	/**
+	 * Validates and synchronizes the live database schema against this table's attribute definitions.
+	 * <p>
+	 * Columns present in the definition but absent from the database are added; columns present in the database but
+	 * absent from the definition are dropped. This runs after {@code createTable} so it is always safe to call on an
+	 * existing table — a freshly created table will produce no diff.
+	 * <p>
+	 * When adding a NOT NULL column that carries no explicit default, a type-appropriate fallback default is applied
+	 * automatically so that existing rows are not left with an illegal null.
+	 *
+	 * @param database an unscoped {@link Database} instance (the method scopes it internally via
+	 *        {@link Database#table(String)})
+	 *
+	 * @throws SQLException if adding a column fails (drop failures are warned and swallowed)
+	 */
+	public void validateSchema(Database database) throws SQLException {
+		Database tableDb = database.table(name);
+
+		// Fetch the column names that actually exist in the database (lowercased for consistent comparison)
+		List<String> actualColumns = tableDb.getColumns()
+				.stream().map(String::toLowerCase).toList();
+
+		// 1. Add columns that are defined but missing from the database
+		for (Map.Entry<String, Attribute<?>> entry : attributes.entrySet()) {
+			String       col  = entry.getKey(); // already lowercase per Attribute constructor
+			Attribute<?> attr = entry.getValue();
+
+			if (actualColumns.contains(col)) continue;
+
+			String colDef = buildColumnDefinition(database, attr);
+			log.info("Table '{}': adding missing column '{}'", name, col);
+			tableDb.addColumn(col, colDef);
+		}
+
+		// 2. Drop columns that exist in the database but are no longer in the definition
+		for (String actual : actualColumns) {
+			if (attributes.containsKey(actual)) continue;
+
+			if (!database.isValidIdentifier(actual)) {
+				log.warn("Table '{}': skipping drop of '{}' — identifier contains unsafe characters", name, actual);
+				continue;
+			}
+
+			log.info("Table '{}': dropping obsolete column '{}'", name, actual);
+			try {
+				tableDb.executeUpdate("ALTER TABLE " + name + " DROP COLUMN " + actual);
+			} catch (SQLException e) {
+				log.warn("Table '{}': could not drop column '{}': {}", name, actual, e.getMessage());
+			}
+		}
+	}
+
 	protected Map<String, Object> createSearchCriteria(String searchQuery, Object[] queryPlaceholder,
 													   int[] queryDataTypes, int[] ignoredIndexes) {
 		return Map.of("search", searchQuery, "info", queryPlaceholder, "type", queryDataTypes, "index", ignoredIndexes);
@@ -156,6 +211,43 @@ public abstract class Table<T> {
 
 	protected void addAttribute(Attribute<?> attribute) {
 		attributes.put(attribute.getName(), attribute);
+	}
+
+	/**
+	 * Builds the SQL column definition string (type + nullability + default) used when adding a column to an existing
+	 * table via {@code ALTER TABLE ... ADD COLUMN}.
+	 */
+	private String buildColumnDefinition(Database database, Attribute<?> attribute) {
+		StringBuilder def = new StringBuilder(database.getStringDataType(attribute.getType(), attribute.getSize()));
+
+		if (attribute.isCanBeNull()) {
+			def.append(" NULL");
+		} else {
+			def.append(" NOT NULL");
+		}
+
+		Object defaultValue = attribute.getDefaultValue();
+		if (defaultValue != null) {
+			def.append(" DEFAULT ");
+			if (defaultValue instanceof String) def.append("'").append(defaultValue).append("'");
+			else def.append(defaultValue);
+		} else if (!attribute.isCanBeNull()) {
+			// A NOT NULL column added to an existing table requires a DEFAULT so existing rows are valid
+			def.append(" DEFAULT ").append(inferDefault(attribute.getType()));
+		}
+
+		return def.toString();
+	}
+
+	/**
+	 * Returns a safe SQL literal default for a given JDBC type, used when a NOT NULL column is added to an existing
+	 * table that has no explicit default value configured.
+	 */
+	private String inferDefault(int sqlType) {
+		return switch (sqlType) {
+			case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR -> "''";
+			default -> "0";
+		};
 	}
 
 }

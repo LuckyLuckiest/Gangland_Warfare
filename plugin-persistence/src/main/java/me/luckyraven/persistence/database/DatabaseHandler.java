@@ -38,9 +38,6 @@ public abstract class DatabaseHandler {
 
 	public abstract String getSchema();
 
-	// TODO work on a way that checks if the table values are similar or not,
-	//  if they are not just create the new columns with a default value attached if it was null
-
 	public void initialize() {
 		DatabaseHelper helper = new DatabaseHelper(plugin, this);
 

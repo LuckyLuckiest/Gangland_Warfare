@@ -208,6 +208,7 @@ public class RepositoryRegistry {
 				var database = databaseHandler.getDatabase();
 				var tableDb  = database.table(table.getName());
 				tableDb.createTable(table.createTableQuery(tableDb));
+				table.validateSchema(database);
 				log.info("Created table: {}", table.getName());
 			} catch (Exception e) {
 				log.error("Failed to create table {}: {}", table.getName(), e.getMessage());
