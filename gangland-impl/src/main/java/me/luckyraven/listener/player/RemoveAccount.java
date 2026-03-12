@@ -3,14 +3,12 @@ package me.luckyraven.listener.player;
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
 import me.luckyraven.copsncrooks.wanted.Wanted;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
+import me.luckyraven.data.account.Bank;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.tables.BankTable;
-import me.luckyraven.database.tables.UserTable;
 import me.luckyraven.feature.bounty.Bounty;
-import me.luckyraven.persistence.database.DatabaseHelper;
-import me.luckyraven.persistence.database.component.Table;
+import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.listener.ListenerPriority;
 import me.luckyraven.weapon.Weapon;
@@ -23,8 +21,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.List;
 
 @ListenerHandler(priority = ListenerPriority.LOW)
 public final class RemoveAccount implements Listener {
@@ -76,31 +72,38 @@ public final class RemoveAccount implements Listener {
 		userManager.remove(user);
 
 		GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
-		DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
-		List<Table<?>>   tables           = ganglandDatabase.getTables();
 
-		UserTable userTable = initializer.getInstanceFromTables(UserTable.class, tables);
-		BankTable bankTable = initializer.getInstanceFromTables(BankTable.class, tables);
+		IRepository<User<? extends OfflinePlayer>> userRepository = ganglandDatabase.getRepositoryRegistry()
+																					.getGenericRepository(User.class);
+		IRepository<Bank> bankRepository = ganglandDatabase.getRepositoryRegistry().getRepository(Bank.class);
 
 		// must save user info
-		helper.runQueriesAsync(database -> {
-			userTable.updateTableQuery(database, user);
-			bankTable.updateTableQuery(database, user);
-		});
+		userRepository.save(user);
+
+		Bank bank = user.getBank();
+
+		if (bank != null) bankRepository.save(bank);
 
 		if (user.getScoreboard() != null) {
 			user.getScoreboard().end();
 			user.setScoreboard(null);
 		}
 
-		// add to offline user manager
+		// add to offline user manager — copy in-memory data to avoid a redundant DB round-trip
 		User<OfflinePlayer> offlineUser = new User<>(gangland, player);
 
-		// initialize offline user data
-		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
-			offlineUserManager.initializeUserData(offlineUser, userTable, bankTable);
-			offlineUserManager.add(offlineUser);
-		});
+		offlineUser.setKills(user.getKills());
+		offlineUser.setDeaths(user.getDeaths());
+		offlineUser.setMobKills(user.getMobKills());
+		offlineUser.setGangId(user.getGangId());
+		offlineUser.getEconomy().setBalance(user.getEconomy().getBalance());
+		offlineUser.getWanted().setLevel(user.getWanted().getLevel());
+		offlineUser.getLevel().setLevelValue(user.getLevel().getLevelValue());
+		offlineUser.getLevel().setExperience(user.getLevel().getExperience());
+		offlineUser.getBounty().setAmount(user.getBounty().getAmount());
+		offlineUser.setBank(user.getBank());
+
+		offlineUserManager.add(offlineUser);
 
 		// search if the player holds a weapon
 		// check if it was a weapon

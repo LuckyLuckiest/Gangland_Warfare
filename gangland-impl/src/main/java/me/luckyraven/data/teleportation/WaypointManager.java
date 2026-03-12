@@ -1,17 +1,16 @@
 package me.luckyraven.data.teleportation;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.database.tables.WaypointTable;
+import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.tables.waypoint.WaypointTable;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHelper;
+import me.luckyraven.persistence.repository.IRepository;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.sql.Types;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class WaypointManager {
 
@@ -27,46 +26,25 @@ public class WaypointManager {
 		this.selectedWaypoints = new HashMap<>();
 	}
 
-	public void initialize(WaypointTable waypointTable) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
+	public void initialize() {
+		GanglandDatabase      database   = gangland.getInitializer().getGanglandDatabase();
+		IRepository<Waypoint> repository = database.getRepositoryRegistry().getRepository(Waypoint.class);
 
-		helper.runQueries(database -> {
-			List<Object[]> data = database.table(waypointTable.getName()).selectAll();
+		Collection<Waypoint> loaded = repository.loadAll();
+		int                  maxId  = 0;
 
-			for (Object[] result : data) {
-				int    v        = 0;
-				int    id       = (int) result[v++];
-				int    gangId   = (int) result[v++];
-				String name     = String.valueOf(result[v++]);
-				String world    = String.valueOf(result[v++]);
-				double x        = (double) result[v++];
-				double y        = (double) result[v++];
-				double z        = (double) result[v++];
-				double yaw      = (double) result[v++];
-				double pitch    = (double) result[v++];
-				String type     = String.valueOf(result[v++]);
-				int    shield   = (int) result[v++];
-				int    timer    = (int) result[v++];
-				int    cooldown = (int) result[v++];
-				double cost     = (double) result[v++];
-				double radius   = (double) result[v];
+		for (Waypoint waypoint : loaded) {
+			int id = waypoint.getUsedId();
 
-				Waypoint waypoint = new Waypoint(name, prefix);
+			if (id > maxId) maxId = id;
 
-				waypoint.setCoordinates(world, x, y, z, (float) yaw, (float) pitch);
-				waypoint.setType(Waypoint.WaypointType.valueOf(type.toUpperCase()));
-				waypoint.setGangId(gangId);
-				waypoint.setTimer(timer);
-				waypoint.setCooldown(cooldown);
-				waypoint.setShield(shield);
-				waypoint.setCost(cost);
-				waypoint.setRadius(radius);
+			gangland.getInitializer().getPermissionManager().addPermission("waypoint." + id);
+			waypoints.put(id, waypoint);
+		}
 
-				gangland.getInitializer().getPermissionManager().addPermission("waypoint." + id);
+		Waypoint.setID(maxId);
 
-				waypoints.put(id, waypoint);
-			}
-		});
+		repository.setDataSupplier(waypoints::values);
 	}
 
 	public void add(Waypoint waypoint) {

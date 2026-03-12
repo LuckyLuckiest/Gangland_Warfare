@@ -3,13 +3,10 @@ package me.luckyraven.data.rank;
 import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.permission.PermissionManager;
-import me.luckyraven.database.tables.PermissionTable;
-import me.luckyraven.database.tables.RankParentTable;
-import me.luckyraven.database.tables.RankPermissionTable;
-import me.luckyraven.database.tables.RankTable;
+import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.persistence.database.DatabaseHelper;
-import me.luckyraven.util.Pair;
+import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.util.datastructure.Tree;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,12 +14,12 @@ import java.util.*;
 
 public class RankManager {
 
-	private final Gangland                    gangland;
-	private final PermissionManager           permissionManager;
-	private final Map<Integer, Rank>          ranks;
-	private final Set<Pair<Integer, Integer>> ranksParent;
-	private final Map<Integer, Permission>    permissions;
-	private final Set<Pair<Integer, Integer>> ranksPermissions;
+	private final Gangland                 gangland;
+	private final PermissionManager        permissionManager;
+	private final Map<Integer, Rank>       ranks;
+	private final Set<RankParent>          ranksParent;
+	private final Map<Integer, Permission> permissions;
+	private final Set<RankPermission>      ranksPermissions;
 
 	private final @Getter Tree<Rank> rankTree;
 
@@ -36,137 +33,93 @@ public class RankManager {
 		this.ranksPermissions  = new HashSet<>();
 	}
 
-	public void initialize(RankTable rankTable, RankParentTable rankParentTable, PermissionTable permissionTable,
-						   RankPermissionTable rankPermissionTable) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
+	public void initialize() {
+		GanglandDatabase   database = gangland.getInitializer().getGanglandDatabase();
+		RepositoryRegistry registry = database.getRepositoryRegistry();
 
-		helper.runQueries(database -> {
-			Map<Tree.Node<Rank>, List<String>> nodeMap = new HashMap<>();
+		IRepository<Rank>           rankRepo           = registry.getRepository(Rank.class);
+		IRepository<RankParent>     rankParentRepo     = registry.getRepository(RankParent.class);
+		IRepository<Permission>     permissionRepo     = registry.getRepository(Permission.class);
+		IRepository<RankPermission> rankPermissionRepo = registry.getRepository(RankPermission.class);
 
-			List<Object[]> rowsRank           = database.table(rankTable.getName()).selectAll();
-			List<Object[]> rowsRankParent     = database.table(rankParentTable.getName()).selectAll();
-			List<Object[]> rowsPermission     = database.table(permissionTable.getName()).selectAll();
-			List<Object[]> rowsRankPermission = database.table(rankPermissionTable.getName()).selectAll();
+		Collection<Rank>           loadedRanks           = rankRepo.loadAll();
+		Collection<Permission>     loadedPermissions     = permissionRepo.loadAll();
+		Collection<RankParent>     loadedRankParents     = rankParentRepo.loadAll();
+		Collection<RankPermission> loadedRankPermissions = rankPermissionRepo.loadAll();
 
-			// set up the rank parent relation
-			for (Object[] result : rowsRankParent) {
-				int id       = (int) result[0];
-				int parentId = (int) result[1];
+		ranksParent.addAll(loadedRankParents);
+		ranksPermissions.addAll(loadedRankPermissions);
 
-				Pair<Integer, Integer> parent = new Pair<>(id, parentId);
+		// Set up the permissions map and ID counter
+		int lastPermissionId = -1;
 
-				ranksParent.add(parent);
+		for (Permission perm : loadedPermissions) {
+			permissions.put(perm.getUsedId(), perm);
+			if (perm.getUsedId() > lastPermissionId) lastPermissionId = perm.getUsedId();
+		}
+
+		Permission.setID(lastPermissionId + 1);
+
+		// Set up ranks with their linked permissions
+		Map<Tree.Node<Rank>, List<String>> nodeMap    = new HashMap<>();
+		int                                lastRankId = -1;
+
+		for (Rank rank : loadedRanks) {
+			int id = rank.getUsedId();
+
+			List<Integer> permIds = ranksPermissions.stream()
+					.filter(rp -> rp.rankId() == id)
+					.map(RankPermission::permissionId)
+					.toList();
+
+			permissions.keySet()
+					.stream()
+					.filter(permIds::contains)
+					.map(permissions::get)
+					.forEach(rank::addPermission);
+
+			if (id > lastRankId) lastRankId = id;
+
+			ranks.put(id, rank);
+		}
+
+		Rank.setID(lastRankId + 1);
+
+		// Build the tree node map: rank node → names of its direct children
+		for (int rankId : ranks.keySet()) {
+			List<String> children = ranksParent.stream()
+					.filter(rp -> rp.rankId() == rankId)
+					.map(rp -> ranks.get(rp.parentId()).getName())
+					.toList();
+
+			nodeMap.put(ranks.get(rankId).getNode(), children);
+		}
+
+		// Add the rank head to the tree
+		rankTree.add(nodeMap.keySet()
+							 .stream()
+							 .filter(node -> node.getData()
+												 .getName()
+												 .equalsIgnoreCase(SettingAddon.getGangRankHead()))
+							 .findFirst()
+							 .orElse(new Rank(SettingAddon.getGangRankHead(), Rank.getNewId()).getNode()));
+
+		// Wire each node's children
+		for (Map.Entry<Tree.Node<Rank>, List<String>> entry : nodeMap.entrySet()) {
+			Tree.Node<Rank> parent   = entry.getKey();
+			List<String>    children = entry.getValue();
+
+			if (!children.isEmpty()) for (String child : children) {
+				Tree.Node<Rank> childNode = findChildNode(nodeMap, child);
+				if (childNode != null) parent.add(childNode);
 			}
+		}
 
-			// set up the permissions
-			int lastPermissionId = -1;
-
-			for (Object[] result : rowsPermission) {
-				int    id         = (int) result[0];
-				String permission = String.valueOf(result[1]);
-
-				Permission perm = new Permission(id, permission);
-
-				if (id > lastPermissionId) lastPermissionId = id;
-
-				permissions.put(id, perm);
-			}
-
-			Permission.setID(lastPermissionId + 1);
-
-			// set up the rank permissions relation
-			for (Object[] result : rowsRankPermission) {
-				int rankId = (int) result[0];
-				int permId = (int) result[1];
-
-				Pair<Integer, Integer> rankPerm = new Pair<>(rankId, permId);
-
-				ranksPermissions.add(rankPerm);
-			}
-
-			// data information
-			int lastRankId = -1;
-
-			for (Object[] result : rowsRank) {
-				int    id   = (int) result[0];
-				String name = String.valueOf(result[1]);
-
-				// set up the permissions
-				// get the permissions which have this rank id
-				List<Integer> permIds = ranksPermissions.stream()
-						.filter(pair -> pair.first() == id)
-						.map(Pair::second)
-						.toList();
-				// group them together and add them as a permissions list
-				List<Permission> perms = this.permissions.keySet()
-						.stream().filter(permIds::contains).map(this.permissions::get).toList();
-				List<Permission> permissions = new ArrayList<>(perms);
-
-				Rank rank = new Rank(name, id, permissions);
-
-				if (id > lastRankId) lastRankId = id;
-
-				ranks.put(id, rank);
-			}
-
-			Rank.setID(lastRankId + 1);
-
-			// set up the children of the rank
-			for (int rankId : ranks.keySet()) {
-				// get the rank parents of the specified id
-				List<String> children = this.ranksParent.stream()
-						// need only the ranks which are under this rank id
-						.filter(pair -> pair.first() == rankId)
-						// get the name of the ranks under this id
-						.map(pair -> this.ranks.get(pair.second()).getName()).toList();
-
-				nodeMap.put(this.ranks.get(rankId).getNode(), children);
-			}
-
-			// add the rank head
-			rankTree.add(nodeMap.keySet()
-								 .stream()
-								 .filter(node -> node.getData()
-													 .getName()
-													 .equalsIgnoreCase(SettingAddon.getGangRankHead()))
-								 .findFirst()
-								 // what if there was a node that doesn't have this specific head!
-								 // need to find the node that would be attached to this default rank
-								 .orElse(new Rank(SettingAddon.getGangRankHead(), Rank.getNewId()).getNode()));
-
-			// map information
-			// the map saves the node and the child of that node
-			// when data collected, the loop will iterate over each entry, and adds the node to the parent entry key
-
-			// member, parent = owner -> null (head)
-			// owner, parent = null -> member (tail)
-
-			// Reasons for calling head are because it is the initial rank the user will have
-			// reasons for calling tail is because it is the final rank the user will have
-			// because of the structure of the tree, there can be multiple parents (will call it children because of the
-			// inverse nature)
-			// the children of that node make the tree diverse so the user can choose 1 node for the specified tree,
-			// this creates tree diversity.
-			// From this concept, each node can have unique perks and diverse to their specified node
-			// OR return to a single unique node which continues the list.
-			// Example:        user
-			//                /   \
-			//          peasant  member
-			//            /  \     /
-			//       farmer   chief
-			//                 ...
-
-			// the tree is built in reverse
-			for (Map.Entry<Tree.Node<Rank>, List<String>> entry : nodeMap.entrySet()) {
-				Tree.Node<Rank> parent   = entry.getKey();
-				List<String>    children = entry.getValue();
-
-				if (!children.isEmpty()) for (String child : children) {
-					Tree.Node<Rank> childNode = findChildNode(nodeMap, child);
-					if (childNode != null) parent.add(childNode);
-				}
-			}
-		});
+		// Set data suppliers so repositoryRegistry.saveAll() can persist each collection
+		rankRepo.setDataSupplier(() -> ranks.values());
+		permissionRepo.setDataSupplier(() -> permissions.values());
+		rankParentRepo.setDataSupplier(() -> ranksParent);
+		rankPermissionRepo.setDataSupplier(() -> ranksPermissions);
 	}
 
 	public void add(Rank rank) {
@@ -227,7 +180,7 @@ public class RankManager {
 		}
 
 		// Add the rank-permission relationship
-		ranksPermissions.add(new Pair<>(rank.getUsedId(), permission.getUsedId()));
+		ranksPermissions.add(new RankPermission(rank.getUsedId(), permission.getUsedId()));
 		// Add permission to the rank itself
 		rank.addPermission(permission);
 
@@ -243,10 +196,11 @@ public class RankManager {
 
 		if (perm == null) return;
 
-		ranksPermissions.removeIf(pair -> pair.first() == rank.getUsedId() && pair.second() == perm.getUsedId());
+		ranksPermissions.removeIf(
+				rp -> rp.rankId() == rank.getUsedId() && rp.permissionId() == perm.getUsedId());
 		rank.removePermission(perm);
 
-		if (ranksPermissions.stream().anyMatch(pair -> pair.second() == perm.getUsedId())) return;
+		if (ranksPermissions.stream().anyMatch(rp -> rp.permissionId() == perm.getUsedId())) return;
 
 		permissions.remove(perm.getUsedId());
 	}
@@ -284,11 +238,11 @@ public class RankManager {
 		return Collections.unmodifiableMap(permissions);
 	}
 
-	public Set<Pair<Integer, Integer>> getRanksParent() {
+	public Set<RankParent> getRanksParent() {
 		return Collections.unmodifiableSet(ranksParent);
 	}
 
-	public Set<Pair<Integer, Integer>> getRanksPermissions() {
+	public Set<RankPermission> getRanksPermissions() {
 		return Collections.unmodifiableSet(ranksPermissions);
 	}
 

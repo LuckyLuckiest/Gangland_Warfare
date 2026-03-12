@@ -1,0 +1,39 @@
+package me.luckyraven.database.tables.rank;
+
+import me.luckyraven.data.rank.RankPermission;
+import me.luckyraven.database.tables.plugin.PermissionTable;
+import me.luckyraven.persistence.database.component.Attribute;
+import me.luckyraven.persistence.database.component.Table;
+
+import java.sql.Types;
+import java.util.Map;
+
+public class RankPermissionTable extends Table<RankPermission> {
+
+	public RankPermissionTable(RankTable rankTable, PermissionTable permissionTable) {
+		super("rank_permission");
+
+		Attribute<Integer> rankId       = new Attribute<>("rank_id", true, Integer.class);
+		Attribute<Integer> permissionId = new Attribute<>("permission_id", false, Integer.class);
+
+		permissionId.setUnique(true);
+
+		rankId.setForeignKey(rankTable.get("id"), rankTable);
+		permissionId.setForeignKey(permissionTable.get("id"), permissionTable);
+
+		this.addAttribute(rankId);
+		this.addAttribute(permissionId);
+	}
+
+	@Override
+	public Object[] getData(RankPermission data) {
+		return new Object[]{data.rankId(), data.permissionId()};
+	}
+
+	@Override
+	public Map<String, Object> searchCriteria(RankPermission data) {
+		return createSearchCriteria("rank_id = ? AND permission_id = ?",
+									new Object[]{data.rankId(), data.permissionId()},
+									new int[]{Types.INTEGER, Types.INTEGER}, new int[]{0, 1});
+	}
+}

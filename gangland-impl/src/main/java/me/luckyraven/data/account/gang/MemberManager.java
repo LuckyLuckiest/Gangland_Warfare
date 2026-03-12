@@ -3,9 +3,11 @@ package me.luckyraven.data.account.gang;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.database.tables.MemberTable;
+import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.database.DatabaseHelper;
+import me.luckyraven.persistence.repository.IRepository;
 
 import java.util.*;
 
@@ -52,6 +54,12 @@ public class MemberManager {
 				if (gang != null) gang.addMember(member);
 			}
 		});
+
+		// Set data supplier so repositoryRegistry.saveAll() can persist members
+		GanglandDatabase    database         = gangland.getInitializer().getGanglandDatabase();
+		IRepository<Member> memberRepository = database.getRepositoryRegistry().getRepository(Member.class);
+
+		memberRepository.setDataSupplier(members::values);
 	}
 
 	public void initializeMemberData(Member member, MemberTable memberTable) {

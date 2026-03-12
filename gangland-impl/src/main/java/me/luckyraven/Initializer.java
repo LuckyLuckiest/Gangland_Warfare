@@ -2,6 +2,7 @@ package me.luckyraven;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.CommandTabCompleter;
 import me.luckyraven.command.data.InformationManager;
@@ -25,16 +26,22 @@ import me.luckyraven.compatibility.CompatibilityWorker;
 import me.luckyraven.compatibility.VersionSetup;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.copsncrooks.combo.KillCombo;
-import me.luckyraven.copsncrooks.detainment.DetainmentRepository;
+import me.luckyraven.copsncrooks.detainment.DetainedPlayer;
+import me.luckyraven.copsncrooks.detainment.DetainmentManager;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
-import me.luckyraven.copsncrooks.detainment.InMemoryDetainmentRepository;
-import me.luckyraven.copsncrooks.detainment.jail.JailService;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
+import me.luckyraven.copsncrooks.jail.Jail;
+import me.luckyraven.copsncrooks.jail.JailManager;
+import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.copsncrooks.police.CopManager;
 import me.luckyraven.copsncrooks.police.CopService;
 import me.luckyraven.copsncrooks.police.config.CopLoader;
+import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
+import me.luckyraven.copsncrooks.police.spawn.CopSpawner;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.permission.PermissionWorker;
 import me.luckyraven.data.placeholder.PlaceholderService;
@@ -44,11 +51,10 @@ import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.teleportation.WaypointTeleport;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.GanglandDatabaseSettings;
-import me.luckyraven.database.tables.*;
+import me.luckyraven.database.repositories.lootchest.LootChestRepository;
+import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.file.configuration.MessageAddon;
@@ -63,6 +69,7 @@ import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.loot.LootChestService;
 import me.luckyraven.loot.config.LootChestLoader;
+import me.luckyraven.loot.data.LootChestData;
 import me.luckyraven.lootchest.GanglandLootItemProvider;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.persistence.FileHandler;
@@ -71,6 +78,8 @@ import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.persistence.database.DatabaseSettingsProvider;
 import me.luckyraven.persistence.database.component.Table;
+import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
 import me.luckyraven.sign.GanglandSignInformation;
@@ -103,6 +112,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Getter
 public final class Initializer {
 
@@ -140,6 +150,8 @@ public final class Initializer {
 	private CopService                 copService;
 	private KillCombo                  killCombo;
 	private DetainmentService          detainmentService;
+	private JailManager                jailManager;
+	private CopSpawnManager            copSpawnManager;
 	// Addons
 	private SettingAddon               settingAddon;
 	private ScoreboardAddon            scoreboardAddon;
@@ -227,50 +239,30 @@ public final class Initializer {
 
 		// plugin manager
 		pluginManager = new PluginManager(gangland);
-
-		// initialize the plugin manager
-		PluginDataTable pluginTable = getInstanceFromTables(PluginDataTable.class, tables);
-
-		pluginManager.initialize(pluginTable);
+		pluginManager.initialize();
 
 		// Rank manager
 		rankManager = new RankManager(gangland);
-
-		// initialize the rank class
-		RankTable           rankTable           = getInstanceFromTables(RankTable.class, tables);
-		RankParentTable     rankParentTable     = getInstanceFromTables(RankParentTable.class, tables);
-		PermissionTable     permissionTable     = getInstanceFromTables(PermissionTable.class, tables);
-		RankPermissionTable rankPermissionTable = getInstanceFromTables(RankPermissionTable.class, tables);
-
-		rankManager.initialize(rankTable, rankParentTable, permissionTable, rankPermissionTable);
+		rankManager.initialize();
 
 		// Gang manager
 		gangManager   = new GangManager(gangland);
 		memberManager = new MemberManager(gangland);
 
 		// initialize the gang and member classes
-		GangTable       gangTable       = getInstanceFromTables(GangTable.class, tables);
-		GangAlliesTable gangAlliesTable = getInstanceFromTables(GangAlliesTable.class, tables);
-		MemberTable     memberTable     = getInstanceFromTables(MemberTable.class, tables);
+		MemberTable memberTable = getInstanceFromTables(MemberTable.class, tables);
 
-		gangManager.initialize(gangTable, gangAlliesTable);
+		gangManager.initialize();
 		memberManager.initialize(memberTable, gangManager, rankManager);
 
 		// Waypoint manager
 		waypointManager = new WaypointManager(gangland, Gangland.FULL_PREFIX);
-
-		WaypointTable waypointTable = getInstanceFromTables(WaypointTable.class, tables);
-
-		// initialize the waypoint class
-		waypointManager.initialize(waypointTable);
+		waypointManager.initialize();
 
 		// Weapon manager
 		weaponManager      = new WeaponManager(gangland);
 		blockDamageManager = new BlockDamageManager(gangland);
-
-		WeaponTable weaponTable = getInstanceFromTables(WeaponTable.class, tables);
-
-		weaponManager.initialize(weaponTable);
+		weaponManager.initialize();
 
 		// sign manager
 		signLoader();
@@ -292,9 +284,7 @@ public final class Initializer {
 		killCombo = new KillCombo(gangland, SettingAddon.getWantedKillCounter());
 
 		// detainment
-		DetainmentRepository repository  = new InMemoryDetainmentRepository();
-		JailService          jailService = new JailService();
-		detainmentService = new DetainmentService(gangland, repository, jailService);
+		detainment();
 
 		// Sign Information
 		signInformation = new GanglandSignInformation();
@@ -426,10 +416,17 @@ public final class Initializer {
 			lootChestManager = new LootChestManager(gangland, Gangland.FULL_PREFIX, hologramService);
 		}
 
-		List<Table<?>> tables         = ganglandDatabase.getTables();
-		LootChestTable lootChestTable = getInstanceFromTables(LootChestTable.class, tables);
+		RepositoryRegistry         repositoryRegistry  = ganglandDatabase.getRepositoryRegistry();
+		IRepository<LootChestData> lootChestRepository = repositoryRegistry.getRepository(LootChestData.class);
 
-		lootChestManager.initialize(lootChestTable, false);
+		if (!(lootChestRepository instanceof LootChestRepository repo)) {
+			String message = "LootChestData repository is not initialized!";
+
+			log.error(message);
+			throw new PluginException(message);
+		}
+
+		lootChestManager.initialize(repo, false);
 
 		var provider = new LootChestSettings();
 		lootChestLoader = new LootChestLoader(gangland, lootChestManager, provider);
@@ -442,16 +439,13 @@ public final class Initializer {
 	}
 
 	public void copLoader() {
-		List<Table<?>>  tables          = ganglandDatabase.getTables();
-		CopSpawnerTable copSpawnerTable = getInstanceFromTables(CopSpawnerTable.class, tables);
-		JailTable       jailTable       = getInstanceFromTables(JailTable.class, tables);
-
 		copLoader = new CopLoader(gangland);
 
 		copLoader.load(false, null, fileManager);
 
 		copService = new CopService();
-		copService.initialize(gangland, copLoader.getLoadedProvider(), entityMarkManager, weaponManager);
+		IRepository<CopSpawner> repository = ganglandDatabase.getRepositoryRegistry().getRepository(CopSpawner.class);
+		copService.initialize(gangland, copLoader.getLoadedProvider(), entityMarkManager, weaponManager, repository);
 	}
 
 	public void weaponLoader() {
@@ -479,6 +473,21 @@ public final class Initializer {
 				.orElseThrow(() -> new RuntimeException("There was a problem finding class, " + clazz.getName()));
 	}
 
+	private void detainment() {
+		JailService jailService = new JailService();
+
+		RepositoryRegistry          repositoryRegistry   = ganglandDatabase.getRepositoryRegistry();
+		IRepository<Jail>           jailRepository       = repositoryRegistry.getRepository(Jail.class);
+		IRepository<DetainedPlayer> detainmentRepository = repositoryRegistry.getRepository(DetainedPlayer.class);
+
+		jailManager = new JailManager(jailService, jailRepository);
+
+		DetainmentManager detainmentManager = new DetainmentManager(detainmentRepository);
+
+		detainmentService = new DetainmentService(gangland, detainmentManager, jailManager,
+												  jailManager.getJailService(), Gangland.FULL_PREFIX);
+	}
+
 	private void signLoader() {
 		SignTypeRegistry     registry         = new SignTypeRegistry();
 		SignFormatRegistry   formatRegistry   = new SignFormatRegistry();
@@ -502,6 +511,11 @@ public final class Initializer {
 		// Primary database
 		GanglandDatabase ganglandDatabase = new GanglandDatabase(gangland, Gangland.FULL_PREFIX, settings);
 		ganglandDatabase.setType(type);
+
+		// Scan and register all repositories BEFORE adding to database manager
+		RepositoryRegistry repositoryRegistry = ganglandDatabase.getRepositoryRegistry();
+		repositoryRegistry.scanAndRegisterRepositories("me.luckyraven.database.repositories");
+
 		databaseManager.addDatabase(ganglandDatabase);
 	}
 

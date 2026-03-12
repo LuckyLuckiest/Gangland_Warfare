@@ -1,7 +1,8 @@
 package me.luckyraven.copsncrooks.detainment;
 
 import lombok.Getter;
-import me.luckyraven.copsncrooks.detainment.jail.JailService;
+import me.luckyraven.copsncrooks.jail.JailManager;
+import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -11,22 +12,25 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Getter
 public class DetainmentService {
 
-	// TODO change this instance
-	public static final String COMMAND_BYPASS_PERMISSION = "gangland.detainment.bypass.command";
+	private final JavaPlugin        plugin;
+	private final DetainmentManager detainmentManager;
+	private final JailManager       jailManager;
+	private final JailService       jailService;
+	private final String            commandBypassPermission;
 
-	private final JavaPlugin           plugin;
-	private final DetainmentRepository repository;
-	private final JailService          jailService;
-
-	public DetainmentService(JavaPlugin plugin, DetainmentRepository repository, JailService jailService) {
-		this.plugin      = plugin;
-		this.repository  = repository;
-		this.jailService = jailService;
+	public DetainmentService(JavaPlugin plugin, DetainmentManager detainmentManager, JailManager jailManager,
+							 JailService jailService, String prefix) {
+		this.plugin                  = plugin;
+		this.detainmentManager       = detainmentManager;
+		this.jailManager             = jailManager;
+		this.jailService             = jailService;
+		this.commandBypassPermission = prefix + ".detainment.bypass.command";
 	}
 
 	public DetainmentState getState(Player player) {
@@ -34,7 +38,11 @@ public class DetainmentService {
 	}
 
 	public DetainmentState getState(UUID playerId) {
-		return repository.loadState(playerId);
+		return detainmentManager.getState(playerId);
+	}
+
+	public Map<UUID, DetainmentState> getDetainedPlayers() {
+		return detainmentManager.getStates();
 	}
 
 	public boolean isHandcuffed(Player player) {
@@ -57,7 +65,8 @@ public class DetainmentService {
 		ChatUtil.sendActionBar(plugin, player, "&cYou are handcuffed", 40L);
 	}
 
-	public void jail(Player player) {
+	public void jail(Player player, int jailId) {
+		jailManager.detainPlayer(jailId, player.getUniqueId());
 		setState(player, DetainmentState.JAILED);
 		applyVisuals(player, true);
 		teleportToJail(player);
@@ -66,13 +75,14 @@ public class DetainmentService {
 	}
 
 	public void release(Player player) {
+		jailService.releasePlayer(player.getUniqueId());
 		setState(player, DetainmentState.NORMAL);
 		clearVisuals(player);
 		ChatUtil.sendTitle(player, "&aReleased", "&7You are no longer restrained");
 	}
 
 	public void setState(Player player, DetainmentState state) {
-		repository.saveState(player.getUniqueId(), state);
+		detainmentManager.setState(player.getUniqueId(), state);
 
 		if (state == DetainmentState.NORMAL) {
 			clearVisuals(player);
@@ -100,7 +110,7 @@ public class DetainmentService {
 	public void handleQuit(Player player) {
 		if (getState(player) != DetainmentState.HANDCUFFED) return;
 
-		repository.saveState(player.getUniqueId(), DetainmentState.JAILED);
+		detainmentManager.setState(player.getUniqueId(), DetainmentState.JAILED);
 	}
 
 	public void handleRespawn(Player player) {

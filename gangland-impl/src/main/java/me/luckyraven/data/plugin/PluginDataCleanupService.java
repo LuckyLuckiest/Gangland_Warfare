@@ -1,7 +1,7 @@
 package me.luckyraven.data.plugin;
 
 import lombok.extern.log4j.Log4j2;
-import me.luckyraven.database.tables.WeaponTable;
+import me.luckyraven.database.tables.weapon.WeaponTable;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHelper;

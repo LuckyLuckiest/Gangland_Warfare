@@ -1,16 +1,13 @@
 package me.luckyraven.data.plugin;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.database.tables.PluginDataTable;
+import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.persistence.database.DatabaseHelper;
+import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.utilities.TimeUtil;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class PluginManager {
 
@@ -22,37 +19,31 @@ public class PluginManager {
 		this.pluginDataList = new ArrayList<>();
 	}
 
-	public void initialize(PluginDataTable table) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
+	public void initialize() {
+		GanglandDatabase        database   = gangland.getInitializer().getGanglandDatabase();
+		IRepository<PluginData> repository = database.getRepositoryRegistry().getRepository(PluginData.class);
 
-		helper.runQueries(database -> {
-			List<Object[]> data = database.table(table.getName()).selectAll();
+		Collection<PluginData> loaded = repository.loadAll();
 
-			if (data.isEmpty()) {
-				Instant    now        = Instant.now();
-				long       nowDate    = now.toEpochMilli();
-				long       nextScan   = nextPlannedDate(new Date(nowDate)).getTime();
-				PluginData pluginData = new PluginData(nowDate, nowDate, nextScan);
+		if (loaded.isEmpty()) {
+			Instant    now        = Instant.now();
+			long       nowDate    = now.toEpochMilli();
+			long       nextScan   = nextPlannedDate(new Date(nowDate)).getTime();
+			PluginData pluginData = new PluginData(nowDate, nowDate, nextScan);
 
+			pluginDataList.add(pluginData);
+		} else {
+			for (PluginData pluginData : loaded) {
 				pluginDataList.add(pluginData);
-				return;
+				PluginData.setID(pluginData.getId());
 			}
+		}
 
-			for (Object[] result : data) {
-				int  v              = 0;
-				int  id             = (int) result[v++];
-				long dateActivation = (long) result[v++];
-				long scanDate       = (long) result[v++];
-				long scheduledDate  = (long) result[v];
+		repository.setDataSupplier(() -> pluginDataList);
+	}
 
-				PluginData pluginData = new PluginData(id, dateActivation, scanDate, scheduledDate);
-
-				pluginDataList.add(pluginData);
-
-				PluginData.setID(id);
-			}
-		});
-
+	public void clear() {
+		pluginDataList.clear();
 	}
 
 	public List<PluginData> getPluginDataList() {

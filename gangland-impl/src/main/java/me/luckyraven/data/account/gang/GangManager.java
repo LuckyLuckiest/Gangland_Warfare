@@ -1,94 +1,57 @@
 package me.luckyraven.data.account.gang;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.database.tables.GangAlliesTable;
-import me.luckyraven.database.tables.GangTable;
-import me.luckyraven.persistence.database.DatabaseHelper;
-import me.luckyraven.util.Pair;
+import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.persistence.repository.IRepository;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class GangManager {
 
-	private final Gangland                                gangland;
-	private final Map<Integer, Gang>                      gangs;
-	private final Set<Pair<Integer, Pair<Integer, Long>>> gangsAllie;
+	private final Gangland           gangland;
+	private final Map<Integer, Gang> gangs;
 
 	public GangManager(Gangland gangland) {
-		this.gangland   = gangland;
-		this.gangs      = new HashMap<>();
-		this.gangsAllie = new HashSet<>();
+		this.gangland = gangland;
+		this.gangs    = new HashMap<>();
 	}
 
-	public void initialize(GangTable gangTable, GangAlliesTable gangAlliesTable) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
+	public void initialize() {
+		// get the information from the repositories
+		GanglandDatabase  database       = gangland.getInitializer().getGanglandDatabase();
+		IRepository<Gang> gangRepository = database.getRepositoryRegistry().getRepository(Gang.class);
+		IRepository<GangAlliance> gangAllianceRepository = database.getRepositoryRegistry()
+																   .getRepository(GangAlliance.class);
 
-		helper.runQueries(database -> {
-			List<Object[]> gangsData      = database.table(gangTable.getName()).selectAll();
-			List<Object[]> gangAlliesData = database.table(gangAlliesTable.getName()).selectAll();
+		Map<Integer, Gang> gangLookup = gangRepository.loadAll()
+				.stream().collect(Collectors.toMap(Gang::getId, Function.identity()));
 
-			// set up the gangs
-			for (Object[] result : gangsData) {
-				int    v           = 0;
-				int    id          = (int) result[v++];
-				String name        = String.valueOf(result[v++]);
-				String displayName = String.valueOf(result[v++]);
-				String description = String.valueOf(result[v++]);
-				String color       = String.valueOf(result[v++]);
-				double balance     = (double) result[v++];
-				int    level       = (int) result[v++];
-				double experience  = (double) result[v++];
-				double bounty      = (double) result[v++];
-				long   created     = (long) result[v];
+		gangs.putAll(gangLookup);
 
-				Gang gang = new Gang(id);
+		// get the gang alliances and fix them to the each proper gang
+		Collection<GangAlliance> gangAlliances = gangAllianceRepository.loadAll();
 
-				gang.setName(name);
-				gang.setDisplayName(displayName);
-				gang.setColor(color);
-				gang.setDescription(description);
-				gang.getEconomy().setBalance(balance);
-				gang.getLevel().setLevelValue(level);
-				gang.getLevel().setExperience(experience);
-				gang.getBounty().setAmount(bounty);
-				gang.setCreated(created);
+		// iterate over each gang and verify it with each gang alliance
+		for (Gang gang : gangs.values()) {
+			List<GangAlliance> alliances = gangAlliances.stream()
+					.filter(alliance -> alliance.gang().getId() == gang.getId())
+					.map(alliance -> {
+						// find the ally gang
+						Gang allyGang = gangs.get(alliance.ally().getId());
 
-				gangs.put(id, gang);
-			}
+						// build a new gang alliance
+						return new GangAlliance(gang, allyGang, alliance.since());
+					})
+					.toList();
 
-			// set up the gang allies
-			// store the data
-			for (Object[] result : gangAlliesData) {
-				int  gangId  = (int) result[0];
-				int  allieId = (int) result[1];
-				long since   = (long) result[2];
+			gang.addAllAllies(alliances);
+		}
 
-				Pair<Integer, Long>                allieDate   = new Pair<>(allieId, since);
-				Pair<Integer, Pair<Integer, Long>> stackedData = new Pair<>(gangId, allieDate);
-
-				gangsAllie.add(stackedData);
-			}
-
-			// add the gang allies to the specified gang
-			for (int gangId : gangs.keySet()) {
-				// get data associated to specific id
-				var alliedGangsIdData = gangsAllie.stream()
-						.filter(pair -> pair.first() == gangId)
-						.map(Pair::second)
-						.toList();
-
-				// convert each id to Gang instance
-				var alliedGangsData = alliedGangsIdData.stream()
-						.map(pair -> new Pair<>(
-								gangs.get(pair.first()),
-								pair.second()))
-						.toList();
-
-				// add the gang to the new gang
-				gangs.get(gangId).addAllAllies(alliedGangsData);
-			}
-		});
-
+		// Set data suppliers so repositoryRegistry.saveAll() can persist gangs and alliances
+		gangRepository.setDataSupplier(gangs::values);
+		gangAllianceRepository.setDataSupplier(this::buildAllAlliances);
 	}
 
 	public void add(Gang gang) {
@@ -118,5 +81,13 @@ public class GangManager {
 
 	public Map<Integer, Gang> getGangs() {
 		return Collections.unmodifiableMap(gangs);
+	}
+
+	private Collection<GangAlliance> buildAllAlliances() {
+		List<GangAlliance> allies = new ArrayList<>();
+
+		for (Gang gang : gangs.values()) allies.addAll(gang.getAllies());
+
+		return allies;
 	}
 }

@@ -1,11 +1,11 @@
 package me.luckyraven.weapon;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.database.tables.WeaponTable;
-import me.luckyraven.persistence.database.DatabaseHelper;
+import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.repositories.weapon.WeaponRepository;
+import me.luckyraven.persistence.repository.IRepository;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.Collection;
 
 public class WeaponManager extends WeaponService {
 
@@ -17,25 +17,21 @@ public class WeaponManager extends WeaponService {
 		this.gangland = gangland;
 	}
 
-	public void initialize(WeaponTable table) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
+	public void initialize() {
+		GanglandDatabase    database   = gangland.getInitializer().getGanglandDatabase();
+		IRepository<Weapon> repository = database.getRepositoryRegistry().getRepository(Weapon.class);
 
-		helper.runQueries(database -> {
-			List<Object[]> data = database.table(table.getName()).selectAll();
+		if (repository instanceof WeaponRepository weaponRepository) {
+			weaponRepository.setWeaponAddon(gangland.getInitializer().getWeaponAddon());
+		}
 
-			for (Object[] result : data) {
-				UUID   uuid = UUID.fromString(String.valueOf(result[0]));
-				String type = String.valueOf(result[1]);
+		Collection<Weapon> loaded = repository.loadAll();
 
-				Weapon weaponAddon = gangland.getInitializer().getWeaponAddon().getWeapon(type);
+		for (Weapon weapon : loaded) {
+			getWeapons().put(weapon.getUuid(), weapon);
+		}
 
-				if (weaponAddon == null) continue;
-
-				Weapon weapon = new Weapon(uuid, weaponAddon);
-
-				getWeapons().put(uuid, weapon);
-			}
-		});
+		repository.setDataSupplier(() -> getWeapons().values());
 	}
 
 }

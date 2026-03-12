@@ -1,0 +1,63 @@
+package me.luckyraven.database.repositories.plugin;
+
+import me.luckyraven.data.plugin.PluginData;
+import me.luckyraven.database.tables.plugin.PluginDataTable;
+import me.luckyraven.persistence.database.Database;
+import me.luckyraven.persistence.database.DatabaseHandler;
+import me.luckyraven.persistence.database.component.Table;
+import me.luckyraven.persistence.repository.AbstractRepository;
+import me.luckyraven.persistence.repository.Repository;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Consumer;
+
+@Repository(PluginData.class)
+public class PluginDataRepository extends AbstractRepository<PluginData> {
+
+	private final PluginDataTable pluginDataTable;
+
+	public PluginDataRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
+		super(plugin, databaseHandler);
+
+		this.pluginDataTable = new PluginDataTable();
+	}
+
+	@Override
+	protected Collection<PluginData> doLoadAll() throws SQLException {
+		List<PluginData> pluginDataList = new ArrayList<>();
+		List<Object[]>   data           = getDatabase().table(pluginDataTable.getName()).selectAll();
+
+		for (Object[] result : data) {
+			int  v              = 0;
+			int  id             = (int) result[v++];
+			long dateActivation = (long) result[v++];
+			long scanDate       = (long) result[v++];
+			long scheduledDate  = (long) result[v];
+
+			pluginDataList.add(new PluginData(id, dateActivation, scanDate, scheduledDate));
+		}
+
+		return pluginDataList;
+	}
+
+	@Override
+	protected <E> Consumer<E> processSave() {
+		return null;
+	}
+
+	@Override
+	protected Table<PluginData> getTable() {
+		return pluginDataTable;
+	}
+
+	@Override
+	protected void doDelete(PluginData data) throws SQLException {
+		Database table = getDatabase().table(pluginDataTable.getName());
+		table.delete("id", data.getId(), Types.INTEGER);
+	}
+}

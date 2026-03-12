@@ -1,16 +1,27 @@
 package me.luckyraven;
 
 import lombok.extern.log4j.Log4j2;
+import me.luckyraven.copsncrooks.detainment.DetainmentService;
+import me.luckyraven.copsncrooks.jail.JailManager;
+import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserDataInitEvent;
+import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.data.plugin.PluginManager;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.teleportation.WaypointManager;
-import me.luckyraven.data.user.User;
-import me.luckyraven.data.user.UserDataInitEvent;
-import me.luckyraven.data.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.tables.*;
+import me.luckyraven.database.repositories.lootchest.LootChestRepository;
+import me.luckyraven.database.tables.gang.GangAllianceTable;
+import me.luckyraven.database.tables.gang.GangTable;
+import me.luckyraven.database.tables.lootchest.LootChestTable;
+import me.luckyraven.database.tables.player.BankTable;
+import me.luckyraven.database.tables.player.MemberTable;
+import me.luckyraven.database.tables.player.UserTable;
+import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.inventory.InventoryHandler;
@@ -18,11 +29,13 @@ import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.listener.player.CreateAccount;
 import me.luckyraven.loot.LootChestService;
+import me.luckyraven.loot.data.LootChestData;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
+import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.scoreboard.Scoreboard;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.driver.DriverHandler;
@@ -84,6 +97,7 @@ public final class ReloadPlugin {
 	 */
 	public void databaseInitialize(boolean resetCache) {
 		// order matters
+		pluginDataInitialize(resetCache);
 		rankInitialize(resetCache);
 		gangInitialize(resetCache);
 		memberInitialize(resetCache);
@@ -93,6 +107,23 @@ public final class ReloadPlugin {
 		weaponInitialize(resetCache);
 		// required to be after weapon
 		lootChestInitialize(resetCache);
+		// cops-n-crooks data
+		jailInitialize(resetCache);
+		detainmentInitialize(resetCache);
+		copSpawnerInitialize(resetCache);
+	}
+
+	/**
+	 * Initializes the plugin data (effective for reloads).
+	 *
+	 * @param resetCache if old data needs to be cleared
+	 */
+	public void pluginDataInitialize(boolean resetCache) {
+		PluginManager pluginManager = initializer.getPluginManager();
+
+		if (resetCache) pluginManager.clear();
+
+		pluginManager.initialize();
 	}
 
 	/**
@@ -100,21 +131,14 @@ public final class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 *
-	 * @implNote Very important to run this method after {@link RankManager}, {@link RankTable},
-	 *        {@link RankParentTable}, {@link PermissionTable}, and {@link RankPermissionTable} initialization.
+	 * @implNote Very important to run this method after {@link RankManager} and its repositories are initialized.
 	 */
 	public void rankInitialize(boolean resetCache) {
 		RankManager rankManager = initializer.getRankManager();
 
 		if (resetCache) rankManager.clear();
 
-		List<Table<?>>      tables              = ganglandDatabase.getTables();
-		RankTable           rankTable           = initializer.getInstanceFromTables(RankTable.class, tables);
-		RankParentTable     rankParentTable     = initializer.getInstanceFromTables(RankParentTable.class, tables);
-		PermissionTable     permissionTable     = initializer.getInstanceFromTables(PermissionTable.class, tables);
-		RankPermissionTable rankPermissionTable = initializer.getInstanceFromTables(RankPermissionTable.class, tables);
-
-		rankManager.initialize(rankTable, rankParentTable, permissionTable, rankPermissionTable);
+		rankManager.initialize();
 	}
 
 	/**
@@ -123,18 +147,14 @@ public final class ReloadPlugin {
 	 * @param resetCache if old data needs to be cleared
 	 *
 	 * @implNote Very important to run this method after {@link GangManager}, {@link GangTable}, and
-	 *        {@link GangAlliesTable} initialization.
+	 *        {@link GangAllianceTable} initialization.
 	 */
 	public void gangInitialize(boolean resetCache) {
 		GangManager gangManager = initializer.getGangManager();
 
 		if (resetCache) gangManager.clear();
 
-		List<Table<?>>  tables          = ganglandDatabase.getTables();
-		GangTable       gangTable       = initializer.getInstanceFromTables(GangTable.class, tables);
-		GangAlliesTable gangAlliesTable = initializer.getInstanceFromTables(GangAlliesTable.class, tables);
-
-		gangManager.initialize(gangTable, gangAlliesTable);
+		gangManager.initialize();
 	}
 
 	/**
@@ -142,8 +162,7 @@ public final class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 *
-	 * @implNote Very important to run this method after {@link RankManager}, {@link GangManager},
-	 *        {@link MemberManager}, and {@link MemberTable} initialization.
+	 * @implNote Very important to run this method after {@link RankManager} and its repositories are initialized.
 	 */
 	public void memberInitialize(boolean resetCache) {
 		RankManager   rankManager   = initializer.getRankManager();
@@ -274,18 +293,15 @@ public final class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 *
-	 * @implNote Very important to run this method after {@link WaypointManager}, and {@link WaypointTable}
-	 * 		initialization.
+	 * @implNote Very important to run this method after {@link WaypointManager} and its repositories are
+	 * 		initialized.
 	 */
 	public void waypointInitialize(boolean resetCache) {
 		WaypointManager waypointManager = initializer.getWaypointManager();
 
 		if (resetCache) waypointManager.clear();
 
-		List<Table<?>> tables        = ganglandDatabase.getTables();
-		WaypointTable  waypointTable = initializer.getInstanceFromTables(WaypointTable.class, tables);
-
-		waypointManager.initialize(waypointTable);
+		waypointManager.initialize();
 	}
 
 	/**
@@ -293,18 +309,14 @@ public final class ReloadPlugin {
 	 *
 	 * @param resetCache if old data needs to be cleared
 	 *
-	 * @implNote Very important to run this method after {@link WeaponManager}, and {@link WeaponTable}
-	 * 		initialization.
+	 * @implNote Very important to run this method after {@link WeaponManager} and its repositories are initialized.
 	 */
 	public void weaponInitialize(boolean resetCache) {
 		WeaponManager weaponManager = initializer.getWeaponManager();
 
 		if (resetCache) weaponManager.clear();
 
-		List<Table<?>> tables      = ganglandDatabase.getTables();
-		WeaponTable    weaponTable = initializer.getInstanceFromTables(WeaponTable.class, tables);
-
-		weaponManager.initialize(weaponTable);
+		weaponManager.initialize();
 	}
 
 	/**
@@ -323,10 +335,50 @@ public final class ReloadPlugin {
 		// Reload config from files first
 		initializer.lootChestLoader();
 
-		List<Table<?>> tables         = ganglandDatabase.getTables();
-		LootChestTable lootChestTable = initializer.getInstanceFromTables(LootChestTable.class, tables);
+		IRepository<LootChestData> repository = ganglandDatabase.getRepositoryRegistry()
+																.getRepository(LootChestData.class);
 
-		lootChestManager.initialize(lootChestTable, true);
+		if (!(repository instanceof LootChestRepository repo)) {
+			String message = "LootChestData repository is not initialized!";
+
+			log.error(message);
+			throw new PluginException(message);
+		}
+
+		lootChestManager.initialize(repo, true);
+	}
+
+	/**
+	 * Initializes the jail data (effective for reloads).
+	 *
+	 * @param resetCache if old data needs to be cleared
+	 */
+	public void jailInitialize(boolean resetCache) {
+		JailManager jailManager = initializer.getJailManager();
+
+		if (resetCache) jailManager.reload();
+	}
+
+	/**
+	 * Initializes the detainment data (effective for reloads).
+	 *
+	 * @param resetCache if old data needs to be cleared
+	 */
+	public void detainmentInitialize(boolean resetCache) {
+		DetainmentService detainmentService = initializer.getDetainmentService();
+
+		if (resetCache) detainmentService.getDetainmentManager().reload();
+	}
+
+	/**
+	 * Initializes the cop spawner data (effective for reloads).
+	 *
+	 * @param resetCache if old data needs to be cleared
+	 */
+	public void copSpawnerInitialize(boolean resetCache) {
+		CopSpawnManager copSpawnManager = initializer.getCopSpawnManager();
+
+		if (resetCache) copSpawnManager.reloadSpawners();
 	}
 
 	/**

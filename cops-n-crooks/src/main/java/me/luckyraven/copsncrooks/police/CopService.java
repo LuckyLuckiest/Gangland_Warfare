@@ -2,12 +2,14 @@ package me.luckyraven.copsncrooks.police;
 
 import lombok.Getter;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
-import me.luckyraven.copsncrooks.listener.CopListener;
 import me.luckyraven.copsncrooks.police.config.CopConfigProvider;
 import me.luckyraven.copsncrooks.police.npc.CopNpcFactory;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
+import me.luckyraven.copsncrooks.police.spawn.CopSpawner;
+import me.luckyraven.copsncrooks.police.state.CopBehaviorFactory;
 import me.luckyraven.copsncrooks.police.targeting.TargetingManager;
 import me.luckyraven.copsncrooks.police.targeting.WantedTargetingManager;
+import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.weapon.WeaponService;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -27,22 +29,24 @@ public class CopService {
 	 * @return the initialized CopManager
 	 */
 	public CopManager initialize(JavaPlugin plugin, CopConfigProvider provider, EntityMarkManager entityMarkManager,
-								 WeaponService weaponService) {
+								 WeaponService weaponService, IRepository<CopSpawner> spawnerRepository) {
 		TargetingManager targetingManager = new WantedTargetingManager();
 
-		// Two-phase init: CopSpawnManager and CopNpcFactory mutually reference each other
-		CopSpawnManager spawnManager = new CopSpawnManager(null, provider);
-		CopNpcFactory copNpcFactory = new CopNpcFactory(provider, entityMarkManager, spawnManager, plugin,
+		// Create a placeholder array to capture the spawn manager reference
+		CopSpawnManager[] spawnManagerHolder = new CopSpawnManager[1];
+
+		// Create behavior factory with a lazy supplier
+		CopBehaviorFactory behaviorFactory = new CopBehaviorFactory(provider, () -> spawnManagerHolder[0]);
+
+		// Create NPC factory
+		CopNpcFactory copNpcFactory = new CopNpcFactory(plugin, provider, behaviorFactory, entityMarkManager,
 														weaponService);
 
-		spawnManager  = new CopSpawnManager(copNpcFactory, provider);
-		copNpcFactory = new CopNpcFactory(provider, entityMarkManager, spawnManager, plugin, weaponService);
-		spawnManager  = new CopSpawnManager(copNpcFactory, provider);
+		// Now create spawn manager and store it in the holder
+		CopSpawnManager spawnManager = new CopSpawnManager(copNpcFactory, provider, spawnerRepository);
+		spawnManagerHolder[0] = spawnManager;
 
 		copManager = new CopManager(plugin, spawnManager, targetingManager, provider, entityMarkManager);
-
-		CopListener listener = new CopListener(copManager);
-		plugin.getServer().getPluginManager().registerEvents(listener, plugin);
 
 		return copManager;
 	}

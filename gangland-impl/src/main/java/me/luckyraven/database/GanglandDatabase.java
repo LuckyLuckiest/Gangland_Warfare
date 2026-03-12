@@ -1,74 +1,37 @@
 package me.luckyraven.database;
 
-import me.luckyraven.database.tables.*;
+import lombok.Getter;
+import me.luckyraven.data.rank.Rank;
+import me.luckyraven.data.rank.RankParent;
+import me.luckyraven.database.repositories.rank.RankParentRepository;
+import me.luckyraven.database.repositories.rank.RankRepository;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.persistence.database.DatabaseSettingsProvider;
 import me.luckyraven.persistence.database.component.Table;
+import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.persistence.repository.RepositoryRegistry;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.sql.Types;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class GanglandDatabase extends DatabaseHandler {
 
-	private final String              schema;
-	private final List<Table<?>>      tables;
-	private final PluginDataTable     pluginDataTable;
-	private final UserTable           userTable;
-	private final BankTable           bankTable;
-	private final GangTable           gangTable;
-	private final GangAlliesTable     gangAlliesTable;
-	private final RankTable           rankTable;
-	private final RankParentTable     rankParentTable;
-	private final PermissionTable     permissionTable;
-	private final RankPermissionTable rankPermissionTable;
-	private final MemberTable         memberTable;
-	private final WaypointTable       waypointTable;
-	private final WeaponTable         weaponTable;
-	private final LootChestTable      lootChestTable;
+	private final String             schema;
+	@Getter
+	private final RepositoryRegistry repositoryRegistry;
 
 	public GanglandDatabase(JavaPlugin plugin, String schema, DatabaseSettingsProvider settings) {
 		super(plugin, settings);
 
-		this.schema = schema;
-		this.tables = new ArrayList<>();
-
-		this.pluginDataTable     = new PluginDataTable();
-		this.userTable           = new UserTable();
-		this.bankTable           = new BankTable(userTable);
-		this.gangTable           = new GangTable();
-		this.gangAlliesTable     = new GangAlliesTable(gangTable);
-		this.rankTable           = new RankTable();
-		this.rankParentTable     = new RankParentTable(rankTable);
-		this.permissionTable     = new PermissionTable();
-		this.rankPermissionTable = new RankPermissionTable(rankTable, permissionTable);
-		this.memberTable         = new MemberTable(userTable, rankTable);
-		this.waypointTable       = new WaypointTable(gangTable);
-		this.weaponTable         = new WeaponTable();
-		this.lootChestTable      = new LootChestTable();
-
-		tables.add(pluginDataTable);
-		tables.add(userTable);
-		tables.add(bankTable);
-		tables.add(gangTable);
-		tables.add(gangAlliesTable);
-		tables.add(rankTable);
-		tables.add(rankParentTable);
-		tables.add(permissionTable);
-		tables.add(rankPermissionTable);
-		tables.add(memberTable);
-		tables.add(waypointTable);
-		tables.add(weaponTable);
-		tables.add(lootChestTable);
+		this.schema             = schema;
+		this.repositoryRegistry = new RepositoryRegistry(plugin, this);
 	}
 
 	@Nullable
@@ -92,83 +55,28 @@ public class GanglandDatabase extends DatabaseHandler {
 
 	@Override
 	public void createTables() throws SQLException {
-		// (1) plugin data table
-		Database pluginDataDatabase = getDatabase().table(pluginDataTable.getName());
-		pluginDataDatabase.createTable(pluginDataTable.createTableQuery(pluginDataDatabase));
-
-		// (2) user table
-		Database userDatabase = getDatabase().table(userTable.getName());
-		userDatabase.createTable(userTable.createTableQuery(userDatabase));
-
-		// (3) gang table
-		Database gangDatabase = getDatabase().table(gangTable.getName());
-		gangDatabase.createTable(gangTable.createTableQuery(gangDatabase));
-
-		// (4) rank table
-		Database rankDatabase = getDatabase().table(rankTable.getName());
-		rankDatabase.createTable(rankTable.createTableQuery(rankDatabase));
-
-		// (5) permission table
-		Database permissionDatabase = getDatabase().table(permissionTable.getName());
-		permissionDatabase.createTable(permissionTable.createTableQuery(permissionDatabase));
-
-		// (6) waypoint table
-		Database waypointDatabase = getDatabase().table(waypointTable.getName());
-		waypointDatabase.createTable(waypointTable.createTableQuery(waypointDatabase));
-
-		// (7) user bank table
-		Database bankDatabase = getDatabase().table(bankTable.getName());
-		bankDatabase.createTable(bankTable.createTableQuery(bankDatabase));
-
-		// (8) gang allie table
-		Database gangAllieDatabase = getDatabase().table(gangAlliesTable.getName());
-		gangAllieDatabase.createTable(gangAlliesTable.createTableQuery(gangAllieDatabase));
-
-		// (9) weapon table
-		Database weaponDatabase = getDatabase().table(weaponTable.getName());
-		weaponDatabase.createTable(weaponTable.createTableQuery(weaponDatabase));
-
-		// (10) member table
-		Database memberDatabase = getDatabase().table(memberTable.getName());
-		memberDatabase.createTable(memberTable.createTableQuery(memberDatabase));
-
-		// (11) rank parent table
-		Database rankParentDatabase = getDatabase().table(rankParentTable.getName());
-		rankParentDatabase.createTable(rankParentTable.createTableQuery(rankParentDatabase));
-
-		// (12) rank permission table
-		Database rankPermissionDatabase = getDatabase().table(rankPermissionTable.getName());
-		rankPermissionDatabase.createTable(rankPermissionTable.createTableQuery(rankPermissionDatabase));
-
-		// (13) loot chest table
-		Database lootChestDatabase = getDatabase().table(lootChestTable.getName());
-		lootChestDatabase.createTable(lootChestTable.createTableQuery(lootChestDatabase));
+		// Tables are now created through RepositoryRegistry
+		try {
+			repositoryRegistry.createTables();
+		} catch (Exception e) {
+			throw new SQLException("Failed to create tables through repositories", e);
+		}
 	}
 
 	@Override
 	public void insertInitialData() throws SQLException {
-		Database dataTable = getDatabase().table(rankTable.getName());
-		String   head      = SettingAddon.getGangRankHead(), tail = SettingAddon.getGangRankTail();
+		IRepository<Rank>       rankRepo       = repositoryRegistry.getRepository(Rank.class);
+		IRepository<RankParent> rankParentRepo = repositoryRegistry.getRepository(RankParent.class);
 
-		// check if the tail is set
-		Object[] tailRow = dataTable.select("name = ?", new Object[]{tail}, new int[]{Types.VARCHAR},
-											new String[]{"*"});
+		if (!(rankRepo instanceof RankRepository repo)) return;
+		if (!(rankParentRepo instanceof RankParentRepository parentRepo)) return;
 
-		int rows = dataTable.totalRows() + 1;
+		String head = SettingAddon.getGangRankHead();
+		String tail = SettingAddon.getGangRankTail();
 
-		if (tailRow.length == 0) dataTable.insert(rankTable.getColumns().toArray(String[]::new),
-												  new Object[]{rows, tail}, new int[]{Types.INTEGER, Types.VARCHAR});
+		int[] ids = repo.insertInitialRanks(head, tail);
 
-		Object[] headRow = dataTable.select("name = ?", new Object[]{head}, new int[]{Types.VARCHAR},
-											new String[]{"*"});
-
-		if (headRow.length == 0) {
-			dataTable.insert(rankTable.getColumns().toArray(String[]::new), new Object[]{rows + 1, head},
-							 new int[]{Types.INTEGER, Types.VARCHAR});
-			getDatabase().table(rankParentTable.getName())
-						 .insert(rankParentTable.getColumns().toArray(String[]::new), new Object[]{rows + 1, rows},
-								 new int[]{Types.INTEGER, Types.INTEGER});
-		}
+		parentRepo.insertInitialRelation(ids[0], ids[1]);
 	}
 
 	@Override
@@ -181,6 +89,6 @@ public class GanglandDatabase extends DatabaseHandler {
 	}
 
 	public List<Table<?>> getTables() {
-		return Collections.unmodifiableList(tables);
+		return Collections.unmodifiableList(repositoryRegistry.getRegisteredTables());
 	}
 }
