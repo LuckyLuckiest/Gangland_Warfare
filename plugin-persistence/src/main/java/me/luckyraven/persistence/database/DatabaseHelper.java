@@ -45,22 +45,24 @@ public class DatabaseHelper {
 	public void runQueries(QueryRunnable queryRunnable) {
 		if (database == null) return;
 
-		boolean exceptionCaught = false;
+		synchronized (database) {
+			boolean exceptionCaught = false;
 
-		try {
-			if (database.getConnection() == null) database.connect();
-			queryRunnable.run(database);
-		} catch (SQLException exception) {
-			exceptionCaught = true;
+			try {
+				if (database.getConnection() == null) database.connect();
+				queryRunnable.run(database);
+			} catch (SQLException exception) {
+				exceptionCaught = true;
 
-			log.warn("{}: {}", UnhandledError.SQL_ERROR, exception.getMessage(), exception);
-		} catch (Throwable throwable) {
-			exceptionCaught = true;
+				log.warn("{}: {}", UnhandledError.SQL_ERROR, exception.getMessage(), exception);
+			} catch (Throwable throwable) {
+				exceptionCaught = true;
 
-			log.warn("{}: {}", UnhandledError.ERROR, throwable.getMessage(), throwable);
-		} finally {
-			if (exceptionCaught) rollbackConnection();
-			if (database.getConnection() != null && !database.handlesConnectionPool()) database.disconnect();
+				log.warn("{}: {}", UnhandledError.ERROR, throwable.getMessage(), throwable);
+			} finally {
+				if (exceptionCaught) rollbackConnection();
+				if (database.getConnection() != null && !database.handlesConnectionPool()) database.disconnect();
+			}
 		}
 	}
 
