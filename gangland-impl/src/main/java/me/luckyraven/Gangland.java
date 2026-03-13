@@ -5,6 +5,7 @@ import com.viaversion.viaversion.api.ViaAPI;
 import com.zaxxer.hikari.HikariConfig;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
+import me.luckyraven.copsncrooks.police.CopService;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
 import me.luckyraven.file.configuration.SettingAddon;
@@ -12,6 +13,7 @@ import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.updater.UpdateChecker;
+import me.luckyraven.util.hologram.HologramService;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -64,9 +66,13 @@ public final class Gangland extends JavaPlugin {
 		DatabaseManager databaseManager = initializer.getDatabaseManager();
 		if (databaseManager != null && !databaseManager.getDatabases().isEmpty()) databaseManager.closeConnections();
 
-		// shutdown unneeded tasks
-		initializer.getHologramService().clear();
-		initializer.getCopService().shutdown();
+		// shutdown hologram service
+		HologramService hologramService = initializer.getHologramService();
+		if (hologramService != null) hologramService.clear();
+
+		// shutdown cop service
+		CopService copService = initializer.getCopService();
+		if (copService != null) copService.shutdown();
 	}
 
 	@Override
