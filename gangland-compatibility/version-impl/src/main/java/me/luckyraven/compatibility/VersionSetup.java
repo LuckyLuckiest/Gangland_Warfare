@@ -9,8 +9,8 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 
-@CustomLog
 @Getter
+@CustomLog
 public final class VersionSetup {
 
 	@Getter
@@ -98,3 +98,4 @@ public final class VersionSetup {
 		return Double.parseDouble(bigDecimal.toPlainString());
 	}
 }
+

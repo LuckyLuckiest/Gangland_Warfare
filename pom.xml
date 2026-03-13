@@ -27,6 +27,7 @@
         <module>inventory-api</module>
         <module>sign-api</module>
         <module>lootchest-api</module>
+        <module>logger-api</module>
         <module>cops-n-crooks</module>
 
         <module>plugin-persistence</module>
@@ -168,6 +169,12 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>logger-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>net.citizensnpcs</groupId>
                 <artifactId>citizens-main</artifactId>

@@ -15,12 +15,6 @@
 
     <name>Gangland Core</name>
 
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <build>
         <resources>
             <resource>
@@ -109,6 +103,18 @@
                     </filters>
 
                     <minimizeJar>true</minimizeJar>
+
+                    <artifactSet>
+                        <includes>
+                            <include>me.luckyraven:*</include>
+                            <include>net.wesjd:anvilgui</include>
+                            <include>com.zaxxer:HikariCP</include>
+                            <include>com.github.cryptomorin:XSeries</include>
+                            <include>fr.mrmicky:fastboard</include>
+                            <include>net.objecthunter:exp4j</include>
+                            <include>org.bstats:*</include>
+                        </includes>
+                    </artifactSet>
                 </configuration>
 
                 <executions>
@@ -137,7 +143,6 @@
     </build>
 
     <dependencies>
-
         <!-- Bukkit/Spigot/Paper builds (start) -->
 
         <!-- Spigot Build -->
@@ -208,6 +213,10 @@
             <groupId>me.luckyraven</groupId>
             <artifactId>cops-n-crooks</artifactId>
             <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>logger-api</artifactId>
         </dependency>
         <!-- Important local dependencies (end) -->
 

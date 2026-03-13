@@ -23,11 +23,16 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Local dependencies -->
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>plugin-exception</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>logger-api</artifactId>
         </dependency>
 
         <!-- XSeries -->

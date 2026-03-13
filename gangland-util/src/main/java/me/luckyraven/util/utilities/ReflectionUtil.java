@@ -66,7 +66,9 @@ public final class ReflectionUtil {
 
 	public static <T> Constructor<T> getDeclaredConstructor(@NotNull Class<T> clazz, Class<?>... parameters) {
 		try {
-			return clazz.getDeclaredConstructor(parameters);
+			Constructor<T> declaredConstructor = clazz.getDeclaredConstructor(parameters);
+			declaredConstructor.setAccessible(true);
+			return declaredConstructor;
 		} catch (NoSuchMethodException | SecurityException exception) {
 			throw new InternalError("Failed to get constructor.", exception);
 		}

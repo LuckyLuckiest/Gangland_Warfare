@@ -14,12 +14,6 @@
 
     <name>Gangland Weapons</name>
 
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <dependencies>
         <!-- Spigot Build -->
         <dependency>
@@ -52,6 +46,10 @@
             <artifactId>plugin-persistence</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>logger-api</artifactId>
         </dependency>
 
         <!-- XSeries -->

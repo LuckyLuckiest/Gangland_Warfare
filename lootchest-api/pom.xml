@@ -28,26 +28,27 @@
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-util</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>plugin-persistence</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>plugin-exception</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>logger-api</artifactId>
         </dependency>
 
         <dependency>

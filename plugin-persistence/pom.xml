@@ -37,6 +37,10 @@
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>logger-api</artifactId>
+        </dependency>
 
         <!-- Database dependencies -->
         <dependency>
