@@ -1,13 +1,13 @@
 package me.luckyraven.weapon.configuration;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.CustomLog;
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.FolderLoader;
 import org.bukkit.configuration.InvalidConfigurationException;
 
-@Log4j2
+@CustomLog
 public class WeaponLoader extends FolderLoader {
 
 	private final Gangland gangland;

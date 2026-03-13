@@ -11,6 +11,8 @@
 
     <artifactId>cops-n-crooks</artifactId>
 
+    <name>Cops N Crooks</name>
+
     <dependencies>
         <!-- Spigot Build -->
         <dependency>

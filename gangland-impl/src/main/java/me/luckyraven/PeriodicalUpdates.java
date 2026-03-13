@@ -1,7 +1,7 @@
 package me.luckyraven;
 
+import lombok.CustomLog;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j2;
 import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-@Log4j2
+@CustomLog
 public final class PeriodicalUpdates {
 
 	private final Gangland           gangland;

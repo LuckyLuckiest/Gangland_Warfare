@@ -1,6 +1,6 @@
 package me.luckyraven.command.sub;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.CustomLog;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@Log4j2
+@CustomLog
 public final class ReloadCommand extends CommandHandler {
 
 	public ReloadCommand(Gangland gangland) {

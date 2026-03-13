@@ -1,6 +1,6 @@
 package me.luckyraven.util.autowire;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.CustomLog;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * A lightweight dependency injection container that manages component instances and performs automatic dependency
  * injection.
  */
-@Log4j2
+@CustomLog
 public class DependencyContainer {
 
 	// Store instances by type

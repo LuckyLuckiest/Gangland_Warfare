@@ -1,10 +1,10 @@
 package me.luckyraven.compatibility;
 
 import com.viaversion.viaversion.api.ViaAPI;
-import lombok.extern.log4j.Log4j2;
+import lombok.CustomLog;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 
-@Log4j2
+@CustomLog
 public class CompatibilityWorker implements Compatibility {
 
 	private final RecoilCompatibility recoilCompatibility;

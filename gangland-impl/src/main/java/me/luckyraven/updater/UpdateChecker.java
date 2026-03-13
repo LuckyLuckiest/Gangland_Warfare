@@ -1,7 +1,7 @@
 package me.luckyraven.updater;
 
+import lombok.CustomLog;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j2;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,7 +17,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-@Log4j2
+@CustomLog
 public class UpdateChecker {
 
 	private final JavaPlugin     plugin;

@@ -1,7 +1,7 @@
 package me.luckyraven.loot.config;
 
+import lombok.CustomLog;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j2;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.loot.LootChestService;
 import me.luckyraven.loot.data.LootTable;
@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 
-@Log4j2
+@CustomLog
 public class LootChestLoader extends FileLoader<LootChestConfig> {
 
 	private final LootChestService          manager;

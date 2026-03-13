@@ -1,6 +1,6 @@
 package me.luckyraven;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.CustomLog;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.jail.JailManager;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
@@ -49,7 +49,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-@Log4j2
+@CustomLog
 public final class ReloadPlugin {
 
 	private final Gangland         gangland;

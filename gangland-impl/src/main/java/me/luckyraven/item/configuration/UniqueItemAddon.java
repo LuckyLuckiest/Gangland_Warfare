@@ -1,7 +1,7 @@
 package me.luckyraven.item.configuration;
 
 import com.cryptomorin.xseries.XMaterial;
-import lombok.extern.log4j.Log4j2;
+import lombok.CustomLog;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.FileHandler;
@@ -12,7 +12,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import java.io.IOException;
 import java.util.*;
 
-@Log4j2
+@CustomLog
 public class UniqueItemAddon implements Comparator<UniqueItem> {
 
 	private final Map<String, UniqueItem> uniqueItems;

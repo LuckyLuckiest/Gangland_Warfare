@@ -1,9 +1,9 @@
 package me.luckyraven.persistence.database;
 
 import lombok.AccessLevel;
+import lombok.CustomLog;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.database.type.MySQL;
 import me.luckyraven.persistence.database.type.SQLite;
@@ -16,7 +16,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-@Log4j2
+@CustomLog
 @Getter
 @RequiredArgsConstructor
 public abstract class DatabaseHandler {

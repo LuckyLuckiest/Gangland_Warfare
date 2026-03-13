@@ -2,9 +2,9 @@ package me.luckyraven.command.argument;
 
 import com.google.common.base.Preconditions;
 import lombok.AccessLevel;
+import lombok.CustomLog;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.log4j.Log4j2;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
@@ -27,7 +27,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Log4j2
+@CustomLog
 @Getter
 public class Argument implements Cloneable {
 

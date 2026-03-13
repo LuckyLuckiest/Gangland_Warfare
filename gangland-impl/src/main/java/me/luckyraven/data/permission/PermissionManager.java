@@ -1,13 +1,13 @@
 package me.luckyraven.data.permission;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.CustomLog;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Log4j2
+@CustomLog
 public class PermissionManager {
 
 	private final PermissionHandler permissionHandler;

@@ -1,7 +1,7 @@
 package me.luckyraven.sign;
 
+import lombok.CustomLog;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j2;
 import me.luckyraven.sign.registry.SignTypeDefinition;
 import me.luckyraven.sign.registry.SignTypeRegistry;
 import me.luckyraven.sign.service.SignInteractionService;
@@ -9,7 +9,7 @@ import me.luckyraven.sign.validation.SignValidationException;
 
 import java.util.List;
 
-@Log4j2
+@CustomLog
 @Getter
 public abstract class SignService {
 

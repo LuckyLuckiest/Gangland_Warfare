@@ -1,6 +1,6 @@
 package me.luckyraven.weapon.repair.item;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.CustomLog;
 import me.luckyraven.weapon.repair.config.RepairItemConfig;
 import me.luckyraven.weapon.repair.config.RepairItemData;
 import org.bukkit.inventory.ItemStack;
@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
-@Log4j2
+@CustomLog
 public class RepairItemManager {
 
 	private final RepairItemConfig        config;

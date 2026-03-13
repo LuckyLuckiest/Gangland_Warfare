@@ -1,6 +1,6 @@
 package me.luckyraven.persistence;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.CustomLog;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-@Log4j2
+@CustomLog
 public class FileManager {
 
 	private final JavaPlugin       plugin;

@@ -1,6 +1,6 @@
 package me.luckyraven.persistence.repository;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.CustomLog;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.util.utilities.ReflectionUtil;
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  * Central registry for all repositories in the system. Handles auto-discovery, instantiation, and lifecycle management.
  * Also manages table dependency resolution.
  */
-@Log4j2
+@CustomLog
 public class RepositoryRegistry {
 
 	private final JavaPlugin                     plugin;
@@ -207,8 +207,10 @@ public class RepositoryRegistry {
 			try {
 				var database = databaseHandler.getDatabase();
 				var tableDb  = database.table(table.getName());
+
 				tableDb.createTable(table.createTableQuery(tableDb));
 				table.validateSchema(database);
+
 				log.info("Created table: {}", table.getName());
 			} catch (Exception e) {
 				log.error("Failed to create table {}: {}", table.getName(), e.getMessage());

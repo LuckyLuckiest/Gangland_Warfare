@@ -1,7 +1,7 @@
 package me.luckyraven.file;
 
+import lombok.CustomLog;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j2;
 import me.luckyraven.Gangland;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.FileManager;
@@ -21,7 +21,7 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-@Log4j2
+@CustomLog
 public class LanguageLoader {
 
 	private final Gangland gangland;

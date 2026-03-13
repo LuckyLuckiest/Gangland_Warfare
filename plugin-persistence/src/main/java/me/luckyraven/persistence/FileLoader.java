@@ -1,15 +1,19 @@
 package me.luckyraven.persistence;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.CustomLog;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.util.timer.SequenceTimer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.function.Consumer;
 
-@Log4j2
+@CustomLog
 public abstract class FileLoader<T> {
+
+	private static final Logger logger = LogManager.getLogger(FileLoader.class.getSimpleName());
 
 	private final JavaPlugin plugin;
 

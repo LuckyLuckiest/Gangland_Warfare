@@ -1,8 +1,8 @@
 package me.luckyraven.copsncrooks.police.npc;
 
+import lombok.CustomLog;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.log4j.Log4j2;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.police.config.CopTierConfig;
 import me.luckyraven.copsncrooks.police.state.CopBehavior;
@@ -27,7 +27,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
-@Log4j2
+@CustomLog
 public class CopNpc {
 
 	private static final int    NAVIGATION_RECALCULATION_TICKS = 10;

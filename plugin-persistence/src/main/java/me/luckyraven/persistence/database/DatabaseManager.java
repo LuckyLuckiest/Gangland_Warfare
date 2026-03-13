@@ -1,6 +1,6 @@
 package me.luckyraven.persistence.database;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-@Log4j2
+@CustomLog
 public class DatabaseManager {
 
 	private final List<DatabaseHandler>    databases;

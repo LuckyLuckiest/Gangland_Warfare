@@ -1,7 +1,7 @@
 package me.luckyraven.copsncrooks.police.config;
 
+import lombok.CustomLog;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j2;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileLoader;
@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-@Log4j2
+@CustomLog
 public class CopLoader extends FileLoader<CopConfig> {
 
 	@Getter

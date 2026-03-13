@@ -3,8 +3,8 @@ package me.luckyraven;
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.ViaAPI;
 import com.zaxxer.hikari.HikariConfig;
+import lombok.CustomLog;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j2;
 import me.luckyraven.copsncrooks.police.CopService;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
@@ -29,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
-@Log4j2
+@CustomLog
 @Getter
 public final class Gangland extends JavaPlugin {
 

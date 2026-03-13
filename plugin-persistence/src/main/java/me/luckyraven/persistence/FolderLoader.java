@@ -1,6 +1,6 @@
 package me.luckyraven.persistence;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.CustomLog;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-@Log4j2
+@CustomLog
 public abstract class FolderLoader extends FileLoader<FileHandler> {
 
 	private final JavaPlugin plugin;

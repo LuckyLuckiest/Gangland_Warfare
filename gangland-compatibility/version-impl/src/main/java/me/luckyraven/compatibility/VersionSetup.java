@@ -1,7 +1,7 @@
 package me.luckyraven.compatibility;
 
+import lombok.CustomLog;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j2;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 
-@Log4j2
+@CustomLog
 @Getter
 public final class VersionSetup {
 

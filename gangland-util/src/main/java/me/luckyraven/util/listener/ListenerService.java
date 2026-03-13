@@ -1,7 +1,7 @@
 package me.luckyraven.util.listener;
 
+import lombok.CustomLog;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j2;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.autowire.DependencyContainer;
 import me.luckyraven.util.utilities.ReflectionUtil;
@@ -16,7 +16,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
-@Log4j2
+@CustomLog
 public abstract class ListenerService {
 
 	private final JavaPlugin          plugin;

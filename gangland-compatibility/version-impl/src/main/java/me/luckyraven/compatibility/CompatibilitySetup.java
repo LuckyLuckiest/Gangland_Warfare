@@ -1,12 +1,12 @@
 package me.luckyraven.compatibility;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.CustomLog;
 import me.luckyraven.util.utilities.ReflectionUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
 
-@Log4j2
+@CustomLog
 public final class CompatibilitySetup {
 
 	private final VersionSetup versionSetup;

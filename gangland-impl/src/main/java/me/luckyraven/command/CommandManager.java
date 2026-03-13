@@ -1,7 +1,7 @@
 package me.luckyraven.command;
 
+import lombok.CustomLog;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j2;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.sub.DownloadPluginCommand;
@@ -25,7 +25,7 @@ import java.util.stream.IntStream;
 
 import static me.luckyraven.util.ChatUtil.color;
 
-@Log4j2
+@CustomLog
 public final class CommandManager implements CommandExecutor {
 
 	// classes that shouldn't be displayed in tab completion

@@ -1,6 +1,6 @@
 package me.luckyraven.util.utilities;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.CustomLog;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
@@ -18,7 +18,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
-@Log4j2
+@CustomLog
 public final class ReflectionUtil {
 
 	private ReflectionUtil() { }

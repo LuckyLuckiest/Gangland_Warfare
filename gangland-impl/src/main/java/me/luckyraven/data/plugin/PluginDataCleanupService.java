@@ -1,6 +1,6 @@
 package me.luckyraven.data.plugin;
 
-import lombok.extern.log4j.Log4j2;
+import lombok.CustomLog;
 import me.luckyraven.database.tables.weapon.WeaponTable;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.database.Database;
@@ -16,7 +16,7 @@ import java.util.Date;
 /**
  * Service responsible for cleaning up unused data from the database based on the plugin's scheduled scan dates.
  */
-@Log4j2
+@CustomLog
 public final class PluginDataCleanupService {
 
 	private final boolean logDebug = SettingAddon.isAutoSaveDebug();

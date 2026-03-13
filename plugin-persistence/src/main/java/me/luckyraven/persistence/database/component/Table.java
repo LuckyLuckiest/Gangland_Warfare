@@ -1,7 +1,7 @@
 package me.luckyraven.persistence.database.component;
 
+import lombok.CustomLog;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j2;
 import me.luckyraven.persistence.database.Database;
 
 import java.sql.SQLException;
@@ -9,7 +9,7 @@ import java.sql.Types;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Log4j2
+@CustomLog
 @Getter
 public abstract class Table<T> {
 

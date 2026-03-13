@@ -1,7 +1,7 @@
 package me.luckyraven.file.configuration;
 
+import lombok.CustomLog;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j2;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.FileInitializer;
 import me.luckyraven.persistence.FileHandler;
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-@Log4j2
+@CustomLog
 public class SettingAddon implements FileInitializer {
 
 	private static final @Getter Map<String, Object> settingsMap         = new LinkedHashMap<>();
