@@ -234,23 +234,27 @@ public class RepositoryRegistry {
 				if (processed.contains(repoClass)) continue;
 
 				// Check if all dependencies are registered
-				if (canRegisterRepository(repoClass)) {
-					sorted.add(repoClass);
-					processed.add(repoClass);
-					addedAny = true;
+				if (!canRegisterRepository(repoClass)) {
+					continue;
 				}
+
+				sorted.add(repoClass);
+				processed.add(repoClass);
+				addedAny = true;
 			}
 
-			if (!addedAny && sorted.size() < repositoryClasses.size()) {
-				log.warn("Circular dependency in repositories detected, registering remaining repositories in order");
-				for (Class<?> repoClass : repositoryClasses) {
-					if (!processed.contains(repoClass)) {
-						sorted.add(repoClass);
-						processed.add(repoClass);
-					}
-				}
-				break;
+			if (!(!addedAny && sorted.size() < repositoryClasses.size())) {
+				continue;
 			}
+
+			log.warn("Circular dependency in repositories detected, registering remaining repositories in order");
+			for (Class<?> repoClass : repositoryClasses) {
+				if (!processed.contains(repoClass)) {
+					sorted.add(repoClass);
+					processed.add(repoClass);
+				}
+			}
+			break;
 		}
 
 		return sorted;
@@ -279,16 +283,20 @@ public class RepositoryRegistry {
 					}
 
 					// Check if it's a Table type
-					if (Table.class.isAssignableFrom(paramType)) {
-						String tableName = getTableName(paramType);
-
-						// If this table hasn't been registered yet, we can't instantiate this repository
-						if (!tablesByName.containsKey(tableName)) {
-							log.debug("Repository {} depends on table {} which is not yet registered",
-									  repoClass.getSimpleName(), tableName);
-							return false;
-						}
+					if (!Table.class.isAssignableFrom(paramType)) {
+						continue;
 					}
+
+					String tableName = getTableName(paramType);
+
+					// If this table hasn't been registered yet, we can't instantiate this repository
+					if (!tablesByName.containsKey(tableName)) {
+						continue;
+					}
+
+					log.debug("Repository {} depends on table {} which is not yet registered",
+							  repoClass.getSimpleName(), tableName);
+					return false;
 				}
 			}
 
@@ -363,11 +371,11 @@ public class RepositoryRegistry {
 				}
 			}
 
-			if (canUse) {
-				targetConstructor = constructor;
-				constructorArgs   = args;
-				break;
-			}
+			if (canUse) continue;
+
+			targetConstructor = constructor;
+			constructorArgs   = args;
+			break;
 		}
 
 		if (targetConstructor == null) {
@@ -436,25 +444,27 @@ public class RepositoryRegistry {
 					break;
 				}
 
-				if (canAdd) {
-					sorted.add(table);
-					processed.add(table.getName());
-					addedAny = true;
-				}
+				if (!canAdd) continue;
+
+				sorted.add(table);
+				processed.add(table.getName());
+				addedAny = true;
 			}
 
-			if (!addedAny && sorted.size() < tables.size()) {
-				log.warn("Possible circular dependency detected, adding remaining tables");
-
-				for (Table<?> table : tables) {
-					if (processed.contains(table.getName())) continue;
-
-					sorted.add(table);
-					processed.add(table.getName());
-				}
-
-				break;
+			if (!(!addedAny && sorted.size() < tables.size())) {
+				continue;
 			}
+
+			log.warn("Possible circular dependency detected, adding remaining tables");
+
+			for (Table<?> table : tables) {
+				if (processed.contains(table.getName())) continue;
+
+				sorted.add(table);
+				processed.add(table.getName());
+			}
+
+			break;
 		}
 
 		return sorted;
