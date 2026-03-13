@@ -540,6 +540,8 @@ public final class Initializer {
 		dependencyContainer.registerInstance(BlockDamageManager.class, blockDamageManager);
 		dependencyContainer.registerInstance(CopManager.class, copService.getCopManager());
 		dependencyContainer.registerInstance(KillCombo.class, killCombo);
+		dependencyContainer.registerInstance(DetainmentService.class, detainmentService);
+		dependencyContainer.registerInstance(JailManager.class, jailManager);
 
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 
