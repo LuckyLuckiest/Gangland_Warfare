@@ -15,10 +15,54 @@ mvn clean package -DskipTests
 mvn clean package -pl gangland-build -am
 ```
 
-Tests use JUnit 5 and Mockito. Run a single test class:
+Tests use JUnit 5 and Mockito.
+
+### Windows / HikariCP / SQLite file-locking in tests
+
+HikariCP's `minimumIdle=5` eagerly opens 5 native SQLite file handles at pool startup. On Windows, these handles are
+not released synchronously after `dataSource.close()`, so JUnit's `@TempDir` auto-cleanup fails with
+`Failed to delete temp directory ... tbl_test.db: The process cannot access the file`.
+
+**Rules for any test class that touches a real database:**
+
+1. Use `@TempDir(cleanup = CleanupMode.NEVER)` — never plain `@TempDir`. This stops JUnit from attempting deletion;
+   the OS cleans up temp files eventually.
+2. Call `MockPluginFactory.releaseDbFiles(tempDir)` at the end of every `@AfterEach` teardown. This flushes WAL/SHM
+   files and makes a best-effort delete so the temp directory doesn't grow unboundedly during a single test run.
+3. Always disconnect the database in `@AfterEach` before calling `releaseDbFiles`. Track every `DatabaseHandler`
+   created in a test class (use a `List<TestDatabaseHandler> toClose` field + a `tracked()` helper) so none are
+   leaked.
+
+**Do not** use retry loops as the primary cleanup strategy — Windows file locks can persist for several seconds and
+retries alone are insufficient.
+
+### HikariCP MySQL failure behaviour
+
+`enforceType(MYSQL)` only catches `SQLException`. HikariCP throws `PoolInitializationException` (a `RuntimeException`)
+when it cannot connect, so the `catch (SQLException)` block is skipped and `this.database` is left as a non-null but
+uninitialized `MySQL` instance (no live connection). Assertions about MySQL failure must check
+`db == null || db.getConnection() == null`, not `assertNull(db)`.
+
+### RepositoryRegistry key semantics
+
+`RepositoryRegistry` is a `Map<Class<?>, IRepository<?>>` keyed by entity type. Registering two repositories under the
+same entity class **overwrites** the first. Tests that register multiple repos for the same type will only see the last
+one in `getAllRepositories()`.
+
+> **Important:** always include `-am` when targeting a single module. The multi-module
+> build uses `${revision}` as the parent POM version; without `-am`, Maven cannot resolve
+> local sibling dependencies (`logger-api`, `plugin-exception`, `gangland-util`, etc.)
+> and will fail trying to download `${revision}` from remote repositories.
 
 ```bash
-mvn test -pl <module> -Dtest=MyTestClass
+# Run all tests in a single module (builds sibling deps first)
+mvn test -pl plugin-persistence -am
+
+# Run a single test class
+mvn test -pl plugin-persistence -am -Dtest=SQLiteIntegrationTest
+
+# Run a single test method
+mvn test -pl plugin-persistence -am -Dtest="SQLiteIntegrationTest#insert_andSelect_returnsCorrectValues"
 ```
 
 ## Module Structure
