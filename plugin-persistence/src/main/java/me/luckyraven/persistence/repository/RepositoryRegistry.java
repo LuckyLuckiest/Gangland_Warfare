@@ -75,6 +75,7 @@ public class RepositoryRegistry {
 			// Second pass: sort by dependencies and register
 			List<Class<?>> sortedClasses = sortRepositoriesByDependencies(repositoryClasses);
 
+			log.info("Registering and linking {} repositories to their tables", sortedClasses.size());
 			for (Class<?> clazz : sortedClasses) {
 				try {
 					registerRepositoryClass(clazz);
@@ -103,16 +104,18 @@ public class RepositoryRegistry {
 			try {
 				Method getTableMethod = AbstractRepository.class.getDeclaredMethod("getTable");
 				getTableMethod.setAccessible(true);
+
 				Table<?> table = (Table<?>) getTableMethod.invoke(instance);
 				registeredTables.add(table);
 				tablesByName.put(table.getName(), table);
-				logRegisteredTable(table);
+
+				log.info("Registered table '{}' from repository", table.getName());
 			} catch (Exception exception) {
 				log.warn("Failed to extract table from repository: {}", exception.getMessage());
 			}
 		}
 
-		logRegisteredRepository(entityType);
+		log.info("Registered repository for: {}", entityType.getSimpleName());
 	}
 
 	/**
@@ -210,8 +213,6 @@ public class RepositoryRegistry {
 
 				tableDb.createTable(table.createTableQuery(tableDb));
 				table.validateSchema(database);
-
-				log.info("Created table: {}", table.getName());
 			} catch (Exception e) {
 				log.error("Failed to create table {}: {}", table.getName(), e.getMessage());
 				throw e;
@@ -371,7 +372,7 @@ public class RepositoryRegistry {
 				}
 			}
 
-			if (canUse) continue;
+			if (!canUse) continue;
 
 			targetConstructor = constructor;
 			constructorArgs   = args;
@@ -395,8 +396,6 @@ public class RepositoryRegistry {
 
 				registeredTables.add(table);
 				tablesByName.put(table.getName(), table);
-
-				logRegisteredTable(table);
 			} catch (Exception e) {
 				log.warn("Failed to extract table from repository {}: {}", repoClass.getSimpleName(), e.getMessage());
 			}
@@ -406,16 +405,6 @@ public class RepositoryRegistry {
 		RepositoryEntry entry = new RepositoryEntry(entityType, instance, repoClass);
 		repositories.put(entityType, entry);
 		registrationOrder.put(entityType, registrationOrder.size());
-
-		logRegisteredRepository(entityType);
-	}
-
-	private <T> void logRegisteredRepository(Class<T> entityType) {
-		log.info("Registered repository for: {}", entityType.getSimpleName());
-	}
-
-	private void logRegisteredTable(Table<?> table) {
-		log.info("Registered table '{}' from repository", table.getName());
 	}
 
 	/**
