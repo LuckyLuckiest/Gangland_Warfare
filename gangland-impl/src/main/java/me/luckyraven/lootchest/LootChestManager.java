@@ -35,6 +35,8 @@ public class LootChestManager extends LootChestService {
 			// waits for the world to load to spawn the holograms
 			waitForWorld.start(false);
 		}
+
+		repository.setDataSupplier(this::getAllChests);
 	}
 
 	private void registerLootChests(IRepository<LootChestData> repository) {

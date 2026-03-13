@@ -1,7 +1,7 @@
 package me.luckyraven.persistence.database;
 
+import lombok.CustomLog;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j2;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.sql.SQLException;
 
-@Log4j2
+@CustomLog
 public class DatabaseHelper {
 
 	private final JavaPlugin      plugin;
@@ -65,16 +65,22 @@ public class DatabaseHelper {
 	}
 
 	public void runQueriesAsync(QueryRunnable queryRunnable) {
-		Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> runQueries(queryRunnable));
+		if (plugin.isEnabled()) {
+			Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> runQueries(queryRunnable));
+			return;
+		}
+
+		runQueries(queryRunnable);
 	}
 
 	public void rollbackConnection() {
 		try {
 			if (database != null && database.getConnection() != null) {
-				database.getConnection().setAutoCommit(false);
-				database.getConnection().rollback();
-				database.getConnection().commit();
-				database.getConnection().setAutoCommit(true);
+				var conn = database.getConnection();
+				if (!conn.getAutoCommit()) {
+					conn.rollback();
+					conn.setAutoCommit(true);
+				}
 			}
 		} catch (SQLException exception) {
 			log.warn("{}: Failed to rollback database connection, {}", UnhandledError.SQL_ERROR,

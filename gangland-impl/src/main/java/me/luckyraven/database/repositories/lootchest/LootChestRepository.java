@@ -48,11 +48,12 @@ public class LootChestRepository extends AbstractRepository<LootChestData> {
 			double  y             = (double) result[v++];
 			double  z             = (double) result[v++];
 			String  lootTableId   = String.valueOf(result[v++]);
-			String  tierId        = result[v++] != null ? String.valueOf(result[v++]) : null;
-			long    respawnTime   = (long) result[v++];
+			Object  tierRaw       = result[v++];
+			String  tierId        = tierRaw != null ? String.valueOf(tierRaw) : null;
+			long    respawnTime   = ((Number) result[v++]).longValue();
 			int     inventorySize = (int) result[v++];
 			String  displayName   = String.valueOf(result[v++]);
-			long    lastOpened    = (long) result[v++];
+			long    lastOpened    = ((Number) result[v++]).longValue();
 			boolean isLooted      = result[v] instanceof Boolean ? (boolean) result[v] : (int) result[v] == 1;
 
 			World    world    = Bukkit.getWorld(worldName);

@@ -235,6 +235,10 @@ public final class Initializer {
 			// plugin crashes
 		}
 
+		// wire data suppliers so repositories can flush memory on auto-save
+		userManager.initialize();
+		offlineUserManager.initialize();
+
 		List<Table<?>> tables = ganglandDatabase.getTables();
 
 		// plugin manager

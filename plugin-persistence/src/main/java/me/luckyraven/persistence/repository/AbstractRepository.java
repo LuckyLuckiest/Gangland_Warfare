@@ -103,7 +103,7 @@ public abstract class AbstractRepository<T> implements IRepository<T> {
 
 		Map<String, Object> search = table.searchCriteria(data);
 		Object[] select = dbTable.select((String) search.get("search"), (Object[]) search.get("info"),
-										 (int[]) search.get("types"), new String[]{"*"});
+										 (int[]) search.get("type"), new String[]{"*"});
 		return select.length != 0;
 	}
 

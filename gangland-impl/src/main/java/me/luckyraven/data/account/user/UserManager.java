@@ -9,6 +9,7 @@ import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
+import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.feature.Executor;
@@ -19,6 +20,8 @@ import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.wanted.WantedExecutor;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.database.DatabaseHelper;
+import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.util.timer.Timer;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -39,6 +42,25 @@ public class UserManager<T extends OfflinePlayer> {
 	public UserManager(Gangland gangland) {
 		this.gangland = gangland;
 		this.users    = new HashMap<>();
+	}
+
+	public void initialize() {
+		GanglandDatabase   database           = gangland.getInitializer().getGanglandDatabase();
+		RepositoryRegistry repositoryRegistry = database.getRepositoryRegistry();
+
+		IRepository<User<? extends OfflinePlayer>> userRepository = repositoryRegistry.getGenericRepository(User.class);
+		IRepository<Bank>                          bankRepository = repositoryRegistry.getRepository(Bank.class);
+
+		userRepository.setDataSupplier(() -> users.values()
+				.stream()
+				.<User<? extends OfflinePlayer>>map(u -> u)
+				.toList());
+
+		bankRepository.setDataSupplier(() -> users.values()
+				.stream()
+				.filter(User::hasBank)
+				.map(User::getBank)
+				.toList());
 	}
 
 	public void initializeUserData(User<T> user, UserTable userTable, BankTable bankTable) {
