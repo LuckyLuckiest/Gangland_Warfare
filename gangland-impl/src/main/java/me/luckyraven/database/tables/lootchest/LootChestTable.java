@@ -1,6 +1,6 @@
 package me.luckyraven.database.tables.lootchest;
 
-import me.luckyraven.loot.data.LootChestData;
+import me.luckyraven.lootchest.data.LootChestData;
 import me.luckyraven.persistence.database.component.Attribute;
 import me.luckyraven.persistence.database.component.Table;
 

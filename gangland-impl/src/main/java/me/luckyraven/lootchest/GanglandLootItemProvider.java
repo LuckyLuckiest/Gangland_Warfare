@@ -2,7 +2,7 @@ package me.luckyraven.lootchest;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.item.configuration.UniqueItemAddon;
-import me.luckyraven.loot.item.LootItemProvider;
+import me.luckyraven.lootchest.item.LootItemProvider;
 import me.luckyraven.weapon.WeaponManager;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import org.bukkit.Material;

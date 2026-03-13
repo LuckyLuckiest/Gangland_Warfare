@@ -2,9 +2,9 @@ package me.luckyraven.database.repositories.lootchest;
 
 import lombok.Setter;
 import me.luckyraven.database.tables.lootchest.LootChestTable;
-import me.luckyraven.loot.LootChestService;
-import me.luckyraven.loot.data.LootChestData;
-import me.luckyraven.loot.data.LootTier;
+import me.luckyraven.lootchest.LootChestService;
+import me.luckyraven.lootchest.data.LootChestData;
+import me.luckyraven.lootchest.data.LootTier;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.component.Table;
@@ -97,6 +97,6 @@ public class LootChestRepository extends AbstractRepository<LootChestData> {
 	@Override
 	protected void doDelete(LootChestData data) throws SQLException {
 		Database table = getDatabase().table(lootChestTable.getName());
-		table.delete("id", data.getId(), Types.INTEGER);
+		table.delete("id", data.getId().toString(), Types.VARCHAR);
 	}
 }
