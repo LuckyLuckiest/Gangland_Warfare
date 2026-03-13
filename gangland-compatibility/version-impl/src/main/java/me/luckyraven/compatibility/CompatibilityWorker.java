@@ -27,7 +27,7 @@ public class CompatibilityWorker implements Compatibility {
 				recoilCompatibility.setViaAPI(viaAPI);
 			}
 
-		} catch (Exception exception) {
+		} catch (Throwable exception) {
 			log.warn("There was a problem loading Compatibility class... {}", exception.getMessage(), exception);
 		}
 
