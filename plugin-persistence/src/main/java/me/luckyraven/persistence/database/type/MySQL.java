@@ -1,10 +1,8 @@
 package me.luckyraven.persistence.database.type;
 
-import com.google.common.base.Preconditions;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import me.luckyraven.persistence.database.Database;
-import me.luckyraven.util.utilities.DatabaseUtil;
 
 import java.sql.*;
 import java.time.Duration;
@@ -122,29 +120,20 @@ public class MySQL implements Database {
 
 	@Override
 	public void createSchema(String name) throws SQLException {
-		// Validate schema name to prevent SQL injection
-		// Schema names should only contain alphanumeric characters and underscores
-		if (!isValidIdentifier(name)) {
-			throw new SQLException("Invalid schema name: " + name);
-		}
+		if (!isValidIdentifier(name)) throw new SQLException("Invalid schema name: " + name);
 		executeStatement("CREATE DATABASE IF NOT EXISTS `" + name + "`;");
 	}
 
 	@Override
 	public void dropSchema(String name) throws SQLException {
-		// Validate schema name to prevent SQL injection
-		if (!isValidIdentifier(name)) {
-			throw new SQLException("Invalid schema name: " + name);
-		}
+		if (!isValidIdentifier(name)) throw new SQLException("Invalid schema name: " + name);
 		executeStatement("DROP DATABASE IF EXISTS `" + name + "`;");
 	}
 
 	@Override
 	public Database table(String tableName) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
-		if (!isValidIdentifier(tableName)) {
-			throw new SQLException("Invalid table name: " + tableName);
-		}
+		if (!isValidIdentifier(tableName)) throw new SQLException("Invalid table name: " + tableName);
 
 		this.table = tableName;
 		return this;
@@ -152,7 +141,7 @@ public class MySQL implements Database {
 
 	@Override
 	public void connect() throws SQLException {
-		Preconditions.checkNotNull(dataSource, "DataSource can't be null");
+		if (dataSource == null) throw new NullPointerException("DataSource can't be null");
 		if (connection != null) throw new SQLException("There is a connection not closed");
 
 		connection = dataSource.getConnection();
@@ -160,8 +149,8 @@ public class MySQL implements Database {
 
 	@Override
 	public void disconnect() {
-		Preconditions.checkNotNull(dataSource, "DataSource can't be null");
-		Preconditions.checkNotNull(connection, "No connection established");
+		if (dataSource == null) throw new NullPointerException("DataSource can't be null");
+		if (connection == null) throw new NullPointerException("No connection established");
 
 		dataSource.close();
 		connection = null;
@@ -175,15 +164,10 @@ public class MySQL implements Database {
 	}
 
 	@Override
-	public boolean handlesConnectionPool() {
-		return true;
-	}
-
-	@Override
 	public void createTable(String... values) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
-		Preconditions.checkNotNull(values, "Missing data");
+		if (table == null) throw new NullPointerException("Invalid table");
+		if (values == null) throw new NullPointerException("Missing data");
 
 		tableNames.add(table);
 
@@ -200,11 +184,9 @@ public class MySQL implements Database {
 	@Override
 	public void deleteTable() throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
+		if (table == null) throw new NullPointerException("Invalid table");
 
-		String query = "DROP TABLE IF EXISTS " + table + ";";
-
-		executeUpdate(query);
+		executeUpdate("DROP TABLE IF EXISTS " + table + ";");
 		tableNames.remove(table);
 	}
 
@@ -214,14 +196,18 @@ public class MySQL implements Database {
 	}
 
 	@Override
+	public String getTable() {
+		return table;
+	}
+
+	@Override
 	public void setTableName(String newName) throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
+		if (table == null) throw new NullPointerException("Invalid table");
 		if (!tableNames.contains(table)) throw new SQLException("Table not found");
 
-		String query = "ALTER TABLE " + table + " RENAME TO " + newName + ";";
+		executeUpdate("ALTER TABLE " + table + " RENAME TO " + newName + ";");
 
-		executeUpdate(query);
 		for (int i = 0; i < tableNames.size(); i++)
 			if (tableNames.get(i).equalsIgnoreCase(table)) {
 				tableNames.set(i, newName);
@@ -232,216 +218,6 @@ public class MySQL implements Database {
 	}
 
 	@Override
-	public Database addColumn(String name, String columType) throws SQLException {
-		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
-
-		String query = "ALTER TABLE " + table + " ADD COLUMN " + name + " " + columType + ";";
-
-		executeUpdate(query);
-
-		return this;
-	}
-
-	@Override
-	public Database insert(String[] columns, Object[] values, int[] types) throws SQLException {
-		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
-		Preconditions.checkNotNull(columns, "Missing columns");
-		Preconditions.checkNotNull(values, "Missing data");
-		Preconditions.checkNotNull(types, "Missing data types");
-		Preconditions.checkArgument(columns.length == values.length && columns.length == types.length,
-									"Invalid columns, values, and types data parameters");
-
-		StringBuilder columnNames  = new StringBuilder();
-		StringBuilder placeholders = new StringBuilder();
-		for (int i = 0; i < columns.length; i++) {
-			columnNames.append(columns[i]);
-			placeholders.append("?");
-
-			if (i < columns.length - 1) {
-				columnNames.append(", ");
-				placeholders.append(", ");
-			}
-		}
-
-		String query = "INSERT INTO " + table + " (" + columnNames + ") VALUES (" + placeholders + ");";
-
-		try (PreparedStatement statement = connection.prepareStatement(query)) {
-			preparePlaceholderStatements(statement, values, types, 0);
-			statement.executeUpdate();
-		}
-
-		return this;
-	}
-
-	@Override
-	public Object[] select(String row, Object[] placeholders, int[] types, String[] columns) throws SQLException {
-		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
-		Preconditions.checkNotNull(row, "Missing row");
-		int count = (int) row.chars().filter(c -> c == '?').count();
-		Preconditions.checkNotNull(placeholders, "Missing placeholders");
-		Preconditions.checkNotNull(types, "Missing data types");
-		Preconditions.checkArgument(count == placeholders.length && count == types.length,
-									"Invalid placeholders, and types data parameters");
-		Preconditions.checkNotNull(columns, "Missing columns");
-
-		StringBuilder query = new StringBuilder("SELECT ");
-		for (int i = 0; i < columns.length; i++) {
-			query.append(columns[i]);
-			if (i < columns.length - 1) query.append(", ");
-		}
-
-		query.append(" FROM ").append(table);
-		if (!row.isEmpty()) query.append(" WHERE ").append(row);
-		query.append(";");
-
-		List<String> cols = new ArrayList<>(List.of(columns));
-		if (columns.length == 1 && columns[0].equals("*")) cols = new ArrayList<>(getColumns());
-
-		try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
-
-			if (!row.isEmpty()) preparePlaceholderStatements(statement, placeholders, types, 0);
-
-			ResultSet    resultSet = statement.executeQuery();
-			List<Object> results   = new ArrayList<>();
-
-			Map<String, Class<?>> columnTypes = getColumnTypes(resultSet);
-
-			while (resultSet.next()) {
-				for (String column : cols) {
-					Class<?> columnType = columnTypes.get(column);
-					Object   value      = getValueFromResultSet(resultSet, column, columnType);
-					results.add(value);
-				}
-			}
-
-			return results.toArray();
-		}
-	}
-
-	@Override
-	public List<Object[]> selectAll() throws SQLException {
-		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
-
-		String query = "SELECT * FROM " + table + ";";
-
-		try (PreparedStatement statement = connection.prepareStatement(query)) {
-			ResultSet      resultSet = statement.executeQuery();
-			List<Object[]> results   = new ArrayList<>();
-
-			Map<String, Class<?>> columnTypes = getColumnTypes(resultSet);
-			int                   columnCount = resultSet.getMetaData().getColumnCount();
-
-			while (resultSet.next()) {
-				Object[] row = new Object[columnCount];
-				for (int i = 1; i <= columnCount; i++) {
-					String   columnName = resultSet.getMetaData().getColumnName(i);
-					Class<?> columnType = columnTypes.get(columnName);
-					row[i - 1] = getValueFromResultSet(resultSet, columnName, columnType);
-				}
-				results.add(row);
-			}
-
-			return results;
-		}
-	}
-
-	@Override
-	public Database update(String row, Object[] rowPlaceholders, int[] rowTypes, String[] columns,
-						   Object[] colPlaceholders, int[] colTypes) throws SQLException {
-		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
-
-		Preconditions.checkNotNull(row, "Missing row");
-		int count = (int) row.chars().filter(c -> c == '?').count();
-		Preconditions.checkNotNull(rowPlaceholders, "Missing row placeholders");
-		Preconditions.checkNotNull(rowTypes, "Missing row types");
-		Preconditions.checkArgument(count == rowPlaceholders.length && count == rowTypes.length,
-									"Invalid row placeholders, and types data parameters");
-
-		Preconditions.checkNotNull(columns, "Missing columns");
-		Preconditions.checkNotNull(colPlaceholders, "Missing columns placeholders");
-		Preconditions.checkNotNull(colTypes, "Missing columns types");
-		Preconditions.checkArgument(columns.length == colPlaceholders.length && columns.length == colTypes.length,
-									"Invalid columns placeholders, and types data parameters");
-
-		StringBuilder query = new StringBuilder("UPDATE ").append(table).append(" SET ");
-		for (int i = 0; i < columns.length; i++) {
-			query.append(columns[i]).append(" = ?");
-			if (i < columns.length - 1) query.append(", ");
-		}
-		query.append(" WHERE ").append(row).append(";");
-
-		try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
-			preparePlaceholderStatements(statement, colPlaceholders, colTypes, 0);
-			if (!row.isEmpty()) preparePlaceholderStatements(statement, rowPlaceholders, rowTypes, columns.length);
-
-			statement.executeUpdate();
-		}
-
-		return this;
-	}
-
-	@Override
-	public int totalRows() throws SQLException {
-		Object[] result = select("", new Object[]{ }, new int[]{ }, new String[]{"COUNT(*)"});
-		if (result.length > 0 && result[0] instanceof Number) {
-			return ((Number) result[0]).intValue();
-		}
-		return 0;
-	}
-
-	@Override
-	public Database delete(String column, Object value, int type) throws SQLException {
-		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
-
-		if (column.isEmpty()) {
-			// Delete all rows - no WHERE clause needed
-			String query = "DELETE FROM " + table + ";";
-			executeUpdate(query);
-		} else {
-			// Use parameterized query to prevent SQL injection
-			String query = "DELETE FROM " + table + " WHERE " + column + " = ?;";
-			try (PreparedStatement statement = connection.prepareStatement(query)) {
-				preparePlaceholderStatements(statement, new Object[]{value}, new int[]{type}, 0);
-				statement.executeUpdate();
-			}
-		}
-
-		return this;
-	}
-
-	@Override
-	public ResultSet executeQuery(String statement) throws SQLException {
-		if (connection == null) throw new SQLException("There is no connection");
-
-		PreparedStatement query = connection.prepareStatement(statement);
-		return query.executeQuery();
-	}
-
-	@Override
-	public void executeUpdate(String statement) throws SQLException {
-		if (connection == null) throw new SQLException("There is no connection");
-
-		try (PreparedStatement query = connection.prepareStatement(statement)) {
-			query.executeUpdate();
-		}
-	}
-
-	@Override
-	public void executeStatement(String statement) throws SQLException {
-		if (connection == null) throw new SQLException("There is no connection");
-
-		try (PreparedStatement query = connection.prepareStatement(statement)) {
-			query.execute();
-		}
-	}
-
-	@Override
 	public List<String> getTables() {
 		return Collections.unmodifiableList(tableNames);
 	}
@@ -449,7 +225,7 @@ public class MySQL implements Database {
 	@Override
 	public List<String> getColumns() throws SQLException {
 		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
+		if (table == null) throw new NullPointerException("Invalid table");
 
 		List<String> columns = new ArrayList<>();
 
@@ -458,37 +234,6 @@ public class MySQL implements Database {
 		}
 
 		return columns;
-	}
-
-	@Override
-	public List<Integer> getColumnsDataType(String[] columns) throws SQLException {
-		if (connection == null) throw new SQLException("There is no connection");
-		Preconditions.checkNotNull(table, "Invalid table");
-
-		StringBuilder query = new StringBuilder("SELECT ");
-		for (int i = 0; i < columns.length; i++) {
-			query.append(columns[i]);
-			if (i < columns.length - 1) query.append(", ");
-		}
-
-		query.append(" FROM ").append(table).append(";");
-
-		List<String> cols = new ArrayList<>(List.of(columns));
-		if (columns.length == 1 && columns[0].equals("*")) cols = new ArrayList<>(getColumns());
-
-		Map<String, Class<?>> columnTypes;
-
-		try (ResultSet resultSet = executeQuery(query.toString())) {
-			columnTypes = getColumnTypes(resultSet);
-		}
-
-		List<Integer> dataTypes = new ArrayList<>();
-		for (String columnName : cols) {
-			Class<?> columnType = columnTypes.get(columnName);
-			dataTypes.add(DatabaseUtil.getColumnType(columnType));
-		}
-
-		return dataTypes;
 	}
 
 	@Override

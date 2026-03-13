@@ -96,13 +96,6 @@ public interface Database {
 	void testConnection(String url) throws SQLException;
 
 	/**
-	 * Checks if the class handles connection pool.
-	 *
-	 * @return boolean value.
-	 */
-	boolean handlesConnectionPool();
-
-	/**
 	 * Creates a table for the specified file.
 	 *
 	 * @param values gets an array of string values and executes a query.
@@ -126,6 +119,14 @@ public interface Database {
 	Connection getConnection();
 
 	/**
+	 * Returns the table name currently selected via {@link #table(String)}, or {@code null} if none has been selected
+	 * yet.
+	 *
+	 * @return the active table name.
+	 */
+	String getTable();
+
+	/**
 	 * Changes the name of the table.
 	 *
 	 * @param newName new name of the table.
@@ -133,6 +134,40 @@ public interface Database {
 	 * @throws SQLException the sql exception
 	 */
 	void setTableName(String newName) throws SQLException;
+
+	/**
+	 * Gets all the tables of the specified database.
+	 *
+	 * @return a list of all tables names.
+	 */
+	List<String> getTables();
+
+	/**
+	 * Gets all the columns of the specified table.
+	 *
+	 * @return a list of all column names.
+	 *
+	 * @throws SQLException the sql exception
+	 */
+	List<String> getColumns() throws SQLException;
+
+	/**
+	 * Gets the column data type as a string.
+	 *
+	 * @param columnType the column class
+	 *
+	 * @return the column data type
+	 */
+	String getStringDataType(int columnType, int size);
+
+	/**
+	 * Checks if the class handles connection pool.
+	 *
+	 * @return boolean value.
+	 */
+	default boolean handlesConnectionPool() {
+		return true;
+	}
 
 	/**
 	 * Adds a column to the specified table.<br/><br/>
@@ -154,7 +189,15 @@ public interface Database {
 	 *
 	 * @throws SQLException the sql exception
 	 */
-	Database addColumn(String name, String columType) throws SQLException;
+	default Database addColumn(String name, String columType) throws SQLException {
+		Connection conn = getConnection();
+		if (conn == null) throw new SQLException("There is no connection");
+		String t = getTable();
+		if (t == null) throw new SQLException("No table selected");
+
+		executeUpdate("ALTER TABLE " + t + " ADD COLUMN " + name + " " + columType + ";");
+		return this;
+	}
 
 	/**
 	 * Inserts new data to the specified table. Need to know the information of the table to add, or it might throw
@@ -180,7 +223,35 @@ public interface Database {
 	 *
 	 * @throws SQLException the sql exception
 	 */
-	Database insert(String[] columns, Object[] values, int[] types) throws SQLException;
+	default Database insert(String[] columns, Object[] values, int[] types) throws SQLException {
+		Connection conn = getConnection();
+		if (conn == null) throw new SQLException("There is no connection");
+		String t = getTable();
+		if (t == null) throw new SQLException("No table selected");
+		if (columns == null) throw new NullPointerException("Missing columns");
+		if (values == null) throw new NullPointerException("Missing data");
+		if (types == null) throw new NullPointerException("Missing data types");
+		if (columns.length != values.length || columns.length != types.length)
+			throw new IllegalArgumentException("Invalid columns, values, and types data parameters");
+
+		StringBuilder columnNames  = new StringBuilder();
+		StringBuilder placeholders = new StringBuilder();
+		for (int i = 0; i < columns.length; i++) {
+			columnNames.append(columns[i]);
+			placeholders.append("?");
+			if (i < columns.length - 1) {
+				columnNames.append(", ");
+				placeholders.append(", ");
+			}
+		}
+
+		String query = "INSERT INTO " + t + " (" + columnNames + ") VALUES (" + placeholders + ");";
+		try (PreparedStatement statement = conn.prepareStatement(query)) {
+			preparePlaceholderStatements(statement, values, types, 0);
+			statement.executeUpdate();
+		}
+		return this;
+	}
 
 	/**
 	 * Selects data from the table specified and returns an array of objects from that table. It is very important that
@@ -209,7 +280,49 @@ public interface Database {
 	 *
 	 * @throws SQLException the sql exception
 	 */
-	Object[] select(String row, Object[] placeholders, int[] types, String[] columns) throws SQLException;
+	default Object[] select(String row, Object[] placeholders, int[] types, String[] columns) throws SQLException {
+		Connection conn = getConnection();
+		if (conn == null) throw new SQLException("There is no connection");
+		String t = getTable();
+		if (t == null) throw new SQLException("No table selected");
+		if (row == null) throw new NullPointerException("Missing row");
+		int count = (int) row.chars().filter(c -> c == '?').count();
+		if (placeholders == null) throw new NullPointerException("Missing placeholders");
+		if (types == null) throw new NullPointerException("Missing data types");
+		if (count != placeholders.length || count != types.length)
+			throw new IllegalArgumentException("Invalid placeholders, and types data parameters");
+		if (columns == null) throw new NullPointerException("Missing columns");
+
+		StringBuilder query = new StringBuilder("SELECT ");
+		for (int i = 0; i < columns.length; i++) {
+			query.append(columns[i]);
+			if (i < columns.length - 1) query.append(", ");
+		}
+		query.append(" FROM ").append(t);
+		if (!row.isEmpty()) query.append(" WHERE ").append(row);
+		query.append(";");
+
+		List<String> cols = new ArrayList<>(List.of(columns));
+		if (columns.length == 1 && columns[0].equals("*")) cols = new ArrayList<>(getColumns());
+
+		try (PreparedStatement statement = conn.prepareStatement(query.toString())) {
+			if (!row.isEmpty()) preparePlaceholderStatements(statement, placeholders, types, 0);
+
+			ResultSet    resultSet = statement.executeQuery();
+			List<Object> results   = new ArrayList<>();
+
+			Map<String, Class<?>> columnTypes = getColumnTypes(resultSet);
+
+			while (resultSet.next()) {
+				for (String column : cols) {
+					Class<?> columnType = columnTypes.get(column);
+					Object   value      = getValueFromResultSet(resultSet, column, columnType);
+					results.add(value);
+				}
+			}
+			return results.toArray();
+		}
+	}
 
 	/**
 	 * Selects all the rows from the table specified and returns a list of an array of objects from that table.
@@ -218,7 +331,32 @@ public interface Database {
 	 *
 	 * @throws SQLException the sql exception
 	 */
-	List<Object[]> selectAll() throws SQLException;
+	default List<Object[]> selectAll() throws SQLException {
+		Connection conn = getConnection();
+		if (conn == null) throw new SQLException("There is no connection");
+		String t = getTable();
+		if (t == null) throw new SQLException("No table selected");
+
+		String query = "SELECT * FROM " + t + ";";
+		try (PreparedStatement statement = conn.prepareStatement(query)) {
+			ResultSet      resultSet = statement.executeQuery();
+			List<Object[]> results   = new ArrayList<>();
+
+			Map<String, Class<?>> columnTypes = getColumnTypes(resultSet);
+			int                   columnCount = resultSet.getMetaData().getColumnCount();
+
+			while (resultSet.next()) {
+				Object[] row = new Object[columnCount];
+				for (int i = 1; i <= columnCount; i++) {
+					String   columnName = resultSet.getMetaData().getColumnName(i);
+					Class<?> columnType = columnTypes.get(columnName);
+					row[i - 1] = getValueFromResultSet(resultSet, columnName, columnType);
+				}
+				results.add(row);
+			}
+			return results;
+		}
+	}
 
 	/**
 	 * Updates the value in the specified <i>row</i> in the database, additionally the <i>values</i> specified are used
@@ -250,15 +388,49 @@ public interface Database {
 	 *
 	 * @throws SQLException the sql exception
 	 */
-	Database update(String row, Object[] rowPlaceholders, int[] rowTypes, String[] columns, Object[] colPlaceholders,
-					int[] colTypes) throws SQLException;
+	default Database update(String row, Object[] rowPlaceholders, int[] rowTypes, String[] columns,
+							Object[] colPlaceholders, int[] colTypes) throws SQLException {
+		Connection conn = getConnection();
+		if (conn == null) throw new SQLException("There is no connection");
+		String t = getTable();
+		if (t == null) throw new SQLException("No table selected");
+		if (row == null) throw new NullPointerException("Missing row");
+		int count = (int) row.chars().filter(c -> c == '?').count();
+		if (rowPlaceholders == null) throw new NullPointerException("Missing row placeholders");
+		if (rowTypes == null) throw new NullPointerException("Missing row types");
+		if (count != rowPlaceholders.length || count != rowTypes.length)
+			throw new IllegalArgumentException("Invalid row placeholders, and types data parameters");
+		if (columns == null) throw new NullPointerException("Missing columns");
+		if (colPlaceholders == null) throw new NullPointerException("Missing columns placeholders");
+		if (colTypes == null) throw new NullPointerException("Missing columns types");
+		if (columns.length != colPlaceholders.length || columns.length != colTypes.length)
+			throw new IllegalArgumentException("Invalid columns placeholders, and types data parameters");
+
+		StringBuilder query = new StringBuilder("UPDATE ").append(t).append(" SET ");
+		for (int i = 0; i < columns.length; i++) {
+			query.append(columns[i]).append(" = ?");
+			if (i < columns.length - 1) query.append(", ");
+		}
+		query.append(" WHERE ").append(row).append(";");
+
+		try (PreparedStatement statement = conn.prepareStatement(query.toString())) {
+			preparePlaceholderStatements(statement, colPlaceholders, colTypes, 0);
+			if (!row.isEmpty()) preparePlaceholderStatements(statement, rowPlaceholders, rowTypes, columns.length);
+			statement.executeUpdate();
+		}
+		return this;
+	}
 
 	/**
 	 * Gets the total rows of the specified table.
 	 *
 	 * @return length of the table provided.
 	 */
-	int totalRows() throws SQLException;
+	default int totalRows() throws SQLException {
+		Object[] result = select("", new Object[]{ }, new int[]{ }, new String[]{"COUNT(*)"});
+		if (result.length > 0 && result[0] instanceof Number n) return n.intValue();
+		return 0;
+	}
 
 	/**
 	 * To delete all the data from the table leave <i><b>value</i></b> empty, and if you specify the specified row
@@ -273,7 +445,23 @@ public interface Database {
 	 *
 	 * @throws SQLException the sql exception
 	 */
-	Database delete(String column, Object value, int type) throws SQLException;
+	default Database delete(String column, Object value, int type) throws SQLException {
+		Connection conn = getConnection();
+		if (conn == null) throw new SQLException("There is no connection");
+		String t = getTable();
+		if (t == null) throw new SQLException("No table selected");
+
+		if (column.isEmpty()) {
+			executeUpdate("DELETE FROM " + t + ";");
+		} else {
+			String query = "DELETE FROM " + t + " WHERE " + column + " = ?;";
+			try (PreparedStatement statement = conn.prepareStatement(query)) {
+				preparePlaceholderStatements(statement, new Object[]{value}, new int[]{type}, 0);
+				statement.executeUpdate();
+			}
+		}
+		return this;
+	}
 
 	/**
 	 * Executes a query that you wish to execute.
@@ -284,7 +472,12 @@ public interface Database {
 	 *
 	 * @throws SQLException the sql exception
 	 */
-	ResultSet executeQuery(String statement) throws SQLException;
+	default ResultSet executeQuery(String statement) throws SQLException {
+		Connection conn = getConnection();
+		if (conn == null) throw new SQLException("There is no connection");
+		PreparedStatement query = conn.prepareStatement(statement);
+		return query.executeQuery();
+	}
 
 	/**
 	 * Executes an update to table that you wish to execute.
@@ -293,7 +486,13 @@ public interface Database {
 	 *
 	 * @throws SQLException the sql exception
 	 */
-	void executeUpdate(String statement) throws SQLException;
+	default void executeUpdate(String statement) throws SQLException {
+		Connection conn = getConnection();
+		if (conn == null) throw new SQLException("There is no connection");
+		try (PreparedStatement query = conn.prepareStatement(statement)) {
+			query.executeUpdate();
+		}
+	}
 
 	/**
 	 * Execute a statement to the table.
@@ -302,23 +501,13 @@ public interface Database {
 	 *
 	 * @throws SQLException the sql exception
 	 */
-	void executeStatement(String statement) throws SQLException;
-
-	/**
-	 * Gets all the tables of the specified database.
-	 *
-	 * @return a list of all tables names.
-	 */
-	List<String> getTables();
-
-	/**
-	 * Gets all the columns of the specified table.
-	 *
-	 * @return a list of all column names.
-	 *
-	 * @throws SQLException the sql exception
-	 */
-	List<String> getColumns() throws SQLException;
+	default void executeStatement(String statement) throws SQLException {
+		Connection conn = getConnection();
+		if (conn == null) throw new SQLException("There is no connection");
+		try (PreparedStatement query = conn.prepareStatement(statement)) {
+			query.execute();
+		}
+	}
 
 	/**
 	 * Gets columns data type.
@@ -329,16 +518,110 @@ public interface Database {
 	 *
 	 * @throws SQLException the sql exception
 	 */
-	List<Integer> getColumnsDataType(String[] columns) throws SQLException;
+	default List<Integer> getColumnsDataType(String[] columns) throws SQLException {
+		Connection conn = getConnection();
+		if (conn == null) throw new SQLException("There is no connection");
+		String t = getTable();
+		if (t == null) throw new SQLException("No table selected");
+
+		StringBuilder query = new StringBuilder("SELECT ");
+		for (int i = 0; i < columns.length; i++) {
+			query.append(columns[i]);
+			if (i < columns.length - 1) query.append(", ");
+		}
+		query.append(" FROM ").append(t).append(";");
+
+		List<String> cols = new ArrayList<>(List.of(columns));
+		if (columns.length == 1 && columns[0].equals("*")) cols = new ArrayList<>(getColumns());
+
+		Map<String, Class<?>> columnTypes;
+		try (ResultSet resultSet = executeQuery(query.toString())) {
+			columnTypes = getColumnTypes(resultSet);
+		}
+
+		List<Integer> dataTypes = new ArrayList<>();
+		for (String columnName : cols) {
+			Class<?> columnType = columnTypes.get(columnName);
+			dataTypes.add(DatabaseUtil.getColumnType(columnType));
+		}
+		return dataTypes;
+	}
 
 	/**
-	 * Gets the column data type as a string.
+	 * Deletes rows matching all supplied conditions combined with AND.
 	 *
-	 * @param columnType the column class
+	 * <p>The {@code whereClause} must use {@code ?} placeholders for every value, e.g.
+	 * {@code "uuid = ? AND active = ?"}. Builders such as {@link me.luckyraven.persistence.database.query.QueryBuilder}
+	 * construct this string automatically so callers rarely need to call this method directly.
 	 *
-	 * @return the column data type
+	 * @param whereClause parameterized WHERE expression (without the "WHERE" keyword).
+	 * @param placeholders values bound to the {@code ?} placeholders in order.
+	 * @param types JDBC type constants from {@link java.sql.Types} for each placeholder.
+	 *
+	 * @return this database instance.
+	 *
+	 * @throws SQLException the sql exception
 	 */
-	String getStringDataType(int columnType, int size);
+	default Database delete(String whereClause, Object[] placeholders, int[] types) throws SQLException {
+		Connection conn = getConnection();
+		if (conn == null) throw new SQLException("There is no connection");
+		String currentTable = getTable();
+		if (currentTable == null) throw new SQLException("No table selected");
+
+		String query = "DELETE FROM " + currentTable + " WHERE " + whereClause + ";";
+		try (PreparedStatement statement = conn.prepareStatement(query)) {
+			preparePlaceholderStatements(statement, placeholders, types, 0);
+			statement.executeUpdate();
+		}
+		return this;
+	}
+
+	/**
+	 * Selects all rows that match the given WHERE conditions and returns each row as a separate {@code Object[]}. This
+	 * complements {@link #selectAll()} with optional filtering.
+	 *
+	 * <p>Pass an empty {@code whereClause} (or call {@link #selectAll()} directly) to retrieve
+	 * every row without filtering.
+	 *
+	 * @param whereClause parameterized WHERE expression (without the "WHERE" keyword).
+	 * @param placeholders values bound to the {@code ?} placeholders in order.
+	 * @param types JDBC type constants from {@link java.sql.Types} for each placeholder.
+	 *
+	 * @return a list of rows; each row is an {@code Object[]} ordered by the table's column definition.
+	 *
+	 * @throws SQLException the sql exception
+	 */
+	default List<Object[]> selectAll(String whereClause, Object[] placeholders, int[] types) throws SQLException {
+		Connection conn = getConnection();
+		if (conn == null) throw new SQLException("There is no connection");
+		String currentTable = getTable();
+		if (currentTable == null) throw new SQLException("No table selected");
+
+		String query = "SELECT * FROM " + currentTable;
+		if (whereClause != null && !whereClause.isEmpty()) query += " WHERE " + whereClause;
+		query += ";";
+
+		try (PreparedStatement statement = conn.prepareStatement(query)) {
+			if (whereClause != null && !whereClause.isEmpty()) preparePlaceholderStatements(statement, placeholders,
+																							types, 0);
+
+			ResultSet             resultSet   = statement.executeQuery();
+			Map<String, Class<?>> columnTypes = getColumnTypes(resultSet);
+			int                   columnCount = resultSet.getMetaData().getColumnCount();
+			List<Object[]>        results     = new ArrayList<>();
+
+			while (resultSet.next()) {
+				Object[] row = new Object[columnCount];
+				for (int i = 1; i <= columnCount; i++) {
+					String   columnName = resultSet.getMetaData().getColumnName(i);
+					Class<?> columnType = columnTypes.get(columnName);
+					row[i - 1] = getValueFromResultSet(resultSet, columnName, columnType);
+				}
+				results.add(row);
+			}
+			return results;
+		}
+	}
 
 	/**
 	 * Prepare placeholder statements by converting the placeholders into their appropriate data type.
