@@ -13,11 +13,35 @@ public final class Logger {
 	private static final Map<String, String> MODULE_CACHE   = new ConcurrentHashMap<>();
 	private static final String              DEFAULT_MODULE = "Unknown";
 
+	/**
+	 * True when running inside a live Spigot/Paper server.
+	 *
+	 * <p>Spigot's log4j2 pattern wraps the logger name in brackets automatically, e.g.
+	 * {@code [%logger]}. In that environment the name is stored as {@code "module] [Class"} so the server's outer
+	 * brackets complete the display to {@code [module] [Class]}.
+	 *
+	 * <p>Outside Spigot (tests, standalone tools) no outer brackets are added, so they are
+	 * included in the name directly: {@code "[module] [Class]"}.
+	 */
+	private static final boolean IN_SPIGOT = detectSpigot();
+
 	private Logger() { }
 
 	public static org.apache.logging.log4j.Logger getLogger(Class<?> clazz) {
 		String moduleName = resolveModuleName(clazz);
-		return LogManager.getLogger(moduleName + "] [" + clazz.getSimpleName());
+		String loggerName = IN_SPIGOT ?
+							moduleName + "] [" + clazz.getSimpleName() :
+							"[" + moduleName + "] [" + clazz.getSimpleName() + "]";
+		return LogManager.getLogger(loggerName);
+	}
+
+	private static boolean detectSpigot() {
+		try {
+			Class<?> bukkit = Class.forName("org.bukkit.Bukkit");
+			return bukkit.getMethod("getServer").invoke(null) != null;
+		} catch (Exception ignored) {
+			return false;
+		}
 	}
 
 	private static String resolveModuleName(Class<?> clazz) {
