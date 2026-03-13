@@ -9,6 +9,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -54,9 +55,9 @@ public abstract class AbstractRepository<T> implements IRepository<T> {
 
 	@Override
 	public Collection<T> loadAll() {
-		AtomicReference<Collection<T>> collection = new AtomicReference<>();
+		AtomicReference<Collection<T>> collection = new AtomicReference<>(Collections.emptyList());
 
-		databaseHelper.runQueriesAsync(database -> collection.set(doLoadAll()));
+		databaseHelper.runQueries(database -> collection.set(doLoadAll()));
 
 		return collection.get();
 	}
