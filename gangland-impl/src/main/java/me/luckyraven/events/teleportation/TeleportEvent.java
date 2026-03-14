@@ -1,6 +1,10 @@
-package me.luckyraven.data.account.user;
+package me.luckyraven.events.teleportation;
 
 import lombok.Getter;
+import lombok.Setter;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.teleportation.Waypoint;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
@@ -8,19 +12,21 @@ import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 @Getter
-public class UserDataInitEvent extends Event implements Cancellable {
+@Setter
+public class TeleportEvent extends Event implements Cancellable {
 
 	private static final HandlerList handler = new HandlerList();
 
 	private final User<Player> user;
-	private final Player       player;
+	private final Location from;
+	private final Waypoint waypoint;
 
 	private boolean cancelled;
 
-	public UserDataInitEvent(boolean async, User<Player> user) {
-		super(async);
+	public TeleportEvent(User<Player> user, Location from, Waypoint to) {
 		this.user      = user;
-		this.player    = user.getUser();
+		this.from      = from;
+		this.waypoint  = to;
 		this.cancelled = false;
 	}
 

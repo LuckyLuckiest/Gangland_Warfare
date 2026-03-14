@@ -1,7 +1,7 @@
 package me.luckyraven.listener.inventory;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.data.account.user.UserDataInitEvent;
+import me.luckyraven.events.user.UserDataInitEvent;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.util.item.unique.UniqueItem;
 import me.luckyraven.util.item.unique.UniqueItemUtil;

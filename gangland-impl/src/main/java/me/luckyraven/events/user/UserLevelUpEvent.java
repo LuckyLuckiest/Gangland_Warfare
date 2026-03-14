@@ -1,7 +1,9 @@
-package me.luckyraven.feature.level;
+package me.luckyraven.events.user;
 
 import lombok.Getter;
 import me.luckyraven.data.account.user.User;
+import me.luckyraven.events.level.LevelUpEvent;
+import me.luckyraven.features.level.Level;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,26 +14,14 @@ public class UserLevelUpEvent extends LevelUpEvent {
 	@Getter
 	private final User<?> user;
 
-	private boolean cancelled;
-
-	public UserLevelUpEvent(User<?> user, Level level) {
-		super(level);
+	public UserLevelUpEvent(boolean async, User<?> user, Level level) {
+		super(async, level);
 
 		this.user = user;
 	}
 
 	public static HandlerList getHandlerList() {
 		return handler;
-	}
-
-	@Override
-	public boolean isCancelled() {
-		return cancelled;
-	}
-
-	@Override
-	public void setCancelled(boolean cancel) {
-		this.cancelled = cancel;
 	}
 
 	@NotNull

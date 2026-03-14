@@ -226,7 +226,7 @@ public class EntityDamage implements Listener {
 		bounty.setAmount(bounty.getAmount() + autoBounty);
 
 		// Start bounty timer if enabled
-		BountyEvent bountyEvent = new BountyEvent(true, bounty);
+		BountyEvent bountyEvent = new UserBountyEvent(true, damagerUser);
 		if (SettingAddon.isBountyTimerEnabled() && bounty.getAmount() < SettingAddon.getBountyTimerMax()) {
 			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser,
 												   gangland.getInitializer().getBountySettings());
@@ -244,8 +244,9 @@ public class EntityDamage implements Listener {
 	}
 
 	private void handleBounty(User<Player> damagerUser) {
-		Bounty      userBounty  = damagerUser.getBounty();
-		BountyEvent bountyEvent = new BountyEvent(true, userBounty);
+		Bounty userBounty   = damagerUser.getBounty();
+		double eachKill     = SettingAddon.getBountyEachKillValue();
+		double scaledBounty = userBounty.calculateLevelScaledBounty(eachKill, damagerUser.getLevel().getLevelValue());
 
 		BountyEvent bountyEvent = new UserBountyEvent(true, damagerUser, scaledBounty);
 

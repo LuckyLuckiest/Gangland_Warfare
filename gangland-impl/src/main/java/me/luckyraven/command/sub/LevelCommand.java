@@ -112,7 +112,7 @@ public final class LevelCommand extends CommandHandler {
 
 			switch (args[2].toLowerCase()) {
 				case "add" -> {
-					LevelUpEvent event = new UserLevelUpEvent(user, user.getLevel());
+					LevelUpEvent event = new UserLevelUpEvent(false, user, user.getLevel());
 
 					user.getLevel().addExperience(argAmount, event);
 				}
@@ -161,7 +161,7 @@ public final class LevelCommand extends CommandHandler {
 
 			switch (args[1].toLowerCase()) {
 				case "add" -> {
-					LevelUpEvent event = new UserLevelUpEvent(user, user.getLevel());
+					LevelUpEvent event = new UserLevelUpEvent(false, user, user.getLevel());
 					levels = user.getLevel().addLevels(argAmount, event);
 				}
 				case "remove" -> levels = user.getLevel().removeLevels(argAmount);

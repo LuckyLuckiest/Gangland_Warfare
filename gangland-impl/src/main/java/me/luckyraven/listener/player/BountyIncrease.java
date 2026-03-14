@@ -2,9 +2,11 @@ package me.luckyraven.listener.player;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.Gangland;
+import me.luckyraven.copsncrooks.events.bounty.BountyEvent;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.user.User;
-import me.luckyraven.feature.bounty.BountyEvent;
+import me.luckyraven.events.gang.GangBountyEvent;
+import me.luckyraven.events.user.UserBountyEvent;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.listener.ListenerHandler;
@@ -16,7 +18,6 @@ import org.bukkit.event.Listener;
 import java.util.List;
 import java.util.Objects;
 
-
 @ListenerHandler
 @RequiredArgsConstructor
 public class BountyIncrease implements Listener {
@@ -24,28 +25,34 @@ public class BountyIncrease implements Listener {
 	private final Gangland gangland;
 
 	@EventHandler
-	public void onBountyIncrease(BountyEvent event) {
-		User<? extends OfflinePlayer> user = event.getUserBounty();
+	public void onUserBountyIncrease(UserBountyEvent event) {
+		User<? extends OfflinePlayer> user = event.getUser();
 
-		String string          = MessageAddon.BOUNTY_INCREMENT.toString();
-		String amount          = SettingAddon.formatDouble(event.getAmountApplied());
-		String bountyIncrement = string.replace("%bounty%", amount);
+		String bountyIncrement = getBountyIncrementMessage(event);
 
-		if (user != null && user.getUser().isOnline()) {
-			if (!event.isCancelled()) {
-				Objects.requireNonNull(user.getUser().getPlayer()).sendMessage(bountyIncrement);
-			}
-		}
+		if (!user.getUser().isOnline()) return;
+		if (event.isCancelled()) return;
 
-		Gang gang = event.getGangBounty();
+		Objects.requireNonNull(user.getUser().getPlayer()).sendMessage(bountyIncrement);
+	}
+
+	@EventHandler
+	public void onGangBountyIncrease(GangBountyEvent event) {
+		Gang gang = event.getGang();
 
 		if (gang == null || event.isCancelled()) return;
 
 		List<User<Player>> onlineMembers = gang.getOnlineMembers(gangland.getInitializer().getUserManager());
 
-		for (User<Player> member : onlineMembers) {
-			member.getUser().sendMessage(bountyIncrement);
-		}
+		String bountyIncrement = getBountyIncrementMessage(event);
+
+		onlineMembers.forEach(member -> member.getUser().sendMessage(bountyIncrement));
+	}
+
+	private String getBountyIncrementMessage(BountyEvent event) {
+		String string = MessageAddon.BOUNTY_INCREMENT.toString();
+		String amount = SettingAddon.formatDouble(event.getAmountApplied());
+		return string.replace("%bounty%", amount);
 	}
 
 }

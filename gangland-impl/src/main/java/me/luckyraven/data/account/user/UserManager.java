@@ -22,6 +22,7 @@ import me.luckyraven.feature.bounty.BountyEvent;
 import me.luckyraven.feature.bounty.BountyExecutor;
 import me.luckyraven.feature.level.Level;
 import me.luckyraven.feature.wanted.WantedExecutor;
+import me.luckyraven.events.user.UserBountyEvent;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.repository.IRepository;
@@ -138,13 +139,12 @@ public class UserManager<T extends OfflinePlayer> {
 			if (!user.getUser().isOnline()) return;
 
 			if (userBounty.hasBounty() && SettingAddon.isBountyTimerEnabled()) {
-				BountyEvent bountyEvent = new BountyEvent(true, userBounty);
-
-				bountyEvent.setUserBounty(user);
+				BountyEvent bountyEvent = new UserBountyEvent(true, user);
 
 				if (userBounty.getAmount() < SettingAddon.getBountyTimerMax()) {
-					Executor executor = new BountyExecutor(gangland, bountyEvent, user);
-					Timer    timer    = executor.createTimer();
+					Executor executor = new BountyExecutor(gangland, bountyEvent, user,
+														   gangland.getInitializer().getBountySettings());
+					Timer timer = executor.createTimer();
 
 					timer.start(true);
 				}

@@ -1,7 +1,7 @@
 import me.luckyraven.data.account.user.User;
-import me.luckyraven.feature.level.Level;
-import me.luckyraven.feature.level.LevelUpEvent;
-import me.luckyraven.feature.level.UserLevelUpEvent;
+import me.luckyraven.events.level.LevelUpEvent;
+import me.luckyraven.events.user.UserLevelUpEvent;
+import me.luckyraven.features.level.Level;
 
 import java.util.Scanner;
 
@@ -49,7 +49,7 @@ public class LevelTester {
 						amount = 0;
 					}
 
-					LevelUpEvent event = new UserLevelUpEvent(new User<>(any(), any()), level);
+					LevelUpEvent event = new UserLevelUpEvent(false, new User<>(any(), any()), level);
 					System.out.printf("Added %d experience level.\n", level.addLevels(amount, event));
 				}
 				case 2 -> {

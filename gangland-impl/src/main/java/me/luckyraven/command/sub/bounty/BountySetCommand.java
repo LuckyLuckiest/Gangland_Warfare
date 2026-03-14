@@ -4,10 +4,11 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
+import me.luckyraven.copsncrooks.bounty.Bounty;
+import me.luckyraven.copsncrooks.events.bounty.BountyEvent;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.feature.bounty.Bounty;
-import me.luckyraven.feature.bounty.BountyEvent;
+import me.luckyraven.events.user.UserBountyEvent;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
@@ -86,15 +87,11 @@ class BountySetCommand extends SubArgument {
 			if (user == null) return;
 
 			Bounty      userBounty  = user.getBounty();
-			BountyEvent bountyEvent = new BountyEvent(false, userBounty);
-
-			bountyEvent.setUserBounty(user);
+			BountyEvent bountyEvent = new UserBountyEvent(false, user, value);
 
 			if (userBounty.size() == 0) user.sendMessage(MessageAddon.BOUNTY_SET.toString());
 
 			// call the event
-			bountyEvent.setAmountApplied(value);
-
 			if (sender instanceof Player senderPlayer) {
 				User<Player> userSender = userManager.getUser(senderPlayer);
 
