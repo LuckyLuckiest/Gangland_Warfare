@@ -75,10 +75,8 @@ public final class CreateAccount implements Listener {
 			userManager.initializeUserData(user, userTable, bankTable);
 
 			// Bukkit events must be fired on the main thread
-			Bukkit.getScheduler().runTask(gangland, () -> {
-				UserDataInitEvent userDataInitEvent = new UserDataInitEvent(true, user);
-				Bukkit.getPluginManager().callEvent(userDataInitEvent);
-			});
+			UserDataInitEvent userDataInitEvent = new UserDataInitEvent(true, user);
+			Bukkit.getPluginManager().callEvent(userDataInitEvent);
 		});
 
 		// need to check if the user already registered
