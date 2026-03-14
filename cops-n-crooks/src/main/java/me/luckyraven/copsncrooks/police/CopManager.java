@@ -1,5 +1,6 @@
 package me.luckyraven.copsncrooks.police;
 
+import lombok.Getter;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.police.config.CopConfigProvider;
 import me.luckyraven.copsncrooks.police.npc.CopNpc;
@@ -22,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class CopManager {
 
 	private final JavaPlugin        plugin;
+	@Getter
 	private final CopSpawnManager   spawnManager;
 	private final TargetingManager  targetingManager;
 	private final CopConfigProvider configProvider;
@@ -248,20 +250,24 @@ public class CopManager {
 
 			int targetCount  = spawnManager.getTargetCopCount(wantedLevel);
 			int currentCount = cops.size();
+			int tier         = spawnManager.getTierForWantedLevel(wantedLevel);
 
-			if (currentCount < targetCount && currentCount < configProvider.getMaxCopsPerPlayer()) {
-				int    tier   = spawnManager.getTierForWantedLevel(wantedLevel);
+			// Spawn all missing cops in one pass so a full wipe is recovered in a single interval
+			while (currentCount < targetCount && currentCount < configProvider.getMaxCopsPerPlayer()) {
 				CopNpc newCop = spawnManager.spawnNearPlayer(player, tier);
-				if (newCop != null) {
-					newCop.setTargetPlayerId(playerId);
+				if (newCop == null) break; // no valid location found — stop trying this interval
 
-					// New spawns start in IDLE, unless there's an active combat alert
-					if (hasCombatAlert(playerId)) {
-						newCop.transitionTo(CopState.COMBAT);
-					}
+				newCop.setTargetPlayerId(playerId);
 
-					cops.add(newCop);
+				// New spawns pursue immediately; escalate to combat if a combat alert is active
+				if (hasCombatAlert(playerId)) {
+					newCop.transitionTo(CopState.COMBAT);
+				} else {
+					newCop.transitionTo(CopState.PURSUING);
 				}
+
+				cops.add(newCop);
+				currentCount++;
 			}
 		}, 20L, configProvider.getSpawnCheckRate());
 

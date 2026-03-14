@@ -19,8 +19,9 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class CopSpawnManager {
 
-	private static final double MIN_SPAWN_DISTANCE        = 30.0;
+	private static final double MIN_SPAWN_DISTANCE        = 10.0;
 	private static final double MAX_SPAWN_DISTANCE        = 50.0;
+	private static final double SPAWN_RADIUS_SHRINK_STEP  = 5.0;
 	private static final int    VERTICAL_SEARCH_RANGE     = 10;
 	private static final int    SPAWN_Y_OFFSET            = 0;
 	private static final int    MIN_OPEN_HORIZONTAL_SIDES = 2;
@@ -61,6 +62,10 @@ public class CopSpawnManager {
 		if (spawner != null) {
 			repository.delete(spawner);
 		}
+	}
+
+	public List<Integer> getSpawnerIds() {
+		return new ArrayList<>(spawners.keySet());
 	}
 
 	public List<Location> getSpawnerLocations() {
@@ -205,32 +210,68 @@ public class CopSpawnManager {
 		return candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
 	}
 
+	/**
+	 * Finds a valid spawn location around the player using two phases:
+	 * <ol>
+	 *   <li>Phase 1 — 20 attempts in the preferred 30–50 block ring, restricted to positions behind the player so
+	 *       the NPC does not pop into view.</li>
+	 *   <li>Phase 2 — if phase 1 fails entirely (player is stationary, against a wall, etc.), the ring radius
+	 *       shrinks by {@value SPAWN_RADIUS_SHRINK_STEP} blocks per step down to {@value MIN_SPAWN_DISTANCE} and
+	 *       the behind-player constraint is dropped, giving every loaded angle a fair chance.</li>
+	 * </ol>
+	 */
 	private Location findSpawnLocation(Player player) {
+		// Phase 1: preferred ring, behind-player only
+		for (int attempt = 0; attempt < 20; attempt++) {
+			Location loc = trySingleSpawnAttempt(player, 30.0, MAX_SPAWN_DISTANCE, true);
+			if (loc != null) return loc;
+		}
+
+		// Phase 2: shrink the ring progressively, drop the direction constraint
+		for (double maxDist = MAX_SPAWN_DISTANCE; maxDist >= MIN_SPAWN_DISTANCE; maxDist -= SPAWN_RADIUS_SHRINK_STEP) {
+			double minDist = Math.max(MIN_SPAWN_DISTANCE, maxDist - SPAWN_RADIUS_SHRINK_STEP);
+			for (int attempt = 0; attempt < 15; attempt++) {
+				Location loc = trySingleSpawnAttempt(player, minDist, maxDist, false);
+				if (loc != null) return loc;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Picks one random point in the given distance ring and checks whether it is a valid spawn site.
+	 *
+	 * @param player the target player
+	 * @param minDist minimum radial distance
+	 * @param maxDist maximum radial distance
+	 * @param requireBehind whether the candidate must be outside the player's forward FOV
+	 *
+	 * @return a valid spawn location, or {@code null} if this attempt failed
+	 */
+	@Nullable
+	private Location trySingleSpawnAttempt(Player player, double minDist, double maxDist, boolean requireBehind) {
 		Location          playerLoc = player.getLocation();
 		World             world     = player.getWorld();
 		ThreadLocalRandom random    = ThreadLocalRandom.current();
 
-		for (int attempt = 0; attempt < 20; attempt++) {
-			double angle    = random.nextDouble(0, 2 * Math.PI);
-			double distance = random.nextDouble(MIN_SPAWN_DISTANCE, MAX_SPAWN_DISTANCE);
+		double angle    = random.nextDouble(0, 2 * Math.PI);
+		double distance = minDist >= maxDist ? minDist : random.nextDouble(minDist, maxDist);
 
-			double x = playerLoc.getX() + Math.cos(angle) * distance;
-			double z = playerLoc.getZ() + Math.sin(angle) * distance;
+		double x = playerLoc.getX() + Math.cos(angle) * distance;
+		double z = playerLoc.getZ() + Math.sin(angle) * distance;
 
-			int chunkX = ((int) Math.floor(x)) >> 4;
-			int chunkZ = ((int) Math.floor(z)) >> 4;
+		int chunkX = ((int) Math.floor(x)) >> 4;
+		int chunkZ = ((int) Math.floor(z)) >> 4;
 
-			if (!world.isChunkLoaded(chunkX, chunkZ)) continue;
+		if (!world.isChunkLoaded(chunkX, chunkZ)) return null;
 
-			Location spawnLoc = findGroundNearY(world, x, z, playerLoc.getBlockY() + SPAWN_Y_OFFSET);
-			if (spawnLoc == null) continue;
+		Location spawnLoc = findGroundNearY(world, x, z, playerLoc.getBlockY() + SPAWN_Y_OFFSET);
+		if (spawnLoc == null) return null;
 
-			if (!isSpawnBehindPlayer(spawnLoc, player)) continue;
+		if (requireBehind && !isSpawnBehindPlayer(spawnLoc, player)) return null;
 
-			return spawnLoc;
-		}
-
-		return null;
+		return spawnLoc;
 	}
 
 	/**
