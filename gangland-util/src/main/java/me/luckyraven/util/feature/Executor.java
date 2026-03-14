@@ -1,4 +1,4 @@
-package me.luckyraven.feature;
+package me.luckyraven.util.feature;
 
 import lombok.AccessLevel;
 import lombok.Getter;
