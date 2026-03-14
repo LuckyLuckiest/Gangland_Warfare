@@ -15,6 +15,7 @@ public record CopTierConfig(
 		double speed,
 		double cuffRadius,
 		boolean canUseWeapons,
+		boolean skipCuffing,
 		List<String> weaponNamePool,
 		List<ItemStack> weaponPool,
 		ItemStack helmet,

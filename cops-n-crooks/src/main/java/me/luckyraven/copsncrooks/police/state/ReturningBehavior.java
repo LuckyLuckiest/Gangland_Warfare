@@ -1,5 +1,6 @@
 package me.luckyraven.copsncrooks.police.state;
 
+import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.police.npc.CopNpc;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
 import org.bukkit.Bukkit;
@@ -11,33 +12,42 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Cop navigates back to the nearest spawn station. Once arrived, or after a timeout, the cop despawns — but only when
- * no other player is looking.
+ * Cop navigates back to the nearest registered spawn station. Once arrived, or after a timeout, the cop despawns — but
+ * only when no other player is looking.
+ * <p>
+ * If the target player is freed before the cop reaches its station (e.g. via admin command), the cop immediately
+ * re-engages — returning to {@link CopState#COMBAT} when {@code combatForced} is set, otherwise
+ * {@link CopState#PURSUING}.
  */
 public class ReturningBehavior implements CopBehavior {
 
 	private static final int MAX_RETURN_TICKS = 600; // 30 seconds at 1 tick/tick, scaled by AI tick rate
 
-	private final List<Location>  spawnStations;
-	private final CopSpawnManager spawnManager;
+	private final CopSpawnManager   spawnManager;
+	private final DetainmentService detainmentService;
 
 	private Location selectedStation;
 
-	public ReturningBehavior(List<Location> spawnStations, CopSpawnManager spawnManager) {
-		this.spawnStations = spawnStations;
-		this.spawnManager  = spawnManager;
+	public ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService) {
+		this.spawnManager      = spawnManager;
+		this.detainmentService = detainmentService;
 	}
 
 	@Override
 	public void tick(CopNpc cop, Player target) {
+		// Re-engage if the target has been freed (e.g. admin uncuff command)
+		if (target != null && target.isOnline() && !detainmentService.isRestrained(target)) {
+			cop.transitionTo(cop.isCombatForced() ? CopState.COMBAT : CopState.PURSUING);
+			return;
+		}
+
 		cop.setDespawnTicks(cop.getDespawnTicks() + 1);
 
-		// If we haven't picked a station yet, find the nearest one
+		// Resolve the nearest station once on entry
 		if (selectedStation == null) {
 			selectedStation = findNearestStation(cop);
 		}
 
-		// If there's a station to go to, navigate there
 		if (selectedStation != null) {
 			LivingEntity entity = cop.getEntity();
 
@@ -46,7 +56,6 @@ public class ReturningBehavior implements CopBehavior {
 			double distance = entity.getLocation().distance(selectedStation);
 
 			if (distance <= 3.0) {
-				// Arrived at station — try to despawn
 				tryDespawn(cop);
 				return;
 			}
@@ -54,7 +63,7 @@ public class ReturningBehavior implements CopBehavior {
 			cop.navigateTo(selectedStation);
 		}
 
-		// Timeout — try to despawn regardless of reaching station
+		// Timeout — despawn regardless of whether the station was reached
 		if (cop.getDespawnTicks() >= MAX_RETURN_TICKS) {
 			tryDespawn(cop);
 		}
@@ -74,7 +83,7 @@ public class ReturningBehavior implements CopBehavior {
 	}
 
 	/**
-	 * Attempts to despawn the cop. Only despawns if no other player is directly looking. If visible, keeps waiting.
+	 * Attempts to despawn the cop. Waits if another player is watching, but forces despawn after an extended timeout.
 	 */
 	private void tryDespawn(CopNpc cop) {
 		if (!cop.isValid()) {
@@ -88,12 +97,9 @@ public class ReturningBehavior implements CopBehavior {
 
 		Location copLocation = entity.getLocation();
 
-		// Resolve the cop's target player to exclude from visibility check
 		Player excludePlayer = cop.getTargetPlayerId() != null ? Bukkit.getPlayer(cop.getTargetPlayerId()) : null;
 
-		// Don't despawn if another player is watching
 		if (spawnManager.isVisibleToOtherPlayers(copLocation, excludePlayer)) {
-			// Still visible — wait a bit more, but force after extended timeout
 			if (cop.getDespawnTicks() < MAX_RETURN_TICKS * 2) {
 				return;
 			}
@@ -103,21 +109,23 @@ public class ReturningBehavior implements CopBehavior {
 	}
 
 	/**
-	 * Finds the nearest configured spawn station to the cop's current location.
+	 * Finds the nearest registered spawner location to the cop. Falls back to the cop's original spawn location when no
+	 * spawners are registered in the same world.
 	 */
 	private Location findNearestStation(CopNpc cop) {
-		if (spawnStations == null || spawnStations.isEmpty()) {
-			// Fall back to the cop's original spawn location
+		List<Location> stations = spawnManager.getSpawnerLocations();
+
+		if (stations.isEmpty()) {
 			return cop.getSpawnLocation();
 		}
 
 		LivingEntity entity = cop.getEntity();
 
-		if (entity == null) return null;
+		if (entity == null) return cop.getSpawnLocation();
 
 		Location copLoc = entity.getLocation();
 
-		return spawnStations.stream()
+		return stations.stream()
 				.filter(loc -> loc.getWorld() != null && loc.getWorld().equals(copLoc.getWorld()))
 				.min(Comparator.comparingDouble(loc -> loc.distanceSquared(copLoc)))
 				.orElse(cop.getSpawnLocation());

@@ -274,6 +274,26 @@ Wanted:
          - 15
          - 20
 
+# +------------+ #
+# | Cops Config| #
+# +------------+ #
+
+# Controls how many cop NPCs spawn per wanted-level star.
+Cops:
+   Count:
+      # Set to true to evaluate the Formula string below instead of the linear Base/Per_Level/Max calculation.
+      Formula_Enabled: false
+      # Formula evaluated when Formula_Enabled is true.
+      # Available variables: level, base, perLevel, max
+      # Example: "base + (level - 1) * perLevel"  (equivalent to the built-in linear formula)
+      Formula: "base + (level - 1) * perLevel"
+      # Cops at wanted level 1 (used for both the linear formula and as the 'base' variable)
+      Base: 2
+      # Additional cops per wanted level above 1 (used for both modes, exposed as 'perLevel')
+      Per_Level: 1
+      # Hard cap — result is always clamped to this value (should not exceed Max_Per_Player in cops.yml)
+      Max: 8
+
 # +-------------+#
 # | Gang Config |#
 # +-------------+#
@@ -320,20 +340,6 @@ Killing_Mob:
 
 # There are different types of entities that can be marked with specific attributes.
 Entity_Marker:
-   Police:
-      Default_Entities:
-         - "PILLAGER"
-      Name: "&8&l[&cPolice&8&l]"
-      Wear:
-         - "LEATHER_HELMET:blue"
-         - "IRON_BOOTS"
-         - "weapon:baton"
-      Drops:
-         Experience:
-            Minimum: 15
-            Maximum: 60
-         Items:
-            - "weapon:baton"
    Civilian:
       Default_Entities:
          - "VILLAGER"

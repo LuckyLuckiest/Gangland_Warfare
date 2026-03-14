@@ -33,7 +33,11 @@ public class PursuingBehavior implements CopBehavior {
 		double distance = cop.distanceTo(target);
 
 		if (distance <= cuffRadius && cop.hasLineOfSight(target)) {
-			cop.transitionTo(CopState.CUFFING);
+			if (cop.getTierConfig().skipCuffing() || cop.isCombatForced()) {
+				cop.transitionTo(CopState.COMBAT);
+			} else {
+				cop.transitionTo(CopState.CUFFING);
+			}
 			return;
 		}
 
