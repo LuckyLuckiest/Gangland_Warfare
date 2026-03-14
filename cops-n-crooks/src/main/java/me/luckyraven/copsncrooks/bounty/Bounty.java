@@ -1,4 +1,4 @@
-package me.luckyraven.feature.bounty;
+package me.luckyraven.copsncrooks.bounty;
 
 import lombok.AccessLevel;
 import lombok.Data;
