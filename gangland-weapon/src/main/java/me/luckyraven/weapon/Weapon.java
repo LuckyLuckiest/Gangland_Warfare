@@ -319,7 +319,8 @@ public class Weapon implements Cloneable, Comparable<Weapon> {
 	private void applyEffect(Player player, XPotion potion, int amplifier) {
 		XPotion.of(potion.name())
 			   .map(XPotion::getPotionEffectType)
-			   .ifPresent(type -> player.addPotionEffect(new PotionEffect(type, Integer.MAX_VALUE, amplifier)));
+			   .ifPresent(type -> player.addPotionEffect(
+					   new PotionEffect(type, PotionEffect.INFINITE_DURATION, amplifier)));
 	}
 
 	private void removeEffect(Player player, XPotion potion) {

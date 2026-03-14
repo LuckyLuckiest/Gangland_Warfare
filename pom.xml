@@ -182,6 +182,12 @@
                 <artifactId>citizens-main</artifactId>
                 <version>${citizen.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>com.github.cryptomorin</groupId>
+                <artifactId>XSeries</artifactId>
+                <version>${xseries.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

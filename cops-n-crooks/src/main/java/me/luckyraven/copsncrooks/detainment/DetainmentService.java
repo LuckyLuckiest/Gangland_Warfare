@@ -1,5 +1,6 @@
 package me.luckyraven.copsncrooks.detainment;
 
+import com.cryptomorin.xseries.XPotion;
 import lombok.Getter;
 import me.luckyraven.copsncrooks.jail.JailManager;
 import me.luckyraven.copsncrooks.jail.JailService;
@@ -10,7 +11,6 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
 import java.util.Map;
 import java.util.UUID;
@@ -150,14 +150,23 @@ public class DetainmentService {
 	private void applyVisuals(Player player, boolean forceInventoryClose) {
 		if (forceInventoryClose) player.closeInventory();
 
-		player.addPotionEffect(
-				new PotionEffect(PotionEffectType.SLOWNESS, PotionEffect.INFINITE_DURATION, 4, false, false, false));
-		player.addPotionEffect(
-				new PotionEffect(PotionEffectType.BLINDNESS, PotionEffect.INFINITE_DURATION, 0, false, false, false));
+		applyEffect(player, XPotion.SLOWNESS, 4);
+		applyEffect(player, XPotion.BLINDNESS, 0);
 	}
 
 	private void clearVisuals(Player player) {
-		player.removePotionEffect(PotionEffectType.SLOWNESS);
-		player.removePotionEffect(PotionEffectType.BLINDNESS);
+		removeEffect(player, XPotion.SLOWNESS);
+		removeEffect(player, XPotion.BLINDNESS);
+	}
+
+	private void applyEffect(Player player, XPotion potion, int amplifier) {
+		XPotion.of(potion.name())
+			   .map(XPotion::getPotionEffectType)
+			   .ifPresent(type -> player.addPotionEffect(
+					   new PotionEffect(type, PotionEffect.INFINITE_DURATION, amplifier)));
+	}
+
+	private void removeEffect(Player player, XPotion potion) {
+		XPotion.of(potion.name()).map(XPotion::getPotionEffectType).ifPresent(player::removePotionEffect);
 	}
 }
