@@ -44,13 +44,13 @@ public class CopSpawnerRepository extends AbstractRepository<CopSpawner> {
 			double x         = (double) result[v++];
 			double y         = (double) result[v++];
 			double z         = (double) result[v++];
-			float  yaw       = (float) result[v++];
-			float  pitch     = (float) result[v];
+			double yaw       = (double) result[v++];
+			double pitch     = (double) result[v];
 
 			World world = Bukkit.getWorld(worldName);
 
 			if (world == null) continue;
-			Location location = new Location(world, x, y, z, yaw, pitch);
+			Location location = new Location(world, x, y, z, (float) yaw, (float) pitch);
 
 			copSpawners.add(new CopSpawner(id, location));
 

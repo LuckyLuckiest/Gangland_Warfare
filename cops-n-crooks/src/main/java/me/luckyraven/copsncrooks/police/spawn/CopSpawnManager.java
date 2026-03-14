@@ -41,7 +41,7 @@ public class CopSpawnManager {
 		this.repository     = repository;
 		this.spawners       = new ConcurrentHashMap<>();
 
-		loadStoredSpawners();
+		reloadSpawners();
 
 		repository.setDataSupplier(spawners::values);
 	}
