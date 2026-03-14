@@ -19,7 +19,7 @@ import java.util.Optional;
 
 @ListenerHandler
 @RequiredArgsConstructor
-public class SignInteract implements Listener {
+public class PlayerSignInteract implements Listener {
 
 	private final SignInteractionService signService;
 	private final SignInformation        information;

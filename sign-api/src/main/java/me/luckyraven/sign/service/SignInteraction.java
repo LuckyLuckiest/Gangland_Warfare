@@ -5,7 +5,6 @@ import me.luckyraven.sign.handler.SignHandler;
 import me.luckyraven.sign.model.ParsedSign;
 import me.luckyraven.sign.registry.SignTypeDefinition;
 import me.luckyraven.sign.registry.SignTypeRegistry;
-import me.luckyraven.util.ChatUtil;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -14,11 +13,14 @@ import java.util.Optional;
 public class SignInteraction extends SignInteractionService {
 
 	private final SignTypeRegistry registry;
+	private final SignInformation  information;
 
-	public SignInteraction(String prefix, SignTypeRegistry registry, SignFormatterService formatterService) {
+	public SignInteraction(String prefix, SignTypeRegistry registry, SignFormatterService formatterService,
+						   SignInformation information) {
 		super(prefix, registry, formatterService);
 
-		this.registry = registry;
+		this.registry    = registry;
+		this.information = information;
 	}
 
 	@Override
@@ -26,7 +28,7 @@ public class SignInteraction extends SignInteractionService {
 		Optional<SignTypeDefinition> definition = registry.getDefinition(sign.getSignType());
 
 		if (definition.isEmpty()) {
-			player.sendMessage(ChatUtil.errorMessage("Invalid sign type!"));
+			information.sendError(player, "Invalid sign type!");
 			return false;
 		}
 
@@ -34,7 +36,7 @@ public class SignInteraction extends SignInteractionService {
 		SignHandler        handler = def.getHandler();
 
 		if (!handler.canHandle(player, sign)) {
-			player.sendMessage(ChatUtil.errorMessage("Might be missing something!"));
+			information.sendError(player, "Might be missing something!");
 			return false;
 		}
 
@@ -43,11 +45,11 @@ public class SignInteraction extends SignInteractionService {
 		boolean overallSuccess = true;
 		for (AspectResult result : results) {
 			if (!result.isSuccess()) {
-				player.sendMessage(ChatUtil.errorMessage(result.getMessage()));
+				information.sendError(player, result.getMessage());
 				overallSuccess = false;
 				break;
 			} else if (result.getMessage() != null && !result.getMessage().isEmpty()) {
-				player.sendMessage(ChatUtil.prefixMessage(result.getMessage()));
+				information.sendSuccess(player, result.getMessage());
 			}
 		}
 
