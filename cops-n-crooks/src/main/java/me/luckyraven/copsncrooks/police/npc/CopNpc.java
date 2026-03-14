@@ -31,12 +31,13 @@ import java.util.concurrent.ThreadLocalRandom;
 public class CopNpc {
 
 	private static final int    NAVIGATION_RECALCULATION_TICKS = 10;
-	private static final int    STUCK_CHECK_INTERVAL_TICKS     = 10;
-	private static final int    MAX_STUCK_CHECKS               = 4;
+	private static final int    STUCK_CHECK_INTERVAL_TICKS     = 5;
+	private static final int    MAX_STUCK_CHECKS               = 3;
+	private static final int    MAX_HOPELESS_STUCK_CHECKS      = 6;   // give up navigating after ~3 s of no progress
+	private static final double HOPELESS_CLOSE_THRESHOLD       = 8.0; // within this range Citizens can handle it
 	private static final double MIN_PROGRESS_DISTANCE_SQUARED  = 0.75 * 0.75;
 	private static final double RANGED_MIN_DISTANCE            = 7.0;
 	private static final double RANGED_MAX_DISTANCE            = 12.0;
-	private static final double RANGED_IDEAL_DISTANCE          = 9.0;
 
 	@Getter
 	private final NPC                        npc;
@@ -68,6 +69,7 @@ public class CopNpc {
 	private int      navigationThrottleTicks;
 	private int      stuckSampleTicks;
 	private int      consecutiveStuckChecks;
+	private boolean  navigationHopeless;
 
 	public CopNpc(NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors, Location spawnLocation) {
 		this.npc                     = npc;
@@ -191,19 +193,31 @@ public class CopNpc {
 	}
 
 	/**
-	 * Returns whether the current navigation appears stuck.
+	 * Returns whether the current navigation appears stuck (NPC has made no progress for several samples).
 	 */
 	public boolean isNavigationStuck() {
 		return consecutiveStuckChecks >= MAX_STUCK_CHECKS;
 	}
 
 	/**
-	 * Resolves the best navigation target while pursuing a player. Uses a direct approach first, then a circular search
-	 * around the player, and broadens the search if navigation has been stuck.
+	 * Returns whether the navigation target appears permanently unreachable. Latches to {@code true} once the threshold
+	 * is first crossed and stays {@code true} until {@link #stopNavigation()} is called, so that a small fallback
+	 * movement does not reset the counter and restart the full wait.
+	 */
+	public boolean isNavigationHopeless() {
+		if (!navigationHopeless && consecutiveStuckChecks >= MAX_HOPELESS_STUCK_CHECKS) {
+			navigationHopeless = true;
+		}
+		return navigationHopeless;
+	}
+
+	/**
+	 * Resolves the navigation target while pursuing a player. Returns a standable location at the player's XZ so that
+	 * Citizens' own A* pathfinder handles all obstacle avoidance and terrain navigation.
 	 *
 	 * @param player the target player
 	 *
-	 * @return a safe pursuit target, or the player's location if no better fallback was found
+	 * @return a standable target near the player, or the player's raw location as a fallback
 	 */
 	public Location resolvePursuitLocation(Player player) {
 		if (!isValid() || player == null) return null;
@@ -219,22 +233,58 @@ public class CopNpc {
 			return playerLocation;
 		}
 
-		if (isUsingRangedWeapon()) {
-			Location ringApproach = findBestRingApproachLocation(copLocation, playerLocation, 7.0, 12.0, 9.0);
-
-			if (ringApproach != null) {
-				return ringApproach;
-			}
-		}
-
-		Location edgeApproach = findLastReachableGroundBeforeGap(copLocation, playerLocation, 32.0);
-
-		if (edgeApproach != null) {
-			return edgeApproach;
-		}
-
+		// Normalize Y so the cop targets solid ground at the player's XZ; Citizens navigates around obstacles itself
 		Location safePlayerSpot = normalizeToStandableLocation(playerLocation);
 		return safePlayerSpot != null ? safePlayerSpot : playerLocation;
+	}
+
+	/**
+	 * Resolves the best reachable position when normal pathfinding has been declared hopeless. Attempts three
+	 * strategies in order:
+	 * <ol>
+	 *   <li>Gap-walk — advances from the cop toward the player in 0.5-block steps and returns the last safe position
+	 *       before any walkable connection breaks (gap, cliff, void).</li>
+	 *   <li>Line approach — walks from the player outward toward the cop, returning the first safe column.</li>
+	 *   <li>Ring approach — samples positions on a ring around the player and returns the best-scored safe spot.</li>
+	 * </ol>
+	 * If the player is within {@value HOPELESS_CLOSE_THRESHOLD} blocks Citizens navigates the remainder directly.
+	 *
+	 * @param player the target player
+	 *
+	 * @return the closest safely reachable location toward the player, or {@code null} if resolution fails
+	 */
+	public Location resolveHopelessFallbackLocation(Player player) {
+		if (!isValid() || player == null) return null;
+
+		LivingEntity entity = getEntity();
+		if (entity == null) return null;
+
+		Location from = entity.getLocation();
+		Location to   = player.getLocation();
+
+		if (from.getWorld() == null || !from.getWorld().equals(to.getWorld())) return null;
+
+		// Close enough that Citizens can navigate the remaining distance on its own
+		if (from.distanceSquared(to) <= HOPELESS_CLOSE_THRESHOLD * HOPELESS_CLOSE_THRESHOLD) {
+			Location safe = normalizeToStandableLocation(to);
+			return safe != null ? safe : to;
+		}
+
+		// 1. Walk from the cop toward the player and stop at the last safe block before any gap
+		Location gapWalk = findLastReachableGroundBeforeGap(from, to, 32.0);
+		if (gapWalk != null) {
+			return gapWalk;
+		}
+
+		// 2. Try a safe point on the direct line from the player outward toward the cop
+		Location lineApproach = findLineApproachLocation(from, to, 32.0);
+		if (lineApproach != null) {
+			return lineApproach;
+		}
+
+		// 3. Last resort: sample a ring around the player for the best reachable spot
+		double distance = from.distance(to);
+		return findBestRingApproachLocation(from, to, 1.5, Math.min(distance, 16.0), Math.min(distance * 0.5, 8.0));
 	}
 
 	/**
@@ -410,7 +460,7 @@ public class CopNpc {
 
 	/**
 	 * Finds the last safe walkable location on the horizontal path from the cop toward the player. If a gap, cliff, or
-	 * blocked step is encountered, the previous safe location is returned.
+	 * blocked step is encountered the previous safe location is returned.
 	 */
 	private Location findLastReachableGroundBeforeGap(Location from, Location to, double maxDistance) {
 		if (from == null || to == null || from.getWorld() == null || !from.getWorld().equals(to.getWorld())) {
@@ -424,11 +474,10 @@ public class CopNpc {
 			return normalizeToStandableLocation(from);
 		}
 
-		double totalDistance = Math.min(horizontal.length(), maxDistance);
-		Vector direction     = horizontal.normalize().multiply(0.5);
-
-		Location lastSafe = normalizeToStandableLocation(from);
-		Location cursor   = from.clone();
+		double   totalDistance = Math.min(horizontal.length(), maxDistance);
+		Vector   direction     = horizontal.normalize().multiply(0.5);
+		Location lastSafe      = normalizeToStandableLocation(from);
+		Location cursor        = from.clone();
 
 		for (double travelled = 0.5; travelled <= totalDistance; travelled += 0.5) {
 			cursor = cursor.clone().add(direction);
@@ -439,7 +488,7 @@ public class CopNpc {
 				return lastSafe;
 			}
 
-			if (!hasWalkableConnection(lastSafe, standable)) {
+			if (!isWalkableStep(lastSafe, standable)) {
 				return lastSafe;
 			}
 
@@ -450,119 +499,7 @@ public class CopNpc {
 	}
 
 	/**
-	 * Returns whether two nearby locations are connected by walkable ground without requiring an unsafe jump/drop.
-	 */
-	private boolean hasWalkableConnection(Location from, Location to) {
-		if (from == null || to == null || from.getWorld() == null || !from.getWorld().equals(to.getWorld())) {
-			return false;
-		}
-
-		int deltaY = to.getBlockY() - from.getBlockY();
-
-		if (deltaY > 1) {
-			return false;
-		}
-
-		if (deltaY < -1) {
-			return false;
-		}
-
-		double horizontalDistanceSquared = horizontalDistanceSquared(from, to);
-
-		if (horizontalDistanceSquared > 1.25 * 1.25) {
-			return false;
-		}
-
-		return isSafeStandLocation(to);
-	}
-
-	/**
-	 * Returns squared horizontal distance ignoring Y.
-	 */
-	private double horizontalDistanceSquared(Location first, Location second) {
-		double dx = first.getX() - second.getX();
-		double dz = first.getZ() - second.getZ();
-		return dx * dx + dz * dz;
-	}
-
-	/**
-	 * Attempts to convert a raw location into a safe standable destination for an NPC.
-	 */
-	private Location normalizeToStandableLocation(Location location) {
-		if (location == null || location.getWorld() == null) return null;
-
-		World world = location.getWorld();
-		int   baseX = location.getBlockX();
-		int   baseZ = location.getBlockZ();
-
-		for (int yOffset = 2; yOffset >= -4; yOffset--) {
-			Location candidate = new Location(world, baseX + 0.5, location.getY() + yOffset, baseZ + 0.5,
-											  location.getYaw(), location.getPitch());
-
-			if (isSafeStandLocation(candidate)) {
-				return candidate;
-			}
-		}
-
-		return null;
-	}
-
-	/**
-	 * Returns whether the location is safe for the NPC to stand at.
-	 */
-	private boolean isSafeStandLocation(Location location) {
-		if (location == null || location.getWorld() == null) return false;
-
-		Block feet  = location.getBlock();
-		Block head  = feet.getRelative(0, 1, 0);
-		Block below = feet.getRelative(0, -1, 0);
-
-		if (!feet.isPassable() || !head.isPassable()) {
-			return false;
-		}
-
-		if (below.isPassable() || !below.getType().isSolid()) {
-			return false;
-		}
-
-		Material supportType = below.getType();
-
-		if (supportType == Material.LAVA || supportType == Material.WATER || supportType == Material.CACTUS ||
-			supportType == Material.MAGMA_BLOCK) {
-			return false;
-		}
-
-		return !isFrontedByImmediateGap(location);
-	}
-
-	/**
-	 * Returns whether there is an immediate horizontal gap directly in front of the location. This helps prevent
-	 * selecting edge positions that force the cop to step into open air on the next move.
-	 */
-	private boolean isFrontedByImmediateGap(Location location) {
-		LivingEntity entity = getEntity();
-
-		if (entity == null) {
-			return false;
-		}
-
-		Vector facing = entity.getLocation().toVector().subtract(location.toVector());
-		facing.setY(0.0);
-
-		if (facing.lengthSquared() <= 0.0001) {
-			return false;
-		}
-
-		Vector   step  = facing.normalize();
-		Location front = location.clone().add(step.getX(), 0.0, step.getZ());
-
-		Location frontStandable = normalizeToStandableLocation(front);
-
-		return frontStandable == null;
-	}
-
-	/**
-	 * Finds a safe point on the line between the player and the cop.
+	 * Finds a safe point on the line between the player and the cop by walking from the player outward toward the cop.
 	 */
 	private Location findLineApproachLocation(Location copLocation, Location playerLocation, double maxDistance) {
 		Vector direction = copLocation.toVector().subtract(playerLocation.toVector());
@@ -588,7 +525,8 @@ public class CopNpc {
 	}
 
 	/**
-	 * Finds the best safe point on a ring around the player.
+	 * Finds the best safe point on a ring around the player. Positions are scored by distance to the cop, deviation
+	 * from the ideal radius, and — for ranged cops — line-of-sight quality.
 	 */
 	private Location findBestRingApproachLocation(Location copLocation, Location playerLocation, double minRadius,
 												  double maxRadius, double idealRadius) {
@@ -604,7 +542,7 @@ public class CopNpc {
 
 				Location safeCandidate = normalizeToStandableLocation(candidate);
 
-				if (safeCandidate == null) {
+				if (safeCandidate == null || !isSafeStandLocation(safeCandidate)) {
 					continue;
 				}
 
@@ -630,7 +568,7 @@ public class CopNpc {
 	}
 
 	/**
-	 * Returns whether a location has a clear block line to the target.
+	 * Returns whether there is a clear block line from {@code from} to {@code to} (eye-level ray, ignoring fluids).
 	 */
 	private boolean hasClearShot(Location from, Location to) {
 		if (from == null || to == null || from.getWorld() == null || !from.getWorld().equals(to.getWorld())) {
@@ -651,20 +589,142 @@ public class CopNpc {
 	}
 
 	/**
+	 * Returns whether the location has immediate walkable ground and is not sitting on the edge of a gap that would
+	 * force the next movement step into open air.
+	 */
+	private boolean isSafeStandLocation(Location location) {
+		return isBasicSafeStandLocation(location) && !isFrontedByImmediateGap(location);
+	}
+
+	/**
+	 * Returns whether there is an immediate horizontal gap directly ahead of the candidate location. Checks a 1-block
+	 * step in the direction from the location toward the entity over a ±4 block vertical scan.
+	 */
+	private boolean isFrontedByImmediateGap(Location location) {
+		LivingEntity entity = getEntity();
+
+		if (entity == null) {
+			return false;
+		}
+
+		Vector facing = entity.getLocation().toVector().subtract(location.toVector());
+		facing.setY(0.0);
+
+		if (facing.lengthSquared() <= 0.0001) {
+			return false;
+		}
+
+		Vector   step  = facing.normalize();
+		Location front = location.clone().add(step.getX(), 0.0, step.getZ());
+
+		World world = front.getWorld();
+		int   baseX = front.getBlockX();
+		int   baseZ = front.getBlockZ();
+
+		for (int yOffset = 2; yOffset >= -4; yOffset--) {
+			Location candidate = new Location(world, baseX + 0.5, front.getY() + yOffset, baseZ + 0.5);
+			if (isBasicSafeStandLocation(candidate)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Returns whether two normalized standable locations are connected by a single walkable step: at most one block of
+	 * Y change in either direction, within horizontal reach, and the destination passes basic stand checks.
+	 */
+	private boolean isWalkableStep(Location from, Location to) {
+		if (from == null || to == null || from.getWorld() == null || !from.getWorld().equals(to.getWorld())) {
+			return false;
+		}
+
+		int deltaY = to.getBlockY() - from.getBlockY();
+
+		if (deltaY > 1 || deltaY < -1) {
+			return false;
+		}
+
+		double dx = from.getX() - to.getX();
+		double dz = from.getZ() - to.getZ();
+
+		if (dx * dx + dz * dz > 1.25 * 1.25) {
+			return false;
+		}
+
+		return isBasicSafeStandLocation(to);
+	}
+
+	/**
+	 * Attempts to convert a raw location into a safe standable destination for an NPC.
+	 */
+	private Location normalizeToStandableLocation(Location location) {
+		if (location == null || location.getWorld() == null) return null;
+
+		World world = location.getWorld();
+		int   baseX = location.getBlockX();
+		int   baseZ = location.getBlockZ();
+
+		for (int yOffset = 2; yOffset >= -4; yOffset--) {
+			Location candidate = new Location(world, baseX + 0.5, location.getY() + yOffset, baseZ + 0.5,
+											  location.getYaw(), location.getPitch());
+
+			if (isBasicSafeStandLocation(candidate)) {
+				return candidate;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns whether the location is safe for the NPC to stand at: feet and head blocks passable, block below solid
+	 * and not a hazard.
+	 */
+	private boolean isBasicSafeStandLocation(Location location) {
+		if (location == null || location.getWorld() == null) return false;
+
+		Block feet  = location.getBlock();
+		Block head  = feet.getRelative(0, 1, 0);
+		Block below = feet.getRelative(0, -1, 0);
+
+		if (!feet.isPassable() || !head.isPassable()) {
+			return false;
+		}
+
+		if (below.isPassable() || !below.getType().isSolid()) {
+			return false;
+		}
+
+		Material supportType = below.getType();
+
+		return supportType != Material.LAVA && supportType != Material.WATER && supportType != Material.CACTUS &&
+			   supportType != Material.MAGMA_BLOCK;
+	}
+
+	/**
 	 * Updates navigation progress tracking for throttling and stuck detection.
+	 * <p>
+	 * Progress is tracked whenever a navigation target is active, regardless of whether Citizens reports
+	 * {@code isNavigating()} at this instant. Citizens can return {@code false} briefly between path requests (on
+	 * completion or silent failure), which would otherwise reset the stuck counter every tick.
+	 * {@code consecutiveStuckChecks} is only cleared on actual movement progress or an explicit
+	 * {@link #stopNavigation()} call.
 	 */
 	private void updateNavigationProgress() {
 		navigationThrottleTicks++;
-
-		if (!npc.getNavigator().isNavigating()) {
-			resetNavigationTracking();
-			return;
-		}
 
 		LivingEntity entity = getEntity();
 
 		if (entity == null) {
 			resetNavigationTracking();
+			return;
+		}
+
+		// No target active yet — nothing to track; preserve the stuck counter
+		if (lastNavigationTarget == null) {
+			stuckSampleTicks = 0;
 			return;
 		}
 
@@ -694,7 +754,9 @@ public class CopNpc {
 		if (progress < MIN_PROGRESS_DISTANCE_SQUARED) {
 			consecutiveStuckChecks++;
 		} else {
+			// Real movement detected — the obstacle is gone, so clear the hopeless latch too
 			consecutiveStuckChecks = 0;
+			navigationHopeless     = false;
 			lastProgressLocation   = currentLocation.clone();
 		}
 
@@ -709,12 +771,9 @@ public class CopNpc {
 			return false;
 		}
 
-		if (isNavigationStuck()) {
-			return true;
-		}
-
-		if (navigationThrottleTicks >= NAVIGATION_RECALCULATION_TICKS) {
-			return true;
+		// Always respect the throttle — even when stuck — to avoid hammering Citizens with path requests every tick
+		if (navigationThrottleTicks < NAVIGATION_RECALCULATION_TICKS) {
+			return false;
 		}
 
 		if (lastNavigationTarget == null || lastNavigationTarget.getWorld() == null || target.getWorld() == null) {
@@ -725,11 +784,14 @@ public class CopNpc {
 			return true;
 		}
 
-		return lastNavigationTarget.distanceSquared(target) >= 2.25;
+		// Force a fresh path request when stuck (but still throttled above), or when the target moved enough
+		return isNavigationStuck() || lastNavigationTarget.distanceSquared(target) >= 2.25;
 	}
 
 	/**
-	 * Clears transient navigation tracking state.
+	 * Clears transient navigation tracking state. The {@code navigationHopeless} latch is intentionally preserved so
+	 * that state transitions (e.g. pursuing → combat) do not restart the stuck-detection wait when the underlying
+	 * terrain obstacle still exists. The latch is cleared only when real movement progress is detected.
 	 */
 	private void resetNavigationTracking() {
 		lastNavigationTarget    = null;

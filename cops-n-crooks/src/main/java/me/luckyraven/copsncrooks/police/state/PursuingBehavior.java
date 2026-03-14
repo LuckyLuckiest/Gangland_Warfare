@@ -29,8 +29,14 @@ public class PursuingBehavior implements CopBehavior {
 			return;
 		}
 
-		if (cop.shouldHoldPursuitPosition(target)) {
-			cop.stopNavigation();
+		// Ranged cops shoot while closing in — they still navigate to cuff range
+		if (cop.isUsingRangedWeapon() && cop.hasLineOfSight(target) && cop.canAttack()) {
+			cop.attack(target);
+		}
+
+		// When pathfinding has repeatedly failed, scan toward the player to find the closest reachable edge before any gap
+		if (cop.isNavigationHopeless()) {
+			cop.navigateTo(cop.resolveHopelessFallbackLocation(target));
 			return;
 		}
 

@@ -34,7 +34,14 @@ public class CombatBehavior implements CopBehavior {
 			cop.attack(target);
 		}
 
-		cop.navigateTo(target.getLocation());
+		// Ranged cops hold their firing position; melee cops close in
+		if (cop.shouldHoldPursuitPosition(target)) {
+			cop.stopNavigation();
+		} else if (cop.isNavigationHopeless()) {
+			cop.navigateTo(cop.resolveHopelessFallbackLocation(target));
+		} else {
+			cop.navigateTo(target.getLocation());
+		}
 	}
 
 	@Override
