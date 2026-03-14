@@ -548,7 +548,7 @@ public class CopNpc {
 
 	/**
 	 * Finds the best safe point on a ring around the player. Positions are scored by distance to the cop, deviation
-	 * from the ideal radius, and - for ranged cops — line-of-sight quality.
+	 * from the ideal radius, and - for ranged cops - line-of-sight quality.
 	 */
 	private Location findBestRingApproachLocation(Location copLocation, Location playerLocation, double minRadius,
 												  double maxRadius, double idealRadius) {
@@ -744,7 +744,7 @@ public class CopNpc {
 			return;
 		}
 
-		// No target active yet — nothing to track; preserve the stuck counter
+		// No target active yet - nothing to track; preserve the stuck counter
 		if (lastNavigationTarget == null) {
 			stuckSampleTicks = 0;
 			return;
@@ -776,7 +776,7 @@ public class CopNpc {
 		if (progress < MIN_PROGRESS_DISTANCE_SQUARED) {
 			consecutiveStuckChecks++;
 		} else {
-			// Real movement detected — the obstacle is gone, so clear the hopeless latch too
+			// Real movement detected - the obstacle is gone, so clear the hopeless latch too
 			consecutiveStuckChecks = 0;
 			navigationHopeless     = false;
 			lastProgressLocation   = currentLocation.clone();
@@ -793,7 +793,7 @@ public class CopNpc {
 			return false;
 		}
 
-		// Always respect the throttle — even when stuck — to avoid hammering Citizens with path requests every tick
+		// Always respect the throttle - even when stuck - to avoid hammering Citizens with path requests every tick
 		if (navigationThrottleTicks < NAVIGATION_RECALCULATION_TICKS) {
 			return false;
 		}
