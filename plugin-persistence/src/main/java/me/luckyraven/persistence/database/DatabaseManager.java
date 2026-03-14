@@ -63,7 +63,7 @@ public class DatabaseManager {
 					case DatabaseHandler.SQLITE -> type = "MySQL";
 				}
 
-				log.info("Failed to create a backup for '{}' in '{}' database.", type, handler.getSchema());
+				log.warn("Failed to create a backup for '{}' in '{}' database.", type, handler.getSchema());
 			}
 		}
 
