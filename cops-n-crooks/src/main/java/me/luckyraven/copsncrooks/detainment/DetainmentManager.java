@@ -1,6 +1,7 @@
 package me.luckyraven.copsncrooks.detainment;
 
 import lombok.Getter;
+import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.persistence.repository.IRepository;
 
 import java.util.HashMap;
@@ -11,17 +12,19 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DetainmentManager {
 
 	private final IRepository<DetainedPlayer> detainmentRepository;
+	private final JailService                 jailService;
 
 	@Getter
 	private final Map<UUID, DetainedPlayer> detainedPlayers;
 
-	public DetainmentManager(IRepository<DetainedPlayer> detainmentRepository) {
+	public DetainmentManager(IRepository<DetainedPlayer> detainmentRepository, JailService jailService) {
 		this.detainmentRepository = detainmentRepository;
+		this.jailService          = jailService;
 		this.detainedPlayers      = new ConcurrentHashMap<>();
 
 		initialize();
 
-		// Set data supplier so repository can save current state
+		// Set the data supplier so the repository can save the current state
 		detainmentRepository.setDataSupplier(detainedPlayers::values);
 	}
 
@@ -52,10 +55,14 @@ public class DetainmentManager {
 		DetainedPlayer detainedPlayer = detainedPlayers.get(playerId);
 
 		if (detainedPlayer == null) {
-			detainedPlayer = new DetainedPlayer(playerId, 0/* get an empty jail */, state);
+			int jailId = state == DetainmentState.JAILED ? resolveJailId(playerId) : -1;
+			detainedPlayer = new DetainedPlayer(playerId, jailId, state);
 			detainedPlayers.put(playerId, detainedPlayer);
 			detainmentRepository.save(detainedPlayer);
 		} else {
+			if (state == DetainmentState.JAILED && detainedPlayer.getJailId() == -1) {
+				detainedPlayer.setJailId(resolveJailId(playerId));
+			}
 			detainedPlayer.setState(state);
 			detainmentRepository.save(detainedPlayer);
 		}
@@ -78,6 +85,19 @@ public class DetainmentManager {
 	public void reload() {
 		detainedPlayers.clear();
 		initialize();
+	}
+
+	/**
+	 * Resolves the jail ID for a player transitioning to the JAILED state. First checks if {@link JailService} has
+	 * already assigned them to a specific jail (via
+	 * {@link me.luckyraven.copsncrooks.detainment.DetainmentService#jail}), then falls back to the first available
+	 * jail.
+	 */
+	private Integer resolveJailId(UUID playerId) {
+		Integer assigned = jailService.getJailIdForPlayer(playerId);
+		if (assigned != null) return assigned;
+
+		return jailService.findAvailableJailId();
 	}
 
 	private void initialize() {

@@ -12,6 +12,6 @@ import java.util.UUID;
 public class DetainedPlayer {
 
 	private final UUID            playerId;
-	private final int             jailId;
+	private       int             jailId;
 	private       DetainmentState state;
 }

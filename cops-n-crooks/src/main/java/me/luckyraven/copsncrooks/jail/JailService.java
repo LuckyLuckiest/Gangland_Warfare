@@ -69,8 +69,36 @@ public class JailService {
 		}
 	}
 
+	/**
+	 * Returns the jail ID the player is currently assigned to, or null if not in any jail.
+	 */
+	@Nullable
+	public Integer getJailIdForPlayer(UUID playerId) {
+		for (Jail jail : cells.values()) {
+			if (jail.getJailedPlayersId().contains(playerId)) {
+				return jail.getId();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Returns the first available jail ID, or null if no jails are registered.
+	 */
+	@Nullable
+	public Integer findAvailableJailId() {
+		for (Jail jail : cells.values()) {
+			return jail.getId();
+		}
+		return null;
+	}
+
 	public List<Jail> getCells() {
 		return new ArrayList<>(cells.values());
+	}
+
+	public Jail removeJail(int id) {
+		return cells.remove(id);
 	}
 
 	public void clear() {

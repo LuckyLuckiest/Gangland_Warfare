@@ -37,6 +37,13 @@ public class JailManager {
 		}
 	}
 
+	public void removeJail(int jailId) {
+		Jail jail = jailService.removeJail(jailId);
+		if (jail != null) {
+			jailRepository.delete(jail);
+		}
+	}
+
 	public void releasePlayer(UUID playerId) {
 		jailService.releasePlayer(playerId);
 		// Save all jails since we don't know which one had this player
