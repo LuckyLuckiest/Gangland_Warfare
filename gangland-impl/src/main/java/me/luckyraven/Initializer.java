@@ -115,6 +115,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -288,7 +289,7 @@ public final class Initializer {
 		signLoader();
 
 		// entity mark manager
-		entityMarkManager = new EntityMarkManager(gangland, SettingAddon.getDefaultPoliceEntities(),
+		entityMarkManager = new EntityMarkManager(gangland, Collections.emptyList(),
 												  SettingAddon.getDefaultCivilianEntities());
 
 		// item parser
@@ -300,14 +301,11 @@ public final class Initializer {
 		// kill combo
 		killCombo = new KillCombo(gangland, SettingAddon.getWantedKillCounter());
 
-		// detainment (must run before copLoader so detainmentService is available)
+		// detainment
 		detainment();
 
 		// cop service
 		copLoader();
-
-		// Sign Information
-		signInformation = new GanglandSignInformation();
 
 		// Events
 		listenerManager = new ListenerManager(gangland);
