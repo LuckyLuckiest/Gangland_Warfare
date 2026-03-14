@@ -16,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.UUID;
 
 @Getter
 @RequiredArgsConstructor
@@ -46,7 +47,7 @@ public abstract class BaseTradeSign implements Sign {
 				.stream()
 				.filter(w -> w.getName().equalsIgnoreCase(weaponName))
 				.findFirst()
-				.map(Weapon::buildItem)
+				.map(template -> new Weapon(UUID.randomUUID(), template).buildItem())
 				.orElse(null);
 	}
 
