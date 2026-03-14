@@ -1,8 +1,9 @@
-package me.luckyraven.sign.validation;
+package me.luckyraven.sign.validation.trade;
 
 import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.sign.SignType;
+import me.luckyraven.sign.validation.AbstractSignValidator;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
@@ -27,7 +28,7 @@ public class TradeSignValidator extends AbstractSignValidator {
 		Map<UUID, Weapon> weapons = weaponService.getWeapons();
 
 		boolean found = weapons.values()
-							   .stream().anyMatch(weapon -> weapon.getName().equalsIgnoreCase(content));
+				.stream().anyMatch(weapon -> weapon.getName().equalsIgnoreCase(content));
 
 		if (!found) {
 			Set<String> ammunitionKeys = ammunitionAddon.getAmmunitionKeys();
@@ -39,9 +40,9 @@ public class TradeSignValidator extends AbstractSignValidator {
 			XMaterial[] values = XMaterial.values();
 
 			found = Arrays.stream(values)
-						  .map(XMaterial::get)
-						  .filter(Objects::nonNull)
-						  .anyMatch(material -> material.name().equalsIgnoreCase(content));
+					.map(XMaterial::get)
+					.filter(Objects::nonNull)
+					.anyMatch(material -> material.name().equalsIgnoreCase(content));
 		}
 
 		return found;
