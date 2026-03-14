@@ -98,7 +98,7 @@
         </dependency>
 
         <!--
-            Log4j2 core — required at test runtime because @CustomLog (Lombok) generates
+            Log4j2 core - required at test runtime because @CustomLog (Lombok) generates
             code that calls me.luckyraven.logger.Logger.getLogger() → LogManager.getLogger(),
             which needs a Log4j2 implementation on the classpath.
             The version is kept in sync with the log4j-slf4j-impl declared in the root POM.

@@ -243,7 +243,7 @@ class RepositoryRegistryIntegrationTest {
 
 		helper.runQueries(db -> { /* open connection */ });
 
-		// Should not throw — parent must be created before child
+		// Should not throw - parent must be created before child
 		assertDoesNotThrow(() -> registry.createTables());
 	}
 

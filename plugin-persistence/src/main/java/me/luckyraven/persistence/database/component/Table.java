@@ -157,7 +157,7 @@ public abstract class Table<T> {
 	 * <p>
 	 * Columns present in the definition but absent from the database are added; columns present in the database but
 	 * absent from the definition are dropped. This runs after {@code createTable} so it is always safe to call on an
-	 * existing table — a freshly created table will produce no diff.
+	 * existing table - a freshly created table will produce no diff.
 	 * <p>
 	 * When adding a NOT NULL column that carries no explicit default, a type-appropriate fallback default is applied
 	 * automatically so that existing rows are not left with an illegal null.
@@ -191,7 +191,7 @@ public abstract class Table<T> {
 			if (attributes.containsKey(actual)) continue;
 
 			if (!database.isValidIdentifier(actual)) {
-				log.warn("Table '{}': skipping drop of '{}' — identifier contains unsafe characters", name, actual);
+				log.warn("Table '{}': skipping drop of '{}' - identifier contains unsafe characters", name, actual);
 				continue;
 			}
 

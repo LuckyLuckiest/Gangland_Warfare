@@ -33,8 +33,8 @@ public class RankParentRepository extends AbstractRepository<RankParent> {
 	 * Inserts the initial head→tail parent relationship if no entry already exists for the given head rank id. Safe to
 	 * call on every startup.
 	 *
-	 * @param headId the id of the head (leader) rank — stored as the parent row's {@code id}
-	 * @param tailId the id of the tail (lowest) rank — stored as the parent row's {@code parent_id}
+	 * @param headId the id of the head (leader) rank - stored as the parent row's {@code id}
+	 * @param tailId the id of the tail (lowest) rank - stored as the parent row's {@code parent_id}
 	 */
 	public void insertInitialRelation(int headId, int tailId) throws SQLException {
 		Database dataTable = getDatabase().table(rankParentTable.getName());

@@ -12,11 +12,11 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Cop navigates back to the nearest registered spawn station. Once arrived, or after a timeout, the cop despawns — but
+ * Cop navigates back to the nearest registered spawn station. Once arrived, or after a timeout, the cop despawns - but
  * only when no other player is looking.
  * <p>
  * If the target player is freed before the cop reaches its station (e.g. via admin command), the cop immediately
- * re-engages — returning to {@link CopState#COMBAT} when {@code combatForced} is set, otherwise
+ * re-engages - returning to {@link CopState#COMBAT} when {@code combatForced} is set, otherwise
  * {@link CopState#PURSUING}.
  */
 public class ReturningBehavior implements CopBehavior {
@@ -63,7 +63,7 @@ public class ReturningBehavior implements CopBehavior {
 			cop.navigateTo(selectedStation);
 		}
 
-		// Timeout — despawn regardless of whether the station was reached
+		// Timeout - despawn regardless of whether the station was reached
 		if (cop.getDespawnTicks() >= MAX_RETURN_TICKS) {
 			tryDespawn(cop);
 		}

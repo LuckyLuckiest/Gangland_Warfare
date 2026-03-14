@@ -249,9 +249,9 @@ public class CopSpawnManager {
 	/**
 	 * Finds a valid spawn location around the player using two phases:
 	 * <ol>
-	 *   <li>Phase 1 — 20 attempts in the preferred 30–50 block ring, restricted to positions behind the player so
+	 *   <li>Phase 1 - 20 attempts in the preferred 30–50 block ring, restricted to positions behind the player so
 	 *       the NPC does not pop into view.</li>
-	 *   <li>Phase 2 — if phase 1 fails entirely (player is stationary, against a wall, etc.), the ring radius
+	 *   <li>Phase 2 - if phase 1 fails entirely (player is stationary, against a wall, etc.), the ring radius
 	 *       shrinks by {@value SPAWN_RADIUS_SHRINK_STEP} blocks per step down to {@value MIN_SPAWN_DISTANCE} and
 	 *       the behind-player constraint is dropped, giving every loaded angle a fair chance.</li>
 	 * </ol>

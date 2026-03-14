@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class DatabaseManagerTest {
 
 	/**
-	 * All handlers created during a test — closed in {@link #tearDown()}.
+	 * All handlers created during a test - closed in {@link #tearDown()}.
 	 */
 	private final List<TestDatabaseHandler> toClose = new ArrayList<>();
 	@TempDir(cleanup = CleanupMode.NEVER)
@@ -114,7 +114,7 @@ class DatabaseManagerTest {
 	void closeConnections_withNoActiveConnections_doesNotThrow() {
 		DatabaseManager     mgr = new DatabaseManager(plugin, MockPluginFactory.sqliteOnly());
 		TestDatabaseHandler h   = handler("close_no_conn");
-		// Do NOT call initialize() — database.getConnection() remains null
+		// Do NOT call initialize() - database.getConnection() remains null
 		mgr.addDatabase(h);
 
 		assertDoesNotThrow(mgr::closeConnections);

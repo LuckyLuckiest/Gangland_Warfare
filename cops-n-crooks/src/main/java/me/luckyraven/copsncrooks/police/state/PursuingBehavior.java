@@ -41,7 +41,7 @@ public class PursuingBehavior implements CopBehavior {
 			return;
 		}
 
-		// Ranged cops shoot while closing in — they still navigate to cuff range
+		// Ranged cops shoot while closing in - they still navigate to cuff range
 		if (cop.isUsingRangedWeapon() && cop.hasLineOfSight(target) && cop.canAttack()) {
 			cop.attack(target);
 		}

@@ -24,8 +24,8 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Integration tests for {@link Table} — {@code createTableQuery}, {@code insertTableQuery}, {@code updateTableQuery},
- * {@code validateSchema} — all backed by real SQLite.
+ * Integration tests for {@link Table} - {@code createTableQuery}, {@code insertTableQuery}, {@code updateTableQuery},
+ * {@code validateSchema} - all backed by real SQLite.
  */
 @DisplayName("Table - DDL generation and DML operations")
 @TestMethodOrder(MethodOrderer.DisplayName.class)
@@ -103,7 +103,7 @@ class TableIntegrationTest {
 		Attribute<String> parentPk = new Attribute<>("id", true, String.class);
 		fkAttr.setForeignKey(parentPk, table);
 
-		// Use reflection-accessible addAttribute via package-private bridge — instead,
+		// Use reflection-accessible addAttribute via package-private bridge - instead,
 		// rely on the fact that Table exposes addAttribute as protected. We subclass inline.
 		Table<TestEntity> childWithFk = new Table<>("child_fk") {
 			{
@@ -219,7 +219,7 @@ class TableIntegrationTest {
 			public Map<String, Object> searchCriteria(TestEntity e) { return null; }
 		};
 
-		// 2. Run validateSchema — should ADD the 'bonus' column
+		// 2. Run validateSchema - should ADD the 'bonus' column
 		helper.runQueries(extendedTable::validateSchema);
 
 		// 3. Verify 'bonus' now exists

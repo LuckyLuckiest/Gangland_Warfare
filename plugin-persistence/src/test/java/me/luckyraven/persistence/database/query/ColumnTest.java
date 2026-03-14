@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for {@link Column}.
  *
- * <p>Pure Java — no database, no mocks.
+ * <p>Pure Java - no database, no mocks.
  */
 @DisplayName("Column - construction and type-inference contracts")
 class ColumnTest {

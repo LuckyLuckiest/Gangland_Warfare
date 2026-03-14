@@ -78,7 +78,7 @@ public final class PeriodicalUpdates {
 			adjustScheduledScanDate(pluginData);
 		}
 
-		// save user and bank data — kept as direct table updates so the offline cache can be
+		// save user and bank data - kept as direct table updates so the offline cache can be
 		// cleared synchronously after saving
 		UserManager<Player>        userManager        = initializer.getUserManager();
 		UserManager<OfflinePlayer> offlineUserManager = initializer.getOfflineUserManager();
@@ -172,7 +172,7 @@ public final class PeriodicalUpdates {
 			log.error("There was an issue resetting the cache...", exception);
 		}
 
-		// auto-saving — timing log fires in the callback after all async saves complete
+		// auto-saving - timing log fires in the callback after all async saves complete
 		if (logDebug) log.info("Saving...");
 		try {
 			updatingDatabase(() -> {

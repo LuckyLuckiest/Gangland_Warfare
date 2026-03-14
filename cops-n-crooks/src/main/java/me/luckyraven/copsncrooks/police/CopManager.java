@@ -256,7 +256,7 @@ public class CopManager {
 			// Spawn all missing cops in one pass so a full wipe is recovered in a single interval
 			while (currentCount < targetCount && currentCount < configProvider.getMaxCopsPerPlayer()) {
 				CopNpc newCop = spawnManager.spawnNearPlayer(player, tier);
-				if (newCop == null) break; // no valid location found — stop trying this interval
+				if (newCop == null) break; // no valid location found - stop trying this interval
 
 				newCop.setTargetPlayerId(playerId);
 

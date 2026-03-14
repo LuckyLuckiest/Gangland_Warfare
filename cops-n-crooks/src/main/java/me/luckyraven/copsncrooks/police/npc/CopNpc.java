@@ -248,10 +248,10 @@ public class CopNpc {
 	 * Resolves the best reachable position when normal pathfinding has been declared hopeless. Attempts three
 	 * strategies in order:
 	 * <ol>
-	 *   <li>Gap-walk — advances from the cop toward the player in 0.5-block steps and returns the last safe position
+	 *   <li>Gap-walk - advances from the cop toward the player in 0.5-block steps and returns the last safe position
 	 *       before any walkable connection breaks (gap, cliff, void).</li>
-	 *   <li>Line approach — walks from the player outward toward the cop, returning the first safe column.</li>
-	 *   <li>Ring approach — samples positions on a ring around the player and returns the best-scored safe spot.</li>
+	 *   <li>Line approach - walks from the player outward toward the cop, returning the first safe column.</li>
+	 *   <li>Ring approach - samples positions on a ring around the player and returns the best-scored safe spot.</li>
 	 * </ol>
 	 * If the player is within {@value HOPELESS_CLOSE_THRESHOLD} blocks Citizens navigates the remainder directly.
 	 *
@@ -367,8 +367,8 @@ public class CopNpc {
 	/**
 	 * Attacks the target player using the highest-priority available attack:
 	 * <ol>
-	 *   <li>Gangland weapon — fires the real projectile through the weapon event pipeline.</li>
-	 *   <li>Vanilla ranged weapon (bow / crossbow) — hitscan with particle trail.</li>
+	 *   <li>Gangland weapon - fires the real projectile through the weapon event pipeline.</li>
+	 *   <li>Vanilla ranged weapon (bow / crossbow) - hitscan with particle trail.</li>
 	 *   <li>Melee fallback.</li>
 	 * </ol>
 	 *
@@ -548,7 +548,7 @@ public class CopNpc {
 
 	/**
 	 * Finds the best safe point on a ring around the player. Positions are scored by distance to the cop, deviation
-	 * from the ideal radius, and — for ranged cops — line-of-sight quality.
+	 * from the ideal radius, and - for ranged cops — line-of-sight quality.
 	 */
 	private Location findBestRingApproachLocation(Location copLocation, Location playerLocation, double minRadius,
 												  double maxRadius, double idealRadius) {

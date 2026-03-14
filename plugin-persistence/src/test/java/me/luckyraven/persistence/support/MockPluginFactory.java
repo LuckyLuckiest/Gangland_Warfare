@@ -25,7 +25,7 @@ public final class MockPluginFactory {
 	 * Creates a {@link JavaPlugin} mock whose {@code getDataFolder()} returns the supplied {@code dataFolder} path.
 	 *
 	 * <p>Notably {@code isEnabled()} returns {@code false} so that
-	 * {@code DatabaseHelper.runQueriesAsync()} takes the synchronous fallback path — no Bukkit scheduler interaction is
+	 * {@code DatabaseHelper.runQueriesAsync()} takes the synchronous fallback path - no Bukkit scheduler interaction is
 	 * needed.
 	 *
 	 * <p>{@code getResource()} always returns {@code null} so {@code FileHandler.create(false)}
@@ -102,8 +102,8 @@ public final class MockPluginFactory {
 	 * pauses between attempts.
 	 *
 	 * <p>On Windows, HikariCP background threads may briefly hold OS file handles after
-	 * {@code dataSource.close()} returns. Call this at the end of {@code @AfterEach} — before JUnit's {@code @TempDir}
-	 * extension runs its own cleanup — to avoid the {@code "Failed to delete temp directory"} error.
+	 * {@code dataSource.close()} returns. Call this at the end of {@code @AfterEach} - before JUnit's {@code @TempDir}
+	 * extension runs its own cleanup - to avoid the {@code "Failed to delete temp directory"} error.
 	 */
 	public static void releaseDbFiles(Path dir) {
 		for (int attempt = 0; attempt < 20; attempt++) {

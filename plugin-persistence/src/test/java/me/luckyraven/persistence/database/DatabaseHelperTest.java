@@ -22,12 +22,12 @@ import static org.mockito.Mockito.when;
  * Tests for {@link DatabaseHelper}.
  *
  * <p>These tests verify the synchronous {@code runQueries()} contract using a real in-process
- * SQLite connection — no Bukkit server or scheduler is required.
+ * SQLite connection - no Bukkit server or scheduler is required.
  *
  * <p>The {@code runQueriesAsync()} method delegates to {@code runQueries()} whenever
  * {@code plugin.isEnabled()} returns {@code false} (plugin disabled / shutdown path), which we exploit here to test the
  * async-path fallback without touching the Bukkit scheduler. For tests that exercise the {@code isEnabled() == true}
- * branch (where {@link org.bukkit.Bukkit#getScheduler()} is actually invoked), set up MockBukkit — see
+ * branch (where {@link org.bukkit.Bukkit#getScheduler()} is actually invoked), set up MockBukkit - see
  * {@code TESTING.md} for step-by-step instructions.
  */
 @DisplayName("DatabaseHelper - query execution")

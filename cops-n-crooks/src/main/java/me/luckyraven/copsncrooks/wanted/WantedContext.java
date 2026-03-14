@@ -17,7 +17,7 @@ public interface WantedContext {
 	 * Withdraws up to {@code requestedAmount} from the entity's balance.
 	 * <p>
 	 * If the balance is insufficient, the implementation must withdraw the remaining balance and return that amount
-	 * instead. Never throws — economy exceptions are handled internally.
+	 * instead. Never throws - economy exceptions are handled internally.
 	 *
 	 * @param requestedAmount the desired withdrawal amount
 	 *

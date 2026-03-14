@@ -64,7 +64,7 @@ public class CopListener implements Listener {
 	}
 
 	/**
-	 * Handles a player attacking a cop NPC — forces the cop into combat mode.
+	 * Handles a player attacking a cop NPC - forces the cop into combat mode.
 	 *
 	 * @param event the damage event
 	 */

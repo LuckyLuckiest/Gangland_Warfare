@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Integration tests for {@link AbstractRepository} / {@link IRepository} contract.
  *
  * <p>All tests use a real SQLite database.  {@code plugin.isEnabled()} returns {@code false}
- * so every {@code runQueriesAsync()} call degrades gracefully to a synchronous {@code runQueries()} — no Bukkit
+ * so every {@code runQueriesAsync()} call degrades gracefully to a synchronous {@code runQueries()} - no Bukkit
  * scheduler needed.
  */
 @DisplayName("AbstractRepository - IRepository contract")
@@ -189,7 +189,7 @@ class RepositoryIntegrationTest {
 		TestEntity entity = new TestEntity("r1", "Nina", 8);
 		helper.runQueries(db -> repo.getTablePublic().insertTableQuery(db, entity));
 
-		// Access via package-private method — both are in the repository sub-package
+		// Access via package-private method - both are in the repository sub-package
 		boolean[] result = {false};
 		helper.runQueries(db -> result[0] = repo.isRowAvailable(entity, db));
 		assertTrue(result[0]);

@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 class SQLiteIntegrationTest {
 
 	/**
-	 * Fresh temp dir per test method — prevents cross-test state leakage. CleanupMode.NEVER: HikariCP/SQLite-JDBC holds
+	 * Fresh temp dir per test method - prevents cross-test state leakage. CleanupMode.NEVER: HikariCP/SQLite-JDBC holds
 	 * native file handles briefly after pool shutdown on Windows; skipping JUnit's auto-delete avoids the "Failed to
 	 * delete temp directory" error. OS temp-file cleanup handles the rest.
 	 */
@@ -117,7 +117,7 @@ class SQLiteIntegrationTest {
 	@DisplayName("table - throws SQLException when called without a live connection")
 	void table_withoutConnection_throwsSQLException() throws SQLException {
 		db.disconnect();
-		// Create a brand-new, uninitialised instance — no dataSource, no connection.
+		// Create a brand-new, uninitialised instance - no dataSource, no connection.
 		SQLite fresh = new SQLite(mock(JavaPlugin.class));
 		assertThrows(SQLException.class, () -> fresh.table("anything"));
 	}

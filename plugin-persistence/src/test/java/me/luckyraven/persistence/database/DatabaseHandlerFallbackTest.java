@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class DatabaseHandlerFallbackTest {
 
 	/**
-	 * All handlers created during a test — closed in {@link #tearDown()}.
+	 * All handlers created during a test - closed in {@link #tearDown()}.
 	 */
 	private final List<TestDatabaseHandler> toClose = new ArrayList<>();
 	@TempDir(cleanup = CleanupMode.NEVER)
@@ -145,7 +145,7 @@ class DatabaseHandlerFallbackTest {
 
 		handler.setType(DatabaseHandler.MYSQL);
 
-		// The handler fell back to SQLite — initialize and verify the connection works
+		// The handler fell back to SQLite - initialize and verify the connection works
 		handler.initialize();
 
 		assertNotNull(handler.getDatabase().getConnection(),

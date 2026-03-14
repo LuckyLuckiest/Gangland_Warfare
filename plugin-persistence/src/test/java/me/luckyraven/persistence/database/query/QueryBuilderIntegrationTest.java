@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
  * cross-test state leakage.
  *
  * <p>{@code @TempDir(cleanup = CleanupMode.NEVER)} + {@link MockPluginFactory#releaseDbFiles}
- * avoids Windows HikariCP file-handle lock errors — see CLAUDE.md for the full explanation.
+ * avoids Windows HikariCP file-handle lock errors - see CLAUDE.md for the full explanation.
  */
 @DisplayName("QueryBuilder - integration against SQLite")
 @TestMethodOrder(MethodOrderer.DisplayName.class)

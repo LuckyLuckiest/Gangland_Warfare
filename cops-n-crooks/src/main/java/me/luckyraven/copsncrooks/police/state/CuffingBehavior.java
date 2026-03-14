@@ -30,7 +30,7 @@ public class CuffingBehavior implements CopBehavior {
 	 */
 	private final int               aiTickRate;
 	/**
-	 * Shared across all cop instances — only the cop that inserted its target UUID may cuff.
+	 * Shared across all cop instances - only the cop that inserted its target UUID may cuff.
 	 */
 	private final Set<UUID>         cuffLock;
 	private final DetainmentService detainmentService;
@@ -83,7 +83,7 @@ public class CuffingBehavior implements CopBehavior {
 			return;
 		}
 
-		// Wind-up complete — attempt the cuff
+		// Wind-up complete - attempt the cuff
 		boolean success = cop.attemptCuff(target);
 
 		if (success) {
@@ -106,7 +106,7 @@ public class CuffingBehavior implements CopBehavior {
 	public void onEnter(CopNpc cop) {
 		reset();
 
-		// Claim the cuff lock before doing anything else — if another cop already holds it, back off
+		// Claim the cuff lock before doing anything else - if another cop already holds it, back off
 		UUID targetId = cop.getTargetPlayerId();
 		if (targetId == null || !cuffLock.add(targetId)) {
 			cop.transitionTo(CopState.PURSUING);

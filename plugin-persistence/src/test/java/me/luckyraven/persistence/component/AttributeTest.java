@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for {@link Attribute}.
  *
- * <p>These are pure Java unit tests — no database, no Bukkit, no mocks.
+ * <p>These are pure Java unit tests - no database, no Bukkit, no mocks.
  */
 @DisplayName("Attribute - construction and property contracts")
 class AttributeTest {

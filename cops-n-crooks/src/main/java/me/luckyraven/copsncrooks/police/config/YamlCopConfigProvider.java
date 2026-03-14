@@ -157,7 +157,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 				if (entry == null || entry.isBlank()) continue;
 
 				if (entry.toLowerCase().startsWith("weapon:")) {
-					// Gangland weapon — only the ID after the prefix is needed for WeaponService lookup
+					// Gangland weapon - only the ID after the prefix is needed for WeaponService lookup
 					String weaponId = entry.substring("weapon:".length()).trim();
 					weaponNamePool.add(weaponId);
 				} else {

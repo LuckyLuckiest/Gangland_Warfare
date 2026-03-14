@@ -15,7 +15,7 @@ import java.sql.SQLException;
  * {@code dataFolder/test_schema.db} automatically.
  *
  * <p>{@link #createSchema()}, {@link #createTables()}, and {@link #insertInitialData()}
- * are all no-ops — tables are created explicitly inside each test.
+ * are all no-ops - tables are created explicitly inside each test.
  */
 public final class TestDatabaseHandler extends DatabaseHandler {
 

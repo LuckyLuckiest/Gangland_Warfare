@@ -20,7 +20,7 @@ public class CopBehaviorFactory {
 	private final Supplier<CopSpawnManager> spawnManagerSupplier;
 	private final DetainmentService         detainmentService;
 	/**
-	 * Shared across every cop created by this factory — only one cop may cuff a given player at a time.
+	 * Shared across every cop created by this factory - only one cop may cuff a given player at a time.
 	 */
 	private final Set<UUID>                 cuffLock = ConcurrentHashMap.newKeySet();
 
