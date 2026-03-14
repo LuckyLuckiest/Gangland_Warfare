@@ -13,9 +13,9 @@ import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.tables.waypoint.WaypointTable;
 import me.luckyraven.file.configuration.MessageAddon;
-import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
+import me.luckyraven.persistence.database.query.QueryBuilder;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -23,7 +23,6 @@ import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.sql.Types;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -70,27 +69,18 @@ class WaypointDeleteCommand extends SubArgument {
 				return;
 			}
 
-			// get the row and delete from the database
-			Initializer      initializer      = gangland.getInitializer();
-			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
+			// delete from the database and refactor the remaining IDs in one async task
+			GanglandDatabase ganglandDatabase = gangland.getInitializer().getGanglandDatabase();
 			DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
 			List<Table<?>>   tables           = ganglandDatabase.getTables();
 
-			WaypointTable waypointTable = initializer.getInstanceFromTables(WaypointTable.class, tables);
+			WaypointTable waypointTable = gangland.getInitializer().getInstanceFromTables(WaypointTable.class, tables);
 
 			helper.runQueriesAsync(database -> {
-				Map<String, Object> search = waypointTable.searchCriteria(waypoint);
-				Database            config = database.table(waypointTable.getName());
-				Object[] info = config.select((String) search.get("search"), (Object[]) search.get("info"),
-											  (int[]) search.get("type"), new String[]{"*"});
+				QueryBuilder.on(database, waypointTable.getName()).delete().where("id", waypoint.getUsedId()).execute();
 
-				// if the data was already saved into the database
-				if (info.length == 0) return;
-
-				config.delete("id", waypoint.getUsedId(), Types.INTEGER);
-
-				// refactor the ids
-				waypointManager.refactorIds(waypointTable);
+				// refactor the ids of the remaining waypoints
+				waypointManager.refactorIds();
 			});
 
 			// inform the player

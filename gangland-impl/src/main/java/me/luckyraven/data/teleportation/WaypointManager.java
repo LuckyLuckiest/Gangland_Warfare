@@ -2,6 +2,7 @@ package me.luckyraven.data.teleportation;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.tables.gang.GangTable;
 import me.luckyraven.database.tables.waypoint.WaypointTable;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHelper;
@@ -17,11 +18,9 @@ public class WaypointManager {
 	private final Gangland               gangland;
 	private final Map<Integer, Waypoint> waypoints;
 	private final Map<Player, Waypoint>  selectedWaypoints;
-	private final String                 prefix;
 
-	public WaypointManager(Gangland gangland, String prefix) {
+	public WaypointManager(Gangland gangland) {
 		this.gangland          = gangland;
-		this.prefix            = prefix;
 		this.waypoints         = new HashMap<>();
 		this.selectedWaypoints = new HashMap<>();
 	}
@@ -73,8 +72,9 @@ public class WaypointManager {
 				.stream().filter(waypoint -> waypoint.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
 	}
 
-	public void refactorIds(WaypointTable waypointTable) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
+	public void refactorIds() {
+		WaypointTable  waypointTable = new WaypointTable(new GangTable());
+		DatabaseHelper helper        = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
 		helper.runQueries(database -> {
 			Database config = database.table(waypointTable.getName());

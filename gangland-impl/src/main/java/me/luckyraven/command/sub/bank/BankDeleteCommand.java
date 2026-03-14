@@ -9,10 +9,9 @@ import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.persistence.database.DatabaseHelper;
+import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
@@ -23,7 +22,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -114,16 +112,11 @@ class BankDeleteCommand extends SubArgument {
 			user.setBank(null);
 
 			// remove the bank from the database
-			Initializer      initializer      = gangland.getInitializer();
-			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
-			DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
+			Initializer       initializer      = gangland.getInitializer();
+			GanglandDatabase  ganglandDatabase = initializer.getGanglandDatabase();
+			IRepository<Bank> bankRepository   = ganglandDatabase.getRepositoryRegistry().getRepository(Bank.class);
 
-			BankTable bankTable = initializer.getInstanceFromTables(BankTable.class, ganglandDatabase.getTables());
-
-			helper.runQueriesAsync(database -> {
-				database.table(bankTable.getName())
-						.delete("uuid", "'" + user.getUser().getUniqueId() + "'", Types.VARCHAR);
-			});
+			bankRepository.delete(bank);
 
 			String string  = MessageAddon.BANK_REMOVED.toString();
 			String replace = string.replace("%bank%", deleteBankName.get(user).get());

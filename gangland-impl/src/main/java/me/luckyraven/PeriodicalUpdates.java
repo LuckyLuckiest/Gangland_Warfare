@@ -11,28 +11,25 @@ import me.luckyraven.data.plugin.PluginManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.UserTable;
-import me.luckyraven.database.tables.weapon.WeaponTable;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.utilities.TimeUtil;
+import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponManager;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 @CustomLog
 public final class PeriodicalUpdates {
 
-	private final Gangland           gangland;
 	private final Initializer        initializer;
 	private final GanglandDatabase   database;
 	private final DatabaseHelper     helper;
@@ -48,7 +45,6 @@ public final class PeriodicalUpdates {
 	}
 
 	public PeriodicalUpdates(Gangland gangland) {
-		this.gangland           = gangland;
 		this.initializer        = gangland.getInitializer();
 		this.database           = initializer.getGanglandDatabase();
 		this.helper             = new DatabaseHelper(gangland, database);
@@ -93,15 +89,15 @@ public final class PeriodicalUpdates {
 		Collection<User<Player>> onlineUsers = userManager.getUsers().values();
 		Collection<Bank> onlineBanks = userManager.getUsers().values()
 				.stream().map(User::getBank).toList();
-		updateAllData(userTable, onlineUsers, null);
-		updateAllData(bankTable, onlineBanks, null);
+		updateAllData(userTable, onlineUsers);
+		updateAllData(bankTable, onlineBanks);
 
 		// offline users
 		Collection<User<OfflinePlayer>> offlineUsers = offlineUserManager.getUsers().values();
 		Collection<Bank> offlineBanks = offlineUserManager.getUsers().values()
 				.stream().map(User::getBank).toList();
-		updateAllData(userTable, offlineUsers, null);
-		updateAllData(bankTable, offlineBanks, null);
+		updateAllData(userTable, offlineUsers);
+		updateAllData(bankTable, offlineBanks);
 		offlineUserManager.clear();
 
 		// update all repositories (rank, permissions, gangs, alliances, members, waypoints,
@@ -147,14 +143,12 @@ public final class PeriodicalUpdates {
 
 	private void initializeCleanupService() {
 		GanglandDatabase database = initializer.getGanglandDatabase();
-		DatabaseHelper   helper   = new DatabaseHelper(gangland, database);
-		List<Table<?>>   tables   = database.getTables();
 
-		PluginManager pluginManager = initializer.getPluginManager();
-		WeaponTable   weaponTable   = initializer.getInstanceFromTables(WeaponTable.class, tables);
-		WeaponManager weaponManager = initializer.getWeaponManager();
+		PluginManager pluginManager    = initializer.getPluginManager();
+		WeaponManager weaponManager    = initializer.getWeaponManager();
+		var           weaponRepository = database.getRepositoryRegistry().getRepository(Weapon.class);
 
-		cleanupService = new PluginDataCleanupService(pluginManager, helper, weaponTable, weaponManager);
+		cleanupService = new PluginDataCleanupService(pluginManager, weaponRepository, weaponManager);
 	}
 
 	private void task() {
@@ -197,11 +191,9 @@ public final class PeriodicalUpdates {
 		log.info("The process took {}ms", System.currentTimeMillis() - start);
 	}
 
-	private <T> void updateAllData(Table<T> table, Collection<? extends T> collection, @Nullable Consumer<T> consumer) {
+	private <T> void updateAllData(Table<T> table, Collection<? extends T> collection) {
 		helper.runQueries(database -> {
 			for (T row : collection) {
-				if (consumer != null) consumer.accept(row);
-
 				Map<String, Object> search = table.searchCriteria(row);
 				Object[] data = database.table(table.getName())
 										.select((String) search.get("search"), (Object[]) search.get("info"),

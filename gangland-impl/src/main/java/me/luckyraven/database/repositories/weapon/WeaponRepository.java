@@ -4,7 +4,9 @@ import lombok.Setter;
 import me.luckyraven.database.tables.weapon.WeaponTable;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
+import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
+import me.luckyraven.persistence.database.query.QueryBuilder;
 import me.luckyraven.persistence.repository.AbstractRepository;
 import me.luckyraven.persistence.repository.Repository;
 import me.luckyraven.weapon.Weapon;
@@ -31,6 +33,16 @@ public class WeaponRepository extends AbstractRepository<Weapon> {
 		super(plugin, databaseHandler);
 
 		this.weaponTable = new WeaponTable();
+	}
+
+	/**
+	 * Deletes every row from the weapon table (full-table clear).
+	 */
+	public void deleteAll() {
+		DatabaseHelper helper = new DatabaseHelper(getPlugin(), getDatabaseHandler());
+		helper.runQueriesAsync(database ->
+									   QueryBuilder.on(database, weaponTable.getName()).delete().execute()
+		);
 	}
 
 	@Override

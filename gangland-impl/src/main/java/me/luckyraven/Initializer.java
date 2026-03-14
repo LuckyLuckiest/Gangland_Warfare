@@ -277,7 +277,7 @@ public final class Initializer {
 		memberManager.initialize(memberTable, gangManager, rankManager);
 
 		// Waypoint manager
-		waypointManager = new WaypointManager(gangland, Gangland.FULL_PREFIX);
+		waypointManager = new WaypointManager(gangland);
 		waypointManager.initialize();
 
 		// Weapon manager

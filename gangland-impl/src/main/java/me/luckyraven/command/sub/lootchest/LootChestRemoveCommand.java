@@ -4,11 +4,8 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.tables.lootchest.LootChestTable;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.lootchest.data.LootChestData;
-import me.luckyraven.persistence.database.DatabaseHelper;
-import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -17,8 +14,6 @@ import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.sql.Types;
-import java.util.List;
 import java.util.Optional;
 
 class LootChestRemoveCommand extends SubArgument {
@@ -59,17 +54,11 @@ class LootChestRemoveCommand extends SubArgument {
 			// Remove from service (handles holograms, cooldowns, etc.)
 			manager.unregisterChest(chestData.getId());
 
-			// Remove from database
+			// Remove from database via repository
 			GanglandDatabase ganglandDatabase = gangland.getInitializer().getGanglandDatabase();
-			DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
-			List<Table<?>>   tables           = ganglandDatabase.getTables();
-
-			LootChestTable lootChestTable = gangland.getInitializer()
-													.getInstanceFromTables(LootChestTable.class, tables);
-
-			helper.runQueries(database -> {
-				database.table(lootChestTable.getName()).delete("id", chestData.getId(), Types.VARCHAR);
-			});
+			var lootChestRepository = ganglandDatabase.getRepositoryRegistry()
+													  .getRepository(LootChestData.class);
+			lootChestRepository.delete(chestData);
 
 			player.sendMessage(ChatUtil.commandMessage("&aLoot chest removed successfully!"));
 		});

@@ -8,13 +8,11 @@ import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
+import me.luckyraven.data.rank.RankParent;
+import me.luckyraven.data.rank.RankPermission;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.tables.rank.RankParentTable;
-import me.luckyraven.database.tables.rank.RankPermissionTable;
-import me.luckyraven.database.tables.rank.RankTable;
 import me.luckyraven.file.configuration.MessageAddon;
-import me.luckyraven.persistence.database.DatabaseHelper;
-import me.luckyraven.persistence.database.component.Table;
+import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
@@ -23,9 +21,7 @@ import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.utilities.TimeUtil;
 import org.bukkit.command.CommandSender;
 
-import java.sql.Types;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 class RankDeleteCommand extends SubArgument {
@@ -47,9 +43,8 @@ class RankDeleteCommand extends SubArgument {
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
-		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
-		};
+		return (argument, sender, args) -> sender.sendMessage(
+				ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
 	}
 
 	private void rankDelete() {
@@ -60,24 +55,20 @@ class RankDeleteCommand extends SubArgument {
 			Rank rank = rankManager.get(deleteRankName.get(sender).get());
 
 			if (rank != null) {
-				Initializer      initializer      = gangland.getInitializer();
-				GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
-				DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
-				List<Table<?>>   tables           = ganglandDatabase.getTables();
+				Initializer        initializer        = gangland.getInitializer();
+				GanglandDatabase   ganglandDatabase   = initializer.getGanglandDatabase();
+				RepositoryRegistry repositoryRegistry = ganglandDatabase.getRepositoryRegistry();
 
-				// remove all the instances from all the tables
-				RankTable       rankTable       = initializer.getInstanceFromTables(RankTable.class, tables);
-				RankParentTable rankParentTable = initializer.getInstanceFromTables(RankParentTable.class, tables);
-				RankPermissionTable rankPermissionTable = initializer.getInstanceFromTables(RankPermissionTable.class,
-																							tables);
+				var rankRepository           = repositoryRegistry.getRepository(Rank.class);
+				var rankParentRepository     = repositoryRegistry.getRepository(RankParent.class);
+				var rankPermissionRepository = repositoryRegistry.getRepository(RankPermission.class);
 
-				helper.runQueriesAsync(database -> {
-					rankManager.remove(rank);
+				rankManager.remove(rank);
 
-					database.table(rankTable.getName()).delete("id", rank.getUsedId(), Types.INTEGER);
-					database.table(rankParentTable.getName()).delete("id", rank.getUsedId(), Types.INTEGER);
-					database.table(rankPermissionTable.getName()).delete("rank_id", rank.getUsedId(), Types.INTEGER);
-				});
+				// Delete permissions and parent entry before the rank itself (FK order)
+				rankPermissionRepository.delete(new RankPermission(rank.getUsedId(), 0));
+				rankParentRepository.delete(new RankParent(rank.getUsedId(), 0));
+				rankRepository.delete(rank);
 
 				String string  = MessageAddon.RANK_REMOVED.toString();
 				String replace = string.replace("%rank%", rank.getName());

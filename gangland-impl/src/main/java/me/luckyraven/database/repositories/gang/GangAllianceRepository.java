@@ -4,15 +4,15 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangAlliance;
 import me.luckyraven.database.tables.gang.GangAllianceTable;
 import me.luckyraven.database.tables.gang.GangTable;
-import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
+import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
+import me.luckyraven.persistence.database.query.QueryBuilder;
 import me.luckyraven.persistence.repository.AbstractRepository;
 import me.luckyraven.persistence.repository.Repository;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -28,6 +28,19 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> {
 
 		GangTable gangTable = new GangTable();
 		this.gangAllianceTable = new GangAllianceTable(gangTable);
+	}
+
+	/**
+	 * Deletes every alliance row that involves the given gang, whether it appears as the initiating gang
+	 * ({@code gang_id}) or the allied gang ({@code ally_id}).
+	 */
+	public void deleteAllForGang(Gang gang) {
+		DatabaseHelper helper = new DatabaseHelper(getPlugin(), getDatabaseHandler());
+		helper.runQueriesAsync(database -> {
+			String tableName = gangAllianceTable.getName();
+			QueryBuilder.on(database, tableName).delete().where("gang_id", gang.getId()).execute();
+			QueryBuilder.on(database, tableName).delete().where("ally_id", gang.getId()).execute();
+		});
 	}
 
 	@Override
@@ -63,7 +76,10 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> {
 
 	@Override
 	protected void doDelete(GangAlliance data) throws SQLException {
-		Database table = getDatabase().table(gangAllianceTable.getName());
-		table.delete("gang_id", data.gang().getId(), Types.INTEGER);
+		QueryBuilder.on(getDatabase(), gangAllianceTable.getName())
+					.delete()
+					.where("gang_id", data.gang().getId())
+					.where("ally_id", data.ally().getId())
+					.execute();
 	}
 }

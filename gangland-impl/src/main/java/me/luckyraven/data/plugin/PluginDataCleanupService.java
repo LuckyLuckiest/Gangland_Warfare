@@ -1,16 +1,14 @@
 package me.luckyraven.data.plugin;
 
 import lombok.CustomLog;
-import me.luckyraven.database.tables.weapon.WeaponTable;
+import me.luckyraven.database.repositories.weapon.WeaponRepository;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.persistence.database.Database;
-import me.luckyraven.persistence.database.DatabaseHelper;
+import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.utilities.TimeUtil;
+import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponManager;
 
-import java.sql.SQLException;
-import java.sql.Types;
 import java.util.Date;
 
 /**
@@ -21,17 +19,15 @@ public final class PluginDataCleanupService {
 
 	private final boolean logDebug = SettingAddon.isAutoSaveDebug();
 
-	private final PluginManager  pluginManager;
-	private final DatabaseHelper databaseHelper;
-	private final WeaponTable    weaponTable;
-	private final WeaponManager  weaponManager;
+	private final PluginManager       pluginManager;
+	private final IRepository<Weapon> weaponRepository;
+	private final WeaponManager       weaponManager;
 
-	public PluginDataCleanupService(PluginManager pluginManager, DatabaseHelper databaseHelper, WeaponTable weaponTable,
+	public PluginDataCleanupService(PluginManager pluginManager, IRepository<Weapon> weaponRepository,
 									WeaponManager weaponManager) {
-		this.pluginManager  = pluginManager;
-		this.databaseHelper = databaseHelper;
-		this.weaponTable    = weaponTable;
-		this.weaponManager  = weaponManager;
+		this.pluginManager    = pluginManager;
+		this.weaponRepository = weaponRepository;
+		this.weaponManager    = weaponManager;
 	}
 
 	/**
@@ -79,11 +75,9 @@ public final class PluginDataCleanupService {
 	private void performCleanup(PluginData pluginData) {
 		long startTime = System.currentTimeMillis();
 
-		databaseHelper.runQueries(database -> {
-			// Reset weapons in the database
-			int weaponsReset = resetWeapons(database);
-			if (logDebug) log.info("Reset {} weapons from database", weaponsReset);
-		});
+		// Reset weapons in the database
+		int weaponsReset = resetWeapons();
+		if (logDebug) log.info("Reset {} weapons from database", weaponsReset);
 
 		// Update plugin data with new scan dates (will be persisted by PeriodicalUpdates)
 		long now          = System.currentTimeMillis();
@@ -98,15 +92,17 @@ public final class PluginDataCleanupService {
 		if (logDebug) log.info("Cleanup scan completed in {}ms", duration);
 	}
 
-	private int resetWeapons(Database database) throws SQLException {
-		int totalBefore = database.table(weaponTable.getName()).totalRows();
+	private int resetWeapons() {
+		int count = weaponManager.getWeapons().size();
 
-		// Delete all rows by passing empty column - this triggers DELETE without WHERE
-		database.table(weaponTable.getName()).delete("", null, Types.NULL);
+		if (weaponRepository instanceof WeaponRepository repo) {
+			repo.deleteAll();
+		}
+
 		weaponManager.clear();
 
-		if (logDebug) log.info("Cleared {} weapons from weapon table", totalBefore);
-		return totalBefore;
+		if (logDebug) log.info("Cleared {} weapons from weapon table", count);
+		return count;
 	}
 
 }

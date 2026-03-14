@@ -15,15 +15,14 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.tables.gang.GangAllianceTable;
-import me.luckyraven.database.tables.gang.GangTable;
+import me.luckyraven.database.repositories.gang.GangAllianceRepository;
 import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
-import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
+import me.luckyraven.persistence.database.query.QueryBuilder;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
@@ -33,12 +32,12 @@ import me.luckyraven.util.utilities.TimeUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.sql.Types;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 class GangDeleteCommand extends SubArgument {
 
@@ -168,10 +167,15 @@ class GangDeleteCommand extends SubArgument {
 			DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
 			List<Table<?>>   tables           = ganglandDatabase.getTables();
 
-			UserTable         userTable         = initializer.getInstanceFromTables(UserTable.class, tables);
-			MemberTable       memberTable       = initializer.getInstanceFromTables(MemberTable.class, tables);
-			GangTable         gangTable         = initializer.getInstanceFromTables(GangTable.class, tables);
-			GangAllianceTable gangAllianceTable = initializer.getInstanceFromTables(GangAllianceTable.class, tables);
+			UserTable   userTable   = initializer.getInstanceFromTables(UserTable.class, tables);
+			MemberTable memberTable = initializer.getInstanceFromTables(MemberTable.class, tables);
+
+			var memberRepository = ganglandDatabase.getRepositoryRegistry().getRepository(Member.class);
+
+			// Track online UUIDs so the async block can skip them
+			Set<UUID> onlineUuids = gangOnlineMembers.stream()
+					.map(u -> u.getUser().getUniqueId())
+					.collect(Collectors.toSet());
 
 			// change the online users gang id
 			String depositMoney = MessageAddon.DEPOSIT_MONEY_PLAYER.toString();
@@ -189,6 +193,9 @@ class GangDeleteCommand extends SubArgument {
 				gang.getEconomy().withdraw(amount);
 				gangUser.getEconomy().deposit(amount);
 
+				// Persist the member reset (gang_id, contribution, rank cleared by removeMember)
+				memberRepository.save(mem);
+
 				// inform the online users
 				String kickedFromGang      = MessageAddon.KICKED_FROM_GANG.toString();
 				String gangRemoved         = MessageAddon.GANG_REMOVED.toString();
@@ -197,37 +204,58 @@ class GangDeleteCommand extends SubArgument {
 				gangUser.sendMessage(kickedFromGang, gangRemovedReplace, depositMoneyReplace);
 			}
 
+			// Update offline members: query MemberTable for all gang members, distribute balance,
+			// then reset their gang_id in both the DB and in-memory member objects
 			helper.runQueriesAsync(database -> {
-				Database       userConfig = database.table(userTable.getName());
-				List<Object[]> allUsers   = userConfig.selectAll();
-				List<Object[]> gangUsers = allUsers.parallelStream()
-												   .filter(obj -> Arrays.stream(obj)
-														   .anyMatch(o -> o.toString()
-																		   .equals(String.valueOf(gang.getId()))))
-												   .toList();
+				String memberTableName = memberTable.getName();
+				String userTableName   = userTable.getName();
 
-				// update offline users
-				for (Object[] data : gangUsers) {
-					UUID   uuid = UUID.fromString(String.valueOf(data[0]));
-					Member mem  = memberManager.getMember(uuid);
+				List<Object[]> gangMemberRows = QueryBuilder.on(database, memberTableName)
+															.select("*")
+															.where("gang_id", gang.getId())
+															.executeAll();
 
-					gang.removeMember(mem);
+				for (Object[] row : gangMemberRows) {
+					UUID uuid = UUID.fromString(String.valueOf(row[0]));
 
-					double balance = (double) data[1];
-					double freq    = mem.getContribution();
-					double gangBal = gang.getEconomy().getBalance();
-					double amount  = Math.round(total) == 0 ? 0 : freq / total * gangBal;
+					// Skip online members – already handled above; auto-save will persist their changes
+					if (onlineUuids.contains(uuid)) continue;
+
+					Member mem = memberManager.getMember(uuid);
+					if (mem == null) continue;
+
+					// Fetch the offline member's current balance from the user table
+					Object[] userRow = QueryBuilder.on(database, userTableName)
+												   .select("balance")
+												   .where("uuid", uuid.toString())
+												   .executeOne();
+					if (userRow.length == 0) continue;
+
+					double dbBalance = (double) userRow[0];
+					double freq      = mem.getContribution();
+					double gangBal   = gang.getEconomy().getBalance();
+					double amount    = Math.round(total) == 0 ? 0 : freq / total * gangBal;
 
 					gang.getEconomy().withdraw(amount);
 
-					// update the balance
-					database.table(userTable.getName())
-							.update("uuid = ?", new Object[]{uuid.toString()}, new int[]{Types.CHAR},
-									new String[]{"balance"}, new Object[]{balance + amount}, new int[]{Types.DOUBLE});
-					// update the gang id
-					database.table(memberTable.getName())
-							.update("uuid = ?", new Object[]{uuid.toString()}, new int[]{Types.CHAR},
-									new String[]{"gang_id"}, new Object[]{-1}, new int[]{Types.INTEGER});
+					// Update offline user balance
+					QueryBuilder.on(database, userTableName)
+								.update()
+								.set("balance", dbBalance + amount)
+								.where("uuid", uuid.toString())
+								.execute();
+
+					// Reset member's gang_id in DB
+					QueryBuilder.on(database, memberTableName)
+								.update()
+								.set("gang_id", -1)
+								.where("uuid", uuid.toString())
+								.execute();
+
+					// Reset in-memory member state
+					mem.resetGang();
+					mem.setContribution(0D);
+					mem.setRank(null);
 				}
 			});
 
@@ -237,24 +265,14 @@ class GangDeleteCommand extends SubArgument {
 			user.getEconomy().deposit(amount);
 			user.sendMessage(depositMoney.replace("%amount%", SettingAddon.formatDouble(amount)));
 
-			// remove the gang information
-			helper.runQueriesAsync(database -> {
-				int removedGang = gang.getId();
+			var gangRepository         = ganglandDatabase.getRepositoryRegistry().getRepository(Gang.class);
+			var gangAllianceRepository = ganglandDatabase.getRepositoryRegistry().getRepository(GangAlliance.class);
 
-				// remove the gang itself
-				database.table(gangTable.getName()).delete("id", removedGang, Types.INTEGER);
-
-				// remove allied gangs to itself
-				for (GangAlliance alliedGangPair : gang.getAllies()) {
-					int      alliedGangId = alliedGangPair.gang().getId();
-					Database config       = database.table(gangAllianceTable.getName());
-
-					config.delete("gang_id", alliedGangId, Types.INTEGER);
-					// remove other gangs who're allied to the removed gang
-					// the number of gangs allied with the removed gang is equal to the opposite
-					config.delete("allie_id", removedGang, Types.INTEGER);
-				}
-			});
+			// Delete the gang row and all related alliance rows (both directions)
+			gangRepository.delete(gang);
+			if (gangAllianceRepository instanceof GangAllianceRepository allianceRepo) {
+				allianceRepo.deleteAllForGang(gang);
+			}
 
 			gangManager.remove(gang);
 			deleteGangName.remove(user);
