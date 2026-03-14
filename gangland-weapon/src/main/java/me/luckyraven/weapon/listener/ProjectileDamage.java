@@ -13,6 +13,7 @@ import me.luckyraven.weapon.modifiers.BlockBreakModifier;
 import me.luckyraven.weapon.modifiers.ModifierHandler;
 import me.luckyraven.weapon.projectile.BlockDamageManager;
 import me.luckyraven.weapon.projectile.ProjectileState;
+import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -33,7 +34,7 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ListenerHandler
-@AutowireTarget({WeaponService.class})
+@AutowireTarget({WeaponService.class, WearableService.class})
 public class ProjectileDamage implements Listener {
 
 	private final static Map<Integer, Weapon>          weaponInstance   = new ConcurrentHashMap<>();
@@ -41,12 +42,15 @@ public class ProjectileDamage implements Listener {
 
 	private final WeaponService      weaponManager;
 	private final BlockDamageManager blockDamageManager;
+	private final WearableService    wearableService;
 
 	private final Map<Integer, ProjectileEventQueue> eventQueues;
 
-	public ProjectileDamage(WeaponService weaponService, BlockDamageManager blockDamageManager) {
+	public ProjectileDamage(WeaponService weaponService, BlockDamageManager blockDamageManager,
+							WearableService wearableService) {
 		this.weaponManager      = weaponService;
 		this.blockDamageManager = blockDamageManager;
+		this.wearableService    = wearableService;
 		this.eventQueues        = new ConcurrentHashMap<>();
 	}
 
@@ -191,12 +195,21 @@ public class ProjectileDamage implements Listener {
 		// Use state's current damage (accounts for penetration/ricochet reductions)
 		double baseDamage = state != null ? state.getCurrentDamage() : projectileData.getDamage();
 
-		double damage = criticalHitOccurred ? baseDamage + damageData.getCriticalHitDamage() : baseDamage;
+		// Reduce critical-hit bonus via TOUGHENED trait across worn armor
+		double critBonus = criticalHitOccurred ? damageData.getCriticalHitDamage() : 0;
+		if (critBonus > 0) {
+			critBonus = wearableService.reduceCritBonus(critBonus, entity);
+		}
+
+		double damage = baseDamage + critBonus;
 
 		// Apply armor piercing modifier
 		damage = ModifierHandler.calculateArmorPiercingDamage(damage, entity, weapon);
 
-		// Apply head damage bonus
+		// Apply wearable damage reduction (projectile-specific path)
+		damage = wearableService.applyWearableReduction(damage, entity, true);
+
+		// Apply head damage bonus (after armor reduction - headshots bypass protection)
 		boolean isHeadshot = weaponManager.isHeadPosition(projectile.getLocation(), entity.getLocation());
 		if (isHeadshot) {
 			damage += damageData.getHeadDamage();
@@ -209,8 +222,9 @@ public class ProjectileDamage implements Listener {
 			sound.playSound(shooter);
 		}
 
-		// set the fire damage
-		entity.setFireTicks(damageData.getFireTicks());
+		// Apply fire ticks with wearable FIRE_RESISTANT and vanilla FIRE_PROTECTION reduction
+		int fireTicks = wearableService.reduceFireTicks(damageData.getFireTicks(), entity);
+		entity.setFireTicks(fireTicks);
 		entity.setNoDamageTicks(0);
 
 		// Handle entity penetration

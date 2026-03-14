@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.sign.registry.SignFormatRegistry;
 import me.luckyraven.sign.registry.SignTypeDefinition;
 import me.luckyraven.sign.registry.SignTypeRegistry;
@@ -14,9 +15,16 @@ import me.luckyraven.sign.type.ViewSign;
 import me.luckyraven.sign.type.WantedSign;
 import me.luckyraven.sign.type.trade.BuySign;
 import me.luckyraven.sign.type.trade.SellSign;
+import me.luckyraven.sign.type.trade.ammo.AmmoBuySign;
+import me.luckyraven.sign.type.trade.ammo.AmmoSellSign;
+import me.luckyraven.sign.type.trade.weapon.WeaponBuySign;
+import me.luckyraven.sign.type.trade.weapon.WeaponSellSign;
+import me.luckyraven.sign.type.trade.wearable.WearableBuySign;
+import me.luckyraven.sign.type.trade.wearable.WearableSellSign;
 import me.luckyraven.sign.validation.SignValidationException;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
+import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
@@ -44,26 +52,64 @@ public class SignManager extends SignService {
 	public List<SignTypeDefinition> setupSigns() throws SignValidationException {
 		WeaponService              weaponService      = gangland.getInitializer().getWeaponManager();
 		AmmunitionAddon            ammunitionAddon    = gangland.getInitializer().getAmmunitionAddon();
+		UniqueItemAddon            uniqueItemAddon    = gangland.getInitializer().getUniqueItemAddon();
 		UserManager<Player>        userManager        = gangland.getInitializer().getUserManager();
 		UserManager<OfflinePlayer> offlineUserManager = gangland.getInitializer().getOfflineUserManager();
+		WearableService            wearableService    = gangland.getInitializer().getWearableAddon();
 
 		List<SignTypeDefinition> definitions = new ArrayList<>();
 
 		String signPrefix = shortPrefix + "-";
 
-		// buy
+		// weapon buy
+		String   weaponBuyKey  = signPrefix + "weapon-buy";
+		SignType weaponBuyType = new SignType(weaponBuyKey, "WEAPON-BUY");
+		Sign     weaponBuy     = new WeaponBuySign(userManager, weaponService, ammunitionAddon, weaponBuyType);
+
+		formatRegistry.register(weaponBuy.createFormat());
+
+		definitions.add(weaponBuy.createDefinition());
+
+		// weapon sell
+		String   weaponSellKey  = signPrefix + "weapon-sell";
+		SignType weaponSellType = new SignType(weaponSellKey, "WEAPON-SELL");
+		Sign     weaponSell     = new WeaponSellSign(userManager, weaponService, ammunitionAddon, weaponSellType);
+
+		formatRegistry.register(weaponSell.createFormat());
+
+		definitions.add(weaponSell.createDefinition());
+
+		// ammo buy
+		String   ammoBuyKey  = signPrefix + "ammo-buy";
+		SignType ammoBuyType = new SignType(ammoBuyKey, "AMMO-BUY");
+		Sign     ammoBuy     = new AmmoBuySign(userManager, weaponService, ammunitionAddon, ammoBuyType);
+
+		formatRegistry.register(ammoBuy.createFormat());
+
+		definitions.add(ammoBuy.createDefinition());
+
+		// ammo sell
+		String   ammoSellKey  = signPrefix + "ammo-sell";
+		SignType ammoSellType = new SignType(ammoSellKey, "AMMO-SELL");
+		Sign     ammoSell     = new AmmoSellSign(userManager, weaponService, ammunitionAddon, ammoSellType);
+
+		formatRegistry.register(ammoSell.createFormat());
+
+		definitions.add(ammoSell.createDefinition());
+
+		// buy (vanilla materials + unique items)
 		String   buyKey  = signPrefix + "buy";
 		SignType buyType = new SignType(buyKey, "BUY");
-		Sign     buy     = new BuySign(userManager, weaponService, ammunitionAddon, buyType);
+		Sign     buy     = new BuySign(userManager, weaponService, ammunitionAddon, uniqueItemAddon, buyType);
 
 		formatRegistry.register(buy.createFormat());
 
 		definitions.add(buy.createDefinition());
 
-		// sell
+		// sell (vanilla materials + unique items)
 		String   sellKey  = signPrefix + "sell";
 		SignType sellType = new SignType(sellKey, "SELL");
-		Sign     sell     = new SellSign(userManager, weaponService, ammunitionAddon, sellType);
+		Sign     sell     = new SellSign(userManager, weaponService, ammunitionAddon, uniqueItemAddon, sellType);
 
 		formatRegistry.register(sell.createFormat());
 
@@ -95,6 +141,26 @@ public class SignManager extends SignService {
 		formatRegistry.register(bounty.createFormat());
 
 		definitions.add(bounty.createDefinition());
+
+		// wearable buy
+		String   wearableBuyKey  = signPrefix + "wearable-buy";
+		SignType wearableBuyType = new SignType(wearableBuyKey, "WEARABLE-BUY");
+		Sign wearableBuy = new WearableBuySign(userManager, wearableService, weaponService, ammunitionAddon,
+											   wearableBuyType);
+
+		formatRegistry.register(wearableBuy.createFormat());
+
+		definitions.add(wearableBuy.createDefinition());
+
+		// wearable sell
+		String   wearableSellKey  = signPrefix + "wearable-sell";
+		SignType wearableSellType = new SignType(wearableSellKey, "WEARABLE-SELL");
+		Sign wearableSell = new WearableSellSign(userManager, wearableService, weaponService, ammunitionAddon,
+												 wearableSellType);
+
+		formatRegistry.register(wearableSell.createFormat());
+
+		definitions.add(wearableSell.createDefinition());
 
 		return definitions;
 	}

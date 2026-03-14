@@ -73,6 +73,7 @@ import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
 import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
+import me.luckyraven.item.configuration.WearableAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.lootchest.GanglandLootItemProvider;
 import me.luckyraven.lootchest.LootChestManager;
@@ -91,6 +92,7 @@ import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
 import me.luckyraven.sign.GanglandSignInformation;
 import me.luckyraven.sign.SignManager;
+import me.luckyraven.sign.bulk.BulkActionManager;
 import me.luckyraven.sign.registry.SignFormatRegistry;
 import me.luckyraven.sign.registry.SignTypeRegistry;
 import me.luckyraven.sign.service.SignFormatterService;
@@ -108,6 +110,7 @@ import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import me.luckyraven.weapon.configuration.WeaponAddon;
 import me.luckyraven.weapon.configuration.WeaponLoader;
 import me.luckyraven.weapon.projectile.BlockDamageManager;
+import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
@@ -150,6 +153,7 @@ public final class Initializer {
 	private ScoreboardManager          scoreboardManager;
 	private WeaponManager              weaponManager;
 	private SignManager                signManager;
+	private BulkActionManager          bulkActionManager;
 	private EntityMarkManager          entityMarkManager;
 	private ItemParserManager          itemParserManager;
 	private HologramService            hologramService;
@@ -166,6 +170,7 @@ public final class Initializer {
 	private AmmunitionAddon            ammunitionAddon;
 	private WeaponAddon                weaponAddon;
 	private UniqueItemAddon            uniqueItemAddon;
+	private WearableAddon              wearableAddon;
 	// Loader
 	private LanguageLoader             languageLoader;
 	private InventoryLoader            inventoryLoader;
@@ -293,7 +298,7 @@ public final class Initializer {
 												  SettingAddon.getDefaultCivilianEntities());
 
 		// item parser
-		itemParserManager = new ItemParserManager(weaponManager, ammunitionAddon);
+		itemParserManager = new ItemParserManager(weaponManager, ammunitionAddon, wearableAddon);
 
 		// loot chest manager
 		lootChestLoader();
@@ -347,6 +352,9 @@ public final class Initializer {
 		FileHandler copsFile = new FileHandler(gangland, "cops", ".yml");
 		fileManager.addFile(copsFile, true);
 
+		FileHandler wearablesFile = new FileHandler(gangland, "wearables", ".yml");
+		fileManager.addFile(wearablesFile, true);
+
 		scoreboardManager = new ScoreboardManager(gangland);
 
 		addonsLoader();
@@ -382,6 +390,13 @@ public final class Initializer {
 		}
 
 		uniqueItemAddon.initialize();
+
+		// initialize wearable addon
+		if (wearableAddon == null) {
+			wearableAddon = new WearableAddon(permissionManager, fileManager);
+		}
+
+		wearableAddon.initialize();
 	}
 
 	/**
@@ -397,6 +412,8 @@ public final class Initializer {
 		weaponLoader.clear();
 		// clear the unique item addons
 		uniqueItemAddon.clear();
+		// clear the wearable addons
+		wearableAddon.clear();
 	}
 
 	/**
@@ -516,6 +533,7 @@ public final class Initializer {
 		String signPrefix = Gangland.SHORT_PREFIX + "-";
 
 		SignInteraction signInteraction = new SignInteraction(signPrefix, registry, formatterService, signInformation);
+		bulkActionManager = new BulkActionManager(gangland);
 
 		signManager = new SignManager(gangland, Gangland.SHORT_PREFIX, registry, signInteraction);
 
@@ -552,7 +570,9 @@ public final class Initializer {
 		dependencyContainer.registerInstance(RankManager.class, rankManager);
 		dependencyContainer.registerInstance(GangManager.class, gangManager);
 		dependencyContainer.registerInstance(WeaponService.class, weaponManager);
+		dependencyContainer.registerInstance(WearableService.class, wearableAddon);
 		dependencyContainer.registerInstance(SignInteractionService.class, signManager.getSignService());
+		dependencyContainer.registerInstance(BulkActionManager.class, bulkActionManager);
 		dependencyContainer.registerInstance(LootChestService.class, lootChestManager);
 		dependencyContainer.registerInstance(RecoilCompatibility.class, compatibilityWorker.getRecoilCompatibility());
 		dependencyContainer.registerInstance(SignInformation.class, signInformation);

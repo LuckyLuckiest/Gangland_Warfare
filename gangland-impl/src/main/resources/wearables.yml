@@ -1,0 +1,85 @@
+# Gangland Warfare - Wearable Armor Configuration
+#
+# Each entry defines a custom armor piece that integrates with the damage pipeline.
+# Items are identified in-game by a hidden NBT tag embedded when built via API.
+#
+# Fields:
+#   Permission          - (optional) node required to wear/receive this piece
+#   Material            - Bukkit material name; must be an armor type
+#   Name                - display name (supports & color codes)
+#   Drop_On_Death       - whether the item drops on player death
+#   Droppable           - whether the player can manually drop the item
+#   Base_Damage_Reduction - flat damage reduction per piece (0.0–1.0, e.g. 0.10 = 10%)
+#   Leather_Color       - hex color string ("#RRGGBB") for leather armor; leave blank otherwise
+#   Lore                - list of lore lines
+#   Traits:             - optional trait section; values are capped to each trait's max level
+#     REINFORCED        - flat damage reduction (5% per level, max 4)
+#     BULLETPROOF       - extra projectile reduction (4% per level, max 3)
+#     PADDED            - extra explosion reduction (8% per level, max 2)
+#     TOUGHENED         - reduces critical hit bonus damage (10% per level, max 3)
+#     FIRE_RESISTANT    - reduces fire ticks applied (25% per level, max 2)
+#     REACTIVE          - chance to nullify an incoming hit entirely (2% per level, max 3)
+#     LIGHTWEIGHT       - cosmetic only, no combat effect (max 2)
+#
+# Note: vanilla enchantments (PROTECTION, PROJECTILE_PROTECTION, FIRE_PROTECTION,
+# BLAST_PROTECTION) are also respected automatically - they do not need to be listed here.
+
+police_vest:
+   Permission: "gangland.wearables.police_vest"
+   Material: IRON_CHESTPLATE
+   Name: "&7Police Vest"
+   Drop_On_Death: true
+   Droppable: true
+   Base_Damage_Reduction: 0.10
+   Leather_Color: ""
+   Lore:
+      - "&8Standard issue body armor"
+      - "&7Worn by all officers on duty"
+   Traits:
+      REINFORCED: 2
+      BULLETPROOF: 1
+
+police_helmet:
+   Permission: "gangland.wearables.police_helmet"
+   Material: IRON_HELMET
+   Name: "&7Police Helmet"
+   Drop_On_Death: true
+   Droppable: true
+   Base_Damage_Reduction: 0.07
+   Leather_Color: ""
+   Lore:
+      - "&8Ballistic-rated patrol helmet"
+   Traits:
+      REINFORCED: 1
+      TOUGHENED: 1
+
+gang_jacket:
+   Permission: "gangland.wearables.gang_jacket"
+   Material: LEATHER_CHESTPLATE
+   Name: "&6Gang Jacket"
+   Drop_On_Death: true
+   Droppable: true
+   Base_Damage_Reduction: 0.05
+   Leather_Color: "#2B2B2B"
+   Lore:
+      - "&8Worn leather jacket"
+      - "&7Doesn't stop much - but it's a look"
+   Traits:
+      REACTIVE: 1
+
+heavy_vest:
+   Permission: "gangland.wearables.heavy_vest"
+   Material: DIAMOND_CHESTPLATE
+   Name: "&bHeavy Tactical Vest"
+   Drop_On_Death: false
+   Droppable: false
+   Base_Damage_Reduction: 0.15
+   Leather_Color: ""
+   Lore:
+      - "&bMilitary-grade ceramic plate carrier"
+      - "&7High protection against firearms"
+   Traits:
+      REINFORCED: 3
+      BULLETPROOF: 2
+      TOUGHENED: 1
+      LIGHTWEIGHT: 1
