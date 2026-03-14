@@ -2,21 +2,15 @@ package me.luckyraven.sign.aspect;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.sign.model.ParsedSign;
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.weapon.Weapon;
-import me.luckyraven.weapon.WeaponService;
-import me.luckyraven.weapon.ammo.Ammunition;
-import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 @RequiredArgsConstructor
 public class ItemTransferAspect implements SignAspect {
 
-	private final ItemProvider    itemProvider;
-	private final TransferType    transferType;
-	private final WeaponService   weaponService;
-	private final AmmunitionAddon ammunitionAddon;
+	private final ItemProvider          itemProvider;
+	private final TransferType          transferType;
+	private final ItemSimilarityChecker similarityChecker;
 
 	@Override
 	public AspectResult execute(Player player, ParsedSign sign) {
@@ -129,34 +123,7 @@ public class ItemTransferAspect implements SignAspect {
 	}
 
 	private boolean isSimilarItems(Player player, ItemStack item1, ItemStack item2) {
-		if (item1.getType() != item2.getType()) {
-			return false;
-		}
-
-		// compare weapons
-		if (weaponService.isWeapon(item1) && weaponService.isWeapon(item2)) {
-			Weapon weapon1 = weaponService.validateAndGetWeapon(player, item1);
-			Weapon weapon2 = weaponService.validateAndGetWeapon(player, item2);
-
-			if (weapon1 == null || weapon2 == null) {
-				return false;
-			}
-
-			return weaponService.compare(weapon1, weapon2) == 0;
-		}
-
-		// compare ammunition
-		if (Ammunition.isAmmunition(item1) && Ammunition.isAmmunition(item2)) {
-			ItemBuilder itemBuilder1 = new ItemBuilder(item1);
-			ItemBuilder itemBuilder2 = new ItemBuilder(item2);
-
-			Ammunition ammunition1 = ammunitionAddon.getAmmunition(itemBuilder1.getStringTagData("ammo"));
-			Ammunition ammunition2 = ammunitionAddon.getAmmunition(itemBuilder2.getStringTagData("ammo"));
-
-			return ammunition1.compareTo(ammunition2) == 0;
-		}
-
-		return item1.isSimilar(item2);
+		return similarityChecker.isSimilar(player, item1, item2);
 	}
 
 	public enum TransferType {
@@ -168,6 +135,13 @@ public class ItemTransferAspect implements SignAspect {
 	public interface ItemProvider {
 
 		ItemStack getItem(ParsedSign sign);
+
+	}
+
+	@FunctionalInterface
+	public interface ItemSimilarityChecker {
+
+		boolean isSimilar(Player player, ItemStack a, ItemStack b);
 
 	}
 
