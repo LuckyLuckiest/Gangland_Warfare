@@ -2,6 +2,8 @@ package me.luckyraven.data.account.user;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.copsncrooks.bounty.Bounty;
+import me.luckyraven.copsncrooks.bounty.BountyContext;
 import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.economy.EconomyHandler;
@@ -33,7 +35,7 @@ import java.util.UUID;
  */
 @Getter
 @Setter
-public class User<T extends OfflinePlayer> {
+public class User<T extends OfflinePlayer> implements BountyContext, WantedContext {
 
 	@Setter
 	private static Placeholder placeholder;
@@ -97,6 +99,27 @@ public class User<T extends OfflinePlayer> {
 	 */
 	public boolean hasGang() {
 		return this.gangId != -1;
+	}
+
+	@Override
+	public int getUserLevel() {
+		return level.getLevelValue();
+	}
+
+	@Override
+	public double withdraw(double requestedAmount) {
+		try {
+			economy.withdraw(requestedAmount);
+			return requestedAmount;
+		} catch (EconomyException ignored) {
+			double balance = economy.getBalance();
+			try {
+				economy.withdraw(balance);
+			} catch (EconomyException ignored2) {
+				return 0;
+			}
+			return balance;
+		}
 	}
 
 	public void sendMessage(String text) {

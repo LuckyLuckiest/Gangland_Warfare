@@ -209,8 +209,9 @@ public class EntityDamage implements Listener {
 
 		// Start wanted timer if enabled
 		if (SettingAddon.isWantedTimerEnabled() && wanted.isWanted()) {
-			Executor executor = new WantedExecutor(gangland, wantedEvent, damagerUser);
-			Timer    timer    = executor.createTimer();
+			Executor executor = new WantedExecutor(gangland, wantedEvent, damagerUser,
+												   gangland.getInitializer().getWantedSettings());
+			Timer timer = executor.createTimer();
 
 			timer.start(true);
 		}
@@ -227,8 +228,9 @@ public class EntityDamage implements Listener {
 		// Start bounty timer if enabled
 		BountyEvent bountyEvent = new BountyEvent(true, bounty);
 		if (SettingAddon.isBountyTimerEnabled() && bounty.getAmount() < SettingAddon.getBountyTimerMax()) {
-			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser);
-			Timer    timer    = executor.createTimer();
+			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser,
+												   gangland.getInitializer().getBountySettings());
+			Timer timer = executor.createTimer();
 
 			timer.start(true);
 		}
@@ -245,20 +247,19 @@ public class EntityDamage implements Listener {
 		Bounty      userBounty  = damagerUser.getBounty();
 		BountyEvent bountyEvent = new BountyEvent(true, userBounty);
 
-		bountyEvent.setUserBounty(damagerUser);
+		BountyEvent bountyEvent = new UserBountyEvent(true, damagerUser, scaledBounty);
 
 		if (SettingAddon.isBountyTimerEnabled() && userBounty.getAmount() < SettingAddon.getBountyTimerMax()) {
-			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser);
-			Timer    timer    = executor.createTimer();
+			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser, gangland.getInitializer()
+																							   .getBountySettings());
+			Timer timer = executor.createTimer();
 
 			timer.start(true);
 
 			return;
 		}
 
-		double eachKill     = SettingAddon.getBountyEachKillValue();
-		double scaledBounty = userBounty.calculateLevelScaledBounty(eachKill, damagerUser.getLevel().getLevelValue());
-		double amount       = eachKill + userBounty.getAmount();
+		double amount = eachKill + userBounty.getAmount();
 
 		if (amount > SettingAddon.getBountyMaxKill()) return;
 

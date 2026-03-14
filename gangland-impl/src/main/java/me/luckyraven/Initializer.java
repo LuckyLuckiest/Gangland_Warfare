@@ -26,6 +26,7 @@ import me.luckyraven.compatibility.CompatibilitySetup;
 import me.luckyraven.compatibility.CompatibilityWorker;
 import me.luckyraven.compatibility.VersionSetup;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
+import me.luckyraven.copsncrooks.bounty.BountySettings;
 import me.luckyraven.copsncrooks.combo.KillCombo;
 import me.luckyraven.copsncrooks.detainment.DetainedPlayer;
 import me.luckyraven.copsncrooks.detainment.DetainmentManager;
@@ -37,8 +38,10 @@ import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.copsncrooks.police.CopManager;
 import me.luckyraven.copsncrooks.police.CopService;
 import me.luckyraven.copsncrooks.police.config.CopLoader;
+import me.luckyraven.copsncrooks.police.config.CopSettings;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawner;
+import me.luckyraven.copsncrooks.wanted.WantedSettings;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.MemberManager;
 import me.luckyraven.data.account.user.User;
@@ -60,6 +63,9 @@ import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.file.configuration.MessageAddon;
 import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.copsncrooks.GanglandBountySettings;
+import me.luckyraven.file.configuration.copsncrooks.GanglandCopSettings;
+import me.luckyraven.file.configuration.copsncrooks.GanglandWantedSettings;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
 import me.luckyraven.file.configuration.inventory.lootchest.LootChestSettings;
@@ -173,8 +179,11 @@ public final class Initializer {
 	private CompatibilityWorker        compatibilityWorker;
 	// Condition Evaluator
 	private ConditionEvaluator         evaluator;
-	// Sign Information
+	// Settings extension
 	private SignInformation            signInformation;
+	private BountySettings             bountySettings;
+	private WantedSettings             wantedSettings;
+	private CopSettings                copSettings;
 
 	public Initializer(Gangland gangland) {
 		this.gangland = gangland;
@@ -222,6 +231,12 @@ public final class Initializer {
 				.collect(Collectors.toSet());
 
 		permissionManager.addAllPermissions(ganglandPermissions);
+
+		// settings extension
+		signInformation = new GanglandSignInformation();
+		bountySettings  = new GanglandBountySettings();
+		wantedSettings  = new GanglandWantedSettings();
+		copSettings     = new GanglandCopSettings();
 
 		// User manager
 		userManager        = new UserManager<>(gangland);

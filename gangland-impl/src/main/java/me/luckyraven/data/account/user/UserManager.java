@@ -2,8 +2,12 @@ package me.luckyraven.data.account.user;
 
 import com.google.common.base.Preconditions;
 import me.luckyraven.Gangland;
+import me.luckyraven.copsncrooks.bounty.Bounty;
+import me.luckyraven.copsncrooks.bounty.BountyExecutor;
+import me.luckyraven.copsncrooks.events.bounty.BountyEvent;
 import me.luckyraven.copsncrooks.events.wanted.WantedEvent;
 import me.luckyraven.copsncrooks.wanted.Wanted;
+import me.luckyraven.copsncrooks.wanted.WantedExecutor;
 import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.gang.Member;
 import me.luckyraven.data.account.gang.MemberManager;
@@ -151,8 +155,9 @@ public class UserManager<T extends OfflinePlayer> {
 			if (userWanted.isWanted() && SettingAddon.isWantedTimerEnabled()) {
 				WantedEvent wantedEvent = new WantedEvent(true, userWanted);
 
-				Executor executor = new WantedExecutor(gangland, wantedEvent, user);
-				Timer    timer    = executor.createTimer();
+				Executor executor = new WantedExecutor(gangland, wantedEvent, user,
+													   gangland.getInitializer().getWantedSettings());
+				Timer timer = executor.createTimer();
 
 				timer.start(true);
 			}

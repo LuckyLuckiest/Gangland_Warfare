@@ -90,12 +90,16 @@ public class SettingAddon implements FileInitializer {
 	private static @Getter String  scoreboardDriver;
 
 	// entity marker configuration
-	private static @Getter List<String> defaultPoliceEntities, defaultCivilianEntities;
-	private static @Getter String policeName, civilianName;
-	private static @Getter List<String> policeWearables, civilianWearables;
-	private static @Getter double policeExperienceDropsMinimum, policeExperienceDropsMaximum,
-			civilianExperienceDropsMinimum, civilianExperienceDropsMaximum;
-	private static @Getter List<String> policeItemDrops, civilianItemDrops;
+	private static @Getter List<String> defaultCivilianEntities;
+	private static @Getter String       civilianName;
+	private static @Getter List<String> civilianWearables;
+	private static @Getter double       civilianExperienceDropsMinimum, civilianExperienceDropsMaximum;
+	private static @Getter List<String> civilianItemDrops;
+
+	// cop count configuration
+	private static @Getter boolean copCountFormulaEnabled;
+	private static @Getter String  copCountFormula;
+	private static @Getter int     copCountBase, copCountPerLevel, copCountMax;
 
 	// loot chest configuration
 	private static @Getter long   lootChestCountdownTimer;
@@ -294,20 +298,6 @@ public class SettingAddon implements FileInitializer {
 		var entityMarker = settings.getConfigurationSection("Entity_Marker");
 		Objects.requireNonNull(entityMarker);
 
-		var police = entityMarker.getConfigurationSection("Police");
-		Objects.requireNonNull(police);
-
-		defaultPoliceEntities = police.getStringList("Default_Entities");
-		policeName            = police.getString("Name");
-		policeWearables       = police.getStringList("Wear");
-
-		var policeDrops = police.getConfigurationSection("Drops");
-		Objects.requireNonNull(policeDrops);
-
-		policeExperienceDropsMinimum = policeDrops.getDouble("Experience.Minimum");
-		policeExperienceDropsMaximum = policeDrops.getDouble("Experience.Maximum");
-		policeItemDrops              = policeDrops.getStringList("Items");
-
 		var civilian = entityMarker.getConfigurationSection("Civilian");
 		Objects.requireNonNull(civilian);
 
@@ -321,6 +311,16 @@ public class SettingAddon implements FileInitializer {
 		civilianExperienceDropsMinimum = civilianDrops.getDouble("Experience.Minimum");
 		civilianExperienceDropsMaximum = civilianDrops.getDouble("Experience.Maximum");
 		civilianItemDrops              = civilianDrops.getStringList("Items");
+
+		// cop count
+		var copsCount = settings.getConfigurationSection("Cops.Count");
+		Objects.requireNonNull(copsCount);
+
+		copCountFormulaEnabled = copsCount.getBoolean("Formula_Enabled", false);
+		copCountFormula        = copsCount.getString("Formula", "base + (level - 1) * perLevel");
+		copCountBase           = copsCount.getInt("Base", 2);
+		copCountPerLevel       = copsCount.getInt("Per_Level", 1);
+		copCountMax            = copsCount.getInt("Max", 8);
 
 		// loot chest
 		var lootChest = settings.getConfigurationSection("Loot_Chest");
