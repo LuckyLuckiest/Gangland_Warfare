@@ -1,5 +1,6 @@
 package me.luckyraven.copsncrooks.police.state;
 
+import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.events.police.CuffedEvent;
 import me.luckyraven.copsncrooks.events.police.DuringCuffingEvent;
 import me.luckyraven.copsncrooks.police.npc.CopNpc;
@@ -18,20 +19,21 @@ import java.util.UUID;
  */
 public class CuffingBehavior implements CopBehavior {
 
-	private final double    cuffRadius;
-	private final int       maxAttempts;
+	private final double            cuffRadius;
+	private final int               maxAttempts;
 	/**
 	 * Countdown duration in AI ticks (already divided by aiTickRate at construction).
 	 */
-	private final long      cuffingCooldown;
+	private final long              cuffingCooldown;
 	/**
 	 * Stored so the event receives remaining time in game ticks, not AI ticks.
 	 */
-	private final int       aiTickRate;
+	private final int               aiTickRate;
 	/**
 	 * Shared across all cop instances — only the cop that inserted its target UUID may cuff.
 	 */
-	private final Set<UUID> cuffLock;
+	private final Set<UUID>         cuffLock;
+	private final DetainmentService detainmentService;
 
 	private int  attemptCount;
 	private long cuffingTicks;
@@ -40,13 +42,14 @@ public class CuffingBehavior implements CopBehavior {
 	 */
 	private UUID claimedPlayer;
 
-	public CuffingBehavior(double cuffRadius, int maxAttempts, long cuffingCooldown, int aiTickRate,
-						   Set<UUID> cuffLock) {
-		this.cuffRadius      = cuffRadius;
-		this.maxAttempts     = maxAttempts;
-		this.cuffingCooldown = cuffingCooldown;
-		this.aiTickRate      = aiTickRate;
-		this.cuffLock        = cuffLock;
+	public CuffingBehavior(double cuffRadius, int maxAttempts, long cuffingCooldown, int aiTickRate, Set<UUID> cuffLock,
+						   DetainmentService detainmentService) {
+		this.cuffRadius        = cuffRadius;
+		this.maxAttempts       = maxAttempts;
+		this.cuffingCooldown   = cuffingCooldown;
+		this.aiTickRate        = aiTickRate;
+		this.cuffLock          = cuffLock;
+		this.detainmentService = detainmentService;
 
 		reset();
 	}
@@ -54,6 +57,11 @@ public class CuffingBehavior implements CopBehavior {
 	@Override
 	public void tick(CopNpc cop, Player target) {
 		if (target == null || !target.isOnline()) {
+			cop.transitionTo(CopState.RETURNING);
+			return;
+		}
+
+		if (detainmentService.isRestrained(target)) {
 			cop.transitionTo(CopState.RETURNING);
 			return;
 		}
@@ -102,6 +110,14 @@ public class CuffingBehavior implements CopBehavior {
 		UUID targetId = cop.getTargetPlayerId();
 		if (targetId == null || !cuffLock.add(targetId)) {
 			cop.transitionTo(CopState.PURSUING);
+			return;
+		}
+
+		// If the player is already restrained, release the lock and return to spawn
+		Player target = Bukkit.getPlayer(targetId);
+		if (target != null && detainmentService.isRestrained(target)) {
+			cuffLock.remove(targetId);
+			cop.transitionTo(CopState.RETURNING);
 			return;
 		}
 

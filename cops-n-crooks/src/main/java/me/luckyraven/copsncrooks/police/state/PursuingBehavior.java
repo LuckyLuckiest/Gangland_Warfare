@@ -1,5 +1,6 @@
 package me.luckyraven.copsncrooks.police.state;
 
+import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.police.npc.CopNpc;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -9,15 +10,22 @@ import org.bukkit.entity.Player;
  */
 public class PursuingBehavior implements CopBehavior {
 
-	private final double cuffRadius;
+	private final double            cuffRadius;
+	private final DetainmentService detainmentService;
 
-	public PursuingBehavior(double cuffRadius) {
-		this.cuffRadius = cuffRadius;
+	public PursuingBehavior(double cuffRadius, DetainmentService detainmentService) {
+		this.cuffRadius        = cuffRadius;
+		this.detainmentService = detainmentService;
 	}
 
 	@Override
 	public void tick(CopNpc cop, Player target) {
 		if (target == null || !target.isOnline()) {
+			cop.transitionTo(CopState.RETURNING);
+			return;
+		}
+
+		if (detainmentService.isRestrained(target)) {
 			cop.transitionTo(CopState.RETURNING);
 			return;
 		}

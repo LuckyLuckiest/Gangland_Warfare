@@ -1,6 +1,7 @@
 package me.luckyraven.copsncrooks.police;
 
 import lombok.Getter;
+import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.police.config.CopConfigProvider;
 import me.luckyraven.copsncrooks.police.npc.CopNpcFactory;
@@ -29,14 +30,16 @@ public class CopService {
 	 * @return the initialized CopManager
 	 */
 	public CopManager initialize(JavaPlugin plugin, CopConfigProvider provider, EntityMarkManager entityMarkManager,
-								 WeaponService weaponService, IRepository<CopSpawner> spawnerRepository) {
+								 WeaponService weaponService, IRepository<CopSpawner> spawnerRepository,
+								 DetainmentService detainmentService) {
 		TargetingManager targetingManager = new WantedTargetingManager();
 
 		// Create a placeholder array to capture the spawn manager reference
 		CopSpawnManager[] spawnManagerHolder = new CopSpawnManager[1];
 
 		// Create behavior factory with a lazy supplier
-		CopBehaviorFactory behaviorFactory = new CopBehaviorFactory(provider, () -> spawnManagerHolder[0]);
+		CopBehaviorFactory behaviorFactory = new CopBehaviorFactory(provider, () -> spawnManagerHolder[0],
+																	detainmentService);
 
 		// Create NPC factory
 		CopNpcFactory copNpcFactory = new CopNpcFactory(plugin, provider, behaviorFactory, entityMarkManager,

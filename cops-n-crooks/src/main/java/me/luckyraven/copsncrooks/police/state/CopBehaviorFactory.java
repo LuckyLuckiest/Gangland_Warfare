@@ -1,5 +1,6 @@
 package me.luckyraven.copsncrooks.police.state;
 
+import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.police.config.CopConfigProvider;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
 
@@ -17,14 +18,17 @@ public class CopBehaviorFactory {
 
 	private final CopConfigProvider         configProvider;
 	private final Supplier<CopSpawnManager> spawnManagerSupplier;
+	private final DetainmentService         detainmentService;
 	/**
 	 * Shared across every cop created by this factory — only one cop may cuff a given player at a time.
 	 */
 	private final Set<UUID>                 cuffLock = ConcurrentHashMap.newKeySet();
 
-	public CopBehaviorFactory(CopConfigProvider configProvider, Supplier<CopSpawnManager> spawnManagerSupplier) {
+	public CopBehaviorFactory(CopConfigProvider configProvider, Supplier<CopSpawnManager> spawnManagerSupplier,
+							  DetainmentService detainmentService) {
 		this.configProvider       = configProvider;
 		this.spawnManagerSupplier = spawnManagerSupplier;
+		this.detainmentService    = detainmentService;
 	}
 
 	/**
@@ -40,11 +44,11 @@ public class CopBehaviorFactory {
 		int cuffAiTicks = Math.max(1, configProvider.getCuffCooldownTicks() / aiTickRate);
 
 		behaviors.put(CopState.IDLE, new IdleBehavior(configProvider.getAlertRange()));
-		behaviors.put(CopState.PURSUING, new PursuingBehavior(configProvider.getCuffRadius()));
+		behaviors.put(CopState.PURSUING, new PursuingBehavior(configProvider.getCuffRadius(), detainmentService));
 		behaviors.put(CopState.CUFFING,
 					  new CuffingBehavior(configProvider.getCuffRadius(), configProvider.getMaxCuffAttempts(),
-										  cuffAiTicks, aiTickRate, cuffLock));
-		behaviors.put(CopState.COMBAT, new CombatBehavior(configProvider.getCombatRange()));
+										  cuffAiTicks, aiTickRate, cuffLock, detainmentService));
+		behaviors.put(CopState.COMBAT, new CombatBehavior(configProvider.getCombatRange(), detainmentService));
 		behaviors.put(CopState.RETURNING,
 					  new ReturningBehavior(configProvider.getSpawnLocations(), spawnManagerSupplier.get()));
 

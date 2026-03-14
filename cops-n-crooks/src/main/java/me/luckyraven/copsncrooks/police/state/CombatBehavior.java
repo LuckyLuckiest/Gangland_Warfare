@@ -1,5 +1,6 @@
 package me.luckyraven.copsncrooks.police.state;
 
+import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.police.npc.CopNpc;
 import org.bukkit.entity.Player;
 
@@ -8,15 +9,22 @@ import org.bukkit.entity.Player;
  */
 public class CombatBehavior implements CopBehavior {
 
-	private final double combatRange;
+	private final double            combatRange;
+	private final DetainmentService detainmentService;
 
-	public CombatBehavior(double combatRange) {
-		this.combatRange = combatRange;
+	public CombatBehavior(double combatRange, DetainmentService detainmentService) {
+		this.combatRange       = combatRange;
+		this.detainmentService = detainmentService;
 	}
 
 	@Override
 	public void tick(CopNpc cop, Player target) {
 		if (target == null || !target.isOnline()) {
+			cop.transitionTo(CopState.RETURNING);
+			return;
+		}
+
+		if (detainmentService.isRestrained(target)) {
 			cop.transitionTo(CopState.RETURNING);
 			return;
 		}
