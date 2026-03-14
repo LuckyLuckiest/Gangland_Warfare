@@ -26,7 +26,7 @@ public class DetainmentTable extends Table<DetainedPlayer> {
 
 	@Override
 	public Object[] getData(DetainedPlayer data) {
-		return new Object[]{data.getPlayerId().toString(), data.getState().name()};
+		return new Object[]{data.getPlayerId().toString(), data.getJailId(), data.getState().name()};
 	}
 
 	@Override
