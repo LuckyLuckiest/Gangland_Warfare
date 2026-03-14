@@ -282,14 +282,14 @@ public final class Initializer {
 		// loot chest manager
 		lootChestLoader();
 
-		// cop service
-		copLoader();
-
 		// kill combo
 		killCombo = new KillCombo(gangland, SettingAddon.getWantedKillCounter());
 
-		// detainment
+		// detainment (must run before copLoader so detainmentService is available)
 		detainment();
+
+		// cop service
+		copLoader();
 
 		// Sign Information
 		signInformation = new GanglandSignInformation();
@@ -450,7 +450,8 @@ public final class Initializer {
 
 		copService = new CopService();
 		IRepository<CopSpawner> repository = ganglandDatabase.getRepositoryRegistry().getRepository(CopSpawner.class);
-		copService.initialize(gangland, copLoader.getLoadedProvider(), entityMarkManager, weaponManager, repository);
+		copService.initialize(gangland, copLoader.getLoadedProvider(), entityMarkManager, weaponManager, repository,
+							  detainmentService);
 		copSpawnManager = copService.getCopManager().getSpawnManager();
 	}
 
