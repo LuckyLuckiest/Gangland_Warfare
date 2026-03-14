@@ -3,6 +3,7 @@ package me.luckyraven.copsncrooks.listener;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.weapon.events.WeaponShootEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -25,6 +26,14 @@ import org.bukkit.event.vehicle.VehicleExitEvent;
 public class DetainmentListener implements Listener {
 
 	private final DetainmentService detainmentService;
+
+	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+	public void onWeaponShoot(WeaponShootEvent event) {
+		if (!(event.getWeaponProjectile().getShooter() instanceof Player player)) return;
+		if (!detainmentService.isRestrained(player)) return;
+
+		event.setCancelled(true);
+	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onJoin(PlayerJoinEvent event) {
