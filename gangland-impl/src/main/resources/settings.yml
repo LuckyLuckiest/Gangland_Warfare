@@ -274,9 +274,9 @@ Wanted:
          - 15
          - 20
 
-# +------------+ #
-# | Cops Config| #
-# +------------+ #
+# +-------------+ #
+# | Cops Config | #
+# +-------------+ #
 
 # Controls how many cop NPCs spawn per wanted-level star.
 Cops:

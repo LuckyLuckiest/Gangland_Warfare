@@ -160,139 +160,142 @@ public class SettingAddon implements FileInitializer {
 		var updateChecker = settings.getConfigurationSection("Update_Checker");
 		Objects.requireNonNull(updateChecker);
 
-		updaterEnabled          = updateChecker.getBoolean("Enable");
-		notifyPrivilegedPlayers = updateChecker.getBoolean("Notify_Privileged_Players");
-		updaterAutoUpdate       = updateChecker.getBoolean("Auto_Update");
+		updaterEnabled          = updateChecker.getBoolean("Enable", true);
+		notifyPrivilegedPlayers = updateChecker.getBoolean("Notify_Privileged_Players", false);
+		updaterAutoUpdate       = updateChecker.getBoolean("Auto_Update", true);
 
 		// language picked
-		languagePicked = settings.getString("Language");
+		languagePicked = settings.getString("Language", "en");
 
 		// resource pack
 		var resourcePack = settings.getConfigurationSection("Resource_Pack");
 		Objects.requireNonNull(resourcePack);
 
-		resourcePackEnabled = resourcePack.getBoolean("Enable");
-		resourcePackUrl     = resourcePack.getString("URL");
-		resourcePackKick    = resourcePack.getBoolean("Kick");
+		resourcePackEnabled = resourcePack.getBoolean("Enable", true);
+		resourcePackUrl     = resourcePack.getString("URL", "");
+		resourcePackKick    = resourcePack.getBoolean("Kick", false);
 
 		// database
 		var database = settings.getConfigurationSection("Database");
 		Objects.requireNonNull(database);
 
-		databaseType      = database.getString("Type");
-		mysqlHost         = database.getString("MySQL.Host");
-		mysqlUsername     = database.getString("MySQL.Username");
-		mysqlPassword     = database.getString("MySQL.Password");
-		mysqlPort         = database.getInt("MySQL.Port");
-		sqliteBackup      = database.getBoolean("SQLite.Backup");
-		sqliteFailedMysql = database.getBoolean("SQLite.Failed_MySQL");
-		autoSave          = database.getBoolean("Auto_Save.Enable");
-		autoSaveDebug     = database.getBoolean("Auto_Save.Debug");
-		autoSaveTime      = database.getInt("Auto_Save.Time");
-		cleanUpTime       = database.getDouble("Clean_Up.Time");
+		databaseType      = database.getString("Type", "sqlite");
+		mysqlHost         = database.getString("MySQL.Host", "localhost");
+		mysqlUsername     = database.getString("MySQL.Username", "root");
+		mysqlPassword     = database.getString("MySQL.Password", "");
+		mysqlPort         = database.getInt("MySQL.Port", 3306);
+		sqliteBackup      = database.getBoolean("SQLite.Backup", true);
+		sqliteFailedMysql = database.getBoolean("SQLite.Failed_MySQL", true);
+		autoSave          = database.getBoolean("Auto_Save.Enable", true);
+		autoSaveDebug     = database.getBoolean("Auto_Save.Debug", true);
+		autoSaveTime      = database.getInt("Auto_Save.Time", 10);
+		cleanUpTime       = database.getDouble("Clean_Up.Time", 30);
 
 		// inventory
 		var inventory = settings.getConfigurationSection("Inventory");
 		Objects.requireNonNull(inventory);
 
-		inventoryFillItem = inventory.getString("Fill.Item");
-		inventoryFillName = inventory.getString("Fill.Name");
-		inventoryLineItem = inventory.getString("Line.Item");
-		inventoryLineName = inventory.getString("Line.Name");
+		inventoryFillItem = inventory.getString("Fill.Item", "BLACK_STAINED_GLASS_PANE");
+		inventoryFillName = inventory.getString("Fill.Name", " ");
+		inventoryLineItem = inventory.getString("Line.Item", "WHITE_STAINED_GLASS_PANE");
+		inventoryLineName = inventory.getString("Line.Name", " ");
 
 		var multiInventory = inventory.getConfigurationSection("Multi_Inventory");
 		Objects.requireNonNull(multiInventory);
 
-		nextPage     = multiInventory.getString("Next_Page");
-		previousPage = multiInventory.getString("Previous_Page");
-		homePage     = multiInventory.getString("Home_Page");
+		nextPage     = multiInventory.getString("Next_Page",
+												"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTYzMzlmZjJlNTM0MmJhMThiZGM0OGE5OWNjYTY1ZDEyM2NlNzgxZDg3ODI3MmY5ZDk2NGVhZDNiOGFkMzcwIn19fQ==");
+		previousPage = multiInventory.getString("Previous_Page",
+												"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=");
+		homePage     = multiInventory.getString("Home_Page",
+												"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=");
 
 		// economy
-		moneySymbol   = Objects.requireNonNull(settings.getString("Money_Symbol")).substring(0, 1);
-		balanceFormat = settings.getString("Balance_Format.Format");
+		moneySymbol   = settings.getString("Money_Symbol", "$").substring(0, 1);
+		balanceFormat = settings.getString("Balance_Format.Format", "%,.2f");
 
 		// user
 		var user = settings.getConfigurationSection("User");
 		Objects.requireNonNull(user);
 
-		userInitialBalance = user.getDouble("Account.Initial_Balance");
-		userMaxBalance     = user.getDouble("Account.Maximum_Balance");
-		bankInitialBalance = user.getDouble("Bank.Initial_Balance");
-		bankCreateFee      = user.getDouble("Bank.Create_Cost");
-		bankMaxBalance     = user.getDouble("Bank.Maximum_Balance");
+		userInitialBalance = user.getDouble("Account.Initial_Balance", 0);
+		userMaxBalance     = user.getDouble("Account.Maximum_Balance", 10_000_000);
+		bankInitialBalance = user.getDouble("Bank.Initial_Balance", 0);
+		bankCreateFee      = user.getDouble("Bank.Create_Cost", 5_000);
+		bankMaxBalance     = user.getDouble("Bank.Maximum_Balance", 1_000_000_000);
 		// user levels
-		userMaxLevel         = user.getInt("Level.Maximum_Level");
-		userLevelBaseAmount  = user.getInt("Level.Base_Amount");
-		userLevelFormula     = user.getString("Level.Formula");
-		userSkillUpgrade     = user.getInt("Level.Skill.Upgrade");
-		userSkillCost        = user.getDouble("Level.Skill.Cost");
-		userSkillExponential = user.getDouble("Level.Skill.Exponential");
+		userMaxLevel         = user.getInt("Level.Maximum_Level", 100);
+		userLevelBaseAmount  = user.getInt("Level.Base_Amount", 1_000);
+		userLevelFormula     = user.getString("Level.Formula", "base * level ^ 1.5");
+		userSkillUpgrade     = user.getInt("Level.Skill.Upgrade", 1);
+		userSkillCost        = user.getDouble("Level.Skill.Cost", 500);
+		userSkillExponential = user.getDouble("Level.Skill.Exponential", 1.8);
 		// user death
-		deathEnabled                 = user.getBoolean("Death.Enable");
-		deathMoneyCommandEnabled     = user.getBoolean("Death.Money.Command.Enable");
+		deathEnabled                 = user.getBoolean("Death.Enable", true);
+		deathMoneyCommandEnabled     = user.getBoolean("Death.Money.Command.Enable", false);
 		deathMoneyCommandExecutables = user.getStringList("Death.Money.Command.Executable");
-		deathLoseMoney               = !user.getBoolean("Death.Lose_Money");
-		deathLoseMoneyFormula        = user.getString("Death.Money.Formula");
-		deathThreshold               = user.getDouble("Death.Money.Threshold");
+		deathLoseMoney               = !user.getBoolean("Death.Lose_Money", true);
+		deathLoseMoneyFormula        = user.getString("Death.Money.Formula", "balance * 0.15");
+		deathThreshold               = user.getDouble("Death.Money.Threshold", 1_000);
 
 		// bounty
 		var bounty = settings.getConfigurationSection("Bounty");
 		Objects.requireNonNull(bounty);
 
-		bountyEachKillValue = bounty.getDouble("Kill.Each");
-		bountyMaxKill       = bounty.getDouble("Kill.Maximum");
-		bountyTimerEnabled  = bounty.getBoolean("Repeating_Timer.Enable");
-		bountyTimerMultiple = bounty.getDouble("Repeating_Timer.Multiple");
-		bountyTimeInterval  = bounty.getInt("Repeating_Timer.Time");
-		bountyTimerMax      = bounty.getDouble("Repeating_Timer.Maximum");
+		bountyEachKillValue = bounty.getDouble("Kill.Each", 5);
+		bountyMaxKill       = bounty.getDouble("Kill.Maximum", 50_000);
+		bountyTimerEnabled  = bounty.getBoolean("Repeating_Timer.Enable", true);
+		bountyTimerMultiple = bounty.getDouble("Repeating_Timer.Multiple", 2);
+		bountyTimeInterval  = bounty.getInt("Repeating_Timer.Time", 300);
+		bountyTimerMax      = bounty.getDouble("Repeating_Timer.Maximum", 20_000);
 
 		// wanted
 		var wanted = settings.getConfigurationSection("Wanted");
 		Objects.requireNonNull(wanted);
 
-		wantedEnabled = wanted.getBoolean("Enable");
+		wantedEnabled = wanted.getBoolean("Enable", true);
 
 		var wantedTakeMoney = wanted.getConfigurationSection("Take_Money");
 		Objects.requireNonNull(wantedTakeMoney);
 
-		wantedTakeMoneyAmount     = wantedTakeMoney.getDouble("Amount");
-		wantedTakeMoneyMultiplier = wantedTakeMoney.getDouble("Multiplier");
+		wantedTakeMoneyAmount     = wantedTakeMoney.getDouble("Amount", 50);
+		wantedTakeMoneyMultiplier = wantedTakeMoney.getDouble("Multiplier", 5);
 
 		var wantedTimer = wanted.getConfigurationSection("Repeating_Timer");
 		Objects.requireNonNull(wantedTimer);
 
-		wantedTimerEnabled           = wantedTimer.getBoolean("Enable");
-		wantedTimerTime              = wantedTimer.getInt("Time");
-		wantedTimerMultiplierEnabled = wantedTimer.getBoolean("Multiplier.Enable");
-		wantedTimerMultiplierAmount  = wantedTimer.getDouble("Multiplier.Amount");
+		wantedTimerEnabled           = wantedTimer.getBoolean("Enable", true);
+		wantedTimerTime              = wantedTimer.getInt("Time", 120);
+		wantedTimerMultiplierEnabled = wantedTimer.getBoolean("Multiplier.Enable", true);
+		wantedTimerMultiplierAmount  = wantedTimer.getDouble("Multiplier.Amount", 1.1);
 
 		var wantedLevel = wanted.getConfigurationSection("Level");
 		Objects.requireNonNull(wantedLevel);
 
-		wantedLevelIncrement = wantedLevel.getInt("Increment");
-		wantedMaximumLevel   = wantedLevel.getInt("Maximum");
+		wantedLevelIncrement = wantedLevel.getInt("Increment", 1);
+		wantedMaximumLevel   = wantedLevel.getInt("Maximum", 5);
 
 		var wantedKillCombo = wanted.getConfigurationSection("Kill_Combo");
 		Objects.requireNonNull(wantedKillCombo);
 
-		wantedKillComboEnabled    = wantedKillCombo.getBoolean("Enable");
-		wantedKillComboResetAfter = wantedKillCombo.getInt("Reset_After");
+		wantedKillComboEnabled    = wantedKillCombo.getBoolean("Enable", true);
+		wantedKillComboResetAfter = wantedKillCombo.getInt("Reset_After", 10);
 		wantedKillCounter         = wantedKillCombo.getIntegerList("Kill_Counter");
 
 		// gang
-		gangEnabled          = settings.getBoolean("Gang.Enable");
-		gangNameDuplicates   = settings.getBoolean("Gang.Name_Duplicates");
-		gangRankHead         = settings.getString("Gang.Rank.Head");
-		gangRankTail         = settings.getString("Gang.Rank.Tail");
-		gangDisplayNameChar  = Objects.requireNonNull(settings.getString("Gang.Display_Name_Char")).substring(0, 1);
-		gangInitialBalance   = settings.getDouble("Gang.Account.Initial_Balance");
-		gangCreateFee        = settings.getDouble("Gang.Account.Create_Cost");
-		gangMaxBalance       = settings.getDouble("Gang.Account.Maximum_Balance");
-		gangContributionRate = settings.getDouble("Gang.Account.Contribution_Rate");
+		gangEnabled          = settings.getBoolean("Gang.Enable", true);
+		gangNameDuplicates   = settings.getBoolean("Gang.Name_Duplicates", false);
+		gangRankHead         = settings.getString("Gang.Rank.Head", "member");
+		gangRankTail         = settings.getString("Gang.Rank.Tail", "owner");
+		gangDisplayNameChar  = settings.getString("Gang.Display_Name_Char", "*").substring(0, 1);
+		gangInitialBalance   = settings.getDouble("Gang.Account.Initial_Balance", 0);
+		gangCreateFee        = settings.getDouble("Gang.Account.Create_Cost", 100_000);
+		gangMaxBalance       = settings.getDouble("Gang.Account.Maximum_Balance", 100_000_000_000.0);
+		gangContributionRate = settings.getDouble("Gang.Account.Contribution_Rate", 1_000);
 
 		// scoreboard
-		scoreboardEnabled = settings.getBoolean("Scoreboard.Enable");
-		scoreboardDriver  = settings.getString("Scoreboard.Driver");
+		scoreboardEnabled = settings.getBoolean("Scoreboard.Enable", true);
+		scoreboardDriver  = settings.getString("Scoreboard.Driver", "Driver_V3");
 
 		// entity marker
 		var entityMarker = settings.getConfigurationSection("Entity_Marker");
@@ -302,14 +305,14 @@ public class SettingAddon implements FileInitializer {
 		Objects.requireNonNull(civilian);
 
 		defaultCivilianEntities = civilian.getStringList("Default_Entities");
-		civilianName            = civilian.getString("Name");
+		civilianName            = civilian.getString("Name", "&7Civilian");
 		civilianWearables       = civilian.getStringList("Wear");
 
 		var civilianDrops = civilian.getConfigurationSection("Drops");
 		Objects.requireNonNull(civilianDrops);
 
-		civilianExperienceDropsMinimum = civilianDrops.getDouble("Experience.Minimum");
-		civilianExperienceDropsMaximum = civilianDrops.getDouble("Experience.Maximum");
+		civilianExperienceDropsMinimum = civilianDrops.getDouble("Experience.Minimum", 1);
+		civilianExperienceDropsMaximum = civilianDrops.getDouble("Experience.Maximum", 15);
 		civilianItemDrops              = civilianDrops.getStringList("Items");
 
 		// cop count
@@ -326,19 +329,19 @@ public class SettingAddon implements FileInitializer {
 		var lootChest = settings.getConfigurationSection("Loot_Chest");
 		Objects.requireNonNull(lootChest);
 
-		lootChestCountdownTimer = lootChest.getLong("Countdown_Timer");
-		lootChestOpeningSound   = lootChest.getString("Sound.Opening");
-		lootChestLockedSound    = lootChest.getString("Sound.Locked");
-		lootChestClosingSound   = lootChest.getString("Sound.Closing");
+		lootChestCountdownTimer = lootChest.getLong("Countdown_Timer", 300);
+		lootChestOpeningSound   = lootChest.getString("Sound.Opening", "BLOCK_CHEST_OPEN");
+		lootChestLockedSound    = lootChest.getString("Sound.Locked", "BLOCK_CHEST_LOCKED");
+		lootChestClosingSound   = lootChest.getString("Sound.Closing", "BLOCK_CHEST_CLOSE");
 		lootChestAllowedBlocks  = lootChest.getStringList("Allowed_Blocks");
 
 		var lootChestRewards = lootChest.getConfigurationSection("Rewards");
 		Objects.requireNonNull(lootChestRewards);
 
-		lootChestRewardMoneyMinimum      = lootChestRewards.getDouble("Money.Minimum");
-		lootChestRewardMoneyMaximum      = lootChestRewards.getDouble("Money.Maximum");
-		lootChestRewardExperienceMinimum = lootChestRewards.getDouble("Experience.Minimum");
-		lootChestRewardExperienceMaximum = lootChestRewards.getDouble("Experience.Maximum");
+		lootChestRewardMoneyMinimum      = lootChestRewards.getDouble("Money.Minimum", 10);
+		lootChestRewardMoneyMaximum      = lootChestRewards.getDouble("Money.Maximum", 1_000);
+		lootChestRewardExperienceMinimum = lootChestRewards.getDouble("Experience.Minimum", 5);
+		lootChestRewardExperienceMaximum = lootChestRewards.getDouble("Experience.Maximum", 100);
 		lootChestRewardCommands          = lootChestRewards.getStringList("Commands");
 
 		addEachFieldReflection();
