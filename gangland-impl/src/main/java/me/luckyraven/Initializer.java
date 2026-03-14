@@ -459,7 +459,7 @@ public final class Initializer {
 	}
 
 	public void copLoader() {
-		copLoader = new CopLoader(gangland);
+		copLoader = new CopLoader(gangland, itemParserManager.getParser(), new GanglandCopSettings());
 
 		copLoader.load(false, null, fileManager);
 
@@ -517,7 +517,7 @@ public final class Initializer {
 
 		String signPrefix = Gangland.SHORT_PREFIX + "-";
 
-		SignInteraction signInteraction = new SignInteraction(signPrefix, registry, formatterService);
+		SignInteraction signInteraction = new SignInteraction(signPrefix, registry, formatterService, signInformation);
 
 		signManager = new SignManager(gangland, Gangland.SHORT_PREFIX, registry, signInteraction);
 
