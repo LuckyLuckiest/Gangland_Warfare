@@ -642,12 +642,12 @@ public interface Database {
 
 			if (value == null) statement.setNull(index, type);
 			else switch (type) {
-				case Types.TINYINT -> statement.setByte(index, (byte) value);
-				case Types.SMALLINT -> statement.setShort(index, (short) value);
-				case Types.INTEGER -> statement.setInt(index, (int) value);
-				case Types.BIGINT -> statement.setLong(index, (long) value);
-				case Types.FLOAT, Types.REAL -> statement.setFloat(index, (float) value);
-				case Types.DOUBLE, Types.NUMERIC -> statement.setDouble(index, (double) value);
+				case Types.TINYINT -> statement.setByte(index, ((Number) value).byteValue());
+				case Types.SMALLINT -> statement.setShort(index, ((Number) value).shortValue());
+				case Types.INTEGER -> statement.setInt(index, ((Number) value).intValue());
+				case Types.BIGINT -> statement.setLong(index, ((Number) value).longValue());
+				case Types.FLOAT, Types.REAL -> statement.setFloat(index, ((Number) value).floatValue());
+				case Types.DOUBLE, Types.NUMERIC -> statement.setDouble(index, ((Number) value).doubleValue());
 				case Types.BOOLEAN -> {
 					switch (value) {
 						case Boolean b -> statement.setBoolean(index, (boolean) value);
