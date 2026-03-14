@@ -1,4 +1,4 @@
-package me.luckyraven.data.account.gang;
+package me.luckyraven.data.account.gang.member;
 
 import lombok.Getter;
 import lombok.Setter;

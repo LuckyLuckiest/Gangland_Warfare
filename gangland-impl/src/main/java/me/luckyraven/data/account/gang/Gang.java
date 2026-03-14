@@ -2,12 +2,13 @@ package me.luckyraven.data.account.gang;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.copsncrooks.bounty.Bounty;
+import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.rank.Rank;
-import me.luckyraven.feature.bounty.Bounty;
-import me.luckyraven.feature.level.Level;
+import me.luckyraven.features.level.Level;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.color.Color;

@@ -2,12 +2,12 @@ package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
+import me.luckyraven.copsncrooks.bounty.Bounty;
 import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.feature.bounty.Bounty;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.listener.ListenerPriority;

@@ -1,7 +1,8 @@
-package me.luckyraven.feature.level;
+package me.luckyraven.features.level;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.events.level.LevelUpEvent;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.datastructure.ScientificCalculator;
 import org.bukkit.Bukkit;

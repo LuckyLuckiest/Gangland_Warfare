@@ -1,11 +1,11 @@
-package me.luckyraven.feature.phone;
+package me.luckyraven.features.phone;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.inventory.InventoryHandler;

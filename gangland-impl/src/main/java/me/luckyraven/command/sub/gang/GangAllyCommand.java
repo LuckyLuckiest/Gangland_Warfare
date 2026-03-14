@@ -7,7 +7,7 @@ import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangAlliance;
 import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.MessageAddon;

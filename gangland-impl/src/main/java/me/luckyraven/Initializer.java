@@ -43,7 +43,7 @@ import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawner;
 import me.luckyraven.copsncrooks.wanted.WantedSettings;
 import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.permission.PermissionManager;

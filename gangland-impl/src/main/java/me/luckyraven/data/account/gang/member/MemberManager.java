@@ -1,6 +1,8 @@
-package me.luckyraven.data.account.gang;
+package me.luckyraven.data.account.gang.member;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.GanglandDatabase;

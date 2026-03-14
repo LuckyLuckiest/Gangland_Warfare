@@ -5,7 +5,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangAlliance;
 import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;

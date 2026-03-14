@@ -1,6 +1,6 @@
 package me.luckyraven.database.tables.player;
 
-import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.database.tables.rank.RankTable;
 import me.luckyraven.persistence.database.component.Attribute;
 import me.luckyraven.persistence.database.component.Table;

@@ -3,7 +3,7 @@ package me.luckyraven.database.repositories.player;
 import lombok.Setter;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.Member;
+import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.tables.player.MemberTable;

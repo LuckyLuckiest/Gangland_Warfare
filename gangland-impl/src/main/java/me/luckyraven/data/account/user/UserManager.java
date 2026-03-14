@@ -9,24 +9,20 @@ import me.luckyraven.copsncrooks.events.wanted.WantedEvent;
 import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.copsncrooks.wanted.WantedExecutor;
 import me.luckyraven.data.account.Bank;
-import me.luckyraven.data.account.gang.Member;
-import me.luckyraven.data.account.gang.MemberManager;
+import me.luckyraven.data.account.gang.member.Member;
+import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.UserTable;
-import me.luckyraven.feature.Executor;
-import me.luckyraven.feature.bounty.Bounty;
-import me.luckyraven.feature.bounty.BountyEvent;
-import me.luckyraven.feature.bounty.BountyExecutor;
-import me.luckyraven.feature.level.Level;
-import me.luckyraven.feature.wanted.WantedExecutor;
 import me.luckyraven.events.user.UserBountyEvent;
+import me.luckyraven.features.level.Level;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
+import me.luckyraven.util.feature.Executor;
 import me.luckyraven.util.timer.Timer;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -57,15 +53,10 @@ public class UserManager<T extends OfflinePlayer> {
 		IRepository<Bank>                          bankRepository = repositoryRegistry.getRepository(Bank.class);
 
 		userRepository.setDataSupplier(() -> users.values()
-				.stream()
-				.<User<? extends OfflinePlayer>>map(u -> u)
-				.toList());
+				.stream().<User<? extends OfflinePlayer>>map(u -> u).toList());
 
 		bankRepository.setDataSupplier(() -> users.values()
-				.stream()
-				.filter(User::hasBank)
-				.map(User::getBank)
-				.toList());
+				.stream().filter(User::hasBank).map(User::getBank).toList());
 	}
 
 	public void initializeUserData(User<T> user, UserTable userTable, BankTable bankTable) {
