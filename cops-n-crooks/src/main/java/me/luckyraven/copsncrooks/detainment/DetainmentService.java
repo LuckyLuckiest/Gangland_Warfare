@@ -150,8 +150,10 @@ public class DetainmentService {
 	private void applyVisuals(Player player, boolean forceInventoryClose) {
 		if (forceInventoryClose) player.closeInventory();
 
-		player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 4, false, false, false));
-		player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 60, 0, false, false, false));
+		player.addPotionEffect(
+				new PotionEffect(PotionEffectType.SLOWNESS, PotionEffect.INFINITE_DURATION, 4, false, false, false));
+		player.addPotionEffect(
+				new PotionEffect(PotionEffectType.BLINDNESS, PotionEffect.INFINITE_DURATION, 0, false, false, false));
 	}
 
 	private void clearVisuals(Player player) {
