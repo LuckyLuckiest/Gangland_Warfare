@@ -80,7 +80,8 @@ public class CopNpcFactory {
 		}
 
 		Map<CopState, CopBehavior> behaviors = behaviorFactory.createBehaviors();
-		CopNpc                     copNpc    = new CopNpc(npc, tierConfig, behaviors, spawnLocation);
+
+		CopNpc copNpc = new CopNpc(npc, tierConfig, behaviors, spawnLocation, configProvider.getAiTickRate());
 
 		// Resolve and assign a gangland weapon when the tier supports it
 		if (tierConfig.canUseWeapons()) {
