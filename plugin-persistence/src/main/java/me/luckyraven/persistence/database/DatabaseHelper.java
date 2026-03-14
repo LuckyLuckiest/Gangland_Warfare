@@ -67,12 +67,18 @@ public class DatabaseHelper {
 	}
 
 	public void runQueriesAsync(QueryRunnable queryRunnable) {
+		runQueriesAsync(queryRunnable, null);
+	}
+
+	public void runQueriesAsync(QueryRunnable queryRunnable, Runnable onComplete) {
 		if (plugin.isEnabled()) {
-			Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> runQueries(queryRunnable));
+			Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+				runQueriesOnComplete(queryRunnable, onComplete);
+			});
 			return;
 		}
 
-		runQueries(queryRunnable);
+		runQueriesOnComplete(queryRunnable, onComplete);
 	}
 
 	public void rollbackConnection() {
@@ -88,6 +94,11 @@ public class DatabaseHelper {
 			log.warn("{}: Failed to rollback database connection, {}", UnhandledError.SQL_ERROR,
 					 exception.getMessage());
 		}
+	}
+
+	private void runQueriesOnComplete(QueryRunnable queryRunnable, Runnable onComplete) {
+		runQueries(queryRunnable);
+		if (onComplete != null) onComplete.run();
 	}
 
 	@FunctionalInterface

@@ -11,6 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -188,11 +189,43 @@ public class RepositoryRegistry {
 	 * Save all data across all repositories
 	 */
 	public void saveAll() {
-		for (RepositoryEntry entry : repositories.values()) {
+		saveAll(null);
+	}
+
+	/**
+	 * Save all data across all repositories, invoking {@code onComplete} after every repository has finished.
+	 * Repositories backed by {@link AbstractRepository} run asynchronously; the callback fires on whichever thread
+	 * completes the last save.
+	 *
+	 * @param onComplete called once when all saves have finished, or {@code null} for fire-and-forget
+	 */
+	public void saveAll(Runnable onComplete) {
+		Collection<RepositoryEntry> entries = repositories.values();
+		int                         total   = entries.size();
+
+		if (total == 0) {
+			if (onComplete != null) onComplete.run();
+			return;
+		}
+
+		AtomicInteger remaining = new AtomicInteger(total);
+		Runnable countDown = () -> {
+			if (remaining.decrementAndGet() == 0 && onComplete != null) {
+				onComplete.run();
+			}
+		};
+
+		for (RepositoryEntry entry : entries) {
 			try {
-				entry.instance().saveAllFromMemory();
+				if (entry.instance() instanceof AbstractRepository<?> repo) {
+					repo.saveAllFromMemory(countDown);
+				} else {
+					entry.instance().saveAllFromMemory();
+					countDown.run();
+				}
 			} catch (Exception e) {
 				log.error("Failed to save data for repository: {}", entry.entityType().getSimpleName(), e);
+				countDown.run();
 			}
 		}
 	}

@@ -63,6 +63,16 @@ public final class PeriodicalUpdates {
 	 * {@link RepositoryRegistry#saveAll()}.
 	 */
 	public void updatingDatabase() {
+		updatingDatabase(null);
+	}
+
+	/**
+	 * Same as {@link #updatingDatabase()} but invokes {@code onComplete} after all repository saves finish (including
+	 * async ones).
+	 *
+	 * @param onComplete called when all saves are done, or {@code null} for fire-and-forget
+	 */
+	public void updatingDatabase(Runnable onComplete) {
 		List<Table<?>> tables = database.getTables();
 
 		// adjust plugin scan dates before the repository save
@@ -96,7 +106,7 @@ public final class PeriodicalUpdates {
 
 		// update all repositories (rank, permissions, gangs, alliances, members, waypoints,
 		//                          weapons, loot chests, plugin data, cop spawners, jails, detainment)
-		repositoryRegistry.saveAll();
+		repositoryRegistry.saveAll(onComplete);
 	}
 
 	/**
@@ -160,15 +170,6 @@ public final class PeriodicalUpdates {
 			}
 		}
 
-		// auto-saving
-		if (logDebug) log.info("Saving...");
-		try {
-			updatingDatabase();
-			if (logDebug) log.info("Data save complete");
-		} catch (Throwable throwable) {
-			log.error("There was an issue saving the data...");
-		}
-
 		// resetting player inventories
 		if (logDebug) log.info("Cache reset...");
 		try {
@@ -177,9 +178,23 @@ public final class PeriodicalUpdates {
 			log.error("There was an issue resetting the cache...", exception);
 		}
 
-		long end = System.currentTimeMillis();
+		// auto-saving — timing log fires in the callback after all async saves complete
+		if (logDebug) log.info("Saving...");
+		try {
+			updatingDatabase(() -> {
+				if (!logDebug) return;
 
-		if (logDebug) log.info("The process took {}ms", end - start);
+				log.info("Data save complete");
+				processTime(start);
+			});
+		} catch (Throwable throwable) {
+			log.error("There was an issue saving the data...");
+			if (logDebug) processTime(start);
+		}
+	}
+
+	private void processTime(long start) {
+		log.info("The process took {}ms", System.currentTimeMillis() - start);
 	}
 
 	private <T> void updateAllData(Table<T> table, Collection<? extends T> collection, @Nullable Consumer<T> consumer) {
@@ -194,9 +209,10 @@ public final class PeriodicalUpdates {
 
 				if (data.length == 0) {
 					table.insertTableQuery(database, row);
-				} else {
-					table.updateTableQuery(database, row);
+					return;
 				}
+
+				table.updateTableQuery(database, row);
 			}
 		});
 	}

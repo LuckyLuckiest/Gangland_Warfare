@@ -69,19 +69,27 @@ public abstract class AbstractRepository<T> implements IRepository<T> {
 
 	@Override
 	public void saveAll(Collection<T> collection) {
+		saveAll(collection, null);
+	}
+
+	public void saveAll(Collection<T> collection, Runnable onComplete) {
 		databaseHelper.runQueriesAsync(database -> {
 			for (T row : collection) {
 				saveRow(row, database);
 			}
-		});
+		}, onComplete);
 	}
 
 	@Override
 	public void saveAllFromMemory() {
+		saveAllFromMemory(null);
+	}
+
+	public void saveAllFromMemory(Runnable onComplete) {
 		if (dataSupplier == null) {
 			throw new IllegalStateException("No data supplier set for repository: " + getClass().getSimpleName());
 		}
-		saveAll(dataSupplier.get());
+		saveAll(dataSupplier.get(), onComplete);
 	}
 
 	@Override
