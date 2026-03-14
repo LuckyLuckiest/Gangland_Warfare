@@ -9,6 +9,7 @@ import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.command.sub.*;
 import me.luckyraven.command.sub.bank.BankCommand;
 import me.luckyraven.command.sub.bounty.BountyCommand;
+import me.luckyraven.command.sub.copsncrooks.*;
 import me.luckyraven.command.sub.debug.ComponentExecutorCommand;
 import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
@@ -450,6 +451,7 @@ public final class Initializer {
 		copService = new CopService();
 		IRepository<CopSpawner> repository = ganglandDatabase.getRepositoryRegistry().getRepository(CopSpawner.class);
 		copService.initialize(gangland, copLoader.getLoadedProvider(), entityMarkManager, weaponManager, repository);
+		copSpawnManager = copService.getCopManager().getSpawnManager();
 	}
 
 	public void weaponLoader() {
@@ -486,7 +488,7 @@ public final class Initializer {
 
 		jailManager = new JailManager(jailService, jailRepository);
 
-		DetainmentManager detainmentManager = new DetainmentManager(detainmentRepository);
+		DetainmentManager detainmentManager = new DetainmentManager(detainmentRepository, jailService);
 
 		detainmentService = new DetainmentService(gangland, detainmentManager, jailManager,
 												  jailManager.getJailService(), Gangland.FULL_PREFIX);
@@ -579,6 +581,11 @@ public final class Initializer {
 		commandManager.addCommand(new AmmunitionCommand(gangland));
 		commandManager.addCommand(new DownloadResourceCommand(gangland));
 		commandManager.addCommand(new LootChestWandCommand(gangland));
+		commandManager.addCommand(new CuffCommand(gangland));
+		commandManager.addCommand(new UncuffCommand(gangland));
+		commandManager.addCommand(new JailCommand(gangland));
+		commandManager.addCommand(new UnjailCommand(gangland));
+		commandManager.addCommand(new CopSpawnerCommand(gangland));
 
 		// gang commands
 		if (SettingAddon.isGangEnabled()) {

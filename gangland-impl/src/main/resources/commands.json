@@ -462,5 +462,53 @@
 	"lootchest_edit": {
 		"usage": "/glw lootchest edit",
 		"description": "Edit wand settings while holding it."
+	},
+	"cuff": {
+		"usage": "/glw cuff <player>",
+		"description": "Handcuffs the specified player."
+	},
+	"uncuff": {
+		"usage": "/glw uncuff <player>",
+		"description": "Releases the specified player from handcuffs."
+	},
+	"jail": {
+		"usage": "/glw jail <player|create|remove>",
+		"description": "Shows jail help page."
+	},
+	"jail_help": {
+		"usage": "/glw jail help <page>",
+		"description": "Shows the specified page in jail menu."
+	},
+	"jail_player": {
+		"usage": "/glw jail <player> <jailId>",
+		"description": "Jails the specified player in the given jail."
+	},
+	"jail_create": {
+		"usage": "/glw jail create <id>",
+		"description": "Creates a jail at your current location with the given id."
+	},
+	"jail_remove": {
+		"usage": "/glw jail remove <id>",
+		"description": "Removes the jail with the specified id."
+	},
+	"unjail": {
+		"usage": "/glw unjail <player>",
+		"description": "Releases the specified player from jail."
+	},
+	"copspawner": {
+		"usage": "/glw copspawner <set|remove>",
+		"description": "Shows cop spawner help page."
+	},
+	"copspawner_help": {
+		"usage": "/glw copspawner help <page>",
+		"description": "Shows the specified page in cop spawner menu."
+	},
+	"copspawner_set": {
+		"usage": "/glw copspawner set",
+		"description": "Sets a cop spawner at your current location."
+	},
+	"copspawner_remove": {
+		"usage": "/glw copspawner remove <id>",
+		"description": "Removes the cop spawner with the specified id."
 	}
 }
