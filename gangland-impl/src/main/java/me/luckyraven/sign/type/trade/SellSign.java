@@ -1,19 +1,24 @@
 package me.luckyraven.sign.type.trade;
 
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.sign.SignType;
+import me.luckyraven.sign.aspect.AspectResult;
 import me.luckyraven.sign.aspect.ItemTransferAspect;
 import me.luckyraven.sign.aspect.MoneyAspect;
 import me.luckyraven.sign.aspect.SignAspect;
+import me.luckyraven.sign.bulk.BulkActionPreview;
+import me.luckyraven.sign.bulk.BulkSignHandler;
 import me.luckyraven.sign.handler.AspectBasedSignHandler;
 import me.luckyraven.sign.handler.SignHandler;
+import me.luckyraven.sign.model.ParsedSign;
 import me.luckyraven.sign.model.SignFormat;
 import me.luckyraven.sign.model.SignLineFormat;
 import me.luckyraven.sign.parser.SignParser;
 import me.luckyraven.sign.parser.TradeSignParser;
 import me.luckyraven.sign.registry.SignTypeDefinition;
 import me.luckyraven.sign.validation.SignValidator;
-import me.luckyraven.sign.validation.TradeSignValidator;
+import me.luckyraven.sign.validation.trade.ItemSignValidator;
 import me.luckyraven.util.color.Color;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
@@ -21,47 +26,75 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 
-public class SellSign extends BaseTradeSign {
+public class SellSign extends BaseTradeSign implements BulkSignHandler {
 
 	private final UserManager<Player> userManager;
+	private final UniqueItemAddon     uniqueItemAddon;
 	private final SignType            signType;
 
+	/**
+	 * Cached after {@link #createDefinition()} is called; used by {@link #executeBulkAction}.
+	 */
+	private SignHandler handler;
+
 	public SellSign(UserManager<Player> userManager, WeaponService weaponService, AmmunitionAddon ammunitionAddon,
-					SignType signType) {
+					UniqueItemAddon uniqueItemAddon, SignType signType) {
 		super(weaponService, ammunitionAddon);
 
-		this.userManager = userManager;
-		this.signType    = signType;
+		this.userManager     = userManager;
+		this.uniqueItemAddon = uniqueItemAddon;
+		this.signType        = signType;
 	}
 
 	@Override
 	public SignTypeDefinition createDefinition() {
-		// validate & parser
-		SignValidator validator = new TradeSignValidator(signType, getWeaponService(), getAmmunitionAddon());
+		SignValidator validator = new ItemSignValidator(signType, uniqueItemAddon);
 		SignParser    parser    = new TradeSignParser(signType);
 
-		// aspect
-		SignAspect itemAspect = new ItemTransferAspect(sign -> getRequiredItem(sign.getContent()),
-													   ItemTransferAspect.TransferType.TAKE, getWeaponService(),
-													   getAmmunitionAddon());
+		SignAspect itemAspect = new ItemTransferAspect(
+				sign -> getUniqueOrMaterialItem(sign.getContent(), uniqueItemAddon),
+				ItemTransferAspect.TransferType.TAKE, (player, a, b) -> a.isSimilar(b));
 
 		SignAspect moneyAspect = new MoneyAspect(userManager, MoneyAspect.TransactionType.DEPOSIT);
 
-		// handler
 		List<SignAspect> aspects = List.of(moneyAspect, itemAspect);
-		SignHandler      handler = new AspectBasedSignHandler(aspects);
+
+		this.handler = new AspectBasedSignHandler(aspects);
 
 		var definition = SignTypeDefinition.builder()
 										   .signType(signType)
 										   .signValidator(validator)
 										   .signParser(parser)
 										   .handler(handler)
+										   .bulkHandler(this)
 										   .build();
 
 		definition.addAllAspects(aspects);
 
 		return definition;
 	}
+
+	// ── BulkSignHandler ───────────────────────────────────────────────────────
+
+	@Override
+	public BulkActionPreview previewBulk(ParsedSign sign) {
+		return new BulkActionPreview(sign.getAmount(), sign.getPrice(), sign.getContent());
+	}
+
+	/**
+	 * Executes the bulk sell by running the same aspect chain used for single sales. The sign's configured
+	 * {@code amount} and {@code price} define the transaction.
+	 */
+	@Override
+	public List<AspectResult> executeBulkAction(Player player, ParsedSign sign) {
+		if (handler == null) {
+			return List.of(AspectResult.failure("Sign not fully initialized - please contact an admin."));
+		}
+
+		return handler.handle(player, sign);
+	}
+
+	// ── SignFormat ────────────────────────────────────────────────────────────
 
 	@Override
 	public SignFormat createFormat() {

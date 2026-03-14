@@ -1,7 +1,13 @@
 package me.luckyraven.sign.listener;
 
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.sign.aspect.AspectResult;
+import me.luckyraven.sign.bulk.BulkActionManager;
+import me.luckyraven.sign.bulk.BulkActionPreview;
+import me.luckyraven.sign.bulk.BulkSignHandler;
+import me.luckyraven.sign.bulk.PendingBulkAction;
 import me.luckyraven.sign.model.ParsedSign;
+import me.luckyraven.sign.registry.SignTypeDefinition;
 import me.luckyraven.sign.service.SignInformation;
 import me.luckyraven.sign.service.SignInteractionService;
 import me.luckyraven.sign.validation.SignValidationException;
@@ -15,6 +21,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
+import java.util.List;
 import java.util.Optional;
 
 @ListenerHandler
@@ -23,6 +30,7 @@ public class PlayerSignInteract implements Listener {
 
 	private final SignInteractionService signService;
 	private final SignInformation        information;
+	private final BulkActionManager      bulkActionManager;
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onSignInteract(PlayerInteractEvent event) {
@@ -44,10 +52,10 @@ public class PlayerSignInteract implements Listener {
 			return;
 		}
 
-		Player player     = event.getPlayer();
-		var    parsedSign = signService.getRegistry().findByLine(title);
+		Player player    = event.getPlayer();
+		var    defByLine = signService.getRegistry().findByLine(title);
 
-		if (parsedSign.isEmpty()) {
+		if (defByLine.isEmpty()) {
 			return;
 		}
 
@@ -67,7 +75,70 @@ public class PlayerSignInteract implements Listener {
 
 		ParsedSign parsed = optParsed.get();
 
+		// ── Bulk (shift-click) flow ──────────────────────────────────────────
+		if (player.isSneaking()) {
+			Optional<SignTypeDefinition> defOpt      = signService.getRegistry().getDefinition(parsed.getSignType());
+			BulkSignHandler              bulkHandler = defOpt.map(SignTypeDefinition::getBulkHandler).orElse(null);
+
+			if (bulkHandler != null) {
+				handleBulkInteraction(player, parsed, bulkHandler);
+				return;
+			}
+		}
+
+		// ── Normal (single) flow ─────────────────────────────────────────────
 		signService.handlerInteraction(player, parsed);
+	}
+
+	// -------------------------------------------------------------------------
+	// Bulk helpers
+	// -------------------------------------------------------------------------
+
+	private void handleBulkInteraction(Player player, ParsedSign parsed, BulkSignHandler bulkHandler) {
+		if (bulkActionManager.isPendingForSign(player, parsed)) {
+			// Second shift-click on the same sign → confirm and execute
+			PendingBulkAction action = bulkActionManager.confirm(player);
+
+			if (action == null) {
+				information.sendError(player, "Bulk confirmation expired - please try again.");
+				return;
+			}
+
+			List<AspectResult> results = action.getHandler().executeBulkAction(player, parsed);
+
+			for (AspectResult result : results) {
+				if (!result.isSuccess()) {
+					information.sendError(player, result.getMessage());
+					return;
+				}
+
+				if (result.getMessage() != null && !result.getMessage().isEmpty()) {
+					information.sendSuccess(player, result.getMessage());
+				}
+			}
+
+		} else {
+			// First shift-click or a different sign → cancel any stale pending, then preview
+			if (bulkActionManager.hasPending(player)) {
+				bulkActionManager.cancel(player);
+			}
+
+			BulkActionPreview preview = bulkHandler.previewBulk(parsed);
+
+			bulkActionManager.initiate(player, parsed, bulkHandler, preview);
+
+			sendBulkConfirmationRequest(player, preview);
+		}
+	}
+
+	private void sendBulkConfirmationRequest(Player player, BulkActionPreview preview) {
+		String moneySymbol = information.getMoneySymbol();
+		int    seconds     = bulkActionManager.getConfirmWindowSeconds();
+
+		information.sendSuccess(player,
+								"Bulk action: &f" + preview.getQuantity() + "x " + preview.getContentName()
+								+ " &7for &a" + moneySymbol + String.format("%.2f", preview.getTotalPrice())
+								+ " &7- Shift-click the sign again within &f" + seconds + "s &7to confirm.");
 	}
 
 }

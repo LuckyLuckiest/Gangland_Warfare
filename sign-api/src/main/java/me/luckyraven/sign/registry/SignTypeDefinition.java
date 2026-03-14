@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.aspect.SignAspect;
+import me.luckyraven.sign.bulk.BulkSignHandler;
 import me.luckyraven.sign.handler.SignHandler;
 import me.luckyraven.sign.parser.SignParser;
 import me.luckyraven.sign.validation.SignValidator;
@@ -20,6 +21,11 @@ public class SignTypeDefinition {
 	private final SignValidator signValidator;
 	private final SignParser    signParser;
 	private final SignHandler   handler;
+
+	/**
+	 * Optional handler for shift-click bulk confirmations. {@code null} means bulk is not supported.
+	 */
+	private final BulkSignHandler bulkHandler;
 
 	@Builder.Default
 	private final List<SignAspect> aspects = new ArrayList<>();
