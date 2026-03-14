@@ -9,7 +9,7 @@ import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.util.utilities.TimeUtil;
-import me.luckyraven.util.utilities.messages.MessagesProvider;
+import me.luckyraven.util.utilities.messages.TimeMessagesProvider;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -147,7 +147,7 @@ public class LootChestListener implements Listener {
 		soundConfig.playSound(player);
 	}
 
-	private static class TimeMessages implements MessagesProvider {
+	private static class TimeMessages implements TimeMessagesProvider {
 
 		@Override
 		public String getYear() {

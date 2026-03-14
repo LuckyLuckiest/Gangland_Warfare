@@ -1,6 +1,6 @@
 package me.luckyraven.util.utilities;
 
-import me.luckyraven.util.utilities.messages.MessagesProvider;
+import me.luckyraven.util.utilities.messages.TimeMessagesProvider;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ public final class TimeUtil {
 		return timestampMillis + daysToMillis(days);
 	}
 
-	public static String formatTime(long valueInSeconds, boolean customValues, MessagesProvider provider) {
+	public static String formatTime(long valueInSeconds, boolean customValues, TimeMessagesProvider provider) {
 		Duration duration = Duration.ofSeconds(valueInSeconds);
 
 		String year   = customValues ? provider.getYear() : "year";

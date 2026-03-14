@@ -1,6 +1,6 @@
 package me.luckyraven.util.utilities.messages;
 
-public interface MessagesProvider {
+public interface TimeMessagesProvider {
 
 	String getYear();
 
