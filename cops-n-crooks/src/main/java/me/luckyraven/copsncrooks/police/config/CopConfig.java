@@ -2,9 +2,7 @@ package me.luckyraven.copsncrooks.police.config;
 
 import lombok.Builder;
 import lombok.Getter;
-import org.bukkit.Location;
 
-import java.util.List;
 import java.util.Map;
 
 @Getter
@@ -15,7 +13,6 @@ public class CopConfig {
 	private final Map<Integer, Integer>       copsPerWantedLevel;
 	private final int                         maxTier;
 	private final int                         maxCopsPerPlayer;
-	private final List<Location>              spawnLocations;
 	private final int                         aiTickRate;
 	private final int                         spawnCheckRate;
 	private final double                      cuffRadius;
@@ -31,7 +28,6 @@ public class CopConfig {
 						.copsPerWantedLevel(provider.getCopsPerWantedLevel())
 						.maxTier(provider.getMaxTier())
 						.maxCopsPerPlayer(provider.getMaxCopsPerPlayer())
-						.spawnLocations(provider.getSpawnLocations())
 						.aiTickRate(provider.getAiTickRate())
 						.spawnCheckRate(provider.getSpawnCheckRate())
 						.cuffRadius(provider.getCuffRadius())

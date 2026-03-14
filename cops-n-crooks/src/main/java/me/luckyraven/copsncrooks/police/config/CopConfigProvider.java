@@ -1,8 +1,5 @@
 package me.luckyraven.copsncrooks.police.config;
 
-import org.bukkit.Location;
-
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,13 +36,6 @@ public interface CopConfigProvider {
 	 * @return the cap
 	 */
 	int getMaxCopsPerPlayer();
-
-	/**
-	 * Returns configured spawn locations.
-	 *
-	 * @return list of spawn locations
-	 */
-	List<Location> getSpawnLocations();
 
 	/**
 	 * Returns the tick rate at which AI should be evaluated.

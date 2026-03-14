@@ -49,8 +49,7 @@ public class CopBehaviorFactory {
 					  new CuffingBehavior(configProvider.getCuffRadius(), configProvider.getMaxCuffAttempts(),
 										  cuffAiTicks, aiTickRate, cuffLock, detainmentService));
 		behaviors.put(CopState.COMBAT, new CombatBehavior(configProvider.getCombatRange(), detainmentService));
-		behaviors.put(CopState.RETURNING,
-					  new ReturningBehavior(configProvider.getSpawnLocations(), spawnManagerSupplier.get()));
+		behaviors.put(CopState.RETURNING, new ReturningBehavior(spawnManagerSupplier.get(), detainmentService));
 
 		return behaviors;
 	}
