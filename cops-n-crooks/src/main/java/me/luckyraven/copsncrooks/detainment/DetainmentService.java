@@ -151,7 +151,7 @@ public class DetainmentService {
 		if (forceInventoryClose) player.closeInventory();
 
 		applyEffect(player, XPotion.SLOWNESS, 4);
-		applyEffect(player, XPotion.BLINDNESS, 0);
+		applyEffect(player, XPotion.BLINDNESS, 1);
 	}
 
 	private void clearVisuals(Player player) {

@@ -57,6 +57,9 @@ public class CopNpc {
 	private boolean  markedForRemoval;
 	@Getter
 	@Setter
+	private boolean  combatForced;
+	@Getter
+	@Setter
 	private int      despawnTicks;
 
 	@Getter

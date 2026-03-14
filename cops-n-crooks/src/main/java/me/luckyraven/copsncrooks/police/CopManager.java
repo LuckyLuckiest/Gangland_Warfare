@@ -130,6 +130,7 @@ public class CopManager {
 	 */
 	public void onCopAttacked(CopNpc copNpc, Player attacker) {
 		copNpc.setTargetPlayerId(attacker.getUniqueId());
+		copNpc.setCombatForced(true);
 		copNpc.transitionTo(CopState.COMBAT);
 	}
 
@@ -261,6 +262,7 @@ public class CopManager {
 
 				// New spawns pursue immediately; escalate to combat if a combat alert is active
 				if (hasCombatAlert(playerId)) {
+					newCop.setCombatForced(true);
 					newCop.transitionTo(CopState.COMBAT);
 				} else {
 					newCop.transitionTo(CopState.PURSUING);
