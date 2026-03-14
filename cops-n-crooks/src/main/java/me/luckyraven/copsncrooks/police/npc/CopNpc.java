@@ -8,6 +8,7 @@ import me.luckyraven.copsncrooks.police.config.CopTierConfig;
 import me.luckyraven.copsncrooks.police.state.CopBehavior;
 import me.luckyraven.copsncrooks.police.state.CopState;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.events.WeaponShootEvent;
 import me.luckyraven.weapon.projectile.WeaponProjectile;
@@ -46,21 +47,21 @@ public class CopNpc {
 	private final Map<CopState, CopBehavior> behaviors;
 	@Getter
 	private final Location                   spawnLocation;
-
+	private final int                        aiTickRate;
 	@Getter
-	private CopState currentState;
+	private       CopState                   currentState;
 	@Setter
 	@Getter
-	private UUID     targetPlayerId;
-	private int      attackCooldown;
+	private       UUID                       targetPlayerId;
+	private       int                        attackCooldown;
 	@Getter
-	private boolean  markedForRemoval;
-	@Getter
-	@Setter
-	private boolean  combatForced;
+	private       boolean                    markedForRemoval;
 	@Getter
 	@Setter
-	private int      despawnTicks;
+	private       boolean                    combatForced;
+	@Getter
+	@Setter
+	private       int                        despawnTicks;
 
 	@Getter
 	private Weapon     heldWeapon;
@@ -74,11 +75,13 @@ public class CopNpc {
 	private int      consecutiveStuckChecks;
 	private boolean  navigationHopeless;
 
-	public CopNpc(NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors, Location spawnLocation) {
+	public CopNpc(NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors, Location spawnLocation,
+				  int aiTickRate) {
 		this.npc                     = npc;
 		this.tierConfig              = tierConfig;
 		this.behaviors               = behaviors;
 		this.spawnLocation           = spawnLocation;
+		this.aiTickRate              = aiTickRate;
 		this.currentState            = CopState.IDLE;
 		this.attackCooldown          = 0;
 		this.markedForRemoval        = false;
@@ -374,6 +377,8 @@ public class CopNpc {
 	public void attack(Player player) {
 		if (!isValid() || !canAttack() || player == null) return;
 
+		faceTarget(player);
+
 		if (tierConfig.canUseWeapons() && heldWeapon != null && hasLineOfSight(player)) {
 			performGanglandWeaponAttack();
 			return;
@@ -459,6 +464,20 @@ public class CopNpc {
 	 */
 	public void destroy() {
 		destroy(null);
+	}
+
+	/**
+	 * Rotates the NPC entity in place to face the target player's eye level. Decouples head rotation from Citizens
+	 * navigation so the cop aims at the player even when holding a firing position.
+	 */
+	private void faceTarget(Player player) {
+		Entity entity = npc.getEntity();
+		if (entity == null) return;
+
+		Location shooterEye = entity.getLocation().add(0, 1.6, 0);
+		Vector   direction  = player.getEyeLocation().toVector().subtract(shooterEye.toVector()).normalize();
+		Location rotated    = entity.getLocation().setDirection(direction);
+		entity.teleport(rotated);
 	}
 
 	/**
@@ -836,6 +855,8 @@ public class CopNpc {
 			heldWeapon.addAmmunition(1);
 		} else {
 			projectile.launchProjectile();
+			SoundConfiguration.playSoundsAtLocation(shooter.getEyeLocation(), heldWeapon.getSoundData().getShotCustom(),
+													heldWeapon.getSoundData().getShotDefault());
 			refreshHeldItem();
 		}
 
@@ -953,9 +974,10 @@ public class CopNpc {
 	}
 
 	/**
-	 * Decrements the attack cooldown by one tick.
+	 * Decrements the attack cooldown by the AI tick rate so that weapon cooldowns expressed in server ticks are
+	 * consumed correctly regardless of how often the AI task runs.
 	 */
 	private void decrementAttackCooldown() {
-		if (attackCooldown > 0) attackCooldown--;
+		if (attackCooldown > 0) attackCooldown = Math.max(0, attackCooldown - aiTickRate);
 	}
 }
