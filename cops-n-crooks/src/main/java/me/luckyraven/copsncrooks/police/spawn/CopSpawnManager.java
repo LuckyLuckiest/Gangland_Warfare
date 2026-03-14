@@ -25,6 +25,7 @@ public class CopSpawnManager {
 	private static final int    VERTICAL_SEARCH_RANGE     = 10;
 	private static final int    SPAWN_Y_OFFSET            = 0;
 	private static final int    MIN_OPEN_HORIZONTAL_SIDES = 2;
+	private static final double SPAWNER_PREFERENCE_RADIUS = 80.0;
 
 	public static int ID = 0;
 
@@ -93,8 +94,15 @@ public class CopSpawnManager {
 	 * @return the spawned CopNpc, or null if no valid location was found
 	 */
 	public CopNpc spawnNearPlayer(Player target, int tier) {
-		Location spawnLoc = findSpawnLocation(target);
+		// Priority 1: closest registered spawner within the preference radius
+		Location spawnLoc = findClosestSpawnerLocation(target);
 
+		// Priority 2: random spawn near the player
+		if (spawnLoc == null) {
+			spawnLoc = findSpawnLocation(target);
+		}
+
+		// Priority 3: any spawner in the world as a last resort
 		if (spawnLoc == null) {
 			spawnLoc = findStoredSpawnerLocation(target.getWorld());
 		}
@@ -180,6 +188,34 @@ public class CopSpawnManager {
 		for (CopSpawner spawner : loadedSpawners) {
 			spawners.put(spawner.getId(), spawner);
 		}
+	}
+
+	/**
+	 * Finds the closest registered spawner to the player that is within {@value SPAWNER_PREFERENCE_RADIUS} blocks.
+	 * Returns {@code null} when no spawner is registered or none is close enough.
+	 *
+	 * @param player the target player
+	 *
+	 * @return the closest spawner location within range, or null
+	 */
+	@Nullable
+	private Location findClosestSpawnerLocation(Player player) {
+		Location playerLoc     = player.getLocation();
+		Location closest       = null;
+		double   closestDistSq = SPAWNER_PREFERENCE_RADIUS * SPAWNER_PREFERENCE_RADIUS;
+
+		for (CopSpawner spawner : spawners.values()) {
+			Location loc = spawner.getLocation();
+			if (loc.getWorld() == null || !loc.getWorld().equals(playerLoc.getWorld())) continue;
+
+			double distSq = loc.distanceSquared(playerLoc);
+			if (distSq < closestDistSq) {
+				closestDistSq = distSq;
+				closest       = loc;
+			}
+		}
+
+		return closest;
 	}
 
 	/**
