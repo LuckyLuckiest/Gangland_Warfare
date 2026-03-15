@@ -17,6 +17,7 @@ public class ModifiersData implements Cloneable {
 	private List<RicochetModifier>   ricochets;
 	private TracerModifier           tracer;
 	private ArmorPiercingModifier    armorPiercing;
+	private FlatDamageModifier       flatDamage;
 
 	public ModifiersData() {
 		this.breakBlocks = new ArrayList<>();
@@ -45,6 +46,10 @@ public class ModifiersData implements Cloneable {
 
 	public boolean hasArmorPiercing() {
 		return armorPiercing != null;
+	}
+
+	public boolean hasFlatDamage() {
+		return flatDamage != null;
 	}
 
 	@Override

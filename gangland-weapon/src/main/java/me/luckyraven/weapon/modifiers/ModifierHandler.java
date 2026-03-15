@@ -71,6 +71,24 @@ public class ModifierHandler {
 	}
 
 	/**
+	 * Adds the flat damage bonus to the base damage.
+	 *
+	 * @param baseDamage The damage before the bonus
+	 * @param weapon The weapon used
+	 *
+	 * @return The damage with the flat bonus added, or baseDamage unchanged if modifier is absent
+	 */
+	public static double applyFlatDamage(double baseDamage, Weapon weapon) {
+		ModifiersData modifiers = weapon.getModifiersData();
+
+		if (!modifiers.hasFlatDamage()) {
+			return baseDamage;
+		}
+
+		return baseDamage + modifiers.getFlatDamage().bonus();
+	}
+
+	/**
 	 * Handles entity penetration logic.
 	 *
 	 * @param state The projectile state

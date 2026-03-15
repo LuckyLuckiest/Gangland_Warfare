@@ -214,6 +214,8 @@ Scope:
 
 # The modifiers of the projectiles/weapon that would be applied on hit
 Modifiers:
+   # Flat damage - adds additional damage after wearable reduction
+   Flat_Damage: 0.0
    # Block breaking - MATERIAL-hitsRequired
    Break_Blocks:
       - GLASS-3

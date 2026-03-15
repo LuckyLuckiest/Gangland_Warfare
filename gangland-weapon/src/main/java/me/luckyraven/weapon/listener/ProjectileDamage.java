@@ -209,6 +209,9 @@ public class ProjectileDamage implements Listener {
 		// Apply wearable damage reduction (projectile-specific path)
 		damage = wearableService.applyWearableReduction(damage, entity, true);
 
+		// Apply flat damage bonus (after reductions - armor cannot soak this bonus)
+		damage = ModifierHandler.applyFlatDamage(damage, weapon);
+
 		// Apply head damage bonus (after armor reduction - headshots bypass protection)
 		boolean isHeadshot = weaponManager.isHeadPosition(projectile.getLocation(), entity.getLocation());
 		if (isHeadshot) {

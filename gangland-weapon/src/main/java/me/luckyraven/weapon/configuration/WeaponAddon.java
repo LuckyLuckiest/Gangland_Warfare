@@ -368,6 +368,7 @@ public class WeaponAddon {
 		List<RicochetModifier>   ricochetModifiers     = new ArrayList<>();
 		TracerModifier           tracerModifier        = null;
 		ArmorPiercingModifier    armorPiercingModifier = null;
+		FlatDamageModifier       flatDamageModifier    = null;
 
 		if (modifiersSection != null) {
 			// Break Blocks parsing
@@ -455,6 +456,17 @@ public class WeaponAddon {
 					armorPiercingModifier = new ArmorPiercingModifier(armorBypass);
 				} catch (NumberFormatException ignored) { }
 			}
+
+			// Flat Damage parsing - Format: bonus (e.g., 10.0)
+			String flatDamageString = modifiersSection.getString("Flat_Damage");
+			if (flatDamageString != null) {
+				try {
+					double bonus = Double.parseDouble(flatDamageString.trim());
+					if (bonus > 0) {
+						flatDamageModifier = new FlatDamageModifier(bonus);
+					}
+				} catch (NumberFormatException ignored) { }
+			}
 		}
 
 		// Build the immutable data objects first
@@ -534,6 +546,7 @@ public class WeaponAddon {
 
 		weapon.getModifiersData().setTracer(tracerModifier);
 		weapon.getModifiersData().setArmorPiercing(armorPiercingModifier);
+		weapon.getModifiersData().setFlatDamage(flatDamageModifier);
 
 		weapons.put(fileName, weapon);
 	}
