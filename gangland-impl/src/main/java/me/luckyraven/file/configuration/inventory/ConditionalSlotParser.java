@@ -1,0 +1,110 @@
+package me.luckyraven.file.configuration.inventory;
+
+import me.luckyraven.inventory.condition.ConditionalSlotData;
+import me.luckyraven.inventory.condition.SlotCondition;
+import me.luckyraven.inventory.handler.SlotItemFactory;
+import me.luckyraven.util.ItemBuilder;
+import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Parses conditional slot data (True/False branches with nested conditions) from YAML.
+ */
+final class ConditionalSlotParser {
+
+	private ConditionalSlotParser() { }
+
+	static ConditionalSlotData parse(ConfigurationSection conditionSection, String defaultItem, String defaultName,
+									 Map<String, Object> defaultData, List<String> defaultLore,
+									 boolean defaultEnchanted, boolean defaultDraggable) {
+		String valueExpression = conditionSection.getString("Value");
+		if (valueExpression == null || valueExpression.isEmpty()) {
+			throw new IllegalArgumentException("Condition must have a Value");
+		}
+
+		SlotCondition condition = new SlotCondition(valueExpression);
+
+		var trueSection = conditionSection.getConfigurationSection("True");
+		if (trueSection == null) trueSection = conditionSection.getConfigurationSection("true");
+
+		var falseSection = conditionSection.getConfigurationSection("False");
+		if (falseSection == null) falseSection = conditionSection.getConfigurationSection("false");
+
+		var trueData = parseBranchData(trueSection, defaultItem, defaultName, defaultData, defaultLore,
+									   defaultEnchanted, defaultDraggable);
+		var falseData = parseBranchData(falseSection, defaultItem, defaultName, defaultData, defaultLore,
+										defaultEnchanted, defaultDraggable);
+
+		return new ConditionalSlotData(condition, trueData, falseData);
+	}
+
+	static ConditionalSlotData.BranchData parseBranchData(@Nullable ConfigurationSection branchSection,
+														  String defaultItem, String defaultName,
+														  Map<String, Object> defaultData, List<String> defaultLore,
+														  boolean defaultEnchanted, boolean defaultDraggable) {
+		if (branchSection == null) {
+			ItemBuilder item = SlotItemFactory.create(defaultItem, defaultName, defaultData, defaultLore,
+													  defaultEnchanted);
+			return new ConditionalSlotData.BranchData(item, defaultName, defaultLore, false, defaultDraggable, null,
+													  null, null);
+		}
+
+		Map<String, Object> itemData = new HashMap<>();
+		String              item     = InventoryParser.getItemInfo(branchSection, itemData);
+		if (item == null) item = defaultItem;
+
+		String       name = branchSection.getString("Name", defaultName);
+		List<String> lore = branchSection.getStringList("Lore");
+		if (lore.isEmpty()) lore = defaultLore;
+
+		boolean enchanted = branchSection.getBoolean("Enchanted", defaultEnchanted);
+		boolean draggable = branchSection.getBoolean("Draggable", defaultDraggable);
+
+		ItemBuilder itemBuilder = SlotItemFactory.create(item, name, itemData, lore, enchanted);
+
+		ConditionalSlotData nestedData      = null;
+		var                 nestedCondition = branchSection.getConfigurationSection("Condition");
+		if (nestedCondition != null) {
+			nestedData = parse(nestedCondition, item, name, itemData, lore, enchanted, draggable);
+		}
+
+		var     clickAction      = parseClickAction(branchSection.getConfigurationSection("OnClick"));
+		var     rightClickAction = parseClickAction(branchSection.getConfigurationSection("OnRightClick"));
+		boolean hasAction        = clickAction != null || rightClickAction != null;
+
+		return new ConditionalSlotData.BranchData(itemBuilder, name, lore, hasAction, draggable, clickAction,
+												  rightClickAction, nestedData);
+	}
+
+	@Nullable
+	static ConditionalSlotData.ClickAction parseClickAction(@Nullable ConfigurationSection section) {
+		if (section == null) return null;
+
+		String command = section.getString("Command");
+		if (command != null) return new ConditionalSlotData.CommandAction(command);
+
+		if (section.isString("Inventory")) {
+			return new ConditionalSlotData.InventoryAction(section.getString("Inventory"));
+		}
+
+		if (section.isConfigurationSection("Inventory")) {
+			var invSection = section.getConfigurationSection("Inventory");
+			if (invSection == null) return null;
+
+			if ("anvil".equalsIgnoreCase(invSection.getString("Type"))) {
+				String title          = invSection.getString("Title", "Enter Text");
+				String text           = invSection.getString("Text", "");
+				var    successSection = invSection.getConfigurationSection("Success");
+				String successCommand = successSection != null ? successSection.getString("Command") : null;
+				return new ConditionalSlotData.AnvilAction(title, text, successCommand);
+			}
+		}
+
+		return null;
+	}
+
+}

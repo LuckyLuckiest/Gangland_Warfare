@@ -2,6 +2,7 @@ package me.luckyraven.inventory.service;
 
 import me.luckyraven.inventory.InventoryHandler;
 import org.bukkit.inventory.Inventory;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,13 +35,14 @@ public class InventoryRegistry {
 		return new ArrayList<>(playerInventories.getOrDefault(uuid, Collections.emptySet()));
 	}
 
+	@Nullable
 	public InventoryHandler findByInventory(Inventory inventory) {
 		return playerInventories.values()
-								.stream()
-								.flatMap(Set::stream)
-								.filter(handler -> inventory.equals(handler.getInventory()))
-								.findFirst()
-								.orElse(null);
+				.stream()
+				.flatMap(Set::stream)
+				.filter(handler -> inventory.equals(handler.getInventory()))
+				.findFirst()
+				.orElse(null);
 	}
 
 	public void clear(UUID uuid) {
