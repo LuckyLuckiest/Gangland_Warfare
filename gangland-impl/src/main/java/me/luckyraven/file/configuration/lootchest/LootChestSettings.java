@@ -1,4 +1,4 @@
-package me.luckyraven.file.configuration.inventory.lootchest;
+package me.luckyraven.file.configuration.lootchest;
 
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.lootchest.config.LootChestSettingsProvider;
