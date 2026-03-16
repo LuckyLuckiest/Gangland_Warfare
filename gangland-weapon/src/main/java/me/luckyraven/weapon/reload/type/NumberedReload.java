@@ -12,6 +12,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Objects;
+
 public class NumberedReload extends Reload {
 
 	private final int amount;
@@ -27,6 +29,10 @@ public class NumberedReload extends Reload {
 	@Override
 	public void stopReloading() {
 		if (timer == null || timer.isCancelled()) return;
+
+		if (isReloading()) {
+			super.endReloading(getCurrentPlayer());
+		}
 
 		timer.stop();
 		timer = null;
@@ -75,13 +81,12 @@ public class NumberedReload extends Reload {
 					return;
 				}
 
-				// TODO a bug that doesn't allow the weapon to leave reload state even after explicitly saying to end the reload
-//				boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1), amount);
-//				if (removeAmmunition && !contains) {
-//					stopReloading();
-//					super.endReloading(player);
-//					return;
-//				}
+				// if ammo was dropped mid-reload, abort the remaining insertions
+				boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1), amount);
+				if (removeAmmunition && !contains) {
+					stopReloading();
+					return;
+				}
 
 				// reload middle sound
 				SoundConfiguration.playSounds(player, getWeapon().getSoundData().getReloadCustomMid(), null);
@@ -102,12 +107,9 @@ public class NumberedReload extends Reload {
 					ItemStack   existingItem = inventory.getItem(newSlot);
 					ItemBuilder heldWeapon;
 
-					if (existingItem != null) {
-						// retrieve the existing item rather than building a new one
-						heldWeapon = new ItemBuilder(existingItem);
-					} else {
-						heldWeapon = new ItemBuilder(getWeapon().buildItem());
-					}
+					// retrieve the existing item rather than building a new one
+					heldWeapon = new ItemBuilder(
+							Objects.requireNonNullElseGet(existingItem, () -> getWeapon().buildItem()));
 
 					getWeapon().updateWeaponData(heldWeapon);
 					getWeapon().updateWeapon(player, heldWeapon, newSlot);

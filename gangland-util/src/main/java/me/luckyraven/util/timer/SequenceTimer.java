@@ -55,9 +55,9 @@ public class SequenceTimer extends Timer {
 
 	@Override
 	public void run() {
-		// cancel the timer if it was stopped
+		// stop the timer if it was externally halted or all tasks have been exhausted
 		if (!isRunning() || currentTask == null) {
-			stop();
+			super.stop();
 			return;
 		}
 
@@ -109,7 +109,6 @@ public class SequenceTimer extends Timer {
 
 	@Override
 	public void stop() {
-		this.reset();
 		super.stop();
 	}
 

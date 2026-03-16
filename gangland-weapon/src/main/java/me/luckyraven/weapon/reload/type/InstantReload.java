@@ -12,6 +12,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Objects;
+
 public class InstantReload extends Reload {
 
 	private SequenceTimer timer;
@@ -23,6 +25,10 @@ public class InstantReload extends Reload {
 	@Override
 	public void stopReloading() {
 		if (timer == null || timer.isCancelled()) return;
+
+		if (isReloading()) {
+			super.endReloading(getCurrentPlayer());
+		}
 
 		timer.stop();
 		timer = null;
@@ -44,13 +50,12 @@ public class InstantReload extends Reload {
 		timer.addIntervalTaskPair(0, time -> {
 			super.startReloading(player);
 
-			// TODO a bug that doesn't allow the weapon to leave reload state even after explicitly saying to end the reload
-//			boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1), getWeapon().getReloadConsume());
-//			if (removeAmmunition && !contains) {
-//				stopReloading();
-//				super.endReloading(player);
-//				return;
-//			}
+			// if ammo was lost before or during the reload start (e.g. dropped), abort immediately
+			boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1), reloadData.getConsume());
+			if (removeAmmunition && !contains) {
+				stopReloading();
+				return;
+			}
 
 			// remove the magazine the moment the reloading starts to prevent bugs
 			if (removeAmmunition) {
@@ -79,12 +84,9 @@ public class InstantReload extends Reload {
 				ItemStack   existingItem = inventory.getItem(newSlot);
 				ItemBuilder heldWeapon;
 
-				if (existingItem != null) {
-					// retrieve the existing item rather than building a new one
-					heldWeapon = new ItemBuilder(existingItem);
-				} else {
-					heldWeapon = new ItemBuilder(getWeapon().buildItem());
-				}
+				// retrieve the existing item rather than building a new one
+				heldWeapon = new ItemBuilder(
+						Objects.requireNonNullElseGet(existingItem, () -> getWeapon().buildItem()));
 
 				getWeapon().updateWeaponData(heldWeapon);
 				getWeapon().updateWeapon(player, heldWeapon, newSlot);
