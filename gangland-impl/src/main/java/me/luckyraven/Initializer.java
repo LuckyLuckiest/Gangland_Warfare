@@ -68,7 +68,7 @@ import me.luckyraven.file.configuration.copsncrooks.GanglandCopSettings;
 import me.luckyraven.file.configuration.copsncrooks.GanglandWantedSettings;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
-import me.luckyraven.file.configuration.inventory.lootchest.LootChestSettings;
+import me.luckyraven.file.configuration.lootchest.LootChestSettings;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
 import me.luckyraven.item.ItemParserManager;
@@ -110,6 +110,10 @@ import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import me.luckyraven.weapon.configuration.WeaponAddon;
 import me.luckyraven.weapon.configuration.WeaponLoader;
 import me.luckyraven.weapon.projectile.BlockDamageManager;
+import me.luckyraven.weapon.repair.GanglandRepairMessages;
+import me.luckyraven.weapon.repair.RepairManager;
+import me.luckyraven.weapon.repair.anvil.RepairAnvilGui;
+import me.luckyraven.weapon.repair.config.RepairLoader;
 import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -177,6 +181,9 @@ public final class Initializer {
 	private WeaponLoader               weaponLoader;
 	private LootChestLoader            lootChestLoader;
 	private CopLoader                  copLoader;
+	private RepairLoader               repairLoader;
+	private RepairManager              repairManager;
+	private RepairAnvilGui             repairAnvilGui;
 	// Database
 	private GanglandDatabase           ganglandDatabase;
 	// Placeholder
@@ -312,6 +319,9 @@ public final class Initializer {
 		// cop service
 		copLoader();
 
+		// repair system
+		repairLoader();
+
 		// Events
 		listenerManager = new ListenerManager(gangland);
 		events();
@@ -351,6 +361,9 @@ public final class Initializer {
 
 		FileHandler copsFile = new FileHandler(gangland, "cops", ".yml");
 		fileManager.addFile(copsFile, true);
+
+		FileHandler repairFile = new FileHandler(gangland, "repair", ".yml");
+		fileManager.addFile(repairFile, true);
 
 		FileHandler wearablesFile = new FileHandler(gangland, "wearables", ".yml");
 		fileManager.addFile(wearablesFile, true);
@@ -485,6 +498,16 @@ public final class Initializer {
 		copSpawnManager = copService.getCopManager().getSpawnManager();
 	}
 
+	public void repairLoader() {
+		repairLoader  = new RepairLoader(gangland);
+		repairManager = new RepairManager();
+
+		repairLoader.load(false, config -> repairManager.load(config), fileManager);
+
+		repairManager.setMessages(new GanglandRepairMessages());
+		repairAnvilGui = new RepairAnvilGui(gangland, repairManager);
+	}
+
 	public void weaponLoader() {
 		if (ammunitionAddon == null) {
 			ammunitionAddon = new AmmunitionAddon(fileManager);
@@ -533,7 +556,7 @@ public final class Initializer {
 		String signPrefix = Gangland.SHORT_PREFIX + "-";
 
 		SignInteraction signInteraction = new SignInteraction(signPrefix, registry, formatterService, signInformation);
-		bulkActionManager = new BulkActionManager(gangland);
+		bulkActionManager = new BulkActionManager(gangland, signInformation);
 
 		signManager = new SignManager(gangland, Gangland.SHORT_PREFIX, registry, signInteraction);
 
@@ -578,6 +601,8 @@ public final class Initializer {
 		dependencyContainer.registerInstance(SignInformation.class, signInformation);
 		dependencyContainer.registerInstance(HologramService.class, hologramService);
 		dependencyContainer.registerInstance(BlockDamageManager.class, blockDamageManager);
+		dependencyContainer.registerInstance(RepairManager.class, repairManager);
+		dependencyContainer.registerInstance(RepairAnvilGui.class, repairAnvilGui);
 		dependencyContainer.registerInstance(CopManager.class, copService.getCopManager());
 		dependencyContainer.registerInstance(KillCombo.class, killCombo);
 		dependencyContainer.registerInstance(DetainmentService.class, detainmentService);

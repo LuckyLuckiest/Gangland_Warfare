@@ -1,0 +1,99 @@
+# ============================================
+# Weapon Repair Material Configuration
+# ============================================
+#
+# Each entry under Repair_Materials defines a repair material type.
+#
+# Fields:
+#   Display_Name:     Item display name (supports color codes with &)
+#   Material:         Bukkit/XMaterial name
+#   Uses:             Number of uses before the material is depleted (1 = single use)
+#   Restore_Amount:   Flat amount of durability to restore (0 = disabled)
+#   Restore_Percent:  Percentage of max durability to restore (0.0 = disabled)
+#                     The higher of Restore_Amount and Restore_Percent is used.
+#   Sound:
+#     Default_Sound:  Vanilla Bukkit sound played on repair
+#       Sound:        Bukkit Sound name
+#       Volume:       Volume (0.0 - 1.0)
+#       Pitch:        Pitch (0.5 - 2.0)
+#     Custom_Sound:   Resource pack sound played on repair (fallback if Default_Sound fails)
+#       Sound:        Resource pack sound key
+#       Volume:       Volume (0.0 - 1.0)
+#       Pitch:        Pitch (0.5 - 2.0)
+#   Compatible_Types: List of item types this material works on (WEAPON, WEARABLE, GADGET)
+#   Lore:             Item lore lines (supports color codes with &)
+#   Custom_Model_Data: Optional custom model data (0 = none)
+# ============================================
+Repair_Materials:
+   Cleaning_Kit:
+      Display_Name: "&aCleaning Kit"
+      Material: PAPER
+      Uses: 5
+      Restore_Amount: 15
+      Restore_Percent: 0.0
+      Sound:
+         Default_Sound:
+            Sound: ENTITY_PLAYER_SPLASH
+            Volume: 1.0
+            Pitch: 1.0
+      Compatible_Types:
+         - WEAPON
+         - WEARABLE
+      Lore:
+         - "&7A basic cleaning kit."
+         - "&7Restores &a15 &7condition."
+      Custom_Model_Data: 0
+
+   Mechanical_Part:
+      Display_Name: "&6Mechanical Part"
+      Material: IRON_INGOT
+      Uses: 1
+      Restore_Amount: 0
+      Restore_Percent: 25.0
+      Sound:
+         Default_Sound:
+            Sound: BLOCK_ANVIL_USE
+            Volume: 1.0
+            Pitch: 1.0
+      Compatible_Types:
+         - WEAPON
+      Lore:
+         - "&7Advanced mechanical component."
+         - "&7Restores &a25% &7of max condition."
+      Custom_Model_Data: 0
+
+   Weapon_Repair_Kit:
+      Display_Name: "&bWeapon Repair Kit"
+      Material: DIAMOND
+      Uses: 3
+      Restore_Amount: 0
+      Restore_Percent: 100.0
+      Sound:
+         Default_Sound:
+            Sound: BLOCK_ANVIL_USE
+            Volume: 1.0
+            Pitch: 0.8
+      Compatible_Types:
+         - WEAPON
+      Lore:
+         - "&7Professional repair kit."
+         - "&7Fully restores weapon condition."
+      Custom_Model_Data: 0
+
+   Field_Kit:
+      Display_Name: "&7Field Repair Kit"
+      Material: STICK
+      Uses: 10
+      Restore_Amount: 5
+      Restore_Percent: 0.0
+      Sound:
+         Default_Sound:
+            Sound: BLOCK_STONE_PLACE
+            Volume: 1.0
+            Pitch: 1.2
+      Compatible_Types:
+         - WEAPON
+      Lore:
+         - "&7A compact field repair kit."
+         - "&7Restores &a5 &7condition per use."
+      Custom_Model_Data: 0
