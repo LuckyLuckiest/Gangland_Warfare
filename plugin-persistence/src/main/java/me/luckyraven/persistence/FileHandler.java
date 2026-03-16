@@ -204,12 +204,16 @@ public class FileHandler {
 		return false;
 	}
 
-	private void reload() {
-		// throwing fileConfiguration
-		if (fileConfiguration != null) fileConfiguration = null;
+	private void reload() throws IOException {
+		if (fileConfiguration == null) {
+			fileConfiguration = new YamlConfiguration();
+		}
 
-		// applying the value again
-		fileConfiguration = YamlConfiguration.loadConfiguration(file);
+		try {
+			fileConfiguration.load(file);
+		} catch (InvalidConfigurationException exception) {
+			throw new IOException("Failed to parse YAML file " + name + ": " + exception.getMessage(), exception);
+		}
 	}
 
 }

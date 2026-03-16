@@ -234,7 +234,7 @@ public class SettingAddon implements FileInitializer {
 		deathEnabled                 = user.getBoolean("Death.Enable", true);
 		deathMoneyCommandEnabled     = user.getBoolean("Death.Money.Command.Enable", false);
 		deathMoneyCommandExecutables = user.getStringList("Death.Money.Command.Executable");
-		deathLoseMoney               = !user.getBoolean("Death.Lose_Money", true);
+		deathLoseMoney               = user.getBoolean("Death.Money.Lose_Money", true);
 		deathLoseMoneyFormula        = user.getString("Death.Money.Formula", "balance * 0.15");
 		deathThreshold               = user.getDouble("Death.Money.Threshold", 1_000);
 
