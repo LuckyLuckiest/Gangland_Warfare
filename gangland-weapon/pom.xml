@@ -65,6 +65,14 @@
             <version>${viaversion.version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- AnvilGUI -->
+        <dependency>
+            <groupId>net.wesjd</groupId>
+            <artifactId>anvilgui</artifactId>
+            <version>${anvilgui.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 </project>

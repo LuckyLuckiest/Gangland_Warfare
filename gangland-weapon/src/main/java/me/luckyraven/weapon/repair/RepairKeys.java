@@ -1,24 +1,12 @@
 package me.luckyraven.weapon.repair;
 
-/**
- * Constant keys for repair item NBT tags.
- */
 public final class RepairKeys {
 
-	/**
-	 * The repair item's unique ID
-	 */
-	public static final String REPAIR_ITEM_ID             = "repair-item-id";
-	/**
-	 * The repair item's current durability
-	 */
-	public static final String REPAIR_ITEM_DURABILITY     = "repair-item-durability";
-	/**
-	 * The repair item's maximum durability
-	 */
-	public static final String REPAIR_ITEM_MAX_DURABILITY = "repair-item-max-durability";
+    public static final String REPAIR_MATERIAL_ID       = "gangland_repair_material_id";
+    public static final String REPAIR_MATERIAL_USES     = "gangland_repair_material_uses";
+    public static final String REPAIR_MATERIAL_MAX_USES = "gangland_repair_material_max_uses";
 
-	private RepairKeys() {
-		throw new UnsupportedOperationException("Utility class");
-	}
+    private RepairKeys() {
+        throw new UnsupportedOperationException("Utility class");
+    }
 }

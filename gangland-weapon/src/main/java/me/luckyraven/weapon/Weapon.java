@@ -11,6 +11,8 @@ import me.luckyraven.weapon.durability.DurabilityCalculator;
 import me.luckyraven.weapon.projectile.recoil.RecoilManager;
 import me.luckyraven.weapon.projectile.spread.SpreadManager;
 import me.luckyraven.weapon.reload.Reload;
+import me.luckyraven.weapon.repair.Repairable;
+import me.luckyraven.weapon.repair.RepairableType;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -23,7 +25,7 @@ import java.util.*;
 
 @Getter
 @Setter
-public class Weapon implements Cloneable, Comparable<Weapon> {
+public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 
 	// Core identity (immutable)
 	private final UUID         uuid;
@@ -269,6 +271,31 @@ public class Weapon implements Cloneable, Comparable<Weapon> {
 		return String.format("Weapon{uuid='%s',name='%s',category='%s',material='%s'}", uuid, name, category, material);
 	}
 
+	@Override
+	public @NotNull String getRepairableId() {
+		return name;
+	}
+
+	@Override
+	public int getCurrentRepairDurability() {
+		return currentDurability;
+	}
+
+	@Override
+	public void setCurrentRepairDurability(int durability) {
+		setCurrentDurability((short) durability);
+	}
+
+	@Override
+	public int getMaxRepairDurability() {
+		return durability;
+	}
+
+	@Override
+	public @NotNull RepairableType getRepairableType() {
+		return RepairableType.WEAPON;
+	}
+
 	private void initializeManagers() {
 		this.reload               = reloadData.getType().createInstance(this, reloadData.getAmmoType());
 		this.recoil               = new RecoilManager(this);
@@ -297,6 +324,8 @@ public class Weapon implements Cloneable, Comparable<Weapon> {
 		this.reloadActionBarData = source.reloadActionBarData.clone();
 		this.modifiersData       = source.modifiersData.clone();
 	}
+
+	// --- Repairable implementation ---
 
 	private void updateTag(ItemBuilder itemBuilder, WeaponTag tag, Object value) {
 		tags.replace(tag, value);
