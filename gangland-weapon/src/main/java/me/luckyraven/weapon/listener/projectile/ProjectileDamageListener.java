@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @ListenerHandler
 @AutowireTarget({WeaponService.class, WearableService.class})
-public class ProjectileDamage implements Listener {
+public class ProjectileDamageListener implements Listener {
 
 	private final static Map<Integer, Weapon>          weaponInstance   = new ConcurrentHashMap<>();
 	private final static Map<Integer, ProjectileState> projectileStates = new ConcurrentHashMap<>();
@@ -46,8 +46,8 @@ public class ProjectileDamage implements Listener {
 
 	private final Map<Integer, ProjectileEventQueue> eventQueues;
 
-	public ProjectileDamage(WeaponService weaponService, BlockDamageManager blockDamageManager,
-							WearableService wearableService) {
+	public ProjectileDamageListener(WeaponService weaponService, BlockDamageManager blockDamageManager,
+									WearableService wearableService) {
 		this.weaponManager      = weaponService;
 		this.blockDamageManager = blockDamageManager;
 		this.wearableService    = wearableService;

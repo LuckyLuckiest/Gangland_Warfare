@@ -16,11 +16,11 @@ import org.bukkit.inventory.ItemStack;
 
 @ListenerHandler
 @AutowireTarget({WeaponService.class})
-public class WeaponSelectiveFireChange implements Listener {
+public class WeaponSelectiveFireChangeListener implements Listener {
 
 	private final WeaponService weaponService;
 
-	public WeaponSelectiveFireChange(WeaponService weaponService) {
+	public WeaponSelectiveFireChangeListener(WeaponService weaponService) {
 		this.weaponService = weaponService;
 	}
 

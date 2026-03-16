@@ -1,15 +1,16 @@
 package me.luckyraven.weapon.listener.reload;
 
+import lombok.RequiredArgsConstructor;
+import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
-import me.luckyraven.weapon.ammo.Ammunition;
+import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.events.reload.WeaponReloadCompleteEvent;
 import me.luckyraven.weapon.events.reload.WeaponReloadStartEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
@@ -19,9 +20,12 @@ import java.util.Set;
 import java.util.UUID;
 
 @ListenerHandler
+@AutowireTarget({WeaponService.class})
+@RequiredArgsConstructor
 public class WeaponReloadListener implements Listener {
 
-	private final Set<UUID> reloadingPlayers = new HashSet<>();
+	private final WeaponService weaponService;
+	private final Set<UUID>     reloadingPlayers = new HashSet<>();
 
 	@EventHandler
 	public void onReloadStart(WeaponReloadStartEvent event) {
@@ -39,35 +43,12 @@ public class WeaponReloadListener implements Listener {
 
 		if (!reloadingPlayers.contains(player.getUniqueId())) return;
 
-		event.setCancelled(true);
-	}
+		ItemStack heldItem = player.getInventory().getItemInMainHand();
+		Weapon    weapon   = weaponService.validateAndGetWeapon(player, heldItem);
 
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onPlayerDrop(PlayerDropItemEvent event) {
-		Player player = event.getPlayer();
+		if (weapon == null) return;
 
-		if (!reloadingPlayers.contains(player.getUniqueId())) return;
-
-		ItemStack dropped = event.getItemDrop().getItemStack();
-
-		// only ammo items may be dropped during a reload
-		if (!Ammunition.isAmmunition(dropped)) {
-			event.setCancelled(true);
-		}
-	}
-
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onPlayerPickup(EntityPickupItemEvent event) {
-		if (!(event.getEntity() instanceof Player player)) return;
-
-		if (!reloadingPlayers.contains(player.getUniqueId())) return;
-
-		ItemStack item = event.getItem().getItemStack();
-
-		// only ammo items may be picked up during a reload
-		if (!Ammunition.isAmmunition(item)) {
-			event.setCancelled(true);
-		}
+		weapon.stopReloading();
 	}
 
 	@EventHandler

@@ -18,12 +18,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 @ListenerHandler
 @AutowireTarget({WeaponService.class})
-public class WeaponDropped implements Listener {
+public class WeaponDroppedListener implements Listener {
 
 	private final JavaPlugin    plugin;
 	private final WeaponService weaponService;
 
-	public WeaponDropped(JavaPlugin plugin, WeaponService weaponService) {
+	public WeaponDroppedListener(JavaPlugin plugin, WeaponService weaponService) {
 		this.plugin        = plugin;
 		this.weaponService = weaponService;
 	}
