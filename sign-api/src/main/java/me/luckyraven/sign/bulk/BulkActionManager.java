@@ -2,7 +2,7 @@ package me.luckyraven.sign.bulk;
 
 import lombok.Getter;
 import me.luckyraven.sign.model.ParsedSign;
-import me.luckyraven.util.utilities.ChatUtil;
+import me.luckyraven.sign.service.SignInformation;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -24,34 +24,28 @@ public class BulkActionManager {
 
 	private static final int DEFAULT_CONFIRM_WINDOW_SECONDS = 10;
 
-	private final JavaPlugin plugin;
+	private final JavaPlugin      plugin;
+	private final SignInformation information;
 	@Getter
-	private final int        confirmWindowSeconds;
+	private final int             confirmWindowSeconds;
 
 	private final ConcurrentHashMap<UUID, PendingBulkAction> pending = new ConcurrentHashMap<>();
 
-	public BulkActionManager(JavaPlugin plugin) {
-		this(plugin, DEFAULT_CONFIRM_WINDOW_SECONDS);
+	public BulkActionManager(JavaPlugin plugin, SignInformation information) {
+		this(plugin, information, DEFAULT_CONFIRM_WINDOW_SECONDS);
 	}
 
-	public BulkActionManager(JavaPlugin plugin, int confirmWindowSeconds) {
+	public BulkActionManager(JavaPlugin plugin, SignInformation information, int confirmWindowSeconds) {
 		this.plugin               = plugin;
+		this.information          = information;
 		this.confirmWindowSeconds = confirmWindowSeconds;
 	}
-
-	// -------------------------------------------------------------------------
-	// State queries
-	// -------------------------------------------------------------------------
 
 	public boolean hasPending(Player player) {
 		PendingBulkAction action = pending.get(player.getUniqueId());
 
 		return action != null && !action.isExpired();
 	}
-
-	// -------------------------------------------------------------------------
-	// Lifecycle
-	// -------------------------------------------------------------------------
 
 	public boolean isPendingForSign(Player player, ParsedSign sign) {
 		PendingBulkAction action = pending.get(player.getUniqueId());
@@ -70,8 +64,7 @@ public class BulkActionManager {
 
 		int taskId = Bukkit.getScheduler().runTaskLater(plugin, () -> {
 			if (pending.remove(player.getUniqueId()) != null && player.isOnline()) {
-				player.sendMessage(ChatUtil.color(
-						"&cYour bulk confirmation for &f" + preview.getContentName() + " &chas expired."));
+				player.sendMessage(information.getBulkExpired(preview.getContentName()));
 			}
 		}, confirmWindowSeconds * 20L).getTaskId();
 
@@ -101,10 +94,6 @@ public class BulkActionManager {
 		cancelInternal(player, true);
 	}
 
-	// -------------------------------------------------------------------------
-	// Internals
-	// -------------------------------------------------------------------------
-
 	/**
 	 * Cancels all pending actions (e.g. on plugin disable).
 	 */
@@ -122,8 +111,7 @@ public class BulkActionManager {
 		cancelSchedulerTask(action);
 
 		if (notify && player.isOnline()) {
-			player.sendMessage(ChatUtil.color(
-					"&cBulk confirmation for &f" + action.getPreview().getContentName() + " &cwas cancelled."));
+			player.sendMessage(information.getBulkCancelled(action.getPreview().getContentName()));
 		}
 	}
 

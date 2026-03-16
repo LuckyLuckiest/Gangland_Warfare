@@ -66,7 +66,7 @@ public class PlayerSignInteract implements Listener {
 		} catch (SignValidationException ignored) { }
 
 		if (optParsed.isEmpty()) {
-			information.sendError(player, "Invalid sign!");
+			player.sendMessage(information.getInvalidSign());
 
 			return;
 		}
@@ -75,7 +75,6 @@ public class PlayerSignInteract implements Listener {
 
 		ParsedSign parsed = optParsed.get();
 
-		// ── Bulk (shift-click) flow ──────────────────────────────────────────
 		if (player.isSneaking()) {
 			Optional<SignTypeDefinition> defOpt      = signService.getRegistry().getDefinition(parsed.getSignType());
 			BulkSignHandler              bulkHandler = defOpt.map(SignTypeDefinition::getBulkHandler).orElse(null);
@@ -86,13 +85,8 @@ public class PlayerSignInteract implements Listener {
 			}
 		}
 
-		// ── Normal (single) flow ─────────────────────────────────────────────
 		signService.handlerInteraction(player, parsed);
 	}
-
-	// -------------------------------------------------------------------------
-	// Bulk helpers
-	// -------------------------------------------------------------------------
 
 	private void handleBulkInteraction(Player player, ParsedSign parsed, BulkSignHandler bulkHandler) {
 		if (bulkActionManager.isPendingForSign(player, parsed)) {
@@ -100,7 +94,7 @@ public class PlayerSignInteract implements Listener {
 			PendingBulkAction action = bulkActionManager.confirm(player);
 
 			if (action == null) {
-				information.sendError(player, "Bulk confirmation expired - please try again.");
+				player.sendMessage(information.getBulkConfirmExpired());
 				return;
 			}
 
@@ -127,18 +121,8 @@ public class PlayerSignInteract implements Listener {
 
 			bulkActionManager.initiate(player, parsed, bulkHandler, preview);
 
-			sendBulkConfirmationRequest(player, preview);
+			player.sendMessage(information.getBulkConfirmRequest(preview, bulkActionManager.getConfirmWindowSeconds()));
 		}
-	}
-
-	private void sendBulkConfirmationRequest(Player player, BulkActionPreview preview) {
-		String moneySymbol = information.getMoneySymbol();
-		int    seconds     = bulkActionManager.getConfirmWindowSeconds();
-
-		information.sendSuccess(player,
-								"Bulk action: &f" + preview.getQuantity() + "x " + preview.getContentName()
-								+ " &7for &a" + moneySymbol + String.format("%.2f", preview.getTotalPrice())
-								+ " &7- Shift-click the sign again within &f" + seconds + "s &7to confirm.");
 	}
 
 }

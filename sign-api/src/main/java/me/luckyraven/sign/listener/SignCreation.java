@@ -37,9 +37,9 @@ public class SignCreation implements Listener {
 				event.setLine(i, newLines[i]);
 			}
 
-			information.sendSuccess(player, "Sign created successfully!");
+			player.sendMessage(information.getSignCreated());
 		} catch (SignValidationException exception) {
-			information.sendError(player, "Invalid sign: " + exception.getMessage());
+			player.sendMessage(information.getSignCreationFailed(exception.getMessage()));
 			event.setCancelled(true);
 		}
 	}
