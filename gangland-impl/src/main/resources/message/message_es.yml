@@ -7,7 +7,7 @@
 # |    | \_______/ ||          | |        / /        \ \     | #
 # |     \__________/           |_|       /_/          \_\    | #
 # |                                                          | #
-# |                   File: message_en.yml                   | #
+# |                   File: message_es.yml                   | #
 # |                  Author: [LuckyRaven10]                  | #
 #  \                                                        /  #
 #   +------------------------------------------------------+   #
@@ -46,6 +46,9 @@ Config_Version: '${project.version}'
 # |  %uuid%           : Get the player UUID.                                      |
 # |  %ammo%           : Gets the ammo amount.                                     |
 # |  %weapon%         : Get the weapon name.                                      |
+# |  %quantity%       : Gets the quantity for bulk sign actions.                  |
+# |  %content%        : Gets the content name for bulk sign actions.              |
+# |  %price%          : Gets the price for bulk sign actions.                     |
 # |  =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=  |
 # +-------------------------------------------------------------------------------+
 # For Color Codes, check this website: http://minecraft.gamepedia.com/Formatting_codes
@@ -70,261 +73,267 @@ Config_Version: '${project.version}'
 
 Normal:
    Prefix: "&8&l[&7G&fL&7W&8&l]&7 "
-   Entity_Drop_Money: "&a%money_symbol%%amount% &7has been added for killing &c%entity%&7."
+   Entity_Drop_Money: "&a%money_symbol%%amount% &7ha sido añadido por matar a &c%entity%&7."
 
 Time_Unit:
-   Second: "second"
-   Minute: "minute"
-   Hour: "hour"
-   Day: "day"
-   Week: "week"
-   Year: "year"
+   Second: "segundo"
+   Minute: "minuto"
+   Hour: "hora"
+   Day: "día"
+   Week: "semana"
+   Year: "año"
 
 Commands:
    Prefix: "&6GLW &8&l>>&7 "
    Syntax:
-      Missing_Arguments: "&4Missing Arguments&7: "
-      Too_Much_Arguments: "&4Too Much Arguments&7: "
-      Wrong_Arguments: "&4Wrong Arguments&7: "
-      Page_Invalid: "&4Invalid Page&7: "
-      Doesnt_Exist: "&4Doesn't Exist&7: "
+      Missing_Arguments: "&4Argumentos Faltantes&7: "
+      Too_Much_Arguments: "&4Demasiados Argumentos&7: "
+      Wrong_Arguments: "&4Argumentos Incorrectos&7: "
+      Page_Invalid: "&4Página Inválida&7: "
+      Doesnt_Exist: "&4No Existe&7: "
    Weapons:
       Ammo:
-         Received: "You received &8(&7%amount%&8) &e%ammo% &7ammunition."
-         Gave: "You gave &8(&7%amount%&8) &e%ammo% &7ammunition to &3%player%&7."
+         Received: "Recibiste &8(&7%amount%&8) &e%ammo% &7munición."
+         Gave: "Le diste &8(&7%amount%&8) &e%ammo% &7munición a &3%player%&7."
       Weapon:
-         Received: "You received &8(&7%amount%&8) &e%weapon% &7weapon."
-         Gave: "You gave a &8(&7%amount%&8) &e%weapon% &7weapon to &3%player%&7."
+         Received: "Recibiste &8(&7%amount%&8) &e%weapon% &7arma."
+         Gave: "Le diste &8(&7%amount%&8) &e%weapon% &7arma a &3%player%&7."
    Economy:
       Balance:
-         Player: "Your balance is: &b%money_symbol%%balance%"
-         Target: "&6%target%'s &7balance is: &b%money_symbol%%balance%"
+         Player: "Tu saldo es: &b%money_symbol%%balance%"
+         Target: "El saldo de &6%target%&7 es: &b%money_symbol%%balance%"
       Money:
-         Free: "A free transaction has been initiated."
+         Free: "Se ha iniciado una transacción gratuita."
          Player:
-            Add: "&a%money_symbol%%amount% &7has been added to your account."
-            Take: "&a%money_symbol%%amount% &7has been taken from your account."
-            Set: "Your account balance has been set to &a%money_symbol%%amount%&7."
-            Reset: "Your account has been reset."
+            Add: "&a%money_symbol%%amount% &7ha sido añadido a tu cuenta."
+            Take: "&a%money_symbol%%amount% &7ha sido retirado de tu cuenta."
+            Set: "El saldo de tu cuenta ha sido establecido en &a%money_symbol%%amount%&7."
+            Reset: "Tu cuenta ha sido restablecida."
          Target:
-            Add: "&a%money_symbol%%amount% &7has been added to &6%target%'s &7account."
-            Take: "&a%money_symbol%%amount% &7has been taken from &6%target%'s &7account."
-            Set: "&6%target%'s &7account balance has been set to &a%money_symbol%%amount%&7."
-            Reset: "&6%target%'s &7account has been reset."
+            Add: "&a%money_symbol%%amount% &7ha sido añadido a la cuenta de &6%target%&7."
+            Take: "&a%money_symbol%%amount% &7ha sido retirado de la cuenta de &6%target%&7."
+            Set: "El saldo de la cuenta de &6%target%&7 ha sido establecido en &a%money_symbol%%amount%&7."
+            Reset: "La cuenta de &6%target%&7 ha sido restablecida."
    Bank:
       Create:
-         Created_Bank: "Created a new bank &8[&a%bank%&8]&7."
-         Bank_Fee: "The fee for creating a new bank account is &a%money_symbol%%amount%&7."
-         Confirm_Timer: "You have &a%timer%&7 to confirm the account."
+         Created_Bank: "Se creó un nuevo banco &8[&a%bank%&8]&7."
+         Bank_Fee: "La tarifa para crear una nueva cuenta bancaria es &a%money_symbol%%amount%&7."
+         Confirm_Timer: "Tienes &a%timer%&7 para confirmar la cuenta."
       Remove:
-         Removed_Bank: "Your bank account &8[&a%bank%&8]&7 has been removed."
-         Confirm_Timer: "You have &a%timer%&7 to confirm deleting the account."
-      Have_Bank: "You already have a bank."
+         Removed_Bank: "Tu cuenta bancaria &8[&a%bank%&8]&7 ha sido eliminada."
+         Confirm_Timer: "Tienes &a%timer%&7 para confirmar la eliminación de la cuenta."
+      Have_Bank: "Ya tienes un banco."
       Balance:
-         Player: "Your bank balance is: &b%money_symbol%%balance%"
-         Target: "&6%target%'s &7 bank balance is: &b%money_symbol%%balance%"
+         Player: "Tu saldo bancario es: &b%money_symbol%%balance%"
+         Target: "El saldo bancario de &6%target%&7 es: &b%money_symbol%%balance%"
       Money:
-         Player_Add: "&a%money_symbol%%amount% &7has been deposited from your account to your bank account."
-         Player_Take: "&a%money_symbol%%amount% &7has been withdrawn from your bank account into your account."
-         Target_Add: "&a%money_symbol%%amount% &7has been deposited from &6%target%'s&7 account to his bank account."
-         Target_Take: "&a%money_symbol%%amount% &7has been withdrawn from &6%target%'s &7bank account."
+         Player_Add: "&a%money_symbol%%amount% &7ha sido depositado desde tu cuenta a tu cuenta bancaria."
+         Player_Take: "&a%money_symbol%%amount% &7ha sido retirado de tu cuenta bancaria a tu cuenta."
+         Target_Add: "&a%money_symbol%%amount% &7ha sido depositado desde la cuenta de &6%target%&7 a su cuenta bancaria."
+         Target_Take: "&a%money_symbol%%amount% &7ha sido retirado de la cuenta bancaria de &6%target%&7."
    Gang:
       Create:
-         Created_Gang: "Created a new gang &8[&a%gang%&8]&7."
-         Gang_Fee: "The fee for creating a new gang account is &a%money_symbol%%amount%&7."
-         Confirm_Timer: "You have &a%timer%&7 to confirm the account."
-         Rename: "Changed gang name from &8[&d%old_gang%&8]&7 to &8[&e%gang%&8]&7."
+         Created_Gang: "Se creó una nueva banda &8[&a%gang%&8]&7."
+         Gang_Fee: "La tarifa para crear una nueva banda es &a%money_symbol%%amount%&7."
+         Confirm_Timer: "Tienes &a%timer%&7 para confirmar la cuenta."
+         Rename: "Se cambió el nombre de la banda de &8[&d%old_gang%&8]&7 a &8[&e%gang%&8]&7."
       Remove:
-         Removed_Gang: "Gang account &8[&a%gang%&8] &7has been removed."
-         Confirm_Timer: "You have &a%timer%&7 to confirm deleting the account."
+         Removed_Gang: "La banda &8[&a%gang%&8] &7ha sido eliminada."
+         Confirm_Timer: "Tienes &a%timer%&7 para confirmar la eliminación de la cuenta."
       Available:
-         Player_In_Gang: "You already have a gang."
-         Target_In_Gang: "&6%player%&7 already in a gang."
-      Balance: "Gang balance is: &b%money_symbol%%balance%"
+         Player_In_Gang: "Ya tienes una banda."
+         Target_In_Gang: "&6%player%&7 ya está en una banda."
+      Balance: "El saldo de la banda es: &b%money_symbol%%balance%"
       Invite:
-         Player: "You have invited &6%player%&7 to the gang."
-         Target: "You were invited to join &8[&a%gang%&8]&7."
-         Accept: "You have joined &8[&a%gang%&8]&7 gang."
-         Joined: "&6%player%&7 joined the gang."
+         Player: "Has invitado a &6%player%&7 a la banda."
+         Target: "Fuiste invitado a unirte a &8[&a%gang%&8]&7."
+         Accept: "Te has unido a la banda &8[&a%gang%&8]&7."
+         Joined: "&6%player%&7 se unió a la banda."
       Ally:
-         Send_Request: "Sent an alliance request to &8[&e%gang%&8]&7."
-         Receive_Request: "Gang alliance was requested from &8[&e%gang%&8]&7."
-         Accept_Request: "Gang alliance with &8[&e%gang%&8]&7 was &aaccepted&7."
-         Reject_Request: "Gang alliance with &8[&e%gang%&8]&7 was &crejected&7."
-         Abandon: "Gang alliance was abandoned with &8[&e%gang%&8]&7."
+         Send_Request: "Se envió una solicitud de alianza a &8[&e%gang%&8]&7."
+         Receive_Request: "La banda &8[&e%gang%&8]&7 solicitó una alianza."
+         Accept_Request: "La alianza con &8[&e%gang%&8]&7 fue &aaceptada&7."
+         Reject_Request: "La alianza con &8[&e%gang%&8]&7 fue &crechazada&7."
+         Abandon: "La alianza con &8[&e%gang%&8]&7 fue abandonada."
       Promote:
-         Player_Success: "You have promoted &6%player%&7 to &e%rank%&7."
-         Target_Success: "You have been promoted to &e%rank%&7."
-         End: "Reached the last rank."
+         Player_Success: "Has ascendido a &6%player%&7 a &e%rank%&7."
+         Target_Success: "Has sido ascendido a &e%rank%&7."
+         End: "Se alcanzó el último rango."
       Demote:
-         Player_Success: "You have demoted &6%player%&7 to &e%rank%&7."
-         Target_Success: "You have been demoted to &e%rank%&7."
-         End: "Reached the initial rank."
+         Player_Success: "Has degradado a &6%player%&7 a &e%rank%&7."
+         Target_Success: "Has sido degradado a &e%rank%&7."
+         End: "Se alcanzó el rango inicial."
       Leave:
-         Left: "You have left the gang."
-         Owner_Rank: "Need to transfer the ownership to another user."
-         Kicked: "You have kicked &6%player%&7 from the gang."
+         Left: "Has abandonado la banda."
+         Owner_Rank: "Debes transferir la propiedad a otro usuario."
+         Kicked: "Has expulsado a &6%player%&7 de la banda."
       Money:
-         Add: "&6%player%&7 has deposited &a%money_symbol%%amount% &7to the gang account."
-         Take: "&6%player%&7 has withdrawn &a%money_symbol%%amount% &7from the gang account."
+         Add: "&6%player%&7 depositó &a%money_symbol%%amount% &7en la cuenta de la banda."
+         Take: "&6%player%&7 retiró &a%money_symbol%%amount% &7de la cuenta de la banda."
       Display_Name:
-         Set: "New gang display name set to &8[&r%display%&8]&7."
-         Removed: "Gang display name has been removed."
+         Set: "El nuevo nombre para mostrar de la banda se estableció en &8[&r%display%&8]&7."
+         Removed: "El nombre para mostrar de la banda ha sido eliminado."
       Color:
-         Set: "Gang new color &8[%color%&8]&7 has been set."
-         Reset: "Gang color has been reset!"
+         Set: "El nuevo color de la banda &8[%color%&8]&7 ha sido establecido."
+         Reset: "¡El color de la banda ha sido restablecido!"
       Description:
-         Cancelled: "No changes made."
-         Change: "Changed gang description from &b\"%old_desc%\"&7 to &6\"%new_desc%\"&7."
+         Cancelled: "No se realizaron cambios."
+         Change: "Se cambió la descripción de la banda de &b\"%old_desc%\"&7 a &6\"%new_desc%\"&7."
    Rank:
       Create:
-         Created_Rank: "Created a new rank &8[&a%rank%&8]&7."
-         Confirm_Timer: "You have &a%timer%&7 to confirm the rank."
+         Created_Rank: "Se creó un nuevo rango &8[&a%rank%&8]&7."
+         Confirm_Timer: "Tienes &a%timer%&7 para confirmar el rango."
       Remove:
-         Removed_Rank: "Rank &8[&a%rank%&8]&7 has been removed successfully."
-         Confirm_Timer: "You have &a%timer%&7 to confirm deleting the rank."
-      Rank_Exists: "This rank is already created!"
+         Removed_Rank: "El rango &8[&a%rank%&8]&7 ha sido eliminado exitosamente."
+         Confirm_Timer: "Tienes &a%timer%&7 para confirmar la eliminación del rango."
+      Rank_Exists: "¡Este rango ya fue creado!"
       Permission:
-         Add: "You have added &8[&a%permission%&8]&7 to &8[&a%rank%&8]&7 rank."
-         Remove: "You have removed &8[&a%permission%&8]&7 from &8[&a%rank%&8]&7 rank."
-         Exists: "&cThe permission %permission% already exists on rank %rank%!"
+         Add: "Has añadido &8[&a%permission%&8]&7 al rango &8[&a%rank%&8]&7."
+         Remove: "Has eliminado &8[&a%permission%&8]&7 del rango &8[&a%rank%&8]&7."
+         Exists: "&cEl permiso %permission% ya existe en el rango %rank%!"
       List:
-         Primary: "All the ranks:"
+         Primary: "Todos los rangos:"
          Secondary: "%ranks%"
       Info:
-         Primary: "&8[&a%rank%&8]&7 information%n%&7ID&8: &b%id%%n%&7Parent&8: &b%parent%"
-         Secondary: "&7Permissions&8:%n%&7%permissions%"
+         Primary: "&8[&a%rank%&8]&7 información%n%&7ID&8: &b%id%%n%&7Padre&8: &b%parent%"
+         Secondary: "&7Permisos&8:%n%&7%permissions%"
       Parent:
-         Add: "Added &8[&e%parent%&8]&7 to &8[&a%rank%&8]&7."
-         Remove: "Removed &8[&e%parent%&8]&7 from &8[&a%rank%&8]&7."
+         Add: "Se añadió &8[&e%parent%&8]&7 a &8[&a%rank%&8]&7."
+         Remove: "Se eliminó &8[&e%parent%&8]&7 de &8[&a%rank%&8]&7."
    Bounty:
-      Current: "Bounty &c%money_symbol%%bounty%"
-      Bounty_Set: "You have a bounty on your head!"
-      Increment: "&4&lBounty &c+%bounty%"
-      Player_Lift: "You have lifted &a%money_symbol%%amount%&7 from &6%player%&7."
-      Lifted: "&a%money_symbol%%amount%&7 has been lifted from your bounty.%n%&4&lBounty &c%money_symbol%%bounty%"
-      Clear: "Your bounty was cleared!"
+      Current: "Recompensa &c%money_symbol%%bounty%"
+      Bounty_Set: "¡Hay una recompensa sobre tu cabeza!"
+      Increment: "&4&lRecompensa &c+%bounty%"
+      Player_Lift: "Has reclamado &a%money_symbol%%amount%&7 de &6%player%&7."
+      Lifted: "&a%money_symbol%%amount%&7 ha sido reclamado de tu recompensa.%n%&4&lRecompensa &c%money_symbol%%bounty%"
+      Clear: "¡Tu recompensa ha sido eliminada!"
    Level:
       Experience:
-         Add: "Added &b%experience%&7 exp to your level."
-         Remove: "Removed &b%experience%&7 exp from your level."
+         Add: "Se añadió &b%experience%&7 de experiencia a tu nivel."
+         Remove: "Se eliminó &b%experience%&7 de experiencia de tu nivel."
       Level:
-         Add: "Leveled Up &b%level%&7 levels."
-         Remove: "Went down &b%level%&7 levels."
-      Next: "Level: &f%level%&7/&b%max_level%%n%&7Experience: &f%experience%&7/&b%required_experience%"
+         Add: "Subiste &b%level%&7 niveles."
+         Remove: "Bajaste &b%level%&7 niveles."
+      Next: "Nivel: &f%level%&7/&b%max_level%%n%&7Experiencia: &f%experience%&7/&b%required_experience%"
    Waypoint:
       Create:
-         Created_Waypoint: "Created a new waypoint &8[&a%waypoint%&8]&7."
-         Confirm_Timer: "You have &a%timer%&7 to confirm the waypoint."
+         Created_Waypoint: "Se creó un nuevo punto de referencia &8[&a%waypoint%&8]&7."
+         Confirm_Timer: "Tienes &a%timer%&7 para confirmar el punto de referencia."
       Select:
-         Selected: "The waypoint &8[&a%waypoint%&8]&7 has been selected."
-         Deselected: "The waypoint &8[&a%waypoint%&8]&7 has be deselected."
+         Selected: "El punto de referencia &8[&a%waypoint%&8]&7 ha sido seleccionado."
+         Deselected: "El punto de referencia &8[&a%waypoint%&8]&7 ha sido deseleccionado."
       List:
-         Primary: "All the waypoints:"
+         Primary: "Todos los puntos de referencia:"
          Secondary: "%waypoints%"
       Configuration:
-         Updated: "Configuration updated."
+         Updated: "Configuración actualizada."
       Teleportation:
-         Sent: "You have been sent to &b%location%&7."
-         Timer: "Teleporting in &b%timer%&7."
+         Sent: "Has sido enviado a &b%location%&7."
+         Timer: "Teletransportando en &b%timer%&7."
 
 Errors:
    Prefix: "&4Error&7: "
    Permissions:
-      Command: "&cYou don't have permission to perform this command!"
-      Kit: "&cYou don't have permission to use this kit!"
-      Spawn: "&cYou don't have permission to teleport to this spawn!"
-      Warp: "&cYou don't have permission to teleport to this warp!"
-      Sign: "&cYou don't have permission to use this sign!"
-      Other: "&cYou don't have permission to use this!"
+      Command: "&c¡No tienes permiso para ejecutar este comando!"
+      Kit: "&c¡No tienes permiso para usar este kit!"
+      Spawn: "&c¡No tienes permiso para teletransportarte a este punto de aparición!"
+      Warp: "&c¡No tienes permiso para teletransportarte a este warp!"
+      Sign: "&c¡No tienes permiso para usar este letrero!"
+      Other: "&c¡No tienes permiso para usar esto!"
    Player:
-      Not_Player: "&cYou need to be a player to use this!"
-      Player_Not_Found: "&6%player% &7is not found!"
-      Inv_Full: "Your inventory is &cfull&7, please clear a slot to receive the item(s)."
+      Not_Player: "&c¡Necesitas ser un jugador para usar esto!"
+      Player_Not_Found: "&6%player% &7no fue encontrado!"
+      Inv_Full: "Tu inventario está &clleno&7, por favor libera un espacio para recibir el/los objeto(s)."
    Kit:
-      Not_Found: "Can't remove kit that doesn't exist."
+      Not_Found: "No se puede eliminar un kit que no existe."
    Economy:
-      Cannot_Exceed_Max: "You can't exceed the &cmaximum amount &7set."
-      Cannot_Take_More_Than_Balance: "You can't take money more than your &cbalance&7."
-      Cannot_Take_Less_Than_Zero: "You can't take money less than &czero&7."
+      Cannot_Exceed_Max: "No puedes exceder la &ccantidad máxima &7establecida."
+      Cannot_Take_More_Than_Balance: "No puedes retirar más dinero de tu &csaldo&7."
+      Cannot_Take_Less_Than_Zero: "No puedes retirar una cantidad menor a &ccero&7."
    Bank:
-      Must_Create: "Must create a Bank to continue."
-      Cannot_Create: "Insufficient funds to create a &cbank account&7."
+      Must_Create: "Debes crear un banco para continuar."
+      Cannot_Create: "Fondos insuficientes para crear una &ccuenta bancaria&7."
    Gang:
-      Invalid_Name: "Invalid gang name."
-      Must_Create: "Must create a Gang to continue."
-      Cannot_Create: "Insufficient funds to create a &cgang account&7."
-      Not_Owner: "Not the &b%tail%&7 of the gang."
-      Duplicate_Names: "&e%gang%&7 already exists, try another name."
-      No_Invite: "You don't have an invitation."
-      Doesnt_Exist: "That gang doesn't exist."
-      Same_Rank: "Can't perform actions to similar ranks."
-      Higher_Rank: "Can't perform actions to higher rank than yours."
+      Invalid_Name: "Nombre de banda inválido."
+      Must_Create: "Debes crear una banda para continuar."
+      Cannot_Create: "Fondos insuficientes para crear una &ccuenta de banda&7."
+      Not_Owner: "No eres el &b%tail%&7 de la banda."
+      Duplicate_Names: "&e%gang%&7 ya existe, intenta con otro nombre."
+      No_Invite: "No tienes una invitación."
+      Doesnt_Exist: "Esa banda no existe."
+      Same_Rank: "No se pueden realizar acciones a rangos similares."
+      Higher_Rank: "No se pueden realizar acciones a un rango mayor que el tuyo."
    Rank:
-      Invalid: "This rank doesn't exist."
-      Invalid_Permission: "This permission doesn't exist."
-      Invalid_Parent: "This parent doesn't exist."
+      Invalid: "Este rango no existe."
+      Invalid_Permission: "Este permiso no existe."
+      Invalid_Parent: "Este padre no existe."
    Bounty:
-      No_Bounty: "This player doesn't have a bounty."
-      User_Set_Bounty: "You didn't set a bounty for this player."
+      No_Bounty: "Este jugador no tiene una recompensa."
+      User_Set_Bounty: "No estableciste una recompensa para este jugador."
    Waypoint:
-      Invalid: "Invalid waypoint."
-      Not_Selected: "No selected waypoint found."
-      Teleport_Issue: "Unable to teleport to &b%location%&7."
-   Cannot_Null: "Can not be &cnull&7!"
-   Must_Be_Numbers: "&a%command% &7must be numbers."
-   Dont_Use_Symbol: "Please don't use symbol."
+      Invalid: "Punto de referencia inválido."
+      Not_Selected: "No se encontró un punto de referencia seleccionado."
+      Teleport_Issue: "No se puede teletransportar a &b%location%&7."
+   Cannot_Null: "¡No puede ser &cnulo&7!"
+   Must_Be_Numbers: "&a%command% &7debe ser números."
+   Dont_Use_Symbol: "Por favor no uses símbolos."
 
 Information:
-   Prefix: "&8&l[&7Information&8&l]&7 "
+   Prefix: "&8&l[&7Información&8&l]&7 "
    Gang:
-      Request_Already_Sent: "Gang alliance to that gang is already sent!"
-      Already_Allied: "Already allied with that gang."
-      Kicked: "You have been kicked from the gang!"
+      Request_Already_Sent: "¡La solicitud de alianza a esa banda ya fue enviada!"
+      Already_Allied: "Ya estás aliado con esa banda."
+      Kicked: "¡Has sido expulsado de la banda!"
 
 Kits:
-   Received: "You have received &b%kit% &7kit."
-   Removed: "Spawn &a%kit% &7has been successfully removed!"
-   Invalid: "&b%kit% &7is not a valid kit!"
-   List_Undefined: "Kits list is &cinvalid&7."
+   Received: "Has recibido el kit &b%kit%&7."
+   Removed: "¡El kit &a%kit% &7ha sido eliminado exitosamente!"
+   Invalid: "&b%kit% &7no es un kit válido!"
+   List_Undefined: "La lista de kits es &cinválida&7."
 
 Safe:
-   Created: "Safe has been created, &b%name%&7."
-   Removed: "Safe has been removed, &b%name%&7."
-   Robbed: "You have robbed this safe and earned &a%money_symbol%%amount%&7."
-   Respawned: "A safe has respawned."
+   Created: "La caja fuerte ha sido creada, &b%name%&7."
+   Removed: "La caja fuerte ha sido eliminada, &b%name%&7."
+   Robbed: "Has robado esta caja fuerte y ganado &a%money_symbol%%amount%&7."
+   Respawned: "Una caja fuerte ha reaparecido."
 
 Wanted_Level:
-   Wanted: "You have a wanted level."
-   Increased: "Your wanted level has been increased &b%stars%&7."
-   Decreased: "Your wanted level has been decreased &b%stars%&7."
-   Not_Wanted: "You don't have a wanted level."
-   Cleared: "Your wanted level has been cleared."
-   Paid: "Paid wanted level fees, totaling &a%money_symbol%%amount%&7."
+   Wanted: "Tienes un nivel de búsqueda."
+   Increased: "Tu nivel de búsqueda ha aumentado &b%stars%&7."
+   Decreased: "Tu nivel de búsqueda ha disminuido &b%stars%&7."
+   Not_Wanted: "No tienes un nivel de búsqueda."
+   Cleared: "Tu nivel de búsqueda ha sido eliminado."
+   Paid: "Se pagaron las tarifas del nivel de búsqueda, con un total de &a%money_symbol%%amount%&7."
 
 Weapons:
-   Not_Valid_Ammo: "&cInvalid ammunition type &3%args%&c."
-   Not_Valid_Weapon: "&cInvalid weapon type &3%args%&c."
-   Not_Valid_Amount: "&cInvalid amount."
+   Not_Valid_Ammo: "&cTipo de munición inválido &3%args%&c."
+   Not_Valid_Weapon: "&cTipo de arma inválido &3%args%&c."
+   Not_Valid_Amount: "&cCantidad inválida."
    Killed_Player: "&7%killer% &c%gun% &7%victim%"
-   Gun_Not_In_Inventory: "You don't have the gun in your inventory!"
-   Gun_Bought: "You just bought &8(&b%gun%&8)&7 for &a%money_symbol%%amount%&7."
-   Gun_Sold: "You just sold &8(&b%gun%&8)&7 for &a%money_symbol%%amount%&7."
-   Ammo_Not_In_Inventory: "You don't have the ammo in your inventory!"
-   Ammo_Bought: "You just bought &8(&b%ammo%&ex%amount_1%&8)&7 for &a%money_symbol%%amount_2%&7."
-   Ammo_Sold: "You just sold &8(&b%ammo%&ex%amount_1%&8)&7 for &a%money_symbol%%amount_2%&7."
-   Not_Enough_Ammo: "You don't have enough ammo to sell!"
+   Gun_Not_In_Inventory: "¡No tienes el arma en tu inventario!"
+   Gun_Bought: "Acabas de comprar &8(&b%gun%&8)&7 por &a%money_symbol%%amount%&7."
+   Gun_Sold: "Acabas de vender &8(&b%gun%&8)&7 por &a%money_symbol%%amount%&7."
+   Ammo_Not_In_Inventory: "¡No tienes la munición en tu inventario!"
+   Ammo_Bought: "Acabas de comprar &8(&b%ammo%&ex%amount_1%&8)&7 por &a%money_symbol%%amount_2%&7."
+   Ammo_Sold: "Acabas de vender &8(&b%ammo%&ex%amount_1%&8)&7 por &a%money_symbol%%amount_2%&7."
+   Not_Enough_Ammo: "¡No tienes suficiente munición para vender!"
+   Repair:
+      Already_Full: "Este objeto ya esta completamente reparado."
+      Complete: "Reparado %restored% condicion. (%current%/%max%)"
+      Incompatible_Material: "Este material de reparacion no es compatible con este tipo de objeto."
+      Cancelled: "La reparacion fue cancelada."
+      No_Material: "No se encontro material de reparacion en tu inventario."
 
 Death:
    Weapon:
-      - "%killer% killed %victim% vigorously using %item%."
-      - "%victim% was killed by %killer% using %item%."
+      - "%killer% mató a %victim% con mucho vigor usando %item%."
+      - "%victim% fue asesinado por %killer% usando %item%."
 
 Level:
    Stats:
       - ""
-      - "&7Player: &f%player%"
-      - "&7Level: &f%level%&7/&b%max_level%"
+      - "&7Jugador: &f%player%"
+      - "&7Nivel: &f%level%&7/&b%max_level%"
       - "&7EXP: &f%experience%&7/&b%required_experience% &7[&f%percentage%%&7]"
       - "&7[%progress_bar%&7]"
       - ""
@@ -333,9 +342,19 @@ Level:
       Complete_Color: "&b"
       Incomplete_Color: "&f"
    Level_Up:
-      Player: "You have leveled up to level &b%next_level%&7."
-      Gang: "The gang has leveled up to level &b%next_level%&7."
+      Player: "Has subido al nivel &b%next_level%&7."
+      Gang: "La banda ha subido al nivel &b%next_level%&7."
 
 Waypoint:
-   Cooldown: "&7You are on a cooldown. Wait &b%timer&7."
-   Cancelled_Teleport: "&7You moved, cancelled teleportation!"
+   Cooldown: "&7Estás en enfriamiento. Espera &b%timer&7."
+   Cancelled_Teleport: "&7Te moviste, ¡teletransportación cancelada!"
+
+Signs:
+   Created: '¡Señal creada con éxito!'
+   Creation_Failed: 'Señal inválida: %reason%'
+   Invalid: '¡Señal inválida!'
+   Bulk:
+      Confirm_Expired: 'La confirmación masiva ha expirado - inténtalo de nuevo.'
+      Confirm_Request: 'Acción masiva: &f%quantity%x %content% &7por &a%money_symbol%%price% &7- Shift-click la señal de nuevo en &f%time%s &7para confirmar.'
+      Expired: '&cTu confirmación masiva para &f%content% &cha expirado.'
+      Cancelled: '&cConfirmación masiva para &f%content% &ccancelada.'
