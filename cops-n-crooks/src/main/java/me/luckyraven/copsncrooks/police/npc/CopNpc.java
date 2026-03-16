@@ -10,7 +10,7 @@ import me.luckyraven.copsncrooks.police.state.CopState;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.weapon.Weapon;
-import me.luckyraven.weapon.events.WeaponShootEvent;
+import me.luckyraven.weapon.events.projectile.WeaponShootEvent;
 import me.luckyraven.weapon.projectile.WeaponProjectile;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.*;
@@ -34,8 +34,8 @@ public class CopNpc {
 	private static final int    NAVIGATION_RECALCULATION_TICKS = 10;
 	private static final int    STUCK_CHECK_INTERVAL_TICKS     = 5;
 	private static final int    MAX_STUCK_CHECKS               = 3;
-	private static final int    MAX_HOPELESS_STUCK_CHECKS      = 6;   // give up navigating after ~3 s of no progress
-	private static final double HOPELESS_CLOSE_THRESHOLD       = 8.0; // within this range Citizens can handle it
+	private static final int    MAX_HOPELESS_STUCK_CHECKS      = 6;
+	private static final double HOPELESS_CLOSE_THRESHOLD       = 8.0;
 	private static final double MIN_PROGRESS_DISTANCE_SQUARED  = 0.75 * 0.75;
 	private static final double RANGED_MIN_DISTANCE            = 7.0;
 	private static final double RANGED_MAX_DISTANCE            = 12.0;
@@ -48,20 +48,21 @@ public class CopNpc {
 	@Getter
 	private final Location                   spawnLocation;
 	private final int                        aiTickRate;
+
 	@Getter
-	private       CopState                   currentState;
+	private CopState currentState;
 	@Setter
 	@Getter
-	private       UUID                       targetPlayerId;
-	private       int                        attackCooldown;
+	private UUID     targetPlayerId;
+	private int      attackCooldown;
 	@Getter
-	private       boolean                    markedForRemoval;
-	@Getter
-	@Setter
-	private       boolean                    combatForced;
+	private boolean  markedForRemoval;
 	@Getter
 	@Setter
-	private       int                        despawnTicks;
+	private boolean  combatForced;
+	@Getter
+	@Setter
+	private int      despawnTicks;
 
 	@Getter
 	private Weapon     heldWeapon;
@@ -135,8 +136,8 @@ public class CopNpc {
 	 * @param newState the target state
 	 */
 	public void transitionTo(CopState newState) {
-		log.info("Transitioning cop {}-{} from {} state to {} state.", npc.getName(), npc.getId(), currentState,
-				 newState);
+		log.debug("Transitioning cop {}-{} from {} state to {} state.", npc.getName(), npc.getId(), currentState,
+				  newState);
 		if (currentState == newState) return;
 
 		CopBehavior oldBehavior = behaviors.get(currentState);

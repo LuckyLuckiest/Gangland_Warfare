@@ -1,4 +1,4 @@
-package me.luckyraven.weapon.repair.listener;
+package me.luckyraven.weapon.listener.repair;
 
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.weapon.Weapon;

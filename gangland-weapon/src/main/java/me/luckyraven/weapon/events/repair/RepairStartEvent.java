@@ -1,4 +1,4 @@
-package me.luckyraven.weapon.repair.event;
+package me.luckyraven.weapon.events.repair;
 
 import me.luckyraven.weapon.repair.Repairable;
 import me.luckyraven.weapon.repair.material.RepairMaterial;

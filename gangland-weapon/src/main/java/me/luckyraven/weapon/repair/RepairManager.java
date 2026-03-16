@@ -2,9 +2,9 @@ package me.luckyraven.weapon.repair;
 
 import lombok.Getter;
 import me.luckyraven.util.configuration.SoundConfiguration;
+import me.luckyraven.weapon.events.repair.RepairCompleteEvent;
+import me.luckyraven.weapon.events.repair.RepairStartEvent;
 import me.luckyraven.weapon.repair.config.RepairConfig;
-import me.luckyraven.weapon.repair.event.RepairCompleteEvent;
-import me.luckyraven.weapon.repair.event.RepairStartEvent;
 import me.luckyraven.weapon.repair.material.RepairMaterial;
 import me.luckyraven.weapon.repair.material.RepairMaterialManager;
 import org.bukkit.Bukkit;

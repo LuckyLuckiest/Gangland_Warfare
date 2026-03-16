@@ -1,4 +1,4 @@
-package me.luckyraven.weapon.repair.event;
+package me.luckyraven.weapon.events.repair;
 
 import lombok.Getter;
 import me.luckyraven.weapon.repair.Repairable;

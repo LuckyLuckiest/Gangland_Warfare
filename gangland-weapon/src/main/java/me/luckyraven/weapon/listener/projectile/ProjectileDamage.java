@@ -1,4 +1,4 @@
-package me.luckyraven.weapon.listener;
+package me.luckyraven.weapon.listener.projectile;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -7,8 +7,8 @@ import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
-import me.luckyraven.weapon.events.WeaponProjectileHitEvent;
-import me.luckyraven.weapon.events.WeaponProjectileLaunchEvent;
+import me.luckyraven.weapon.events.projectile.WeaponProjectileHitEvent;
+import me.luckyraven.weapon.events.projectile.WeaponProjectileLaunchEvent;
 import me.luckyraven.weapon.modifiers.BlockBreakModifier;
 import me.luckyraven.weapon.modifiers.ModifierHandler;
 import me.luckyraven.weapon.projectile.BlockDamageManager;

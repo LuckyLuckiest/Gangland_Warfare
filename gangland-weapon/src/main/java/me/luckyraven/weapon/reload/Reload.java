@@ -8,6 +8,9 @@ import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.Ammunition;
+import me.luckyraven.weapon.events.reload.WeaponReloadCompleteEvent;
+import me.luckyraven.weapon.events.reload.WeaponReloadStartEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -23,6 +26,7 @@ public abstract class Reload implements Cloneable {
 	private final Ammunition ammunition;
 
 	private AtomicBoolean reloading;
+	private Player        currentPlayer;
 
 	public Reload(Weapon weapon, Ammunition ammunition) {
 		this.weapon     = weapon;
@@ -61,6 +65,9 @@ public abstract class Reload implements Cloneable {
 	}
 
 	protected void startReloading(Player player) {
+		// track the player for stopReloading()
+		this.currentPlayer = player;
+
 		// set that the weapon is reloading
 		this.reloading.set(true);
 
@@ -73,6 +80,8 @@ public abstract class Reload implements Cloneable {
 
 		// scope the player and make them slow down
 		weapon.scope(player, false);
+
+		Bukkit.getPluginManager().callEvent(new WeaponReloadStartEvent(weapon, player));
 	}
 
 	protected void endReloading(Player player) {
@@ -85,6 +94,10 @@ public abstract class Reload implements Cloneable {
 
 		// set the weapon as not reloading
 		this.reloading.set(false);
+
+		this.currentPlayer = null;
+
+		Bukkit.getPluginManager().callEvent(new WeaponReloadCompleteEvent(weapon, player));
 	}
 
 	/**

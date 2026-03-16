@@ -1,4 +1,4 @@
-package me.luckyraven.weapon.listener;
+package me.luckyraven.weapon.listener.selective;
 
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.autowire.AutowireTarget;
@@ -6,7 +6,7 @@ import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
-import me.luckyraven.weapon.events.WeaponChangeSelectiveFireEvent;
+import me.luckyraven.weapon.events.selective.WeaponChangeSelectiveFireEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

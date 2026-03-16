@@ -3,7 +3,7 @@ package me.luckyraven.copsncrooks.listener;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.util.listener.ListenerHandler;
-import me.luckyraven.weapon.events.WeaponShootEvent;
+import me.luckyraven.weapon.events.projectile.WeaponShootEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

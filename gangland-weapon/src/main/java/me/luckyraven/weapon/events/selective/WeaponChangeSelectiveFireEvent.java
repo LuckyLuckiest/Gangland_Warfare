@@ -1,21 +1,22 @@
-package me.luckyraven.weapon.events;
+package me.luckyraven.weapon.events.selective;
 
 import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.events.WeaponEvent;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
-public class WeaponRepairEvent extends WeaponEvent implements Cancellable {
+public class WeaponChangeSelectiveFireEvent extends WeaponEvent implements Cancellable {
 
 	private static final HandlerList handler = new HandlerList();
 
 	private boolean cancelled;
 
-	public WeaponRepairEvent(Weapon weapon) {
+	public WeaponChangeSelectiveFireEvent(Weapon weapon) {
 		super(weapon);
 	}
 
-	public static HandlerList getHandlerList() {
+	private static HandlerList getHandlerList() {
 		return handler;
 	}
 

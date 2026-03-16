@@ -1,7 +1,8 @@
-package me.luckyraven.weapon.events;
+package me.luckyraven.weapon.events.projectile;
 
 import lombok.Getter;
 import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.events.WeaponEvent;
 import me.luckyraven.weapon.projectile.WeaponProjectile;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.Cancellable;

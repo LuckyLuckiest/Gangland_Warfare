@@ -1,11 +1,11 @@
-package me.luckyraven.weapon.listener;
+package me.luckyraven.weapon.listener.reload;
 
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
-import me.luckyraven.weapon.events.WeaponReloadEvent;
+import me.luckyraven.weapon.events.reload.WeaponReloadEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Item;

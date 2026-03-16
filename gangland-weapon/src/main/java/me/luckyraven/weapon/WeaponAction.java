@@ -6,7 +6,7 @@ import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.dto.RecoilData;
 import me.luckyraven.weapon.dto.SoundData;
-import me.luckyraven.weapon.events.WeaponShootEvent;
+import me.luckyraven.weapon.events.projectile.WeaponShootEvent;
 import me.luckyraven.weapon.projectile.WeaponProjectile;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

@@ -6,7 +6,7 @@ import me.luckyraven.util.color.Color;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.weapon.Weapon;
-import me.luckyraven.weapon.events.WeaponProjectileLaunchEvent;
+import me.luckyraven.weapon.events.projectile.WeaponProjectileLaunchEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
