@@ -68,6 +68,7 @@ import me.luckyraven.file.configuration.copsncrooks.GanglandCopSettings;
 import me.luckyraven.file.configuration.copsncrooks.GanglandWantedSettings;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
+import me.luckyraven.file.configuration.lootchest.GanglandLootChestMessages;
 import me.luckyraven.file.configuration.lootchest.LootChestSettings;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
@@ -484,6 +485,8 @@ public final class Initializer {
 		// set the item provider so loot can be generated
 		var itemProvider = new GanglandLootItemProvider(weaponManager, ammunitionAddon, uniqueItemAddon);
 		lootChestManager.setItemProvider(itemProvider);
+
+		lootChestManager.setMessagesProvider(new GanglandLootChestMessages());
 	}
 
 	public void copLoader() {

@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.lootchest.config.LootChestConfig;
+import me.luckyraven.lootchest.config.LootChestMessagesProvider;
 import me.luckyraven.lootchest.data.*;
 import me.luckyraven.lootchest.events.cracking.*;
 import me.luckyraven.lootchest.events.lootchest.LootChestCloseEvent;
@@ -77,6 +78,9 @@ public abstract class LootChestService {
 	@Setter
 	private LootItemProvider itemProvider;
 
+	@Getter
+	private LootChestMessagesProvider messagesProvider;
+
 	public LootChestService(JavaPlugin plugin, HologramService hologramService, String prefix) {
 		this.plugin = plugin;
 		this.prefix = prefix;
@@ -120,6 +124,11 @@ public abstract class LootChestService {
 
 		callEvents();
 		addSounds();
+	}
+
+	public void setMessagesProvider(LootChestMessagesProvider messagesProvider) {
+		this.messagesProvider = messagesProvider;
+		this.cooldownManager.setMessagesProvider(messagesProvider);
 	}
 
 	public void setConfig(LootChestConfig config) {

@@ -358,3 +358,26 @@ Signs:
       Confirm_Request: 'Acción masiva: &f%quantity%x %content% &7por &a%money_symbol%%price% &7- Shift-click la señal de nuevo en &f%time%s &7para confirmar.'
       Expired: '&cTu confirmación masiva para &f%content% &cha expirado.'
       Cancelled: '&cConfirmación masiva para &f%content% &ccancelada.'
+
+Loot_Chest:
+   Cracking_Started: "&e¡Forzando el cofre... ¡Completa el minijuego!"
+   Already_In_Session: "¡Ya estás abriendo un cofre!"
+   On_Cooldown: "¡Este cofre está vacío y en recarga! &7(%time%)"
+   Requires_Lockpick: "¡Necesitas una ganzúa para abrir este cofre!"
+   Requires_Key: "¡Necesitas una llave para abrir este cofre!"
+   No_Permission: "¡No tienes permiso para abrir este cofre!"
+   Invalid_Loot_Table: "¡Este cofre tiene una tabla de botín no válida!"
+   Invalid_Chest: "¡Este cofre no es válido!"
+   No_Item_Provider: "¡El sistema de botín no está configurado correctamente!"
+   Already_Looted: "¡Este cofre ya ha sido saqueado!"
+   Hologram:
+      Cooldown_Status: "§c§lEN RECARGA"
+      Available_Status: "§a§lDISPONIBLE"
+      Available_Hint: "§7Clic derecho para abrir"
+   Time_Units:
+      Year: "a"
+      Week: "sem"
+      Day: "d"
+      Hour: "h"
+      Minute: "m"
+      Second: "s"

@@ -275,6 +275,31 @@ public enum MessageAddon {
 	SIGN_BULK_CONFIRM_REQUEST("Signs.Bulk.Confirm_Request", Type.COMMAND),
 	SIGN_BULK_EXPIRED("Signs.Bulk.Expired", Type.ERROR),
 	SIGN_BULK_CANCELLED("Signs.Bulk.Cancelled", Type.ERROR),
+
+	// loot chests - player messages
+	LOOT_CHEST_CRACKING_STARTED("Loot_Chest.Cracking_Started", Type.OTHER),
+	LOOT_CHEST_ALREADY_IN_SESSION("Loot_Chest.Already_In_Session", Type.ERROR),
+	LOOT_CHEST_ON_COOLDOWN("Loot_Chest.On_Cooldown", Type.ERROR),
+	LOOT_CHEST_REQUIRES_LOCKPICK("Loot_Chest.Requires_Lockpick", Type.ERROR),
+	LOOT_CHEST_REQUIRES_KEY("Loot_Chest.Requires_Key", Type.ERROR),
+	LOOT_CHEST_NO_PERMISSION("Loot_Chest.No_Permission", Type.ERROR),
+	LOOT_CHEST_INVALID_LOOT_TABLE("Loot_Chest.Invalid_Loot_Table", Type.ERROR),
+	LOOT_CHEST_INVALID_CHEST("Loot_Chest.Invalid_Chest", Type.ERROR),
+	LOOT_CHEST_NO_ITEM_PROVIDER("Loot_Chest.No_Item_Provider", Type.ERROR),
+	LOOT_CHEST_ALREADY_LOOTED("Loot_Chest.Already_Looted", Type.ERROR),
+
+	// loot chests - hologram text (NO_CHANGE keeps raw § codes; use § in the yml)
+	LOOT_CHEST_HOLOGRAM_COOLDOWN("Loot_Chest.Hologram.Cooldown_Status", Type.NO_CHANGE),
+	LOOT_CHEST_HOLOGRAM_AVAILABLE("Loot_Chest.Hologram.Available_Status", Type.NO_CHANGE),
+	LOOT_CHEST_HOLOGRAM_HINT("Loot_Chest.Hologram.Available_Hint", Type.NO_CHANGE),
+
+	// loot chests - time units for cooldown countdown
+	LOOT_CHEST_TIME_YEAR("Loot_Chest.Time_Units.Year", Type.NO_CHANGE),
+	LOOT_CHEST_TIME_WEEK("Loot_Chest.Time_Units.Week", Type.NO_CHANGE),
+	LOOT_CHEST_TIME_DAY("Loot_Chest.Time_Units.Day", Type.NO_CHANGE),
+	LOOT_CHEST_TIME_HOUR("Loot_Chest.Time_Units.Hour", Type.NO_CHANGE),
+	LOOT_CHEST_TIME_MINUTE("Loot_Chest.Time_Units.Minute", Type.NO_CHANGE),
+	LOOT_CHEST_TIME_SECOND("Loot_Chest.Time_Units.Second", Type.NO_CHANGE),
 	;
 
 	private static YamlConfiguration message;

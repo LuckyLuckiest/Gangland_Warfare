@@ -3,6 +3,7 @@ package me.luckyraven.lootchest.listener;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import me.luckyraven.lootchest.LootChestService;
+import me.luckyraven.lootchest.config.LootChestMessagesProvider;
 import me.luckyraven.lootchest.data.LootChestData;
 import me.luckyraven.lootchest.data.LootChestSession;
 import me.luckyraven.util.configuration.SoundConfiguration;
@@ -106,34 +107,63 @@ public class LootChestListener implements Listener {
 	}
 
 	private void handleOpenResult(Player player, LootChestService.OpenResult result, LootChestData chestData) {
+		LootChestMessagesProvider msg = manager.getMessagesProvider();
+
 		switch (result) {
 			case SUCCESS -> {
 				// Chest opened successfully
 			}
-			case CRACKING_STARTED -> player.sendMessage(
-					ChatUtil.color("&eCracking the chest... Complete the minigame!"));
-			case ALREADY_IN_SESSION -> player.sendMessage(ChatUtil.color("&cYou are already opening a chest!"));
+			case CRACKING_STARTED -> {
+				player.sendMessage(msg != null ?
+								   msg.getCrackingStarted() :
+								   ChatUtil.color("&eCracking the chest... Complete the minigame!"));
+			}
+			case ALREADY_IN_SESSION -> {
+				player.sendMessage(
+						msg != null ? msg.getAlreadyInSession() : ChatUtil.color("&cYou are already opening a chest!"));
+			}
 			case ON_COOLDOWN -> {
-				long remaining = chestData.getRemainingCooldownSeconds();
-				player.sendMessage(ChatUtil.color("&cThis chest is empty and on cooldown! &7(" +
-												  TimeUtil.formatTime(remaining, true, new TimeMessages()) + ")"));
+				long                 remaining     = chestData.getRemainingCooldownSeconds();
+				TimeMessagesProvider timeUnits     = msg != null ? msg.getTimeMessages() : new DefaultTimeMessages();
+				String               formattedTime = TimeUtil.formatTime(remaining, true, timeUnits);
+				player.sendMessage(msg != null ?
+								   msg.getOnCooldown(formattedTime) :
+								   ChatUtil.color("&cThis chest is empty and on cooldown! &7(" + formattedTime + ")"));
 			}
 			case REQUIRES_LOCKPICK -> {
 				playLockedSound(player);
-				player.sendMessage(ChatUtil.color("&cYou need a lockpick to open this chest!"));
+				player.sendMessage(msg != null ?
+								   msg.getRequiresLockpick() :
+								   ChatUtil.color("&cYou need a lockpick to open this chest!"));
 			}
 			case REQUIRES_KEY -> {
 				playLockedSound(player);
-				player.sendMessage(ChatUtil.color("&cYou need a key to open this chest!"));
+				player.sendMessage(
+						msg != null ? msg.getRequiresKey() : ChatUtil.color("&cYou need a key to open this chest!"));
 			}
 			case NO_PERMISSION -> {
 				playLockedSound(player);
-				player.sendMessage(ChatUtil.color("&cYou don't have permission to open this chest!"));
+				player.sendMessage(msg != null ?
+								   msg.getNoPermission() :
+								   ChatUtil.color("&cYou don't have permission to open this chest!"));
 			}
-			case INVALID_LOOT_TABLE -> player.sendMessage(ChatUtil.color("&cThis chest has an invalid loot table!"));
-			case INVALID_CHEST -> player.sendMessage(ChatUtil.color("&cThis chest is invalid!"));
-			case NO_ITEM_PROVIDER -> player.sendMessage(ChatUtil.color("&cLoot system is not configured properly!"));
-			case ALREADY_LOOTED -> player.sendMessage(ChatUtil.color("&cThis chest has already been looted!"));
+			case INVALID_LOOT_TABLE -> {
+				player.sendMessage(msg != null ?
+								   msg.getInvalidLootTable() :
+								   ChatUtil.color("&cThis chest has an invalid loot table!"));
+			}
+			case INVALID_CHEST -> {
+				player.sendMessage(msg != null ? msg.getInvalidChest() : ChatUtil.color("&cThis chest is invalid!"));
+			}
+			case NO_ITEM_PROVIDER -> {
+				player.sendMessage(msg != null ?
+								   msg.getNoItemProvider() :
+								   ChatUtil.color("&cLoot system is not configured properly!"));
+			}
+			case ALREADY_LOOTED -> {
+				player.sendMessage(
+						msg != null ? msg.getAlreadyLooted() : ChatUtil.color("&cThis chest has already been looted!"));
+			}
 		}
 	}
 
@@ -147,7 +177,10 @@ public class LootChestListener implements Listener {
 		soundConfig.playSound(player);
 	}
 
-	private static class TimeMessages implements TimeMessagesProvider {
+	/**
+	 * Fallback time-unit labels used when no {@link LootChestMessagesProvider} is set.
+	 */
+	private static class DefaultTimeMessages implements TimeMessagesProvider {
 
 		@Override
 		public String getYear() {

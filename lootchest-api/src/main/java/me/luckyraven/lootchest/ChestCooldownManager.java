@@ -1,6 +1,7 @@
 package me.luckyraven.lootchest;
 
 import lombok.Setter;
+import me.luckyraven.lootchest.config.LootChestMessagesProvider;
 import me.luckyraven.lootchest.data.LootChestData;
 import me.luckyraven.util.hologram.Hologram;
 import me.luckyraven.util.hologram.HologramService;
@@ -29,6 +30,9 @@ public class ChestCooldownManager {
 	private BiConsumer<LootChestData, Long> onCooldownTick;
 	@Setter
 	private Consumer<LootChestData>         onCooldownComplete;
+
+	@Setter
+	private LootChestMessagesProvider messagesProvider;
 
 	@Setter
 	private double hologramYOffset = 1.5;
@@ -105,7 +109,7 @@ public class ChestCooldownManager {
 		Hologram hologram = chestHolograms.get(chestId);
 
 		String timerText  = formatTime(remainingSeconds);
-		String statusText = "§c§lON COOLDOWN";
+		String statusText = messagesProvider != null ? messagesProvider.getHologramCooldownStatus() : "§c§lON COOLDOWN";
 
 		if (hologram == null || !hologram.isSpawned()) {
 			Location holoLocation = chestData.getLocation().clone().add(0.5, hologramYOffset, 0.5);
@@ -124,7 +128,13 @@ public class ChestCooldownManager {
 		removeChestHologram(chestId);
 
 		Location holoLocation = chestData.getLocation().clone().add(0.5, hologramYOffset, 0.5);
-		Hologram hologram     = hologramService.createHologram(holoLocation, "§a§lAVAILABLE", "§7Right-click to open");
+		String availableStatus = messagesProvider != null ?
+								 messagesProvider.getHologramAvailableStatus() :
+								 "§a§lAVAILABLE";
+		String availableHint = messagesProvider != null ?
+							   messagesProvider.getHologramAvailableHint() :
+							   "§7Right-click to open";
+		Hologram hologram = hologramService.createHologram(holoLocation, availableStatus, availableHint);
 
 		chestHolograms.put(chestId, hologram);
 	}

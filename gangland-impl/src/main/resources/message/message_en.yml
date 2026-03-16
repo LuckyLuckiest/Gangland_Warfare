@@ -358,3 +358,38 @@ Signs:
       Confirm_Request: 'Bulk action: &f%quantity%x %content% &7for &a%money_symbol%%price% &7- Shift-click the sign again within &f%time%s &7to confirm.'
       Expired: '&cYour bulk confirmation for &f%content% &chas expired.'
       Cancelled: '&cBulk confirmation for &f%content% &cwas cancelled.'
+
+Loot_Chest:
+   # Sent when the cracking minigame starts
+   Cracking_Started: "&eCracking the chest... Complete the minigame!"
+   # Sent when the player is already in a loot session
+   Already_In_Session: "You are already opening a chest!"
+   # Sent when the chest is on cooldown; %time% is replaced with the remaining time
+   On_Cooldown: "This chest is empty and on cooldown! &7(%time%)"
+   # Sent when a lockpick is required
+   Requires_Lockpick: "You need a lockpick to open this chest!"
+   # Sent when a key is required
+   Requires_Key: "You need a key to open this chest!"
+   # Sent when the player lacks permission
+   No_Permission: "You don't have permission to open this chest!"
+   # Sent when the loot table is missing or misconfigured
+   Invalid_Loot_Table: "This chest has an invalid loot table!"
+   # Sent when the chest data is invalid
+   Invalid_Chest: "This chest is invalid!"
+   # Sent when no item provider is registered
+   No_Item_Provider: "Loot system is not configured properly!"
+   # Sent when the chest has already been looted
+   Already_Looted: "This chest has already been looted!"
+   Hologram:
+      # Use § colour codes; these are written directly to hologram lines
+      Cooldown_Status: "§c§lON COOLDOWN"
+      Available_Status: "§a§lAVAILABLE"
+      Available_Hint: "§7Right-click to open"
+   Time_Units:
+      # Abbreviations shown in the cooldown countdown (e.g. "4m 30s")
+      Year: "y"
+      Week: "w"
+      Day: "d"
+      Hour: "h"
+      Minute: "m"
+      Second: "s"
