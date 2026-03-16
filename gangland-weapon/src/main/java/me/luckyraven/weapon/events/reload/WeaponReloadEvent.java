@@ -1,6 +1,7 @@
-package me.luckyraven.weapon.events;
+package me.luckyraven.weapon.events.reload;
 
 import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.events.WeaponEvent;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
