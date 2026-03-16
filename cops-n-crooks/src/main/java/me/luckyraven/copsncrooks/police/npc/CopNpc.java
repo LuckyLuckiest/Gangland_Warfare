@@ -4,6 +4,7 @@ import lombok.CustomLog;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
+import me.luckyraven.copsncrooks.police.config.CopConfigProvider;
 import me.luckyraven.copsncrooks.police.config.CopTierConfig;
 import me.luckyraven.copsncrooks.police.state.CopBehavior;
 import me.luckyraven.copsncrooks.police.state.CopState;
@@ -31,14 +32,14 @@ import java.util.concurrent.ThreadLocalRandom;
 @CustomLog
 public class CopNpc {
 
-	private static final int    NAVIGATION_RECALCULATION_TICKS = 10;
-	private static final int    STUCK_CHECK_INTERVAL_TICKS     = 5;
-	private static final int    MAX_STUCK_CHECKS               = 3;
-	private static final int    MAX_HOPELESS_STUCK_CHECKS      = 6;
-	private static final double HOPELESS_CLOSE_THRESHOLD       = 8.0;
-	private static final double MIN_PROGRESS_DISTANCE_SQUARED  = 0.75 * 0.75;
-	private static final double RANGED_MIN_DISTANCE            = 7.0;
-	private static final double RANGED_MAX_DISTANCE            = 12.0;
+	private final int    navigationRecalculationTicks;
+	private final int    stuckCheckIntervalTicks;
+	private final int    maxStuckChecks;
+	private final int    maxHopelessStuckChecks;
+	private final double hopelessCloseThreshold;
+	private final double minProgressDistanceSquared;
+	private final double rangedMinDistance;
+	private final double rangedMaxDistance;
 
 	@Getter
 	private final NPC                        npc;
@@ -77,20 +78,31 @@ public class CopNpc {
 	private boolean  navigationHopeless;
 
 	public CopNpc(NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors, Location spawnLocation,
-				  int aiTickRate) {
-		this.npc                     = npc;
-		this.tierConfig              = tierConfig;
-		this.behaviors               = behaviors;
-		this.spawnLocation           = spawnLocation;
-		this.aiTickRate              = aiTickRate;
-		this.currentState            = CopState.IDLE;
-		this.attackCooldown          = 0;
-		this.markedForRemoval        = false;
-		this.despawnTicks            = 0;
-		this.reloading               = false;
-		this.navigationThrottleTicks = NAVIGATION_RECALCULATION_TICKS;
-		this.stuckSampleTicks        = 0;
-		this.consecutiveStuckChecks  = 0;
+				  CopConfigProvider configProvider) {
+		this.npc                    = npc;
+		this.tierConfig             = tierConfig;
+		this.behaviors              = behaviors;
+		this.spawnLocation          = spawnLocation;
+		this.aiTickRate             = configProvider.getAiTickRate();
+		this.currentState           = CopState.IDLE;
+		this.attackCooldown         = 0;
+		this.markedForRemoval       = false;
+		this.despawnTicks           = 0;
+		this.reloading              = false;
+		this.stuckSampleTicks       = 0;
+		this.consecutiveStuckChecks = 0;
+
+		this.navigationRecalculationTicks = configProvider.getNavigationRecalculationTicks();
+		this.stuckCheckIntervalTicks      = configProvider.getStuckCheckIntervalTicks();
+		this.maxStuckChecks               = configProvider.getMaxStuckChecks();
+		this.maxHopelessStuckChecks       = configProvider.getMaxHopelessStuckChecks();
+		this.hopelessCloseThreshold       = configProvider.getHopelessCloseThreshold();
+		double minProg = configProvider.getMinProgressDistance();
+		this.minProgressDistanceSquared = minProg * minProg;
+		this.rangedMinDistance          = configProvider.getRangedMinDistance();
+		this.rangedMaxDistance          = configProvider.getRangedMaxDistance();
+
+		this.navigationThrottleTicks = this.navigationRecalculationTicks;
 	}
 
 	/**
@@ -196,14 +208,14 @@ public class CopNpc {
 		}
 
 		double distance = distanceTo(player);
-		return distance >= RANGED_MIN_DISTANCE && distance <= RANGED_MAX_DISTANCE;
+		return distance >= rangedMinDistance && distance <= rangedMaxDistance;
 	}
 
 	/**
 	 * Returns whether the current navigation appears stuck (NPC has made no progress for several samples).
 	 */
 	public boolean isNavigationStuck() {
-		return consecutiveStuckChecks >= MAX_STUCK_CHECKS;
+		return consecutiveStuckChecks >= maxStuckChecks;
 	}
 
 	/**
@@ -212,7 +224,7 @@ public class CopNpc {
 	 * movement does not reset the counter and restart the full wait.
 	 */
 	public boolean isNavigationHopeless() {
-		if (!navigationHopeless && consecutiveStuckChecks >= MAX_HOPELESS_STUCK_CHECKS) {
+		if (!navigationHopeless && consecutiveStuckChecks >= maxHopelessStuckChecks) {
 			navigationHopeless = true;
 		}
 		return navigationHopeless;
@@ -272,7 +284,7 @@ public class CopNpc {
 		if (from.getWorld() == null || !from.getWorld().equals(to.getWorld())) return null;
 
 		// Close enough that Citizens can navigate the remaining distance on its own
-		if (from.distanceSquared(to) <= HOPELESS_CLOSE_THRESHOLD * HOPELESS_CLOSE_THRESHOLD) {
+		if (from.distanceSquared(to) <= hopelessCloseThreshold * hopelessCloseThreshold) {
 			Location safe = normalizeToStandableLocation(to);
 			return safe != null ? safe : to;
 		}
@@ -759,7 +771,7 @@ public class CopNpc {
 			return;
 		}
 
-		if (stuckSampleTicks < STUCK_CHECK_INTERVAL_TICKS) {
+		if (stuckSampleTicks < stuckCheckIntervalTicks) {
 			return;
 		}
 
@@ -774,7 +786,7 @@ public class CopNpc {
 
 		double progress = currentLocation.distanceSquared(lastProgressLocation);
 
-		if (progress < MIN_PROGRESS_DISTANCE_SQUARED) {
+		if (progress < minProgressDistanceSquared) {
 			consecutiveStuckChecks++;
 		} else {
 			// Real movement detected - the obstacle is gone, so clear the hopeless latch too
@@ -795,7 +807,7 @@ public class CopNpc {
 		}
 
 		// Always respect the throttle - even when stuck - to avoid hammering Citizens with path requests every tick
-		if (navigationThrottleTicks < NAVIGATION_RECALCULATION_TICKS) {
+		if (navigationThrottleTicks < navigationRecalculationTicks) {
 			return false;
 		}
 
@@ -819,7 +831,7 @@ public class CopNpc {
 	private void resetNavigationTracking() {
 		lastNavigationTarget    = null;
 		lastProgressLocation    = null;
-		navigationThrottleTicks = NAVIGATION_RECALCULATION_TICKS;
+		navigationThrottleTicks = navigationRecalculationTicks;
 		stuckSampleTicks        = 0;
 		consecutiveStuckChecks  = 0;
 	}

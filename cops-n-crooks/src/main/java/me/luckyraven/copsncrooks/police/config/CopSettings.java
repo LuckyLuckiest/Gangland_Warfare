@@ -23,4 +23,113 @@ public interface CopSettings {
 	 * this value.
 	 */
 	int getMaxWantedLevel();
+
+	// -------------------------------------------------------------------------
+	// Core cop behaviour
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Hard cap on the number of cops allowed per wanted player.
+	 */
+	int getMaxCopsPerPlayer();
+
+	/**
+	 * Game ticks per AI evaluation cycle. Lower = more responsive, higher CPU cost.
+	 */
+	int getAiTickRate();
+
+	/**
+	 * Game ticks between spawn-check cycles.
+	 */
+	int getSpawnCheckRate();
+
+	/**
+	 * Default radius within which a cop can attempt to cuff a player (blocks).
+	 */
+	double getCuffRadius();
+
+	/**
+	 * Maximum failed cuff attempts before the cop escalates to combat.
+	 */
+	int getMaxCuffAttempts();
+
+	/**
+	 * Ticks between consecutive cuff attempts.
+	 */
+	int getCuffCooldownTicks();
+
+	/**
+	 * Distance at which an idle cop detects a wanted player and becomes alert (blocks).
+	 */
+	double getAlertRange();
+
+	/**
+	 * Base melee engagement range (blocks). Ranged attack range scales from this value.
+	 */
+	double getCombatRange();
+
+	/**
+	 * Ticks between melee attacks.
+	 */
+	int getAttackCooldownTicks();
+
+	// -------------------------------------------------------------------------
+	// Spawn settings
+	// -------------------------------------------------------------------------
+
+	double getMinSpawnDistance();
+
+	double getMaxSpawnDistance();
+
+	double getPhase1MinDistance();
+
+	double getSpawnRadiusShrinkStep();
+
+	int getVerticalSearchRange();
+
+	int getSpawnYOffset();
+
+	int getMinOpenHorizontalSides();
+
+	double getSpawnerPreferenceRadius();
+
+	double getVisibilityCheckDistance();
+
+	int getSpawnPhase1Attempts();
+
+	int getSpawnPhase2Attempts();
+
+	// -------------------------------------------------------------------------
+	// Navigation settings
+	// -------------------------------------------------------------------------
+
+	int getNavigationRecalculationTicks();
+
+	int getStuckCheckIntervalTicks();
+
+	int getMaxStuckChecks();
+
+	int getMaxHopelessStuckChecks();
+
+	double getHopelessCloseThreshold();
+
+	double getMinProgressDistance();
+
+	double getRangedMinDistance();
+
+	double getRangedMaxDistance();
+
+	// -------------------------------------------------------------------------
+	// Return / despawn settings
+	// -------------------------------------------------------------------------
+
+	int getMaxReturnTicks();
+
+	double getStationArrivalDistance();
+
+	// -------------------------------------------------------------------------
+	// Misc
+	// -------------------------------------------------------------------------
+
+	int getStartingAmmoMagazines();
 }

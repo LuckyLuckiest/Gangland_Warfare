@@ -96,10 +96,35 @@ public class SettingAddon implements FileInitializer {
 	private static @Getter double       civilianExperienceDropsMinimum, civilianExperienceDropsMaximum;
 	private static @Getter List<String> civilianItemDrops;
 
+	// cop core configuration
+	private static @Getter int copMaxPerPlayer, copAiTickRate, copSpawnCheckRate, copMaxCuffAttempts,
+			copCuffCooldownTicks, copAttackCooldownTicks;
+	private static @Getter double copCuffRadius, copAlertRange, copCombatRange;
+
 	// cop count configuration
 	private static @Getter boolean copCountFormulaEnabled;
 	private static @Getter String  copCountFormula;
 	private static @Getter int     copCountBase, copCountPerLevel, copCountMax;
+
+	// cop spawn configuration
+	private static @Getter double copSpawnMinDistance, copSpawnMaxDistance, copSpawnPhase1MinDistance;
+	private static @Getter double copSpawnRadiusShrinkStep, copSpawnSpawnerPreferenceRadius,
+			copSpawnVisibilityCheckDistance;
+	private static @Getter int copSpawnVerticalSearchRange, copSpawnYOffset, copSpawnMinOpenHorizontalSides;
+	private static @Getter int copSpawnPhase1Attempts, copSpawnPhase2Attempts;
+
+	// cop navigation configuration
+	private static @Getter int copNavRecalculationTicks, copNavStuckCheckInterval, copNavMaxStuckChecks,
+			copNavMaxHopelessStuckChecks;
+	private static @Getter double copNavHopelessCloseThreshold, copNavMinProgressDistance, copNavRangedMinDistance,
+			copNavRangedMaxDistance;
+
+	// cop return / despawn configuration
+	private static @Getter int    copReturnMaxTicks;
+	private static @Getter double copReturnStationArrivalDistance;
+
+	// cop misc configuration
+	private static @Getter int copStartingAmmoMagazines;
 
 	// loot chest configuration
 	private static @Getter long   lootChestCountdownTimer;
@@ -315,6 +340,20 @@ public class SettingAddon implements FileInitializer {
 		civilianExperienceDropsMaximum = civilianDrops.getDouble("Experience.Maximum", 15);
 		civilianItemDrops              = civilianDrops.getStringList("Items");
 
+		// cop core
+		var copCore = settings.getConfigurationSection("Cops.Behaviour");
+		Objects.requireNonNull(copCore);
+
+		copMaxPerPlayer        = copCore.getInt("Max_Per_Player", 8);
+		copAiTickRate          = copCore.getInt("AI_Tick_Rate", 10);
+		copSpawnCheckRate      = copCore.getInt("Spawn_Check_Rate", 40);
+		copCuffRadius          = copCore.getDouble("Cuff_Radius", 3.0);
+		copMaxCuffAttempts     = copCore.getInt("Max_Cuff_Attempts", 3);
+		copCuffCooldownTicks   = copCore.getInt("Cuff_Cooldown_Ticks", 100);
+		copAlertRange          = copCore.getDouble("Alert_Range", 40.0);
+		copCombatRange         = copCore.getDouble("Combat_Range", 4.0);
+		copAttackCooldownTicks = copCore.getInt("Attack_Cooldown_Ticks", 20);
+
 		// cop count
 		var copsCount = settings.getConfigurationSection("Cops.Count");
 		Objects.requireNonNull(copsCount);
@@ -324,6 +363,45 @@ public class SettingAddon implements FileInitializer {
 		copCountBase           = copsCount.getInt("Base", 2);
 		copCountPerLevel       = copsCount.getInt("Per_Level", 1);
 		copCountMax            = copsCount.getInt("Max", 8);
+
+		// cop spawn
+		var copsSpawn = settings.getConfigurationSection("Cops.Spawn");
+		Objects.requireNonNull(copsSpawn);
+
+		copSpawnMinDistance             = copsSpawn.getDouble("Min_Distance", 10.0);
+		copSpawnMaxDistance             = copsSpawn.getDouble("Max_Distance", 50.0);
+		copSpawnPhase1MinDistance       = copsSpawn.getDouble("Phase1_Min_Distance", 30.0);
+		copSpawnRadiusShrinkStep        = copsSpawn.getDouble("Radius_Shrink_Step", 5.0);
+		copSpawnVerticalSearchRange     = copsSpawn.getInt("Vertical_Search_Range", 10);
+		copSpawnYOffset                 = copsSpawn.getInt("Y_Offset", 0);
+		copSpawnMinOpenHorizontalSides  = copsSpawn.getInt("Min_Open_Sides", 2);
+		copSpawnSpawnerPreferenceRadius = copsSpawn.getDouble("Spawner_Preference_Radius", 80.0);
+		copSpawnVisibilityCheckDistance = copsSpawn.getDouble("Visibility_Check_Distance", 48.0);
+		copSpawnPhase1Attempts          = copsSpawn.getInt("Phase1_Attempts", 20);
+		copSpawnPhase2Attempts          = copsSpawn.getInt("Phase2_Attempts", 15);
+
+		// cop navigation
+		var copsNav = settings.getConfigurationSection("Cops.Navigation");
+		Objects.requireNonNull(copsNav);
+
+		copNavRecalculationTicks     = copsNav.getInt("Recalculation_Ticks", 10);
+		copNavStuckCheckInterval     = copsNav.getInt("Stuck_Check_Interval", 5);
+		copNavMaxStuckChecks         = copsNav.getInt("Max_Stuck_Checks", 3);
+		copNavMaxHopelessStuckChecks = copsNav.getInt("Max_Hopeless_Stuck_Checks", 6);
+		copNavHopelessCloseThreshold = copsNav.getDouble("Hopeless_Close_Threshold", 8.0);
+		copNavMinProgressDistance    = copsNav.getDouble("Min_Progress_Distance", 0.75);
+		copNavRangedMinDistance      = copsNav.getDouble("Ranged_Min_Distance", 7.0);
+		copNavRangedMaxDistance      = copsNav.getDouble("Ranged_Max_Distance", 12.0);
+
+		// cop return / despawn
+		var copsReturn = settings.getConfigurationSection("Cops.Return");
+		Objects.requireNonNull(copsReturn);
+
+		copReturnMaxTicks               = copsReturn.getInt("Max_Ticks", 600);
+		copReturnStationArrivalDistance = copsReturn.getDouble("Station_Arrival_Distance", 3.0);
+
+		// cop misc
+		copStartingAmmoMagazines = settings.getInt("Cops.Starting_Ammo_Magazines", 3);
 
 		// loot chest
 		var lootChest = settings.getConfigurationSection("Loot_Chest");

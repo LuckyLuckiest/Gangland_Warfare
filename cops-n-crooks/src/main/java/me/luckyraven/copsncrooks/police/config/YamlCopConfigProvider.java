@@ -33,6 +33,36 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final double combatRange;
 	private final int    attackCooldownTicks;
 
+	// Spawn settings
+	private final double minSpawnDistance;
+	private final double maxSpawnDistance;
+	private final double phase1MinDistance;
+	private final double spawnRadiusShrinkStep;
+	private final int    verticalSearchRange;
+	private final int    spawnYOffset;
+	private final int    minOpenHorizontalSides;
+	private final double spawnerPreferenceRadius;
+	private final double visibilityCheckDistance;
+	private final int    spawnPhase1Attempts;
+	private final int    spawnPhase2Attempts;
+
+	// Navigation settings
+	private final int    navigationRecalculationTicks;
+	private final int    stuckCheckIntervalTicks;
+	private final int    maxStuckChecks;
+	private final int    maxHopelessStuckChecks;
+	private final double hopelessCloseThreshold;
+	private final double minProgressDistance;
+	private final double rangedMinDistance;
+	private final double rangedMaxDistance;
+
+	// Return / despawn settings
+	private final int    maxReturnTicks;
+	private final double stationArrivalDistance;
+
+	// Misc
+	private final int startingAmmoMagazines;
+
 	private final String head = "Cops.";
 
 	/**
@@ -46,15 +76,45 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.tiers              = new LinkedHashMap<>();
 		this.copsPerWantedLevel = new LinkedHashMap<>();
 
-		this.maxCopsPerPlayer    = copsConfig.getInt(head + "Max_Per_Player", 8);
-		this.aiTickRate          = copsConfig.getInt(head + "AI_Tick_Rate", 10);
-		this.spawnCheckRate      = copsConfig.getInt(head + "Spawn_Check_Rate", 40);
-		this.cuffRadius          = copsConfig.getDouble(head + "Cuff_Radius", 3.0);
-		this.maxCuffAttempts     = copsConfig.getInt(head + "Max_Cuff_Attempts", 3);
-		this.cuffCooldownTicks   = copsConfig.getInt(head + "Cuff_Cooldown_Ticks", 100);
-		this.alertRange          = copsConfig.getDouble(head + "Alert_Range", 40.0);
-		this.combatRange         = copsConfig.getDouble(head + "Combat_Range", 4.0);
-		this.attackCooldownTicks = copsConfig.getInt(head + "Attack_Cooldown_Ticks", 20);
+		this.maxCopsPerPlayer    = copSettings != null ? copSettings.getMaxCopsPerPlayer() : 8;
+		this.aiTickRate          = copSettings != null ? copSettings.getAiTickRate() : 10;
+		this.spawnCheckRate      = copSettings != null ? copSettings.getSpawnCheckRate() : 40;
+		this.cuffRadius          = copSettings != null ? copSettings.getCuffRadius() : 3.0;
+		this.maxCuffAttempts     = copSettings != null ? copSettings.getMaxCuffAttempts() : 3;
+		this.cuffCooldownTicks   = copSettings != null ? copSettings.getCuffCooldownTicks() : 100;
+		this.alertRange          = copSettings != null ? copSettings.getAlertRange() : 40.0;
+		this.combatRange         = copSettings != null ? copSettings.getCombatRange() : 4.0;
+		this.attackCooldownTicks = copSettings != null ? copSettings.getAttackCooldownTicks() : 20;
+
+		// Spawn settings — sourced from settings.yml via CopSettings (falls back to sensible defaults)
+		this.minSpawnDistance        = copSettings != null ? copSettings.getMinSpawnDistance() : 10.0;
+		this.maxSpawnDistance        = copSettings != null ? copSettings.getMaxSpawnDistance() : 50.0;
+		this.phase1MinDistance       = copSettings != null ? copSettings.getPhase1MinDistance() : 30.0;
+		this.spawnRadiusShrinkStep   = copSettings != null ? copSettings.getSpawnRadiusShrinkStep() : 5.0;
+		this.verticalSearchRange     = copSettings != null ? copSettings.getVerticalSearchRange() : 10;
+		this.spawnYOffset            = copSettings != null ? copSettings.getSpawnYOffset() : 0;
+		this.minOpenHorizontalSides  = copSettings != null ? copSettings.getMinOpenHorizontalSides() : 2;
+		this.spawnerPreferenceRadius = copSettings != null ? copSettings.getSpawnerPreferenceRadius() : 80.0;
+		this.visibilityCheckDistance = copSettings != null ? copSettings.getVisibilityCheckDistance() : 48.0;
+		this.spawnPhase1Attempts     = copSettings != null ? copSettings.getSpawnPhase1Attempts() : 20;
+		this.spawnPhase2Attempts     = copSettings != null ? copSettings.getSpawnPhase2Attempts() : 15;
+
+		// Navigation settings — sourced from settings.yml via CopSettings
+		this.navigationRecalculationTicks = copSettings != null ? copSettings.getNavigationRecalculationTicks() : 10;
+		this.stuckCheckIntervalTicks      = copSettings != null ? copSettings.getStuckCheckIntervalTicks() : 5;
+		this.maxStuckChecks               = copSettings != null ? copSettings.getMaxStuckChecks() : 3;
+		this.maxHopelessStuckChecks       = copSettings != null ? copSettings.getMaxHopelessStuckChecks() : 6;
+		this.hopelessCloseThreshold       = copSettings != null ? copSettings.getHopelessCloseThreshold() : 8.0;
+		this.minProgressDistance          = copSettings != null ? copSettings.getMinProgressDistance() : 0.75;
+		this.rangedMinDistance            = copSettings != null ? copSettings.getRangedMinDistance() : 7.0;
+		this.rangedMaxDistance            = copSettings != null ? copSettings.getRangedMaxDistance() : 12.0;
+
+		// Return / despawn settings — sourced from settings.yml via CopSettings
+		this.maxReturnTicks         = copSettings != null ? copSettings.getMaxReturnTicks() : 600;
+		this.stationArrivalDistance = copSettings != null ? copSettings.getStationArrivalDistance() : 3.0;
+
+		// Misc — sourced from settings.yml via CopSettings
+		this.startingAmmoMagazines = copSettings != null ? copSettings.getStartingAmmoMagazines() : 3;
 
 		loadTiers(copsConfig, itemParser);
 		buildCopsPerWantedLevel(copSettings);
@@ -121,6 +181,72 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	public int getAttackCooldownTicks() {
 		return attackCooldownTicks;
 	}
+
+	@Override
+	public double getMinSpawnDistance() { return minSpawnDistance; }
+
+	@Override
+	public double getMaxSpawnDistance() { return maxSpawnDistance; }
+
+	@Override
+	public double getPhase1MinDistance() { return phase1MinDistance; }
+
+	@Override
+	public double getSpawnRadiusShrinkStep() { return spawnRadiusShrinkStep; }
+
+	@Override
+	public int getVerticalSearchRange() { return verticalSearchRange; }
+
+	@Override
+	public int getSpawnYOffset() { return spawnYOffset; }
+
+	@Override
+	public int getMinOpenHorizontalSides() { return minOpenHorizontalSides; }
+
+	@Override
+	public double getSpawnerPreferenceRadius() { return spawnerPreferenceRadius; }
+
+	@Override
+	public double getVisibilityCheckDistance() { return visibilityCheckDistance; }
+
+	@Override
+	public int getSpawnPhase1Attempts() { return spawnPhase1Attempts; }
+
+	@Override
+	public int getSpawnPhase2Attempts() { return spawnPhase2Attempts; }
+
+	@Override
+	public int getNavigationRecalculationTicks() { return navigationRecalculationTicks; }
+
+	@Override
+	public int getStuckCheckIntervalTicks() { return stuckCheckIntervalTicks; }
+
+	@Override
+	public int getMaxStuckChecks() { return maxStuckChecks; }
+
+	@Override
+	public int getMaxHopelessStuckChecks() { return maxHopelessStuckChecks; }
+
+	@Override
+	public double getHopelessCloseThreshold() { return hopelessCloseThreshold; }
+
+	@Override
+	public double getMinProgressDistance() { return minProgressDistance; }
+
+	@Override
+	public double getRangedMinDistance() { return rangedMinDistance; }
+
+	@Override
+	public double getRangedMaxDistance() { return rangedMaxDistance; }
+
+	@Override
+	public int getMaxReturnTicks() { return maxReturnTicks; }
+
+	@Override
+	public double getStationArrivalDistance() { return stationArrivalDistance; }
+
+	@Override
+	public int getStartingAmmoMagazines() { return startingAmmoMagazines; }
 
 	// -------------------------------------------------------------------------
 	// Private loading helpers

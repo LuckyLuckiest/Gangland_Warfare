@@ -33,8 +33,6 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class CopNpcFactory {
 
-	private static final int MIN_OPEN_HORIZONTAL_SIDES = 2;
-
 	private final CopConfigProvider  configProvider;
 	private final CopBehaviorFactory behaviorFactory;
 	private final EntityMarkManager  entityMarkManager;
@@ -81,7 +79,7 @@ public class CopNpcFactory {
 
 		Map<CopState, CopBehavior> behaviors = behaviorFactory.createBehaviors();
 
-		CopNpc copNpc = new CopNpc(npc, tierConfig, behaviors, spawnLocation, configProvider.getAiTickRate());
+		CopNpc copNpc = new CopNpc(npc, tierConfig, behaviors, spawnLocation, configProvider);
 
 		// Resolve and assign a gangland weapon when the tier supports it
 		if (tierConfig.canUseWeapons()) {
@@ -158,7 +156,7 @@ public class CopNpcFactory {
 		if (world.getBlockAt(x, y, z + 1).isEmpty()) openSides++;
 		if (world.getBlockAt(x, y, z - 1).isEmpty()) openSides++;
 
-		return openSides >= MIN_OPEN_HORIZONTAL_SIDES;
+		return openSides >= configProvider.getMinOpenHorizontalSides();
 	}
 
 	/**
@@ -193,8 +191,8 @@ public class CopNpcFactory {
 		Ammunition ammoType = weapon.getReloadData().getAmmoType();
 		if (ammoType == null) return;
 
-		// Give enough for 3 full magazines worth of reloads
-		int       ammoCount = weapon.getReloadData().getMaxMagCapacity() * 3;
+		// Give enough magazines worth of ammo as configured
+		int       ammoCount = weapon.getReloadData().getMaxMagCapacity() * configProvider.getStartingAmmoMagazines();
 		ItemStack ammoItem  = ammoType.buildItem(Math.min(ammoCount, ammoType.buildItem().getMaxStackSize()));
 
 		equipment.setItemInOffHand(ammoItem);

@@ -13,16 +13,6 @@
 #   +------------------------------------------------------+   #
 
 Cops:
-   Max_Per_Player: 8
-   AI_Tick_Rate: 10
-   Spawn_Check_Rate: 40
-   Cuff_Radius: 3.0
-   Max_Cuff_Attempts: 3
-   Cuff_Cooldown_Ticks: 100
-   Alert_Range: 40.0
-   Combat_Range: 4.0
-   Attack_Cooldown_Ticks: 20
-
    Tiers:
       1:
          Display_Name: "&9Officer"

@@ -19,14 +19,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class CopSpawnManager {
 
-	private static final double MIN_SPAWN_DISTANCE        = 10.0;
-	private static final double MAX_SPAWN_DISTANCE        = 50.0;
-	private static final double SPAWN_RADIUS_SHRINK_STEP  = 5.0;
-	private static final int    VERTICAL_SEARCH_RANGE     = 10;
-	private static final int    SPAWN_Y_OFFSET            = 0;
-	private static final int    MIN_OPEN_HORIZONTAL_SIDES = 2;
-	private static final double SPAWNER_PREFERENCE_RADIUS = 80.0;
-
 	public static int ID = 0;
 
 	private final CopNpcFactory            copNpcFactory;
@@ -164,7 +156,7 @@ public class CopSpawnManager {
 			if (player.equals(excludePlayer)) continue;
 
 			double distance = player.getLocation().distance(location);
-			if (distance > 48) continue;
+			if (distance > configProvider.getVisibilityCheckDistance()) continue;
 
 			// Check if the cop is in the player's forward FOV
 			Location playerLoc  = player.getLocation();
@@ -202,7 +194,8 @@ public class CopSpawnManager {
 	private Location findClosestSpawnerLocation(Player player) {
 		Location playerLoc     = player.getLocation();
 		Location closest       = null;
-		double   closestDistSq = SPAWNER_PREFERENCE_RADIUS * SPAWNER_PREFERENCE_RADIUS;
+		double   prefRadius    = configProvider.getSpawnerPreferenceRadius();
+		double   closestDistSq = prefRadius * prefRadius;
 
 		for (CopSpawner spawner : spawners.values()) {
 			Location loc = spawner.getLocation();
@@ -257,17 +250,22 @@ public class CopSpawnManager {
 	 * </ol>
 	 */
 	private Location findSpawnLocation(Player player) {
+		double minDist    = configProvider.getMinSpawnDistance();
+		double maxDist    = configProvider.getMaxSpawnDistance();
+		double p1Min      = configProvider.getPhase1MinDistance();
+		double shrinkStep = configProvider.getSpawnRadiusShrinkStep();
+
 		// Phase 1: preferred ring, behind-player only
-		for (int attempt = 0; attempt < 20; attempt++) {
-			Location loc = trySingleSpawnAttempt(player, 30.0, MAX_SPAWN_DISTANCE, true);
+		for (int attempt = 0; attempt < configProvider.getSpawnPhase1Attempts(); attempt++) {
+			Location loc = trySingleSpawnAttempt(player, p1Min, maxDist, true);
 			if (loc != null) return loc;
 		}
 
 		// Phase 2: shrink the ring progressively, drop the direction constraint
-		for (double maxDist = MAX_SPAWN_DISTANCE; maxDist >= MIN_SPAWN_DISTANCE; maxDist -= SPAWN_RADIUS_SHRINK_STEP) {
-			double minDist = Math.max(MIN_SPAWN_DISTANCE, maxDist - SPAWN_RADIUS_SHRINK_STEP);
-			for (int attempt = 0; attempt < 15; attempt++) {
-				Location loc = trySingleSpawnAttempt(player, minDist, maxDist, false);
+		for (double max = maxDist; max >= minDist; max -= shrinkStep) {
+			double min = Math.max(minDist, max - shrinkStep);
+			for (int attempt = 0; attempt < configProvider.getSpawnPhase2Attempts(); attempt++) {
+				Location loc = trySingleSpawnAttempt(player, min, max, false);
 				if (loc != null) return loc;
 			}
 		}
@@ -302,7 +300,7 @@ public class CopSpawnManager {
 
 		if (!world.isChunkLoaded(chunkX, chunkZ)) return null;
 
-		Location spawnLoc = findGroundNearY(world, x, z, playerLoc.getBlockY() + SPAWN_Y_OFFSET);
+		Location spawnLoc = findGroundNearY(world, x, z, playerLoc.getBlockY() + configProvider.getSpawnYOffset());
 		if (spawnLoc == null) return null;
 
 		if (requireBehind && !isSpawnBehindPlayer(spawnLoc, player)) return null;
@@ -326,10 +324,11 @@ public class CopSpawnManager {
 		int blockX = (int) Math.floor(x);
 		int blockZ = (int) Math.floor(z);
 
-		int minY = Math.max(world.getMinHeight(), targetY - VERTICAL_SEARCH_RANGE);
-		int maxY = Math.min(world.getMaxHeight() - 3, targetY + VERTICAL_SEARCH_RANGE);
+		int searchRange = configProvider.getVerticalSearchRange();
+		int minY        = Math.max(world.getMinHeight(), targetY - searchRange);
+		int maxY        = Math.min(world.getMaxHeight() - 3, targetY + searchRange);
 
-		for (int offset = 0; offset <= VERTICAL_SEARCH_RANGE; offset++) {
+		for (int offset = 0; offset <= searchRange; offset++) {
 			int downY = targetY - offset;
 			if (downY >= minY && isValidGround(world, blockX, downY, blockZ)) {
 				return createCenteredSpawnLocation(world, blockX, downY, blockZ);
@@ -388,7 +387,7 @@ public class CopSpawnManager {
 		if (world.getBlockAt(x, y, z + 1).isEmpty()) openSides++;
 		if (world.getBlockAt(x, y, z - 1).isEmpty()) openSides++;
 
-		return openSides >= MIN_OPEN_HORIZONTAL_SIDES;
+		return openSides >= configProvider.getMinOpenHorizontalSides();
 	}
 
 	/**

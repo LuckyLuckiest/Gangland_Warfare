@@ -21,16 +21,19 @@ import java.util.List;
  */
 public class ReturningBehavior implements CopBehavior {
 
-	private static final int MAX_RETURN_TICKS = 600; // 30 seconds at 1 tick/tick, scaled by AI tick rate
-
 	private final CopSpawnManager   spawnManager;
 	private final DetainmentService detainmentService;
+	private final int               maxReturnTicks;
+	private final double            stationArrivalDistance;
 
 	private Location selectedStation;
 
-	public ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService) {
-		this.spawnManager      = spawnManager;
-		this.detainmentService = detainmentService;
+	public ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
+							 double stationArrivalDistance) {
+		this.spawnManager           = spawnManager;
+		this.detainmentService      = detainmentService;
+		this.maxReturnTicks         = maxReturnTicks;
+		this.stationArrivalDistance = stationArrivalDistance;
 	}
 
 	@Override
@@ -55,7 +58,7 @@ public class ReturningBehavior implements CopBehavior {
 
 			double distance = entity.getLocation().distance(selectedStation);
 
-			if (distance <= 3.0) {
+			if (distance <= stationArrivalDistance) {
 				tryDespawn(cop);
 				return;
 			}
@@ -64,7 +67,7 @@ public class ReturningBehavior implements CopBehavior {
 		}
 
 		// Timeout - despawn regardless of whether the station was reached
-		if (cop.getDespawnTicks() >= MAX_RETURN_TICKS) {
+		if (cop.getDespawnTicks() >= maxReturnTicks) {
 			tryDespawn(cop);
 		}
 	}
@@ -100,7 +103,7 @@ public class ReturningBehavior implements CopBehavior {
 		Player excludePlayer = cop.getTargetPlayerId() != null ? Bukkit.getPlayer(cop.getTargetPlayerId()) : null;
 
 		if (spawnManager.isVisibleToOtherPlayers(copLocation, excludePlayer)) {
-			if (cop.getDespawnTicks() < MAX_RETURN_TICKS * 2) {
+			if (cop.getDespawnTicks() < maxReturnTicks * 2) {
 				return;
 			}
 		}

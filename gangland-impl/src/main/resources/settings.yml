@@ -294,6 +294,80 @@ Cops:
       # Hard cap - result is always clamped to this value (should not exceed Max_Per_Player in cops.yml)
       Max: 8
 
+   # Core behaviour values shared across all cop tiers.
+   Behaviour:
+      # Hard cap on the number of cop NPCs active per wanted player at any time.
+      Max_Per_Player: 8
+      # Game ticks between each AI evaluation cycle. Lower = faster reactions, higher CPU cost.
+      AI_Tick_Rate: 10
+      # Game ticks between each check that decides whether to spawn more cops.
+      Spawn_Check_Rate: 40
+      # Default radius within which a cop can attempt to cuff the target (blocks). Tiers may override this.
+      Cuff_Radius: 3.0
+      # How many cuff attempts a cop makes before giving up and switching to combat.
+      Max_Cuff_Attempts: 3
+      # Game ticks the cop waits between consecutive cuff attempts.
+      Cuff_Cooldown_Ticks: 100
+      # Distance at which an idle cop detects a wanted player and begins pursuit (blocks).
+      Alert_Range: 40.0
+      # Base melee engagement range (blocks). Ranged attack range is derived from this value.
+      Combat_Range: 4.0
+      # Game ticks between melee attacks.
+      Attack_Cooldown_Ticks: 20
+
+   # Controls where cop NPCs spawn relative to the target player.
+   Spawn:
+      # Minimum distance from the player to spawn a cop (blocks).
+      Min_Distance: 10.0
+      # Maximum distance from the player to spawn a cop (blocks).
+      Max_Distance: 50.0
+      # Minimum ring distance used during phase-1 (preferred-ring, behind-player) spawn attempts (blocks).
+      Phase1_Min_Distance: 30.0
+      # Amount the ring radius shrinks per phase-2 iteration (blocks).
+      Radius_Shrink_Step: 5.0
+      # Vertical range searched above/below the player's Y level to find valid ground (blocks).
+      Vertical_Search_Range: 10
+      # Y-offset added to the player's Y when searching for spawn ground. 0 = same level as player.
+      Y_Offset: 0
+      # Minimum number of open horizontal sides required at a spawn position.
+      Min_Open_Sides: 2
+      # Radius within which a registered cop spawner is preferred over a random position (blocks).
+      Spawner_Preference_Radius: 80.0
+      # Distance within which another player triggers the visibility check during despawn (blocks).
+      Visibility_Check_Distance: 48.0
+      # Number of attempts in phase-1 (preferred ring, behind-player) of spawn location selection.
+      Phase1_Attempts: 20
+      # Number of attempts per shrink step in phase-2 of spawn location selection.
+      Phase2_Attempts: 15
+
+   # Controls NPC pathfinding and stuck-detection behavior.
+   Navigation:
+      # Ticks between navigation path recalculations. Lower = more responsive but higher CPU cost.
+      Recalculation_Ticks: 10
+      # AI ticks between movement-progress samples for stuck detection.
+      Stuck_Check_Interval: 5
+      # Consecutive stuck samples required before navigation is considered stuck.
+      Max_Stuck_Checks: 3
+      # Consecutive stuck samples required before navigation is considered permanently hopeless.
+      Max_Hopeless_Stuck_Checks: 6
+      # Distance (blocks) below which a hopeless cop can still navigate to the target directly.
+      Hopeless_Close_Threshold: 8.0
+      # Minimum distance the NPC must travel between samples to count as progress (blocks).
+      Min_Progress_Distance: 0.75
+      # Ranged cops hold their firing position when the target is within this distance range (blocks).
+      Ranged_Min_Distance: 7.0
+      Ranged_Max_Distance: 12.0
+
+   # Controls how a cop returns to its station and despawns after the target is detained.
+   Return:
+      # Maximum AI ticks the cop waits before being force-despawned. (600 = ~30 s at default AI tick rate)
+      Max_Ticks: 600
+      # Distance to the station at which the cop considers itself arrived and attempts to despawn (blocks).
+      Station_Arrival_Distance: 3.0
+
+   # Number of full magazine reloads worth of ammo given to a cop NPC on spawn.
+   Starting_Ammo_Magazines: 3
+
 # +-------------+#
 # | Gang Config |#
 # +-------------+#
