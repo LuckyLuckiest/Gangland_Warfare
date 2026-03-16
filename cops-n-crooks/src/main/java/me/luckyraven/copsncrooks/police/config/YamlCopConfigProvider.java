@@ -215,8 +215,13 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		}
 
 		try {
-			XMaterial type = XMaterial.valueOf(entry.toUpperCase());
-			return new ItemStack(Objects.requireNonNull(type.get()));
+			Optional<XMaterial> xMaterial = XMaterial.matchXMaterial(entry.toUpperCase());
+			if (xMaterial.isPresent()) {
+				Material mat = xMaterial.get().get();
+				if (mat != null) return new ItemStack(mat);
+			}
+
+			return new ItemStack(Material.STICK);
 		} catch (IllegalArgumentException e) {
 			return null;
 		}
