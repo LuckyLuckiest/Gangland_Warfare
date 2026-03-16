@@ -46,6 +46,9 @@ Config_Version: '${project.version}'
 # |  %uuid%           : Get the player UUID.                                      |
 # |  %ammo%           : Gets the ammo amount.                                     |
 # |  %weapon%         : Get the weapon name.                                      |
+# |  %quantity%       : Gets the quantity for bulk sign actions.                  |
+# |  %content%        : Gets the content name for bulk sign actions.              |
+# |  %price%          : Gets the price for bulk sign actions.                     |
 # |  =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=  |
 # +-------------------------------------------------------------------------------+
 # For Color Codes, check this website: http://minecraft.gamepedia.com/Formatting_codes
@@ -314,6 +317,12 @@ Weapons:
    Ammo_Bought: "You just bought &8(&b%ammo%&ex%amount_1%&8)&7 for &a%money_symbol%%amount_2%&7."
    Ammo_Sold: "You just sold &8(&b%ammo%&ex%amount_1%&8)&7 for &a%money_symbol%%amount_2%&7."
    Not_Enough_Ammo: "You don't have enough ammo to sell!"
+   Repair:
+      Already_Full: "This item is already fully repaired."
+      Complete: "Repaired %restored% condition. (%current%/%max%)"
+      Incompatible_Material: "This repair material is not compatible with this item type."
+      Cancelled: "Repair was cancelled."
+      No_Material: "No repair material found in your inventory."
 
 Death:
    Weapon:
@@ -339,3 +348,13 @@ Level:
 Waypoint:
    Cooldown: "&7You are on a cooldown. Wait &b%timer&7."
    Cancelled_Teleport: "&7You moved, cancelled teleportation!"
+
+Signs:
+   Created: 'Sign created successfully!'
+   Creation_Failed: 'Invalid sign: %reason%'
+   Invalid: 'Invalid sign!'
+   Bulk:
+      Confirm_Expired: 'Bulk confirmation expired - please try again.'
+      Confirm_Request: 'Bulk action: &f%quantity%x %content% &7for &a%money_symbol%%price% &7- Shift-click the sign again within &f%time%s &7to confirm.'
+      Expired: '&cYour bulk confirmation for &f%content% &chas expired.'
+      Cancelled: '&cBulk confirmation for &f%content% &cwas cancelled.'

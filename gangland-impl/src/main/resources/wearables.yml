@@ -1,10 +1,21 @@
-# Gangland Warfare - Wearable Armor Configuration
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     / ________/      \_____   _____/      / __ \         | #
+# |    | /                     | |           / /  \ \        | #
+# |    | |  _______            | |          / /____\ \       | #
+# |    | |  \_____ \           | |         / ________ \      | #
+# |    | \_______/ ||          | |        / /        \ \     | #
+# |     \__________/           |_|       /_/          \_\    | #
+# |                                                          | #
+# |                    File: wearables.yml                   | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
 #
 # Each entry defines a custom armor piece that integrates with the damage pipeline.
 # Items are identified in-game by a hidden NBT tag embedded when built via API.
 #
 # Fields:
-#   Permission          - (optional) node required to wear/receive this piece
 #   Material            - Bukkit material name; must be an armor type
 #   Name                - display name (supports & color codes)
 #   Drop_On_Death       - whether the item drops on player death
