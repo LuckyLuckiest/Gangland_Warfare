@@ -12,7 +12,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -60,7 +60,7 @@ class GangLeaveCommand extends SubArgument {
 			Member member = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -73,7 +73,7 @@ class GangLeaveCommand extends SubArgument {
 			if (tail == null) return;
 
 			if (member.getRank().match(tail.getUsedId())) {
-				user.sendMessage(MessageAddon.GANG_TRANSFER_OWNERSHIP.toString());
+				user.sendMessage(Messages.GANG_TRANSFER_OWNERSHIP.toString());
 				return;
 			}
 
@@ -103,7 +103,7 @@ class GangLeaveCommand extends SubArgument {
 			Member member = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -118,14 +118,14 @@ class GangLeaveCommand extends SubArgument {
 			if (tail == null) return;
 
 			if (member.getRank().match(tail.getUsedId())) {
-				user.sendMessage(MessageAddon.GANG_TRANSFER_OWNERSHIP.toString());
+				user.sendMessage(Messages.GANG_TRANSFER_OWNERSHIP.toString());
 				return;
 			}
 
 			// if they were not the owner, they can leave
 			// anyone leaving will not get a piece of the pie, thus the contribution would not be counted
 			gang.removeMember(user, member);
-			user.sendMessage(MessageAddon.GANG_LEAVE.toString());
+			user.sendMessage(Messages.GANG_LEAVE.toString());
 
 			CountdownTimer timer = leaveTimer.get(user);
 			if (timer != null) {

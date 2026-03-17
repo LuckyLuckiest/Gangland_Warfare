@@ -9,7 +9,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.tables.player.UserTable;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
@@ -67,10 +67,10 @@ public final class BalanceCommand extends CommandHandler {
 			User<Player> user   = userManager.getUser(Bukkit.getPlayer(target));
 
 			if (user != null) {
-				sender.sendMessage(MessageAddon.BALANCE_TARGET.toString()
-															  .replace("%target%", target)
-															  .replace("%balance%", SettingAddon.formatDouble(
-																	  user.getEconomy().getBalance())));
+				sender.sendMessage(Messages.BALANCE_TARGET.toString()
+														  .replace("%target%", target)
+														  .replace("%balance%", SettingAddon.formatDouble(
+																  user.getEconomy().getBalance())));
 				return;
 			}
 
@@ -101,15 +101,15 @@ public final class BalanceCommand extends CommandHandler {
 
 					found = true;
 
-					sender.sendMessage(MessageAddon.BALANCE_TARGET.toString()
-																  .replace("%target%", target)
-																  .replace("%balance%",
-																		   SettingAddon.formatDouble(uuids.get(uuid))));
+					sender.sendMessage(Messages.BALANCE_TARGET.toString()
+															  .replace("%target%", target)
+															  .replace("%balance%",
+																	   SettingAddon.formatDouble(uuids.get(uuid))));
 
 					break;
 				}
 
-				if (!found) sender.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", target));
+				if (!found) sender.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", target));
 			});
 		}, sender -> {
 			List<String> players = new ArrayList<>();

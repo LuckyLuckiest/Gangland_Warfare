@@ -5,17 +5,17 @@ import org.jetbrains.annotations.NotNull;
 public interface RepairMessages {
 
 	@NotNull
-	String alreadyFullyRepaired();
+	String getAlreadyFullyRepaired();
 
 	@NotNull
-	String repairComplete(int restored, int current, int max);
+	String getRepairComplete(int restored, int current, int max);
 
 	@NotNull
-	String incompatibleMaterial();
+	String getIncompatibleMaterial();
 
 	@NotNull
-	String repairCancelled();
+	String getRepairCancelled();
 
 	@NotNull
-	String noMaterialAvailable();
+	String getNoMaterialAvailable();
 }

@@ -5,7 +5,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyException;
 import me.luckyraven.data.economy.EconomyHandler;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.sign.model.ParsedSign;
 import org.bukkit.entity.Player;
@@ -20,14 +20,14 @@ public class MoneyAspect implements SignAspect {
 	public AspectResult execute(Player player, ParsedSign sign) {
 		User<Player> user = userManager.getUser(player);
 
-		if (user == null) return AspectResult.failure(MessageAddon.PLAYER_NOT_FOUND.toString());
+		if (user == null) return AspectResult.failure(Messages.PLAYER_NOT_FOUND.toString());
 
 		EconomyHandler economy = user.getEconomy();
 		double         amount  = sign.getPrice();
 
 		if (transactionType == TransactionType.WITHDRAW) {
 			if (amount == 0D) {
-				String string = MessageAddon.FREE_TRANSACTION.toString(MessageAddon.Type.NO_CHANGE);
+				String string = Messages.FREE_TRANSACTION.toString(Messages.Type.NO_CHANGE);
 				return AspectResult.successContinue(string);
 			}
 
@@ -37,12 +37,12 @@ public class MoneyAspect implements SignAspect {
 				return AspectResult.failure(exception.getMessage());
 			}
 
-			String withdrawn = MessageAddon.WITHDRAW_MONEY_PLAYER.toString(MessageAddon.Type.NO_CHANGE);
+			String withdrawn = Messages.WITHDRAW_MONEY_PLAYER.toString(Messages.Type.NO_CHANGE);
 			return AspectResult.success(withdrawn.replace("%amount%", SettingAddon.formatDouble(amount)));
 		} else {
 			economy.deposit(amount);
 
-			String deposit = MessageAddon.DEPOSIT_MONEY_PLAYER.toString(MessageAddon.Type.NO_CHANGE);
+			String deposit = Messages.DEPOSIT_MONEY_PLAYER.toString(Messages.Type.NO_CHANGE);
 			return AspectResult.successContinue(deposit.replace("%amount%", SettingAddon.formatDouble(amount)));
 		}
 	}

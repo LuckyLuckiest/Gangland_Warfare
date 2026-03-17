@@ -9,7 +9,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -42,7 +42,7 @@ class WaypointSelectCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<id>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
 		};
 	}
 
@@ -59,7 +59,7 @@ class WaypointSelectCommand extends SubArgument {
 			try {
 				id = Integer.parseInt(argId);
 			} catch (NumberFormatException exception) {
-				sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", argId));
+				sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", argId));
 				return;
 			}
 
@@ -67,7 +67,7 @@ class WaypointSelectCommand extends SubArgument {
 
 			// check if the waypoint exists
 			if (waypoint == null) {
-				sender.sendMessage(MessageAddon.INVALID_WAYPOINT.toString());
+				sender.sendMessage(Messages.INVALID_WAYPOINT.toString());
 				return;
 			}
 
@@ -80,7 +80,7 @@ class WaypointSelectCommand extends SubArgument {
 			waypointManager.playerSelect(player, waypoint);
 
 			// inform the player
-			user.sendMessage(MessageAddon.WAYPOINT_SELECTED.toString().replace("%waypoint%", waypoint.getName()));
+			user.sendMessage(Messages.WAYPOINT_SELECTED.toString().replace("%waypoint%", waypoint.getName()));
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);

@@ -7,7 +7,7 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import net.wesjd.anvilgui.AnvilGUI;
@@ -41,7 +41,7 @@ class GangDescriptionCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!user.hasGang()) {
-				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -59,7 +59,7 @@ class GangDescriptionCommand extends SubArgument {
 
 				// no change
 				if (output == null || output.isEmpty() || output.equals(old)) {
-					stateSnapshot.getPlayer().sendMessage(MessageAddon.GANG_DESCRIPTION_NO_CHANGE.toString());
+					stateSnapshot.getPlayer().sendMessage(Messages.GANG_DESCRIPTION_NO_CHANGE.toString());
 					return Collections.emptyList();
 				}
 
@@ -67,9 +67,9 @@ class GangDescriptionCommand extends SubArgument {
 				gang1.setDescription(output);
 
 				stateSnapshot.getPlayer()
-							 .sendMessage(MessageAddon.GANG_DESCRIPTION_CHANGE.toString()
-																			  .replace("%old_desc%", old)
-																			  .replace("%new_desc%", output));
+							 .sendMessage(Messages.GANG_DESCRIPTION_CHANGE.toString()
+																		  .replace("%old_desc%", old)
+																		  .replace("%new_desc%", output));
 				return List.of(AnvilGUI.ResponseAction.close());
 			}).text(gang.getDescription()).title("Gang description").plugin(gangland).open(player);
 		};

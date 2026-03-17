@@ -11,7 +11,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -49,7 +49,7 @@ class WaypointGangIdCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<gangId>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<gangId>"));
 		};
 	}
 
@@ -63,12 +63,12 @@ class WaypointGangIdCommand extends SubArgument {
 			Waypoint waypoint = waypointManager.getSelected(player);
 
 			if (waypoint == null) {
-				user.sendMessage(MessageAddon.NOT_SELECTED_WAYPOINT.toString());
+				user.sendMessage(Messages.NOT_SELECTED_WAYPOINT.toString());
 				return;
 			}
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -81,25 +81,25 @@ class WaypointGangIdCommand extends SubArgument {
 			try {
 				id = Integer.parseInt(value);
 			} catch (NumberFormatException exception) {
-				sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", value));
+				sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", value));
 				return;
 			}
 
 			// check if the gang is valid
 			if (user.getGangId() != id) {
-				user.sendMessage(MessageAddon.INVALID_GANG_NAME.toString());
+				user.sendMessage(Messages.INVALID_GANG_NAME.toString());
 				return;
 			}
 
 			Gang gang = gangManager.getGang(id);
 
 			if (gang == null) {
-				user.sendMessage(MessageAddon.GANG_DOESNT_EXIST.toString());
+				user.sendMessage(Messages.GANG_DOESNT_EXIST.toString());
 				return;
 			}
 
 			waypoint.setGangId(id);
-			user.sendMessage(MessageAddon.WAYPOINT_CONFIGURATION_SUCCESS.toString());
+			user.sendMessage(Messages.WAYPOINT_CONFIGURATION_SUCCESS.toString());
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);

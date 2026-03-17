@@ -12,7 +12,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -59,11 +59,11 @@ class GangPromoteCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -80,7 +80,7 @@ class GangPromoteCommand extends SubArgument {
 			boolean force     = player.hasPermission(forceRank);
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -99,7 +99,7 @@ class GangPromoteCommand extends SubArgument {
 			}
 
 			if (targetMember == null) {
-				user.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
+				user.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
 				return;
 			}
 
@@ -113,7 +113,7 @@ class GangPromoteCommand extends SubArgument {
 
 				// cannot promote more than your rank
 				if (userMemberRank.equals(targetMember.getRank())) {
-					user.sendMessage(MessageAddon.GANG_SAME_RANK_ACTION.toString());
+					user.sendMessage(Messages.GANG_SAME_RANK_ACTION.toString());
 					return;
 				}
 
@@ -122,7 +122,7 @@ class GangPromoteCommand extends SubArgument {
 				Tree.Node<Rank> targetNode = currentRank.getNode();
 
 				if (rankManager.getRankTree().isDescendant(targetNode, userNode)) {
-					user.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
+					user.sendMessage(Messages.GANG_HIGHER_RANK_ACTION.toString());
 					return;
 				}
 			}
@@ -136,7 +136,7 @@ class GangPromoteCommand extends SubArgument {
 					.toList();
 
 			if (nextRanks.isEmpty()) {
-				user.sendMessage(MessageAddon.GANG_PROMOTE_END.toString());
+				user.sendMessage(Messages.GANG_PROMOTE_END.toString());
 				return;
 			}
 
@@ -160,8 +160,8 @@ class GangPromoteCommand extends SubArgument {
 				Rank first = nextRanks.getFirst();
 				if (offlineName != null && !offlineName.isEmpty() && offlinePlayer.isOnline()) {
 					Player onlinePlayer = offlinePlayer.getPlayer();
-					String message = MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString()
-																			 .replace("%rank%", first.getName());
+					String message = Messages.GANG_PROMOTE_TARGET_SUCCESS.toString()
+																		 .replace("%rank%", first.getName());
 					// remove the previous rank attachments
 					User<Player> onlineUser = userManager.getUser(onlinePlayer);
 
@@ -170,7 +170,7 @@ class GangPromoteCommand extends SubArgument {
 					Objects.requireNonNull(onlinePlayer).sendMessage(message);
 				}
 
-				String string  = MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString();
+				String string  = Messages.GANG_PROMOTE_PLAYER_SUCCESS.toString();
 				String replace = string.replace("%player%", targetStr).replace("%rank%", first.getName());
 				user.sendMessage(replace);
 

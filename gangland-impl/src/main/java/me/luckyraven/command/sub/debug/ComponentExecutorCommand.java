@@ -12,7 +12,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -82,11 +82,11 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			if (user == null) return;
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<rank>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<rank>"));
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
@@ -94,7 +94,7 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			if (user == null) return null;
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return null;
 			}
 
@@ -132,7 +132,7 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			Member userMember = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -152,7 +152,7 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			}
 
 			if (targetMember == null) {
-				user.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
+				user.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
 				return;
 			}
 
@@ -161,7 +161,7 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			// cannot promote more than your rank
 
 			if (userMember.getRank().equals(targetMember.getRank())) {
-				user.sendMessage(MessageAddon.GANG_SAME_RANK_ACTION.toString());
+				user.sendMessage(Messages.GANG_SAME_RANK_ACTION.toString());
 				return;
 			}
 
@@ -176,14 +176,14 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			User<Player>  onlineUser    = userManager.getUser(onlinePlayer);
 
 			if (onlinePlayer != null && onlineUser != null && offlinePlayer.isOnline()) {
-				String string  = MessageAddon.GANG_PROMOTE_TARGET_SUCCESS.toString();
+				String string  = Messages.GANG_PROMOTE_TARGET_SUCCESS.toString();
 				String replace = string.replace("%rank%", nextRank.getName());
 				onlineUser.sendMessage(replace);
 			}
 
-			user.sendMessage(MessageAddon.GANG_PROMOTE_PLAYER_SUCCESS.toString()
-																	 .replace("%player%", targetStr)
-																	 .replace("%rank%", nextRank.getName()));
+			user.sendMessage(Messages.GANG_PROMOTE_PLAYER_SUCCESS.toString()
+																 .replace("%player%", targetStr)
+																 .replace("%rank%", nextRank.getName()));
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
@@ -191,7 +191,7 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			if (user == null) return null;
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return null;
 			}
 

@@ -61,7 +61,7 @@ import me.luckyraven.database.repositories.lootchest.LootChestRepository;
 import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.LanguageLoader;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.file.configuration.copsncrooks.GanglandBountySettings;
 import me.luckyraven.file.configuration.copsncrooks.GanglandCopSettings;
@@ -70,6 +70,8 @@ import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
 import me.luckyraven.file.configuration.lootchest.GanglandLootChestMessages;
 import me.luckyraven.file.configuration.lootchest.LootChestSettings;
+import me.luckyraven.file.configuration.weapon.GanglandRepairMessages;
+import me.luckyraven.file.configuration.weapon.WeaponLoader;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
 import me.luckyraven.item.ItemParserManager;
@@ -109,9 +111,7 @@ import me.luckyraven.weapon.WeaponManager;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import me.luckyraven.weapon.configuration.WeaponAddon;
-import me.luckyraven.weapon.configuration.WeaponLoader;
 import me.luckyraven.weapon.projectile.BlockDamageManager;
-import me.luckyraven.weapon.repair.GanglandRepairMessages;
 import me.luckyraven.weapon.repair.RepairManager;
 import me.luckyraven.weapon.repair.anvil.RepairAnvilGui;
 import me.luckyraven.weapon.repair.config.RepairLoader;
@@ -386,7 +386,7 @@ public final class Initializer {
 		languageLoader = new LanguageLoader(gangland);
 		languageLoader.initialize();
 
-		MessageAddon.setMessageConfiguration(languageLoader.getMessage());
+		Messages.setMessageConfiguration(languageLoader.getMessage());
 		TimeMessages.initialize();
 
 		// initialize scoreboard addon

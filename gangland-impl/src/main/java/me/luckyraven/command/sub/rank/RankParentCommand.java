@@ -6,7 +6,7 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -34,7 +34,7 @@ class RankParentCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<add/remove>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<add/remove>"));
 		};
 	}
 
@@ -43,26 +43,26 @@ class RankParentCommand extends SubArgument {
 			Rank rank = rankManager.get(args[3]);
 
 			if (rank == null) {
-				sender.sendMessage(MessageAddon.INVALID_RANK.toString());
+				sender.sendMessage(Messages.INVALID_RANK.toString());
 				return;
 			}
 
 			Rank childRank = rankManager.get(args[4]);
 
 			if (childRank == null) {
-				sender.sendMessage(MessageAddon.INVALID_RANK_PARENT.toString());
+				sender.sendMessage(Messages.INVALID_RANK_PARENT.toString());
 				return;
 			}
 
 			switch (args[2].toLowerCase()) {
 				case "add" -> {
 					if (rank.getNode().getChildren().contains(childRank.getNode())) {
-						sender.sendMessage(MessageAddon.RANK_EXIST.toString());
+						sender.sendMessage(Messages.RANK_EXIST.toString());
 						return;
 					}
 					rank.getNode().add(childRank.getNode());
 
-					String string = MessageAddon.RANK_PARENT_ADD.toString();
+					String string = Messages.RANK_PARENT_ADD.toString();
 					String replace = string
 							.replace("%parent%", childRank.getName())
 							.replace("%rank%", rank.getName());
@@ -72,12 +72,12 @@ class RankParentCommand extends SubArgument {
 
 				case "remove" -> {
 					if (!rank.getNode().getChildren().contains(childRank.getNode())) {
-						sender.sendMessage(MessageAddon.INVALID_RANK_PARENT.toString());
+						sender.sendMessage(Messages.INVALID_RANK_PARENT.toString());
 						return;
 					}
 					rank.getNode().remove(childRank.getNode());
 
-					String string = MessageAddon.RANK_PARENT_REMOVE.toString();
+					String string = Messages.RANK_PARENT_REMOVE.toString();
 					String replace = string
 							.replace("%parent%", childRank.getName())
 							.replace("%rank%", rank.getName());
@@ -88,17 +88,17 @@ class RankParentCommand extends SubArgument {
 		}, sender -> List.of("<add/remove>"));
 
 		Argument parentName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<parent>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<parent>"));
 		}, sender -> List.of("<parent>"));
 
 		parentName.addSubArgument(parentStr);
 
 		Argument addParent = new Argument(gangland, "add", tree, (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, this.getPermission() + ".add");
 
 		Argument removeParent = new Argument(gangland, "remove", tree, (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		}, this.getPermission() + ".remove");
 
 		this.addSubArgument(addParent);

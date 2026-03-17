@@ -12,7 +12,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -65,11 +65,11 @@ class GangInviteCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 
 		};
 	}
@@ -82,12 +82,12 @@ class GangInviteCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!playerInvite.containsKey(user)) {
-				user.sendMessage(MessageAddon.NO_GANG_INVITATION.toString());
+				user.sendMessage(Messages.NO_GANG_INVITATION.toString());
 				return;
 			}
 
 			if (user.hasGang()) {
-				user.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
+				user.sendMessage(Messages.PLAYER_IN_GANG.toString());
 				return;
 			}
 
@@ -99,8 +99,8 @@ class GangInviteCommand extends SubArgument {
 			// don't broadcast to the joined member
 			List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
 			for (User<Player> onUser : gangOnlineMembers) {
-				String playerJoined = MessageAddon.GANG_PLAYER_JOINED.toString()
-																	 .replace("%player%", user.getUser().getName());
+				String playerJoined = Messages.GANG_PLAYER_JOINED.toString()
+																 .replace("%player%", user.getUser().getName());
 
 				onUser.sendMessage(playerJoined);
 			}
@@ -108,7 +108,7 @@ class GangInviteCommand extends SubArgument {
 			member.setGangJoinDateLong(Instant.now().toEpochMilli());
 			gang.addMember(user, member, rank);
 			sender.sendMessage(
-					MessageAddon.GANG_INVITE_ACCEPT.toString().replace("%gang%", gang.getDisplayNameString()));
+					Messages.GANG_INVITE_ACCEPT.toString().replace("%gang%", gang.getDisplayNameString()));
 
 			playerInvite.remove(user);
 
@@ -128,7 +128,7 @@ class GangInviteCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -136,7 +136,7 @@ class GangInviteCommand extends SubArgument {
 			Player target    = Bukkit.getPlayer(targetStr);
 
 			if (target == null) {
-				sender.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
+				sender.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
 				return;
 			}
 
@@ -146,14 +146,14 @@ class GangInviteCommand extends SubArgument {
 			if (targetUser == null) return;
 
 			if (targetUser.hasGang()) {
-				sender.sendMessage(MessageAddon.TARGET_IN_GANG.toString().replace("%player%", targetStr));
+				sender.sendMessage(Messages.TARGET_IN_GANG.toString().replace("%player%", targetStr));
 				return;
 			}
 
 			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
-				user.sendMessage(MessageAddon.GANG_INVITE_PLAYER.toString().replace("%player%", targetStr));
-				String replace = MessageAddon.GANG_INVITE_TARGET.toString()
-																.replace("%gang%", gang.getDisplayNameString());
+				user.sendMessage(Messages.GANG_INVITE_PLAYER.toString().replace("%player%", targetStr));
+				String replace = Messages.GANG_INVITE_TARGET.toString()
+															.replace("%gang%", gang.getDisplayNameString());
 				targetUser.sendMessage(replace);
 			}, null, time -> {
 				playerInvite.remove(targetUser);

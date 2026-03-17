@@ -7,7 +7,7 @@ import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.copsncrooks.bounty.Bounty;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -36,7 +36,7 @@ class BountyClearCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<player>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<player>"));
 		};
 	}
 
@@ -46,7 +46,7 @@ class BountyClearCommand extends SubArgument {
 			Player player    = Bukkit.getPlayer(playerStr);
 
 			if (player == null) {
-				String string  = MessageAddon.PLAYER_NOT_FOUND.toString();
+				String string  = Messages.PLAYER_NOT_FOUND.toString();
 				String replace = string.replace("%player%", playerStr);
 				sender.sendMessage(replace);
 				return;
@@ -57,14 +57,14 @@ class BountyClearCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!user.getBounty().hasBounty()) {
-				sender.sendMessage(MessageAddon.NO_BOUNTY.toString());
+				sender.sendMessage(Messages.NO_BOUNTY.toString());
 				return;
 			}
 
 			Bounty userBounty = user.getBounty();
 
 			if (!userBounty.containsBounty(sender)) {
-				sender.sendMessage(MessageAddon.NO_USER_SET_BOUNTY.toString());
+				sender.sendMessage(Messages.NO_USER_SET_BOUNTY.toString());
 				return;
 			}
 
@@ -73,7 +73,7 @@ class BountyClearCommand extends SubArgument {
 			// remove the user
 			userBounty.removeBounty(sender);
 
-			String string = MessageAddon.BOUNTY_PLAYER_LIFT.toString();
+			String string = Messages.BOUNTY_PLAYER_LIFT.toString();
 			String replace = string.replace("%amount%", SettingAddon.formatDouble(amount))
 								   .replace("%player%", playerStr);
 
@@ -86,16 +86,16 @@ class BountyClearCommand extends SubArgument {
 
 				userSender.getEconomy().deposit(amount);
 
-				String string1  = MessageAddon.DEPOSIT_MONEY_PLAYER.toString();
+				String string1  = Messages.DEPOSIT_MONEY_PLAYER.toString();
 				String replace1 = string1.replace("%amount%", SettingAddon.formatDouble(amount));
 
 				senderPlayer.sendMessage(replace1);
 			}
 
 			if (userBounty.getAmount() == 0D) {
-				user.sendMessage(MessageAddon.BOUNTY_CLEAR.toString());
+				user.sendMessage(Messages.BOUNTY_CLEAR.toString());
 			} else {
-				String string1 = MessageAddon.BOUNTY_LIFTED.toString();
+				String string1 = Messages.BOUNTY_LIFTED.toString();
 				String replace1 = string1.replace("%amount%", SettingAddon.formatDouble(amount))
 										 .replace("%bounty%", SettingAddon.formatDouble(userBounty.getAmount()));
 

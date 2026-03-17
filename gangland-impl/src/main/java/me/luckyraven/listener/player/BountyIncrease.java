@@ -7,7 +7,7 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.events.gang.GangBountyEvent;
 import me.luckyraven.events.user.UserBountyEvent;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.OfflinePlayer;
@@ -50,7 +50,7 @@ public class BountyIncrease implements Listener {
 	}
 
 	private String getBountyIncrementMessage(BountyEvent event) {
-		String string = MessageAddon.BOUNTY_INCREMENT.toString();
+		String string = Messages.BOUNTY_INCREMENT.toString();
 		String amount = SettingAddon.formatDouble(event.getAmountApplied());
 		return string.replace("%bounty%", amount);
 	}

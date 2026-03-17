@@ -5,7 +5,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.util.List;
 
-public enum MessageAddon {
+public enum Messages {
 
 	// prefixes
 	PREFIX("Normal.Prefix", Type.OTHER),
@@ -309,13 +309,13 @@ public enum MessageAddon {
 
 	private boolean isList;
 
-	MessageAddon(String path, Type type) {
+	Messages(String path, Type type) {
 		this.path   = path;
 		this.type   = type;
 		this.isList = false;
 	}
 
-	MessageAddon(String path, Type type, boolean isList) {
+	Messages(String path, Type type, boolean isList) {
 		this(path, type);
 		this.isList = isList;
 	}

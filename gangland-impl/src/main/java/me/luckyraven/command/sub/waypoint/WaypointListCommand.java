@@ -5,7 +5,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -30,19 +30,19 @@ class WaypointListCommand extends SubArgument {
 
 			List<Waypoint> waypoints = waypointManager.getWaypoints()
 													  .entrySet()
-													  .stream()
-													  .sorted(Map.Entry.comparingByKey())
-													  .map(Map.Entry::getValue)
-													  .toList();
+					.stream()
+					.sorted(Map.Entry.comparingByKey())
+					.map(Map.Entry::getValue)
+					.toList();
 			for (int i = 0; i < waypoints.size(); i++) {
 				builder.append(waypoints.get(i).getName()).append(':').append(i + 1);
 
 				if (i < waypoints.size() - 1) builder.append(", ");
 			}
 
-			sender.sendMessage(MessageAddon.WAYPOINT_LIST_PRIMARY.toString(),
-							   MessageAddon.WAYPOINT_LIST_SECONDARY.toString()
-																   .replace("%waypoints%", builder.toString()));
+			sender.sendMessage(Messages.WAYPOINT_LIST_PRIMARY.toString(),
+							   Messages.WAYPOINT_LIST_SECONDARY.toString()
+															   .replace("%waypoints%", builder.toString()));
 		};
 	}
 

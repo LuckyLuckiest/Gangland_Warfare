@@ -14,7 +14,7 @@ import me.luckyraven.copsncrooks.wanted.WantedExecutor;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.events.user.UserBountyEvent;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.feature.Executor;
@@ -121,7 +121,7 @@ public class EntityDamage implements Listener {
 			damagerUser.getEconomy().deposit(amount);
 			bounty.resetBounty();
 
-			String message = MessageAddon.BANK_MONEY_DEPOSIT_PLAYER.toString();
+			String message = Messages.BANK_MONEY_DEPOSIT_PLAYER.toString();
 			String replace = message.replace("%amount%", SettingAddon.formatDouble(amount));
 
 			damagerUser.sendMessage(replace);

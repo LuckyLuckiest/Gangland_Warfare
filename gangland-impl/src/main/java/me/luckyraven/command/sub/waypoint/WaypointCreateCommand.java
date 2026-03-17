@@ -10,7 +10,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
@@ -49,7 +49,7 @@ class WaypointCreateCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -76,7 +76,7 @@ class WaypointCreateCommand extends SubArgument {
 			waypointManager.add(waypoint);
 
 			// inform the player that the waypoint is created
-			user.sendMessage(MessageAddon.WAYPOINT_CREATED.toString().replace("%waypoint%", name));
+			user.sendMessage(Messages.WAYPOINT_CREATED.toString().replace("%waypoint%", name));
 
 			createWaypointName.remove(player);
 
@@ -120,7 +120,7 @@ class WaypointCreateCommand extends SubArgument {
 				CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
 					if (time.getTimeLeft() % 20 != 0) return;
 
-					String createConfirm = MessageAddon.WAYPOINT_CREATE_CONFIRM.toString();
+					String createConfirm = Messages.WAYPOINT_CREATE_CONFIRM.toString();
 					String confirm = createConfirm.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
 																						  TimeMessages.getInstance()));
 

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.sign.model.ParsedSign;
 import me.luckyraven.sign.type.WantedSign;
 import org.bukkit.entity.Player;
@@ -18,7 +18,7 @@ public class WantedAspect implements SignAspect {
 	public AspectResult execute(Player player, ParsedSign sign) {
 		User<Player> user = userManager.getUser(player);
 
-		if (user == null) return AspectResult.failure(MessageAddon.PLAYER_NOT_FOUND.toString());
+		if (user == null) return AspectResult.failure(Messages.PLAYER_NOT_FOUND.toString());
 
 		Wanted wanted = user.getWanted();
 		int    amount = sign.getAmount();
@@ -31,7 +31,7 @@ public class WantedAspect implements SignAspect {
 
 				wanted.setLevel(currentLevel + amount);
 
-				String string = MessageAddon.WANTED_INCREASED.toString(MessageAddon.Type.NO_CHANGE);
+				String string = Messages.WANTED_INCREASED.toString(Messages.Type.NO_CHANGE);
 				String replace = string.replace("%amount%", String.valueOf(amount))
 									   .replace("%stars%", wanted.getLevelStars());
 				return AspectResult.success(replace);
@@ -41,7 +41,7 @@ public class WantedAspect implements SignAspect {
 					wanted.decrementLevel();
 				}
 
-				String string = MessageAddon.WANTED_DECREASED.toString(MessageAddon.Type.NO_CHANGE);
+				String string = Messages.WANTED_DECREASED.toString(Messages.Type.NO_CHANGE);
 				String replace = string.replace("%amount%", String.valueOf(amount))
 									   .replace("%stars%", wanted.getLevelStars());
 				return AspectResult.success(replace);
@@ -49,7 +49,7 @@ public class WantedAspect implements SignAspect {
 			case CLEAR -> {
 				wanted.reset();
 
-				String string  = MessageAddon.WANTED_CLEARED.toString(MessageAddon.Type.NO_CHANGE);
+				String string  = Messages.WANTED_CLEARED.toString(Messages.Type.NO_CHANGE);
 				String replace = string.replace("%stars%", wanted.getLevelStars());
 				return AspectResult.success(replace);
 			}

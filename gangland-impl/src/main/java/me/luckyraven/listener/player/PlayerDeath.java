@@ -5,7 +5,7 @@ import me.luckyraven.Initializer;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.datastructure.ScientificCalculator;
@@ -112,7 +112,7 @@ public class PlayerDeath implements Listener {
 
 		if (weapon == null) return;
 
-		List<String> messages = MessageAddon.DEAD_USING_WEAPON.toStringList();
+		List<String> messages = Messages.DEAD_USING_WEAPON.toStringList();
 		Random       random   = new Random();
 
 		int    index        = random.nextInt(messages.size());

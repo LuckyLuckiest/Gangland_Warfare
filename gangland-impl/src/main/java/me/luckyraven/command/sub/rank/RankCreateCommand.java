@@ -7,7 +7,7 @@ import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
@@ -40,7 +40,7 @@ class RankCreateCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -51,7 +51,7 @@ class RankCreateCommand extends SubArgument {
 		ConfirmArgument confirmCreate = new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
 			Rank rank = new Rank(createRankName.get(sender).get(), Rank.getNewId());
 
-			String string  = MessageAddon.RANK_CREATED.toString();
+			String string  = Messages.RANK_CREATED.toString();
 			String replace = string.replace("%rank%", rank.getName());
 			sender.sendMessage(replace);
 			rankManager.add(rank);
@@ -70,7 +70,7 @@ class RankCreateCommand extends SubArgument {
 			Rank rank = rankManager.get(args[2]);
 
 			if (rank != null) {
-				sender.sendMessage(MessageAddon.RANK_EXIST.toString());
+				sender.sendMessage(Messages.RANK_EXIST.toString());
 				return;
 			}
 
@@ -83,7 +83,7 @@ class RankCreateCommand extends SubArgument {
 				CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
 					if (time.getTimeLeft() % 20 != 0) return;
 
-					String string = MessageAddon.RANK_CREATE_CONFIRM.toString();
+					String string = Messages.RANK_CREATE_CONFIRM.toString();
 					String replace = string.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
 																				   TimeMessages.getInstance()));
 

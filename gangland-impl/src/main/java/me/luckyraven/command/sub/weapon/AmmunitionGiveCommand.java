@@ -6,7 +6,7 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -40,7 +40,7 @@ class AmmunitionGiveCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> sender.sendMessage(
-				ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+				ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 	}
 
 	private void ammunitionGive() {
@@ -54,10 +54,10 @@ class AmmunitionGiveCommand extends SubArgument {
 			boolean giveAmmunition = giveAmmunition(player, ammoName.toLowerCase(), 1);
 
 			if (giveAmmunition) {
-				String gaveAmmo = MessageAddon.RECEIVED_AMMO.toString();
+				String gaveAmmo = Messages.RECEIVED_AMMO.toString();
 				user.sendMessage(gaveAmmo.replace("%ammo%", ammoName).replace("%amount%", "1"));
 			} else {
-				String invalidAmmo = MessageAddon.INVALID_AMMO.toString();
+				String invalidAmmo = Messages.INVALID_AMMO.toString();
 				user.sendMessage(invalidAmmo.replace("%args%", ammoName));
 			}
 		}, sender -> {
@@ -79,17 +79,17 @@ class AmmunitionGiveCommand extends SubArgument {
 			try {
 				ammoAmount = Integer.parseInt(args[3]);
 			} catch (NumberFormatException exception) {
-				user.sendMessage(ChatUtil.commandMessage(MessageAddon.MUST_BE_NUMBERS.toString()));
+				user.sendMessage(ChatUtil.commandMessage(Messages.MUST_BE_NUMBERS.toString()));
 				return;
 			}
 
 			boolean giveAmmunition = giveAmmunition(player, ammoName.toLowerCase(), ammoAmount);
 
 			if (giveAmmunition) {
-				String gaveAmmo = MessageAddon.RECEIVED_AMMO.toString();
+				String gaveAmmo = Messages.RECEIVED_AMMO.toString();
 				user.sendMessage(gaveAmmo.replace("%ammo%", ammoName).replace("%amount%", String.valueOf(ammoAmount)));
 			} else {
-				String invalidAmmo = MessageAddon.INVALID_AMMO.toString();
+				String invalidAmmo = Messages.INVALID_AMMO.toString();
 				user.sendMessage(invalidAmmo.replace("%args%", ammoName));
 			}
 		}, sender -> List.of("<amount>"));

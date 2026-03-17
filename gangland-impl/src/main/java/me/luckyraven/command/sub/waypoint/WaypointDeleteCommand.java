@@ -12,7 +12,7 @@ import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.tables.waypoint.WaypointTable;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.persistence.database.query.QueryBuilder;
@@ -50,7 +50,7 @@ class WaypointDeleteCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<id>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
 		};
 	}
 
@@ -65,7 +65,7 @@ class WaypointDeleteCommand extends SubArgument {
 
 			// check if the waypoint exists
 			if (waypoint == null) {
-				sender.sendMessage(MessageAddon.INVALID_WAYPOINT.toString());
+				sender.sendMessage(Messages.INVALID_WAYPOINT.toString());
 				return;
 			}
 
@@ -115,7 +115,7 @@ class WaypointDeleteCommand extends SubArgument {
 			try {
 				id = Integer.parseInt(argId);
 			} catch (NumberFormatException exception) {
-				sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", argId));
+				sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", argId));
 				return;
 			}
 
@@ -123,7 +123,7 @@ class WaypointDeleteCommand extends SubArgument {
 
 			// check if the waypoint exists
 			if (waypoint == null) {
-				sender.sendMessage(MessageAddon.INVALID_WAYPOINT.toString());
+				sender.sendMessage(Messages.INVALID_WAYPOINT.toString());
 				return;
 			}
 

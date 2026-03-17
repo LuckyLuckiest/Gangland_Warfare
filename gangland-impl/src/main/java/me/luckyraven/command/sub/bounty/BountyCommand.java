@@ -5,7 +5,7 @@ import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -38,7 +38,7 @@ public final class BountyCommand extends CommandHandler {
 
 			if (user == null) return;
 
-			String string      = MessageAddon.BOUNTY_CURRENT.toString();
+			String string      = Messages.BOUNTY_CURRENT.toString();
 			String replacement = SettingAddon.formatDouble(user.getBounty().getAmount());
 			String replace     = string.replace("%bounty%", replacement);
 

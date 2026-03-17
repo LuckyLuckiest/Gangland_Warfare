@@ -2,7 +2,7 @@ package me.luckyraven.data.teleportation;
 
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.events.teleportation.TeleportEvent;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.timer.CountdownTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -105,7 +105,7 @@ public class WaypointTeleport implements Listener {
 		countdownTimer.remove(player);
 		totalDistance.remove(player);
 
-		player.sendMessage(MessageAddon.WAYPOINT_TELEPORT_CANCELLED.toString());
+		player.sendMessage(Messages.WAYPOINT_TELEPORT_CANCELLED.toString());
 	}
 
 	private void teleport(JavaPlugin plugin, User<Player> user, CompletableFuture<TeleportResult> teleportResult) {

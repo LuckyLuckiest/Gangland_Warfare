@@ -11,7 +11,7 @@ import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -53,11 +53,11 @@ class GangWithdrawCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>"));
 		};
 	}
 
@@ -71,7 +71,7 @@ class GangWithdrawCommand extends SubArgument {
 			Member member = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -89,7 +89,7 @@ class GangWithdrawCommand extends SubArgument {
 
 
 				if (gang.getEconomy().getBalance() < argAmount) {
-					user.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
+					user.sendMessage(Messages.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 					return;
 				}
 
@@ -99,14 +99,14 @@ class GangWithdrawCommand extends SubArgument {
 				member.decreaseContribution(contribution);
 				for (User<Player> gangUser : gangOnlineMembers) {
 					gangUser.getUser()
-							.sendMessage(MessageAddon.GANG_MONEY_WITHDRAW.toString()
-																		 .replace("%player%", player.getName())
-																		 .replace("%amount%", SettingAddon.formatDouble(
-																				 argAmount)));
+							.sendMessage(Messages.GANG_MONEY_WITHDRAW.toString()
+																	 .replace("%player%", player.getName())
+																	 .replace("%amount%", SettingAddon.formatDouble(
+																			 argAmount)));
 				}
 				user.sendMessage(ChatUtil.color("&c-" + contribution));
 			} catch (NumberFormatException exception) {
-				user.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
+				user.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
 			}
 		}, sender -> {
 			Player       player = (Player) sender;

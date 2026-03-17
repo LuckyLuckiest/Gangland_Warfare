@@ -16,7 +16,7 @@ import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.UserTable;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -115,11 +115,11 @@ class GangKickCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -134,7 +134,7 @@ class GangKickCommand extends SubArgument {
 			Member userMember = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -153,7 +153,7 @@ class GangKickCommand extends SubArgument {
 			}
 
 			if (targetMember == null) {
-				user.sendMessage(MessageAddon.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
+				user.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
 				return;
 			}
 
@@ -161,7 +161,7 @@ class GangKickCommand extends SubArgument {
 			Rank targetRank = targetMember.getRank();
 
 			if (playerRank == null || targetRank == null) {
-				user.sendMessage(MessageAddon.INVALID_RANK.toString());
+				user.sendMessage(Messages.INVALID_RANK.toString());
 				return;
 			}
 
@@ -169,7 +169,7 @@ class GangKickCommand extends SubArgument {
 			Tree.Node<Rank> targetNode = targetMember.getRank().getNode();
 
 			if (!rankManager.getRankTree().isDescendant(targetNode, playerNode)) {
-				user.sendMessage(MessageAddon.GANG_HIGHER_RANK_ACTION.toString());
+				user.sendMessage(Messages.GANG_HIGHER_RANK_ACTION.toString());
 				return;
 			}
 
@@ -202,14 +202,14 @@ class GangKickCommand extends SubArgument {
 			if (targetUser == null) return;
 
 			if (targetUser.getUser() instanceof Player targetPlayer) {
-				targetPlayer.sendMessage(MessageAddon.KICKED_FROM_GANG.toString());
+				targetPlayer.sendMessage(Messages.KICKED_FROM_GANG.toString());
 			}
 
 			gang.removeMember(targetUser, targetMember);
 
-			user.sendMessage(MessageAddon.GANG_KICKED_TARGET.toString()
-															.replace("%player%",
-																	 Objects.requireNonNull(offlinePlayer.getName())));
+			user.sendMessage(Messages.GANG_KICKED_TARGET.toString()
+														.replace("%player%",
+																 Objects.requireNonNull(offlinePlayer.getName())));
 		}, sender -> getDescendantRanks(userManager, memberManager, gangManager, rankManager, sender));
 
 		this.addSubArgument(kickName);

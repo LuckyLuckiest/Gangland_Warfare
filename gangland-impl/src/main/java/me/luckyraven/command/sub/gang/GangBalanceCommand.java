@@ -7,7 +7,7 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -35,14 +35,14 @@ class GangBalanceCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!user.hasGang()) {
-				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
 			Gang gang = gangManager.getGang(user.getGangId());
-			sender.sendMessage(MessageAddon.GANG_BALANCE.toString()
-														.replace("%balance%", SettingAddon.formatDouble(
-																gang.getEconomy().getBalance())));
+			sender.sendMessage(Messages.GANG_BALANCE.toString()
+													.replace("%balance%", SettingAddon.formatDouble(
+															gang.getEconomy().getBalance())));
 		};
 	}
 

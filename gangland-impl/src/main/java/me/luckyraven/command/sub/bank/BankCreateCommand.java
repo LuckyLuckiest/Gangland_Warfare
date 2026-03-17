@@ -8,7 +8,7 @@ import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeMessages;
@@ -49,11 +49,11 @@ class BankCreateCommand extends SubArgument {
 			if (user == null) return;
 
 			if (user.hasBank()) {
-				user.sendMessage(MessageAddon.BANK_EXIST.toString());
+				user.sendMessage(Messages.BANK_EXIST.toString());
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -68,12 +68,12 @@ class BankCreateCommand extends SubArgument {
 			if (user == null) return;
 
 			if (user.hasBank()) {
-				user.sendMessage(MessageAddon.BANK_EXIST.toString());
+				user.sendMessage(Messages.BANK_EXIST.toString());
 				return;
 			}
 
 			if (user.getEconomy().getBalance() < SettingAddon.getBankCreateFee()) {
-				user.sendMessage(MessageAddon.CANNOT_CREATE_BANK.toString());
+				user.sendMessage(Messages.CANNOT_CREATE_BANK.toString());
 				return;
 			}
 
@@ -86,7 +86,7 @@ class BankCreateCommand extends SubArgument {
 
 			user.setBank(bank);
 
-			String string  = MessageAddon.BANK_CREATED.toString();
+			String string  = Messages.BANK_CREATED.toString();
 			String replace = string.replace("%bank%", createBankName.get(user).get());
 
 			user.sendMessage(replace);
@@ -109,7 +109,7 @@ class BankCreateCommand extends SubArgument {
 			if (user == null) return;
 
 			if (user.hasBank()) {
-				user.sendMessage(MessageAddon.BANK_EXIST.toString());
+				user.sendMessage(Messages.BANK_EXIST.toString());
 				return;
 			}
 
@@ -118,7 +118,7 @@ class BankCreateCommand extends SubArgument {
 			createBankName.put(user, new AtomicReference<>(args[2]));
 
 			// Need to notify the player and give access to confirm
-			String string  = MessageAddon.BANK_CREATE_FEE.toString();
+			String string  = Messages.BANK_CREATE_FEE.toString();
 			String replace = string.replace("%amount%", SettingAddon.formatDouble(SettingAddon.getBankCreateFee()));
 
 			user.sendMessage(replace);
@@ -128,7 +128,7 @@ class BankCreateCommand extends SubArgument {
 				CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
 					if (time.getTimeLeft() % 20 != 0) return;
 
-					String string1 = MessageAddon.BANK_CREATE_CONFIRM.toString();
+					String string1 = Messages.BANK_CREATE_CONFIRM.toString();
 					String replace1 = string1.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
 																					 TimeMessages.getInstance()));
 					s.sendMessage(replace1);

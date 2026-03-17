@@ -5,7 +5,7 @@ import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -29,12 +29,12 @@ public final class UncuffCommand extends CommandHandler {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		commandSender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<player>"));
+		commandSender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<player>"));
 	}
 
 	@Override
 	protected void initializeArguments() {
-		String notFound = MessageAddon.PLAYER_NOT_FOUND.toString();
+		String notFound = Messages.PLAYER_NOT_FOUND.toString();
 
 		Argument playerArg = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
 			String playerStr = args[1];

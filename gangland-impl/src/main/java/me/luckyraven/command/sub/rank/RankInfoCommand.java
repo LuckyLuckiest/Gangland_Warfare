@@ -7,7 +7,7 @@ import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -35,7 +35,7 @@ class RankInfoCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -44,7 +44,7 @@ class RankInfoCommand extends SubArgument {
 			Rank rank = rankManager.get(args[2]);
 
 			if (rank == null) {
-				sender.sendMessage(MessageAddon.INVALID_RANK.toString());
+				sender.sendMessage(Messages.INVALID_RANK.toString());
 				return;
 			}
 
@@ -61,14 +61,14 @@ class RankInfoCommand extends SubArgument {
 				if (i < rank.getNode().getChildren().size() - 1) parentBuilder.append(", ");
 			}
 
-			String string = MessageAddon.RANK_INFO_PRIMARY.toString();
+			String string = Messages.RANK_INFO_PRIMARY.toString();
 			String replace = string.replace("%rank%", rank.getName())
 								   .replace("%id%", String.valueOf(rank.getUsedId()))
 								   .replace("%parent%", parentBuilder.toString());
 
 			sender.sendMessage(replace);
 
-			String string1  = MessageAddon.RANK_INFO_SECONDARY.toString();
+			String string1  = Messages.RANK_INFO_SECONDARY.toString();
 			String replace1 = string1.replace("%permissions%", permBuilder.toString());
 
 			sender.sendMessage(replace1);

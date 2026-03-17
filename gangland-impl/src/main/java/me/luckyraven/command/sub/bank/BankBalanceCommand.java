@@ -6,7 +6,7 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -34,11 +34,11 @@ class BankBalanceCommand extends SubArgument {
 			Bank bank = user.getBank();
 
 			if (!user.hasBank() || bank == null) {
-				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
+				user.sendMessage(Messages.MUST_CREATE_BANK.toString());
 				return;
 			}
 
-			String string      = MessageAddon.BANK_BALANCE_PLAYER.toString();
+			String string      = Messages.BANK_BALANCE_PLAYER.toString();
 			String replacement = SettingAddon.formatDouble(bank.getEconomy().getBalance());
 			String replace     = string.replace("%balance%", replacement);
 

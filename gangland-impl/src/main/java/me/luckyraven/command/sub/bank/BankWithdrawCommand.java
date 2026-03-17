@@ -8,7 +8,7 @@ import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -46,11 +46,11 @@ class BankWithdrawCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!user.hasBank()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
+				user.sendMessage(Messages.MUST_CREATE_BANK.toString());
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>"));
 		};
 	}
 
@@ -64,7 +64,7 @@ class BankWithdrawCommand extends SubArgument {
 			Bank bank = user.getBank();
 
 			if (!user.hasBank() || bank == null) {
-				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
+				user.sendMessage(Messages.MUST_CREATE_BANK.toString());
 				return;
 			}
 
@@ -73,7 +73,7 @@ class BankWithdrawCommand extends SubArgument {
 			try {
 				argAmount = Double.parseDouble(args[2]);
 			} catch (NumberFormatException exception) {
-				String string  = MessageAddon.MUST_BE_NUMBERS.toString();
+				String string  = Messages.MUST_BE_NUMBERS.toString();
 				String replace = string.replace("%command%", args[2]);
 
 				user.sendMessage(replace);
@@ -85,7 +85,7 @@ class BankWithdrawCommand extends SubArgument {
 			BankCommand.processMoney(user, bank, bank.getEconomy().getBalance(), argAmount, inBank,
 									 user.getEconomy().getBalance() + argAmount);
 
-			String string  = MessageAddon.BANK_MONEY_WITHDRAW_PLAYER.toString();
+			String string  = Messages.BANK_MONEY_WITHDRAW_PLAYER.toString();
 			String replace = string.replace("%amount%", SettingAddon.formatDouble(argAmount));
 
 			user.getUser().sendMessage(replace);

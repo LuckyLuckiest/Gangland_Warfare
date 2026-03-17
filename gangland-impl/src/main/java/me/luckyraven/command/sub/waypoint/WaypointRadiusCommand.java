@@ -8,7 +8,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -39,7 +39,7 @@ class WaypointRadiusCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>"));
 		};
 	}
 
@@ -53,7 +53,7 @@ class WaypointRadiusCommand extends SubArgument {
 			Waypoint waypoint = waypointManager.getSelected(player);
 
 			if (waypoint == null) {
-				user.sendMessage(MessageAddon.NOT_SELECTED_WAYPOINT.toString());
+				user.sendMessage(Messages.NOT_SELECTED_WAYPOINT.toString());
 				return;
 			}
 
@@ -64,13 +64,13 @@ class WaypointRadiusCommand extends SubArgument {
 			try {
 				changedValue = Double.parseDouble(value);
 			} catch (NumberFormatException exception) {
-				sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", value));
+				sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", value));
 				return;
 			}
 
 			// update the timer
 			waypoint.setRadius(changedValue);
-			user.sendMessage(MessageAddon.WAYPOINT_CONFIGURATION_SUCCESS.toString());
+			user.sendMessage(Messages.WAYPOINT_CONFIGURATION_SUCCESS.toString());
 		}, sender -> List.of("<radius>"));
 
 		this.addSubArgument(optional);

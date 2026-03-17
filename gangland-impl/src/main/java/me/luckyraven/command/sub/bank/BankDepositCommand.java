@@ -8,7 +8,7 @@ import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -46,11 +46,11 @@ class BankDepositCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!user.hasBank()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
+				user.sendMessage(Messages.MUST_CREATE_BANK.toString());
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>"));
 		};
 	}
 
@@ -64,7 +64,7 @@ class BankDepositCommand extends SubArgument {
 			Bank bank = user.getBank();
 
 			if (!user.hasBank() || bank == null) {
-				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
+				user.sendMessage(Messages.MUST_CREATE_BANK.toString());
 				return;
 			}
 
@@ -73,7 +73,7 @@ class BankDepositCommand extends SubArgument {
 			try {
 				argAmount = Double.parseDouble(args[2]);
 			} catch (NumberFormatException exception) {
-				String string  = MessageAddon.MUST_BE_NUMBERS.toString();
+				String string  = Messages.MUST_BE_NUMBERS.toString();
 				String replace = string.replace("%command%", args[2]);
 
 				user.sendMessage(replace);
@@ -83,14 +83,14 @@ class BankDepositCommand extends SubArgument {
 			double inBank = bank.getEconomy().getBalance() + argAmount;
 
 			if (inBank > SettingAddon.getBankMaxBalance()) {
-				user.sendMessage(MessageAddon.CANNOT_EXCEED_MAXIMUM.toString());
+				user.sendMessage(Messages.CANNOT_EXCEED_MAXIMUM.toString());
 
 			}
 
 			BankCommand.processMoney(user, bank, user.getEconomy().getBalance(), argAmount, inBank,
 									 user.getEconomy().getBalance() - argAmount);
 
-			String string  = MessageAddon.BANK_MONEY_DEPOSIT_PLAYER.toString();
+			String string  = Messages.BANK_MONEY_DEPOSIT_PLAYER.toString();
 			String replace = string.replace("%amount%", SettingAddon.formatDouble(argAmount));
 
 			user.getUser().sendMessage(replace);

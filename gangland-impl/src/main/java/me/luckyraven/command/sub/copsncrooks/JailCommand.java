@@ -5,7 +5,7 @@ import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -30,7 +30,7 @@ public final class JailCommand extends CommandHandler {
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		commandSender.sendMessage(
-				ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<player|create|remove>"));
+				ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<player|create|remove>"));
 	}
 
 	@Override
@@ -50,7 +50,7 @@ public final class JailCommand extends CommandHandler {
 	}
 
 	private Argument jailPlayerArgument() {
-		String notFound = MessageAddon.PLAYER_NOT_FOUND.toString();
+		String notFound = Messages.PLAYER_NOT_FOUND.toString();
 
 		Argument playerArg = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
 			String playerStr = args[1];
@@ -61,7 +61,7 @@ public final class JailCommand extends CommandHandler {
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<jailId>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<jailId>"));
 		}, sender -> Bukkit.getOnlinePlayers()
 				.stream().map(Player::getName).toList());
 
@@ -79,7 +79,7 @@ public final class JailCommand extends CommandHandler {
 			try {
 				jailId = Integer.parseInt(jailIdStr);
 			} catch (NumberFormatException e) {
-				sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", jailIdStr));
+				sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", jailIdStr));
 				return;
 			}
 

@@ -1,10 +1,11 @@
-package me.luckyraven.weapon.configuration;
+package me.luckyraven.file.configuration.weapon;
 
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.FolderLoader;
+import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import org.bukkit.configuration.InvalidConfigurationException;
 
 @CustomLog

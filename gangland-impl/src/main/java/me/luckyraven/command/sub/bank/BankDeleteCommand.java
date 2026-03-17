@@ -9,7 +9,7 @@ import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.ChatUtil;
@@ -62,7 +62,7 @@ class BankDeleteCommand extends SubArgument {
 			Bank bank = user.getBank();
 
 			if (!user.hasBank() || bank == null) {
-				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
+				user.sendMessage(Messages.MUST_CREATE_BANK.toString());
 				return;
 			}
 
@@ -81,7 +81,7 @@ class BankDeleteCommand extends SubArgument {
 		}, time -> {
 			if (time.getTimeLeft() % 20 != 0) return;
 
-			String string = MessageAddon.BANK_REMOVE_CONFIRM.toString();
+			String string = Messages.BANK_REMOVE_CONFIRM.toString();
 			String replace = string.replace("%timer%",
 											TimeUtil.formatTime(time.getTimeLeft(), true, TimeMessages.getInstance()));
 			sender.sendMessage(replace);
@@ -104,7 +104,7 @@ class BankDeleteCommand extends SubArgument {
 			Bank bank = user.getBank();
 
 			if (!user.hasBank() || bank == null) {
-				user.sendMessage(MessageAddon.MUST_CREATE_BANK.toString());
+				user.sendMessage(Messages.MUST_CREATE_BANK.toString());
 				return;
 			}
 
@@ -118,7 +118,7 @@ class BankDeleteCommand extends SubArgument {
 
 			bankRepository.delete(bank);
 
-			String string  = MessageAddon.BANK_REMOVED.toString();
+			String string  = Messages.BANK_REMOVED.toString();
 			String replace = string.replace("%bank%", deleteBankName.get(user).get());
 
 			user.sendMessage(replace);

@@ -11,7 +11,7 @@ import me.luckyraven.data.teleportation.IllegalTeleportException;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.teleportation.WaypointTeleport;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeMessages;
@@ -112,7 +112,7 @@ public final class TeleportCommand extends CommandHandler {
 
 	private void teleportCost(User<Player> user, Waypoint waypoint) {
 		if (waypoint == null) {
-			user.getUser().sendMessage(MessageAddon.INVALID_WAYPOINT.toString());
+			user.getUser().sendMessage(Messages.INVALID_WAYPOINT.toString());
 			return;
 		}
 
@@ -136,7 +136,7 @@ public final class TeleportCommand extends CommandHandler {
 			user.sendMessage(ChatUtil.color(confirmationMessage));
 		} else {
 			if (user.getEconomy().getBalance() < waypoint.getCost()) {
-				user.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
+				user.sendMessage(Messages.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 			} else {
 				reconfirm.remove(player);
 				CountdownTimer timer = reconfirmTimer.get(player);
@@ -153,7 +153,7 @@ public final class TeleportCommand extends CommandHandler {
 
 	private void teleport(User<Player> user, Waypoint waypoint) {
 		if (waypoint == null) {
-			user.getUser().sendMessage(MessageAddon.INVALID_WAYPOINT.toString());
+			user.getUser().sendMessage(Messages.INVALID_WAYPOINT.toString());
 			return;
 		}
 
@@ -163,7 +163,7 @@ public final class TeleportCommand extends CommandHandler {
 
 			waypoint.getWaypointTeleport().teleport(getGangland(), user, (u, t) -> {
 				String time    = TimeUtil.formatTime(t.getTimeLeft(), true, TimeMessages.getInstance());
-				String message = MessageAddon.WAYPOINT_TELEPORT_TIMER.toString().replace("%timer%", time);
+				String message = Messages.WAYPOINT_TELEPORT_TIMER.toString().replace("%timer%", time);
 
 				u.getUser().sendMessage(message);
 			}).thenAccept(teleportResult -> {
@@ -176,16 +176,16 @@ public final class TeleportCommand extends CommandHandler {
 					if (waypoint1.getCost() != 0D) {
 						user1.getEconomy().withdraw(waypoint1.getCost());
 
-						String string  = MessageAddon.WITHDRAW_MONEY_PLAYER.toString();
+						String string  = Messages.WITHDRAW_MONEY_PLAYER.toString();
 						String replace = string.replace("%amount%", SettingAddon.formatDouble(waypoint1.getCost()));
 
 						user.sendMessage(replace);
 					}
 
-					String string = MessageAddon.WAYPOINT_TELEPORT.toString();
+					String string = Messages.WAYPOINT_TELEPORT.toString();
 					message = string.replace("%location%", waypoint1.getName());
 				} else {
-					String string = MessageAddon.UNABLE_TELEPORT_WAYPOINT.toString();
+					String string = Messages.UNABLE_TELEPORT_WAYPOINT.toString();
 					message = string.replace("%location%", waypoint1.getName());
 
 				}
@@ -198,7 +198,7 @@ public final class TeleportCommand extends CommandHandler {
 			if (timer == null) return;
 
 			String time    = TimeUtil.formatTime(timer.getTimeLeft(), true, TimeMessages.getInstance());
-			String string  = MessageAddon.WAYPOINT_TELEPORT_COOLDOWN.toString();
+			String string  = Messages.WAYPOINT_TELEPORT_COOLDOWN.toString();
 			String message = string.replace("%timer%", time);
 
 			user.getUser().sendMessage(message);

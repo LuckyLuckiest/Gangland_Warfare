@@ -1,6 +1,6 @@
 package me.luckyraven.util;
 
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.utilities.messages.TimeMessagesProvider;
 
 public final class TimeMessages implements TimeMessagesProvider {
@@ -25,31 +25,31 @@ public final class TimeMessages implements TimeMessagesProvider {
 
 	@Override
 	public String getYear() {
-		return MessageAddon.YEAR.toString();
+		return Messages.YEAR.toString();
 	}
 
 	@Override
 	public String getWeek() {
-		return MessageAddon.WEEK.toString();
+		return Messages.WEEK.toString();
 	}
 
 	@Override
 	public String getDay() {
-		return MessageAddon.DAY.toString();
+		return Messages.DAY.toString();
 	}
 
 	@Override
 	public String getHour() {
-		return MessageAddon.HOUR.toString();
+		return Messages.HOUR.toString();
 	}
 
 	@Override
 	public String getMinute() {
-		return MessageAddon.MINUTE.toString();
+		return Messages.MINUTE.toString();
 	}
 
 	@Override
 	public String getSecond() {
-		return MessageAddon.SECOND.toString();
+		return Messages.SECOND.toString();
 	}
 }

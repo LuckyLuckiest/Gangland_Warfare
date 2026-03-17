@@ -1,11 +1,11 @@
 package me.luckyraven.file.configuration.copsncrooks;
 
 import me.luckyraven.copsncrooks.wanted.WantedSettings;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 
 /**
- * {@link WantedSettings} implementation backed by {@link SettingAddon} and {@link MessageAddon}.
+ * {@link WantedSettings} implementation backed by {@link SettingAddon} and {@link Messages}.
  */
 public class GanglandWantedSettings implements WantedSettings {
 
@@ -36,7 +36,7 @@ public class GanglandWantedSettings implements WantedSettings {
 
 	@Override
 	public String getWantedDecreasedMessageTemplate() {
-		return MessageAddon.WANTED_DECREASED.toString();
+		return Messages.WANTED_DECREASED.toString();
 	}
 
 	@Override

@@ -9,7 +9,7 @@ import me.luckyraven.command.sub.debug.ComponentExecutorCommand;
 import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
 import me.luckyraven.command.sub.debug.TimerCommand;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.command.Command;
@@ -88,7 +88,7 @@ public final class CommandManager implements CommandExecutor {
 			String mainCommandPermission = String.format("%s.command.main", fullPrefix.toLowerCase());
 
 			if (!sender.hasPermission(mainCommandPermission)) {
-				sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
+				sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
 				return false;
 			}
 
@@ -111,7 +111,7 @@ public final class CommandManager implements CommandExecutor {
 			}
 
 			if (!match) {
-				sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_DONT_EXIST.toString(),
+				sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_DONT_EXIST.toString(),
 														 String.format("/%s %s", label, Arrays.asList(args))));
 
 				List<CommandHandler> commandHandlers = getPermissibleCommands(sender);

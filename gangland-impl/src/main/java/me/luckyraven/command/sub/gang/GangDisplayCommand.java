@@ -8,7 +8,7 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -45,11 +45,11 @@ class GangDisplayCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -61,7 +61,7 @@ class GangDisplayCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -69,7 +69,7 @@ class GangDisplayCommand extends SubArgument {
 			Gang   gang           = gangManager.getGang(user.getGangId());
 
 			gang.setDisplayName(displayNameStr);
-			user.sendMessage(MessageAddon.GANG_DISPLAY_SET.toString().replace("%display%", displayNameStr));
+			user.sendMessage(Messages.GANG_DISPLAY_SET.toString().replace("%display%", displayNameStr));
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
@@ -91,14 +91,14 @@ class GangDisplayCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
 			Gang gang = gangManager.getGang(user.getGangId());
 
 			gang.setDisplayName("");
-			user.sendMessage(MessageAddon.GANG_DISPLAY_REMOVED.toString());
+			user.sendMessage(Messages.GANG_DISPLAY_REMOVED.toString());
 		});
 
 		this.addSubArgument(removeDisplay);

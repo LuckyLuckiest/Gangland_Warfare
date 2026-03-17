@@ -7,7 +7,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -37,11 +37,11 @@ class WaypointDeselectCommand extends SubArgument {
 			Waypoint waypoint = waypointManager.playerDeselect(player);
 
 			if (waypoint != null) {
-				user.sendMessage(MessageAddon.WAYPOINT_DESELECTED.toString().replace("%waypoint%", waypoint.getName()));
+				user.sendMessage(Messages.WAYPOINT_DESELECTED.toString().replace("%waypoint%", waypoint.getName()));
 			}
 			// player didn't select a waypoint
 			else {
-				user.sendMessage(MessageAddon.NOT_SELECTED_WAYPOINT.toString());
+				user.sendMessage(Messages.NOT_SELECTED_WAYPOINT.toString());
 			}
 		};
 	}

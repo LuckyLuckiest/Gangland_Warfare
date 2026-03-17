@@ -8,7 +8,7 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -46,11 +46,11 @@ class GangRenameCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!user.hasGang()) {
-				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -62,7 +62,7 @@ class GangRenameCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!user.hasGang()) {
-				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -72,7 +72,7 @@ class GangRenameCommand extends SubArgument {
 
 			if (!SettingAddon.isGangNameDuplicates()) for (Gang checkGangName : gangManager.getGangs().values())
 				if (checkGangName.getName().equalsIgnoreCase(newName)) {
-					user.sendMessage(MessageAddon.DUPLICATE_GANG_NAME.toString().replace("%gang%", newName));
+					user.sendMessage(Messages.DUPLICATE_GANG_NAME.toString().replace("%gang%", newName));
 					return;
 				}
 
@@ -80,9 +80,9 @@ class GangRenameCommand extends SubArgument {
 
 			for (User<Player> onlineMembers : gang.getOnlineMembers(userManager))
 				onlineMembers.getUser()
-							 .sendMessage(MessageAddon.GANG_RENAME.toString()
-																  .replace("%old_gang%", oldName)
-																  .replace("%gang%", gang.getName()));
+							 .sendMessage(Messages.GANG_RENAME.toString()
+															  .replace("%old_gang%", oldName)
+															  .replace("%gang%", gang.getName()));
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);

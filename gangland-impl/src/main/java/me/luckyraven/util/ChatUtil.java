@@ -1,7 +1,7 @@
 package me.luckyraven.util;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
@@ -17,19 +17,19 @@ public final class ChatUtil extends me.luckyraven.util.utilities.ChatUtil {
 	}
 
 	public static String prefixMessage(String message) {
-		return color(MessageAddon.PREFIX + message);
+		return color(Messages.PREFIX + message);
 	}
 
 	public static String commandMessage(String message) {
-		return color(MessageAddon.COMMAND_PREFIX + message);
+		return color(Messages.COMMAND_PREFIX + message);
 	}
 
 	public static String errorMessage(String message) {
-		return color(MessageAddon.ERROR_PREFIX + message);
+		return color(Messages.ERROR_PREFIX + message);
 	}
 
 	public static String informationMessage(String message) {
-		return color(MessageAddon.INFORMATION_PREFIX + message);
+		return color(Messages.INFORMATION_PREFIX + message);
 	}
 
 	public static void sendToOperators(String permission, String message) {

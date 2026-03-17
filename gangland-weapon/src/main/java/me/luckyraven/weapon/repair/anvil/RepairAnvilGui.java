@@ -53,13 +53,13 @@ public class RepairAnvilGui {
 								  ItemStack currentMaterial = findMaterialInInventory(viewer);
 
 								  if (currentMaterial == null) {
-									  if (messages != null) viewer.sendMessage(messages.noMaterialAvailable());
+									  if (messages != null) viewer.sendMessage(messages.getNoMaterialAvailable());
 									  return List.of(AnvilGUI.ResponseAction.close());
 								  }
 
 								  RepairMaterial selectedMaterial = materialManager.getMaterial(currentMaterial);
 								  if (selectedMaterial == null || !RepairMaterial.hasUsesLeft(currentMaterial)) {
-									  if (messages != null) viewer.sendMessage(messages.noMaterialAvailable());
+									  if (messages != null) viewer.sendMessage(messages.getNoMaterialAvailable());
 									  return List.of(AnvilGUI.ResponseAction.close());
 								  }
 

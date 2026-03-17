@@ -5,7 +5,7 @@ import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.user.User;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -30,8 +30,8 @@ public final class BankCommand extends CommandHandler {
 
 	static void processMoney(User<Player> user, Bank bank, double check, double amount, double inBank,
 							 double inAccount) {
-		if (check == 0D) user.getUser().sendMessage(MessageAddon.CANNOT_TAKE_LESS_THAN_ZERO.toString());
-		else if (amount > check) user.getUser().sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
+		if (check == 0D) user.getUser().sendMessage(Messages.CANNOT_TAKE_LESS_THAN_ZERO.toString());
+		else if (amount > check) user.getUser().sendMessage(Messages.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 		else {
 			user.getEconomy().setBalance(inAccount);
 			bank.getEconomy().setBalance(inBank);

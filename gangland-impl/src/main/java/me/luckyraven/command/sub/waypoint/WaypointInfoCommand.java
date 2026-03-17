@@ -7,7 +7,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -38,7 +38,7 @@ class WaypointInfoCommand extends SubArgument {
 
 			// check if the user already selected a waypoint
 			if (waypoint == null) {
-				user.sendMessage(MessageAddon.NOT_SELECTED_WAYPOINT.toString());
+				user.sendMessage(Messages.NOT_SELECTED_WAYPOINT.toString());
 				return;
 			}
 

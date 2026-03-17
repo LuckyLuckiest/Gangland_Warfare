@@ -22,7 +22,7 @@ import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.events.user.UserDataInitEvent;
 import me.luckyraven.exception.PluginException;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.item.configuration.UniqueItemAddon;
@@ -87,7 +87,7 @@ public final class ReloadPlugin {
 		initializer.getFileManager().reloadFiles();
 		initializer.addonsLoader();
 		// third, update message addon with new language configuration
-		MessageAddon.setMessageConfiguration(initializer.getLanguageLoader().getMessage());
+		Messages.setMessageConfiguration(initializer.getLanguageLoader().getMessage());
 	}
 
 	/**

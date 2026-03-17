@@ -44,12 +44,12 @@ public class RepairManager {
 	public boolean applyRepair(@NotNull Player player, @NotNull Repairable repairable,
 							   @NotNull RepairMaterial repairMaterial) {
 		if (repairable.isFullyRepaired()) {
-			if (messages != null) player.sendMessage(messages.alreadyFullyRepaired());
+			if (messages != null) player.sendMessage(messages.getAlreadyFullyRepaired());
 			return false;
 		}
 
 		if (!repairMaterial.isCompatibleWith(repairable.getRepairableType())) {
-			if (messages != null) player.sendMessage(messages.incompatibleMaterial());
+			if (messages != null) player.sendMessage(messages.getIncompatibleMaterial());
 			return false;
 		}
 
@@ -57,7 +57,7 @@ public class RepairManager {
 		Bukkit.getPluginManager().callEvent(startEvent);
 
 		if (startEvent.isCancelled()) {
-			if (messages != null) player.sendMessage(messages.repairCancelled());
+			if (messages != null) player.sendMessage(messages.getRepairCancelled());
 			return false;
 		}
 
@@ -75,7 +75,7 @@ public class RepairManager {
 									  repairMaterial.getData().getRepairCustomSound());
 
 		if (messages != null) {
-			player.sendMessage(messages.repairComplete(actualGain, newValue, max));
+			player.sendMessage(messages.getRepairComplete(actualGain, newValue, max));
 		}
 
 		return true;

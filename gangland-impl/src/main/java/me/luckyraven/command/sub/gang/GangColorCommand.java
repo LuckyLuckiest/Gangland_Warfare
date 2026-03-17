@@ -8,7 +8,7 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.part.Fill;
@@ -48,7 +48,7 @@ class GangColorCommand extends SubArgument {
 			if (user == null) return;
 
 			if (!user.hasGang()) {
-				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -103,9 +103,9 @@ class GangColorCommand extends SubArgument {
 									   // inform player
 									   String colorSelected = ChatUtil.color(colorCode + ChatUtil.capitalize(
 											   colorName.toLowerCase().replace('_', ' ')));
-									   player2.sendMessage(MessageAddon.GANG_COLOR_SET.toString()
-																					  .replace("%color%",
-																							   colorSelected));
+									   player2.sendMessage(Messages.GANG_COLOR_SET.toString()
+																				  .replace("%color%",
+																						   colorSelected));
 
 									   inv.close(player2);
 								   });

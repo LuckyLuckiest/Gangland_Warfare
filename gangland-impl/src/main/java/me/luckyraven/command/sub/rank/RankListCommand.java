@@ -5,7 +5,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -25,18 +25,18 @@ class RankListCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(MessageAddon.RANK_LIST_PRIMARY.toString());
+			sender.sendMessage(Messages.RANK_LIST_PRIMARY.toString());
 
 			StringBuilder builder = new StringBuilder();
 			List<Rank> ranks = rankManager.getRanks().values()
-										  .stream().toList();
+					.stream().toList();
 
 			for (int i = 0; i < ranks.size(); i++) {
 				builder.append(ranks.get(i).getName());
 				if (i < ranks.size() - 1) builder.append(", ");
 			}
 
-			String string  = MessageAddon.RANK_LIST_SECONDARY.toString();
+			String string  = Messages.RANK_LIST_SECONDARY.toString();
 			String replace = string.replace("%ranks%", builder.toString());
 
 			sender.sendMessage(replace);

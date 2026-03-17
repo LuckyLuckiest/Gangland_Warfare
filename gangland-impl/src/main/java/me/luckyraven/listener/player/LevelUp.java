@@ -7,7 +7,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.events.gang.GangLevelUpEvent;
 import me.luckyraven.events.user.UserLevelUpEvent;
 import me.luckyraven.features.level.Level;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -37,7 +37,7 @@ public class LevelUp implements Listener {
 
 		if (player == null) return;
 
-		String message = MessageAddon.LEVEL_UP_PLAYER.toString();
+		String message = Messages.LEVEL_UP_PLAYER.toString();
 
 		user.sendMessage(replacePlaceholders(message, level));
 	}
@@ -55,7 +55,7 @@ public class LevelUp implements Listener {
 		for (Player player : onlinePlayers) {
 			User<Player> onlineUser = userManager.getUser(player);
 
-			String message = MessageAddon.LEVEL_UP_GANG.toString();
+			String message = Messages.LEVEL_UP_GANG.toString();
 
 			if (onlineUser != null) onlineUser.sendMessage(replacePlaceholders(message, level));
 		}

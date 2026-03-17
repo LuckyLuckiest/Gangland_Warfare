@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyException;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.inventory.multi.MultiInventory;
 import me.luckyraven.inventory.part.ButtonTags;
@@ -38,7 +38,7 @@ public class BountyAspect implements SignAspect {
 	public AspectResult execute(Player player, ParsedSign sign) {
 		User<Player> user = onlinePlayerUserManager.getUser(player);
 
-		if (user == null) return AspectResult.failure(MessageAddon.PLAYER_NOT_FOUND.toString());
+		if (user == null) return AspectResult.failure(Messages.PLAYER_NOT_FOUND.toString());
 
 		BountySign.BountyType bountyType = BountySign.BountyType.valueOf(sign.getContent().toUpperCase());
 
@@ -58,7 +58,7 @@ public class BountyAspect implements SignAspect {
 
 				user.getBounty().resetBounty();
 
-				String withdrawn = MessageAddon.WITHDRAW_MONEY_PLAYER.toString(MessageAddon.Type.NO_CHANGE);
+				String withdrawn = Messages.WITHDRAW_MONEY_PLAYER.toString(Messages.Type.NO_CHANGE);
 
 				return AspectResult.success(withdrawn.replace("%amount%", SettingAddon.formatDouble(amount)));
 			}

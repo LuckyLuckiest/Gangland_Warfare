@@ -9,7 +9,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.exception.PluginException;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -169,7 +169,7 @@ public class Argument implements Cloneable {
 
 			switch (argument.getState()) {
 				case SUCCESS -> argument.getArgument().executeArgument(sender, args);
-				case NO_PERMISSION -> sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
+				case NO_PERMISSION -> sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
 				case NOT_FOUND -> notFound(commandPrefix, sender, args, modifiedArg);
 			}
 		} catch (Throwable throwable) {
@@ -231,7 +231,7 @@ public class Argument implements Cloneable {
 	}
 
 	private void notFound(String commandPrefix, CommandSender sender, String[] args, Argument[] modifiedArg) {
-		StringBuilder invalidArg = new StringBuilder(MessageAddon.ARGUMENTS_WRONG.toString());
+		StringBuilder invalidArg = new StringBuilder(Messages.ARGUMENTS_WRONG.toString());
 		Argument      lastValid  = tree.traverseLastValid(modifiedArg);
 
 		if (lastValid == null) {

@@ -6,13 +6,13 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
+import me.luckyraven.file.configuration.weapon.WeaponLoader;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.weapon.Weapon;
-import me.luckyraven.weapon.configuration.WeaponLoader;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -41,7 +41,7 @@ class WeaponGiveCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> sender.sendMessage(
-				ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+				ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 	}
 
 	private void weaponGive() {
@@ -55,10 +55,10 @@ class WeaponGiveCommand extends SubArgument {
 			boolean giveWeapon = giveWeapon(player, weaponName.toLowerCase(), 1);
 
 			if (giveWeapon) {
-				String receivedWeapon = MessageAddon.RECEIVED_WEAPON.toString();
+				String receivedWeapon = Messages.RECEIVED_WEAPON.toString();
 				user.sendMessage(receivedWeapon.replace("%weapon%", weaponName).replace("%amount%", "1"));
 			} else {
-				String invalidWeapon = MessageAddon.INVALID_WEAPON.toString();
+				String invalidWeapon = Messages.INVALID_WEAPON.toString();
 				user.sendMessage(invalidWeapon.replace("%args%", weaponName));
 			}
 		}, sender -> {
@@ -80,19 +80,19 @@ class WeaponGiveCommand extends SubArgument {
 			try {
 				weaponAmount = Integer.parseInt(args[3]);
 			} catch (NumberFormatException exception) {
-				user.sendMessage(ChatUtil.commandMessage(MessageAddon.MUST_BE_NUMBERS.toString()));
+				user.sendMessage(ChatUtil.commandMessage(Messages.MUST_BE_NUMBERS.toString()));
 				return;
 			}
 
 			boolean giveWeapon = giveWeapon(player, weaponName.toLowerCase(), weaponAmount);
 
 			if (giveWeapon) {
-				String receivedWeapon = MessageAddon.RECEIVED_WEAPON.toString();
+				String receivedWeapon = Messages.RECEIVED_WEAPON.toString();
 				String replace = receivedWeapon.replace("%weapon%", weaponName)
 											   .replace("%amount%", String.valueOf(weaponAmount));
 				user.sendMessage(replace);
 			} else {
-				String invalidWeapon = MessageAddon.INVALID_WEAPON.toString();
+				String invalidWeapon = Messages.INVALID_WEAPON.toString();
 				user.sendMessage(invalidWeapon.replace("%args%", weaponName));
 			}
 		}, sender -> List.of("<amount>"));

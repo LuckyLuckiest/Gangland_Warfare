@@ -7,7 +7,7 @@ import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
@@ -51,7 +51,7 @@ public final class EconomyCommand extends CommandHandler {
 		Argument deposit = new Argument(getGangland(), new String[]{"deposit", "add"}, getArgumentTree(),
 										(argument, sender, args) -> {
 											sender.sendMessage(
-													ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(),
+													ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(),
 																		  "<specifier>"));
 										}, getPermission() + ".deposit");
 
@@ -59,12 +59,12 @@ public final class EconomyCommand extends CommandHandler {
 		// glw economy withdraw
 		Argument withdraw = new Argument(getGangland(), new String[]{"withdraw", "take"}, getArgumentTree(),
 										 (argument, sender, args) -> sender.sendMessage(
-												 ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(),
+												 ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(),
 																	   "<specifier>")), getPermission() + ".withdraw");
 
 		// glw economy set
 		Argument set = new Argument(getGangland(), "set", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<specifier>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<specifier>"));
 		}, getPermission() + ".set");
 
 		Argument amount = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
@@ -74,7 +74,7 @@ public final class EconomyCommand extends CommandHandler {
 			else specifier = "@" + args[2];
 
 			if (specifier.equals("**") && !(sender instanceof Player)) {
-				sender.sendMessage(MessageAddon.NOT_PLAYER.toString());
+				sender.sendMessage(Messages.NOT_PLAYER.toString());
 				return;
 			}
 
@@ -159,13 +159,13 @@ public final class EconomyCommand extends CommandHandler {
 					}
 				}
 				user.getUser()
-					.sendMessage(MessageAddon.valueOf(strValue.toUpperCase() + "_MONEY_PLAYER")
-											 .toString()
-											 .replace("%amount%", SettingAddon.formatDouble(valueChanged)));
+					.sendMessage(Messages.valueOf(strValue.toUpperCase() + "_MONEY_PLAYER")
+										 .toString()
+										 .replace("%amount%", SettingAddon.formatDouble(valueChanged)));
 				economy.setBalance(value);
 			}
 		} catch (NumberFormatException exception) {
-			sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", args[3]));
+			sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", args[3]));
 		}
 	}
 
@@ -174,7 +174,7 @@ public final class EconomyCommand extends CommandHandler {
 		Argument specifier = new OptionalArgument(getGangland(), optionalSpecifier, getArgumentTree(),
 												  (argument, sender, args) -> {
 													  sender.sendMessage(ChatUtil.setArguments(
-															  MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
+															  Messages.ARGUMENTS_MISSING.toString(), "<amount>"));
 												  }, sender -> {
 			List<String> list = new ArrayList<>();
 
@@ -203,7 +203,7 @@ public final class EconomyCommand extends CommandHandler {
 			String specifierStr = args.length > 2 ? args[2] : "**";
 
 			if (specifierStr.equals("**") && !(sender instanceof Player)) {
-				sender.sendMessage(MessageAddon.NOT_PLAYER.toString());
+				sender.sendMessage(Messages.NOT_PLAYER.toString());
 				return;
 			}
 
@@ -215,7 +215,7 @@ public final class EconomyCommand extends CommandHandler {
 				if (user == null) continue;
 
 				user.getEconomy().setBalance(0D);
-				user.getUser().sendMessage(MessageAddon.RESET_MONEY_PLAYER.toString());
+				user.getUser().sendMessage(Messages.RESET_MONEY_PLAYER.toString());
 			}
 		}, getPermission() + ".reset");
 

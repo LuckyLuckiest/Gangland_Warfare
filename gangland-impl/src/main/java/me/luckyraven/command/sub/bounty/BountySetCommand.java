@@ -9,7 +9,7 @@ import me.luckyraven.copsncrooks.events.bounty.BountyEvent;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.events.user.UserBountyEvent;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -40,12 +40,12 @@ class BountySetCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<player>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<player>"));
 		};
 	}
 
 	private void bountySet() {
-		String string = MessageAddon.PLAYER_NOT_FOUND.toString();
+		String string = Messages.PLAYER_NOT_FOUND.toString();
 		Argument playerName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			String playerStr = args[2];
 			Player player    = Bukkit.getPlayer(playerStr);
@@ -56,7 +56,7 @@ class BountySetCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<amount>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>"));
 		}, sender -> Bukkit.getOnlinePlayers()
 				.stream().map(Player::getName).toList());
 
@@ -75,7 +75,7 @@ class BountySetCommand extends SubArgument {
 			try {
 				value = Double.parseDouble(amountStr);
 			} catch (NumberFormatException exception) {
-				String string1 = MessageAddon.MUST_BE_NUMBERS.toString();
+				String string1 = Messages.MUST_BE_NUMBERS.toString();
 				String replace = string1.replace("%command%", amountStr);
 
 				sender.sendMessage(replace);
@@ -89,7 +89,7 @@ class BountySetCommand extends SubArgument {
 			Bounty      userBounty  = user.getBounty();
 			BountyEvent bountyEvent = new UserBountyEvent(false, user, value);
 
-			if (userBounty.size() == 0) user.sendMessage(MessageAddon.BOUNTY_SET.toString());
+			if (userBounty.size() == 0) user.sendMessage(Messages.BOUNTY_SET.toString());
 
 			// call the event
 			if (sender instanceof Player senderPlayer) {
@@ -98,15 +98,15 @@ class BountySetCommand extends SubArgument {
 				if (userSender == null) return;
 
 				if (userSender.getEconomy().getBalance() == 0D) {
-					senderPlayer.sendMessage(MessageAddon.CANNOT_TAKE_LESS_THAN_ZERO.toString());
+					senderPlayer.sendMessage(Messages.CANNOT_TAKE_LESS_THAN_ZERO.toString());
 					return;
 				} else if (userSender.getEconomy().getBalance() < value) {
-					senderPlayer.sendMessage(MessageAddon.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
+					senderPlayer.sendMessage(Messages.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 					return;
 				} else {
 					userSender.getEconomy().withdraw(value);
 
-					String string1 = MessageAddon.WITHDRAW_MONEY_PLAYER.toString();
+					String string1 = Messages.WITHDRAW_MONEY_PLAYER.toString();
 					String replace = string1.replace("%amount%", SettingAddon.formatDouble(value));
 
 					senderPlayer.sendMessage(replace);

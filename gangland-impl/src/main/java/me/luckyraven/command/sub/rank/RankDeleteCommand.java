@@ -11,7 +11,7 @@ import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.rank.RankParent;
 import me.luckyraven.data.rank.RankPermission;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeMessages;
@@ -44,7 +44,7 @@ class RankDeleteCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> sender.sendMessage(
-				ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+				ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 	}
 
 	private void rankDelete() {
@@ -70,7 +70,7 @@ class RankDeleteCommand extends SubArgument {
 				rankParentRepository.delete(new RankParent(rank.getUsedId(), 0));
 				rankRepository.delete(rank);
 
-				String string  = MessageAddon.RANK_REMOVED.toString();
+				String string  = Messages.RANK_REMOVED.toString();
 				String replace = string.replace("%rank%", rank.getName());
 				sender.sendMessage(replace);
 				deleteRankName.remove(sender);
@@ -89,7 +89,7 @@ class RankDeleteCommand extends SubArgument {
 			Rank rank = rankManager.get(args[2]);
 
 			if (rank == null) {
-				sender.sendMessage(MessageAddon.INVALID_RANK.toString());
+				sender.sendMessage(Messages.INVALID_RANK.toString());
 				return;
 			}
 
@@ -102,7 +102,7 @@ class RankDeleteCommand extends SubArgument {
 				CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
 					if (time.getTimeLeft() % 20 != 0) return;
 
-					String string = MessageAddon.RANK_REMOVE_CONFIRM.toString();
+					String string = Messages.RANK_REMOVE_CONFIRM.toString();
 					String replace = string.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
 																				   TimeMessages.getInstance()));
 

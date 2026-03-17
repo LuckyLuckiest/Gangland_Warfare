@@ -13,7 +13,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyException;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeMessages;
@@ -62,11 +62,11 @@ class GangCreateCommand extends SubArgument {
 			if (user == null) return;
 
 			if (user.hasGang()) {
-				user.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
+				user.sendMessage(Messages.PLAYER_IN_GANG.toString());
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -83,7 +83,7 @@ class GangCreateCommand extends SubArgument {
 			Member member = memberManager.getMember(player.getUniqueId());
 
 			if (user.hasGang()) {
-				user.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
+				user.sendMessage(Messages.PLAYER_IN_GANG.toString());
 				return;
 			}
 
@@ -96,7 +96,7 @@ class GangCreateCommand extends SubArgument {
 					createGangTimer.remove(sender);
 				}
 
-				user.sendMessage(MessageAddon.CANNOT_CREATE_GANG.toString());
+				user.sendMessage(Messages.CANNOT_CREATE_GANG.toString());
 				return;
 			}
 
@@ -115,7 +115,7 @@ class GangCreateCommand extends SubArgument {
 
 			gangManager.add(gang);
 
-			user.sendMessage(MessageAddon.GANG_CREATED.toString().replace("%gang%", gang.getDisplayNameString()));
+			user.sendMessage(Messages.GANG_CREATED.toString().replace("%gang%", gang.getDisplayNameString()));
 
 			createGangName.remove(user);
 
@@ -135,7 +135,7 @@ class GangCreateCommand extends SubArgument {
 			if (user == null) return;
 
 			if (user.hasGang()) {
-				user.sendMessage(MessageAddon.PLAYER_IN_GANG.toString());
+				user.sendMessage(Messages.PLAYER_IN_GANG.toString());
 				return;
 			}
 
@@ -145,14 +145,14 @@ class GangCreateCommand extends SubArgument {
 
 			if (!SettingAddon.isGangNameDuplicates()) for (Gang gang : gangManager.getGangs().values())
 				if (gang.getName().equalsIgnoreCase(name.get())) {
-					user.sendMessage(MessageAddon.DUPLICATE_GANG_NAME.toString().replace("%gang%", name.get()));
+					user.sendMessage(Messages.DUPLICATE_GANG_NAME.toString().replace("%gang%", name.get()));
 					return;
 				}
 
 			createGangName.put(user, name);
 
 			// Need to notify the player and give access to confirm
-			String string  = MessageAddon.GANG_CREATE_FEE.toString();
+			String string  = Messages.GANG_CREATE_FEE.toString();
 			String replace = string.replace("%amount%", SettingAddon.formatDouble(SettingAddon.getGangCreateFee()));
 
 			user.sendMessage(replace);
@@ -162,7 +162,7 @@ class GangCreateCommand extends SubArgument {
 				CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
 					if (time.getTimeLeft() % 20 != 0) return;
 
-					String string1     = MessageAddon.GANG_CREATE_CONFIRM.toString();
+					String string1     = Messages.GANG_CREATE_CONFIRM.toString();
 					String replacement = TimeUtil.formatTime(time.getTimeLeft(), true, TimeMessages.getInstance());
 					String replace1    = string1.replace("%timer%", replacement);
 

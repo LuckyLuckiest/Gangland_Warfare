@@ -18,7 +18,7 @@ import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.repositories.gang.GangAllianceRepository;
 import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.database.tables.player.UserTable;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.SettingAddon;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
@@ -82,7 +82,7 @@ class GangDeleteCommand extends SubArgument {
 			Member member = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
-				sender.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -94,7 +94,7 @@ class GangDeleteCommand extends SubArgument {
 			if (tail == null) return;
 
 			if (!member.getRank().match(tail.getUsedId())) {
-				user.sendMessage(MessageAddon.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
+				user.sendMessage(Messages.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
 				return;
 			}
 
@@ -109,7 +109,7 @@ class GangDeleteCommand extends SubArgument {
 				CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
 					if (time.getTimeLeft() % 20 != 0) return;
 
-					String string = MessageAddon.GANG_REMOVE_CONFIRM.toString();
+					String string = Messages.GANG_REMOVE_CONFIRM.toString();
 					String replace = string.replace("%timer%", TimeUtil.formatTime(time.getPeriod(), true,
 																				   TimeMessages.getInstance()));
 					s.sendMessage(replace);
@@ -135,7 +135,7 @@ class GangDeleteCommand extends SubArgument {
 			Member member = memberManager.getMember(player.getUniqueId());
 
 			if (!user.hasGang()) {
-				user.sendMessage(MessageAddon.MUST_CREATE_GANG.toString());
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
 
@@ -147,7 +147,7 @@ class GangDeleteCommand extends SubArgument {
 			if (tail == null) return;
 
 			if (!member.getRank().match(tail.getUsedId())) {
-				user.sendMessage(MessageAddon.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
+				user.sendMessage(Messages.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
 				return;
 			}
 
@@ -178,7 +178,7 @@ class GangDeleteCommand extends SubArgument {
 					.collect(Collectors.toSet());
 
 			// change the online users gang id
-			String depositMoney = MessageAddon.DEPOSIT_MONEY_PLAYER.toString();
+			String depositMoney = Messages.DEPOSIT_MONEY_PLAYER.toString();
 			for (User<Player> gangUser : gangOnlineMembers) {
 				Player currentPlayer = gangUser.getUser();
 				Member mem           = memberManager.getMember(currentPlayer.getUniqueId());
@@ -197,8 +197,8 @@ class GangDeleteCommand extends SubArgument {
 				memberRepository.save(mem);
 
 				// inform the online users
-				String kickedFromGang      = MessageAddon.KICKED_FROM_GANG.toString();
-				String gangRemoved         = MessageAddon.GANG_REMOVED.toString();
+				String kickedFromGang      = Messages.KICKED_FROM_GANG.toString();
+				String gangRemoved         = Messages.GANG_REMOVED.toString();
 				String gangRemovedReplace  = gangRemoved.replace("%gang%", deleteGangName.get(user).get());
 				String depositMoneyReplace = depositMoney.replace("%amount%", SettingAddon.formatDouble(amount));
 				gangUser.sendMessage(kickedFromGang, gangRemovedReplace, depositMoneyReplace);

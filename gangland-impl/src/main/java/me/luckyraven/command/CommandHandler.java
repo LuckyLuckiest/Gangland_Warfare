@@ -6,7 +6,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.data.HelpInfo;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -60,13 +60,13 @@ public abstract class CommandHandler {
 	public void runExecute(CommandSender sender, String[] args) {
 		// sender has the permission
 		if (!sender.hasPermission(permission)) {
-			sender.sendMessage(MessageAddon.COMMAND_NO_PERM.toString());
+			sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
 			return;
 		}
 
 		// check if the user should be a Player
 		if (user && !(sender instanceof Player)) {
-			sender.sendMessage(MessageAddon.NOT_PLAYER.toString());
+			sender.sendMessage(Messages.NOT_PLAYER.toString());
 			return;
 		}
 

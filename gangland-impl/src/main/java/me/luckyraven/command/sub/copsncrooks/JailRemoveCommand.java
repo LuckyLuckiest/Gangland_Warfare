@@ -5,7 +5,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.copsncrooks.jail.JailManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -28,7 +28,7 @@ class JailRemoveCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> sender.sendMessage(
-				ChatUtil.setArguments(MessageAddon.ARGUMENTS_MISSING.toString(), "<id>"));
+				ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
 	}
 
 	private void idArgument() {
@@ -38,7 +38,7 @@ class JailRemoveCommand extends SubArgument {
 			try {
 				id = Integer.parseInt(idStr);
 			} catch (NumberFormatException e) {
-				sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", idStr));
+				sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", idStr));
 				return;
 			}
 

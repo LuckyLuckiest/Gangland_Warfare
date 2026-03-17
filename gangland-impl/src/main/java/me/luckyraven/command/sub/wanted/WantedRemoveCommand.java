@@ -7,7 +7,7 @@ import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.file.configuration.MessageAddon;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -46,7 +46,7 @@ class WantedRemoveCommand extends SubArgument {
 			if (wanted.getLevel() - amount < 0) amount = 0;
 			wanted.setLevel(Math.max(0, wanted.getLevel() - amount));
 
-			String decreased = MessageAddon.WANTED_DECREASED.toString();
+			String decreased = Messages.WANTED_DECREASED.toString();
 			String replace = decreased.replace("%amount%", String.valueOf(amount))
 									  .replace("%stars%", wanted.getLevelStars());
 
@@ -62,7 +62,7 @@ class WantedRemoveCommand extends SubArgument {
 			try {
 				amount = Integer.parseInt(amountStr);
 			} catch (NumberFormatException exception) {
-				sender.sendMessage(MessageAddon.MUST_BE_NUMBERS.toString().replace("%command%", amountStr));
+				sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", amountStr));
 				return;
 			}
 
@@ -78,7 +78,7 @@ class WantedRemoveCommand extends SubArgument {
 			int value = Math.max(0, wanted.getLevel() - amount);
 			wanted.setLevel(value);
 
-			String decreased = MessageAddon.WANTED_DECREASED.toString();
+			String decreased = Messages.WANTED_DECREASED.toString();
 			String replace = decreased.replace("%amount%", String.valueOf(realAmount))
 									  .replace("%stars%", wanted.getLevelStars());
 

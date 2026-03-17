@@ -266,7 +266,7 @@ public class CopNpc {
 	 *   <li>Line approach - walks from the player outward toward the cop, returning the first safe column.</li>
 	 *   <li>Ring approach - samples positions on a ring around the player and returns the best-scored safe spot.</li>
 	 * </ol>
-	 * If the player is within {@value HOPELESS_CLOSE_THRESHOLD} blocks Citizens navigates the remainder directly.
+	 * If the player is within hopelessCloseThreshold value blocks, Citizens navigates the remainder directly.
 	 *
 	 * @param player the target player
 	 *
