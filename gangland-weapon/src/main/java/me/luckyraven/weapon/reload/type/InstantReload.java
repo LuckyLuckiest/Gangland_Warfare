@@ -49,19 +49,6 @@ public class InstantReload extends Reload {
 		ReloadData reloadData = getWeapon().getReloadData();
 		timer.addIntervalTaskPair(0, time -> {
 			super.startReloading(player);
-
-			// if ammo was lost before or during the reload start (e.g. dropped), abort immediately
-			boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1), reloadData.getConsume());
-			if (removeAmmunition && !contains) {
-				stopReloading();
-				return;
-			}
-
-			// remove the magazine the moment the reloading starts to prevent bugs
-			if (removeAmmunition) {
-				// consume the item
-				inventory.removeItem(getAmmunition().buildItem(reloadData.getConsume()));
-			}
 		});
 
 		// the sound that plays at the middle
@@ -74,6 +61,19 @@ public class InstantReload extends Reload {
 		long remaining = Math.max(0, reloadData.getCooldown() - midSound);
 		// continue execution after the sound had finished
 		timer.addIntervalTaskPair(remaining, time -> {
+			// if ammo was lost before or during the reload start (e.g. dropped), abort immediately
+			boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1), reloadData.getConsume());
+			if (removeAmmunition && !contains) {
+				stopReloading();
+				return;
+			}
+
+			// remove the magazine the moment the reloading starts to prevent bugs
+			if (removeAmmunition) {
+				// consume the item
+				inventory.removeItem(getAmmunition().buildItem(reloadData.getConsume()));
+			}
+
 			// add to the weapon capacity
 			getWeapon().addAmmunition(reloadData.getRestore());
 
