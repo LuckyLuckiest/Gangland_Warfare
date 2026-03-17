@@ -15,7 +15,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.events.user.UserBountyEvent;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.feature.Executor;
 import me.luckyraven.util.listener.ListenerHandler;
@@ -99,9 +99,9 @@ public class EntityDamage implements Listener {
 
 			// Only increase wanted if this NPC counts towards wanted (cops should, civilians may, etc.)
 			if (entityMarkManager.countsForWanted(deadPlayer)) {
-				if (SettingAddon.isWantedKillComboEnabled()) {
+				if (Settings.isWantedKillComboEnabled()) {
 					killCombo.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
-										 SettingAddon.getWantedKillComboResetAfter());
+										 Settings.getWantedKillComboResetAfter());
 				} else {
 					handleWanted(damagerUser);
 				}
@@ -122,20 +122,20 @@ public class EntityDamage implements Listener {
 			bounty.resetBounty();
 
 			String message = Messages.BANK_MONEY_DEPOSIT_PLAYER.toString();
-			String replace = message.replace("%amount%", SettingAddon.formatDouble(amount));
+			String replace = message.replace("%amount%", Settings.formatDouble(amount));
 
 			damagerUser.sendMessage(replace);
 
 			// Reset kill combo if player was killed by someone with bounty
-			if (SettingAddon.isWantedKillComboEnabled()) {
+			if (Settings.isWantedKillComboEnabled()) {
 				killCombo.resetCombo(deadPlayer.getUniqueId());
 			}
 		} else handleBounty(damagerUser);
 
 		// increase the wanted level for killing another player
-		if (SettingAddon.isWantedKillComboEnabled()) {
+		if (Settings.isWantedKillComboEnabled()) {
 			killCombo.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
-								 SettingAddon.getWantedKillComboResetAfter());
+								 Settings.getWantedKillComboResetAfter());
 		} else handleWanted(damagerUser);
 	}
 
@@ -148,9 +148,9 @@ public class EntityDamage implements Listener {
 		if (!entityMarkManager.countsForWanted(victim)) return false;
 
 		// Record kill in combo system if enabled
-		if (SettingAddon.isWantedKillComboEnabled()) {
+		if (Settings.isWantedKillComboEnabled()) {
 			killCombo.recordKill(attacker.getUser(), attacker.getWanted(), victim,
-								 SettingAddon.getWantedKillComboResetAfter());
+								 Settings.getWantedKillComboResetAfter());
 		} else handleWanted(attacker);
 
 		return false;
@@ -209,7 +209,7 @@ public class EntityDamage implements Listener {
 		wanted.incrementLevel();
 
 		// Start wanted timer if enabled
-		if (SettingAddon.isWantedTimerEnabled() && wanted.isWanted()) {
+		if (Settings.isWantedTimerEnabled() && wanted.isWanted()) {
 			Executor executor = new WantedExecutor(gangland, wantedEvent, damagerUser,
 												   gangland.getInitializer().getWantedSettings());
 			Timer timer = executor.createTimer();
@@ -228,7 +228,7 @@ public class EntityDamage implements Listener {
 
 		// Start bounty timer if enabled
 		BountyEvent bountyEvent = new UserBountyEvent(true, damagerUser);
-		if (SettingAddon.isBountyTimerEnabled() && bounty.getAmount() < SettingAddon.getBountyTimerMax()) {
+		if (Settings.isBountyTimerEnabled() && bounty.getAmount() < Settings.getBountyTimerMax()) {
 			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser,
 												   gangland.getInitializer().getBountySettings());
 			Timer timer = executor.createTimer();
@@ -238,7 +238,7 @@ public class EntityDamage implements Listener {
 
 		// Notify player with kill combo information
 		String format = String.format("&c&lWANTED LEVEL: &c%s &7(Bounty: &b+%s%.2f)", wanted.getLevelStars(),
-									  SettingAddon.getMoneySymbol(), autoBounty);
+									  Settings.getMoneySymbol(), autoBounty);
 		String message = ChatUtil.color(format);
 
 		damagerUser.sendMessage(message);
@@ -246,12 +246,12 @@ public class EntityDamage implements Listener {
 
 	private void handleBounty(User<Player> damagerUser) {
 		Bounty userBounty   = damagerUser.getBounty();
-		double eachKill     = SettingAddon.getBountyEachKillValue();
+		double eachKill     = Settings.getBountyEachKillValue();
 		double scaledBounty = userBounty.calculateLevelScaledBounty(eachKill, damagerUser.getLevel().getLevelValue());
 
 		BountyEvent bountyEvent = new UserBountyEvent(true, damagerUser, scaledBounty);
 
-		if (SettingAddon.isBountyTimerEnabled() && userBounty.getAmount() < SettingAddon.getBountyTimerMax()) {
+		if (Settings.isBountyTimerEnabled() && userBounty.getAmount() < Settings.getBountyTimerMax()) {
 			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser, gangland.getInitializer()
 																							   .getBountySettings());
 			Timer timer = executor.createTimer();
@@ -263,7 +263,7 @@ public class EntityDamage implements Listener {
 
 		double amount = eachKill + userBounty.getAmount();
 
-		if (amount > SettingAddon.getBountyMaxKill()) return;
+		if (amount > Settings.getBountyMaxKill()) return;
 
 		bountyEvent.setAmountApplied(scaledBounty);
 

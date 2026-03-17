@@ -2,7 +2,7 @@ package me.luckyraven.listener.loot;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.Gangland;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.lootchest.LootChestWand;
@@ -33,7 +33,7 @@ public class LootChestWandHandler implements Listener {
 		if (!LootChestWand.isLootChestWand(heldItem)) return;
 
 		Action action = event.getAction();
-		Fill   fill   = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+		Fill   fill   = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 
 		// Handle left click - open configuration menu
 		if (action == Action.LEFT_CLICK_BLOCK || action == Action.LEFT_CLICK_AIR) {
@@ -64,7 +64,7 @@ public class LootChestWandHandler implements Listener {
 		event.setCancelled(true);
 
 		// Check if block is allowed
-		List<String> allowedBlocks = SettingAddon.getLootChestAllowedBlocks();
+		List<String> allowedBlocks = Settings.getLootChestAllowedBlocks();
 		if (allowedBlocks.isEmpty()) {
 			allowedBlocks = List.of("CHEST", "TRAPPED_CHEST", "BARREL", "ENDER_CHEST");
 		}

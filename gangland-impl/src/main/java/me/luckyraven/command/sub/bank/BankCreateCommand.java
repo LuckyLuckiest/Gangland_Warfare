@@ -9,7 +9,7 @@ import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
@@ -72,7 +72,7 @@ class BankCreateCommand extends SubArgument {
 				return;
 			}
 
-			if (user.getEconomy().getBalance() < SettingAddon.getBankCreateFee()) {
+			if (user.getEconomy().getBalance() < Settings.getBankCreateFee()) {
 				user.sendMessage(Messages.CANNOT_CREATE_BANK.toString());
 				return;
 			}
@@ -81,8 +81,8 @@ class BankCreateCommand extends SubArgument {
 			bank.getEconomy().setUser(user);
 
 			// create the bank
-			user.getEconomy().withdraw(SettingAddon.getBankCreateFee());
-			bank.getEconomy().setBalance(SettingAddon.getBankInitialBalance());
+			user.getEconomy().withdraw(Settings.getBankCreateFee());
+			bank.getEconomy().setBalance(Settings.getBankInitialBalance());
 
 			user.setBank(bank);
 
@@ -119,7 +119,7 @@ class BankCreateCommand extends SubArgument {
 
 			// Need to notify the player and give access to confirm
 			String string  = Messages.BANK_CREATE_FEE.toString();
-			String replace = string.replace("%amount%", SettingAddon.formatDouble(SettingAddon.getBankCreateFee()));
+			String replace = string.replace("%amount%", Settings.formatDouble(Settings.getBankCreateFee()));
 
 			user.sendMessage(replace);
 			user.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "create"}));

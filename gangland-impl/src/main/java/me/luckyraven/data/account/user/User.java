@@ -12,7 +12,7 @@ import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.features.level.Level;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.service.InventoryRegistry;
 import me.luckyraven.scoreboard.Scoreboard;
@@ -63,10 +63,10 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 	public User(JavaPlugin plugin, T user) {
 		this.user        = user;
 		this.uuid        = user.getUniqueId();
-		this.bounty      = new Bounty(SettingAddon.getBountyEachKillValue(), SettingAddon.getBountyTimerMultiple());
+		this.bounty      = new Bounty(Settings.getBountyEachKillValue(), Settings.getBountyTimerMultiple());
 		this.level       = new Level();
-		this.wanted      = new Wanted(plugin, SettingAddon.getWantedLevelIncrement(),
-									  SettingAddon.getWantedMaximumLevel());
+		this.wanted      = new Wanted(plugin, Settings.getWantedLevelIncrement(),
+									  Settings.getWantedMaximumLevel());
 		this.economy     = new EconomyHandler(this);
 		this.inventories = new HashSet<>();
 

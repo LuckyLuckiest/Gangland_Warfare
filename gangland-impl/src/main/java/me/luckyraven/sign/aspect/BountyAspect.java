@@ -6,7 +6,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyException;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.multi.MultiInventory;
 import me.luckyraven.inventory.part.ButtonTags;
 import me.luckyraven.inventory.part.Fill;
@@ -60,7 +60,7 @@ public class BountyAspect implements SignAspect {
 
 				String withdrawn = Messages.WITHDRAW_MONEY_PLAYER.toString(Messages.Type.NO_CHANGE);
 
-				return AspectResult.success(withdrawn.replace("%amount%", SettingAddon.formatDouble(amount)));
+				return AspectResult.success(withdrawn.replace("%amount%", Settings.formatDouble(amount)));
 			}
 			default -> {
 				return AspectResult.failure("Unknown bounty operation type");
@@ -113,10 +113,10 @@ public class BountyAspect implements SignAspect {
 
 		// create a multi inventory
 		String title = "&c&lBounties";
-		Fill   fill  = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+		Fill   fill  = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 
-		ButtonTags buttonTags = new ButtonTags(SettingAddon.getPreviousPage(), SettingAddon.getHomePage(),
-											   SettingAddon.getNextPage());
+		ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
+											   Settings.getNextPage());
 
 		MultiInventory multiInventory = dynamicMultiInventory(plugin, player, heads, title, false, false, fill,
 															  buttonTags, null);
@@ -140,8 +140,8 @@ public class BountyAspect implements SignAspect {
 
 		List<String> lore = new ArrayList<>();
 
-		lore.add(String.format("&7&lBounty: &a%s&e%s", SettingAddon.getMoneySymbol(),
-							   SettingAddon.formatDouble(user.getBounty().getAmount())));
+		lore.add(String.format("&7&lBounty: &a%s&e%s", Settings.getMoneySymbol(),
+							   Settings.formatDouble(user.getBounty().getAmount())));
 		lore.add("&7&lStatus: " + status);
 
 		headBuilder.setLore(lore);

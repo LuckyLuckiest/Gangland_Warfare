@@ -1,7 +1,7 @@
 package me.luckyraven.listener.inventory;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.inventory.InventoryBuilder;
 import me.luckyraven.inventory.InventoryOpener;
@@ -72,8 +72,8 @@ public class InventoryOpenByCommand implements Listener {
 			if (openInventory.permission() != null && !player.hasPermission(openInventory.permission())) break;
 
 			try {
-				Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
-				Fill line = new Fill(SettingAddon.getInventoryLineName(), SettingAddon.getInventoryLineItem());
+				Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
+				Fill line = new Fill(Settings.getInventoryLineName(), Settings.getInventoryLineItem());
 
 				// Create the opener callback
 				InventoryOpener opener = (p, invName) -> InventoryAddon.openInventoryForPlayer(gangland, p, invName);

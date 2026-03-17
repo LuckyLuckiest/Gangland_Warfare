@@ -23,7 +23,7 @@ import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.events.user.UserDataInitEvent;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
@@ -73,7 +73,7 @@ public final class ReloadPlugin {
 		// first killing all scoreboards, then initializing the data
 		killAllScoreboards();
 		databaseInitialize(resetCache);
-		if (SettingAddon.isScoreboardEnabled()) scoreboardReload();
+		if (Settings.isScoreboardEnabled()) scoreboardReload();
 		periodicalUpdatesReload();
 	}
 

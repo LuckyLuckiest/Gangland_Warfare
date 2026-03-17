@@ -13,7 +13,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -93,7 +93,7 @@ class GangInviteCommand extends SubArgument {
 
 			Gang   gang   = playerInvite.get(user);
 			Member member = memberManager.getMember(player.getUniqueId());
-			Rank   rank   = rankManager.get(SettingAddon.getGangRankHead());
+			Rank   rank   = rankManager.get(Settings.getGangRankHead());
 
 			// broadcast in gang join of the player
 			// don't broadcast to the joined member

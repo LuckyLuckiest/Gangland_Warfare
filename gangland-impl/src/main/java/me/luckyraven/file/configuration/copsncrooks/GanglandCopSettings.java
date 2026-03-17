@@ -1,11 +1,11 @@
 package me.luckyraven.file.configuration.copsncrooks;
 
 import me.luckyraven.copsncrooks.police.config.CopSettings;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import net.objecthunter.exp4j.ExpressionBuilder;
 
 /**
- * {@link CopSettings} implementation backed by {@link SettingAddon}.
+ * {@link CopSettings} implementation backed by {@link Settings}.
  * <p>
  * When formula mode is enabled, the expression stored in {@code settings.yml} under {@code Cops.Count.Formula} is
  * evaluated using <a href="https://www.objecthunter.net/exp4j/">exp4j</a> with four variables: {@code level},
@@ -19,12 +19,12 @@ public class GanglandCopSettings implements CopSettings {
 
 	@Override
 	public int getCountForLevel(int level) {
-		int base     = SettingAddon.getCopCountBase();
-		int perLevel = SettingAddon.getCopCountPerLevel();
-		int max      = SettingAddon.getCopCountMax();
+		int base     = Settings.getCopCountBase();
+		int perLevel = Settings.getCopCountPerLevel();
+		int max      = Settings.getCopCountMax();
 
-		if (SettingAddon.isCopCountFormulaEnabled()) {
-			String formula = SettingAddon.getCopCountFormula();
+		if (Settings.isCopCountFormulaEnabled()) {
+			String formula = Settings.getCopCountFormula();
 
 			if (formula != null && !formula.isBlank()) {
 				try {
@@ -48,161 +48,161 @@ public class GanglandCopSettings implements CopSettings {
 
 	@Override
 	public int getMaxWantedLevel() {
-		return SettingAddon.getWantedMaximumLevel();
+		return Settings.getWantedMaximumLevel();
 	}
 
 	@Override
 	public int getMaxCopsPerPlayer() {
-		return SettingAddon.getCopMaxPerPlayer();
+		return Settings.getCopMaxPerPlayer();
 	}
 
 	@Override
 	public int getAiTickRate() {
-		return SettingAddon.getCopAiTickRate();
+		return Settings.getCopAiTickRate();
 	}
 
 	@Override
 	public int getSpawnCheckRate() {
-		return SettingAddon.getCopSpawnCheckRate();
+		return Settings.getCopSpawnCheckRate();
 	}
 
 	@Override
 	public double getCuffRadius() {
-		return SettingAddon.getCopCuffRadius();
+		return Settings.getCopCuffRadius();
 	}
 
 	@Override
 	public int getMaxCuffAttempts() {
-		return SettingAddon.getCopMaxCuffAttempts();
+		return Settings.getCopMaxCuffAttempts();
 	}
 
 	@Override
 	public int getCuffCooldownTicks() {
-		return SettingAddon.getCopCuffCooldownTicks();
+		return Settings.getCopCuffCooldownTicks();
 	}
 
 	@Override
 	public double getAlertRange() {
-		return SettingAddon.getCopAlertRange();
+		return Settings.getCopAlertRange();
 	}
 
 	@Override
 	public double getCombatRange() {
-		return SettingAddon.getCopCombatRange();
+		return Settings.getCopCombatRange();
 	}
 
 	@Override
 	public int getAttackCooldownTicks() {
-		return SettingAddon.getCopAttackCooldownTicks();
+		return Settings.getCopAttackCooldownTicks();
 	}
 
 	@Override
 	public double getMinSpawnDistance() {
-		return SettingAddon.getCopSpawnMinDistance();
+		return Settings.getCopSpawnMinDistance();
 	}
 
 	@Override
 	public double getMaxSpawnDistance() {
-		return SettingAddon.getCopSpawnMaxDistance();
+		return Settings.getCopSpawnMaxDistance();
 	}
 
 	@Override
 	public double getPhase1MinDistance() {
-		return SettingAddon.getCopSpawnPhase1MinDistance();
+		return Settings.getCopSpawnPhase1MinDistance();
 	}
 
 	@Override
 	public double getSpawnRadiusShrinkStep() {
-		return SettingAddon.getCopSpawnRadiusShrinkStep();
+		return Settings.getCopSpawnRadiusShrinkStep();
 	}
 
 	@Override
 	public int getVerticalSearchRange() {
-		return SettingAddon.getCopSpawnVerticalSearchRange();
+		return Settings.getCopSpawnVerticalSearchRange();
 	}
 
 	@Override
 	public int getSpawnYOffset() {
-		return SettingAddon.getCopSpawnYOffset();
+		return Settings.getCopSpawnYOffset();
 	}
 
 	@Override
 	public int getMinOpenHorizontalSides() {
-		return SettingAddon.getCopSpawnMinOpenHorizontalSides();
+		return Settings.getCopSpawnMinOpenHorizontalSides();
 	}
 
 	@Override
 	public double getSpawnerPreferenceRadius() {
-		return SettingAddon.getCopSpawnSpawnerPreferenceRadius();
+		return Settings.getCopSpawnSpawnerPreferenceRadius();
 	}
 
 	@Override
 	public double getVisibilityCheckDistance() {
-		return SettingAddon.getCopSpawnVisibilityCheckDistance();
+		return Settings.getCopSpawnVisibilityCheckDistance();
 	}
 
 	@Override
 	public int getSpawnPhase1Attempts() {
-		return SettingAddon.getCopSpawnPhase1Attempts();
+		return Settings.getCopSpawnPhase1Attempts();
 	}
 
 	@Override
 	public int getSpawnPhase2Attempts() {
-		return SettingAddon.getCopSpawnPhase2Attempts();
+		return Settings.getCopSpawnPhase2Attempts();
 	}
 
 	@Override
 	public int getNavigationRecalculationTicks() {
-		return SettingAddon.getCopNavRecalculationTicks();
+		return Settings.getCopNavRecalculationTicks();
 	}
 
 	@Override
 	public int getStuckCheckIntervalTicks() {
-		return SettingAddon.getCopNavStuckCheckInterval();
+		return Settings.getCopNavStuckCheckInterval();
 	}
 
 	@Override
 	public int getMaxStuckChecks() {
-		return SettingAddon.getCopNavMaxStuckChecks();
+		return Settings.getCopNavMaxStuckChecks();
 	}
 
 	@Override
 	public int getMaxHopelessStuckChecks() {
-		return SettingAddon.getCopNavMaxHopelessStuckChecks();
+		return Settings.getCopNavMaxHopelessStuckChecks();
 	}
 
 	@Override
 	public double getHopelessCloseThreshold() {
-		return SettingAddon.getCopNavHopelessCloseThreshold();
+		return Settings.getCopNavHopelessCloseThreshold();
 	}
 
 	@Override
 	public double getMinProgressDistance() {
-		return SettingAddon.getCopNavMinProgressDistance();
+		return Settings.getCopNavMinProgressDistance();
 	}
 
 	@Override
 	public double getRangedMinDistance() {
-		return SettingAddon.getCopNavRangedMinDistance();
+		return Settings.getCopNavRangedMinDistance();
 	}
 
 	@Override
 	public double getRangedMaxDistance() {
-		return SettingAddon.getCopNavRangedMaxDistance();
+		return Settings.getCopNavRangedMaxDistance();
 	}
 
 	@Override
 	public int getMaxReturnTicks() {
-		return SettingAddon.getCopReturnMaxTicks();
+		return Settings.getCopReturnMaxTicks();
 	}
 
 	@Override
 	public double getStationArrivalDistance() {
-		return SettingAddon.getCopReturnStationArrivalDistance();
+		return Settings.getCopReturnStationArrivalDistance();
 	}
 
 	@Override
 	public int getStartingAmmoMagazines() {
-		return SettingAddon.getCopStartingAmmoMagazines();
+		return Settings.getCopStartingAmmoMagazines();
 	}
 }

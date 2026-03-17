@@ -6,7 +6,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyException;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.sign.model.ParsedSign;
 import org.bukkit.entity.Player;
 
@@ -38,12 +38,12 @@ public class MoneyAspect implements SignAspect {
 			}
 
 			String withdrawn = Messages.WITHDRAW_MONEY_PLAYER.toString(Messages.Type.NO_CHANGE);
-			return AspectResult.success(withdrawn.replace("%amount%", SettingAddon.formatDouble(amount)));
+			return AspectResult.success(withdrawn.replace("%amount%", Settings.formatDouble(amount)));
 		} else {
 			economy.deposit(amount);
 
 			String deposit = Messages.DEPOSIT_MONEY_PLAYER.toString(Messages.Type.NO_CHANGE);
-			return AspectResult.successContinue(deposit.replace("%amount%", SettingAddon.formatDouble(amount)));
+			return AspectResult.successContinue(deposit.replace("%amount%", Settings.formatDouble(amount)));
 		}
 	}
 

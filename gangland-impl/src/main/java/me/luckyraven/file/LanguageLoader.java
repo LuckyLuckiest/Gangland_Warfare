@@ -3,7 +3,7 @@ package me.luckyraven.file;
 import lombok.CustomLog;
 import lombok.Getter;
 import me.luckyraven.Gangland;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.Bukkit;
@@ -91,7 +91,7 @@ public class LanguageLoader {
 	}
 
 	private YamlConfiguration loadMessage(FileManager manager) throws IOException, InvalidConfigurationException {
-		String lang    = SettingAddon.getLanguagePicked();
+		String lang    = Settings.getLanguagePicked();
 		String fileLoc = Path.of("message", "message_" + lang + ".yml").toString();
 
 		return manager.loadFromResources(fileLoc);

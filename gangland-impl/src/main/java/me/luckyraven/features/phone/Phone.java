@@ -7,7 +7,7 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.user.User;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.multi.MultiInventory;
 import me.luckyraven.inventory.multi.MultiInventoryCreation;
@@ -46,7 +46,7 @@ public class Phone {
 
 		InventoryHandler newGang = new InventoryHandler(gangland, title, size, user.getUser());
 
-		Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 
 		// search gang
 		newGang.setItem(23, XMaterial.BOOKSHELF.get(), "&b&lSearch Gang", null, true, false, (player1, inv, it) -> {
@@ -64,7 +64,7 @@ public class Phone {
 						.stream()
 						.filter(member -> Objects.requireNonNull(member.getRank())
 												 .getName()
-												 .equalsIgnoreCase(SettingAddon.getGangRankTail()))
+												 .equalsIgnoreCase(Settings.getGangRankTail()))
 						.findFirst()
 						.map(Member::getUuid)
 						.orElse(null);
@@ -86,8 +86,8 @@ public class Phone {
 
 			String title1 = "&6&lGangs View";
 
-			ButtonTags buttonTags = new ButtonTags(SettingAddon.getPreviousPage(), SettingAddon.getHomePage(),
-												   SettingAddon.getNextPage());
+			ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
+												   Settings.getNextPage());
 
 			MultiInventory multiInventory = MultiInventoryCreation.dynamicMultiInventory(gangland, player1, gangsItems,
 																						 title1, true, true, fill,
@@ -135,7 +135,7 @@ public class Phone {
 			multiInventory.open(player1);
 		});
 
-		Fill line = new Fill(SettingAddon.getInventoryLineName(), SettingAddon.getInventoryLineItem());
+		Fill line = new Fill(Settings.getInventoryLineName(), Settings.getInventoryLineItem());
 
 		InventoryUtil.verticalLine(newGang, line, 2);
 		InventoryUtil.verticalLine(newGang, line, 8);

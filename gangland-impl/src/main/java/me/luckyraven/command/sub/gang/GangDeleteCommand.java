@@ -19,7 +19,7 @@ import me.luckyraven.database.repositories.gang.GangAllianceRepository;
 import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.persistence.database.query.QueryBuilder;
@@ -89,12 +89,12 @@ class GangDeleteCommand extends SubArgument {
 			// check if the player is the owner
 			if (member.getRank() == null) return;
 
-			Rank tail = rankManager.get(SettingAddon.getGangRankTail());
+			Rank tail = rankManager.get(Settings.getGangRankTail());
 
 			if (tail == null) return;
 
 			if (!member.getRank().match(tail.getUsedId())) {
-				user.sendMessage(Messages.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
+				user.sendMessage(Messages.NOT_OWNER.toString().replace("%tail%", Settings.getGangRankTail()));
 				return;
 			}
 
@@ -142,12 +142,12 @@ class GangDeleteCommand extends SubArgument {
 			if (member.getRank() == null) return;
 
 			// check if the player is the owner
-			Rank tail = rankManager.get(SettingAddon.getGangRankTail());
+			Rank tail = rankManager.get(Settings.getGangRankTail());
 
 			if (tail == null) return;
 
 			if (!member.getRank().match(tail.getUsedId())) {
-				user.sendMessage(Messages.NOT_OWNER.toString().replace("%tail%", SettingAddon.getGangRankTail()));
+				user.sendMessage(Messages.NOT_OWNER.toString().replace("%tail%", Settings.getGangRankTail()));
 				return;
 			}
 
@@ -200,7 +200,7 @@ class GangDeleteCommand extends SubArgument {
 				String kickedFromGang      = Messages.KICKED_FROM_GANG.toString();
 				String gangRemoved         = Messages.GANG_REMOVED.toString();
 				String gangRemovedReplace  = gangRemoved.replace("%gang%", deleteGangName.get(user).get());
-				String depositMoneyReplace = depositMoney.replace("%amount%", SettingAddon.formatDouble(amount));
+				String depositMoneyReplace = depositMoney.replace("%amount%", Settings.formatDouble(amount));
 				gangUser.sendMessage(kickedFromGang, gangRemovedReplace, depositMoneyReplace);
 			}
 
@@ -260,10 +260,10 @@ class GangDeleteCommand extends SubArgument {
 			});
 
 			// return quarter of the gang creation fees
-			double amount = SettingAddon.getGangCreateFee() / 4;
+			double amount = Settings.getGangCreateFee() / 4;
 
 			user.getEconomy().deposit(amount);
-			user.sendMessage(depositMoney.replace("%amount%", SettingAddon.formatDouble(amount)));
+			user.sendMessage(depositMoney.replace("%amount%", Settings.formatDouble(amount)));
 
 			var gangRepository         = ganglandDatabase.getRepositoryRegistry().getRepository(Gang.class);
 			var gangAllianceRepository = ganglandDatabase.getRepositoryRegistry().getRepository(GangAlliance.class);

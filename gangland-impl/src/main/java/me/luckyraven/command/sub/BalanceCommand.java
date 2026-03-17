@@ -10,7 +10,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.util.ChatUtil;
@@ -53,7 +53,7 @@ public final class BalanceCommand extends CommandHandler {
 
 			user.sendMessage(ChatUtil.color("&6" + player.getName() + "&7 balance:"));
 			user.sendMessage(ChatUtil.color(
-					"&a" + SettingAddon.getMoneySymbol() + SettingAddon.formatDouble(user.getEconomy().getBalance())));
+					"&a" + Settings.getMoneySymbol() + Settings.formatDouble(user.getEconomy().getBalance())));
 		} else {
 			commandSender.sendMessage(ChatUtil.informationMessage("Balance are for registered users"));
 		}
@@ -69,7 +69,7 @@ public final class BalanceCommand extends CommandHandler {
 			if (user != null) {
 				sender.sendMessage(Messages.BALANCE_TARGET.toString()
 														  .replace("%target%", target)
-														  .replace("%balance%", SettingAddon.formatDouble(
+														  .replace("%balance%", Settings.formatDouble(
 																  user.getEconomy().getBalance())));
 				return;
 			}
@@ -104,7 +104,7 @@ public final class BalanceCommand extends CommandHandler {
 					sender.sendMessage(Messages.BALANCE_TARGET.toString()
 															  .replace("%target%", target)
 															  .replace("%balance%",
-																	   SettingAddon.formatDouble(uuids.get(uuid))));
+																	   Settings.formatDouble(uuids.get(uuid))));
 
 					break;
 				}

@@ -1,7 +1,7 @@
 package me.luckyraven.sign;
 
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.sign.bulk.BulkActionPreview;
 import me.luckyraven.sign.service.SignInformation;
 import me.luckyraven.util.ChatUtil;
@@ -21,7 +21,7 @@ public class GanglandSignInformation implements SignInformation {
 
 	@Override
 	public String getMoneySymbol() {
-		return SettingAddon.getMoneySymbol();
+		return Settings.getMoneySymbol();
 	}
 
 	@Override
@@ -50,7 +50,7 @@ public class GanglandSignInformation implements SignInformation {
 												 .replace("%quantity%", String.valueOf(preview.getQuantity()))
 												 .replace("%content%", preview.getContentName())
 												 .replace("%price%", String.format("%.2f", preview.getTotalPrice()))
-												 .replace("%money_symbol%", SettingAddon.getMoneySymbol())
+												 .replace("%money_symbol%", Settings.getMoneySymbol())
 												 .replace("%time%", String.valueOf(confirmWindowSeconds));
 	}
 

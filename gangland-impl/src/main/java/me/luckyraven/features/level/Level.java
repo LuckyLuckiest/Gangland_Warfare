@@ -3,7 +3,7 @@ package me.luckyraven.features.level;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.events.level.LevelUpEvent;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.datastructure.ScientificCalculator;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.Nullable;
@@ -24,7 +24,7 @@ public class Level {
 	private String formula;
 
 	public Level() {
-		this(SettingAddon.getUserMaxLevel(), SettingAddon.getUserLevelBaseAmount());
+		this(Settings.getUserMaxLevel(), Settings.getUserLevelBaseAmount());
 	}
 
 	public Level(int maxLevel, double baseAmount) {
@@ -100,7 +100,7 @@ public class Level {
 		variables.put("experience", experience);
 
 		String formula = this.formula == null || this.formula.isEmpty() ?
-						 SettingAddon.getUserLevelFormula() :
+						 Settings.getUserLevelFormula() :
 						 this.formula;
 
 		ScientificCalculator calculator = new ScientificCalculator(formula, variables);

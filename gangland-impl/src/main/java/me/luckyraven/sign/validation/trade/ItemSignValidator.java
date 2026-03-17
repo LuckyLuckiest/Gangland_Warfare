@@ -1,7 +1,7 @@
 package me.luckyraven.sign.validation.trade;
 
 import com.cryptomorin.xseries.XMaterial;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.validation.AbstractSignValidator;
@@ -14,7 +14,7 @@ public class ItemSignValidator extends AbstractSignValidator {
 	private final UniqueItemAddon uniqueItemAddon;
 
 	public ItemSignValidator(SignType signType, UniqueItemAddon uniqueItemAddon) {
-		super(signType, SettingAddon.getMoneySymbol());
+		super(signType, Settings.getMoneySymbol());
 
 		this.uniqueItemAddon = uniqueItemAddon;
 	}

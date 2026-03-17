@@ -8,7 +8,7 @@ import lombok.Getter;
 import me.luckyraven.copsncrooks.police.CopService;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
@@ -103,9 +103,9 @@ public final class Gangland extends JavaPlugin {
 	 */
 	void periodicalUpdatesInitializer() {
 		// periodical updates
-		int minutes = SettingAddon.getAutoSaveTime();
+		int minutes = Settings.getAutoSaveTime();
 
-		if (SettingAddon.isAutoSave()) this.periodicalUpdates = new PeriodicalUpdates(this, minutes * 60L);
+		if (Settings.isAutoSave()) this.periodicalUpdates = new PeriodicalUpdates(this, minutes * 60L);
 		else this.periodicalUpdates = new PeriodicalUpdates(this);
 
 		periodicalUpdates.start();
@@ -143,7 +143,7 @@ public final class Gangland extends JavaPlugin {
 			Map<String, Integer> values = new HashMap<>();
 
 			for (String driver : ScoreboardManager.getDrivers()) {
-				if (!driver.equalsIgnoreCase(SettingAddon.getScoreboardDriver())) {
+				if (!driver.equalsIgnoreCase(Settings.getScoreboardDriver())) {
 					values.put(driver, 0);
 					continue;
 				}

@@ -10,7 +10,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.events.user.UserBountyEvent;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -107,7 +107,7 @@ class BountySetCommand extends SubArgument {
 					userSender.getEconomy().withdraw(value);
 
 					String string1 = Messages.WITHDRAW_MONEY_PLAYER.toString();
-					String replace = string1.replace("%amount%", SettingAddon.formatDouble(value));
+					String replace = string1.replace("%amount%", Settings.formatDouble(value));
 
 					senderPlayer.sendMessage(replace);
 				}

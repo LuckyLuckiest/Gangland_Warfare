@@ -2,7 +2,7 @@ package me.luckyraven.data.plugin;
 
 import lombok.CustomLog;
 import me.luckyraven.database.repositories.weapon.WeaponRepository;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.utilities.TimeUtil;
@@ -17,7 +17,7 @@ import java.util.Date;
 @CustomLog
 public final class PluginDataCleanupService {
 
-	private final boolean logDebug = SettingAddon.isAutoSaveDebug();
+	private final boolean logDebug = Settings.isAutoSaveDebug();
 
 	private final PluginManager       pluginManager;
 	private final IRepository<Weapon> weaponRepository;

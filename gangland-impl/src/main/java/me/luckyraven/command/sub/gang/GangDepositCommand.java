@@ -12,7 +12,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -79,7 +79,7 @@ class GangDepositCommand extends SubArgument {
 				double argAmount = Double.parseDouble(args[2]);
 				Gang   gang      = gangManager.getGang(user.getGangId());
 
-				double rate   = SettingAddon.getGangContributionRate();
+				double rate   = Settings.getGangContributionRate();
 				int    length = String.valueOf((int) rate).length() - 1;
 				double round  = Math.pow(10, length);
 
@@ -90,7 +90,7 @@ class GangDepositCommand extends SubArgument {
 				if (user.getEconomy().getBalance() < argAmount) {
 					user.sendMessage(Messages.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 					return;
-				} else if (gang.getEconomy().getBalance() + argAmount > SettingAddon.getGangMaxBalance()) {
+				} else if (gang.getEconomy().getBalance() + argAmount > Settings.getGangMaxBalance()) {
 					user.sendMessage(Messages.CANNOT_EXCEED_MAXIMUM.toString());
 					return;
 				}
@@ -103,7 +103,7 @@ class GangDepositCommand extends SubArgument {
 							.sendMessage(Messages.GANG_MONEY_DEPOSIT.toString()
 																	.replace("%player%", player.getName())
 																	.replace("%amount%",
-																			 SettingAddon.formatDouble(argAmount)));
+																			 Settings.formatDouble(argAmount)));
 				}
 				user.sendMessage(ChatUtil.color("&a+" + contribution));
 			} catch (NumberFormatException exception) {

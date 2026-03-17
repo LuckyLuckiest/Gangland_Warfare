@@ -10,7 +10,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeMessages;
@@ -108,7 +108,7 @@ class BankDeleteCommand extends SubArgument {
 				return;
 			}
 
-			user.getEconomy().deposit(bank.getEconomy().getBalance() + SettingAddon.getBankCreateFee() / 2);
+			user.getEconomy().deposit(bank.getEconomy().getBalance() + Settings.getBankCreateFee() / 2);
 			user.setBank(null);
 
 			// remove the bank from the database

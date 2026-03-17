@@ -8,7 +8,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -134,11 +134,11 @@ public final class EconomyCommand extends CommandHandler {
 				EconomyHandler economy = user.getEconomy();
 				switch (args[1].toLowerCase()) {
 					case "deposit", "add" -> {
-						if (economy.getBalance() + argAmount <= SettingAddon.getUserMaxBalance()) valueChanged
+						if (economy.getBalance() + argAmount <= Settings.getUserMaxBalance()) valueChanged
 								= argAmount;
 
 						value    = Math.min(economy.getBalance() + argAmount,
-											SettingAddon.getUserMaxBalance());
+											Settings.getUserMaxBalance());
 						strValue = "deposit";
 					}
 					case "withdraw", "take" -> {
@@ -149,10 +149,10 @@ public final class EconomyCommand extends CommandHandler {
 						strValue = "withdraw";
 					}
 					case "set" -> {
-						value = Math.min(argAmount, SettingAddon.getUserMaxBalance());
+						value = Math.min(argAmount, Settings.getUserMaxBalance());
 
-						if (argAmount > SettingAddon.getUserMaxBalance()) valueChanged
-								= SettingAddon.getUserMaxBalance();
+						if (argAmount > Settings.getUserMaxBalance()) valueChanged
+								= Settings.getUserMaxBalance();
 						else valueChanged = value;
 
 						strValue = "set";
@@ -161,7 +161,7 @@ public final class EconomyCommand extends CommandHandler {
 				user.getUser()
 					.sendMessage(Messages.valueOf(strValue.toUpperCase() + "_MONEY_PLAYER")
 										 .toString()
-										 .replace("%amount%", SettingAddon.formatDouble(valueChanged)));
+										 .replace("%amount%", Settings.formatDouble(valueChanged)));
 				economy.setBalance(value);
 			}
 		} catch (NumberFormatException exception) {

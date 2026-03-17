@@ -6,7 +6,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.events.level.LevelUpEvent;
 import me.luckyraven.events.user.UserLevelUpEvent;
 import me.luckyraven.features.level.Level;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.lootchest.data.LootChestSession;
 import me.luckyraven.lootchest.events.lootchest.LootChestCooldownCompleteEvent;
 import me.luckyraven.lootchest.events.lootchest.LootChestOpenEvent;
@@ -53,11 +53,11 @@ public class LootChestEarnGoods implements Listener {
 		openedLootChests.computeIfAbsent(player, k -> ConcurrentHashMap.newKeySet()).add(chestId);
 
 		// add experience and money
-		double money = random.nextDouble(SettingAddon.getLootChestRewardMoneyMinimum(),
-										 SettingAddon.getLootChestRewardMoneyMaximum());
+		double money = random.nextDouble(Settings.getLootChestRewardMoneyMinimum(),
+										 Settings.getLootChestRewardMoneyMaximum());
 
-		double exp = random.nextDouble(SettingAddon.getLootChestRewardExperienceMinimum(),
-									   SettingAddon.getLootChestRewardExperienceMaximum());
+		double exp = random.nextDouble(Settings.getLootChestRewardExperienceMinimum(),
+									   Settings.getLootChestRewardExperienceMaximum());
 
 		// deposit money
 		user.getEconomy().deposit(money);
@@ -70,10 +70,10 @@ public class LootChestEarnGoods implements Listener {
 
 		player.sendMessage(ChatUtil.prefixMessage("Opened a loot chest and earned:"));
 		player.sendMessage(ChatUtil.color(
-				String.format("&a%s +%s", SettingAddon.getMoneySymbol(), SettingAddon.formatDouble(money))));
+				String.format("&a%s +%s", Settings.getMoneySymbol(), Settings.formatDouble(money))));
 		player.sendMessage(ChatUtil.color(String.format("&aXP +%.2f", exp)));
 
-		for (String command : SettingAddon.getLootChestRewardCommands()) {
+		for (String command : Settings.getLootChestRewardCommands()) {
 			if (command.isEmpty()) continue;
 			if (command.startsWith("/")) command = command.substring(1);
 

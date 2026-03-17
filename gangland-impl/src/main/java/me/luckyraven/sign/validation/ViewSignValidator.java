@@ -1,6 +1,6 @@
 package me.luckyraven.sign.validation;
 
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
@@ -14,7 +14,7 @@ public class ViewSignValidator extends AbstractSignValidator {
 	private final AmmunitionAddon ammunitionAddon;
 
 	public ViewSignValidator(SignType signType, WeaponService weaponService, AmmunitionAddon ammunitionAddon) {
-		super(signType, SettingAddon.getMoneySymbol());
+		super(signType, Settings.getMoneySymbol());
 
 		this.weaponService   = weaponService;
 		this.ammunitionAddon = ammunitionAddon;
@@ -31,8 +31,8 @@ public class ViewSignValidator extends AbstractSignValidator {
 		// Check if it's a weapon
 		Collection<Weapon> values = weaponService.getWeapons().values();
 		boolean isWeapon = values.stream()
-								 .anyMatch(weapon -> weapon.getName().equalsIgnoreCase(content) ||
-													 weapon.getDisplayName().equalsIgnoreCase(content));
+				.anyMatch(weapon -> weapon.getName().equalsIgnoreCase(content) ||
+									weapon.getDisplayName().equalsIgnoreCase(content));
 
 		if (isWeapon) {
 			return true;
@@ -40,7 +40,7 @@ public class ViewSignValidator extends AbstractSignValidator {
 
 		// Check if it's ammunition
 		boolean isAmmo = ammunitionAddon.getAmmunitionKeys()
-										.stream().anyMatch(ammo -> ammo.equalsIgnoreCase(content));
+				.stream().anyMatch(ammo -> ammo.equalsIgnoreCase(content));
 
 		if (isAmmo) {
 			return true;

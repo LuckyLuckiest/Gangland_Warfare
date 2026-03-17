@@ -9,7 +9,7 @@ import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
@@ -110,7 +110,7 @@ class GangColorCommand extends SubArgument {
 									   inv.close(player2);
 								   });
 
-				Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+				Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 
 				InventoryUtil.fillInventory(confirmGUI, fill);
 
@@ -126,7 +126,7 @@ class GangColorCommand extends SubArgument {
 		colorGUI.setItem((6 - 1) * 9, XMaterial.RED_CONCRETE.get(), "&4Exit", null, false, false,
 						 (player1, inventory, item) -> inventory.close(player1));
 
-		Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryLineName());
+		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryLineName());
 
 		InventoryUtil.createBoarder(colorGUI, fill);
 

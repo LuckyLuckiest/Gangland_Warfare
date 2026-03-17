@@ -6,7 +6,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.datastructure.ScientificCalculator;
 import me.luckyraven.util.listener.ListenerHandler;
@@ -62,10 +62,10 @@ public class PlayerDeath implements Listener {
 
 	private boolean handleCommandExecution(User<Player> user, Player player) {
 		EconomyHandler economy = user.getEconomy();
-		if (economy.getBalance() <= SettingAddon.getDeathThreshold()) return true;
+		if (economy.getBalance() <= Settings.getDeathThreshold()) return true;
 
-		if (SettingAddon.isDeathMoneyCommandEnabled()) {
-			for (String executable : SettingAddon.getDeathMoneyCommandExecutables()) {
+		if (Settings.isDeathMoneyCommandEnabled()) {
+			for (String executable : Settings.getDeathMoneyCommandExecutables()) {
 				PlaceholderHandler placeholder = initializer.getPlaceholder();
 
 				String exec = placeholder.replacePlaceholder(player, executable.replace("/", ""));
@@ -86,7 +86,7 @@ public class PlayerDeath implements Listener {
 		// ignore it if there was no money to be deducted
 		if (deduct == 0) return true;
 
-		if (SettingAddon.isDeathLoseMoney()) {
+		if (Settings.isDeathLoseMoney()) {
 			type = "&c&l-";
 			economy.withdraw(deduct);
 		} else {
@@ -95,7 +95,7 @@ public class PlayerDeath implements Listener {
 		}
 
 		// inform the player
-		String info    = type + SettingAddon.getMoneySymbol() + NumberUtil.valueFormat(deduct);
+		String info    = type + Settings.getMoneySymbol() + NumberUtil.valueFormat(deduct);
 		String message = "&3Death penalty: " + info;
 
 		user.sendMessage(ChatUtil.color(message));
@@ -134,7 +134,7 @@ public class PlayerDeath implements Listener {
 		variables.put("bounty", user.getBounty().getAmount());
 		variables.put("wanted", (double) user.getWanted().getLevel());
 
-		String formula = SettingAddon.getDeathLoseMoneyFormula();
+		String formula = Settings.getDeathLoseMoneyFormula();
 
 		ScientificCalculator calculator = new ScientificCalculator(formula, variables);
 

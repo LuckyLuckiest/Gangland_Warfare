@@ -9,7 +9,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.features.level.Level;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.color.Color;
 import org.bukkit.Bukkit;
@@ -54,7 +54,7 @@ public class Gang {
 		this.id      = id;
 		this.allies  = new HashSet<>();
 		this.level   = new Level();
-		this.bounty  = new Bounty(SettingAddon.getBountyEachKillValue(), SettingAddon.getBountyTimerMultiple());
+		this.bounty  = new Bounty(Settings.getBountyEachKillValue(), Settings.getBountyTimerMultiple());
 		this.economy = new EconomyHandler(null);
 		this.members = new ArrayList<>();
 
@@ -162,7 +162,7 @@ public class Gang {
 	public String getDisplayNameString() {
 		return displayName.isEmpty() ?
 			   this.name :
-			   ChatUtil.color(this.displayName + "&c" + SettingAddon.getGangDisplayNameChar());
+			   ChatUtil.color(this.displayName + "&c" + Settings.getGangDisplayNameChar());
 	}
 
 	public String getAllyListString() {

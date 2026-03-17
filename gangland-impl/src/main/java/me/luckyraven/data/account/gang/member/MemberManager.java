@@ -7,7 +7,7 @@ import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.tables.player.MemberTable;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.repository.IRepository;
 
@@ -75,7 +75,7 @@ public class MemberManager {
 
 			// create member data into a database
 			if (memberInfo.length == 0) {
-				if (!SettingAddon.isAutoSave()) memberTable.insertTableQuery(database, member);
+				if (!Settings.isAutoSave()) memberTable.insertTableQuery(database, member);
 			} else {
 				RankManager rankManager = gangland.getInitializer().getRankManager();
 

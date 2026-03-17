@@ -2,7 +2,7 @@ package me.luckyraven.util;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 
@@ -13,7 +13,7 @@ public final class ChatUtil extends me.luckyraven.util.utilities.ChatUtil {
 	}
 
 	public static String color(final String message) {
-		return color(message, new Replacement("%money_symbol%", SettingAddon.getMoneySymbol()));
+		return color(message, new Replacement("%money_symbol%", Settings.getMoneySymbol()));
 	}
 
 	public static String prefixMessage(String message) {

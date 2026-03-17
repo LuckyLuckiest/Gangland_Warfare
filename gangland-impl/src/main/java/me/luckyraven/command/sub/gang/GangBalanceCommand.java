@@ -8,7 +8,7 @@ import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -41,7 +41,7 @@ class GangBalanceCommand extends SubArgument {
 
 			Gang gang = gangManager.getGang(user.getGangId());
 			sender.sendMessage(Messages.GANG_BALANCE.toString()
-													.replace("%balance%", SettingAddon.formatDouble(
+													.replace("%balance%", Settings.formatDouble(
 															gang.getEconomy().getBalance())));
 		};
 	}

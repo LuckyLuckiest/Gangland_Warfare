@@ -1,36 +1,36 @@
 package me.luckyraven.database;
 
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseSettingsProvider;
 
 public class GanglandDatabaseSettings implements DatabaseSettingsProvider {
 	@Override
 	public boolean isSqliteBackup() {
-		return SettingAddon.isSqliteBackup();
+		return Settings.isSqliteBackup();
 	}
 
 	@Override
 	public boolean isSqliteFailedMysql() {
-		return SettingAddon.isSqliteFailedMysql();
+		return Settings.isSqliteFailedMysql();
 	}
 
 	@Override
 	public String getMysqlHost() {
-		return SettingAddon.getMysqlHost();
+		return Settings.getMysqlHost();
 	}
 
 	@Override
 	public int getMysqlPort() {
-		return SettingAddon.getMysqlPort();
+		return Settings.getMysqlPort();
 	}
 
 	@Override
 	public String getMysqlUsername() {
-		return SettingAddon.getMysqlUsername();
+		return Settings.getMysqlUsername();
 	}
 
 	@Override
 	public String getMysqlPassword() {
-		return SettingAddon.getMysqlPassword();
+		return Settings.getMysqlPassword();
 	}
 }

@@ -2,7 +2,7 @@ package me.luckyraven.scoreboard;
 
 import com.viaversion.viaversion.api.ViaAPI;
 import me.luckyraven.Gangland;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
 import me.luckyraven.scoreboard.driver.DriverHandler;
 import me.luckyraven.scoreboard.driver.version.DriverV1;
@@ -54,7 +54,7 @@ public class ScoreboardManager {
 
 		List<Line> lines = scoreboardAddon.getLines();
 		Line       title = scoreboardAddon.getTitle();
-		return switch (SettingAddon.getScoreboardDriver().toLowerCase()) {
+		return switch (Settings.getScoreboardDriver().toLowerCase()) {
 			case "driver_v3" -> new DriverV3(placeholder, viaAPI, player, title, lines);
 			case "driver_v2" -> new DriverV2(placeholder, viaAPI, player, title, lines);
 			default -> new DriverV1(placeholder, viaAPI, player, title, lines);

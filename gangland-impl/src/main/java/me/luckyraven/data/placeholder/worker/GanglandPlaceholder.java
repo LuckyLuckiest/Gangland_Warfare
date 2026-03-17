@@ -11,7 +11,7 @@ import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.features.level.Level;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.item.unique.UniqueItem;
@@ -99,8 +99,8 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 	@Nullable
 	private String getSetting(String parameter) {
-		Object value = SettingAddon.getSettingsPlaceholder()
-								   .entrySet()
+		Object value = Settings.getSettingsPlaceholder()
+							   .entrySet()
 				.stream()
 				.filter(entry -> entry.getKey().equals(parameter))
 				.map(Map.Entry::getValue)
@@ -109,7 +109,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 		if (value == null) return null;
 
-		if (value instanceof Double) return SettingAddon.formatDouble((double) value);
+		if (value instanceof Double) return Settings.formatDouble((double) value);
 
 		return String.valueOf(value);
 	}
@@ -127,11 +127,11 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (parameter.equals(userStr + "gang-join-date"))
 			return !member.hasGang() ? null : member.getGangJoinDateString();
 		if (parameter.equals(userStr + "contribution"))
-			return !member.hasGang() ? null : SettingAddon.formatDouble(member.getContribution());
+			return !member.hasGang() ? null : Settings.formatDouble(member.getContribution());
 		if (parameter.equals(userStr + "contributed-amount")) {
 			return !member.hasGang() ?
 				   null :
-				   NumberUtil.valueFormat(SettingAddon.getGangContributionRate() * member.getContribution());
+				   NumberUtil.valueFormat(Settings.getGangContributionRate() * member.getContribution());
 		}
 		if (parameter.equals(userStr + "has-rank")) return String.valueOf(member.hasRank());
 		if (parameter.equals(userStr + "rank")) return member.getRank() == null ? null : member.getRank().getName();
@@ -151,7 +151,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (parameter.equals(userStr + "bounty")) return NumberUtil.valueFormat(user.getBounty().getAmount());
 		if (parameter.equals(userStr + "has-bounty")) return String.valueOf(user.getBounty().hasBounty());
 
-		if (parameter.equals(userStr + "kd")) return SettingAddon.formatDouble(user.getKillDeathRatio());
+		if (parameter.equals(userStr + "kd")) return Settings.formatDouble(user.getKillDeathRatio());
 		if (parameter.equals(userStr + "mob-kills")) return String.valueOf(user.getMobKills());
 		if (parameter.equals(userStr + "kills")) return String.valueOf(user.getKills());
 		if (parameter.equals(userStr + "deaths")) return String.valueOf(user.getDeaths());

@@ -12,7 +12,7 @@ import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.teleportation.WaypointTeleport;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.timer.CountdownTimer;
@@ -128,7 +128,7 @@ public final class TeleportCommand extends CommandHandler {
 
 			timer.start(true);
 
-			String teleportationCost = "The teleportation costs &a" + SettingAddon.getMoneySymbol() +
+			String teleportationCost = "The teleportation costs &a" + Settings.getMoneySymbol() +
 									   waypoint.getCost() + "&7.";
 			String confirmationMessage = "&7To confirm the command re-type it again.";
 
@@ -177,7 +177,7 @@ public final class TeleportCommand extends CommandHandler {
 						user1.getEconomy().withdraw(waypoint1.getCost());
 
 						String string  = Messages.WITHDRAW_MONEY_PLAYER.toString();
-						String replace = string.replace("%amount%", SettingAddon.formatDouble(waypoint1.getCost()));
+						String replace = string.replace("%amount%", Settings.formatDouble(waypoint1.getCost()));
 
 						user.sendMessage(replace);
 					}

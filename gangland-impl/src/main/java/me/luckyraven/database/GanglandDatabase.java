@@ -5,7 +5,7 @@ import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankParent;
 import me.luckyraven.database.repositories.rank.RankParentRepository;
 import me.luckyraven.database.repositories.rank.RankRepository;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.persistence.database.DatabaseSettingsProvider;
@@ -71,8 +71,8 @@ public class GanglandDatabase extends DatabaseHandler {
 		if (!(rankRepo instanceof RankRepository repo)) return;
 		if (!(rankParentRepo instanceof RankParentRepository parentRepo)) return;
 
-		String head = SettingAddon.getGangRankHead();
-		String tail = SettingAddon.getGangRankTail();
+		String head = Settings.getGangRankHead();
+		String tail = Settings.getGangRankTail();
 
 		int[] ids = repo.insertInitialRanks(head, tail);
 

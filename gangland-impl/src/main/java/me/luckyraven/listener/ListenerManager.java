@@ -1,6 +1,6 @@
 package me.luckyraven.listener;
 
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.listener.ListenerService;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -15,7 +15,7 @@ public class ListenerManager extends ListenerService {
 
 	@Override
 	public boolean invokeMethod(String condition) throws InvocationTargetException, IllegalAccessException {
-		Method method = SettingAddon.getSetting(condition);
+		Method method = Settings.getSetting(condition);
 
 		if (method != null && (method.getReturnType().getSimpleName().equalsIgnoreCase("boolean") ||
 							   method.getReturnType() == Boolean.class)) {

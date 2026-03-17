@@ -2,7 +2,7 @@ package me.luckyraven.data.plugin;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.utilities.TimeUtil;
 
@@ -51,7 +51,7 @@ public class PluginManager {
 	}
 
 	public Date nextPlannedDate(Date currentDate) {
-		long resultMillis = TimeUtil.addDays(currentDate.getTime(), SettingAddon.getCleanUpTime());
+		long resultMillis = TimeUtil.addDays(currentDate.getTime(), Settings.getCleanUpTime());
 		return new Date(resultMillis);
 	}
 

@@ -2,7 +2,7 @@ package me.luckyraven.file.configuration.inventory;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.data.account.user.User;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.inventory.itemsource.GangItemSourceProvider;
 import me.luckyraven.inventory.*;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
@@ -179,8 +179,8 @@ public class InventoryAddon {
 
 		if (invBuilder.permission() != null && !player.hasPermission(invBuilder.permission())) return;
 
-		Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
-		Fill line = new Fill(SettingAddon.getInventoryLineName(), SettingAddon.getInventoryLineItem());
+		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
+		Fill line = new Fill(Settings.getInventoryLineName(), Settings.getInventoryLineItem());
 
 		InventoryOpener opener      = (p, invName) -> openInventoryForPlayer(gangland, p, invName);
 		Placeholder     placeholder = gangland.getInitializer().getPlaceholderService();
@@ -188,8 +188,8 @@ public class InventoryAddon {
 		if (invBuilder.inventoryData().isMultiInventory()) {
 			String          itemSource = invBuilder.inventoryData().getItemSource();
 			List<ItemStack> items      = itemSourceProvider.getItems(player, itemSource);
-			ButtonTags buttonTags = new ButtonTags(SettingAddon.getPreviousPage(), SettingAddon.getHomePage(),
-												   SettingAddon.getNextPage());
+			ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
+												   Settings.getNextPage());
 			MultiInventory multi = invBuilder.createMultiInventory(gangland, placeholder, player, items, buttonTags,
 																   fill);
 			if (multi != null) {

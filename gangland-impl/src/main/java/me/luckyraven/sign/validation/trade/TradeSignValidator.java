@@ -1,7 +1,7 @@
 package me.luckyraven.sign.validation.trade;
 
 import com.cryptomorin.xseries.XMaterial;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.validation.AbstractSignValidator;
 import me.luckyraven.weapon.Weapon;
@@ -16,7 +16,7 @@ public class TradeSignValidator extends AbstractSignValidator {
 	private final AmmunitionAddon ammunitionAddon;
 
 	public TradeSignValidator(SignType signType, WeaponService weaponService, AmmunitionAddon ammunitionAddon) {
-		super(signType, SettingAddon.getMoneySymbol());
+		super(signType, Settings.getMoneySymbol());
 
 		this.weaponService   = weaponService;
 		this.ammunitionAddon = ammunitionAddon;

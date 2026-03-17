@@ -13,7 +13,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -68,7 +68,7 @@ class GangLeaveCommand extends SubArgument {
 			// if it was the owner, then they need to transfer the rank
 			if (member.getRank() == null) return;
 
-			Rank tail = rankManager.get(SettingAddon.getGangRankTail());
+			Rank tail = rankManager.get(Settings.getGangRankTail());
 
 			if (tail == null) return;
 
@@ -113,7 +113,7 @@ class GangLeaveCommand extends SubArgument {
 			// if it was the owner, then they need to transfer the rank
 			if (member.getRank() == null) return;
 
-			Rank tail = rankManager.get(SettingAddon.getGangRankTail());
+			Rank tail = rankManager.get(Settings.getGangRankTail());
 
 			if (tail == null) return;
 

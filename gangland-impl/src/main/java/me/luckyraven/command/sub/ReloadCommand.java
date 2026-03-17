@@ -4,7 +4,7 @@ import lombok.CustomLog;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import org.bukkit.command.CommandSender;
 
@@ -49,7 +49,7 @@ public final class ReloadCommand extends CommandHandler {
 
 		Argument scoreboard = new Argument(getGangland(), "scoreboard", getArgumentTree(), (argument, sender, args) -> {
 			reloadProcess("scoreboard", () -> {
-				if (SettingAddon.isScoreboardEnabled()) getGangland().getReloadPlugin().scoreboardReload();
+				if (Settings.isScoreboardEnabled()) getGangland().getReloadPlugin().scoreboardReload();
 			}, false);
 		});
 

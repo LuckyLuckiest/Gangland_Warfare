@@ -8,7 +8,7 @@ import me.luckyraven.copsncrooks.bounty.Bounty;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -74,7 +74,7 @@ class BountyClearCommand extends SubArgument {
 			userBounty.removeBounty(sender);
 
 			String string = Messages.BOUNTY_PLAYER_LIFT.toString();
-			String replace = string.replace("%amount%", SettingAddon.formatDouble(amount))
+			String replace = string.replace("%amount%", Settings.formatDouble(amount))
 								   .replace("%player%", playerStr);
 
 			sender.sendMessage(replace);
@@ -87,7 +87,7 @@ class BountyClearCommand extends SubArgument {
 				userSender.getEconomy().deposit(amount);
 
 				String string1  = Messages.DEPOSIT_MONEY_PLAYER.toString();
-				String replace1 = string1.replace("%amount%", SettingAddon.formatDouble(amount));
+				String replace1 = string1.replace("%amount%", Settings.formatDouble(amount));
 
 				senderPlayer.sendMessage(replace1);
 			}
@@ -96,8 +96,8 @@ class BountyClearCommand extends SubArgument {
 				user.sendMessage(Messages.BOUNTY_CLEAR.toString());
 			} else {
 				String string1 = Messages.BOUNTY_LIFTED.toString();
-				String replace1 = string1.replace("%amount%", SettingAddon.formatDouble(amount))
-										 .replace("%bounty%", SettingAddon.formatDouble(userBounty.getAmount()));
+				String replace1 = string1.replace("%amount%", Settings.formatDouble(amount))
+										 .replace("%bounty%", Settings.formatDouble(userBounty.getAmount()));
 
 				user.sendMessage(replace1);
 			}

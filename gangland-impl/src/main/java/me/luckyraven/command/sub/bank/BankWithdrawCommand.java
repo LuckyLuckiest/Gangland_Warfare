@@ -9,7 +9,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -86,7 +86,7 @@ class BankWithdrawCommand extends SubArgument {
 									 user.getEconomy().getBalance() + argAmount);
 
 			String string  = Messages.BANK_MONEY_WITHDRAW_PLAYER.toString();
-			String replace = string.replace("%amount%", SettingAddon.formatDouble(argAmount));
+			String replace = string.replace("%amount%", Settings.formatDouble(argAmount));
 
 			user.getUser().sendMessage(replace);
 

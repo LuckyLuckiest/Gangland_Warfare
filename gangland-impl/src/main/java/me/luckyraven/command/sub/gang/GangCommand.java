@@ -12,7 +12,7 @@ import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.multi.MultiInventory;
 import me.luckyraven.inventory.multi.MultiInventoryCreation;
@@ -169,7 +169,7 @@ public final class GangCommand extends CommandHandler {
 
 	private Material itemToBalance(Gang gang) {
 		double balance    = gang.getEconomy().getBalance();
-		double maxBalance = SettingAddon.getGangMaxBalance();
+		double maxBalance = Settings.getGangMaxBalance();
 
 		// 1 max balance
 		if (balance >= maxBalance) return XMaterial.EMERALD_BLOCK.get();
@@ -193,8 +193,8 @@ public final class GangCommand extends CommandHandler {
 		Material material = itemToBalance(gang);
 
 		gui.setItem(11, material, "&bBalance", new ArrayList<>(
-				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
-									  SettingAddon.formatDouble(gang.getEconomy().getBalance())))), true, false);
+				List.of(String.format("&e%s%s", Settings.getMoneySymbol(),
+									  Settings.formatDouble(gang.getEconomy().getBalance())))), true, false);
 
 		// id
 		gui.setItem(13, XMaterial.CRAFTING_TABLE.get(), "&bID", new ArrayList<>(List.of("&e" + gang.getId())), false,
@@ -210,10 +210,10 @@ public final class GangCommand extends CommandHandler {
 					player.performCommand(argumentSequence);
 				});
 
-		Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 
-		ButtonTags buttonTags = new ButtonTags(SettingAddon.getPreviousPage(), SettingAddon.getHomePage(),
-											   SettingAddon.getNextPage());
+		ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
+											   Settings.getNextPage());
 
 		// members
 		gui.setItem(19, XMaterial.PLAYER_HEAD.get(), "&bMembers", new ArrayList<>(
@@ -259,8 +259,8 @@ public final class GangCommand extends CommandHandler {
 
 		// bounty
 		gui.setItem(22, XMaterial.BLAZE_ROD.get(), "&bBounty", new ArrayList<>(
-				List.of(String.format("&e%s%s", SettingAddon.getMoneySymbol(),
-									  SettingAddon.formatDouble(gang.getBounty().getAmount())))), true, false);
+				List.of(String.format("&e%s%s", Settings.getMoneySymbol(),
+									  Settings.formatDouble(gang.getBounty().getAmount())))), true, false);
 
 		// ally
 		gui.setItem(25, XMaterial.REDSTONE.get(), "&bAlly", List.of("&e" + gang.getAllies().size()), false, false,

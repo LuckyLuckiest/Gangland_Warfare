@@ -3,7 +3,7 @@ package me.luckyraven.command.sub;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -15,22 +15,22 @@ public final class DownloadResourceCommand extends CommandHandler {
 		super(gangland, "resource", true, "download");
 
 		var list = getCommands().entrySet()
-								.stream()
-								.filter(entry -> entry.getKey().startsWith("resource"))
-								.sorted(Map.Entry.comparingByKey())
-								.map(Map.Entry::getValue)
-								.toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("resource"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 
 		getHelpInfo().addAll(list);
 	}
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		if (!SettingAddon.isScoreboardEnabled()) return;
+		if (!Settings.isScoreboardEnabled()) return;
 
 		Player player = (Player) commandSender;
 
-		player.setResourcePack(SettingAddon.getResourcePackUrl());
+		player.setResourcePack(Settings.getResourcePackUrl());
 	}
 
 	@Override

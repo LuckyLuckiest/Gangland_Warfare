@@ -4,7 +4,7 @@ import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.util.datastructure.Tree;
@@ -100,9 +100,9 @@ public class RankManager {
 							 .stream()
 							 .filter(node -> node.getData()
 												 .getName()
-												 .equalsIgnoreCase(SettingAddon.getGangRankHead()))
+												 .equalsIgnoreCase(Settings.getGangRankHead()))
 							 .findFirst()
-							 .orElse(new Rank(SettingAddon.getGangRankHead(), Rank.getNewId()).getNode()));
+							 .orElse(new Rank(Settings.getGangRankHead(), Rank.getNewId()).getNode()));
 
 		// Wire each node's children
 		for (Map.Entry<Tree.Node<Rank>, List<String>> entry : nodeMap.entrySet()) {

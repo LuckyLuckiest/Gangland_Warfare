@@ -1,7 +1,7 @@
 package me.luckyraven.sign.aspect;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
@@ -111,7 +111,7 @@ public class ViewInventoryAspect implements SignAspect {
 		}
 
 		// Add decorative glass panes in empty slots
-		Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 
 		InventoryUtil.fillInventory(inventory, fill);
 
@@ -129,7 +129,7 @@ public class ViewInventoryAspect implements SignAspect {
 			inventory.setItem(4, ammoItem, false, null);
 		}
 
-		Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 
 		InventoryUtil.fillInventory(inventory, fill);
 
@@ -170,7 +170,7 @@ public class ViewInventoryAspect implements SignAspect {
 
 		inventory.setItem(4, material, "&e" + itemName, lore, false, false, null);
 
-		Fill fill = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 
 		InventoryUtil.fillInventory(inventory, fill);
 

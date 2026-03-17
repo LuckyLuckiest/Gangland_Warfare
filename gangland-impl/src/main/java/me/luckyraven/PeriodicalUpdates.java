@@ -11,7 +11,7 @@ import me.luckyraven.data.plugin.PluginManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.UserTable;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
@@ -153,7 +153,7 @@ public final class PeriodicalUpdates {
 
 	private void task() {
 		long    start    = System.currentTimeMillis();
-		boolean logDebug = SettingAddon.isAutoSaveDebug();
+		boolean logDebug = Settings.isAutoSaveDebug();
 
 		// Check for scheduled cleanup
 		if (cleanupService != null) {
@@ -221,14 +221,14 @@ public final class PeriodicalUpdates {
 
 		// Calculate what the scheduled date SHOULD be based on last scan and current config
 		long lastScanDate          = pluginData.getScanDate();
-		long expectedScheduledDate = TimeUtil.addDays(lastScanDate, SettingAddon.getCleanUpTime());
+		long expectedScheduledDate = TimeUtil.addDays(lastScanDate, Settings.getCleanUpTime());
 
 		// Only adjust if the config has changed (expected != stored)
 		if (expectedScheduledDate == pluginData.getScheduledScanDate()) return;
 
 		pluginData.setScheduledScanDate(expectedScheduledDate);
 
-		if (SettingAddon.isAutoSaveDebug()) {
+		if (Settings.isAutoSaveDebug()) {
 			log.info("Cleanup interval config changed. Adjusted scheduled scan date to: {}",
 					 new Date(expectedScheduledDate));
 		}

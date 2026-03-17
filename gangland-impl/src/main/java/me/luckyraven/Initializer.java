@@ -62,7 +62,7 @@ import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.copsncrooks.GanglandBountySettings;
 import me.luckyraven.file.configuration.copsncrooks.GanglandCopSettings;
 import me.luckyraven.file.configuration.copsncrooks.GanglandWantedSettings;
@@ -170,7 +170,7 @@ public final class Initializer {
 	private JailManager                jailManager;
 	private CopSpawnManager            copSpawnManager;
 	// Addons
-	private SettingAddon               settingAddon;
+	private Settings                   settings;
 	private ScoreboardAddon            scoreboardAddon;
 	private AmmunitionAddon            ammunitionAddon;
 	private WeaponAddon                weaponAddon;
@@ -303,7 +303,7 @@ public final class Initializer {
 
 		// entity mark manager
 		entityMarkManager = new EntityMarkManager(gangland, Collections.emptyList(),
-												  SettingAddon.getDefaultCivilianEntities());
+												  Settings.getDefaultCivilianEntities());
 
 		// item parser
 		itemParserManager = new ItemParserManager(weaponManager, ammunitionAddon, wearableAddon);
@@ -312,7 +312,7 @@ public final class Initializer {
 		lootChestLoader();
 
 		// kill combo
-		killCombo = new KillCombo(gangland, SettingAddon.getWantedKillCounter());
+		killCombo = new KillCombo(gangland, Settings.getWantedKillCounter());
 
 		// detainment
 		detainment();
@@ -379,8 +379,8 @@ public final class Initializer {
 	 */
 	public void addonsLoader() {
 		// initialize settings addon
-		settingAddon = new SettingAddon(fileManager);
-		settingAddon.initialize();
+		settings = new Settings(fileManager);
+		settings.initialize();
 
 		// initialize language addon
 		languageLoader = new LanguageLoader(gangland);
@@ -569,7 +569,7 @@ public final class Initializer {
 	private void databases(DatabaseSettingsProvider settings) {
 		int type;
 
-		if (SettingAddon.getDatabaseType().equalsIgnoreCase("mysql")) type = DatabaseHandler.MYSQL;
+		if (Settings.getDatabaseType().equalsIgnoreCase("mysql")) type = DatabaseHandler.MYSQL;
 		else type = DatabaseHandler.SQLITE;
 
 		// Primary database
@@ -650,7 +650,7 @@ public final class Initializer {
 		commandManager.addCommand(new CopSpawnerCommand(gangland));
 
 		// gang commands
-		if (SettingAddon.isGangEnabled()) {
+		if (Settings.isGangEnabled()) {
 			commandManager.addCommand(new GangCommand(gangland));
 		}
 

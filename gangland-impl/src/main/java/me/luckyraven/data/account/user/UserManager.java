@@ -18,7 +18,7 @@ import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.events.user.UserBountyEvent;
 import me.luckyraven.features.level.Level;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
@@ -71,7 +71,7 @@ public class UserManager<T extends OfflinePlayer> {
 
 			// create player data into a database
 			if (userData.length == 0) {
-				if (!SettingAddon.isAutoSave()) userTable.insertTableQuery(database, user);
+				if (!Settings.isAutoSave()) userTable.insertTableQuery(database, user);
 				return;
 			}
 
@@ -129,10 +129,10 @@ public class UserManager<T extends OfflinePlayer> {
 
 			if (!user.getUser().isOnline()) return;
 
-			if (userBounty.hasBounty() && SettingAddon.isBountyTimerEnabled()) {
+			if (userBounty.hasBounty() && Settings.isBountyTimerEnabled()) {
 				BountyEvent bountyEvent = new UserBountyEvent(true, user);
 
-				if (userBounty.getAmount() < SettingAddon.getBountyTimerMax()) {
+				if (userBounty.getAmount() < Settings.getBountyTimerMax()) {
 					Executor executor = new BountyExecutor(gangland, bountyEvent, user,
 														   gangland.getInitializer().getBountySettings());
 					Timer timer = executor.createTimer();
@@ -143,7 +143,7 @@ public class UserManager<T extends OfflinePlayer> {
 
 			Wanted userWanted = user.getWanted();
 
-			if (userWanted.isWanted() && SettingAddon.isWantedTimerEnabled()) {
+			if (userWanted.isWanted() && Settings.isWantedTimerEnabled()) {
 				WantedEvent wantedEvent = new WantedEvent(true, userWanted);
 
 				Executor executor = new WantedExecutor(gangland, wantedEvent, user,

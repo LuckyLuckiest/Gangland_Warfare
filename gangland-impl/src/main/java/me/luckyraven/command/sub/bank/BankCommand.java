@@ -6,7 +6,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -54,8 +54,8 @@ public final class BankCommand extends CommandHandler {
 
 		user.sendMessage(String.format("&6%s&7 bank information", player.getName()),
 						 String.format("&7%s&8: &a%s", "Name", bank.getName()),
-						 String.format("&7%s&8: &a%s%s", "Balance", SettingAddon.getMoneySymbol(),
-									   SettingAddon.formatDouble(bank.getEconomy().getBalance())));
+						 String.format("&7%s&8: &a%s%s", "Balance", Settings.getMoneySymbol(),
+									   Settings.formatDouble(bank.getEconomy().getBalance())));
 	}
 
 	@Override

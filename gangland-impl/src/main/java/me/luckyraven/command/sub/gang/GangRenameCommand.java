@@ -9,7 +9,7 @@ import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -70,7 +70,7 @@ class GangRenameCommand extends SubArgument {
 			String oldName = gang.getName();
 			String newName = args[2];
 
-			if (!SettingAddon.isGangNameDuplicates()) for (Gang checkGangName : gangManager.getGangs().values())
+			if (!Settings.isGangNameDuplicates()) for (Gang checkGangName : gangManager.getGangs().values())
 				if (checkGangName.getName().equalsIgnoreCase(newName)) {
 					user.sendMessage(Messages.DUPLICATE_GANG_NAME.toString().replace("%gang%", newName));
 					return;

@@ -7,7 +7,7 @@ import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -39,7 +39,7 @@ class BankBalanceCommand extends SubArgument {
 			}
 
 			String string      = Messages.BANK_BALANCE_PLAYER.toString();
-			String replacement = SettingAddon.formatDouble(bank.getEconomy().getBalance());
+			String replacement = Settings.formatDouble(bank.getEconomy().getBalance());
 			String replace     = string.replace("%balance%", replacement);
 
 			user.sendMessage(replace);

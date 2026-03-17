@@ -1,6 +1,6 @@
 package me.luckyraven.sign.validation;
 
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.type.WantedSign;
 import me.luckyraven.util.ChatUtil;
@@ -8,7 +8,7 @@ import me.luckyraven.util.ChatUtil;
 public class WantedSignValidator extends AbstractSignValidator {
 
 	public WantedSignValidator(SignType signType) {
-		super(signType, SettingAddon.getMoneySymbol());
+		super(signType, Settings.getMoneySymbol());
 	}
 
 	@Override

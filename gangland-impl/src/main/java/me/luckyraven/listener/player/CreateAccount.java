@@ -10,7 +10,7 @@ import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.events.user.UserDataInitEvent;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.updater.UpdateChecker;
 import me.luckyraven.util.ChatUtil;
@@ -55,7 +55,7 @@ public final class CreateAccount implements Listener {
 			player.sendMessage(ChatUtil.prefixMessage(updateChecker.getUpdateMessage()));
 		}
 
-		user.getEconomy().setBalance(SettingAddon.getUserInitialBalance());
+		user.getEconomy().setBalance(Settings.getUserInitialBalance());
 
 		// remove the player from the offline user manager
 		User<OfflinePlayer> offlineUser = offlineUserManager.getUser(player);

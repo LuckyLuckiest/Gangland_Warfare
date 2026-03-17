@@ -1,6 +1,6 @@
 package me.luckyraven.listener.player;
 
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.configuration.ResourcePackTracker;
 import me.luckyraven.util.listener.ListenerHandler;
@@ -18,7 +18,7 @@ public class LoadResourcePack implements Listener {
 
 	@EventHandler
 	public void onResourcePackStatus(PlayerResourcePackStatusEvent event) {
-		if (!SettingAddon.isResourcePackEnabled()) return;
+		if (!Settings.isResourcePackEnabled()) return;
 
 		Player player = event.getPlayer();
 
@@ -40,7 +40,7 @@ public class LoadResourcePack implements Listener {
 				player.sendMessage(message);
 			}
 			case DECLINED -> {
-				if (SettingAddon.isResourcePackKick()) {
+				if (Settings.isResourcePackKick()) {
 					String message = ChatUtil.color("&cYou have to accept the resource pack request!");
 
 					player.kickPlayer(message);
@@ -65,9 +65,9 @@ public class LoadResourcePack implements Listener {
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		Player player = event.getPlayer();
 
-		if (!SettingAddon.isResourcePackEnabled()) return;
+		if (!Settings.isResourcePackEnabled()) return;
 
-		player.setResourcePack(SettingAddon.getResourcePackUrl());
+		player.setResourcePack(Settings.getResourcePackUrl());
 	}
 
 	@EventHandler

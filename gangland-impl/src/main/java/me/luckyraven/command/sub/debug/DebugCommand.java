@@ -16,7 +16,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.teleportation.Waypoint;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.multi.MultiInventory;
 import me.luckyraven.inventory.multi.MultiInventoryCreation;
@@ -251,10 +251,10 @@ public final class DebugCommand extends CommandHandler {
 				items.addAll(swords.stream().map(ItemStack::new).toList());
 
 				String title = "&6&lDebug items";
-				Fill   fill  = new Fill(SettingAddon.getInventoryFillName(), SettingAddon.getInventoryFillItem());
+				Fill   fill  = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 
-				ButtonTags buttonTags = new ButtonTags(SettingAddon.getPreviousPage(), SettingAddon.getHomePage(),
-													   SettingAddon.getNextPage());
+				ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
+													   Settings.getNextPage());
 
 				MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getGangland(), player, items, title,
 																					false, false, fill, buttonTags,
@@ -322,7 +322,7 @@ public final class DebugCommand extends CommandHandler {
 	private @NotNull Argument getArgument(String[] setOpt) {
 		return new Argument(getGangland(), setOpt, getArgumentTree(), (argument, sender, args) -> {
 			var jsonFormatter = new JsonFormatter();
-			var message       = convertToJson(jsonFormatter.createJson(SettingAddon.getSettingsMap()));
+			var message       = convertToJson(jsonFormatter.createJson(Settings.getSettingsMap()));
 
 			sender.sendMessage(message);
 		});
@@ -331,7 +331,7 @@ public final class DebugCommand extends CommandHandler {
 	private @NotNull Argument getSetPlaceholder() {
 		return new Argument(getGangland(), "placeholder", getArgumentTree(), (argument, sender, args) -> {
 			var jsonFormatter = new JsonFormatter();
-			var message       = convertToJson(jsonFormatter.createJson(SettingAddon.getSettingsPlaceholder()));
+			var message       = convertToJson(jsonFormatter.createJson(Settings.getSettingsPlaceholder()));
 
 			sender.sendMessage(message);
 		});

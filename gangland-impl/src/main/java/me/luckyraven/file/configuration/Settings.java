@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @CustomLog
-public class SettingAddon implements FileInitializer {
+public class Settings implements FileInitializer {
 
 	private static final @Getter Map<String, Object> settingsMap         = new LinkedHashMap<>();
 	private static final @Getter Map<String, Object> settingsPlaceholder = new LinkedHashMap<>();
@@ -134,7 +134,7 @@ public class SettingAddon implements FileInitializer {
 			lootChestRewardExperienceMinimum, lootChestRewardExperienceMaximum;
 	private static @Getter List<String> lootChestRewardCommands;
 
-	public SettingAddon(FileManager fileManager) {
+	public Settings(FileManager fileManager) {
 		try {
 			String fileName = "settings";
 
@@ -153,7 +153,7 @@ public class SettingAddon implements FileInitializer {
 	}
 
 	public static Method getSetting(String methodName) {
-		Method[] methods = SettingAddon.class.getDeclaredMethods();
+		Method[] methods = Settings.class.getDeclaredMethods();
 
 		for (Method method : methods) {
 			if (!method.getName().endsWith(methodName)) continue;

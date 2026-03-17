@@ -1,6 +1,6 @@
 package me.luckyraven.sign.parser;
 
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.model.ParsedSign;
 import me.luckyraven.sign.model.WantedParsedSign;
@@ -26,7 +26,7 @@ public class WantedParser extends AbstractSignParser {
 
 		String priceLine = lines[3];
 		if (!priceLine.isEmpty()) {
-			price = parsePrice(priceLine, SettingAddon.getMoneySymbol());
+			price = parsePrice(priceLine, Settings.getMoneySymbol());
 		}
 
 		return new WantedParsedSign(signType, action, stars, price, location, lines);

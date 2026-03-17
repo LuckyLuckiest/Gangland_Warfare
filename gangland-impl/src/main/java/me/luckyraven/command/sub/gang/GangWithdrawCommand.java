@@ -12,7 +12,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -79,7 +79,7 @@ class GangWithdrawCommand extends SubArgument {
 				double argAmount = Double.parseDouble(args[2]);
 				Gang   gang      = gangManager.getGang(user.getGangId());
 
-				double rate   = SettingAddon.getGangContributionRate();
+				double rate   = Settings.getGangContributionRate();
 				int    length = String.valueOf((int) rate).length() - 1;
 				double round  = Math.pow(10, length);
 
@@ -101,7 +101,7 @@ class GangWithdrawCommand extends SubArgument {
 					gangUser.getUser()
 							.sendMessage(Messages.GANG_MONEY_WITHDRAW.toString()
 																	 .replace("%player%", player.getName())
-																	 .replace("%amount%", SettingAddon.formatDouble(
+																	 .replace("%amount%", Settings.formatDouble(
 																			 argAmount)));
 				}
 				user.sendMessage(ChatUtil.color("&c-" + contribution));

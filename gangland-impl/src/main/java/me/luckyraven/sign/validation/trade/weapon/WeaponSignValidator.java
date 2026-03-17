@@ -1,6 +1,6 @@
 package me.luckyraven.sign.validation.trade.weapon;
 
-import me.luckyraven.file.configuration.SettingAddon;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.validation.AbstractSignValidator;
 import me.luckyraven.weapon.WeaponService;
@@ -10,7 +10,7 @@ public class WeaponSignValidator extends AbstractSignValidator {
 	private final WeaponService weaponService;
 
 	public WeaponSignValidator(SignType signType, WeaponService weaponService) {
-		super(signType, SettingAddon.getMoneySymbol());
+		super(signType, Settings.getMoneySymbol());
 
 		this.weaponService = weaponService;
 	}
