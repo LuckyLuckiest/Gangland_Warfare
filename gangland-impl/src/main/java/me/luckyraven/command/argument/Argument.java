@@ -129,7 +129,11 @@ public class Argument implements Cloneable {
 	 * @param argument the new argument attached
 	 */
 	public void addSubArgument(Argument argument) {
-		if (tree.contains(argument)) return;
+		boolean alreadyAttached = tree.getAllNodes()
+				.stream().anyMatch(node -> node.getData() == argument);
+
+		if (alreadyAttached) return;
+
 		if (argument.toString().contains(OPTIONAL_ARGUMENT)) node.add(argument.getNode());
 		else node.add(0, argument.getNode());
 	}
