@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Only non-JAR resource creation is tested ({@code create(false)}) so the tests do not depend on a real JAR
  * classloader.
  *
- * <h2>Covered behaviours</h2>
+ * <h2>Covered behaviors</h2>
  * <ul>
  *   <li>Create / delete lifecycle for both YAML and non-YAML files
  *   <li>YAML loading, save, reload

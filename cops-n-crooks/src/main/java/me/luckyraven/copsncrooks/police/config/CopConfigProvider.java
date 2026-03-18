@@ -93,10 +93,6 @@ public interface CopConfigProvider {
 	 */
 	int getAttackCooldownTicks();
 
-	// -------------------------------------------------------------------------
-	// Spawn settings
-	// -------------------------------------------------------------------------
-
 	/**
 	 * Minimum distance from the player to spawn a cop (blocks).
 	 */
@@ -152,10 +148,6 @@ public interface CopConfigProvider {
 	 */
 	int getSpawnPhase2Attempts();
 
-	// -------------------------------------------------------------------------
-	// Navigation settings
-	// -------------------------------------------------------------------------
-
 	/**
 	 * Ticks between navigation path recalculations.
 	 */
@@ -196,9 +188,12 @@ public interface CopConfigProvider {
 	 */
 	double getRangedMaxDistance();
 
-	// -------------------------------------------------------------------------
-	// Return / despawn settings
-	// -------------------------------------------------------------------------
+	/**
+	 * Minimum number of AI ticks that must have elapsed from the last path request before a path-loss recovery re-path
+	 * is allowed. Guards against requesting a new path before Citizens has finished computing the previous one
+	 * (Citizens takes 1–2 ticks to start navigating after {@code setTarget} is called).
+	 */
+	double getMinRepathAfterLossTicks();
 
 	/**
 	 * Maximum AI ticks a cop waits at the station before being force-despawned.
@@ -209,10 +204,6 @@ public interface CopConfigProvider {
 	 * Distance to a station at which the cop considers itself arrived and attempts despawn (blocks).
 	 */
 	double getStationArrivalDistance();
-
-	// -------------------------------------------------------------------------
-	// Misc
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Number of full magazine reloads worth of ammo given to a cop NPC on spawn.

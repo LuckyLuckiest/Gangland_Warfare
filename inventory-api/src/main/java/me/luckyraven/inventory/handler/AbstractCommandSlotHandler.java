@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
  * Base handler that reads {@code Command}, {@code Inventory}, and {@code Permission} from the event config section and
  * wires them as a left-click action.
  *
- * <p>Subclasses can override {@link #onSlotAction} to execute additional behaviour after the
+ * <p>Subclasses can override {@link #onSlotAction} to execute additional behavior after the
  * command / inventory-open has run (template-method pattern).
  */
 public abstract class AbstractCommandSlotHandler implements SlotEventHandler {
@@ -44,7 +44,7 @@ public abstract class AbstractCommandSlotHandler implements SlotEventHandler {
 	}
 
 	/**
-	 * Called after the command / inventory action. Override to add event-specific behaviour.
+	 * Called after the command / inventory action. Override to add event-specific behavior.
 	 */
 	protected void onSlotAction(Player player, InventoryHandler inv, ItemBuilder builder) { }
 

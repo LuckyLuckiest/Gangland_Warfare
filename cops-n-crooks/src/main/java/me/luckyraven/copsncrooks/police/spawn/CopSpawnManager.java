@@ -48,6 +48,7 @@ public class CopSpawnManager {
 		CopSpawner spawner = spawners.computeIfAbsent(ID, ignored -> new CopSpawner(ID, location));
 
 		spawner.setLocation(location);
+		repository.save(spawner);
 	}
 
 	public void removeSpawner(int id) {
@@ -86,22 +87,21 @@ public class CopSpawnManager {
 	 * @return the spawned CopNpc, or null if no valid location was found
 	 */
 	public CopNpc spawnNearPlayer(Player target, int tier) {
-		// Priority 1: closest registered spawner within the preference radius
+		// Priority 1: cop spawner within preference radius — use it exclusively when available
 		Location spawnLoc = findClosestSpawnerLocation(target);
 
-		// Priority 2: random spawn near the player
-		if (spawnLoc == null) {
-			spawnLoc = findSpawnLocation(target);
+		if (spawnLoc != null) {
+			return copNpcFactory.createCop(spawnLoc, tier);
 		}
 
-		// Priority 3: any spawner in the world as a last resort
-		if (spawnLoc == null) {
-			spawnLoc = findStoredSpawnerLocation(target.getWorld());
-		}
+		// No nearby spawner — fall back to a random location that matches the player's environment
+		// (indoor when the player is indoors, outdoor when outdoors). Validate after spawn because
+		// Citizens may nudge the entity when the location is inside a building.
+		spawnLoc = findSpawnLocation(target);
 
 		if (spawnLoc == null) return null;
 
-		return copNpcFactory.createCop(spawnLoc, tier);
+		return copNpcFactory.createCop(spawnLoc, tier, true);
 	}
 
 	/**
@@ -183,8 +183,9 @@ public class CopSpawnManager {
 	}
 
 	/**
-	 * Finds the closest registered spawner to the player that is within {@value SPAWNER_PREFERENCE_RADIUS} blocks.
-	 * Returns {@code null} when no spawner is registered or none is close enough.
+	 * Finds the closest registered spawner to the player that is within
+	 * {@code CopConfigProvider.getSpawnerPreferenceRadius()} blocks. Returns {@code null} when no spawner is registered
+	 * or none is close enough.
 	 *
 	 * @param player the target player
 	 *
@@ -198,45 +199,18 @@ public class CopSpawnManager {
 		double   closestDistSq = prefRadius * prefRadius;
 
 		for (CopSpawner spawner : spawners.values()) {
-			Location loc = spawner.getLocation();
-			if (loc.getWorld() == null || !loc.getWorld().equals(playerLoc.getWorld())) continue;
+			Location loc   = spawner.getLocation();
+			World    world = loc.getWorld();
+			if (world == null || !world.equals(playerLoc.getWorld())) continue;
 
 			double distSq = loc.distanceSquared(playerLoc);
-			if (distSq < closestDistSq) {
-				closestDistSq = distSq;
-				closest       = loc;
-			}
+			if (distSq >= closestDistSq) continue;
+
+			closestDistSq = distSq;
+			closest       = loc;
 		}
 
 		return closest;
-	}
-
-	/**
-	 * Finds a valid spawn location around the target player. Prefers locations close to the player's current Y level,
-	 * including inside buildings, and avoids placing the NPC inside walls by spawning at the center of the block
-	 * column.
-	 *
-	 * @param world the world
-	 *
-	 * @return a spawn location, or null
-	 */
-	@Nullable
-	private Location findStoredSpawnerLocation(World world) {
-		List<Location> candidates = new ArrayList<>();
-
-		for (CopSpawner spawner : spawners.values()) {
-			Location location = spawner.getLocation();
-			if (location.getWorld() == null) continue;
-			if (!location.getWorld().getUID().equals(world.getUID())) continue;
-
-			candidates.add(location);
-		}
-
-		if (candidates.isEmpty()) {
-			return null;
-		}
-
-		return candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
 	}
 
 	/**
@@ -245,7 +219,7 @@ public class CopSpawnManager {
 	 *   <li>Phase 1 - 20 attempts in the preferred 30–50 block ring, restricted to positions behind the player so
 	 *       the NPC does not pop into view.</li>
 	 *   <li>Phase 2 - if phase 1 fails entirely (player is stationary, against a wall, etc.), the ring radius
-	 *       shrinks by {@value SPAWN_RADIUS_SHRINK_STEP} blocks per step down to {@value MIN_SPAWN_DISTANCE} and
+	 *       shrinks by {@code CopConfigProvider.getSpawnRadiusShrinkStep()} blocks per step down to {@code configProvider.getMinSpawnDistance()} and
 	 *       the behind-player constraint is dropped, giving every loaded angle a fair chance.</li>
 	 * </ol>
 	 */
@@ -255,9 +229,11 @@ public class CopSpawnManager {
 		double p1Min      = configProvider.getPhase1MinDistance();
 		double shrinkStep = configProvider.getSpawnRadiusShrinkStep();
 
+		boolean playerOutdoor = isOutdoor(player.getLocation());
+
 		// Phase 1: preferred ring, behind-player only
 		for (int attempt = 0; attempt < configProvider.getSpawnPhase1Attempts(); attempt++) {
-			Location loc = trySingleSpawnAttempt(player, p1Min, maxDist, true);
+			Location loc = trySingleSpawnAttempt(player, p1Min, maxDist, true, playerOutdoor);
 			if (loc != null) return loc;
 		}
 
@@ -265,7 +241,7 @@ public class CopSpawnManager {
 		for (double max = maxDist; max >= minDist; max -= shrinkStep) {
 			double min = Math.max(minDist, max - shrinkStep);
 			for (int attempt = 0; attempt < configProvider.getSpawnPhase2Attempts(); attempt++) {
-				Location loc = trySingleSpawnAttempt(player, min, max, false);
+				Location loc = trySingleSpawnAttempt(player, min, max, false, playerOutdoor);
 				if (loc != null) return loc;
 			}
 		}
@@ -284,7 +260,8 @@ public class CopSpawnManager {
 	 * @return a valid spawn location, or {@code null} if this attempt failed
 	 */
 	@Nullable
-	private Location trySingleSpawnAttempt(Player player, double minDist, double maxDist, boolean requireBehind) {
+	private Location trySingleSpawnAttempt(Player player, double minDist, double maxDist, boolean requireBehind,
+										   boolean playerOutdoor) {
 		Location          playerLoc = player.getLocation();
 		World             world     = player.getWorld();
 		ThreadLocalRandom random    = ThreadLocalRandom.current();
@@ -305,7 +282,25 @@ public class CopSpawnManager {
 
 		if (requireBehind && !isSpawnBehindPlayer(spawnLoc, player)) return null;
 
+		// Only accept locations that match the player's environment (indoor/outdoor)
+		if (isOutdoor(spawnLoc) != playerOutdoor) return null;
+
 		return spawnLoc;
+	}
+
+	/**
+	 * Returns whether the given location is outdoors (no solid blocks above it up to the sky). A location is considered
+	 * outdoor when the highest non-air block in its column is below the location's Y, meaning there is no roof
+	 * overhead.
+	 *
+	 * @param location the location to check
+	 *
+	 * @return true if outdoor, false if indoor or underground
+	 */
+	private boolean isOutdoor(Location location) {
+		World world = location.getWorld();
+		if (world == null) return true;
+		return world.getHighestBlockYAt(location.getBlockX(), location.getBlockZ()) < location.getBlockY();
 	}
 
 	/**

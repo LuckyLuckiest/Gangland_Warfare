@@ -24,10 +24,6 @@ public interface CopSettings {
 	 */
 	int getMaxWantedLevel();
 
-	// -------------------------------------------------------------------------
-	// Core cop behaviour
-	// -------------------------------------------------------------------------
-
 	/**
 	 * Hard cap on the number of cops allowed per wanted player.
 	 */
@@ -73,10 +69,6 @@ public interface CopSettings {
 	 */
 	int getAttackCooldownTicks();
 
-	// -------------------------------------------------------------------------
-	// Spawn settings
-	// -------------------------------------------------------------------------
-
 	double getMinSpawnDistance();
 
 	double getMaxSpawnDistance();
@@ -99,10 +91,6 @@ public interface CopSettings {
 
 	int getSpawnPhase2Attempts();
 
-	// -------------------------------------------------------------------------
-	// Navigation settings
-	// -------------------------------------------------------------------------
-
 	int getNavigationRecalculationTicks();
 
 	int getStuckCheckIntervalTicks();
@@ -119,17 +107,11 @@ public interface CopSettings {
 
 	double getRangedMaxDistance();
 
-	// -------------------------------------------------------------------------
-	// Return / despawn settings
-	// -------------------------------------------------------------------------
+	double getMinRepathAfterLossTicks();
 
 	int getMaxReturnTicks();
 
 	double getStationArrivalDistance();
-
-	// -------------------------------------------------------------------------
-	// Misc
-	// -------------------------------------------------------------------------
 
 	int getStartingAmmoMagazines();
 }

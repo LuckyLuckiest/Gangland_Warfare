@@ -294,7 +294,7 @@ Cops:
       # Hard cap - result is always clamped to this value (should not exceed Max_Per_Player in cops.yml)
       Max: 8
 
-   # Core behaviour values shared across all cop tiers.
+   # Core behavior values shared across all cop tiers.
    Behaviour:
       # Hard cap on the number of cop NPCs active per wanted player at any time.
       Max_Per_Player: 8
@@ -357,6 +357,9 @@ Cops:
       # Ranged cops hold their firing position when the target is within this distance range (blocks).
       Ranged_Min_Distance: 7.0
       Ranged_Max_Distance: 12.0
+      # Minimum AI ticks the cop waits before re-pathing after losing combat.
+      # This helps prevent unnecessary re-pathing during combat, improving performance.
+      Min_Repath_After_Loss_Ticks: 2.0
 
    # Controls how a cop returns to its station and despawns after the target is detained.
    Return:
