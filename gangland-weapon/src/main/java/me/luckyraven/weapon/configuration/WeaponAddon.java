@@ -179,6 +179,13 @@ public class WeaponAddon {
 		// empty mag
 		SoundConfiguration defaultMagSound = null;
 		SoundConfiguration customMagSound  = null;
+		// flyby
+		SoundConfiguration flybyDefaultSound = null;
+		SoundConfiguration flybyCustomSound  = null;
+		double             flybyRange        = 0D;
+		// impact
+		SoundConfiguration impactDefaultSound = null;
+		SoundConfiguration impactCustomSound  = null;
 
 		if (soundSection != null) {
 			ConfigurationSection defaultSound = soundSection.getConfigurationSection("Default_Sound");
@@ -215,6 +222,44 @@ public class WeaponAddon {
 				float  pitch  = (float) emptyCustomSound.getDouble("Pitch");
 
 				customMagSound = new SoundConfiguration(SoundConfiguration.SoundType.CUSTOM, sound, volume, pitch);
+			}
+
+			flybyRange = soundSection.getDouble("Flyby_Range", 0D);
+
+			ConfigurationSection flybyDefaultSection = soundSection.getConfigurationSection("Flyby_Default_Sound");
+			if (flybyDefaultSection != null) {
+				String sound  = Objects.requireNonNull(flybyDefaultSection.getString("Sound"));
+				float  volume = (float) flybyDefaultSection.getDouble("Volume");
+				float  pitch  = (float) flybyDefaultSection.getDouble("Pitch");
+
+				flybyDefaultSound = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, sound, volume, pitch);
+			}
+
+			ConfigurationSection flybyCustomSection = soundSection.getConfigurationSection("Flyby_Custom_Sound");
+			if (flybyCustomSection != null) {
+				String sound  = Objects.requireNonNull(flybyCustomSection.getString("Sound"));
+				float  volume = (float) flybyCustomSection.getDouble("Volume");
+				float  pitch  = (float) flybyCustomSection.getDouble("Pitch");
+
+				flybyCustomSound = new SoundConfiguration(SoundConfiguration.SoundType.CUSTOM, sound, volume, pitch);
+			}
+
+			ConfigurationSection impactDefaultSection = soundSection.getConfigurationSection("Impact_Default_Sound");
+			if (impactDefaultSection != null) {
+				String sound  = Objects.requireNonNull(impactDefaultSection.getString("Sound"));
+				float  volume = (float) impactDefaultSection.getDouble("Volume");
+				float  pitch  = (float) impactDefaultSection.getDouble("Pitch");
+
+				impactDefaultSound = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, sound, volume, pitch);
+			}
+
+			ConfigurationSection impactCustomSection = soundSection.getConfigurationSection("Impact_Custom_Sound");
+			if (impactCustomSection != null) {
+				String sound  = Objects.requireNonNull(impactCustomSection.getString("Sound"));
+				float  volume = (float) impactCustomSection.getDouble("Volume");
+				float  pitch  = (float) impactCustomSection.getDouble("Pitch");
+
+				impactCustomSound = new SoundConfiguration(SoundConfiguration.SoundType.CUSTOM, sound, volume, pitch);
 			}
 		}
 
@@ -528,6 +573,11 @@ public class WeaponAddon {
 		weapon.getSoundData().setReloadCustomEnd(reloadCustomSoundEnd);
 		weapon.getSoundData().setScopeDefault(scopeDefaultSound);
 		weapon.getSoundData().setScopeCustom(scopeCustomSound);
+		weapon.getSoundData().setFlybyDefault(flybyDefaultSound);
+		weapon.getSoundData().setFlybyCustom(flybyCustomSound);
+		weapon.getSoundData().setFlybyRange(flybyRange);
+		weapon.getSoundData().setImpactDefault(impactDefaultSound);
+		weapon.getSoundData().setImpactCustom(impactCustomSound);
 
 		weapon.getReloadActionBarData().setReloading(reloadActionBarReloading);
 		weapon.getReloadActionBarData().setOpening(reloadActionBarOpening);

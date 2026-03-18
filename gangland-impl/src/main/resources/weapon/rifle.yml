@@ -142,6 +142,28 @@ Shoot:
          Sound: sound.gta.m4_empty
          Volume: 1
          Pitch: 1
+      # How close (in blocks) a bullet must pass for the flyby whoosh to play
+      Flyby_Range: 3.0
+      # Flyby sound heard by players the bullet passes near
+      Flyby_Default_Sound:
+         Sound: ENTITY_ARROW_SHOOT
+         Volume: 0.6
+         Pitch: 2.0
+      # Overrides the default flyby sound if available
+      Flyby_Custom_Sound:
+         Sound: sound.gta.bullet_flyby
+         Volume: 0.8
+         Pitch: 1.0
+      # Impact sound when the bullet strikes a target
+      Impact_Default_Sound:
+         Sound: BLOCK_STONE_HIT
+         Volume: 1.0
+         Pitch: 1.5
+      # Overrides the default impact sound if available
+      Impact_Custom_Sound:
+         Sound: sound.gta.bullet_impact
+         Volume: 1.0
+         Pitch: 1.0
 
 # Weapon reload configuration
 Reload:

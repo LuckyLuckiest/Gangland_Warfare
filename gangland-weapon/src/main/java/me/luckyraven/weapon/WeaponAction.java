@@ -88,9 +88,9 @@ public class WeaponAction {
 		// apply push
 		applyPush(shooter, weapon);
 
-		// shooting sound
-		SoundConfiguration.playSounds(shooter, weapon.getSoundData().getShotCustom(),
-									  weapon.getSoundData().getShotDefault());
+		// shooting sound — echo broadcasts to all players near the shooter's location
+		SoundConfiguration.playSoundsAtLocation(shooter.getLocation(), weapon.getSoundData().getShotCustom(),
+												weapon.getSoundData().getShotDefault());
 	}
 
 	private void applyPush(Player player, Weapon weapon) {

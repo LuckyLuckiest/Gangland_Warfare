@@ -230,6 +230,13 @@ public class ProjectileDamageListener implements Listener {
 		entity.setFireTicks(fireTicks);
 		entity.setNoDamageTicks(0);
 
+		// Impact sound — plays at the hit location so all nearby players hear it
+		SoundConfiguration impactCustom  = weapon.getSoundData().getImpactCustom();
+		SoundConfiguration impactDefault = weapon.getSoundData().getImpactDefault();
+		if (impactCustom != null || impactDefault != null) {
+			SoundConfiguration.playSoundsAtLocation(entity.getLocation(), impactCustom, impactDefault);
+		}
+
 		// Handle entity penetration
 		return state != null && ModifierHandler.handleEntityPenetration(state, projectile);
 	}

@@ -28,6 +28,15 @@ public class SoundData implements Cloneable {
 	private SoundConfiguration scopeDefault;
 	private SoundConfiguration scopeCustom;
 
+	// Flyby sounds (bullet passing near a player)
+	private SoundConfiguration flybyDefault;
+	private SoundConfiguration flybyCustom;
+	private double             flybyRange;
+
+	// Impact sounds (bullet striking a target)
+	private SoundConfiguration impactDefault;
+	private SoundConfiguration impactCustom;
+
 	@Override
 	public SoundData clone() {
 		SoundData copy;
@@ -49,6 +58,10 @@ public class SoundData implements Cloneable {
 		copy.reloadCustomEnd     = cloneSound(reloadCustomEnd);
 		copy.scopeDefault        = cloneSound(scopeDefault);
 		copy.scopeCustom         = cloneSound(scopeCustom);
+		copy.flybyDefault        = cloneSound(flybyDefault);
+		copy.flybyCustom         = cloneSound(flybyCustom);
+		copy.impactDefault       = cloneSound(impactDefault);
+		copy.impactCustom        = cloneSound(impactCustom);
 
 		return copy;
 	}

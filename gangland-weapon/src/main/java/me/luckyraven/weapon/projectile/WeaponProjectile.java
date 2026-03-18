@@ -3,13 +3,16 @@ package me.luckyraven.weapon.projectile;
 import com.cryptomorin.xseries.particles.XParticle;
 import com.google.common.util.concurrent.AtomicDouble;
 import me.luckyraven.util.color.Color;
+import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.dto.SoundData;
 import me.luckyraven.weapon.events.projectile.WeaponProjectileLaunchEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -17,6 +20,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -84,11 +90,41 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 		// call the projectile launch event
 		WeaponProjectileLaunchEvent event = new WeaponProjectileLaunchEvent(weapon, projectile, this);
 		Bukkit.getPluginManager().callEvent(event);
+
+		startFlybyCheck(projectile);
 	}
 
 	@Override
 	public double getSpeed() {
 		return weapon.getProjectileData().getSpeed();
+	}
+
+	private void startFlybyCheck(Projectile projectile) {
+		SoundData soundData  = weapon.getSoundData();
+		double    flybyRange = soundData.getFlybyRange();
+
+		if (flybyRange <= 0 || (soundData.getFlybyDefault() == null && soundData.getFlybyCustom() == null)) {
+			return;
+		}
+
+		LivingEntity shooter = getShooter();
+		Set<UUID>    heard   = new HashSet<>();
+		RepeatingTimer timer = new RepeatingTimer(plugin, 1L, t -> {
+			if (!projectile.isValid()) {
+				t.stop();
+				return;
+			}
+
+			for (Entity entity : projectile.getNearbyEntities(flybyRange, flybyRange, flybyRange)) {
+				if (!(entity instanceof Player player)) continue;
+				if (entity.equals(shooter)) continue;
+				if (!heard.add(player.getUniqueId())) continue;
+
+				SoundConfiguration.playSounds(player, soundData.getFlybyCustom(), soundData.getFlybyDefault());
+			}
+		});
+
+		timer.start(false);
 	}
 
 	@NotNull
