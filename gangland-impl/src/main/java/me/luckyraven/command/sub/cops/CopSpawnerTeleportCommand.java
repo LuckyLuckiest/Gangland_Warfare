@@ -1,4 +1,4 @@
-package me.luckyraven.command.sub.copsncrooks;
+package me.luckyraven.command.sub.cops;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
@@ -9,31 +9,39 @@ import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
+import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
-class CopSpawnerRemoveCommand extends SubArgument {
+class CopSpawnerTeleportCommand extends SubArgument {
 
 	private final Gangland       gangland;
 	private final Tree<Argument> tree;
 
-	CopSpawnerRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(gangland, "remove", tree, parent);
+	CopSpawnerTeleportCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+		super(gangland, new String[]{"teleport", "tp"}, tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
 
-		idArgument();
+		this.idArgument();
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
-		return (argument, sender, args) -> sender.sendMessage(
-				ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
+		return (argument, sender, args) -> {
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
+		};
 	}
 
 	private void idArgument() {
 		Argument idArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			String idStr = args[2];
+			if (!(sender instanceof Player player)) {
+				sender.sendMessage(Messages.NOT_PLAYER.toString());
+				return;
+			}
+
+			String idStr = args[3];
 			int    id;
 			try {
 				id = Integer.parseInt(idStr);
@@ -43,9 +51,15 @@ class CopSpawnerRemoveCommand extends SubArgument {
 			}
 
 			CopSpawnManager copSpawnManager = gangland.getInitializer().getCopSpawnManager();
-			copSpawnManager.removeSpawner(id);
+			Location        location        = copSpawnManager.getSpawnerLocation(id);
 
-			sender.sendMessage(ChatUtil.commandMessage("&aCop spawner &e" + id + "&a removed."));
+			if (location == null) {
+				sender.sendMessage(Messages.LOCATION_NOT_FOUND.toString().replace("%location%", idStr));
+				return;
+			}
+
+			player.teleport(location);
+			sender.sendMessage(ChatUtil.commandMessage("Teleported to cop spawner &e(&b" + id + "&e)&7."));
 		}, sender -> gangland.getInitializer().getCopSpawnManager().getSpawnerIds()
 				.stream().map(String::valueOf).toList());
 

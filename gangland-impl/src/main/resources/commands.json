@@ -495,20 +495,32 @@
 		"usage": "/glw unjail <player>",
 		"description": "Releases the specified player from jail."
 	},
-	"copspawner": {
-		"usage": "/glw copspawner <set|remove>",
-		"description": "Shows cop spawner help page."
+	"cop_help": {
+		"usage": "/glw cop help <page>",
+		"description": "Shows the specified page in cop menu."
 	},
-	"copspawner_help": {
-		"usage": "/glw copspawner help <page>",
-		"description": "Shows the specified page in cop spawner menu."
+	"cop_list": {
+		"usage": "/glw cop list",
+		"description": "Shows all the available cops."
 	},
-	"copspawner_set": {
-		"usage": "/glw copspawner set",
+	"cop_spawner_set": {
+		"usage": "/glw cop spawner set",
 		"description": "Sets a cop spawner at your current location."
 	},
-	"copspawner_remove": {
-		"usage": "/glw copspawner remove <id>",
+	"cop_spawner_remove": {
+		"usage": "/glw cop spawner remove <id>",
 		"description": "Removes the cop spawner with the specified id."
+	},
+	"cop_spawner_list": {
+		"usage": "/glw cop spawner list",
+		"description": "Shows all the available cop spawners."
+	},
+	"cop_spawner_info": {
+		"usage": "/glw cop spawner info <id>",
+		"description": "Shows the information of the cop spawner with the specified id."
+	},
+	"cop_spawner_teleport": {
+		"usage": "/glw cop spawner teleport <id>",
+		"description": "Teleports the player to the cop spawner with the specified id."
 	}
 }

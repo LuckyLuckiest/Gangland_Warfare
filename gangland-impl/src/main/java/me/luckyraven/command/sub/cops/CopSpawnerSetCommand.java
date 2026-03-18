@@ -1,9 +1,10 @@
-package me.luckyraven.command.sub.copsncrooks;
+package me.luckyraven.command.sub.cops;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -24,7 +25,7 @@ class CopSpawnerSetCommand extends SubArgument {
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
 			if (!(sender instanceof Player player)) {
-				sender.sendMessage(ChatUtil.commandMessage("&cOnly players can use this command."));
+				sender.sendMessage(Messages.NOT_PLAYER.toString());
 				return;
 			}
 
