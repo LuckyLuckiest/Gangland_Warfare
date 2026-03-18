@@ -31,11 +31,6 @@ public class CombatBehavior implements CopBehavior {
 
 		double distance = cop.distanceTo(target);
 
-		if (distance > combatRange * 3) {
-			cop.transitionTo(CopState.PURSUING);
-			return;
-		}
-
 		double attackRange = cop.getTierConfig().canUseWeapons() ? (combatRange * 3) : combatRange;
 
 		if (distance <= attackRange && cop.canAttack() && cop.hasLineOfSight(target)) {

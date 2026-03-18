@@ -40,6 +40,7 @@ public class CopNpc {
 	private final double minProgressDistanceSquared;
 	private final double rangedMinDistance;
 	private final double rangedMaxDistance;
+	private final double minRepathAfterLossTicks;
 
 	@Getter
 	private final NPC                        npc;
@@ -69,13 +70,12 @@ public class CopNpc {
 	private Weapon     heldWeapon;
 	private boolean    reloading;
 	private JavaPlugin plugin;
-
-	private Location lastNavigationTarget;
-	private Location lastProgressLocation;
-	private int      navigationThrottleTicks;
-	private int      stuckSampleTicks;
-	private int      consecutiveStuckChecks;
-	private boolean  navigationHopeless;
+	private Location   lastNavigationTarget;
+	private Location   lastProgressLocation;
+	private int        navigationThrottleTicks;
+	private int        stuckSampleTicks;
+	private int        consecutiveStuckChecks;
+	private boolean    navigationHopeless;
 
 	public CopNpc(NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors, Location spawnLocation,
 				  CopConfigProvider configProvider) {
@@ -97,12 +97,15 @@ public class CopNpc {
 		this.maxStuckChecks               = configProvider.getMaxStuckChecks();
 		this.maxHopelessStuckChecks       = configProvider.getMaxHopelessStuckChecks();
 		this.hopelessCloseThreshold       = configProvider.getHopelessCloseThreshold();
+
 		double minProg = configProvider.getMinProgressDistance();
 		this.minProgressDistanceSquared = minProg * minProg;
-		this.rangedMinDistance          = configProvider.getRangedMinDistance();
-		this.rangedMaxDistance          = configProvider.getRangedMaxDistance();
+
+		this.rangedMinDistance = configProvider.getRangedMinDistance();
+		this.rangedMaxDistance = configProvider.getRangedMaxDistance();
 
 		this.navigationThrottleTicks = this.navigationRecalculationTicks;
+		this.minRepathAfterLossTicks = configProvider.getMinRepathAfterLossTicks();
 	}
 
 	/**
@@ -148,8 +151,8 @@ public class CopNpc {
 	 * @param newState the target state
 	 */
 	public void transitionTo(CopState newState) {
-		log.debug("Transitioning cop {}-{} from {} state to {} state.", npc.getName(), npc.getId(), currentState,
-				  newState);
+		log.info("Transitioning cop {}-{} from {} state to {} state.", npc.getName(), npc.getId(), currentState,
+				 newState);
 		if (currentState == newState) return;
 
 		CopBehavior oldBehavior = behaviors.get(currentState);
@@ -283,7 +286,7 @@ public class CopNpc {
 
 		if (from.getWorld() == null || !from.getWorld().equals(to.getWorld())) return null;
 
-		// Close enough that Citizens can navigate the remaining distance on its own
+		// Close enough that Citizens can navigate the remaining distance on their own
 		if (from.distanceSquared(to) <= hopelessCloseThreshold * hopelessCloseThreshold) {
 			Location safe = normalizeToStandableLocation(to);
 			return safe != null ? safe : to;
@@ -352,11 +355,11 @@ public class CopNpc {
 	}
 
 	/**
-	 * Checks if the cop has direct line of sight to the player.
+	 * Checks if the cop has a direct line of sight to the player.
 	 *
 	 * @param player the target player
 	 *
-	 * @return true if line of sight exists
+	 * @return true if a line of sight exists
 	 */
 	public boolean hasLineOfSight(Player player) {
 		if (!isValid() || player == null) return false;
@@ -422,7 +425,7 @@ public class CopNpc {
 
 	/**
 	 * Equips the cop with its tier's loadout. If a gangland weapon was assigned via {@link #setHeldWeapon}, its built
-	 * item is placed in the main hand. Otherwise a random item from the vanilla weapon pool is used.
+	 * item is placed in the main hand. Otherwise, a random item from the vanilla weapon pool is used.
 	 */
 	public void equip() {
 		if (!isValid()) return;
@@ -473,7 +476,7 @@ public class CopNpc {
 	}
 
 	/**
-	 * Despawns and destroys the NPC without entity mark cleanup.
+	 * Despawns and destroys the NPC without an entity mark cleanup.
 	 */
 	public void destroy() {
 		destroy(null);
@@ -495,7 +498,7 @@ public class CopNpc {
 
 	/**
 	 * Finds the last safe walkable location on the horizontal path from the cop toward the player. If a gap, cliff, or
-	 * blocked step is encountered the previous safe location is returned.
+	 * blocked step is encountered, the previous safe location is returned.
 	 */
 	private Location findLastReachableGroundBeforeGap(Location from, Location to, double maxDistance) {
 		if (from == null || to == null || from.getWorld() == null || !from.getWorld().equals(to.getWorld())) {
@@ -561,7 +564,7 @@ public class CopNpc {
 
 	/**
 	 * Finds the best safe point on a ring around the player. Positions are scored by distance to the cop, deviation
-	 * from the ideal radius, and - for ranged cops - line-of-sight quality.
+	 * from the ideal radius, and for ranged cops - line-of-sight quality.
 	 */
 	private Location findBestRingApproachLocation(Location copLocation, Location playerLocation, double minRadius,
 												  double maxRadius, double idealRadius) {
@@ -808,7 +811,14 @@ public class CopNpc {
 
 		// Always respect the throttle - even when stuck - to avoid hammering Citizens with path requests every tick
 		if (navigationThrottleTicks < navigationRecalculationTicks) {
-			return false;
+			// Path-loss recovery: when Citizens stopped navigating unexpectedly (e.g., a faceTarget
+			// teleport canceled the active path, or Citizens finished the path while the player
+			// hasn't moved enough to trigger a normal recalculation), bypass the remaining throttle
+			// wait once a short guard window has passed. The guard prevents requesting a path
+			// before Citizens finishes computing the previous one (Citizens takes 1-2 AI ticks to
+			// start reporting isNavigating() == true after setTarget is called).
+			return lastNavigationTarget != null && !npc.getNavigator().isNavigating() &&
+				   navigationThrottleTicks >= minRepathAfterLossTicks;
 		}
 
 		if (lastNavigationTarget == null || lastNavigationTarget.getWorld() == null || target.getWorld() == null) {
@@ -825,7 +835,7 @@ public class CopNpc {
 
 	/**
 	 * Clears transient navigation tracking state. The {@code navigationHopeless} latch is intentionally preserved so
-	 * that state transitions (e.g. pursuing → combat) do not restart the stuck-detection wait when the underlying
+	 * that state transitions (e.g., pursuing → combat) do not restart the stuck-detection wait when the underlying
 	 * terrain obstacle still exists. The latch is cleared only when real movement progress is detected.
 	 */
 	private void resetNavigationTracking() {

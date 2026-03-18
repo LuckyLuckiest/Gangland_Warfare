@@ -117,7 +117,7 @@ public class Settings implements FileInitializer {
 	private static @Getter int copNavRecalculationTicks, copNavStuckCheckInterval, copNavMaxStuckChecks,
 			copNavMaxHopelessStuckChecks;
 	private static @Getter double copNavHopelessCloseThreshold, copNavMinProgressDistance, copNavRangedMinDistance,
-			copNavRangedMaxDistance;
+			copNavRangedMaxDistance, copNavMinRepathAfterLossTicks;
 
 	// cop return / despawn configuration
 	private static @Getter int    copReturnMaxTicks;
@@ -384,14 +384,15 @@ public class Settings implements FileInitializer {
 		var copsNav = settings.getConfigurationSection("Cops.Navigation");
 		Objects.requireNonNull(copsNav);
 
-		copNavRecalculationTicks     = copsNav.getInt("Recalculation_Ticks", 10);
-		copNavStuckCheckInterval     = copsNav.getInt("Stuck_Check_Interval", 5);
-		copNavMaxStuckChecks         = copsNav.getInt("Max_Stuck_Checks", 3);
-		copNavMaxHopelessStuckChecks = copsNav.getInt("Max_Hopeless_Stuck_Checks", 6);
-		copNavHopelessCloseThreshold = copsNav.getDouble("Hopeless_Close_Threshold", 8.0);
-		copNavMinProgressDistance    = copsNav.getDouble("Min_Progress_Distance", 0.75);
-		copNavRangedMinDistance      = copsNav.getDouble("Ranged_Min_Distance", 7.0);
-		copNavRangedMaxDistance      = copsNav.getDouble("Ranged_Max_Distance", 12.0);
+		copNavRecalculationTicks      = copsNav.getInt("Recalculation_Ticks", 10);
+		copNavStuckCheckInterval      = copsNav.getInt("Stuck_Check_Interval", 5);
+		copNavMaxStuckChecks          = copsNav.getInt("Max_Stuck_Checks", 3);
+		copNavMaxHopelessStuckChecks  = copsNav.getInt("Max_Hopeless_Stuck_Checks", 6);
+		copNavHopelessCloseThreshold  = copsNav.getDouble("Hopeless_Close_Threshold", 8.0);
+		copNavMinProgressDistance     = copsNav.getDouble("Min_Progress_Distance", 0.75);
+		copNavRangedMinDistance       = copsNav.getDouble("Ranged_Min_Distance", 7.0);
+		copNavRangedMaxDistance       = copsNav.getDouble("Ranged_Max_Distance", 12.0);
+		copNavMinRepathAfterLossTicks = copsNav.getDouble("Min_Repath_After_Loss_Ticks", 2.0);
 
 		// cop return / despawn
 		var copsReturn = settings.getConfigurationSection("Cops.Return");

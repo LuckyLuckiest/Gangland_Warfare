@@ -55,6 +55,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final double minProgressDistance;
 	private final double rangedMinDistance;
 	private final double rangedMaxDistance;
+	private final double minRepathAfterLossTicks;
 
 	// Return / despawn settings
 	private final int    maxReturnTicks;
@@ -62,8 +63,6 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	// Misc
 	private final int startingAmmoMagazines;
-
-	private final String head = "Cops.";
 
 	/**
 	 * @param copsConfig the {@code cops.yml} configuration
@@ -108,6 +107,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.minProgressDistance          = copSettings != null ? copSettings.getMinProgressDistance() : 0.75;
 		this.rangedMinDistance            = copSettings != null ? copSettings.getRangedMinDistance() : 7.0;
 		this.rangedMaxDistance            = copSettings != null ? copSettings.getRangedMaxDistance() : 12.0;
+		this.minRepathAfterLossTicks      = copSettings != null ? copSettings.getMinRepathAfterLossTicks() : 2;
 
 		// Return / despawn settings — sourced from settings.yml via CopSettings
 		this.maxReturnTicks         = copSettings != null ? copSettings.getMaxReturnTicks() : 600;
@@ -240,6 +240,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	public double getRangedMaxDistance() { return rangedMaxDistance; }
 
 	@Override
+	public double getMinRepathAfterLossTicks() {
+		return minRepathAfterLossTicks;
+	}
+
+	@Override
 	public int getMaxReturnTicks() { return maxReturnTicks; }
 
 	@Override
@@ -247,10 +252,6 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	@Override
 	public int getStartingAmmoMagazines() { return startingAmmoMagazines; }
-
-	// -------------------------------------------------------------------------
-	// Private loading helpers
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Parses all tier sections from {@code cops.yml}.
@@ -267,6 +268,8 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	 * Armor slots use the same parser path and therefore also accept custom item syntax.
 	 */
 	private void loadTiers(FileConfiguration config, @Nullable ItemParser itemParser) {
+		String head = "Cops.";
+
 		ConfigurationSection tiersSection = config.getConfigurationSection(head + "Tiers");
 		if (tiersSection == null) return;
 
