@@ -277,6 +277,11 @@ Errors:
    Cannot_Null: "¡No puede ser &cnulo&7!"
    Must_Be_Numbers: "&a%command% &7debe ser números."
    Dont_Use_Symbol: "Por favor no uses símbolos."
+   Teleportation:
+      Location:
+         Not_Found: "¡Esta ubicación &c%location%&7 no fue encontrada!"
+      World:
+         Not_Found: "¡Este mundo &8(&c%world%&8) no fue encontrado!"
 
 Information:
    Prefix: "&8&l[&7Información&8&l]&7 "

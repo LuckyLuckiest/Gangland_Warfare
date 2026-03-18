@@ -182,11 +182,7 @@ public enum Messages {
 	INVALID_RANK_PARENT("Errors.Rank.Invalid_Parent", Type.ERROR),
 
 	// errors - teleportation
-	SPAWN_NOT_FOUND("Errors.Teleportation.Spawn.Not_Found", Type.ERROR),
-	SPAWN_INCORRECT_TYPE("Errors.Teleportation.Spawn.Correct_Type", Type.ERROR),
-	DEFAULT_SPAWN("Errors.Teleportation.Spawn.Need_Default", Type.ERROR),
-	SPAWN_LIST_UNDEFINED("Errors.Teleportation.Spawn.List_Undefined", Type.ERROR),
-	WARP_NOT_FOUND("Errors.Teleportation.Warp.Not_Found", Type.ERROR),
+	LOCATION_NOT_FOUND("Errors.Teleportation.Location.Not_Found", Type.ERROR),
 	WORLD_NOT_FOUND("Errors.Teleportation.World.Not_Found", Type.ERROR),
 
 	// errors - bounty
