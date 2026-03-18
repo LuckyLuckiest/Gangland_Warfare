@@ -8,7 +8,6 @@ import me.luckyraven.copsncrooks.police.npc.CopNpcFactory;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawner;
 import me.luckyraven.copsncrooks.police.state.CopBehaviorFactory;
-import me.luckyraven.copsncrooks.police.targeting.TargetingManager;
 import me.luckyraven.copsncrooks.police.targeting.WantedTargetingManager;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.weapon.WeaponService;
@@ -17,7 +16,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 @Getter
 public class CopService {
 
-	private CopManager copManager;
+	private CopManager             copManager;
+	private WantedTargetingManager targetingManager;
 
 	/**
 	 * Initializes and registers all cop system components.
@@ -32,7 +32,7 @@ public class CopService {
 	public CopManager initialize(JavaPlugin plugin, CopConfigProvider provider, EntityMarkManager entityMarkManager,
 								 WeaponService weaponService, IRepository<CopSpawner> spawnerRepository,
 								 DetainmentService detainmentService) {
-		TargetingManager targetingManager = new WantedTargetingManager();
+		targetingManager = new WantedTargetingManager();
 
 		// Create a placeholder array to capture the spawn manager reference
 		CopSpawnManager[] spawnManagerHolder = new CopSpawnManager[1];

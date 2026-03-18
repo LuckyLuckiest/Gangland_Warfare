@@ -57,6 +57,20 @@ public class CopNpcFactory {
 	 * @return the created CopNpc, or null if spawning failed
 	 */
 	public CopNpc createCop(Location spawnLocation, int tier) {
+		return createCop(spawnLocation, tier, false);
+	}
+
+	/**
+	 * Creates a new cop NPC at the given location with the specified tier.
+	 *
+	 * @param spawnLocation the location to spawn the NPC
+	 * @param tier the cop tier
+	 * @param validateAfterSpawn when true, schedules a 1-tick safety check to destroy the NPC if it ended up clipped
+	 * 		inside geometry; used for random indoor spawns where Citizens may nudge the entity unexpectedly
+	 *
+	 * @return the created CopNpc, or null if spawning failed
+	 */
+	public CopNpc createCop(Location spawnLocation, int tier, boolean validateAfterSpawn) {
 		CopTierConfig tierConfig = configProvider.getTierConfig(tier);
 
 		String plainName = ChatUtil.replaceColorCodes(ChatUtil.color(tierConfig.displayName()), "");
@@ -71,7 +85,9 @@ public class CopNpcFactory {
 			return null;
 		}
 
-		scheduleDelayedSpawnValidation(npc);
+		if (validateAfterSpawn) {
+			scheduleDelayedSpawnValidation(npc);
+		}
 
 		if (npc.getEntity() != null) {
 			entityMarkManager.setEntityMark(npc.getEntity(), EntityMark.POLICE);
@@ -105,9 +121,13 @@ public class CopNpcFactory {
 	private void scheduleDelayedSpawnValidation(NPC npc) {
 		plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
 			if (npc == null || !npc.isSpawned()) return;
-			if (npc.getEntity() == null || !isSafeSpawnPosition(npc.getEntity())) {
-				npc.destroy();
-			}
+
+			Entity entity = npc.getEntity();
+			// Citizens PLAYER NPCs may have a null entity for a tick while initializing; skip rather than destroy.
+			if (entity == null) return;
+			if (isSafeSpawnPosition(entity)) return;
+
+			npc.destroy();
 		}, 1L);
 	}
 
@@ -128,6 +148,13 @@ public class CopNpcFactory {
 		int x = location.getBlockX();
 		int y = location.getBlockY();
 		int z = location.getBlockZ();
+
+		// Physics timing between spawn and this 1-tick callback can leave the entity fractionally inside
+		// the ground block before collision resolution runs. Step up one block so we evaluate the position
+		// the entity will actually occupy once standing.
+		if (!world.getBlockAt(x, y, z).isPassable()) {
+			y++;
+		}
 
 		Block feet      = world.getBlockAt(x, y, z);
 		Block head      = world.getBlockAt(x, y + 1, z);

@@ -32,16 +32,16 @@ public class JailManager {
 		jailService.detainPlayer(jailId, playerId);
 		// Save the updated jail (which now contains this player)
 		Jail jail = jailService.getJail(jailId);
-		if (jail != null) {
-			jailRepository.save(jail);
-		}
+
+		if (jail == null) return;
+		jailRepository.save(jail);
 	}
 
 	public void removeJail(int jailId) {
 		Jail jail = jailService.removeJail(jailId);
-		if (jail != null) {
-			jailRepository.delete(jail);
-		}
+
+		if (jail == null) return;
+		jailRepository.delete(jail);
 	}
 
 	public void releasePlayer(UUID playerId) {

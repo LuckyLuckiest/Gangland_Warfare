@@ -72,6 +72,10 @@ public class CopSpawnManager {
 		return locations;
 	}
 
+	public List<CopSpawner> getSpawners() {
+		return new ArrayList<>(spawners.values());
+	}
+
 	@Nullable
 	public Location getSpawnerLocation(int id) {
 		CopSpawner spawner = spawners.get(id);

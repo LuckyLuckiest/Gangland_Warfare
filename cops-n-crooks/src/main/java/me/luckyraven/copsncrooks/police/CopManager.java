@@ -8,6 +8,7 @@ import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
 import me.luckyraven.copsncrooks.police.state.CopState;
 import me.luckyraven.copsncrooks.police.targeting.TargetingManager;
 import me.luckyraven.copsncrooks.wanted.Wanted;
+import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -247,7 +248,23 @@ public class CopManager {
 			List<CopNpc> cops = playerCops.get(playerId);
 			if (cops == null) return;
 
-			cops.removeIf(cop -> !cop.isValid() || cop.isMarkedForRemoval());
+			cops.removeIf(cop -> {
+				if (cop.isMarkedForRemoval()) {
+					cop.destroy(entityMarkManager);
+					return true;
+				}
+				if (!cop.isValid()) {
+					// PLAYER-type Citizens NPCs may have a null entity for a tick or two while initializing —
+					// keep in list so the count is not artificially low, causing a spawn loop.
+					NPC npc = cop.getNpc();
+					if (npc.isSpawned() && npc.getEntity() == null) {
+						return false;
+					}
+					cop.destroy(entityMarkManager);
+					return true;
+				}
+				return false;
+			});
 
 			int targetCount  = spawnManager.getTargetCopCount(wantedLevel);
 			int currentCount = cops.size();
@@ -260,13 +277,9 @@ public class CopManager {
 
 				newCop.setTargetPlayerId(playerId);
 
-				// New spawns pursue immediately; escalate to combat if a combat alert is active
-				if (hasCombatAlert(playerId)) {
-					newCop.setCombatForced(true);
-					newCop.transitionTo(CopState.COMBAT);
-				} else {
-					newCop.transitionTo(CopState.PURSUING);
-				}
+				// New spawns pursue immediately; combatForced flag causes them to enter COMBAT once in range
+				newCop.setCombatForced(hasCombatAlert(playerId));
+				newCop.transitionTo(CopState.PURSUING);
 
 				cops.add(newCop);
 				currentCount++;
@@ -308,7 +321,19 @@ public class CopManager {
 			while (iterator.hasNext()) {
 				CopNpc cop = iterator.next();
 
-				if (!cop.isValid() || cop.isMarkedForRemoval()) {
+				if (cop.isMarkedForRemoval()) {
+					cop.destroy(entityMarkManager);
+					iterator.remove();
+					continue;
+				}
+
+				if (!cop.isValid()) {
+					// PLAYER-type Citizens NPCs may have a null entity for a tick or two while initializing —
+					// skip this tick instead of destroying so the NPC gets a chance to fully spawn.
+					NPC npc = cop.getNpc();
+					if (npc.isSpawned() && npc.getEntity() == null) {
+						continue;
+					}
 					cop.destroy(entityMarkManager);
 					iterator.remove();
 					continue;
