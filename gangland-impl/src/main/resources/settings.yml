@@ -277,21 +277,19 @@ Wanted:
 # +-------------+ #
 # | Cops Config | #
 # +-------------+ #
-
-# Controls how many cop NPCs spawn per wanted-level star.
 Cops:
    Count:
       # Set to true to evaluate the Formula string below instead of the linear Base/Per_Level/Max calculation.
       Formula_Enabled: false
       # Formula evaluated when Formula_Enabled is true.
       # Available variables: level, base, perLevel, max
-      # Example: "base + (level - 1) * perLevel"  (equivalent to the built-in linear formula)
+      # Example: "base + (level - 1) * perLevel" (equivalent to the built-in linear formula)
       Formula: "base + (level - 1) * perLevel"
       # Cops at wanted level 1 (used for both the linear formula and as the 'base' variable)
       Base: 2
       # Additional cops per wanted level above 1 (used for both modes, exposed as 'perLevel')
       Per_Level: 1
-      # Hard cap - result is always clamped to this value (should not exceed Max_Per_Player in cops.yml)
+      # Hard cap - result is always clamped to this value
       Max: 8
 
    # Core behavior values shared across all cop tiers.
@@ -370,6 +368,14 @@ Cops:
 
    # Number of full magazine reloads worth of ammo given to a cop NPC on spawn.
    Starting_Ammo_Magazines: 3
+
+# +-------------------+ #
+# | Detainment Config | #
+# +-------------------+ #
+Detainment:
+   Jail:
+      # The maximum capacity of jail inmates a jail can hold
+      Max_Capacity: 10
 
 # +-------------+#
 # | Gang Config |#
