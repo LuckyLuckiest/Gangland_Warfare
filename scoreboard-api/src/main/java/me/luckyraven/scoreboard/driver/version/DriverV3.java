@@ -93,7 +93,7 @@ public class DriverV3 extends DriverHandler {
 	 * Update all lines containing flash effects every tick for smooth animation
 	 */
 	private void updateFlashLines() {
-		for (Line line : getLines()) {
+		for (Line line : List.copyOf(getLines())) {
 			if (line == getTitle()) continue;
 
 			// Check if this line contains flash effects
