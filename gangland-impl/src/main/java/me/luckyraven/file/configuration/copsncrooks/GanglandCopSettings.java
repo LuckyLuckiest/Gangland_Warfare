@@ -27,19 +27,8 @@ public class GanglandCopSettings implements CopSettings {
 			String formula = Settings.getCopCountFormula();
 
 			if (formula != null && !formula.isBlank()) {
-				try {
-					double result = new ExpressionBuilder(formula).variables("level", "base", "perLevel", "max")
-																  .build()
-																  .setVariable("level", level)
-																  .setVariable("base", base)
-																  .setVariable("perLevel", perLevel)
-																  .setVariable("max", max)
-																  .evaluate();
-
-					return Math.max(1, Math.min(max, (int) Math.round(result)));
-				} catch (Exception ignored) {
-					// fall through to linear formula
-				}
+				Integer max1 = formulaCalculation(level, formula, base, perLevel, max);
+				if (max1 != null) return max1;
 			}
 		}
 
@@ -192,6 +181,11 @@ public class GanglandCopSettings implements CopSettings {
 	}
 
 	@Override
+	public double getMinRepathAfterLossTicks() {
+		return Settings.getCopNavMinRepathAfterLossTicks();
+	}
+
+	@Override
 	public int getMaxReturnTicks() {
 		return Settings.getCopReturnMaxTicks();
 	}
@@ -204,5 +198,22 @@ public class GanglandCopSettings implements CopSettings {
 	@Override
 	public int getStartingAmmoMagazines() {
 		return Settings.getCopStartingAmmoMagazines();
+	}
+
+	private Integer formulaCalculation(int level, String formula, int base, int perLevel, int max) {
+		try {
+			double result = new ExpressionBuilder(formula).variables("level", "base", "perLevel", "max")
+														  .build()
+														  .setVariable("level", level)
+														  .setVariable("base", base)
+														  .setVariable("perLevel", perLevel)
+														  .setVariable("max", max)
+														  .evaluate();
+
+			return Math.max(1, Math.min(max, (int) Math.round(result)));
+		} catch (Exception ignored) {
+			// fall through to linear formula
+		}
+		return null;
 	}
 }

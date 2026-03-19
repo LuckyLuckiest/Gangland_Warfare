@@ -126,6 +126,8 @@ public class Settings implements FileInitializer {
 	// cop misc configuration
 	private static @Getter int copStartingAmmoMagazines;
 
+	private static @Getter int jailMaxCapacity;
+
 	// loot chest configuration
 	private static @Getter long   lootChestCountdownTimer;
 	private static @Getter String lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
@@ -341,21 +343,24 @@ public class Settings implements FileInitializer {
 		civilianItemDrops              = civilianDrops.getStringList("Items");
 
 		// cop core
-		var copCore = settings.getConfigurationSection("Cops.Behaviour");
-		Objects.requireNonNull(copCore);
+		var cop = settings.getConfigurationSection("Cops");
+		Objects.requireNonNull(cop);
 
-		copMaxPerPlayer        = copCore.getInt("Max_Per_Player", 8);
-		copAiTickRate          = copCore.getInt("AI_Tick_Rate", 10);
-		copSpawnCheckRate      = copCore.getInt("Spawn_Check_Rate", 40);
-		copCuffRadius          = copCore.getDouble("Cuff_Radius", 3.0);
-		copMaxCuffAttempts     = copCore.getInt("Max_Cuff_Attempts", 3);
-		copCuffCooldownTicks   = copCore.getInt("Cuff_Cooldown_Ticks", 100);
-		copAlertRange          = copCore.getDouble("Alert_Range", 40.0);
-		copCombatRange         = copCore.getDouble("Combat_Range", 4.0);
-		copAttackCooldownTicks = copCore.getInt("Attack_Cooldown_Ticks", 20);
+		var copBehavior = cop.getConfigurationSection("Behaviour");
+		Objects.requireNonNull(copBehavior);
+
+		copMaxPerPlayer        = copBehavior.getInt("Max_Per_Player", 8);
+		copAiTickRate          = copBehavior.getInt("AI_Tick_Rate", 10);
+		copSpawnCheckRate      = copBehavior.getInt("Spawn_Check_Rate", 40);
+		copCuffRadius          = copBehavior.getDouble("Cuff_Radius", 3.0);
+		copMaxCuffAttempts     = copBehavior.getInt("Max_Cuff_Attempts", 3);
+		copCuffCooldownTicks   = copBehavior.getInt("Cuff_Cooldown_Ticks", 100);
+		copAlertRange          = copBehavior.getDouble("Alert_Range", 40.0);
+		copCombatRange         = copBehavior.getDouble("Combat_Range", 4.0);
+		copAttackCooldownTicks = copBehavior.getInt("Attack_Cooldown_Ticks", 20);
 
 		// cop count
-		var copsCount = settings.getConfigurationSection("Cops.Count");
+		var copsCount = cop.getConfigurationSection("Count");
 		Objects.requireNonNull(copsCount);
 
 		copCountFormulaEnabled = copsCount.getBoolean("Formula_Enabled", false);
@@ -365,7 +370,7 @@ public class Settings implements FileInitializer {
 		copCountMax            = copsCount.getInt("Max", 8);
 
 		// cop spawn
-		var copsSpawn = settings.getConfigurationSection("Cops.Spawn");
+		var copsSpawn = cop.getConfigurationSection("Spawn");
 		Objects.requireNonNull(copsSpawn);
 
 		copSpawnMinDistance             = copsSpawn.getDouble("Min_Distance", 10.0);
@@ -381,7 +386,7 @@ public class Settings implements FileInitializer {
 		copSpawnPhase2Attempts          = copsSpawn.getInt("Phase2_Attempts", 15);
 
 		// cop navigation
-		var copsNav = settings.getConfigurationSection("Cops.Navigation");
+		var copsNav = cop.getConfigurationSection("Navigation");
 		Objects.requireNonNull(copsNav);
 
 		copNavRecalculationTicks      = copsNav.getInt("Recalculation_Ticks", 10);
@@ -395,14 +400,24 @@ public class Settings implements FileInitializer {
 		copNavMinRepathAfterLossTicks = copsNav.getDouble("Min_Repath_After_Loss_Ticks", 2.0);
 
 		// cop return / despawn
-		var copsReturn = settings.getConfigurationSection("Cops.Return");
+		var copsReturn = cop.getConfigurationSection("Return");
 		Objects.requireNonNull(copsReturn);
 
 		copReturnMaxTicks               = copsReturn.getInt("Max_Ticks", 600);
 		copReturnStationArrivalDistance = copsReturn.getDouble("Station_Arrival_Distance", 3.0);
 
 		// cop misc
-		copStartingAmmoMagazines = settings.getInt("Cops.Starting_Ammo_Magazines", 3);
+		copStartingAmmoMagazines = cop.getInt("Starting_Ammo_Magazines", 3);
+
+		// detainment
+		var detainment = settings.getConfigurationSection("Detainment");
+		Objects.requireNonNull(detainment);
+
+		// jail
+		var jail = detainment.getConfigurationSection("Jail");
+		Objects.requireNonNull(jail);
+
+		jailMaxCapacity = jail.getInt("Max_Capacity", 10);
 
 		// loot chest
 		var lootChest = settings.getConfigurationSection("Loot_Chest");

@@ -471,29 +471,29 @@
 		"usage": "/glw uncuff <player>",
 		"description": "Releases the specified player from handcuffs."
 	},
-	"jail": {
-		"usage": "/glw jail <player|create|remove>",
-		"description": "Shows jail help page."
-	},
 	"jail_help": {
 		"usage": "/glw jail help <page>",
 		"description": "Shows the specified page in jail menu."
 	},
-	"jail_player": {
-		"usage": "/glw jail <player> <jailId>",
-		"description": "Jails the specified player in the given jail."
+	"jail_throw": {
+		"usage": "/glw jail throw <player>",
+		"description": "Jails the specified player in an empty jail."
 	},
 	"jail_create": {
-		"usage": "/glw jail create <id>",
-		"description": "Creates a jail at your current location with the given id."
+		"usage": "/glw jail create",
+		"description": "Creates a jail at your current location."
 	},
 	"jail_remove": {
 		"usage": "/glw jail remove <id>",
 		"description": "Removes the jail with the specified id."
 	},
-	"unjail": {
-		"usage": "/glw unjail <player>",
+	"jail_release": {
+		"usage": "/glw jail release <player>",
 		"description": "Releases the specified player from jail."
+	},
+	"jail_list": {
+		"usage": "/glw jail list",
+		"description": "Shows all the available jails."
 	},
 	"cop_help": {
 		"usage": "/glw cop help <page>",

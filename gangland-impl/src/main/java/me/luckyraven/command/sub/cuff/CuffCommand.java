@@ -1,4 +1,4 @@
-package me.luckyraven.command.sub.copsncrooks;
+package me.luckyraven.command.sub.cuff;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
@@ -15,8 +15,12 @@ import java.util.Map;
 
 public final class CuffCommand extends CommandHandler {
 
+	private final DetainmentService detainmentService;
+
 	public CuffCommand(Gangland gangland) {
 		super(gangland, "cuff", false);
+
+		this.detainmentService = gangland.getInitializer().getDetainmentService();
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -34,23 +38,7 @@ public final class CuffCommand extends CommandHandler {
 
 	@Override
 	protected void initializeArguments() {
-		String notFound = Messages.PLAYER_NOT_FOUND.toString();
-
-		Argument playerArg = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
-			String playerStr = args[1];
-			Player target    = Bukkit.getPlayer(playerStr);
-
-			if (target == null) {
-				sender.sendMessage(notFound.replace("%player%", playerStr));
-				return;
-			}
-
-			DetainmentService detainmentService = getGangland().getInitializer().getDetainmentService();
-			detainmentService.handcuff(target);
-
-			sender.sendMessage(ChatUtil.commandMessage("&aHandcuffed &e" + target.getName() + "&a."));
-		}, sender -> Bukkit.getOnlinePlayers()
-				.stream().map(Player::getName).toList());
+		Argument playerArg = getPlayerArg();
 
 		getArgument().addSubArgument(playerArg);
 	}
@@ -58,5 +46,27 @@ public final class CuffCommand extends CommandHandler {
 	@Override
 	protected void help(CommandSender sender, int page) {
 		getHelpInfo().displayHelp(sender, page, "Cuff");
+	}
+
+	private Argument getPlayerArg() {
+		return new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
+			String playerStr = args[1];
+			Player target    = Bukkit.getPlayer(playerStr);
+
+			if (target == null) {
+				sender.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", playerStr));
+				return;
+			}
+
+			if (detainmentService.isHandcuffed(target)) {
+				sender.sendMessage(ChatUtil.errorMessage("This player is already cuffed!"));
+				return;
+			}
+
+			detainmentService.handcuff(target);
+
+			sender.sendMessage(ChatUtil.commandMessage("&aHandcuffed &e" + target.getName() + "&a."));
+		}, sender -> Bukkit.getOnlinePlayers()
+				.stream().filter(player -> !detainmentService.isHandcuffed(player)).map(Player::getName).toList());
 	}
 }

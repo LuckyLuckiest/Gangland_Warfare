@@ -1,24 +1,23 @@
-package me.luckyraven.command.sub.copsncrooks;
+package me.luckyraven.command.sub.jail;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
-import me.luckyraven.copsncrooks.jail.JailManager;
+import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
-class JailCreateCommand extends SubArgument {
+class JailRemoveCommand extends SubArgument {
 
 	private final Gangland       gangland;
 	private final Tree<Argument> tree;
 
-	JailCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(gangland, "create", tree, parent);
+	JailRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+		super(gangland, "remove", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
@@ -34,11 +33,6 @@ class JailCreateCommand extends SubArgument {
 
 	private void idArgument() {
 		Argument idArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			if (!(sender instanceof Player player)) {
-				sender.sendMessage(ChatUtil.commandMessage("&cOnly players can use this command."));
-				return;
-			}
-
 			String idStr = args[2];
 			int    id;
 			try {
@@ -48,11 +42,11 @@ class JailCreateCommand extends SubArgument {
 				return;
 			}
 
-			JailManager jailManager = gangland.getInitializer().getJailManager();
-			jailManager.setJailLocation(id, player.getLocation());
+			JailService jailService = gangland.getInitializer().getJailService();
+			jailService.removeJail(id);
 
-			sender.sendMessage(ChatUtil.commandMessage("&aJail &e" + id + "&a created at your location."));
-		}, sender -> gangland.getInitializer().getJailManager().getJailService().getCells()
+			sender.sendMessage(ChatUtil.commandMessage("&aJail &e" + id + "&a removed."));
+		}, sender -> gangland.getInitializer().getJailService().getJailRegistry().getCells()
 				.stream().map(jail -> String.valueOf(jail.getId())).toList());
 
 		this.addSubArgument(idArg);

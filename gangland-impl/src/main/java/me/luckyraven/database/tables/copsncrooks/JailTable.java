@@ -14,17 +14,19 @@ public class JailTable extends Table<Jail> {
 	public JailTable() {
 		super("jail");
 
-		Attribute<Integer> id    = new Attribute<>("id", true, Integer.class);
-		Attribute<String>  world = new Attribute<>("world", false, String.class);
-		Attribute<Double>  x     = new Attribute<>("x", false, Double.class);
-		Attribute<Double>  y     = new Attribute<>("y", false, Double.class);
-		Attribute<Double>  z     = new Attribute<>("z", false, Double.class);
+		Attribute<Integer> id          = new Attribute<>("id", true, Integer.class);
+		Attribute<String>  world       = new Attribute<>("world", false, String.class);
+		Attribute<Double>  x           = new Attribute<>("x", false, Double.class);
+		Attribute<Double>  y           = new Attribute<>("y", false, Double.class);
+		Attribute<Double>  z           = new Attribute<>("z", false, Double.class);
+		Attribute<Integer> maxCapacity = new Attribute<>("max_capacity", false, Integer.class);
 
 		this.addAttribute(id);
 		this.addAttribute(world);
 		this.addAttribute(x);
 		this.addAttribute(y);
 		this.addAttribute(z);
+		this.addAttribute(maxCapacity);
 	}
 
 	@Override
@@ -32,7 +34,7 @@ public class JailTable extends Table<Jail> {
 		Location location = data.getLocation();
 
 		return new Object[]{data.getId(), Objects.requireNonNull(location.getWorld()).getName(), location.getX(),
-							location.getY(), location.getZ()};
+							location.getY(), location.getZ(), data.getMaxCapacity()};
 	}
 
 	@Override

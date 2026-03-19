@@ -49,6 +49,11 @@ class CopListCommand extends SubArgument {
 					.map(Player::getPlayer)
 					.toList();
 
+			if (targetedPlayers.isEmpty()) {
+				sender.sendMessage(ChatUtil.commandMessage("No players are being chased by cops."));
+				return;
+			}
+
 			List<String> list = targetedPlayers.stream().map(player -> "&b- &r" + player.getName()).toList();
 			sender.sendMessage(ChatUtil.color("&7Players being chased by cops:"));
 			sender.sendMessage(ChatUtil.color(String.join("\n", list)));

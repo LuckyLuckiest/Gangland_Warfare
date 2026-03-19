@@ -1,6 +1,7 @@
 package me.luckyraven.database.repositories.copsncrooks;
 
 import me.luckyraven.copsncrooks.jail.Jail;
+import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.database.tables.copsncrooks.JailTable;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
@@ -39,18 +40,21 @@ public class JailRepository extends AbstractRepository<Jail> {
 		for (Object[] result : data) {
 			int v = 0;
 
-			int    id        = (int) result[v++];
-			String worldName = String.valueOf(result[v++]);
-			double x         = (double) result[v++];
-			double y         = (double) result[v++];
-			double z         = (double) result[v];
+			int    id          = (int) result[v++];
+			String worldName   = String.valueOf(result[v++]);
+			double x           = (double) result[v++];
+			double y           = (double) result[v++];
+			double z           = (double) result[v++];
+			int    maxCapacity = (int) result[v];
 
 			World world = Bukkit.getWorld(worldName);
 
 			if (world == null) continue;
 
 			Location location = new Location(world, x, y, z);
-			jails.add(new Jail(id, location));
+			jails.add(new Jail(id, location, maxCapacity));
+
+			JailService.ID = id;
 		}
 
 		return jails;
