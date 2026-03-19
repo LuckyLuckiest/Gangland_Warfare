@@ -3,27 +3,44 @@ package me.luckyraven.command.sub.rank;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
+import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 
 class RankParentAddCommand extends SubArgument {
 
-	private final RankManager rankManager;
+	private final Gangland       gangland;
+	private final Tree<Argument> tree;
 
 	RankParentAddCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "add", tree, parent);
 
-		this.rankManager = gangland.getInitializer().getRankManager();
+		this.gangland = gangland;
+		this.tree     = tree;
+
+		rankParent();
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			Rank rank = rankManager.get(args[3]);
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<rank>"));
+		};
+	}
+
+	private void rankParent() {
+		Argument rankArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<parent>"));
+		});
+
+		Argument parentArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+			RankManager rankManager = gangland.getInitializer().getRankManager();
+			Rank        rank        = rankManager.get(args[3]);
 
 			if (rank == null) {
 				sender.sendMessage(Messages.INVALID_RANK.toString());
@@ -48,6 +65,8 @@ class RankParentAddCommand extends SubArgument {
 			String replace = string.replace("%parent%", childRank.getName()).replace("%rank%", rank.getName());
 
 			sender.sendMessage(replace);
-		};
+		});
+
+		rankArg.addSubArgument(parentArg);
 	}
 }

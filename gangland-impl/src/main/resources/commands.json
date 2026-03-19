@@ -299,6 +299,14 @@
 		"usage": "/glw rank traverse",
 		"description": "Shows the next rank(s)."
 	},
+	"rank_parent_add": {
+		"usage": "/glw rank parent add <rank> <parent>",
+		"description": "Adds the rank to the specified parent."
+	},
+	"rank_parent_remove": {
+		"usage": "/glw rank parent remove <rank> <parent>",
+		"description": "Removes the rank from the specified parent."
+	},
 	"bounty": {
 		"usage": "/glw bounty",
 		"description": "Shows the current bounty or help menu."
