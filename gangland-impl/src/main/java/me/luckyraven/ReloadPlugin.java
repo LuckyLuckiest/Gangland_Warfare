@@ -1,8 +1,8 @@
 package me.luckyraven;
 
 import lombok.CustomLog;
-import me.luckyraven.copsncrooks.detainment.DetainmentService;
-import me.luckyraven.copsncrooks.jail.JailManager;
+import me.luckyraven.copsncrooks.detainment.DetainmentRegistry;
+import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.member.Member;
@@ -354,9 +354,9 @@ public final class ReloadPlugin {
 	 * @param resetCache if old data needs to be cleared
 	 */
 	public void jailInitialize(boolean resetCache) {
-		JailManager jailManager = initializer.getJailManager();
+		JailService jailService = initializer.getJailService();
 
-		if (resetCache) jailManager.reload();
+		if (resetCache) jailService.reload();
 	}
 
 	/**
@@ -365,9 +365,9 @@ public final class ReloadPlugin {
 	 * @param resetCache if old data needs to be cleared
 	 */
 	public void detainmentInitialize(boolean resetCache) {
-		DetainmentService detainmentService = initializer.getDetainmentService();
+		DetainmentRegistry registry = initializer.getDetainmentRegistry();
 
-		if (resetCache) detainmentService.getDetainmentManager().reload();
+		if (resetCache) registry.reload();
 	}
 
 	/**

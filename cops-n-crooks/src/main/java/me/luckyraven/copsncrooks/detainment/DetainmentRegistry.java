@@ -1,7 +1,8 @@
 package me.luckyraven.copsncrooks.detainment;
 
 import lombok.Getter;
-import me.luckyraven.copsncrooks.jail.JailService;
+import me.luckyraven.copsncrooks.jail.Jail;
+import me.luckyraven.copsncrooks.jail.JailRegistry;
 import me.luckyraven.persistence.repository.IRepository;
 
 import java.util.HashMap;
@@ -9,17 +10,17 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class DetainmentManager {
+public class DetainmentRegistry {
 
 	private final IRepository<DetainedPlayer> detainmentRepository;
-	private final JailService                 jailService;
+	private final JailRegistry                jailRegistry;
 
 	@Getter
 	private final Map<UUID, DetainedPlayer> detainedPlayers;
 
-	public DetainmentManager(IRepository<DetainedPlayer> detainmentRepository, JailService jailService) {
+	public DetainmentRegistry(IRepository<DetainedPlayer> detainmentRepository, JailRegistry jailRegistry) {
 		this.detainmentRepository = detainmentRepository;
-		this.jailService          = jailService;
+		this.jailRegistry         = jailRegistry;
 		this.detainedPlayers      = new ConcurrentHashMap<>();
 
 		initialize();
@@ -56,16 +57,29 @@ public class DetainmentManager {
 
 		if (detainedPlayer == null) {
 			int jailId = state == DetainmentState.JAILED ? resolveJailId(playerId) : -1;
+
 			detainedPlayer = new DetainedPlayer(playerId, jailId, state);
+
 			detainedPlayers.put(playerId, detainedPlayer);
 			detainmentRepository.save(detainedPlayer);
-		} else {
-			if (state == DetainmentState.JAILED && detainedPlayer.getJailId() == -1) {
-				detainedPlayer.setJailId(resolveJailId(playerId));
-			}
-			detainedPlayer.setState(state);
-			detainmentRepository.save(detainedPlayer);
+			return;
 		}
+
+		if (state == DetainmentState.JAILED && detainedPlayer.getJailId() == -1) {
+			detainedPlayer.setJailId(resolveJailId(playerId));
+		}
+
+		detainedPlayer.setState(state);
+		detainmentRepository.save(detainedPlayer);
+	}
+
+	public Jail findEmptyJail() {
+		for (Jail jail : jailRegistry.getCells()) {
+			if (jail.getJailedPlayersId().size() >= jail.getMaxCapacity()) continue;
+
+			return jail;
+		}
+		return null;
 	}
 
 	public boolean isDetained(UUID playerId) {
@@ -88,16 +102,15 @@ public class DetainmentManager {
 	}
 
 	/**
-	 * Resolves the jail ID for a player transitioning to the JAILED state. First checks if {@link JailService} has
-	 * already assigned them to a specific jail (via
-	 * {@link me.luckyraven.copsncrooks.detainment.DetainmentService#jail}), then falls back to the first available
-	 * jail.
+	 * Resolves the jail ID for a player transitioning to the JAILED state. First checks if {@link JailRegistry} has
+	 * already assigned them to a specific jail (via {@link DetainmentService#jail}), then falls back to the first
+	 * available jail.
 	 */
 	private Integer resolveJailId(UUID playerId) {
-		Integer assigned = jailService.getJailIdForPlayer(playerId);
+		Integer assigned = jailRegistry.getJailIdForPlayer(playerId);
 		if (assigned != null) return assigned;
 
-		return jailService.findAvailableJailId();
+		return findEmptyJail().getId();
 	}
 
 	private void initialize() {

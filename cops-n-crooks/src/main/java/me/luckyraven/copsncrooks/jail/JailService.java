@@ -1,107 +1,77 @@
 package me.luckyraven.copsncrooks.jail;
 
+import lombok.Getter;
+import me.luckyraven.persistence.repository.IRepository;
 import org.bukkit.Location;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.UUID;
 
 public class JailService {
 
-	private final Map<Integer, Jail> cells;
+	public static int ID = 0;
 
-	public JailService() {
-		this.cells = new LinkedHashMap<>();
+	@Getter
+	private final JailRegistry      jailRegistry;
+	private final IRepository<Jail> jailRepository;
+
+	public JailService(JailRegistry jailRegistry, IRepository<Jail> jailRepository) {
+		this.jailRegistry   = jailRegistry;
+		this.jailRepository = jailRepository;
+
+		initialize();
+
+		// Set the data supplier so the repository can save the current state
+		jailRepository.setDataSupplier(jailRegistry::getCells);
 	}
 
-	@Nullable
-	public Jail getJail(int id) {
-		return cells.get(id);
-	}
+	public Jail setJailLocation(Location location, int maxCapacity) {
+		ID++;
 
-	@Nullable
-	public Location getJailLocation(int id) {
-		Jail jail = cells.get(id);
-		return jail == null ? null : jail.getLocation();
-	}
-
-	@Nullable
-	public Location getJailLocation(UUID playerId) {
-		for (Jail jail : cells.values()) {
-			if (!jail.getJailedPlayersId().contains(playerId)) continue;
-
-			return jail.getLocation();
-		}
-
-		return null;
-	}
-
-	public Jail setJailLocation(int id, Location location) {
-		Jail jail = cells.get(id);
-
-		if (jail == null) {
-			jail = new Jail(id, location);
-			cells.put(id, jail);
-			return jail;
-		}
-
-		jail.setLocation(location);
+		Jail jail = jailRegistry.setJailLocation(ID, location, maxCapacity);
+		jailRepository.save(jail);
 		return jail;
 	}
 
-	public void addJail(Jail jail) {
-		cells.put(jail.getId(), jail);
+	public void detainPlayer(int jailId, UUID playerId) {
+		jailRegistry.detainPlayer(jailId, playerId);
+		// Save the updated jail (which now contains this player)
+		Jail jail = jailRegistry.getJail(jailId);
+
+		if (jail == null) return;
+		jailRepository.save(jail);
 	}
 
-	public void detainPlayer(int jailId, UUID playerId) {
-		releasePlayer(playerId);
+	public void removeJail(int jailId) {
+		Jail jail = jailRegistry.removeJail(jailId);
 
-		Jail jail = cells.get(jailId);
-		if (jail == null) {
-			throw new IllegalArgumentException("Unknown jail id: " + jailId);
-		}
-
-		jail.addPlayer(playerId);
+		if (jail == null) return;
+		jailRepository.delete(jail);
 	}
 
 	public void releasePlayer(UUID playerId) {
-		for (Jail jail : cells.values()) {
-			jail.removePlayer(playerId);
-		}
+		jailRegistry.releasePlayer(playerId);
+		// Save all jails since we don't know which one had this player
+		jailRepository.saveAll(jailRegistry.getCells());
 	}
 
 	/**
-	 * Returns the jail ID the player is currently assigned to, or null if not in any jail.
+	 * Save all jails to database
 	 */
-	@Nullable
-	public Integer getJailIdForPlayer(UUID playerId) {
-		for (Jail jail : cells.values()) {
-			if (jail.getJailedPlayersId().contains(playerId)) {
-				return jail.getId();
-			}
-		}
-		return null;
+	public void saveAll() {
+		jailRepository.saveAllFromMemory();
 	}
 
 	/**
-	 * Returns the first available jail ID, or null if no jails are registered.
+	 * Reloads jail data from the database, clearing the current in-memory state first.
 	 */
-	@Nullable
-	public Integer findAvailableJailId() {
-		for (Jail jail : cells.values()) {
-			return jail.getId();
+	public void reload() {
+		jailRegistry.clear();
+		initialize();
+	}
+
+	private void initialize() {
+		for (Jail jail : jailRepository.loadAll()) {
+			jailRegistry.addJail(jail);
 		}
-		return null;
-	}
-
-	public List<Jail> getCells() {
-		return new ArrayList<>(cells.values());
-	}
-
-	public Jail removeJail(int id) {
-		return cells.remove(id);
-	}
-
-	public void clear() {
-		cells.clear();
 	}
 }

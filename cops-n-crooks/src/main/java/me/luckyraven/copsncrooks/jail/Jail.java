@@ -12,13 +12,15 @@ public class Jail {
 
 	private final int        id;
 	private final List<UUID> jailedPlayersId;
+	private final int        maxCapacity;
 
 	private Location location;
 
-	public Jail(int id, Location location) {
+	public Jail(int id, Location location, int maxCapacity) {
 		this.id              = id;
 		this.location        = location.clone();
 		this.jailedPlayersId = new ArrayList<>();
+		this.maxCapacity     = maxCapacity;
 	}
 
 	public Location getLocation() {

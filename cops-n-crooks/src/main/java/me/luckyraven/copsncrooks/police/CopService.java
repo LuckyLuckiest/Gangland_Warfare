@@ -49,7 +49,8 @@ public class CopService {
 		CopSpawnManager spawnManager = new CopSpawnManager(copNpcFactory, provider, spawnerRepository);
 		spawnManagerHolder[0] = spawnManager;
 
-		copManager = new CopManager(plugin, spawnManager, targetingManager, provider, entityMarkManager);
+		copManager = new CopManager(plugin, spawnManager, targetingManager, provider, entityMarkManager,
+									detainmentService);
 
 		return copManager;
 	}

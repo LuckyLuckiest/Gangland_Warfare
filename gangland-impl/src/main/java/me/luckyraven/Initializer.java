@@ -9,12 +9,15 @@ import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.command.sub.*;
 import me.luckyraven.command.sub.bank.BankCommand;
 import me.luckyraven.command.sub.bounty.BountyCommand;
-import me.luckyraven.command.sub.copsncrooks.*;
+import me.luckyraven.command.sub.cops.CopCommand;
+import me.luckyraven.command.sub.cuff.CuffCommand;
+import me.luckyraven.command.sub.cuff.UncuffCommand;
 import me.luckyraven.command.sub.debug.ComponentExecutorCommand;
 import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
 import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.command.sub.gang.GangCommand;
+import me.luckyraven.command.sub.jail.JailCommand;
 import me.luckyraven.command.sub.lootchest.LootChestWandCommand;
 import me.luckyraven.command.sub.rank.RankCommand;
 import me.luckyraven.command.sub.wanted.WantedCommand;
@@ -29,11 +32,11 @@ import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.copsncrooks.bounty.BountySettings;
 import me.luckyraven.copsncrooks.combo.KillCombo;
 import me.luckyraven.copsncrooks.detainment.DetainedPlayer;
-import me.luckyraven.copsncrooks.detainment.DetainmentManager;
+import me.luckyraven.copsncrooks.detainment.DetainmentRegistry;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.jail.Jail;
-import me.luckyraven.copsncrooks.jail.JailManager;
+import me.luckyraven.copsncrooks.jail.JailRegistry;
 import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.copsncrooks.police.CopManager;
 import me.luckyraven.copsncrooks.police.CopService;
@@ -167,7 +170,8 @@ public final class Initializer {
 	private CopService                 copService;
 	private KillCombo                  killCombo;
 	private DetainmentService          detainmentService;
-	private JailManager                jailManager;
+	private DetainmentRegistry         detainmentRegistry;
+	private JailService                jailService;
 	private CopSpawnManager            copSpawnManager;
 	// Addons
 	private Settings                   settings;
@@ -537,18 +541,17 @@ public final class Initializer {
 	}
 
 	private void detainment() {
-		JailService jailService = new JailService();
+		JailRegistry jailRegistry = new JailRegistry();
 
 		RepositoryRegistry          repositoryRegistry   = ganglandDatabase.getRepositoryRegistry();
 		IRepository<Jail>           jailRepository       = repositoryRegistry.getRepository(Jail.class);
 		IRepository<DetainedPlayer> detainmentRepository = repositoryRegistry.getRepository(DetainedPlayer.class);
 
-		jailManager = new JailManager(jailService, jailRepository);
+		jailService = new JailService(jailRegistry, jailRepository);
 
-		DetainmentManager detainmentManager = new DetainmentManager(detainmentRepository, jailService);
-
-		detainmentService = new DetainmentService(gangland, detainmentManager, jailManager,
-												  jailManager.getJailService(), Gangland.FULL_PREFIX);
+		detainmentRegistry = new DetainmentRegistry(detainmentRepository, jailRegistry);
+		detainmentService  = new DetainmentService(gangland, detainmentRegistry, jailService,
+												   jailService.getJailRegistry(), Gangland.FULL_PREFIX);
 	}
 
 	private void signLoader() {
@@ -609,7 +612,7 @@ public final class Initializer {
 		dependencyContainer.registerInstance(CopManager.class, copService.getCopManager());
 		dependencyContainer.registerInstance(KillCombo.class, killCombo);
 		dependencyContainer.registerInstance(DetainmentService.class, detainmentService);
-		dependencyContainer.registerInstance(JailManager.class, jailManager);
+		dependencyContainer.registerInstance(JailService.class, jailService);
 
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 
@@ -646,8 +649,7 @@ public final class Initializer {
 		commandManager.addCommand(new CuffCommand(gangland));
 		commandManager.addCommand(new UncuffCommand(gangland));
 		commandManager.addCommand(new JailCommand(gangland));
-		commandManager.addCommand(new UnjailCommand(gangland));
-		commandManager.addCommand(new CopSpawnerCommand(gangland));
+		commandManager.addCommand(new CopCommand(gangland));
 
 		// gang commands
 		if (Settings.isGangEnabled()) {
