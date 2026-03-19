@@ -1,99 +1,174 @@
 # Gangland Warfare
 
-Dive into ***Gangland Warfare***, where Minecraft meets the thrill of GTA! Choose your path as a cunning criminal or a
-law-abiding cop in this dynamic, action-packed plugin. As a criminal, orchestrate heists, smuggle contraband, and
-outsmart the authorities. As a cop, enforce the law, chase down fugitives, and restore order to the streets. Customize
-your gear, complete daring missions, and rise through the ranks. Experience the perfect blend of urban chaos and
-Minecraft creativity.
+> A GTA-inspired Minecraft plugin bringing street-level gang warfare, police pursuit, and an underground economy to your
+> server.
 
-***Gangland Warfare*** fuses the thrill of GTA with the creativity of Minecraft, offering a rich and immersive
-experience. Dive into a world where you can choose your path as a criminal or a cop and explore these exciting features:
+![Minecraft](https://img.shields.io/badge/Minecraft-1.21%2B-brightgreen?style=flat-square)
+![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square)
+![Version](https://img.shields.io/badge/Version-0.7.3--DEV-blue?style=flat-square)
+![Build](https://img.shields.io/badge/Build-Maven-red?style=flat-square)
 
-### Choose Your Path: Cop, Criminal, or Civilian
+---
 
-- **Criminal Empire:**
-  Dive into the underworld, orchestrate daring heists, smuggle contraband, and build your empire. Rise through your
-  gang's ranks and become the city's most notorious criminal.
+## Overview
 
-- **Law Enforcement:**
-  Join the ranks of the police force, chase down fugitives, and bring criminals to justice. Patrol the streets, respond
-  to crimes in progress, and maintain order in a city rife with chaos.
+Gangland Warfare is a multi-module Spigot/Paper plugin that lets players form gangs, accumulate wealth, build a wanted
+level, and evade — or become — the police. It features a fully custom weapon system, AI-driven cop NPCs, a hierarchical
+rank engine, loot chests, and a persistent economy backed by either MySQL or SQLite.
 
-- **Civilian Life:**
-  Engage in everyday activities, choose jobs, own properties, and participate in various quests for rewards.
+---
 
-### Dynamic Gameplay Features
+## Features
 
-- **Weapons:**
-  Equip a variety of customizable weapons, from melee to firearms, enhancing your combat capabilities.
+### 🚔 Cops N Crooks
 
-- **Phone System:**
-  Use your in-game phone for bounties, mini-missions, teleportation via taxi, and player information.
+Police NPCs powered by the Citizens API pursue wanted players, engage in combat, and make arrests. Cop count and
+strength scale with the player's wanted level — from a pair of rookie officers at one star to a military response at
+five. Arrested players are handcuffed, jailed, and held until released.
 
-- **Economy:**
-  Manage your wealth with in-game banking and trade with dealers.
+### 🔫 Weapons
 
-### Exciting Missions and Challenges
+A fully custom weapon system with configurable fire modes (auto, burst, single), magazine-based reload mechanics,
+armor-piercing, bullet penetration, flat damage, and projectile tracers. Cops carry weapons too, drawing from their own
+configurable loadouts per tier.
 
-- **Jobs and Missions:**
-  Take on jobs and missions as a criminal, cop, or civilian. Criminals can plan heists and manage hideouts, cops can
-  clear criminal hideouts and tackle corruption, and civilians can own properties and complete diverse quests.
+### 🛡️ Wearables
 
-- **Bounty System:**
-  Set and claim bounties on players, adding an extra layer of excitement and competition. Whether hunting criminals or
-  evading bounty hunters, every moment is packed with action.
+Custom armor pieces with a base damage reduction percentage and stackable protective traits — `REINFORCED`,
+`BULLETPROOF`, `PADDED`, `TOUGHENED`, `FIRE_RESISTANT`, `REACTIVE`, and `LIGHTWEIGHT`. Traits from multiple pieces
+stack.
 
-- **Wanted Levels:**
-  Experience intense chases with a dynamic wanted-level system that increases police presence as your infamy grows.
+### 🔧 Repair System
 
-- **Heists and Robberies:**
-  Plan and execute elaborate heists for big rewards, requiring strategy and coordination.
+Weapons and wearables can be repaired using configurable materials — from disposable field kits that restore a small
+amount of durability to full repair kits that restore an item completely.
 
-### Immersive World Elements
+### 🏪 Trade Signs
 
-- **NPCs:**
-  Various NPCs, including police officers, SWAT teams, special forces, and dealers, populate the world and interact
-  dynamically with players.
+In-world signs that let players buy and sell weapons and ammunition at fixed prices. No external economy plugin
+required.
 
-- **Dealers:**
-  Interact with the black market and regular dealers for unique items and resources. Use commands to create and manage
-  dealers with interactive GUIs.
+### ⭐ Wanted & Bounty
 
-- **Casino:**
-  Engage in casino games like poker and slot machines for a chance to win money and exclusive items.
+A kill-streak-driven wanted level that escalates the police response. A parallel bounty system lets players place
+rewards on each other's heads, with a kill multiplier for sustained hot streaks.
 
-### Customization and Progression
+### 🏴 Gangs
 
-- **Gangs:**
-  Form and manage gangs with a hierarchical rank system, set challenges, and toggle friendly fire.
+Players form gangs with a configurable rank hierarchy, a shared bank account with individual contribution tracking, gang
+colors and display names, and a bidirectional alliance system.
 
-- **Level System:**
-  Gain experience, level up, and unlock rewards and abilities.
+### 🏦 Economy
 
-- **Houses and Properties:**
-  Own and customize houses that serve as safe zones and item storage. Civilians, criminals, and cops can own land or
-  rent apartments.
+Dual-layer economy: a cash balance for everyday transactions and a higher-capacity personal bank account. Death costs
+15% of your cash balance. Admin commands support bulk operations across all online players.
 
-### Additional Features
+### 🗺️ Waypoints
 
-- **Cars:**
-  Purchase vehicles for racing, transportation, and combat.
+Admin-placed teleportation destinations with configurable costs, timers, cooldowns, and safe zones. Waypoints can be
+public, gang-restricted, or permission-gated.
 
-- **Auction House:**
-  Buy and sell items through a competitive auction system.
+### 📦 Loot Chests
 
-- **Death Cam:**
-  A GTA like top-down death to view how you died and engage in strategizing a better approach.
+Randomized reward containers that unlock on a countdown timer. Five rarity tiers — Common through Legendary — with the
+upper tiers locked behind collectible keys. Rewards include money, XP, weapons, ammo, and more.
 
-- **Passive Mode:**
-  Toggle to immune mode to avoid combat, allowing for peaceful interaction activities.
+### 📊 Scoreboard
 
-- **Scoreboard and Achievements:**
-  Track your achievements and progress with a customizable scoreboard, showcasing your rise to power or your dedication
-  to law enforcement.
+Live player stats with an animated title and per-row update intervals. Three rendering drivers available, including an
+interactive mode for advanced UI use cases.
 
-- **Punishments on Death:**
-  Face consequences when you die, adding a strategic element to how you approach dangerous situations.
+---
 
-Immerse yourself in ***Gangland Warfare***, where every decision shapes your destiny. Rule the streets or protect
-them—it's your call in this ultimate GTA-inspired Minecraft adventure.
+## Requirements
+
+| Dependency                                                                | Type         | Notes                                                    |
+|---------------------------------------------------------------------------|--------------|----------------------------------------------------------|
+| [Citizens](https://www.spigotmc.org/resources/citizens.13811/)            | **Required** | Powers all police NPCs. Plugin will not load without it. |
+| [NBTAPI](https://www.spigotmc.org/resources/nbt-api.7939/)                | **Required** | Custom item data for weapons, ammo, and wearables.       |
+| [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/) | Optional     | Placeholders in messages and scoreboards.                |
+| [Vault](https://www.spigotmc.org/resources/vault.34315/)                  | Optional     | Economy hook for cross-plugin compatibility.             |
+| [ViaVersion](https://www.spigotmc.org/resources/viaversion.19254/)        | Optional     | Multi-version client support.                            |
+
+---
+
+## Installation
+
+1. Download the latest release JAR from the [Releases](../../releases) page.
+2. Place the JAR in your server's `plugins/` folder.
+3. Install **Citizens** and **NBTAPI** — both are required.
+4. Start the server once to generate all configuration files.
+5. Configure `settings.yml`, `cops.yml`, and other files to your liking.
+6. Restart the server.
+7. Use `/glw cop spawner set` in-world to place cop spawn points.
+8. Use `/glw jail create` to configure jail locations.
+
+All commands use the `/glw` dispatcher (alias: `/gangland`).
+
+---
+
+## Configuration
+
+| File               | Purpose                                                           |
+|--------------------|-------------------------------------------------------------------|
+| `settings.yml`     | Database, economy, wanted level, bounty, gang, and level settings |
+| `cops.yml`         | Cop tier stats, AI behavior, spawn radii, and detainment options  |
+| `wearables.yml`    | Custom armor pieces and their protective traits                   |
+| `repair.yml`       | Repair materials, uses, and restoration amounts                   |
+| `ammunition.yml`   | Ammo types and their item representations                         |
+| `weapon/*.yml`     | Individual weapon configurations                                  |
+| `unique_items.yml` | Phone, keys, lockpicks, and other special items                   |
+| `scoreboard.yml`   | Scoreboard driver, layout, and animation                          |
+
+---
+
+## Documentation
+
+Full documentation is available in the [`documentation/`](./documentation/) folder.
+
+| Guide                                                              | Description                                       |
+|--------------------------------------------------------------------|---------------------------------------------------|
+| [Cops N Crooks](./documentation/v0.7.3-DEV/cops-n-crooks.md)       | NPC AI, spawning, tiers, and configuration        |
+| [Jail & Detainment](./documentation/v0.7.3-DEV/jail-detainment.md) | Handcuffing, jailing, and the detainment API      |
+| [Wearables](./documentation/v0.7.3-DEV/wearables.md)               | Traits, damage pipeline, and configuration        |
+| [Repair System](./documentation/v0.7.3-DEV/repair.md)              | Materials, restore values, and configuration      |
+| [Weapons](./documentation/features/weapons.md)                     | Fire modes, ammo, damage modifiers, and commands  |
+| [Wanted & Bounty](./documentation/features/wanted-bounty.md)       | Star scaling, decay, and bounty multipliers       |
+| [Trade Signs](./documentation/features/trade-signs.md)             | Sign format and setup                             |
+| [Gangs](./documentation/features/gangs.md)                         | Creation, ranks, bank, and alliances              |
+| [Economy](./documentation/features/economy.md)                     | Balances, bank, death penalty, and admin commands |
+| [Waypoints](./documentation/features/waypoints.md)                 | Types, teleportation, and safe zones              |
+| [Loot Chests](./documentation/features/loot-chests.md)             | Tiers, keys, and loot table configuration         |
+| [Levels](./documentation/features/levels.md)                       | XP formula and skill upgrades                     |
+| [Ranks](./documentation/features/ranks.md)                         | Hierarchy, inheritance, and permission management |
+| [Database & Setup](./documentation/features/database.md)           | MySQL/SQLite, auto-save, and setup checklist      |
+
+---
+
+## Module Structure
+
+| Module                             | Purpose                                               |
+|------------------------------------|-------------------------------------------------------|
+| `gangland-impl`                    | Plugin entry point, commands, listeners, and managers |
+| `cops-n-crooks`                    | Cop AI, spawning, detainment, and jail logic          |
+| `gangland-weapon`                  | Weapon, ammo, and projectile system                   |
+| `plugin-persistence`               | Generic repository pattern and database abstraction   |
+| `gangland-util`                    | Shared utilities and dependency injection container   |
+| `scoreboard-api`                   | FastBoard-based scoreboard rendering                  |
+| `inventory-api`                    | Custom inventory and GUI framework                    |
+| `sign-api`                         | Sign interaction system                               |
+| `lootchest-api`                    | Loot chest system with hologram support               |
+| `gangland-build`                   | Shade assembly — produces the final deployable JAR    |
+| `gangland-compatibility/version-*` | NMS adapters for Minecraft 1.10–1.21                  |
+
+---
+
+## Building
+
+```bash
+mvn clean package -DskipTests
+```
+
+The final shaded JAR is produced by the `gangland-build` module.
+
+**Java 21** and **Maven** are required to build the project.
