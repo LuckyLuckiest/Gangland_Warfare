@@ -267,6 +267,7 @@ Errors:
       Invalid: "Este rango no existe."
       Invalid_Permission: "Este permiso no existe."
       Invalid_Parent: "Este padre no existe."
+      Parent_Same: "Esta madre no puede ser la misma que el rango."
    Bounty:
       No_Bounty: "Este jugador no tiene una recompensa."
       User_Set_Bounty: "No estableciste una recompensa para este jugador."

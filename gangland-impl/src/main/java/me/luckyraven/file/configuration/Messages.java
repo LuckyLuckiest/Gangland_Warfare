@@ -180,6 +180,7 @@ public enum Messages {
 	INVALID_RANK("Errors.Rank.Invalid", Type.ERROR),
 	INVALID_RANK_PERMISSION("Errors.Rank.Invalid_Permission", Type.ERROR),
 	INVALID_RANK_PARENT("Errors.Rank.Invalid_Parent", Type.ERROR),
+	RANK_PARENT_SAME("Errors.Rank.Parent_Same", Type.ERROR),
 
 	// errors - teleportation
 	LOCATION_NOT_FOUND("Errors.Teleportation.Location.Not_Found", Type.ERROR),

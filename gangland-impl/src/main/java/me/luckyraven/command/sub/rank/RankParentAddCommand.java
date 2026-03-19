@@ -16,12 +16,14 @@ class RankParentAddCommand extends SubArgument {
 
 	private final Gangland       gangland;
 	private final Tree<Argument> tree;
+	private final RankManager    rankManager;
 
 	RankParentAddCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "add", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland    = gangland;
+		this.tree        = tree;
+		this.rankManager = gangland.getInitializer().getRankManager();
 
 		rankParent();
 	}
@@ -35,12 +37,19 @@ class RankParentAddCommand extends SubArgument {
 
 	private void rankParent() {
 		Argument rankArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+			Rank rank = rankManager.get(args[3]);
+
+			if (rank == null) {
+				sender.sendMessage(Messages.INVALID_RANK.toString());
+				return;
+			}
+
 			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<parent>"));
-		});
+		}, sender -> rankManager.getRanks().values()
+				.stream().map(Rank::getName).toList());
 
 		Argument parentArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			RankManager rankManager = gangland.getInitializer().getRankManager();
-			Rank        rank        = rankManager.get(args[3]);
+			Rank rank = rankManager.get(args[3]);
 
 			if (rank == null) {
 				sender.sendMessage(Messages.INVALID_RANK.toString());
@@ -51,6 +60,11 @@ class RankParentAddCommand extends SubArgument {
 
 			if (childRank == null) {
 				sender.sendMessage(Messages.INVALID_RANK_PARENT.toString());
+				return;
+			}
+
+			if (rank.equals(childRank)) {
+				sender.sendMessage(Messages.RANK_PARENT_SAME.toString());
 				return;
 			}
 
@@ -65,8 +79,10 @@ class RankParentAddCommand extends SubArgument {
 			String replace = string.replace("%parent%", childRank.getName()).replace("%rank%", rank.getName());
 
 			sender.sendMessage(replace);
-		});
+		}, sender -> rankManager.getRanks().values()
+				.stream().map(Rank::getName).toList());
 
 		rankArg.addSubArgument(parentArg);
+		this.addSubArgument(rankArg);
 	}
 }

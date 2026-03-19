@@ -267,6 +267,7 @@ Errors:
       Invalid: "This rank doesn't exist."
       Invalid_Permission: "This permission doesn't exist."
       Invalid_Parent: "This parent doesn't exist."
+      Parent_Same: "This parent can't be the same as the rank."
    Bounty:
       No_Bounty: "This player doesn't have a bounty."
       User_Set_Bounty: "You didn't set a bounty for this player."
