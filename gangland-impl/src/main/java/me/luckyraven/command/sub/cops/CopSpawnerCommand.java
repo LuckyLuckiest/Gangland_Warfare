@@ -30,7 +30,7 @@ class CopSpawnerCommand extends SubArgument {
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
 			String message = ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(),
-												   "<set|remove|list|info|teleport>");
+												   "<set/remove/list/info/teleport>");
 			sender.sendMessage(message);
 		};
 	}
