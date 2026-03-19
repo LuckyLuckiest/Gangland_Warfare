@@ -151,8 +151,8 @@ public class CopNpc {
 	 * @param newState the target state
 	 */
 	public void transitionTo(CopState newState) {
-		log.info("Transitioning cop {}-{} from {} state to {} state.", npc.getName(), npc.getId(), currentState,
-				 newState);
+		log.debug("Transitioning cop {}-{} from {} state to {} state.", npc.getName(), npc.getId(), currentState,
+				  newState);
 		if (currentState == newState) return;
 
 		CopBehavior oldBehavior = behaviors.get(currentState);
