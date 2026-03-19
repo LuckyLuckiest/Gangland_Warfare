@@ -418,9 +418,7 @@ public class CopNpc {
 	public boolean attemptCuff(Player player) {
 		if (!isValid() || player == null) return false;
 		if (!hasLineOfSight(player)) return false;
-		if (distanceTo(player) > tierConfig.cuffRadius()) return false;
-
-		return ThreadLocalRandom.current().nextDouble() < 0.6;
+		return !(distanceTo(player) > tierConfig.cuffRadius());
 	}
 
 	/**
@@ -463,16 +461,20 @@ public class CopNpc {
 	 * @param entityMarkManager the entity mark manager for cleanup, may be null
 	 */
 	public void destroy(EntityMarkManager entityMarkManager) {
-		if (heldWeapon != null) {
-			heldWeapon.stopReloading();
-		}
-		if (npc.isSpawned()) {
-			if (entityMarkManager != null && npc.getEntity() != null) {
-				entityMarkManager.removeEntityMark(npc.getEntity());
+		try {
+			if (heldWeapon != null) {
+				heldWeapon.stopReloading();
 			}
-			npc.despawn();
+			if (npc.isSpawned()) {
+				if (entityMarkManager != null && npc.getEntity() != null) {
+					entityMarkManager.removeEntityMark(npc.getEntity());
+				}
+				npc.despawn();
+			}
+		} finally {
+			cleanupTransientState();
+			npc.destroy();
 		}
-		npc.destroy();
 	}
 
 	/**
@@ -480,6 +482,14 @@ public class CopNpc {
 	 */
 	public void destroy() {
 		destroy(null);
+	}
+
+	private void cleanupTransientState() {
+		// Ensures behaviors get a chance to release any owned resources if they are holding any.
+		CopBehavior behavior = behaviors.get(currentState);
+		if (behavior == null) return;
+
+		behavior.onExit(this);
 	}
 
 	/**

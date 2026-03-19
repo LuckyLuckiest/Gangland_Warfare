@@ -3,12 +3,10 @@ package me.luckyraven.copsncrooks.police.state;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.police.config.CopConfigProvider;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
+import me.luckyraven.copsncrooks.police.state.behavior.*;
 
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 /**
@@ -19,20 +17,22 @@ public class CopBehaviorFactory {
 	private final CopConfigProvider         configProvider;
 	private final Supplier<CopSpawnManager> spawnManagerSupplier;
 	private final DetainmentService         detainmentService;
-	/**
-	 * Shared across every cop created by this factory - only one cop may cuff a given player at a time.
-	 */
-	private final Set<UUID>                 cuffLock = ConcurrentHashMap.newKeySet();
+	private final CuffLockRegistry          cuffLockRegistry;
 
 	public CopBehaviorFactory(CopConfigProvider configProvider, Supplier<CopSpawnManager> spawnManagerSupplier,
 							  DetainmentService detainmentService) {
 		this.configProvider       = configProvider;
 		this.spawnManagerSupplier = spawnManagerSupplier;
 		this.detainmentService    = detainmentService;
+		this.cuffLockRegistry     = new CuffLockRegistry();
 	}
 
 	/**
 	 * Builds a map of all cop states to their behavior implementations.
+	 * <p>
+	 * All cops created by this factory share the same {@link CuffLockRegistry}, which is keyed by target UUID. This
+	 * ensures that only one cop across ALL groups can hold the cuff lock for a given player at any time — including
+	 * cops that retargeted from a different group after their original target lost wanted status.
 	 *
 	 * @return the state-to-behavior map
 	 */
@@ -47,7 +47,7 @@ public class CopBehaviorFactory {
 		behaviors.put(CopState.PURSUING, new PursuingBehavior(configProvider.getCuffRadius(), detainmentService));
 		behaviors.put(CopState.CUFFING,
 					  new CuffingBehavior(configProvider.getCuffRadius(), configProvider.getMaxCuffAttempts(),
-										  cuffAiTicks, aiTickRate, cuffLock, detainmentService));
+										  cuffAiTicks, aiTickRate, cuffLockRegistry, detainmentService));
 		behaviors.put(CopState.COMBAT, new CombatBehavior(configProvider.getCombatRange(), detainmentService));
 		behaviors.put(CopState.RETURNING, new ReturningBehavior(spawnManagerSupplier.get(), detainmentService,
 																configProvider.getMaxReturnTicks(),

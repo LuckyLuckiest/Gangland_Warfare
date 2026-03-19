@@ -1,54 +1,45 @@
-package me.luckyraven.copsncrooks.police.state;
+package me.luckyraven.copsncrooks.police.state.behavior;
 
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.events.police.CuffedEvent;
 import me.luckyraven.copsncrooks.events.police.DuringCuffingEvent;
 import me.luckyraven.copsncrooks.police.npc.CopNpc;
+import me.luckyraven.copsncrooks.police.state.CopBehavior;
+import me.luckyraven.copsncrooks.police.state.CopState;
+import me.luckyraven.copsncrooks.police.state.CuffLockRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.util.Set;
 import java.util.UUID;
 
 /**
- * Cop attempts to cuff the target player. Escalates to combat on repeated failure.
+ * Cop attempts to cuff the target player.
  * <p>
- * Only one cop per player may be in this state at a time; ownership is coordinated via the shared {@code cuffLock} set
- * injected at construction. A cop that cannot claim the lock immediately falls back to {@link CopState#PURSUING}
- * without interfering with the cop that holds it.
+ * Only one cop per group may hold the cuff lock for a given target at a time. The lock is acquired at the start of the
+ * wind-up and held through the entire {@link DuringCuffingEvent} sequence. When {@link CopNpc#attemptCuff} succeeds the
+ * cop transitions to {@link CopState#RETURNING}; if the target moved out of range before the attempt, the lock is
+ * released and the cop returns to {@link CopState#PURSUING}, allowing the next closest cop in the group to acquire the
+ * lock.
  */
 public class CuffingBehavior implements CopBehavior {
 
 	private final double            cuffRadius;
 	private final int               maxAttempts;
-	/**
-	 * Countdown duration in AI ticks (already divided by aiTickRate at construction).
-	 */
 	private final long              cuffingCooldown;
-	/**
-	 * Stored so the event receives remaining time in game ticks, not AI ticks.
-	 */
 	private final int               aiTickRate;
-	/**
-	 * Shared across all cop instances - only the cop that inserted its target UUID may cuff.
-	 */
-	private final Set<UUID>         cuffLock;
+	private final CuffLockRegistry  cuffLockRegistry;
 	private final DetainmentService detainmentService;
 
-	private int  attemptCount;
 	private long cuffingTicks;
-	/**
-	 * Non-null only while this instance holds the cuff lock for a player.
-	 */
 	private UUID claimedPlayer;
 
-	public CuffingBehavior(double cuffRadius, int maxAttempts, long cuffingCooldown, int aiTickRate, Set<UUID> cuffLock,
-						   DetainmentService detainmentService) {
+	public CuffingBehavior(double cuffRadius, int maxAttempts, long cuffingCooldown, int aiTickRate,
+						   CuffLockRegistry cuffLockRegistry, DetainmentService detainmentService) {
 		this.cuffRadius        = cuffRadius;
 		this.maxAttempts       = maxAttempts;
 		this.cuffingCooldown   = cuffingCooldown;
 		this.aiTickRate        = aiTickRate;
-		this.cuffLock          = cuffLock;
+		this.cuffLockRegistry  = cuffLockRegistry;
 		this.detainmentService = detainmentService;
 
 		reset();
@@ -66,8 +57,26 @@ public class CuffingBehavior implements CopBehavior {
 			return;
 		}
 
+		UUID copId    = cop.getNpc().getUniqueId();
+		UUID targetId = target.getUniqueId();
+
+		if (claimedPlayer == null) {
+			if (!cuffLockRegistry.tryAcquire(targetId, copId)) {
+				cop.transitionTo(CopState.PURSUING);
+				return;
+			}
+
+			claimedPlayer = targetId;
+			reset();
+			cop.stopNavigation();
+		} else if (!cuffLockRegistry.isOwner(targetId, copId)) {
+			cop.transitionTo(CopState.PURSUING);
+			return;
+		}
+
 		double distance = cop.distanceTo(target);
 
+		// Only leave cuffing if the target actually escapes the cuffing zone
 		if (distance > cuffRadius || !cop.hasLineOfSight(target)) {
 			cop.transitionTo(CopState.PURSUING);
 			return;
@@ -87,59 +96,47 @@ public class CuffingBehavior implements CopBehavior {
 		boolean success = cop.attemptCuff(target);
 
 		if (success) {
-			attemptCount = 0;
 			var cuffedEvent = new CuffedEvent(cop, target, cuffRadius, maxAttempts);
 			Bukkit.getPluginManager().callEvent(cuffedEvent);
 			cop.transitionTo(CopState.RETURNING);
 			return;
 		}
 
-		attemptCount++;
-		cuffingTicks = cuffingCooldown;
-
-		if (!(attemptCount >= maxAttempts && cop.getTierConfig().canUseWeapons())) return;
-
-		cop.transitionTo(CopState.COMBAT);
+		// Target moved out of range or lost LOS at the last moment.
+		// Release the lock and return to pursuit so the next closest cop may try.
+		cop.transitionTo(CopState.PURSUING);
 	}
 
 	@Override
 	public void onEnter(CopNpc cop) {
-		reset();
-
-		// Claim the cuff lock before doing anything else - if another cop already holds it, back off
 		UUID targetId = cop.getTargetPlayerId();
-		if (targetId == null || !cuffLock.add(targetId)) {
+		if (targetId == null) {
 			cop.transitionTo(CopState.PURSUING);
 			return;
 		}
 
-		// If the player is already restrained, release the lock and return to spawn
-		Player target = Bukkit.getPlayer(targetId);
-		if (target != null && detainmentService.isRestrained(target)) {
-			cuffLock.remove(targetId);
-			cop.transitionTo(CopState.RETURNING);
-			return;
-		}
-
-		claimedPlayer = targetId;
+		// Brand-new reservation: always restart from the beginning of the cuff wind-up
+		claimedPlayer = null;
+		reset();
 		cop.stopNavigation();
 	}
 
 	@Override
 	public void onExit(CopNpc cop) {
-		releaseLock();
+		releaseLock(cop);
 		reset();
 	}
 
-	private void releaseLock() {
-		if (claimedPlayer != null) {
-			cuffLock.remove(claimedPlayer);
-			claimedPlayer = null;
-		}
+	private void releaseLock(CopNpc cop) {
+		UUID targetId = claimedPlayer;
+
+		if (targetId == null) return;
+
+		cuffLockRegistry.release(targetId, cop.getNpc().getUniqueId());
+		claimedPlayer = null;
 	}
 
 	private void reset() {
-		this.attemptCount = 0;
 		this.cuffingTicks = cuffingCooldown;
 	}
 }

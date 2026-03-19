@@ -1,6 +1,7 @@
 package me.luckyraven.copsncrooks.police;
 
 import lombok.Getter;
+import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.police.config.CopConfigProvider;
 import me.luckyraven.copsncrooks.police.npc.CopNpc;
@@ -10,7 +11,9 @@ import me.luckyraven.copsncrooks.police.targeting.TargetingManager;
 import me.luckyraven.copsncrooks.wanted.Wanted;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -23,29 +26,34 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class CopManager {
 
-	private final JavaPlugin        plugin;
+	private final JavaPlugin            plugin;
 	@Getter
-	private final CopSpawnManager   spawnManager;
-	private final TargetingManager  targetingManager;
-	private final CopConfigProvider configProvider;
-	private final EntityMarkManager entityMarkManager;
-
-	private final Map<UUID, List<CopNpc>> playerCops;
-	private final Map<UUID, BukkitTask>   aiTasks;
-	private final Map<UUID, BukkitTask>   spawnTasks;
-	private final Set<UUID>               activeCombatAlerts;
+	private final CopSpawnManager       spawnManager;
+	private final TargetingManager      targetingManager;
+	private final CopConfigProvider     configProvider;
+	private final EntityMarkManager     entityMarkManager;
+	private final DetainmentService     detainmentService;
+	private final Map<UUID, CopGroup>   groups;
+	private final Map<UUID, BukkitTask> aiTasks;
+	private final Map<UUID, BukkitTask> spawnTasks;
+	private final Set<UUID>             activeCombatAlerts;
+	private final Set<UUID>             copAttackers;
 
 	public CopManager(JavaPlugin plugin, CopSpawnManager spawnManager, TargetingManager targetingManager,
-					  CopConfigProvider configProvider, EntityMarkManager entityMarkManager) {
-		this.plugin             = plugin;
-		this.spawnManager       = spawnManager;
-		this.targetingManager   = targetingManager;
-		this.configProvider     = configProvider;
-		this.entityMarkManager  = entityMarkManager;
-		this.playerCops         = new ConcurrentHashMap<>();
+					  CopConfigProvider configProvider, EntityMarkManager entityMarkManager,
+					  DetainmentService detainmentService) {
+		this.plugin            = plugin;
+		this.spawnManager      = spawnManager;
+		this.targetingManager  = targetingManager;
+		this.configProvider    = configProvider;
+		this.entityMarkManager = entityMarkManager;
+		this.detainmentService = detainmentService;
+
+		this.groups             = new ConcurrentHashMap<>();
 		this.aiTasks            = new ConcurrentHashMap<>();
 		this.spawnTasks         = new ConcurrentHashMap<>();
 		this.activeCombatAlerts = ConcurrentHashMap.newKeySet();
+		this.copAttackers       = ConcurrentHashMap.newKeySet();
 	}
 
 	/**
@@ -59,7 +67,7 @@ public class CopManager {
 		if (!wanted.isWanted()) return;
 
 		targetingManager.registerWanted(player, wanted);
-		playerCops.computeIfAbsent(playerId, k -> Collections.synchronizedList(new ArrayList<>()));
+		groups.computeIfAbsent(playerId, CopGroup::new);
 
 		startSpawnTask(playerId, wanted);
 		startAITask(playerId);
@@ -75,9 +83,27 @@ public class CopManager {
 
 		targetingManager.unregisterWanted(playerId);
 		stopSpawnTask(playerId);
-		stopAITask(playerId);
 		clearCombatAlert(playerId);
-		despawnAllForPlayer(playerId);
+
+		CopGroup group = groups.get(playerId);
+		if (group == null || group.isEmpty()) {
+			stopAITask(playerId);
+			groups.remove(playerId);
+			return;
+		}
+
+		// Clear targeting only for cops still pointing at the now-unwanted player.
+		// Cops that already retargeted to an attacker keep their state so resolveTarget
+		// can evaluate them correctly on the next AI tick.
+		for (CopNpc cop : group.getCops()) {
+			if (!playerId.equals(cop.getTargetPlayerId())) continue;
+
+			cop.setTargetPlayerId(null);
+			cop.setCombatForced(false);
+		}
+
+		// Do not stop the AI task or despawn — let cops organically find new targets.
+		// The AI task will self-terminate once all cops have returned and despawned.
 	}
 
 	/**
@@ -109,8 +135,10 @@ public class CopManager {
 		if (targetPlayerId == null) return;
 
 		// Get all cops assigned to this target player
-		List<CopNpc> cops = playerCops.get(targetPlayerId);
-		if (cops == null || cops.isEmpty()) return;
+		CopGroup group = groups.get(targetPlayerId);
+		if (group == null || group.isEmpty()) return;
+
+		List<CopNpc> cops = group.getCops();
 
 		// Mark this player's cops as being in active combat alert
 		activeCombatAlerts.add(targetPlayerId);
@@ -130,9 +158,32 @@ public class CopManager {
 	 * @param attacker the attacking player
 	 */
 	public void onCopAttacked(CopNpc copNpc, Player attacker) {
+		copAttackers.add(attacker.getUniqueId());
 		copNpc.setTargetPlayerId(attacker.getUniqueId());
 		copNpc.setCombatForced(true);
 		copNpc.transitionTo(CopState.COMBAT);
+	}
+
+	/**
+	 * Removes a player from the cop-attacker registry. Should be called when the player dies or leaves, so that cops no
+	 * longer treat them as a combat target after respawn.
+	 * <p>
+	 * Also eagerly clears this player from any cop's target so cops don't continue navigating to the death location.
+	 * The next AI tick's {@code resolveTarget} will transition idle cops to RETURNING if no other target is found.
+	 *
+	 * @param playerId the player UUID
+	 */
+	public void removeCopAttacker(UUID playerId) {
+		copAttackers.remove(playerId);
+
+		for (CopGroup group : groups.values()) {
+			for (CopNpc cop : group.getCops()) {
+				if (!playerId.equals(cop.getTargetPlayerId())) continue;
+
+				cop.setTargetPlayerId(null);
+				cop.setCombatForced(false);
+			}
+		}
 	}
 
 	/**
@@ -154,8 +205,8 @@ public class CopManager {
 	 * @return list of cop NPCs
 	 */
 	public List<CopNpc> getCopsForPlayer(UUID playerId) {
-		List<CopNpc> cops = playerCops.get(playerId);
-		return cops != null ? new ArrayList<>(cops) : Collections.emptyList();
+		CopGroup group = groups.get(playerId);
+		return group != null ? new ArrayList<>(group.getCops()) : Collections.emptyList();
 	}
 
 	/**
@@ -166,8 +217,8 @@ public class CopManager {
 	 * @return true if it's a cop
 	 */
 	public boolean isCopNpc(org.bukkit.entity.Entity entity) {
-		for (List<CopNpc> cops : playerCops.values()) {
-			for (CopNpc cop : cops) {
+		for (CopGroup group : groups.values()) {
+			for (CopNpc cop : group.getCops()) {
 				if (!validateEntityCop(entity, cop)) continue;
 
 				return true;
@@ -184,8 +235,8 @@ public class CopManager {
 	 * @return the cop npc, or null
 	 */
 	public CopNpc findCopByEntity(org.bukkit.entity.Entity entity) {
-		for (List<CopNpc> cops : playerCops.values()) {
-			for (CopNpc cop : cops) {
+		for (CopGroup group : groups.values()) {
+			for (CopNpc cop : group.getCops()) {
 				if (!validateEntityCop(entity, cop)) continue;
 
 				return cop;
@@ -204,9 +255,10 @@ public class CopManager {
 		for (UUID playerId : new HashSet<>(aiTasks.keySet())) {
 			stopAITask(playerId);
 		}
-		for (UUID playerId : new HashSet<>(playerCops.keySet())) {
+		for (UUID playerId : new HashSet<>(groups.keySet())) {
 			despawnAllForPlayer(playerId);
 		}
+		copAttackers.clear();
 	}
 
 	/**
@@ -245,8 +297,15 @@ public class CopManager {
 				return;
 			}
 
-			List<CopNpc> cops = playerCops.get(playerId);
-			if (cops == null) return;
+			// check if the player was detained before spawning a new cop
+			if (detainmentService.isRestrained(player)) {
+				return;
+			}
+
+			CopGroup group = groups.get(playerId);
+			if (group == null) return;
+
+			List<CopNpc> cops = group.getCops();
 
 			cops.removeIf(cop -> {
 				if (cop.isMarkedForRemoval()) {
@@ -314,8 +373,17 @@ public class CopManager {
 				return;
 			}
 
-			List<CopNpc> cops = playerCops.get(playerId);
-			if (cops == null || cops.isEmpty()) return;
+			CopGroup group = groups.get(playerId);
+			if (group == null || group.isEmpty()) {
+				// Self-cleanup: player is no longer wanted and all cops are gone
+				if (!targetingManager.isWanted(playerId)) {
+					stopAITask(playerId);
+					groups.remove(playerId);
+				}
+				return;
+			}
+
+			List<CopNpc> cops = group.getCops();
 
 			Iterator<CopNpc> iterator = cops.iterator();
 			while (iterator.hasNext()) {
@@ -348,34 +416,105 @@ public class CopManager {
 	}
 
 	/**
-	 * Resolves the current target for a cop. Switches target if current is no longer wanted.
+	 * Resolves the current target for a cop. Priority order:
+	 * <ol>
+	 *   <li>Current wanted target — keep if still valid and wanted.</li>
+	 *   <li>Current cop-attacker target — keep if still online and in the attacker registry.</li>
+	 *   <li>Nearest wanted player in the world.</li>
+	 *   <li>Nearest cop-attacker (combat mode) — someone who previously hit a cop.</li>
+	 *   <li>No valid target — transition to RETURNING.</li>
+	 * </ol>
 	 *
 	 * @param cop the cop NPC
-	 * @param defaultTarget the default target player
+	 * @param defaultTarget the reference player used to find the nearest wanted target
 	 *
-	 * @return the resolved target
+	 * @return the resolved target, or null if no target available
 	 */
 	private Player resolveTarget(CopNpc cop, Player defaultTarget) {
 		UUID currentTargetId = cop.getTargetPlayerId();
 
-		if (currentTargetId != null && targetingManager.isWanted(currentTargetId)) {
+		if (currentTargetId != null) {
 			Player currentTarget = Bukkit.getPlayer(currentTargetId);
-			if (currentTarget != null && currentTarget.isOnline()) {
-				return currentTarget;
+
+			if (currentTarget != null && currentTarget.isOnline() && !currentTarget.isDead()) {
+				// Keep if still wanted
+				if (targetingManager.isWanted(currentTargetId)) {
+					return currentTarget;
+				}
+
+				// Keep if this player attacked a cop (combat forced) — pursue even without wanted status
+				if (cop.isCombatForced() && copAttackers.contains(currentTargetId)) {
+					return currentTarget;
+				}
 			}
+
+			// Stale target — clear and search for a new one
+			cop.setTargetPlayerId(null);
+			cop.setCombatForced(false);
 		}
 
-		Player newTarget = targetingManager.findBestTarget(defaultTarget);
-		if (newTarget != null) {
-			cop.setTargetPlayerId(newTarget.getUniqueId());
-			return newTarget;
+		// 1. Find the nearest wanted player
+		Player wanted = targetingManager.findBestTarget(defaultTarget);
+		if (wanted != null) {
+			cop.setTargetPlayerId(wanted.getUniqueId());
+			cop.setCombatForced(false);
+			// Leave combat mode so the cop pursues/cuffs normally instead of attacking
+			if (cop.getCurrentState() == CopState.COMBAT) {
+				cop.transitionTo(CopState.PURSUING);
+			}
+			return wanted;
 		}
 
+		// 2. Find the nearest player who previously attacked a cop (engage in combat)
+		Player attacker = findNearestCopAttacker(cop);
+		if (attacker != null) {
+			cop.setTargetPlayerId(attacker.getUniqueId());
+			cop.setCombatForced(true);
+			if (cop.getCurrentState() != CopState.COMBAT) {
+				cop.transitionTo(CopState.COMBAT);
+			}
+			return attacker;
+		}
+
+		// No valid target — return to spawn
 		cop.setTargetPlayerId(null);
+		cop.setCombatForced(false);
 		if (cop.getCurrentState() != CopState.RETURNING && cop.getCurrentState() != CopState.IDLE) {
 			cop.transitionTo(CopState.RETURNING);
 		}
 		return null;
+	}
+
+	/**
+	 * Finds the nearest online player who has previously attacked a cop, relative to the cop's position.
+	 *
+	 * @param cop the cop NPC
+	 *
+	 * @return the nearest cop-attacker, or null
+	 */
+	private Player findNearestCopAttacker(CopNpc cop) {
+		if (copAttackers.isEmpty() || !cop.isValid()) return null;
+
+		LivingEntity entity = cop.getEntity();
+		if (entity == null) return null;
+
+		Location copLoc   = entity.getLocation();
+		Player   best     = null;
+		double   bestDist = Double.MAX_VALUE;
+
+		for (UUID attackerId : copAttackers) {
+			Player attacker = Bukkit.getPlayer(attackerId);
+			if (attacker == null || !attacker.isOnline() || attacker.isDead()) continue;
+			if (!attacker.getWorld().equals(copLoc.getWorld())) continue;
+
+			double dist = attacker.getLocation().distanceSquared(copLoc);
+			if (dist >= bestDist) continue;
+
+			bestDist = dist;
+			best     = attacker;
+		}
+
+		return best;
 	}
 
 	/**
@@ -394,11 +533,9 @@ public class CopManager {
 	 * @param playerId the player UUID
 	 */
 	private void despawnAllForPlayer(UUID playerId) {
-		List<CopNpc> cops = playerCops.remove(playerId);
-		if (cops == null) return;
+		CopGroup group = groups.remove(playerId);
+		if (group == null) return;
 
-		for (CopNpc cop : cops) {
-			cop.destroy(entityMarkManager);
-		}
+		group.destroyAll(entityMarkManager);
 	}
 }

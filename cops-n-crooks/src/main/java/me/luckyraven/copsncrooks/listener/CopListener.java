@@ -15,6 +15,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 @ListenerHandler
@@ -60,7 +61,20 @@ public class CopListener implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onPlayerQuit(PlayerQuitEvent event) {
-		copManager.onWantedEnd(event.getPlayer());
+		Player player = event.getPlayer();
+		copManager.removeCopAttacker(player.getUniqueId());
+		copManager.onWantedEnd(player);
+	}
+
+	/**
+	 * Removes a player from the cop-attacker registry when they die so that cops do not continue attacking them after
+	 * respawn.
+	 *
+	 * @param event the player death event
+	 */
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onPlayerDeath(PlayerDeathEvent event) {
+		copManager.removeCopAttacker(event.getEntity().getUniqueId());
 	}
 
 	/**
@@ -98,6 +112,11 @@ public class CopListener implements Listener {
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onCopDeath(EntityDeathEvent event) {
 		if (!copManager.isCopNpc(event.getEntity())) return;
+
+		CopNpc cop = copManager.findCopByEntity(event.getEntity());
+		if (cop != null) {
+			cop.destroy();
+		}
 
 		event.getDrops().clear();
 		event.setDroppedExp(0);
