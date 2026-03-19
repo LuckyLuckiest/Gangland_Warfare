@@ -1,8 +1,10 @@
-package me.luckyraven.copsncrooks.police.state;
+package me.luckyraven.copsncrooks.police.state.behavior;
 
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.police.npc.CopNpc;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
+import me.luckyraven.copsncrooks.police.state.CopBehavior;
+import me.luckyraven.copsncrooks.police.state.CopState;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
