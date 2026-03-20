@@ -36,7 +36,7 @@ total effect is `REINFORCED 3`.
 |------------------|----------------------------------|------------|----------------------------------------------------------|
 | `REINFORCED`     | 5% general damage reduction      | 4          | Applies to all damage types.                             |
 | `BULLETPROOF`    | 4% reduction vs. firearm damage  | 3          | Only activates on projectile hits from Gangland weapons. |
-| `PADDED`         | 8% broad physical reduction      | 2          | Applies to melee and fall damage.                        |
+| `PADDED`         | 8% explosion damage reduction    | 2          | Applies to explosion damage.                             |
 | `TOUGHENED`      | 10% critical hit bonus reduction | 3          | Reduces the extra damage from critical strikes.          |
 | `FIRE_RESISTANT` | 25% fire damage reduction        | 2          | Applies to burn damage.                                  |
 | `REACTIVE`       | 2% chance to fully nullify a hit | 3          | Each level adds an independent 2% nullify roll.          |
@@ -57,38 +57,30 @@ total effect is `REINFORCED 3`.
 
 ## Configuration
 
-Wearables are defined in `wearables.yml`. Each entry follows this structure:
+Wearables are defined in `wearables.yml`. Each entry's key (e.g., `police_vest`) becomes the item's internal ID used for
+giving and referencing.
 
 ```yaml
-police-vest:
-  name: "Police Vest"
-  material: LEATHER_CHESTPLATE    # Vanilla item used as the display item
-  base-damage-reduction: 0.10     # 10% of damage absorbed before traits apply
-  traits:
-    REINFORCED: 2                 # Trait name: level
-    BULLETPROOF: 1
+police_vest:
+   Permission: "gangland.wearables.police_vest"  # Permission node required to receive this item
+   Material: IRON_CHESTPLATE         # Vanilla Bukkit armor material (must be an armor type)
+   Name: "&7Police Vest"             # Display name (supports & color codes)
+   Drop_On_Death: true               # Whether the item drops at the player's death location
+   Droppable: true                   # Whether the player can manually drop the item
+   Base_Damage_Reduction: 0.10       # Flat damage reduction applied before traits (0.10 = 10%)
+   Leather_Color: ""                 # Hex color string for leather armor, e.g. "#2B2B2B". Leave empty for non-leather.
+   Lore:
+      - "&8Standard issue body armor" # Item lore lines (supports & color codes)
+   Traits:
+      REINFORCED: 2                   # Trait name: level. Values are clamped to each trait's max level at load time.
+      BULLETPROOF: 1
 ```
 
-### Adding a New Wearable
-
-```yaml
-military-armor:
-  name: "Military Chestplate"
-  material: IRON_CHESTPLATE
-  base-damage-reduction: 0.20
-  traits:
-    REINFORCED: 4
-    BULLETPROOF: 3
-    TOUGHENED: 2
-```
-
-Any key added under the root of `wearables.yml` is automatically picked up on load. The key (e.g., `military-armor`) is
-used as the item's internal ID for giving and referencing.
+Any key added to the root of `wearables.yml` is automatically registered on load.
 
 ### Trait Caps
 
-Traits cannot exceed their defined maximum level. Configuring `REINFORCED: 10` on a single item will silently clamp it
-to the maximum of 4. The cap is enforced at load time.
+Trait levels cannot exceed their defined maximum. Setting `REINFORCED: 10` silently clamps to 4 at load time.
 
 ---
 
@@ -109,17 +101,19 @@ boolean wearing = wearableManager.isWearable(player.getInventory().getChestplate
 // Get the wearable data from an item
 Optional<Wearable> wearable = wearableManager.getWearable(itemStack);
 
-wearable.ifPresent(w -> {
-    double reduction = w.getBaseDamageReduction();         // e.g. 0.10
-    Map<WearableTrait, Integer> traits = w.getTraits();    // trait -> level map
-    int reinforcedLevel = traits.getOrDefault(WearableTrait.REINFORCED, 0);
+wearable.
+
+ifPresent(w ->{
+double reduction = w.getBaseDamageReduction();         // e.g. 0.10
+Map<WearableTrait, Integer> traits = w.getTraits();    // trait -> level map
+int reinforcedLevel = traits.getOrDefault(WearableTrait.REINFORCED, 0);
 });
 
 // Listen for the damage event to intercept wearable processing
 @EventHandler
 public void onDamage(EntityDamageByEntityEvent event) {
-    // Wearable reduction is applied automatically in the pipeline.
-    // You do not need to handle it manually.
+	// Wearable reduction is applied automatically in the pipeline.
+	// You do not need to handle it manually.
 }
 ```
 

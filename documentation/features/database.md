@@ -115,6 +115,76 @@ Database:
 
 ---
 
+## Global Settings
+
+The following sections in `settings.yml` are not database-specific but apply to the whole plugin.
+
+### Config Version
+
+```yaml
+Config_Version: '1.0.0'
+```
+
+Changing `Config_Version` to any value different from the current plugin version causes the file to be regenerated. The
+old file is renamed with an `-old` suffix. This works on every YAML file in the plugin, even if the section was not
+originally present — you can add it manually to any config to force a reset.
+
+---
+
+### Update Checker
+
+```yaml
+Update_Checker:
+  Enable: true                    # Check for new plugin releases on startup
+  Notify_Privileged_Players: false # Notify players with the notify permission on join if an update is available
+  Auto_Download: true             # Automatically download new releases into the plugin's 'release' folder
+```
+
+---
+
+### Language
+
+```yaml
+Language: en
+```
+
+Sets the active message language. Messages are loaded from `plugins/GanglandWarfare/message/message_<Language>.yml`. To
+use a custom language, create that file in the message folder. Entering an invalid language name disables the plugin and
+prints a list of valid options in the console.
+
+---
+
+### Resource Pack
+
+```yaml
+Resource_Pack:
+  Enable: true                    # Whether the plugin prompts players to download the resource pack on join
+  URL: "https://..."              # Direct download URL for the resource pack
+  Kick: false                     # If true, players who decline the resource pack are kicked
+```
+
+---
+
+### Inventory Appearance
+
+Controls the decorative items used inside plugin GUIs.
+
+```yaml
+Inventory:
+  Fill:
+    Item: BLACK_STAINED_GLASS_PANE  # Material used to fill empty GUI slots
+    Name: " "                        # Display name of the fill item
+  Line:
+    Item: WHITE_STAINED_GLASS_PANE  # Material used for divider rows in GUIs
+    Name: " "
+  Multi_Inventory:
+    Next_Page: "<base64>"           # Skull texture for the next-page navigation button
+    Previous_Page: "<base64>"       # Skull texture for the previous-page navigation button
+    Home_Page: "<base64>"           # Skull texture for the home navigation button
+```
+
+---
+
 ## First-Time Setup Checklist
 
 1. Install the plugin JAR into your `plugins/` folder.

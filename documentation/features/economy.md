@@ -51,6 +51,14 @@ Loss = balance × 0.15
 
 This is fully configurable and can be disabled entirely.
 
+The death money behavior has two modes — formula-based loss or server command execution:
+
+- **Formula mode** (default): calculates money lost/gained using the configured formula.
+- **Command mode**: runs a list of server commands instead and ignores the formula entirely. Useful for custom
+  punishments via other plugins.
+
+When `Command.Enable: true`, the formula is bypassed completely.
+
 ---
 
 ## Admin Economy Commands
@@ -95,29 +103,56 @@ In `settings.yml`:
 Money_Symbol: '$'                 # Symbol displayed before all money values
 
 Balance_Format:
-   Enable: true                    # Whether to format numbers with separators
-   Format: "%,.2f"                 # Java DecimalFormat — e.g. "1,000,000.00"
+   Enable: true                   # Whether to format numbers with comma/decimal separators
+   Format: "%,.2f"                # Java DecimalFormat pattern — e.g. "1,000,000.00"
 
 User:
    Account:
-      Initial_Balance: 0            # Starting cash balance for new players
-      Maximum_Balance: 10_000_000   # Highest cash balance allowed
+      Initial_Balance: 0          # Starting cash balance for new players
+      Maximum_Balance: 10_000_000 # Highest cash balance allowed
 
    Bank:
-      Initial_Balance: 0            # Bank balance when first created
-      Create_Cost: 5_000            # One-time fee to open a bank account
+      Initial_Balance: 0          # Bank balance when the account is first created
+      Create_Cost: 5_000          # One-time fee to open a bank account. Set to 0 to remove the fee.
       Maximum_Balance: 1_000_000_000
 
    Death:
-      Enable: true                  # Whether dying causes money loss
+      Enable: true                # Master switch for all death-related money/respawn effects
+
       Money:
-         Lose_Money: true
-         Formula: "balance * 0.15"   # Percentage of cash lost on death
-         Threshold: 1_000            # Minimum balance before death penalty applies
+         Command:
+            Enable: false         # If true, runs the commands below instead of the formula. The formula is ignored.
+            Executable:           # Server commands run on player death (%player% = the dead player's name)
+               - "/glw eco withdraw %player% 20"
+         Lose_Money: true         # If false, death gives money instead of taking it (formula still applies)
+         Formula: "balance * 0.15"
+                                  # Expression evaluated to determine money lost/gained.
+                                  # Variables: balance, level, experience, bounty, wanted
+         Threshold: 1_000         # Minimum cash balance before the penalty applies. Below this, nothing is deducted.
+
+      Respawn:
+         Enable: false            # Whether the respawn sequence (screen title, gamemode change, etc.) is active
+         Screen:
+            Enable: true
+            Title: "&cWASTED"     # Title shown on screen at death
+            Subtitle: "..."       # Subtitle — supports %gangland_waypoint_spawn%, %gangland_time%, %gangland_time_unit%
+         Chat:
+            Enable: true
+            Message:              # Lines sent to the player in chat on respawn
+               - ""
+         GameMode:
+            Enable: true
+            Change_To: "spectator"  # Gamemode set on respawn: survival, creative, adventure, spectator
+         Health:
+            Enable: true
+            Amount: 20            # Health restored on respawn
+         Hunger:
+            Enable: true
+            Amount: 20            # Hunger restored on respawn
 
 Killing_Mob:
-   Minimum: 0                      # Minimum cash reward for killing a mob
-   Maximum: 20                     # Maximum cash reward for killing a mob
+   Minimum: 0                     # Minimum cash reward for killing a mob
+   Maximum: 20                    # Maximum cash reward for killing a mob
 ```
 
 ---

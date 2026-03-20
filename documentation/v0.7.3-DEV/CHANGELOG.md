@@ -210,4 +210,13 @@ specifically watching for them. Backup failures are now logged at `WARN` level s
 
 ---
 
+### Rank Being Assignable as Its Own Parent
+
+When setting a parent rank via `/glw rank parent add`, it was possible to pass the same rank for both arguments — making
+a rank its own parent. This would create a nonsensical self-referencing entry in the hierarchy without any error. The
+command now checks whether the rank and the intended parent are the same and rejects the operation with an explicit
+error message.
+
+---
+
 [← Back to Documentation Index](../README.md)

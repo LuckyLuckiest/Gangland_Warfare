@@ -71,15 +71,16 @@ Required to open **Legendary** tier loot chests. The rarest key.
 
 Each unique item supports the following inventory behavior settings:
 
-| Property           | Description                                                                    |
-|--------------------|--------------------------------------------------------------------------------|
-| `Add_On_Join`      | Automatically added to the player's inventory when they first join the server. |
-| `Add_On_Respawn`   | Re-added to inventory every time the player respawns.                          |
-| `Drop_On_Death`    | Whether the item is dropped at death location (if `false`, it disappears).     |
-| `Allow_Duplicates` | Whether the player can carry more than one of this item.                       |
-| `Slot`             | Forces the item into a specific inventory slot. Use `-1` for no fixed slot.    |
-| `Droppable`        | Whether the player can manually drop the item from their inventory.            |
-| `Movable`          | Whether the player can move the item between inventory slots.                  |
+| Property           | Description                                                                                                                                                               |
+|--------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Add_On_Join`      | Automatically added to the player's inventory when they join the server.                                                                                                  |
+| `Add_On_Respawn`   | Re-added to inventory every time the player respawns.                                                                                                                     |
+| `Drop_On_Death`    | Whether the item is dropped at the death location (if `false`, it is silently removed).                                                                                   |
+| `Allow_Duplicates` | Whether the player can carry more than one of this item.                                                                                                                  |
+| `Slot`             | Forces the item into a specific inventory slot. Use `-1` for no fixed slot.                                                                                               |
+| `Overrides`        | If `true`, the item replaces whatever is already in the configured `Slot` when given on join/respawn. If `false`, the slot must be empty for the item to be placed there. |
+| `Droppable`        | Whether the player can manually drop the item from their inventory.                                                                                                       |
+| `Movable`          | Whether the player can move the item between inventory slots.                                                                                                             |
 
 ---
 
@@ -89,9 +90,9 @@ Unique items are defined in `unique_items.yml`. Each entry is identified by a ke
 
 ```yaml
 phone:
-   Permission: "gangland.uniqueitem.phone"   # Permission node to receive this item
-   Material: COMPASS
-   Name: "&6Phone"
+   Permission: "gangland.uniqueitem.phone"   # Permission node required to receive this item
+   Material: COMPASS                         # Vanilla Bukkit material
+   Name: "&6Phone"                           # Display name (supports & color codes)
    Lore:
       - "&7Your personal communication device"
    Inventory:
@@ -99,7 +100,8 @@ phone:
       Add_On_Respawn: true
       Drop_On_Death: false
       Allow_Duplicates: false
-      Slot: 8
+      Slot: 8                                # Target hotbar/inventory slot (0–8 for hotbar, -1 for no fixed slot)
+      Overrides: false                       # If true, replaces whatever is in Slot when given. If false, only places if slot is empty.
       Movable: true
       Droppable: false
 
@@ -109,13 +111,14 @@ lockpick:
    Name: "&7Lockpick"
    Lore:
       - "&7Used to open &9Rare &7tier chests"
-   Loot_Key: "lockpick"                      # Links this item to a loot tier unlock
+   Loot_Key: "lockpick"                      # Links this item to a loot tier unlock. Must match Unlock_Item in loot/tiers.yml.
    Inventory:
       Add_On_Join: false
       Add_On_Respawn: false
       Drop_On_Death: true
       Allow_Duplicates: true
       Slot: -1
+      Overrides: false
       Movable: true
       Droppable: true
 ```

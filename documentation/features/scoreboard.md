@@ -81,6 +81,12 @@ Board:
 Each row can have its own `Interval`, allowing high-frequency stats (like wanted level) to update more often than
 low-frequency ones (like gang info).
 
+- `Interval: 0` — the row is **static**. It is set once and never updated again. Use this for decorative separator lines
+  or section headers that never change.
+- Any positive `Interval` value — the row is refreshed every that many ticks (20 ticks = 1 second).
+
+Row lines support PlaceholderAPI placeholders (e.g., `%gangland_user_balance%`) and standard `&` color codes.
+
 ---
 
 [← Unique Items](./unique-items.md) | [Back to Index](../README.md) | [Next: Database & Setup →](./database.md)

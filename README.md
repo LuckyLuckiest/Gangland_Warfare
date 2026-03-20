@@ -3,10 +3,12 @@
 > A GTA-inspired Minecraft plugin bringing street-level gang warfare, police pursuit, and an underground economy to your
 > server.
 
-![Minecraft](https://img.shields.io/badge/Minecraft-1.21%2B-brightgreen?style=flat-square)
-![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square)
-![Version](https://img.shields.io/badge/Version-0.7.3--DEV-blue?style=flat-square)
-![Build](https://img.shields.io/badge/Build-Maven-red?style=flat-square)
+<p align="center">
+  <img src="https://img.shields.io/badge/Minecraft-1.21%2B-brightgreen?style=flat-square" alt="Minecraft">
+  <img src="https://img.shields.io/badge/Java-21-orange?style=flat-square" alt="Java">
+  <img src="https://img.shields.io/badge/Version-0.7.3--DEV-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/Build-Maven-red?style=flat-square" alt="Build">
+</p>
 
 ---
 

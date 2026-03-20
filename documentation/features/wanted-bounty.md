@@ -26,10 +26,10 @@ players and gangs put a price on each other's heads.
 
 ### How Stars Are Lost
 
-- Stars **decay over time** — every 120 seconds without a kill, the wanted level reduces by one.
-- A **kill multiplier** applies during active wanted periods — kills within the window refresh the timer and can trigger
-  escalation.
+- Stars **decay over time** — the decay timer starts at `Time` (default 120 seconds) and scales up with each star:
+  `time × Amount ^ stars`. A 5-star player waits significantly longer between each star reduction than a 1-star player.
 - **Dying clears all wanted stars** immediately.
+- Kill combos reset after `Reset_After` seconds of no kills (default 10 seconds).
 
 ### Police Response Per Star
 
@@ -46,14 +46,23 @@ players and gangs put a price on each other's heads.
 
 ### Cost of Being Wanted
 
-Each wanted star also takes money from the player at regular intervals:
+Each wanted star also takes money from the player at regular intervals. The formula is:
 
 ```
-money taken = 50 + (stars ^ 5)
+money taken = Amount * Multiplier ^ stars
 ```
 
-A player with 5 stars loses significantly more money per tick than one with 1 star. This is configurable in
-`settings.yml`.
+With defaults (`Amount: 50`, `Multiplier: 5`):
+
+| Stars   | Money taken per tick |
+|---------|----------------------|
+| 1 ★     | 50 × 5¹ = 250        |
+| 2 ★★    | 50 × 5² = 1,250      |
+| 3 ★★★   | 50 × 5³ = 6,250      |
+| 4 ★★★★  | 50 × 5⁴ = 31,250     |
+| 5 ★★★★★ | 50 × 5⁵ = 156,250    |
+
+Both values are configurable in `settings.yml`.
 
 ---
 
@@ -93,24 +102,47 @@ with a 20,000 money maximum). This rewards players for sustained hot streaks.
 In `settings.yml`:
 
 ```yaml
-wanted:
-  increment: 1              # Stars added per threshold crossed
-  max: 5                    # Maximum wanted stars
-  money-taken: 50           # Base money deducted per star tick
-  star-exponent: 5          # Exponent in money formula (50 + stars^exponent)
-  decay-timer: 120          # Seconds before a star is removed
+Wanted:
+   Enable: true
 
-bounty:
-  kill-reward: 5            # Base money earned per kill
-  max-bounty: 50000         # Hard cap on a single player's bounty
-  multiplier-interval: 300  # Seconds between multiplier doublings
-  multiplier-cap: 20000     # Maximum extra bounty from multiplier
+   Take_Money:
+      Amount: 50              # Base money deducted per tick while wanted
+      Multiplier: 5           # Exponent base in the formula: Amount * Multiplier ^ stars
 
-cops:
-  count:
-    base: 2
-    per-level: 1
-    max: 8
+   Repeating_Timer:
+      Enable: true
+      Time: 120               # Base decay interval in seconds (at 1 star)
+      Multiplier:
+         Enable: true
+         Amount: 1.1           # Decay timer scales as: Time * Amount ^ stars
+         # Higher-star players wait longer between each star reduction
+
+   Level:
+      Increment: 1            # Stars added each time a kill threshold is crossed
+      Maximum: 5              # Hard cap on wanted stars
+
+   Kill_Combo:
+      Enable: true
+      Reset_After: 10         # Seconds without a kill before the combo counter resets
+      Kill_Counter: # Kill thresholds that trigger each star level
+         - 2                   # 2 kills → 1 star
+         - 5                   # 5 kills → 2 stars
+         - 10                  # 10 kills → 3 stars
+         - 15                  # 15 kills → 4 stars
+         - 20                  # 20 kills → 5 stars
+
+Bounty:
+   Enable: true
+   Kill:
+      Each: 5                 # Money added to the player's bounty per kill they commit
+      Maximum: 50_000         # Hard cap on a player's total kill-accrued bounty
+   Repeating_Timer:
+      Enable: true
+      Multiple: 2             # Multiplier applied to the bounty amount each interval
+      Time: 300               # Seconds between multiplier applications
+      Maximum: 20_000         # Cap on bonus bounty from the multiplier
+
+# Cop count scaling is under the Cops key — see the Cops N Crooks guide
 ```
 
 ---
@@ -125,15 +157,23 @@ WantedExecutor wanted = gangland.getInitializer().getWantedExecutor();
 int stars = wanted.getLevel(user);
 
 // Add or remove stars
-wanted.addLevel(user, 1);
-wanted.removeLevel(user, 1);
+wanted.
+
+addLevel(user, 1);
+wanted.
+
+removeLevel(user, 1);
 
 // Bounty
 BountyExecutor bounty = gangland.getInitializer().getBountyExecutor();
 
 long currentBounty = bounty.getBounty(user);
-bounty.setBounty(user, 5000L);
-bounty.clearBounty(user);
+bounty.
+
+setBounty(user, 5000L);
+bounty.
+
+clearBounty(user);
 ```
 
 ---

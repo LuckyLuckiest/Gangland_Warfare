@@ -107,67 +107,123 @@ All commands require appropriate permissions.
 
 ## Configuration
 
-Cop behavior is controlled through `cops.yml`. The file is generated automatically on first run.
+Cop behavior is split across two files: `cops.yml` (tier definitions and AI tuning) and `settings.yml` (cop count
+scaling).
 
-### Tier Configuration
+---
 
-Each tier (`tier-1` through `tier-5`) supports the following fields:
+### Tier Configuration (`cops.yml`)
+
+Tiers are numbered `1` through `5` under `Cops.Tiers`. Each tier defines the stats and equipment for that cop rank.
 
 ```yaml
-tier-1:
-   name: "Officer"
-   health: 20.0
-   damage: 2.0
-   speed: 1.0
-   cuff-radius: 3.0          # How close the cop must be to attempt a cuff
-   can-use-weapons: false    # Whether this tier fires ranged weapons
-   skip-cuffing: false       # If true, goes straight to lethal combat
-   equipment:
-      - WOODEN_SWORD          # Items given to the NPC on spawn
+Cops:
+   Tiers:
+      1:
+         Display_Name: "&9Officer"   # Name shown above the NPC (supports & color codes)
+         Health: 20.0                # Max health points
+         Damage: 2.0                 # Melee damage per attack
+         Speed: 1.0                  # Movement speed multiplier (1.0 = normal player speed)
+         Cuff_Radius: 3.0            # Blocks from target at which this tier can attempt a cuff
+         Can_Use_Weapons: false      # Whether this tier fires Gangland ranged weapons
+         Skip_Cuffing: false         # If true, skips cuffing entirely and goes straight to lethal combat
+         Weapon_Pool: # Items the cop can carry. One is selected randomly on spawn.
+            - "WOODEN_SWORD"          # Vanilla Bukkit material name
+            - "weapon:rifle"          # Custom Gangland weapon — prefix with "weapon:" then the weapon name
+         Helmet: ""                  # Vanilla armor material for the helmet slot (empty = none)
+         Chestplate: ""              # Vanilla armor material for the chestplate slot
+         Leggings: ""                # Vanilla armor material for the leggings slot
+         Boots: ""                   # Vanilla armor material for the boots slot
 ```
 
-### AI Settings
+`Weapon_Pool` accepts two formats:
 
-Found under the `behavior` section of `cops.yml`:
+- Plain vanilla material (e.g., `IRON_SWORD`, `CROSSBOW`) — gives the NPC that vanilla item.
+- `weapon:<name>` (e.g., `weapon:rifle`) — gives the NPC a configured Gangland weapon from the `weapon/` folder.
+
+---
+
+### AI Settings (`settings.yml` → `Cops.Behaviour`)
 
 ```yaml
-behavior:
-   ai-tick-rate: 10          # How often (in ticks) cops recalculate decisions
-   spawn-check-ticks: 40     # How often the spawn manager checks for wanted players
-   attack-cooldown: 20       # Ticks between melee attacks
-   cuff-attempts: 3          # Max cuffing attempts before switching to combat
-   cuff-cooldown: 100        # Ticks between cuffing attempts
-   navigation-recalc: 10     # Ticks between pathfinding recalculations
-   stuck-threshold: 6        # Consecutive stuck checks before retrying navigation
-   return-timeout: 600       # Ticks before a cop with no target despawns
-   arrival-distance: 3.0     # Blocks from target before the cop considers itself "arrived"
-   starting-ammo: 3          # Magazine reloads each cop spawns with
+Cops:
+   Behaviour:
+      Max_Per_Player: 8             # Hard cap on active cop NPCs per wanted player at any time
+      AI_Tick_Rate: 10              # Ticks between each AI decision cycle. Lower = faster reactions, more CPU.
+      Spawn_Check_Rate: 40          # Ticks between checks that decide whether to spawn more cops
+      Cuff_Radius: 3.0              # Default cuff radius in blocks (individual tiers override this)
+      Max_Cuff_Attempts: 3          # Cuff attempts before the cop gives up and switches to combat
+      Cuff_Cooldown_Ticks: 100      # Ticks between consecutive cuffing attempts
+      Alert_Range: 40.0             # Blocks within which an idle cop detects a wanted player
+      Combat_Range: 4.0             # Melee attack range in blocks (ranged range is derived from this)
+      Attack_Cooldown_Ticks: 20     # Ticks between melee attacks
 ```
 
-### Spawn Settings
+---
 
-Found under the `spawn` section:
+### Spawn Settings (`settings.yml` → `Cops.Spawn`)
 
 ```yaml
-spawn:
-   min-distance: 10          # Minimum spawn distance from the player
-   max-distance: 50          # Maximum spawn distance from the player
-   phase-1-radius: 30.0      # Preferred spawn ring radius
-   visibility-check: 48.0    # Distance within which the system checks for spawners
+Cops:
+   Spawn:
+      Min_Distance: 10.0            # Minimum spawn distance from the player (blocks)
+      Max_Distance: 50.0            # Maximum spawn distance from the player (blocks)
+      Phase1_Min_Distance: 30.0     # Target ring radius for Phase 1 (preferred, behind-player) spawn attempts
+      Radius_Shrink_Step: 5.0       # How much the ring radius shrinks per Phase 2 iteration
+      Vertical_Search_Range: 10     # Blocks searched above and below the player's Y to find valid ground
+      Y_Offset: 0                   # Vertical offset from the player's Y when searching (0 = same level)
+      Min_Open_Sides: 2             # Minimum open horizontal sides required at a spawn position
+      Spawner_Preference_Radius: 80.0  # Blocks within which a placed cop spawner is preferred over a random position
+      Visibility_Check_Distance: 48.0  # Distance within which nearby players trigger despawn visibility checks
+      Phase1_Attempts: 20           # Number of spawn attempts in Phase 1 (preferred ring)
+      Phase2_Attempts: 15           # Number of attempts per shrink step in Phase 2
 ```
 
-### Global Settings
+---
 
-These live in `settings.yml` under the `cops` key:
+### Navigation Settings (`settings.yml` → `Cops.Navigation`)
 
 ```yaml
-cops:
-   count:
-      base: 2                 # Cops sent at 1 wanted star
-      per-level: 1            # Additional cops per additional wanted star
-      max: 8                  # Hard cap on cops per player
-   alert-range: 40.0         # Blocks within which a cop alerts its squad
-   cuff-radius: 3.0          # Default cuff attempt radius (overridden per tier)
+Cops:
+   Navigation:
+      Recalculation_Ticks: 10       # Ticks between pathfinding path recalculations
+      Stuck_Check_Interval: 5       # AI ticks between movement-progress samples for stuck detection
+      Max_Stuck_Checks: 3           # Consecutive stuck samples before the cop retries pathfinding
+      Max_Hopeless_Stuck_Checks: 6  # Consecutive stuck samples before navigation is considered permanently failed
+      Hopeless_Close_Threshold: 8.0 # If the target is within this many blocks, a hopeless cop still tries to navigate directly
+      Min_Progress_Distance: 0.75   # Minimum blocks moved between samples to count as progress (not stuck)
+      Ranged_Min_Distance: 7.0      # Ranged cops hold their firing position when target is closer than this
+      Ranged_Max_Distance: 12.0     # Ranged cops hold position when target is farther than this
+      Min_Repath_After_Loss_Ticks: 2.0  # Minimum AI ticks before the cop re-paths after losing combat
+```
+
+---
+
+### Return Settings (`settings.yml` → `Cops.Return`)
+
+```yaml
+Cops:
+   Return:
+      Max_Ticks: 600                # AI ticks before a cop with no target is force-despawned (600 ≈ 30 s)
+      Station_Arrival_Distance: 3.0 # Blocks from the spawn station at which the cop considers itself arrived and despawns
+```
+
+---
+
+### Cop Count Scaling (`settings.yml` → `Cops.Count`)
+
+```yaml
+Cops:
+   Count:
+      Formula_Enabled: false        # If true, evaluates the Formula string instead of the linear calculation
+      Formula: "base + (level - 1) * perLevel"
+      # Custom expression when Formula_Enabled is true.
+      # Available variables: level, base, perLevel, max
+      Base: 2                       # Cops spawned at 1 wanted star (also the 'base' variable in the formula)
+      Per_Level: 1                  # Additional cops per additional wanted star (also 'perLevel' in the formula)
+      Max: 8                        # Hard cap — result is always clamped to this value
+
+   Starting_Ammo_Magazines: 3      # Full magazine reloads worth of ammo given to each cop NPC on spawn
 ```
 
 ---

@@ -42,49 +42,61 @@ Durability cannot exceed the item's base maximum. Over-repairing simply brings i
 
 ## Configuration
 
-Repair materials are defined in `repair.yml`. Each entry maps to a vanilla item and defines its repair behavior.
+Repair materials are defined under `Repair_Materials` in `repair.yml`. Each key becomes the material's internal ID.
 
 ```yaml
-cleaning-kit:
-   name: "Cleaning Kit"
-   material: PAPER               # Vanilla item that acts as the repair material
-   uses: 5                       # How many times this item can be used before disappearing
-   restore: 15                   # Flat durability restored per use
-   compatible: # What item types this can repair
+Repair_Materials:
+  Cleaning_Kit:
+    Display_Name: "&aCleaning Kit"      # Item display name (supports & color codes)
+    Material: PAPER                     # Vanilla Bukkit material used as the physical item
+    Uses: 5                             # Uses remaining before the item is removed from the player's inventory
+    Restore_Amount: 15                  # Flat durability restored per use (0 = disabled)
+    Restore_Percent: 0.0                # Percentage of max durability restored per use (0.0 = disabled)
+                                        # When both are set, the higher resulting value is used.
+    Sound:
+      Default_Sound:                    # Vanilla Bukkit sound played on repair
+        Sound: ENTITY_PLAYER_SPLASH
+        Volume: 1.0                     # Volume (0.0–1.0)
+        Pitch: 1.0                      # Pitch (0.5–2.0)
+      Custom_Sound:                     # Resource pack sound played on repair (used if resource pack is loaded)
+        Sound: ""
+        Volume: 1.0
+        Pitch: 1.0
+    Compatible_Types:                   # Item categories this material can repair
       - WEAPON
-      - WEARABLE
-
-mechanical-part:
-   name: "Mechanical Part"
-   material: IRON_INGOT
-   uses: 1
-   restore-percent: 0.25         # Restores 25% of the item's max durability
-   compatible:
-      - WEAPON
+      - WEARABLE                        # Valid values: WEAPON, WEARABLE, GADGET
+    Lore:
+      - "&7A basic cleaning kit."
+      - "&7Restores &a15 &7condition."
+    Custom_Model_Data: 0                # Custom model data integer for resource pack texture overrides (0 = none)
 ```
 
-### Restore vs Restore Percent
+### Restore_Amount vs Restore_Percent
 
-- `restore` — adds a flat amount of durability (e.g., `15` always adds exactly 15).
-- `restore-percent` — adds a percentage of the item's maximum durability (e.g., `0.25` on a weapon with 100 max = 25
-  durability restored).
+- `Restore_Amount` — adds a flat number of durability points (e.g., `15` always restores exactly 15).
+- `Restore_Percent` — adds a percentage of the item's max durability (e.g., `25.0` on a weapon with 100 max = 25
+  restored).
 
-Only one of these should be set per material. If both are present, `restore-percent` takes precedence.
+When both are non-zero, **the higher resulting value is used**. Set the unused field to `0` / `0.0` to avoid ambiguity.
 
 ### Adding a New Repair Material
 
 ```yaml
-duct-tape:
-   name: "Duct Tape"
-   material: STRING
-   uses: 3
-   restore: 10
-   compatible:
+Repair_Materials:
+  Duct_Tape:
+    Display_Name: "&7Duct Tape"
+    Material: STRING
+    Uses: 3
+    Restore_Amount: 10
+    Restore_Percent: 0.0
+    Compatible_Types:
       - WEARABLE
+    Lore:
+      - "&7Quick field patch."
+    Custom_Model_Data: 0
 ```
 
-Any key added to `repair.yml` is automatically registered on load. Players must have the corresponding vanilla item in
-their inventory to use it as a repair material.
+Any key added under `Repair_Materials` is automatically registered on load.
 
 ---
 
