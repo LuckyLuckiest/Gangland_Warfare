@@ -17,26 +17,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import java.io.IOException;
 import java.util.*;
 
-/**
- * Loads and registers {@link Wearable} armor configurations from {@code wearables.yml}.
- *
- * <p>Example config entry:
- * <pre>
- * police_vest:
- *   Permission: "wearables.police_vest"
- *   Material: IRON_CHESTPLATE
- *   Name: "&7Police Vest"
- *   Drop_On_Death: true
- *   Droppable: true
- *   Base_Damage_Reduction: 0.12
- *   Leather_Color: ""          # hex color e.g. "#8B4513", only for leather armor
- *   Lore:
- *     - "&8Standard issue body armor"
- *   Traits:
- *     REINFORCED: 2
- *     BULLETPROOF: 1
- * </pre>
- */
 @CustomLog
 public class WearableAddon extends WearableService {
 

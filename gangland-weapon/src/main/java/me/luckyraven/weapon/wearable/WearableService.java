@@ -38,10 +38,6 @@ public class WearableService {
 
 	private final Map<String, Wearable> wearables = new HashMap<>();
 
-	// =========================================================================
-	// Registry management
-	// =========================================================================
-
 	public void register(String key, Wearable wearable) {
 		wearables.put(key.toLowerCase(), wearable);
 	}
@@ -58,10 +54,6 @@ public class WearableService {
 	public void clear() {
 		wearables.clear();
 	}
-
-	// =========================================================================
-	// Resolution
-	// =========================================================================
 
 	/**
 	 * Resolves a {@link Wearable} from an ItemStack according to the resolution order described in the class javadoc.
@@ -83,10 +75,6 @@ public class WearableService {
 
 		return Wearable.fromItemStack(item);
 	}
-
-	// =========================================================================
-	// Damage calculation
-	// =========================================================================
 
 	/**
 	 * Applies all worn-wearable damage reductions for a living entity to the given damage value. Reductions are applied
@@ -111,7 +99,7 @@ public class WearableService {
 
 		for (EquipmentSlot slot : ARMOR_SLOTS) {
 			ItemStack item = equipment.getItem(slot);
-			if (item == null || item.getType().isAir()) continue;
+			if (item.getType().isAir()) continue;
 
 			Wearable wearable = resolveWearable(item);
 			if (wearable == null) continue;
@@ -152,7 +140,7 @@ public class WearableService {
 
 		for (EquipmentSlot slot : ARMOR_SLOTS) {
 			ItemStack item = equipment.getItem(slot);
-			if (item == null || item.getType().isAir()) continue;
+			if (item.getType().isAir()) continue;
 
 			Wearable wearable = resolveWearable(item);
 			if (wearable == null) continue;
@@ -183,7 +171,7 @@ public class WearableService {
 
 		for (EquipmentSlot slot : ARMOR_SLOTS) {
 			ItemStack item = equipment.getItem(slot);
-			if (item == null || item.getType().isAir()) continue;
+			if (item.getType().isAir()) continue;
 
 			Wearable wearable = resolveWearable(item);
 			if (wearable != null) {

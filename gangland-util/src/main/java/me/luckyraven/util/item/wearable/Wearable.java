@@ -8,12 +8,14 @@ import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -37,60 +39,22 @@ import java.util.concurrent.ThreadLocalRandom;
 @Getter
 public class Wearable {
 
-	/**
-	 * NBT tag key used to stamp an ItemStack as a registered Wearable.
-	 */
 	public static final String NBT_KEY          = "wearable";
-	/**
-	 * NBT prefix for per-trait level storage: {@code "wt_<traitKey>"} → level.
-	 */
 	public static final String NBT_TRAIT_PREFIX = "wt_";
-	/**
-	 * NBT key for the stored base damage reduction value.
-	 */
 	public static final String NBT_BASE_REDUCE  = "wr_base";
 
-	// ----- Fields shared with UniqueItem (subset) -----
-
-	/**
-	 * Permission node required to equip this wearable (optional).
-	 */
-	private final String       permission;
-	private final Material     material;
-	private final String       name;
-	private final boolean      dropOnDeath;
-	private final List<String> lore;
-	private final boolean      droppable;
-
-	/**
-	 * Registry identifier; matches the key in {@code wearables.yml}.
-	 */
-	private final String wearableKey;
-
-	// ----- Wearable-specific fields -----
-
-	/**
-	 * Traits applied to this piece. Map from trait → integer level. May be empty but never null for built wearables.
-	 */
+	private final String                      permission;
+	private final Material                    material;
+	private final String                      name;
+	private final boolean                     dropOnDeath;
+	private final List<String>                lore;
+	private final boolean                     droppable;
+	private final String                      wearableKey;
 	private final Map<WearableTrait, Integer> traits;
-
-	/**
-	 * Base per-piece damage reduction fraction (0.0–1.0) before traits or enchantments are considered.
-	 */
-	private final double baseDamageReduction;
-
-	/**
-	 * Dye color for leather armor. Only applied when {@link #isLeatherArmor(Material)} is true. Null means use the
-	 * default leather color.
-	 */
+	private final double                      baseDamageReduction;
 	@Nullable
-	private final Color leatherColor;
-
-	/**
-	 * True when this instance was constructed on-the-fly from a vanilla armor piece, i.e. it is not registered in the
-	 * main wearable registry.
-	 */
-	private final boolean temporary;
+	private final Color                       leatherColor;
+	private final boolean                     temporary;
 
 	// =========================================================================
 	// Item building
@@ -103,10 +67,6 @@ public class Wearable {
 		if (!isArmorItem(item)) return 0;
 		return item.getEnchantmentLevel(Enchantment.PROTECTION) * 0.015;
 	}
-
-	// =========================================================================
-	// Damage-reduction helpers
-	// =========================================================================
 
 	/**
 	 * Extra projectile damage reduction from vanilla {@code PROTECTION} and {@code PROJECTILE_PROTECTION} enchantments.
@@ -152,14 +112,16 @@ public class Wearable {
 	public static Wearable fromItemStack(ItemStack item) {
 		if (!isArmorItem(item)) return null;
 
-		Color leatherColor = null;
-		if (isLeatherArmor(item.getType()) && item.getItemMeta() instanceof LeatherArmorMeta leatherMeta) {
+		Color    leatherColor = null;
+		ItemMeta itemMeta     = item.getItemMeta();
+
+		if (isLeatherArmor(item.getType()) && itemMeta instanceof LeatherArmorMeta leatherMeta) {
 			leatherColor = leatherMeta.getColor();
 		}
 
-		String displayName = (item.hasItemMeta() && item.getItemMeta().hasDisplayName())
-							 ? item.getItemMeta().getDisplayName()
-							 : ChatUtil.color("&7" + item.getType().name().replace("_", " ").toLowerCase());
+		String displayName = (item.hasItemMeta() && Objects.requireNonNull(itemMeta).hasDisplayName()) ?
+							 itemMeta.getDisplayName() :
+							 ChatUtil.color("&7" + item.getType().name().replace("_", " ").toLowerCase());
 
 		return Wearable.builder()
 					   .material(item.getType())
@@ -193,10 +155,6 @@ public class Wearable {
 		return new ItemBuilder(item).getStringTagData(NBT_KEY);
 	}
 
-	// =========================================================================
-	// Vanilla enchantment bonuses (static helpers, read from live ItemStack)
-	// =========================================================================
-
 	/**
 	 * Returns true if the ItemStack is a non-null, non-air piece of armor.
 	 */
@@ -210,9 +168,8 @@ public class Wearable {
 	 */
 	public static boolean isArmorMaterial(Material material) {
 		String name = material.name();
-		return name.endsWith("_HELMET") || name.endsWith("_CHESTPLATE")
-			   || name.endsWith("_LEGGINGS") || name.endsWith("_BOOTS")
-			   || name.equals("TURTLE_HELMET");
+		return name.endsWith("_HELMET") || name.endsWith("_CHESTPLATE") || name.endsWith("_LEGGINGS") ||
+			   name.endsWith("_BOOTS") || name.equals("TURTLE_HELMET");
 	}
 
 	/**
@@ -236,10 +193,6 @@ public class Wearable {
 		if (name.startsWith("NETHERITE_")) return 0.15;
 		return 0.03; // TURTLE_HELMET or unknown
 	}
-
-	// =========================================================================
-	// Factory: wrap any vanilla armor as a temporary Wearable
-	// =========================================================================
 
 	/**
 	 * Builds an ItemStack for this registered Wearable. The item is stamped with:
@@ -299,10 +252,6 @@ public class Wearable {
 		return Math.min(getGenericDamageReduction() + traitBonus(WearableTrait.BULLETPROOF), 0.90);
 	}
 
-	// =========================================================================
-	// Item classification helpers
-	// =========================================================================
-
 	/**
 	 * Explosion-specific reduction: generic reduction plus {@link WearableTrait#PADDED}. Capped at 90 % per piece.
 	 *
@@ -329,10 +278,6 @@ public class Wearable {
 	public double getFireTickReduction() {
 		return Math.min(traitBonus(WearableTrait.FIRE_RESISTANT), 1.0);
 	}
-
-	// =========================================================================
-	// Private helpers
-	// =========================================================================
 
 	/**
 	 * Rolls whether {@link WearableTrait#REACTIVE} triggers for this hit. Each level contributes an independent 2 %
