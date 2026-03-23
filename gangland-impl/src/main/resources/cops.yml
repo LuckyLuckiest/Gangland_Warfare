@@ -11,7 +11,26 @@
 # |                  Author: [LuckyRaven10]                  | #
 #  \                                                        /  #
 #   +------------------------------------------------------+   #
-
+#
+# Each entry under Cops.Tiers defines a cop NPC tier, escalating in difficulty.
+# Tiers are assigned to spawn points and determine NPC stats and equipment.
+#
+# Fields:
+#   Display_Name:   Name shown above the NPC (supports & color codes)
+#   Health:         Max health in half-hearts (20.0 = 10 hearts)
+#   Damage:         Melee damage dealt per hit
+#   Speed:          Movement speed multiplier (1.0 = default walk speed)
+#   Cuff_Radius:    Distance in blocks within which the cop can cuff a player
+#   Can_Use_Weapons: Whether the cop draws from its Weapon_Pool instead of melee
+#   Skip_Cuffing:   If true, the cop arrests the player instantly without a cuffing animation
+#   Weapon_Pool:    List of items the cop may equip; one is chosen at random on spawn.
+#                   Accepts vanilla materials (IRON_SWORD), custom weapons (weapon:<id>),
+#                   or items with extra data (LEATHER_HELMET{color=blue})
+#   Helmet:         Armor piece for the head slot; leave blank for none
+#   Chestplate:     Armor piece for the chest slot; leave blank for none
+#   Leggings:       Armor piece for the legs slot; leave blank for none
+#   Boots:          Armor piece for the feet slot; leave blank for none
+# ============================================
 Cops:
    Tiers:
       1:
