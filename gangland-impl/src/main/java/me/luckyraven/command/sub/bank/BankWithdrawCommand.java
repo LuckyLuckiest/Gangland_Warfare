@@ -82,8 +82,10 @@ class BankWithdrawCommand extends SubArgument {
 
 			double inBank = bank.getEconomy().getBalance() - argAmount;
 
-			BankCommand.processMoney(user, bank, bank.getEconomy().getBalance(), argAmount, inBank,
-									 user.getEconomy().getBalance() + argAmount);
+			boolean processed = BankCommand.processMoney(user, bank, bank.getEconomy().getBalance(), argAmount, inBank,
+														 user.getEconomy().getBalance() + argAmount);
+
+			if (!processed) return;
 
 			String string  = Messages.BANK_MONEY_WITHDRAW_PLAYER.toString();
 			String replace = string.replace("%amount%", Settings.formatDouble(argAmount));
@@ -108,8 +110,10 @@ class BankWithdrawCommand extends SubArgument {
 			NavigableSet<Double> values = NumberUtil.getSetOfNumbers(balance);
 
 			return values.stream()
-					.map(value -> String.valueOf(value % 1D == 0D ? (long) value.doubleValue() : value))
+					.map(value -> Double.parseDouble(value.toString()))
+					.map(value -> Math.round(value * 100.0) / 100.0)
 					.sorted()
+					.map(value -> value % 1 == 0 ? String.valueOf(value.longValue()) : String.format("%.2f", value))
 					.toList();
 		});
 	}

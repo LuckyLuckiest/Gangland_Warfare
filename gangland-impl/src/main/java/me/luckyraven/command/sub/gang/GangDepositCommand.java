@@ -123,8 +123,10 @@ class GangDepositCommand extends SubArgument {
 			NavigableSet<Double> values = NumberUtil.getSetOfNumbers(balance);
 
 			return values.stream()
-					.map(value -> String.valueOf(value % 1D == 0D ? (long) value.doubleValue() : value))
+					.map(value -> Double.parseDouble(value.toString()))
+					.map(value -> Math.round(value * 100.0) / 100.0)
 					.sorted()
+					.map(value -> value % 1 == 0 ? String.valueOf(value.longValue()) : String.format("%.2f", value))
 					.toList();
 		});
 	}

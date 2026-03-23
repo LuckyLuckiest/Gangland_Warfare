@@ -28,14 +28,20 @@ public final class BankCommand extends CommandHandler {
 		getHelpInfo().addAll(list);
 	}
 
-	static void processMoney(User<Player> user, Bank bank, double check, double amount, double inBank,
-							 double inAccount) {
-		if (check == 0D) user.getUser().sendMessage(Messages.CANNOT_TAKE_LESS_THAN_ZERO.toString());
-		else if (amount > check) user.getUser().sendMessage(Messages.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
-		else {
+	static boolean processMoney(User<Player> user, Bank bank, double check, double amount, double inBank,
+								double inAccount) {
+		if (check == 0D) {
+			user.getUser().sendMessage(Messages.CANNOT_TAKE_LESS_THAN_ZERO.toString());
+			return false;
+		} else if (amount > check) {
+			user.getUser().sendMessage(Messages.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
+			return false;
+		} else {
 			user.getEconomy().setBalance(inAccount);
 			bank.getEconomy().setBalance(inBank);
 		}
+
+		return true;
 	}
 
 	@Override
