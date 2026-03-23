@@ -66,7 +66,7 @@ public class WeaponInteract implements Listener {
 
 		// left-click scopes
 		boolean leftClick = event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK;
-		if (leftClick) {
+		if (leftClick && !player.isSneaking()) {
 			if (!weapon.getScopeData().isScoped()) {
 				weapon.scope(player, true);
 				SoundConfiguration.playSounds(player, weapon.getSoundData().getScopeCustom(),
