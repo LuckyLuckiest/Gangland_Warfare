@@ -36,6 +36,8 @@ public abstract class FolderLoader extends FileLoader<FileHandler> {
 	}
 
 	public void addExpectedFile(FileHandler fileHandler) {
+		if (expectedFolderFiles.contains(fileHandler)) return;
+
 		expectedFolderFiles.add(fileHandler);
 	}
 
