@@ -15,8 +15,6 @@
 # +------------------------------------+ #
 # |      Scoreboard Configuration      | #
 # +------------------------------------+ #
-Config_Version: '${project.version}'
-
 Board:
    Title:
       Interval: 2
