@@ -122,7 +122,9 @@ public class UpdateChecker {
 	}
 
 	public boolean updateAvailable() {
-		return !getLatestVersion().equals(plugin.getDescription().getVersion());
+		PluginVersion latest  = PluginVersion.parse(getLatestVersion());
+		PluginVersion current = PluginVersion.parse(plugin.getDescription().getVersion());
+		return latest.compareTo(current) > 0;
 	}
 
 	public String getUpdateMessage() {
@@ -154,6 +156,35 @@ public class UpdateChecker {
 
 	private boolean isResourceIdSet() {
 		return resourceId > -1;
+	}
+
+	private record PluginVersion(int major, int minor, int patch) implements Comparable<PluginVersion> {
+
+		static PluginVersion parse(String version) {
+			String   clean = version.contains("-") ? version.substring(0, version.indexOf('-')) : version;
+			String[] parts = clean.split("\\.");
+
+			int major = parts.length > 0 ? parseIntSafe(parts[0]) : 0;
+			int minor = parts.length > 1 ? parseIntSafe(parts[1]) : 0;
+			int patch = parts.length > 2 ? parseIntSafe(parts[2]) : 0;
+
+			return new PluginVersion(major, minor, patch);
+		}
+
+		private static int parseIntSafe(String s) {
+			try {
+				return Integer.parseInt(s);
+			} catch (NumberFormatException ignored) {
+				return 0;
+			}
+		}
+
+		@Override
+		public int compareTo(PluginVersion other) {
+			if (this.major != other.major) return Integer.compare(this.major, other.major);
+			if (this.minor != other.minor) return Integer.compare(this.minor, other.minor);
+			return Integer.compare(this.patch, other.patch);
+		}
 	}
 
 }
