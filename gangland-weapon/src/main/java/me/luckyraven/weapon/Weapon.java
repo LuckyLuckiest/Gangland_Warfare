@@ -13,6 +13,7 @@ import me.luckyraven.weapon.projectile.spread.SpreadManager;
 import me.luckyraven.weapon.reload.Reload;
 import me.luckyraven.weapon.repair.Repairable;
 import me.luckyraven.weapon.repair.RepairableType;
+import me.luckyraven.weapon.types.WeaponType;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -20,6 +21,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -41,6 +43,15 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 	// Configuration groups (immutable)
 	private final ProjectileData         projectileData;
 	private final ReloadData             reloadData;
+	// Type-specific configuration (only one non-null per weapon instance)
+	@Nullable
+	private final ThrowableData          throwableData;
+	@Nullable
+	private final MeleeData              meleeData;
+	@Nullable
+	private final IncendiaryData         incendiaryData;
+	@Nullable
+	private final BiologicalData         biologicalData;
 	// Runtime state
 	private final Map<WeaponTag, Object> tags;
 	// Configuration groups (mutable)
@@ -70,7 +81,9 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 
 	public Weapon(UUID uuid, String name, String displayName, WeaponType category, Material material, short durability,
 				  List<String> lore, boolean dropHologram, SelectiveFire selectiveFire, int weaponConsumedOnShot,
-				  ProjectileData projectileData, ReloadData reloadData) {
+				  ProjectileData projectileData, ReloadData reloadData, @Nullable ThrowableData throwableData,
+				  @Nullable MeleeData meleeData, @Nullable IncendiaryData incendiaryData,
+				  @Nullable BiologicalData biologicalData) {
 		this.uuid                 = uuid;
 		this.name                 = name;
 		this.displayName          = displayName;
@@ -84,8 +97,12 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 		this.weaponConsumedOnShot = weaponConsumedOnShot;
 		this.projectileData       = projectileData;
 		this.reloadData           = reloadData;
+		this.throwableData        = throwableData;
+		this.meleeData            = meleeData;
+		this.incendiaryData       = incendiaryData;
+		this.biologicalData       = biologicalData;
 
-		this.currentMagCapacity  = reloadData.getMaxMagCapacity();
+		this.currentMagCapacity  = reloadData != null ? reloadData.getMaxMagCapacity() : 0;
 		this.tags                = new TreeMap<>();
 		this.changingDisplayName = updateDisplayName(displayName);
 
@@ -96,7 +113,7 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 	public Weapon(UUID uuid, Weapon weapon) {
 		this(uuid, weapon.name, weapon.displayName, weapon.category, weapon.material, weapon.durability, weapon.lore,
 			 weapon.dropHologram, weapon.currentSelectiveFire, weapon.weaponConsumedOnShot, weapon.projectileData,
-			 weapon.reloadData);
+			 weapon.reloadData, weapon.throwableData, weapon.meleeData, weapon.incendiaryData, weapon.biologicalData);
 
 		this.currentDurability = weapon.currentDurability;
 		copyMutableData(weapon);
@@ -211,6 +228,8 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 		return itemBuilder.hasNBTTag(getTagProperName(tag));
 	}
 
+	@NotNull
+	@Override
 	public ItemStack buildItem() {
 		ItemBuilder builder = new ItemBuilder(material);
 		builder.setDisplayName(changingDisplayName).setLore(lore);
@@ -229,11 +248,11 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 		try {
 			Weapon weapon = (Weapon) super.clone();
 
-			weapon.currentMagCapacity = weapon.reloadData.getMaxMagCapacity();
+			weapon.currentMagCapacity = weapon.reloadData != null ? weapon.reloadData.getMaxMagCapacity() : 0;
 			weapon.tags.clear();
 			weapon.copyMutableData(this);
 
-			weapon.reload               = this.reload.clone();
+			weapon.reload               = this.reload != null ? this.reload.clone() : null;
 			weapon.recoil               = new RecoilManager(weapon);
 			weapon.spread               = new SpreadManager(weapon);
 			weapon.durabilityCalculator = new DurabilityCalculator(weapon);
@@ -249,20 +268,20 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 						 .thenComparing(Weapon::getCategory)
 						 .thenComparing(Weapon::getMaterial)
 						 .thenComparingInt(w -> w.durability)
-						 .thenComparingDouble(w -> w.projectileData.getSpeed())
-						 .thenComparing(w -> w.projectileData.getType())
-						 .thenComparingDouble(w -> w.projectileData.getDamage())
-						 .thenComparingInt(w -> w.projectileData.getConsumed())
-						 .thenComparingInt(w -> w.projectileData.getPerShot())
-						 .thenComparingInt(w -> w.projectileData.getCooldown())
-						 .thenComparingInt(w -> w.projectileData.getDistance())
-						 .thenComparing(w -> w.projectileData.isParticle())
-						 .thenComparingInt(w -> w.reloadData.getMaxMagCapacity())
-						 .thenComparingInt(w -> w.reloadData.getCooldown())
-						 .thenComparing(w -> w.reloadData.getAmmoType())
-						 .thenComparingInt(w -> w.reloadData.getConsume())
-						 .thenComparingInt(w -> w.reloadData.getRestore())
-						 .thenComparing(w -> w.reloadData.getType())
+						 .thenComparingDouble(w -> w.projectileData != null ? w.projectileData.getSpeed() : 0.0)
+						 .thenComparing(w -> w.projectileData != null ? w.projectileData.getType().name() : "")
+						 .thenComparingDouble(w -> w.projectileData != null ? w.projectileData.getDamage() : 0.0)
+						 .thenComparingInt(w -> w.projectileData != null ? w.projectileData.getConsumed() : 0)
+						 .thenComparingInt(w -> w.projectileData != null ? w.projectileData.getPerShot() : 0)
+						 .thenComparingInt(w -> w.projectileData != null ? w.projectileData.getCooldown() : 0)
+						 .thenComparingInt(w -> w.projectileData != null ? w.projectileData.getDistance() : 0)
+						 .thenComparing(w -> w.projectileData != null && w.projectileData.isParticle())
+						 .thenComparingInt(w -> w.reloadData != null ? w.reloadData.getMaxMagCapacity() : 0)
+						 .thenComparingInt(w -> w.reloadData != null ? w.reloadData.getCooldown() : 0)
+						 .thenComparing(w -> w.reloadData != null ? w.reloadData.getAmmoType().getName() : "")
+						 .thenComparingInt(w -> w.reloadData != null ? w.reloadData.getConsume() : 0)
+						 .thenComparingInt(w -> w.reloadData != null ? w.reloadData.getRestore() : 0)
+						 .thenComparing(w -> w.reloadData != null ? w.reloadData.getType().name() : "")
 						 .compare(this, other);
 	}
 
@@ -271,8 +290,9 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 		return String.format("Weapon{uuid='%s',name='%s',category='%s',material='%s'}", uuid, name, category, material);
 	}
 
+	@NotNull
 	@Override
-	public @NotNull String getRepairableId() {
+	public String getRepairableId() {
 		return name;
 	}
 
@@ -291,13 +311,16 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 		return durability;
 	}
 
+	@NotNull
 	@Override
-	public @NotNull RepairableType getRepairableType() {
+	public RepairableType getRepairableType() {
 		return RepairableType.WEAPON;
 	}
 
 	private void initializeManagers() {
-		this.reload               = reloadData.getType().createInstance(this, reloadData.getAmmoType());
+		this.reload               = reloadData != null ?
+									reloadData.getType().createInstance(this, reloadData.getAmmoType()) :
+									null;
 		this.recoil               = new RecoilManager(this);
 		this.spread               = new SpreadManager(this);
 		this.durabilityCalculator = new DurabilityCalculator(this);
@@ -325,14 +348,13 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 		this.modifiersData       = source.modifiersData.clone();
 	}
 
-	// --- Repairable implementation ---
-
 	private void updateTag(ItemBuilder itemBuilder, WeaponTag tag, Object value) {
 		tags.replace(tag, value);
 		itemBuilder.modifyTag(getTagProperName(tag), value);
 	}
 
 	private String updateDisplayName(String displayName) {
+		if (reloadData == null) return displayName + "&r";
 		return String.format("%s&r &8«&6%d&7/&6%d&8»&r", displayName, currentMagCapacity,
 							 reloadData.getMaxMagCapacity());
 	}

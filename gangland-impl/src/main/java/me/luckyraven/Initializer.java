@@ -529,6 +529,10 @@ public final class Initializer {
 		weaponLoader = new WeaponLoader(gangland);
 
 		weaponLoader.addExpectedFile(new FileHandler(gangland, "rifle", "weapon", ".yml"));
+		weaponLoader.addExpectedFile(new FileHandler(gangland, "grenade", "weapon", ".yml"));
+		weaponLoader.addExpectedFile(new FileHandler(gangland, "knife", "weapon", ".yml"));
+		weaponLoader.addExpectedFile(new FileHandler(gangland, "flamethrower", "weapon", ".yml"));
+		weaponLoader.addExpectedFile(new FileHandler(gangland, "syringe_gun", "weapon", ".yml"));
 		weaponLoader.initialize();
 	}
 

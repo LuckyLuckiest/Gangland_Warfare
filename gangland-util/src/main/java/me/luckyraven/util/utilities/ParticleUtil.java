@@ -8,6 +8,7 @@ import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
+import org.bukkit.util.Vector;
 
 public class ParticleUtil {
 
@@ -30,6 +31,14 @@ public class ParticleUtil {
 
 			world.spawnParticle(particle, particleLocation, 1, data);
 		}
+	}
+
+	public static void spawnFireSpray(Location eye, Vector direction, double range) {
+		Particle flame = XParticle.FLAME.get();
+		if (flame == null) flame = Particle.FLAME;
+
+		Location target = eye.clone().add(direction.clone().normalize().multiply(range));
+		spawnLine(eye, target, flame, Math.max(1, (int) (range * 2)), null);
 	}
 
 	public static void createBloodSplash(Entity entity, double damage) {

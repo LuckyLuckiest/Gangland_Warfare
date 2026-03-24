@@ -1,0 +1,23 @@
+Information:
+   Name: "&aSyringe Gun"
+   Category: biological
+   Material: GLASS_BOTTLE
+   Durability:
+      Base: 100
+      Change:
+         On_Shot: 0
+         On_Repair: 25
+   Lore:
+      - "&7Hold right-click to charge."
+      - "&7Release (left-click) to fire."
+   Drop_Hologram: false
+
+Biological:
+   Charge_Time_Per_Level: 20
+   Max_Charge_Level: 3
+   Area_Radius: 5.0
+   Ammo_Type: pathogen_vial
+   Effects_Per_Level:
+      - "POISON-60-1"
+      - "POISON-100-1,SLOWNESS-80-1"
+      - "WITHER-60-1,NAUSEA-100-1"

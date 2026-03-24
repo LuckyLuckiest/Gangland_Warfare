@@ -8,7 +8,16 @@ import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.timer.SequenceTimer;
-import me.luckyraven.weapon.*;
+import me.luckyraven.weapon.SelectiveFire;
+import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.WeaponService;
+import me.luckyraven.weapon.types.WeaponType;
+import me.luckyraven.weapon.types.biological.BiologicalAction;
+import me.luckyraven.weapon.types.gun.FullAutoTask;
+import me.luckyraven.weapon.types.gun.GunAction;
+import me.luckyraven.weapon.types.incendiary.IncendiaryAction;
+import me.luckyraven.weapon.types.melee.MeleeAction;
+import me.luckyraven.weapon.types.throwable.ThrowableAction;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -40,6 +49,7 @@ public class WeaponInteract implements Listener {
 	private final Map<UUID, AtomicReference<WeaponData>> continuousFire;
 	private final Map<UUID, Boolean>                     singleShotLock;
 	private final Map<UUID, FullAutoTask>                autoTasks;
+	private final Map<UUID, RepeatingTimer>              activeTasks;
 
 	public WeaponInteract(JavaPlugin plugin, WeaponService weaponService, RecoilCompatibility recoilCompatibility) {
 		this.plugin              = plugin;
@@ -48,6 +58,7 @@ public class WeaponInteract implements Listener {
 		this.continuousFire      = new ConcurrentHashMap<>();
 		this.singleShotLock      = new ConcurrentHashMap<>();
 		this.autoTasks           = new ConcurrentHashMap<>();
+		this.activeTasks         = new ConcurrentHashMap<>();
 	}
 
 	@EventHandler
@@ -57,6 +68,12 @@ public class WeaponInteract implements Listener {
 		Weapon    weapon = weaponService.validateAndGetWeapon(player, item);
 
 		if (weapon == null) return;
+
+		// dispatch non-GUN types before any gun-specific logic
+		if (weapon.getCategory() != WeaponType.GUN) {
+			handleNonGunInteract(event, player, weapon);
+			return;
+		}
 
 		// no interruption while the weapon is reloading
 		if (weapon.isReloading()) {
@@ -129,6 +146,14 @@ public class WeaponInteract implements Listener {
 
 		if (weapon == null) return;
 
+		// dispatch non-GUN types (e.g. melee can hit entity directly)
+		if (weapon.getCategory() != WeaponType.GUN) {
+			if (weapon.getCategory() == WeaponType.MELEE) {
+				MeleeAction.activate(player, weapon);
+			}
+			return;
+		}
+
 		if (weapon.isReloading()) {
 			return;
 		}
@@ -167,6 +192,39 @@ public class WeaponInteract implements Listener {
 
 		if (autoTask != null) {
 			autoTask.stop();
+		}
+
+		// cancel active incendiary / biological tasks
+		RepeatingTimer activeTask = activeTasks.remove(weaponUuid);
+		if (activeTask != null) {
+			activeTask.stop();
+		}
+	}
+
+	private void handleNonGunInteract(PlayerInteractEvent event, Player player, Weapon weapon) {
+		boolean rightClick = event.getAction() == Action.RIGHT_CLICK_AIR ||
+							 event.getAction() == Action.RIGHT_CLICK_BLOCK;
+		boolean leftClick = event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK;
+
+		event.setUseInteractedBlock(Event.Result.DENY);
+		event.setUseItemInHand(Event.Result.DENY);
+
+		switch (weapon.getCategory()) {
+			case THROWABLE -> {
+				if (rightClick) ThrowableAction.activate(plugin, player, weapon);
+			}
+			case MELEE -> {
+				if (rightClick) MeleeAction.activate(player, weapon);
+			}
+			case INCENDIARY -> {
+				if (rightClick) IncendiaryAction.start(plugin, player, weapon, activeTasks);
+				else if (leftClick) IncendiaryAction.stop(weapon, activeTasks);
+			}
+			case BIOLOGICAL -> {
+				if (rightClick) BiologicalAction.start(plugin, player, weapon, activeTasks);
+				else if (leftClick) BiologicalAction.fire(player, weapon, activeTasks);
+			}
+			default -> { }
 		}
 	}
 
@@ -395,10 +453,10 @@ public class WeaponInteract implements Listener {
 
 	private void shootInterval(Player player, Weapon weapon) {
 
-		WeaponAction weaponAction = new WeaponAction(plugin, weaponService, weapon, recoilCompatibility);
+		GunAction gunAction = new GunAction(plugin, weaponService, weapon, recoilCompatibility);
 
 		// shoot the weapon
-		weaponAction.weaponShoot(player);
+		gunAction.weaponShoot(player);
 
 		// weapon consumption
 		if (weapon.getWeaponConsumedOnShot() > 0 &&

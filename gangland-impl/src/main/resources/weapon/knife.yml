@@ -1,0 +1,19 @@
+Information:
+   Name: "&7Combat Knife"
+   Category: melee
+   Material: IRON_SWORD
+   Durability:
+      Base: 200
+      Change:
+         On_Shot: 1
+         On_Repair: 50
+   Lore:
+      - "&7A quick, silent blade."
+      - "&7Range: &e2.5 blocks"
+   Drop_Hologram: false
+
+Melee:
+   Damage: 6.0
+   Range: 2.5
+   Cooldown: 8
+   Knockback: 0.4

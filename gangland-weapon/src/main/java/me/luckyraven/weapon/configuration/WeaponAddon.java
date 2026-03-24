@@ -5,13 +5,12 @@ import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.weapon.SelectiveFire;
 import me.luckyraven.weapon.Weapon;
-import me.luckyraven.weapon.WeaponType;
 import me.luckyraven.weapon.ammo.Ammunition;
-import me.luckyraven.weapon.dto.ProjectileData;
-import me.luckyraven.weapon.dto.ReloadData;
+import me.luckyraven.weapon.dto.*;
 import me.luckyraven.weapon.modifiers.*;
 import me.luckyraven.weapon.projectile.ProjectileType;
 import me.luckyraven.weapon.reload.ReloadType;
+import me.luckyraven.weapon.types.WeaponType;
 import me.luckyraven.weapon.util.BlockGroupResolver;
 import org.bukkit.Color;
 import org.bukkit.Material;
@@ -75,6 +74,25 @@ public class WeaponAddon {
 
 		// drop hologram
 		boolean dropHologram = informationSection.getBoolean("Drop_Hologram");
+
+		// dispatch non-GUN types to their own parsers before gun-only sections
+		if (category != WeaponType.GUN) {
+			Weapon weapon = switch (category) {
+				case THROWABLE -> parseThrowable(config, fileName, displayName, category, material, durability, lore,
+												 dropHologram);
+				case MELEE -> parseMelee(config, fileName, displayName, category, material, durability, lore,
+										 dropHologram);
+				case INCENDIARY -> parseIncendiary(config, fileName, displayName, category, material, durability, lore,
+												   dropHologram, ammunitionAddon);
+				case BIOLOGICAL -> parseBiological(config, fileName, displayName, category, material, durability, lore,
+												   dropHologram, ammunitionAddon);
+				default -> parseMinimal(fileName, displayName, category, material, durability, lore, dropHologram);
+			};
+			weapon.getDurabilityData().setOnShot(onShotDurability);
+			weapon.getDurabilityData().setOnRepair(onRepairDurability);
+			weapons.put(fileName, weapon);
+			return;
+		}
 
 		/* shoot section */
 		ConfigurationSection shootSection = config.getConfigurationSection("Shoot");
@@ -537,7 +555,8 @@ public class WeaponAddon {
 
 		// Create the weapon with the new constructor
 		Weapon weapon = new Weapon(null, fileName, displayName, category, material, durability, lore, dropHologram,
-								   selectiveFire, weaponConsumedOnShot, projectileData, reloadData);
+								   selectiveFire, weaponConsumedOnShot, projectileData, reloadData, null, null, null,
+								   null);
 
 		// Set mutable data via the data objects
 		weapon.getDurabilityData().setOnShot(onShotDurability);
@@ -616,6 +635,85 @@ public class WeaponAddon {
 
 	public int size() {
 		return weapons.size();
+	}
+
+	private Weapon parseThrowable(FileConfiguration config, String fileName, String displayName, WeaponType category,
+								  Material material, short durability, List<String> lore, boolean dropHologram) throws
+			InvalidConfigurationException {
+		ConfigurationSection section = config.getConfigurationSection("Throwable");
+		if (section == null) throw new InvalidConfigurationException("Throwable section not found");
+
+		int     fuseTime        = section.getInt("Fuse_Time", 60);
+		double  explosionRadius = section.getDouble("Explosion_Radius", 3.0);
+		int     explosionDamage = section.getInt("Explosion_Damage", 6);
+		int     fireTicks       = section.getInt("Fire_Ticks", 0);
+		boolean bounces         = section.getBoolean("Bounces", false);
+		String  entityType      = section.getString("Entity_Type", "SNOWBALL");
+
+		ThrowableData throwableData = new ThrowableData(fuseTime, explosionRadius, explosionDamage, fireTicks, bounces,
+														entityType);
+		return new Weapon(null, fileName, displayName, category, material, durability, lore, dropHologram,
+						  SelectiveFire.SINGLE, 0, null, null, throwableData, null, null, null);
+	}
+
+	private Weapon parseMelee(FileConfiguration config, String fileName, String displayName, WeaponType category,
+							  Material material, short durability, List<String> lore, boolean dropHologram) throws
+			InvalidConfigurationException {
+		ConfigurationSection section = config.getConfigurationSection("Melee");
+		if (section == null) throw new InvalidConfigurationException("Melee section not found");
+
+		double damage    = section.getDouble("Damage", 4.0);
+		double range     = section.getDouble("Range", 2.5);
+		int    cooldown  = section.getInt("Cooldown", 10);
+		double knockback = section.getDouble("Knockback", 0.5);
+
+		MeleeData meleeData = new MeleeData(damage, range, cooldown, knockback);
+		return new Weapon(null, fileName, displayName, category, material, durability, lore, dropHologram,
+						  SelectiveFire.SINGLE, 0, null, null, null, meleeData, null, null);
+	}
+
+	private Weapon parseIncendiary(FileConfiguration config, String fileName, String displayName, WeaponType category,
+								   Material material, short durability, List<String> lore, boolean dropHologram,
+								   AmmunitionAddon ammunitionAddon) throws InvalidConfigurationException {
+		ConfigurationSection section = config.getConfigurationSection("Incendiary");
+		if (section == null) throw new InvalidConfigurationException("Incendiary section not found");
+
+		double coneAngle       = section.getDouble("Cone_Angle", 30.0);
+		double range           = section.getDouble("Range", 5.0);
+		int    fireDuration    = section.getInt("Fire_Duration", 60);
+		int    tickRate        = section.getInt("Tick_Rate", 2);
+		String ammoTypeString  = section.getString("Ammo_Type");
+		int    fuelCapacity    = section.getInt("Fuel_Capacity", 100);
+		int    fuelConsumeRate = section.getInt("Fuel_Consume_Rate", 2);
+
+		IncendiaryData incendiaryData = new IncendiaryData(coneAngle, range, fireDuration, tickRate, ammoTypeString,
+														   fuelCapacity, fuelConsumeRate);
+		return new Weapon(null, fileName, displayName, category, material, durability, lore, dropHologram,
+						  SelectiveFire.SINGLE, 0, null, null, null, null, incendiaryData, null);
+	}
+
+	private Weapon parseBiological(FileConfiguration config, String fileName, String displayName, WeaponType category,
+								   Material material, short durability, List<String> lore, boolean dropHologram,
+								   AmmunitionAddon ammunitionAddon) throws InvalidConfigurationException {
+		ConfigurationSection section = config.getConfigurationSection("Biological");
+		if (section == null) throw new InvalidConfigurationException("Biological section not found");
+
+		int          chargeTimePerLevel = section.getInt("Charge_Time_Per_Level", 20);
+		int          maxChargeLevel     = section.getInt("Max_Charge_Level", 3);
+		List<String> effectsPerLevel    = section.getStringList("Effects_Per_Level");
+		double       areaRadius         = section.getDouble("Area_Radius", 5.0);
+		String       ammoTypeString     = section.getString("Ammo_Type");
+
+		BiologicalData biologicalData = new BiologicalData(chargeTimePerLevel, maxChargeLevel, effectsPerLevel,
+														   areaRadius, ammoTypeString);
+		return new Weapon(null, fileName, displayName, category, material, durability, lore, dropHologram,
+						  SelectiveFire.SINGLE, 0, null, null, null, null, null, biologicalData);
+	}
+
+	private Weapon parseMinimal(String fileName, String displayName, WeaponType category, Material material,
+								short durability, List<String> lore, boolean dropHologram) {
+		return new Weapon(null, fileName, displayName, category, material, durability, lore, dropHologram,
+						  SelectiveFire.SINGLE, 0, null, null, null, null, null, null);
 	}
 
 }

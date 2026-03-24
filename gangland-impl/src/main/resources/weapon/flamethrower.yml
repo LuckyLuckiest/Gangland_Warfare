@@ -1,0 +1,22 @@
+Information:
+   Name: "&6Flamethrower"
+   Category: incendiary
+   Material: BLAZE_ROD
+   Durability:
+      Base: 500
+      Change:
+         On_Shot: 0
+         On_Repair: 100
+   Lore:
+      - "&7Sprays continuous fire."
+      - "&7Right-click to toggle."
+   Drop_Hologram: false
+
+Incendiary:
+   Cone_Angle: 30.0
+   Range: 5.0
+   Fire_Duration: 60
+   Tick_Rate: 2
+   Ammo_Type: fuel_canister
+   Fuel_Capacity: 200
+   Fuel_Consume_Rate: 4

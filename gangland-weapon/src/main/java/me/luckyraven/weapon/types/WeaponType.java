@@ -1,10 +1,10 @@
-package me.luckyraven.weapon;
+package me.luckyraven.weapon.types;
 
 public enum WeaponType {
 
 	GUN,
 	MELEE,
-	PROJECTILE,
+	THROWABLE,
 	INCENDIARY,
 	BIOLOGICAL,
 	OTHER;
@@ -13,7 +13,7 @@ public enum WeaponType {
 		return switch (type.toLowerCase()) {
 			case "gun" -> GUN;
 			case "melee" -> MELEE;
-			case "projectile", "proj" -> PROJECTILE;
+			case "throwable", "throw", "grenade", "projectile", "proj" -> THROWABLE;
 			case "incendiary", "fire" -> INCENDIARY;
 			case "biological", "biology", "bio" -> BIOLOGICAL;
 			default -> OTHER;

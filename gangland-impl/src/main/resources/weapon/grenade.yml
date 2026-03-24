@@ -1,0 +1,21 @@
+Information:
+   Name: "&cFrag Grenade"
+   Category: throwable
+   Material: LIME_DYE
+   Durability:
+      Base: 1
+      Change:
+         On_Shot: 0
+         On_Repair: 0
+   Lore:
+      - "&7Pull the pin and throw."
+      - "&7Fuse: &e3s"
+   Drop_Hologram: false
+
+Throwable:
+   Fuse_Time: 60
+   Explosion_Radius: 4.0
+   Explosion_Damage: 10
+   Fire_Ticks: 0
+   Bounces: true
+   Entity_Type: SNOWBALL
