@@ -1,9 +1,11 @@
-package me.luckyraven.weapon;
+package me.luckyraven.weapon.types.gun;
 
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.utilities.ChatUtil;
+import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.dto.RecoilData;
 import me.luckyraven.weapon.dto.SoundData;
 import me.luckyraven.weapon.events.projectile.WeaponShootEvent;
@@ -15,15 +17,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
-public class WeaponAction {
+public class GunAction {
 
 	private final JavaPlugin          plugin;
 	private final WeaponService       weaponService;
 	private final Weapon              weapon;
 	private final RecoilCompatibility recoilCompatibility;
 
-	public WeaponAction(JavaPlugin plugin, WeaponService weaponService, Weapon weapon,
-						RecoilCompatibility recoilCompatibility) {
+	public GunAction(JavaPlugin plugin, WeaponService weaponService, Weapon weapon,
+					 RecoilCompatibility recoilCompatibility) {
 		this.plugin              = plugin;
 		this.weaponService       = weaponService;
 		this.weapon              = weapon;

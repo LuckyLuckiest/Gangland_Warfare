@@ -1,7 +1,9 @@
-package me.luckyraven.weapon;
+package me.luckyraven.weapon.types.gun;
 
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.util.timer.Timer;
+import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.WeaponService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -87,9 +89,9 @@ public class FullAutoTask extends Timer {
 		int shotsPerSecond = Math.max(1, Math.min(20, 20 / Math.max(1, weapon.getProjectileData().getCooldown())));
 
 		if (AUTO[shotsPerSecond][tickIndex]) {
-			WeaponAction weaponAction = new WeaponAction(plugin, weaponService, weapon, recoilCompatibility);
+			GunAction gunAction = new GunAction(plugin, weaponService, weapon, recoilCompatibility);
 
-			weaponAction.weaponShoot(player);
+			gunAction.weaponShoot(player);
 		}
 
 		// Advance tick
