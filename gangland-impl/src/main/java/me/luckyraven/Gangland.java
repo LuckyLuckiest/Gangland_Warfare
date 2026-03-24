@@ -204,6 +204,8 @@ public final class Gangland extends JavaPlugin {
 	 * Initializes the update checker timer, which checks if there was a new update for the plugin published.
 	 */
 	private void updateCheckerInitializer() {
+		if (!Settings.isUpdaterEnabled()) return;
+
 		// there needs to be checks every 6 hours
 		// give an option if there was an update
 		int hours      = 6;
