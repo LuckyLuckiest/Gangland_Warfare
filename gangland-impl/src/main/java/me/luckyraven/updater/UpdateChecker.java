@@ -2,14 +2,12 @@ package me.luckyraven.updater;
 
 import lombok.CustomLog;
 import lombok.Getter;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
@@ -71,13 +69,33 @@ public class UpdateChecker {
 		if (!isResourceIdSet()) return;
 
 		try {
-			// get the url to download the resource from
-			URL url = new URI("").toURL();
+			String latestVersion = getLatestVersion();
+
+			// get the url to download the resource from the Spiget API
+			URL url = new URI("https://api.spiget.org/v2/resources/" + resourceId + "/download").toURL();
 			// establish the connection by having a new channel
 			ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
 
+			// create the release folder inside the plugin's data folder
+			File releaseFolder = new File(plugin.getDataFolder(), "release");
+			if (!releaseFolder.exists()) {
+				boolean mkdir = releaseFolder.mkdirs();
+
+				if (!mkdir) {
+					log.error("Failed to create release folder at {}", releaseFolder.getAbsolutePath());
+					return;
+				}
+			}
+
 			// specify the output path for the JAR file
-			String outputPath = "";
+			File   outputFile = new File(releaseFolder, plugin.getName() + "-" + latestVersion + ".jar");
+			String outputPath = outputFile.getAbsolutePath();
+
+			// skip download if this version was already downloaded
+			if (outputFile.exists()) {
+				log.info("Version {} is already downloaded at {}", latestVersion, outputPath);
+				return;
+			}
 
 			// create a file output stream to write the downloaded file
 			FileOutputStream fileOutputStream = new FileOutputStream(outputPath);
@@ -86,6 +104,8 @@ public class UpdateChecker {
 
 			fileOutputStream.close();
 			readableByteChannel.close();
+
+			log.info("Downloaded version {} to {}", latestVersion, outputPath);
 		} catch (FileNotFoundException exception) {
 			log.error("Unable to find the new file.", exception);
 		} catch (Exception exception) {
@@ -120,6 +140,9 @@ public class UpdateChecker {
 
 		if (updateAvailable()) {
 			ChatUtil.sendToOperators(checkPermission, updateMessage, log, true);
+			if (Settings.isUpdaterAutoUpdate()) {
+				downloadLatestVersion();
+			}
 			return;
 		}
 
