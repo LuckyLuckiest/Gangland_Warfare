@@ -3,6 +3,7 @@ package me.luckyraven.weapon;
 import lombok.Getter;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.weapon.configuration.WeaponAddon;
+import me.luckyraven.weapon.types.WeaponType;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -10,6 +11,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -153,10 +155,14 @@ public abstract class WeaponService implements Comparator<Weapon> {
 
 		if (weaponAddon == null) return null;
 
-		// check if the weapon already has an uuid but not registered, use it; otherwise generate one
-		UUID finalUuid = (uuid != null) ? uuid : UUID.randomUUID();
-
-		while (weapons.containsKey(finalUuid)) finalUuid = UUID.randomUUID();
+		// throwable share one UUID per type so identical items stack in inventory
+		UUID finalUuid;
+		if (weaponAddon.getCategory() == WeaponType.THROWABLE) {
+			finalUuid = UUID.nameUUIDFromBytes(("throwable:" + type).getBytes(StandardCharsets.UTF_8));
+		} else {
+			finalUuid = (uuid != null) ? uuid : UUID.randomUUID();
+			while (weapons.containsKey(finalUuid)) finalUuid = UUID.randomUUID();
+		}
 
 		// mostly for new weapons
 		// when the weapon is registered in the system but not tagged with an uuid
