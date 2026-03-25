@@ -53,7 +53,7 @@ public class EntityDamage implements Listener {
 		setupKillComboCallbacks();
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onPlayerEntityDeath(EntityDamageByEntityEvent event) {
 		Player damager;
 		if (event.getDamager() instanceof Player player) damager = player;

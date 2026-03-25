@@ -22,17 +22,18 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @ListenerHandler
 public class PlayerDeath implements Listener {
 
+	private static final long DEATH_DEDUP_WINDOW_MS = 500L;
+
 	private final Initializer         initializer;
 	private final UserManager<Player> userManager;
 	private final WeaponManager       weaponManager;
+	private final Map<UUID, Long>     recentDeaths = new ConcurrentHashMap<>();
 
 	public PlayerDeath(Gangland gangland) {
 		this.initializer   = gangland.getInitializer();
@@ -42,8 +43,18 @@ public class PlayerDeath implements Listener {
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onPlayerDeath(PlayerDeathEvent event) {
-		Player       player = event.getEntity();
-		User<Player> user   = userManager.getUser(player);
+		Player player = event.getEntity();
+		UUID   uuid   = player.getUniqueId();
+		long   now    = System.currentTimeMillis();
+
+		Long lastDeath = recentDeaths.get(uuid);
+		if (lastDeath != null && now - lastDeath < DEATH_DEDUP_WINDOW_MS) {
+			event.setDeathMessage(null);
+			return;
+		}
+		recentDeaths.put(uuid, now);
+
+		User<Player> user = userManager.getUser(player);
 
 		if (user == null) return;
 
