@@ -3,8 +3,10 @@ package me.luckyraven.weapon.types.biological;
 import com.cryptomorin.xseries.XPotion;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.utilities.ChatUtil;
+import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.dto.BiologicalData;
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -45,6 +47,8 @@ public class BiologicalAction {
 				ChatUtil.sendActionBar(player, "§6Charging... §e[" + "■".repeat(charge[0]) +
 											   "□".repeat(data.getMaxChargeLevel() - charge[0]) + "]");
 			}
+			// visual ring that grows with charge level
+			ParticleUtil.spawnChargeRing(player.getLocation(), charge[0], data.getMaxChargeLevel());
 		});
 
 		timer.start(false);
@@ -67,12 +71,19 @@ public class BiologicalAction {
 		List<PotionEffect> effects = parseEffects(data, level);
 		double             radius  = data.getAreaRadius();
 
+		Location beamOrigin = player.getLocation().add(0, 1.0, 0);
+
 		for (Entity entity : player.getNearbyEntities(radius, radius, radius)) {
 			if (!(entity instanceof LivingEntity target)) continue;
 			if (entity.equals(player)) continue;
 			if (target.getLocation().distanceSquared(player.getLocation()) > radius * radius) continue;
 			for (PotionEffect effect : effects) target.addPotionEffect(effect);
+			// directed beam to each infected target
+			ParticleUtil.spawnBeam(beamOrigin, target.getLocation().add(0, target.getHeight() / 2.0, 0));
 		}
+
+		// area-of-effect burst pulse
+		ParticleUtil.spawnAreaPulse(player.getLocation(), radius);
 
 		ChatUtil.sendActionBar(player, "&aReleased at charge level " + level);
 	}
