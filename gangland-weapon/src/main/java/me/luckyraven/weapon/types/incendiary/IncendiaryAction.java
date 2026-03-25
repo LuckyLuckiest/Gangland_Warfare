@@ -5,14 +5,18 @@ import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.dto.IncendiaryData;
 import org.bukkit.Location;
-import org.bukkit.entity.Entity;
+import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class IncendiaryAction {
 
@@ -56,21 +60,47 @@ public class IncendiaryAction {
 		Location eye   = player.getEyeLocation();
 		Vector   dir   = eye.getDirection().normalize();
 		double   range = data.getRange();
-		double   angle = Math.toRadians(data.getConeAngle() / 2.0);
+		World    world = player.getWorld();
 
-		// spray particles along the look direction using ParticleUtil
-		ParticleUtil.spawnFireSpray(eye, dir, range);
+		// muzzle position: in front, shifted to the right hand side, slightly below eye
+		Vector right = dir.clone().crossProduct(new Vector(0, 1, 0));
+		if (right.lengthSquared() < 0.001) right = new Vector(1, 0, 0);
+		right.normalize();
+		Location muzzle = eye.clone()
+							 .add(dir.clone().multiply(0.5))
+							 .add(right.multiply(0.25))
+							 .add(0, -0.15, 0);
 
-		// ignite entities within the cone
-		for (Entity entity : player.getNearbyEntities(range, range, range)) {
-			if (!(entity instanceof LivingEntity target)) continue;
-			if (entity.equals(player)) continue;
+		// flame particles from muzzle in a realistic cone with upward drift
+		ParticleUtil.spawnFlameCone(muzzle, dir, range, data.getConeAngle());
 
-			Vector toTarget = target.getLocation().toVector().subtract(eye.toVector()).normalize();
+		// ray-trace multiple directions within the cone to find entities accurately
+		double            halfAngle = Math.toRadians(data.getConeAngle() / 2.0);
+		int               rays      = Math.max(4, (int) (data.getConeAngle() / 8));
+		ThreadLocalRandom rng       = ThreadLocalRandom.current();
 
-			if (dir.dot(toTarget) < Math.cos(angle)) continue;
-			if (target.getLocation().distanceSquared(eye) > range * range) continue;
+		Vector perp1 = dir.clone().crossProduct(new Vector(0, 1, 0));
+		if (perp1.lengthSquared() < 0.001) perp1 = dir.clone().crossProduct(new Vector(1, 0, 0));
+		perp1.normalize();
+		Vector perp2 = dir.clone().crossProduct(perp1).normalize();
 
+		Set<LivingEntity> hit = new HashSet<>();
+		for (int r = 0; r < rays; r++) {
+			double theta = rng.nextDouble() * halfAngle;
+			double phi   = rng.nextDouble() * 2 * Math.PI;
+			Vector rayDir = dir.clone()
+							   .add(perp1.clone().multiply(Math.sin(theta) * Math.cos(phi)))
+							   .add(perp2.clone().multiply(Math.sin(theta) * Math.sin(phi)))
+							   .normalize();
+
+			RayTraceResult result = world.rayTraceEntities(muzzle, rayDir, range, 0.3,
+														   e -> e instanceof LivingEntity && !e.equals(player));
+			if (result != null && result.getHitEntity() instanceof LivingEntity target) {
+				hit.add(target);
+			}
+		}
+
+		for (LivingEntity target : hit) {
 			target.setFireTicks(data.getFireDuration());
 		}
 	}
