@@ -54,6 +54,9 @@ public class WeaponDroppedListener implements Listener {
 			item.setCustomNameVisible(true);
 		}
 
+		// weapons without ammo (melee, throwable, etc.) skip reload
+		if (weapon.getReloadData() == null) return;
+
 		// drop the weapon normally
 		if (!player.isSneaking()) return;
 

@@ -125,14 +125,16 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 
 	// Reload operations
 	public boolean isReloading() {
-		return reload.isReloading();
+		return reload != null && reload.isReloading();
 	}
 
 	public void reload(JavaPlugin plugin, Player player, boolean removeAmmunition) {
+		if (reload == null) return;
 		reload.reload(plugin, player, removeAmmunition);
 	}
 
 	public void stopReloading() {
+		if (reload == null) return;
 		reload.stopReloading();
 	}
 
@@ -166,14 +168,17 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 
 	// Magazine operations
 	public boolean isMagazineFull() {
+		if (reloadData == null) return true;
 		return currentMagCapacity >= reloadData.getMaxMagCapacity();
 	}
 
 	public boolean isMagazineEmpty() {
+		if (reloadData == null) return false;
 		return currentMagCapacity <= 0;
 	}
 
 	public void addAmmunition(int amount) {
+		if (reloadData == null) return;
 		currentMagCapacity = Math.min(reloadData.getMaxMagCapacity(), currentMagCapacity + amount);
 	}
 
@@ -184,7 +189,7 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 	}
 
 	public boolean requiresReload() {
-		return !isMagazineFull();
+		return reloadData != null && !isMagazineFull();
 	}
 
 	// Weapon item operations
@@ -222,6 +227,16 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 
 	public void removeWeapon(Player player, int slot) {
 		player.getInventory().setItem(slot, new ItemStack(Material.AIR));
+	}
+
+	public void applyOnHitDurability(Player player, int slot) {
+		int onShot = durabilityData.getOnShot();
+		if (onShot <= 0) return;
+		ItemStack item = player.getInventory().getItem(slot);
+		if (item == null) return;
+		ItemBuilder builder = new ItemBuilder(item);
+		decreaseDurability(builder, onShot);
+		updateWeapon(player, builder, slot);
 	}
 
 	public boolean containsTag(ItemBuilder itemBuilder, WeaponTag tag) {
