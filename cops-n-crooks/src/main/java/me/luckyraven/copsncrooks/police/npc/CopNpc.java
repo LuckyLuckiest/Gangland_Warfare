@@ -351,7 +351,14 @@ public class CopNpc {
 
 		if (entity == null) return Double.MAX_VALUE;
 
-		return entity.getLocation().distance(player.getLocation());
+		Location entityLocation = entity.getLocation();
+		Location playerLocation = player.getLocation();
+
+		if (entityLocation.getWorld() == null || !entityLocation.getWorld().equals(playerLocation.getWorld())) {
+			return Double.MAX_VALUE;
+		}
+
+		return entityLocation.distance(playerLocation);
 	}
 
 	/**
@@ -558,6 +565,10 @@ public class CopNpc {
 
 		direction.normalize();
 
+		if (copLocation.getWorld() == null || !copLocation.getWorld().equals(playerLocation.getWorld())) {
+			return null;
+		}
+
 		double searchDistance = Math.min(copLocation.distance(playerLocation), maxDistance);
 
 		for (double offset = 0.0; offset <= searchDistance; offset += 1.0) {
@@ -591,6 +602,10 @@ public class CopNpc {
 				Location safeCandidate = normalizeToStandableLocation(candidate);
 
 				if (safeCandidate == null || !isSafeStandLocation(safeCandidate)) {
+					continue;
+				}
+
+				if (safeCandidate.getWorld() == null || !safeCandidate.getWorld().equals(copLocation.getWorld())) {
 					continue;
 				}
 
@@ -790,7 +805,8 @@ public class CopNpc {
 
 		Location currentLocation = entity.getLocation();
 
-		if (!Objects.equals(currentLocation.getWorld(), lastProgressLocation.getWorld())) {
+		if (currentLocation.getWorld() == null ||
+			!Objects.equals(currentLocation.getWorld(), lastProgressLocation.getWorld())) {
 			lastProgressLocation   = currentLocation.clone();
 			stuckSampleTicks       = 0;
 			consecutiveStuckChecks = 0;

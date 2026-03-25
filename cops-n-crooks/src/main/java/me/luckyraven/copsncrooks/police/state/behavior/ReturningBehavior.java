@@ -7,6 +7,7 @@ import me.luckyraven.copsncrooks.police.state.CopBehavior;
 import me.luckyraven.copsncrooks.police.state.CopState;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -57,6 +58,13 @@ public class ReturningBehavior implements CopBehavior {
 			LivingEntity entity = cop.getEntity();
 
 			if (entity == null) return;
+
+			World world = entity.getWorld();
+
+			if (!world.equals(selectedStation.getWorld())) {
+				tryDespawn(cop);
+				return;
+			}
 
 			double distance = entity.getLocation().distance(selectedStation);
 
