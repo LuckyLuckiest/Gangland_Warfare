@@ -1,8 +1,10 @@
 package me.luckyraven.weapon.types.melee;
 
+import me.luckyraven.compatibility.recoil.RecoilCompatibility;
+import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.utilities.ParticleUtil;
-import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.dto.MeleeData;
+import me.luckyraven.weapon.modifiers.ArmorPiercingModifier;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -16,19 +18,35 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MeleeAction {
 
 	/**
-	 * Entity UUIDs currently receiving programmatic melee damage — used to bypass the event cancel guard.
+	 * Entity UUIDs currently receiving programmatic melee damage — used to bypass the event cancel guard in
+	 * WeaponInteract. Kept static so WeaponInteract.onEntityDamage can access it without holding an instance.
 	 */
-	public static final  Set<UUID>       pendingDamage = ConcurrentHashMap.newKeySet();
-	private static final Map<UUID, Long> cooldowns     = new ConcurrentHashMap<>();
+	public static final Set<UUID> pendingDamage = ConcurrentHashMap.newKeySet();
+
+	private final MeleeWeapon         weapon;
+	private final RecoilCompatibility recoilCompatibility;
+	private final Map<UUID, Long>     cooldowns;
+
+	public MeleeAction(MeleeWeapon weapon, RecoilCompatibility recoilCompatibility, Map<UUID, Long> cooldowns) {
+		this.weapon              = weapon;
+		this.recoilCompatibility = recoilCompatibility;
+		this.cooldowns           = cooldowns;
+	}
 
 	/**
 	 * Activates a melee swing. Spawns a slash arc regardless of hit.
 	 *
 	 * @return true if at least one entity was hit
 	 */
-	public static boolean activate(Player player, Weapon weapon) {
+	public boolean activate(Player player) {
 		MeleeData data = weapon.getMeleeData();
-		if (data == null) return false;
+
+		// empty-mag guard — only applies to melee weapons with ammo configured
+		if (weapon.getReloadData() != null && weapon.isMagazineEmpty()) {
+			SoundConfiguration.playSounds(player, weapon.getSoundData().getEmptyMagCustom(),
+			                              weapon.getSoundData().getEmptyMagDefault());
+			return false;
+		}
 
 		UUID weaponUuid = weapon.getUuid();
 		long now        = System.currentTimeMillis();
@@ -42,6 +60,12 @@ public class MeleeAction {
 		double  range   = data.getRange();
 		boolean hit     = false;
 
+		double flatBonus = weapon.getModifiersData().hasFlatDamage()
+		                   ? weapon.getModifiersData().getFlatDamage().bonus() : 0.0;
+		double baseDmg = data.getDamage() + flatBonus;
+
+		ArmorPiercingModifier ap = weapon.getModifiersData().getArmorPiercing();
+
 		for (Entity entity : player.getNearbyEntities(range, range, range)) {
 			if (!(entity instanceof LivingEntity target)) continue;
 			if (entity.equals(player)) continue;
@@ -51,13 +75,22 @@ public class MeleeAction {
 			Vector toTarget = target.getLocation().toVector().subtract(player.getLocation().toVector()).normalize();
 			if (lookDir.dot(toTarget) < 0.5) continue;
 
-			pendingDamage.add(target.getUniqueId());
-			target.damage(data.getDamage(), player);
+			if (ap != null && ap.armorBypass() > 0) {
+				double armoredDmg = baseDmg * (1.0 - ap.armorBypass());
+				double pierceDmg  = baseDmg * ap.armorBypass();
+				pendingDamage.add(target.getUniqueId());
+				target.damage(armoredDmg, player);
+				if (!target.isDead() && pierceDmg > 0) {
+					pendingDamage.add(target.getUniqueId());
+					target.damage(pierceDmg);
+				}
+			} else {
+				pendingDamage.add(target.getUniqueId());
+				target.damage(baseDmg, player);
+			}
+
 			hit = true;
 
-			// do not apply knockback to an entity that just died — setting velocity on a
-			// dead entity causes the server's physics engine to move the corpse, which
-			// can trigger a secondary generic damage event and produce a duplicate death message.
 			if (target.isDead()) continue;
 			if (data.getKnockback() <= 0) continue;
 			Vector knockback = lookDir.clone().multiply(data.getKnockback());
@@ -66,6 +99,11 @@ public class MeleeAction {
 
 		// slash effect always plays on swing (not just on hit)
 		ParticleUtil.spawnSlashArc(player.getLocation(), lookDir, range * 0.6);
+
+		// swing sound and recoil always apply on swing
+		SoundConfiguration.playSounds(player, weapon.getSoundData().getShotCustom(),
+		                              weapon.getSoundData().getShotDefault());
+		weapon.getRecoil().applyRecoil(recoilCompatibility, player);
 
 		return hit;
 	}
