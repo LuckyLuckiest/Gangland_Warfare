@@ -3,6 +3,8 @@ package me.luckyraven.weapon.projectile;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.modifiers.RicochetModifier;
+import me.luckyraven.weapon.types.gun.GunWeapon;
 
 /**
  * Tracks the runtime state of a projectile for modifier calculations.
@@ -19,7 +21,7 @@ public class ProjectileState {
 	private int    bounceCount;
 	private double currentDamageMultiplier;
 
-	public ProjectileState(Weapon weapon) {
+	public ProjectileState(GunWeapon weapon) {
 		this.weapon                  = weapon;
 		this.baseDamage              = weapon.getProjectileData().getDamage();
 		this.blocksPenetrated        = 0;
@@ -76,7 +78,7 @@ public class ProjectileState {
 
 		// Check against the maximum bounces from all ricochet modifiers
 		int maxBounces = modifiers.getRicochets()
-				.stream().mapToInt(r -> r.maxBounces()).max().orElse(0);
+				.stream().mapToInt(RicochetModifier::maxBounces).max().orElse(0);
 
 		return bounceCount < maxBounces;
 	}

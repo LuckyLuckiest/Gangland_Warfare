@@ -21,11 +21,11 @@ public class GunAction {
 
 	private final JavaPlugin          plugin;
 	private final WeaponService       weaponService;
-	private final Weapon              weapon;
+	private final GunWeapon           weapon;
 	private final RecoilCompatibility recoilCompatibility;
 
-	public GunAction(JavaPlugin plugin, WeaponService weaponService, Weapon weapon,
-					 RecoilCompatibility recoilCompatibility) {
+	public GunAction(JavaPlugin plugin, WeaponService weaponService, GunWeapon weapon,
+	                 RecoilCompatibility recoilCompatibility) {
 		this.plugin              = plugin;
 		this.weaponService       = weaponService;
 		this.weapon              = weapon;
@@ -60,8 +60,8 @@ public class GunAction {
 		}
 
 		WeaponProjectile<?> weaponProjectile = weapon.getProjectileData()
-													 .getType()
-													 .createInstance(plugin, shooter, weapon);
+		                                             .getType()
+		                                             .createInstance(plugin, shooter, weapon);
 		WeaponShootEvent weaponShootEvent = new WeaponShootEvent(weapon, weaponProjectile);
 		Bukkit.getPluginManager().callEvent(weaponShootEvent);
 
@@ -92,7 +92,7 @@ public class GunAction {
 
 		// shooting sound — echo broadcasts to all players near the shooter's location
 		SoundConfiguration.playSoundsAtLocation(shooter.getLocation(), weapon.getSoundData().getShotCustom(),
-												weapon.getSoundData().getShotDefault());
+		                                        weapon.getSoundData().getShotDefault());
 	}
 
 	private void applyPush(Player player, Weapon weapon) {
@@ -114,8 +114,8 @@ public class GunAction {
 
 	private void push(Player player, double powerUp, double push) {
 		// Safety check - clamp values to reasonable limits
-		powerUp = Math.max(-0.5, Math.min(0.5, powerUp));
-		push    = Math.max(-0.5, Math.min(0.5, push));
+		powerUp = Math.clamp(powerUp, -0.5, 0.5);
+		push    = Math.clamp(push, -0.5, 0.5);
 
 		if (push > 0) push *= -1;
 
@@ -130,7 +130,7 @@ public class GunAction {
 		Vector   velocity  = direction.add(upward);
 
 		// Clamp final velocity to prevent "moved too quickly" warnings
-		double maxSpeed = 1.0; // Reasonable max speed
+		double maxSpeed = 1.0;
 		if (velocity.length() > maxSpeed) {
 			velocity.normalize().multiply(maxSpeed);
 		}

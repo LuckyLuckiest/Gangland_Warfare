@@ -2,7 +2,6 @@ package me.luckyraven.weapon.types.gun;
 
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.util.timer.Timer;
-import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -48,7 +47,7 @@ public class FullAutoTask extends Timer {
 
 	private final JavaPlugin          plugin;
 	private final WeaponService       weaponService;
-	private final Weapon              weapon;
+	private final GunWeapon           weapon;
 	private final RecoilCompatibility recoilCompatibility;
 	private final Player              player;
 	private final ItemStack           itemStack;
@@ -56,9 +55,9 @@ public class FullAutoTask extends Timer {
 
 	private int tickIndex;
 
-	public FullAutoTask(JavaPlugin plugin, WeaponService weaponService, Weapon weapon,
-						RecoilCompatibility recoilCompatibility, Player player, ItemStack weaponItem,
-						Runnable onCancel) {
+	public FullAutoTask(JavaPlugin plugin, WeaponService weaponService, GunWeapon weapon,
+	                    RecoilCompatibility recoilCompatibility, Player player, ItemStack weaponItem,
+	                    Runnable onCancel) {
 		super(plugin, weapon.getProjectileData().getCooldown(), 1L);
 
 		this.plugin              = plugin;

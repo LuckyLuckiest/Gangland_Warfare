@@ -13,6 +13,7 @@ import me.luckyraven.weapon.modifiers.BlockBreakModifier;
 import me.luckyraven.weapon.modifiers.ModifierHandler;
 import me.luckyraven.weapon.projectile.BlockDamageManager;
 import me.luckyraven.weapon.projectile.ProjectileState;
+import me.luckyraven.weapon.types.gun.GunWeapon;
 import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -37,7 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @AutowireTarget({WeaponService.class, WearableService.class})
 public class ProjectileDamageListener implements Listener {
 
-	private final static Map<Integer, Weapon>          weaponInstance   = new ConcurrentHashMap<>();
+	private final static Map<Integer, GunWeapon>       weaponInstance   = new ConcurrentHashMap<>();
 	private final static Map<Integer, ProjectileState> projectileStates = new ConcurrentHashMap<>();
 
 	private final WeaponService      weaponManager;
@@ -47,7 +48,7 @@ public class ProjectileDamageListener implements Listener {
 	private final Map<Integer, ProjectileEventQueue> eventQueues;
 
 	public ProjectileDamageListener(WeaponService weaponService, BlockDamageManager blockDamageManager,
-									WearableService wearableService) {
+	                                WearableService wearableService) {
 		this.weaponManager      = weaponService;
 		this.blockDamageManager = blockDamageManager;
 		this.wearableService    = wearableService;
@@ -58,7 +59,7 @@ public class ProjectileDamageListener implements Listener {
 	public void onProjectileLaunch(WeaponProjectileLaunchEvent event) {
 		if (!(event.getProjectile().getShooter() instanceof Player player)) return;
 
-		Weapon weapon = event.getWeapon();
+		GunWeapon weapon = (GunWeapon) event.getWeapon();
 
 		if (weapon == null) return;
 
@@ -72,9 +73,9 @@ public class ProjectileDamageListener implements Listener {
 		if (weapon.getModifiersData().hasTracer()) {
 			Location start = event.getProjectile().getLocation();
 			Vector vector = event.getProjectile()
-								 .getVelocity()
-								 .normalize()
-								 .multiply(weapon.getProjectileData().getDistance());
+			                     .getVelocity()
+			                     .normalize()
+			                     .multiply(weapon.getProjectileData().getDistance());
 			Location end = start.clone().add(vector);
 			ModifierHandler.spawnTracerParticles(weapon, start, end, player);
 		}
@@ -150,7 +151,7 @@ public class ProjectileDamageListener implements Listener {
 		if (queue.isProcessed()) return;
 		queue.setProcessed(true);
 
-		Weapon weapon = weaponInstance.get(projectileId);
+		GunWeapon weapon = weaponInstance.get(projectileId);
 		if (weapon == null) {
 			cleanup(projectileId);
 			return;
@@ -181,8 +182,8 @@ public class ProjectileDamageListener implements Listener {
 		}
 	}
 
-	private boolean processDamageEvent(EntityDamageByEntityEvent event, Weapon weapon, Player shooter,
-									   ProjectileState state) {
+	private boolean processDamageEvent(EntityDamageByEntityEvent event, GunWeapon weapon, Player shooter,
+	                                   ProjectileState state) {
 		if (!(event.getEntity() instanceof LivingEntity entity)) return false;
 		if (!(event.getDamager() instanceof Projectile projectile)) return false;
 
@@ -242,7 +243,7 @@ public class ProjectileDamageListener implements Listener {
 	}
 
 	private void processHitEvent(ProjectileHitEvent event, Weapon weapon, ProjectileState state,
-								 boolean continueFromDamage) {
+	                             boolean continueFromDamage) {
 		Projectile projectile   = event.getEntity();
 		Block      hitBlock     = event.getHitBlock();
 		BlockFace  hitBlockFace = event.getHitBlockFace();
@@ -307,9 +308,9 @@ public class ProjectileDamageListener implements Listener {
 		Location hitLoc   = hitBlock != null ? hitBlock.getLocation() : hitEntity;
 
 		// damage nearby entities
-		int    entityId        = projectile.getEntityId();
-		Weapon weapon          = weaponInstance.get(entityId);
-		double explosionRadius = weapon.getDamageData().getExplosionDamage();
+		int       entityId        = projectile.getEntityId();
+		GunWeapon weapon          = weaponInstance.get(entityId);
+		double    explosionRadius = weapon.getDamageData().getExplosionDamage();
 
 		for (Entity entity : fireball.getNearbyEntities(explosionRadius, explosionRadius, explosionRadius)) {
 			if (!(entity instanceof LivingEntity target && entity != shooter)) continue;

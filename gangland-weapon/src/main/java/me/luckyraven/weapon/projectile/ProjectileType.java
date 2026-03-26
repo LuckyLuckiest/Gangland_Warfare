@@ -1,10 +1,10 @@
 package me.luckyraven.weapon.projectile;
 
-import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.projectile.type.Bullet;
 import me.luckyraven.weapon.projectile.type.Flare;
 import me.luckyraven.weapon.projectile.type.Rocket;
 import me.luckyraven.weapon.projectile.type.Spread;
+import me.luckyraven.weapon.types.gun.GunWeapon;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -24,7 +24,7 @@ public enum ProjectileType {
 		};
 	}
 
-	public WeaponProjectile<?> createInstance(JavaPlugin plugin, LivingEntity shooter, Weapon weapon) {
+	public WeaponProjectile<?> createInstance(JavaPlugin plugin, LivingEntity shooter, GunWeapon weapon) {
 		return switch (weapon.getProjectileData().getType()) {
 			case BULLET -> new Bullet(plugin, shooter, weapon);
 			case SPREAD -> new Spread(plugin, shooter, weapon);

@@ -6,9 +6,9 @@ import me.luckyraven.util.color.Color;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.utilities.ParticleUtil;
-import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.dto.SoundData;
 import me.luckyraven.weapon.events.projectile.WeaponProjectileLaunchEvent;
+import me.luckyraven.weapon.types.gun.GunWeapon;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -29,11 +29,11 @@ import java.util.concurrent.atomic.AtomicReference;
 public abstract class WeaponProjectile<T extends Projectile> extends WProjectile {
 
 	private final JavaPlugin plugin;
-	private final Weapon     weapon;
+	private final GunWeapon  weapon;
 	private final Class<T>   bulletType;
 
-	public WeaponProjectile(JavaPlugin plugin, LivingEntity shooter, Weapon weapon, Location location, Vector velocity,
-							Class<T> bulletType) {
+	public WeaponProjectile(JavaPlugin plugin, LivingEntity shooter, GunWeapon weapon, Location location,
+	                        Vector velocity, Class<T> bulletType) {
 		super(shooter, location, velocity);
 
 		this.plugin     = plugin;
@@ -49,9 +49,9 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 
 		// Calculate the weapon position offset (right side of the player)
 		Vector rightVector = eyeLocation.getDirection()
-										.getCrossProduct(new Vector(0, 1, 0))
-										.normalize()
-										.multiply(0.3); // Distance from center (adjust as needed)
+		                                .getCrossProduct(new Vector(0, 1, 0))
+		                                .normalize()
+		                                .multiply(0.3); // Distance from center (adjust as needed)
 
 		// Offset slightly downward to represent hand/weapon position
 		Vector downVector = new Vector(0, -0.2, 0);
@@ -82,8 +82,8 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 
 				// Spawn particle line from weapon position following the projectile trajectory
 				ParticleUtil.spawnLine(weaponPosition, endLocation, XParticle.DUST.get(),
-									   weapon.getProjectileData().getDistance(),
-									   new Particle.DustOptions(Color.GRAY.getBukkitColor(), 0.5F));
+				                       weapon.getProjectileData().getDistance(),
+				                       new Particle.DustOptions(Color.GRAY.getBukkitColor(), 0.5F));
 			}
 		}
 
@@ -128,7 +128,7 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 	}
 
 	@NotNull
-	private RepeatingTimer applyGravity(Weapon weapon, Projectile projectile) {
+	private RepeatingTimer applyGravity(GunWeapon weapon, Projectile projectile) {
 		AtomicReference<Location> initialLocation  = new AtomicReference<>(projectile.getLocation());
 		AtomicDouble              furthestDistance = new AtomicDouble(weapon.getProjectileData().getDistance());
 		AtomicBoolean             falling          = new AtomicBoolean();
@@ -149,7 +149,7 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 			projectile.setVelocity(currentVelocity.setY(newY).normalize());
 
 			if (projectile.getLocation().getChunk().isLoaded() ||
-				(projectile.getLocation().getY() > 0 && distance < furthestDistance.get() * 10)) return;
+			    (projectile.getLocation().getY() > 0 && distance < furthestDistance.get() * 10)) return;
 
 			projectile.remove();
 			t.cancel();
