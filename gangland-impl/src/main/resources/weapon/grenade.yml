@@ -12,10 +12,30 @@ Information:
       - "&7Fuse: &e3s"
    Drop_Hologram: false
 
-Throwable:
+Throw:
    Fuse_Time: 60
    Explosion_Radius: 4.0
    Explosion_Damage: 10
    Fire_Ticks: 0
    Bounces: true
+   Max_Bounces: 5
+   Sticky: false
    Entity_Type: SNOWBALL
+   Recoil:
+      Amount: 0.0
+      Push: 0.1
+      Power_Up: 0.0
+      Pattern: []
+   Sound:
+      Default_Sound:
+         Sound: ENTITY_SNOWBALL_THROW
+         Volume: 1.0
+         Pitch: 0.8
+
+Modifiers:
+   Flat_Damage: 0.0
+
+Death_Messages:
+   - "&c%victim% was blown up by %killer%'s %item%."
+   - "&c%victim% didn't survive %killer%'s grenade."
+   - "&c%killer% fragmented %victim%."

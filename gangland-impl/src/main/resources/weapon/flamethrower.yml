@@ -12,11 +12,47 @@ Information:
       - "&7Right-click to toggle."
    Drop_Hologram: false
 
-Incendiary:
-   Cone_Angle: 30.0
+Shoot:
+   Rate: 2
    Range: 5.0
+   Cone_Angle: 30.0
    Fire_Duration: 60
-   Tick_Rate: 2
+   # Fuel units consumed per fire tick
+   Consume_Rate: 4
+   Recoil:
+      Amount: 0.0
+      Push: 0.08
+      Power_Up: 0.0
+      Pattern: []
+   Sound:
+      Default_Sound:
+         Sound: BLOCK_FIRE_AMBIENT
+         Volume: 0.8
+         Pitch: 1.0/c
+
+Ammunition:
    Ammo_Type: fuel_canister
-   Fuel_Capacity: 200
-   Fuel_Consume_Rate: 4
+   Capacity: 200
+   Consume: 1
+   Restore: 200
+
+Reload:
+   Cooldown: 5
+   Type: instant
+   Sound:
+      Default_Sound_Before:
+         Sound: ITEM_FLINTANDSTEEL_USE
+         Volume: 0.8
+         Pitch: 0.9
+      Default_Sound_After:
+         Sound: ENTITY_EXPERIENCE_ORB_PICKUP
+         Volume: 0.6
+         Pitch: 1.0
+
+Modifiers:
+   Flat_Damage: 0.0
+
+Death_Messages:
+   - "&c%victim% was incinerated by %killer%'s %item%."
+   - "&c%victim% got torched by %killer%."
+   - "&c%victim% went up in flames thanks to %killer%'s %item%."

@@ -165,18 +165,21 @@ Shoot:
          Volume: 1.0
          Pitch: 1.0
 
-# Weapon reload configuration
-Reload:
+# Ammunition configuration
+Ammunition:
    # The default magazine holding capacity
    Capacity: 45
-   # The reload time taken
-   Cooldown: 4
    # The ammo name from the ammunition YAML file
    Ammo_Type: "5,56"
    # The number of ammunition items that is required to insert one magazine
    Consume: 1
    # The amount that would be restored in the magazine
    Restore: 45
+
+# Weapon reload configuration
+Reload:
+   # The reload time taken
+   Cooldown: 4
 
    Sound:
       # Default sounds only use mc supported sounds, and they can be overlapped with custom sounds
@@ -257,3 +260,8 @@ Modifiers:
 
    # Armor Piercing - bypassPercentage (0.0-1.0)
    Armor_Piercing: 0.4
+
+Death_Messages:
+   - "&c%victim% was gunned down by %killer%'s %item%."
+   - "&c%killer% landed a clean shot on %victim%."
+   - "&c%victim% took a bullet from %killer%."

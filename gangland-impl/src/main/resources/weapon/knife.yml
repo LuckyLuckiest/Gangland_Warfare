@@ -12,8 +12,28 @@ Information:
       - "&7Range: &e2.5 blocks"
    Drop_Hologram: false
 
-Melee:
+Attack:
    Damage: 6.0
    Range: 2.5
    Cooldown: 8
    Knockback: 0.4
+   Selective_Fire: single
+   Recoil:
+      Amount: 0.0
+      Push: 0.05
+      Power_Up: 0.0
+      Pattern: []
+   Sound:
+      Default_Sound:
+         Sound: ENTITY_PLAYER_ATTACK_SWEEP
+         Volume: 1.0
+         Pitch: 1.2
+
+Modifiers:
+   Flat_Damage: 0.0
+   Armor_Piercing: 0.0
+
+Death_Messages:
+   - "&c%victim% was stabbed by %killer%'s %item%."
+   - "&c%killer% silenced %victim% with a blade."
+   - "&c%victim% never heard %killer% coming."
