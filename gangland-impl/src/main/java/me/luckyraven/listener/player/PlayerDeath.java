@@ -14,6 +14,7 @@ import me.luckyraven.util.placeholder.PlaceholderHandler;
 import me.luckyraven.util.utilities.NumberUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponManager;
+import me.luckyraven.weapon.types.throwable.ThrowableAction;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -61,13 +62,13 @@ public class PlayerDeath implements Listener {
 		// when a player dies, the death counter increases
 		user.setDeaths(user.getDeaths() + 1);
 
-		// punish the player if they die
-		if (handleCommandExecution(user, player)) return;
+		// punish the player if they die; if commands ran, skip direct money deduction
+		if (!handleCommandExecution(user, player)) {
+			// take money from their balance (NOT THEIR BANK)
+			handleMoney(user);
+		}
 
-		// take money from their balance (NOT THEIR BANK)
-		if (handleMoney(user)) return;
-
-		// change the death message according to the weapon
+		// change the death message according to the weapon (always runs)
 		changeDeathMessage(event, player);
 	}
 
@@ -88,14 +89,14 @@ public class PlayerDeath implements Listener {
 		return false;
 	}
 
-	private boolean handleMoney(User<Player> user) {
+	private void handleMoney(User<Player> user) {
 		EconomyHandler economy = user.getEconomy();
 		double         deduct  = amountDeduction(user);
 
 		String type;
 
 		// ignore it if there was no money to be deducted
-		if (deduct == 0) return true;
+		if (deduct == 0) return;
 
 		if (Settings.isDeathLoseMoney()) {
 			type = "&c&l-";
@@ -110,7 +111,6 @@ public class PlayerDeath implements Listener {
 		String message = "&3Death penalty: " + info;
 
 		user.sendMessage(ChatUtil.color(message));
-		return false;
 	}
 
 	private void changeDeathMessage(PlayerDeathEvent event, Player player) {
@@ -118,22 +118,30 @@ public class PlayerDeath implements Listener {
 
 		if (killer == null) return;
 
-		ItemStack heldItem = killer.getInventory().getItemInMainHand();
-		Weapon    weapon   = weaponManager.validateAndGetWeapon(killer, heldItem);
+		// check if a throwable weapon was responsible (killer may have switched items since throwing)
+		String throwableName = ThrowableAction.pendingKillerWeapon.remove(player.getUniqueId());
+
+		Weapon weapon;
+		if (throwableName != null) {
+			weapon = weaponManager.getWeapon(throwableName);
+		} else {
+			ItemStack heldItem = killer.getInventory().getItemInMainHand();
+			weapon = weaponManager.validateAndGetWeapon(killer, heldItem);
+		}
 
 		if (weapon == null) return;
 
-		List<String> messages = Messages.DEAD_USING_WEAPON.toStringList();
-		Random       random   = new Random();
+		// prefer weapon-specific death messages; fall back to global config
+		String template = weapon.pickDeathMessage().orElseGet(() -> {
+			List<String> messages = Messages.DEAD_USING_WEAPON.toStringList();
+			return messages.get(new Random().nextInt(messages.size()));
+		});
 
-		int    index        = random.nextInt(messages.size());
-		String deathMessage = messages.get(index);
+		String replace = template.replace("%killer%", killer.getName())
+		                         .replace("%victim%", player.getName())
+		                         .replace("%item%", weapon.getName());
 
-		String replace = deathMessage.replace("%killer%", killer.getName())
-									 .replace("%victim%", player.getName())
-									 .replace("%item%", weapon.getName());
-
-		event.setDeathMessage(replace);
+		event.setDeathMessage(ChatUtil.color(replace));
 	}
 
 	private double amountDeduction(User<Player> user) {
