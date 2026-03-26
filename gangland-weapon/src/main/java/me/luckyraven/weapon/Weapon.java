@@ -24,121 +24,109 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Getter
 @Setter
-public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
+public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 
-	// Core identity (immutable)
-	private final UUID         uuid;
-	private final String       name;
-	private final String       displayName;
-	private final WeaponType   category;
-	private final Material     material;
-	private final short        durability;
-	private final List<String> lore;
-	private final boolean      dropHologram;
-	private final int          weaponConsumedOnShot;
-
-	// Configuration groups (immutable)
-	private final ProjectileData         projectileData;
-	private final ReloadData             reloadData;
-	// Type-specific configuration (only one non-null per weapon instance)
-	@Nullable
-	private final ThrowableData          throwableData;
-	@Nullable
-	private final MeleeData              meleeData;
-	@Nullable
-	private final IncendiaryData         incendiaryData;
-	@Nullable
-	private final BiologicalData         biologicalData;
+	private final String                 name;
+	private final String                 displayName;
+	private final WeaponType             category;
+	private final Material               material;
+	private final short                  durability;
+	private final List<String>           lore;
+	private final boolean                dropHologram;
+	@Setter(AccessLevel.NONE)
+	private final List<String>           deathMessages;
 	// Runtime state
 	private final Map<WeaponTag, Object> tags;
-	// Configuration groups (mutable)
+	// Reload configuration (immutable — set at construction)
+	@Nullable
+	private final ReloadData             reloadData;
+	@Nullable
+	private final AmmunitionData         ammunitionData;
+	// Core identity
+	@Setter(AccessLevel.NONE)
+	private       UUID                   uuid;
+	// Configuration groups (mutable — set by WeaponAddon after construction)
 	private       DurabilityData         durabilityData;
-	private       DamageData             damageData;
-	private       SpreadData             spreadData;
-	private       RecoilData             recoilData;
 	private       SoundData              soundData;
-	private       ScopeData              scopeData;
 	private       ReloadActionBarData    reloadActionBarData;
 	private       ModifiersData          modifiersData;
-	private       String                 changingDisplayName;
-	private       short                  currentDurability;
-	private       SelectiveFire          currentSelectiveFire;
+	private       RecoilData             recoilData;
+	private       ScopeData              scopeData;
+	private       SpreadData             spreadData;
+	// Runtime state
 	private       int                    currentMagCapacity;
+	private       SelectiveFire          currentSelectiveFire;
+
+	private String changingDisplayName;
+	private short  currentDurability;
 
 	// Managers (non-serialized)
+	@Setter(AccessLevel.NONE)
+	private DurabilityCalculator durabilityCalculator;
 	@Getter(AccessLevel.NONE)
 	@Setter(AccessLevel.NONE)
 	private Reload               reload;
 	@Setter(AccessLevel.NONE)
-	private DurabilityCalculator durabilityCalculator;
+	private RecoilManager        recoil;
 	@Setter(AccessLevel.NONE)
 	private SpreadManager        spread;
-	@Setter(AccessLevel.NONE)
-	private RecoilManager        recoil;
 
-	public Weapon(UUID uuid, String name, String displayName, WeaponType category, Material material, short durability,
-				  List<String> lore, boolean dropHologram, SelectiveFire selectiveFire, int weaponConsumedOnShot,
-				  ProjectileData projectileData, ReloadData reloadData, @Nullable ThrowableData throwableData,
-				  @Nullable MeleeData meleeData, @Nullable IncendiaryData incendiaryData,
-				  @Nullable BiologicalData biologicalData) {
-		this.uuid                 = uuid;
-		this.name                 = name;
-		this.displayName          = displayName;
-		this.category             = category;
-		this.material             = material;
-		this.durability           = durability;
-		this.currentDurability    = durability;
-		this.lore                 = lore;
-		this.dropHologram         = dropHologram;
-		this.currentSelectiveFire = selectiveFire;
-		this.weaponConsumedOnShot = weaponConsumedOnShot;
-		this.projectileData       = projectileData;
-		this.reloadData           = reloadData;
-		this.throwableData        = throwableData;
-		this.meleeData            = meleeData;
-		this.incendiaryData       = incendiaryData;
-		this.biologicalData       = biologicalData;
+	protected Weapon(UUID uuid, String name, String displayName, WeaponType category, Material material,
+	                 short durability, List<String> lore, boolean dropHologram, @Nullable List<String> deathMessages,
+	                 @Nullable ReloadData reloadData, @Nullable AmmunitionData ammunitionData) {
+		this.uuid              = uuid;
+		this.name              = name;
+		this.displayName       = displayName;
+		this.category          = category;
+		this.material          = material;
+		this.durability        = durability;
+		this.currentDurability = durability;
+		this.lore              = lore;
+		this.dropHologram      = dropHologram;
+		this.deathMessages     = deathMessages;
+		this.reloadData        = reloadData;
+		this.ammunitionData    = ammunitionData;
 
-		this.currentMagCapacity  = reloadData != null ? reloadData.getMaxMagCapacity() : 0;
-		this.tags                = new TreeMap<>();
-		this.changingDisplayName = updateDisplayName(displayName);
+		this.currentMagCapacity = ammunitionData != null ? ammunitionData.getMaxMagCapacity() : 0;
 
-		initializeMutableData();
-		initializeManagers();
+		this.tags                 = new TreeMap<>();
+		this.durabilityData       = new DurabilityData();
+		this.soundData            = new SoundData();
+		this.reloadActionBarData  = new ReloadActionBarData();
+		this.modifiersData        = new ModifiersData();
+		this.recoilData           = new RecoilData();
+		this.scopeData            = new ScopeData();
+		this.spreadData           = new SpreadData();
+		this.recoil               = new RecoilManager(this);
+		this.spread               = new SpreadManager(this);
+		this.reload               = ammunitionData != null && reloadData != null ?
+		                            reloadData.getType().createInstance(this, ammunitionData.getAmmoType()) :
+		                            null;
+		this.changingDisplayName  = buildDisplayName();
+		this.durabilityCalculator = new DurabilityCalculator(this);
 	}
 
-	public Weapon(UUID uuid, Weapon weapon) {
-		this(uuid, weapon.name, weapon.displayName, weapon.category, weapon.material, weapon.durability, weapon.lore,
-			 weapon.dropHologram, weapon.currentSelectiveFire, weapon.weaponConsumedOnShot, weapon.projectileData,
-			 weapon.reloadData, weapon.throwableData, weapon.meleeData, weapon.incendiaryData, weapon.biologicalData);
+	// --- Death message ---
 
-		this.currentDurability = weapon.currentDurability;
-		copyMutableData(weapon);
-	}
+	public abstract Weapon copyWithUUID(UUID newUuid);
+
+	// --- Scope operations ---
 
 	public static String getTagProperName(WeaponTag tag) {
 		return tag.name().toLowerCase().replace("_", "-");
 	}
 
-	// Reload operations
-	public boolean isReloading() {
-		return reload != null && reload.isReloading();
+	public Optional<String> pickDeathMessage() {
+		if (deathMessages == null || deathMessages.isEmpty()) return Optional.empty();
+		return Optional.of(deathMessages.get(ThreadLocalRandom.current().nextInt(deathMessages.size())));
 	}
 
-	public void reload(JavaPlugin plugin, Player player, boolean removeAmmunition) {
-		if (reload == null) return;
-		reload.reload(plugin, player, removeAmmunition);
-	}
+	// --- Reload operations ---
 
-	public void stopReloading() {
-		if (reload == null) return;
-		reload.stopReloading();
-	}
-
-	// Scope operations
 	public void scope(Player player, boolean bypass) {
 		if (!bypass && scopeData.isScoped()) return;
 		scopeData.setScoped(true);
@@ -153,23 +141,25 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 		removeEffect(player, XPotion.JUMP_BOOST);
 	}
 
-	// Durability operations
-	public void increaseDurability(ItemBuilder itemBuilder, int amount) {
-		durabilityCalculator.setDurability(itemBuilder, (short) (currentDurability + amount));
+	public boolean isReloading() {
+		return reload != null && reload.isReloading();
 	}
 
-	public void decreaseDurability(ItemBuilder itemBuilder, int amount) {
-		durabilityCalculator.setDurability(itemBuilder, (short) (currentDurability - amount));
+	// --- Magazine operations ---
+
+	public void reload(JavaPlugin plugin, Player player, boolean removeAmmunition) {
+		if (reload == null) return;
+		reload.reload(plugin, player, removeAmmunition);
 	}
 
-	public boolean isBroken() {
-		return currentDurability <= 0;
+	public void stopReloading() {
+		if (reload == null) return;
+		reload.stopReloading();
 	}
 
-	// Magazine operations
 	public boolean isMagazineFull() {
-		if (reloadData == null) return true;
-		return currentMagCapacity >= reloadData.getMaxMagCapacity();
+		if (ammunitionData == null) return true;
+		return currentMagCapacity >= ammunitionData.getMaxMagCapacity();
 	}
 
 	public boolean isMagazineEmpty() {
@@ -178,69 +168,24 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 	}
 
 	public void addAmmunition(int amount) {
-		if (reloadData == null) return;
-		currentMagCapacity = Math.min(reloadData.getMaxMagCapacity(), currentMagCapacity + amount);
+		if (ammunitionData == null) return;
+		currentMagCapacity = Math.min(ammunitionData.getMaxMagCapacity(), currentMagCapacity + amount);
 	}
 
+	// --- Item operations ---
+
+	/**
+	 * Consumes one shot's worth of ammunition. Returns {@code false} if the magazine is empty. Subclasses may override
+	 * to change the consume amount (e.g. Gun uses projectileData.getConsumed()).
+	 */
 	public boolean consumeShot() {
 		if (isMagazineEmpty()) return false;
-		currentMagCapacity = Math.max(0, currentMagCapacity - projectileData.getConsumed());
+		currentMagCapacity = Math.max(0, currentMagCapacity - 1);
 		return true;
 	}
 
 	public boolean requiresReload() {
 		return reloadData != null && !isMagazineFull();
-	}
-
-	// Weapon item operations
-	public void updateWeaponData(ItemBuilder itemBuilder) {
-		this.changingDisplayName = updateDisplayName(displayName);
-		itemBuilder.setDisplayName(changingDisplayName);
-
-		boolean updatedSelectiveFire = false, updatedCurrentAmmo = false;
-
-		for (WeaponTag tag : WeaponTag.values()) {
-			if (containsTag(itemBuilder, tag)) continue;
-
-			switch (tag) {
-				case UUID -> tags.put(tag, uuid.toString());
-				case WEAPON -> tags.put(tag, name);
-				case SELECTIVE_FIRE -> {
-					tags.put(tag, currentSelectiveFire);
-					updatedSelectiveFire = true;
-				}
-				case AMMO_LEFT -> {
-					tags.put(tag, currentMagCapacity);
-					updatedCurrentAmmo = true;
-				}
-			}
-			itemBuilder.addTag(getTagProperName(tag), tags.get(tag));
-		}
-
-		if (!updatedSelectiveFire) updateTag(itemBuilder, WeaponTag.SELECTIVE_FIRE, currentSelectiveFire);
-		if (!updatedCurrentAmmo) updateTag(itemBuilder, WeaponTag.AMMO_LEFT, currentMagCapacity);
-	}
-
-	public void updateWeapon(Player player, ItemBuilder itemBuilder, int slot) {
-		player.getInventory().setItem(slot, itemBuilder.build());
-	}
-
-	public void removeWeapon(Player player, int slot) {
-		player.getInventory().setItem(slot, new ItemStack(Material.AIR));
-	}
-
-	public void applyOnHitDurability(Player player, int slot) {
-		int onShot = durabilityData.getOnShot();
-		if (onShot <= 0) return;
-		ItemStack item = player.getInventory().getItem(slot);
-		if (item == null) return;
-		ItemBuilder builder = new ItemBuilder(item);
-		decreaseDurability(builder, onShot);
-		updateWeapon(player, builder, slot);
-	}
-
-	public boolean containsTag(ItemBuilder itemBuilder, WeaponTag tag) {
-		return itemBuilder.hasNBTTag(getTagProperName(tag));
 	}
 
 	@NotNull
@@ -258,52 +203,107 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 		return builder.build();
 	}
 
+	public void updateWeaponData(ItemBuilder itemBuilder) {
+		this.changingDisplayName = buildDisplayName();
+		itemBuilder.setDisplayName(changingDisplayName);
+
+		boolean updatedSelectiveFire = false, updatedCurrentAmmo = false;
+
+		for (WeaponTag tag : WeaponTag.values()) {
+			if (containsTag(itemBuilder, tag)) continue;
+
+			switch (tag) {
+				case UUID -> tags.put(tag, uuid != null ? uuid.toString() : "");
+				case WEAPON -> tags.put(tag, name);
+				case SELECTIVE_FIRE -> {
+					tags.put(tag, getSelectiveFireForTag());
+					updatedSelectiveFire = true;
+				}
+				case AMMO_LEFT -> {
+					tags.put(tag, getAmmoLeftForTag());
+					updatedCurrentAmmo = true;
+				}
+			}
+			itemBuilder.addTag(getTagProperName(tag), tags.get(tag));
+		}
+
+		if (!updatedSelectiveFire) updateTag(itemBuilder, WeaponTag.SELECTIVE_FIRE, getSelectiveFireForTag());
+		if (!updatedCurrentAmmo) updateTag(itemBuilder, WeaponTag.AMMO_LEFT, getAmmoLeftForTag());
+	}
+
+	// --- Durability operations ---
+
+	public void updateWeapon(Player player, ItemBuilder itemBuilder, int slot) {
+		player.getInventory().setItem(slot, itemBuilder.build());
+	}
+
+	public void removeWeapon(Player player, int slot) {
+		player.getInventory().setItem(slot, new ItemStack(Material.AIR));
+	}
+
+	public void increaseDurability(ItemBuilder itemBuilder, int amount) {
+		durabilityCalculator.setDurability(itemBuilder, (short) (currentDurability + amount));
+	}
+
+	public void decreaseDurability(ItemBuilder itemBuilder, int amount) {
+		durabilityCalculator.setDurability(itemBuilder, (short) (currentDurability - amount));
+	}
+
+	// --- Tag operations ---
+
+	public boolean isBroken() {
+		return currentDurability <= 0;
+	}
+
+	public void applyOnHitDurability(Player player, int slot) {
+		int onShot = durabilityData.getOnShot();
+		if (onShot <= 0) return;
+		ItemStack item = player.getInventory().getItem(slot);
+		if (item == null) return;
+		ItemBuilder builder = new ItemBuilder(item);
+		decreaseDurability(builder, onShot);
+		updateWeapon(player, builder, slot);
+	}
+
+	// --- Copy / clone ---
+
+	public boolean containsTag(ItemBuilder itemBuilder, WeaponTag tag) {
+		return itemBuilder.hasNBTTag(getTagProperName(tag));
+	}
+
+	/**
+	 * Base clone: shallow-copies via {@code Object.clone()}, then runs {@link #initClone(Weapon)}. Concrete subclasses
+	 * override this, call {@code super.clone()} to get the base copy, then clone any additional mutable fields they
+	 * own.
+	 */
 	@Override
 	public Weapon clone() {
 		try {
-			Weapon weapon = (Weapon) super.clone();
-
-			weapon.currentMagCapacity = weapon.reloadData != null ? weapon.reloadData.getMaxMagCapacity() : 0;
-			weapon.tags.clear();
-			weapon.copyMutableData(this);
-
-			weapon.reload               = this.reload != null ? this.reload.clone() : null;
-			weapon.recoil               = new RecoilManager(weapon);
-			weapon.spread               = new SpreadManager(weapon);
-			weapon.durabilityCalculator = new DurabilityCalculator(weapon);
-			return weapon;
+			Weapon copy = (Weapon) super.clone();
+			copy.initClone(this);
+			return copy;
 		} catch (CloneNotSupportedException e) {
 			throw new PluginException(e);
 		}
 	}
 
+	// --- Comparable ---
+
 	@Override
 	public int compareTo(@NotNull Weapon other) {
 		return Comparator.comparing(Weapon::getName, String.CASE_INSENSITIVE_ORDER)
-						 .thenComparing(Weapon::getCategory)
-						 .thenComparing(Weapon::getMaterial)
-						 .thenComparingInt(w -> w.durability)
-						 .thenComparingDouble(w -> w.projectileData != null ? w.projectileData.getSpeed() : 0.0)
-						 .thenComparing(w -> w.projectileData != null ? w.projectileData.getType().name() : "")
-						 .thenComparingDouble(w -> w.projectileData != null ? w.projectileData.getDamage() : 0.0)
-						 .thenComparingInt(w -> w.projectileData != null ? w.projectileData.getConsumed() : 0)
-						 .thenComparingInt(w -> w.projectileData != null ? w.projectileData.getPerShot() : 0)
-						 .thenComparingInt(w -> w.projectileData != null ? w.projectileData.getCooldown() : 0)
-						 .thenComparingInt(w -> w.projectileData != null ? w.projectileData.getDistance() : 0)
-						 .thenComparing(w -> w.projectileData != null && w.projectileData.isParticle())
-						 .thenComparingInt(w -> w.reloadData != null ? w.reloadData.getMaxMagCapacity() : 0)
-						 .thenComparingInt(w -> w.reloadData != null ? w.reloadData.getCooldown() : 0)
-						 .thenComparing(w -> w.reloadData != null ? w.reloadData.getAmmoType().getName() : "")
-						 .thenComparingInt(w -> w.reloadData != null ? w.reloadData.getConsume() : 0)
-						 .thenComparingInt(w -> w.reloadData != null ? w.reloadData.getRestore() : 0)
-						 .thenComparing(w -> w.reloadData != null ? w.reloadData.getType().name() : "")
-						 .compare(this, other);
+		                 .thenComparing(Weapon::getCategory)
+		                 .thenComparing(Weapon::getMaterial)
+		                 .thenComparingInt(w -> w.durability)
+		                 .compare(this, other);
 	}
 
 	@Override
 	public String toString() {
 		return String.format("Weapon{uuid='%s',name='%s',category='%s',material='%s'}", uuid, name, category, material);
 	}
+
+	// --- Repairable ---
 
 	@NotNull
 	@Override
@@ -332,64 +332,79 @@ public class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
 		return RepairableType.WEAPON;
 	}
 
-	private void initializeManagers() {
-		this.reload               = reloadData != null ?
-									reloadData.getType().createInstance(this, reloadData.getAmmoType()) :
-									null;
-		this.recoil               = new RecoilManager(this);
-		this.spread               = new SpreadManager(this);
-		this.durabilityCalculator = new DurabilityCalculator(this);
+	// --- Protected API for subclasses ---
+
+	/**
+	 * Shows ammo counter for any weapon that has reloadData configured.
+	 */
+	protected String buildDisplayName() {
+		if (ammunitionData == null) return displayName + "&r";
+
+		return String.format("%s&r &8«&6%d&7/&6%d&8»&r", displayName, currentMagCapacity,
+		                     ammunitionData.getMaxMagCapacity());
 	}
 
-	private void initializeMutableData() {
-		this.durabilityData      = new DurabilityData();
-		this.damageData          = new DamageData();
-		this.spreadData          = new SpreadData();
-		this.recoilData          = new RecoilData();
-		this.soundData           = new SoundData();
-		this.scopeData           = new ScopeData();
-		this.reloadActionBarData = new ReloadActionBarData();
-		this.modifiersData       = new ModifiersData();
+	protected SelectiveFire getSelectiveFireForTag() {
+		return currentSelectiveFire != null ? currentSelectiveFire : SelectiveFire.SINGLE;
 	}
 
-	private void copyMutableData(Weapon source) {
-		this.durabilityData      = source.durabilityData.clone();
-		this.damageData          = source.damageData.clone();
-		this.spreadData          = source.spreadData.clone();
-		this.recoilData          = source.recoilData.clone();
-		this.soundData           = source.soundData.clone();
-		this.scopeData           = source.scopeData.clone();
-		this.reloadActionBarData = source.reloadActionBarData.clone();
-		this.modifiersData       = source.modifiersData.clone();
+	protected int getAmmoLeftForTag() {
+		return currentMagCapacity;
 	}
 
-	private void updateTag(ItemBuilder itemBuilder, WeaponTag tag, Object value) {
+	protected void setUUID(UUID uuid) {
+		this.uuid = uuid;
+	}
+
+	protected void updateTag(ItemBuilder itemBuilder, WeaponTag tag, Object value) {
 		tags.replace(tag, value);
 		itemBuilder.modifyTag(getTagProperName(tag), value);
 	}
 
-	private String updateDisplayName(String displayName) {
-		if (reloadData == null) return displayName + "&r";
-		return String.format("%s&r &8«&6%d&7/&6%d&8»&r", displayName, currentMagCapacity,
-							 reloadData.getMaxMagCapacity());
-	}
-
-	private void initializeTags(ItemBuilder itemBuilder) {
-		tags.put(WeaponTag.UUID, uuid.toString());
+	protected void initializeTags(ItemBuilder itemBuilder) {
+		tags.put(WeaponTag.UUID, uuid != null ? uuid.toString() : "");
 		tags.put(WeaponTag.WEAPON, name);
-		tags.put(WeaponTag.SELECTIVE_FIRE, currentSelectiveFire);
-		tags.put(WeaponTag.AMMO_LEFT, currentMagCapacity);
+		tags.put(WeaponTag.SELECTIVE_FIRE, getSelectiveFireForTag());
+		tags.put(WeaponTag.AMMO_LEFT, getAmmoLeftForTag());
 		tags.forEach((tag, value) -> itemBuilder.addTag(getTagProperName(tag), value));
 	}
 
-	private void applyEffect(Player player, XPotion potion, int amplifier) {
+	/**
+	 * Re-initialises shared mutable data after a {@code super.clone()} shallow copy. Subclasses must call this inside
+	 * their own {@code clone()} implementations.
+	 */
+	protected void initClone(Weapon source) {
+		this.tags.clear();
+		this.durabilityData      = source.durabilityData.clone();
+		this.soundData           = source.soundData.clone();
+		this.reloadActionBarData = source.reloadActionBarData.clone();
+		this.modifiersData       = source.modifiersData.clone();
+		this.recoilData          = source.recoilData.clone();
+
+		this.scopeData = source.scopeData.clone();
+		this.scopeData.setScoped(false);
+
+		this.spreadData           = source.spreadData.clone();
+		this.recoil               = new RecoilManager(this);
+		this.spread               = new SpreadManager(this);
+		this.durabilityCalculator = new DurabilityCalculator(this);
+
+		// ammunitionData and reloadData are final — Object.clone() already shallow-copies them.
+		// Only reset runtime state derived from them.
+		this.currentMagCapacity = source.ammunitionData != null ? source.ammunitionData.getMaxMagCapacity() : 0;
+		this.reload             = source.reload != null ? source.reload.clone() : null;
+		if (this.reload != null) this.reload.rebindWeapon(this);
+		this.currentSelectiveFire = source.currentSelectiveFire;
+	}
+
+	protected void applyEffect(Player player, XPotion potion, int amplifier) {
 		XPotion.of(potion.name())
-			   .map(XPotion::getPotionEffectType)
-			   .ifPresent(type -> player.addPotionEffect(
+		       .map(XPotion::getPotionEffectType)
+		       .ifPresent(type -> player.addPotionEffect(
 					   new PotionEffect(type, PotionEffect.INFINITE_DURATION, amplifier)));
 	}
 
-	private void removeEffect(Player player, XPotion potion) {
+	protected void removeEffect(Player player, XPotion potion) {
 		XPotion.of(potion.name()).map(XPotion::getPotionEffectType).ifPresent(player::removePotionEffect);
 	}
 
