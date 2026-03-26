@@ -60,7 +60,7 @@ public class WeaponRepository extends AbstractRepository<Weapon> {
 
 			if (template == null) continue;
 
-			weapons.add(new Weapon(uuid, template));
+			weapons.add(template.copyWithUUID(uuid));
 		}
 
 		return weapons;
