@@ -12,9 +12,7 @@ public class DurabilityCalculator {
 	}
 
 	public void setDurability(ItemBuilder itemBuilder, short durability) {
-		short maxDurability = itemBuilder.getItemMaxDurability();
-
-		weapon.setCurrentDurability((short) Math.max(maxDurability, durability));
+		weapon.setCurrentDurability((short) Math.max(0, durability));
 
 		short newDamageValue = getWeaponDurability(itemBuilder);
 
