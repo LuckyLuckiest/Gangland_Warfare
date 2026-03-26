@@ -11,20 +11,26 @@ import me.luckyraven.util.timer.SequenceTimer;
 import me.luckyraven.weapon.SelectiveFire;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
-import me.luckyraven.weapon.types.WeaponType;
 import me.luckyraven.weapon.types.biological.BiologicalAction;
+import me.luckyraven.weapon.types.biological.BiologicalWeapon;
 import me.luckyraven.weapon.types.gun.FullAutoTask;
 import me.luckyraven.weapon.types.gun.GunAction;
+import me.luckyraven.weapon.types.gun.GunWeapon;
 import me.luckyraven.weapon.types.incendiary.IncendiaryAction;
+import me.luckyraven.weapon.types.incendiary.IncendiaryWeapon;
 import me.luckyraven.weapon.types.melee.MeleeAction;
+import me.luckyraven.weapon.types.melee.MeleeWeapon;
 import me.luckyraven.weapon.types.throwable.ThrowableAction;
+import me.luckyraven.weapon.types.throwable.ThrowableWeapon;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
@@ -50,6 +56,7 @@ public class WeaponInteract implements Listener {
 	private final Map<UUID, Boolean>                     singleShotLock;
 	private final Map<UUID, FullAutoTask>                autoTasks;
 	private final Map<UUID, RepeatingTimer>              activeTasks;
+	private final Map<UUID, Long>                        meleeCooldowns;
 
 	public WeaponInteract(JavaPlugin plugin, WeaponService weaponService, RecoilCompatibility recoilCompatibility) {
 		this.plugin              = plugin;
@@ -59,6 +66,7 @@ public class WeaponInteract implements Listener {
 		this.singleShotLock      = new ConcurrentHashMap<>();
 		this.autoTasks           = new ConcurrentHashMap<>();
 		this.activeTasks         = new ConcurrentHashMap<>();
+		this.meleeCooldowns      = new ConcurrentHashMap<>();
 	}
 
 	@EventHandler
@@ -69,53 +77,50 @@ public class WeaponInteract implements Listener {
 
 		if (weapon == null) return;
 
+		boolean leftClick = event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK;
+		boolean rightClick = event.getAction() == Action.RIGHT_CLICK_AIR ||
+		                     event.getAction() == Action.RIGHT_CLICK_BLOCK;
+
+		// scope toggle for any weapon type that has a scope configured
+		if (leftClick && !player.isSneaking() && weapon.getScopeData().getLevel() > 0 && !weapon.isReloading()) {
+			event.setUseInteractedBlock(Event.Result.DENY);
+			event.setUseItemInHand(Event.Result.DENY);
+
+			if (!weapon.getScopeData().isScoped()) weapon.scope(player, true);
+			else weapon.unScope(player, true);
+
+			SoundConfiguration.playSounds(player, weapon.getSoundData().getScopeCustom(),
+			                              weapon.getSoundData().getScopeDefault());
+			return;
+		}
+
 		// dispatch non-GUN types before any gun-specific logic
-		if (weapon.getCategory() != WeaponType.GUN) {
-			handleNonGunInteract(event, player, weapon);
+		if (!(weapon instanceof GunWeapon gunWeapon)) {
+			handleNonGunInteract(event, player, weapon, leftClick, rightClick);
 			return;
 		}
 
 		// no interruption while the weapon is reloading
-		if (weapon.isReloading()) {
+		if (gunWeapon.isReloading()) {
 			event.setCancelled(true);
 			return;
 		}
 
-		// left-click scopes
-		boolean leftClick = event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK;
-		if (leftClick && !player.isSneaking()) {
-			if (!weapon.getScopeData().isScoped()) {
-				weapon.scope(player, true);
-				SoundConfiguration.playSounds(player, weapon.getSoundData().getScopeCustom(),
-											  weapon.getSoundData().getScopeDefault());
-
-				return;
-			}
-
-			weapon.unScope(player, true);
-			SoundConfiguration.playSounds(player, weapon.getSoundData().getScopeCustom(),
-										  weapon.getSoundData().getScopeDefault());
-
-			return;
-		}
-
-		// right-click shoots
-		boolean rightClick = event.getAction() == Action.RIGHT_CLICK_AIR ||
-							 event.getAction() == Action.RIGHT_CLICK_BLOCK;
 		if (!rightClick) return;
 
 		// cancel block interaction
 		event.setUseInteractedBlock(Event.Result.DENY);
 		event.setUseItemInHand(Event.Result.DENY);
 
-		SelectiveFire selectiveFire = weapon.getCurrentSelectiveFire();
+		SelectiveFire selectiveFire = gunWeapon.getCurrentSelectiveFire();
+
 
 		if (selectiveFire == SelectiveFire.AUTO) {
 			// handle the AUTO mode with full auto task
-			shootFullAuto(weapon, player, item);
+			shootFullAuto(gunWeapon, player, item);
 		} else {
 			// handle the BURST and SINGLE modes
-			shootOtherModes(weapon, player);
+			shootOtherModes(gunWeapon, player);
 		}
 	}
 
@@ -146,26 +151,45 @@ public class WeaponInteract implements Listener {
 
 		if (weapon == null) return;
 
-		// dispatch non-GUN types (e.g. melee can hit entity directly)
-		if (weapon.getCategory() != WeaponType.GUN) {
-			if (weapon.getCategory() == WeaponType.MELEE) {
-				MeleeAction.activate(player, weapon);
-			}
-			return;
-		}
+		// non-GUN types: no right-click-on-entity behavior
+		if (!(weapon instanceof GunWeapon gunWeapon)) return;
 
-		if (weapon.isReloading()) {
+		if (gunWeapon.isReloading()) {
 			return;
 		}
 
 		// ignore the actions since this event is for right click interactions with entity
 
-		SelectiveFire selectiveFire = weapon.getCurrentSelectiveFire();
+		SelectiveFire selectiveFire = gunWeapon.getCurrentSelectiveFire();
 
 		if (selectiveFire == SelectiveFire.AUTO) {
-			shootFullAuto(weapon, player, item);
+			shootFullAuto(gunWeapon, player, item);
 		} else {
-			shootOtherModes(weapon, player);
+			shootOtherModes(gunWeapon, player);
+		}
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void onEntityDamage(EntityDamageByEntityEvent event) {
+		if (!(event.getDamager() instanceof Player player)) return;
+
+		// allow damage that was applied programmatically by MeleeAction or ThrowableAction itself
+		UUID targetUuid = event.getEntity().getUniqueId();
+		if (MeleeAction.pendingDamage.remove(targetUuid)) return;
+		if (ThrowableAction.pendingDamage.remove(targetUuid)) return;
+
+		ItemStack item = player.getInventory().getItemInMainHand();
+		if (!weaponService.isWeapon(item)) return;
+
+		// cancel the default Minecraft attack damage for all weapon types
+		event.setCancelled(true);
+
+		Weapon weapon = weaponService.validateAndGetWeapon(player, item);
+		if (weapon == null) return;
+
+		if (weapon instanceof MeleeWeapon meleeWeapon) {
+			boolean hit = new MeleeAction(meleeWeapon, recoilCompatibility, meleeCooldowns).activate(player);
+			if (hit) meleeWeapon.applyOnHitDurability(player, player.getInventory().getHeldItemSlot());
 		}
 	}
 
@@ -178,20 +202,21 @@ public class WeaponInteract implements Listener {
 
 		if (weapon == null) return;
 
-		weapon.unScope(player, true);
+		UUID weaponUuid = weapon.getUuid();
 
-		// reset recoil pattern
+		// unscoped and reset recoil for any weapon type
+		weapon.unScope(player, true);
 		weapon.getRecoil().resetRecoilPattern();
 
-		// remove single shot lock for the weapon
-		UUID weaponUuid = weapon.getUuid();
-		singleShotLock.remove(weaponUuid);
+		if (weapon instanceof GunWeapon gunWeapon) {
+			// remove single shot lock for the weapon
+			singleShotLock.remove(weaponUuid);
 
-		// cancel any active auto fire
-		FullAutoTask autoTask = autoTasks.get(weaponUuid);
-
-		if (autoTask != null) {
-			autoTask.stop();
+			// cancel any active auto fire
+			FullAutoTask autoTask = autoTasks.get(weaponUuid);
+			if (autoTask != null) {
+				autoTask.stop();
+			}
 		}
 
 		// cancel active incendiary / biological tasks
@@ -201,34 +226,47 @@ public class WeaponInteract implements Listener {
 		}
 	}
 
-	private void handleNonGunInteract(PlayerInteractEvent event, Player player, Weapon weapon) {
-		boolean rightClick = event.getAction() == Action.RIGHT_CLICK_AIR ||
-							 event.getAction() == Action.RIGHT_CLICK_BLOCK;
-		boolean leftClick = event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK;
-
+	private void handleNonGunInteract(PlayerInteractEvent event, Player player, Weapon weapon, boolean leftClick,
+	                                  boolean rightClick) {
 		event.setUseInteractedBlock(Event.Result.DENY);
 		event.setUseItemInHand(Event.Result.DENY);
 
-		switch (weapon.getCategory()) {
-			case THROWABLE -> {
-				if (rightClick) ThrowableAction.activate(plugin, player, weapon);
+		// block all actions while reloading
+		if (weapon.isReloading()) return;
+
+		// sneak + right-click reloads for any non-gun with ammo configured
+		if (rightClick && player.isSneaking() && weapon.getReloadData() != null && weapon.requiresReload()) {
+			weapon.reload(plugin, player, true);
+			return;
+		}
+
+		switch (weapon) {
+			case ThrowableWeapon throwable -> {
+				if (rightClick) new ThrowableAction(plugin, throwable, recoilCompatibility).activate(player);
 			}
-			case MELEE -> {
-				if (rightClick) MeleeAction.activate(player, weapon);
+			case MeleeWeapon melee -> {
+				if (leftClick) {
+					boolean hit = new MeleeAction(melee, recoilCompatibility, meleeCooldowns).activate(player);
+					if (hit) melee.applyOnHitDurability(player, player.getInventory().getHeldItemSlot());
+				}
 			}
-			case INCENDIARY -> {
-				if (rightClick) IncendiaryAction.start(plugin, player, weapon, activeTasks);
-				else if (leftClick) IncendiaryAction.stop(weapon, activeTasks);
+			case IncendiaryWeapon incendiary -> {
+				IncendiaryAction action = new IncendiaryAction(plugin, incendiary, recoilCompatibility, activeTasks);
+
+				if (rightClick) action.start(player);
+				else if (leftClick) action.stop();
 			}
-			case BIOLOGICAL -> {
-				if (rightClick) BiologicalAction.start(plugin, player, weapon, activeTasks);
-				else if (leftClick) BiologicalAction.fire(player, weapon, activeTasks);
+			case BiologicalWeapon biological -> {
+				BiologicalAction action = new BiologicalAction(plugin, biological, recoilCompatibility, activeTasks);
+
+				if (rightClick) action.start(player);
+				else if (leftClick) action.fire(player);
 			}
 			default -> { }
 		}
 	}
 
-	private void shootOtherModes(Weapon weapon, Player player) {
+	private void shootOtherModes(GunWeapon weapon, Player player) {
 		// check if the pair exists
 		UUID weaponUuid = weapon.getUuid();
 
@@ -286,7 +324,7 @@ public class WeaponInteract implements Listener {
 		}
 	}
 
-	private void shootFullAuto(Weapon weapon, Player player, ItemStack item) {
+	private void shootFullAuto(GunWeapon weapon, Player player, ItemStack item) {
 		UUID weaponUuid = weapon.getUuid();
 		if (!autoTasks.containsKey(weaponUuid)) {
 			var autoTask = new FullAutoTask(plugin, weaponService, weapon, recoilCompatibility, player, item, () -> {
@@ -341,8 +379,8 @@ public class WeaponInteract implements Listener {
 	}
 
 	@NotNull
-	private RepeatingTimer getShootingTimer(AtomicReference<WeaponData> retrievedWeaponData, Weapon weapon,
-											Player player) {
+	private RepeatingTimer getShootingTimer(AtomicReference<WeaponData> retrievedWeaponData, GunWeapon weapon,
+	                                        Player player) {
 		return new RepeatingTimer(plugin, weapon.getProjectileData().getCooldown(), time -> {
 			if (retrievedWeaponData == null) {
 				time.stop();
@@ -364,8 +402,8 @@ public class WeaponInteract implements Listener {
 		});
 	}
 
-	private void selectiveFireShooter(Weapon weapon, Player player, RepeatingTimer time, SelectiveFire selectiveFire,
-									  WeaponData data) {
+	private void selectiveFireShooter(GunWeapon weapon, Player player, RepeatingTimer time, SelectiveFire selectiveFire,
+	                                  WeaponData data) {
 		var projectileData = weapon.getProjectileData();
 		switch (selectiveFire) {
 			case AUTO -> { }
@@ -406,7 +444,7 @@ public class WeaponInteract implements Listener {
 	}
 
 	@NotNull
-	private WeaponData getWeaponData(@Nullable WeaponData weaponData, @NotNull Weapon weapon) {
+	private WeaponData getWeaponData(@Nullable WeaponData weaponData, @NotNull GunWeapon weapon) {
 		WeaponData finalWeaponData;
 
 		// if the weapon is in continuous fire, then get the stored data
@@ -432,12 +470,12 @@ public class WeaponInteract implements Listener {
 		return new Pair<>(true, false);
 	}
 
-	private void shoot(Player player, Weapon weapon) {
+	private void shoot(Player player, GunWeapon weapon) {
 		// have only multiple shots for when the weapon is burst
 		int numberOfShots = 1;
 
 		if (weapon.getCurrentSelectiveFire() == SelectiveFire.BURST) numberOfShots = weapon.getProjectileData()
-																						   .getPerShot();
+		                                                                                   .getPerShot();
 
 		SequenceTimer sequenceTimer = new SequenceTimer(plugin, 1L, 1L);
 
@@ -451,7 +489,7 @@ public class WeaponInteract implements Listener {
 		sequenceTimer.start(false);
 	}
 
-	private void shootInterval(Player player, Weapon weapon) {
+	private void shootInterval(Player player, GunWeapon weapon) {
 
 		GunAction gunAction = new GunAction(plugin, weaponService, weapon, recoilCompatibility);
 
@@ -460,7 +498,7 @@ public class WeaponInteract implements Listener {
 
 		// weapon consumption
 		if (weapon.getWeaponConsumedOnShot() > 0 &&
-			weapon.getCurrentMagCapacity() == weapon.getWeaponConsumedOnShot()) {
+		    weapon.getCurrentMagCapacity() == weapon.getWeaponConsumedOnShot()) {
 			weapon.removeWeapon(player, player.getInventory().getHeldItemSlot());
 		}
 
@@ -468,8 +506,8 @@ public class WeaponInteract implements Listener {
 		if (consumeOnTime <= -1) return;
 
 		CountdownTimer timer = new CountdownTimer(plugin, 0L, 0L, consumeOnTime, null, null,
-												  time -> weapon.removeWeapon(player,
-																			  player.getInventory().getHeldItemSlot()));
+		                                          time -> weapon.removeWeapon(player,
+		                                                                      player.getInventory().getHeldItemSlot()));
 
 		timer.start(false);
 	}
