@@ -11,6 +11,7 @@ import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.Ammunition;
+import me.luckyraven.weapon.dto.AmmunitionData;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
@@ -40,7 +41,7 @@ public class CopNpcFactory {
 	private final WeaponService      weaponService;
 
 	public CopNpcFactory(JavaPlugin plugin, CopConfigProvider configProvider, CopBehaviorFactory behaviorFactory,
-						 EntityMarkManager entityMarkManager, WeaponService weaponService) {
+	                     EntityMarkManager entityMarkManager, WeaponService weaponService) {
 		this.plugin            = plugin;
 		this.configProvider    = configProvider;
 		this.behaviorFactory   = behaviorFactory;
@@ -199,6 +200,7 @@ public class CopNpcFactory {
 		for (int i = 0; i < pool.size(); i++) {
 			String name   = pool.get((start + i) % pool.size());
 			Weapon weapon = weaponService.getWeapon(name);
+
 			if (weapon != null) return weapon;
 		}
 		return null;
@@ -215,11 +217,14 @@ public class CopNpcFactory {
 		EntityEquipment equipment = livingEntity.getEquipment();
 		if (equipment == null) return;
 
-		Ammunition ammoType = weapon.getReloadData().getAmmoType();
+		AmmunitionData ammunitionData = weapon.getAmmunitionData();
+		if (ammunitionData == null) return;
+
+		Ammunition ammoType = ammunitionData.getAmmoType();
 		if (ammoType == null) return;
 
 		// Give enough magazines worth of ammo as configured
-		int       ammoCount = weapon.getReloadData().getMaxMagCapacity() * configProvider.getStartingAmmoMagazines();
+		int       ammoCount = ammunitionData.getMaxMagCapacity() * configProvider.getStartingAmmoMagazines();
 		ItemStack ammoItem  = ammoType.buildItem(Math.min(ammoCount, ammoType.buildItem().getMaxStackSize()));
 
 		equipment.setItemInOffHand(ammoItem);

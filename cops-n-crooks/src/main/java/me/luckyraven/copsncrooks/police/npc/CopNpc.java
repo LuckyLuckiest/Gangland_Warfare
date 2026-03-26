@@ -11,8 +11,11 @@ import me.luckyraven.copsncrooks.police.state.CopState;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.dto.AmmunitionData;
+import me.luckyraven.weapon.dto.ReloadData;
 import me.luckyraven.weapon.events.projectile.WeaponShootEvent;
 import me.luckyraven.weapon.projectile.WeaponProjectile;
+import me.luckyraven.weapon.types.gun.GunWeapon;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -78,7 +81,7 @@ public class CopNpc {
 	private boolean    navigationHopeless;
 
 	public CopNpc(NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors, Location spawnLocation,
-				  CopConfigProvider configProvider) {
+	              CopConfigProvider configProvider) {
 		this.npc                    = npc;
 		this.tierConfig             = tierConfig;
 		this.behaviors              = behaviors;
@@ -152,7 +155,7 @@ public class CopNpc {
 	 */
 	public void transitionTo(CopState newState) {
 		log.debug("Transitioning cop {}-{} from {} state to {} state.", npc.getName(), npc.getId(), currentState,
-				  newState);
+		          newState);
 		if (currentState == newState) return;
 
 		CopBehavior oldBehavior = behaviors.get(currentState);
@@ -588,7 +591,7 @@ public class CopNpc {
 	 * from the ideal radius, and for ranged cops - line-of-sight quality.
 	 */
 	private Location findBestRingApproachLocation(Location copLocation, Location playerLocation, double minRadius,
-												  double maxRadius, double idealRadius) {
+	                                              double maxRadius, double idealRadius) {
 		Location bestLocation = null;
 		double   bestScore    = Double.MAX_VALUE;
 
@@ -597,7 +600,7 @@ public class CopNpc {
 				double radians = Math.toRadians(angle);
 
 				Location candidate = playerLocation.clone()
-												   .add(Math.cos(radians) * radius, 0.0, Math.sin(radians) * radius);
+				                                   .add(Math.cos(radians) * radius, 0.0, Math.sin(radians) * radius);
 
 				Location safeCandidate = normalizeToStandableLocation(candidate);
 
@@ -731,7 +734,7 @@ public class CopNpc {
 
 		for (int yOffset = 2; yOffset >= -4; yOffset--) {
 			Location candidate = new Location(world, baseX + 0.5, location.getY() + yOffset, baseZ + 0.5,
-											  location.getYaw(), location.getPitch());
+			                                  location.getYaw(), location.getPitch());
 
 			if (isBasicSafeStandLocation(candidate)) {
 				return candidate;
@@ -763,7 +766,7 @@ public class CopNpc {
 		Material supportType = below.getType();
 
 		return supportType != Material.LAVA && supportType != Material.WATER && supportType != Material.CACTUS &&
-			   supportType != Material.MAGMA_BLOCK;
+		       supportType != Material.MAGMA_BLOCK;
 	}
 
 	/**
@@ -806,7 +809,7 @@ public class CopNpc {
 		Location currentLocation = entity.getLocation();
 
 		if (currentLocation.getWorld() == null ||
-			!Objects.equals(currentLocation.getWorld(), lastProgressLocation.getWorld())) {
+		    !Objects.equals(currentLocation.getWorld(), lastProgressLocation.getWorld())) {
 			lastProgressLocation   = currentLocation.clone();
 			stuckSampleTicks       = 0;
 			consecutiveStuckChecks = 0;
@@ -844,7 +847,7 @@ public class CopNpc {
 			// before Citizens finishes computing the previous one (Citizens takes 1-2 AI ticks to
 			// start reporting isNavigating() == true after setTarget is called).
 			return lastNavigationTarget != null && !npc.getNavigator().isNavigating() &&
-				   navigationThrottleTicks >= minRepathAfterLossTicks;
+			       navigationThrottleTicks >= minRepathAfterLossTicks;
 		}
 
 		if (lastNavigationTarget == null || lastNavigationTarget.getWorld() == null || target.getWorld() == null) {
@@ -877,6 +880,8 @@ public class CopNpc {
 	 * {@link WeaponShootEvent} pipeline, and triggers a reload when the magazine empties.
 	 */
 	private void performGanglandWeaponAttack() {
+		if (!(heldWeapon instanceof GunWeapon gun)) return;
+
 		if (heldWeapon.isBroken() || heldWeapon.isMagazineEmpty()) {
 			triggerReload();
 			return;
@@ -892,9 +897,7 @@ public class CopNpc {
 
 		if (shooter == null) return;
 
-		WeaponProjectile<?> projectile = heldWeapon.getProjectileData()
-												   .getType()
-												   .createInstance(plugin, shooter, heldWeapon);
+		WeaponProjectile<?> projectile = gun.getProjectileData().getType().createInstance(plugin, shooter, gun);
 
 		WeaponShootEvent event = new WeaponShootEvent(heldWeapon, projectile);
 		Bukkit.getPluginManager().callEvent(event);
@@ -905,12 +908,12 @@ public class CopNpc {
 		} else {
 			projectile.launchProjectile();
 			SoundConfiguration.playSoundsAtLocation(shooter.getEyeLocation(), heldWeapon.getSoundData().getShotCustom(),
-													heldWeapon.getSoundData().getShotDefault());
+			                                        heldWeapon.getSoundData().getShotDefault());
 			refreshHeldItem();
 		}
 
 		// Use the weapon's own cooldown; fall back to a sensible minimum
-		int cooldown = heldWeapon.getProjectileData().getCooldown();
+		int cooldown = gun.getProjectileData().getCooldown();
 		attackCooldown = Math.max(cooldown, 5);
 
 		if (heldWeapon.isMagazineEmpty()) {
@@ -927,14 +930,21 @@ public class CopNpc {
 
 		reloading = true;
 
-		int reloadTicks = heldWeapon.getReloadData().getCooldown();
+		ReloadData reloadData = heldWeapon.getReloadData();
+		if (reloadData == null) return;
+
+		int reloadTicks = reloadData.getCooldown();
 
 		Bukkit.getScheduler().runTaskLater(plugin, () -> {
+			AmmunitionData ammunitionData = heldWeapon.getAmmunitionData();
+			if (ammunitionData == null) return;
+
 			if (!isValid()) {
 				reloading = false;
 				return;
 			}
-			heldWeapon.addAmmunition(heldWeapon.getReloadData().getMaxMagCapacity());
+
+			heldWeapon.addAmmunition(ammunitionData.getMaxMagCapacity());
 			refreshHeldItem();
 			reloading = false;
 		}, reloadTicks);
@@ -971,11 +981,11 @@ public class CopNpc {
 		attackCooldown = 5;
 
 		Vector knockback = player.getLocation()
-								 .toVector()
-								 .subtract(entity.getLocation().toVector())
-								 .normalize()
-								 .multiply(0.3)
-								 .setY(0.1);
+		                         .toVector()
+		                         .subtract(entity.getLocation().toVector())
+		                         .normalize()
+		                         .multiply(0.3)
+		                         .setY(0.1);
 		player.setVelocity(player.getVelocity().add(knockback));
 	}
 
