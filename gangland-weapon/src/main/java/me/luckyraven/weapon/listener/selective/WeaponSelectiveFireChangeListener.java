@@ -31,11 +31,12 @@ public class WeaponSelectiveFireChangeListener implements Listener {
 		// check if the player is shifting
 		if (!player.isSneaking()) return;
 
-		// check if the player is holding a weapon
+		// check if the player is holding a weapon with selective fire configured
 		ItemStack item   = player.getInventory().getItemInMainHand();
 		Weapon    weapon = weaponService.validateAndGetWeapon(player, item);
 
 		if (weapon == null) return;
+		if (weapon.getCurrentSelectiveFire() == null) return;
 
 		var newEvent = new WeaponChangeSelectiveFireEvent(weapon);
 		Bukkit.getPluginManager().callEvent(newEvent);
@@ -56,7 +57,7 @@ public class WeaponSelectiveFireChangeListener implements Listener {
 		weapon.updateWeapon(player, itemBuilder, player.getInventory().getHeldItemSlot());
 
 		ChatUtil.sendActionBar(player, "&6Selective Fire > &e" +
-									   ChatUtil.capitalize(weapon.getCurrentSelectiveFire().name().toLowerCase()));
+		                               ChatUtil.capitalize(weapon.getCurrentSelectiveFire().name().toLowerCase()));
 	}
 
 }
