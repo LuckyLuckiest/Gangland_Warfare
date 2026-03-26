@@ -3,6 +3,7 @@ package me.luckyraven.weapon;
 import lombok.Getter;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.weapon.configuration.WeaponAddon;
+import me.luckyraven.weapon.dto.AmmunitionData;
 import me.luckyraven.weapon.types.WeaponType;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -72,11 +73,14 @@ public abstract class WeaponService implements Comparator<Weapon> {
 	}
 
 	public boolean hasAmmunition(Player player, Weapon weapon) {
-		var reloadData = weapon.getReloadData();
-		var item       = reloadData.getAmmoType().buildItem();
-		var consume    = reloadData.getConsume();
+		AmmunitionData ammunitionData = weapon.getAmmunitionData();
 
-		return player.getInventory().containsAtLeast(item, consume);
+		if (ammunitionData == null) return true;
+
+		var item        = ammunitionData.getAmmoType().buildItem();
+		var consumeRate = ammunitionData.getConsumeRate();
+
+		return player.getInventory().containsAtLeast(item, consumeRate);
 	}
 
 	/**
@@ -166,7 +170,7 @@ public abstract class WeaponService implements Comparator<Weapon> {
 
 		// mostly for new weapons
 		// when the weapon is registered in the system but not tagged with an uuid
-		Weapon finalWeapon = new Weapon(finalUuid, weaponAddon);
+		Weapon finalWeapon = weaponAddon.copyWithUUID(finalUuid);
 
 		// check if the weapon is new or not
 		// if it was new, then no need to set the data of the uuid since it is not even created/built

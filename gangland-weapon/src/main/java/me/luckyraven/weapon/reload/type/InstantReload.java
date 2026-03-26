@@ -5,6 +5,7 @@ import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.timer.SequenceTimer;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.ammo.Ammunition;
+import me.luckyraven.weapon.dto.AmmunitionData;
 import me.luckyraven.weapon.dto.ReloadData;
 import me.luckyraven.weapon.reload.Reload;
 import org.bukkit.entity.Player;
@@ -45,8 +46,10 @@ public class InstantReload extends Reload {
 
 		timer = new SequenceTimer(plugin);
 
-		// start reloading the gun
 		ReloadData reloadData = getWeapon().getReloadData();
+		if (reloadData == null) return;
+
+		// start reloading the gun
 		timer.addIntervalTaskPair(0, time -> {
 			super.startReloading(player);
 		});
@@ -61,8 +64,11 @@ public class InstantReload extends Reload {
 		long remaining = Math.max(0, reloadData.getCooldown() - midSound);
 		// continue execution after the sound had finished
 		timer.addIntervalTaskPair(remaining, time -> {
+			AmmunitionData ammunitionData = getWeapon().getAmmunitionData();
+			if (ammunitionData == null) return;
+
 			// if ammo was lost before or during the reload start (e.g. dropped), abort immediately
-			boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1), reloadData.getConsume());
+			boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1), ammunitionData.getConsumeRate());
 			if (removeAmmunition && !contains) {
 				stopReloading();
 				return;
@@ -71,11 +77,11 @@ public class InstantReload extends Reload {
 			// remove the magazine the moment the reloading starts to prevent bugs
 			if (removeAmmunition) {
 				// consume the item
-				inventory.removeItem(getAmmunition().buildItem(reloadData.getConsume()));
+				inventory.removeItem(getAmmunition().buildItem(ammunitionData.getConsumeRate()));
 			}
 
 			// add to the weapon capacity
-			getWeapon().addAmmunition(reloadData.getRestore());
+			getWeapon().addAmmunition(ammunitionData.getRestore());
 
 			// update the weapon data
 			int newSlot = findWeaponSlot(inventory, getWeapon());

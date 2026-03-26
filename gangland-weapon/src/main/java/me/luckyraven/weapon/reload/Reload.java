@@ -8,6 +8,7 @@ import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.Ammunition;
+import me.luckyraven.weapon.dto.ReloadData;
 import me.luckyraven.weapon.events.reload.WeaponReloadCompleteEvent;
 import me.luckyraven.weapon.events.reload.WeaponReloadStartEvent;
 import org.bukkit.Bukkit;
@@ -22,11 +23,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Getter(value = AccessLevel.PROTECTED)
 public abstract class Reload implements Cloneable {
 
-	private final Weapon     weapon;
-	private final Ammunition ammunition;
-
-	private AtomicBoolean reloading;
-	private Player        currentPlayer;
+	private final Ammunition    ammunition;
+	private       Weapon        weapon;
+	private       AtomicBoolean reloading;
+	private       Player        currentPlayer;
 
 	public Reload(Weapon weapon, Ammunition ammunition) {
 		this.weapon     = weapon;
@@ -40,8 +40,12 @@ public abstract class Reload implements Cloneable {
 
 	public void reload(JavaPlugin plugin, Player player, boolean removeAmmunition) {
 		// reload the weapon action bar status
+		ReloadData reloadData = weapon.getReloadData();
+
+		if (reloadData == null) return;
+
 		ChatUtil.sendActionBar(plugin, player, weapon.getReloadActionBarData().getReloading(),
-							   weapon.getReloadData().getCooldown());
+		                       reloadData.getCooldown());
 
 		// start executing the reload process
 		executeReload(plugin, player, removeAmmunition);
@@ -64,6 +68,10 @@ public abstract class Reload implements Cloneable {
 		return reloading.get();
 	}
 
+	public void rebindWeapon(Weapon newWeapon) {
+		this.weapon = newWeapon;
+	}
+
 	protected void startReloading(Player player) {
 		// track the player for stopReloading()
 		this.currentPlayer = player;
@@ -76,7 +84,7 @@ public abstract class Reload implements Cloneable {
 
 		// start reloading sound
 		SoundConfiguration.playSounds(player, weapon.getSoundData().getReloadCustomStart(),
-									  weapon.getSoundData().getReloadDefaultBefore());
+		                              weapon.getSoundData().getReloadDefaultBefore());
 
 		// scope the player and make them slow down
 		weapon.scope(player, false);
@@ -87,7 +95,7 @@ public abstract class Reload implements Cloneable {
 	protected void endReloading(Player player) {
 		// end reloading sound
 		SoundConfiguration.playSounds(player, weapon.getSoundData().getReloadCustomEnd(),
-									  weapon.getSoundData().getReloadDefaultAfter());
+		                              weapon.getSoundData().getReloadDefaultAfter());
 
 		// un-scope the player to resume the showdown
 		weapon.unScope(player, true);
@@ -108,6 +116,7 @@ public abstract class Reload implements Cloneable {
 	 * @return the slot index where the weapon is located, or -1 if not found
 	 */
 	protected int findWeaponSlot(PlayerInventory inventory, Weapon weapon) {
+		if (weapon.getUuid() == null) return -1;
 		String      weaponUUID = weapon.getUuid().toString();
 		ItemStack[] contents   = inventory.getContents();
 

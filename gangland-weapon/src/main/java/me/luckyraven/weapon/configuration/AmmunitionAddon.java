@@ -6,24 +6,29 @@ import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.weapon.ammo.Ammunition;
+import me.luckyraven.weapon.ammo.AmmunitionManager;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
+/**
+ * Pure parser for the {@code ammunition.yml} file. Reads each ammunition entry and registers it into the provided
+ * {@link AmmunitionManager}. Does not store any data itself.
+ */
 @CustomLog
-public class AmmunitionAddon implements Comparator<Ammunition> {
+public class AmmunitionAddon {
 
-	private final Map<String, Ammunition> ammunition;
-	private final FileManager             fileManager;
+	private final FileManager fileManager;
 
 	public AmmunitionAddon(FileManager fileManager) {
-		this.ammunition  = new HashMap<>();
 		this.fileManager = fileManager;
 	}
 
-	public void initialize() {
+	public void initialize(AmmunitionManager manager) {
 		FileConfiguration fileConfiguration;
 		try {
 			String fileName = "ammunition";
@@ -36,30 +41,12 @@ public class AmmunitionAddon implements Comparator<Ammunition> {
 			throw new PluginException(exception);
 		}
 
-		registerAmmunition(fileConfiguration);
+		registerAmmunition(manager, fileConfiguration);
 	}
 
-	public Ammunition getAmmunition(String key) {
-		return ammunition.get(key);
-	}
-
-	public Set<String> getAmmunitionKeys() {
-		return ammunition.keySet();
-	}
-
-	public void clear() {
-		ammunition.clear();
-	}
-
-	@Override
-	public int compare(Ammunition ammunition1, Ammunition ammunition2) {
-		return ammunition1.compareTo(ammunition2);
-	}
-
-	private void registerAmmunition(FileConfiguration ammunition) {
+	private void registerAmmunition(AmmunitionManager manager, FileConfiguration ammunition) {
 		List<String> temp = new ArrayList<>();
 
-		// initialize the data
 		for (String key : ammunition.getKeys(false)) {
 			ConfigurationSection section = ammunition.getConfigurationSection(key);
 
@@ -77,7 +64,7 @@ public class AmmunitionAddon implements Comparator<Ammunition> {
 
 			Ammunition ammo = new Ammunition(key, name, xMaterial.get(), lore);
 
-			this.ammunition.put(key, ammo);
+			manager.register(key, ammo);
 			temp.add(key);
 		}
 

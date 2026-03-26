@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -27,14 +26,14 @@ public class Ammunition implements Comparable<Ammunition> {
 		return new ItemBuilder(item).hasNBTTag("ammo");
 	}
 
-	public static Ammunition getHeldAmmunition(AmmunitionAddon ammunitionAddon, ItemStack itemHeld) {
+	public static Ammunition getHeldAmmunition(AmmunitionManager ammunitionManager, ItemStack itemHeld) {
 		if (itemHeld == null || itemHeld.getType().equals(Material.AIR) || itemHeld.getAmount() == 0) return null;
 		if (!isAmmunition(itemHeld)) return null;
 
 		ItemBuilder itemBuilder    = new ItemBuilder(itemHeld);
 		String      ammunitionName = itemBuilder.getStringTagData("ammo");
 
-		return ammunitionAddon.getAmmunition(ammunitionName);
+		return ammunitionManager.getAmmunition(ammunitionName);
 	}
 
 	@Override

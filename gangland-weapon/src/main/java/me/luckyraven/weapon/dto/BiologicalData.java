@@ -17,7 +17,6 @@ public class BiologicalData implements Cloneable {
 	private int          maxChargeLevel;
 	private List<String> effectsPerLevel;
 	private double       areaRadius;
-	private String       ammoType;
 
 	@Override
 	public BiologicalData clone() {

@@ -15,6 +15,8 @@ public class ThrowableData implements Cloneable {
 	private int     explosionDamage;
 	private int     fireTicks;
 	private boolean bounces;
+	private int     maxBounces;
+	private boolean sticky;
 	private String  entityType;
 
 	@Override

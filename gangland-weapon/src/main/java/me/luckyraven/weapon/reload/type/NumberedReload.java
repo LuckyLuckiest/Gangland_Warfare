@@ -5,6 +5,8 @@ import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.timer.SequenceTimer;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.ammo.Ammunition;
+import me.luckyraven.weapon.dto.AmmunitionData;
+import me.luckyraven.weapon.dto.ReloadData;
 import me.luckyraven.weapon.reload.Reload;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -54,9 +56,12 @@ public class NumberedReload extends Reload {
 			super.startReloading(player);
 		});
 
+		AmmunitionData ammunitionData = getWeapon().getAmmunitionData();
+		if (ammunitionData == null) return;
+
 		// calculate the number of inserts according to the mag capacity
-		int leftToInsert       = getWeapon().getReloadData().getMaxMagCapacity() - getWeapon().getCurrentMagCapacity();
-		int numberOfInsertions = leftToInsert / getWeapon().getReloadData().getRestore();
+		int leftToInsert       = ammunitionData.getMaxMagCapacity() - getWeapon().getCurrentMagCapacity();
+		int numberOfInsertions = leftToInsert / ammunitionData.getRestore();
 
 		int numberOfAmmunition = 0;
 		for (int i = 0; i < inventory.getSize(); i++) {
@@ -75,8 +80,11 @@ public class NumberedReload extends Reload {
 
 		numberOfInsertions = Math.min(numberOfInsertions, maxPossibleInsertions);
 
+		ReloadData reloadData = getWeapon().getReloadData();
+		if (reloadData == null) return;
+
 		for (int i = 0; i < numberOfInsertions; ++i) {
-			timer.addIntervalTaskPair(getWeapon().getReloadData().getCooldown(), time -> {
+			timer.addIntervalTaskPair(reloadData.getCooldown(), time -> {
 				if (!isReloading()) {
 					return;
 				}
@@ -98,7 +106,7 @@ public class NumberedReload extends Reload {
 				}
 
 				// add to the weapon capacity
-				getWeapon().addAmmunition(getWeapon().getReloadData().getRestore());
+				getWeapon().addAmmunition(ammunitionData.getRestore());
 
 				// update the weapon data
 				int newSlot = findWeaponSlot(inventory, getWeapon());

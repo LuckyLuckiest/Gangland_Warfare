@@ -4,22 +4,22 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import me.luckyraven.exception.PluginException;
+import me.luckyraven.weapon.ammo.Ammunition;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class IncendiaryData implements Cloneable {
+public class AmmunitionData implements Cloneable {
 
-	private double coneAngle;
-	private double range;
-	private int    fireDuration;
-	private int    tickRate;
-	private int    consumeRate;
+	private Ammunition ammoType;
+	private int        maxMagCapacity;
+	private int        consumeRate;
+	private int        restore;
 
 	@Override
-	public IncendiaryData clone() {
+	public AmmunitionData clone() {
 		try {
-			return (IncendiaryData) super.clone();
+			return (AmmunitionData) super.clone();
 		} catch (CloneNotSupportedException exception) {
 			throw new PluginException(exception);
 		}
