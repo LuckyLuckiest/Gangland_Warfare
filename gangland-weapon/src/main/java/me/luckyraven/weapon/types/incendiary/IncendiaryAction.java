@@ -1,8 +1,9 @@
 package me.luckyraven.weapon.types.incendiary;
 
+import me.luckyraven.compatibility.recoil.RecoilCompatibility;
+import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.utilities.ParticleUtil;
-import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.dto.IncendiaryData;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -20,43 +21,67 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class IncendiaryAction {
 
+	private final JavaPlugin                plugin;
+	private final IncendiaryWeapon          weapon;
+	private final RecoilCompatibility       recoilCompatibility;
+	private final Map<UUID, RepeatingTimer> activeTasks;
+
+	public IncendiaryAction(JavaPlugin plugin, IncendiaryWeapon weapon, RecoilCompatibility recoilCompatibility,
+	                        Map<UUID, RepeatingTimer> activeTasks) {
+		this.plugin              = plugin;
+		this.weapon              = weapon;
+		this.recoilCompatibility = recoilCompatibility;
+		this.activeTasks         = activeTasks;
+	}
+
 	/**
-	 * Starts continuous fire spray. Toggles off if already active.
+	 * Starts continuous fire spray. Toggles off if already active. Fuel is tracked via
+	 * {@code weapon.getCurrentMagCapacity()} — unlimited when no reloadData is set.
 	 */
-	public static void start(JavaPlugin plugin, Player player, Weapon weapon, Map<UUID, RepeatingTimer> activeTasks) {
+	public void start(Player player) {
 		UUID weaponUuid = weapon.getUuid();
 
 		if (activeTasks.containsKey(weaponUuid)) {
-			stop(weapon, activeTasks);
+			stop();
 			return;
 		}
 
-		IncendiaryData data = weapon.getIncendiaryData();
-		if (data == null) return;
+		IncendiaryData data       = weapon.getIncendiaryData();
+		boolean        tracksAmmo = weapon.getAmmunitionData() != null;
 
-		int[] fuel = {data.getFuelCapacity()};
+		if (tracksAmmo && weapon.isMagazineEmpty()) return;
+
+		// spray-start sound and recoil
+		SoundConfiguration.playSounds(player, weapon.getSoundData().getShotCustom(),
+		                              weapon.getSoundData().getShotDefault());
+		weapon.getRecoil().applyRecoil(recoilCompatibility, player);
+
+		double flatBonus = weapon.getModifiersData().hasFlatDamage() ?
+		                   weapon.getModifiersData().getFlatDamage().bonus() :
+		                   0.0;
 
 		RepeatingTimer timer = new RepeatingTimer(plugin, data.getTickRate(), time -> {
-			if (fuel[0] <= 0) {
-				stop(weapon, activeTasks);
+			if (tracksAmmo && weapon.isMagazineEmpty()) {
+				stop();
 				time.stop();
 				return;
 			}
 
-			fuel[0] = Math.max(0, fuel[0] - data.getFuelConsumeRate());
-			sprayFire(player, data);
+			if (tracksAmmo) weapon.consumeShot();
+
+			sprayFire(player, data, flatBonus);
 		});
 
 		timer.start(false);
 		activeTasks.put(weaponUuid, timer);
 	}
 
-	public static void stop(Weapon weapon, Map<UUID, RepeatingTimer> activeTasks) {
+	public void stop() {
 		RepeatingTimer timer = activeTasks.remove(weapon.getUuid());
 		if (timer != null) timer.stop();
 	}
 
-	private static void sprayFire(Player player, IncendiaryData data) {
+	private void sprayFire(Player player, IncendiaryData data, double flatBonus) {
 		Location eye   = player.getEyeLocation();
 		Vector   dir   = eye.getDirection().normalize();
 		double   range = data.getRange();
@@ -66,10 +91,7 @@ public class IncendiaryAction {
 		Vector right = dir.clone().crossProduct(new Vector(0, 1, 0));
 		if (right.lengthSquared() < 0.001) right = new Vector(1, 0, 0);
 		right.normalize();
-		Location muzzle = eye.clone()
-							 .add(dir.clone().multiply(0.5))
-							 .add(right.multiply(0.25))
-							 .add(0, -0.15, 0);
+		Location muzzle = eye.clone().add(dir.clone().multiply(0.5)).add(right.multiply(0.25)).add(0, -0.15, 0);
 
 		// flame particles from muzzle in a realistic cone with upward drift
 		ParticleUtil.spawnFlameCone(muzzle, dir, range, data.getConeAngle());
@@ -89,12 +111,12 @@ public class IncendiaryAction {
 			double theta = rng.nextDouble() * halfAngle;
 			double phi   = rng.nextDouble() * 2 * Math.PI;
 			Vector rayDir = dir.clone()
-							   .add(perp1.clone().multiply(Math.sin(theta) * Math.cos(phi)))
-							   .add(perp2.clone().multiply(Math.sin(theta) * Math.sin(phi)))
-							   .normalize();
+			                   .add(perp1.clone().multiply(Math.sin(theta) * Math.cos(phi)))
+			                   .add(perp2.clone().multiply(Math.sin(theta) * Math.sin(phi)))
+			                   .normalize();
 
 			RayTraceResult result = world.rayTraceEntities(muzzle, rayDir, range, 0.3,
-														   e -> e instanceof LivingEntity && !e.equals(player));
+			                                               e -> e instanceof LivingEntity && !e.equals(player));
 			if (result != null && result.getHitEntity() instanceof LivingEntity target) {
 				hit.add(target);
 			}
@@ -102,6 +124,10 @@ public class IncendiaryAction {
 
 		for (LivingEntity target : hit) {
 			target.setFireTicks(data.getFireDuration());
+			if (flatBonus > 0) {
+				// apply flat bonus without attacker so it bypasses armor and the weapon event guard
+				target.damage(flatBonus);
+			}
 		}
 	}
 
