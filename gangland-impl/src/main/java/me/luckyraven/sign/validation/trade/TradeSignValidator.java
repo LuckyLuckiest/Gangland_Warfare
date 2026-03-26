@@ -6,20 +6,20 @@ import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.validation.AbstractSignValidator;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
-import me.luckyraven.weapon.configuration.AmmunitionAddon;
+import me.luckyraven.weapon.ammo.AmmunitionManager;
 
 import java.util.*;
 
 public class TradeSignValidator extends AbstractSignValidator {
 
-	private final WeaponService   weaponService;
-	private final AmmunitionAddon ammunitionAddon;
+	private final WeaponService     weaponService;
+	private final AmmunitionManager ammunitionManager;
 
-	public TradeSignValidator(SignType signType, WeaponService weaponService, AmmunitionAddon ammunitionAddon) {
+	public TradeSignValidator(SignType signType, WeaponService weaponService, AmmunitionManager ammunitionManager) {
 		super(signType, Settings.getMoneySymbol());
 
-		this.weaponService   = weaponService;
-		this.ammunitionAddon = ammunitionAddon;
+		this.weaponService     = weaponService;
+		this.ammunitionManager = ammunitionManager;
 	}
 
 	@Override
@@ -31,7 +31,7 @@ public class TradeSignValidator extends AbstractSignValidator {
 				.stream().anyMatch(weapon -> weapon.getName().equalsIgnoreCase(content));
 
 		if (!found) {
-			Set<String> ammunitionKeys = ammunitionAddon.getAmmunitionKeys();
+			Set<String> ammunitionKeys = ammunitionManager.getAmmunitionKeys();
 
 			found = ammunitionKeys.stream().anyMatch(ammo -> ammo.equalsIgnoreCase(content));
 		}

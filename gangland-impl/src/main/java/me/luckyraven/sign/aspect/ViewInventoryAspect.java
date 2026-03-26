@@ -10,7 +10,9 @@ import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.Ammunition;
-import me.luckyraven.weapon.configuration.AmmunitionAddon;
+import me.luckyraven.weapon.ammo.AmmunitionManager;
+import me.luckyraven.weapon.dto.AmmunitionData;
+import me.luckyraven.weapon.types.gun.GunWeapon;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -22,9 +24,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ViewInventoryAspect implements SignAspect {
 
-	private final JavaPlugin      plugin;
-	private final WeaponService   weaponService;
-	private final AmmunitionAddon ammunitionAddon;
+	private final JavaPlugin        plugin;
+	private final WeaponService     weaponService;
+	private final AmmunitionManager ammunitionManager;
 
 	@Override
 	public AspectResult execute(Player player, ParsedSign sign) {
@@ -39,7 +41,7 @@ public class ViewInventoryAspect implements SignAspect {
 		}
 
 		// Try to find ammunition
-		if (ammunitionAddon.getAmmunitionKeys().contains(itemName)) {
+		if (ammunitionManager.getAmmunitionKeys().contains(itemName)) {
 			openAmmunitionView(player, itemName);
 			return AspectResult.success("Opened ammunition view: " + itemName);
 		}
@@ -59,7 +61,7 @@ public class ViewInventoryAspect implements SignAspect {
 		}
 
 		// Check if ammunition exists
-		if (ammunitionAddon.getAmmunitionKeys().contains(itemName)) {
+		if (ammunitionManager.getAmmunitionKeys().contains(itemName)) {
 			return true;
 		}
 
@@ -89,9 +91,11 @@ public class ViewInventoryAspect implements SignAspect {
 
 		List<String> weaponLore = new ArrayList<>();
 		weaponLore.add("&7Type: &f" + weapon.getCategory().name());
-		weaponLore.add("&7Damage: &c" + weapon.getProjectileData().getDamage());
-		weaponLore.add("&7Magazine: &e" + weapon.getReloadData().getMaxMagCapacity());
-		weaponLore.add("&7Fire Rate: &a" + weapon.getProjectileData().getCooldown() + "ms");
+		if (weapon instanceof GunWeapon gun && gun.getAmmunitionData() != null) {
+			weaponLore.add("&7Damage: &c" + gun.getProjectileData().getDamage());
+			weaponLore.add("&7Magazine: &e" + gun.getAmmunitionData().getMaxMagCapacity());
+			weaponLore.add("&7Fire Rate: &a" + gun.getProjectileData().getCooldown() + "ms");
+		}
 		weaponLore.add("");
 		weaponLore.add("&7Compatible Ammo: " + compatibleAmmo);
 
@@ -138,7 +142,7 @@ public class ViewInventoryAspect implements SignAspect {
 
 	private ItemStack createAmmunitionItem(String ammoName, Weapon forWeapon) {
 		// Get ammunition material from config or default
-		Material ammoMaterial = ammunitionAddon.getAmmunition(ammoName).getMaterial();
+		Material ammoMaterial = ammunitionManager.getAmmunition(ammoName).getMaterial();
 
 		List<String> lore = new ArrayList<>();
 		lore.add("&7Type: &fAmmunition");
@@ -179,10 +183,10 @@ public class ViewInventoryAspect implements SignAspect {
 
 	private Weapon findWeapon(String identifier) {
 		return weaponService.getWeapons()
-							.values()
+		                    .values()
 				.stream()
 				.filter(w -> w.getName().equalsIgnoreCase(identifier) ||
-							 w.getDisplayName().equalsIgnoreCase(identifier))
+				             w.getDisplayName().equalsIgnoreCase(identifier))
 				.findFirst()
 				.orElse(null);
 	}
@@ -191,12 +195,15 @@ public class ViewInventoryAspect implements SignAspect {
 		List<String> compatible = new ArrayList<>();
 
 		// Add the weapon's primary ammunition type
-		Ammunition ammoType = weapon.getReloadData().getAmmoType();
-		if (ammoType != null) {
-			String ammoName = ammoType.getName().toLowerCase();
-			if (ammunitionAddon.getAmmunitionKeys().contains(ammoName)) {
-				compatible.add(ammoName);
-			}
+		AmmunitionData ammunitionData = weapon.getAmmunitionData();
+		if (ammunitionData == null) return compatible;
+
+		Ammunition ammoType = ammunitionData.getAmmoType();
+		if (ammoType == null) return compatible;
+
+		String ammoName = ammoType.getName().toLowerCase();
+		if (ammunitionManager.getAmmunitionKeys().contains(ammoName)) {
+			compatible.add(ammoName);
 		}
 
 		return compatible;

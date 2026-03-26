@@ -22,7 +22,7 @@ import me.luckyraven.sign.validation.trade.wearable.WearableSignValidator;
 import me.luckyraven.util.color.Color;
 import me.luckyraven.util.item.wearable.Wearable;
 import me.luckyraven.weapon.WeaponService;
-import me.luckyraven.weapon.configuration.AmmunitionAddon;
+import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.entity.Player;
 
@@ -40,8 +40,8 @@ public class WearableSellSign extends BaseTradeSign implements BulkSignHandler {
 	private SignHandler handler;
 
 	public WearableSellSign(UserManager<Player> userManager, WearableService wearableService,
-							WeaponService weaponService, AmmunitionAddon ammunitionAddon, SignType signType) {
-		super(weaponService, ammunitionAddon);
+	                        WeaponService weaponService, AmmunitionManager ammunitionManager, SignType signType) {
+		super(weaponService, ammunitionManager);
 
 		this.userManager     = userManager;
 		this.wearableService = wearableService;
@@ -69,12 +69,12 @@ public class WearableSellSign extends BaseTradeSign implements BulkSignHandler {
 		this.handler = new AspectBasedSignHandler(aspects);
 
 		var definition = SignTypeDefinition.builder()
-										   .signType(signType)
-										   .signValidator(validator)
-										   .signParser(parser)
-										   .handler(handler)
-										   .bulkHandler(this)
-										   .build();
+		                                   .signType(signType)
+		                                   .signValidator(validator)
+		                                   .signParser(parser)
+		                                   .handler(handler)
+		                                   .bulkHandler(this)
+		                                   .build();
 
 		definition.addAllAspects(aspects);
 
@@ -105,35 +105,35 @@ public class WearableSellSign extends BaseTradeSign implements BulkSignHandler {
 		var    builder   = SignFormat.builder().formatName(generated.toLowerCase()).signTypePrefix(signType.typed());
 
 		var line1 = SignLineFormat.builder()
-								  .lineNumber(0)
-								  .required(true)
-								  .contentType(SignLineFormat.LineContentType.TITLE)
-								  .formatter(s -> "&8[&3" + generated + "&8]")
-								  .build();
+		                          .lineNumber(0)
+		                          .required(true)
+		                          .contentType(SignLineFormat.LineContentType.TITLE)
+		                          .formatter(s -> "&8[&3" + generated + "&8]")
+		                          .build();
 
 		var line2 = SignLineFormat.builder()
-								  .lineNumber(1)
-								  .required(true)
-								  .defaultColor(Color.GRAY)
-								  .contentType(SignLineFormat.LineContentType.CUSTOM_TEXT)
-								  .formatter(s -> "&7" + s)
-								  .build();
+		                          .lineNumber(1)
+		                          .required(true)
+		                          .defaultColor(Color.GRAY)
+		                          .contentType(SignLineFormat.LineContentType.CUSTOM_TEXT)
+		                          .formatter(s -> "&7" + s)
+		                          .build();
 
 		var line3 = SignLineFormat.builder()
-								  .lineNumber(2)
-								  .required(true)
-								  .defaultColor(Color.LIME)
-								  .contentType(SignLineFormat.LineContentType.PRICE)
-								  .formatter(s -> "&a" + s)
-								  .build();
+		                          .lineNumber(2)
+		                          .required(true)
+		                          .defaultColor(Color.LIME)
+		                          .contentType(SignLineFormat.LineContentType.PRICE)
+		                          .formatter(s -> "&a" + s)
+		                          .build();
 
 		var line4 = SignLineFormat.builder()
-								  .lineNumber(3)
-								  .required(true)
-								  .defaultColor(Color.CYAN)
-								  .contentType(SignLineFormat.LineContentType.QUANTITY)
-								  .formatter(s -> "&b" + s)
-								  .build();
+		                          .lineNumber(3)
+		                          .required(true)
+		                          .defaultColor(Color.CYAN)
+		                          .contentType(SignLineFormat.LineContentType.QUANTITY)
+		                          .formatter(s -> "&b" + s)
+		                          .build();
 
 		return builder.lineFormats(List.of(line1, line2, line3, line4)).build();
 	}

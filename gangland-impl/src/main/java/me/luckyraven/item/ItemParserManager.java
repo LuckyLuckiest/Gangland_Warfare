@@ -8,7 +8,7 @@ import me.luckyraven.item.converter.WearableConverter;
 import me.luckyraven.util.item.ItemConverterRegistry;
 import me.luckyraven.util.item.ItemParser;
 import me.luckyraven.weapon.WeaponService;
-import me.luckyraven.weapon.configuration.AmmunitionAddon;
+import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.wearable.WearableService;
 
 @Getter
@@ -17,7 +17,7 @@ public class ItemParserManager {
 	private final ItemConverterRegistry registry;
 	private final ItemParser            parser;
 
-	public ItemParserManager(WeaponService weaponService, AmmunitionAddon ammunitionAddon,
+	public ItemParserManager(WeaponService weaponService, AmmunitionManager ammunitionManager,
 							 WearableService wearableService) {
 		this.registry = new ItemConverterRegistry();
 		this.parser   = new ItemParser(registry);
@@ -26,7 +26,7 @@ public class ItemParserManager {
 		registry.register("weapon", new WeaponConverter(weaponService));
 		registry.register("wearable", new WearableConverter(wearableService));
 
-		var ammunitionConverter = new AmmunitionConverter(ammunitionAddon);
+		var ammunitionConverter = new AmmunitionConverter(ammunitionManager);
 
 		registry.register("ammunition", ammunitionConverter);
 		registry.register("ammo", ammunitionConverter);

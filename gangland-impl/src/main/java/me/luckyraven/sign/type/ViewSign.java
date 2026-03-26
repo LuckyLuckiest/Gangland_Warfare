@@ -16,7 +16,7 @@ import me.luckyraven.sign.validation.SignValidator;
 import me.luckyraven.sign.validation.ViewSignValidator;
 import me.luckyraven.util.color.Color;
 import me.luckyraven.weapon.WeaponService;
-import me.luckyraven.weapon.configuration.AmmunitionAddon;
+import me.luckyraven.weapon.ammo.AmmunitionManager;
 
 import java.util.List;
 
@@ -25,17 +25,17 @@ public class ViewSign implements Sign {
 
 	private final Gangland        gangland;
 	private final WeaponService   weaponService;
-	private final AmmunitionAddon ammunitionAddon;
+	private final AmmunitionManager ammunitionManager;
 	private final SignType        signType;
 
 	@Override
 	public SignTypeDefinition createDefinition() {
 		// Create validator & parser
-		SignValidator validator = new ViewSignValidator(signType, weaponService, ammunitionAddon);
+		SignValidator validator = new ViewSignValidator(signType, weaponService, ammunitionManager);
 		SignParser    parser    = new ViewSignParser(signType);
 
 		// aspect
-		SignAspect viewAspect = new ViewInventoryAspect(gangland, weaponService, ammunitionAddon);
+		SignAspect viewAspect = new ViewInventoryAspect(gangland, weaponService, ammunitionManager);
 
 		// handler
 		List<SignAspect> aspects = List.of(viewAspect);

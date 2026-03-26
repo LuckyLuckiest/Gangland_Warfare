@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.lootchest.item.LootItemProvider;
 import me.luckyraven.weapon.WeaponManager;
-import me.luckyraven.weapon.configuration.AmmunitionAddon;
+import me.luckyraven.weapon.ammo.AmmunitionManager;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 public class GanglandLootItemProvider implements LootItemProvider {
 
 	private final WeaponManager   weaponManager;
-	private final AmmunitionAddon ammunitionAddon;
+	private final AmmunitionManager ammunitionManager;
 	private final UniqueItemAddon uniqueItemAddon;
 
 	@Override
@@ -27,7 +27,7 @@ public class GanglandLootItemProvider implements LootItemProvider {
 	@Override
 	@Nullable
 	public ItemStack getAmmunition(String ammoId, int amount) {
-		var ammo = ammunitionAddon.getAmmunition(ammoId);
+		var ammo = ammunitionManager.getAmmunition(ammoId);
 		if (ammo == null) return null;
 
 		var item      = ammo.buildItem(amount);
@@ -86,7 +86,7 @@ public class GanglandLootItemProvider implements LootItemProvider {
 
 	@Override
 	public boolean hasAmmunition(String ammoId) {
-		return ammunitionAddon.getAmmunition(ammoId) != null;
+		return ammunitionManager.getAmmunition(ammoId) != null;
 	}
 
 	@Override

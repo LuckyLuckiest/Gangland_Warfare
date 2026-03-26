@@ -5,7 +5,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.FolderLoader;
-import me.luckyraven.weapon.configuration.AmmunitionAddon;
+import me.luckyraven.weapon.ammo.AmmunitionManager;
 import org.bukkit.configuration.InvalidConfigurationException;
 
 @CustomLog
@@ -24,9 +24,9 @@ public class WeaponLoader extends FolderLoader {
 		FileManager fileManager = gangland.getInitializer().getFileManager();
 		this.load(true, fileHandler -> {
 			try {
-				Initializer     initializer     = gangland.getInitializer();
-				AmmunitionAddon ammunitionAddon = initializer.getAmmunitionAddon();
-				initializer.getWeaponAddon().registerWeapon(ammunitionAddon, fileHandler);
+				Initializer       initializer       = gangland.getInitializer();
+				AmmunitionManager ammunitionManager = initializer.getAmmunitionManager();
+				initializer.getWeaponAddon().registerWeapon(ammunitionManager, fileHandler);
 			} catch (InvalidConfigurationException exception) {
 				log.info("There was a problem loading the weapon: {}", exception.getMessage(), exception);
 			}

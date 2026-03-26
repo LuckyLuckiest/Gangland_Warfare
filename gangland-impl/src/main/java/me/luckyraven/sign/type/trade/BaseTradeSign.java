@@ -11,7 +11,7 @@ import me.luckyraven.util.item.unique.UniqueItem;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.Ammunition;
-import me.luckyraven.weapon.configuration.AmmunitionAddon;
+import me.luckyraven.weapon.ammo.AmmunitionManager;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Arrays;
@@ -22,8 +22,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public abstract class BaseTradeSign implements Sign {
 
-	private final WeaponService   weaponService;
-	private final AmmunitionAddon ammunitionAddon;
+	private final WeaponService     weaponService;
+	private final AmmunitionManager ammunitionManager;
 
 	protected ItemStack getUniqueOrMaterialItem(String itemName, UniqueItemAddon uniqueItemAddon) {
 		// check unique items first
@@ -43,19 +43,19 @@ public abstract class BaseTradeSign implements Sign {
 
 	protected ItemStack getWeaponItem(String weaponName) {
 		return weaponService.getWeapons()
-							.values()
+		                    .values()
 				.stream()
 				.filter(w -> w.getName().equalsIgnoreCase(weaponName))
 				.findFirst()
-				.map(template -> new Weapon(UUID.randomUUID(), template).buildItem())
+				.map(template -> template.copyWithUUID(UUID.randomUUID()).buildItem())
 				.orElse(null);
 	}
 
 	protected ItemStack getAmmoItem(String ammoKey) {
-		return ammunitionAddon.getAmmunitionKeys()
+		return ammunitionManager.getAmmunitionKeys()
 				.stream()
 				.filter(k -> k.equalsIgnoreCase(ammoKey))
-				.map(ammunitionAddon::getAmmunition)
+				.map(ammunitionManager::getAmmunition)
 				.filter(Objects::nonNull)
 				.findFirst()
 				.map(Ammunition::buildItem)
@@ -76,8 +76,8 @@ public abstract class BaseTradeSign implements Sign {
 		return (player, a, b) -> {
 			if (a.getType() != b.getType()) return false;
 			if (!Ammunition.isAmmunition(a) || !Ammunition.isAmmunition(b)) return a.isSimilar(b);
-			Ammunition ammo1 = ammunitionAddon.getAmmunition(new ItemBuilder(a).getStringTagData("ammo"));
-			Ammunition ammo2 = ammunitionAddon.getAmmunition(new ItemBuilder(b).getStringTagData("ammo"));
+			Ammunition ammo1 = ammunitionManager.getAmmunition(new ItemBuilder(a).getStringTagData("ammo"));
+			Ammunition ammo2 = ammunitionManager.getAmmunition(new ItemBuilder(b).getStringTagData("ammo"));
 			return ammo1 != null && ammo2 != null && ammo1.compareTo(ammo2) == 0;
 		};
 	}

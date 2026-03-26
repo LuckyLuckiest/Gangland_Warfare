@@ -112,6 +112,7 @@ import me.luckyraven.util.listener.ListenerPriority;
 import me.luckyraven.util.placeholder.replacer.Replacer;
 import me.luckyraven.weapon.WeaponManager;
 import me.luckyraven.weapon.WeaponService;
+import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import me.luckyraven.weapon.configuration.WeaponAddon;
 import me.luckyraven.weapon.projectile.BlockDamageManager;
@@ -177,6 +178,7 @@ public final class Initializer {
 	private Settings                   settings;
 	private ScoreboardAddon            scoreboardAddon;
 	private AmmunitionAddon            ammunitionAddon;
+	private AmmunitionManager          ammunitionManager;
 	private WeaponAddon                weaponAddon;
 	private UniqueItemAddon            uniqueItemAddon;
 	private WearableAddon              wearableAddon;
@@ -307,10 +309,10 @@ public final class Initializer {
 
 		// entity mark manager
 		entityMarkManager = new EntityMarkManager(gangland, Collections.emptyList(),
-												  Settings.getDefaultCivilianEntities());
+		                                          Settings.getDefaultCivilianEntities());
 
 		// item parser
-		itemParserManager = new ItemParserManager(weaponManager, ammunitionAddon, wearableAddon);
+		itemParserManager = new ItemParserManager(weaponManager, ammunitionManager, wearableAddon);
 
 		// loot chest manager
 		lootChestLoader();
@@ -424,7 +426,7 @@ public final class Initializer {
 		// clear the inventory loader
 		inventoryLoader.clear();
 		// clear the ammunition addons
-		ammunitionAddon.clear();
+		ammunitionManager.clear();
 		// clear the weapon addons
 		weaponAddon.clear();
 		weaponLoader.clear();
@@ -487,7 +489,7 @@ public final class Initializer {
 		lootChestLoader.load(false, null, fileManager);
 
 		// set the item provider so loot can be generated
-		var itemProvider = new GanglandLootItemProvider(weaponManager, ammunitionAddon, uniqueItemAddon);
+		var itemProvider = new GanglandLootItemProvider(weaponManager, ammunitionManager, uniqueItemAddon);
 		lootChestManager.setItemProvider(itemProvider);
 
 		lootChestManager.setMessagesProvider(new GanglandLootChestMessages());
@@ -501,7 +503,7 @@ public final class Initializer {
 		copService = new CopService();
 		IRepository<CopSpawner> repository = ganglandDatabase.getRepositoryRegistry().getRepository(CopSpawner.class);
 		copService.initialize(gangland, copLoader.getLoadedProvider(), entityMarkManager, weaponManager, repository,
-							  detainmentService);
+		                      detainmentService);
 		copSpawnManager = copService.getCopManager().getSpawnManager();
 	}
 
@@ -520,7 +522,11 @@ public final class Initializer {
 			ammunitionAddon = new AmmunitionAddon(fileManager);
 		}
 
-		ammunitionAddon.initialize();
+		if (ammunitionManager == null) {
+			ammunitionManager = new AmmunitionManager();
+		}
+
+		ammunitionAddon.initialize(ammunitionManager);
 
 		if (weaponAddon == null) {
 			weaponAddon = new WeaponAddon();
@@ -555,7 +561,7 @@ public final class Initializer {
 
 		detainmentRegistry = new DetainmentRegistry(detainmentRepository, jailRegistry);
 		detainmentService  = new DetainmentService(gangland, detainmentRegistry, jailService,
-												   jailService.getJailRegistry(), Gangland.FULL_PREFIX);
+		                                           jailService.getJailRegistry(), Gangland.FULL_PREFIX);
 	}
 
 	private void signLoader() {

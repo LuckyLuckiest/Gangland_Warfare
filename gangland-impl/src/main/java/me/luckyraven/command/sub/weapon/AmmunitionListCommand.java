@@ -7,7 +7,7 @@ import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.weapon.ammo.Ammunition;
-import me.luckyraven.weapon.configuration.AmmunitionAddon;
+import me.luckyraven.weapon.ammo.AmmunitionManager;
 import org.bukkit.command.CommandSender;
 
 import java.util.Iterator;
@@ -26,8 +26,8 @@ class AmmunitionListCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			AmmunitionAddon ammunitionAddon = gangland.getInitializer().getAmmunitionAddon();
-			Set<String>     ammunition      = ammunitionAddon.getAmmunitionKeys();
+			AmmunitionManager ammunitionManager = gangland.getInitializer().getAmmunitionManager();
+			Set<String>       ammunition        = ammunitionManager.getAmmunitionKeys();
 
 			sender.sendMessage(ChatUtil.commandMessage("List of ammunition"));
 
@@ -35,7 +35,7 @@ class AmmunitionListCommand extends SubArgument {
 			StringBuilder    builder  = new StringBuilder();
 
 			while (iterator.hasNext()) {
-				Ammunition ammo = ammunitionAddon.getAmmunition(iterator.next());
+				Ammunition ammo = ammunitionManager.getAmmunition(iterator.next());
 				if (ammo == null) continue;
 
 				builder.append("&b").append(ammo.getName());

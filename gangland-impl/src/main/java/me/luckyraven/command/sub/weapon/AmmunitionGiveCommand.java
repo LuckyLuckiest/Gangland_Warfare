@@ -11,7 +11,7 @@ import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.weapon.ammo.Ammunition;
-import me.luckyraven.weapon.configuration.AmmunitionAddon;
+import me.luckyraven.weapon.ammo.AmmunitionManager;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -61,9 +61,9 @@ class AmmunitionGiveCommand extends SubArgument {
 				user.sendMessage(invalidAmmo.replace("%args%", ammoName));
 			}
 		}, sender -> {
-			AmmunitionAddon ammunitionAddon = gangland.getInitializer().getAmmunitionAddon();
+			AmmunitionManager ammunitionManager = gangland.getInitializer().getAmmunitionManager();
 
-			return ammunitionAddon.getAmmunitionKeys()
+			return ammunitionManager.getAmmunitionKeys()
 					.stream().toList();
 		});
 
@@ -99,7 +99,7 @@ class AmmunitionGiveCommand extends SubArgument {
 	}
 
 	private boolean giveAmmunition(Player player, String name, int amount) {
-		Ammunition ammunition = gangland.getInitializer().getAmmunitionAddon().getAmmunition(name);
+		Ammunition ammunition = gangland.getInitializer().getAmmunitionManager().getAmmunition(name);
 
 		if (ammunition == null) return false;
 

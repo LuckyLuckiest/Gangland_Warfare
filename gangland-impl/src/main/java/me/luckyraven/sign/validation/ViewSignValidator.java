@@ -4,20 +4,20 @@ import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
-import me.luckyraven.weapon.configuration.AmmunitionAddon;
+import me.luckyraven.weapon.ammo.AmmunitionManager;
 
 import java.util.Collection;
 
 public class ViewSignValidator extends AbstractSignValidator {
 
-	private final WeaponService   weaponService;
-	private final AmmunitionAddon ammunitionAddon;
+	private final WeaponService     weaponService;
+	private final AmmunitionManager ammunitionManager;
 
-	public ViewSignValidator(SignType signType, WeaponService weaponService, AmmunitionAddon ammunitionAddon) {
+	public ViewSignValidator(SignType signType, WeaponService weaponService, AmmunitionManager ammunitionManager) {
 		super(signType, Settings.getMoneySymbol());
 
-		this.weaponService   = weaponService;
-		this.ammunitionAddon = ammunitionAddon;
+		this.weaponService     = weaponService;
+		this.ammunitionManager = ammunitionManager;
 	}
 
 	@Override
@@ -32,14 +32,14 @@ public class ViewSignValidator extends AbstractSignValidator {
 		Collection<Weapon> values = weaponService.getWeapons().values();
 		boolean isWeapon = values.stream()
 				.anyMatch(weapon -> weapon.getName().equalsIgnoreCase(content) ||
-									weapon.getDisplayName().equalsIgnoreCase(content));
+				                    weapon.getDisplayName().equalsIgnoreCase(content));
 
 		if (isWeapon) {
 			return true;
 		}
 
 		// Check if it's ammunition
-		boolean isAmmo = ammunitionAddon.getAmmunitionKeys()
+		boolean isAmmo = ammunitionManager.getAmmunitionKeys()
 				.stream().anyMatch(ammo -> ammo.equalsIgnoreCase(content));
 
 		if (isAmmo) {

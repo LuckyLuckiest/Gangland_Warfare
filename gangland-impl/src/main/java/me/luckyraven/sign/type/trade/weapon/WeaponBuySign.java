@@ -17,7 +17,7 @@ import me.luckyraven.sign.validation.SignValidator;
 import me.luckyraven.sign.validation.trade.weapon.WeaponSignValidator;
 import me.luckyraven.util.color.Color;
 import me.luckyraven.weapon.WeaponService;
-import me.luckyraven.weapon.configuration.AmmunitionAddon;
+import me.luckyraven.weapon.ammo.AmmunitionManager;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -27,9 +27,9 @@ public class WeaponBuySign extends BaseTradeSign {
 	private final UserManager<Player> userManager;
 	private final SignType            signType;
 
-	public WeaponBuySign(UserManager<Player> userManager, WeaponService weaponService, AmmunitionAddon ammunitionAddon,
-						 SignType signType) {
-		super(weaponService, ammunitionAddon);
+	public WeaponBuySign(UserManager<Player> userManager, WeaponService weaponService,
+	                     AmmunitionManager ammunitionManager, SignType signType) {
+		super(weaponService, ammunitionManager);
 
 		this.userManager = userManager;
 		this.signType    = signType;
@@ -43,18 +43,17 @@ public class WeaponBuySign extends BaseTradeSign {
 		SignAspect moneyAspect = new MoneyAspect(userManager, MoneyAspect.TransactionType.WITHDRAW);
 
 		SignAspect itemAspect = new ItemTransferAspect(sign -> getWeaponItem(sign.getContent()),
-													   ItemTransferAspect.TransferType.GIVE,
-													   weaponSimilarityChecker());
+		                                               ItemTransferAspect.TransferType.GIVE, weaponSimilarityChecker());
 
 		List<SignAspect> aspects = List.of(moneyAspect, itemAspect);
 		SignHandler      handler = new AspectBasedSignHandler(aspects);
 
 		var definition = SignTypeDefinition.builder()
-										   .signType(signType)
-										   .signValidator(validator)
-										   .signParser(parser)
-										   .handler(handler)
-										   .build();
+		                                   .signType(signType)
+		                                   .signValidator(validator)
+		                                   .signParser(parser)
+		                                   .handler(handler)
+		                                   .build();
 
 		definition.addAllAspects(aspects);
 
@@ -67,35 +66,35 @@ public class WeaponBuySign extends BaseTradeSign {
 		var    builder   = SignFormat.builder().formatName(generated.toLowerCase()).signTypePrefix(signType.typed());
 
 		var line1 = SignLineFormat.builder()
-								  .lineNumber(0)
-								  .required(true)
-								  .contentType(SignLineFormat.LineContentType.TITLE)
-								  .formatter(s -> "&8[&3" + generated + "&8]")
-								  .build();
+		                          .lineNumber(0)
+		                          .required(true)
+		                          .contentType(SignLineFormat.LineContentType.TITLE)
+		                          .formatter(s -> "&8[&3" + generated + "&8]")
+		                          .build();
 
 		var line2 = SignLineFormat.builder()
-								  .lineNumber(1)
-								  .required(true)
-								  .defaultColor(Color.GRAY)
-								  .contentType(SignLineFormat.LineContentType.CUSTOM_TEXT)
-								  .formatter(s -> "&7" + s)
-								  .build();
+		                          .lineNumber(1)
+		                          .required(true)
+		                          .defaultColor(Color.GRAY)
+		                          .contentType(SignLineFormat.LineContentType.CUSTOM_TEXT)
+		                          .formatter(s -> "&7" + s)
+		                          .build();
 
 		var line3 = SignLineFormat.builder()
-								  .lineNumber(2)
-								  .required(true)
-								  .defaultColor(Color.LIME)
-								  .contentType(SignLineFormat.LineContentType.PRICE)
-								  .formatter(s -> "&a" + s)
-								  .build();
+		                          .lineNumber(2)
+		                          .required(true)
+		                          .defaultColor(Color.LIME)
+		                          .contentType(SignLineFormat.LineContentType.PRICE)
+		                          .formatter(s -> "&a" + s)
+		                          .build();
 
 		var line4 = SignLineFormat.builder()
-								  .lineNumber(3)
-								  .required(true)
-								  .defaultColor(Color.CYAN)
-								  .contentType(SignLineFormat.LineContentType.QUANTITY)
-								  .formatter(s -> "&b" + s)
-								  .build();
+		                          .lineNumber(3)
+		                          .required(true)
+		                          .defaultColor(Color.CYAN)
+		                          .contentType(SignLineFormat.LineContentType.QUANTITY)
+		                          .formatter(s -> "&b" + s)
+		                          .build();
 
 		return builder.lineFormats(List.of(line1, line2, line3, line4)).build();
 	}
