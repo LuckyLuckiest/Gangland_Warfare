@@ -1,10 +1,8 @@
 package me.luckyraven.item;
 
 import lombok.Getter;
-import me.luckyraven.item.converter.AmmunitionConverter;
-import me.luckyraven.item.converter.MaterialConverter;
-import me.luckyraven.item.converter.WeaponConverter;
-import me.luckyraven.item.converter.WearableConverter;
+import me.luckyraven.gadget.car.CarManager;
+import me.luckyraven.item.converter.*;
 import me.luckyraven.util.item.ItemConverterRegistry;
 import me.luckyraven.util.item.ItemParser;
 import me.luckyraven.weapon.WeaponService;
@@ -18,13 +16,14 @@ public class ItemParserManager {
 	private final ItemParser            parser;
 
 	public ItemParserManager(WeaponService weaponService, AmmunitionManager ammunitionManager,
-							 WearableService wearableService) {
+	                         WearableService wearableService, CarManager carManager) {
 		this.registry = new ItemConverterRegistry();
 		this.parser   = new ItemParser(registry);
 
 		registry.register("material", new MaterialConverter());
 		registry.register("weapon", new WeaponConverter(weaponService));
 		registry.register("wearable", new WearableConverter(wearableService));
+		registry.register("car", new CarConverter(carManager));
 
 		var ammunitionConverter = new AmmunitionConverter(ammunitionManager);
 

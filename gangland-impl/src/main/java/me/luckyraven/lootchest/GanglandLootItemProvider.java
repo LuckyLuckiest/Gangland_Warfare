@@ -1,10 +1,12 @@
 package me.luckyraven.lootchest;
 
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.gadget.car.CarManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.lootchest.item.LootItemProvider;
 import me.luckyraven.weapon.WeaponManager;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
+import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -12,9 +14,11 @@ import org.jetbrains.annotations.Nullable;
 @RequiredArgsConstructor
 public class GanglandLootItemProvider implements LootItemProvider {
 
-	private final WeaponManager   weaponManager;
+	private final WeaponManager     weaponManager;
 	private final AmmunitionManager ammunitionManager;
-	private final UniqueItemAddon uniqueItemAddon;
+	private final UniqueItemAddon   uniqueItemAddon;
+	private final WearableService   wearableService;
+	private final CarManager        carManager;
 
 	@Override
 	@Nullable
@@ -97,6 +101,32 @@ public class GanglandLootItemProvider implements LootItemProvider {
 	@Override
 	public boolean hasRepairItem(String repairId) {
 		return false;
+	}
+
+	@Override
+	@Nullable
+	public ItemStack getWearable(String wearableId) {
+		var wearable = wearableService.getWearable(wearableId);
+
+		return wearable != null ? wearable.buildItem() : null;
+	}
+
+	@Override
+	@Nullable
+	public ItemStack getCar(String carId) {
+		var car = carManager.getCar(carId);
+
+		return car != null ? car.buildItem() : null;
+	}
+
+	@Override
+	public boolean hasWearable(String wearableId) {
+		return wearableService.getWearable(wearableId) != null;
+	}
+
+	@Override
+	public boolean hasCar(String carId) {
+		return carManager.getCar(carId) != null;
 	}
 
 }

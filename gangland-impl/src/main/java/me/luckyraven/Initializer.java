@@ -75,11 +75,18 @@ import me.luckyraven.file.configuration.lootchest.GanglandLootChestMessages;
 import me.luckyraven.file.configuration.lootchest.LootChestSettings;
 import me.luckyraven.file.configuration.weapon.GanglandRepairMessages;
 import me.luckyraven.file.configuration.weapon.WeaponLoader;
+import me.luckyraven.gadget.car.CarManager;
+import me.luckyraven.gadget.car.CarService;
+import me.luckyraven.gadget.car.config.CarAddon;
+import me.luckyraven.gadget.car.vehicle.VehicleRegistry;
+import me.luckyraven.gadget.repair.RepairManager;
+import me.luckyraven.gadget.repair.anvil.RepairAnvilGui;
+import me.luckyraven.gadget.repair.config.RepairLoader;
+import me.luckyraven.gadget.wearable.WearableAddon;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
 import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
-import me.luckyraven.item.configuration.WearableAddon;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.lootchest.GanglandLootItemProvider;
 import me.luckyraven.lootchest.LootChestManager;
@@ -116,9 +123,6 @@ import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import me.luckyraven.weapon.configuration.WeaponAddon;
 import me.luckyraven.weapon.projectile.BlockDamageManager;
-import me.luckyraven.weapon.repair.RepairManager;
-import me.luckyraven.weapon.repair.anvil.RepairAnvilGui;
-import me.luckyraven.weapon.repair.config.RepairLoader;
 import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -191,6 +195,9 @@ public final class Initializer {
 	private RepairLoader               repairLoader;
 	private RepairManager              repairManager;
 	private RepairAnvilGui             repairAnvilGui;
+	// Gadgets
+	private CarAddon                   carAddon;
+	private CarService                 carService;
 	// Database
 	private GanglandDatabase           ganglandDatabase;
 	// Placeholder
@@ -312,7 +319,7 @@ public final class Initializer {
 		                                          Settings.getDefaultCivilianEntities());
 
 		// item parser
-		itemParserManager = new ItemParserManager(weaponManager, ammunitionManager, wearableAddon);
+		itemParserManager = new ItemParserManager(weaponManager, ammunitionManager, wearableAddon, carAddon);
 
 		// loot chest manager
 		lootChestLoader();
@@ -328,6 +335,9 @@ public final class Initializer {
 
 		// repair system
 		repairLoader();
+
+		// car service
+		carServiceInit();
 
 		// Events
 		listenerManager = new ListenerManager(gangland);
@@ -375,6 +385,9 @@ public final class Initializer {
 		FileHandler wearablesFile = new FileHandler(gangland, "wearables", ".yml");
 		fileManager.addFile(wearablesFile, true);
 
+		FileHandler carsFile = new FileHandler(gangland, "cars", ".yml");
+		fileManager.addFile(carsFile, true);
+
 		scoreboardManager = new ScoreboardManager(gangland);
 
 		addonsLoader();
@@ -413,10 +426,17 @@ public final class Initializer {
 
 		// initialize wearable addon
 		if (wearableAddon == null) {
-			wearableAddon = new WearableAddon(permissionManager, fileManager);
+			wearableAddon = new WearableAddon(permissionManager::addPermission, fileManager);
 		}
 
 		wearableAddon.initialize();
+
+		// initialize car addon
+		if (carAddon == null) {
+			carAddon = new CarAddon(permissionManager::addPermission, fileManager);
+		}
+
+		carAddon.initialize();
 	}
 
 	/**
@@ -434,6 +454,8 @@ public final class Initializer {
 		uniqueItemAddon.clear();
 		// clear the wearable addons
 		wearableAddon.clear();
+		// clear the car addons
+		carAddon.clear();
 	}
 
 	/**
@@ -489,7 +511,8 @@ public final class Initializer {
 		lootChestLoader.load(false, null, fileManager);
 
 		// set the item provider so loot can be generated
-		var itemProvider = new GanglandLootItemProvider(weaponManager, ammunitionManager, uniqueItemAddon);
+		var itemProvider = new GanglandLootItemProvider(weaponManager, ammunitionManager, uniqueItemAddon,
+		                                                wearableAddon, carAddon);
 		lootChestManager.setItemProvider(itemProvider);
 
 		lootChestManager.setMessagesProvider(new GanglandLootChestMessages());
@@ -515,6 +538,11 @@ public final class Initializer {
 
 		repairManager.setMessages(new GanglandRepairMessages());
 		repairAnvilGui = new RepairAnvilGui(gangland, repairManager);
+	}
+
+	public void carServiceInit() {
+		carService = new CarService(carAddon, new VehicleRegistry(), gangland);
+		carService.reloadParkedVehicles();
 	}
 
 	public void weaponLoader() {
@@ -623,6 +651,8 @@ public final class Initializer {
 		dependencyContainer.registerInstance(KillCombo.class, killCombo);
 		dependencyContainer.registerInstance(DetainmentService.class, detainmentService);
 		dependencyContainer.registerInstance(JailService.class, jailService);
+		dependencyContainer.registerInstance(CarManager.class, carAddon);
+		dependencyContainer.registerInstance(CarService.class, carService);
 
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 

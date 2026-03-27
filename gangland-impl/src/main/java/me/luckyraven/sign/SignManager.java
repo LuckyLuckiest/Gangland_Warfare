@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.gadget.car.CarManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.sign.registry.SignFormatRegistry;
 import me.luckyraven.sign.registry.SignTypeDefinition;
@@ -17,6 +18,8 @@ import me.luckyraven.sign.type.trade.BuySign;
 import me.luckyraven.sign.type.trade.SellSign;
 import me.luckyraven.sign.type.trade.ammo.AmmoBuySign;
 import me.luckyraven.sign.type.trade.ammo.AmmoSellSign;
+import me.luckyraven.sign.type.trade.car.CarBuySign;
+import me.luckyraven.sign.type.trade.car.CarSellSign;
 import me.luckyraven.sign.type.trade.weapon.WeaponBuySign;
 import me.luckyraven.sign.type.trade.weapon.WeaponSellSign;
 import me.luckyraven.sign.type.trade.wearable.WearableBuySign;
@@ -56,6 +59,7 @@ public class SignManager extends SignService {
 		UserManager<Player>        userManager        = gangland.getInitializer().getUserManager();
 		UserManager<OfflinePlayer> offlineUserManager = gangland.getInitializer().getOfflineUserManager();
 		WearableService            wearableService    = gangland.getInitializer().getWearableAddon();
+		CarManager                 carManager         = gangland.getInitializer().getCarAddon();
 
 		List<SignTypeDefinition> definitions = new ArrayList<>();
 
@@ -118,7 +122,7 @@ public class SignManager extends SignService {
 		// view
 		String   viewKey  = signPrefix + "view";
 		SignType viewType = new SignType(viewKey, "VIEW");
-		Sign     view     = new ViewSign(gangland, weaponService, ammunitionManager, viewType);
+		Sign     view     = new ViewSign(gangland, weaponService, ammunitionManager, carManager, viewType);
 
 		formatRegistry.register(view.createFormat());
 
@@ -161,6 +165,24 @@ public class SignManager extends SignService {
 		formatRegistry.register(wearableSell.createFormat());
 
 		definitions.add(wearableSell.createDefinition());
+
+		// car buy
+		String   carBuyKey  = signPrefix + "car-buy";
+		SignType carBuyType = new SignType(carBuyKey, "CAR-BUY");
+		Sign     carBuy     = new CarBuySign(userManager, carManager, weaponService, ammunitionManager, carBuyType);
+
+		formatRegistry.register(carBuy.createFormat());
+
+		definitions.add(carBuy.createDefinition());
+
+		// car sell
+		String   carSellKey  = signPrefix + "car-sell";
+		SignType carSellType = new SignType(carSellKey, "CAR-SELL");
+		Sign     carSell     = new CarSellSign(userManager, carManager, weaponService, ammunitionManager, carSellType);
+
+		formatRegistry.register(carSell.createFormat());
+
+		definitions.add(carSell.createDefinition());
 
 		return definitions;
 	}

@@ -2,6 +2,8 @@ package me.luckyraven.sign.aspect;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gadget.car.Car;
+import me.luckyraven.gadget.car.CarManager;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
@@ -27,6 +29,7 @@ public class ViewInventoryAspect implements SignAspect {
 	private final JavaPlugin        plugin;
 	private final WeaponService     weaponService;
 	private final AmmunitionManager ammunitionManager;
+	private final CarManager        carManager;
 
 	@Override
 	public AspectResult execute(Player player, ParsedSign sign) {
@@ -44,6 +47,13 @@ public class ViewInventoryAspect implements SignAspect {
 		if (ammunitionManager.getAmmunitionKeys().contains(itemName)) {
 			openAmmunitionView(player, itemName);
 			return AspectResult.success("Opened ammunition view: " + itemName);
+		}
+
+		// Try to find car
+		Car car = findCar(itemName);
+		if (car != null) {
+			openCarView(player, car);
+			return AspectResult.success("Opened car view: " + itemName);
 		}
 
 		// Generic item view
@@ -179,6 +189,39 @@ public class ViewInventoryAspect implements SignAspect {
 		InventoryUtil.fillInventory(inventory, fill);
 
 		inventory.open(player);
+	}
+
+	private void openCarView(Player player, Car car) {
+		String title = "&6View: &e" + car.getDisplayName();
+
+		InventoryHandler inventory = new InventoryHandler(plugin, title, 9, player);
+
+		List<String> lore = new ArrayList<>();
+		lore.add("&7Speed: &f" + car.getMaxSpeed() + " &7blocks/tick");
+		lore.add("&7Acceleration: &f" + car.getAcceleration());
+		lore.add("&7Health: &f" + car.getMaxHealth() + " HP");
+		lore.add("&7Durability: &f" + car.getMaxDurability());
+
+		if (car.isFuelEnabled()) {
+			lore.add("&7Fuel: &f" + car.getMaxFuel() + " &7ticks");
+			lore.add("&7Fuel Item: &f" + car.getFuelMaterial().name());
+		} else {
+			lore.add("&7Fuel: &aUnlimited");
+		}
+
+		ItemStack carItem = new ItemBuilder(car.buildItem()).setLore(lore).build();
+
+		inventory.setItem(4, carItem, false, null);
+
+		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
+
+		InventoryUtil.fillInventory(inventory, fill);
+
+		inventory.open(player);
+	}
+
+	private Car findCar(String identifier) {
+		return carManager.getCar(identifier);
 	}
 
 	private Weapon findWeapon(String identifier) {

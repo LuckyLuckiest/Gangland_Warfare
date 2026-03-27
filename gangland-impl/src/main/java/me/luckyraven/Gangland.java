@@ -10,6 +10,7 @@ import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
+import me.luckyraven.gadget.car.CarService;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.updater.UpdateChecker;
@@ -73,6 +74,10 @@ public final class Gangland extends JavaPlugin {
 		// shutdown cop service
 		CopService copService = initializer.getCopService();
 		if (copService != null) copService.shutdown();
+
+		// despawn all active vehicles and return car items
+		CarService carService = initializer.getCarService();
+		if (carService != null) carService.destroyAll();
 	}
 
 	@Override

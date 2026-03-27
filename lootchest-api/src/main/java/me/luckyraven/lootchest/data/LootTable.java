@@ -60,8 +60,10 @@ public class LootTable {
 
 			// For weapons and unique items, don't allow duplicates
 			if ((selected.getCategory() == LootItemReference.LootCategory.WEAPON ||
-				 selected.getCategory() == LootItemReference.LootCategory.UNIQUE) &&
-				selectedIds.contains(selected.getReferenceId())) {
+			     selected.getCategory() == LootItemReference.LootCategory.UNIQUE ||
+			     selected.getCategory() == LootItemReference.LootCategory.WEARABLE ||
+			     selected.getCategory() == LootItemReference.LootCategory.CAR) &&
+			    selectedIds.contains(selected.getReferenceId())) {
 				continue;
 			}
 
@@ -145,6 +147,8 @@ public class LootTable {
 			case CONSUMABLE -> provider.getConsumable(reference.getReferenceId(), amount);
 			case MATERIAL -> provider.getMaterial(reference.getReferenceId(), amount);
 			case MISC -> provider.getMiscItem(reference.getReferenceId(), amount);
+			case WEARABLE -> provider.getWearable(reference.getReferenceId());
+			case CAR -> provider.getCar(reference.getReferenceId());
 		};
 	}
 

@@ -45,7 +45,9 @@ public class LootItemReference {
 		REPAIR,
 		CONSUMABLE,
 		MATERIAL,
-		MISC
+		MISC,
+		WEARABLE,
+		CAR
 	}
 
 	public enum Rarity {

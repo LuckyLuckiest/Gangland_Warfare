@@ -1,0 +1,89 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     / ________/      \_____   _____/      / __ \         | #
+# |    | /                     | |           / /  \ \        | #
+# |    | |  _______            | |          / /____\ \       | #
+# |    | |  \_____ \           | |         / ________ \      | #
+# |    | \_______/ ||          | |        / /        \ \     | #
+# |     \__________/           |_|       /_/          \_\    | #
+# |                                                          | #
+# |                      File: cars.yml                      | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+#
+# Each entry defines a drivable car that can be spawned in the world.
+# Items are identified in-game by a hidden NBT tag embedded when built via API.
+#
+# Fields:
+#   Material            - Bukkit material name for the inventory item
+#   Display_Name        - display name (supports & color codes)
+#   Custom_Model_Data   - integer for resource pack model
+#   Permission          - permission node required to use (optional)
+#   Drop_On_Death       - whether the item drops on player death
+#   Droppable           - whether the player can manually drop the item
+#   Lore                - list of lore lines
+#
+#   Vehicle:
+#     Max_Speed         - maximum speed in blocks/tick (default 0.8)
+#     Acceleration      - speed gain per tick (default 0.04)
+#     Deceleration      - friction/braking per tick (default 0.02)
+#     Turn_Speed        - turning rate in degrees/tick (default 4.0)
+#     Max_Health        - vehicle hit points (default 100.0)
+#
+#   Fuel:
+#     Enabled           - whether fuel is consumed while driving
+#     Max_Fuel          - maximum fuel capacity in ticks
+#     Fuel_Material     - item used to refuel
+#     Fuel_Per_Item     - ticks of fuel per fuel item
+#
+#   Repair:
+#     Max_Durability    - maximum repair durability of the car
+
+sports_car:
+   Permission: "gangland.cars.sports_car"
+   Material: MINECART
+   Display_Name: "&6Sports Car"
+   Custom_Model_Data: 1001
+   Drop_On_Death: false
+   Droppable: false
+   Lore:
+      - "&7A sleek and fast street car"
+      - "&8Top speed: Fast"
+   Vehicle:
+      Max_Speed: 0.8
+      Acceleration: 0.04
+      Deceleration: 0.02
+      Turn_Speed: 4.0
+      Max_Health: 100.0
+   Fuel:
+      Enabled: false
+      Max_Fuel: 6000
+      Fuel_Material: COAL
+      Fuel_Per_Item: 1200
+   Repair:
+      Max_Durability: 500
+
+pickup_truck:
+   Permission: "gangland.cars.pickup_truck"
+   Material: MINECART
+   Display_Name: "&2Pickup Truck"
+   Custom_Model_Data: 1002
+   Drop_On_Death: true
+   Droppable: true
+   Lore:
+      - "&7Heavy duty transport"
+      - "&8Top speed: Moderate"
+   Vehicle:
+      Max_Speed: 0.5
+      Acceleration: 0.02
+      Deceleration: 0.015
+      Turn_Speed: 3.0
+      Max_Health: 200.0
+   Fuel:
+      Enabled: true
+      Max_Fuel: 12000
+      Fuel_Material: COAL
+      Fuel_Per_Item: 2400
+   Repair:
+      Max_Durability: 800

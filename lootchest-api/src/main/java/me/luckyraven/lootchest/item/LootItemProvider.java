@@ -63,4 +63,34 @@ public interface LootItemProvider {
 	 * Checks if a repair item exists
 	 */
 	boolean hasRepairItem(String repairId);
+
+	/**
+	 * Gets an ItemStack for a wearable by its configuration key
+	 */
+	@Nullable
+	default ItemStack getWearable(String wearableId) {
+		return null;
+	}
+
+	/**
+	 * Gets an ItemStack for a car by its configuration key
+	 */
+	@Nullable
+	default ItemStack getCar(String carId) {
+		return null;
+	}
+
+	/**
+	 * Checks if a wearable exists
+	 */
+	default boolean hasWearable(String wearableId) {
+		return false;
+	}
+
+	/**
+	 * Checks if a car exists
+	 */
+	default boolean hasCar(String carId) {
+		return false;
+	}
 }

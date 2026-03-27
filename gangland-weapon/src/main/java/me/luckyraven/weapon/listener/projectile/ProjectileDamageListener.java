@@ -83,12 +83,29 @@ public class ProjectileDamageListener implements Listener {
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onProjectileEntityDamage(EntityDamageByEntityEvent event) {
-		if (!(event.getEntity() instanceof LivingEntity entity)) return;
 		if (!(event.getDamager() instanceof Projectile projectile)) return;
-		if (entity instanceof ItemFrame || entity instanceof ArmorStand) return;
+
+		Entity hitEntity = event.getEntity();
+		if (hitEntity instanceof ItemFrame || hitEntity instanceof ArmorStand) return;
 
 		int projectileId = projectile.getEntityId();
-		var queue        = eventQueues.computeIfAbsent(projectileId, ProjectileEventQueue::new);
+
+		// Non-living entities (vehicles, etc.) are not processed through the queue.
+		// Set the weapon's configured damage on the event so downstream listeners (e.g.
+		// CarDamageListener) receive the correct value instead of vanilla projectile damage.
+		if (!(hitEntity instanceof LivingEntity)) {
+			GunWeapon weapon = weaponInstance.get(projectileId);
+			if (weapon != null) {
+				ProjectileState state = projectileStates.get(projectileId);
+				double damage = state != null ?
+				                state.getCurrentDamage() :
+				                weapon.getProjectileData().getDamage();
+				event.setDamage(damage);
+			}
+			return;
+		}
+
+		var queue = eventQueues.computeIfAbsent(projectileId, ProjectileEventQueue::new);
 
 		// Add damage event to queue
 		queue.addDamageEvent(event);
@@ -128,14 +145,14 @@ public class ProjectileDamageListener implements Listener {
 
 		// If we have a hit event but no damage event, it is a block/miss hit
 		if (hasHitEvent && !hasDamageEvent) {
-			// Check if hit was on a block (not entity)
-			if (queue.getHitEvent().getHitEntity() == null) {
-				// Block hit only - process immediately
+			Entity hitEntity = queue.getHitEvent().getHitEntity();
+			// Block hit OR non-living entity (damage was set directly in onProjectileEntityDamage)
+			if (hitEntity == null || !(hitEntity instanceof LivingEntity)) {
 				executeQueue(projectileId, queue, shooter);
 				return;
 			}
 
-			// Hit entity but no damage event yet - wait for damage event
+			// Living entity hit but damage event not yet received — wait
 			return;
 		}
 
