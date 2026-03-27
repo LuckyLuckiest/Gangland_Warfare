@@ -89,6 +89,12 @@
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-gadget</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
             <artifactId>logger-api</artifactId>
         </dependency>
         <!-- Important local dependencies (end) -->

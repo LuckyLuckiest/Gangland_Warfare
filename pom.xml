@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
 
     <name>Gangland Warfare</name>
-    <description>Rival gangs battling for control in minecraft.</description>
+    <description>Rival gangs battling for control in Minecraft.</description>
     <developers>
         <developer>
             <name>LuckyRaven10</name>
@@ -29,6 +29,7 @@
         <module>lootchest-api</module>
         <module>logger-api</module>
         <module>cops-n-crooks</module>
+        <module>gangland-gadget</module>
 
         <module>plugin-persistence</module>
         <module>plugin-exception</module>
