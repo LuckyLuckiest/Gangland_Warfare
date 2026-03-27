@@ -57,6 +57,11 @@ public final class Gangland extends JavaPlugin {
 		// vault soft dependency economy check
 		if (EconomyHandler.getVaultEconomy() != null) EconomyHandler.setVaultEconomy(null);
 
+		// convert active car sessions to parked records BEFORE force-save so the data supplier
+		// includes the converted sessions when PeriodicalUpdates flushes all repositories
+		CarService carService = initializer.getCarService();
+		if (carService != null) carService.destroyAll();
+
 		// force save
 		if (this.periodicalUpdates != null) {
 			this.periodicalUpdates.forceUpdate();
@@ -74,10 +79,6 @@ public final class Gangland extends JavaPlugin {
 		// shutdown cop service
 		CopService copService = initializer.getCopService();
 		if (copService != null) copService.shutdown();
-
-		// despawn all active vehicles and return car items
-		CarService carService = initializer.getCarService();
-		if (carService != null) carService.destroyAll();
 	}
 
 	@Override
