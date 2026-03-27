@@ -8,6 +8,7 @@
 # IntelliJ
 out/
 *.env
+nul
 
 # Compiled class file
 *.class
