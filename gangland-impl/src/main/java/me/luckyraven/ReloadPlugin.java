@@ -24,6 +24,8 @@ import me.luckyraven.events.user.UserDataInitEvent;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gadget.car.Car;
+import me.luckyraven.gadget.car.CarService;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
@@ -111,6 +113,8 @@ public final class ReloadPlugin {
 		jailInitialize(resetCache);
 		detainmentInitialize(resetCache);
 		copSpawnerInitialize(resetCache);
+		// gadgets
+		carServiceInitialize();
 	}
 
 	/**
@@ -336,7 +340,7 @@ public final class ReloadPlugin {
 		initializer.lootChestLoader();
 
 		IRepository<LootChestData> repository = ganglandDatabase.getRepositoryRegistry()
-																.getRepository(LootChestData.class);
+		                                                        .getRepository(LootChestData.class);
 
 		if (!(repository instanceof LootChestRepository repo)) {
 			String message = "LootChestData repository is not initialized!";
@@ -379,6 +383,16 @@ public final class ReloadPlugin {
 		CopSpawnManager copSpawnManager = initializer.getCopSpawnManager();
 
 		if (resetCache) copSpawnManager.reloadSpawners();
+	}
+
+	/**
+	 * Refreshes {@link Car} config references in all in-memory parked vehicles and active sessions after
+	 * {@link me.luckyraven.gadget.car.config.CarAddon} has been reloaded from {@code cars.yml}.
+	 */
+	public void carServiceInitialize() {
+		CarService carService = initializer.getCarService();
+		if (carService == null) return;
+		carService.refreshCarDefinitions();
 	}
 
 	/**

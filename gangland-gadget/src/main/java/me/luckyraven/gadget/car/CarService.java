@@ -3,12 +3,12 @@ package me.luckyraven.gadget.car;
 import io.netty.channel.Channel;
 import lombok.Getter;
 import me.luckyraven.gadget.car.vehicle.*;
+import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.ItemBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
@@ -18,8 +18,8 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,38 +33,46 @@ import java.util.concurrent.ConcurrentHashMap;
  *       registers a {@link ParkedVehicle}. The item is consumed by the caller.</li>
  *   <li>Player right-clicks the entity → {@link #mountCar} creates a {@link VehicleSession},
  *       mounts the player, and starts the movement task.</li>
- *   <li>Player dismounts (shift) → {@link #destroyCar} tears down the session and returns the item.</li>
+ *   <li>Player dismounts (shift) → {@link #parkCar} tears down the session, returns to parked.</li>
  *   <li>Player shift+right-clicks the entity (while parked) → {@link #pickupCar} returns the item.</li>
  * </ol>
  *
  * <h3>Cross-reload persistence</h3>
- * Parked vehicle state (car ID, location, fuel, durability, placer UUID) is written to
- * {@code parked_cars.yml} in the plugin data folder whenever the parked map changes.
- * On plugin enable, {@link #reloadParkedVehicles} reads that file and re-spawns the Minecart
- * entities so the cars appear in the world exactly where they were left.
+ * Parked vehicle state (car ID, location, fuel, durability, placer UUID) is stored in the database
+ * via {@link IRepository}. On plugin enable, {@link #reloadParkedVehicles} loads all records and
+ * re-spawns the Minecart entities so the cars appear in the world exactly where they were left.
  */
 @Getter
 public class CarService {
 
-	private final CarManager      carManager;
-	private final VehicleRegistry vehicleRegistry;
-	private final JavaPlugin      plugin;
+	private final CarManager             carManager;
+	private final VehicleRegistry        vehicleRegistry;
+	private final JavaPlugin             plugin;
+	private final IRepository<ParkedCar> parkedCarRepository;
 
 	/**
 	 * Placed-but-not-driven vehicles, keyed by entity UUID.
 	 */
 	private final Map<UUID, ParkedVehicle> parkedVehicles = new ConcurrentHashMap<>();
 
-	// PersistentDataContainer keys stored on the Minecart / ArmorStand entity
+	/**
+	 * Database records for placed vehicles, keyed by entity UUID. Retained across mount/unmount cycles so the same
+	 * {@code dbId} is reused on update, avoiding orphaned DB rows.
+	 */
+	private final Map<UUID, ParkedCar> parkedCarRecords = new ConcurrentHashMap<>();
+
+	// PersistentDataContainer keys stored on the Minecart entity
 	private final NamespacedKey pdcCarId;
 	private final NamespacedKey pdcFuel;
 	private final NamespacedKey pdcDurability;
 	private final NamespacedKey pdcPlacer;
 
-	public CarService(CarManager carManager, VehicleRegistry vehicleRegistry, JavaPlugin plugin) {
-		this.carManager      = carManager;
-		this.vehicleRegistry = vehicleRegistry;
-		this.plugin          = plugin;
+	public CarService(CarManager carManager, VehicleRegistry vehicleRegistry, JavaPlugin plugin,
+	                  IRepository<ParkedCar> parkedCarRepository) {
+		this.carManager          = carManager;
+		this.vehicleRegistry     = vehicleRegistry;
+		this.plugin              = plugin;
+		this.parkedCarRepository = parkedCarRepository;
 
 		this.pdcCarId      = new NamespacedKey(plugin, "car_id");
 		this.pdcFuel       = new NamespacedKey(plugin, "car_fuel");
@@ -100,8 +108,13 @@ public class CarService {
 
 		storePdc(entity, carId, fuel, durability, player.getUniqueId());
 
-		parkedVehicles.put(entityUUID, new ParkedVehicle(entity, car, player.getUniqueId(), fuel, durability));
-		saveParkedVehicles();
+		ParkedVehicle pv     = new ParkedVehicle(entity, car, player.getUniqueId(), fuel, durability);
+		ParkedCar     record = buildRecord(entityUUID, pv, spawnLoc);
+		parkedVehicles.put(entityUUID, pv);
+		if (record != null) {
+			parkedCarRecords.put(entityUUID, record);
+			parkedCarRepository.save(record);
+		}
 		return true;
 	}
 
@@ -111,7 +124,8 @@ public class CarService {
 
 	/**
 	 * Mounts {@code player} into the parked vehicle identified by {@code entityUUID}, moving it from the parked
-	 * registry to an active {@link VehicleSession}.
+	 * registry to an active {@link VehicleSession}. The database record is intentionally kept so it can be updated with
+	 * the new location when the car is parked again.
 	 *
 	 * @return {@code true} if the player was successfully mounted
 	 */
@@ -138,8 +152,9 @@ public class CarService {
 
 		Channel channel = VehicleInputInterceptor.getChannel(player);
 		if (channel != null) {
-			channel.pipeline().addBefore("packet_handler", VehicleInputInterceptor.HANDLER_NAME,
-			                             new VehicleInputInterceptor(session));
+			channel.pipeline()
+			       .addBefore("packet_handler", VehicleInputInterceptor.HANDLER_NAME,
+			                  new VehicleInputInterceptor(session));
 		}
 
 		task.runTaskTimer(plugin, 1L, 1L);
@@ -172,11 +187,21 @@ public class CarService {
 
 		storePdc(session.getEntity(), session.getCar().getCarId(), fuel, durability, placerUUID);
 
-		parkedVehicles.put(entityUUID,
-		                   new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, fuel, durability));
-
+		ParkedVehicle pv = new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, fuel, durability);
+		parkedVehicles.put(entityUUID, pv);
 		vehicleRegistry.unregister(entityUUID);
-		saveParkedVehicles();
+
+		// Build updated record from current entity location and save
+		Entity entity = session.getEntity().getBukkitEntity();
+		if (entity != null && entity.getLocation().getWorld() != null) {
+			Location  loc      = entity.getLocation();
+			ParkedCar existing = parkedCarRecords.get(entityUUID);
+			String    dbId     = existing != null ? existing.getDbId() : UUID.randomUUID().toString();
+			ParkedCar record = new ParkedCar(dbId, session.getCar().getCarId(), loc.getWorld().getName(), loc.getX(),
+			                                 loc.getY(), loc.getZ(), loc.getYaw(), fuel, durability, placerUUID);
+			parkedCarRecords.put(entityUUID, record);
+			parkedCarRepository.save(record);
+		}
 	}
 
 	// ------------------------------------------------------------------
@@ -193,13 +218,17 @@ public class CarService {
 
 		parked.getEntity().despawn();
 
+		ParkedCar record = parkedCarRecords.remove(entityUUID);
+		if (record != null) {
+			parkedCarRepository.delete(record);
+		}
+
 		ItemStack   item    = parked.getCar().buildItem();
 		ItemBuilder builder = new ItemBuilder(item);
 		builder.addTag(CarKey.CAR_FUEL.getKey(), parked.getFuel());
 		builder.addTag(CarKey.CAR_DURABILITY.getKey(), parked.getDurability());
 		builder.addTag(CarKey.CAR_OWNER.getKey(), player.getUniqueId().toString());
 		player.getInventory().addItem(builder.build());
-		saveParkedVehicles();
 	}
 
 	// ------------------------------------------------------------------
@@ -217,8 +246,11 @@ public class CarService {
 			session.removeDisplays();
 			removeInputHandler(session.getDriver());
 
-			if (session.getTask() != null && !session.getTask().isCancelled()) {
-				session.getTask().cancel();
+			VehicleMovementTask task = session.getTask();
+			if (task == null) return;
+
+			if (!task.isCancelled()) {
+				task.cancel();
 			}
 
 			session.getEntity().despawn();
@@ -228,7 +260,11 @@ public class CarService {
 			}
 
 			vehicleRegistry.unregister(entityUUID);
-			saveParkedVehicles();
+
+			ParkedCar record = parkedCarRecords.remove(entityUUID);
+			if (record != null) {
+				parkedCarRepository.delete(record);
+			}
 			return;
 		}
 
@@ -236,43 +272,89 @@ public class CarService {
 		ParkedVehicle parked = parkedVehicles.remove(entityUUID);
 		if (parked != null) {
 			parked.getEntity().despawn();
-			saveParkedVehicles();
+			ParkedCar record = parkedCarRecords.remove(entityUUID);
+			if (record != null) {
+				parkedCarRepository.delete(record);
+			}
 		}
 	}
 
 	/**
 	 * Destroys all active and parked vehicles. Called on plugin disable to ensure clean shutdown. Active sessions are
-	 * converted to parked entries so their location and stats are saved and the Minecart re-appears on the next server
-	 * start.
+	 * converted to parked entries so their location and stats are persisted and the Minecart re-appears on the next
+	 * server start.
 	 */
 	public void destroyAll() {
-		// Convert every active session into a parked entry (entities still alive, location valid)
+		// Convert every active session into a parked entry; build/update its DB record
 		for (VehicleSession session : vehicleRegistry.getAllSessions()) {
 			session.removeDisplays();
 			removeInputHandler(session.getDriver());
 
-			if (session.getTask() != null && !session.getTask().isCancelled()) {
-				session.getTask().cancel();
+			VehicleMovementTask task = session.getTask();
+			if (task == null) return;
+
+			if (!task.isCancelled()) {
+				task.cancel();
 			}
 
-			UUID uuid = session.getEntity().getEntityUUID();
-			if (uuid != null) {
-				parkedVehicles.put(uuid, new ParkedVehicle(
-						session.getEntity(), session.getCar(), session.getDriverUUID(),
-						session.getCurrentFuel(), session.getCurrentDurability()));
+			UUID entityUUID = session.getEntity().getEntityUUID();
+			if (entityUUID == null) continue;
+
+			int  fuel       = session.getCurrentFuel();
+			int  durability = session.getCurrentDurability();
+			UUID placerUUID = session.getDriverUUID();
+
+			ParkedVehicle pv = new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, fuel, durability);
+			parkedVehicles.put(entityUUID, pv);
+
+			Entity entity = session.getEntity().getBukkitEntity();
+			if (entity != null && entity.getLocation().getWorld() != null) {
+				Location  loc      = entity.getLocation();
+				ParkedCar existing = parkedCarRecords.get(entityUUID);
+				String    dbId     = existing != null ? existing.getDbId() : UUID.randomUUID().toString();
+				ParkedCar record = new ParkedCar(dbId, session.getCar().getCarId(), loc.getWorld().getName(),
+				                                 loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), fuel, durability,
+				                                 placerUUID);
+				parkedCarRecords.put(entityUUID, record);
 			}
 		}
 		vehicleRegistry.clear();
 
-		// Persist all parked data while entities are still alive and have valid locations
-		saveParkedVehicles();
+		// DB persistence is handled by PeriodicalUpdates.forceUpdate() which runs after
+		// destroyAll() completes. The data supplier returns parkedCarRecords.values(), so
+		// all records (including the just-converted sessions) are flushed by the force-save.
 
-		// Now despawn everything
 		for (ParkedVehicle parked : parkedVehicles.values()) {
 			parked.getEntity().despawn();
 		}
 		parkedVehicles.clear();
-		// Do NOT save here — the file was already written above with correct data
+		parkedCarRecords.clear();
+	}
+
+	// ------------------------------------------------------------------
+	// Config reload
+	// ------------------------------------------------------------------
+
+	/**
+	 * Refreshes the {@link Car} definition references held by all in-memory parked vehicles and active sessions. Must
+	 * be called after {@link CarManager} has been reloaded from config (e.g. on {@code /glw reload}) so that existing
+	 * in-world cars immediately pick up the updated configuration.
+	 */
+	public void refreshCarDefinitions() {
+		for (UUID entityUUID : new ArrayList<>(parkedVehicles.keySet())) {
+			ParkedVehicle old = parkedVehicles.get(entityUUID);
+			if (old == null) continue;
+			Car freshCar = carManager.getCar(old.getCar().getCarId());
+			if (freshCar == null) continue;
+			parkedVehicles.put(entityUUID,
+			                   new ParkedVehicle(old.getEntity(), freshCar, old.getPlacerUUID(), old.getFuel(),
+			                                     old.getDurability()));
+		}
+
+		for (VehicleSession session : vehicleRegistry.getAllSessions()) {
+			Car freshCar = carManager.getCar(session.getCar().getCarId());
+			if (freshCar != null) session.setCar(freshCar);
+		}
 	}
 
 	// ------------------------------------------------------------------
@@ -280,57 +362,33 @@ public class CarService {
 	// ------------------------------------------------------------------
 
 	/**
-	 * Loads parked vehicle data from {@code parked_cars.yml} and re-spawns each car entity. Call this once on plugin
-	 * enable after {@link CarManager} is ready. Minecart entities do not survive server restarts, so they are
-	 * re-created here from the saved file.
+	 * Loads parked vehicle data from the database and re-spawns each car entity. Call this once on plugin enable after
+	 * {@link CarManager} is ready. Minecart entities do not survive server restarts, so they are re-created here from
+	 * the saved records.
 	 */
 	public void reloadParkedVehicles() {
-		File file = getParkedVehiclesFile();
-		if (!file.exists()) return;
+		Collection<ParkedCar> records = parkedCarRepository.loadAll();
 
-		YamlConfiguration config  = YamlConfiguration.loadConfiguration(file);
-		var               section = config.getConfigurationSection("parked");
-		if (section == null) return;
-
-		for (String key : section.getKeys(false)) {
-			String path = "parked." + key;
-
-			String carId = config.getString(path + ".car_id");
-			Car    car   = carManager.getCar(carId);
+		for (ParkedCar record : records) {
+			Car car = carManager.getCar(record.getCarId());
 			if (car == null) continue;
 
-			String worldName = config.getString(path + ".world");
-			World  world     = Bukkit.getWorld(worldName != null ? worldName : "");
+			World world = Bukkit.getWorld(record.getWorld());
 			if (world == null) continue;
 
-			double x          = config.getDouble(path + ".x");
-			double y          = config.getDouble(path + ".y");
-			double z          = config.getDouble(path + ".z");
-			float  yaw        = (float) config.getDouble(path + ".yaw");
-			int    fuel       = config.getInt(path + ".fuel", car.getMaxFuel());
-			int    durability = config.getInt(path + ".durability", car.getMaxDurability());
-			String placerStr  = config.getString(path + ".placer", "");
+			Location spawnLoc = new Location(world, record.getX(), record.getY(), record.getZ(), record.getYaw(), 0f);
 
-			UUID placerUUID = null;
-			try {
-				if (placerStr != null && !placerStr.isEmpty()) {
-					placerUUID = UUID.fromString(placerStr);
-				}
-			} catch (IllegalArgumentException ignored) { }
-
-			Location      spawnLoc = new Location(world, x, y, z, yaw, 0f);
-			VehicleEntity entity   = createVehicleEntity(car);
+			VehicleEntity entity = createVehicleEntity(car);
 			entity.spawn(spawnLoc);
 
 			UUID entityUUID = entity.getEntityUUID();
 			if (entityUUID == null) continue;
 
-			storePdc(entity, carId, fuel, durability, placerUUID);
-			parkedVehicles.put(entityUUID, new ParkedVehicle(entity, car, placerUUID, fuel, durability));
+			storePdc(entity, record.getCarId(), record.getFuel(), record.getDurability(), record.getPlacerUUID());
+			parkedVehicles.put(entityUUID, new ParkedVehicle(entity, car, record.getPlacerUUID(), record.getFuel(),
+			                                                 record.getDurability()));
+			parkedCarRecords.put(entityUUID, record);
 		}
-
-		// Overwrite the file with current entity UUIDs now that entities are spawned
-		saveParkedVehicles();
 	}
 
 	// ------------------------------------------------------------------
@@ -350,7 +408,11 @@ public class CarService {
 		if (parked.isDestroyed()) {
 			destroyCar(entityUUID, false);
 		} else {
-			saveParkedVehicles();
+			ParkedCar record = parkedCarRecords.get(entityUUID);
+			if (record != null) {
+				record.setDurability(parked.getDurability());
+				parkedCarRepository.save(record);
+			}
 		}
 	}
 
@@ -382,52 +444,6 @@ public class CarService {
 	}
 
 	// ------------------------------------------------------------------
-	// File persistence helpers
-	// ------------------------------------------------------------------
-
-	/**
-	 * Writes the current parked-vehicles map to {@code parked_cars.yml}. Called whenever the map is mutated so the file
-	 * always reflects the in-world state.
-	 */
-	private void saveParkedVehicles() {
-		YamlConfiguration config = new YamlConfiguration();
-
-		for (Map.Entry<UUID, ParkedVehicle> entry : parkedVehicles.entrySet()) {
-			ParkedVehicle pv     = entry.getValue();
-			Entity        entity = pv.getEntity().getBukkitEntity();
-			if (entity == null) continue;
-
-			Location loc = entity.getLocation();
-			if (loc.getWorld() == null) continue;
-
-			String base = "parked." + entry.getKey();
-			config.set(base + ".car_id", pv.getCar().getCarId());
-			config.set(base + ".world", loc.getWorld().getName());
-			config.set(base + ".x", loc.getX());
-			config.set(base + ".y", loc.getY());
-			config.set(base + ".z", loc.getZ());
-			config.set(base + ".yaw", (double) loc.getYaw());
-			config.set(base + ".fuel", pv.getFuel());
-			config.set(base + ".durability", pv.getDurability());
-			if (pv.getPlacerUUID() != null) {
-				config.set(base + ".placer", pv.getPlacerUUID().toString());
-			}
-		}
-
-		try {
-			File file = getParkedVehiclesFile();
-			file.getParentFile().mkdirs();
-			config.save(file);
-		} catch (IOException e) {
-			plugin.getLogger().warning("[CarService] Failed to save parked_cars.yml: " + e.getMessage());
-		}
-	}
-
-	private File getParkedVehiclesFile() {
-		return new File(plugin.getDataFolder(), "parked_cars.yml");
-	}
-
-	// ------------------------------------------------------------------
 	// Internal helpers
 	// ------------------------------------------------------------------
 
@@ -441,6 +457,20 @@ public class CarService {
 	@Nullable
 	private VehicleEntity wrapExistingEntity(Entity entity, Car car) {
 		return entity instanceof Minecart m ? new MinecartVehicle(car, m) : null;
+	}
+
+	/**
+	 * Builds a {@link ParkedCar} DB record from a {@link ParkedVehicle} using the provided location. Reuses the
+	 * existing {@code dbId} from {@link #parkedCarRecords} if one exists for this entity, otherwise generates a new
+	 * UUID.
+	 */
+	@Nullable
+	private ParkedCar buildRecord(UUID entityUUID, ParkedVehicle pv, Location loc) {
+		if (loc.getWorld() == null) return null;
+		ParkedCar existing = parkedCarRecords.get(entityUUID);
+		String    dbId     = existing != null ? existing.getDbId() : UUID.randomUUID().toString();
+		return new ParkedCar(dbId, pv.getCar().getCarId(), loc.getWorld().getName(), loc.getX(), loc.getY(), loc.getZ(),
+		                     loc.getYaw(), pv.getFuel(), pv.getDurability(), pv.getPlacerUUID());
 	}
 
 	private void storePdc(VehicleEntity vehicleEntity, String carId, int fuel, int durability,

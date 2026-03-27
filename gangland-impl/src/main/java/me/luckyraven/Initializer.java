@@ -77,6 +77,7 @@ import me.luckyraven.file.configuration.weapon.GanglandRepairMessages;
 import me.luckyraven.file.configuration.weapon.WeaponLoader;
 import me.luckyraven.gadget.car.CarManager;
 import me.luckyraven.gadget.car.CarService;
+import me.luckyraven.gadget.car.ParkedCar;
 import me.luckyraven.gadget.car.config.CarAddon;
 import me.luckyraven.gadget.car.vehicle.VehicleRegistry;
 import me.luckyraven.gadget.repair.RepairManager;
@@ -131,6 +132,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -541,7 +543,10 @@ public final class Initializer {
 	}
 
 	public void carServiceInit() {
-		carService = new CarService(carAddon, new VehicleRegistry(), gangland);
+		IRepository<ParkedCar> parkedCarRepository = ganglandDatabase.getRepositoryRegistry()
+		                                                             .getRepository(ParkedCar.class);
+		carService = new CarService(carAddon, new VehicleRegistry(), gangland, parkedCarRepository);
+		parkedCarRepository.setDataSupplier(() -> new ArrayList<>(carService.getParkedCarRecords().values()));
 		carService.reloadParkedVehicles();
 	}
 
