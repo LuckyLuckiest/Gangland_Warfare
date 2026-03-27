@@ -15,8 +15,9 @@ import org.bukkit.inventory.EquipmentSlot;
 import java.util.UUID;
 
 /**
- * Handles interaction with a placed (parked) car entity. Right-clicking the entity (sneaking or not) mounts the player
- * into the vehicle. Pickup is handled via shift + left-click in {@link CarDamageListener}.
+ * Handles interaction with a placed (parked) car entity. Plain right-click mounts the player.
+ * Shift + right-click is intentionally ignored — pickup is handled by shift + left-click via
+ * {@link CarDamageListener}.
  */
 @ListenerHandler
 @AutowireTarget({CarService.class})
@@ -39,6 +40,9 @@ public class CarEntityInteractListener implements Listener {
 		if (!carService.isParkedVehicle(entityUUID)) return;
 
 		event.setCancelled(true);
+
+		// Shift + right-click is reserved for other actions (pickup = shift + left-click)
+		if (player.isSneaking()) return;
 
 		if (carService.getVehicleRegistry().isPlayerDriving(player.getUniqueId())) {
 			player.sendMessage(ChatUtil.color("&cYou are already driving a vehicle."));
