@@ -7,6 +7,8 @@ import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.weapon.dto.BiologicalData;
+import me.luckyraven.weapon.events.WeaponEntityDamageEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -108,6 +110,15 @@ public class BiologicalAction {
 			}
 			// directed beam to each infected target
 			ParticleUtil.spawnBeam(beamOrigin, target.getLocation().add(0, target.getHeight() / 2.0, 0));
+		}
+
+		// Fire WeaponEntityDamageEvent for non-living entities (vehicles) in the biological radius
+		if (flatBonus > 0) {
+			for (Entity entity : player.getNearbyEntities(radius, radius, radius)) {
+				if (entity instanceof LivingEntity || entity.equals(player)) continue;
+				if (entity.getLocation().distanceSquared(player.getLocation()) > radius * radius) continue;
+				Bukkit.getPluginManager().callEvent(new WeaponEntityDamageEvent(weapon, entity, flatBonus, player));
+			}
 		}
 
 		// area-of-effect burst pulse

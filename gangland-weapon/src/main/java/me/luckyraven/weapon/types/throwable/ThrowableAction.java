@@ -17,9 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ThrowableAction {
@@ -35,6 +33,13 @@ public class ThrowableAction {
 	 * death message. Kept static so PlayerDeath can access it without holding an instance.
 	 */
 	public static final Map<UUID, String> pendingKillerWeapon = new ConcurrentHashMap<>();
+
+	/**
+	 * Maps a non-living entity's UUID to the configured weapon explosion damage, pre-populated before
+	 * {@code World#createExplosion} fires its events. Consumed by {@code CarDamageListener} so vehicles take the
+	 * weapon's configured value instead of the vanilla explosion calculation.
+	 */
+	public static final Map<UUID, Double> pendingVehicleExplosionDamage = new ConcurrentHashMap<>();
 
 	private final JavaPlugin          plugin;
 	private final ThrowableWeapon     weapon;
@@ -128,14 +133,33 @@ public class ThrowableAction {
 	private void detonate(Location center, ThrowableData data, Player player, World world) {
 		ParticleUtil.spawnExplosionBurst(center);
 
+		double flatBonus = weapon.getModifiersData().hasFlatDamage() ?
+		                   weapon.getModifiersData().getFlatDamage().bonus() :
+		                   0.0;
+		double totalDmg = data.getExplosionDamage() + flatBonus;
+		double radiusSq = data.getExplosionRadius() * data.getExplosionRadius();
+
+		// Pre-register weapon damage for non-living entities (vehicles) before the explosion fires its events,
+		// so CarDamageListener can use the configured value instead of vanilla explosion damage.
+		List<UUID> registeredUuids = new ArrayList<>();
+		if (totalDmg > 0) {
+			for (Entity nearby : world.getNearbyEntities(center, data.getExplosionRadius(), data.getExplosionRadius(),
+			                                             data.getExplosionRadius())) {
+				if (nearby instanceof LivingEntity) continue;
+				if (nearby.getLocation().distanceSquared(center) > radiusSq) continue;
+				pendingVehicleExplosionDamage.put(nearby.getUniqueId(), totalDmg);
+				registeredUuids.add(nearby.getUniqueId());
+			}
+		}
+
 		world.createExplosion(center.getX(), center.getY(), center.getZ(), (float) data.getExplosionRadius(),
 		                      data.getFireTicks() > 0, false, player);
 
-		double flatBonus = weapon.getModifiersData().hasFlatDamage()
-		                   ? weapon.getModifiersData().getFlatDamage().bonus() : 0.0;
-		double totalDmg = data.getExplosionDamage() + flatBonus;
+		// Clean up entries not consumed by CarDamageListener (e.g. entity out of actual blast range)
+		plugin.getServer()
+		      .getScheduler()
+		      .runTaskLater(plugin, () -> registeredUuids.forEach(pendingVehicleExplosionDamage::remove), 1L);
 
-		double radiusSq = data.getExplosionRadius() * data.getExplosionRadius();
 		for (Entity nearby : world.getNearbyEntities(center, data.getExplosionRadius(), data.getExplosionRadius(),
 		                                             data.getExplosionRadius())) {
 			if (!(nearby instanceof LivingEntity target)) continue;

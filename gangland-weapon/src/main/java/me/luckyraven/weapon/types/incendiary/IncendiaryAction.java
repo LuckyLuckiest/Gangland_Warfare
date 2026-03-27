@@ -5,8 +5,11 @@ import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.weapon.dto.IncendiaryData;
+import me.luckyraven.weapon.events.WeaponEntityDamageEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -127,6 +130,18 @@ public class IncendiaryAction {
 			if (flatBonus > 0) {
 				// apply flat bonus without attacker so it bypasses armor and the weapon event guard
 				target.damage(flatBonus);
+			}
+		}
+
+		// Fire WeaponEntityDamageEvent for non-living entities (vehicles) inside the spray cone
+		if (flatBonus > 0) {
+			for (Entity entity : player.getNearbyEntities(range, range, range)) {
+				if (entity instanceof LivingEntity || entity.equals(player)) continue;
+				Vector toEntity = entity.getLocation().toVector().subtract(muzzle.toVector());
+				double dist     = toEntity.length();
+				if (dist > range || dist < 0.001) continue;
+				if (dir.dot(toEntity.normalize()) < Math.cos(halfAngle)) continue;
+				Bukkit.getPluginManager().callEvent(new WeaponEntityDamageEvent(weapon, entity, flatBonus, player));
 			}
 		}
 	}

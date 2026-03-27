@@ -55,6 +55,19 @@ public class ProjectileDamageListener implements Listener {
 		this.eventQueues        = new ConcurrentHashMap<>();
 	}
 
+	/**
+	 * Returns the effective damage for a weapon projectile (accounting for penetration/ricochet state reductions), or
+	 * {@code -1} if the given entity ID does not belong to a weapon projectile. Read this <em>before</em>
+	 * {@link ProjectileHitEvent} at {@code HIGHEST} priority, which is when the per-projectile data is cleaned up.
+	 */
+	public static double getDamageForProjectile(int projectileEntityId) {
+		GunWeapon weapon = weaponInstance.get(projectileEntityId);
+		if (weapon == null) return -1;
+
+		ProjectileState state = projectileStates.get(projectileEntityId);
+		return state != null ? state.getCurrentDamage() : weapon.getProjectileData().getDamage();
+	}
+
 	@EventHandler(priority = EventPriority.LOW)
 	public void onProjectileLaunch(WeaponProjectileLaunchEvent event) {
 		if (!(event.getProjectile().getShooter() instanceof Player player)) return;
@@ -147,7 +160,7 @@ public class ProjectileDamageListener implements Listener {
 		if (hasHitEvent && !hasDamageEvent) {
 			Entity hitEntity = queue.getHitEvent().getHitEntity();
 			// Block hit OR non-living entity (damage was set directly in onProjectileEntityDamage)
-			if (hitEntity == null || !(hitEntity instanceof LivingEntity)) {
+			if (!(hitEntity instanceof LivingEntity)) {
 				executeQueue(projectileId, queue, shooter);
 				return;
 			}
