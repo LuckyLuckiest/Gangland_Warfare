@@ -6,6 +6,8 @@ import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.UUID;
@@ -91,5 +93,36 @@ public class MinecartVehicle implements VehicleEntity {
 	@Override
 	public UUID getEntityUUID() {
 		return minecart != null ? minecart.getUniqueId() : null;
+	}
+
+	@Override
+	public void wobble(JavaPlugin plugin) {
+		if (minecart == null || minecart.isDead() || !minecart.isEmpty()) return;
+
+		Minecart cart  = minecart;
+		Location start = cart.getLocation().clone();
+		// Perpendicular (right) vector relative to the cart's facing direction
+		Vector facing = start.getDirection().setY(0).normalize();
+		Vector right  = new Vector(-facing.getZ(), 0, facing.getX());
+
+		new BukkitRunnable() {
+			int ticks = 0;
+
+			@Override
+			public void run() {
+				if (cart.isDead() || ticks >= 12) {
+					cart.setVelocity(new Vector(0, 0, 0));
+					cancel();
+					return;
+				}
+
+				// Alternating direction each tick with decaying amplitude — set, not add
+				double amplitude = 0.12 * (1.0 - (double) ticks / 12.0);
+				double side      = ticks % 2 == 0 ? amplitude : -amplitude;
+
+				cart.setVelocity(right.clone().multiply(side));
+				ticks++;
+			}
+		}.runTaskTimer(plugin, 0L, 1L);
 	}
 }

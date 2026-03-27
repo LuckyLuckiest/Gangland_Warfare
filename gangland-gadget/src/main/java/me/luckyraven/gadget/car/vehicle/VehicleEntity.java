@@ -3,6 +3,7 @@ package me.luckyraven.gadget.car.vehicle;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.UUID;
 
@@ -54,4 +55,13 @@ public interface VehicleEntity {
 	 * Returns the UUID of the underlying Bukkit entity.
 	 */
 	UUID getEntityUUID();
+
+	/**
+	 * Plays a brief side-to-side wobble animation on the vehicle entity by applying a sine-wave velocity impulse for a
+	 * short duration. No-op if the entity does not support it.
+	 *
+	 * @param plugin the plugin instance used to schedule the animation task
+	 */
+	default void wobble(JavaPlugin plugin) {
+	}
 }

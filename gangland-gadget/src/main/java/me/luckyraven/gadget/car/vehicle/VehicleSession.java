@@ -25,10 +25,11 @@ import java.util.UUID;
 public class VehicleSession {
 
 	private final VehicleEntity       entity;
-	private final Car                 car;
 	private final Player              driver;
 	private final UUID                driverUUID;
 	private final BossBar             healthBar;
+	@Setter
+	private       Car                 car;
 	@Setter
 	private       VehicleMovementTask task;
 	private       int                 currentFuel;
