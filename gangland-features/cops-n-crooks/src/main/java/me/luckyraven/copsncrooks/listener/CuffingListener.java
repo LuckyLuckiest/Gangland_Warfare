@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.events.police.CuffedEvent;
 import me.luckyraven.copsncrooks.events.police.DuringCuffingEvent;
+import me.luckyraven.util.downed.DownedPlayerRegistry;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.entity.Player;
@@ -25,7 +26,7 @@ public class CuffingListener implements Listener {
 		Player target = event.getTarget();
 
 		if (target == null) return;
-		if (target.isDead()) return;
+		if (target.isDead() || DownedPlayerRegistry.isDowned(target.getUniqueId())) return;
 
 		long current = event.getCurrentCuffingCooldown();
 
@@ -33,7 +34,7 @@ public class CuffingListener implements Listener {
 		long secondsRemaining = computeInSeconds(current);
 
 		if (!currentCuffCooldown.containsKey(target) ||
-			computeInSeconds(currentCuffCooldown.get(target)) != secondsRemaining) {
+		    computeInSeconds(currentCuffCooldown.get(target)) != secondsRemaining) {
 			currentCuffCooldown.put(target, current);
 
 			ChatUtil.sendTitle(target, "&cCuffing", "&7Restraining in &b" + secondsRemaining + "s");
@@ -45,7 +46,7 @@ public class CuffingListener implements Listener {
 		Player target = event.getTarget();
 
 		if (target == null) return;
-		if (target.isDead()) return;
+		if (target.isDead() || DownedPlayerRegistry.isDowned(target.getUniqueId())) return;
 
 		currentCuffCooldown.remove(target);
 		detainmentService.handcuff(target);

@@ -4,6 +4,7 @@ import com.cryptomorin.xseries.XPotion;
 import lombok.Getter;
 import me.luckyraven.copsncrooks.jail.JailRegistry;
 import me.luckyraven.copsncrooks.jail.JailService;
+import me.luckyraven.util.downed.DownedPlayerRegistry;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -26,7 +27,7 @@ public class DetainmentService {
 	private final String commandBypassPermission;
 
 	public DetainmentService(JavaPlugin plugin, DetainmentRegistry detainmentRegistry, JailService jailService,
-							 JailRegistry jailRegistry, String prefix) {
+	                         JailRegistry jailRegistry, String prefix) {
 		this.plugin                  = plugin;
 		this.detainmentRegistry      = detainmentRegistry;
 		this.jailService             = jailService;
@@ -128,7 +129,7 @@ public class DetainmentService {
 
 		if (state == DetainmentState.NORMAL) return;
 		if (!player.isOnline()) return;
-		if (player.isDead()) return;
+		if (player.isDead() || DownedPlayerRegistry.isDowned(player.getUniqueId())) return;
 		if (player.getGameMode() == GameMode.SPECTATOR) return;
 
 		applyVisuals(player, false);
@@ -162,8 +163,8 @@ public class DetainmentService {
 
 	private void applyEffect(Player player, XPotion potion, int amplifier) {
 		XPotion.of(potion.name())
-			   .map(XPotion::getPotionEffectType)
-			   .ifPresent(type -> player.addPotionEffect(
+		       .map(XPotion::getPotionEffectType)
+		       .ifPresent(type -> player.addPotionEffect(
 					   new PotionEffect(type, PotionEffect.INFINITE_DURATION, amplifier)));
 	}
 

@@ -3,6 +3,7 @@ package me.luckyraven.gadget.listener.car;
 import me.luckyraven.gadget.car.CarService;
 import me.luckyraven.gadget.car.vehicle.VehicleSession;
 import me.luckyraven.util.autowire.AutowireTarget;
+import me.luckyraven.util.downed.DownedPlayerRegistry;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -42,7 +43,7 @@ public class CarDismountListener implements Listener {
 		// Cancel dismounts that were not triggered by the player pressing shift (e.g. Minecraft
 		// physics ejecting the player from a no-rail minecart). Death-caused dismounts are still
 		// allowed through so the player can respawn normally.
-		if (!player.isSneaking() && !player.isDead()) {
+		if (!player.isSneaking() && !player.isDead() && !DownedPlayerRegistry.isDowned(player.getUniqueId())) {
 			event.setCancelled(true);
 			return;
 		}

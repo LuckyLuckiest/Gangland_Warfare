@@ -6,6 +6,7 @@ import me.luckyraven.copsncrooks.events.wanted.WantedLevelChangeEvent;
 import me.luckyraven.copsncrooks.events.wanted.WantedStartEvent;
 import me.luckyraven.copsncrooks.police.CopManager;
 import me.luckyraven.copsncrooks.police.npc.CopNpc;
+import me.luckyraven.util.downed.PlayerDownedEvent;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -75,6 +76,17 @@ public class CopListener implements Listener {
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onPlayerDeath(PlayerDeathEvent event) {
 		copManager.removeCopAttacker(event.getEntity().getUniqueId());
+	}
+
+	/**
+	 * Removes a player from the cop-attacker registry when they are downed (GTA-style death that prevents actual
+	 * death). Mirrors the behaviour of {@link #onPlayerDeath} for the downed state.
+	 *
+	 * @param event the player downed event
+	 */
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onPlayerDowned(PlayerDownedEvent event) {
+		copManager.removeCopAttacker(event.getPlayer().getUniqueId());
 	}
 
 	/**

@@ -16,6 +16,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.events.user.UserBountyEvent;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.util.downed.DownedPlayerRegistry;
 import me.luckyraven.util.feature.Executor;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.timer.Timer;
@@ -71,6 +72,9 @@ public class EntityDamage implements Listener {
 		boolean isEntityDead = !(entity instanceof LivingEntity livingEntity &&
 		                         livingEntity.getHealth() <= event.getFinalDamage());
 		if (isEntityDead) return;
+
+		// Downed players (GTA-style) have health=0.5 and absorb all further damage — skip kill credit.
+		if (entity instanceof Player target && DownedPlayerRegistry.isDowned(target.getUniqueId())) return;
 
 		// the current damager
 		User<Player> damagerUser = userManager.getUser(damager);

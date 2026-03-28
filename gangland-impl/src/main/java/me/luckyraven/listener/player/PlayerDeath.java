@@ -8,6 +8,7 @@ import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.datastructure.ScientificCalculator;
+import me.luckyraven.util.downed.PlayerDownedEvent;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.placeholder.PlaceholderHandler;
 import me.luckyraven.util.utilities.ChatUtil;
@@ -15,6 +16,7 @@ import me.luckyraven.util.utilities.NumberUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponManager;
 import me.luckyraven.weapon.types.throwable.ThrowableAction;
+import net.citizensnpcs.api.CitizensAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -44,6 +46,8 @@ public class PlayerDeath implements Listener {
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onPlayerDeath(PlayerDeathEvent event) {
+		if (CitizensAPI.getNPCRegistry().isNPC(event.getEntity())) return;
+
 		Player player = event.getEntity();
 		UUID   uuid   = player.getUniqueId();
 		long   now    = System.currentTimeMillis();
@@ -70,6 +74,31 @@ public class PlayerDeath implements Listener {
 
 		// change the death message according to the weapon (always runs)
 		changeDeathMessage(event, player);
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void onPlayerDowned(PlayerDownedEvent event) {
+		Player player = event.getPlayer();
+		UUID   uuid   = player.getUniqueId();
+		long   now    = System.currentTimeMillis();
+
+		Long lastDeath = recentDeaths.get(uuid);
+		if (lastDeath != null && now - lastDeath < DEATH_DEDUP_WINDOW_MS) {
+			return;
+		}
+		recentDeaths.put(uuid, now);
+
+		User<Player> user = userManager.getUser(player);
+
+		if (user == null) return;
+
+		user.setDeaths(user.getDeaths() + 1);
+
+		if (!handleCommandExecution(user, player)) {
+			handleMoney(user);
+		}
+
+		broadcastDeathMessage(player);
 	}
 
 	private boolean handleCommandExecution(User<Player> user, Player player) {
@@ -114,9 +143,21 @@ public class PlayerDeath implements Listener {
 	}
 
 	private void changeDeathMessage(PlayerDeathEvent event, Player player) {
+		String message = buildDeathMessage(player);
+		if (message == null) return;
+		event.setDeathMessage(message);
+	}
+
+	private void broadcastDeathMessage(Player player) {
+		String message = buildDeathMessage(player);
+		if (message == null) return;
+		Bukkit.broadcastMessage(message);
+	}
+
+	private String buildDeathMessage(Player player) {
 		Player killer = player.getKiller();
 
-		if (killer == null) return;
+		if (killer == null) return null;
 
 		// check if a throwable weapon was responsible (killer may have switched items since throwing)
 		String throwableName = ThrowableAction.pendingKillerWeapon.remove(player.getUniqueId());
@@ -129,7 +170,7 @@ public class PlayerDeath implements Listener {
 			weapon = weaponManager.validateAndGetWeapon(killer, heldItem);
 		}
 
-		if (weapon == null) return;
+		if (weapon == null) return null;
 
 		// prefer weapon-specific death messages; fall back to global config
 		String template = weapon.pickDeathMessage().orElseGet(() -> {
@@ -137,11 +178,9 @@ public class PlayerDeath implements Listener {
 			return messages.get(new Random().nextInt(messages.size()));
 		});
 
-		String replace = template.replace("%killer%", killer.getName())
-		                         .replace("%victim%", player.getName())
-		                         .replace("%item%", weapon.getName());
-
-		event.setDeathMessage(ChatUtil.color(replace));
+		return ChatUtil.color(template.replace("%killer%", killer.getName())
+		                              .replace("%victim%", player.getName())
+		                              .replace("%item%", weapon.getName()));
 	}
 
 	private double amountDeduction(User<Player> user) {

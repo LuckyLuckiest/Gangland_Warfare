@@ -9,6 +9,7 @@ import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
 import me.luckyraven.copsncrooks.police.state.CopState;
 import me.luckyraven.copsncrooks.police.targeting.TargetingManager;
 import me.luckyraven.copsncrooks.wanted.Wanted;
+import me.luckyraven.util.downed.DownedPlayerRegistry;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -40,8 +41,8 @@ public class CopManager {
 	private final Set<UUID>             copAttackers;
 
 	public CopManager(JavaPlugin plugin, CopSpawnManager spawnManager, TargetingManager targetingManager,
-					  CopConfigProvider configProvider, EntityMarkManager entityMarkManager,
-					  DetainmentService detainmentService) {
+	                  CopConfigProvider configProvider, EntityMarkManager entityMarkManager,
+	                  DetainmentService detainmentService) {
 		this.plugin            = plugin;
 		this.spawnManager      = spawnManager;
 		this.targetingManager  = targetingManager;
@@ -436,7 +437,8 @@ public class CopManager {
 		if (currentTargetId != null) {
 			Player currentTarget = Bukkit.getPlayer(currentTargetId);
 
-			if (currentTarget != null && currentTarget.isOnline() && !currentTarget.isDead()) {
+			if (currentTarget != null && currentTarget.isOnline() && !currentTarget.isDead()
+			    && !DownedPlayerRegistry.isDowned(currentTargetId)) {
 				// Keep if still wanted
 				if (targetingManager.isWanted(currentTargetId)) {
 					return currentTarget;
@@ -453,9 +455,9 @@ public class CopManager {
 			cop.setCombatForced(false);
 		}
 
-		// 1. Find the nearest wanted player
+		// 1. Find the nearest wanted player (skip downed players)
 		Player wanted = targetingManager.findBestTarget(defaultTarget);
-		if (wanted != null) {
+		if (wanted != null && !DownedPlayerRegistry.isDowned(wanted.getUniqueId())) {
 			cop.setTargetPlayerId(wanted.getUniqueId());
 			cop.setCombatForced(false);
 			// Leave combat mode so the cop pursues/cuffs normally instead of attacking
@@ -504,7 +506,8 @@ public class CopManager {
 
 		for (UUID attackerId : copAttackers) {
 			Player attacker = Bukkit.getPlayer(attackerId);
-			if (attacker == null || !attacker.isOnline() || attacker.isDead()) continue;
+			if (attacker == null || !attacker.isOnline() || attacker.isDead()
+			    || DownedPlayerRegistry.isDowned(attackerId)) continue;
 			if (!attacker.getWorld().equals(copLoc.getWorld())) continue;
 
 			double dist = attacker.getLocation().distanceSquared(copLoc);

@@ -72,13 +72,13 @@ public class Settings implements FileInitializer {
 	private static @Getter int     respawnDelay;
 	private static @Getter boolean respawnScreenEnabled;
 	private static @Getter String  respawnScreenTitle, respawnScreenSubtitle;
-	private static @Getter boolean      respawnChatEnabled;
-	private static @Getter List<String> respawnChatMessages;
-	private static @Getter boolean      respawnGameModeEnabled, respawnGameModeAllowFly;
+	private static @Getter boolean respawnGameModeEnabled, respawnGameModeAllowFly;
 	private static @Getter String  respawnGameMode;
 	private static @Getter boolean respawnHealthEnabled, respawnHungerEnabled;
-	private static @Getter double respawnHealthAmount;
-	private static @Getter int    respawnHungerAmount;
+	private static @Getter double  respawnHealthAmount;
+	private static @Getter int     respawnHungerAmount;
+	private static @Getter boolean respawnTeleportEnabled;
+	private static @Getter String  respawnTeleportWaypoint;
 
 	// bounty configuration
 	private static @Getter double bountyEachKillValue, bountyMaxKill;
@@ -282,14 +282,12 @@ public class Settings implements FileInitializer {
 		var respawn = user.getConfigurationSection("Death.Respawn");
 		Objects.requireNonNull(respawn);
 
-		respawnEnabled        = respawn.getBoolean("Enable", false);
-		respawnDelay          = respawn.getInt("Delay", 10);
-		respawnScreenEnabled  = respawn.getBoolean("Screen.Enable", true);
-		respawnScreenTitle    = respawn.getString("Screen.Title", "&cWASTED");
-		respawnScreenSubtitle = respawn.getString("Screen.Subtitle", "&7Respawning after &a%gangland_time% &7seconds");
-		respawnChatEnabled    = respawn.getBoolean("Chat.Enable", true);
-		respawnChatMessages   = respawn.getStringList("Chat.Message");
-
+		respawnEnabled          = respawn.getBoolean("Enable", false);
+		respawnDelay            = respawn.getInt("Delay", 10);
+		respawnScreenEnabled    = respawn.getBoolean("Screen.Enable", true);
+		respawnScreenTitle      = respawn.getString("Screen.Title", "&cWASTED");
+		respawnScreenSubtitle   = respawn.getString("Screen.Subtitle",
+		                                            "&7Respawning after &a%gangland_time% &7seconds");
 		respawnGameModeEnabled  = respawn.getBoolean("GameMode.Enable", true);
 		respawnGameMode         = respawn.getString("GameMode.Change_To", "survival");
 		respawnGameModeAllowFly = respawn.getBoolean("GameMode.Allow_Fly", true);
@@ -298,6 +296,9 @@ public class Settings implements FileInitializer {
 		respawnHealthAmount  = respawn.getDouble("Health.Amount", 20);
 		respawnHungerEnabled = respawn.getBoolean("Hunger.Enable", true);
 		respawnHungerAmount  = respawn.getInt("Hunger.Amount", 20);
+
+		respawnTeleportEnabled  = respawn.getBoolean("Teleport.Enable", false);
+		respawnTeleportWaypoint = respawn.getString("Teleport.Waypoint", "spawn");
 
 		// bounty
 		var bounty = settings.getConfigurationSection("Bounty");
