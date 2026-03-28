@@ -13,7 +13,7 @@
     <artifactId>gangland-impl</artifactId>
     <packaging>jar</packaging>
 
-    <name>Gangland Core</name>
+    <name>Gangland Implementation</name>
 
     <dependencies>
         <!-- Bukkit/Spigot/Paper builds (start) -->
@@ -37,7 +37,13 @@
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-util</artifactId>
+            <artifactId>gangland-core</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>hologram-api</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>
@@ -55,9 +61,7 @@
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>plugin-exception</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
+            <artifactId>plugin-common</artifactId>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
@@ -92,10 +96,6 @@
             <artifactId>gangland-gadget</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>logger-api</artifactId>
         </dependency>
         <!-- Important local dependencies (end) -->
 

@@ -10,9 +10,9 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>gangland-util</artifactId>
+    <artifactId>gangland-core</artifactId>
 
-    <name>Gangland Utilities</name>
+    <name>Gangland Core</name>
 
     <dependencies>
         <!-- Spigot Build -->
@@ -26,13 +26,7 @@
         <!-- Local dependencies -->
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>plugin-exception</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>logger-api</artifactId>
+            <artifactId>plugin-common</artifactId>
         </dependency>
 
         <!-- XSeries -->

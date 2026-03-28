@@ -37,19 +37,14 @@
         <!-- Local dependencies -->
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>plugin-exception</artifactId>
-            <version>${project.parent.version}</version>
+            <artifactId>plugin-common</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-util</artifactId>
+            <artifactId>gangland-core</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>logger-api</artifactId>
         </dependency>
 
         <!-- Database dependencies -->
@@ -66,8 +61,6 @@
             </exclusions>
         </dependency>
 
-        <!-- ── Test dependencies ─────────────────────────────────────── -->
-
         <!-- JUnit 5 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -76,7 +69,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Mockito – mocks JavaPlugin and DatabaseHandler without a Bukkit server -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -84,12 +76,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!--
-            SQLite JDBC driver.
-            The main code targets a server environment where the driver is provided at runtime
-            by the plugin JAR (shaded). In tests we run outside of that environment, so we
-            declare it explicitly here.
-        -->
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
@@ -97,12 +83,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!--
-            Log4j2 core - required at test runtime because @CustomLog (Lombok) generates
-            code that calls me.luckyraven.logger.Logger.getLogger() → LogManager.getLogger(),
-            which needs a Log4j2 implementation on the classpath.
-            The version is kept in sync with the log4j-slf4j-impl declared in the root POM.
-        -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
