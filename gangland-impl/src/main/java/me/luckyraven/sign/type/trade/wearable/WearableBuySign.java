@@ -1,6 +1,7 @@
 package me.luckyraven.sign.type.trade.wearable;
 
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.aspect.AspectResult;
 import me.luckyraven.sign.aspect.ItemTransferAspect;
@@ -20,7 +21,6 @@ import me.luckyraven.sign.type.trade.BaseTradeSign;
 import me.luckyraven.sign.validation.SignValidator;
 import me.luckyraven.sign.validation.trade.wearable.WearableSignValidator;
 import me.luckyraven.util.color.Color;
-import me.luckyraven.util.item.wearable.Wearable;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.wearable.WearableService;

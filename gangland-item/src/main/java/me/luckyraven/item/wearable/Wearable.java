@@ -1,4 +1,4 @@
-package me.luckyraven.util.item.wearable;
+package me.luckyraven.item.wearable;
 
 import lombok.Builder;
 import lombok.Getter;

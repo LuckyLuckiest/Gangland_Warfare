@@ -5,10 +5,10 @@ import lombok.CustomLog;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.gadget.fuel.FuelService;
+import me.luckyraven.item.fuel.Fuel;
+import me.luckyraven.item.unique.UniqueItem;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
-import me.luckyraven.util.item.fuel.Fuel;
-import me.luckyraven.util.item.unique.UniqueItem;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 

@@ -1,10 +1,10 @@
-package me.luckyraven.util.item.fuel;
+package me.luckyraven.item.fuel;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.Builder;
 import lombok.Getter;
+import me.luckyraven.item.unique.UniqueItem;
 import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.item.unique.UniqueItem;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 

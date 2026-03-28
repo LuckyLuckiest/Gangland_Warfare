@@ -1,4 +1,4 @@
-package me.luckyraven.util.item.fuel;
+package me.luckyraven.item.fuel;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

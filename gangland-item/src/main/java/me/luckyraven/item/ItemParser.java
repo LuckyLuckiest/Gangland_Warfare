@@ -1,4 +1,4 @@
-package me.luckyraven.util.item;
+package me.luckyraven.item;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;

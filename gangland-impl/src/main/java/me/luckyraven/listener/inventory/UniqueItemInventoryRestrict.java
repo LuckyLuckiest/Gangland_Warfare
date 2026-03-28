@@ -2,8 +2,8 @@ package me.luckyraven.listener.inventory;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.Gangland;
+import me.luckyraven.item.unique.UniqueItemUtil;
 import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.item.unique.UniqueItemUtil;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

@@ -2,7 +2,6 @@ package me.luckyraven.item;
 
 import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.color.Color;
-import me.luckyraven.util.item.ItemConverter;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;

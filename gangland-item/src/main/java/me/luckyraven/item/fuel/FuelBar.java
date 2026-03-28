@@ -1,4 +1,4 @@
-package me.luckyraven.util.item.fuel;
+package me.luckyraven.item.fuel;
 
 /**
  * Renders a fuel gauge string for action bar display. The bar uses a fixed number of segments colored green for filled

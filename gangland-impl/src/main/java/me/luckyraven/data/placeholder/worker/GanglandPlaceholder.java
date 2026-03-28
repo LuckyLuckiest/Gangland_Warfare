@@ -13,8 +13,8 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.features.level.Level;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.item.configuration.UniqueItemAddon;
+import me.luckyraven.item.unique.UniqueItem;
 import me.luckyraven.util.color.ColorUtil;
-import me.luckyraven.util.item.unique.UniqueItem;
 import me.luckyraven.util.placeholder.PlaceholderHandler;
 import me.luckyraven.util.placeholder.effect.ConditionalFlashWrapper;
 import me.luckyraven.util.placeholder.effect.FlashPlaceholderWrapper;
@@ -100,7 +100,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	@Nullable
 	private String getSetting(String parameter) {
 		Object value = Settings.getSettingsPlaceholder()
-							   .entrySet()
+		                       .entrySet()
 				.stream()
 				.filter(entry -> entry.getKey().equals(parameter))
 				.map(Map.Entry::getValue)
@@ -130,8 +130,8 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 			return !member.hasGang() ? null : Settings.formatDouble(member.getContribution());
 		if (parameter.equals(userStr + "contributed-amount")) {
 			return !member.hasGang() ?
-				   null :
-				   NumberUtil.valueFormat(Settings.getGangContributionRate() * member.getContribution());
+			       null :
+			       NumberUtil.valueFormat(Settings.getGangContributionRate() * member.getContribution());
 		}
 		if (parameter.equals(userStr + "has-rank")) return String.valueOf(member.hasRank());
 		if (parameter.equals(userStr + "rank")) return member.getRank() == null ? null : member.getRank().getName();

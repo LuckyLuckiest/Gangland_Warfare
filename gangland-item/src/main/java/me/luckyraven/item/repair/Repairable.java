@@ -1,4 +1,4 @@
-package me.luckyraven.util.repair;
+package me.luckyraven.item.repair;
 
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;

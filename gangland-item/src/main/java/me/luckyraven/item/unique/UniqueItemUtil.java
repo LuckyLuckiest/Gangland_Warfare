@@ -1,4 +1,4 @@
-package me.luckyraven.util.item.unique;
+package me.luckyraven.item.unique;
 
 import me.luckyraven.util.ItemBuilder;
 import org.bukkit.entity.Player;

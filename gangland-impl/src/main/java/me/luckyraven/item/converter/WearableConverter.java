@@ -2,7 +2,7 @@ package me.luckyraven.item.converter;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.item.ItemAttributes;
-import me.luckyraven.util.item.wearable.Wearable;
+import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.inventory.ItemStack;
 

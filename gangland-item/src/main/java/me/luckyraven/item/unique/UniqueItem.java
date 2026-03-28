@@ -1,11 +1,11 @@
-package me.luckyraven.util.item.unique;
+package me.luckyraven.item.unique;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.item.fuel.Fuel;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;

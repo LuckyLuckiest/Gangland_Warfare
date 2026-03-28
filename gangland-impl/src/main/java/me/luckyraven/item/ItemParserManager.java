@@ -3,8 +3,6 @@ package me.luckyraven.item;
 import lombok.Getter;
 import me.luckyraven.gadget.car.CarManager;
 import me.luckyraven.item.converter.*;
-import me.luckyraven.util.item.ItemConverterRegistry;
-import me.luckyraven.util.item.ItemParser;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.wearable.WearableService;

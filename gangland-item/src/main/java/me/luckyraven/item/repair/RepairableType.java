@@ -1,4 +1,4 @@
-package me.luckyraven.util.repair;
+package me.luckyraven.item.repair;
 
 public enum RepairableType {
 	WEAPON,
