@@ -221,6 +221,9 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 	}
 
 	public void open(Player player) {
+		if (owner != null) {
+			InventoryRegistry.getInstance().registerInventory(owner, this);
+		}
 		player.openInventory(inventory);
 	}
 
