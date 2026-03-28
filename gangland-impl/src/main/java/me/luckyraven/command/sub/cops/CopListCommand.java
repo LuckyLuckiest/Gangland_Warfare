@@ -9,7 +9,7 @@ import me.luckyraven.copsncrooks.police.CopService;
 import me.luckyraven.copsncrooks.police.npc.CopNpc;
 import me.luckyraven.copsncrooks.police.targeting.TargetingManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import net.citizensnpcs.api.npc.NPC;
@@ -50,13 +50,13 @@ class CopListCommand extends SubArgument {
 					.toList();
 
 			if (targetedPlayers.isEmpty()) {
-				sender.sendMessage(ChatUtil.commandMessage("No players are being chased by cops."));
+				sender.sendMessage(GanglandChatUtil.commandMessage("No players are being chased by cops."));
 				return;
 			}
 
 			List<String> list = targetedPlayers.stream().map(player -> "&b- &r" + player.getName()).toList();
-			sender.sendMessage(ChatUtil.color("&7Players being chased by cops:"));
-			sender.sendMessage(ChatUtil.color(String.join("\n", list)));
+			sender.sendMessage(GanglandChatUtil.color("&7Players being chased by cops:"));
+			sender.sendMessage(GanglandChatUtil.color(String.join("\n", list)));
 		};
 	}
 
@@ -73,16 +73,17 @@ class CopListCommand extends SubArgument {
 			List<CopNpc> cops = copManager.getCopsForPlayer(target.getUniqueId());
 
 			if (cops.isEmpty()) {
-				String message = ChatUtil.commandMessage(
+				String message = GanglandChatUtil.commandMessage(
 						"&7Player &e" + target.getName() + "&7 is not being chased by cops.");
 				sender.sendMessage(message);
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.color("&7Player &e" + target.getName() + "&7 is being chased by cops:"));
+			sender.sendMessage(
+					GanglandChatUtil.color("&7Player &e" + target.getName() + "&7 is being chased by cops:"));
 			cops.forEach(cop -> {
 				NPC npc = cop.getNpc();
-				sender.sendMessage(ChatUtil.color("&b- &a" + npc.getName() + "&7 (" + npc.getUniqueId() + ")"));
+				sender.sendMessage(GanglandChatUtil.color("&b- &a" + npc.getName() + "&7 (" + npc.getUniqueId() + ")"));
 			});
 		}, sender -> Bukkit.getOnlinePlayers()
 				.stream()

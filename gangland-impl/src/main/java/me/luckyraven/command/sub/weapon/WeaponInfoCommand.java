@@ -5,7 +5,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.JsonFormatter;
 import me.luckyraven.util.datastructure.Tree;
@@ -40,14 +40,14 @@ class WeaponInfoCommand extends SubArgument {
 			Weapon weapon = gangland.getInitializer().getWeaponManager().validateAndGetWeapon(player, itemStack);
 
 			if (weapon == null) {
-				user.sendMessage(ChatUtil.prefixMessage("Not weapon!"));
+				user.sendMessage(GanglandChatUtil.prefixMessage("Not weapon!"));
 				return;
 			}
 
 			// display the necessary information
 			JsonFormatter jsonFormatter = new JsonFormatter();
 
-			user.sendMessage(jsonFormatter.formatToJson(ChatUtil.color(weapon.toString()), " ".repeat(3)));
+			user.sendMessage(jsonFormatter.formatToJson(GanglandChatUtil.color(weapon.toString()), " ".repeat(3)));
 		};
 	}
 

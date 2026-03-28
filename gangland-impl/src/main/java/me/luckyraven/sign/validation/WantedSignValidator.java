@@ -3,7 +3,7 @@ package me.luckyraven.sign.validation;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.type.WantedSign;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.utilities.ChatUtil;
 
 public class WantedSignValidator extends AbstractSignValidator {
 
@@ -18,7 +18,7 @@ public class WantedSignValidator extends AbstractSignValidator {
 		String clear    = WantedSign.WantedType.CLEAR.name().toLowerCase();
 
 		return content.equalsIgnoreCase(increase) || content.equalsIgnoreCase(remove) ||
-			   content.equalsIgnoreCase(clear);
+		       content.equalsIgnoreCase(clear);
 	}
 
 	@Override

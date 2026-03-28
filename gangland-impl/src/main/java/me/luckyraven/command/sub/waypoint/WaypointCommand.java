@@ -7,7 +7,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -45,7 +45,7 @@ public final class WaypointCommand extends CommandHandler {
 			Waypoint selected = waypointManager.getSelected(player);
 
 			if (selected != null) {
-				user.sendMessage(ChatUtil.color("&6Selected waypoint: &7" + selected.getName()));
+				user.sendMessage(GanglandChatUtil.color("&6Selected waypoint: &7" + selected.getName()));
 				return;
 			}
 		}

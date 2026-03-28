@@ -10,7 +10,7 @@ import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
 import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -23,7 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static me.luckyraven.util.ChatUtil.color;
+import static me.luckyraven.util.GanglandChatUtil.color;
 
 @CustomLog
 public final class CommandManager implements CommandExecutor {
@@ -31,10 +31,10 @@ public final class CommandManager implements CommandExecutor {
 	// classes that shouldn't be displayed in tab completion
 	@Getter
 	private static final List<Class<? extends CommandHandler>> filters = Arrays.asList(DebugCommand.class,
-																					   ComponentExecutorCommand.class,
-																					   ReadNBTCommand.class,
-																					   TimerCommand.class,
-																					   DownloadPluginCommand.class);
+	                                                                                   ComponentExecutorCommand.class,
+	                                                                                   ReadNBTCommand.class,
+	                                                                                   TimerCommand.class,
+	                                                                                   DownloadPluginCommand.class);
 
 	private static final Map<String, CommandHandler> commands = new HashMap<>();
 
@@ -83,7 +83,7 @@ public final class CommandManager implements CommandExecutor {
 
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
-							 @NotNull String[] args) {
+	                         @NotNull String[] args) {
 		try {
 			String mainCommandPermission = String.format("%s.command.main", fullPrefix.toLowerCase());
 
@@ -101,7 +101,7 @@ public final class CommandManager implements CommandExecutor {
 
 			for (Map.Entry<String, CommandHandler> entry : commands.entrySet()) {
 				if (!(entry.getKey().equalsIgnoreCase(args[0]) ||
-					  entry.getValue().getAlias().contains(args[0].toLowerCase()))) continue;
+				      entry.getValue().getAlias().contains(args[0].toLowerCase()))) continue;
 
 				if (Arrays.stream(args).anyMatch("help"::equalsIgnoreCase)) onHelp(entry, sender, args);
 				else entry.getValue().runExecute(sender, args);
@@ -111,8 +111,8 @@ public final class CommandManager implements CommandExecutor {
 			}
 
 			if (!match) {
-				sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_DONT_EXIST.toString(),
-														 String.format("/%s %s", label, Arrays.asList(args))));
+				sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_DONT_EXIST.toString(),
+				                                                 String.format("/%s %s", label, Arrays.asList(args))));
 
 				List<CommandHandler> commandHandlers = getPermissibleCommands(sender);
 
@@ -124,11 +124,11 @@ public final class CommandManager implements CommandExecutor {
 
 				dictionary.addAll(commandHandlers.stream()
 										  .map(handler -> handler.getArgument().getArguments()[0])
-										  .collect(Collectors.toSet()));
+						                  .collect(Collectors.toSet()));
 
-				String commandSuggestion = ChatUtil.generateCommandSuggestion(args[0], dictionary, label, null);
+				String commandSuggestion = GanglandChatUtil.generateCommandSuggestion(args[0], dictionary, label, null);
 
-				sender.sendMessage(ChatUtil.color(commandSuggestion));
+				sender.sendMessage(GanglandChatUtil.color(commandSuggestion));
 
 				return false;
 			}
@@ -155,7 +155,7 @@ public final class CommandManager implements CommandExecutor {
 			if (i < authors.size() - 1) authorStr.append(", ");
 		}
 
-		cs.sendMessage(color("&7Author" + ChatUtil.plural(authors.size()) + "&8: &b" + authorStr));
+		cs.sendMessage(color("&7Author" + GanglandChatUtil.plural(authors.size()) + "&8: &b" + authorStr));
 		cs.sendMessage(color("&7Version&8: &b" + pdf.getVersion()));
 		cs.sendMessage(color("&7Type &6/" + shortPrefix + " help &7to start."));
 		cs.sendMessage("");
@@ -167,9 +167,9 @@ public final class CommandManager implements CommandExecutor {
 		// Get the page number if it exists
 		int page = 1;
 		int index = IntStream.range(0, args.length - 1)
-							 .filter(i -> args[i].equalsIgnoreCase("help"))
-							 .findFirst()
-							 .orElse(-1);
+		                     .filter(i -> args[i].equalsIgnoreCase("help"))
+		                     .findFirst()
+		                     .orElse(-1);
 		if (index != -1) try {
 			page = Integer.parseInt(args[index + 1]);
 		} catch (NumberFormatException | ArrayIndexOutOfBoundsException ignored) {
@@ -179,7 +179,7 @@ public final class CommandManager implements CommandExecutor {
 		try {
 			entry.getValue().help(sender, page);
 		} catch (IllegalArgumentException exception) {
-			ChatUtil.errorMessage(exception.getMessage());
+			GanglandChatUtil.errorMessage(exception.getMessage());
 		}
 	}
 

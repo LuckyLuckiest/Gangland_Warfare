@@ -2,7 +2,7 @@ package me.luckyraven.file.configuration.weapon;
 
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.gadget.repair.RepairMessages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class GanglandRepairMessages implements RepairMessages {
@@ -16,10 +16,10 @@ public class GanglandRepairMessages implements RepairMessages {
 	@Override
 	@NotNull
 	public String getRepairComplete(int restored, int current, int max) {
-		return ChatUtil.color(Messages.REPAIR_COMPLETE.toString()
-		                                              .replace("%restored%", String.valueOf(restored))
-		                                              .replace("%current%", String.valueOf(current))
-		                                              .replace("%max%", String.valueOf(max)));
+		return GanglandChatUtil.color(Messages.REPAIR_COMPLETE.toString()
+		                                                      .replace("%restored%", String.valueOf(restored))
+		                                                      .replace("%current%", String.valueOf(current))
+		                                                      .replace("%max%", String.valueOf(max)));
 	}
 
 	@Override

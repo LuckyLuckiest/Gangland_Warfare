@@ -9,7 +9,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.Bukkit;
@@ -36,7 +36,7 @@ class BountyClearCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<player>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<player>"));
 		};
 	}
 
@@ -75,7 +75,7 @@ class BountyClearCommand extends SubArgument {
 
 			String string = Messages.BOUNTY_PLAYER_LIFT.toString();
 			String replace = string.replace("%amount%", Settings.formatDouble(amount))
-								   .replace("%player%", playerStr);
+			                       .replace("%player%", playerStr);
 
 			sender.sendMessage(replace);
 
@@ -97,7 +97,7 @@ class BountyClearCommand extends SubArgument {
 			} else {
 				String string1 = Messages.BOUNTY_LIFTED.toString();
 				String replace1 = string1.replace("%amount%", Settings.formatDouble(amount))
-										 .replace("%bounty%", Settings.formatDouble(userBounty.getAmount()));
+				                         .replace("%bounty%", Settings.formatDouble(userBounty.getAmount()));
 
 				user.sendMessage(replace1);
 			}

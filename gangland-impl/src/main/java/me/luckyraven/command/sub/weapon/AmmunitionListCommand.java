@@ -3,7 +3,7 @@ package me.luckyraven.command.sub.weapon;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.weapon.ammo.Ammunition;
@@ -29,7 +29,7 @@ class AmmunitionListCommand extends SubArgument {
 			AmmunitionManager ammunitionManager = gangland.getInitializer().getAmmunitionManager();
 			Set<String>       ammunition        = ammunitionManager.getAmmunitionKeys();
 
-			sender.sendMessage(ChatUtil.commandMessage("List of ammunition"));
+			sender.sendMessage(GanglandChatUtil.commandMessage("List of ammunition"));
 
 			Iterator<String> iterator = ammunition.iterator();
 			StringBuilder    builder  = new StringBuilder();
@@ -42,7 +42,7 @@ class AmmunitionListCommand extends SubArgument {
 				if (iterator.hasNext()) builder.append("&7, ");
 			}
 
-			sender.sendMessage(ChatUtil.color(builder.toString()));
+			sender.sendMessage(GanglandChatUtil.color(builder.toString()));
 		};
 	}
 

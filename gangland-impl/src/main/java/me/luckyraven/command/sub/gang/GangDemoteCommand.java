@@ -13,7 +13,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.Bukkit;
@@ -59,7 +59,7 @@ class GangDemoteCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -130,7 +130,7 @@ class GangDemoteCommand extends SubArgument {
 			if (offlineName != null && !offlineName.isEmpty() && offlinePlayer.isOnline()) {
 				Player onlinePlayer = offlinePlayer.getPlayer();
 				String message = Messages.GANG_DEMOTE_TARGET_SUCCESS.toString()
-																	.replace("%rank%", previousRank.getName());
+				                                                    .replace("%rank%", previousRank.getName());
 
 				// remove the previous rank attachments
 				User<Player> onlineUser = userManager.getUser(onlinePlayer);
@@ -141,8 +141,8 @@ class GangDemoteCommand extends SubArgument {
 			}
 
 			user.sendMessage(Messages.GANG_DEMOTE_PLAYER_SUCCESS.toString()
-																.replace("%player%", targetStr)
-																.replace("%rank%", previousRank.getName()));
+			                                                    .replace("%player%", targetStr)
+			                                                    .replace("%rank%", previousRank.getName()));
 			targetMember.setRank(previousRank);
 		}, sender -> GangKickCommand.getDescendantRanks(userManager, memberManager, gangManager, rankManager, sender));
 	}

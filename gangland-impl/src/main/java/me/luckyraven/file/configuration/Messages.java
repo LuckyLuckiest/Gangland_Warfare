@@ -1,6 +1,6 @@
 package me.luckyraven.file.configuration;
 
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.util.List;
@@ -347,11 +347,11 @@ public enum Messages {
 		String value;
 
 		switch (type) {
-			case PREFIX -> value = ChatUtil.prefixMessage(data);
-			case COMMAND -> value = ChatUtil.commandMessage(data);
-			case ERROR -> value = ChatUtil.errorMessage(data);
-			case INFORMATION -> value = ChatUtil.informationMessage(data);
-			case OTHER -> value = ChatUtil.color(data);
+			case PREFIX -> value = GanglandChatUtil.prefixMessage(data);
+			case COMMAND -> value = GanglandChatUtil.commandMessage(data);
+			case ERROR -> value = GanglandChatUtil.errorMessage(data);
+			case INFORMATION -> value = GanglandChatUtil.informationMessage(data);
+			case OTHER -> value = GanglandChatUtil.color(data);
 			default -> value = data;
 		}
 

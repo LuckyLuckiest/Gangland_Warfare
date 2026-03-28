@@ -4,7 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -29,8 +29,8 @@ class CopSpawnerCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			String message = ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(),
-												   "<set/remove/list/info/teleport>");
+			String message = GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(),
+			                                               "<set/remove/list/info/teleport>");
 			sender.sendMessage(message);
 		};
 	}

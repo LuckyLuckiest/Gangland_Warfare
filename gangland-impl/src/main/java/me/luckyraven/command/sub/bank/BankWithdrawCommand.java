@@ -10,7 +10,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.util.utilities.NumberUtil;
@@ -50,7 +50,7 @@ class BankWithdrawCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>"));
 		};
 	}
 
@@ -83,7 +83,7 @@ class BankWithdrawCommand extends SubArgument {
 			double inBank = bank.getEconomy().getBalance() - argAmount;
 
 			boolean processed = BankCommand.processMoney(user, bank, bank.getEconomy().getBalance(), argAmount, inBank,
-														 user.getEconomy().getBalance() + argAmount);
+			                                             user.getEconomy().getBalance() + argAmount);
 
 			if (!processed) return;
 

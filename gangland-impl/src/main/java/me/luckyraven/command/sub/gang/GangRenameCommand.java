@@ -10,7 +10,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -50,7 +50,7 @@ class GangRenameCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -80,9 +80,9 @@ class GangRenameCommand extends SubArgument {
 
 			for (User<Player> onlineMembers : gang.getOnlineMembers(userManager))
 				onlineMembers.getUser()
-							 .sendMessage(Messages.GANG_RENAME.toString()
-															  .replace("%old_gang%", oldName)
-															  .replace("%gang%", gang.getName()));
+				             .sendMessage(Messages.GANG_RENAME.toString()
+				                                              .replace("%old_gang%", oldName)
+				                                              .replace("%gang%", gang.getName()));
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);

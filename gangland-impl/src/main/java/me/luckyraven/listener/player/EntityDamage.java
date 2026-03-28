@@ -16,10 +16,10 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.events.user.UserBountyEvent;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.feature.Executor;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.timer.Timer;
+import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.util.utilities.ParticleUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
@@ -69,7 +69,7 @@ public class EntityDamage implements Listener {
 
 		// register when the entity dies
 		boolean isEntityDead = !(entity instanceof LivingEntity livingEntity &&
-								 livingEntity.getHealth() <= event.getFinalDamage());
+		                         livingEntity.getHealth() <= event.getFinalDamage());
 		if (isEntityDead) return;
 
 		// the current damager
@@ -101,7 +101,7 @@ public class EntityDamage implements Listener {
 			if (entityMarkManager.countsForWanted(deadPlayer)) {
 				if (Settings.isWantedKillComboEnabled()) {
 					killCombo.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
-										 Settings.getWantedKillComboResetAfter());
+					                     Settings.getWantedKillComboResetAfter());
 				} else {
 					handleWanted(damagerUser);
 				}
@@ -135,7 +135,7 @@ public class EntityDamage implements Listener {
 		// increase the wanted level for killing another player
 		if (Settings.isWantedKillComboEnabled()) {
 			killCombo.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
-								 Settings.getWantedKillComboResetAfter());
+			                     Settings.getWantedKillComboResetAfter());
 		} else handleWanted(damagerUser);
 	}
 
@@ -150,7 +150,7 @@ public class EntityDamage implements Listener {
 		// Record kill in combo system if enabled
 		if (Settings.isWantedKillComboEnabled()) {
 			killCombo.recordKill(attacker.getUser(), attacker.getWanted(), victim,
-								 Settings.getWantedKillComboResetAfter());
+			                     Settings.getWantedKillComboResetAfter());
 		} else handleWanted(attacker);
 
 		return false;
@@ -211,7 +211,7 @@ public class EntityDamage implements Listener {
 		// Start wanted timer if enabled
 		if (Settings.isWantedTimerEnabled() && wanted.isWanted()) {
 			Executor executor = new WantedExecutor(gangland, wantedEvent, damagerUser,
-												   gangland.getInitializer().getWantedSettings());
+			                                       gangland.getInitializer().getWantedSettings());
 			Timer timer = executor.createTimer();
 
 			timer.start(true);
@@ -230,7 +230,7 @@ public class EntityDamage implements Listener {
 		BountyEvent bountyEvent = new UserBountyEvent(true, damagerUser);
 		if (Settings.isBountyTimerEnabled() && bounty.getAmount() < Settings.getBountyTimerMax()) {
 			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser,
-												   gangland.getInitializer().getBountySettings());
+			                                       gangland.getInitializer().getBountySettings());
 			Timer timer = executor.createTimer();
 
 			timer.start(true);
@@ -238,7 +238,7 @@ public class EntityDamage implements Listener {
 
 		// Notify player with kill combo information
 		String format = String.format("&c&lWANTED LEVEL: &c%s &7(Bounty: &b+%s%.2f)", wanted.getLevelStars(),
-									  Settings.getMoneySymbol(), autoBounty);
+		                              Settings.getMoneySymbol(), autoBounty);
 		String message = ChatUtil.color(format);
 
 		damagerUser.sendMessage(message);
@@ -252,8 +252,8 @@ public class EntityDamage implements Listener {
 		BountyEvent bountyEvent = new UserBountyEvent(true, damagerUser, scaledBounty);
 
 		if (Settings.isBountyTimerEnabled() && userBounty.getAmount() < Settings.getBountyTimerMax()) {
-			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser, gangland.getInitializer()
-																							   .getBountySettings());
+			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser,
+			                                       gangland.getInitializer().getBountySettings());
 			Timer timer = executor.createTimer();
 
 			timer.start(true);

@@ -712,6 +712,7 @@ public final class Initializer {
 		commandManager.addCommand(new UncuffCommand(gangland));
 		commandManager.addCommand(new JailCommand(gangland));
 		commandManager.addCommand(new CopCommand(gangland));
+		commandManager.addCommand(new RespawnCommand(gangland));
 
 		// gang commands
 		if (Settings.isGangEnabled()) {

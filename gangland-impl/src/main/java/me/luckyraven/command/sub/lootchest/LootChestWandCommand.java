@@ -4,7 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.lootchest.LootChestWand;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -38,8 +38,8 @@ public class LootChestWandCommand extends CommandHandler {
 		String command = "/" + Gangland.SHORT_PREFIX + " wand edit";
 		String hold    = "&7Hold the wand and use '&e" + command + "' &7to configure settings.";
 
-		player.sendMessage(ChatUtil.color("&a&lLoot Chest Wand &7has been added to your inventory!",
-										  "&7Right-click on an allowed block to create a loot chest.", hold));
+		player.sendMessage(GanglandChatUtil.color("&a&lLoot Chest Wand &7has been added to your inventory!",
+		                                          "&7Right-click on an allowed block to create a loot chest.", hold));
 	}
 
 	@Override

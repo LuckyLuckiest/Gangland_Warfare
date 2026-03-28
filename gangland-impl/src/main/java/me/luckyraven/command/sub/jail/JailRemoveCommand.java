@@ -6,7 +6,7 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -28,7 +28,7 @@ class JailRemoveCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> sender.sendMessage(
-				ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
+				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
 	}
 
 	private void idArgument() {
@@ -45,7 +45,7 @@ class JailRemoveCommand extends SubArgument {
 			JailService jailService = gangland.getInitializer().getJailService();
 			jailService.removeJail(id);
 
-			sender.sendMessage(ChatUtil.commandMessage("&aJail &e" + id + "&a removed."));
+			sender.sendMessage(GanglandChatUtil.commandMessage("&aJail &e" + id + "&a removed."));
 		}, sender -> gangland.getInitializer().getJailService().getJailRegistry().getCells()
 				.stream().map(jail -> String.valueOf(jail.getId())).toList());
 

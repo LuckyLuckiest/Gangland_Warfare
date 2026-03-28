@@ -7,7 +7,7 @@ import me.luckyraven.copsncrooks.detainment.DetainmentRegistry;
 import me.luckyraven.copsncrooks.jail.Jail;
 import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.Bukkit;
@@ -42,12 +42,12 @@ class JailThrowCommand extends SubArgument {
 			Jail jail = detainmentRegistry.findEmptyJail();
 
 			if (jail == null) {
-				sender.sendMessage(ChatUtil.errorMessage("No empty jail found!"));
+				sender.sendMessage(GanglandChatUtil.errorMessage("No empty jail found!"));
 				return;
 			}
 
 			jailService.detainPlayer(jail.getId(), target.getUniqueId());
-			sender.sendMessage(ChatUtil.commandMessage("&aThrown &e" + target.getName() + "&a to jail."));
+			sender.sendMessage(GanglandChatUtil.commandMessage("&aThrown &e" + target.getName() + "&a to jail."));
 		};
 	}
 }

@@ -16,7 +16,7 @@ import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.service.InventoryRegistry;
 import me.luckyraven.scoreboard.Scoreboard;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.Placeholder;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -66,7 +66,7 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 		this.bounty      = new Bounty(Settings.getBountyEachKillValue(), Settings.getBountyTimerMultiple());
 		this.level       = new Level();
 		this.wanted      = new Wanted(plugin, Settings.getWantedLevelIncrement(),
-									  Settings.getWantedMaximumLevel());
+		                              Settings.getWantedMaximumLevel());
 		this.economy     = new EconomyHandler(this);
 		this.inventories = new HashSet<>();
 
@@ -127,7 +127,7 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 		if (!(user instanceof Player player)) return;
 
 		String placeholder = User.placeholder.convert(player, text);
-		String message     = ChatUtil.color(placeholder);
+		String message     = GanglandChatUtil.color(placeholder);
 
 		player.sendMessage(message);
 	}
@@ -241,11 +241,11 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 	@Override
 	public String toString() {
 		return String.format("User{data=%s,kd=%.2f,balance=%.2f,level=%d,bounty=%.2f,gangId=%d,permissions=%s}", user,
-							 getKillDeathRatio(), economy.getBalance(), level.getLevelValue(), bounty.getAmount(),
-							 gangId, permissionAttachment != null ?
-									 permissionAttachment.getPermissions().keySet()
-											 .stream().toList() :
-									 "NA");
+		                     getKillDeathRatio(), economy.getBalance(), level.getLevelValue(), bounty.getAmount(),
+		                     gangId, permissionAttachment != null ?
+		                             permissionAttachment.getPermissions().keySet()
+									 .stream().toList() :
+		                             "NA");
 	}
 
 }

@@ -3,12 +3,13 @@ package me.luckyraven.util;
 import me.luckyraven.Gangland;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.util.utilities.ChatUtil;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 
-public final class ChatUtil extends me.luckyraven.util.utilities.ChatUtil {
+public final class GanglandChatUtil extends ChatUtil {
 
-	private ChatUtil() {
+	private GanglandChatUtil() {
 		super();
 	}
 
@@ -38,7 +39,7 @@ public final class ChatUtil extends me.luckyraven.util.utilities.ChatUtil {
 
 	public static void sendToOperators(String permission, String message, Logger logger, boolean sendAsWarn) {
 		Bukkit.getServer()
-			  .getOnlinePlayers()
+		      .getOnlinePlayers()
 				.stream()
 				.filter(player -> permission == null || permission.isEmpty() || player.hasPermission(permission))
 				.forEach(player -> player.sendMessage(commandMessage(message)));
@@ -49,15 +50,15 @@ public final class ChatUtil extends me.luckyraven.util.utilities.ChatUtil {
 
 	public static String commandDesign(String command) {
 		return color(command.replace("/" + Gangland.SHORT_PREFIX, "&6/" + Gangland.SHORT_PREFIX + "&7")
-							.replace("<", "&5<&7")
-							.replace(">", "&5>&7")
-							.replace(" - ", " &c-&r ")
-							.replaceAll("[\\[\\],]", ""));
+		                    .replace("<", "&5<&7")
+		                    .replace(">", "&5>&7")
+		                    .replace(" - ", " &c-&r ")
+		                    .replaceAll("[\\[\\],]", ""));
 	}
 
 	public static String confirmCommand(String[] args) {
 		return color("&cYou need to confirm using &e/" + Gangland.SHORT_PREFIX + " " + String.join(" ", args) +
-					 " confirm &cto execute the command.");
+		             " confirm &cto execute the command.");
 	}
 
 	public static String setArguments(String arguments, String command) {

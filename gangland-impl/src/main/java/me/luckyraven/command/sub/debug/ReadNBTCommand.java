@@ -4,7 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.lootchest.LootChestWandTag;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.datastructure.JsonFormatter;
 import me.luckyraven.weapon.WeaponTag;
@@ -32,7 +32,7 @@ public final class ReadNBTCommand extends CommandHandler {
 		String        allNbt        = itemBuilder.toString();
 		JsonFormatter jsonFormatter = new JsonFormatter();
 
-		player.sendMessage(ChatUtil.color(jsonFormatter.formatToJson(allNbt, " ".repeat(3))));
+		player.sendMessage(GanglandChatUtil.color(jsonFormatter.formatToJson(allNbt, " ".repeat(3))));
 	}
 
 	@Override
@@ -65,7 +65,7 @@ public final class ReadNBTCommand extends CommandHandler {
 			}
 
 			if (presentTags.isEmpty()) {
-				player.sendMessage(ChatUtil.color("&cNo important NBT tags found on this item."));
+				player.sendMessage(GanglandChatUtil.color("&cNo important NBT tags found on this item."));
 				return;
 			}
 
@@ -74,7 +74,7 @@ public final class ReadNBTCommand extends CommandHandler {
 				output.append("&7- &e").append(entry.getKey()).append("&7: &f").append(entry.getValue()).append("\n");
 			}
 
-			player.sendMessage(ChatUtil.color(output.toString()));
+			player.sendMessage(GanglandChatUtil.color(output.toString()));
 		});
 
 		getArgument().addSubArgument(brief);

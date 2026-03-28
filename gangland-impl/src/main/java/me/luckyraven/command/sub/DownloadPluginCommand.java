@@ -4,7 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.DoubleArgument;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,18 +35,18 @@ public final class DownloadPluginCommand extends CommandHandler {
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		// check if there was an update
 		boolean newUpdate = !getGangland().getUpdateChecker()
-										  .getLatestVersion()
-										  .equalsIgnoreCase(getGangland().getDescription().getVersion());
+		                                  .getLatestVersion()
+		                                  .equalsIgnoreCase(getGangland().getDescription().getVersion());
 
 		containsUpdate.put(commandSender, newUpdate);
 
 		if (newUpdate) {
-			String message = ChatUtil.commandMessage(
+			String message = GanglandChatUtil.commandMessage(
 					"There is a new update, please type:\n&7/" + shortPrefix + " update download");
 
 			commandSender.sendMessage(message);
 		} else {
-			commandSender.sendMessage(ChatUtil.commandMessage("You are running the latest version."));
+			commandSender.sendMessage(GanglandChatUtil.commandMessage("You are running the latest version."));
 		}
 	}
 

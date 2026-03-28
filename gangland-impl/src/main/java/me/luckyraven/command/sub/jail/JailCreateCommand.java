@@ -7,7 +7,7 @@ import me.luckyraven.copsncrooks.jail.Jail;
 import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -33,9 +33,10 @@ class JailCreateCommand extends SubArgument {
 
 			JailService jailService = gangland.getInitializer().getJailService();
 			Jail jail = jailService.setJailLocation(player.getLocation(),
-													Settings.getJailMaxCapacity());
+			                                        Settings.getJailMaxCapacity());
 
-			sender.sendMessage(ChatUtil.commandMessage("&aJail &e" + jail.getId() + "&a created at your location."));
+			sender.sendMessage(
+					GanglandChatUtil.commandMessage("&aJail &e" + jail.getId() + "&a created at your location."));
 		};
 	}
 }

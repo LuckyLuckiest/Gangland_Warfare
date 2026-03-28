@@ -13,7 +13,7 @@ import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.color.Color;
@@ -74,8 +74,8 @@ class GangColorCommand extends SubArgument {
 
 			if (material == null) return;
 
-			String name = colorCode + ChatUtil.capitalize(colorName.toLowerCase().replace('_', ' ')) + " " +
-						  ChatUtil.capitalize(materialName.toLowerCase().replace('_', ' '));
+			String name = colorCode + GanglandChatUtil.capitalize(colorName.toLowerCase().replace('_', ' ')) + " " +
+			              GanglandChatUtil.capitalize(materialName.toLowerCase().replace('_', ' '));
 
 			ItemBuilder itemBuilder = new ItemBuilder(material).setDisplayName(name);
 
@@ -91,7 +91,7 @@ class GangColorCommand extends SubArgument {
 				InventoryUtil.aroundSlot(confirmGUI, 22, mat);
 
 				confirmGUI.setItem(49, XMaterial.GREEN_CONCRETE.get(), "&aConfirm", null, false, false,
-								   (player2, inv, it) -> {
+				                   (player2, inv, it) -> {
 									   User<Player> user = userManager.getUser(player2);
 
 									   if (user == null) return;
@@ -101,11 +101,12 @@ class GangColorCommand extends SubArgument {
 									   gang.setColor(colorName);
 
 									   // inform player
-									   String colorSelected = ChatUtil.color(colorCode + ChatUtil.capitalize(
-											   colorName.toLowerCase().replace('_', ' ')));
+									   String colorSelected = GanglandChatUtil.color(
+											   colorCode + GanglandChatUtil.capitalize(
+													   colorName.toLowerCase().replace('_', ' ')));
 									   player2.sendMessage(Messages.GANG_COLOR_SET.toString()
-																				  .replace("%color%",
-																						   colorSelected));
+					                                                              .replace("%color%",
+					                                                                       colorSelected));
 
 									   inv.close(player2);
 								   });
@@ -124,7 +125,7 @@ class GangColorCommand extends SubArgument {
 		}
 
 		colorGUI.setItem((6 - 1) * 9, XMaterial.RED_CONCRETE.get(), "&4Exit", null, false, false,
-						 (player1, inventory, item) -> inventory.close(player1));
+		                 (player1, inventory, item) -> inventory.close(player1));
 
 		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryLineName());
 

@@ -3,7 +3,7 @@ package me.luckyraven.command.argument.types;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -20,17 +20,17 @@ public class DoubleArgument extends Argument {
 	}
 
 	public DoubleArgument(JavaPlugin plugin, String[] arguments, Tree<Argument> tree,
-						  TriConsumer<Argument, CommandSender, String[]> action) {
+	                      TriConsumer<Argument, CommandSender, String[]> action) {
 		this(plugin, arguments, tree, action, "");
 	}
 
 	public DoubleArgument(JavaPlugin plugin, String argument, Tree<Argument> tree,
-						  TriConsumer<Argument, CommandSender, String[]> action, String permission) {
+	                      TriConsumer<Argument, CommandSender, String[]> action, String permission) {
 		this(plugin, new String[]{argument}, tree, action, permission);
 	}
 
 	public DoubleArgument(JavaPlugin plugin, String[] arguments, Tree<Argument> tree,
-						  TriConsumer<Argument, CommandSender, String[]> action, String permission) {
+	                      TriConsumer<Argument, CommandSender, String[]> action, String permission) {
 		super(plugin, arguments, tree, action, permission);
 		this.confirmed = false;
 	}
@@ -38,7 +38,7 @@ public class DoubleArgument extends Argument {
 	@Override
 	public void executeArgument(CommandSender sender, String[] args) {
 		if (!confirmed) {
-			sender.sendMessage(ChatUtil.informationMessage("To confirm the command re-type it again."));
+			sender.sendMessage(GanglandChatUtil.informationMessage("To confirm the command re-type it again."));
 			confirmed = true;
 			return;
 		}

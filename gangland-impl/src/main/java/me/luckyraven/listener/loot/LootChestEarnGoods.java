@@ -10,7 +10,7 @@ import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.lootchest.data.LootChestSession;
 import me.luckyraven.lootchest.events.lootchest.LootChestCooldownCompleteEvent;
 import me.luckyraven.lootchest.events.lootchest.LootChestOpenEvent;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -54,10 +54,10 @@ public class LootChestEarnGoods implements Listener {
 
 		// add experience and money
 		double money = random.nextDouble(Settings.getLootChestRewardMoneyMinimum(),
-										 Settings.getLootChestRewardMoneyMaximum());
+		                                 Settings.getLootChestRewardMoneyMaximum());
 
 		double exp = random.nextDouble(Settings.getLootChestRewardExperienceMinimum(),
-									   Settings.getLootChestRewardExperienceMaximum());
+		                               Settings.getLootChestRewardExperienceMaximum());
 
 		// deposit money
 		user.getEconomy().deposit(money);
@@ -68,10 +68,10 @@ public class LootChestEarnGoods implements Listener {
 		LevelUpEvent levelUpEvent = new UserLevelUpEvent(false, user, level);
 		level.addExperience(exp, levelUpEvent);
 
-		player.sendMessage(ChatUtil.prefixMessage("Opened a loot chest and earned:"));
-		player.sendMessage(ChatUtil.color(
-				String.format("&a%s +%s", Settings.getMoneySymbol(), Settings.formatDouble(money))));
-		player.sendMessage(ChatUtil.color(String.format("&aXP +%.2f", exp)));
+		player.sendMessage(GanglandChatUtil.prefixMessage("Opened a loot chest and earned:"));
+		player.sendMessage(GanglandChatUtil.color(
+				String.format("&c-> &a%s +%s", Settings.getMoneySymbol(), Settings.formatDouble(money))));
+		player.sendMessage(GanglandChatUtil.color(String.format("&c-> &aXP +%.2f", exp)));
 
 		for (String command : Settings.getLootChestRewardCommands()) {
 			if (command.isEmpty()) continue;

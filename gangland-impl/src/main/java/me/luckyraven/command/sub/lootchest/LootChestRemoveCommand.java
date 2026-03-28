@@ -6,7 +6,7 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.lootchest.data.LootChestData;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.Location;
@@ -35,7 +35,8 @@ class LootChestRemoveCommand extends SubArgument {
 			Block targetBlock = player.getTargetBlockExact(5);
 
 			if (targetBlock == null) {
-				player.sendMessage(ChatUtil.commandMessage("&cYou must be looking at a block within 5 blocks!"));
+				player.sendMessage(
+						GanglandChatUtil.commandMessage("&cYou must be looking at a block within 5 blocks!"));
 				return;
 			}
 
@@ -45,7 +46,7 @@ class LootChestRemoveCommand extends SubArgument {
 			Optional<LootChestData> chestOptional = manager.getChestAt(location);
 
 			if (chestOptional.isEmpty()) {
-				player.sendMessage(ChatUtil.commandMessage("&cNo loot chest found at that location!"));
+				player.sendMessage(GanglandChatUtil.commandMessage("&cNo loot chest found at that location!"));
 				return;
 			}
 
@@ -57,10 +58,10 @@ class LootChestRemoveCommand extends SubArgument {
 			// Remove from database via repository
 			GanglandDatabase ganglandDatabase = gangland.getInitializer().getGanglandDatabase();
 			var lootChestRepository = ganglandDatabase.getRepositoryRegistry()
-													  .getRepository(LootChestData.class);
+			                                          .getRepository(LootChestData.class);
 			lootChestRepository.delete(chestData);
 
-			player.sendMessage(ChatUtil.commandMessage("&aLoot chest removed successfully!"));
+			player.sendMessage(GanglandChatUtil.commandMessage("&aLoot chest removed successfully!"));
 		});
 	}
 

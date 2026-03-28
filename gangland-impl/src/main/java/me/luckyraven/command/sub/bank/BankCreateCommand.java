@@ -10,7 +10,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -53,7 +53,7 @@ class BankCreateCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -122,7 +122,7 @@ class BankCreateCommand extends SubArgument {
 			String replace = string.replace("%amount%", Settings.formatDouble(Settings.getBankCreateFee()));
 
 			user.sendMessage(replace);
-			user.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "create"}));
+			user.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"bank", "create"}));
 
 			confirmCreate.lock(sender, s -> {
 				CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
@@ -130,7 +130,7 @@ class BankCreateCommand extends SubArgument {
 
 					String string1 = Messages.BANK_CREATE_CONFIRM.toString();
 					String replace1 = string1.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
-																					 TimeMessages.getInstance()));
+					                                                                 TimeMessages.getInstance()));
 					s.sendMessage(replace1);
 				}, time -> {
 					confirmCreate.unlock(s);

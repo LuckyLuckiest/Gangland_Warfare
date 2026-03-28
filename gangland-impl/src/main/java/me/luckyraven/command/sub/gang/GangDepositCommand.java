@@ -13,7 +13,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.util.utilities.NumberUtil;
@@ -57,7 +57,7 @@ class GangDepositCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>"));
 		};
 	}
 
@@ -100,12 +100,12 @@ class GangDepositCommand extends SubArgument {
 				member.increaseContribution(contribution);
 				for (User<Player> gangUser : gangOnlineMembers) {
 					gangUser.getUser()
-							.sendMessage(Messages.GANG_MONEY_DEPOSIT.toString()
-																	.replace("%player%", player.getName())
-																	.replace("%amount%",
-																			 Settings.formatDouble(argAmount)));
+					        .sendMessage(Messages.GANG_MONEY_DEPOSIT.toString()
+					                                                .replace("%player%", player.getName())
+					                                                .replace("%amount%",
+					                                                         Settings.formatDouble(argAmount)));
 				}
-				user.sendMessage(ChatUtil.color("&a+" + contribution));
+				user.sendMessage(GanglandChatUtil.color("&a+" + contribution));
 			} catch (NumberFormatException exception) {
 				user.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
 			}

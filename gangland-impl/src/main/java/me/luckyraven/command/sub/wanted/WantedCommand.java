@@ -5,7 +5,7 @@ import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -34,8 +34,8 @@ public final class WantedCommand extends CommandHandler {
 
 		if (user == null) return;
 
-		user.sendMessage(ChatUtil.commandMessage("Wanted Status:"));
-		user.sendMessage(ChatUtil.color(user.getWanted().getLevelStars()));
+		user.sendMessage(GanglandChatUtil.commandMessage("Wanted Status:"));
+		user.sendMessage(GanglandChatUtil.color(user.getWanted().getLevelStars()));
 	}
 
 	@Override

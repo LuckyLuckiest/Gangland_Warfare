@@ -23,7 +23,7 @@ import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.persistence.database.query.QueryBuilder;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -100,7 +100,7 @@ class GangDeleteCommand extends SubArgument {
 
 			if (confirmDelete.isLocked(sender)) return;
 
-			user.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "delete"}));
+			user.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"gang", "delete"}));
 
 			Gang gang = gangManager.getGang(user.getGangId());
 			deleteGangName.put(user, new AtomicReference<>(gang.getName()));
@@ -111,7 +111,7 @@ class GangDeleteCommand extends SubArgument {
 
 					String string = Messages.GANG_REMOVE_CONFIRM.toString();
 					String replace = string.replace("%timer%", TimeUtil.formatTime(time.getPeriod(), true,
-																				   TimeMessages.getInstance()));
+					                                                               TimeMessages.getInstance()));
 					s.sendMessage(replace);
 				}, time -> {
 					confirmDelete.unlock(s);
@@ -211,9 +211,9 @@ class GangDeleteCommand extends SubArgument {
 				String userTableName   = userTable.getName();
 
 				List<Object[]> gangMemberRows = QueryBuilder.on(database, memberTableName)
-															.select("*")
-															.where("gang_id", gang.getId())
-															.executeAll();
+				                                            .select("*")
+				                                            .where("gang_id", gang.getId())
+				                                            .executeAll();
 
 				for (Object[] row : gangMemberRows) {
 					UUID uuid = UUID.fromString(String.valueOf(row[0]));
@@ -226,9 +226,9 @@ class GangDeleteCommand extends SubArgument {
 
 					// Fetch the offline member's current balance from the user table
 					Object[] userRow = QueryBuilder.on(database, userTableName)
-												   .select("balance")
-												   .where("uuid", uuid.toString())
-												   .executeOne();
+					                               .select("balance")
+					                               .where("uuid", uuid.toString())
+					                               .executeOne();
 					if (userRow.length == 0) continue;
 
 					double dbBalance = (double) userRow[0];
@@ -240,17 +240,17 @@ class GangDeleteCommand extends SubArgument {
 
 					// Update offline user balance
 					QueryBuilder.on(database, userTableName)
-								.update()
-								.set("balance", dbBalance + amount)
-								.where("uuid", uuid.toString())
-								.execute();
+					            .update()
+					            .set("balance", dbBalance + amount)
+					            .where("uuid", uuid.toString())
+					            .execute();
 
 					// Reset member's gang_id in DB
 					QueryBuilder.on(database, memberTableName)
-								.update()
-								.set("gang_id", -1)
-								.where("uuid", uuid.toString())
-								.execute();
+					            .update()
+					            .set("gang_id", -1)
+					            .where("uuid", uuid.toString())
+					            .execute();
 
 					// Reset in-memory member state
 					mem.resetGang();

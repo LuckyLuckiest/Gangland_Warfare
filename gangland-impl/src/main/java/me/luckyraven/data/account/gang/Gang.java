@@ -10,7 +10,7 @@ import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.features.level.Level;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.color.Color;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -161,8 +161,8 @@ public class Gang {
 
 	public String getDisplayNameString() {
 		return displayName.isEmpty() ?
-			   this.name :
-			   ChatUtil.color(this.displayName + "&c" + Settings.getGangDisplayNameChar());
+		       this.name :
+		       GanglandChatUtil.color(this.displayName + "&c" + Settings.getGangDisplayNameChar());
 	}
 
 	public String getAllyListString() {

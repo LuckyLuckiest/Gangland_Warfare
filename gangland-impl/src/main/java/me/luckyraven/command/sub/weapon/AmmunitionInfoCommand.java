@@ -5,7 +5,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.JsonFormatter;
 import me.luckyraven.util.datastructure.Tree;
@@ -40,7 +40,7 @@ class AmmunitionInfoCommand extends SubArgument {
 
 			// check if it was an ammunition
 			if (!Ammunition.isAmmunition(itemStack)) {
-				user.sendMessage(ChatUtil.prefixMessage("Not ammunition!"));
+				user.sendMessage(GanglandChatUtil.prefixMessage("Not ammunition!"));
 				return;
 			}
 
@@ -51,7 +51,7 @@ class AmmunitionInfoCommand extends SubArgument {
 			// display the necessary information
 			JsonFormatter jsonFormatter = new JsonFormatter();
 
-			user.sendMessage(jsonFormatter.formatToJson(ChatUtil.color(ammunition.toString()), " ".repeat(3)));
+			user.sendMessage(jsonFormatter.formatToJson(GanglandChatUtil.color(ammunition.toString()), " ".repeat(3)));
 		};
 	}
 

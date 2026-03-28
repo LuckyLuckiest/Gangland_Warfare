@@ -14,7 +14,7 @@ import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.util.timer.CountdownTimer;
@@ -81,7 +81,7 @@ class GangLeaveCommand extends SubArgument {
 
 			leaveConfirm.lock(sender, s -> {
 				CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
-					user.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "leave"}));
+					user.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"gang", "leave"}));
 				}, null, time -> {
 					leaveConfirm.unlock(s);
 					leaveTimer.remove(user);

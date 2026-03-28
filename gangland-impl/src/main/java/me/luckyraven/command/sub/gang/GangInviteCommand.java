@@ -14,7 +14,7 @@ import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.util.timer.CountdownTimer;
@@ -69,7 +69,7 @@ class GangInviteCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 
 		};
 	}
@@ -100,7 +100,7 @@ class GangInviteCommand extends SubArgument {
 			List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
 			for (User<Player> onUser : gangOnlineMembers) {
 				String playerJoined = Messages.GANG_PLAYER_JOINED.toString()
-																 .replace("%player%", user.getUser().getName());
+				                                                 .replace("%player%", user.getUser().getName());
 
 				onUser.sendMessage(playerJoined);
 			}
@@ -153,7 +153,7 @@ class GangInviteCommand extends SubArgument {
 			CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
 				user.sendMessage(Messages.GANG_INVITE_PLAYER.toString().replace("%player%", targetStr));
 				String replace = Messages.GANG_INVITE_TARGET.toString()
-															.replace("%gang%", gang.getDisplayNameString());
+				                                            .replace("%gang%", gang.getDisplayNameString());
 				targetUser.sendMessage(replace);
 			}, null, time -> {
 				playerInvite.remove(targetUser);

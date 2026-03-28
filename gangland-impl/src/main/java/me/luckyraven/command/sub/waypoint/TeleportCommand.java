@@ -13,7 +13,7 @@ import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.teleportation.WaypointTeleport;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.utilities.TimeUtil;
@@ -129,11 +129,11 @@ public final class TeleportCommand extends CommandHandler {
 			timer.start(true);
 
 			String teleportationCost = "The teleportation costs &a" + Settings.getMoneySymbol() +
-									   waypoint.getCost() + "&7.";
+			                           waypoint.getCost() + "&7.";
 			String confirmationMessage = "&7To confirm the command re-type it again.";
 
-			user.sendMessage(ChatUtil.commandMessage(teleportationCost));
-			user.sendMessage(ChatUtil.color(confirmationMessage));
+			user.sendMessage(GanglandChatUtil.commandMessage(teleportationCost));
+			user.sendMessage(GanglandChatUtil.color(confirmationMessage));
 		} else {
 			if (user.getEconomy().getBalance() < waypoint.getCost()) {
 				user.sendMessage(Messages.CANNOT_TAKE_MORE_THAN_BALANCE.toString());

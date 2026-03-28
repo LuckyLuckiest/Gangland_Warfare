@@ -13,7 +13,7 @@ import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -51,11 +51,11 @@ public final class BalanceCommand extends CommandHandler {
 
 			if (user == null) return;
 
-			user.sendMessage(ChatUtil.color("&6" + player.getName() + "&7 balance:"));
-			user.sendMessage(ChatUtil.color(
+			user.sendMessage(GanglandChatUtil.color("&6" + player.getName() + "&7 balance:"));
+			user.sendMessage(GanglandChatUtil.color(
 					"&a" + Settings.getMoneySymbol() + Settings.formatDouble(user.getEconomy().getBalance())));
 		} else {
-			commandSender.sendMessage(ChatUtil.informationMessage("Balance are for registered users"));
+			commandSender.sendMessage(GanglandChatUtil.informationMessage("Balance are for registered users"));
 		}
 	}
 
@@ -68,8 +68,8 @@ public final class BalanceCommand extends CommandHandler {
 
 			if (user != null) {
 				sender.sendMessage(Messages.BALANCE_TARGET.toString()
-														  .replace("%target%", target)
-														  .replace("%balance%", Settings.formatDouble(
+				                                          .replace("%target%", target)
+				                                          .replace("%balance%", Settings.formatDouble(
 																  user.getEconomy().getBalance())));
 				return;
 			}
@@ -88,7 +88,7 @@ public final class BalanceCommand extends CommandHandler {
 				// get only the uuids
 				Map<UUID, Double> uuids = usersData.stream()
 						.collect(Collectors.toMap(objects -> UUID.fromString(String.valueOf(objects[0])),
-												  objects -> (double) objects[1]));
+						                          objects -> (double) objects[1]));
 
 				// iterate over all uuids and check if the name is similar to target
 				boolean found = false;
@@ -102,9 +102,9 @@ public final class BalanceCommand extends CommandHandler {
 					found = true;
 
 					sender.sendMessage(Messages.BALANCE_TARGET.toString()
-															  .replace("%target%", target)
-															  .replace("%balance%",
-																	   Settings.formatDouble(uuids.get(uuid))));
+					                                          .replace("%target%", target)
+					                                          .replace("%balance%",
+					                                                   Settings.formatDouble(uuids.get(uuid))));
 
 					break;
 				}
@@ -128,7 +128,7 @@ public final class BalanceCommand extends CommandHandler {
 				// get only the uuids
 				Map<UUID, Double> uuids = usersData.stream()
 						.collect(Collectors.toMap(objects -> UUID.fromString(String.valueOf(objects[0])),
-												  objects -> (double) objects[1]));
+						                          objects -> (double) objects[1]));
 
 				for (UUID uuid : uuids.keySet()) {
 					OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);

@@ -9,7 +9,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -39,7 +39,7 @@ class WaypointTypeCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<value>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<value>"));
 		};
 	}
 
@@ -74,8 +74,8 @@ class WaypointTypeCommand extends SubArgument {
 					if (i < waypointTypes.length - 1) builder.append(", ");
 				}
 
-				user.sendMessage(ChatUtil.errorMessage("Invalid Waypoint Type. Select from the list:"),
-								 ChatUtil.color("&7" + builder));
+				user.sendMessage(GanglandChatUtil.errorMessage("Invalid Waypoint Type. Select from the list:"),
+				                 GanglandChatUtil.color("&7" + builder));
 
 				type = waypoint.getType();
 			}

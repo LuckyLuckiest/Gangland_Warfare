@@ -16,7 +16,7 @@ import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.persistence.database.query.QueryBuilder;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.util.timer.CountdownTimer;
@@ -50,7 +50,7 @@ class WaypointDeleteCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
 		};
 	}
 
@@ -84,7 +84,7 @@ class WaypointDeleteCommand extends SubArgument {
 			});
 
 			// inform the player
-			sender.sendMessage(ChatUtil.commandMessage("Removed the waypoint!"));
+			sender.sendMessage(GanglandChatUtil.commandMessage("Removed the waypoint!"));
 
 			String format = String.format("%s.waypoint.%d", Gangland.FULL_PREFIX, waypoint.getUsedId());
 
@@ -132,7 +132,7 @@ class WaypointDeleteCommand extends SubArgument {
 			deleteWaypointId.put(sender, verifiedId);
 
 			// notify the player to confirm the waypoint
-			sender.sendMessage(ChatUtil.confirmCommand(new String[]{"waypoint", "create"}));
+			sender.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"waypoint", "create"}));
 
 			confirm.lock(sender, s -> {
 				CountdownTimer timer = new CountdownTimer(gangland, 60, null, null, time -> {

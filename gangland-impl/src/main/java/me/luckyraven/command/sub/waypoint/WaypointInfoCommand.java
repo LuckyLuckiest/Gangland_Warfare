@@ -8,7 +8,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -43,18 +43,18 @@ class WaypointInfoCommand extends SubArgument {
 			}
 
 			String type = String.format("&7Type:&b %s%s", waypoint.getType().getName(),
-										waypoint.getType() == Waypoint.WaypointType.GANG ?
-										", Gang linked: " + waypoint.getGangId() :
-										"");
+			                            waypoint.getType() == Waypoint.WaypointType.GANG ?
+			                            ", Gang linked: " + waypoint.getGangId() :
+			                            "");
 
 			String[] info = {String.format("&8[&a%s&8]&7 info:", waypoint.getName()), "&7ID:&b " + waypoint.getUsedId(),
-							 "&7X:&b " + waypoint.getX(), "&7Y:&b " + waypoint.getY(), "&7Z:&b " + waypoint.getZ(),
-							 "&7Yaw:&b " + waypoint.getYaw(), "&7Pitch:&b " + waypoint.getPitch(),
-							 "&7World:&b " + waypoint.getWorld(), type, "&7Timer:&b " + waypoint.getTimer(),
-							 "&7Cooldown:&b " + waypoint.getCooldown(), "&7Shield:&b " + waypoint.getShield(),
-							 "&7Cost:&b " + waypoint.getCost(), "&7Radius:&b " + waypoint.getRadius()};
+			                 "&7X:&b " + waypoint.getX(), "&7Y:&b " + waypoint.getY(), "&7Z:&b " + waypoint.getZ(),
+			                 "&7Yaw:&b " + waypoint.getYaw(), "&7Pitch:&b " + waypoint.getPitch(),
+			                 "&7World:&b " + waypoint.getWorld(), type, "&7Timer:&b " + waypoint.getTimer(),
+			                 "&7Cooldown:&b " + waypoint.getCooldown(), "&7Shield:&b " + waypoint.getShield(),
+			                 "&7Cost:&b " + waypoint.getCost(), "&7Radius:&b " + waypoint.getRadius()};
 
-			user.sendMessage(ChatUtil.color(info));
+			user.sendMessage(GanglandChatUtil.color(info));
 		};
 	}
 

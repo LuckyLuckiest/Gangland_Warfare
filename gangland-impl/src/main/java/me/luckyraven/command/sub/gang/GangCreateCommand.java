@@ -15,7 +15,7 @@ import me.luckyraven.data.economy.EconomyException;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -66,7 +66,7 @@ class GangCreateCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -156,7 +156,7 @@ class GangCreateCommand extends SubArgument {
 			String replace = string.replace("%amount%", Settings.formatDouble(Settings.getGangCreateFee()));
 
 			user.sendMessage(replace);
-			user.sendMessage(ChatUtil.confirmCommand(new String[]{"gang", "create"}));
+			user.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"gang", "create"}));
 
 			confirmCreate.lock(sender, s -> {
 				CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {

@@ -9,7 +9,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.weapon.WeaponLoader;
 import me.luckyraven.persistence.FileHandler;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.weapon.Weapon;
@@ -41,7 +41,7 @@ class WeaponGiveCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> sender.sendMessage(
-				ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
+				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 	}
 
 	private void weaponGive() {
@@ -80,7 +80,7 @@ class WeaponGiveCommand extends SubArgument {
 			try {
 				weaponAmount = Integer.parseInt(args[3]);
 			} catch (NumberFormatException exception) {
-				user.sendMessage(ChatUtil.commandMessage(Messages.MUST_BE_NUMBERS.toString()));
+				user.sendMessage(GanglandChatUtil.commandMessage(Messages.MUST_BE_NUMBERS.toString()));
 				return;
 			}
 
@@ -89,7 +89,7 @@ class WeaponGiveCommand extends SubArgument {
 			if (giveWeapon) {
 				String receivedWeapon = Messages.RECEIVED_WEAPON.toString();
 				String replace = receivedWeapon.replace("%weapon%", weaponName)
-											   .replace("%amount%", String.valueOf(weaponAmount));
+				                               .replace("%amount%", String.valueOf(weaponAmount));
 				user.sendMessage(replace);
 			} else {
 				String invalidWeapon = Messages.INVALID_WEAPON.toString();

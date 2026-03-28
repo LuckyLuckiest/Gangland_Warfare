@@ -6,7 +6,7 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.Location;
@@ -29,7 +29,7 @@ class CopSpawnerRemoveCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
 		};
 	}
 
@@ -53,7 +53,7 @@ class CopSpawnerRemoveCommand extends SubArgument {
 
 			copSpawnManager.removeSpawner(id);
 
-			sender.sendMessage(ChatUtil.commandMessage("&aCop spawner &e" + id + "&a removed."));
+			sender.sendMessage(GanglandChatUtil.commandMessage("&aCop spawner &e" + id + "&a removed."));
 		}, sender -> gangland.getInitializer().getCopSpawnManager().getSpawnerIds()
 				.stream().map(String::valueOf).toList());
 

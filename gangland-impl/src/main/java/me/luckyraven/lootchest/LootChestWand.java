@@ -9,8 +9,8 @@ import me.luckyraven.inventory.util.InventoryUtil;
 import me.luckyraven.lootchest.data.LootChestData;
 import me.luckyraven.lootchest.data.LootTable;
 import me.luckyraven.lootchest.data.LootTier;
-import me.luckyraven.util.ChatUtil;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.utilities.ChatUtil;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -59,18 +59,18 @@ public class LootChestWand {
 		ItemBuilder itemBuilder = new ItemBuilder(material);
 
 		List<String> lore = List.of("&7Left-click to configure.", "&7Right-click on a block to",
-									"&7create a loot chest.", "", "&eStatus: &cNot Configured", "",
-									"&7Or use &e/" + prefix + " lootchest edit", "&7while holding to configure.");
+		                            "&7create a loot chest.", "", "&eStatus: &cNot Configured", "",
+		                            "&7Or use &e/" + prefix + " lootchest edit", "&7while holding to configure.");
 		return itemBuilder.setDisplayName("&6&lLoot Chest Wand")
-						  .setLore(lore)
-						  .addTag(WAND_KEY.toString(), true)
-						  .addTag(CONFIGURED.toString(), false)
-						  .addTag(LOOT_TABLE_ID.toString(), "")
-						  .addTag(TIER_ID.toString(), "")
-						  .addTag(RESPAWN_TIME.toString(), 300L)
-						  .addTag(INVENTORY_SIZE.toString(), 27)
-						  .addTag(DISPLAY_NAME.toString(), "&eLoot Chest")
-						  .build();
+		                  .setLore(lore)
+		                  .addTag(WAND_KEY.toString(), true)
+		                  .addTag(CONFIGURED.toString(), false)
+		                  .addTag(LOOT_TABLE_ID.toString(), "")
+		                  .addTag(TIER_ID.toString(), "")
+		                  .addTag(RESPAWN_TIME.toString(), 300L)
+		                  .addTag(INVENTORY_SIZE.toString(), 27)
+		                  .addTag(DISPLAY_NAME.toString(), "&eLoot Chest")
+		                  .build();
 	}
 
 	public void openConfigInventory(Player player, Fill fill) {
@@ -117,8 +117,8 @@ public class LootChestWand {
 		var finalDisplayName = currentDisplayName;
 		var lore2            = List.of("&7Current: " + currentDisplayName, "", "&aClick to set display name");
 		var displayNameItem = new ItemBuilder(Material.NAME_TAG).setDisplayName("&d&lDisplay Name")
-																.setLore(lore2)
-																.build();
+		                                                        .setLore(lore2)
+		                                                        .build();
 
 		inventory.setItem(15, new ItemBuilder(displayNameItem), false, (p, inv, builder) -> {
 			p.closeInventory();
@@ -127,7 +127,7 @@ public class LootChestWand {
 
 		// Inventory Size (slot 29)
 		var lore3 = List.of("&7Current: &a" + currentInvSize, "", "&aLeft-click to increase",
-							"&cRight-click to decrease");
+		                    "&cRight-click to decrease");
 		var invSizeItem = new ItemBuilder(Material.CHEST).setDisplayName("&6&lInventory Size").setLore(lore3).build();
 
 		inventory.setItem(29, new ItemBuilder(invSizeItem), false, (p, inv, builder) -> {
@@ -138,20 +138,20 @@ public class LootChestWand {
 
 		// Respawn Time (slot 31)
 		var lore4 = List.of("&7Current: &a" + getRespawnTimeFromWand(heldItem) + " seconds", "",
-							"&aClick to set respawn time");
+		                    "&aClick to set respawn time");
 		var respawnTimeItem = new ItemBuilder(Material.CLOCK).setDisplayName("&c&lRespawn Time").setLore(lore4).build();
 
 		inventory.setItem(31, new ItemBuilder(respawnTimeItem), false, (p, inv, builder) -> {
 			p.closeInventory();
 			openAnvilInput(p, "Respawn Time (seconds)", String.valueOf(getRespawnTimeFromWand(heldItem)),
-						   RESPAWN_TIME.toString(), fill);
+			               RESPAWN_TIME.toString(), fill);
 		});
 
 		// Confirm Button (slot 40)
 		var lore5 = List.of("&7Click to save settings", "&7to your wand.");
 		var confirmItem = new ItemBuilder(XMaterial.LIME_WOOL.get()).setDisplayName("&a&lSave Configuration")
-																	.setLore(lore5)
-																	.build();
+		                                                            .setLore(lore5)
+		                                                            .build();
 
 		inventory.setItem(40, new ItemBuilder(confirmItem), false, (p, inv, builder) -> {
 			p.closeInventory();
@@ -186,16 +186,16 @@ public class LootChestWand {
 
 		// Create chest data
 		var chestData = LootChestData.builder()
-									 .id(UUID.randomUUID())
-									 .location(location)
-									 .lootTableId(lootTableId)
-									 .tier(tier)
-									 .respawnTime(respawnTime)
-									 .inventorySize(invSize)
-									 .displayName(displayName)
-									 .lastOpened(0L)
-									 .isLooted(false)
-									 .build();
+		                             .id(UUID.randomUUID())
+		                             .location(location)
+		                             .lootTableId(lootTableId)
+		                             .tier(tier)
+		                             .respawnTime(respawnTime)
+		                             .inventorySize(invSize)
+		                             .displayName(displayName)
+		                             .lastOpened(0L)
+		                             .isLooted(false)
+		                             .build();
 
 		// Register with manager
 		manager.registerChest(chestData);
@@ -204,7 +204,8 @@ public class LootChestWand {
 		player.sendMessage(ChatUtil.color(
 				"&7Location: &f" + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ()));
 		player.sendMessage(ChatUtil.color("&7Loot Table: &f" + lootTableId));
-		player.sendMessage(ChatUtil.color("&7Tier: &f" + (tierId == null || tierId.isEmpty() ? "None" : tierId)));
+		player.sendMessage(
+				ChatUtil.color("&7Tier: &f" + (tierId == null || tierId.isEmpty() ? "None" : tierId)));
 	}
 
 	private void openLootTableSelection(Player player, Fill fill) {
@@ -217,11 +218,11 @@ public class LootChestWand {
 		int slot = 0;
 		for (LootTable table : lootTables) {
 			var lore = List.of("&7ID: &f" + table.getId(), "&7Items: &f" + table.getItemReferences().size(),
-							   "&7Min Items: &f" + table.getMinItems(), "&7Max Items: &f" + table.getMaxItems(), "",
-							   "&aClick to select");
+			                   "&7Min Items: &f" + table.getMinItems(), "&7Max Items: &f" + table.getMaxItems(), "",
+			                   "&aClick to select");
 			var item = new ItemBuilder(Material.PAPER).setDisplayName("&e" + table.getDisplayName())
-													  .setLore(lore)
-													  .build();
+			                                          .setLore(lore)
+			                                          .build();
 
 			String tableId = table.getId();
 			inventory.setItem(slot++, new ItemBuilder(item), false, (p, inv, builder) -> {
@@ -262,10 +263,10 @@ public class LootChestWand {
 		int slot = 1;
 		for (LootTier tier : tiers) {
 			var lore1 = List.of("&7ID: &f" + tier.id(), "&7Level: &f" + tier.level(),
-								"&7Unlock: &f" + tier.unlockRequirement().name(), "", "&aClick to select");
+			                    "&7Unlock: &f" + tier.unlockRequirement().name(), "", "&aClick to select");
 			var item = new ItemBuilder(Material.DIAMOND).setDisplayName("&b" + tier.displayName())
-														.setLore(lore1)
-														.build();
+			                                            .setLore(lore1)
+			                                            .build();
 
 			String tierId = tier.id();
 
@@ -301,10 +302,12 @@ public class LootChestWand {
 					long respawnTime = Long.parseLong(input);
 					setWandNBT(stateSnapshot.getPlayer(), nbtKey, respawnTime);
 					stateSnapshot.getPlayer()
-								 .sendMessage(ChatUtil.color("&aRespawn time set to: &e" + respawnTime + " seconds"));
+					             .sendMessage(
+										 ChatUtil.color(
+												 "&aRespawn time set to: &e" + respawnTime + " seconds"));
 				} catch (NumberFormatException e) {
 					stateSnapshot.getPlayer()
-								 .sendMessage(ChatUtil.color("&cInvalid number! Please enter a valid number."));
+					             .sendMessage(ChatUtil.color("&cInvalid number! Please enter a valid number."));
 				}
 			} else {
 				setWandNBT(stateSnapshot.getPlayer(), nbtKey, input);

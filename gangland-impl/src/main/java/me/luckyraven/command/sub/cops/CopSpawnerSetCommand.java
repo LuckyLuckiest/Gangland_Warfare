@@ -5,7 +5,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -32,7 +32,7 @@ class CopSpawnerSetCommand extends SubArgument {
 			CopSpawnManager copSpawnManager = gangland.getInitializer().getCopSpawnManager();
 			copSpawnManager.setSpawnerLocation(player.getLocation());
 
-			sender.sendMessage(ChatUtil.commandMessage("&aCop spawner set at your location."));
+			sender.sendMessage(GanglandChatUtil.commandMessage("&aCop spawner set at your location."));
 		};
 	}
 }

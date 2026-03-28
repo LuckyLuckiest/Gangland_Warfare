@@ -8,7 +8,7 @@ import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -35,7 +35,7 @@ class RankInfoCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -63,8 +63,8 @@ class RankInfoCommand extends SubArgument {
 
 			String string = Messages.RANK_INFO_PRIMARY.toString();
 			String replace = string.replace("%rank%", rank.getName())
-								   .replace("%id%", String.valueOf(rank.getUsedId()))
-								   .replace("%parent%", parentBuilder.toString());
+			                       .replace("%id%", String.valueOf(rank.getUsedId()))
+			                       .replace("%parent%", parentBuilder.toString());
 
 			sender.sendMessage(replace);
 

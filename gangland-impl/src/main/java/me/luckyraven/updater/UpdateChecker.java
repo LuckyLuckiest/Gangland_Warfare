@@ -3,7 +3,7 @@ package me.luckyraven.updater;
 import lombok.CustomLog;
 import lombok.Getter;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -134,14 +134,14 @@ public class UpdateChecker {
 		String currentVersion = plugin.getDescription().getVersion();
 
 		return String.format("The current version is %s, please update to the newest version available: %s",
-							 currentVersion, newVersion);
+		                     currentVersion, newVersion);
 	}
 
 	private void task() {
 		String updateMessage = getUpdateMessage();
 
 		if (updateAvailable()) {
-			ChatUtil.sendToOperators(checkPermission, updateMessage, log, true);
+			GanglandChatUtil.sendToOperators(checkPermission, updateMessage, log, true);
 			if (Settings.isUpdaterAutoUpdate()) {
 				downloadLatestVersion();
 			}
@@ -150,7 +150,7 @@ public class UpdateChecker {
 
 		if (checked.get()) return;
 
-		ChatUtil.sendToOperators(checkPermission, updateMessage);
+		GanglandChatUtil.sendToOperators(checkPermission, updateMessage);
 		checked.set(true);
 	}
 

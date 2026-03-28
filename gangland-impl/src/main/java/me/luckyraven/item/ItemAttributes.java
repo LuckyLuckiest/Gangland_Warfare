@@ -1,6 +1,6 @@
 package me.luckyraven.item;
 
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.color.Color;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -19,14 +19,14 @@ public abstract class ItemAttributes implements ItemConverter {
 		if (meta == null) return;
 
 		if (attributes.containsKey("name")) {
-			String name = ChatUtil.color(attributes.get("name"));
+			String name = GanglandChatUtil.color(attributes.get("name"));
 
 			meta.setDisplayName(name);
 		}
 
 		if (attributes.containsKey("lore")) {
 			var lore      = attributes.get("lore");
-			var loreLines = Arrays.stream(lore.split(",")).map(String::trim).map(ChatUtil::color).toList();
+			var loreLines = Arrays.stream(lore.split(",")).map(String::trim).map(GanglandChatUtil::color).toList();
 
 			meta.setLore(loreLines);
 		}

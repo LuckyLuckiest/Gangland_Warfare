@@ -8,7 +8,7 @@ import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -40,7 +40,7 @@ class RankCreateCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -76,7 +76,7 @@ class RankCreateCommand extends SubArgument {
 
 			if (confirmCreate.isLocked(sender)) return;
 
-			sender.sendMessage(ChatUtil.confirmCommand(new String[]{"rank", "create"}));
+			sender.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"rank", "create"}));
 			createRankName.put(sender, new AtomicReference<>(args[2]));
 
 			confirmCreate.lock(sender, s -> {
@@ -85,7 +85,7 @@ class RankCreateCommand extends SubArgument {
 
 					String string = Messages.RANK_CREATE_CONFIRM.toString();
 					String replace = string.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
-																				   TimeMessages.getInstance()));
+					                                                               TimeMessages.getInstance()));
 
 					s.sendMessage(replace);
 				}, time -> {

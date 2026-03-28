@@ -10,7 +10,7 @@ import me.luckyraven.events.level.LevelUpEvent;
 import me.luckyraven.events.user.UserLevelUpEvent;
 import me.luckyraven.features.level.Level;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -60,21 +60,21 @@ public final class LevelCommand extends CommandHandler {
 		int  incompleteBars = totalBars - completeBars;
 
 		for (int i = 0; i < completeBars; i++)
-			 builder.append(Messages.LEVEL_COMPLETE_COLOR).append("&l").append(bar);
+		     builder.append(Messages.LEVEL_COMPLETE_COLOR).append("&l").append(bar);
 
 		for (int i = 0; i < incompleteBars; i++)
-			 builder.append(Messages.LEVEL_INCOMPLETE_COLOR).append("&l").append(bar);
+		     builder.append(Messages.LEVEL_INCOMPLETE_COLOR).append("&l").append(bar);
 
-		String progressBar = ChatUtil.color(builder.toString());
+		String progressBar = GanglandChatUtil.color(builder.toString());
 
 		String stats = Messages.LEVEL_STATS.toString()
-										   .replace("%player%", player.getName())
-										   .replace("%level%", currentLevel)
-										   .replace("%max_level%", maxLevel)
-										   .replace("%experience%", experience)
-										   .replace("%required_experience%", requiredExperience)
-										   .replace("%percentage%", percentageStr)
-										   .replace("%progress_bar%", progressBar);
+		                                   .replace("%player%", player.getName())
+		                                   .replace("%level%", currentLevel)
+		                                   .replace("%max_level%", maxLevel)
+		                                   .replace("%experience%", experience)
+		                                   .replace("%required_experience%", requiredExperience)
+		                                   .replace("%percentage%", percentageStr)
+		                                   .replace("%progress_bar%", progressBar);
 		user.sendMessage(stats);
 	}
 
@@ -84,15 +84,15 @@ public final class LevelCommand extends CommandHandler {
 
 		String[] expArr = {"exp", "experience"};
 		Argument experience = new Argument(getGangland(), expArr, getArgumentTree(), (argument, sender, args) -> {
-			ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<add/remove>");
+			GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<add/remove>");
 		}, getPermission() + ".experience");
 
 		Argument expAdd = new Argument(getGangland(), "add", getArgumentTree(), (argument, sender, args) -> {
-			ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>");
+			GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>");
 		}, experience.getPermission() + ".add");
 
 		Argument expRemove = new Argument(getGangland(), "remove", getArgumentTree(), (argument, sender, args) -> {
-			ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>");
+			GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>");
 		}, experience.getPermission() + ".remove");
 
 		Argument expOptional = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
@@ -121,8 +121,8 @@ public final class LevelCommand extends CommandHandler {
 
 			String type = args[2].toUpperCase();
 			user.sendMessage(Messages.valueOf("LEVEL_EXP_" + type)
-									 .toString()
-									 .replace("%experience%", String.valueOf(argAmount)));
+			                         .toString()
+			                         .replace("%experience%", String.valueOf(argAmount)));
 		}, sender -> List.of("<amount>"));
 
 		expAdd.addSubArgument(expOptional);
@@ -135,11 +135,11 @@ public final class LevelCommand extends CommandHandler {
 		getArgument().addPermission(levelPerm);
 
 		Argument levelAdd = new Argument(getGangland(), "add", getArgumentTree(), (argument, sender, args) -> {
-			ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>");
+			GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>");
 		}, levelPerm + ".add");
 
 		Argument levelRemove = new Argument(getGangland(), "remove", getArgumentTree(), (argument, sender, args) -> {
-			ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>");
+			GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<amount>");
 		}, levelPerm + ".remove");
 
 		Argument levelOptional = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
@@ -191,10 +191,10 @@ public final class LevelCommand extends CommandHandler {
 			String requiredExperience = String.format("%.2f", requiredExp);
 
 			String message = Messages.LEVEL_NEXT.toString()
-												.replace("%level%", currentLevel)
-												.replace("%max_level%", maxLevel)
-												.replace("%experience%", exp)
-												.replace("%required_experience%", requiredExperience);
+			                                    .replace("%level%", currentLevel)
+			                                    .replace("%max_level%", maxLevel)
+			                                    .replace("%experience%", exp)
+			                                    .replace("%required_experience%", requiredExperience);
 			user.sendMessage(message);
 		});
 

@@ -6,7 +6,7 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -31,7 +31,7 @@ class CopSpawnerInfoCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
 		};
 	}
 
@@ -61,8 +61,8 @@ class CopSpawnerInfoCommand extends SubArgument {
 
 			String tpCommand = String.format("/%s cop spawner teleport %d", Gangland.SHORT_PREFIX, id);
 
-			var message = new ComponentBuilder(ChatUtil.color("&7&lCop spawner &e(&b" + id + "&e)&7: "))
-					.append(ChatUtil.color("&e(&btp&e)"))
+			var message = new ComponentBuilder(GanglandChatUtil.color("&7&lCop spawner &e(&b" + id + "&e)&7: "))
+					.append(GanglandChatUtil.color("&e(&btp&e)"))
 					.event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, tpCommand))
 					.create();
 
@@ -70,7 +70,7 @@ class CopSpawnerInfoCommand extends SubArgument {
 
 			String info = String.format(" &bX: &7%d\n &bY: &7%d\n &bZ: &7%d\n &bWorld: &7%s", x, y, z, world);
 
-			sender.sendMessage(ChatUtil.color(info));
+			sender.sendMessage(GanglandChatUtil.color(info));
 		}, sender -> gangland.getInitializer().getCopSpawnManager().getSpawnerIds()
 				.stream().map(String::valueOf).toList());
 

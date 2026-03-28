@@ -9,7 +9,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -49,22 +49,23 @@ public final class EconomyCommand extends CommandHandler {
 
 		// glw economy deposit
 		Argument deposit = new Argument(getGangland(), new String[]{"deposit", "add"}, getArgumentTree(),
-										(argument, sender, args) -> {
+		                                (argument, sender, args) -> {
 											sender.sendMessage(
-													ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(),
-																		  "<specifier>"));
+													GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(),
+					                                                              "<specifier>"));
 										}, getPermission() + ".deposit");
 
 
 		// glw economy withdraw
 		Argument withdraw = new Argument(getGangland(), new String[]{"withdraw", "take"}, getArgumentTree(),
-										 (argument, sender, args) -> sender.sendMessage(
-												 ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(),
-																	   "<specifier>")), getPermission() + ".withdraw");
+		                                 (argument, sender, args) -> sender.sendMessage(
+												 GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(),
+				                                                               "<specifier>")),
+		                                 getPermission() + ".withdraw");
 
 		// glw economy set
 		Argument set = new Argument(getGangland(), "set", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<specifier>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<specifier>"));
 		}, getPermission() + ".set");
 
 		Argument amount = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
@@ -94,7 +95,7 @@ public final class EconomyCommand extends CommandHandler {
 		Argument reset = economyReset(specifiers, userManager);
 
 		Argument resetSpecifier = new OptionalArgument(getGangland(), optionalSpecifier, getArgumentTree(),
-													   (argument, sender, args) -> reset.executeArgument(sender, args));
+		                                               (argument, sender, args) -> reset.executeArgument(sender, args));
 
 		reset.addSubArgument(resetSpecifier);
 
@@ -115,7 +116,7 @@ public final class EconomyCommand extends CommandHandler {
 	}
 
 	private void operations(CommandSender sender, String[] args, HashMap<String, Supplier<List<Player>>> specifiers,
-							String specifier, UserManager<Player> userManager) {
+	                        String specifier, UserManager<Player> userManager) {
 		try {
 			double argAmount = Double.parseDouble(args[3]);
 			double value     = 0D;
@@ -138,7 +139,7 @@ public final class EconomyCommand extends CommandHandler {
 								= argAmount;
 
 						value    = Math.min(economy.getBalance() + argAmount,
-											Settings.getUserMaxBalance());
+						                    Settings.getUserMaxBalance());
 						strValue = "deposit";
 					}
 					case "withdraw", "take" -> {
@@ -159,9 +160,9 @@ public final class EconomyCommand extends CommandHandler {
 					}
 				}
 				user.getUser()
-					.sendMessage(Messages.valueOf(strValue.toUpperCase() + "_MONEY_PLAYER")
-										 .toString()
-										 .replace("%amount%", Settings.formatDouble(valueChanged)));
+				    .sendMessage(Messages.valueOf(strValue.toUpperCase() + "_MONEY_PLAYER")
+				                         .toString()
+				                         .replace("%amount%", Settings.formatDouble(valueChanged)));
 				economy.setBalance(value);
 			}
 		} catch (NumberFormatException exception) {
@@ -170,10 +171,10 @@ public final class EconomyCommand extends CommandHandler {
 	}
 
 	private @NotNull Argument getArgument(String[] optionalSpecifier,
-										  HashMap<String, Supplier<List<Player>>> specifiers) {
+	                                      HashMap<String, Supplier<List<Player>>> specifiers) {
 		Argument specifier = new OptionalArgument(getGangland(), optionalSpecifier, getArgumentTree(),
-												  (argument, sender, args) -> {
-													  sender.sendMessage(ChatUtil.setArguments(
+		                                          (argument, sender, args) -> {
+													  sender.sendMessage(GanglandChatUtil.setArguments(
 															  Messages.ARGUMENTS_MISSING.toString(), "<amount>"));
 												  }, sender -> {
 			List<String> list = new ArrayList<>();
@@ -191,7 +192,7 @@ public final class EconomyCommand extends CommandHandler {
 			try {
 				collectSpecifiers(specifiers, sender, args.length > 2 ? args[2] : null);
 			} catch (IllegalArgumentException exception) {
-				sender.sendMessage(ChatUtil.errorMessage(exception.getMessage()));
+				sender.sendMessage(GanglandChatUtil.errorMessage(exception.getMessage()));
 			}
 		});
 		return specifier;
@@ -223,14 +224,14 @@ public final class EconomyCommand extends CommandHandler {
 			try {
 				collectSpecifiers(specifiers, sender, args.length > 2 ? args[2] : null);
 			} catch (IllegalArgumentException exception) {
-				sender.sendMessage(ChatUtil.errorMessage(exception.getMessage()));
+				sender.sendMessage(GanglandChatUtil.errorMessage(exception.getMessage()));
 			}
 		});
 		return reset;
 	}
 
 	private void collectSpecifiers(HashMap<String, Supplier<List<Player>>> specifiers, CommandSender sender,
-								   String target) {
+	                               String target) {
 		allPlayers(specifiers);
 		senderSpecifier(specifiers, sender);
 

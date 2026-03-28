@@ -6,7 +6,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -37,7 +37,7 @@ public final class UncuffCommand extends CommandHandler {
 			releasePlayer(commandSender, player);
 			return;
 		}
-		commandSender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<player>"));
+		commandSender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<player>"));
 	}
 
 	@Override
@@ -63,7 +63,7 @@ public final class UncuffCommand extends CommandHandler {
 			}
 
 			if (!detainmentService.isHandcuffed(target)) {
-				sender.sendMessage(ChatUtil.errorMessage("This player is not handcuffed!"));
+				sender.sendMessage(GanglandChatUtil.errorMessage("This player is not handcuffed!"));
 				return;
 			}
 
@@ -75,6 +75,6 @@ public final class UncuffCommand extends CommandHandler {
 	private void releasePlayer(CommandSender sender, Player target) {
 		detainmentService.release(target);
 
-		sender.sendMessage(ChatUtil.commandMessage("&aReleased &e" + target.getName() + "&a from handcuffs."));
+		sender.sendMessage(GanglandChatUtil.commandMessage("&aReleased &e" + target.getName() + "&a from handcuffs."));
 	}
 }

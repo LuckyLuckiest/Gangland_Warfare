@@ -13,7 +13,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -55,11 +55,11 @@ public final class ComponentExecutorCommand extends CommandHandler {
 
 		// glw option click resource
 		Argument resource = new Argument(getGangland(), "resource", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.prefixMessage(
+			sender.sendMessage(GanglandChatUtil.prefixMessage(
 					"&7You should first disconnect from the server and click the server tab you created, " +
 					"next click &8(&bEdit&8)&7 then change &8(&bServer Resource Packs&8)&7 to either " +
 					"&aPrompt&7 or &aEnabled&7 then click &8(&bDone&8)&7 button and log back in."));
-			sender.sendMessage(ChatUtil.color(
+			sender.sendMessage(GanglandChatUtil.color(
 					"&7If you chose &aPrompt &7then click &8(&bYes&8)&7 once you joined back into the server, " +
 					"then the download process will start."));
 		});
@@ -70,7 +70,7 @@ public final class ComponentExecutorCommand extends CommandHandler {
 	}
 
 	private Argument gangArgument(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-								  RankManager rankManager) {
+	                              RankManager rankManager) {
 		Argument gang = new Argument(getGangland(), "gang", getArgumentTree());
 
 		Argument rank = new Argument(getGangland(), "rank", getArgumentTree());
@@ -86,7 +86,7 @@ public final class ComponentExecutorCommand extends CommandHandler {
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<rank>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<rank>"));
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
@@ -122,7 +122,7 @@ public final class ComponentExecutorCommand extends CommandHandler {
 	}
 
 	private @NotNull Argument getRankType(UserManager<Player> userManager, MemberManager memberManager,
-										  GangManager gangManager, RankManager rankManager) {
+	                                      GangManager gangManager, RankManager rankManager) {
 		return new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
@@ -182,8 +182,8 @@ public final class ComponentExecutorCommand extends CommandHandler {
 			}
 
 			user.sendMessage(Messages.GANG_PROMOTE_PLAYER_SUCCESS.toString()
-																 .replace("%player%", targetStr)
-																 .replace("%rank%", nextRank.getName()));
+			                                                     .replace("%player%", targetStr)
+			                                                     .replace("%rank%", nextRank.getName()));
 		}, sender -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);

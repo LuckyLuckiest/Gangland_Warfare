@@ -11,7 +11,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -49,7 +49,7 @@ class WaypointCreateCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -70,7 +70,7 @@ class WaypointCreateCommand extends SubArgument {
 			Location location = player.getLocation();
 
 			waypoint.setCoordinates(player.getWorld().getName(), location.getX(), location.getY(), location.getZ(),
-									location.getYaw(), location.getPitch());
+			                        location.getYaw(), location.getPitch());
 
 			// add the waypoint to waypoint manager
 			waypointManager.add(waypoint);
@@ -93,7 +93,7 @@ class WaypointCreateCommand extends SubArgument {
 			// using '/glw waypoint select <id>' command to the created waypoint, so it is selected
 			var selectedArgument = Objects.requireNonNull(tree.find(new Argument(gangland, "select", tree)));
 			var select = ArgumentUtil.getArgumentSequence(selectedArgument, Gangland.SHORT_PREFIX) + " " +
-						 waypoint.getUsedId();
+			             waypoint.getUsedId();
 
 			player.performCommand(select);
 		});
@@ -114,7 +114,7 @@ class WaypointCreateCommand extends SubArgument {
 			createWaypointName.put(player, name);
 
 			// notify the player to confirm the waypoint
-			user.sendMessage(ChatUtil.confirmCommand(new String[]{"waypoint", "create"}));
+			user.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"waypoint", "create"}));
 
 			confirmWaypoint.lock(sender, s -> {
 				CountdownTimer timer = new CountdownTimer(gangland, 60, null, time -> {
@@ -122,7 +122,7 @@ class WaypointCreateCommand extends SubArgument {
 
 					String createConfirm = Messages.WAYPOINT_CREATE_CONFIRM.toString();
 					String confirm = createConfirm.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
-																						  TimeMessages.getInstance()));
+					                                                                      TimeMessages.getInstance()));
 
 					s.sendMessage(confirm);
 				}, time -> {

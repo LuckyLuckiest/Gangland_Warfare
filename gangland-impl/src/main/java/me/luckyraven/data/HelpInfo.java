@@ -1,7 +1,7 @@
 package me.luckyraven.data;
 
 import me.luckyraven.command.data.CommandInformation;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
@@ -70,7 +70,7 @@ public final class HelpInfo {
 		int maxPages = getMaxPages();
 		if (page < 1) throw new IllegalArgumentException("Cannot get page less than 1");
 		if (page > maxPages) throw new IllegalArgumentException("Cannot exceed maximum allowed pages");
-		String header = ChatUtil.color(
+		String header = GanglandChatUtil.color(
 				"&3Oo&3&m------&r &8&l[&bG&fL&bW&8&l]&7 " + title + " &8[&7" + page + "&5/&7" + maxPages +
 				"&8] &3&m------&3oO");
 		sender.sendMessage("");
@@ -81,7 +81,7 @@ public final class HelpInfo {
 		int endIndex   = Math.min(startIndex + breaks, size());
 
 		for (int index = startIndex; index < endIndex; index++)
-			 sender.sendMessage(ChatUtil.commandDesign(list.get(index).toString()));
+		     sender.sendMessage(GanglandChatUtil.commandDesign(list.get(index).toString()));
 	}
 
 }

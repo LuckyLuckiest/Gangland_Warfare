@@ -67,6 +67,19 @@ public class Settings implements FileInitializer {
 	private static @Getter String       deathLoseMoneyFormula;
 	private static @Getter double       deathThreshold;
 
+	// respawn
+	private static @Getter boolean respawnEnabled;
+	private static @Getter int     respawnDelay;
+	private static @Getter boolean respawnScreenEnabled;
+	private static @Getter String  respawnScreenTitle, respawnScreenSubtitle;
+	private static @Getter boolean      respawnChatEnabled;
+	private static @Getter List<String> respawnChatMessages;
+	private static @Getter boolean      respawnGameModeEnabled, respawnGameModeAllowFly;
+	private static @Getter String  respawnGameMode;
+	private static @Getter boolean respawnHealthEnabled, respawnHungerEnabled;
+	private static @Getter double respawnHealthAmount;
+	private static @Getter int    respawnHungerAmount;
+
 	// bounty configuration
 	private static @Getter double bountyEachKillValue, bountyMaxKill;
 	private static @Getter boolean bountyTimerEnabled;
@@ -231,11 +244,11 @@ public class Settings implements FileInitializer {
 		Objects.requireNonNull(multiInventory);
 
 		nextPage     = multiInventory.getString("Next_Page",
-												"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTYzMzlmZjJlNTM0MmJhMThiZGM0OGE5OWNjYTY1ZDEyM2NlNzgxZDg3ODI3MmY5ZDk2NGVhZDNiOGFkMzcwIn19fQ==");
+		                                        "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTYzMzlmZjJlNTM0MmJhMThiZGM0OGE5OWNjYTY1ZDEyM2NlNzgxZDg3ODI3MmY5ZDk2NGVhZDNiOGFkMzcwIn19fQ==");
 		previousPage = multiInventory.getString("Previous_Page",
-												"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=");
+		                                        "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=");
 		homePage     = multiInventory.getString("Home_Page",
-												"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=");
+		                                        "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=");
 
 		// economy
 		moneySymbol   = settings.getString("Money_Symbol", "$").substring(0, 1);
@@ -264,6 +277,27 @@ public class Settings implements FileInitializer {
 		deathLoseMoney               = user.getBoolean("Death.Money.Lose_Money", true);
 		deathLoseMoneyFormula        = user.getString("Death.Money.Formula", "balance * 0.15");
 		deathThreshold               = user.getDouble("Death.Money.Threshold", 1_000);
+
+		// respawn
+		var respawn = user.getConfigurationSection("Death.Respawn");
+		Objects.requireNonNull(respawn);
+
+		respawnEnabled        = respawn.getBoolean("Enable", false);
+		respawnDelay          = respawn.getInt("Delay", 10);
+		respawnScreenEnabled  = respawn.getBoolean("Screen.Enable", true);
+		respawnScreenTitle    = respawn.getString("Screen.Title", "&cWASTED");
+		respawnScreenSubtitle = respawn.getString("Screen.Subtitle", "&7Respawning after &a%gangland_time% &7seconds");
+		respawnChatEnabled    = respawn.getBoolean("Chat.Enable", true);
+		respawnChatMessages   = respawn.getStringList("Chat.Message");
+
+		respawnGameModeEnabled  = respawn.getBoolean("GameMode.Enable", true);
+		respawnGameMode         = respawn.getString("GameMode.Change_To", "survival");
+		respawnGameModeAllowFly = respawn.getBoolean("GameMode.Allow_Fly", true);
+
+		respawnHealthEnabled = respawn.getBoolean("Health.Enable", true);
+		respawnHealthAmount  = respawn.getDouble("Health.Amount", 20);
+		respawnHungerEnabled = respawn.getBoolean("Hunger.Enable", true);
+		respawnHungerAmount  = respawn.getInt("Hunger.Amount", 20);
 
 		// bounty
 		var bounty = settings.getConfigurationSection("Bounty");

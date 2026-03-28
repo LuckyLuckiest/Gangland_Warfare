@@ -4,19 +4,19 @@ import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.sign.bulk.BulkActionPreview;
 import me.luckyraven.sign.service.SignInformation;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.entity.Player;
 
 public class GanglandSignInformation implements SignInformation {
 
 	@Override
 	public void sendSuccess(Player player, String message) {
-		player.sendMessage(ChatUtil.prefixMessage(message));
+		player.sendMessage(GanglandChatUtil.prefixMessage(message));
 	}
 
 	@Override
 	public void sendError(Player player, String message) {
-		player.sendMessage(ChatUtil.errorMessage(message));
+		player.sendMessage(GanglandChatUtil.errorMessage(message));
 	}
 
 	@Override
@@ -47,11 +47,11 @@ public class GanglandSignInformation implements SignInformation {
 	@Override
 	public String getBulkConfirmRequest(BulkActionPreview preview, int confirmWindowSeconds) {
 		return Messages.SIGN_BULK_CONFIRM_REQUEST.toString()
-												 .replace("%quantity%", String.valueOf(preview.getQuantity()))
-												 .replace("%content%", preview.getContentName())
-												 .replace("%price%", String.format("%.2f", preview.getTotalPrice()))
-												 .replace("%money_symbol%", Settings.getMoneySymbol())
-												 .replace("%time%", String.valueOf(confirmWindowSeconds));
+		                                         .replace("%quantity%", String.valueOf(preview.getQuantity()))
+		                                         .replace("%content%", preview.getContentName())
+		                                         .replace("%price%", String.format("%.2f", preview.getTotalPrice()))
+		                                         .replace("%money_symbol%", Settings.getMoneySymbol())
+		                                         .replace("%time%", String.valueOf(confirmWindowSeconds));
 	}
 
 	@Override

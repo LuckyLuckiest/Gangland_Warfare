@@ -6,7 +6,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -33,7 +33,7 @@ public final class CuffCommand extends CommandHandler {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		commandSender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<player>"));
+		commandSender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<player>"));
 	}
 
 	@Override
@@ -59,13 +59,13 @@ public final class CuffCommand extends CommandHandler {
 			}
 
 			if (detainmentService.isHandcuffed(target)) {
-				sender.sendMessage(ChatUtil.errorMessage("This player is already cuffed!"));
+				sender.sendMessage(GanglandChatUtil.errorMessage("This player is already cuffed!"));
 				return;
 			}
 
 			detainmentService.handcuff(target);
 
-			sender.sendMessage(ChatUtil.commandMessage("&aHandcuffed &e" + target.getName() + "&a."));
+			sender.sendMessage(GanglandChatUtil.commandMessage("&aHandcuffed &e" + target.getName() + "&a."));
 		}, sender -> Bukkit.getOnlinePlayers()
 				.stream().filter(player -> !detainmentService.isHandcuffed(player)).map(Player::getName).toList());
 	}

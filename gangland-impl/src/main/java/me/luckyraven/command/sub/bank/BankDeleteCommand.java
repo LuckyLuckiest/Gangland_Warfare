@@ -12,7 +12,7 @@ import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.repository.IRepository;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -77,13 +77,13 @@ class BankDeleteCommand extends SubArgument {
 	@NotNull
 	private CountdownTimer getCountdownTimer(CommandSender sender, User<Player> user) {
 		CountdownTimer timer = new CountdownTimer(gangland, 60, time -> {
-			user.sendMessage(ChatUtil.confirmCommand(new String[]{"bank", "delete"}));
+			user.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"bank", "delete"}));
 		}, time -> {
 			if (time.getTimeLeft() % 20 != 0) return;
 
 			String string = Messages.BANK_REMOVE_CONFIRM.toString();
 			String replace = string.replace("%timer%",
-											TimeUtil.formatTime(time.getTimeLeft(), true, TimeMessages.getInstance()));
+			                                TimeUtil.formatTime(time.getTimeLeft(), true, TimeMessages.getInstance()));
 			sender.sendMessage(replace);
 		}, time -> {
 			confirmDelete.unlock(sender);

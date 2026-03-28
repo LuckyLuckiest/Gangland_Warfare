@@ -7,7 +7,7 @@ import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.weapon.ammo.Ammunition;
@@ -40,7 +40,7 @@ class AmmunitionGiveCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> sender.sendMessage(
-				ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
+				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 	}
 
 	private void ammunitionGive() {
@@ -79,7 +79,7 @@ class AmmunitionGiveCommand extends SubArgument {
 			try {
 				ammoAmount = Integer.parseInt(args[3]);
 			} catch (NumberFormatException exception) {
-				user.sendMessage(ChatUtil.commandMessage(Messages.MUST_BE_NUMBERS.toString()));
+				user.sendMessage(GanglandChatUtil.commandMessage(Messages.MUST_BE_NUMBERS.toString()));
 				return;
 			}
 

@@ -18,7 +18,7 @@ import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.persistence.database.component.Table;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.Bukkit;
@@ -54,8 +54,8 @@ class GangKickCommand extends SubArgument {
 	}
 
 	protected static List<String> getDescendantRanks(UserManager<Player> userManager, MemberManager memberManager,
-													 GangManager gangManager, RankManager rankManager,
-													 CommandSender sender) {
+	                                                 GangManager gangManager, RankManager rankManager,
+	                                                 CommandSender sender) {
 		Player       player = (Player) sender;
 		User<Player> user   = userManager.getUser(player);
 
@@ -119,7 +119,7 @@ class GangKickCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -208,8 +208,8 @@ class GangKickCommand extends SubArgument {
 			gang.removeMember(targetUser, targetMember);
 
 			user.sendMessage(Messages.GANG_KICKED_TARGET.toString()
-														.replace("%player%",
-																 Objects.requireNonNull(offlinePlayer.getName())));
+			                                            .replace("%player%",
+			                                                     Objects.requireNonNull(offlinePlayer.getName())));
 		}, sender -> getDescendantRanks(userManager, memberManager, gangManager, rankManager, sender));
 
 		this.addSubArgument(kickName);

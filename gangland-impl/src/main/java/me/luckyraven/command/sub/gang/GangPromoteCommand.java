@@ -13,7 +13,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -63,7 +63,7 @@ class GangPromoteCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(ChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 		};
 	}
 
@@ -129,8 +129,8 @@ class GangPromoteCommand extends SubArgument {
 
 			// navigate the ranks first
 			List<Rank> nextRanks = Objects.requireNonNull(rankManager.getRankTree().find(currentRank))
-										  .getNode()
-										  .getChildren()
+			                              .getNode()
+			                              .getChildren()
 					.stream()
 					.map(Tree.Node::getData)
 					.toList();
@@ -161,7 +161,7 @@ class GangPromoteCommand extends SubArgument {
 				if (offlineName != null && !offlineName.isEmpty() && offlinePlayer.isOnline()) {
 					Player onlinePlayer = offlinePlayer.getPlayer();
 					String message = Messages.GANG_PROMOTE_TARGET_SUCCESS.toString()
-																		 .replace("%rank%", first.getName());
+					                                                     .replace("%rank%", first.getName());
 					// remove the previous rank attachments
 					User<Player> onlineUser = userManager.getUser(onlinePlayer);
 

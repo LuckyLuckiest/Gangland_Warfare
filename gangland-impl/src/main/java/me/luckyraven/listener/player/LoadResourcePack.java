@@ -1,7 +1,7 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.configuration.ResourcePackTracker;
 import me.luckyraven.util.listener.ListenerHandler;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -24,34 +24,34 @@ public class LoadResourcePack implements Listener {
 
 		switch (event.getStatus()) {
 			case ACCEPTED -> {
-				String message = ChatUtil.prefixMessage("&eDownloading custom resource pack...");
+				String message = GanglandChatUtil.prefixMessage("&eDownloading custom resource pack...");
 
 				player.sendMessage(message);
 			}
 			case SUCCESSFULLY_LOADED -> {
-				String message = ChatUtil.prefixMessage("&aResource pack has been downloaded successfully.");
+				String message = GanglandChatUtil.prefixMessage("&aResource pack has been downloaded successfully.");
 
 				player.sendMessage(message);
 				ResourcePackTracker.markLoaded(player);
 			}
 			case FAILED_DOWNLOAD -> {
-				String message = ChatUtil.errorMessage("Could not download the resource pack.");
+				String message = GanglandChatUtil.errorMessage("Could not download the resource pack.");
 
 				player.sendMessage(message);
 			}
 			case DECLINED -> {
 				if (Settings.isResourcePackKick()) {
-					String message = ChatUtil.color("&cYou have to accept the resource pack request!");
+					String message = GanglandChatUtil.color("&cYou have to accept the resource pack request!");
 
 					player.kickPlayer(message);
 				} else {
-					String message = ChatUtil.color(
+					String message = GanglandChatUtil.color(
 							"&7If you changed your mind &aclick &7to check how to download the resource pack.");
 
 					TextComponent click = new TextComponent(message);
 					click.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/glw option click resource"));
 
-					String messageSpigot = ChatUtil.color(
+					String messageSpigot = GanglandChatUtil.color(
 							"&cYou will miss some custom features if you did not download the resource pack!");
 
 					player.sendMessage(messageSpigot);

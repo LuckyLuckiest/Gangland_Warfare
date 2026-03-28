@@ -13,7 +13,7 @@ import me.luckyraven.events.user.UserDataInitEvent;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.updater.UpdateChecker;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.listener.ListenerPriority;
 import org.bukkit.Bukkit;
@@ -52,7 +52,7 @@ public final class CreateAccount implements Listener {
 		UpdateChecker updateChecker = gangland.getUpdateChecker();
 
 		if (player.hasPermission(updateChecker.getCheckPermission()) && updateChecker.updateAvailable()) {
-			player.sendMessage(ChatUtil.prefixMessage(updateChecker.getUpdateMessage()));
+			player.sendMessage(GanglandChatUtil.prefixMessage(updateChecker.getUpdateMessage()));
 		}
 
 		user.getEconomy().setBalance(Settings.getUserInitialBalance());

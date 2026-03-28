@@ -5,7 +5,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
@@ -35,16 +35,16 @@ public final class ReloadCommand extends CommandHandler {
 	@Override
 	protected void initializeArguments() {
 		Argument files = new Argument(getGangland(), new String[]{"files", "file"}, getArgumentTree(),
-									  (argument, sender, args) -> {
+		                              (argument, sender, args) -> {
 										  reloadProcess("files", () -> getGangland().getReloadPlugin().filesReload(),
-														true);
+			                                            true);
 									  });
 
 		Argument data = new Argument(getGangland(), new String[]{"database", "data"}, getArgumentTree(),
-									 (argument, sender, args) -> {
+		                             (argument, sender, args) -> {
 										 reloadProcess("database",
-													   () -> getGangland().getReloadPlugin().databaseInitialize(true),
-													   true);
+			                                           () -> getGangland().getReloadPlugin().databaseInitialize(true),
+			                                           true);
 									 });
 
 		Argument scoreboard = new Argument(getGangland(), "scoreboard", getArgumentTree(), (argument, sender, args) -> {
@@ -86,7 +86,7 @@ public final class ReloadCommand extends CommandHandler {
 		String permission = getPermission();
 		String reloading  = String.format("&bReloading&7 the plugin%s%s...", process.isEmpty() ? "" : " ", process);
 
-		ChatUtil.sendToOperators(permission, reloading);
+		GanglandChatUtil.sendToOperators(permission, reloading);
 
 		try {
 			if (forceUpdate) getGangland().getPeriodicalUpdates().forceUpdate();
@@ -94,11 +94,11 @@ public final class ReloadCommand extends CommandHandler {
 
 			String reloadComplete = "&aReload has been completed.";
 
-			ChatUtil.sendToOperators(permission, reloadComplete);
+			GanglandChatUtil.sendToOperators(permission, reloadComplete);
 		} catch (Throwable throwable) {
 			String reloadIssue = "&cThere was a problem reloading the plugin!";
 
-			ChatUtil.sendToOperators(permission, reloadIssue);
+			GanglandChatUtil.sendToOperators(permission, reloadIssue);
 			log.error(throwable.getMessage(), throwable);
 		}
 	}

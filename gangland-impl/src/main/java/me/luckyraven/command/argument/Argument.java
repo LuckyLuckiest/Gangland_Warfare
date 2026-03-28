@@ -10,7 +10,7 @@ import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.ChatUtil;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.Bukkit;
@@ -54,28 +54,28 @@ public class Argument implements Cloneable {
 	}
 
 	public Argument(JavaPlugin plugin, String argument, Tree<Argument> tree,
-					TriConsumer<Argument, CommandSender, String[]> action) {
+	                TriConsumer<Argument, CommandSender, String[]> action) {
 		this(plugin, new String[]{argument}, tree, action);
 	}
 
 	public Argument(JavaPlugin plugin, String[] arguments, Tree<Argument> tree,
-					TriConsumer<Argument, CommandSender, String[]> action) {
+	                TriConsumer<Argument, CommandSender, String[]> action) {
 		this(plugin, arguments, tree, action, "");
 	}
 
 	public Argument(JavaPlugin plugin, String argument, Tree<Argument> tree,
-					TriConsumer<Argument, CommandSender, String[]> action, String permission) {
+	                TriConsumer<Argument, CommandSender, String[]> action, String permission) {
 		this(plugin, new String[]{argument}, tree, action, permission);
 	}
 
 	public Argument(JavaPlugin plugin, String[] arguments, Tree<Argument> tree,
-					TriConsumer<Argument, CommandSender, String[]> action, String permission) {
+	                TriConsumer<Argument, CommandSender, String[]> action, String permission) {
 		this(plugin, arguments, tree, action, permission, false);
 	}
 
 	public Argument(JavaPlugin plugin, String[] arguments, Tree<Argument> tree,
-					TriConsumer<Argument, CommandSender, String[]> action, String permission,
-					boolean displayAllArguments) {
+	                TriConsumer<Argument, CommandSender, String[]> action, String permission,
+	                boolean displayAllArguments) {
 		Preconditions.checkNotNull(permission, "Permission string can't be null");
 
 		this.arguments           = arguments;
@@ -186,7 +186,7 @@ public class Argument implements Cloneable {
 
 	public void executeArgument(CommandSender sender, String[] args) {
 		if (this.action != null) this.action.accept(this, sender, args);
-		else sender.sendMessage(ChatUtil.errorMessage("Not implemented method!"));
+		else sender.sendMessage(GanglandChatUtil.errorMessage("Not implemented method!"));
 	}
 
 	@Override
@@ -270,10 +270,10 @@ public class Argument implements Cloneable {
 
 			String[] validArguments = Arrays.stream(args).toList().subList(0, length).toArray(String[]::new);
 
-			String commandSuggestion = ChatUtil.generateCommandSuggestion(lastInput, dictionary, commandPrefix,
-																		  validArguments);
+			String commandSuggestion = GanglandChatUtil.generateCommandSuggestion(lastInput, dictionary, commandPrefix,
+			                                                                      validArguments);
 
-			sender.sendMessage(ChatUtil.color(commandSuggestion));
+			sender.sendMessage(GanglandChatUtil.color(commandSuggestion));
 			break;
 		}
 	}
@@ -283,8 +283,8 @@ public class Argument implements Cloneable {
 	}
 
 	private <T extends Argument> ArgumentResult<T> traverseList(Tree.Node<T> node, T[] list, int index,
-																OptionalArgument dummy, CommandSender sender,
-																String[] args) {
+	                                                            OptionalArgument dummy, CommandSender sender,
+	                                                            String[] args) {
 		if (node == null || index >= list.length) return ArgumentResult.notFound();
 		if (!node.getData().equals(list[index]) && !node.getData().equals(dummy)) return ArgumentResult.notFound();
 
