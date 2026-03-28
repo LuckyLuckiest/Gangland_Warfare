@@ -18,7 +18,7 @@
     <dependencies>
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>logger-api</artifactId>
+            <artifactId>plugin-common</artifactId>
         </dependency>
     </dependencies>
 
