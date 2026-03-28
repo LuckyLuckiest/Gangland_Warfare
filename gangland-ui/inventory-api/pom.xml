@@ -6,8 +6,9 @@
 
     <parent>
         <groupId>me.luckyraven</groupId>
-        <artifactId>gangland_warfare</artifactId>
+        <artifactId>gangland-ui</artifactId>
         <version>${revision}</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>inventory-api</artifactId>
@@ -25,7 +26,7 @@
 
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-util</artifactId>
+            <artifactId>gangland-core</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -37,13 +38,7 @@
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>plugin-exception</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>logger-api</artifactId>
+            <artifactId>plugin-common</artifactId>
         </dependency>
 
         <dependency>

@@ -3,14 +3,25 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>me.luckyraven</groupId>
         <artifactId>gangland_warfare</artifactId>
         <version>${revision}</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>logger-api</artifactId>
+    <artifactId>gangland-ui</artifactId>
+    <packaging>pom</packaging>
 
-    <name>Logger API</name>
+    <name>Gangland UI</name>
+
+    <modules>
+        <module>hologram-api</module>
+        <module>inventory-api</module>
+        <module>scoreboard-api</module>
+        <module>sign-api</module>
+        <module>lootchest-api</module>
+    </modules>
 
 </project>
