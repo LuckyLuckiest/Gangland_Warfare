@@ -56,17 +56,10 @@ public class JetpackTask extends BukkitRunnable {
 			return;
 		}
 
-		// Detect spacebar: player.isFlying() becomes true when space is held
-		// We cancel vanilla flight immediately each tick
-		boolean holdingSpace = player.isFlying();
-		if (holdingSpace) {
-			player.setFlying(false);
-		}
-
 		String  fuelKey = jetpack.getFuelKey();
 		boolean hasFuel = fuelService.hasFuel(player, fuelKey);
 
-		if (holdingSpace && hasFuel) {
+		if (hasFuel) {
 			// === THRUST MODE ===
 			int consumeRate = getEffectiveConsumptionRate(jetpack);
 			fuelService.consumeFuel(player, fuelKey, consumeRate);

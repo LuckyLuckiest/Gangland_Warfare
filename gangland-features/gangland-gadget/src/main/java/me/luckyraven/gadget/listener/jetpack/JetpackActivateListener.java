@@ -49,7 +49,6 @@ public class JetpackActivateListener implements Listener {
 		if (wearable == null || !wearable.isJetpack()) return;
 
 		event.setCancelled(true);
-		player.setFlying(false);
 
 		if (jetpackService.isActive(player)) {
 			jetpackService.deactivate(player);
