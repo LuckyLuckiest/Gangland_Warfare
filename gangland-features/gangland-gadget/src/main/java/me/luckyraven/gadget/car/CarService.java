@@ -145,13 +145,15 @@ public class CarService {
 		VehicleEntity entity = parked.getEntity();
 		Car           car    = parked.getCar();
 
-		entity.mount(player);
-
 		VehicleSession      session = new VehicleSession(entity, car, player, parked.getDurability());
 		VehicleMovementTask task    = new VehicleMovementTask(session, this, fuelService);
 		session.setTask(task);
 
+		// Register before mounting so CarDismountListener can find the session if Minecraft
+		// physics immediately eject the player (e.g. no-rail minecart after server restart).
 		vehicleRegistry.register(session);
+
+		entity.mount(player);
 
 		Channel channel = VehicleInputInterceptor.getChannel(player);
 		if (channel != null) {
@@ -254,13 +256,15 @@ public class CarService {
 				task.cancel();
 			}
 
+			// Unregister before despawn so CarDismountListener finds no session when
+			// the entity eject fires, allowing the player to dismount naturally.
+			vehicleRegistry.unregister(entityUUID);
+
 			session.getEntity().despawn();
 
 			if (returnItem && session.getDriver().isOnline() && !session.isDestroyed()) {
 				session.getDriver().getInventory().addItem(session.buildReturnItem());
 			}
-
-			vehicleRegistry.unregister(entityUUID);
 
 			ParkedCar record = parkedCarRecords.remove(entityUUID);
 			if (record != null) {

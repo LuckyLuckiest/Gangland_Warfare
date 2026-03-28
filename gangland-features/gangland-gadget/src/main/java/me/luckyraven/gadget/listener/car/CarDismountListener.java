@@ -39,6 +39,14 @@ public class CarDismountListener implements Listener {
 		VehicleSession session = carService.getVehicleRegistry().getByEntity(vehicle.getUniqueId());
 		if (session == null) return;
 
+		// Cancel dismounts that were not triggered by the player pressing shift (e.g. Minecraft
+		// physics ejecting the player from a no-rail minecart). Death-caused dismounts are still
+		// allowed through so the player can respawn normally.
+		if (!player.isSneaking() && !player.isDead()) {
+			event.setCancelled(true);
+			return;
+		}
+
 		// Capture safe exit location before any entity manipulation
 		Location safeExit = findSafeExitLocation(vehicle.getLocation());
 
