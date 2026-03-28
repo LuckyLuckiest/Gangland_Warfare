@@ -118,6 +118,8 @@ public class ProjectileDamageListener implements Listener {
 			return;
 		}
 
+		if (!weaponInstance.containsKey(projectileId)) return;
+
 		var queue = eventQueues.computeIfAbsent(projectileId, ProjectileEventQueue::new);
 
 		// Add damage event to queue
@@ -132,6 +134,18 @@ public class ProjectileDamageListener implements Listener {
 	public void onProjectileHit(ProjectileHitEvent event) {
 		var projectile   = event.getEntity();
 		int projectileId = projectile.getEntityId();
+
+		if (!weaponInstance.containsKey(projectileId)) return;
+
+		// Reset noDamageTicks before entity.hurt() is called (which happens after all
+		// ProjectileHitEvent handlers complete). Without this, Minecraft's invulnerability
+		// window from a prior hit causes entity.hurt() to short-circuit and skip firing
+		// EntityDamageByEntityEvent entirely, leaving the queue stuck waiting for a damage
+		// event that never arrives and causing rapid-fire projectiles to silently do nothing.
+		Entity hitEntity = event.getHitEntity();
+		if (hitEntity instanceof LivingEntity livingEntity) {
+			livingEntity.setNoDamageTicks(0);
+		}
 
 		var queue = eventQueues.computeIfAbsent(projectileId, ProjectileEventQueue::new);
 
