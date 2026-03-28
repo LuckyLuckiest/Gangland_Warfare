@@ -15,6 +15,8 @@ import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Types;
 import java.util.Arrays;
 import java.util.List;
@@ -95,7 +97,7 @@ class TableIntegrationTest {
 			@Override
 			public Map<String, Object> searchCriteria(TestEntity e) {
 				return createSearchCriteria("entity_id = ?", new Object[]{e.getId()}, new int[]{Types.VARCHAR},
-											new int[]{0});
+				                            new int[]{0});
 			}
 		};
 
@@ -118,7 +120,7 @@ class TableIntegrationTest {
 			@Override
 			public Map<String, Object> searchCriteria(TestEntity e) {
 				return createSearchCriteria("entity_id = ?", new Object[]{e.getId()}, new int[]{Types.VARCHAR},
-											new int[]{0});
+				                            new int[]{0});
 			}
 		};
 
@@ -173,8 +175,8 @@ class TableIntegrationTest {
 
 		helper.runQueries(db -> {
 			Object[] row = db.table(TestTable.TABLE_NAME)
-							 .select("id = ?", new Object[]{"u1"}, new int[]{Types.VARCHAR},
-									 new String[]{"name", "score"});
+			                 .select("id = ?", new Object[]{"u1"}, new int[]{Types.VARCHAR},
+			                         new String[]{"name", "score"});
 			assertEquals("Bobby", row[0], "name should be updated");
 			assertEquals(99, ((Number) row[1]).intValue(), "score should be updated");
 		});
@@ -191,7 +193,7 @@ class TableIntegrationTest {
 
 		helper.runQueries(db -> {
 			Object[] row = db.table(TestTable.TABLE_NAME)
-							 .select("id = ?", new Object[]{"pk1"}, new int[]{Types.VARCHAR}, new String[]{"id"});
+			                 .select("id = ?", new Object[]{"pk1"}, new int[]{Types.VARCHAR}, new String[]{"id"});
 			assertEquals("pk1", row[0], "Primary key must not change");
 		});
 	}
@@ -242,7 +244,7 @@ class TableIntegrationTest {
 		helper.runQueries(db -> {
 			List<String> cols = db.table(TestTable.TABLE_NAME).getColumns();
 			assertFalse(cols.contains("obsolete_col"),
-						"validateSchema must drop the obsolete column; columns: " + cols);
+			            "validateSchema must drop the obsolete column; columns: " + cols);
 		});
 	}
 
@@ -293,7 +295,68 @@ class TableIntegrationTest {
 		});
 	}
 
-	// ─────────────────────────────────────────── Column metadata ──
+	// ──────────────────────────── validateSchema – nullability migration ──
+
+	@Test
+	@DisplayName("validateSchema - changes NOT NULL column to NULL; PRAGMA confirms notnull=0 after migration")
+	void validateSchema_notNullToNullable_columnAcceptsNullAfterMigration() {
+		helper.runQueries(db -> table.insertTableQuery(db, new TestEntity("m1", "Alice", 42)));
+
+		helper.runQueries(makeTestEntityTable(true)::validateSchema);
+
+		assertEquals(0, queryScoreNotNullFlag(), "score notnull flag should be 0 (nullable) after migration");
+	}
+
+	@Test
+	@DisplayName("validateSchema - all existing rows are preserved after table recreation for nullability fix")
+	void validateSchema_nullabilityFix_preservesExistingRows() {
+		helper.runQueries(db -> {
+			table.insertTableQuery(db, new TestEntity("p1", "Alice", 10));
+			table.insertTableQuery(db, new TestEntity("p2", "Bob", 20));
+			table.insertTableQuery(db, new TestEntity("p3", "Carol", 30));
+		});
+
+		helper.runQueries(makeTestEntityTable(true)::validateSchema);
+
+		helper.runQueries(db -> {
+			List<Object[]> rows = db.table(TestTable.TABLE_NAME).selectAll();
+			assertEquals(3, rows.size(), "All rows must survive table recreation during nullability migration");
+		});
+	}
+
+	@Test
+	@DisplayName("validateSchema - no table recreation when nullability already matches definition")
+	void validateSchema_noNullabilityMismatch_isNoOp() {
+		helper.runQueries(db -> table.insertTableQuery(db, new TestEntity("o1", "Dave", 7)));
+
+		// same nullability as the live DB — no recreation should occur
+		helper.runQueries(table::validateSchema);
+
+		helper.runQueries(db -> {
+			List<Object[]> rows = db.table(TestTable.TABLE_NAME).selectAll();
+			assertEquals(1, rows.size(), "Row must still exist — no recreation on a matching schema");
+			assertEquals("Dave", rows.getFirst()[1]);
+		});
+	}
+
+	@Test
+	@DisplayName("validateSchema - changes NULL column to NOT NULL; PRAGMA confirms notnull=1 after migration")
+	void validateSchema_nullableToNotNull_columnRejectsNullAfterMigration() {
+		// Start from a nullable-score table
+		Table<TestEntity> nullableTable = makeTestEntityTable(true);
+		helper.runQueries(db -> {
+			db.executeUpdate("DROP TABLE " + TestTable.TABLE_NAME);
+			db.table(TestTable.TABLE_NAME).createTable(nullableTable.createTableQuery(db));
+			db.table(TestTable.TABLE_NAME)
+			  .insert(new String[]{"id", "name", "score"}, new Object[]{"t1", "Eve", 5},
+			          new int[]{Types.VARCHAR, Types.VARCHAR, Types.INTEGER});
+		});
+
+		// Validate with original definition (score canBeNull=false in TestTable)
+		helper.runQueries(table::validateSchema);
+
+		assertEquals(1, queryScoreNotNullFlag(), "score notnull flag should be 1 (NOT NULL) after migration");
+	}
 
 	@Test
 	@DisplayName("getColumns - returns the attribute names defined in addAttribute()")
@@ -310,7 +373,7 @@ class TableIntegrationTest {
 	void getAttributes_returnsUnmodifiableMap() {
 		Map<String, Attribute<?>> attrs = table.getAttributes();
 		assertThrows(UnsupportedOperationException.class,
-					 () -> attrs.put("injected", new Attribute<>("x", false, String.class)));
+		             () -> attrs.put("injected", new Attribute<>("x", false, String.class)));
 	}
 
 	@Test
@@ -319,5 +382,58 @@ class TableIntegrationTest {
 		assertNotNull(table.get("ID"), "get('ID') should find attribute 'id'");
 		assertNotNull(table.get("Name"), "get('Name') should find attribute 'name'");
 		assertNotNull(table.get("SCORE"), "get('SCORE') should find attribute 'score'");
+	}
+
+	/**
+	 * Reads the SQLite {@code notnull} flag for the {@code score} column of {@code test_entity} via
+	 * {@code PRAGMA table_info}. Returns {@code 1} if the column is NOT NULL, {@code 0} if nullable, or {@code -1} if
+	 * the column was not found. This bypasses exception-swallowing in {@link DatabaseHelper#runQueries} and gives a
+	 * direct view of the live schema constraint.
+	 */
+	private int queryScoreNotNullFlag() {
+		int[] result = {-1};
+		helper.runQueries(db -> {
+			try (PreparedStatement stmt = db.getConnection()
+			                                .prepareStatement("PRAGMA table_info(" + TestTable.TABLE_NAME + ")");
+			     ResultSet rs = stmt.executeQuery()) {
+				while (rs.next()) {
+					if ("score".equals(rs.getString("name"))) {
+						result[0] = rs.getInt("notnull");
+						return;
+					}
+				}
+			}
+		});
+		return result[0];
+	}
+
+	/**
+	 * Builds a {@link Table} for {@code test_entity} that is identical to {@link TestTable} except that the
+	 * {@code score} column's nullability is controlled by {@code scoreNullable}.
+	 */
+	private Table<TestEntity> makeTestEntityTable(boolean scoreNullable) {
+		return new Table<>(TestTable.TABLE_NAME) {
+			{
+				Attribute<String>  id    = new Attribute<>("id", true, String.class);
+				Attribute<String>  name  = new Attribute<>("name", false, String.class);
+				Attribute<Integer> score = new Attribute<>("score", false, Integer.class);
+				id.setCanBeNull(false);
+				name.setCanBeNull(false);
+				score.setCanBeNull(scoreNullable);
+				addAttribute(id);
+				addAttribute(name);
+				addAttribute(score);
+			}
+
+			@Override
+			public Object[] getData(TestEntity e) {
+				return new Object[]{e.getId(), e.getName(), e.getScore()};
+			}
+
+			@Override
+			public Map<String, Object> searchCriteria(TestEntity e) {
+				return createSearchCriteria("id = ?", new Object[]{e.getId()}, new int[]{Types.VARCHAR}, new int[]{0});
+			}
+		};
 	}
 }

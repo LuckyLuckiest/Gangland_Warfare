@@ -4,6 +4,7 @@ import lombok.Getter;
 import me.luckyraven.copsncrooks.jail.Jail;
 import me.luckyraven.copsncrooks.jail.JailRegistry;
 import me.luckyraven.persistence.repository.IRepository;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -55,8 +56,9 @@ public class DetainmentRegistry {
 
 		DetainedPlayer detainedPlayer = detainedPlayers.get(playerId);
 
+		Integer resolvedJailId = resolveJailId(playerId);
 		if (detainedPlayer == null) {
-			int jailId = state == DetainmentState.JAILED ? resolveJailId(playerId) : -1;
+			Integer jailId = state == DetainmentState.JAILED ? resolvedJailId : null;
 
 			detainedPlayer = new DetainedPlayer(playerId, jailId, state);
 
@@ -65,14 +67,15 @@ public class DetainmentRegistry {
 			return;
 		}
 
-		if (state == DetainmentState.JAILED && detainedPlayer.getJailId() == -1) {
-			detainedPlayer.setJailId(resolveJailId(playerId));
+		if (state == DetainmentState.JAILED && detainedPlayer.getJailId() == null) {
+			detainedPlayer.setJailId(resolvedJailId);
 		}
 
 		detainedPlayer.setState(state);
 		detainmentRepository.save(detainedPlayer);
 	}
 
+	@Nullable
 	public Jail findEmptyJail() {
 		for (Jail jail : jailRegistry.getCells()) {
 			if (jail.getJailedPlayersId().size() >= jail.getMaxCapacity()) continue;
@@ -106,11 +109,13 @@ public class DetainmentRegistry {
 	 * already assigned them to a specific jail (via {@link DetainmentService#jail}), then falls back to the first
 	 * available jail.
 	 */
+	@Nullable
 	private Integer resolveJailId(UUID playerId) {
 		Integer assigned = jailRegistry.getJailIdForPlayer(playerId);
 		if (assigned != null) return assigned;
 
-		return findEmptyJail().getId();
+		Jail emptyJail = findEmptyJail();
+		return emptyJail == null ? null : emptyJail.getId();
 	}
 
 	private void initialize() {

@@ -17,6 +17,7 @@ public class DetainmentTable extends Table<DetainedPlayer> {
 		Attribute<String>  state      = new Attribute<>("state", false, String.class);
 
 		jailId.setUnique(true);
+		jailId.setCanBeNull(true);
 		jailId.setForeignKey(jailTable.get("id"), jailTable);
 
 		this.addAttribute(playerUuid);
@@ -32,6 +33,6 @@ public class DetainmentTable extends Table<DetainedPlayer> {
 	@Override
 	public Map<String, Object> searchCriteria(DetainedPlayer data) {
 		return createSearchCriteria("player_uuid = ?", new Object[]{data.getPlayerId().toString()},
-									new int[]{Types.VARCHAR}, new int[]{0});
+		                            new int[]{Types.VARCHAR}, new int[]{0});
 	}
 }

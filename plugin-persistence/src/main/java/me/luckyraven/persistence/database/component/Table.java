@@ -4,8 +4,7 @@ import lombok.CustomLog;
 import lombok.Getter;
 import me.luckyraven.persistence.database.Database;
 
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -149,7 +148,7 @@ public abstract class Table<T> {
 		Database config    = database.table(name);
 
 		config.update((String) search.get("search"), (Object[]) search.get("info"), (int[]) search.get("type"),
-					  colTemp.toArray(String[]::new), objectsTemp.toArray(), dataTypes);
+		              colTemp.toArray(String[]::new), objectsTemp.toArray(), dataTypes);
 	}
 
 	/**
@@ -202,15 +201,117 @@ public abstract class Table<T> {
 				log.warn("Table '{}': could not drop column '{}': {}", name, actual, e.getMessage());
 			}
 		}
+
+		// 3. Fix nullability mismatches on existing columns
+		String dbProduct = database.getConnection().getMetaData().getDatabaseProductName().toLowerCase();
+		if (dbProduct.contains("sqlite")) {
+			fixNullabilityMismatchesSQLite(database);
+		} else {
+			fixNullabilityMismatchesMySQL(database);
+		}
 	}
 
 	protected Map<String, Object> createSearchCriteria(String searchQuery, Object[] queryPlaceholder,
-													   int[] queryDataTypes, int[] ignoredIndexes) {
+	                                                   int[] queryDataTypes, int[] ignoredIndexes) {
 		return Map.of("search", searchQuery, "info", queryPlaceholder, "type", queryDataTypes, "index", ignoredIndexes);
 	}
 
 	protected void addAttribute(Attribute<?> attribute) {
 		attributes.put(attribute.getName(), attribute);
+	}
+
+	/**
+	 * Detects nullability mismatches between the live SQLite schema and this table's attribute definitions. If any
+	 * mismatch is found, the table is recreated via rename-create-copy-drop so that the correct constraints apply.
+	 */
+	private void fixNullabilityMismatchesSQLite(Database database) throws SQLException {
+		Map<String, Boolean> dbCanBeNull = new HashMap<>();
+		try (PreparedStatement stmt = database.getConnection().prepareStatement("PRAGMA table_info(" + name + ")");
+		     ResultSet rs = stmt.executeQuery()) {
+			while (rs.next()) {
+				String  col     = rs.getString("name").toLowerCase();
+				boolean notNull = rs.getInt("notnull") == 1;
+				dbCanBeNull.put(col, !notNull);
+			}
+		}
+
+		for (Map.Entry<String, Attribute<?>> entry : attributes.entrySet()) {
+			Boolean current = dbCanBeNull.get(entry.getKey());
+			if (current == null) continue;
+			if (current != entry.getValue().isCanBeNull()) {
+				log.info("Table '{}': nullability mismatch on '{}' (db={}, def={}) - recreating table",
+				         name, entry.getKey(),
+				         current ? "NULL" : "NOT NULL",
+				         entry.getValue().isCanBeNull() ? "NULL" : "NOT NULL");
+				recreateTableSQLite(database);
+				return;
+			}
+		}
+	}
+
+	/**
+	 * Recreates a SQLite table in-place to apply schema changes that SQLite does not support via ALTER TABLE (e.g.
+	 * nullability). Uses the rename-create-copy-drop pattern inside a transaction.
+	 */
+	private void recreateTableSQLite(Database database) throws SQLException {
+		String     tmpName   = name + "_tmp";
+		Connection conn      = database.getConnection();
+		String     cols      = String.join(", ", attributes.keySet());
+		String[]   colDefs   = createTableQuery(database);
+		String     createSql = "CREATE TABLE " + name + " (" + String.join(", ", colDefs) + ")";
+
+		// Capture the current FK enforcement state so it can be restored exactly after migration.
+		// SQLite defaults to OFF; unconditionally enabling it after the migration would cause FK
+		// violations on subsequent saves if referenced rows were not yet persisted.
+		int prevFk = 0;
+		try (PreparedStatement fkQuery = conn.prepareStatement("PRAGMA foreign_keys");
+		     ResultSet fkRs = fkQuery.executeQuery()) {
+			if (fkRs.next()) prevFk = fkRs.getInt(1);
+		}
+
+		database.executeUpdate("PRAGMA foreign_keys = OFF");
+		conn.setAutoCommit(false);
+		try {
+			database.executeUpdate("DROP TABLE IF EXISTS " + tmpName);
+			database.executeUpdate("ALTER TABLE " + name + " RENAME TO " + tmpName);
+			database.executeUpdate(createSql);
+			database.executeUpdate("INSERT INTO " + name + " (" + cols + ") SELECT " + cols + " FROM " + tmpName);
+			database.executeUpdate("DROP TABLE " + tmpName);
+			conn.commit();
+			log.info("Table '{}': recreated successfully to apply nullability changes", name);
+		} catch (SQLException e) {
+			conn.rollback();
+			throw e;
+		} finally {
+			conn.setAutoCommit(true);
+			database.executeUpdate("PRAGMA foreign_keys = " + prevFk);
+		}
+	}
+
+	/**
+	 * Fixes nullability mismatches on a MySQL table by issuing {@code ALTER TABLE … MODIFY COLUMN} for each column
+	 * whose nullability in the live schema differs from the attribute definition.
+	 */
+	private void fixNullabilityMismatchesMySQL(Database database) throws SQLException {
+		String infoQuery = "SELECT COLUMN_NAME, IS_NULLABLE FROM information_schema.COLUMNS " +
+		                   "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?";
+		try (PreparedStatement stmt = database.getConnection().prepareStatement(infoQuery)) {
+			stmt.setString(1, name);
+			try (ResultSet rs = stmt.executeQuery()) {
+				while (rs.next()) {
+					String       col        = rs.getString("COLUMN_NAME").toLowerCase();
+					boolean      dbNullable = "YES".equalsIgnoreCase(rs.getString("IS_NULLABLE"));
+					Attribute<?> attr       = attributes.get(col);
+					if (attr == null || dbNullable == attr.isCanBeNull()) continue;
+
+					String colType = database.getStringDataType(attr.getType(), attr.getSize());
+					String nullStr = attr.isCanBeNull() ? "NULL" : "NOT NULL";
+					log.info("Table '{}': altering column '{}' nullability to {}", name, col, nullStr);
+					database.executeUpdate(
+							"ALTER TABLE " + name + " MODIFY COLUMN " + col + " " + colType + " " + nullStr);
+				}
+			}
+		}
 	}
 
 	/**

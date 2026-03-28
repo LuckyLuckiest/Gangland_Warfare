@@ -42,9 +42,10 @@ public class DetainmentRepository extends AbstractRepository<DetainedPlayer> {
 		for (Object[] result : data) {
 			int v = 0;
 
-			UUID uuid   = UUID.fromString(String.valueOf(result[v++]));
-			int  jailId = (int) result[v++];
-			var  state  = DetainmentState.JAILED;
+			UUID    uuid      = UUID.fromString(String.valueOf(result[v++]));
+			Object  rawJailId = result[v++];
+			Integer jailId    = rawJailId == null ? null : ((Number) rawJailId).intValue();
+			var     state     = DetainmentState.JAILED;
 
 			try {
 				state = DetainmentState.valueOf(String.valueOf(result[v]));
