@@ -2,6 +2,7 @@ package me.luckyraven.lootchest;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.hologram.HologramService;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.lootchest.config.LootChestConfig;
 import me.luckyraven.lootchest.config.LootChestMessagesProvider;
@@ -22,7 +23,6 @@ import me.luckyraven.lootchest.handler.lootchest.SessionStartHandler;
 import me.luckyraven.lootchest.item.LootItemProvider;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.hologram.HologramService;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -403,9 +403,9 @@ public abstract class LootChestService {
 	 * Starts the cracking minigame for a chest
 	 */
 	private OpenResult startCrackingMinigame(Player player, LootChestData chestData, LootTable lootTable,
-											 LootTier tier) {
+	                                         LootTier tier) {
 		CrackingSession crackingSession = new CrackingSession(plugin, player, chestData, lootTable, tier,
-															  chestData.getCrackingTimeSeconds());
+		                                                      chestData.getCrackingTimeSeconds());
 
 		crackingSessions.put(player.getUniqueId(), crackingSession);
 
@@ -436,7 +436,7 @@ public abstract class LootChestService {
 			Player player = session.getPlayer();
 
 			var soundConfig = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, config.getOpeningSound(),
-													 1.0f, 1.0f);
+			                                         1.0f, 1.0f);
 
 			soundConfig.playSound(player);
 		});
@@ -445,7 +445,7 @@ public abstract class LootChestService {
 			Player player = session.getPlayer();
 
 			var soundConfig = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, config.getClosingSound(),
-													 1.0f, 1.0f);
+			                                         1.0f, 1.0f);
 
 			soundConfig.playSound(player);
 		});

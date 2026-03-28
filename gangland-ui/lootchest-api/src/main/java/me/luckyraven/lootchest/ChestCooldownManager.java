@@ -1,10 +1,10 @@
 package me.luckyraven.lootchest;
 
 import lombok.Setter;
+import me.luckyraven.hologram.Hologram;
+import me.luckyraven.hologram.HologramService;
 import me.luckyraven.lootchest.config.LootChestMessagesProvider;
 import me.luckyraven.lootchest.data.LootChestData;
-import me.luckyraven.util.hologram.Hologram;
-import me.luckyraven.util.hologram.HologramService;
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -129,11 +129,11 @@ public class ChestCooldownManager {
 
 		Location holoLocation = chestData.getLocation().clone().add(0.5, hologramYOffset, 0.5);
 		String availableStatus = messagesProvider != null ?
-								 messagesProvider.getHologramAvailableStatus() :
-								 "§a§lAVAILABLE";
+		                         messagesProvider.getHologramAvailableStatus() :
+		                         "§a§lAVAILABLE";
 		String availableHint = messagesProvider != null ?
-							   messagesProvider.getHologramAvailableHint() :
-							   "§7Right-click to open";
+		                       messagesProvider.getHologramAvailableHint() :
+		                       "§7Right-click to open";
 		Hologram hologram = hologramService.createHologram(holoLocation, availableStatus, availableHint);
 
 		chestHolograms.put(chestId, hologram);

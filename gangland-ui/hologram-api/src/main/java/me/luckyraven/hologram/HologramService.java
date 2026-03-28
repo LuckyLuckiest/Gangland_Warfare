@@ -1,4 +1,4 @@
-package me.luckyraven.util.hologram;
+package me.luckyraven.hologram;
 
 import lombok.Getter;
 import org.bukkit.Location;
@@ -50,7 +50,7 @@ public class HologramService {
 	 * @param updater function that provides new lines for the hologram
 	 */
 	public Hologram createUpdatingHologram(Location location, long updateIntervalTicks,
-										   BiConsumer<Hologram, Long> updater, String... initialLines) {
+	                                       BiConsumer<Hologram, Long> updater, String... initialLines) {
 		Hologram hologram = createHologram(location, initialLines);
 
 		BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {

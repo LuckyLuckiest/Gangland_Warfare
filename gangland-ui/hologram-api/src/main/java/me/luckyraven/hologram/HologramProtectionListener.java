@@ -1,4 +1,4 @@
-package me.luckyraven.util.hologram;
+package me.luckyraven.hologram;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.util.listener.ListenerHandler;

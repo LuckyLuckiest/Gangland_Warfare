@@ -1,4 +1,4 @@
-package me.luckyraven.util.hologram;
+package me.luckyraven.hologram;
 
 import lombok.Getter;
 import me.luckyraven.util.utilities.ChatUtil;

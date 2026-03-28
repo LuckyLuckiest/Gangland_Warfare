@@ -2,9 +2,9 @@ package me.luckyraven.lootchest;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.database.repositories.lootchest.LootChestRepository;
+import me.luckyraven.hologram.HologramService;
 import me.luckyraven.lootchest.data.LootChestData;
 import me.luckyraven.persistence.repository.IRepository;
-import me.luckyraven.util.hologram.HologramService;
 import me.luckyraven.util.timer.CountdownTimer;
 
 import java.util.Collection;
