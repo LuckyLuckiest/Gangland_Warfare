@@ -3,6 +3,7 @@ package me.luckyraven.gadget.car;
 import io.netty.channel.Channel;
 import lombok.Getter;
 import me.luckyraven.gadget.car.vehicle.*;
+import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.ItemBuilder;
 import org.bukkit.Bukkit;
@@ -49,6 +50,7 @@ public class CarService {
 	private final VehicleRegistry        vehicleRegistry;
 	private final JavaPlugin             plugin;
 	private final IRepository<ParkedCar> parkedCarRepository;
+	private final FuelService            fuelService;
 
 	/**
 	 * Placed-but-not-driven vehicles, keyed by entity UUID.
@@ -68,11 +70,12 @@ public class CarService {
 	private final NamespacedKey pdcPlacer;
 
 	public CarService(CarManager carManager, VehicleRegistry vehicleRegistry, JavaPlugin plugin,
-	                  IRepository<ParkedCar> parkedCarRepository) {
+	                  IRepository<ParkedCar> parkedCarRepository, FuelService fuelService) {
 		this.carManager          = carManager;
 		this.vehicleRegistry     = vehicleRegistry;
 		this.plugin              = plugin;
 		this.parkedCarRepository = parkedCarRepository;
+		this.fuelService         = fuelService;
 
 		this.pdcCarId      = new NamespacedKey(plugin, "car_id");
 		this.pdcFuel       = new NamespacedKey(plugin, "car_fuel");
@@ -144,8 +147,8 @@ public class CarService {
 
 		entity.mount(player);
 
-		VehicleSession      session = new VehicleSession(entity, car, player, parked.getFuel(), parked.getDurability());
-		VehicleMovementTask task    = new VehicleMovementTask(session, this);
+		VehicleSession      session = new VehicleSession(entity, car, player, parked.getDurability());
+		VehicleMovementTask task    = new VehicleMovementTask(session, this, fuelService);
 		session.setTask(task);
 
 		vehicleRegistry.register(session);
@@ -181,13 +184,12 @@ public class CarService {
 			session.getTask().cancel();
 		}
 
-		int  fuel       = session.getCurrentFuel();
 		int  durability = session.getCurrentDurability();
 		UUID placerUUID = session.getDriverUUID();
 
-		storePdc(session.getEntity(), session.getCar().getCarId(), fuel, durability, placerUUID);
+		storePdc(session.getEntity(), session.getCar().getCarId(), 0, durability, placerUUID);
 
-		ParkedVehicle pv = new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, fuel, durability);
+		ParkedVehicle pv = new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, 0, durability);
 		parkedVehicles.put(entityUUID, pv);
 		vehicleRegistry.unregister(entityUUID);
 
@@ -198,7 +200,7 @@ public class CarService {
 			ParkedCar existing = parkedCarRecords.get(entityUUID);
 			String    dbId     = existing != null ? existing.getDbId() : UUID.randomUUID().toString();
 			ParkedCar record = new ParkedCar(dbId, session.getCar().getCarId(), loc.getWorld().getName(), loc.getX(),
-			                                 loc.getY(), loc.getZ(), loc.getYaw(), fuel, durability, placerUUID);
+			                                 loc.getY(), loc.getZ(), loc.getYaw(), 0, durability, placerUUID);
 			parkedCarRecords.put(entityUUID, record);
 			parkedCarRepository.save(record);
 		}
@@ -225,7 +227,6 @@ public class CarService {
 
 		ItemStack   item    = parked.getCar().buildItem();
 		ItemBuilder builder = new ItemBuilder(item);
-		builder.addTag(CarKey.CAR_FUEL.getKey(), parked.getFuel());
 		builder.addTag(CarKey.CAR_DURABILITY.getKey(), parked.getDurability());
 		builder.addTag(CarKey.CAR_OWNER.getKey(), player.getUniqueId().toString());
 		player.getInventory().addItem(builder.build());
@@ -300,11 +301,10 @@ public class CarService {
 			UUID entityUUID = session.getEntity().getEntityUUID();
 			if (entityUUID == null) continue;
 
-			int  fuel       = session.getCurrentFuel();
 			int  durability = session.getCurrentDurability();
 			UUID placerUUID = session.getDriverUUID();
 
-			ParkedVehicle pv = new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, fuel, durability);
+			ParkedVehicle pv = new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, 0, durability);
 			parkedVehicles.put(entityUUID, pv);
 
 			Entity entity = session.getEntity().getBukkitEntity();
@@ -313,7 +313,7 @@ public class CarService {
 				ParkedCar existing = parkedCarRecords.get(entityUUID);
 				String    dbId     = existing != null ? existing.getDbId() : UUID.randomUUID().toString();
 				ParkedCar record = new ParkedCar(dbId, session.getCar().getCarId(), loc.getWorld().getName(),
-				                                 loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), fuel, durability,
+				                                 loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), 0, durability,
 				                                 placerUUID);
 				parkedCarRecords.put(entityUUID, record);
 			}

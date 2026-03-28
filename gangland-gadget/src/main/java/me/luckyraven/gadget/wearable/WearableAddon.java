@@ -108,6 +108,22 @@ public class WearableAddon extends WearableService {
 				}
 			}
 
+			// Jetpack section (optional)
+			String fuelKey             = null;
+			int    fuelConsumptionRate = 0;
+			double ascendPower         = 0;
+			double glideDescentRate    = 0;
+			double maxSpeedY           = 0;
+
+			ConfigurationSection jetpackSection = section.getConfigurationSection("Jetpack");
+			if (jetpackSection != null) {
+				fuelKey             = jetpackSection.getString("Fuel_Key", "");
+				fuelConsumptionRate = jetpackSection.getInt("Fuel_Consumption_Rate", 2);
+				ascendPower         = jetpackSection.getDouble("Ascend_Power", 0.35);
+				glideDescentRate    = jetpackSection.getDouble("Glide_Descent_Rate", -0.05);
+				maxSpeedY           = jetpackSection.getDouble("Max_Speed_Y", 0.8);
+			}
+
 			Wearable wearable = Wearable.builder()
 			                            .permission(permission)
 			                            .material(material)
@@ -120,6 +136,11 @@ public class WearableAddon extends WearableService {
 			                            .traits(traits)
 			                            .leatherColor(leatherColor)
 			                            .temporary(false)
+			                            .fuelKey(fuelKey)
+			                            .fuelConsumptionRate(fuelConsumptionRate)
+			                            .ascendPower(ascendPower)
+			                            .glideDescentRate(glideDescentRate)
+			                            .maxSpeedY(maxSpeedY)
 			                            .build();
 
 			register(key, wearable);

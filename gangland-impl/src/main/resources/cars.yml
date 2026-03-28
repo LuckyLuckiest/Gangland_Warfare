@@ -33,9 +33,7 @@
 #
 #   Fuel:
 #     Enabled           - whether fuel is consumed while driving
-#     Max_Fuel          - maximum fuel capacity in ticks
-#     Fuel_Material     - item used to refuel
-#     Fuel_Per_Item     - ticks of fuel per fuel item
+#     Fuel_Key          - references a fuel unique item key (e.g. "gasoline")
 #
 #   Repair:
 #     Max_Durability    - maximum repair durability of the car
@@ -58,9 +56,7 @@ sports_car:
       Max_Health: 100.0
    Fuel:
       Enabled: false
-      Max_Fuel: 6000
-      Fuel_Material: COAL
-      Fuel_Per_Item: 1200
+      Fuel_Key: ""
    Repair:
       Max_Durability: 500
 
@@ -82,8 +78,6 @@ pickup_truck:
       Max_Health: 200.0
    Fuel:
       Enabled: true
-      Max_Fuel: 12000
-      Fuel_Material: COAL
-      Fuel_Per_Item: 2400
+      Fuel_Key: "gasoline"
    Repair:
       Max_Durability: 800

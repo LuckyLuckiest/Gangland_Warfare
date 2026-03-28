@@ -4,9 +4,12 @@ import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.exception.PluginException;
+import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
+import me.luckyraven.util.item.fuel.Fuel;
 import me.luckyraven.util.item.unique.UniqueItem;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.IOException;
@@ -18,11 +21,13 @@ public class UniqueItemAddon implements Comparator<UniqueItem> {
 	private final Map<String, UniqueItem> uniqueItems;
 	private final PermissionManager       permissionManager;
 	private final FileManager             fileManager;
+	private final FuelService             fuelService;
 
-	public UniqueItemAddon(PermissionManager permissionManager, FileManager fileManager) {
+	public UniqueItemAddon(PermissionManager permissionManager, FileManager fileManager, FuelService fuelService) {
 		this.uniqueItems       = new HashMap<>();
 		this.fileManager       = fileManager;
 		this.permissionManager = permissionManager;
+		this.fuelService       = fuelService;
 	}
 
 	public void initialize() {
@@ -99,23 +104,45 @@ public class UniqueItemAddon implements Comparator<UniqueItem> {
 
 			boolean addToInventory = slot > -1;
 
+			// Fuel section (optional)
+			Fuel                 fuel        = null;
+			ConfigurationSection fuelSection = section.getConfigurationSection("Fuel");
+			if (fuelSection != null) {
+				String    fuelKey            = fuelSection.getString("Fuel_Key", "");
+				int       maxFuel            = fuelSection.getInt("Max_Fuel", 6000);
+				int       fuelPerItem        = fuelSection.getInt("Fuel_Per_Item", 1200);
+				String    fuelMaterialString = fuelSection.getString("Fuel_Material", "COAL");
+				XMaterial fuelMaterial       = XMaterial.matchXMaterial(fuelMaterialString).orElse(XMaterial.COAL);
+
+				fuel = Fuel.builder()
+				           .fuelKey(fuelKey)
+				           .maxFuel(maxFuel)
+				           .displayName(name)
+				           .fuelMaterial(fuelMaterial)
+				           .fuelPerItem(fuelPerItem)
+				           .build();
+
+				fuelService.registerFuel(fuel);
+			}
+
 			var uniqueItem = UniqueItem.builder()
-									   .permission(permission)
-									   .uniqueItem(key)
-									   .material(material.get())
-									   .name(name)
-									   .addOnJoin(addOnJoin)
-									   .addOnRespawn(addOnRespawn)
-									   .dropOnDeath(dropOnDeath)
-									   .allowDuplicates(allowDuplicates)
-									   .addToInventory(addToInventory)
-									   .lore(lore)
-									   .inventorySlot(slot)
-									   .overridesSlot(overrides)
-									   .movable(movable)
-									   .droppable(droppable)
-									   .lootKey(lootKey)
-									   .build();
+			                           .permission(permission)
+			                           .uniqueItem(key)
+			                           .material(material.get())
+			                           .name(name)
+			                           .addOnJoin(addOnJoin)
+			                           .addOnRespawn(addOnRespawn)
+			                           .dropOnDeath(dropOnDeath)
+			                           .allowDuplicates(allowDuplicates)
+			                           .addToInventory(addToInventory)
+			                           .lore(lore)
+			                           .inventorySlot(slot)
+			                           .overridesSlot(overrides)
+			                           .movable(movable)
+			                           .droppable(droppable)
+			                           .lootKey(lootKey)
+			                           .fuel(fuel)
+			                           .build();
 
 			this.uniqueItems.put(key, uniqueItem);
 			temp.add(key);

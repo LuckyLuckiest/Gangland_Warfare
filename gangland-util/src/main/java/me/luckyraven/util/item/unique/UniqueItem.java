@@ -5,12 +5,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.item.fuel.Fuel;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -37,6 +39,9 @@ public class UniqueItem implements Comparable<ItemStack> {
 	private boolean      droppable;
 
 	private String lootKey;
+
+	@Nullable
+	private Fuel fuel;
 
 	@Override
 	public int compareTo(@NotNull ItemStack itemStack) {
@@ -71,6 +76,10 @@ public class UniqueItem implements Comparable<ItemStack> {
 
 		if (lootKey != null && !lootKey.isEmpty()) {
 			itemBuilder.addTag("loot_key", lootKey);
+		}
+
+		if (fuel != null) {
+			fuel.stampNBT(itemBuilder);
 		}
 
 		return itemBuilder.build();

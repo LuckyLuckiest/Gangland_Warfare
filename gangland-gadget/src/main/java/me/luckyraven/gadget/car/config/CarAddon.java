@@ -92,18 +92,12 @@ public class CarAddon extends CarManager {
 			// Fuel section
 			ConfigurationSection fuelSection = section.getConfigurationSection("Fuel");
 
-			boolean  fuelEnabled  = false;
-			int      maxFuel      = 6000;
-			Material fuelMaterial = Material.COAL;
-			int      fuelPerItem  = 1200;
+			boolean fuelEnabled = false;
+			String  fuelKey     = "";
 
 			if (fuelSection != null) {
 				fuelEnabled = fuelSection.getBoolean("Enabled", false);
-				maxFuel     = fuelSection.getInt("Max_Fuel", 6000);
-				fuelPerItem = fuelSection.getInt("Fuel_Per_Item", 1200);
-
-				String fuelMaterialString = fuelSection.getString("Fuel_Material", "COAL");
-				fuelMaterial = XMaterial.matchXMaterial(fuelMaterialString).orElse(XMaterial.COAL).get();
+				fuelKey     = fuelSection.getString("Fuel_Key", "");
 			}
 
 			// Repair section
@@ -128,9 +122,7 @@ public class CarAddon extends CarManager {
 			             .turnSpeed(turnSpeed)
 			             .maxHealth(maxHealth)
 			             .fuelEnabled(fuelEnabled)
-			             .maxFuel(maxFuel)
-			             .fuelMaterial(fuelMaterial)
-			             .fuelPerItem(fuelPerItem)
+			             .fuelKey(fuelKey)
 			             .maxDurability(maxDurability)
 			             .dropOnDeath(dropOnDeath)
 			             .droppable(droppable)

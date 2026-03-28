@@ -99,3 +99,26 @@ legendary_key:
       Overrides: false
       Movable: true
       Droppable: true
+
+# Fuel can for vehicles and gadgets
+gasoline:
+   Permission: "gangland.uniqueitem.gasoline"
+   Material: GLASS_BOTTLE
+   Name: "&6&lFuel Can"
+   Lore:
+      - "&7Portable fuel container"
+      - "&7Used to power vehicles and gadgets"
+   Fuel:
+      Fuel_Key: "gasoline"
+      Max_Fuel: 6000
+      Fuel_Material: COAL
+      Fuel_Per_Item: 1200
+   Inventory:
+      Add_On_Join: false
+      Add_On_Respawn: false
+      Drop_On_Death: true
+      Allow_Duplicates: true
+      Slot: -1
+      Overrides: false
+      Movable: true
+      Droppable: true

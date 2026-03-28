@@ -12,6 +12,7 @@ import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -32,7 +33,6 @@ public class VehicleSession {
 	private       Car                 car;
 	@Setter
 	private       VehicleMovementTask task;
-	private       int                 currentFuel;
 	private       int                 currentDurability;
 
 	// WASD input state — written by VehicleInputInterceptor (Netty IO thread), read by VehicleMovementTask (main thread)
@@ -42,28 +42,18 @@ public class VehicleSession {
 	private volatile boolean inputRight;
 
 	/**
-	 * @param initialFuel fuel carried over from the item (or {@code car.getMaxFuel()} for a fresh car)
 	 * @param initialDurability durability carried over from the item
 	 */
-	public VehicleSession(VehicleEntity entity, Car car, Player driver, int initialFuel, int initialDurability) {
+	public VehicleSession(VehicleEntity entity, Car car, Player driver, int initialDurability) {
 		this.entity            = entity;
 		this.car               = car;
 		this.driver            = driver;
 		this.driverUUID        = driver.getUniqueId();
-		this.currentFuel       = initialFuel;
 		this.currentDurability = initialDurability;
 
 		this.healthBar = Bukkit.createBossBar(buildHealthTitle(), BarColor.RED, BarStyle.SOLID);
 		this.healthBar.setProgress(durabilityProgress());
 		this.healthBar.addPlayer(driver);
-	}
-
-	public void consumeFuel(int amount) {
-		currentFuel = Math.max(0, currentFuel - amount);
-	}
-
-	public boolean hasFuel() {
-		return !car.isFuelEnabled() || currentFuel > 0;
 	}
 
 	public void damage(int amount) {
@@ -82,15 +72,17 @@ public class VehicleSession {
 	}
 
 	/**
-	 * Refreshes the boss bar health display and action bar fuel display for the driver. Called every tick by
-	 * {@link VehicleMovementTask}.
+	 * Refreshes the boss bar health display for the driver. Called every tick by {@link VehicleMovementTask}.
+	 * Fuel display is handled separately by the movement task via {@link me.luckyraven.gadget.fuel.FuelService}.
+	 *
+	 * @param fuelDisplay optional action bar message for fuel; {@code null} if fuel is disabled
 	 */
-	public void updateDisplays() {
+	public void updateDisplays(@Nullable String fuelDisplay) {
 		healthBar.setProgress(durabilityProgress());
 		healthBar.setTitle(buildHealthTitle());
 
-		if (car.isFuelEnabled()) {
-			ChatUtil.sendActionBar(driver, "&6⛽ Fuel &f" + currentFuel + "&7/&f" + car.getMaxFuel());
+		if (fuelDisplay != null) {
+			ChatUtil.sendActionBar(driver, fuelDisplay);
 		}
 	}
 
@@ -102,13 +94,13 @@ public class VehicleSession {
 	}
 
 	/**
-	 * Builds the car item with updated fuel and durability NBT values to return to the player.
+	 * Builds the car item with updated durability NBT values to return to the player.
+	 * Fuel is tracked separately via the fuel item system.
 	 */
 	public ItemStack buildReturnItem() {
 		ItemStack   item    = car.buildItem();
 		ItemBuilder builder = new ItemBuilder(item);
 
-		builder.addTag(CarKey.CAR_FUEL.getKey(), currentFuel);
 		builder.addTag(CarKey.CAR_DURABILITY.getKey(), currentDurability);
 		builder.addTag(CarKey.CAR_OWNER.getKey(), driverUUID.toString());
 

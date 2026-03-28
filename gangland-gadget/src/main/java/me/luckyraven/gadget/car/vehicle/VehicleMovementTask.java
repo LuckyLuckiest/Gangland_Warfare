@@ -2,6 +2,8 @@ package me.luckyraven.gadget.car.vehicle;
 
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarService;
+import me.luckyraven.gadget.fuel.FuelService;
+import me.luckyraven.util.item.fuel.FuelBar;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -17,13 +19,15 @@ public class VehicleMovementTask extends BukkitRunnable {
 
 	private final VehicleSession session;
 	private final CarService     carService;
+	private final FuelService    fuelService;
 
 	private double currentSpeed;
 	private float  currentYaw;
 
-	public VehicleMovementTask(VehicleSession session, CarService carService) {
+	public VehicleMovementTask(VehicleSession session, CarService carService, FuelService fuelService) {
 		this.session      = session;
 		this.carService   = carService;
+		this.fuelService  = fuelService;
 		this.currentSpeed = 0;
 		this.currentYaw   = session.getDriver().getLocation().getYaw();
 	}
@@ -56,10 +60,11 @@ public class VehicleMovementTask extends BukkitRunnable {
 		boolean right    = session.isInputRight();
 
 		// Fuel check: no fuel — coast to a stop
-		if (!session.hasFuel()) {
+		boolean hasFuel = !car.isFuelEnabled() || fuelService.hasFuel(driver, car.getFuelKey());
+		if (!hasFuel) {
 			currentSpeed = decelerate(currentSpeed, car.getDeceleration() * 3);
 			entity.updateMovement(currentSpeed, currentYaw);
-			session.updateDisplays();
+			session.updateDisplays(buildFuelDisplay(driver, car));
 			return;
 		}
 
@@ -87,14 +92,24 @@ public class VehicleMovementTask extends BukkitRunnable {
 
 		// Consume fuel when moving
 		if (car.isFuelEnabled() && Math.abs(currentSpeed) > 0.001) {
-			session.consumeFuel(1);
+			fuelService.consumeFuel(driver, car.getFuelKey(), 1);
 		}
 
-		session.updateDisplays();
+		session.updateDisplays(buildFuelDisplay(driver, car));
 	}
 
 	public double getCurrentSpeed() {
 		return currentSpeed;
+	}
+
+	/**
+	 * Builds the action bar fuel display string, or {@code null} if fuel is not enabled.
+	 */
+	private String buildFuelDisplay(Player driver, Car car) {
+		if (!car.isFuelEnabled()) return null;
+		int current = fuelService.getFuelLevel(driver, car.getFuelKey());
+		int max     = fuelService.getMaxFuelLevel(driver, car.getFuelKey());
+		return FuelBar.render(current, max);
 	}
 
 	/**

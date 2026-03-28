@@ -29,10 +29,8 @@ public class Car {
 	private final double maxHealth;
 
 	// Fuel
-	private final boolean  fuelEnabled;
-	private final int      maxFuel;
-	private final Material fuelMaterial;
-	private final int      fuelPerItem;
+	private final boolean fuelEnabled;
+	private final String  fuelKey;
 
 	// Repair
 	private final int maxDurability;
@@ -78,8 +76,6 @@ public class Car {
 		}
 
 		builder.addTag(CarKey.CAR_ID.getKey(), carId);
-		builder.addTag(CarKey.CAR_FUEL.getKey(), maxFuel);
-		builder.addTag(CarKey.CAR_MAX_FUEL.getKey(), maxFuel);
 		builder.addTag(CarKey.CAR_DURABILITY.getKey(), maxDurability);
 		builder.addTag(CarKey.CAR_MAX_DURABILITY.getKey(), maxDurability);
 
