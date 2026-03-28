@@ -8,10 +8,14 @@ import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -38,6 +42,51 @@ public class FuelHoldDisplayListener implements Listener {
 	public FuelHoldDisplayListener(FuelService fuelService, JavaPlugin plugin) {
 		this.fuelService = fuelService;
 		this.plugin      = plugin;
+	}
+
+	/**
+	 * Refuels the player's fuel item when they right-click while holding the matching fuel material. Consumes one unit
+	 * of the held material and adds {@link Fuel#getFuelPerItem()} fuel ticks.
+	 */
+	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+	public void onRefuel(PlayerInteractEvent event) {
+		if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+		if (event.getHand() != EquipmentSlot.HAND) return;
+
+		Player    player   = event.getPlayer();
+		ItemStack mainHand = player.getInventory().getItemInMainHand();
+		if (mainHand.getType().isAir()) return;
+
+		Fuel fuelDef = fuelService.findFuelByMaterial(mainHand.getType());
+		if (fuelDef == null) return;
+
+		event.setCancelled(true);
+
+		String fuelKey = fuelDef.getFuelKey();
+		int    slot    = fuelService.findFuelSlot(player, fuelKey);
+
+		if (slot < 0) {
+			player.sendMessage(
+					ChatUtil.color("&cYou don't have a &6" + fuelDef.getDisplayName() + " &cfuel item to fill."));
+			return;
+		}
+
+		boolean added = fuelService.addFuel(player, fuelKey, fuelDef.getFuelPerItem());
+
+		if (!added) {
+			player.sendMessage(ChatUtil.color("&eYour " + fuelDef.getDisplayName() + " &eis already full!"));
+			return;
+		}
+
+		if (mainHand.getAmount() > 1) {
+			mainHand.setAmount(mainHand.getAmount() - 1);
+		} else {
+			player.getInventory().setItemInMainHand(null);
+		}
+
+		int current = fuelService.getFuelLevel(player, fuelKey);
+		int max     = fuelService.getMaxFuelLevel(player, fuelKey);
+		ChatUtil.sendActionBar(player, FuelBar.render(current, max));
 	}
 
 	@EventHandler

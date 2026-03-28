@@ -1,6 +1,7 @@
 package me.luckyraven.gadget.fuel;
 
 import me.luckyraven.item.fuel.Fuel;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -44,6 +45,19 @@ public class FuelService {
 	@Nullable
 	public Fuel getFuel(String fuelKey) {
 		return fuelRegistry.get(fuelKey);
+	}
+
+	/**
+	 * Returns the first registered fuel definition whose {@code fuelMaterial} matches the given material, or
+	 * {@code null} if none match.
+	 */
+	@Nullable
+	public Fuel findFuelByMaterial(Material material) {
+		for (Fuel fuel : fuelRegistry.values()) {
+			Material fuelMat = fuel.getFuelMaterial().parseMaterial();
+			if (fuelMat != null && fuelMat == material) return fuel;
+		}
+		return null;
 	}
 
 	// =========================================================================
