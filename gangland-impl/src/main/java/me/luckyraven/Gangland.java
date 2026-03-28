@@ -11,6 +11,7 @@ import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.gadget.car.CarService;
+import me.luckyraven.gadget.jetpack.JetpackService;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.updater.UpdateChecker;
@@ -56,6 +57,10 @@ public final class Gangland extends JavaPlugin {
 	public void onDisable() {
 		// vault soft dependency economy check
 		if (EconomyHandler.getVaultEconomy() != null) EconomyHandler.setVaultEconomy(null);
+
+		// deactivate all jetpack sessions before shutdown
+		JetpackService jetpackService = initializer.getJetpackService();
+		if (jetpackService != null) jetpackService.deactivateAll();
 
 		// convert active car sessions to parked records BEFORE force-save so the data supplier
 		// includes the converted sessions when PeriodicalUpdates flushes all repositories

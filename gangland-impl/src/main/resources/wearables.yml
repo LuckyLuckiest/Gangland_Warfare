@@ -94,3 +94,25 @@ heavy_vest:
       BULLETPROOF: 2
       TOUGHENED: 1
       LIGHTWEIGHT: 1
+
+jetpack:
+   Permission: "gangland.wearables.jetpack"
+   Material: IRON_CHESTPLATE
+   Name: "&b&lJetpack"
+   Drop_On_Death: false
+   Droppable: false
+   Base_Damage_Reduction: 0.05
+   Leather_Color: ""
+   Lore:
+      - "&7Strap it on and take flight"
+      - "&7Hold &bSPACE &7to fly upward"
+      - "&7Fuel: &fGasoline"
+   Traits:
+      REINFORCED: 1
+      LIGHTWEIGHT: 2
+   Jetpack:
+      Fuel_Key: "gasoline"
+      Fuel_Consumption_Rate: 2
+      Ascend_Power: 0.35
+      Glide_Descent_Rate: -0.05
+      Max_Speed_Y: 0.8

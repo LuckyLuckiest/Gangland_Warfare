@@ -52,7 +52,12 @@ public enum WearableTrait {
 	/**
 	 * Purely cosmetic / descriptive trait - indicates the armor is lightweight. No combat effect.
 	 */
-	LIGHTWEIGHT("lightweight", "Reduces movement encumbrance", 2, 0.0);
+	LIGHTWEIGHT("lightweight", "Reduces movement encumbrance", 2, 0.0),
+
+	/**
+	 * Reduces fuel consumption rate for fuel-powered gadgets. 10 % reduction per level (max 2 -> up to 20 %).
+	 */
+	FUEL_EFFICIENT("fuel_efficient", "Reduces fuel consumption", 2, 0.10);
 
 	/**
 	 * Config / NBT key used to identify this trait.

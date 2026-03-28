@@ -80,6 +80,8 @@ import me.luckyraven.gadget.car.CarService;
 import me.luckyraven.gadget.car.ParkedCar;
 import me.luckyraven.gadget.car.config.CarAddon;
 import me.luckyraven.gadget.car.vehicle.VehicleRegistry;
+import me.luckyraven.gadget.fuel.FuelService;
+import me.luckyraven.gadget.jetpack.JetpackService;
 import me.luckyraven.gadget.repair.RepairManager;
 import me.luckyraven.gadget.repair.anvil.RepairAnvilGui;
 import me.luckyraven.gadget.repair.config.RepairLoader;
@@ -200,6 +202,9 @@ public final class Initializer {
 	// Gadgets
 	private CarAddon                   carAddon;
 	private CarService                 carService;
+	// Fuel & Jetpack
+	private FuelService                fuelService;
+	private JetpackService             jetpackService;
 	// Database
 	private GanglandDatabase           ganglandDatabase;
 	// Placeholder
@@ -419,9 +424,14 @@ public final class Initializer {
 		// initialize weapon addon
 		weaponLoader();
 
-		// initialize unique item addon
+		// initialize fuel service
+		if (fuelService == null) {
+			fuelService = new me.luckyraven.gadget.fuel.FuelService();
+		}
+
+		// initialize unique item addon (registers fuel definitions into FuelService)
 		if (uniqueItemAddon == null) {
-			uniqueItemAddon = new UniqueItemAddon(permissionManager, fileManager);
+			uniqueItemAddon = new UniqueItemAddon(permissionManager, fileManager, fuelService);
 		}
 
 		uniqueItemAddon.initialize();
@@ -432,6 +442,11 @@ public final class Initializer {
 		}
 
 		wearableAddon.initialize();
+
+		// initialize jetpack service
+		if (jetpackService == null) {
+			jetpackService = new me.luckyraven.gadget.jetpack.JetpackService(fuelService, gangland);
+		}
 
 		// initialize car addon
 		if (carAddon == null) {
@@ -545,7 +560,7 @@ public final class Initializer {
 	public void carServiceInit() {
 		IRepository<ParkedCar> parkedCarRepository = ganglandDatabase.getRepositoryRegistry()
 		                                                             .getRepository(ParkedCar.class);
-		carService = new CarService(carAddon, new VehicleRegistry(), gangland, parkedCarRepository);
+		carService = new CarService(carAddon, new VehicleRegistry(), gangland, parkedCarRepository, fuelService);
 		parkedCarRepository.setDataSupplier(() -> new ArrayList<>(carService.getParkedCarRecords().values()));
 		carService.reloadParkedVehicles();
 	}
@@ -658,6 +673,8 @@ public final class Initializer {
 		dependencyContainer.registerInstance(JailService.class, jailService);
 		dependencyContainer.registerInstance(CarManager.class, carAddon);
 		dependencyContainer.registerInstance(CarService.class, carService);
+		dependencyContainer.registerInstance(me.luckyraven.gadget.fuel.FuelService.class, fuelService);
+		dependencyContainer.registerInstance(me.luckyraven.gadget.jetpack.JetpackService.class, jetpackService);
 
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 

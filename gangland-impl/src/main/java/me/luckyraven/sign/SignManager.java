@@ -122,7 +122,8 @@ public class SignManager extends SignService {
 		// view
 		String   viewKey  = signPrefix + "view";
 		SignType viewType = new SignType(viewKey, "VIEW");
-		Sign     view     = new ViewSign(gangland, weaponService, ammunitionManager, carManager, viewType);
+		Sign view = new ViewSign(gangland, weaponService, ammunitionManager, carManager, wearableService,
+		                         uniqueItemAddon, viewType);
 
 		formatRegistry.register(view.createFormat());
 

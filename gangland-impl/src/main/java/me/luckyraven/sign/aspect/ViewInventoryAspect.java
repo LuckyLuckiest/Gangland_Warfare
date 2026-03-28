@@ -7,14 +7,19 @@ import me.luckyraven.gadget.car.CarManager;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
+import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.sign.model.ParsedSign;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.item.unique.UniqueItem;
+import me.luckyraven.util.item.wearable.Wearable;
+import me.luckyraven.util.item.wearable.WearableTrait;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.Ammunition;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.dto.AmmunitionData;
 import me.luckyraven.weapon.types.gun.GunWeapon;
+import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -22,6 +27,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 public class ViewInventoryAspect implements SignAspect {
@@ -30,6 +36,8 @@ public class ViewInventoryAspect implements SignAspect {
 	private final WeaponService     weaponService;
 	private final AmmunitionManager ammunitionManager;
 	private final CarManager        carManager;
+	private final WearableService   wearableService;
+	private final UniqueItemAddon   uniqueItemAddon;
 
 	@Override
 	public AspectResult execute(Player player, ParsedSign sign) {
@@ -47,6 +55,13 @@ public class ViewInventoryAspect implements SignAspect {
 		if (ammunitionManager.getAmmunitionKeys().contains(itemName)) {
 			openAmmunitionView(player, itemName);
 			return AspectResult.success("Opened ammunition view: " + itemName);
+		}
+
+		// Try to find wearable
+		Wearable wearable = wearableService.getWearable(itemName);
+		if (wearable != null) {
+			openWearableView(player, wearable);
+			return AspectResult.success("Opened wearable view: " + itemName);
 		}
 
 		// Try to find car
@@ -203,8 +218,8 @@ public class ViewInventoryAspect implements SignAspect {
 		lore.add("&7Durability: &f" + car.getMaxDurability());
 
 		if (car.isFuelEnabled()) {
-			lore.add("&7Fuel: &f" + car.getMaxFuel() + " &7ticks");
-			lore.add("&7Fuel Item: &f" + car.getFuelMaterial().name());
+			lore.add("&7Fuel: &fRequired");
+			lore.add("&7Fuel Type: &f" + car.getFuelKey());
 		} else {
 			lore.add("&7Fuel: &aUnlimited");
 		}
@@ -218,6 +233,61 @@ public class ViewInventoryAspect implements SignAspect {
 		InventoryUtil.fillInventory(inventory, fill);
 
 		inventory.open(player);
+	}
+
+	private void openWearableView(Player player, Wearable wearable) {
+		String title = "&6View: &e" + wearable.getName();
+
+		InventoryHandler inventory = new InventoryHandler(plugin, title, 9, player);
+
+		// Wearable item in slot 3 with stats lore
+		List<String> lore = new ArrayList<>();
+		lore.add("&7Type: &fWearable");
+		lore.add("&7Base Reduction: &f" + (int) (wearable.getBaseDamageReduction() * 100) + "%");
+
+		if (wearable.getTraits() != null && !wearable.getTraits().isEmpty()) {
+			lore.add("&7Traits:");
+			for (Map.Entry<WearableTrait, Integer> entry : wearable.getTraits().entrySet()) {
+				lore.add("  &8- &f" + entry.getKey().name() + " " + entry.getValue());
+			}
+		}
+
+		if (wearable.isJetpack()) {
+			lore.add("");
+			lore.add("&bJetpack Properties:");
+			lore.add("  &7Ascend Power: &f" + wearable.getAscendPower());
+			lore.add("  &7Glide Rate: &f" + wearable.getGlideDescentRate());
+			lore.add("  &7Fuel Type: &f" + wearable.getFuelKey());
+		}
+
+		ItemStack wearableItem = new ItemBuilder(wearable.buildItem()).setLore(lore).build();
+		inventory.setItem(3, wearableItem, false, null);
+
+		// If jetpack, show required fuel item in slot 5
+		if (wearable.isJetpack() && wearable.getFuelKey() != null) {
+			UniqueItem fuelUniqueItem = findFuelUniqueItem(wearable.getFuelKey());
+			if (fuelUniqueItem != null) {
+				List<String> fuelLore = new ArrayList<>();
+				fuelLore.add("&7Required Fuel");
+				fuelLore.add("&7Type: &f" + fuelUniqueItem.getName());
+
+				ItemStack fuelItem = new ItemBuilder(fuelUniqueItem.buildItem()).setLore(fuelLore).build();
+				inventory.setItem(5, fuelItem, false, null);
+			}
+		}
+
+		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
+		InventoryUtil.fillInventory(inventory, fill);
+		inventory.open(player);
+	}
+
+	private UniqueItem findFuelUniqueItem(String fuelKey) {
+		for (UniqueItem item : uniqueItemAddon.getUniqueItems().values()) {
+			if (item.getFuel() != null && fuelKey.equals(item.getFuel().getFuelKey())) {
+				return item;
+			}
+		}
+		return null;
 	}
 
 	private Car findCar(String identifier) {

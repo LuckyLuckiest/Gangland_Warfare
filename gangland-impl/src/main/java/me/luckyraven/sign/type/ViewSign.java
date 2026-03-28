@@ -3,6 +3,7 @@ package me.luckyraven.sign.type;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.Gangland;
 import me.luckyraven.gadget.car.CarManager;
+import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.aspect.SignAspect;
 import me.luckyraven.sign.aspect.ViewInventoryAspect;
@@ -18,6 +19,7 @@ import me.luckyraven.sign.validation.ViewSignValidator;
 import me.luckyraven.util.color.Color;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
+import me.luckyraven.weapon.wearable.WearableService;
 
 import java.util.List;
 
@@ -28,6 +30,8 @@ public class ViewSign implements Sign {
 	private final WeaponService     weaponService;
 	private final AmmunitionManager ammunitionManager;
 	private final CarManager        carManager;
+	private final WearableService   wearableService;
+	private final UniqueItemAddon   uniqueItemAddon;
 	private final SignType          signType;
 
 	@Override
@@ -37,7 +41,8 @@ public class ViewSign implements Sign {
 		SignParser    parser    = new ViewSignParser(signType);
 
 		// aspect
-		SignAspect viewAspect = new ViewInventoryAspect(gangland, weaponService, ammunitionManager, carManager);
+		SignAspect viewAspect = new ViewInventoryAspect(gangland, weaponService, ammunitionManager, carManager,
+		                                                wearableService, uniqueItemAddon);
 
 		// handler
 		List<SignAspect> aspects = List.of(viewAspect);

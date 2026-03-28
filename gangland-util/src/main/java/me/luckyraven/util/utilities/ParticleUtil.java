@@ -8,6 +8,7 @@ import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -65,9 +66,9 @@ public class ParticleUtil {
 			double theta = rng.nextDouble() * halfAngle;
 			double phi   = rng.nextDouble() * 2 * Math.PI;
 			Vector rayDir = norm.clone()
-								.add(perp1.clone().multiply(Math.sin(theta) * Math.cos(phi)))
-								.add(perp2.clone().multiply(Math.sin(theta) * Math.sin(phi)))
-								.normalize();
+			                    .add(perp1.clone().multiply(Math.sin(theta) * Math.cos(phi)))
+			                    .add(perp2.clone().multiply(Math.sin(theta) * Math.sin(phi)))
+			                    .normalize();
 
 			int points = Math.max(1, (int) (range * 2.5));
 			for (int i = 0; i <= points; i++) {
@@ -193,6 +194,57 @@ public class ParticleUtil {
 
 		Location target = eye.clone().add(direction.clone().normalize().multiply(range));
 		spawnLine(eye, target, flame, Math.max(1, (int) (range * 2)), null);
+	}
+
+	/**
+	 * Spawns two flame trails from behind the player's back, simulating jetpack exhaust. Trails originate from slightly
+	 * behind and below the player's shoulders, offset left and right.
+	 */
+	public static void spawnJetpackFlame(Player player) {
+		Location loc   = player.getLocation();
+		World    world = loc.getWorld();
+		if (world == null) return;
+
+		Particle flame = XParticle.FLAME.get();
+		if (flame == null) flame = Particle.FLAME;
+		Particle smoke = XParticle.SMOKE.get();
+		if (smoke == null) smoke = Particle.SMOKE;
+
+		Vector direction = loc.getDirection().setY(0).normalize();
+		Vector right     = direction.clone().crossProduct(new Vector(0, 1, 0));
+		if (right.lengthSquared() < 0.001) {
+			right = direction.clone().crossProduct(new Vector(1, 0, 0));
+		}
+		right.normalize();
+
+		// Behind player, offset left and right for two exhaust nozzles
+		Vector   behind      = direction.clone().multiply(-0.4);
+		Location leftNozzle  = loc.clone().add(behind).add(right.clone().multiply(-0.3)).add(0, 0.8, 0);
+		Location rightNozzle = loc.clone().add(behind).add(right.clone().multiply(0.3)).add(0, 0.8, 0);
+
+		// Flame core
+		world.spawnParticle(flame, leftNozzle, 3, 0.05, 0.05, 0.05, 0.02, null);
+		world.spawnParticle(flame, rightNozzle, 3, 0.05, 0.05, 0.05, 0.02, null);
+
+		// Smoke trail slightly below flame
+		Location leftSmoke  = leftNozzle.clone().add(0, -0.3, 0);
+		Location rightSmoke = rightNozzle.clone().add(0, -0.3, 0);
+		world.spawnParticle(smoke, leftSmoke, 2, 0.08, 0.08, 0.08, 0.01, null);
+		world.spawnParticle(smoke, rightSmoke, 2, 0.08, 0.08, 0.08, 0.01, null);
+	}
+
+	/**
+	 * Spawns light smoke particles for jetpack glide mode (no fuel remaining).
+	 */
+	public static void spawnJetpackGlide(Player player) {
+		Location loc   = player.getLocation();
+		World    world = loc.getWorld();
+		if (world == null) return;
+
+		Particle smoke = XParticle.SMOKE.get();
+		if (smoke == null) smoke = Particle.SMOKE;
+
+		world.spawnParticle(smoke, loc.clone().add(0, 0.5, 0), 1, 0.1, 0.1, 0.1, 0.005, null);
 	}
 
 	public static void createBloodSplash(Entity entity, double damage) {

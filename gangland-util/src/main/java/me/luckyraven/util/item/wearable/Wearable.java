@@ -56,9 +56,13 @@ public class Wearable {
 	private final Color                       leatherColor;
 	private final boolean                     temporary;
 
-	// =========================================================================
-	// Item building
-	// =========================================================================
+	// Jetpack-specific fields (null/zero for non-jetpack wearables)
+	@Nullable
+	private final String fuelKey;
+	private final int    fuelConsumptionRate;
+	private final double ascendPower;
+	private final double glideDescentRate;
+	private final double maxSpeedY;
 
 	/**
 	 * Extra generic damage reduction from vanilla {@code PROTECTION} enchantment. Each level contributes 1.5 %.
@@ -120,20 +124,20 @@ public class Wearable {
 		}
 
 		String displayName = (item.hasItemMeta() && Objects.requireNonNull(itemMeta).hasDisplayName()) ?
-							 itemMeta.getDisplayName() :
-							 ChatUtil.color("&7" + item.getType().name().replace("_", " ").toLowerCase());
+		                     itemMeta.getDisplayName() :
+		                     ChatUtil.color("&7" + item.getType().name().replace("_", " ").toLowerCase());
 
 		return Wearable.builder()
-					   .material(item.getType())
-					   .name(displayName)
-					   .wearableKey("__vanilla__" + item.getType().name())
-					   .baseDamageReduction(vanillaMaterialReduction(item.getType()))
-					   .traits(Collections.emptyMap())
-					   .dropOnDeath(true)
-					   .droppable(true)
-					   .temporary(true)
-					   .leatherColor(leatherColor)
-					   .build();
+		               .material(item.getType())
+		               .name(displayName)
+		               .wearableKey("__vanilla__" + item.getType().name())
+		               .baseDamageReduction(vanillaMaterialReduction(item.getType()))
+		               .traits(Collections.emptyMap())
+		               .dropOnDeath(true)
+		               .droppable(true)
+		               .temporary(true)
+		               .leatherColor(leatherColor)
+		               .build();
 	}
 
 	/**
@@ -169,7 +173,7 @@ public class Wearable {
 	public static boolean isArmorMaterial(Material material) {
 		String name = material.name();
 		return name.endsWith("_HELMET") || name.endsWith("_CHESTPLATE") || name.endsWith("_LEGGINGS") ||
-			   name.endsWith("_BOOTS") || name.equals("TURTLE_HELMET");
+		       name.endsWith("_BOOTS") || name.equals("TURTLE_HELMET");
 	}
 
 	/**
@@ -192,6 +196,13 @@ public class Wearable {
 		if (name.startsWith("DIAMOND_")) return 0.13;
 		if (name.startsWith("NETHERITE_")) return 0.15;
 		return 0.03; // TURTLE_HELMET or unknown
+	}
+
+	/**
+	 * Returns whether this wearable is a jetpack (has fuel-powered flight capability).
+	 */
+	public boolean isJetpack() {
+		return fuelKey != null;
 	}
 
 	/**
