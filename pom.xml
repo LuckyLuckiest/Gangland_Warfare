@@ -20,19 +20,14 @@
     <modules>
         <module>gangland-impl</module>
         <module>gangland-build</module>
-        <module>gangland-weapon</module>
-        <module>gangland-util</module>
+        <module>gangland-core</module>
+        <module>gangland-item</module>
 
-        <module>scoreboard-api</module>
-        <module>inventory-api</module>
-        <module>sign-api</module>
-        <module>lootchest-api</module>
-        <module>logger-api</module>
-        <module>cops-n-crooks</module>
-        <module>gangland-gadget</module>
+        <module>gangland-ui</module>
+        <module>gangland-features</module>
 
+        <module>plugin-common</module>
         <module>plugin-persistence</module>
-        <module>plugin-exception</module>
 
         <!-- Compatibility modules -->
         <module>gangland-compatibility</module>
@@ -174,7 +169,7 @@
         <dependencies>
             <dependency>
                 <groupId>me.luckyraven</groupId>
-                <artifactId>logger-api</artifactId>
+                <artifactId>plugin-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
