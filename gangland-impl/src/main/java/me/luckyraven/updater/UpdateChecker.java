@@ -65,8 +65,8 @@ public class UpdateChecker {
 		return currentVersion;
 	}
 
-	public void downloadLatestVersion() {
-		if (!isResourceIdSet()) return;
+	public boolean downloadLatestVersion() {
+		if (!isResourceIdSet()) return false;
 
 		try {
 			String latestVersion = getLatestVersion();
@@ -83,7 +83,7 @@ public class UpdateChecker {
 
 				if (!mkdir) {
 					log.error("Failed to create release folder at {}", releaseFolder.getAbsolutePath());
-					return;
+					return false;
 				}
 			}
 
@@ -94,7 +94,7 @@ public class UpdateChecker {
 			// skip download if this version was already downloaded
 			if (outputFile.exists()) {
 				log.info("Version {} is already downloaded at {}", latestVersion, outputPath);
-				return;
+				return false;
 			}
 
 			// create a file output stream to write the downloaded file
@@ -106,11 +106,14 @@ public class UpdateChecker {
 			readableByteChannel.close();
 
 			log.info("Downloaded version {} to {}", latestVersion, outputPath);
+			return true;
 		} catch (FileNotFoundException exception) {
 			log.error("Unable to find the new file.", exception);
 		} catch (Exception exception) {
 			log.error("Unable to download the new file.", exception);
 		}
+
+		return false;
 	}
 
 	public void start() {

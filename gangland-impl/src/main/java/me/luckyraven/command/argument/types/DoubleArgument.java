@@ -1,19 +1,16 @@
 package me.luckyraven.command.argument.types;
 
-import lombok.Getter;
-import lombok.Setter;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.argument.ArgumentLock;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
-@Getter
-@Setter
 public class DoubleArgument extends Argument {
 
-	private boolean confirmed;
+	private final ArgumentLock lock = new ArgumentLock();
 
 	public DoubleArgument(JavaPlugin plugin, String argument, Tree<Argument> tree) {
 		this(plugin, new String[]{argument}, tree, null);
@@ -32,18 +29,17 @@ public class DoubleArgument extends Argument {
 	public DoubleArgument(JavaPlugin plugin, String[] arguments, Tree<Argument> tree,
 	                      TriConsumer<Argument, CommandSender, String[]> action, String permission) {
 		super(plugin, arguments, tree, action, permission);
-		this.confirmed = false;
 	}
 
 	@Override
 	public void executeArgument(CommandSender sender, String[] args) {
-		if (!confirmed) {
+		if (!lock.isLocked(sender)) {
 			sender.sendMessage(GanglandChatUtil.informationMessage("To confirm the command re-type it again."));
-			confirmed = true;
+			lock.lock(sender);
 			return;
 		}
 
-		this.confirmed = false;
+		lock.unlock(sender);
 
 		super.executeArgument(sender, args);
 	}

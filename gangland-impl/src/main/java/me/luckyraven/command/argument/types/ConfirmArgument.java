@@ -1,19 +1,18 @@
 package me.luckyraven.command.argument.types;
 
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.argument.ArgumentLock;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.function.Consumer;
 
 public class ConfirmArgument extends Argument {
 
-	private final Set<CommandSender> lockedSenders = new HashSet<>();
+	private final ArgumentLock lock = new ArgumentLock();
 
 	public ConfirmArgument(JavaPlugin plugin, Tree<Argument> tree) {
 		this(plugin, tree, null);
@@ -33,10 +32,7 @@ public class ConfirmArgument extends Argument {
 	 */
 	@SafeVarargs
 	public final void lock(CommandSender sender, Consumer<CommandSender>... phases) {
-		lockedSenders.add(sender);
-		for (Consumer<CommandSender> phase : phases) {
-			phase.accept(sender);
-		}
+		lock.lock(sender, phases);
 	}
 
 	/**
@@ -45,29 +41,28 @@ public class ConfirmArgument extends Argument {
 	 * @param sender the command sender to unlock
 	 */
 	public void unlock(CommandSender sender) {
-		lockedSenders.remove(sender);
+		lock.unlock(sender);
 	}
 
 	/**
 	 * Returns whether the given sender has an active 'confirm' session locked.
 	 *
 	 * @param sender the command sender to check
-	 *
 	 * @return true if the sender has a pending 'confirm'
 	 */
 	public boolean isLocked(CommandSender sender) {
-		return lockedSenders.contains(sender);
+		return lock.isLocked(sender);
 	}
 
 	@Override
 	public void executeArgument(CommandSender sender, String[] args) {
-		if (!isLocked(sender)) {
+		if (!lock.isLocked(sender)) {
 			sender.sendMessage(
 					GanglandChatUtil.errorMessage("Need to execute the initial statement to use this argument."));
 			return;
 		}
 
-		unlock(sender);
+		lock.unlock(sender);
 
 		super.executeArgument(sender, args);
 	}

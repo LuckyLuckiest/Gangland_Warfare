@@ -4,23 +4,21 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandHandler;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.DoubleArgument;
+import me.luckyraven.updater.UpdateChecker;
 import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public final class DownloadPluginCommand extends CommandHandler {
 
-	private final Map<CommandSender, Boolean> containsUpdate;
-	private final String                      shortPrefix;
+	private final String shortPrefix;
 
 	public DownloadPluginCommand(Gangland gangland, String shortPrefix) {
 		super(gangland, "update", false);
 
-		this.shortPrefix    = shortPrefix;
-		this.containsUpdate = new HashMap<>();
+		this.shortPrefix = shortPrefix;
 		var list = getCommands().entrySet()
 				.stream()
 				.filter(entry -> entry.getKey().startsWith("update"))
@@ -37,8 +35,6 @@ public final class DownloadPluginCommand extends CommandHandler {
 		boolean newUpdate = !getGangland().getUpdateChecker()
 		                                  .getLatestVersion()
 		                                  .equalsIgnoreCase(getGangland().getDescription().getVersion());
-
-		containsUpdate.put(commandSender, newUpdate);
 
 		if (newUpdate) {
 			String message = GanglandChatUtil.commandMessage(
@@ -64,13 +60,22 @@ public final class DownloadPluginCommand extends CommandHandler {
 
 	private @NotNull Argument getConfirm() {
 		return new DoubleArgument(getGangland(), "download", getArgumentTree(), (argument, sender, args) -> {
-			if (!containsUpdate.containsKey(sender)) return;
+			UpdateChecker updateChecker = getGangland().getUpdateChecker();
+			boolean       newUpdate     = updateChecker.updateAvailable();
 
-			boolean newUpdate = containsUpdate.get(sender);
+			if (!newUpdate) {
+				sender.sendMessage(GanglandChatUtil.commandMessage("You are already running the latest version."));
+				return;
+			}
 
-			if (!newUpdate) return;
+			sender.sendMessage(GanglandChatUtil.commandMessage("Downloading the latest version..."));
+			boolean downloadSuccess = getGangland().getUpdateChecker().downloadLatestVersion();
 
-			getGangland().getUpdateChecker().downloadLatestVersion();
+			if (downloadSuccess) {
+				sender.sendMessage(GanglandChatUtil.commandMessage("Download successful!"));
+			} else {
+				sender.sendMessage(GanglandChatUtil.commandMessage("Download failed!"));
+			}
 		}, getPermission() + ".download");
 	}
 }
