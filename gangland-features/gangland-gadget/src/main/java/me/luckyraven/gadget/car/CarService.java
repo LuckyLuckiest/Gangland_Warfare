@@ -3,7 +3,9 @@ package me.luckyraven.gadget.car;
 import io.netty.channel.Channel;
 import lombok.Getter;
 import me.luckyraven.gadget.car.vehicle.*;
+import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
+import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.ItemBuilder;
 import org.bukkit.Bukkit;
@@ -51,6 +53,7 @@ public class CarService {
 	private final JavaPlugin             plugin;
 	private final IRepository<ParkedCar> parkedCarRepository;
 	private final FuelService            fuelService;
+	private final GadgetPhysicsConfig    physicsConfig;
 
 	/**
 	 * Placed-but-not-driven vehicles, keyed by entity UUID.
@@ -70,12 +73,14 @@ public class CarService {
 	private final NamespacedKey pdcPlacer;
 
 	public CarService(CarManager carManager, VehicleRegistry vehicleRegistry, JavaPlugin plugin,
-	                  IRepository<ParkedCar> parkedCarRepository, FuelService fuelService) {
+	                  IRepository<ParkedCar> parkedCarRepository, FuelService fuelService,
+	                  GadgetPhysicsConfig physicsConfig) {
 		this.carManager          = carManager;
 		this.vehicleRegistry     = vehicleRegistry;
 		this.plugin              = plugin;
 		this.parkedCarRepository = parkedCarRepository;
 		this.fuelService         = fuelService;
+		this.physicsConfig       = physicsConfig;
 
 		this.pdcCarId      = new NamespacedKey(plugin, "car_id");
 		this.pdcFuel       = new NamespacedKey(plugin, "car_fuel");
@@ -145,8 +150,12 @@ public class CarService {
 		VehicleEntity entity = parked.getEntity();
 		Car           car    = parked.getCar();
 
-		VehicleSession      session = new VehicleSession(entity, car, player, parked.getDurability());
-		VehicleMovementTask task    = new VehicleMovementTask(session, this, fuelService);
+		Fuel fuelDef = car.isFuelEnabled() && car.getFuelKey() != null ? fuelService.getFuel(car.getFuelKey()) : null;
+		int  maxFuel = fuelDef != null ? fuelDef.getMaxFuel() : 0;
+
+		VehicleSession session = new VehicleSession(entity, car, player, parked.getDurability(), parked.getFuel(),
+		                                            maxFuel);
+		VehicleMovementTask task = new VehicleMovementTask(session, this, physicsConfig);
 		session.setTask(task);
 
 		// Register before mounting so CarDismountListener can find the session if Minecraft
@@ -186,12 +195,14 @@ public class CarService {
 			session.getTask().cancel();
 		}
 
-		int  durability = session.getCurrentDurability();
-		UUID placerUUID = session.getDriverUUID();
+		int  durability  = session.getCurrentDurability();
+		int  currentFuel = session.getCurrentFuel();
+		UUID placerUUID  = session.getDriverUUID();
 
-		storePdc(session.getEntity(), session.getCar().getCarId(), 0, durability, placerUUID);
+		storePdc(session.getEntity(), session.getCar().getCarId(), currentFuel, durability, placerUUID);
 
-		ParkedVehicle pv = new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, 0, durability);
+		ParkedVehicle pv = new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, currentFuel,
+		                                     durability);
 		parkedVehicles.put(entityUUID, pv);
 		vehicleRegistry.unregister(entityUUID);
 
@@ -202,7 +213,7 @@ public class CarService {
 			ParkedCar existing = parkedCarRecords.get(entityUUID);
 			String    dbId     = existing != null ? existing.getDbId() : UUID.randomUUID().toString();
 			ParkedCar record = new ParkedCar(dbId, session.getCar().getCarId(), loc.getWorld().getName(), loc.getX(),
-			                                 loc.getY(), loc.getZ(), loc.getYaw(), 0, durability, placerUUID);
+			                                 loc.getY(), loc.getZ(), loc.getYaw(), currentFuel, durability, placerUUID);
 			parkedCarRecords.put(entityUUID, record);
 			parkedCarRepository.save(record);
 		}
@@ -230,6 +241,7 @@ public class CarService {
 		ItemStack   item    = parked.getCar().buildItem();
 		ItemBuilder builder = new ItemBuilder(item);
 		builder.addTag(CarKey.CAR_DURABILITY.getKey(), parked.getDurability());
+		builder.addTag(CarKey.CAR_FUEL.getKey(), parked.getFuel());
 		builder.addTag(CarKey.CAR_OWNER.getKey(), player.getUniqueId().toString());
 		player.getInventory().addItem(builder.build());
 	}
@@ -305,10 +317,12 @@ public class CarService {
 			UUID entityUUID = session.getEntity().getEntityUUID();
 			if (entityUUID == null) continue;
 
-			int  durability = session.getCurrentDurability();
-			UUID placerUUID = session.getDriverUUID();
+			int  durability  = session.getCurrentDurability();
+			int  currentFuel = session.getCurrentFuel();
+			UUID placerUUID  = session.getDriverUUID();
 
-			ParkedVehicle pv = new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, 0, durability);
+			ParkedVehicle pv = new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, currentFuel,
+			                                     durability);
 			parkedVehicles.put(entityUUID, pv);
 
 			Entity entity = session.getEntity().getBukkitEntity();
@@ -317,8 +331,8 @@ public class CarService {
 				ParkedCar existing = parkedCarRecords.get(entityUUID);
 				String    dbId     = existing != null ? existing.getDbId() : UUID.randomUUID().toString();
 				ParkedCar record = new ParkedCar(dbId, session.getCar().getCarId(), loc.getWorld().getName(),
-				                                 loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), 0, durability,
-				                                 placerUUID);
+				                                 loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), currentFuel,
+				                                 durability, placerUUID);
 				parkedCarRecords.put(entityUUID, record);
 			}
 		}
@@ -398,6 +412,36 @@ public class CarService {
 	// ------------------------------------------------------------------
 	// Damage
 	// ------------------------------------------------------------------
+
+	/**
+	 * Adds fuel to a parked (undriven) vehicle, capped at the fuel definition's max capacity. Updates both the
+	 * in-memory record and the entity PDC. Does nothing if fuel is not enabled for this car or the tank is full.
+	 *
+	 * @param entityUUID UUID of the parked car entity
+	 * @param amount fuel ticks to add
+	 */
+	public void refuelParkedCar(UUID entityUUID, int amount) {
+		ParkedVehicle parked = parkedVehicles.get(entityUUID);
+		if (parked == null || amount <= 0) return;
+
+		Car car = parked.getCar();
+		if (!car.isFuelEnabled() || car.getFuelKey() == null) return;
+
+		Fuel fuelDef = fuelService.getFuel(car.getFuelKey());
+		int  maxFuel = fuelDef != null ? fuelDef.getMaxFuel() : 0;
+
+		int toAdd = Math.min(amount, maxFuel - parked.getFuel());
+		if (toAdd <= 0) return;
+
+		parked.addFuel(toAdd);
+		storePdc(parked.getEntity(), car.getCarId(), parked.getFuel(), parked.getDurability(), parked.getPlacerUUID());
+
+		ParkedCar record = parkedCarRecords.get(entityUUID);
+		if (record != null) {
+			record.setFuel(parked.getFuel());
+			parkedCarRepository.save(record);
+		}
+	}
 
 	/**
 	 * Applies damage to a parked vehicle and persists the updated durability. Destroys the vehicle without returning an

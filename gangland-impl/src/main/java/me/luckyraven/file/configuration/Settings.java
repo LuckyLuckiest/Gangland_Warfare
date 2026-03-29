@@ -141,6 +141,18 @@ public class Settings implements FileInitializer {
 
 	private static @Getter int jailMaxCapacity;
 
+	// gadget - jetpack
+	private static @Getter int    gadgetJetpackThrustRampTicks;
+	private static @Getter double gadgetJetpackDescentAccel;
+	private static @Getter double gadgetJetpackMaxDescentSpeed;
+	private static @Getter double gadgetJetpackHorizInfluence;
+	private static @Getter double gadgetJetpackMaxHorizSpeed;
+
+	// gadget - car
+	private static @Getter double gadgetCarReverseSpeedRatio;
+	private static @Getter double gadgetCarHardBrakeMultiplier;
+	private static @Getter int    gadgetCarFuelConsumePerTick;
+
 	// loot chest configuration
 	private static @Getter long   lootChestCountdownTimer;
 	private static @Getter String lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
@@ -472,6 +484,26 @@ public class Settings implements FileInitializer {
 		lootChestRewardExperienceMinimum = lootChestRewards.getDouble("Experience.Minimum", 5);
 		lootChestRewardExperienceMaximum = lootChestRewards.getDouble("Experience.Maximum", 100);
 		lootChestRewardCommands          = lootChestRewards.getStringList("Commands");
+
+		// gadgets
+		var gadgets = settings.getConfigurationSection("Gadgets");
+		Objects.requireNonNull(gadgets);
+
+		var gadgetsJetpack = gadgets.getConfigurationSection("Jetpack");
+		Objects.requireNonNull(gadgetsJetpack);
+
+		gadgetJetpackThrustRampTicks = gadgetsJetpack.getInt("Thrust_Ramp_Ticks", 20);
+		gadgetJetpackDescentAccel    = gadgetsJetpack.getDouble("Descent_Accel", 0.022);
+		gadgetJetpackMaxDescentSpeed = gadgetsJetpack.getDouble("Max_Descent_Speed", -0.5);
+		gadgetJetpackHorizInfluence  = gadgetsJetpack.getDouble("Horiz_Influence", 0.03);
+		gadgetJetpackMaxHorizSpeed   = gadgetsJetpack.getDouble("Max_Horiz_Speed", 0.25);
+
+		var gadgetsCar = gadgets.getConfigurationSection("Car");
+		Objects.requireNonNull(gadgetsCar);
+
+		gadgetCarReverseSpeedRatio   = gadgetsCar.getDouble("Reverse_Speed_Ratio", 0.5);
+		gadgetCarHardBrakeMultiplier = gadgetsCar.getDouble("Hard_Brake_Multiplier", 3.0);
+		gadgetCarFuelConsumePerTick  = gadgetsCar.getInt("Fuel_Consume_Per_Tick", 1);
 
 		addEachFieldReflection();
 		convertToPlaceholder();

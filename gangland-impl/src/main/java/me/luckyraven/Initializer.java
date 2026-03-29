@@ -64,6 +64,7 @@ import me.luckyraven.database.repositories.lootchest.LootChestRepository;
 import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.LanguageLoader;
+import me.luckyraven.file.configuration.GadgetPhysicsConfigImpl;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.copsncrooks.GanglandBountySettings;
@@ -80,6 +81,7 @@ import me.luckyraven.gadget.car.CarService;
 import me.luckyraven.gadget.car.ParkedCar;
 import me.luckyraven.gadget.car.config.CarAddon;
 import me.luckyraven.gadget.car.vehicle.VehicleRegistry;
+import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.gadget.jetpack.JetpackService;
 import me.luckyraven.gadget.repair.RepairManager;
@@ -202,6 +204,7 @@ public final class Initializer {
 	// Gadgets
 	private CarAddon                   carAddon;
 	private CarService                 carService;
+	private GadgetPhysicsConfig        gadgetPhysicsConfig;
 	// Fuel & Jetpack
 	private FuelService                fuelService;
 	private JetpackService             jetpackService;
@@ -445,7 +448,7 @@ public final class Initializer {
 
 		// initialize jetpack service
 		if (jetpackService == null) {
-			jetpackService = new me.luckyraven.gadget.jetpack.JetpackService(fuelService, gangland);
+			jetpackService = new JetpackService(fuelService, gangland, gadgetPhysicsConfig);
 		}
 
 		// initialize car addon
@@ -560,7 +563,9 @@ public final class Initializer {
 	public void carServiceInit() {
 		IRepository<ParkedCar> parkedCarRepository = ganglandDatabase.getRepositoryRegistry()
 		                                                             .getRepository(ParkedCar.class);
-		carService = new CarService(carAddon, new VehicleRegistry(), gangland, parkedCarRepository, fuelService);
+		gadgetPhysicsConfig = new GadgetPhysicsConfigImpl();
+		carService          = new CarService(carAddon, new VehicleRegistry(), gangland, parkedCarRepository,
+		                                     fuelService, gadgetPhysicsConfig);
 		parkedCarRepository.setDataSupplier(() -> new ArrayList<>(carService.getParkedCarRecords().values()));
 		carService.reloadParkedVehicles();
 	}

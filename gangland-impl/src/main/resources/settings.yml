@@ -471,3 +471,26 @@ Loot_Chest:
       # The commands to execute when a player opens a loot chest.
       Commands:
          - ""
+
+# +-----------------+ #
+# | Gadgets Config  | #
+# +-----------------+ #
+Gadgets:
+   Jetpack:
+      # Ticks of continuous thrust to ramp from 10% to 100% ascend power.
+      Thrust_Ramp_Ticks: 20
+      # Downward acceleration added per tick while descending (m/tick²).
+      Descent_Accel: 0.022
+      # Terminal descent speed — descent will not exceed this (negative = downward).
+      Max_Descent_Speed: -0.5
+      # Horizontal speed delta added per tick when a directional key is held (m/tick).
+      Horiz_Influence: 0.03
+      # Maximum horizontal speed while airborne (m/tick).
+      Max_Horiz_Speed: 0.25
+   Car:
+      # Fraction of max speed used when reversing (0.5 = half max speed).
+      Reverse_Speed_Ratio: 0.5
+      # Multiplier applied to deceleration when the driver hard-brakes (sneak key).
+      Hard_Brake_Multiplier: 3.0
+      # Fuel units consumed per tick while the car is moving.
+      Fuel_Consume_Per_Tick: 1

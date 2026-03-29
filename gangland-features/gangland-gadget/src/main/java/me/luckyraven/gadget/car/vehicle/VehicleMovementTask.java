@@ -2,7 +2,7 @@ package me.luckyraven.gadget.car.vehicle;
 
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarService;
-import me.luckyraven.gadget.fuel.FuelService;
+import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.item.fuel.FuelBar;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -17,19 +17,19 @@ import org.bukkit.scheduler.BukkitRunnable;
  */
 public class VehicleMovementTask extends BukkitRunnable {
 
-	private final VehicleSession session;
-	private final CarService     carService;
-	private final FuelService    fuelService;
+	private final VehicleSession      session;
+	private final CarService          carService;
+	private final GadgetPhysicsConfig physicsConfig;
 
 	private double currentSpeed;
 	private float  currentYaw;
 
-	public VehicleMovementTask(VehicleSession session, CarService carService, FuelService fuelService) {
-		this.session      = session;
-		this.carService   = carService;
-		this.fuelService  = fuelService;
-		this.currentSpeed = 0;
-		this.currentYaw   = session.getDriver().getLocation().getYaw();
+	public VehicleMovementTask(VehicleSession session, CarService carService, GadgetPhysicsConfig physicsConfig) {
+		this.session       = session;
+		this.carService    = carService;
+		this.physicsConfig = physicsConfig;
+		this.currentSpeed  = 0;
+		this.currentYaw    = session.getDriver().getLocation().getYaw();
 	}
 
 	@Override
@@ -60,11 +60,11 @@ public class VehicleMovementTask extends BukkitRunnable {
 		boolean right    = session.isInputRight();
 
 		// Fuel check: no fuel — coast to a stop
-		boolean hasFuel = !car.isFuelEnabled() || fuelService.hasFuel(driver, car.getFuelKey());
+		boolean hasFuel = !car.isFuelEnabled() || session.hasFuel();
 		if (!hasFuel) {
-			currentSpeed = decelerate(currentSpeed, car.getDeceleration() * 3);
+			currentSpeed = decelerate(currentSpeed, car.getDeceleration() * physicsConfig.getCarHardBrakeMultiplier());
 			entity.updateMovement(currentSpeed, currentYaw);
-			session.updateDisplays(buildFuelDisplay(driver, car));
+			session.updateDisplays(buildFuelDisplay(car));
 			return;
 		}
 
@@ -77,12 +77,12 @@ public class VehicleMovementTask extends BukkitRunnable {
 		// Speed control
 		if (driver.isSneaking()) {
 			// Hard brake
-			currentSpeed = decelerate(currentSpeed, car.getDeceleration() * 3);
+			currentSpeed = decelerate(currentSpeed, car.getDeceleration() * physicsConfig.getCarHardBrakeMultiplier());
 		} else if (forward) {
 			currentSpeed = Math.min(car.getMaxSpeed(), currentSpeed + car.getAcceleration());
 		} else if (backward) {
-			// Reverse at half max speed
-			currentSpeed = Math.max(-car.getMaxSpeed() * 0.5, currentSpeed - car.getAcceleration());
+			currentSpeed = Math.max(-car.getMaxSpeed() * physicsConfig.getCarReverseSpeedRatio(),
+			                        currentSpeed - car.getAcceleration());
 		} else {
 			// No input — friction brings speed back to zero
 			currentSpeed = decelerate(currentSpeed, car.getDeceleration());
@@ -92,10 +92,10 @@ public class VehicleMovementTask extends BukkitRunnable {
 
 		// Consume fuel when moving
 		if (car.isFuelEnabled() && Math.abs(currentSpeed) > 0.001) {
-			fuelService.consumeFuel(driver, car.getFuelKey(), 1);
+			session.consumeFuel(physicsConfig.getCarFuelConsumePerTick());
 		}
 
-		session.updateDisplays(buildFuelDisplay(driver, car));
+		session.updateDisplays(buildFuelDisplay(car));
 	}
 
 	public double getCurrentSpeed() {
@@ -105,11 +105,9 @@ public class VehicleMovementTask extends BukkitRunnable {
 	/**
 	 * Builds the action bar fuel display string, or {@code null} if fuel is not enabled.
 	 */
-	private String buildFuelDisplay(Player driver, Car car) {
+	private String buildFuelDisplay(Car car) {
 		if (!car.isFuelEnabled()) return null;
-		int current = fuelService.getFuelLevel(driver, car.getFuelKey());
-		int max     = fuelService.getMaxFuelLevel(driver, car.getFuelKey());
-		return FuelBar.render(current, max);
+		return FuelBar.render(session.getCurrentFuel(), session.getMaxFuel());
 	}
 
 	/**
