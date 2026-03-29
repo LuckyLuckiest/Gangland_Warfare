@@ -14,12 +14,15 @@ import me.luckyraven.weapon.projectile.recoil.RecoilManager;
 import me.luckyraven.weapon.projectile.spread.SpreadManager;
 import me.luckyraven.weapon.reload.Reload;
 import me.luckyraven.weapon.types.WeaponType;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -94,13 +97,6 @@ public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon
 		this.currentMagCapacity = ammunitionData != null ? ammunitionData.getMaxMagCapacity() : 0;
 
 		this.tags                 = new TreeMap<>();
-		this.durabilityData       = new DurabilityData();
-		this.soundData            = new SoundData();
-		this.reloadActionBarData  = new ReloadActionBarData();
-		this.modifiersData        = new ModifiersData();
-		this.recoilData           = new RecoilData();
-		this.scopeData            = new ScopeData();
-		this.spreadData           = new SpreadData();
 		this.recoil               = new RecoilManager(this);
 		this.spread               = new SpreadManager(this);
 		this.reload               = ammunitionData != null && reloadData != null ?
@@ -125,27 +121,27 @@ public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon
 		return Optional.of(deathMessages.get(ThreadLocalRandom.current().nextInt(deathMessages.size())));
 	}
 
-	// --- Reload operations ---
-
 	public void scope(Player player, boolean bypass) {
+		if (scopeData == null) return;
 		if (!bypass && scopeData.isScoped()) return;
+
 		scopeData.setScoped(true);
+
 		applyEffect(player, XPotion.SLOWNESS, scopeData.getLevel());
-		applyEffect(player, XPotion.JUMP_BOOST, 250);
 	}
 
 	public void unScope(Player player, boolean bypass) {
+		if (scopeData == null) return;
 		if (!bypass && !scopeData.isScoped()) return;
+
 		scopeData.setScoped(false);
+
 		removeEffect(player, XPotion.SLOWNESS);
-		removeEffect(player, XPotion.JUMP_BOOST);
 	}
 
 	public boolean isReloading() {
 		return reload != null && reload.isReloading();
 	}
-
-	// --- Magazine operations ---
 
 	public void reload(JavaPlugin plugin, Player player, boolean removeAmmunition) {
 		if (reload == null) return;
@@ -171,8 +167,6 @@ public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon
 		if (ammunitionData == null) return;
 		currentMagCapacity = Math.min(ammunitionData.getMaxMagCapacity(), currentMagCapacity + amount);
 	}
-
-	// --- Item operations ---
 
 	/**
 	 * Consumes one shot's worth of ammunition. Returns {@code false} if the magazine is empty. Subclasses may override
@@ -332,7 +326,22 @@ public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon
 		return RepairableType.WEAPON;
 	}
 
-	// --- Protected API for subclasses ---
+	public void applyPush(Player player) {
+		// Never apply push if player is not on solid ground
+		if (!isPlayerGrounded(player)) {
+			return;
+		}
+
+		if (!player.isSneaking()) {
+			push(player, recoilData.getPushPowerUp(), recoilData.getPushVelocity());
+			return;
+		}
+
+		if (scopeData != null && scopeData.isScoped()) {
+			push(player, recoilData.getPushPowerUp() / 2, recoilData.getPushVelocity() / 2);
+		}
+		// When sneaking and not scoped, no push is applied (implicitly returns)
+	}
 
 	/**
 	 * Shows ammo counter for any weapon that has reloadData configured.
@@ -375,16 +384,16 @@ public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon
 	 */
 	protected void initClone(Weapon source) {
 		this.tags.clear();
-		this.durabilityData      = source.durabilityData.clone();
-		this.soundData           = source.soundData.clone();
-		this.reloadActionBarData = source.reloadActionBarData.clone();
-		this.modifiersData       = source.modifiersData.clone();
-		this.recoilData          = source.recoilData.clone();
+		this.durabilityData      = source.durabilityData != null ? source.durabilityData.clone() : null;
+		this.soundData           = source.soundData != null ? source.soundData.clone() : null;
+		this.reloadActionBarData = source.reloadActionBarData != null ? source.reloadActionBarData.clone() : null;
+		this.modifiersData       = source.modifiersData != null ? source.modifiersData.clone() : null;
+		this.recoilData          = source.recoilData != null ? source.recoilData.clone() : null;
+		this.scopeData           = source.scopeData != null ? source.scopeData.clone() : null;
 
-		this.scopeData = source.scopeData.clone();
-		this.scopeData.setScoped(false);
+		if (this.scopeData != null) this.scopeData.setScoped(false);
 
-		this.spreadData           = source.spreadData.clone();
+		this.spreadData           = source.spreadData != null ? source.spreadData.clone() : null;
 		this.recoil               = new RecoilManager(this);
 		this.spread               = new SpreadManager(this);
 		this.durabilityCalculator = new DurabilityCalculator(this);
@@ -406,6 +415,65 @@ public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon
 
 	protected void removeEffect(Player player, XPotion potion) {
 		XPotion.of(potion.name()).map(XPotion::getPotionEffectType).ifPresent(player::removePotionEffect);
+	}
+
+	private void push(Player player, double powerUp, double push) {
+		// Safety check - clamp values to reasonable limits
+		powerUp = Math.clamp(powerUp, -0.5, 0.5);
+		push    = Math.clamp(push, -0.5, 0.5);
+
+		if (push > 0) push *= -1;
+
+		// Don't apply if values are effectively zero
+		if (Math.abs(powerUp) < 0.001 && Math.abs(push) < 0.001) {
+			return;
+		}
+
+		Location location  = player.getLocation();
+		Vector   direction = location.getDirection().multiply(push);
+		Vector   upward    = new Vector(0, powerUp, 0);
+		Vector   velocity  = direction.add(upward);
+
+		// Clamp final velocity to prevent "moved too quickly" warnings
+		double maxSpeed = 1.0;
+		if (velocity.length() > maxSpeed) {
+			velocity.normalize().multiply(maxSpeed);
+		}
+
+		player.setVelocity(velocity);
+	}
+
+	/**
+	 * Checks if the player is firmly on the ground. Returns false if jumping, flying, in creative flight, swimming,
+	 * etc.
+	 */
+	private boolean isPlayerGrounded(Player player) {
+		// Check if player is flying (creative/spectator or elytra)
+		if (player.isFlying() || player.isGliding()) {
+			return false;
+		}
+
+		// Check if player is swimming or in water
+		if (player.isSwimming() || player.isInWater()) {
+			return false;
+		}
+
+		// Check if player is climbing (ladders, vines)
+		if (player.isClimbing()) {
+			return false;
+		}
+
+		// Check the block below - must be solid ground
+		Location playerLoc  = player.getLocation();
+		Block    blockBelow = playerLoc.subtract(0, 0.1, 0).getBlock();
+
+		if (!blockBelow.getType().isSolid()) {
+			return false;
+		}
+
+		// Check player's Y velocity - if moving up or down significantly, not grounded
+		double yVelocity = player.getVelocity().getY();
+		return !(Math.abs(yVelocity) > 0.1);
 	}
 
 }
