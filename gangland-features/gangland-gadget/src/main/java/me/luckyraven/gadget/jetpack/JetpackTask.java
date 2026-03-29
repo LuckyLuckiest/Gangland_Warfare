@@ -1,5 +1,6 @@
 package me.luckyraven.gadget.jetpack;
 
+import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.item.fuel.FuelBar;
 import me.luckyraven.item.wearable.Wearable;
@@ -15,26 +16,43 @@ import org.bukkit.util.Vector;
 /**
  * Tick-based handler for an active jetpack. Runs every server tick while the jetpack is active.
  *
- * <p>Behavior per tick:
- * <ol>
- *   <li>Guard: verify player is online and still wearing the jetpack</li>
- *   <li>Detect spacebar via {@link Player#isFlying()} (re-cancelled each tick)</li>
- *   <li><b>Thrust mode</b>: space held + has fuel → consume fuel, apply upward velocity, spawn flame particles</li>
- *   <li><b>Glide mode</b>: airborne + no fuel → slow descent with smoke particles</li>
- *   <li><b>Landed</b>: on ground, stop thrusting/gliding</li>
- *   <li>Display fuel on action bar</li>
- * </ol>
+ * <p>Vertical physics:
+ * <ul>
+ *   <li><b>Thrust</b> (jump held, has fuel): upward delta ramps from 10 % to 100 % of
+ *       {@code ascendPower} over {@code thrustRampTicks} ticks, then caps at {@code maxSpeedY}.</li>
+ *   <li><b>Descent</b> (airborne, no thrust): descent acceleration subtracted per tick so descent
+ *       gradually speeds up.</li>
+ *   <li><b>Landed</b>: no velocity override; Minecraft ground physics applies.</li>
+ * </ul>
+ *
+ * <p>Horizontal physics: while airborne, WASD input applies a configured influence per tick in
+ * the player's look direction, capped at the configured max horizontal speed. Vanilla air drag
+ * decelerates the player when no key is held.
+ *
+ * <p>All physics constants are sourced from {@link GadgetPhysicsConfig}.
  */
 public class JetpackTask extends BukkitRunnable {
 
-	private final JetpackSession session;
-	private final JetpackService jetpackService;
-	private final FuelService    fuelService;
+	private final JetpackSession      session;
+	private final JetpackService      jetpackService;
+	private final FuelService         fuelService;
+	private final GadgetPhysicsConfig physicsConfig;
 
-	public JetpackTask(JetpackSession session, JetpackService jetpackService, FuelService fuelService) {
+	/**
+	 * Consecutive ticks of active thrust; drives the ramp-up curve.
+	 */
+	private int     thrustTicks         = 0;
+	/**
+	 * Previous tick's state of shift+jump held, used for rising-edge detection of the glide toggle.
+	 */
+	private boolean prevGlideToggleHeld = false;
+
+	public JetpackTask(JetpackSession session, JetpackService jetpackService, FuelService fuelService,
+	                   GadgetPhysicsConfig physicsConfig) {
 		this.session        = session;
 		this.jetpackService = jetpackService;
 		this.fuelService    = fuelService;
+		this.physicsConfig  = physicsConfig;
 	}
 
 	@Override
@@ -42,63 +60,141 @@ public class JetpackTask extends BukkitRunnable {
 		Player   player  = session.getPlayer();
 		Wearable jetpack = session.getJetpackWearable();
 
-		// Guard: player offline
+		if (checkGuards(player, jetpack)) return;
+
+		boolean spaceHeld = session.isInputJump();
+		boolean sneakHeld = session.isInputSneak();
+		String  fuelKey   = jetpack.getFuelKey();
+		boolean hasFuel   = fuelService.hasFuel(player, fuelKey);
+		boolean onGround  = PlayerUtil.isOnGround(player);
+
+		handleGlideToggle(spaceHeld, sneakHeld, onGround);
+
+		Vector velocity = player.getVelocity();
+		double newY     = applyVerticalPhysics(player, jetpack, fuelKey, velocity.getY(), hasFuel, spaceHeld, onGround);
+		applyHorizontalPhysics(player, velocity.getX(), newY, velocity.getZ(), hasFuel, spaceHeld, onGround);
+		updateActionBar(player, fuelKey, spaceHeld, hasFuel);
+	}
+
+	private boolean checkGuards(Player player, Wearable jetpack) {
 		if (!player.isOnline()) {
 			jetpackService.deactivate(player);
 			cancel();
-			return;
+			return true;
 		}
-
-		// Guard: still wearing the jetpack
 		if (!isWearingJetpack(player, jetpack)) {
 			jetpackService.deactivate(player);
 			cancel();
-			return;
+			return true;
 		}
-
-		String  fuelKey = jetpack.getFuelKey();
-		boolean hasFuel = fuelService.hasFuel(player, fuelKey);
-
-		if (hasFuel) {
-			// === THRUST MODE ===
-			int consumeRate = getEffectiveConsumptionRate(jetpack);
-			fuelService.consumeFuel(player, fuelKey, consumeRate);
-
-			Vector velocity = player.getVelocity();
-			double newY     = Math.min(velocity.getY() + jetpack.getAscendPower(), jetpack.getMaxSpeedY());
-			player.setVelocity(velocity.setY(newY));
-
-			ParticleUtil.spawnJetpackFlame(player);
-
-			session.setThrusting(true);
-			session.setGliding(false);
-
-		} else if (!PlayerUtil.isOnGround(player) && !hasFuel) {
-			// === GLIDE MODE ===
-			Vector velocity = player.getVelocity();
-			double glideY   = jetpack.getGlideDescentRate();
-			player.setVelocity(velocity.setY(Math.max(velocity.getY(), glideY)));
-
-			ParticleUtil.spawnJetpackGlide(player);
-
-			session.setThrusting(false);
-			session.setGliding(true);
-
-		} else if (PlayerUtil.isOnGround(player)) {
-			// === LANDED ===
-			session.setThrusting(false);
-			session.setGliding(false);
-		}
-
-		// Display fuel on action bar
-		int currentFuel = fuelService.getFuelLevel(player, fuelKey);
-		int maxFuel     = fuelService.getMaxFuelLevel(player, fuelKey);
-		ChatUtil.sendActionBar(player, FuelBar.render(currentFuel, maxFuel));
+		return false;
 	}
 
-	/**
-	 * Calculates the effective fuel consumption rate, accounting for the {@link WearableTrait#FUEL_EFFICIENT} trait.
-	 */
+	private void handleGlideToggle(boolean spaceHeld, boolean sneakHeld, boolean onGround) {
+		boolean glideCombo = sneakHeld && spaceHeld;
+		if (glideCombo && !prevGlideToggleHeld && !onGround) {
+			session.setGlideModeActive(!session.isGlideModeActive());
+		}
+		prevGlideToggleHeld = glideCombo;
+		if (onGround || (spaceHeld && !sneakHeld)) {
+			session.setGlideModeActive(false);
+		}
+	}
+
+	private double applyVerticalPhysics(Player player, Wearable jetpack, String fuelKey, double currentY,
+	                                    boolean hasFuel, boolean spaceHeld, boolean onGround) {
+		if (session.isGlideModeActive()) {
+			thrustTicks = 0;
+			ParticleUtil.spawnJetpackGlide(player);
+			session.setThrusting(false);
+			session.setGliding(true);
+			return 0.0;
+		}
+		if (hasFuel && spaceHeld) {
+			fuelService.consumeFuel(player, fuelKey, getEffectiveConsumptionRate(jetpack));
+			thrustTicks++;
+			double ramp = Math.min(thrustTicks / (double) physicsConfig.getJetpackThrustRampTicks(), 1.0);
+			ParticleUtil.spawnJetpackFlame(player);
+			session.setThrusting(true);
+			session.setGliding(false);
+			return Math.min(currentY + jetpack.getAscendPower() * (0.1 + 0.9 * ramp), jetpack.getMaxSpeedY());
+		}
+		if (!onGround) {
+			thrustTicks = 0;
+			ParticleUtil.spawnJetpackGlide(player);
+			session.setThrusting(false);
+			session.setGliding(true);
+			return Math.max(currentY - physicsConfig.getJetpackDescentAccel(),
+			                physicsConfig.getJetpackMaxDescentSpeed());
+		}
+		thrustTicks = 0;
+		session.setThrusting(false);
+		session.setGliding(false);
+		return currentY;
+	}
+
+	private void applyHorizontalPhysics(Player player, double newX, double newY, double newZ,
+	                                    boolean hasFuel, boolean spaceHeld, boolean onGround) {
+		if (onGround && !(hasFuel && spaceHeld)) return;
+
+		boolean fwd = session.isInputForward();
+		boolean bwd = session.isInputBackward();
+		boolean lft = session.isInputLeft();
+		boolean rgt = session.isInputRight();
+
+		if (fwd || bwd || lft || rgt) {
+			double yaw = Math.toRadians(player.getLocation().getYaw());
+			double dx  = 0, dz = 0;
+			if (fwd) {
+				dx -= Math.sin(yaw);
+				dz += Math.cos(yaw);
+			}
+			if (bwd) {
+				dx += Math.sin(yaw);
+				dz -= Math.cos(yaw);
+			}
+			if (lft) {
+				dx += Math.cos(yaw);
+				dz += Math.sin(yaw);
+			}
+			if (rgt) {
+				dx -= Math.cos(yaw);
+				dz -= Math.sin(yaw);
+			}
+
+			double len = Math.sqrt(dx * dx + dz * dz);
+			if (len > 0) {
+				dx /= len;
+				dz /= len;
+			}
+
+			newX += dx * physicsConfig.getJetpackHorizInfluence();
+			newZ += dz * physicsConfig.getJetpackHorizInfluence();
+
+			double horizSpeed = Math.sqrt(newX * newX + newZ * newZ);
+			if (horizSpeed > physicsConfig.getJetpackMaxHorizSpeed()) {
+				newX = newX / horizSpeed * physicsConfig.getJetpackMaxHorizSpeed();
+				newZ = newZ / horizSpeed * physicsConfig.getJetpackMaxHorizSpeed();
+			}
+		}
+
+		player.setVelocity(new Vector(newX, newY, newZ));
+	}
+
+	private void updateActionBar(Player player, String fuelKey, boolean spaceHeld, boolean hasFuel) {
+		int    currentFuel = fuelService.getFuelLevel(player, fuelKey);
+		int    maxFuel     = fuelService.getMaxFuelLevel(player, fuelKey);
+		String actionBar;
+		if (session.isGlideModeActive()) {
+			actionBar = ChatUtil.color("&b\u2708 Gliding");
+		} else if (spaceHeld && !hasFuel) {
+			actionBar = ChatUtil.color("&c\u26A0 No fuel \u2014 refuel the jetpack!");
+		} else {
+			actionBar = FuelBar.render(currentFuel, maxFuel);
+		}
+		ChatUtil.sendActionBar(player, actionBar);
+	}
+
 	private int getEffectiveConsumptionRate(Wearable jetpack) {
 		int baseRate = jetpack.getFuelConsumptionRate();
 		if (jetpack.getTraits() == null) return baseRate;

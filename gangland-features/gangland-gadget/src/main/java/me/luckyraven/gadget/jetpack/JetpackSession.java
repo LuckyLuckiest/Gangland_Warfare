@@ -16,11 +16,26 @@ public class JetpackSession {
 	private final Wearable jetpackWearable;
 
 	@Setter
-	private JetpackTask task;
+	private          JetpackTask task;
 	@Setter
-	private boolean     thrusting;
+	private          boolean     thrusting;
 	@Setter
-	private boolean     gliding;
+	private          boolean     gliding;
+	@Setter
+	private volatile boolean     inputJump;
+	@Setter
+	private volatile boolean     inputForward;
+	@Setter
+	private volatile boolean     inputBackward;
+	@Setter
+	private volatile boolean     inputLeft;
+	@Setter
+	private volatile boolean     inputRight;
+	@Setter
+	private volatile boolean     inputSneak;
+
+	@Setter
+	private boolean glideModeActive;
 
 	public JetpackSession(Player player, Wearable jetpackWearable) {
 		this.player          = player;

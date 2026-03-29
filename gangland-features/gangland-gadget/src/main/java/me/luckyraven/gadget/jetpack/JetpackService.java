@@ -1,5 +1,8 @@
 package me.luckyraven.gadget.jetpack;
 
+import io.netty.channel.Channel;
+import me.luckyraven.gadget.car.vehicle.VehicleInputInterceptor;
+import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.item.wearable.Wearable;
 import org.bukkit.entity.Player;
@@ -18,10 +21,12 @@ public class JetpackService {
 	private final Map<UUID, JetpackSession> activeSessions = new ConcurrentHashMap<>();
 	private final FuelService               fuelService;
 	private final JavaPlugin                plugin;
+	private final GadgetPhysicsConfig       physicsConfig;
 
-	public JetpackService(FuelService fuelService, JavaPlugin plugin) {
-		this.fuelService = fuelService;
-		this.plugin      = plugin;
+	public JetpackService(FuelService fuelService, JavaPlugin plugin, GadgetPhysicsConfig physicsConfig) {
+		this.fuelService   = fuelService;
+		this.plugin        = plugin;
+		this.physicsConfig = physicsConfig;
 	}
 
 	/**
@@ -31,13 +36,22 @@ public class JetpackService {
 		if (activeSessions.containsKey(player.getUniqueId())) return;
 
 		JetpackSession session = new JetpackSession(player, jetpackWearable);
-		JetpackTask    task    = new JetpackTask(session, this, fuelService);
+		JetpackTask    task    = new JetpackTask(session, this, fuelService, physicsConfig);
 		session.setTask(task);
 
 		activeSessions.put(player.getUniqueId(), session);
 		task.runTaskTimer(plugin, 1L, 1L);
 
+		// Suppress Spigot's anti-cheat kick ("Flying is not enabled for this server").
+		// We do NOT call setFlying(true) — flight is driven entirely by velocity in JetpackTask.
 		player.setAllowFlight(true);
+
+		Channel channel = VehicleInputInterceptor.getChannel(player);
+		if (channel != null) {
+			channel.pipeline().addBefore(
+					"packet_handler", JetpackInputInterceptor.HANDLER_NAME,
+					new JetpackInputInterceptor(session));
+		}
 	}
 
 	/**
@@ -52,8 +66,13 @@ public class JetpackService {
 		}
 
 		if (player.isOnline()) {
-			player.setAllowFlight(false);
 			player.setFlying(false);
+			player.setAllowFlight(false);
+
+			Channel channel = VehicleInputInterceptor.getChannel(player);
+			if (channel != null && channel.pipeline().get(JetpackInputInterceptor.HANDLER_NAME) != null) {
+				channel.pipeline().remove(JetpackInputInterceptor.HANDLER_NAME);
+			}
 		}
 	}
 
@@ -82,8 +101,13 @@ public class JetpackService {
 			}
 			Player player = session.getPlayer();
 			if (player.isOnline()) {
-				player.setAllowFlight(false);
 				player.setFlying(false);
+				player.setAllowFlight(false);
+
+				Channel channel = VehicleInputInterceptor.getChannel(player);
+				if (channel != null && channel.pipeline().get(JetpackInputInterceptor.HANDLER_NAME) != null) {
+					channel.pipeline().remove(JetpackInputInterceptor.HANDLER_NAME);
+				}
 			}
 		}
 		activeSessions.clear();
