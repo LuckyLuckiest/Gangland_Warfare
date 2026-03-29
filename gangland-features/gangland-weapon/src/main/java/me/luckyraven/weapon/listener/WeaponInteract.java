@@ -294,6 +294,10 @@ public class WeaponInteract implements Listener {
 			// run the process each x ticks
 			RepeatingTimer shootingTimer = getShootingTimer(retrievedWeaponData, weapon, player);
 
+			// RepeatingTimer skips its first tick (justStarted guard), so without this
+			// call the first shot would be delayed by one full cooldown period.
+			selectiveFireShooter(weapon, player, shootingTimer, weapon.getCurrentSelectiveFire(), finalWeaponData);
+
 			shootingTimer.start(false);
 
 			// remove the weapon after 3 ticks of not pressing the button
