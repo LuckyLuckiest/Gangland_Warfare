@@ -13,7 +13,7 @@
     <artifactId>gangland-impl</artifactId>
     <packaging>jar</packaging>
 
-    <name>Gangland Implementation</name>
+    <name>Gangland</name>
 
     <dependencies>
         <!-- Bukkit/Spigot/Paper builds (start) -->
