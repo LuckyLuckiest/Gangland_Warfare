@@ -172,11 +172,14 @@ public abstract class WeaponService implements Comparator<Weapon> {
 		// when the weapon is registered in the system but not tagged with an uuid
 		Weapon finalWeapon = weaponAddon.copyWithUUID(finalUuid);
 
+		// Register the weapon first so isWeapon() can find it when setWeaponData
+		// calls getHeldWeaponItem — otherwise the map lookup returns null and the
+		// NBT ammo/durability data is never applied (weapon stays at max capacity).
+		weapons.put(finalUuid, finalWeapon);
+
 		// check if the weapon is new or not
 		// if it was new, then no need to set the data of the uuid since it is not even created/built
 		if (player != null && !newInstance) setWeaponData(finalWeapon, player);
-
-		weapons.put(finalUuid, finalWeapon);
 
 		return finalWeapon;
 	}
@@ -192,8 +195,15 @@ public abstract class WeaponService implements Comparator<Weapon> {
 		UUID uuid = getWeaponUUID(heldItem);
 		if (uuid == null) return null;
 
-		// get or load the new weapon (this will re-register if needed after cleanup)
-		return getWeapon(player, uuid, weaponName);
+		// newInstance=true skips the internal player-hand re-fetch inside getWeapon.
+		// We sync directly from heldItem so dropped items, off-hand items, and
+		// first-login cases all read the correct NBT ammo/durability values.
+		Weapon weapon = getWeapon(player, uuid, weaponName, true);
+		if (weapon == null) return null;
+
+		setWeaponData(weapon, new ItemBuilder(heldItem));
+
+		return weapon;
 	}
 
 	public void clear() {
