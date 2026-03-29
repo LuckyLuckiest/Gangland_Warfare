@@ -29,11 +29,13 @@ public class VehicleSession {
 	private final Player              driver;
 	private final UUID                driverUUID;
 	private final BossBar             healthBar;
+	private final int                 maxFuel;
 	@Setter
 	private       Car                 car;
 	@Setter
 	private       VehicleMovementTask task;
 	private       int                 currentDurability;
+	private       int                 currentFuel;
 
 	// WASD input state — written by VehicleInputInterceptor (Netty IO thread), read by VehicleMovementTask (main thread)
 	private volatile boolean inputForward;
@@ -42,14 +44,19 @@ public class VehicleSession {
 	private volatile boolean inputRight;
 
 	/**
-	 * @param initialDurability durability carried over from the item
+	 * @param initialDurability durability carried over from the parked vehicle
+	 * @param initialFuel fuel carried over from the parked vehicle (entity PDC / DB record)
+	 * @param maxFuel maximum fuel capacity from the car's fuel definition
 	 */
-	public VehicleSession(VehicleEntity entity, Car car, Player driver, int initialDurability) {
+	public VehicleSession(VehicleEntity entity, Car car, Player driver, int initialDurability, int initialFuel,
+	                      int maxFuel) {
 		this.entity            = entity;
 		this.car               = car;
 		this.driver            = driver;
 		this.driverUUID        = driver.getUniqueId();
 		this.currentDurability = initialDurability;
+		this.currentFuel       = initialFuel;
+		this.maxFuel           = maxFuel;
 
 		this.healthBar = Bukkit.createBossBar(buildHealthTitle(), BarColor.RED, BarStyle.SOLID);
 		this.healthBar.setProgress(durabilityProgress());
@@ -58,6 +65,18 @@ public class VehicleSession {
 
 	public void damage(int amount) {
 		currentDurability = Math.max(0, currentDurability - amount);
+	}
+
+	public boolean hasFuel() {
+		return currentFuel > 0;
+	}
+
+	public void consumeFuel(int amount) {
+		currentFuel = Math.max(0, currentFuel - amount);
+	}
+
+	public void addFuel(int amount) {
+		currentFuel = Math.min(maxFuel, currentFuel + amount);
 	}
 
 	public boolean isDestroyed() {
@@ -72,8 +91,8 @@ public class VehicleSession {
 	}
 
 	/**
-	 * Refreshes the boss bar health display for the driver. Called every tick by {@link VehicleMovementTask}.
-	 * Fuel display is handled separately by the movement task via {@link me.luckyraven.gadget.fuel.FuelService}.
+	 * Refreshes the boss bar health display for the driver. Called every tick by {@link VehicleMovementTask}. Fuel
+	 * display is handled separately by the movement task via {@link me.luckyraven.gadget.fuel.FuelService}.
 	 *
 	 * @param fuelDisplay optional action bar message for fuel; {@code null} if fuel is disabled
 	 */
@@ -94,14 +113,14 @@ public class VehicleSession {
 	}
 
 	/**
-	 * Builds the car item with updated durability NBT values to return to the player.
-	 * Fuel is tracked separately via the fuel item system.
+	 * Builds the car item with updated durability and fuel NBT values to return to the player.
 	 */
 	public ItemStack buildReturnItem() {
 		ItemStack   item    = car.buildItem();
 		ItemBuilder builder = new ItemBuilder(item);
 
 		builder.addTag(CarKey.CAR_DURABILITY.getKey(), currentDurability);
+		builder.addTag(CarKey.CAR_FUEL.getKey(), currentFuel);
 		builder.addTag(CarKey.CAR_OWNER.getKey(), driverUUID.toString());
 
 		return builder.build();

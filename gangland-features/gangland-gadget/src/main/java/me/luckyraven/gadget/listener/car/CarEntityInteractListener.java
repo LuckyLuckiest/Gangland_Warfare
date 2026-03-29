@@ -1,9 +1,14 @@
 package me.luckyraven.gadget.listener.car;
 
 import me.luckyraven.gadget.car.CarService;
+import me.luckyraven.gadget.car.vehicle.ParkedVehicle;
+import me.luckyraven.gadget.fuel.FuelService;
+import me.luckyraven.item.fuel.Fuel;
+import me.luckyraven.item.fuel.FuelBar;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ChatUtil;
+import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -11,13 +16,13 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.UUID;
 
 /**
- * Handles interaction with a placed (parked) car entity. Plain right-click mounts the player.
- * Shift + right-click is intentionally ignored — pickup is handled by shift + left-click via
- * {@link CarDamageListener}.
+ * Handles interaction with a placed (parked) car entity. Plain right-click mounts the player. Shift + right-click is
+ * intentionally ignored — pickup is handled by shift + left-click via {@link CarDamageListener}.
  */
 @ListenerHandler
 @AutowireTarget({CarService.class})
@@ -43,6 +48,42 @@ public class CarEntityInteractListener implements Listener {
 
 		// Shift + right-click is reserved for other actions (pickup = shift + left-click)
 		if (player.isSneaking()) return;
+
+		// Fuel-can refueling: right-click the car while holding a matching fuel can
+		ItemStack heldItem = player.getInventory().getItemInMainHand();
+		if (Fuel.isFuelItem(heldItem)) {
+			String        heldFuelKey = Fuel.getFuelKey(heldItem);
+			ParkedVehicle parked      = carService.getParkedVehicle(entityUUID);
+
+			if (parked != null && parked.getCar().isFuelEnabled() && heldFuelKey != null &&
+			    heldFuelKey.equals(parked.getCar().getFuelKey())) {
+
+				int canFuel = Fuel.getCurrentFuel(heldItem);
+				if (canFuel <= 0) {
+					ChatUtil.sendActionBar(player, "&cFuel can is empty!");
+					return;
+				}
+
+				FuelService                  fuelService    = carService.getFuelService();
+				me.luckyraven.item.fuel.Fuel fuelDef        = fuelService.getFuel(heldFuelKey);
+				int                          maxCarFuel     = fuelDef != null ? fuelDef.getMaxFuel() : 0;
+				int                          currentCarFuel = parked.getFuel();
+				int                          spaceInCar     = maxCarFuel - currentCarFuel;
+
+				if (spaceInCar <= 0) {
+					ChatUtil.sendActionBar(player, "&cCar fuel is already full!");
+					return;
+				}
+
+				int toTransfer = Math.min(canFuel, spaceInCar);
+				carService.refuelParkedCar(entityUUID, toTransfer);
+				player.getInventory().setItemInMainHand(Fuel.setCurrentFuel(heldItem, canFuel - toTransfer));
+
+				player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.2f);
+				ChatUtil.sendActionBar(player, FuelBar.render(currentCarFuel + toTransfer, maxCarFuel));
+				return;
+			}
+		}
 
 		if (carService.getVehicleRegistry().isPlayerDriving(player.getUniqueId())) {
 			player.sendMessage(ChatUtil.color("&cYou are already driving a vehicle."));

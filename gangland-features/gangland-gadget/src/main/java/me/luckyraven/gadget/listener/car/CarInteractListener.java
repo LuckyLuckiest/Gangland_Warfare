@@ -4,6 +4,7 @@ import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarKey;
 import me.luckyraven.gadget.car.CarService;
 import me.luckyraven.gadget.fuel.FuelService;
+import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
@@ -65,11 +66,18 @@ public class CarInteractListener implements Listener {
 
 		FuelService fuelService = carService.getFuelService();
 
-		// Read saved fuel/durability from the item's NBT so values persist across sessions
+		// Read saved fuel from the item's NBT so values persist across sessions.
+		// For a brand-new car (no NBT), default to the fuel definition's maximum capacity.
 		ItemBuilder itemBuilder = new ItemBuilder(item);
-		int fuel = itemBuilder.hasNBTTag(CarKey.CAR_FUEL.getKey()) ?
-		           itemBuilder.getIntegerTagData(CarKey.CAR_FUEL.getKey()) :
-		           fuelService.getMaxFuelLevel(player, car.getFuelKey());
+		int         fuel;
+		if (itemBuilder.hasNBTTag(CarKey.CAR_FUEL.getKey())) {
+			fuel = itemBuilder.getIntegerTagData(CarKey.CAR_FUEL.getKey());
+		} else if (car.isFuelEnabled() && car.getFuelKey() != null) {
+			Fuel fuelDef = fuelService.getFuel(car.getFuelKey());
+			fuel = fuelDef != null ? fuelDef.getMaxFuel() : 0;
+		} else {
+			fuel = 0;
+		}
 		int durability = itemBuilder.hasNBTTag(CarKey.CAR_DURABILITY.getKey()) ?
 		                 itemBuilder.getIntegerTagData(CarKey.CAR_DURABILITY.getKey()) :
 		                 car.getMaxDurability();

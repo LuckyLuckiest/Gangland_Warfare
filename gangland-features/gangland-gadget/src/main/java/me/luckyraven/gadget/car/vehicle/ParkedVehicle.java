@@ -30,6 +30,10 @@ public class ParkedVehicle {
 		durability = Math.max(0, durability - amount);
 	}
 
+	public void addFuel(int amount) {
+		fuel = Math.max(0, fuel + amount);
+	}
+
 	public boolean isDestroyed() {
 		return durability <= 0;
 	}
