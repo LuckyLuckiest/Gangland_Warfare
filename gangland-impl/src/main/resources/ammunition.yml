@@ -64,3 +64,8 @@ slugs:
    Lore:
       - "&7Slugs are primarily used to hunt large game and for"
       - "&7military and police purposes."
+fuel_canister:
+   Material: "BUCKET"
+   Name: "&6Fuel Canister&r"
+   Lore:
+      - "&7A canister of flammable fuel used to reload the flamethrower."
