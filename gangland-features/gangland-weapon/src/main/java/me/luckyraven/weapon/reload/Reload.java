@@ -44,8 +44,10 @@ public abstract class Reload implements Cloneable {
 
 		if (reloadData == null) return;
 
-		ChatUtil.sendActionBar(plugin, player, weapon.getReloadActionBarData().getReloading(),
-		                       reloadData.getCooldown());
+		if (weapon.getReloadActionBarData() != null) {
+			ChatUtil.sendActionBar(plugin, player, weapon.getReloadActionBarData().getReloading(),
+			                       reloadData.getCooldown());
+		}
 
 		// start executing the reload process
 		executeReload(plugin, player, removeAmmunition);
@@ -80,7 +82,9 @@ public abstract class Reload implements Cloneable {
 		this.reloading.set(true);
 
 		// open the reload chamber action bar status
-		ChatUtil.sendActionBar(player, weapon.getReloadActionBarData().getOpening());
+		if (weapon.getReloadActionBarData() != null) {
+			ChatUtil.sendActionBar(player, weapon.getReloadActionBarData().getOpening());
+		}
 
 		// start reloading sound
 		SoundConfiguration.playSounds(player, weapon.getSoundData().getReloadCustomStart(),
