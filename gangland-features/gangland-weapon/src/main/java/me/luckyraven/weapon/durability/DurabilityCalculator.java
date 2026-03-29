@@ -45,6 +45,10 @@ public class DurabilityCalculator {
 		double itemMaxDurability   = itemBuilder.getItemMaxDurability();
 		double itemCurrentDamage   = itemBuilder.getItemDamagedDurability();
 
+		// Item material has no Minecraft durability bar — cannot encode weapon durability
+		// visually, so treat the weapon as undamaged.
+		if (itemMaxDurability == 0) return (short) weaponMaxDurability;
+
 		// Calculate the scale factor
 		double scale = itemMaxDurability / weaponMaxDurability;
 
