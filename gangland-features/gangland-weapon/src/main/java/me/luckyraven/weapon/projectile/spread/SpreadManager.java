@@ -12,17 +12,18 @@ import java.util.Random;
  */
 public class SpreadManager {
 
-	private final Random     random;
-	private final SpreadData spreadData;
+	private final Random random;
+	private final Weapon weapon;
 
 	@Getter
 	private double currentSpread;
 	private long   lastShotTime;
 
 	public SpreadManager(Weapon weapon) {
-		this.random        = new Random();
-		this.spreadData    = weapon.getSpreadData();
-		this.currentSpread = spreadData.getStart();
+		this.random = new Random();
+		this.weapon = weapon;
+		SpreadData data = weapon.getSpreadData();
+		this.currentSpread = data != null ? data.getStart() : 0.0;
 		this.lastShotTime  = System.currentTimeMillis();
 	}
 
@@ -34,16 +35,16 @@ public class SpreadManager {
 	 * @return The vector with spread applied
 	 */
 	public Vector applySpread(Vector originalVector) {
-		// Check if spread should reset based on time
-		checkSpreadReset();
+		SpreadData spreadData = weapon.getSpreadData();
+		if (spreadData == null) return originalVector;
 
-		// Apply the current spread factor
+		checkSpreadReset(spreadData);
+
 		double offsetX = (random.nextDouble() - 0.5) * currentSpread;
 		double offsetY = (random.nextDouble() - 0.5) * currentSpread;
 		double offsetZ = (random.nextDouble() - 0.5) * currentSpread;
 
-		// Update spread for next shot
-		updateSpread();
+		updateSpread(spreadData);
 
 		return originalVector.add(new Vector(offsetX, offsetY, offsetZ)).normalize();
 	}
@@ -52,6 +53,9 @@ public class SpreadManager {
 	 * Manually resets the spread to its starting value.
 	 */
 	public void resetSpread() {
+		SpreadData spreadData = weapon.getSpreadData();
+		if (spreadData == null) return;
+
 		this.currentSpread = spreadData.getStart();
 		this.lastShotTime  = System.currentTimeMillis();
 	}
@@ -59,11 +63,10 @@ public class SpreadManager {
 	/**
 	 * Checks if spread should reset based on the spreadResetTime.
 	 */
-	private void checkSpreadReset() {
+	private void checkSpreadReset(SpreadData spreadData) {
 		long currentTime       = System.currentTimeMillis();
 		long timeSinceLastShot = currentTime - lastShotTime;
 
-		// If enough time has passed, reset spread to starting value
 		if (timeSinceLastShot >= spreadData.getResetTime()) {
 			currentSpread = spreadData.getStart();
 		}
@@ -74,10 +77,9 @@ public class SpreadManager {
 	/**
 	 * Updates the spread value after a shot is fired.
 	 */
-	private void updateSpread() {
+	private void updateSpread(SpreadData spreadData) {
 		double newSpread = currentSpread + spreadData.getChangeBase();
 
-		// Check if spread exceeds bounds
 		if (newSpread >= spreadData.getBoundMaximum()) {
 			currentSpread = spreadData.isResetOnBound() ? spreadData.getStart() : spreadData.getBoundMaximum();
 		} else if (newSpread <= spreadData.getBoundMinimum()) {

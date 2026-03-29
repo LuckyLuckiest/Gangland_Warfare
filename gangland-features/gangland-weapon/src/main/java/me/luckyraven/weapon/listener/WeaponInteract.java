@@ -11,6 +11,7 @@ import me.luckyraven.util.timer.SequenceTimer;
 import me.luckyraven.weapon.SelectiveFire;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
+import me.luckyraven.weapon.dto.ScopeData;
 import me.luckyraven.weapon.types.biological.BiologicalAction;
 import me.luckyraven.weapon.types.biological.BiologicalWeapon;
 import me.luckyraven.weapon.types.gun.FullAutoTask;
@@ -82,11 +83,17 @@ public class WeaponInteract implements Listener {
 		                     event.getAction() == Action.RIGHT_CLICK_BLOCK;
 
 		// scope toggle for any weapon type that has a scope configured
-		if (leftClick && !player.isSneaking() && weapon.getScopeData().getLevel() > 0 && !weapon.isReloading()) {
+		ScopeData scopeData     = weapon.getScopeData();
+		boolean   validateScope = true;
+		if (scopeData != null) {
+			validateScope = scopeData.getLevel() > 0;
+		}
+
+		if (leftClick && !player.isSneaking() && validateScope && !weapon.isReloading()) {
 			event.setUseInteractedBlock(Event.Result.DENY);
 			event.setUseItemInHand(Event.Result.DENY);
 
-			if (!weapon.getScopeData().isScoped()) weapon.scope(player, true);
+			if (scopeData != null && !scopeData.isScoped()) weapon.scope(player, true);
 			else weapon.unScope(player, true);
 
 			SoundConfiguration.playSounds(player, weapon.getSoundData().getScopeCustom(),
@@ -234,12 +241,6 @@ public class WeaponInteract implements Listener {
 		// block all actions while reloading
 		if (weapon.isReloading()) return;
 
-		// sneak + right-click reloads for any non-gun with ammo configured
-		if (rightClick && player.isSneaking() && weapon.getReloadData() != null && weapon.requiresReload()) {
-			weapon.reload(plugin, player, true);
-			return;
-		}
-
 		switch (weapon) {
 			case ThrowableWeapon throwable -> {
 				if (rightClick) new ThrowableAction(plugin, throwable, recoilCompatibility).activate(player);
@@ -251,7 +252,8 @@ public class WeaponInteract implements Listener {
 				}
 			}
 			case IncendiaryWeapon incendiary -> {
-				IncendiaryAction action = new IncendiaryAction(plugin, incendiary, recoilCompatibility, activeTasks);
+				IncendiaryAction action = new IncendiaryAction(plugin, weaponService, incendiary, recoilCompatibility,
+				                                               activeTasks);
 
 				if (rightClick) action.start(player);
 				else if (leftClick) action.stop();

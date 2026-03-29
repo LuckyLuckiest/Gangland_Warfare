@@ -7,6 +7,7 @@ import me.luckyraven.weapon.SelectiveFire;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.configuration.parser.*;
+import me.luckyraven.weapon.dto.*;
 import me.luckyraven.weapon.modifiers.*;
 import me.luckyraven.weapon.types.WeaponType;
 import me.luckyraven.weapon.util.BlockGroupResolver;
@@ -84,6 +85,8 @@ public class WeaponAddon {
 		};
 
 		/* apply shared post-parse sections */
+		weapon.setDurabilityData(new DurabilityData());
+		weapon.setSoundData(new SoundData());
 		weapon.getDurabilityData().setOnShot(onShotDurability);
 		weapon.getDurabilityData().setOnRepair(onRepairDurability);
 		applyShootSounds(shootSection, weapon);
@@ -157,55 +160,65 @@ public class WeaponAddon {
 
 		ConfigurationSection recoilSection = shootSection.getConfigurationSection("Recoil");
 		if (recoilSection != null) {
+			weapon.setRecoilData(new RecoilData());
 			weapon.getRecoilData().setAmount(recoilSection.getDouble("Amount"));
 			weapon.getRecoilData().setPushVelocity(recoilSection.getDouble("Push"));
 			weapon.getRecoilData().setPushPowerUp(recoilSection.getDouble("Power_Up"));
-			weapon.getRecoilData().setPattern(
-					recoilSection.getStringList("Pattern")
-							.stream().map(s -> s.split(";")).toList());
+			weapon.getRecoilData()
+			      .setPattern(recoilSection.getStringList("Pattern")
+									  .stream().map(s -> s.split(";")).toList());
 		}
 
 		ConfigurationSection spreadSection = shootSection.getConfigurationSection("Spread");
-		if (spreadSection != null) {
-			weapon.getSpreadData().setStart(spreadSection.getDouble("Starting_Spread"));
-			weapon.getSpreadData().setResetTime(spreadSection.getInt("Time"));
-			ConfigurationSection spreadChangeSection = spreadSection.getConfigurationSection("Change");
-			if (spreadChangeSection != null) {
-				weapon.getSpreadData().setChangeBase(spreadSection.getDouble("Base"));
-				ConfigurationSection boundSection = spreadChangeSection.getConfigurationSection("Bounds");
-				if (boundSection != null) {
-					weapon.getSpreadData().setResetOnBound(spreadSection.getBoolean("Reset_On_Bound"));
-					weapon.getSpreadData().setBoundMinimum(spreadSection.getDouble("Min"));
-					weapon.getSpreadData().setBoundMaximum(spreadSection.getDouble("Max"));
-				}
-			}
-		}
+		if (spreadSection == null) return;
+
+		weapon.setSpreadData(new SpreadData());
+
+		weapon.getSpreadData().setStart(spreadSection.getDouble("Starting_Spread"));
+		weapon.getSpreadData().setResetTime(spreadSection.getInt("Time"));
+
+		ConfigurationSection spreadChangeSection = spreadSection.getConfigurationSection("Change");
+		if (spreadChangeSection == null) return;
+
+		weapon.getSpreadData().setChangeBase(spreadSection.getDouble("Base"));
+		ConfigurationSection boundSection = spreadChangeSection.getConfigurationSection("Bounds");
+
+		if (boundSection == null) return;
+		weapon.getSpreadData().setResetOnBound(spreadSection.getBoolean("Reset_On_Bound"));
+		weapon.getSpreadData().setBoundMinimum(spreadSection.getDouble("Min"));
+		weapon.getSpreadData().setBoundMaximum(spreadSection.getDouble("Max"));
 	}
 
 	private void applyScope(FileConfiguration config, Weapon weapon) {
 		ConfigurationSection scopeSection = config.getConfigurationSection("Scope");
 		if (scopeSection == null) return;
+
+		weapon.setScopeData(new ScopeData());
 		weapon.getScopeData().setLevel(scopeSection.getInt("Level"));
+
 		ConfigurationSection soundSection = scopeSection.getConfigurationSection("Sound");
 		if (soundSection == null) return;
-		weapon.getSoundData().setScopeDefault(
-				parseSound(soundSection, "Default_Sound", SoundConfiguration.SoundType.VANILLA));
-		weapon.getSoundData().setScopeCustom(
-				parseSound(soundSection, "Custom_Sound", SoundConfiguration.SoundType.CUSTOM));
+
+		weapon.getSoundData()
+		      .setScopeDefault(parseSound(soundSection, "Default_Sound", SoundConfiguration.SoundType.VANILLA));
+		weapon.getSoundData()
+		      .setScopeCustom(parseSound(soundSection, "Custom_Sound", SoundConfiguration.SoundType.CUSTOM));
 	}
 
 	private void applyModifiers(FileConfiguration config, Weapon weapon) {
 		ConfigurationSection modifiersSection = config.getConfigurationSection("Modifiers");
 		if (modifiersSection == null) return;
 
+		weapon.setModifiersData(new ModifiersData());
+
 		for (String entry : modifiersSection.getStringList("Break_Blocks")) {
 			String[] parts = entry.split("-");
 			if (parts.length != 2) continue;
 			try {
 				Set<Material> materials = BlockGroupResolver.resolve(parts[0].trim());
-				if (!materials.isEmpty())
-					weapon.getModifiersData().addBreakBlock(
-							new BlockBreakModifier(materials, Integer.parseInt(parts[1].trim())));
+				if (!materials.isEmpty()) weapon.getModifiersData()
+				                                .addBreakBlock(new BlockBreakModifier(materials, Integer.parseInt(
+														parts[1].trim())));
 			} catch (NumberFormatException ignored) { }
 		}
 
@@ -214,10 +227,10 @@ public class WeaponAddon {
 			String[] parts = penetrationString.split("-");
 			if (parts.length == 3) {
 				try {
-					weapon.getModifiersData().setPenetration(
-							new PenetrationModifier(Integer.parseInt(parts[0].trim()),
-							                        Integer.parseInt(parts[1].trim()),
-							                        Double.parseDouble(parts[2].trim())));
+					weapon.getModifiersData()
+					      .setPenetration(new PenetrationModifier(Integer.parseInt(parts[0].trim()),
+					                                              Integer.parseInt(parts[1].trim()),
+					                                              Double.parseDouble(parts[2].trim())));
 				} catch (NumberFormatException ignored) { }
 			}
 		}
@@ -229,10 +242,9 @@ public class WeaponAddon {
 					Set<Material> bounceOffBlocks = new HashSet<>();
 					for (String matName : parts[1].trim().split(","))
 						bounceOffBlocks.addAll(BlockGroupResolver.resolve(matName.trim()));
-					weapon.getModifiersData().addRicochet(
-							new RicochetModifier(Integer.parseInt(parts[0].trim()),
-							                     bounceOffBlocks,
-							                     Double.parseDouble(parts[2].trim())));
+					weapon.getModifiersData()
+					      .addRicochet(new RicochetModifier(Integer.parseInt(parts[0].trim()), bounceOffBlocks,
+					                                        Double.parseDouble(parts[2].trim())));
 				} catch (NumberFormatException ignored) { }
 			}
 		}
@@ -243,13 +255,12 @@ public class WeaponAddon {
 			if (parts.length == 3) {
 				try {
 					String colorHex = parts[0].trim();
-					Color color = Color.fromRGB(
-							Integer.parseInt(colorHex.substring(0, 2), 16),
-							Integer.parseInt(colorHex.substring(2, 4), 16),
-							Integer.parseInt(colorHex.substring(4, 6), 16));
-					weapon.getModifiersData().setTracer(
-							new TracerModifier(color, Boolean.parseBoolean(parts[1].trim()),
-							                   Float.parseFloat(parts[2].trim())));
+					Color color = Color.fromRGB(Integer.parseInt(colorHex.substring(0, 2), 16),
+					                            Integer.parseInt(colorHex.substring(2, 4), 16),
+					                            Integer.parseInt(colorHex.substring(4, 6), 16));
+					weapon.getModifiersData()
+					      .setTracer(new TracerModifier(color, Boolean.parseBoolean(parts[1].trim()),
+					                                    Float.parseFloat(parts[2].trim())));
 				} catch (NumberFormatException | IndexOutOfBoundsException ignored) { }
 			}
 		}
@@ -257,8 +268,8 @@ public class WeaponAddon {
 		String armorPiercingString = modifiersSection.getString("Armor_Piercing");
 		if (armorPiercingString != null) {
 			try {
-				weapon.getModifiersData().setArmorPiercing(
-						new ArmorPiercingModifier(Double.parseDouble(armorPiercingString.trim())));
+				weapon.getModifiersData()
+				      .setArmorPiercing(new ArmorPiercingModifier(Double.parseDouble(armorPiercingString.trim())));
 			} catch (NumberFormatException ignored) { }
 		}
 
@@ -276,25 +287,26 @@ public class WeaponAddon {
 		ConfigurationSection soundSection = shootSection.getConfigurationSection("Sound");
 		if (soundSection == null) return;
 
-		weapon.getSoundData().setShotDefault(
-				parseSound(soundSection, "Default_Sound", SoundConfiguration.SoundType.VANILLA));
-		weapon.getSoundData().setShotCustom(
-				parseSound(soundSection, "Custom_Sound", SoundConfiguration.SoundType.CUSTOM));
-		weapon.getSoundData().setEmptyMagDefault(
-				parseSound(soundSection, "Empty_Default_Sound", SoundConfiguration.SoundType.VANILLA));
-		weapon.getSoundData().setEmptyMagCustom(
-				parseSound(soundSection, "Empty_Custom_Sound", SoundConfiguration.SoundType.CUSTOM));
+		weapon.getSoundData()
+		      .setShotDefault(parseSound(soundSection, "Default_Sound", SoundConfiguration.SoundType.VANILLA));
+		weapon.getSoundData()
+		      .setShotCustom(parseSound(soundSection, "Custom_Sound", SoundConfiguration.SoundType.CUSTOM));
+		weapon.getSoundData()
+		      .setEmptyMagDefault(
+					  parseSound(soundSection, "Empty_Default_Sound", SoundConfiguration.SoundType.VANILLA));
+		weapon.getSoundData()
+		      .setEmptyMagCustom(parseSound(soundSection, "Empty_Custom_Sound", SoundConfiguration.SoundType.CUSTOM));
 
 		double flybyRange = soundSection.getDouble("Flyby_Range", 0D);
 		weapon.getSoundData().setFlybyRange(flybyRange);
-		weapon.getSoundData().setFlybyDefault(
-				parseSound(soundSection, "Flyby_Default_Sound", SoundConfiguration.SoundType.VANILLA));
-		weapon.getSoundData().setFlybyCustom(
-				parseSound(soundSection, "Flyby_Custom_Sound", SoundConfiguration.SoundType.CUSTOM));
-		weapon.getSoundData().setImpactDefault(
-				parseSound(soundSection, "Impact_Default_Sound", SoundConfiguration.SoundType.VANILLA));
-		weapon.getSoundData().setImpactCustom(
-				parseSound(soundSection, "Impact_Custom_Sound", SoundConfiguration.SoundType.CUSTOM));
+		weapon.getSoundData()
+		      .setFlybyDefault(parseSound(soundSection, "Flyby_Default_Sound", SoundConfiguration.SoundType.VANILLA));
+		weapon.getSoundData()
+		      .setFlybyCustom(parseSound(soundSection, "Flyby_Custom_Sound", SoundConfiguration.SoundType.CUSTOM));
+		weapon.getSoundData()
+		      .setImpactDefault(parseSound(soundSection, "Impact_Default_Sound", SoundConfiguration.SoundType.VANILLA));
+		weapon.getSoundData()
+		      .setImpactCustom(parseSound(soundSection, "Impact_Custom_Sound", SoundConfiguration.SoundType.CUSTOM));
 	}
 
 	private void applyReloadSoundsAndActionBar(FileConfiguration config, Weapon weapon) {
@@ -303,32 +315,35 @@ public class WeaponAddon {
 
 		ConfigurationSection reloadSoundSection = reloadSection.getConfigurationSection("Sound");
 		if (reloadSoundSection != null) {
-			weapon.getSoundData().setReloadDefaultBefore(
-					parseSound(reloadSoundSection, "Default_Sound_Before", SoundConfiguration.SoundType.VANILLA));
-			weapon.getSoundData().setReloadDefaultAfter(
-					parseSound(reloadSoundSection, "Default_Sound_After", SoundConfiguration.SoundType.VANILLA));
+			weapon.getSoundData()
+			      .setReloadDefaultBefore(
+						  parseSound(reloadSoundSection, "Default_Sound_Before", SoundConfiguration.SoundType.VANILLA));
+			weapon.getSoundData()
+			      .setReloadDefaultAfter(
+						  parseSound(reloadSoundSection, "Default_Sound_After", SoundConfiguration.SoundType.VANILLA));
 
 			ConfigurationSection customSoundSection = reloadSoundSection.getConfigurationSection("Custom_Sound");
 			if (customSoundSection != null) {
-				weapon.getSoundData().setReloadCustomStart(
-						parseSound(customSoundSection, "Start", SoundConfiguration.SoundType.CUSTOM));
-				weapon.getSoundData().setReloadCustomMid(
-						parseSound(customSoundSection, "Mid", SoundConfiguration.SoundType.CUSTOM));
-				weapon.getSoundData().setReloadCustomEnd(
-						parseSound(customSoundSection, "End", SoundConfiguration.SoundType.CUSTOM));
+				weapon.getSoundData()
+				      .setReloadCustomStart(
+							  parseSound(customSoundSection, "Start", SoundConfiguration.SoundType.CUSTOM));
+				weapon.getSoundData()
+				      .setReloadCustomMid(parseSound(customSoundSection, "Mid", SoundConfiguration.SoundType.CUSTOM));
+				weapon.getSoundData()
+				      .setReloadCustomEnd(parseSound(customSoundSection, "End", SoundConfiguration.SoundType.CUSTOM));
 			}
 		}
 
 		ConfigurationSection actionBarSection = reloadSection.getConfigurationSection("Action_Bar");
 		if (actionBarSection != null) {
+			weapon.setReloadActionBarData(new ReloadActionBarData());
 			weapon.getReloadActionBarData().setReloading(actionBarSection.getString("Reloading"));
 			weapon.getReloadActionBarData().setOpening(actionBarSection.getString("Opening"));
 		}
 	}
 
 	@Nullable
-	private SoundConfiguration parseSound(ConfigurationSection parent, String key,
-	                                      SoundConfiguration.SoundType type) {
+	private SoundConfiguration parseSound(ConfigurationSection parent, String key, SoundConfiguration.SoundType type) {
 		ConfigurationSection section = parent.getConfigurationSection(key);
 		if (section == null) return null;
 		String sound = section.getString("Sound");

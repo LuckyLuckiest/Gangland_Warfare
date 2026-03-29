@@ -54,6 +54,9 @@ Reload:
          Sound: ENTITY_EXPERIENCE_ORB_PICKUP
          Volume: 0.6
          Pitch: 1.0
+   Action_Bar:
+      Reloading: "&cReloading...&r"
+      Opening: "&cOpening...&r"
 
 Scope:
    Level: 1
