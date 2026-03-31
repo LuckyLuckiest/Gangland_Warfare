@@ -1,6 +1,6 @@
 package me.luckyraven.file.configuration.copsncrooks;
 
-import me.luckyraven.copsncrooks.police.config.CopSettings;
+import me.luckyraven.copsncrooks.npc.police.config.CopSettings;
 import me.luckyraven.file.configuration.Settings;
 import net.objecthunter.exp4j.ExpressionBuilder;
 

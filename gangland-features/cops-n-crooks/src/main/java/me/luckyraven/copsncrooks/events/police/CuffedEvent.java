@@ -2,7 +2,7 @@ package me.luckyraven.copsncrooks.events.police;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.copsncrooks.police.npc.CopNpc;
+import me.luckyraven.copsncrooks.npc.police.npc.CopNpc;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;

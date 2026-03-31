@@ -3,7 +3,7 @@ package me.luckyraven;
 import lombok.CustomLog;
 import me.luckyraven.copsncrooks.detainment.DetainmentRegistry;
 import me.luckyraven.copsncrooks.jail.JailService;
-import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
+import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.gang.member.MemberManager;

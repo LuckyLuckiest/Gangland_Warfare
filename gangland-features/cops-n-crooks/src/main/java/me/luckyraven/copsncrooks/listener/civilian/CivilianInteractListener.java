@@ -1,9 +1,9 @@
 package me.luckyraven.copsncrooks.listener.civilian;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.copsncrooks.civilian.CivilianNpc;
-import me.luckyraven.copsncrooks.civilian.CivilianService;
-import me.luckyraven.copsncrooks.civilian.config.CivilianInventoryConfig;
+import me.luckyraven.copsncrooks.npc.civilian.CivilianNpc;
+import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
+import me.luckyraven.copsncrooks.npc.civilian.config.CivilianInventoryConfig;
 import me.luckyraven.item.ItemParser;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ChatUtil;

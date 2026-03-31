@@ -1,6 +1,6 @@
 package me.luckyraven.database.tables.copsncrooks;
 
-import me.luckyraven.copsncrooks.civilian.spawn.CivilianSpawner;
+import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawner;
 import me.luckyraven.persistence.database.component.Attribute;
 import me.luckyraven.persistence.database.component.Table;
 import org.bukkit.Location;

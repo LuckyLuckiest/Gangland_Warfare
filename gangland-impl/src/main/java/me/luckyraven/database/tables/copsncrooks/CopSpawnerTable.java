@@ -1,6 +1,6 @@
 package me.luckyraven.database.tables.copsncrooks;
 
-import me.luckyraven.copsncrooks.police.spawn.CopSpawner;
+import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawner;
 import me.luckyraven.persistence.database.component.Attribute;
 import me.luckyraven.persistence.database.component.Table;
 import org.bukkit.Location;
@@ -36,7 +36,7 @@ public class CopSpawnerTable extends Table<CopSpawner> {
 		Location location = data.getLocation();
 
 		return new Object[]{data.getId(), Objects.requireNonNull(location.getWorld()).getName(), location.getX(),
-							location.getY(), location.getZ(), location.getYaw(), location.getPitch()};
+		                    location.getY(), location.getZ(), location.getYaw(), location.getPitch()};
 	}
 
 	@Override

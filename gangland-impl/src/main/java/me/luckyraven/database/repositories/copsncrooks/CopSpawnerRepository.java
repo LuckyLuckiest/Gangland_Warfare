@@ -1,7 +1,7 @@
 package me.luckyraven.database.repositories.copsncrooks;
 
-import me.luckyraven.copsncrooks.police.spawn.CopSpawnManager;
-import me.luckyraven.copsncrooks.police.spawn.CopSpawner;
+import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
+import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawner;
 import me.luckyraven.database.tables.copsncrooks.CopSpawnerTable;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;

@@ -1,6 +1,6 @@
 package me.luckyraven.file.configuration.copsncrooks;
 
-import me.luckyraven.copsncrooks.civilian.config.CivilianSettings;
+import me.luckyraven.copsncrooks.npc.civilian.config.CivilianSettings;
 import me.luckyraven.file.configuration.Settings;
 
 /**

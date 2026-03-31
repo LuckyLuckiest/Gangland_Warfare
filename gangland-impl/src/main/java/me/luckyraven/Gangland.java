@@ -5,7 +5,7 @@ import com.viaversion.viaversion.api.ViaAPI;
 import com.zaxxer.hikari.HikariConfig;
 import lombok.CustomLog;
 import lombok.Getter;
-import me.luckyraven.copsncrooks.police.CopService;
+import me.luckyraven.copsncrooks.npc.police.CopService;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
 import me.luckyraven.file.configuration.Settings;

@@ -1,10 +1,10 @@
 package me.luckyraven.copsncrooks.listener.civilian;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.copsncrooks.civilian.CivilianNpc;
-import me.luckyraven.copsncrooks.civilian.CivilianService;
-import me.luckyraven.copsncrooks.civilian.CivilianState;
-import me.luckyraven.copsncrooks.civilian.config.CivilianAIBehaviorConfig;
+import me.luckyraven.copsncrooks.npc.civilian.CivilianNpc;
+import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
+import me.luckyraven.copsncrooks.npc.civilian.CivilianState;
+import me.luckyraven.copsncrooks.npc.civilian.config.CivilianAIBehaviorConfig;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
