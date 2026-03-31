@@ -55,7 +55,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final double minProgressDistance;
 	private final double rangedMinDistance;
 	private final double rangedMaxDistance;
-	private final double minRepathAfterLossTicks;
+	private final int    minRepathAfterLossTicks;
 
 	// Return / despawn settings
 	private final int    maxReturnTicks;
@@ -183,75 +183,119 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	}
 
 	@Override
-	public double getMinSpawnDistance() { return minSpawnDistance; }
+	public double getMinSpawnDistance() {
+		return minSpawnDistance;
+	}
 
 	@Override
-	public double getMaxSpawnDistance() { return maxSpawnDistance; }
+	public double getMaxSpawnDistance() {
+		return maxSpawnDistance;
+	}
 
 	@Override
-	public double getPhase1MinDistance() { return phase1MinDistance; }
+	public double getPhase1MinDistance() {
+		return phase1MinDistance;
+	}
 
 	@Override
-	public double getSpawnRadiusShrinkStep() { return spawnRadiusShrinkStep; }
+	public double getSpawnRadiusShrinkStep() {
+		return spawnRadiusShrinkStep;
+	}
 
 	@Override
-	public int getVerticalSearchRange() { return verticalSearchRange; }
+	public int getVerticalSearchRange() {
+		return verticalSearchRange;
+	}
 
 	@Override
-	public int getSpawnYOffset() { return spawnYOffset; }
+	public int getSpawnYOffset() {
+		return spawnYOffset;
+	}
 
 	@Override
-	public int getMinOpenHorizontalSides() { return minOpenHorizontalSides; }
+	public int getMinOpenHorizontalSides() {
+		return minOpenHorizontalSides;
+	}
 
 	@Override
-	public double getSpawnerPreferenceRadius() { return spawnerPreferenceRadius; }
+	public double getSpawnerPreferenceRadius() {
+		return spawnerPreferenceRadius;
+	}
 
 	@Override
-	public double getVisibilityCheckDistance() { return visibilityCheckDistance; }
+	public double getVisibilityCheckDistance() {
+		return visibilityCheckDistance;
+	}
 
 	@Override
-	public int getSpawnPhase1Attempts() { return spawnPhase1Attempts; }
+	public int getSpawnPhase1Attempts() {
+		return spawnPhase1Attempts;
+	}
 
 	@Override
-	public int getSpawnPhase2Attempts() { return spawnPhase2Attempts; }
+	public int getSpawnPhase2Attempts() {
+		return spawnPhase2Attempts;
+	}
 
 	@Override
-	public int getNavigationRecalculationTicks() { return navigationRecalculationTicks; }
+	public int getNavigationRecalculationTicks() {
+		return navigationRecalculationTicks;
+	}
 
 	@Override
-	public int getStuckCheckIntervalTicks() { return stuckCheckIntervalTicks; }
+	public int getStuckCheckIntervalTicks() {
+		return stuckCheckIntervalTicks;
+	}
 
 	@Override
-	public int getMaxStuckChecks() { return maxStuckChecks; }
+	public int getMaxStuckChecks() {
+		return maxStuckChecks;
+	}
 
 	@Override
-	public int getMaxHopelessStuckChecks() { return maxHopelessStuckChecks; }
+	public int getMaxHopelessStuckChecks() {
+		return maxHopelessStuckChecks;
+	}
 
 	@Override
-	public double getHopelessCloseThreshold() { return hopelessCloseThreshold; }
+	public double getHopelessCloseThreshold() {
+		return hopelessCloseThreshold;
+	}
 
 	@Override
-	public double getMinProgressDistance() { return minProgressDistance; }
+	public double getMinProgressDistance() {
+		return minProgressDistance;
+	}
 
 	@Override
-	public double getRangedMinDistance() { return rangedMinDistance; }
+	public double getRangedMinDistance() {
+		return rangedMinDistance;
+	}
 
 	@Override
-	public double getRangedMaxDistance() { return rangedMaxDistance; }
+	public double getRangedMaxDistance() {
+		return rangedMaxDistance;
+	}
 
 	@Override
-	public double getMinRepathAfterLossTicks() {
+	public int getMinRepathAfterLossTicks() {
 		return minRepathAfterLossTicks;
 	}
 
 	@Override
-	public int getMaxReturnTicks() { return maxReturnTicks; }
+	public int getMaxReturnTicks() {
+		return maxReturnTicks;
+	}
 
 	@Override
-	public double getStationArrivalDistance() { return stationArrivalDistance; }
+	public double getStationArrivalDistance() {
+		return stationArrivalDistance;
+	}
 
 	@Override
-	public int getStartingAmmoMagazines() { return startingAmmoMagazines; }
+	public int getStartingAmmoMagazines() {
+		return startingAmmoMagazines;
+	}
 
 	/**
 	 * Parses all tier sections from {@code cops.yml}.

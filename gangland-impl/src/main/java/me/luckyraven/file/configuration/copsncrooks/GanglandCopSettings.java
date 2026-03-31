@@ -142,47 +142,47 @@ public class GanglandCopSettings implements CopSettings {
 
 	@Override
 	public int getNavigationRecalculationTicks() {
-		return Settings.getCopNavRecalculationTicks();
+		return Settings.getNpcNavRecalculationTicks();
 	}
 
 	@Override
 	public int getStuckCheckIntervalTicks() {
-		return Settings.getCopNavStuckCheckInterval();
+		return Settings.getNpcNavStuckCheckInterval();
 	}
 
 	@Override
 	public int getMaxStuckChecks() {
-		return Settings.getCopNavMaxStuckChecks();
+		return Settings.getNpcNavMaxStuckChecks();
 	}
 
 	@Override
 	public int getMaxHopelessStuckChecks() {
-		return Settings.getCopNavMaxHopelessStuckChecks();
+		return Settings.getNpcNavMaxHopelessStuckChecks();
 	}
 
 	@Override
 	public double getHopelessCloseThreshold() {
-		return Settings.getCopNavHopelessCloseThreshold();
+		return Settings.getNpcNavHopelessCloseThreshold();
 	}
 
 	@Override
 	public double getMinProgressDistance() {
-		return Settings.getCopNavMinProgressDistance();
+		return Settings.getNpcNavMinProgressDistance();
 	}
 
 	@Override
 	public double getRangedMinDistance() {
-		return Settings.getCopNavRangedMinDistance();
+		return Settings.getNpcNavRangedMinDistance();
 	}
 
 	@Override
 	public double getRangedMaxDistance() {
-		return Settings.getCopNavRangedMaxDistance();
+		return Settings.getNpcNavRangedMaxDistance();
 	}
 
 	@Override
-	public double getMinRepathAfterLossTicks() {
-		return Settings.getCopNavMinRepathAfterLossTicks();
+	public int getMinRepathAfterLossTicks() {
+		return Settings.getNpcNavMinRepathAfterLossTicks();
 	}
 
 	@Override
@@ -203,12 +203,12 @@ public class GanglandCopSettings implements CopSettings {
 	private Integer formulaCalculation(int level, String formula, int base, int perLevel, int max) {
 		try {
 			double result = new ExpressionBuilder(formula).variables("level", "base", "perLevel", "max")
-														  .build()
-														  .setVariable("level", level)
-														  .setVariable("base", base)
-														  .setVariable("perLevel", perLevel)
-														  .setVariable("max", max)
-														  .evaluate();
+			                                              .build()
+			                                              .setVariable("level", level)
+			                                              .setVariable("base", base)
+			                                              .setVariable("perLevel", perLevel)
+			                                              .setVariable("max", max)
+			                                              .evaluate();
 
 			return Math.max(1, Math.min(max, (int) Math.round(result)));
 		} catch (Exception ignored) {

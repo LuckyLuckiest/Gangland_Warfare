@@ -4,8 +4,11 @@ import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.police.npc.CopNpc;
 import me.luckyraven.copsncrooks.police.state.CopBehavior;
 import me.luckyraven.copsncrooks.police.state.CopState;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+
+import java.util.UUID;
 
 /**
  * Cop actively navigates toward a wanted player to attempt cuffing.
@@ -21,7 +24,8 @@ public class PursuingBehavior implements CopBehavior {
 	}
 
 	@Override
-	public void tick(CopNpc cop, Player target) {
+	public void tick(CopNpc cop) {
+		Player target = resolveTarget(cop);
 		if (target == null || !target.isOnline()) {
 			cop.transitionTo(CopState.RETURNING);
 			return;
@@ -59,10 +63,16 @@ public class PursuingBehavior implements CopBehavior {
 	}
 
 	@Override
-	public void onEnter(CopNpc cop) { }
+	public void onEnter(CopNpc cop) {
+	}
 
 	@Override
 	public void onExit(CopNpc cop) {
 		cop.stopNavigation();
+	}
+
+	private Player resolveTarget(CopNpc cop) {
+		UUID id = cop.getTargetPlayerId();
+		return id != null ? Bukkit.getPlayer(id) : null;
 	}
 }

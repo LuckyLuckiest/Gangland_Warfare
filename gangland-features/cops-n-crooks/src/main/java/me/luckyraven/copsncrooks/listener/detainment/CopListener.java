@@ -1,4 +1,4 @@
-package me.luckyraven.copsncrooks.listener;
+package me.luckyraven.copsncrooks.listener.detainment;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.events.wanted.WantedEndEvent;

@@ -1,4 +1,4 @@
-package me.luckyraven.copsncrooks.listener;
+package me.luckyraven.copsncrooks.listener.police;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;

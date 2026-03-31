@@ -1,24 +1,11 @@
 package me.luckyraven.copsncrooks.police.spawn;
 
-import lombok.Getter;
+import me.luckyraven.copsncrooks.entity.EntitySpawnerPoint;
 import org.bukkit.Location;
 
-public class CopSpawner {
-
-	@Getter
-	private final int      id;
-	private       Location location;
+public class CopSpawner extends EntitySpawnerPoint {
 
 	public CopSpawner(int id, Location location) {
-		this.id       = id;
-		this.location = location.clone();
-	}
-
-	public Location getLocation() {
-		return location.clone();
-	}
-
-	public void setLocation(Location location) {
-		this.location = location.clone();
+		super(id, location);
 	}
 }

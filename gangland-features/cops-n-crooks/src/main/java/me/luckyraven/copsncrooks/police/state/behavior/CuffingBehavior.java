@@ -34,7 +34,7 @@ public class CuffingBehavior implements CopBehavior {
 	private UUID claimedPlayer;
 
 	public CuffingBehavior(double cuffRadius, int maxAttempts, long cuffingCooldown, int aiTickRate,
-						   CuffLockRegistry cuffLockRegistry, DetainmentService detainmentService) {
+	                       CuffLockRegistry cuffLockRegistry, DetainmentService detainmentService) {
 		this.cuffRadius        = cuffRadius;
 		this.maxAttempts       = maxAttempts;
 		this.cuffingCooldown   = cuffingCooldown;
@@ -46,7 +46,8 @@ public class CuffingBehavior implements CopBehavior {
 	}
 
 	@Override
-	public void tick(CopNpc cop, Player target) {
+	public void tick(CopNpc cop) {
+		Player target = cop.getTargetPlayerId() != null ? Bukkit.getPlayer(cop.getTargetPlayerId()) : null;
 		if (target == null || !target.isOnline()) {
 			cop.transitionTo(CopState.RETURNING);
 			return;
@@ -86,7 +87,7 @@ public class CuffingBehavior implements CopBehavior {
 			// Pass remaining time in game ticks so the listener's seconds display is accurate
 			long remainingGameTicks = cuffingTicks * aiTickRate;
 			var duringCuffingEvent = new DuringCuffingEvent(cop, target, cuffRadius, maxAttempts,
-															cuffingCooldown * aiTickRate, remainingGameTicks);
+			                                                cuffingCooldown * aiTickRate, remainingGameTicks);
 			Bukkit.getPluginManager().callEvent(duringCuffingEvent);
 			cuffingTicks--;
 			return;

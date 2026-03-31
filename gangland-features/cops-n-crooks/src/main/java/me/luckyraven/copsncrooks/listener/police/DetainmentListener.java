@@ -1,4 +1,4 @@
-package me.luckyraven.copsncrooks.listener;
+package me.luckyraven.copsncrooks.listener.police;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
@@ -67,7 +67,7 @@ public class DetainmentListener implements Listener {
 		if (event.getTo() == null) return;
 
 		if (event.getFrom().getX() == event.getTo().getX() && event.getFrom().getY() == event.getTo().getY() &&
-			event.getFrom().getZ() == event.getTo().getZ()) {
+		    event.getFrom().getZ() == event.getTo().getZ()) {
 			return;
 		}
 
@@ -120,7 +120,7 @@ public class DetainmentListener implements Listener {
 
 		Action action = event.getAction();
 		if (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK || action == Action.LEFT_CLICK_AIR ||
-			action == Action.LEFT_CLICK_BLOCK || action == Action.PHYSICAL) {
+		    action == Action.LEFT_CLICK_BLOCK || action == Action.PHYSICAL) {
 			event.setCancelled(true);
 			detainmentService.tickVisuals(player);
 		}

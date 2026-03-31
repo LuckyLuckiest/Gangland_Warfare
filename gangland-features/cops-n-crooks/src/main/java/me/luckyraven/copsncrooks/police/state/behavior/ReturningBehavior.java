@@ -32,7 +32,7 @@ public class ReturningBehavior implements CopBehavior {
 	private Location selectedStation;
 
 	public ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
-							 double stationArrivalDistance) {
+	                         double stationArrivalDistance) {
 		this.spawnManager           = spawnManager;
 		this.detainmentService      = detainmentService;
 		this.maxReturnTicks         = maxReturnTicks;
@@ -40,7 +40,8 @@ public class ReturningBehavior implements CopBehavior {
 	}
 
 	@Override
-	public void tick(CopNpc cop, Player target) {
+	public void tick(CopNpc cop) {
+		Player target = cop.getTargetPlayerId() != null ? Bukkit.getPlayer(cop.getTargetPlayerId()) : null;
 		// Re-engage if the target has been freed (e.g. admin uncuff command)
 		if (target != null && target.isOnline() && !detainmentService.isRestrained(target)) {
 			cop.transitionTo(cop.isCombatForced() ? CopState.COMBAT : CopState.PURSUING);

@@ -1,11 +1,17 @@
 package me.luckyraven.copsncrooks.police.config;
 
+import me.luckyraven.copsncrooks.entity.SpawnConfigProvider;
+import me.luckyraven.copsncrooks.entity.npc.NpcNavigationConfig;
+
 import java.util.Map;
 
 /**
  * Provides all cop-related configuration values.
+ * <p>
+ * Also implements {@link NpcNavigationConfig} and {@link SpawnConfigProvider} so the shared abstract layers can consume
+ * cop config without any additional adapter.
  */
-public interface CopConfigProvider {
+public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvider {
 
 	/**
 	 * Returns the cop tier configuration for the given tier level.
@@ -193,7 +199,7 @@ public interface CopConfigProvider {
 	 * is allowed. Guards against requesting a new path before Citizens has finished computing the previous one
 	 * (Citizens takes 1–2 ticks to start navigating after {@code setTarget} is called).
 	 */
-	double getMinRepathAfterLossTicks();
+	int getMinRepathAfterLossTicks();
 
 	/**
 	 * Maximum AI ticks a cop waits at the station before being force-despawned.

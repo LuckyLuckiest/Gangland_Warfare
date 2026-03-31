@@ -107,7 +107,7 @@ public interface CopSettings {
 
 	double getRangedMaxDistance();
 
-	double getMinRepathAfterLossTicks();
+	int getMinRepathAfterLossTicks();
 
 	int getMaxReturnTicks();
 
