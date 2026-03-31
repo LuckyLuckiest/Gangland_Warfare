@@ -1,8 +1,8 @@
 package me.luckyraven.item;
 
 import lombok.RequiredArgsConstructor;
-import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +17,7 @@ public class ItemParser {
 
 	private final ItemConverterRegistry registry;
 
+	@Nullable
 	public ItemStack parse(String itemString) {
 		if (itemString == null || itemString.isBlank()) return null;
 
@@ -42,7 +43,7 @@ public class ItemParser {
 		String   type     = parts[0].toUpperCase();
 		String   modifier = parts.length > 1 ? parts[1] : null;
 
-		ItemConverter converter = getConverter(type, modifier);
+		ItemConverter converter = getConverter(type);
 
 		if (converter == null) {
 			return null;
@@ -51,31 +52,11 @@ public class ItemParser {
 		return converter.convert(type, modifier, attributes);
 	}
 
-	private ItemConverter getConverter(String type, String modifier) {
-		// Special case: weapon
-		if (type.equalsIgnoreCase("weapon")) {
-			return registry.getConverter("weapon");
-		}
+	@Nullable
+	private ItemConverter getConverter(String type) {
+		if (!registry.hasConverter(type)) return null;
 
-		// Special case: ammunition
-		if (type.equalsIgnoreCase("ammunition") || type.equalsIgnoreCase("ammo")) {
-			return registry.getConverter("ammunition");
-		}
-
-		// Check if it's a registered unique item
-		ItemConverter uniqueConverter = registry.getConverter(type.toLowerCase());
-		if (uniqueConverter != null) {
-			return uniqueConverter;
-		}
-
-		// Try to parse as a material
-		try {
-			Material.valueOf(type);
-
-			return registry.getConverter("material");
-		} catch (IllegalArgumentException e) {
-			return null;
-		}
+		return registry.getConverter(type);
 	}
 
 }
