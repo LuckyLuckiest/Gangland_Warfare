@@ -30,7 +30,6 @@ public class CivilianSpawnManager extends EntitySpawner<CivilianSpawner> {
 	 * @param civilianService manages active civilian NPCs and provides the factory
 	 * @param markerConfig loaded entity_marker.yml config (used to resolve type definitions)
 	 */
-	// TODO Implement the repository before building
 	public CivilianSpawnManager(SpawnConfigProvider config,
 	                            IRepository<CivilianSpawner> repository,
 	                            CivilianService civilianService,
