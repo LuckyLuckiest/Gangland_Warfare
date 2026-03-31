@@ -1,0 +1,164 @@
+# +-----------------+ #
+# | Entity Marker   | #
+# +-----------------+ #
+#
+# Default entity-type classifications used for wanted-level logic.
+# Individual NPC types are defined in the Types section below.
+
+Default_Entities:
+   Civilian:
+      - "VILLAGER"
+      - "WANDERING_TRADER"
+      - "PLAYER"
+   Police: []
+
+# +----------------+ #
+# | Civilian Types | #
+# +----------------+ #
+#
+# Each type defines one kind of spawnable civilian NPC.
+#
+# Entity_Type   — Bukkit EntityType name for the Citizens NPC body (e.g. VILLAGER, PLAYER).
+# Health        — Max health in half-hearts.
+# Hostile       — If true the NPC will attack nearby players and use its Weapon_Pool.
+# Wearables     — ItemParser strings for armor slots. Use "" for empty.
+#                 Supported prefixes: material:, wearable:
+# Item_Pool     — Items randomly given to the NPC on spawn (not weapons).
+#                 Supported prefixes: material:, weapon:, ammunition:, wearable:
+# Weapon_Pool   — Weapons randomly selected and held on spawn for hostile types.
+#                 Prefix "weapon:" selects a gangland weapon (with ammo); vanilla materials are fallback.
+# Drops         — Items and experience awarded to the killer on death.
+# Inventory     — Optional trader inventory opened on right-click. Omit for non-trader types.
+# AI            — Per-type behavior settings (wander range, flee, combat).
+#                 Technical navigation settings (recalculation ticks, stuck detection) live in settings.yml.
+
+Types:
+   pedestrian:
+      Display_Name: "&f&lPedestrian"
+      Entity_Type: VILLAGER
+      Health: 20.0
+      Hostile: false
+      Wearables:
+         Helmet: ""
+         Chestplate: ""
+         Leggings: ""
+         Boots: ""
+      Item_Pool:
+         - "material:BREAD"
+         - "material:GOLD_NUGGET"
+      Weapon_Pool: []
+      Drops:
+         Experience: 5
+         Items:
+            - "material:BREAD"
+            - "material:GOLD_NUGGET"
+      AI:
+         Wander:
+            Enabled: true
+            Range: 20
+         Flee_On_Damage:
+            Enabled: true
+            Flee_Range: 15
+         Combat:
+            Enabled: false
+            Attack_Damage: 0.0
+            Attack_Range: 0.0
+            Attack_Interval_Ticks: 0
+
+   gang_member:
+      Display_Name: "&c&lGang Member"
+      Entity_Type: PLAYER
+      Health: 25.0
+      Hostile: true
+      Wearables:
+         Helmet: ""
+         Chestplate: "LEATHER_CHESTPLATE"
+         Leggings: "LEATHER_LEGGINGS"
+         Boots: ""
+      Item_Pool:
+         - "material:GOLD_INGOT"
+      Weapon_Pool:
+         - "weapon:pistol"
+         - "weapon:rifle"
+      Drops:
+         Experience: 25
+         Items:
+            - "weapon:pistol"
+            - "material:GOLD_INGOT"
+      AI:
+         Wander:
+            Enabled: true
+            Range: 10
+         Flee_On_Damage:
+            Enabled: false
+            Flee_Range: 0
+         Combat:
+            Enabled: true
+            Attack_Damage: 4.0
+            Attack_Range: 12.0
+            Attack_Interval_Ticks: 20
+
+   trader:
+      Display_Name: "&e&lTrader"
+      Entity_Type: VILLAGER
+      Health: 20.0
+      Hostile: false
+      Wearables:
+         Helmet: ""
+         Chestplate: ""
+         Leggings: ""
+         Boots: ""
+      Item_Pool: []
+      Weapon_Pool: []
+      Drops:
+         Experience: 0
+         Items: []
+      Inventory:
+         Title: "&6&lTrader Shop"
+         Size: 27
+         Items:
+            13: "weapon:pistol"
+      AI:
+         Wander:
+            Enabled: false
+            Range: 0
+         Flee_On_Damage:
+            Enabled: true
+            Flee_Range: 10
+         Combat:
+            Enabled: false
+            Attack_Damage: 0.0
+            Attack_Range: 0.0
+            Attack_Interval_Ticks: 0
+
+# +--------+ #
+# | Groups | #
+# +--------+ #
+#
+# Groups define sets of NPC types that spawn together and stay near each other.
+#
+# Hostile        — All members inherit hostile targeting behavior regardless of individual type settings.
+# Health_Bonus   — Extra max health added to every member of this group (half-hearts).
+# Speed_Bonus    — Speed multiplier bonus added to every member (e.g. 0.1 = +10%).
+# Stay_Together_Range — Members navigate back toward the group center when they stray beyond this range (blocks).
+# Members        — Map of <type-id>: <count> specifying how many of each type spawn per group.
+
+Groups:
+   street_gang:
+      Display_Name: "&cStreet Gang"
+      Hostile: true
+      Health_Bonus: 5.0
+      Speed_Bonus: 0.1
+      Stay_Together_Range: 15
+      Members:
+         gang_member: 3
+
+   market_crowd:
+      Display_Name: "&7Market Crowd"
+      Hostile: false
+      Health_Bonus: 0.0
+      Speed_Bonus: 0.0
+      Stay_Together_Range: 10
+      Members:
+         pedestrian: 4
+         trader: 1

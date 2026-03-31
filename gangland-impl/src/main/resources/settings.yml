@@ -339,27 +339,6 @@ Cops:
       # Number of attempts per shrink step in phase-2 of spawn location selection.
       Phase2_Attempts: 15
 
-   # Controls NPC pathfinding and stuck-detection behavior.
-   Navigation:
-      # Ticks between navigation path recalculations. Lower = more responsive but higher CPU cost.
-      Recalculation_Ticks: 10
-      # AI ticks between movement-progress samples for stuck detection.
-      Stuck_Check_Interval: 5
-      # Consecutive stuck samples required before navigation is considered stuck.
-      Max_Stuck_Checks: 3
-      # Consecutive stuck samples required before navigation is considered permanently hopeless.
-      Max_Hopeless_Stuck_Checks: 6
-      # Distance (blocks) below which a hopeless cop can still navigate to the target directly.
-      Hopeless_Close_Threshold: 8.0
-      # Minimum distance the NPC must travel between samples to count as progress (blocks).
-      Min_Progress_Distance: 0.75
-      # Ranged cops hold their firing position when the target is within this distance range (blocks).
-      Ranged_Min_Distance: 7.0
-      Ranged_Max_Distance: 12.0
-      # Minimum AI ticks the cop waits before re-pathing after losing combat.
-      # This helps prevent unnecessary re-pathing during combat, improving performance.
-      Min_Repath_After_Loss_Ticks: 2.0
-
    # Controls how a cop returns to its station and despawns after the target is detained.
    Return:
       # Maximum AI ticks the cop waits before being force-despawned. (600 = ~30 s at default AI tick rate)
@@ -418,26 +397,42 @@ Killing_Mob:
    Minimum: 0
    Maximum: 20
 
-# +---------------+ #
-# | Entity Marker | #
-# +---------------+ #
+# +----------------+ #
+# | NPC Navigation | #
+# +----------------+ #
 
-# There are different types of entities that can be marked with specific attributes.
-Entity_Marker:
-   Civilian:
-      Default_Entities:
-         - "VILLAGER"
-         - "WANDERING_TRADER"
-         - "PLAYER"
-      Name: "&7Civilian"
-      Wear:
-         - ""
-      Drops:
-         Experience:
-            Minimum: 1
-            Maximum: 15
-         Items:
-            - ""
+# Shared pathfinding and stuck-detection settings used by all Citizens NPC types (cops, civilians, etc.).
+NPC_Navigation:
+   # Ticks between navigation path recalculations. Lower = more responsive but higher CPU cost.
+   Recalculation_Ticks: 10
+   # AI ticks between movement-progress samples for stuck detection.
+   Stuck_Check_Interval: 5
+   # Consecutive stuck samples required before navigation is considered stuck.
+   Max_Stuck_Checks: 3
+   # Consecutive stuck samples required before navigation is considered permanently hopeless.
+   Max_Hopeless_Stuck_Checks: 6
+   # Distance (blocks) below which a hopeless NPC can still navigate to the target directly.
+   Hopeless_Close_Threshold: 8.0
+   # Minimum distance the NPC must travel between samples to count as progress (blocks).
+   Min_Progress_Distance: 0.75
+   # Ranged NPCs hold their firing position when the target is within this distance range (blocks).
+   Ranged_Min_Distance: 7.0
+   Ranged_Max_Distance: 12.0
+   # Minimum AI ticks an NPC waits before re-pathing after losing sight of target.
+   Min_Repath_After_Loss_Ticks: 2
+
+# +----------+ #
+# | Civilian | #
+# +----------+ #
+
+# Configuration for civilian NPC AI behavior. Per-type behavior (wander range, flee range, etc.)
+# is configured in entity_marker.yml.
+Civilians:
+   Behaviour:
+      # Set to false to disable all civilian NPC AI ticking.
+      Enabled: true
+      # Game ticks between each civilian AI evaluation cycle.
+      AI_Tick_Rate: 20
 
 # +------------+ #
 # | Loot Chest | #

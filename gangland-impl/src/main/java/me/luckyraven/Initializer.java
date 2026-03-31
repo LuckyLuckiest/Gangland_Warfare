@@ -30,6 +30,9 @@ import me.luckyraven.compatibility.CompatibilityWorker;
 import me.luckyraven.compatibility.VersionSetup;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.copsncrooks.bounty.BountySettings;
+import me.luckyraven.copsncrooks.civilian.CivilianService;
+import me.luckyraven.copsncrooks.civilian.config.CivilianSettings;
+import me.luckyraven.copsncrooks.civilian.config.EntityMarkerLoader;
 import me.luckyraven.copsncrooks.combo.KillCombo;
 import me.luckyraven.copsncrooks.detainment.DetainedPlayer;
 import me.luckyraven.copsncrooks.detainment.DetainmentRegistry;
@@ -68,6 +71,7 @@ import me.luckyraven.file.configuration.GadgetPhysicsConfigImpl;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.copsncrooks.GanglandBountySettings;
+import me.luckyraven.file.configuration.copsncrooks.GanglandCivilianSettings;
 import me.luckyraven.file.configuration.copsncrooks.GanglandCopSettings;
 import me.luckyraven.file.configuration.copsncrooks.GanglandWantedSettings;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
@@ -91,6 +95,7 @@ import me.luckyraven.gadget.wearable.WearableAddon;
 import me.luckyraven.hologram.HologramService;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
+import me.luckyraven.item.ItemParser;
 import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
@@ -137,7 +142,6 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -179,6 +183,7 @@ public final class Initializer {
 	private LootChestManager           lootChestManager;
 	private BlockDamageManager         blockDamageManager;
 	private CopService                 copService;
+	private CivilianService            civilianService;
 	private KillCombo                  killCombo;
 	private DetainmentService          detainmentService;
 	private DetainmentRegistry         detainmentRegistry;
@@ -198,6 +203,7 @@ public final class Initializer {
 	private WeaponLoader               weaponLoader;
 	private LootChestLoader            lootChestLoader;
 	private CopLoader                  copLoader;
+	private EntityMarkerLoader         entityMarkerLoader;
 	private RepairLoader               repairLoader;
 	private RepairManager              repairManager;
 	private RepairAnvilGui             repairAnvilGui;
@@ -221,6 +227,7 @@ public final class Initializer {
 	private BountySettings             bountySettings;
 	private WantedSettings             wantedSettings;
 	private CopSettings                copSettings;
+	private CivilianSettings           civilianSettings;
 
 	public Initializer(Gangland gangland) {
 		this.gangland = gangland;
@@ -270,10 +277,11 @@ public final class Initializer {
 		permissionManager.addAllPermissions(ganglandPermissions);
 
 		// settings extension
-		signInformation = new GanglandSignInformation();
-		bountySettings  = new GanglandBountySettings();
-		wantedSettings  = new GanglandWantedSettings();
-		copSettings     = new GanglandCopSettings();
+		signInformation  = new GanglandSignInformation();
+		bountySettings   = new GanglandBountySettings();
+		wantedSettings   = new GanglandWantedSettings();
+		copSettings      = new GanglandCopSettings();
+		civilianSettings = new GanglandCivilianSettings();
 
 		// User manager
 		userManager        = new UserManager<>(gangland);
@@ -324,12 +332,17 @@ public final class Initializer {
 		// sign manager
 		signLoader();
 
-		// entity mark manager
-		entityMarkManager = new EntityMarkManager(gangland, Collections.emptyList(),
-		                                          Settings.getDefaultCivilianEntities());
-
-		// item parser
+		// item parser (must be before entity marker loader — weapon pool parsing needs it)
 		itemParserManager = new ItemParserManager(weaponManager, ammunitionManager, wearableAddon, carAddon);
+
+		// entity marker loader (reads entity_marker.yml; resolves weapon pools via ItemParser)
+		entityMarkerLoader = new EntityMarkerLoader(gangland, itemParserManager.getParser(), civilianSettings);
+		entityMarkerLoader.load(false, null, fileManager);
+
+		// entity mark manager (uses the loaded default entity lists instead of settings.yml)
+		entityMarkManager = new EntityMarkManager(gangland,
+		                                          entityMarkerLoader.getLoadedConfig().defaultPoliceEntities(),
+		                                          entityMarkerLoader.getLoadedConfig().defaultCivilianEntities());
 
 		// loot chest manager
 		lootChestLoader();
@@ -342,6 +355,9 @@ public final class Initializer {
 
 		// cop service
 		copLoader();
+
+		// civilian service
+		civilianLoader();
 
 		// repair system
 		repairLoader();
@@ -388,6 +404,9 @@ public final class Initializer {
 
 		FileHandler copsFile = new FileHandler(gangland, "cops", ".yml");
 		fileManager.addFile(copsFile, true);
+
+		FileHandler entityMarkerFile = new FileHandler(gangland, "entity_marker", ".yml");
+		fileManager.addFile(entityMarkerFile, true);
 
 		FileHandler repairFile = new FileHandler(gangland, "repair", ".yml");
 		fileManager.addFile(repairFile, true);
@@ -550,6 +569,12 @@ public final class Initializer {
 		copSpawnManager = copService.getCopManager().getSpawnManager();
 	}
 
+	public void civilianLoader() {
+		civilianService = new CivilianService();
+		civilianService.initialize(gangland, entityMarkerLoader.getLoadedConfig(), entityMarkManager,
+		                           civilianSettings, itemParserManager.getParser(), weaponManager);
+	}
+
 	public void repairLoader() {
 		repairLoader  = new RepairLoader(gangland);
 		repairManager = new RepairManager();
@@ -678,8 +703,10 @@ public final class Initializer {
 		dependencyContainer.registerInstance(JailService.class, jailService);
 		dependencyContainer.registerInstance(CarManager.class, carAddon);
 		dependencyContainer.registerInstance(CarService.class, carService);
-		dependencyContainer.registerInstance(me.luckyraven.gadget.fuel.FuelService.class, fuelService);
-		dependencyContainer.registerInstance(me.luckyraven.gadget.jetpack.JetpackService.class, jetpackService);
+		dependencyContainer.registerInstance(FuelService.class, fuelService);
+		dependencyContainer.registerInstance(JetpackService.class, jetpackService);
+		dependencyContainer.registerInstance(CivilianService.class, civilianService);
+		dependencyContainer.registerInstance(ItemParser.class, itemParserManager.getParser());
 
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 

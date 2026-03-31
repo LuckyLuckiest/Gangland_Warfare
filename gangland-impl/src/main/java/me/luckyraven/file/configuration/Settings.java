@@ -102,12 +102,15 @@ public class Settings implements FileInitializer {
 	private static @Getter boolean scoreboardEnabled;
 	private static @Getter String  scoreboardDriver;
 
-	// entity marker configuration
-	private static @Getter List<String> defaultCivilianEntities;
-	private static @Getter String       civilianName;
-	private static @Getter List<String> civilianWearables;
-	private static @Getter double       civilianExperienceDropsMinimum, civilianExperienceDropsMaximum;
-	private static @Getter List<String> civilianItemDrops;
+	// civilian AI configuration
+	private static @Getter boolean civilianAiEnabled;
+	private static @Getter int     civilianAiTickRate;
+
+	// shared NPC navigation configuration
+	private static @Getter int npcNavRecalculationTicks, npcNavStuckCheckInterval, npcNavMaxStuckChecks,
+			npcNavMaxHopelessStuckChecks, npcNavMinRepathAfterLossTicks;
+	private static @Getter double npcNavHopelessCloseThreshold, npcNavMinProgressDistance, npcNavRangedMinDistance,
+			npcNavRangedMaxDistance;
 
 	// cop core configuration
 	private static @Getter int copMaxPerPlayer, copAiTickRate, copSpawnCheckRate, copMaxCuffAttempts,
@@ -125,12 +128,6 @@ public class Settings implements FileInitializer {
 			copSpawnVisibilityCheckDistance;
 	private static @Getter int copSpawnVerticalSearchRange, copSpawnYOffset, copSpawnMinOpenHorizontalSides;
 	private static @Getter int copSpawnPhase1Attempts, copSpawnPhase2Attempts;
-
-	// cop navigation configuration
-	private static @Getter int copNavRecalculationTicks, copNavStuckCheckInterval, copNavMaxStuckChecks,
-			copNavMaxHopelessStuckChecks;
-	private static @Getter double copNavHopelessCloseThreshold, copNavMinProgressDistance, copNavRangedMinDistance,
-			copNavRangedMaxDistance, copNavMinRepathAfterLossTicks;
 
 	// cop return / despawn configuration
 	private static @Getter int    copReturnMaxTicks;
@@ -371,23 +368,26 @@ public class Settings implements FileInitializer {
 		scoreboardEnabled = settings.getBoolean("Scoreboard.Enable", true);
 		scoreboardDriver  = settings.getString("Scoreboard.Driver", "Driver_V3");
 
-		// entity marker
-		var entityMarker = settings.getConfigurationSection("Entity_Marker");
-		Objects.requireNonNull(entityMarker);
+		// civilian AI
+		var civilianBehaviour = settings.getConfigurationSection("Civilians.Behaviour");
+		Objects.requireNonNull(civilianBehaviour);
 
-		var civilian = entityMarker.getConfigurationSection("Civilian");
-		Objects.requireNonNull(civilian);
+		civilianAiEnabled  = civilianBehaviour.getBoolean("Enabled", true);
+		civilianAiTickRate = civilianBehaviour.getInt("AI_Tick_Rate", 20);
 
-		defaultCivilianEntities = civilian.getStringList("Default_Entities");
-		civilianName            = civilian.getString("Name", "&7Civilian");
-		civilianWearables       = civilian.getStringList("Wear");
+		// shared NPC navigation
+		var npcNav = settings.getConfigurationSection("NPC_Navigation");
+		Objects.requireNonNull(npcNav);
 
-		var civilianDrops = civilian.getConfigurationSection("Drops");
-		Objects.requireNonNull(civilianDrops);
-
-		civilianExperienceDropsMinimum = civilianDrops.getDouble("Experience.Minimum", 1);
-		civilianExperienceDropsMaximum = civilianDrops.getDouble("Experience.Maximum", 15);
-		civilianItemDrops              = civilianDrops.getStringList("Items");
+		npcNavRecalculationTicks      = npcNav.getInt("Recalculation_Ticks", 10);
+		npcNavStuckCheckInterval      = npcNav.getInt("Stuck_Check_Interval", 5);
+		npcNavMaxStuckChecks          = npcNav.getInt("Max_Stuck_Checks", 3);
+		npcNavMaxHopelessStuckChecks  = npcNav.getInt("Max_Hopeless_Stuck_Checks", 6);
+		npcNavMinRepathAfterLossTicks = npcNav.getInt("Min_Repath_After_Loss_Ticks", 2);
+		npcNavHopelessCloseThreshold  = npcNav.getDouble("Hopeless_Close_Threshold", 8.0);
+		npcNavMinProgressDistance     = npcNav.getDouble("Min_Progress_Distance", 0.75);
+		npcNavRangedMinDistance       = npcNav.getDouble("Ranged_Min_Distance", 7.0);
+		npcNavRangedMaxDistance       = npcNav.getDouble("Ranged_Max_Distance", 12.0);
 
 		// cop core
 		var cop = settings.getConfigurationSection("Cops");
@@ -431,20 +431,6 @@ public class Settings implements FileInitializer {
 		copSpawnVisibilityCheckDistance = copsSpawn.getDouble("Visibility_Check_Distance", 48.0);
 		copSpawnPhase1Attempts          = copsSpawn.getInt("Phase1_Attempts", 20);
 		copSpawnPhase2Attempts          = copsSpawn.getInt("Phase2_Attempts", 15);
-
-		// cop navigation
-		var copsNav = cop.getConfigurationSection("Navigation");
-		Objects.requireNonNull(copsNav);
-
-		copNavRecalculationTicks      = copsNav.getInt("Recalculation_Ticks", 10);
-		copNavStuckCheckInterval      = copsNav.getInt("Stuck_Check_Interval", 5);
-		copNavMaxStuckChecks          = copsNav.getInt("Max_Stuck_Checks", 3);
-		copNavMaxHopelessStuckChecks  = copsNav.getInt("Max_Hopeless_Stuck_Checks", 6);
-		copNavHopelessCloseThreshold  = copsNav.getDouble("Hopeless_Close_Threshold", 8.0);
-		copNavMinProgressDistance     = copsNav.getDouble("Min_Progress_Distance", 0.75);
-		copNavRangedMinDistance       = copsNav.getDouble("Ranged_Min_Distance", 7.0);
-		copNavRangedMaxDistance       = copsNav.getDouble("Ranged_Max_Distance", 12.0);
-		copNavMinRepathAfterLossTicks = copsNav.getDouble("Min_Repath_After_Loss_Ticks", 2.0);
 
 		// cop return / despawn
 		var copsReturn = cop.getConfigurationSection("Return");
