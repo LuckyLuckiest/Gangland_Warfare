@@ -7,6 +7,7 @@ import me.luckyraven.file.FileInitializer;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.util.utilities.NumberUtil;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.IOException;
@@ -105,6 +106,14 @@ public class Settings implements FileInitializer {
 	// civilian AI configuration
 	private static @Getter boolean civilianAiEnabled;
 	private static @Getter int     civilianAiTickRate;
+
+	// civilian spawn configuration
+	private static @Getter double civilianSpawnMinDistance, civilianSpawnMaxDistance, civilianSpawnPhase1MinDistance;
+	private static @Getter double civilianSpawnRadiusShrinkStep, civilianSpawnSpawnerPreferenceRadius,
+			civilianSpawnVisibilityCheckDistance;
+	private static @Getter int civilianSpawnVerticalSearchRange, civilianSpawnYOffset,
+			civilianSpawnMinOpenHorizontalSides;
+	private static @Getter int civilianSpawnPhase1Attempts, civilianSpawnPhase2Attempts;
 
 	// shared NPC navigation configuration
 	private static @Getter int npcNavRecalculationTicks, npcNavStuckCheckInterval, npcNavMaxStuckChecks,
@@ -368,12 +377,32 @@ public class Settings implements FileInitializer {
 		scoreboardEnabled = settings.getBoolean("Scoreboard.Enable", true);
 		scoreboardDriver  = settings.getString("Scoreboard.Driver", "Driver_V3");
 
+		// civilian
+		ConfigurationSection civilian = settings.getConfigurationSection("Civilian");
+		Objects.requireNonNull(civilian);
+
 		// civilian AI
-		var civilianBehaviour = settings.getConfigurationSection("Civilians.Behaviour");
+		var civilianBehaviour = civilian.getConfigurationSection("Behaviour");
 		Objects.requireNonNull(civilianBehaviour);
 
 		civilianAiEnabled  = civilianBehaviour.getBoolean("Enabled", true);
 		civilianAiTickRate = civilianBehaviour.getInt("AI_Tick_Rate", 20);
+
+		// cop spawn
+		var civiliansSpawn = civilian.getConfigurationSection("Spawn");
+		Objects.requireNonNull(civiliansSpawn);
+
+		civilianSpawnMinDistance             = civiliansSpawn.getDouble("Min_Distance", 10.0);
+		civilianSpawnMaxDistance             = civiliansSpawn.getDouble("Max_Distance", 50.0);
+		civilianSpawnPhase1MinDistance       = civiliansSpawn.getDouble("Phase1_Min_Distance", 30.0);
+		civilianSpawnRadiusShrinkStep        = civiliansSpawn.getDouble("Radius_Shrink_Step", 5.0);
+		civilianSpawnVerticalSearchRange     = civiliansSpawn.getInt("Vertical_Search_Range", 10);
+		civilianSpawnYOffset                 = civiliansSpawn.getInt("Y_Offset", 0);
+		civilianSpawnMinOpenHorizontalSides  = civiliansSpawn.getInt("Min_Open_Sides", 2);
+		civilianSpawnSpawnerPreferenceRadius = civiliansSpawn.getDouble("Spawner_Preference_Radius", 80.0);
+		civilianSpawnVisibilityCheckDistance = civiliansSpawn.getDouble("Visibility_Check_Distance", 48.0);
+		civilianSpawnPhase1Attempts          = civiliansSpawn.getInt("Phase1_Attempts", 20);
+		civilianSpawnPhase2Attempts          = civiliansSpawn.getInt("Phase2_Attempts", 15);
 
 		// shared NPC navigation
 		var npcNav = settings.getConfigurationSection("NPC_Navigation");

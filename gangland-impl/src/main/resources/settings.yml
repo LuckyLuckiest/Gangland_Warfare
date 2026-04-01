@@ -433,6 +433,30 @@ Civilians:
       Enabled: true
       # Game ticks between each civilian AI evaluation cycle.
       AI_Tick_Rate: 20
+   # Controls where civilian NPCs spawn relative to the target player.
+   Spawn:
+      # Minimum distance from the player to spawn a civilian (blocks).
+      Min_Distance: 10.0
+      # Maximum distance from the player to spawn a civilian (blocks).
+      Max_Distance: 50.0
+      # Minimum ring distance used during phase-1 (preferred-ring, behind-player) spawn attempts (blocks).
+      Phase1_Min_Distance: 30.0
+      # Amount the ring radius shrinks per phase-2 iteration (blocks).
+      Radius_Shrink_Step: 5.0
+      # Vertical range searched above/below the player's Y level to find valid ground (blocks).
+      Vertical_Search_Range: 10
+      # Y-offset added to the player's Y when searching for spawn ground. 0 = same level as player.
+      Y_Offset: 0
+      # Minimum number of open horizontal sides required at a spawn position.
+      Min_Open_Sides: 2
+      # Radius within which a registered cop spawner is preferred over a random position (blocks).
+      Spawner_Preference_Radius: 80.0
+      # Distance within which another player triggers the visibility check during despawn (blocks).
+      Visibility_Check_Distance: 48.0
+      # Number of attempts in phase-1 (preferred ring, behind-player) of spawn location selection.
+      Phase1_Attempts: 20
+      # Number of attempts per shrink step in phase-2 of spawn location selection.
+      Phase2_Attempts: 15
 
 # +------------+ #
 # | Loot Chest | #

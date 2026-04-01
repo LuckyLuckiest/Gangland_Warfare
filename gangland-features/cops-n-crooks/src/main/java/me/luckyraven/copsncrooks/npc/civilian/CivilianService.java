@@ -3,11 +3,15 @@ package me.luckyraven.copsncrooks.npc.civilian;
 import lombok.CustomLog;
 import lombok.Getter;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
+import me.luckyraven.copsncrooks.entity.SpawnConfigProvider;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianGroupConfig;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianSettings;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianTypeConfig;
 import me.luckyraven.copsncrooks.npc.civilian.config.EntityMarkerConfig;
+import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
+import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawner;
 import me.luckyraven.item.ItemParser;
+import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.weapon.WeaponService;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -33,6 +37,10 @@ public class CivilianService {
 
 	@Getter
 	private CivilianNpcFactory npcFactory;
+
+	@Getter
+	private CivilianSpawnManager spawnManager;
+
 	private EntityMarkManager  entityMarkManager;
 	private EntityMarkerConfig markerConfig;
 	private boolean            initialized;
@@ -45,18 +53,23 @@ public class CivilianService {
 	 * @param plugin the owning plugin
 	 * @param markerConfig loaded entity_marker.yml config
 	 * @param entityMarkManager entity classification manager
+	 * @param civilianSettings civilian settings
 	 * @param itemParser item string parser (nullable — falls back to XMaterial)
 	 * @param weaponService gangland weapon registry (nullable — disables weapon assignment)
 	 */
 	public void initialize(JavaPlugin plugin, EntityMarkerConfig markerConfig,
 	                       EntityMarkManager entityMarkManager,
+	                       IRepository<CivilianSpawner> spawnerRepository,
 	                       CivilianSettings civilianSettings,
+	                       SpawnConfigProvider spawnConfigProvider,
 	                       @Nullable ItemParser itemParser,
 	                       @Nullable WeaponService weaponService) {
 		if (initialized) return;
 
 		this.markerConfig      = markerConfig;
 		this.entityMarkManager = entityMarkManager;
+		this.spawnManager      = new CivilianSpawnManager(spawnConfigProvider, spawnerRepository, this,
+		                                                  markerConfig);
 		this.npcFactory        = new CivilianNpcFactory(plugin, entityMarkManager, itemParser,
 		                                                weaponService, civilianSettings);
 

@@ -41,6 +41,8 @@ import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianSettings;
 import me.luckyraven.copsncrooks.npc.civilian.config.EntityMarkerLoader;
+import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
+import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawner;
 import me.luckyraven.copsncrooks.npc.police.CopManager;
 import me.luckyraven.copsncrooks.npc.police.CopService;
 import me.luckyraven.copsncrooks.npc.police.config.CopLoader;
@@ -70,10 +72,7 @@ import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.file.configuration.GadgetPhysicsConfigImpl;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.file.configuration.copsncrooks.GanglandBountySettings;
-import me.luckyraven.file.configuration.copsncrooks.GanglandCivilianSettings;
-import me.luckyraven.file.configuration.copsncrooks.GanglandCopSettings;
-import me.luckyraven.file.configuration.copsncrooks.GanglandWantedSettings;
+import me.luckyraven.file.configuration.copsncrooks.*;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
 import me.luckyraven.file.configuration.lootchest.GanglandLootChestMessages;
@@ -183,12 +182,13 @@ public final class Initializer {
 	private LootChestManager           lootChestManager;
 	private BlockDamageManager         blockDamageManager;
 	private CopService                 copService;
+	private CopSpawnManager            copSpawnManager;
 	private CivilianService            civilianService;
+	private CivilianSpawnManager       civilianSpawnManager;
 	private KillCombo                  killCombo;
 	private DetainmentService          detainmentService;
 	private DetainmentRegistry         detainmentRegistry;
 	private JailService                jailService;
-	private CopSpawnManager            copSpawnManager;
 	// Addons
 	private Settings                   settings;
 	private ScoreboardAddon            scoreboardAddon;
@@ -571,8 +571,14 @@ public final class Initializer {
 
 	public void civilianLoader() {
 		civilianService = new CivilianService();
-		civilianService.initialize(gangland, entityMarkerLoader.getLoadedConfig(), entityMarkManager,
-		                           civilianSettings, itemParserManager.getParser(), weaponManager);
+		IRepository<CivilianSpawner> repository = ganglandDatabase.getRepositoryRegistry()
+		                                                          .getRepository(CivilianSpawner.class);
+		var ganglandCivilianSpawnConfigProvider = new GanglandCivilianSpawnConfigProvider();
+
+		civilianService.initialize(gangland, entityMarkerLoader.getLoadedConfig(), entityMarkManager, repository,
+		                           civilianSettings, ganglandCivilianSpawnConfigProvider, itemParserManager.getParser(),
+		                           weaponManager);
+		civilianSpawnManager = civilianService.getSpawnManager();
 	}
 
 	public void repairLoader() {
