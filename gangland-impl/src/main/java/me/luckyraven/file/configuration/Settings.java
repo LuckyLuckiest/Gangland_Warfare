@@ -378,7 +378,7 @@ public class Settings implements FileInitializer {
 		scoreboardDriver  = settings.getString("Scoreboard.Driver", "Driver_V3");
 
 		// civilian
-		ConfigurationSection civilian = settings.getConfigurationSection("Civilian");
+		ConfigurationSection civilian = settings.getConfigurationSection("Civilians");
 		Objects.requireNonNull(civilian);
 
 		// civilian AI
