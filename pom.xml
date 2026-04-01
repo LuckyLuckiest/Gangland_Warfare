@@ -71,7 +71,7 @@
         <bukkit.version>1.21.11-R0.1-SNAPSHOT</bukkit.version>
 
         <!-- Dependencies/Libraries versions -->
-        <nbt.version>2.15.5</nbt.version>
+        <nbt.version>2.15.6</nbt.version>
         <xseries.version>13.6.0</xseries.version>
         <anvilgui.version>1.10.11-SNAPSHOT</anvilgui.version>
         <fastboard.version>2.1.5</fastboard.version>
