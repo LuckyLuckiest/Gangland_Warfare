@@ -31,8 +31,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
-@CustomLog
 @Getter
+@CustomLog
 public final class Gangland extends JavaPlugin {
 
 	public static final String FULL_PREFIX  = "gangland";
