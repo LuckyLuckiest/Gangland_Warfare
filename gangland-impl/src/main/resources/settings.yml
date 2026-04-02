@@ -204,20 +204,15 @@ User:
             Title: "&cWASTED"
             Subtitle: "&7Respawning after &a%time%"
          GameMode:
-            Enable: true
-            # Gamemode applied while the player waits to respawn.
+            # GameMode applied while the player waits to respawn.
             Change_To: "spectator"
             # Allow the player to fly while waiting to respawn so they can observe the scene.
             Allow_Fly: true
          Teleport:
             Enable: true
             Waypoint: "spawn"
-         Health:
-            Enable: true
-            Amount: 20
-         Hunger:
-            Enable: true
-            Amount: 20
+         Health: 20
+         Hunger: 20
 
 # +---------------+ #
 # | Bounty Config | #

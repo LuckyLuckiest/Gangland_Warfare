@@ -164,14 +164,12 @@ public class CustomPlayerDeath implements Listener {
 
 		Bukkit.getPluginManager().callEvent(new PlayerDownedEvent(player));
 
-		if (Settings.isRespawnGameModeEnabled()) {
-			GameMode gm = parseGameMode(Settings.getRespawnGameMode());
-			player.setGameMode(gm);
+		GameMode gm = parseGameMode(Settings.getRespawnGameMode());
+		player.setGameMode(gm);
 
-			if (Settings.isRespawnGameModeAllowFly()) {
-				player.setAllowFlight(true);
-				player.setFlying(true);
-			}
+		if (Settings.isRespawnGameModeAllowFly()) {
+			player.setAllowFlight(true);
+			player.setFlying(true);
 		}
 
 		int delay = Settings.getRespawnDelay();
@@ -227,26 +225,16 @@ public class CustomPlayerDeath implements Listener {
 
 		DownedPlayerRegistry.remove(uuid);
 
-		double value = Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue();
-		if (Settings.isRespawnHealthEnabled()) {
-			double amount = Math.min(Settings.getRespawnHealthAmount(), value);
-			player.setHealth(amount);
-		} else {
-			player.setHealth(Math.min(20D, value));
-		}
+		double maxHealth = Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue();
+		double amount    = Math.min(Settings.getRespawnHealthAmount(), maxHealth);
 
-		if (Settings.isRespawnHungerEnabled()) {
-			player.setFoodLevel(Settings.getRespawnHungerAmount());
-		}
+		player.setHealth(amount);
+		player.setFoodLevel(Settings.getRespawnHungerAmount());
 
-		if (Settings.isRespawnGameModeEnabled()) {
-			GameMode original = savedGameModes.remove(uuid);
-			player.setGameMode(original != null ? original : GameMode.SURVIVAL);
-			player.setAllowFlight(false);
-			player.setFlying(false);
-		} else {
-			savedGameModes.remove(uuid);
-		}
+		GameMode original = savedGameModes.remove(uuid);
+		player.setGameMode(original != null ? original : GameMode.SURVIVAL);
+		player.setAllowFlight(false);
+		player.setFlying(false);
 
 		if (Settings.isRespawnTeleportEnabled()) {
 			User<Player> user     = userManager.getUser(player);

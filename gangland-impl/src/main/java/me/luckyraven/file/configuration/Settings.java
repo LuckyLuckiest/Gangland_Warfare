@@ -73,9 +73,8 @@ public class Settings implements FileInitializer {
 	private static @Getter int     respawnDelay;
 	private static @Getter boolean respawnScreenEnabled;
 	private static @Getter String  respawnScreenTitle, respawnScreenSubtitle;
-	private static @Getter boolean respawnGameModeEnabled, respawnGameModeAllowFly;
+	private static @Getter boolean respawnGameModeAllowFly;
 	private static @Getter String  respawnGameMode;
-	private static @Getter boolean respawnHealthEnabled, respawnHungerEnabled;
 	private static @Getter double  respawnHealthAmount;
 	private static @Getter int     respawnHungerAmount;
 	private static @Getter boolean respawnTeleportEnabled;
@@ -304,16 +303,12 @@ public class Settings implements FileInitializer {
 		respawnDelay            = respawn.getInt("Delay", 10);
 		respawnScreenEnabled    = respawn.getBoolean("Screen.Enable", true);
 		respawnScreenTitle      = respawn.getString("Screen.Title", "&cWASTED");
-		respawnScreenSubtitle   = respawn.getString("Screen.Subtitle",
-		                                            "&7Respawning after &a%gangland_time% &7seconds");
-		respawnGameModeEnabled  = respawn.getBoolean("GameMode.Enable", true);
-		respawnGameMode         = respawn.getString("GameMode.Change_To", "survival");
+		respawnScreenSubtitle   = respawn.getString("Screen.Subtitle", "&7Respawning after &a%time% &7seconds");
+		respawnGameMode         = respawn.getString("GameMode.Change_To", "spectator");
 		respawnGameModeAllowFly = respawn.getBoolean("GameMode.Allow_Fly", true);
 
-		respawnHealthEnabled = respawn.getBoolean("Health.Enable", true);
-		respawnHealthAmount  = respawn.getDouble("Health.Amount", 20);
-		respawnHungerEnabled = respawn.getBoolean("Hunger.Enable", true);
-		respawnHungerAmount  = respawn.getInt("Hunger.Amount", 20);
+		respawnHealthAmount = respawn.getDouble("Health", 20);
+		respawnHungerAmount = respawn.getInt("Hunger", 20);
 
 		respawnTeleportEnabled  = respawn.getBoolean("Teleport.Enable", false);
 		respawnTeleportWaypoint = respawn.getString("Teleport.Waypoint", "spawn");
