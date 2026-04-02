@@ -33,10 +33,13 @@ public final class JailCommand extends CommandHandler {
 
 	@Override
 	protected void initializeArguments() {
-		Argument createArg  = new JailCreateCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument removeArg  = new JailRemoveCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument playerArg  = new JailThrowCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument releaseArg = new JailReleaseCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument createArg   = new JailCreateCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument removeArg   = new JailRemoveCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument playerArg   = new JailThrowCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument releaseArg  = new JailReleaseCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument listArg     = new JailListCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument infoArg     = new JailInfoCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument teleportArg = new JailTeleportCommand(getGangland(), getArgumentTree(), getArgument());
 
 		List<Argument> arguments = new ArrayList<>();
 
@@ -44,6 +47,9 @@ public final class JailCommand extends CommandHandler {
 		arguments.add(removeArg);
 		arguments.add(playerArg);
 		arguments.add(releaseArg);
+		arguments.add(listArg);
+		arguments.add(infoArg);
+		arguments.add(teleportArg);
 
 		getArgument().addAllSubArguments(arguments);
 	}
