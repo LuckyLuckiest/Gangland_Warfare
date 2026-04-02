@@ -18,7 +18,7 @@ class JailCreateCommand extends SubArgument {
 
 	private final Gangland gangland;
 
-	JailCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected JailCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "create", tree, parent);
 
 		this.gangland = gangland;

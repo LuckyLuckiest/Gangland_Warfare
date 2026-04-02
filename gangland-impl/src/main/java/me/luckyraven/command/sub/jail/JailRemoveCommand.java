@@ -17,7 +17,7 @@ class JailRemoveCommand extends SubArgument {
 	private final Gangland       gangland;
 	private final Tree<Argument> tree;
 
-	JailRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected JailRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "remove", tree, parent);
 
 		this.gangland = gangland;

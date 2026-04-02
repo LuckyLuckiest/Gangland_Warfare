@@ -15,12 +15,12 @@ import org.bukkit.entity.Player;
 
 import java.util.Collection;
 
-public final class JailReleaseCommand extends SubArgument {
+class JailReleaseCommand extends SubArgument {
 
 	private final Gangland       gangland;
 	private final Tree<Argument> tree;
 
-	public JailReleaseCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected JailReleaseCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "release", tree, parent);
 
 		this.gangland = gangland;
