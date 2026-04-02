@@ -1,4 +1,4 @@
-package me.luckyraven.gadget.car.vehicle;
+package me.luckyraven.gadget.car.vehicle.entity;
 
 import me.luckyraven.gadget.car.Car;
 import org.bukkit.Location;
