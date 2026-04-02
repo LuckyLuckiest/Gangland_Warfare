@@ -1,6 +1,7 @@
 package me.luckyraven.item;
 
 import lombok.RequiredArgsConstructor;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,16 +46,19 @@ public class ItemParser {
 
 		ItemConverter converter = getConverter(type);
 
-		if (converter == null) {
-			return null;
-		}
+		if (converter == null) return null;
 
 		return converter.convert(type, modifier, attributes);
 	}
 
 	@Nullable
 	private ItemConverter getConverter(String type) {
-		if (!registry.hasConverter(type)) return null;
+		if (!registry.hasConverter(type)) {
+			try {
+				Material.valueOf(type);
+				return registry.getConverter("material");
+			} catch (IllegalArgumentException ignored) { }
+		}
 
 		return registry.getConverter(type);
 	}
