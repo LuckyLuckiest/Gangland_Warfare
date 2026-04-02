@@ -42,6 +42,10 @@ public class ScopeJumpListener implements Listener {
 		Weapon    weapon = weaponService.validateAndGetWeapon(player, item);
 		if (weapon == null) return;
 
+		// During reload the scope is auto-applied as an animation effect; blocking Y movement would
+		// prevent external knockback from working properly while the player is being attacked.
+		if (weapon.isReloading()) return;
+
 		ScopeData scopeData = weapon.getScopeData();
 		if (scopeData == null || !scopeData.isScoped()) return;
 
