@@ -31,10 +31,10 @@ public class FullAutoTask extends Timer {
 			for (int i = 0; i < AUTO[shotsPerSecond].length; i++) {
 				accumulate += shotsPerSecond / 20.0 + 0.00000000001;
 
-				if (accumulate >= 1.0) {
-					accumulate -= 1.0;
-					collection[i] = true;
-				}
+				if (accumulate < 1.0) continue;
+
+				accumulate -= 1.0;
+				collection[i] = true;
 			}
 
 			while (!collection[0]) {
@@ -85,7 +85,9 @@ public class FullAutoTask extends Timer {
 			return;
 		}
 
-		int shotsPerSecond = Math.max(1, Math.min(20, 20 / Math.max(1, weapon.getProjectileData().getCooldown())));
+		int cooldown       = Math.max(1, weapon.getProjectileData().getCooldown());
+		int tickValue      = 20 / cooldown;
+		int shotsPerSecond = Math.clamp(tickValue, 1, 20);
 
 		if (AUTO[shotsPerSecond][tickIndex]) {
 			GunAction gunAction = new GunAction(plugin, weaponService, weapon, recoilCompatibility);
