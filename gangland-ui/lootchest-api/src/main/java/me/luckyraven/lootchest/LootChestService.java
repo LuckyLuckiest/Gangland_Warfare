@@ -308,6 +308,9 @@ public abstract class LootChestService {
 
 		session.close();
 
+		// Always fire close event and play closing sound, regardless of whether items were taken
+		sessionCompleteHandler.handle(session);
+
 		// Only start cooldown if player actually took an item AND cooldown not already started
 		if (!session.hasItemBeenTaken()) return;
 
@@ -319,8 +322,6 @@ public abstract class LootChestService {
 		if (cooldownTime > 0) {
 			cooldownManager.startCooldown(chestData, cooldownTime);
 		}
-
-		sessionCompleteHandler.handle(session);
 	}
 
 	public void cancelSession(Player player) {
