@@ -365,6 +365,9 @@ public final class Initializer {
 		// car service
 		carServiceInit();
 
+		// jetpack service
+		jetpackServiceInit();
+
 		// Events
 		listenerManager = new ListenerManager(gangland);
 		events();
@@ -465,10 +468,7 @@ public final class Initializer {
 
 		wearableAddon.initialize();
 
-		// initialize jetpack service
-		if (jetpackService == null) {
-			jetpackService = new JetpackService(fuelService, gangland, gadgetPhysicsConfig);
-		}
+		gadgetPhysicsConfig = new GadgetPhysicsConfigImpl();
 
 		// initialize car addon
 		if (carAddon == null) {
@@ -594,11 +594,16 @@ public final class Initializer {
 	public void carServiceInit() {
 		IRepository<ParkedCar> parkedCarRepository = ganglandDatabase.getRepositoryRegistry()
 		                                                             .getRepository(ParkedCar.class);
-		gadgetPhysicsConfig = new GadgetPhysicsConfigImpl();
-		carService          = new CarService(carAddon, new VehicleRegistry(), gangland, parkedCarRepository,
-		                                     fuelService, gadgetPhysicsConfig);
+		carService = new CarService(carAddon, new VehicleRegistry(), gangland, parkedCarRepository, fuelService,
+		                            gadgetPhysicsConfig);
 		parkedCarRepository.setDataSupplier(() -> new ArrayList<>(carService.getParkedCarRecords().values()));
 		carService.reloadParkedVehicles();
+	}
+
+	public void jetpackServiceInit() {
+		if (jetpackService == null) {
+			jetpackService = new JetpackService(fuelService, gangland, gadgetPhysicsConfig);
+		}
 	}
 
 	public void weaponLoader() {
