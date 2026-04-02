@@ -143,7 +143,10 @@ public class DetainmentService {
 	}
 
 	private void teleportToJail(Player player) {
-		Location jailLocation = jailRegistry.getJailLocation(player.getUniqueId());
+		DetainedPlayer detainedPlayer = detainmentRegistry.getDetainedPlayers().get(player.getUniqueId());
+		if (detainedPlayer == null || detainedPlayer.getJailId() == null) return;
+
+		Location jailLocation = jailRegistry.getJailLocation(detainedPlayer.getJailId());
 		if (jailLocation == null) return;
 
 		player.teleport(jailLocation);
