@@ -61,10 +61,10 @@ class CopSpawnerInfoCommand extends SubArgument {
 
 			String tpCommand = String.format("/%s cop spawner teleport %d", Gangland.SHORT_PREFIX, id);
 
-			var message = new ComponentBuilder(GanglandChatUtil.color("&7&lCop spawner &e(&b" + id + "&e)&7: "))
-					.append(GanglandChatUtil.color("&e(&btp&e)"))
-					.event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, tpCommand))
-					.create();
+			String color = GanglandChatUtil.color("&7&lCop spawner &e(&b" + id + "&e)&7: ");
+			var message = new ComponentBuilder(color).append(GanglandChatUtil.color("&e(&btp&e)"))
+			                                         .event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, tpCommand))
+			                                         .create();
 
 			sender.spigot().sendMessage(message);
 
