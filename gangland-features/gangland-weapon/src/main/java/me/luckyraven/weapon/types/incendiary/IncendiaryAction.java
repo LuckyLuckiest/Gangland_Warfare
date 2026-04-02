@@ -22,9 +22,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class IncendiaryAction {
+
+	/**
+	 * Entity UUIDs receiving attributed fire damage — bypasses WeaponInteract's cancel guard so the combat tracker
+	 * stays updated (enabling death attribution and flat-damage application).
+	 */
+	public static final Set<UUID> pendingDamage = ConcurrentHashMap.newKeySet();
 
 	private final JavaPlugin                plugin;
 	private final WeaponService             weaponService;
@@ -173,6 +180,7 @@ public class IncendiaryAction {
 			// the combat tracker is updated without meaningfully changing health.
 			double attributed = flatBonus > 0 ? flatBonus : 0.001;
 			target.setNoDamageTicks(0);
+			pendingDamage.add(target.getUniqueId());
 			target.damage(attributed, player);
 		}
 	}
