@@ -1,8 +1,10 @@
-package me.luckyraven.gadget.car.vehicle;
+package me.luckyraven.gadget.car.vehicle.packet;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import me.luckyraven.gadget.car.vehicle.VehicleMovementTask;
+import me.luckyraven.gadget.car.vehicle.VehicleSession;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 

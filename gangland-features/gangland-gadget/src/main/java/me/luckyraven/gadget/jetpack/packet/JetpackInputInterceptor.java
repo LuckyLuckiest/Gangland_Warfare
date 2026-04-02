@@ -1,7 +1,9 @@
-package me.luckyraven.gadget.jetpack;
+package me.luckyraven.gadget.jetpack.packet;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import me.luckyraven.gadget.jetpack.JetpackSession;
+import me.luckyraven.gadget.jetpack.JetpackTask;
 
 import java.lang.reflect.Method;
 
