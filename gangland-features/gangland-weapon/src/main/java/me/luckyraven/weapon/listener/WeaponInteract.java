@@ -4,6 +4,7 @@ import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.util.Pair;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.configuration.SoundConfiguration;
+import me.luckyraven.util.downed.DownedPlayerRegistry;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.timer.RepeatingTimer;
@@ -78,6 +79,8 @@ public class WeaponInteract implements Listener {
 
 		if (weapon == null) return;
 
+		if (player.isDead() || DownedPlayerRegistry.isDowned(player.getUniqueId())) return;
+
 		boolean leftClick = event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK;
 		boolean rightClick = event.getAction() == Action.RIGHT_CLICK_AIR ||
 		                     event.getAction() == Action.RIGHT_CLICK_BLOCK;
@@ -151,11 +154,11 @@ public class WeaponInteract implements Listener {
 		ItemStack item   = player.getInventory().getItemInMainHand();
 
 		if (!weaponService.isWeapon(item)) return;
-
 		event.setCancelled(true);
 
-		Weapon weapon = weaponService.validateAndGetWeapon(player, item);
+		if (player.isDead() || DownedPlayerRegistry.isDowned(player.getUniqueId())) return;
 
+		Weapon weapon = weaponService.validateAndGetWeapon(player, item);
 		if (weapon == null) return;
 
 		// non-GUN types: no right-click-on-entity behavior
@@ -184,6 +187,7 @@ public class WeaponInteract implements Listener {
 		UUID targetUuid = event.getEntity().getUniqueId();
 		if (MeleeAction.pendingDamage.remove(targetUuid)) return;
 		if (ThrowableAction.pendingDamage.remove(targetUuid)) return;
+		if (IncendiaryAction.pendingDamage.remove(targetUuid)) return;
 
 		ItemStack item = player.getInventory().getItemInMainHand();
 		if (!weaponService.isWeapon(item)) return;
