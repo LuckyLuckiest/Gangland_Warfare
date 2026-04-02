@@ -3,59 +3,81 @@ package me.luckyraven.command.sub.waypoint;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+
+import java.util.Map;
 
 class WaypointInfoCommand extends SubArgument {
 
-	private final UserManager<Player> userManager;
-	private final WaypointManager     waypointManager;
+	private final Gangland        gangland;
+	private final Tree<Argument>  tree;
+	private final WaypointManager waypointManager;
 
 	protected WaypointInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "info", tree, parent);
 
-		this.userManager     = gangland.getInitializer().getUserManager();
+		this.gangland        = gangland;
+		this.tree            = tree;
 		this.waypointManager = gangland.getInitializer().getWaypointManager();
+
+		this.nameArgument();
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
+		};
+	}
 
-			if (user == null) return;
+	private void nameArgument() {
+		Argument nameArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+			String   name     = args[2];
+			Waypoint waypoint = waypointManager.get(name);
 
-			Waypoint waypoint = waypointManager.getSelected(player);
-
-			// check if the user already selected a waypoint
 			if (waypoint == null) {
-				user.sendMessage(Messages.NOT_SELECTED_WAYPOINT.toString());
+				sender.sendMessage(Messages.INVALID_WAYPOINT.toString());
 				return;
 			}
 
-			String type = String.format("&7Type:&b %s%s", waypoint.getType().getName(),
+			String tpCommand = String.format("/%s teleport %s", Gangland.SHORT_PREFIX, waypoint.getName());
+
+			String color = GanglandChatUtil.color("&7&lWaypoint &e(&b" + waypoint.getName() + "&e)&7: ");
+			var message = new ComponentBuilder(color).append(GanglandChatUtil.color("&e(&btp&e)"))
+			                                         .event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, tpCommand))
+			                                         .create();
+
+			sender.spigot().sendMessage(message);
+
+			String type = String.format("&bType: &7%s%s", waypoint.getType().getName(),
 			                            waypoint.getType() == Waypoint.WaypointType.GANG ?
-			                            ", Gang linked: " + waypoint.getGangId() :
-			                            "");
+			                            ", Gang: " + waypoint.getGangId() : "");
 
-			String[] info = {String.format("&8[&a%s&8]&7 info:", waypoint.getName()), "&7ID:&b " + waypoint.getUsedId(),
-			                 "&7X:&b " + waypoint.getX(), "&7Y:&b " + waypoint.getY(), "&7Z:&b " + waypoint.getZ(),
-			                 "&7Yaw:&b " + waypoint.getYaw(), "&7Pitch:&b " + waypoint.getPitch(),
-			                 "&7World:&b " + waypoint.getWorld(), type, "&7Timer:&b " + waypoint.getTimer(),
-			                 "&7Cooldown:&b " + waypoint.getCooldown(), "&7Shield:&b " + waypoint.getShield(),
-			                 "&7Cost:&b " + waypoint.getCost(), "&7Radius:&b " + waypoint.getRadius()};
+			String info = String.format(
+					" &bX: &7%d\n &bY: &7%d\n &bZ: &7%d\n &bWorld: &7%s\n %s\n &bTimer: &7%d\n &bCooldown: &7%d\n &bShield: &7%d\n &bCost: &7%.1f\n &bRadius: &7%.1f",
+					(int) waypoint.getX(), (int) waypoint.getY(), (int) waypoint.getZ(), waypoint.getWorld(), type,
+					waypoint.getTimer(), waypoint.getCooldown(), waypoint.getShield(), waypoint.getCost(),
+					waypoint.getRadius());
 
-			user.sendMessage(GanglandChatUtil.color(info));
-		};
+			sender.sendMessage(GanglandChatUtil.color(info));
+		}, sender -> waypointManager.getWaypoints()
+		                            .entrySet()
+				.stream()
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.map(Waypoint::getName)
+				.toList());
+
+		this.addSubArgument(nameArg);
 	}
 
 }

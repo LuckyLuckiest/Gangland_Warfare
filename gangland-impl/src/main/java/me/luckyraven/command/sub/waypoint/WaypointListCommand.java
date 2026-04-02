@@ -3,14 +3,16 @@ package me.luckyraven.command.sub.waypoint;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
-import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
-import me.luckyraven.file.configuration.Messages;
+import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.command.CommandSender;
 
-import java.util.List;
 import java.util.Map;
 
 class WaypointListCommand extends SubArgument {
@@ -26,23 +28,28 @@ class WaypointListCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			StringBuilder builder = new StringBuilder();
+			sender.sendMessage(GanglandChatUtil.prefixMessage("Waypoints:"));
 
-			List<Waypoint> waypoints = waypointManager.getWaypoints()
-													  .entrySet()
+			waypointManager.getWaypoints()
+			               .entrySet()
 					.stream()
 					.sorted(Map.Entry.comparingByKey())
 					.map(Map.Entry::getValue)
-					.toList();
-			for (int i = 0; i < waypoints.size(); i++) {
-				builder.append(waypoints.get(i).getName()).append(':').append(i + 1);
+					.forEach(waypoint -> {
+						String name      = waypoint.getName();
+						String tpCommand = String.format("/%s teleport %s", Gangland.SHORT_PREFIX, name);
+						String hoverText = String.format("%s - %d, %d, %d", waypoint.getWorld(),
+						                                 (int) waypoint.getX(), (int) waypoint.getY(),
+						                                 (int) waypoint.getZ());
 
-				if (i < waypoints.size() - 1) builder.append(", ");
-			}
+						var message = new ComponentBuilder(GanglandChatUtil.color(" &b- &7" + name + " "))
+								.append(GanglandChatUtil.color("&e(&btp&e)"))
+								.event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, tpCommand))
+								.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(hoverText)))
+								.create();
 
-			sender.sendMessage(Messages.WAYPOINT_LIST_PRIMARY.toString(),
-							   Messages.WAYPOINT_LIST_SECONDARY.toString()
-															   .replace("%waypoints%", builder.toString()));
+						sender.spigot().sendMessage(message);
+					});
 		};
 	}
 
