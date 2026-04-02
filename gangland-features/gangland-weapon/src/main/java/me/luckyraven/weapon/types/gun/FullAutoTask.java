@@ -18,7 +18,7 @@ public class FullAutoTask extends Timer {
 	 * CJCrafter.
 	 *
 	 * @see <a
-	 * 		href="https://github.com/WeaponMechanics/MechanicsMain/blob/master/WeaponMechanics/src/main/java/me/deecaad/weaponmechanics/weapon/shoot/FullAutoTask.java">FullAutoTask
+	 * 		href="https://github.com/WeaponMechanics/WeaponMechanics/blob/master/weaponmechanics-core/src/main/java/me/deecaad/weaponmechanics/weapon/shoot/FullAutoTask.java">FullAutoTask
 	 * 		class</a>
 	 */
 	private static final boolean[][] AUTO = new boolean[21][20];
