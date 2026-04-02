@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
+import me.luckyraven.copsncrooks.jail.JailRegistry;
 import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
@@ -27,8 +28,9 @@ class JailRemoveCommand extends SubArgument {
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
-		return (argument, sender, args) -> sender.sendMessage(
-				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
+		return (argument, sender, args) -> {
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
+		};
 	}
 
 	private void idArgument() {
@@ -46,8 +48,12 @@ class JailRemoveCommand extends SubArgument {
 			jailService.removeJail(id);
 
 			sender.sendMessage(GanglandChatUtil.commandMessage("&aJail &e" + id + "&a removed."));
-		}, sender -> gangland.getInitializer().getJailService().getJailRegistry().getCells()
-				.stream().map(jail -> String.valueOf(jail.getId())).toList());
+		}, sender -> {
+			JailRegistry jailRegistry = gangland.getInitializer().getJailService().getJailRegistry();
+
+			return jailRegistry.getCells()
+					.stream().map(jail -> String.valueOf(jail.getId())).toList();
+		});
 
 		this.addSubArgument(idArg);
 	}

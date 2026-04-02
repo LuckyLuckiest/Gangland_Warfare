@@ -13,6 +13,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Collection;
+
 public final class JailReleaseCommand extends SubArgument {
 
 	private final Gangland       gangland;
@@ -45,9 +47,24 @@ public final class JailReleaseCommand extends SubArgument {
 			}
 
 			DetainmentService detainmentService = gangland.getInitializer().getDetainmentService();
+
+			if (!detainmentService.isJailed(target)) {
+				sender.sendMessage(
+						GanglandChatUtil.commandMessage("&cPlayer &e" + target.getName() + "&c is not jailed."));
+				return;
+			}
+
 			detainmentService.release(target);
 
 			sender.sendMessage(GanglandChatUtil.commandMessage("&aReleased &e" + target.getName() + "&a from jail."));
+		}, sender -> {
+			Collection<? extends Player> onlinePlayers     = Bukkit.getOnlinePlayers();
+			DetainmentService            detainmentService = gangland.getInitializer().getDetainmentService();
+
+			return onlinePlayers.stream()
+					.filter(detainmentService::isJailed)
+					.map(Player::getName)
+					.toList();
 		});
 
 		this.addSubArgument(playerInfo);
