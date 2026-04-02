@@ -2,7 +2,13 @@ package me.luckyraven.gadget.car;
 
 import io.netty.channel.Channel;
 import lombok.Getter;
-import me.luckyraven.gadget.car.vehicle.*;
+import me.luckyraven.gadget.car.vehicle.ParkedVehicle;
+import me.luckyraven.gadget.car.vehicle.VehicleMovementTask;
+import me.luckyraven.gadget.car.vehicle.VehicleRegistry;
+import me.luckyraven.gadget.car.vehicle.VehicleSession;
+import me.luckyraven.gadget.car.vehicle.entity.MinecartVehicle;
+import me.luckyraven.gadget.car.vehicle.entity.VehicleEntity;
+import me.luckyraven.gadget.car.vehicle.packet.VehicleInputInterceptor;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.item.fuel.Fuel;

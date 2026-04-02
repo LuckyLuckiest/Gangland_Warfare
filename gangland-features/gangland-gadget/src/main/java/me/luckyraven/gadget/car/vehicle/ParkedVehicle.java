@@ -2,6 +2,7 @@ package me.luckyraven.gadget.car.vehicle;
 
 import lombok.Getter;
 import me.luckyraven.gadget.car.Car;
+import me.luckyraven.gadget.car.vehicle.entity.VehicleEntity;
 
 import java.util.UUID;
 

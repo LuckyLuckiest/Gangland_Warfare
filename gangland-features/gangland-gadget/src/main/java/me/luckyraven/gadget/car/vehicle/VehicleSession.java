@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarKey;
+import me.luckyraven.gadget.car.vehicle.entity.VehicleEntity;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Bukkit;

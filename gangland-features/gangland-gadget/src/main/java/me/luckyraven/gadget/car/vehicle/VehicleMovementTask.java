@@ -2,6 +2,8 @@ package me.luckyraven.gadget.car.vehicle;
 
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarService;
+import me.luckyraven.gadget.car.vehicle.entity.VehicleEntity;
+import me.luckyraven.gadget.car.vehicle.packet.VehicleInputInterceptor;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.item.fuel.FuelBar;
 import org.bukkit.entity.Player;

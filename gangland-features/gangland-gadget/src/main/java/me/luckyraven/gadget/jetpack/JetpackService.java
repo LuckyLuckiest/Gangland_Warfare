@@ -1,9 +1,10 @@
 package me.luckyraven.gadget.jetpack;
 
 import io.netty.channel.Channel;
-import me.luckyraven.gadget.car.vehicle.VehicleInputInterceptor;
+import me.luckyraven.gadget.car.vehicle.packet.VehicleInputInterceptor;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
+import me.luckyraven.gadget.jetpack.packet.JetpackInputInterceptor;
 import me.luckyraven.item.wearable.Wearable;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
