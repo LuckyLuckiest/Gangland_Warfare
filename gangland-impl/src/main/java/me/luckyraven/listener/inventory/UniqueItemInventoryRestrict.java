@@ -5,9 +5,11 @@ import me.luckyraven.Gangland;
 import me.luckyraven.item.unique.UniqueItemUtil;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.listener.ListenerHandler;
+import org.bukkit.GameRule;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -50,6 +52,24 @@ public class UniqueItemInventoryRestrict implements Listener {
 		if (uniqueItem.isMovable()) return;
 
 		event.setCancelled(true);
+	}
+
+	@EventHandler(priority = EventPriority.NORMAL)
+	public void onUniqueItemDeathDrop(PlayerDeathEvent event) {
+		if (Boolean.TRUE.equals(event.getEntity().getWorld().getGameRuleValue(GameRule.KEEP_INVENTORY))) {
+			event.getDrops().removeIf(UniqueItemUtil::isUniqueItem);
+			return;
+		}
+
+		event.getDrops().removeIf(item -> {
+			if (!UniqueItemUtil.isUniqueItem(item)) return false;
+
+			var itemBuilder   = new ItemBuilder(item);
+			var uniqueItemKey = itemBuilder.getStringTagData("uniqueItem");
+			var uniqueItem    = gangland.getInitializer().getUniqueItemAddon().getUniqueItem(uniqueItemKey);
+
+			return uniqueItem != null && !uniqueItem.isDropOnDeath();
+		});
 	}
 
 	@EventHandler(priority = EventPriority.LOW)
