@@ -32,6 +32,7 @@ Guides for features that are part of the base plugin and not tied to a specific 
 | 10 | [Trade Signs](./features/trade-signs.md)       | In-world buy/sell signs for weapons and ammo                     |
 | 11 | [Ranks](./features/ranks.md)                   | Gang rank hierarchy and permission management                    |
 | 12 | [Database & Setup](./features/database.md)     | MySQL/SQLite config, auto-save, and first-time setup             |
+| 13 | [Inventory System](./features/inventory.md)    | Custom GUI menus, slots, conditions, pagination, and API usage   |
 
 ---
 

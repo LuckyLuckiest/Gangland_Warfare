@@ -1,6 +1,6 @@
 # Repair System
 
-[← Wearables](./wearables.md) | [Back to Index](../README.md) | [Next: Trade Signs →](../features/trade-signs.md)
+[← Wearables](./wearables.md) | [Back to Index](../README.md)
 
 ---
 
@@ -128,4 +128,4 @@ repair(player, targetItem, repairMaterialItem);
 
 ---
 
-[← Wearables](./wearables.md) | [Back to Index](../README.md) | [Next: Trade Signs →](../features/trade-signs.md)
+[← Wearables](./wearables.md) | [Back to Index](../README.md)

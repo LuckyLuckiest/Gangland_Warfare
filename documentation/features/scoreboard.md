@@ -1,6 +1,6 @@
 # Scoreboard
 
-[← Unique Items](./unique-items.md) | [Back to Index](../README.md) | [Next: Database & Setup →](./database.md)
+[← Unique Items](./unique-items.md) | [Back to Index](../README.md) | [Next: Weapons →](./weapons.md)
 
 ---
 
@@ -89,4 +89,4 @@ Row lines support PlaceholderAPI placeholders (e.g., `%gangland_user_balance%`) 
 
 ---
 
-[← Unique Items](./unique-items.md) | [Back to Index](../README.md) | [Next: Database & Setup →](./database.md)
+[← Unique Items](./unique-items.md) | [Back to Index](../README.md) | [Next: Weapons →](./weapons.md)

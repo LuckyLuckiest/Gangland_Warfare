@@ -5,7 +5,7 @@
 
 ---
 
-[← Back to Documentation Index](../README.md)
+[← Back to Documentation Index](../README.md) | [Next: Cops N Crooks →](./cops-n-crooks.md)
 
 ---
 
@@ -92,7 +92,7 @@ See the full [Jail & Detainment guide](./jail-detainment.md) for configuration a
 - The bounty system has been moved under the Cops N Crooks umbrella and tightened up with configurable scaling and kill
   multipliers.
 
-See the full [Wanted & Bounty guide](./wanted-bounty.md).
+See the full [Wanted & Bounty guide](../features/wanted-bounty.md).
 
 ---
 
@@ -142,7 +142,7 @@ Players and admins can now set up in-world signs that allow buying and selling o
 - **Weapons** — any weapon from the weapon configs.
 - Both support configurable prices and quantities per transaction.
 
-See the full [Trade Signs guide](./trade-signs.md) for setup instructions.
+See the full [Trade Signs guide](../features/trade-signs.md) for setup instructions.
 
 ---
 
@@ -152,7 +152,7 @@ Gang ranks now support parent-child relationships, enabling a full hierarchical 
 or remove a rank's parent rank via commands, creating inheritance chains where child ranks automatically receive the
 permissions of their parents.
 
-See the full [Ranks guide](./ranks.md) for commands.
+See the full [Ranks guide](../features/ranks.md) for commands.
 
 ---
 
@@ -219,4 +219,4 @@ error message.
 
 ---
 
-[← Back to Documentation Index](../README.md)
+[← Back to Documentation Index](../README.md) | [Next: Cops N Crooks →](./cops-n-crooks.md)

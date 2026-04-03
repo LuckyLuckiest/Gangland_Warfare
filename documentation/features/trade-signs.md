@@ -1,6 +1,6 @@
 # Trade Signs
 
-[← Repair System](../v0.7.3-DEV/repair.md) | [Back to Index](../README.md) | [Next: Ranks →](./ranks.md)
+[← Wanted & Bounty](./wanted-bounty.md) | [Back to Index](../README.md) | [Next: Ranks →](./ranks.md)
 
 ---
 
@@ -104,4 +104,4 @@ public void onSignUse(SignInteractionUseEvent event) {
 
 ---
 
-[← Repair System](../v0.7.3-DEV/repair.md) | [Back to Index](../README.md) | [Next: Ranks →](./ranks.md)
+[← Wanted & Bounty](./wanted-bounty.md) | [Back to Index](../README.md) | [Next: Ranks →](./ranks.md)

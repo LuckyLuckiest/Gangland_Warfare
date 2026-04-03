@@ -1,6 +1,6 @@
 # Ranks
 
-[← Trade Signs](./trade-signs.md) | [Back to Index](../README.md)
+[← Trade Signs](./trade-signs.md) | [Back to Index](../README.md) | [Next: Database & Setup →](./database.md)
 
 ---
 
@@ -132,4 +132,4 @@ rankManager.removeParent(childRank);
 
 ---
 
-[← Trade Signs](./trade-signs.md) | [Back to Index](../README.md)
+[← Trade Signs](./trade-signs.md) | [Back to Index](../README.md) | [Next: Database & Setup →](./database.md)

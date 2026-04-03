@@ -1,6 +1,6 @@
 # Weapons
 
-[← Wanted & Bounty](./wanted-bounty.md) | [Back to Index](../README.md) | [Next: Wearables →](../v0.7.3-DEV/wearables.md)
+[← Scoreboard](./scoreboard.md) | [Back to Index](../README.md) | [Next: Wanted & Bounty →](./wanted-bounty.md)
 
 ---
 
@@ -351,4 +351,4 @@ boolean isWeapon = weaponManager.isWeapon(itemStack);
 
 ---
 
-[← Wanted & Bounty](./wanted-bounty.md) | [Back to Index](../README.md) | [Next: Wearables →](../v0.7.3-DEV/wearables.md)
+[← Scoreboard](./scoreboard.md) | [Back to Index](../README.md) | [Next: Wanted & Bounty →](./wanted-bounty.md)

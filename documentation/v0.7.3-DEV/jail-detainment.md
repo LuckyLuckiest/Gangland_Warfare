@@ -1,6 +1,6 @@
 # Jail & Detainment
 
-[← Cops N Crooks](./cops-n-crooks.md) | [Back to Index](../README.md) | [Next: Wanted & Bounty →](./wanted-bounty.md)
+[← Cops N Crooks](./cops-n-crooks.md) | [Back to Index](../README.md) | [Next: Wearables →](./wearables.md)
 
 ---
 
@@ -141,4 +141,4 @@ boolean hasSpace = jailService.hasCapacity(jailId);
 
 ---
 
-[← Cops N Crooks](./cops-n-crooks.md) | [Back to Index](../README.md) | [Next: Wanted & Bounty →](./wanted-bounty.md)
+[← Cops N Crooks](./cops-n-crooks.md) | [Back to Index](../README.md) | [Next: Wearables →](./wearables.md)

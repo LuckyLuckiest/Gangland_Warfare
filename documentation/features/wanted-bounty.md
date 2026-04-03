@@ -1,6 +1,6 @@
 # Wanted & Bounty
 
-[← Jail & Detainment](../v0.7.3-DEV/jail-detainment.md) | [Back to Index](../README.md) | [Next: Weapons →](./weapons.md)
+[← Weapons](./weapons.md) | [Back to Index](../README.md) | [Next: Trade Signs →](./trade-signs.md)
 
 ---
 
@@ -178,4 +178,4 @@ clearBounty(user);
 
 ---
 
-[← Jail & Detainment](../v0.7.3-DEV/jail-detainment.md) | [Back to Index](../README.md) | [Next: Weapons →](./weapons.md)
+[← Weapons](./weapons.md) | [Back to Index](../README.md) | [Next: Trade Signs →](./trade-signs.md)

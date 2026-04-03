@@ -1,6 +1,6 @@
 # Database & Setup
 
-[← Scoreboard](./scoreboard.md) | [Back to Index](../README.md)
+[← Ranks](./ranks.md) | [Back to Index](../README.md) | [Next: Inventory System →](./inventory.md)
 
 ---
 
@@ -198,4 +198,4 @@ Inventory:
 
 ---
 
-[← Scoreboard](./scoreboard.md) | [Back to Index](../README.md)
+[← Ranks](./ranks.md) | [Back to Index](../README.md) | [Next: Inventory System →](./inventory.md)

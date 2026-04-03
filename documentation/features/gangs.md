@@ -37,7 +37,7 @@ Gangs use the server's global rank system internally. Two ranks are reserved:
 | **Tail rank** (default: `owner`)  | The highest rank — held only by the gang creator.   |
 
 Ranks between Head and Tail are filled in by the server admin using the `/glw rank` commands. See
-the [Ranks guide](../v0.7.3-DEV/ranks.md) for how to build a hierarchy.
+the [Ranks guide](./ranks.md) for how to build a hierarchy.
 
 When a member is promoted or demoted, the system traverses up or down the rank tree automatically — there is no need to
 specify which rank to promote to, it always moves to the next defined rank in the chain.
