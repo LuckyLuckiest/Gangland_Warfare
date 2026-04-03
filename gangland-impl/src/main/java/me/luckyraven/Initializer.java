@@ -17,6 +17,7 @@ import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
 import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.command.sub.gang.GangCommand;
+import me.luckyraven.command.sub.item.ItemCommand;
 import me.luckyraven.command.sub.jail.JailCommand;
 import me.luckyraven.command.sub.lootchest.LootChestWandCommand;
 import me.luckyraven.command.sub.rank.RankCommand;
@@ -749,6 +750,7 @@ public final class Initializer {
 		commandManager.addCommand(new WantedCommand(gangland));
 		commandManager.addCommand(new WeaponCommand(gangland));
 		commandManager.addCommand(new AmmunitionCommand(gangland));
+		commandManager.addCommand(new ItemCommand(gangland));
 		commandManager.addCommand(new DownloadResourceCommand(gangland));
 		commandManager.addCommand(new LootChestWandCommand(gangland));
 		commandManager.addCommand(new CuffCommand(gangland));
