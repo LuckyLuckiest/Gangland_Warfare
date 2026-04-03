@@ -72,7 +72,7 @@ public class UniqueItem implements Comparable<ItemStack> {
 
 		if (lore != null) itemBuilder.setLore(lore);
 
-		itemBuilder.addTag("uniqueItem", uniqueItem);
+		itemBuilder.addTag(UniqueItemKeys.UNIQUE_ITEM_KEY, uniqueItem);
 
 		if (lootKey != null && !lootKey.isEmpty()) {
 			itemBuilder.addTag("loot_key", lootKey);

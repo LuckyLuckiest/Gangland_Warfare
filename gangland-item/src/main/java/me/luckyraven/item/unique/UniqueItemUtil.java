@@ -1,15 +1,24 @@
 package me.luckyraven.item.unique;
 
 import me.luckyraven.util.ItemBuilder;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
 
 public final class UniqueItemUtil {
 
-	public static boolean isUniqueItem(ItemStack itemStack) {
-		ItemBuilder itemBuilder = new ItemBuilder(itemStack);
+	public static boolean isUniqueItem(@Nullable ItemStack itemStack) {
+		if (itemStack == null || itemStack.getType() == Material.AIR) return false;
 
-		return itemBuilder.hasNBTTag("uniqueItem");
+		return new ItemBuilder(itemStack).hasNBTTag(UniqueItemKeys.UNIQUE_ITEM_KEY);
+	}
+
+	@Nullable
+	public static String getUniqueItemKey(@Nullable ItemStack itemStack) {
+		if (!isUniqueItem(itemStack)) return null;
+
+		return new ItemBuilder(itemStack).getStringTagData(UniqueItemKeys.UNIQUE_ITEM_KEY);
 	}
 
 	public static boolean hasUniqueItem(Player player, UniqueItem uniqueItem) {
