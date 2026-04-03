@@ -69,9 +69,12 @@ public class ThrowableAction {
 		                              weapon.getSoundData().getShotDefault());
 		weapon.getRecoil().applyRecoil(recoilCompatibility, player);
 
-		boolean[] wasOnGround = {false};
-		boolean[] stuck       = {false};
-		int[]     bounceCount = {0};
+		boolean[] wasOnGround       = {false};
+		boolean[] stuck             = {false};
+		int[]     bounceCount       = {0};
+		int[]     bounceCooldown    = {0};
+		int[]     tickCount         = {0};
+		double[]  prevVelocityLenSq = {throwVec.lengthSquared()};
 
 		RepeatingTimer physicsTimer = new RepeatingTimer(plugin, 1L, time -> {
 			if (grenade.isDead()) {
@@ -85,10 +88,29 @@ public class ThrowableAction {
 				return;
 			}
 
+			tickCount[0]++;
+			if (bounceCooldown[0] > 0) bounceCooldown[0]--;
 			boolean onGround   = grenade.isOnGround();
 			boolean justLanded = onGround && !wasOnGround[0];
 
-			if (justLanded) {
+			// Detect wall/ceiling collision: item was moving last tick but velocity
+			// is now near-zero without having hit the floor (isOnGround is false).
+			// Skip the first tick — the item entity's velocity isn't always reflected by
+			// getVelocity() immediately after setVelocity() on the very first tick.
+			// Also suppress detection for a few ticks after a bounce so the new bounce
+			// velocity has time to register and doesn't trigger a false wall-hit.
+			Vector curVel   = grenade.getVelocity();
+			double curLenSq = curVel.lengthSquared();
+			boolean hitSurface = tickCount[0] > 1 && !onGround && curLenSq < 0.005 && prevVelocityLenSq[0] > 0.01
+			                     && bounceCooldown[0] == 0;
+			// For sticky grenades: also catch angled wall hits where the reflected velocity is
+			// reduced but not near-zero. If velocity magnitude squared drops to < 40 % of the
+			// previous tick's value, a collision absorbed kinetic energy → stick immediately.
+			boolean stickyCollision = data.isSticky() && tickCount[0] > 2 && bounceCooldown[0] == 0
+			                          && prevVelocityLenSq[0] > 0.05 && curLenSq < prevVelocityLenSq[0] * 0.40;
+			prevVelocityLenSq[0] = curLenSq;
+
+			if (justLanded || hitSurface || stickyCollision) {
 				if (data.isSticky()) {
 					stuck[0] = true;
 					grenade.setGravity(false);
@@ -101,6 +123,7 @@ public class ThrowableAction {
 					v.setX(v.getX() * 0.85);
 					v.setZ(v.getZ() * 0.85);
 					grenade.setVelocity(v);
+					bounceCooldown[0] = 3;
 				}
 			}
 
@@ -171,6 +194,20 @@ public class ThrowableAction {
 				target.damage(totalDmg, player);
 			}
 			if (data.getFireTicks() > 0) target.setFireTicks(data.getFireTicks());
+		}
+
+		// getNearbyEntities() never returns the player themselves, so self-damage and knockback must be applied explicitly.
+		if (player.getLocation().distanceSquared(center) <= radiusSq) {
+			if (totalDmg > 0) player.damage(totalDmg);
+			if (data.getFireTicks() > 0) player.setFireTicks(data.getFireTicks());
+			Vector blastDir = player.getLocation().toVector().subtract(center.toVector());
+			double dist     = blastDir.length();
+			if (dist > 0) {
+				double strength = (1.0 - dist / data.getExplosionRadius()) * 2.0;
+				player.setVelocity(player.getVelocity().add(blastDir.normalize().multiply(strength)));
+			} else {
+				player.setVelocity(player.getVelocity().add(new Vector(0, 2.0, 0)));
+			}
 		}
 	}
 
