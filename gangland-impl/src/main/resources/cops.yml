@@ -26,10 +26,11 @@
 #   Weapon_Pool:    List of items the cop may equip; one is chosen at random on spawn.
 #                   Accepts vanilla materials (IRON_SWORD), custom weapons (weapon:<id>),
 #                   or items with extra data (LEATHER_HELMET{color=blue})
-#   Helmet:         Armor piece for the head slot; leave blank for none
-#   Chestplate:     Armor piece for the chest slot; leave blank for none
-#   Leggings:       Armor piece for the legs slot; leave blank for none
-#   Boots:          Armor piece for the feet slot; leave blank for none
+#   Wearables:
+#     Helmet:       Armor piece for the head slot; leave blank for none
+#     Chestplate:   Armor piece for the chest slot; leave blank for none
+#     Leggings:     Armor piece for the legs slot; leave blank for none
+#     Boots:        Armor piece for the feet slot; leave blank for none
 # ============================================
 Cops:
    Tiers:
@@ -44,10 +45,11 @@ Cops:
          # Accepts vanilla materials (IRON_SWORD) or custom items (weapon:rifle, LEATHER_HELMET{color=blue})
          Weapon_Pool:
             - "WOODEN_SWORD"
-         Helmet: ""
-         Chestplate: ""
-         Leggings: ""
-         Boots: ""
+         Wearables:
+            Helmet: ""
+            Chestplate: ""
+            Leggings: ""
+            Boots: ""
       2:
          Display_Name: "&9Sergeant"
          Health: 25.0
@@ -58,10 +60,11 @@ Cops:
          Skip_Cuffing: false
          Weapon_Pool:
             - "STONE_SWORD"
-         Helmet: "LEATHER_HELMET"
-         Chestplate: ""
-         Leggings: ""
-         Boots: ""
+         Wearables:
+            Helmet: "LEATHER_HELMET"
+            Chestplate: ""
+            Leggings: ""
+            Boots: ""
       3:
          Display_Name: "&1Lieutenant"
          Health: 30.0
@@ -73,10 +76,11 @@ Cops:
          Weapon_Pool:
             - "weapon:rifle"
             - "CROSSBOW"
-         Helmet: "CHAINMAIL_HELMET"
-         Chestplate: "CHAINMAIL_CHESTPLATE"
-         Leggings: ""
-         Boots: ""
+         Wearables:
+            Helmet: "CHAINMAIL_HELMET"
+            Chestplate: "CHAINMAIL_CHESTPLATE"
+            Leggings: ""
+            Boots: ""
       4:
          Display_Name: "&1SWAT"
          Health: 40.0
@@ -88,10 +92,11 @@ Cops:
          Weapon_Pool:
             - "weapon:rifle"
             - "CROSSBOW"
-         Helmet: "IRON_HELMET"
-         Chestplate: "IRON_CHESTPLATE"
-         Leggings: "IRON_LEGGINGS"
-         Boots: "IRON_BOOTS"
+         Wearables:
+            Helmet: "IRON_HELMET"
+            Chestplate: "IRON_CHESTPLATE"
+            Leggings: "IRON_LEGGINGS"
+            Boots: "IRON_BOOTS"
       5:
          Display_Name: "§4Military"
          Health: 60.0
@@ -103,7 +108,8 @@ Cops:
          Weapon_Pool:
             - "weapon:rifle"
             - "CROSSBOW"
-         Helmet: "DIAMOND_HELMET"
-         Chestplate: "DIAMOND_CHESTPLATE"
-         Leggings: "DIAMOND_LEGGINGS"
-         Boots: "DIAMOND_BOOTS"
+         Wearables:
+            Helmet: "DIAMOND_HELMET"
+            Chestplate: "DIAMOND_CHESTPLATE"
+            Leggings: "DIAMOND_LEGGINGS"
+            Boots: "DIAMOND_BOOTS"

@@ -347,10 +347,10 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 			                                   section.getDouble("Cuff_Radius", cuffRadius),
 			                                   section.getBoolean("Can_Use_Weapons", false),
 			                                   section.getBoolean("Skip_Cuffing", false), weaponNamePool, weaponPool,
-			                                   parseItem(section.getString("Helmet"), itemParser),
-			                                   parseItem(section.getString("Chestplate"), itemParser),
-			                                   parseItem(section.getString("Leggings"), itemParser),
-			                                   parseItem(section.getString("Boots"), itemParser));
+			                                   parseItem(section.getString("Wearables.Helmet"), itemParser),
+			                                   parseItem(section.getString("Wearables.Chestplate"), itemParser),
+			                                   parseItem(section.getString("Wearables.Leggings"), itemParser),
+			                                   parseItem(section.getString("Wearables.Boots"), itemParser));
 
 			tiers.put(tierNum, tierConfig);
 		}
