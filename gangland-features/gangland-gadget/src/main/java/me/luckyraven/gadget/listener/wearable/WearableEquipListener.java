@@ -12,7 +12,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType.SlotType;
-import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -53,22 +52,6 @@ public class WearableEquipListener implements Listener {
 		if (permission != null && !permission.isEmpty() && !player.hasPermission(permission)) {
 			event.setCancelled(true);
 			player.sendMessage(ChatUtil.color("&cYou are not authorized to equip this armor."));
-		}
-	}
-
-	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-	public void onWearableDrop(PlayerDropItemEvent event) {
-		ItemStack dropped = event.getItemDrop().getItemStack();
-		if (!Wearable.isRegisteredWearable(dropped)) return;
-
-		String key = Wearable.getWearableKey(dropped);
-
-		if (key == null) return;
-
-		Wearable wearable = wearableService.getWearable(key);
-
-		if (wearable != null && !wearable.isDroppable()) {
-			event.setCancelled(true);
 		}
 	}
 

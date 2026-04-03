@@ -81,8 +81,6 @@ public class WearableAddon extends WearableService {
 			}
 
 			String       permission          = section.getString("Permission");
-			boolean      dropOnDeath         = section.getBoolean("Drop_On_Death", true);
-			boolean      droppable           = section.getBoolean("Droppable", true);
 			double       baseDamageReduction = section.getDouble("Base_Damage_Reduction", 0.0);
 			List<String> lore                = section.getStringList("Lore");
 
@@ -128,8 +126,6 @@ public class WearableAddon extends WearableService {
 			                            .permission(permission)
 			                            .material(material)
 			                            .name(name)
-			                            .dropOnDeath(dropOnDeath)
-			                            .droppable(droppable)
 			                            .lore(lore.isEmpty() ? null : lore)
 			                            .wearableKey(key)
 			                            .baseDamageReduction(Math.min(Math.max(baseDamageReduction, 0.0), 1.0))

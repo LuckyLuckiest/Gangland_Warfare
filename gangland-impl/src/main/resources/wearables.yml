@@ -18,8 +18,6 @@
 # Fields:
 #   Material            - Bukkit material name; must be an armor type
 #   Name                - display name (supports & color codes)
-#   Drop_On_Death       - whether the item drops on player death
-#   Droppable           - whether the player can manually drop the item
 #   Base_Damage_Reduction - flat damage reduction per piece (0.0–1.0, e.g. 0.10 = 10%)
 #   Leather_Color       - hex color string ("#RRGGBB") for leather armor; leave blank otherwise
 #   Lore                - list of lore lines
@@ -39,8 +37,6 @@ police_vest:
    Permission: "gangland.wearables.police_vest"
    Material: IRON_CHESTPLATE
    Name: "&7Police Vest"
-   Drop_On_Death: true
-   Droppable: true
    Base_Damage_Reduction: 0.10
    Leather_Color: ""
    Lore:
@@ -54,8 +50,6 @@ police_helmet:
    Permission: "gangland.wearables.police_helmet"
    Material: IRON_HELMET
    Name: "&7Police Helmet"
-   Drop_On_Death: true
-   Droppable: true
    Base_Damage_Reduction: 0.07
    Leather_Color: ""
    Lore:
@@ -68,8 +62,6 @@ gang_jacket:
    Permission: "gangland.wearables.gang_jacket"
    Material: LEATHER_CHESTPLATE
    Name: "&6Gang Jacket"
-   Drop_On_Death: true
-   Droppable: true
    Base_Damage_Reduction: 0.05
    Leather_Color: "#2B2B2B"
    Lore:
@@ -82,8 +74,6 @@ heavy_vest:
    Permission: "gangland.wearables.heavy_vest"
    Material: DIAMOND_CHESTPLATE
    Name: "&bHeavy Tactical Vest"
-   Drop_On_Death: false
-   Droppable: false
    Base_Damage_Reduction: 0.15
    Leather_Color: ""
    Lore:
@@ -99,8 +89,6 @@ jetpack:
    Permission: "gangland.wearables.jetpack"
    Material: IRON_CHESTPLATE
    Name: "&b&lJetpack"
-   Drop_On_Death: false
-   Droppable: false
    Base_Damage_Reduction: 0.05
    Leather_Color: ""
    Lore:

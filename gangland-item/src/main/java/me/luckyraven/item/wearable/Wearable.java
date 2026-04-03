@@ -46,9 +46,7 @@ public class Wearable {
 	private final String                      permission;
 	private final Material                    material;
 	private final String                      name;
-	private final boolean                     dropOnDeath;
 	private final List<String>                lore;
-	private final boolean                     droppable;
 	private final String                      wearableKey;
 	private final Map<WearableTrait, Integer> traits;
 	private final double                      baseDamageReduction;
@@ -133,8 +131,6 @@ public class Wearable {
 		               .wearableKey("__vanilla__" + item.getType().name())
 		               .baseDamageReduction(vanillaMaterialReduction(item.getType()))
 		               .traits(Collections.emptyMap())
-		               .dropOnDeath(true)
-		               .droppable(true)
 		               .temporary(true)
 		               .leatherColor(leatherColor)
 		               .build();
