@@ -240,6 +240,7 @@ public class Wearable {
 
 		// Stamp fuel NBT for jetpack wearables so they carry their own charge
 		if (fuelKey != null && !fuelKey.isEmpty() && maxFuel > 0) {
+			builder.addTag(FuelKey.FUEL_ID.getKey(), fuelKey);
 			builder.addTag(FuelKey.FUEL_CURRENT.getKey(), maxFuel);
 			builder.addTag(FuelKey.FUEL_MAX.getKey(), maxFuel);
 		}
