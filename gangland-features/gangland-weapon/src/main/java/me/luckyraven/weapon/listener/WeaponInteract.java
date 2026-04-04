@@ -42,6 +42,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -59,6 +60,7 @@ public class WeaponInteract implements Listener {
 	private final Map<UUID, FullAutoTask>                autoTasks;
 	private final Map<UUID, RepeatingTimer>              activeTasks;
 	private final Map<UUID, Long>                        meleeCooldowns;
+	private final Set<UUID>                              activeMeleeSwings;
 
 	public WeaponInteract(JavaPlugin plugin, WeaponService weaponService, RecoilCompatibility recoilCompatibility) {
 		this.plugin              = plugin;
@@ -69,6 +71,7 @@ public class WeaponInteract implements Listener {
 		this.autoTasks           = new ConcurrentHashMap<>();
 		this.activeTasks         = new ConcurrentHashMap<>();
 		this.meleeCooldowns      = new ConcurrentHashMap<>();
+		this.activeMeleeSwings   = ConcurrentHashMap.newKeySet();
 	}
 
 	@EventHandler
@@ -192,16 +195,26 @@ public class WeaponInteract implements Listener {
 		ItemStack item = player.getInventory().getItemInMainHand();
 		if (!weaponService.isWeapon(item)) return;
 
-		// cancel the default Minecraft attack damage for all weapon types
-		event.setCancelled(true);
-
+		// For melee weapons: cancel the vanilla attack and trigger MeleeAction directly.
+		// When the player clicks on an entity the client sends an attack-entity packet, which
+		// fires EntityDamageByEntityEvent but does NOT always fire PlayerInteractEvent.
+		// Running MeleeAction here ensures damage is applied regardless of which events arrive.
+		// The MeleeAction cooldown (ms-based) prevents double-damage if PlayerInteractEvent
+		// also fires in the same tick.
 		Weapon weapon = weaponService.validateAndGetWeapon(player, item);
-		if (weapon == null) return;
-
-		if (weapon instanceof MeleeWeapon meleeWeapon) {
-			boolean hit = new MeleeAction(meleeWeapon, recoilCompatibility, meleeCooldowns).activate(player);
-			if (hit) meleeWeapon.applyOnHitDurability(player, player.getInventory().getHeldItemSlot());
+		if (weapon instanceof MeleeWeapon melee) {
+			event.setCancelled(true);
+			UUID wUuid = melee.getUuid();
+			if (activeMeleeSwings.add(wUuid)) {
+				plugin.getServer().getScheduler().runTaskLater(plugin, () -> activeMeleeSwings.remove(wUuid), 1L);
+				boolean hit = new MeleeAction(melee, recoilCompatibility, meleeCooldowns).activate(player);
+				if (hit) melee.applyOnHitDurability(player, player.getInventory().getHeldItemSlot());
+			}
+			return;
 		}
+
+		// cancel the default Minecraft attack damage for all other weapon types.
+		event.setCancelled(true);
 	}
 
 	@EventHandler
@@ -251,8 +264,14 @@ public class WeaponInteract implements Listener {
 			}
 			case MeleeWeapon melee -> {
 				if (leftClick) {
-					boolean hit = new MeleeAction(melee, recoilCompatibility, meleeCooldowns).activate(player);
-					if (hit) melee.applyOnHitDurability(player, player.getInventory().getHeldItemSlot());
+					UUID wUuid = melee.getUuid();
+					if (activeMeleeSwings.add(wUuid)) {
+						plugin.getServer()
+						      .getScheduler()
+						      .runTaskLater(plugin, () -> activeMeleeSwings.remove(wUuid), 1L);
+						boolean hit = new MeleeAction(melee, recoilCompatibility, meleeCooldowns).activate(player);
+						if (hit) melee.applyOnHitDurability(player, player.getInventory().getHeldItemSlot());
+					}
 				}
 			}
 			case IncendiaryWeapon incendiary -> {
