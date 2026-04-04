@@ -106,6 +106,80 @@ public class Fuel {
 	}
 
 	/**
+	 * Updates the max fuel capacity on the given ItemStack's NBT. Also clamps current fuel if it would exceed the new
+	 * max. Works on any item that has fuel capacity (not limited to registered fuel items).
+	 *
+	 * @param item the item to update
+	 * @param max the new maximum fuel capacity (clamped to &ge; 0)
+	 *
+	 * @return the updated ItemStack
+	 */
+	public static ItemStack setMaxFuel(ItemStack item, int max) {
+		if (!hasFuelCapacity(item)) return item;
+
+		int newMax  = Math.max(0, max);
+		int current = readFuelCurrent(item);
+		int clamped = Math.min(current, newMax);
+
+		ItemBuilder builder = new ItemBuilder(item);
+		builder.addTag(FuelKey.FUEL_MAX.getKey(), newMax);
+		builder.addTag(FuelKey.FUEL_CURRENT.getKey(), clamped);
+		return builder.build();
+	}
+
+	// =========================================================================
+	// Raw NBT helpers (work on any item with fuel tags, no FUEL_ID required)
+	// =========================================================================
+
+	/**
+	 * Returns whether the given item has fuel capacity — i.e. carries a {@link FuelKey#FUEL_CURRENT} NBT tag. Unlike
+	 * {@link #isFuelItem}, this does not require the {@link FuelKey#FUEL_ID} tag and therefore also matches wearables
+	 * such as jetpacks that store fuel directly on the item.
+	 */
+	public static boolean hasFuelCapacity(@Nullable ItemStack item) {
+		if (item == null || item.getType().isAir()) return false;
+		return new ItemBuilder(item).hasNBTTag(FuelKey.FUEL_CURRENT.getKey());
+	}
+
+	/**
+	 * Reads {@link FuelKey#FUEL_CURRENT} from NBT without requiring a {@link FuelKey#FUEL_ID} tag.
+	 *
+	 * @return the raw tag value, or 0 if absent
+	 */
+	public static int readFuelCurrent(@Nullable ItemStack item) {
+		if (item == null || item.getType().isAir()) return 0;
+		return new ItemBuilder(item).getIntegerTagData(FuelKey.FUEL_CURRENT.getKey());
+	}
+
+	/**
+	 * Reads {@link FuelKey#FUEL_MAX} from NBT without requiring a {@link FuelKey#FUEL_ID} tag.
+	 *
+	 * @return the raw tag value, or 0 if absent
+	 */
+	public static int readFuelMax(@Nullable ItemStack item) {
+		if (item == null || item.getType().isAir()) return 0;
+		return new ItemBuilder(item).getIntegerTagData(FuelKey.FUEL_MAX.getKey());
+	}
+
+	/**
+	 * Writes {@link FuelKey#FUEL_CURRENT} to NBT, clamping to {@code [0, max]}. Does not require a
+	 * {@link FuelKey#FUEL_ID} tag — safe to use on wearables with embedded fuel.
+	 *
+	 * @param item the item to update
+	 * @param current the desired current fuel level
+	 *
+	 * @return the updated ItemStack
+	 */
+	public static ItemStack writeFuelCurrent(ItemStack item, int current) {
+		int max     = readFuelMax(item);
+		int clamped = max > 0 ? Math.max(0, Math.min(current, max)) : Math.max(0, current);
+
+		ItemBuilder builder = new ItemBuilder(item);
+		builder.addTag(FuelKey.FUEL_CURRENT.getKey(), clamped);
+		return builder.build();
+	}
+
+	/**
 	 * Stamps all fuel NBT tags onto an ItemStack. Called when building a new fuel unique item.
 	 *
 	 * @param builder the ItemBuilder to stamp onto

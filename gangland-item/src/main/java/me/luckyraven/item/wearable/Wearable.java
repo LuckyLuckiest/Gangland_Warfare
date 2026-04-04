@@ -2,6 +2,7 @@ package me.luckyraven.item.wearable;
 
 import lombok.Builder;
 import lombok.Getter;
+import me.luckyraven.item.fuel.FuelKey;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Color;
@@ -61,6 +62,7 @@ public class Wearable {
 	private final double ascendPower;
 	private final double glideDescentRate;
 	private final double maxSpeedY;
+	private final int    maxFuel;
 
 	/**
 	 * Extra generic damage reduction from vanilla {@code PROTECTION} enchantment. Each level contributes 1.5 %.
@@ -234,6 +236,12 @@ public class Wearable {
 					leatherMeta.setColor(leatherColor);
 				}
 			}));
+		}
+
+		// Stamp fuel NBT for jetpack wearables so they carry their own charge
+		if (fuelKey != null && !fuelKey.isEmpty() && maxFuel > 0) {
+			builder.addTag(FuelKey.FUEL_CURRENT.getKey(), maxFuel);
+			builder.addTag(FuelKey.FUEL_MAX.getKey(), maxFuel);
 		}
 
 		return builder.build();
