@@ -11,11 +11,10 @@ import lombok.RequiredArgsConstructor;
 public enum CarKey {
 
 	CAR_ID("car"),
-	CAR_FUEL("car_fuel"),
-	CAR_MAX_FUEL("car_max_fuel"),
 	CAR_OWNER("car_owner"),
 	CAR_DURABILITY("car_durability"),
-	CAR_MAX_DURABILITY("car_max_durability");
+	CAR_MAX_DURABILITY("car_max_durability"),
+	CAR_EXHAUST_SIDE("car_exhaust_side");
 
 	private final String key;
 }

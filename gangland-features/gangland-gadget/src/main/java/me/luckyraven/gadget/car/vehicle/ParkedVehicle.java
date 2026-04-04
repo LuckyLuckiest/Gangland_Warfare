@@ -2,7 +2,9 @@ package me.luckyraven.gadget.car.vehicle;
 
 import lombok.Getter;
 import me.luckyraven.gadget.car.Car;
+import me.luckyraven.gadget.car.ExhaustSide;
 import me.luckyraven.gadget.car.vehicle.entity.VehicleEntity;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -16,15 +18,19 @@ public class ParkedVehicle {
 	private final VehicleEntity entity;
 	private final Car           car;
 	private final UUID          placerUUID;
+	@Nullable
+	private final ExhaustSide   exhaustSide;
 	private       int           fuel;
 	private       int           durability;
 
-	public ParkedVehicle(VehicleEntity entity, Car car, UUID placerUUID, int fuel, int durability) {
-		this.entity     = entity;
-		this.car        = car;
-		this.placerUUID = placerUUID;
-		this.fuel       = fuel;
-		this.durability = durability;
+	public ParkedVehicle(VehicleEntity entity, Car car, UUID placerUUID, int fuel, int durability,
+	                     @Nullable ExhaustSide exhaustSide) {
+		this.entity      = entity;
+		this.car         = car;
+		this.placerUUID  = placerUUID;
+		this.fuel        = fuel;
+		this.durability  = durability;
+		this.exhaustSide = exhaustSide;
 	}
 
 	public void damage(int amount) {

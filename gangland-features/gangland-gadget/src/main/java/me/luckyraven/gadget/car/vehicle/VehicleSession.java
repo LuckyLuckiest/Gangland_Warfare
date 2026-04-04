@@ -4,7 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarKey;
+import me.luckyraven.gadget.car.ExhaustSide;
 import me.luckyraven.gadget.car.vehicle.entity.VehicleEntity;
+import me.luckyraven.item.fuel.FuelKey;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Bukkit;
@@ -16,6 +18,8 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
+
+import static me.luckyraven.gadget.car.ExhaustSide.random;
 
 /**
  * Represents an active driving session — a player currently operating a car in the world.
@@ -31,6 +35,7 @@ public class VehicleSession {
 	private final UUID                driverUUID;
 	private final BossBar             healthBar;
 	private final int                 maxFuel;
+	private final ExhaustSide         exhaustSide;
 	@Setter
 	private       Car                 car;
 	@Setter
@@ -50,7 +55,7 @@ public class VehicleSession {
 	 * @param maxFuel maximum fuel capacity from the car's fuel definition
 	 */
 	public VehicleSession(VehicleEntity entity, Car car, Player driver, int initialDurability, int initialFuel,
-	                      int maxFuel) {
+	                      int maxFuel, @Nullable ExhaustSide exhaustSide) {
 		this.entity            = entity;
 		this.car               = car;
 		this.driver            = driver;
@@ -58,6 +63,7 @@ public class VehicleSession {
 		this.currentDurability = initialDurability;
 		this.currentFuel       = initialFuel;
 		this.maxFuel           = maxFuel;
+		this.exhaustSide       = exhaustSide != null ? exhaustSide : random();
 
 		this.healthBar = Bukkit.createBossBar(buildHealthTitle(), BarColor.RED, BarStyle.SOLID);
 		this.healthBar.setProgress(durabilityProgress());
@@ -121,8 +127,9 @@ public class VehicleSession {
 		ItemBuilder builder = new ItemBuilder(item);
 
 		builder.addTag(CarKey.CAR_DURABILITY.getKey(), currentDurability);
-		builder.addTag(CarKey.CAR_FUEL.getKey(), currentFuel);
+		builder.addTag(FuelKey.FUEL_CURRENT.getKey(), currentFuel);
 		builder.addTag(CarKey.CAR_OWNER.getKey(), driverUUID.toString());
+		builder.addTag(CarKey.CAR_EXHAUST_SIDE.getKey(), exhaustSide.name());
 
 		return builder.build();
 	}
