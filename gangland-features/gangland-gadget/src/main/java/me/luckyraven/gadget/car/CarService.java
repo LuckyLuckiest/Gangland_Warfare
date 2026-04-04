@@ -161,8 +161,7 @@ public class CarService {
 		VehicleEntity entity = parked.getEntity();
 		Car           car    = parked.getCar();
 
-		Fuel fuelDef = car.isFuelEnabled() && car.getFuelKey() != null ? fuelService.getFuel(car.getFuelKey()) : null;
-		int  maxFuel = fuelDef != null ? fuelDef.getMaxFuel() : 0;
+		int maxFuel = car.getMaxFuel();
 
 		VehicleSession session = new VehicleSession(entity, car, player, parked.getDurability(), parked.getFuel(),
 		                                            maxFuel, parked.getExhaustSide());
