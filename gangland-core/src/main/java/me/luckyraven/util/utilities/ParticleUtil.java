@@ -188,14 +188,6 @@ public class ParticleUtil {
 		world.spawnParticle(explosion, center, 1, 0, 0, 0, 0, null);
 	}
 
-	public static void spawnFireSpray(Location eye, Vector direction, double range) {
-		Particle flame = XParticle.FLAME.get();
-		if (flame == null) flame = Particle.FLAME;
-
-		Location target = eye.clone().add(direction.clone().normalize().multiply(range));
-		spawnLine(eye, target, flame, Math.max(1, (int) (range * 2)), null);
-	}
-
 	/**
 	 * Spawns two flame trails from behind the player's back, simulating jetpack exhaust. Trails originate from slightly
 	 * behind and below the player's shoulders, offset left and right.
@@ -245,6 +237,65 @@ public class ParticleUtil {
 		if (smoke == null) smoke = Particle.SMOKE;
 
 		world.spawnParticle(smoke, loc.clone().add(0, 0.5, 0), 1, 0.1, 0.1, 0.1, 0.005, null);
+	}
+
+	/**
+	 * Spawns thick tire-smoke clouds at both rear wheels during a car burnout (W+S held simultaneously).
+	 *
+	 * @param vehicleLocation current location of the vehicle entity
+	 * @param yaw current heading of the vehicle in degrees
+	 */
+	public static void spawnBurnoutSmoke(Location vehicleLocation, float yaw) {
+		World world = vehicleLocation.getWorld();
+		if (world == null) return;
+
+		Particle smoke = XParticle.SMOKE.get();
+		if (smoke == null) smoke = Particle.SMOKE;
+
+		double radians = Math.toRadians(yaw);
+		double behindX = Math.sin(radians) * 0.7;
+		double behindZ = -Math.cos(radians) * 0.7;
+		// Left/right offset perpendicular to the heading
+		double rightX = Math.cos(radians) * 0.4;
+		double rightZ = Math.sin(radians) * 0.4;
+
+		Location leftWheel  = vehicleLocation.clone().add(behindX - rightX, 0.1, behindZ - rightZ);
+		Location rightWheel = vehicleLocation.clone().add(behindX + rightX, 0.1, behindZ + rightZ);
+
+		world.spawnParticle(smoke, leftWheel, 5, 0.12, 0.08, 0.12, 0.02, null);
+		world.spawnParticle(smoke, rightWheel, 5, 0.12, 0.08, 0.12, 0.02, null);
+	}
+
+	/**
+	 * Spawns smoke exhaust particles at the rear of a car. Pass {@code leftNozzle} and/or {@code rightNozzle} as
+	 * {@code true} to emit from that side; at least one must be true.
+	 *
+	 * @param vehicleLocation current location of the vehicle entity
+	 * @param yaw current heading of the vehicle in degrees
+	 * @param leftNozzle emit from the left exhaust nozzle
+	 * @param rightNozzle emit from the right exhaust nozzle
+	 */
+	public static void spawnCarExhaust(Location vehicleLocation, float yaw, boolean leftNozzle, boolean rightNozzle) {
+		World world = vehicleLocation.getWorld();
+		if (world == null) return;
+
+		Particle smoke = XParticle.SMOKE.get();
+		if (smoke == null) smoke = Particle.SMOKE;
+
+		double radians = Math.toRadians(yaw);
+		double behindX = Math.sin(radians) * 0.7;
+		double behindZ = -Math.cos(radians) * 0.7;
+		double rightX  = Math.cos(radians) * 0.3;
+		double rightZ  = Math.sin(radians) * 0.3;
+
+		if (leftNozzle) {
+			world.spawnParticle(smoke, vehicleLocation.clone().add(behindX + rightX, 0.3, behindZ + rightZ),
+			                    2, 0.05, 0.05, 0.05, 0.008, null);
+		}
+		if (rightNozzle) {
+			world.spawnParticle(smoke, vehicleLocation.clone().add(behindX - rightX, 0.3, behindZ - rightZ),
+			                    2, 0.05, 0.05, 0.05, 0.008, null);
+		}
 	}
 
 	public static void createBloodSplash(Entity entity, double damage) {
