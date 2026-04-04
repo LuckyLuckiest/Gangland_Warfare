@@ -96,48 +96,6 @@ public abstract class ListenerService {
 	}
 
 	/**
-	 * Scans and registers components annotated with @Component for dependency injection.
-	 *
-	 * @param basePackage The base package to scan
-	 * @param plugin The plugin instance
-	 */
-	@SuppressWarnings("unchecked")
-	public void scanAndRegisterComponents(String basePackage, JavaPlugin plugin) {
-		try {
-			ClassLoader classLoader = plugin.getClass().getClassLoader();
-			String      path        = basePackage.replace('.', '/');
-
-			Set<Class<?>> classes = ReflectionUtil.findClasses(path, classLoader);
-
-			for (Class<?> clazz : classes) {
-				if (!clazz.isAnnotationPresent(ListenerComponent.class)) continue;
-
-				ListenerComponent annotation = clazz.getAnnotation(ListenerComponent.class);
-				String            condition  = annotation.condition();
-
-				// check if the condition is met
-				if (!condition.isEmpty()) {
-					boolean invoke = invokeMethod(condition);
-					if (!invoke) continue;
-				}
-
-				// Create an instance with autowiring
-				try {
-					Object instance = dependencyContainer.createInstance(clazz, plugin);
-
-					dependencyContainer.registerInstance((Class<? super Object>) clazz, instance);
-
-					log.info("Registered component: {}", clazz.getName());
-				} catch (Exception exception) {
-					log.warn("Failed to register component {}: {}", clazz.getName(), exception.getMessage());
-				}
-			}
-		} catch (Exception exception) {
-			log.warn("Error scanning components: {}", exception.getMessage());
-		}
-	}
-
-	/**
 	 * Attempts to instantiate a listener with various constructor patterns. Now with autowiring support.
 	 */
 	private Listener instantiateListener(Class<?> clazz, JavaPlugin plugin) throws Exception {
