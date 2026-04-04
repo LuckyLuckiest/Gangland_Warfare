@@ -1,11 +1,12 @@
 package me.luckyraven.command.sub.debug;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.lootchest.LootChestWandTag;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.command.CommandHandler;
 import me.luckyraven.util.datastructure.JsonFormatter;
 import me.luckyraven.weapon.WeaponTag;
 import org.bukkit.command.CommandSender;
@@ -15,7 +16,8 @@ import org.bukkit.inventory.ItemStack;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public final class ReadNBTCommand extends CommandHandler {
+@CommandHandler
+public final class ReadNBTCommand extends Command {
 
 	public ReadNBTCommand(Gangland gangland) {
 		super(gangland, "nbt", true, "read-nbt", "readnbt");

@@ -1,16 +1,18 @@
 package me.luckyraven.command.sub.debug;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
+import me.luckyraven.util.command.CommandHandler;
 import me.luckyraven.util.timer.SequenceTimer;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public final class TimerCommand extends CommandHandler {
+@CommandHandler
+public final class TimerCommand extends Command {
 
 	private final Map<CommandSender, SequenceTimer> timerMap;
 	private final Map<CommandSender, SequenceTimer> startedTimers;

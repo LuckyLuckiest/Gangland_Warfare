@@ -2,7 +2,7 @@ package me.luckyraven.command.sub.waypoint;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
@@ -15,6 +15,7 @@ import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TimeMessages;
+import me.luckyraven.util.command.CommandHandler;
 import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.utilities.TimeUtil;
 import org.bukkit.command.CommandSender;
@@ -22,7 +23,8 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 
-public final class TeleportCommand extends CommandHandler {
+@CommandHandler
+public final class TeleportCommand extends Command {
 
 	private final Map<Player, Waypoint>       reconfirm;
 	private final Map<Player, CountdownTimer> reconfirmTimer;

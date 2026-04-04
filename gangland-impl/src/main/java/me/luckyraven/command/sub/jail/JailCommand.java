@@ -1,17 +1,19 @@
 package me.luckyraven.command.sub.jail;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public final class JailCommand extends CommandHandler {
+@CommandHandler
+public final class JailCommand extends Command {
 
 	public JailCommand(Gangland gangland) {
 		super(gangland, "jail", false);

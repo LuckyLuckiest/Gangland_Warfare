@@ -1,7 +1,7 @@
 package me.luckyraven.command.sub.debug;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.gang.Gang;
@@ -14,6 +14,7 @@ import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -24,7 +25,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
-public final class ComponentExecutorCommand extends CommandHandler {
+@CommandHandler
+public final class ComponentExecutorCommand extends Command {
 
 	public ComponentExecutorCommand(Gangland gangland) {
 		super(gangland, "option", false);

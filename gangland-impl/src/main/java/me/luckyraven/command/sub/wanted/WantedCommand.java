@@ -1,17 +1,19 @@
 package me.luckyraven.command.sub.wanted;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
 
-public final class WantedCommand extends CommandHandler {
+@CommandHandler
+public final class WantedCommand extends Command {
 
 	public WantedCommand(Gangland gangland) {
 		super(gangland, "wanted", true);

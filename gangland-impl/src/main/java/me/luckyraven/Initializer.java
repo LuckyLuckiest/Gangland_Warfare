@@ -6,28 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.CommandTabCompleter;
 import me.luckyraven.command.data.InformationManager;
-import me.luckyraven.command.sub.*;
-import me.luckyraven.command.sub.bank.BankCommand;
-import me.luckyraven.command.sub.bounty.BountyCommand;
-import me.luckyraven.command.sub.car.CarCommand;
-import me.luckyraven.command.sub.cops.CopCommand;
-import me.luckyraven.command.sub.cuff.CuffCommand;
-import me.luckyraven.command.sub.cuff.UncuffCommand;
-import me.luckyraven.command.sub.debug.ComponentExecutorCommand;
-import me.luckyraven.command.sub.debug.DebugCommand;
-import me.luckyraven.command.sub.debug.ReadNBTCommand;
-import me.luckyraven.command.sub.debug.TimerCommand;
-import me.luckyraven.command.sub.fuel.FuelCommand;
-import me.luckyraven.command.sub.gang.GangCommand;
-import me.luckyraven.command.sub.item.ItemCommand;
-import me.luckyraven.command.sub.jail.JailCommand;
-import me.luckyraven.command.sub.lootchest.LootChestWandCommand;
-import me.luckyraven.command.sub.rank.RankCommand;
-import me.luckyraven.command.sub.wanted.WantedCommand;
-import me.luckyraven.command.sub.waypoint.TeleportCommand;
-import me.luckyraven.command.sub.waypoint.WaypointCommand;
-import me.luckyraven.command.sub.weapon.AmmunitionCommand;
-import me.luckyraven.command.sub.weapon.WeaponCommand;
 import me.luckyraven.compatibility.CompatibilitySetup;
 import me.luckyraven.compatibility.CompatibilityWorker;
 import me.luckyraven.compatibility.VersionSetup;
@@ -736,50 +714,8 @@ public final class Initializer {
 
 		if (command == null) return;
 
-		// initial command
 		command.setExecutor(commandManager);
-
-		// sub commands
-		// default plugin commands
-		commandManager.addCommand(new BalanceCommand(gangland));
-		commandManager.addCommand(new BankCommand(gangland));
-		commandManager.addCommand(new EconomyCommand(gangland));
-		commandManager.addCommand(new RankCommand(gangland));
-		commandManager.addCommand(new BountyCommand(gangland));
-		commandManager.addCommand(new LevelCommand(gangland));
-		commandManager.addCommand(new WaypointCommand(gangland));
-		commandManager.addCommand(new TeleportCommand(gangland));
-		commandManager.addCommand(new WantedCommand(gangland));
-		commandManager.addCommand(new WeaponCommand(gangland));
-		commandManager.addCommand(new AmmunitionCommand(gangland));
-		commandManager.addCommand(new ItemCommand(gangland));
-		commandManager.addCommand(new CarCommand(gangland));
-		commandManager.addCommand(new FuelCommand(gangland));
-		commandManager.addCommand(new DownloadResourceCommand(gangland));
-		commandManager.addCommand(new LootChestWandCommand(gangland));
-		commandManager.addCommand(new CuffCommand(gangland));
-		commandManager.addCommand(new UncuffCommand(gangland));
-		commandManager.addCommand(new JailCommand(gangland));
-		commandManager.addCommand(new CopCommand(gangland));
-		commandManager.addCommand(new RespawnCommand(gangland));
-
-		// gang commands
-		if (Settings.isGangEnabled()) {
-			commandManager.addCommand(new GangCommand(gangland));
-		}
-
-		// debug commands
-		commandManager.addCommand(new DebugCommand(gangland));
-		commandManager.addCommand(new ComponentExecutorCommand(gangland));
-		commandManager.addCommand(new ReadNBTCommand(gangland));
-		commandManager.addCommand(new ReloadCommand(gangland));
-		commandManager.addCommand(new TimerCommand(gangland));
-		commandManager.addCommand(new DownloadPluginCommand(gangland, Gangland.SHORT_PREFIX));
-
-		// Needs to be the final command to add all the help information
-		commandManager.addCommand(new HelpCommand(gangland));
-
-		// initialize the tab completer
+		commandManager.scanAndRegisterCommands("me.luckyraven.command.sub", gangland.getClass().getClassLoader());
 		command.setTabCompleter(new CommandTabCompleter(CommandManager.getCommands()));
 	}
 }

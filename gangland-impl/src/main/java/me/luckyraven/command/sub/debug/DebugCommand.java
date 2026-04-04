@@ -5,7 +5,7 @@ import com.cryptomorin.xseries.particles.XParticle;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.gang.Gang;
@@ -25,6 +25,7 @@ import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.util.color.Color;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
+import me.luckyraven.util.command.CommandHandler;
 import me.luckyraven.util.datastructure.JsonFormatter;
 import me.luckyraven.util.placeholder.PlaceholderHandler;
 import me.luckyraven.util.ray.RayTrace;
@@ -43,7 +44,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public final class DebugCommand extends CommandHandler {
+@CommandHandler
+public final class DebugCommand extends Command {
 
 	public DebugCommand(Gangland gangland) {
 		super(gangland, "debug", false);
@@ -254,11 +256,11 @@ public final class DebugCommand extends CommandHandler {
 				Fill   fill  = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 
 				ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
-													   Settings.getNextPage());
+				                                       Settings.getNextPage());
 
 				MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getGangland(), player, items, title,
-																					false, false, fill, buttonTags,
-																					null);
+				                                                                    false, false, fill, buttonTags,
+				                                                                    null);
 
 				if (multi == null) return;
 
@@ -299,9 +301,9 @@ public final class DebugCommand extends CommandHandler {
 	private @NotNull Argument getPerm() {
 		return new Argument(getGangland(), "perms", getArgumentTree(), (argument, sender, args) -> {
 			String[] array = getGangland().getInitializer()
-										  .getPermissionManager()
-										  .getPermissions()
-										  .toArray(String[]::new);
+			                              .getPermissionManager()
+			                              .getPermissions()
+			                              .toArray(String[]::new);
 			sender.sendMessage(array);
 		});
 	}
@@ -309,7 +311,7 @@ public final class DebugCommand extends CommandHandler {
 	private @NotNull Argument getPermOptional() {
 		return new Argument(getGangland(), "bukkit", getArgumentTree(), (argument, sender, args) -> {
 			String[] permissions = Bukkit.getPluginManager()
-										 .getPermissions()
+			                             .getPermissions()
 					.stream()
 					.map(Permission::getName)
 					.filter(name -> name.startsWith(Gangland.FULL_PREFIX))
@@ -370,8 +372,8 @@ public final class DebugCommand extends CommandHandler {
 				user.sendMessage(user.getInventories()
 										 .stream()
 										 .map(InventoryHandler::getTitle)
-										 .map(NamespacedKey::getKey)
-										 .toArray(String[]::new));
+						                 .map(NamespacedKey::getKey)
+						                 .toArray(String[]::new));
 			} else {
 				for (User<Player> user : getGangland().getInitializer().getUserManager().getUsers().values()) {
 
@@ -423,9 +425,9 @@ public final class DebugCommand extends CommandHandler {
 	private @NotNull Argument getVersion() {
 		return new Argument(getGangland(), "version", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage("Server version: " + Bukkit.getVersion(), "Bukkit version: " + Bukkit.getBukkitVersion(),
-							   "Plugin version: " + getGangland().getDescription().getVersion(),
-							   "API version: " + getGangland().getDescription().getAPIVersion(),
-							   "Bukkit version: " + Bukkit.getServer().getClass().getPackage().getName());
+			                   "Plugin version: " + getGangland().getDescription().getVersion(),
+			                   "API version: " + getGangland().getDescription().getAPIVersion(),
+			                   "Bukkit version: " + Bukkit.getServer().getClass().getPackage().getName());
 
 			if (!(sender instanceof Player player && getGangland().getViaAPI() != null)) return;
 
@@ -450,8 +452,8 @@ public final class DebugCommand extends CommandHandler {
 			if (location != null) {
 				for (int i = 0; i < 100; i++) {
 					player.getWorld()
-						  .spawnParticle(Objects.requireNonNull(XParticle.DUST.get()), location, 50,
-										 new Particle.DustOptions(Color.RED.getBukkitColor(), 0.5F));
+					      .spawnParticle(Objects.requireNonNull(XParticle.DUST.get()), location, 50,
+					                     new Particle.DustOptions(Color.RED.getBukkitColor(), 0.5F));
 				}
 
 				for (Entity entity : player.getWorld().getNearbyEntities(location, x, y, z)) {
@@ -470,8 +472,8 @@ public final class DebugCommand extends CommandHandler {
 					Location blockLocation = block.getLocation();
 
 					CountdownTimer timer = new CountdownTimer(getGangland(), 0L, 0L, 40, null,
-															  t -> world.playEffect(blockLocation, Effect.STEP_SOUND,
-																					block.getType()), null);
+					                                          t -> world.playEffect(blockLocation, Effect.STEP_SOUND,
+					                                                                block.getType()), null);
 
 					timer.start(false);
 				}

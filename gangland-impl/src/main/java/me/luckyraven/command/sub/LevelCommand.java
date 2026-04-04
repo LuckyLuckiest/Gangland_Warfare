@@ -1,7 +1,7 @@
 package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
@@ -11,6 +11,7 @@ import me.luckyraven.events.user.UserLevelUpEvent;
 import me.luckyraven.features.level.Level;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -18,7 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public final class LevelCommand extends CommandHandler {
+@CommandHandler
+public final class LevelCommand extends Command {
 
 	public LevelCommand(Gangland gangland) {
 		super(gangland, "level", true);

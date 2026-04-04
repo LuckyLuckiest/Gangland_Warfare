@@ -2,7 +2,7 @@ package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.Initializer;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
@@ -14,6 +14,7 @@ import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -25,7 +26,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public final class BalanceCommand extends CommandHandler {
+@CommandHandler
+public final class BalanceCommand extends Command {
 
 	private final UserManager<Player> userManager;
 

@@ -1,15 +1,17 @@
 package me.luckyraven.command.sub.car;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public final class CarCommand extends CommandHandler {
+@CommandHandler
+public final class CarCommand extends Command {
 
 	public CarCommand(Gangland gangland) {
 		super(gangland, "car", true, "cars");

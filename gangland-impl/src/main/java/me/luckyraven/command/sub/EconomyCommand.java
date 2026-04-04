@@ -1,7 +1,7 @@
 package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
@@ -10,6 +10,7 @@ import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -22,7 +23,8 @@ import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public final class EconomyCommand extends CommandHandler {
+@CommandHandler
+public final class EconomyCommand extends Command {
 
 	public EconomyCommand(Gangland gangland) {
 		super(gangland, "economy", false, "eco");

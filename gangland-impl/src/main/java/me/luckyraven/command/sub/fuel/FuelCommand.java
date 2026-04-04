@@ -1,15 +1,17 @@
 package me.luckyraven.command.sub.fuel;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public final class FuelCommand extends CommandHandler {
+@CommandHandler
+public final class FuelCommand extends Command {
 
 	public FuelCommand(Gangland gangland) {
 		super(gangland, "fuel", true, "fuels");

@@ -10,15 +10,18 @@ import me.luckyraven.command.sub.debug.DebugCommand;
 import me.luckyraven.command.sub.debug.ReadNBTCommand;
 import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.file.configuration.Messages;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.UnhandledError;
-import org.bukkit.command.Command;
+import me.luckyraven.util.command.CommandService;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -26,17 +29,17 @@ import java.util.stream.IntStream;
 import static me.luckyraven.util.GanglandChatUtil.color;
 
 @CustomLog
-public final class CommandManager implements CommandExecutor {
+public final class CommandManager extends CommandService<Command> implements CommandExecutor {
 
 	// classes that shouldn't be displayed in tab completion
 	@Getter
-	private static final List<Class<? extends CommandHandler>> filters = Arrays.asList(DebugCommand.class,
-	                                                                                   ComponentExecutorCommand.class,
-	                                                                                   ReadNBTCommand.class,
-	                                                                                   TimerCommand.class,
-	                                                                                   DownloadPluginCommand.class);
+	private static final List<Class<? extends Command>> filters = Arrays.asList(DebugCommand.class,
+	                                                                            ComponentExecutorCommand.class,
+	                                                                            ReadNBTCommand.class,
+	                                                                            TimerCommand.class,
+	                                                                            DownloadPluginCommand.class);
 
-	private static final Map<String, CommandHandler> commands = new HashMap<>();
+	private static final Map<String, Command> commands = new HashMap<>();
 
 	private final Gangland gangland;
 	private final String   fullPrefix;
@@ -48,10 +51,10 @@ public final class CommandManager implements CommandExecutor {
 		this.shortPrefix = shortPrefix;
 	}
 
-	public static List<CommandHandler> getPermissibleCommands(CommandSender sender) {
-		List<CommandHandler> commandHandlers = new ArrayList<>();
+	public static List<Command> getPermissibleCommands(CommandSender sender) {
+		List<Command> commands = new ArrayList<>();
 
-		for (CommandHandler handler : commands.values()) {
+		for (Command handler : CommandManager.commands.values()) {
 			// filter the commands for non-dev users
 			if (!isDev(sender)) {
 				if (filters.stream().anyMatch(filterClass -> filterClass.isInstance(handler))) continue;
@@ -60,13 +63,13 @@ public final class CommandManager implements CommandExecutor {
 			String permission = handler.getPermission();
 
 			// check if the user has the permission to suggest the tab completion
-			if (permission.isEmpty() || sender.hasPermission(handler.getPermission())) commandHandlers.add(handler);
+			if (permission.isEmpty() || sender.hasPermission(handler.getPermission())) commands.add(handler);
 		}
 
-		return commandHandlers;
+		return commands;
 	}
 
-	public static Map<String, CommandHandler> getCommands() {
+	public static Map<String, Command> getCommands() {
 		return new HashMap<>(commands);
 	}
 
@@ -82,8 +85,20 @@ public final class CommandManager implements CommandExecutor {
 	}
 
 	@Override
-	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
-	                         @NotNull String[] args) {
+	public boolean invokeCondition(String condition) throws InvocationTargetException, IllegalAccessException {
+		Method method = Settings.getSetting(condition);
+
+		if (method != null && (method.getReturnType().getSimpleName().equalsIgnoreCase("boolean") ||
+		                       method.getReturnType() == Boolean.class)) {
+			return (boolean) method.invoke(null);
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean onCommand(@NotNull CommandSender sender, @NotNull org.bukkit.command.Command command,
+	                         @NotNull String label, @NotNull String[] args) {
 		try {
 			String mainCommandPermission = String.format("%s.command.main", fullPrefix.toLowerCase());
 
@@ -99,7 +114,7 @@ public final class CommandManager implements CommandExecutor {
 
 			boolean match = false;
 
-			for (Map.Entry<String, CommandHandler> entry : commands.entrySet()) {
+			for (Map.Entry<String, Command> entry : commands.entrySet()) {
 				if (!(entry.getKey().equalsIgnoreCase(args[0]) ||
 				      entry.getValue().getAlias().contains(args[0].toLowerCase()))) continue;
 
@@ -114,15 +129,15 @@ public final class CommandManager implements CommandExecutor {
 				sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_DONT_EXIST.toString(),
 				                                                 String.format("/%s %s", label, Arrays.asList(args))));
 
-				List<CommandHandler> commandHandlers = getPermissibleCommands(sender);
+				List<Command> commands = getPermissibleCommands(sender);
 
-				Set<String> dictionary = commandHandlers.stream()
-						.map(CommandHandler::getAlias)
+				Set<String> dictionary = commands.stream()
+						.map(Command::getAlias)
 						.flatMap(Collection::stream)
 						.filter(s -> !s.equals(Argument.OPTIONAL_ARGUMENT))
 						.collect(Collectors.toSet());
 
-				dictionary.addAll(commandHandlers.stream()
+				dictionary.addAll(commands.stream()
 										  .map(handler -> handler.getArgument().getArguments()[0])
 						                  .collect(Collectors.toSet()));
 
@@ -139,7 +154,7 @@ public final class CommandManager implements CommandExecutor {
 		return true;
 	}
 
-	public void addCommand(CommandHandler sub) {
+	public void addCommand(Command sub) {
 		commands.put(sub.getLabel(), sub);
 	}
 
@@ -161,7 +176,21 @@ public final class CommandManager implements CommandExecutor {
 		cs.sendMessage("");
 	}
 
-	private void onHelp(Map.Entry<String, CommandHandler> entry, CommandSender sender, String[] args) {
+	@Override
+	protected Command createInstance(Class<?> clazz) throws Exception {
+		if (!Command.class.isAssignableFrom(clazz)) {
+			throw new IllegalArgumentException(clazz.getName() + " does not extend CommandHandler");
+		}
+
+		return (Command) clazz.getConstructor(Gangland.class).newInstance(gangland);
+	}
+
+	@Override
+	protected void registerCommand(Command command) {
+		addCommand(command);
+	}
+
+	private void onHelp(Map.Entry<String, Command> entry, CommandSender sender, String[] args) {
 		if (entry.getValue().getHelpInfo().size() == 0) return;
 
 		// Get the page number if it exists

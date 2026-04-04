@@ -1,16 +1,18 @@
 package me.luckyraven.command.sub.rank;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public final class RankCommand extends CommandHandler {
+@CommandHandler
+public final class RankCommand extends Command {
 
 	public RankCommand(Gangland gangland) {
 		super(gangland, "rank", false);
@@ -31,27 +33,12 @@ public final class RankCommand extends CommandHandler {
 
 	@Override
 	protected void initializeArguments() {
-		// create rank
-		// glw rank create <name>
-		Argument create = new RankCreateCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// delete rank
-		// glw rank delete <name>
-		Argument delete = new RankDeleteCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// glw rank list
-		Argument list = new RankListCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// glw rank permission <add/remove> <name> <permission>
-		Argument permission = new RankPermissionCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// glw rank info <name>
-		Argument info = new RankInfoCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// glw rank parent <add/remove> <name> <parent>
-		Argument parent = new RankParentCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// glw rank traverse
+		Argument create       = new RankCreateCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument delete       = new RankDeleteCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument list         = new RankListCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument permission   = new RankPermissionCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument info         = new RankInfoCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument parent       = new RankParentCommand(getGangland(), getArgumentTree(), getArgument());
 		Argument traverseTree = new RankTraverseCommand(getGangland(), getArgumentTree(), getArgument());
 
 		// add sub arguments

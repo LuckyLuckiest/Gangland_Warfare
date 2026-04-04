@@ -5,7 +5,6 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.util.datastructure.Tree;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
@@ -19,26 +18,27 @@ import java.util.Map;
 @RequiredArgsConstructor
 public final class CommandTabCompleter implements TabCompleter {
 
-	private final Map<String, CommandHandler> commandMap;
+	private final Map<String, Command> commandMap;
 
 	@Nullable
 	@Override
-	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
-									  @NotNull String[] args) {
+	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull org.bukkit.command.Command command,
+	                                  @NotNull String label,
+	                                  @NotNull String[] args) {
 		// commands according to user permission
-		List<CommandHandler> commandHandlers = CommandManager.getPermissibleCommands(sender);
+		List<Command> commands = CommandManager.getPermissibleCommands(sender);
 
 		// display all the initial arguments
 		if (args.length == 1)
-			return collectedArguments(args, commandHandlers.stream().map(CommandHandler::getLabel).toList());
+			return collectedArguments(args, commands.stream().map(Command::getLabel).toList());
 
-		CommandHandler commandHandler = commandMap.get(args[0].toLowerCase());
+		Command commandHandler = commandMap.get(args[0].toLowerCase());
 		// this won't solve the case of multiple optional values but would definitely stop the tab completion
 		// end the command tab completion if the size was greater than the height of the tree
 		if (commandHandler != null && args.length > commandHandler.getArgumentTree().height()) return null;
 
 		// find the argument last valid argument
-		Argument arg = findArgument(args, commandHandlers);
+		Argument arg = findArgument(args, commands);
 		if (arg == null) return null;
 
 		List<String> arguments = new ArrayList<>();
@@ -62,8 +62,8 @@ public final class CommandTabCompleter implements TabCompleter {
 		return arguments.stream().map(String::toLowerCase).filter(arg -> arg.contains(lastArg)).distinct().toList();
 	}
 
-	private Argument findArgument(String[] args, List<CommandHandler> commandHandlers) {
-		for (Tree<Argument> tree : commandHandlers.stream().map(CommandHandler::getArgumentTree).toList()) {
+	private Argument findArgument(String[] args, List<Command> commands) {
+		for (Tree<Argument> tree : commands.stream().map(Command::getArgumentTree).toList()) {
 			// We want to find the parent of the argument being typed
 			// so we can show its children as completions
 			int targetDepth = args.length - 2;

@@ -1,24 +1,22 @@
 package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.DoubleArgument;
 import me.luckyraven.updater.UpdateChecker;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-public final class DownloadPluginCommand extends CommandHandler {
+@CommandHandler
+public final class DownloadPluginCommand extends Command {
 
-	private final String shortPrefix;
-
-	public DownloadPluginCommand(Gangland gangland, String shortPrefix) {
+	public DownloadPluginCommand(Gangland gangland) {
 		super(gangland, "update", false);
-
-		this.shortPrefix = shortPrefix;
 		var list = getCommands().entrySet()
 				.stream()
 				.filter(entry -> entry.getKey().startsWith("update"))
@@ -38,7 +36,7 @@ public final class DownloadPluginCommand extends CommandHandler {
 
 		if (newUpdate) {
 			String message = GanglandChatUtil.commandMessage(
-					"There is a new update, please type:\n&7/" + shortPrefix + " update download");
+					"There is a new update, please type:\n&7/" + Gangland.SHORT_PREFIX + " update download");
 
 			commandSender.sendMessage(message);
 		} else {

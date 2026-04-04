@@ -1,5 +1,12 @@
 package me.luckyraven.util.command;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
 public @interface CommandHandler {
 
 	/**
@@ -8,7 +15,7 @@ public @interface CommandHandler {
 	String condition() default "";
 
 	/**
-	 * Priority for this component (higher values = higher priority when multiple candidates exist).
+	 * Priority controlling registration order. Higher priority commands are registered first.
 	 */
-	int priority() default 0;
+	CommandPriority priority() default CommandPriority.NORMAL;
 }

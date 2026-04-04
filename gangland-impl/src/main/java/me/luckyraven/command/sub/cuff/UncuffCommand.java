@@ -1,19 +1,21 @@
 package me.luckyraven.command.sub.cuff;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
 
-public final class UncuffCommand extends CommandHandler {
+@CommandHandler
+public final class UncuffCommand extends Command {
 
 	private final DetainmentService detainmentService;
 

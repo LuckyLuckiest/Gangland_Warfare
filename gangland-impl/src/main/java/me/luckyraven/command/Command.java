@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Getter
-public abstract class CommandHandler {
+public abstract class Command {
 
 	@Getter(value = AccessLevel.PROTECTED)
 	private final Gangland       gangland;
@@ -28,7 +28,7 @@ public abstract class CommandHandler {
 	private final Argument       argument;
 	private final Tree<Argument> argumentTree;
 
-	public CommandHandler(Gangland gangland, String label, boolean user, String... alias) {
+	public Command(Gangland gangland, String label, boolean user, String... alias) {
 		this.gangland = gangland;
 		this.label    = label.toLowerCase();
 

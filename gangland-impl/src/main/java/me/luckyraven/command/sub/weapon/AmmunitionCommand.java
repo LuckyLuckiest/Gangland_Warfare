@@ -1,25 +1,27 @@
 package me.luckyraven.command.sub.weapon;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public final class AmmunitionCommand extends CommandHandler {
+@CommandHandler
+public final class AmmunitionCommand extends Command {
 
 	public AmmunitionCommand(Gangland gangland) {
 		super(gangland, "ammo", true, "ammunition");
 
 		var list = getCommands().entrySet()
-								.stream()
-								.filter(entry -> entry.getKey().startsWith("ammunition"))
-								.sorted(Map.Entry.comparingByKey())
-								.map(Map.Entry::getValue)
-								.toList();
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("ammunition"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
 
 		getHelpInfo().addAll(list);
 	}

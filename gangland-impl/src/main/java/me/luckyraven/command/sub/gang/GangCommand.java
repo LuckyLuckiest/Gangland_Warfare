@@ -2,7 +2,7 @@ package me.luckyraven.command.sub.gang;
 
 import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ArgumentUtil;
 import me.luckyraven.data.account.gang.Gang;
@@ -22,6 +22,7 @@ import me.luckyraven.inventory.util.InventoryUtil;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
+import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -34,7 +35,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class GangCommand extends CommandHandler {
+@CommandHandler(condition = "isGangEnabled")
+public final class GangCommand extends Command {
 
 	public GangCommand(Gangland gangland) {
 		super(gangland, "gang", true);
@@ -58,79 +60,30 @@ public final class GangCommand extends CommandHandler {
 
 		if (user == null) return;
 
-		if (!user.hasGang())
-//			gangStat(user, userManager, gangManager);
-//		else
-			help(commandSender, 1);
+		if (!user.hasGang()) help(commandSender, 1);
 	}
 
 	@Override
 	protected void initializeArguments() {
-		// create gang
-		// glw gang create <name>
-		Argument create = new GangCreateCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// delete gang
-		// glw gang delete
-		Argument delete = new GangDeleteCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// add user to gang
-		// glw gang invite <name>
-		GangInviteCommand addUser = new GangInviteCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// glw gang accept
-		Argument acceptInvite = addUser.gangAccept();
-
-		// remove user from gang
-		// glw gang kick <name>
-		Argument removeUser = new GangKickCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// leave the gang
-		// glw gang leave
-		Argument leave = new GangLeaveCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// promote user in gang
-		// glw gang promote <name>
-		Argument promoteUser = new GangPromoteCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// demote user in gang
-		// glw gang demote <name>
-		Argument demoteUser = new GangDemoteCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument          create       = new GangCreateCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument          delete       = new GangDeleteCommand(getGangland(), getArgumentTree(), getArgument());
+		GangInviteCommand addUser      = new GangInviteCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument          acceptInvite = addUser.gangAccept();
+		Argument          removeUser   = new GangKickCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument          leave        = new GangLeaveCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument          promoteUser  = new GangPromoteCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument          demoteUser   = new GangDemoteCommand(getGangland(), getArgumentTree(), getArgument());
 
 		getArgument().addPermission(getPermission() + ".force_rank");
 
-		// deposit money to gang
-		// glw gang deposit <amount>
-		Argument deposit = new GangDepositCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// withdraw money from gang
-		// glw gang withdraw <amount>
-		Argument withdraw = new GangWithdrawCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// balance of gang
-		// glw gang balance
-		Argument balance = new GangBalanceCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// change gang name
-		// glw gang name <name>
-		Argument name = new GangRenameCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// change gang description
-		// opens an anvil with a paper that can change the title
-		// glw gang desc
+		Argument deposit     = new GangDepositCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument withdraw    = new GangWithdrawCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument balance     = new GangBalanceCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument name        = new GangRenameCommand(getGangland(), getArgumentTree(), getArgument());
 		Argument description = new GangDescriptionCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// gang ally
-		// glw gang ally <request/abandon> <id>
-		Argument ally = new GangAllyCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// change gang display name
-		// glw gang display <name>
-		Argument display = new GangDisplayCommand(getGangland(), getArgumentTree(), getArgument());
-
-		// change gang color using gui
-		// glw gang color
-		Argument color = new GangColorCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument ally        = new GangAllyCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument display     = new GangDisplayCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument color       = new GangColorCommand(getGangland(), getArgumentTree(), getArgument());
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
@@ -194,15 +147,15 @@ public final class GangCommand extends CommandHandler {
 
 		gui.setItem(11, material, "&bBalance", new ArrayList<>(
 				List.of(String.format("&e%s%s", Settings.getMoneySymbol(),
-									  Settings.formatDouble(gang.getEconomy().getBalance())))), true, false);
+				                      Settings.formatDouble(gang.getEconomy().getBalance())))), true, false);
 
 		// id
 		gui.setItem(13, XMaterial.CRAFTING_TABLE.get(), "&bID", new ArrayList<>(List.of("&e" + gang.getId())), false,
-					false);
+		            false);
 
 		// description
 		gui.setItem(15, XMaterial.PAPER.get(), "&bDescription", new ArrayList<>(List.of("&e" + gang.getDescription())),
-					false, false, (player, inventory, items) -> {
+		            false, false, (player, inventory, items) -> {
 					var desc = Objects.requireNonNull(
 							getArgumentTree().find(new Argument(getGangland(), "desc", getArgumentTree())));
 					var argumentSequence = ArgumentUtil.getArgumentSequence(desc, Gangland.SHORT_PREFIX);
@@ -213,12 +166,12 @@ public final class GangCommand extends CommandHandler {
 		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 
 		ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
-											   Settings.getNextPage());
+		                                       Settings.getNextPage());
 
 		// members
 		gui.setItem(19, XMaterial.PLAYER_HEAD.get(), "&bMembers", new ArrayList<>(
 							List.of("&a" + gang.getOnlineMembers(userManager).size() + "&7/&e" + gang.getMembers().size())), false,
-					false, (player, inventory, item) -> {
+		            false, (player, inventory, item) -> {
 					User<Player> user1 = userManager.getUser(player);
 
 					if (user1 == null) return;
@@ -249,8 +202,8 @@ public final class GangCommand extends CommandHandler {
 
 					String title1 = "&6&lGang Members";
 					MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getGangland(), player, items,
-																						title1, false, false, fill,
-																						buttonTags, null);
+					                                                                    title1, false, false, fill,
+					                                                                    buttonTags, null);
 
 					if (multi == null) return;
 
@@ -260,11 +213,11 @@ public final class GangCommand extends CommandHandler {
 		// bounty
 		gui.setItem(22, XMaterial.BLAZE_ROD.get(), "&bBounty", new ArrayList<>(
 				List.of(String.format("&e%s%s", Settings.getMoneySymbol(),
-									  Settings.formatDouble(gang.getBounty().getAmount())))), true, false);
+				                      Settings.formatDouble(gang.getBounty().getAmount())))), true, false);
 
 		// ally
 		gui.setItem(25, XMaterial.REDSTONE.get(), "&bAlly", List.of("&e" + gang.getAllies().size()), false, false,
-					(player, inventory, item) -> {
+		            (player, inventory, item) -> {
 						User<Player> user1 = userManager.getUser(player);
 
 						if (user1 == null) return;
@@ -278,7 +231,7 @@ public final class GangCommand extends CommandHandler {
 							List<String> data = new ArrayList<>();
 							data.add("&7ID:&e " + ally.getId());
 							data.add(String.format("&7Members:&a %d&7/&e%d", ally.getOnlineMembers(userManager).size(),
-												   ally.getMembers().size()));
+				                                   ally.getMembers().size()));
 							data.add("&7Created:&e " + ally.getDateCreatedString());
 
 							ItemBuilder itemBuilder = new ItemBuilder(XMaterial.REDSTONE.get()).setDisplayName(
@@ -289,8 +242,8 @@ public final class GangCommand extends CommandHandler {
 
 						String title1 = "&6&lGang Allies";
 						MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getGangland(), player,
-																							items, title1, false, false,
-																							fill, buttonTags, null);
+			                                                                                items, title1, false, false,
+			                                                                                fill, buttonTags, null);
 
 						if (multi == null) return;
 
@@ -299,12 +252,12 @@ public final class GangCommand extends CommandHandler {
 
 		// date created
 		gui.setItem(29, XMaterial.WRITABLE_BOOK.get(), "&bCreated",
-					new ArrayList<>(List.of("&e" + gang.getDateCreatedString())), true, false);
+		            new ArrayList<>(List.of("&e" + gang.getDateCreatedString())), true, false);
 
 		// color
 		gui.setItem(31, ColorUtil.getMaterialByColor(gang.getColor(), MaterialType.WOOL.name()), "&bColor",
-					new ArrayList<>(List.of("&e" + gang.getColor().toLowerCase().replace("_", " "))), false, false,
-					(player, inventory, item) -> {
+		            new ArrayList<>(List.of("&e" + gang.getColor().toLowerCase().replace("_", " "))), false, false,
+		            (player, inventory, item) -> {
 						var color = Objects.requireNonNull(
 								getArgumentTree().find(new Argument(getGangland(), "color", getArgumentTree())));
 						var argumentSequence = ArgumentUtil.getArgumentSequence(color, Gangland.SHORT_PREFIX);
@@ -313,7 +266,7 @@ public final class GangCommand extends CommandHandler {
 					});
 
 		gui.setItem(33, ColorUtil.getMaterialByColor(gang.getColor(), MaterialType.BANNER.name()), "&bStatistics",
-					new ArrayList<>(List.of("&eGang stats")), false, false);
+		            new ArrayList<>(List.of("&eGang stats")), false, false);
 
 		InventoryUtil.fillInventory(gui, fill);
 

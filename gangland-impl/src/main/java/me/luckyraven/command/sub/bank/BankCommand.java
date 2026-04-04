@@ -1,12 +1,13 @@
 package me.luckyraven.command.sub.bank;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -14,7 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public final class BankCommand extends CommandHandler {
+@CommandHandler
+public final class BankCommand extends Command {
 
 	public BankCommand(Gangland gangland) {
 		super(gangland, "bank", true);
@@ -29,7 +31,7 @@ public final class BankCommand extends CommandHandler {
 	}
 
 	static boolean processMoney(User<Player> user, Bank bank, double check, double amount, double inBank,
-								double inAccount) {
+	                            double inAccount) {
 		if (check == 0D) {
 			user.getUser().sendMessage(Messages.CANNOT_TAKE_LESS_THAN_ZERO.toString());
 			return false;
@@ -59,9 +61,9 @@ public final class BankCommand extends CommandHandler {
 		}
 
 		user.sendMessage(String.format("&6%s&7 bank information", player.getName()),
-						 String.format("&7%s&8: &a%s", "Name", bank.getName()),
-						 String.format("&7%s&8: &a%s%s", "Balance", Settings.getMoneySymbol(),
-									   Settings.formatDouble(bank.getEconomy().getBalance())));
+		                 String.format("&7%s&8: &a%s", "Name", bank.getName()),
+		                 String.format("&7%s&8: &a%s%s", "Balance", Settings.getMoneySymbol(),
+		                               Settings.formatDouble(bank.getEconomy().getBalance())));
 	}
 
 	@Override

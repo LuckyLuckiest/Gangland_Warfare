@@ -1,18 +1,19 @@
 package me.luckyraven.command.sub.lootchest;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.lootchest.LootChestWand;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Map;
 
-public class LootChestWandCommand extends CommandHandler {
-
+@CommandHandler
+public class LootChestWandCommand extends Command {
 
 	public LootChestWandCommand(Gangland gangland) {
 		super(gangland, "lootchest", true, "wand", "lootchestwand", "chestwand", "lcwand");

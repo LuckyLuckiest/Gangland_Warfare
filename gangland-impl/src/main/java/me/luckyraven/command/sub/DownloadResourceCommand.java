@@ -1,15 +1,17 @@
 package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
 
-public final class DownloadResourceCommand extends CommandHandler {
+@CommandHandler
+public final class DownloadResourceCommand extends Command {
 
 	public DownloadResourceCommand(Gangland gangland) {
 		super(gangland, "resource", true, "download");

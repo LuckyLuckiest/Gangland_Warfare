@@ -1,16 +1,19 @@
 package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.util.command.CommandHandler;
+import me.luckyraven.util.command.CommandPriority;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public final class HelpCommand extends CommandHandler {
+@CommandHandler(priority = CommandPriority.LOWEST)
+public final class HelpCommand extends Command {
 
 	public HelpCommand(Gangland gangland) {
 		super(gangland, "help", false, "general", "?");
@@ -20,11 +23,11 @@ public final class HelpCommand extends CommandHandler {
 		list.add(getCommandInformation("general"));
 		list.add(getCommandInformation("general_page"));
 		list.addAll(CommandManager.getCommands()
-								  .values()
-								  .parallelStream()
-								  .flatMap(entry -> entry.getHelpInfo().getList()
-														 .stream())
-								  .toList());
+		                          .values()
+		                          .parallelStream()
+		                          .flatMap(entry -> entry.getHelpInfo().getList()
+										  .stream())
+		                          .toList());
 
 		getHelpInfo().addAll(list);
 	}
