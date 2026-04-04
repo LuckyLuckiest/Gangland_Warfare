@@ -1,21 +1,26 @@
 package me.luckyraven.gadget.car.vehicle;
 
+import lombok.Getter;
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarService;
+import me.luckyraven.gadget.car.ExhaustSide;
 import me.luckyraven.gadget.car.vehicle.entity.VehicleEntity;
 import me.luckyraven.gadget.car.vehicle.packet.VehicleInputInterceptor;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.item.fuel.FuelBar;
+import me.luckyraven.util.utilities.ParticleUtil;
+import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 /**
  * Tick-based movement handler for an active car. Runs every server tick (50 ms) while a player is driving.
  *
- * <p>Movement is controlled by WASD keys. Input is written into {@link VehicleSession} by
+ * <p>WASD keys control movement. Input is written into {@link VehicleSession} by
  * {@link VehicleInputInterceptor} (Netty IO thread) each time the client sends a steering packet, and read here on the
- * main thread. The vehicle maintains its own yaw which turns with A/D. W accelerates forward, S reverses, sneak brakes
- * hard. Fuel is consumed each tick if fuel is enabled.
+ * main thread. W speeds up forward, S brakes then reverses, A/D steer, W+S triggers a burnout spin. Fuel is consumed
+ * each tick if fuel is enabled.
  */
 public class VehicleMovementTask extends BukkitRunnable {
 
@@ -23,6 +28,7 @@ public class VehicleMovementTask extends BukkitRunnable {
 	private final CarService          carService;
 	private final GadgetPhysicsConfig physicsConfig;
 
+	@Getter
 	private double currentSpeed;
 	private float  currentYaw;
 
@@ -40,68 +46,118 @@ public class VehicleMovementTask extends BukkitRunnable {
 		Player        driver = session.getDriver();
 		Car           car    = session.getCar();
 
-		// Entity was killed externally (explosion, etc.) — destroy completely, no item return
-		if (!entity.isAlive()) {
-			carService.destroyCar(entity.getEntityUUID(), false);
-			cancel();
-			return;
-		}
+		if (checkGuards(entity, driver)) return;
 
-		// Driver dismounted or disconnected — EntityDismountEvent fires and calls parkCar;
-		// guard here ensures the task stops cleanly if the event fires before this tick
-		if (!driver.isOnline() || driver.getVehicle() != entity.getBukkitEntity()) {
-			carService.parkCar(entity.getEntityUUID());
-			cancel();
-			return;
-		}
-
-		// Read WASD input written by VehicleInputInterceptor from the Netty IO thread
 		boolean forward  = session.isInputForward();
 		boolean backward = session.isInputBackward();
 		boolean left     = session.isInputLeft();
 		boolean right    = session.isInputRight();
 
-		// Fuel check: no fuel — coast to a stop
-		boolean hasFuel = !car.isFuelEnabled() || session.hasFuel();
-		if (!hasFuel) {
-			currentSpeed = decelerate(currentSpeed, car.getDeceleration() * physicsConfig.getCarHardBrakeMultiplier());
-			entity.updateMovement(currentSpeed, currentYaw);
-			session.updateDisplays(buildFuelDisplay(car));
-			return;
-		}
-
-		// Turning — only when moving so the car doesn't spin on the spot
-		if (Math.abs(currentSpeed) > 0.001) {
-			if (left) currentYaw -= (float) car.getTurnSpeed();
-			if (right) currentYaw += (float) car.getTurnSpeed();
-		}
-
-		// Speed control
-		if (driver.isSneaking()) {
-			// Hard brake
-			currentSpeed = decelerate(currentSpeed, car.getDeceleration() * physicsConfig.getCarHardBrakeMultiplier());
-		} else if (forward) {
-			currentSpeed = Math.min(car.getMaxSpeed(), currentSpeed + car.getAcceleration());
-		} else if (backward) {
-			currentSpeed = Math.max(-car.getMaxSpeed() * physicsConfig.getCarReverseSpeedRatio(),
-			                        currentSpeed - car.getAcceleration());
+		if (!car.isFuelEnabled() || session.hasFuel()) {
+			if (forward && backward) {
+				tickBurnout(entity, car, left, right);
+				return;
+			}
+			updateSteering(driver, left, right);
+			updateSpeed(car, forward, backward);
 		} else {
-			// No input — friction brings speed back to zero
-			currentSpeed = decelerate(currentSpeed, car.getDeceleration());
+			coastToStop(car);
 		}
 
+		finalizeTick(entity, car);
+	}
+
+	/**
+	 * Checks whether the entity or driver are in an invalid state. Cancels the task and triggers the appropriate
+	 * cleanup if so.
+	 *
+	 * @return {@code true} if the tick should be aborted
+	 */
+	private boolean checkGuards(VehicleEntity entity, Player driver) {
+		if (!entity.isAlive()) {
+			carService.destroyCar(entity.getEntityUUID(), false);
+			cancel();
+			return true;
+		}
+		if (!driver.isOnline() || driver.getVehicle() != entity.getBukkitEntity()) {
+			carService.parkCar(entity.getEntityUUID());
+			cancel();
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Handles the burnout state — W+S held simultaneously. Brakes the car to a stop, lets A/D spin the heading, and
+	 * emits tire-smoke particles.
+	 */
+	private void tickBurnout(VehicleEntity entity, Car car, boolean left, boolean right) {
+		currentSpeed = decelerate(currentSpeed, car.getDeceleration() * physicsConfig.getCarHardBrakeMultiplier());
+		if (left) currentYaw -= (float) car.getTurnSpeed();
+		if (right) currentYaw += (float) car.getTurnSpeed();
 		entity.updateMovement(currentSpeed, currentYaw);
-
-		// Consume fuel when moving
-		if (car.isFuelEnabled() && Math.abs(currentSpeed) > 0.001) {
-			session.consumeFuel(physicsConfig.getCarFuelConsumePerTick());
+		ParticleUtil.spawnBurnoutSmoke(entity.getLocation(), currentYaw);
+		World world = entity.getLocation().getWorld();
+		if (world != null) {
+			world.playSound(entity.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.3f, 1.5f);
 		}
-
+		if (car.isFuelEnabled()) session.consumeFuel(physicsConfig.getCarFuelConsumePerTick());
 		session.updateDisplays(buildFuelDisplay(car));
 	}
 
-	public double getCurrentSpeed() {
-		return currentSpeed;
+	/**
+	 * Decelerates to a stop when the car has no fuel. Does not modify steering.
+	 */
+	private void coastToStop(Car car) {
+		currentSpeed = decelerate(currentSpeed, car.getDeceleration() * physicsConfig.getCarHardBrakeMultiplier());
+	}
+
+	/**
+	 * Updates {@link #currentYaw} based on driver input. A/D is dominant while moving; otherwise the heading syncs to
+	 * the driver's look direction.
+	 */
+	private void updateSteering(Player driver, boolean left, boolean right) {
+		if (Math.abs(currentSpeed) > 0.001 && (left || right)) {
+			if (left) currentYaw -= (float) session.getCar().getTurnSpeed();
+			if (right) currentYaw += (float) session.getCar().getTurnSpeed();
+		} else {
+			currentYaw = driver.getLocation().getYaw();
+		}
+	}
+
+	/**
+	 * Updates {@link #currentSpeed} based on driver input. S brakes before reversing.
+	 */
+	private void updateSpeed(Car car, boolean forward, boolean backward) {
+		if (forward) {
+			currentSpeed = Math.min(car.getMaxSpeed(), currentSpeed + car.getAcceleration());
+		} else if (backward) {
+			if (currentSpeed > 0) {
+				currentSpeed = decelerate(currentSpeed,
+				                          car.getDeceleration() * physicsConfig.getCarHardBrakeMultiplier());
+			} else {
+				currentSpeed = Math.max(-car.getMaxSpeed() * physicsConfig.getCarReverseSpeedRatio(),
+				                        currentSpeed - car.getAcceleration());
+			}
+		} else {
+			currentSpeed = decelerate(currentSpeed, car.getDeceleration());
+		}
+	}
+
+	/**
+	 * Applies the current speed and yaw to the entity, spawns exhaust particles, consumes fuel, and refreshes HUD
+	 * displays.
+	 */
+	private void finalizeTick(VehicleEntity entity, Car car) {
+		entity.updateMovement(currentSpeed, currentYaw);
+		if (Math.abs(currentSpeed) > 0.001) {
+			ExhaustSide side = session.getExhaustSide();
+			ParticleUtil.spawnCarExhaust(entity.getLocation(), currentYaw,
+			                             side == ExhaustSide.LEFT || side == ExhaustSide.BOTH,
+			                             side == ExhaustSide.RIGHT || side == ExhaustSide.BOTH);
+			if (car.isFuelEnabled()) session.consumeFuel(physicsConfig.getCarFuelConsumePerTick());
+		}
+		session.updateDisplays(buildFuelDisplay(car));
 	}
 
 	/**
