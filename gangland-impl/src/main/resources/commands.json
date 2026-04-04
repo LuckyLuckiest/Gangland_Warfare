@@ -471,6 +471,10 @@
 		"usage": "/glw lootchest edit",
 		"description": "Edit wand settings while holding it."
 	},
+	"lootchest_remove": {
+		"usage": "/glw lootchest remove",
+		"description": "Removes the loot chest you are looking at."
+	},
 	"cuff": {
 		"usage": "/glw cuff <player>",
 		"description": "Handcuffs the specified player."
@@ -503,6 +507,14 @@
 		"usage": "/glw jail list",
 		"description": "Shows all the available jails."
 	},
+	"jail_info": {
+		"usage": "/glw jail info <id>",
+		"description": "Shows information about the specified jail."
+	},
+	"jail_teleport": {
+		"usage": "/glw jail teleport <id>",
+		"description": "Teleports to the specified jail."
+	},
 	"cop_help": {
 		"usage": "/glw cop help <page>",
 		"description": "Shows the specified page in cop menu."
@@ -530,5 +542,105 @@
 	"cop_spawner_teleport": {
 		"usage": "/glw cop spawner teleport <id>",
 		"description": "Teleports the player to the cop spawner with the specified id."
+	},
+	"car": {
+		"usage": "/glw car",
+		"description": "Shows car help page."
+	},
+	"car_help": {
+		"usage": "/glw car help <page>",
+		"description": "Shows the specified page in car menu."
+	},
+	"car_give": {
+		"usage": "/glw car give <name> <amount>",
+		"description": "Gives the specified car item."
+	},
+	"car_info": {
+		"usage": "/glw car info",
+		"description": "Shows information about the car item in hand."
+	},
+	"car_list": {
+		"usage": "/glw car list",
+		"description": "Shows all registered cars."
+	},
+	"fuel": {
+		"usage": "/glw fuel",
+		"description": "Shows fuel help page."
+	},
+	"fuel_help": {
+		"usage": "/glw fuel help <page>",
+		"description": "Shows the specified page in fuel menu."
+	},
+	"fuel_add": {
+		"usage": "/glw fuel add <amount>",
+		"description": "Adds fuel to the item in hand."
+	},
+	"fuel_info": {
+		"usage": "/glw fuel info",
+		"description": "Shows fuel info for the item in hand."
+	},
+	"fuel_refuel": {
+		"usage": "/glw fuel refuel",
+		"description": "Refuels the item in hand to max capacity."
+	},
+	"fuel_remove": {
+		"usage": "/glw fuel remove <amount>",
+		"description": "Removes fuel from the item in hand."
+	},
+	"item": {
+		"usage": "/glw item",
+		"description": "Shows item help page."
+	},
+	"item_help": {
+		"usage": "/glw item help <page>",
+		"description": "Shows the specified page in item menu."
+	},
+	"item_repair": {
+		"usage": "/glw item repair",
+		"description": "Shows repair item help."
+	},
+	"item_repair_give": {
+		"usage": "/glw item repair give <name> <amount>",
+		"description": "Gives the specified repair item."
+	},
+	"item_repair_info": {
+		"usage": "/glw item repair info <name>",
+		"description": "Shows information about the specified repair item."
+	},
+	"item_repair_list": {
+		"usage": "/glw item repair list",
+		"description": "Shows all registered repair items."
+	},
+	"item_unique": {
+		"usage": "/glw item unique",
+		"description": "Shows unique item help."
+	},
+	"item_unique_give": {
+		"usage": "/glw item unique give <name> <amount>",
+		"description": "Gives the specified unique item."
+	},
+	"item_unique_info": {
+		"usage": "/glw item unique info <name>",
+		"description": "Shows information about the specified unique item."
+	},
+	"item_unique_list": {
+		"usage": "/glw item unique list",
+		"description": "Shows all registered unique items."
+	},
+	"item_wearable": {
+		"usage": "/glw item wearable",
+		"description": "Shows wearable item help."
+	},
+	"item_wearable_give": {
+		"usage": "/glw item wearable give <name> <amount>",
+		"description": "Gives the specified wearable item."
+	},
+	"item_wearable_info": {
+		"usage": "/glw item wearable info <name>",
+		"description": "Shows information about the specified wearable item."
+	},
+	"item_wearable_list": {
+		"usage": "/glw item wearable list",
+		"description": "Shows all registered wearable items."
 	}
 }
