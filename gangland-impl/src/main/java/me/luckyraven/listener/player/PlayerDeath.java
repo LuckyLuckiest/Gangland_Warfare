@@ -22,8 +22,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -143,6 +146,15 @@ public class PlayerDeath implements Listener {
 	}
 
 	private void changeDeathMessage(PlayerDeathEvent event, Player player) {
+		// Citizens NPC killers are not Player instances, so getKiller() returns null and the
+		// vanilla "[NpcName] slain" message would show. Suppress it explicitly.
+		EntityDamageEvent cause = player.getLastDamageCause();
+		if (cause instanceof EntityDamageByEntityEvent byEntity
+		    && CitizensAPI.getNPCRegistry().isNPC(byEntity.getDamager())) {
+			event.setDeathMessage(null);
+			return;
+		}
+
 		String message = buildDeathMessage(player);
 		if (message == null) return;
 		event.setDeathMessage(message);
@@ -170,17 +182,32 @@ public class PlayerDeath implements Listener {
 			weapon = weaponManager.validateAndGetWeapon(killer, heldItem);
 		}
 
-		if (weapon == null) return null;
+		List<String> globalMessages = Messages.DEAD_USING_WEAPON.toStringList();
+
+		// no weapon found — fall back to the global death messages if available
+		if (weapon == null) {
+			String template = getRandomGlobalMessage(globalMessages);
+			if (template == null) return null;
+			// use the throwable's name if we at least know which weapon it was
+			String itemName = throwableName != null ? throwableName : "";
+			return ChatUtil.color(template.replace("%killer%", killer.getName())
+			                              .replace("%victim%", player.getName())
+			                              .replace("%item%", itemName));
+		}
 
 		// prefer weapon-specific death messages; fall back to global config
-		String template = weapon.pickDeathMessage().orElseGet(() -> {
-			List<String> messages = Messages.DEAD_USING_WEAPON.toStringList();
-			return messages.get(new Random().nextInt(messages.size()));
-		});
+		String template = weapon.pickDeathMessage().orElseGet(() -> getRandomGlobalMessage(globalMessages));
+
+		if (template == null) return null;
 
 		return ChatUtil.color(template.replace("%killer%", killer.getName())
 		                              .replace("%victim%", player.getName())
 		                              .replace("%item%", weapon.getName()));
+	}
+
+	private @Nullable String getRandomGlobalMessage(List<String> globalMessages) {
+		if (globalMessages.isEmpty()) return null;
+		return globalMessages.get(new Random().nextInt(globalMessages.size()));
 	}
 
 	private double amountDeduction(User<Player> user) {
