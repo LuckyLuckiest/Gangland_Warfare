@@ -1,0 +1,54 @@
+package me.luckyraven.command.sub.fuel;
+
+import me.luckyraven.Gangland;
+import me.luckyraven.command.CommandHandler;
+import me.luckyraven.command.argument.Argument;
+import org.bukkit.command.CommandSender;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+public final class FuelCommand extends CommandHandler {
+
+	public FuelCommand(Gangland gangland) {
+		super(gangland, "fuel", true, "fuels");
+
+		var list = getCommands().entrySet()
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("fuel"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
+
+		getHelpInfo().addAll(list);
+	}
+
+	@Override
+	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
+		help(commandSender, 1);
+	}
+
+	@Override
+	protected void initializeArguments() {
+		Argument add    = new FuelAddCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument remove = new FuelRemoveCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument info   = new FuelInfoCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument refuel = new FuelRefuelCommand(getGangland(), getArgumentTree(), getArgument());
+
+		List<Argument> arguments = new ArrayList<>();
+
+		arguments.add(add);
+		arguments.add(remove);
+		arguments.add(info);
+		arguments.add(refuel);
+
+		getArgument().addAllSubArguments(arguments);
+	}
+
+	@Override
+	protected void help(CommandSender sender, int page) {
+		getHelpInfo().displayHelp(sender, page, "Fuel");
+	}
+
+}
