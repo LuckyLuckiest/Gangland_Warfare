@@ -194,6 +194,58 @@ public class FuelService {
 		return true;
 	}
 
+	// =========================================================================
+	// Wearable (chestplate) fuel operations
+	// =========================================================================
+
+	/**
+	 * Returns whether the player's equipped chestplate has any remaining fuel.
+	 */
+	public boolean hasFuelOnWearable(Player player) {
+		ItemStack chestplate = player.getInventory().getChestplate();
+		if (chestplate == null || chestplate.getType().isAir()) return false;
+		return Fuel.readFuelCurrent(chestplate) > 0;
+	}
+
+	/**
+	 * Consumes fuel directly from the player's equipped chestplate NBT. Updates the item in-place.
+	 *
+	 * @return {@code true} if fuel was available and consumed
+	 */
+	public boolean consumeFuelFromWearable(Player player, int amount) {
+		ItemStack chestplate = player.getInventory().getChestplate();
+		if (chestplate == null || chestplate.getType().isAir()) return false;
+
+		int current = Fuel.readFuelCurrent(chestplate);
+		if (current <= 0) return false;
+
+		ItemStack updated = Fuel.writeFuelCurrent(chestplate, current - amount);
+		player.getInventory().setChestplate(updated);
+		return true;
+	}
+
+	/**
+	 * Returns the current fuel level stored in the player's equipped chestplate.
+	 *
+	 * @return the current fuel, or 0 if the chestplate carries no fuel tag
+	 */
+	public int getWearableFuelLevel(Player player) {
+		ItemStack chestplate = player.getInventory().getChestplate();
+		if (chestplate == null || chestplate.getType().isAir()) return 0;
+		return Fuel.readFuelCurrent(chestplate);
+	}
+
+	/**
+	 * Returns the maximum fuel capacity stored in the player's equipped chestplate.
+	 *
+	 * @return the max fuel, or 0 if the chestplate carries no fuel tag
+	 */
+	public int getWearableMaxFuelLevel(Player player) {
+		ItemStack chestplate = player.getInventory().getChestplate();
+		if (chestplate == null || chestplate.getType().isAir()) return 0;
+		return Fuel.readFuelMax(chestplate);
+	}
+
 	/**
 	 * Clears the slot cache for a player. Called on disconnect.
 	 */

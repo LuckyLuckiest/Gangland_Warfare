@@ -64,16 +64,15 @@ public class JetpackTask extends BukkitRunnable {
 
 		boolean spaceHeld = session.isInputJump();
 		boolean sneakHeld = session.isInputSneak();
-		String  fuelKey   = jetpack.getFuelKey();
-		boolean hasFuel   = fuelService.hasFuel(player, fuelKey);
+		boolean hasFuel   = fuelService.hasFuelOnWearable(player);
 		boolean onGround  = PlayerUtil.isOnGround(player);
 
 		handleGlideToggle(spaceHeld, sneakHeld, onGround);
 
 		Vector velocity = player.getVelocity();
-		double newY     = applyVerticalPhysics(player, jetpack, fuelKey, velocity.getY(), hasFuel, spaceHeld, onGround);
+		double newY     = applyVerticalPhysics(player, jetpack, velocity.getY(), hasFuel, spaceHeld, onGround);
 		applyHorizontalPhysics(player, velocity.getX(), newY, velocity.getZ(), hasFuel, spaceHeld, onGround);
-		updateActionBar(player, fuelKey, spaceHeld, hasFuel);
+		updateActionBar(player, spaceHeld, hasFuel);
 	}
 
 	private boolean checkGuards(Player player, Wearable jetpack) {
@@ -101,7 +100,7 @@ public class JetpackTask extends BukkitRunnable {
 		}
 	}
 
-	private double applyVerticalPhysics(Player player, Wearable jetpack, String fuelKey, double currentY,
+	private double applyVerticalPhysics(Player player, Wearable jetpack, double currentY,
 	                                    boolean hasFuel, boolean spaceHeld, boolean onGround) {
 		if (session.isGlideModeActive()) {
 			thrustTicks = 0;
@@ -111,7 +110,7 @@ public class JetpackTask extends BukkitRunnable {
 			return 0.0;
 		}
 		if (hasFuel && spaceHeld) {
-			fuelService.consumeFuel(player, fuelKey, getEffectiveConsumptionRate(jetpack));
+			fuelService.consumeFuelFromWearable(player, getEffectiveConsumptionRate(jetpack));
 			thrustTicks++;
 			double ramp = Math.min(thrustTicks / (double) physicsConfig.getJetpackThrustRampTicks(), 1.0);
 			ParticleUtil.spawnJetpackFlame(player);
@@ -181,9 +180,9 @@ public class JetpackTask extends BukkitRunnable {
 		player.setVelocity(new Vector(newX, newY, newZ));
 	}
 
-	private void updateActionBar(Player player, String fuelKey, boolean spaceHeld, boolean hasFuel) {
-		int    currentFuel = fuelService.getFuelLevel(player, fuelKey);
-		int    maxFuel     = fuelService.getMaxFuelLevel(player, fuelKey);
+	private void updateActionBar(Player player, boolean spaceHeld, boolean hasFuel) {
+		int    currentFuel = fuelService.getWearableFuelLevel(player);
+		int    maxFuel     = fuelService.getWearableMaxFuelLevel(player);
 		String actionBar;
 		if (session.isGlideModeActive()) {
 			actionBar = ChatUtil.color("&b\u2708 Gliding");

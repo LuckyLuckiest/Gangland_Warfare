@@ -112,6 +112,7 @@ public class WearableAddon extends WearableService {
 			double ascendPower         = 0;
 			double glideDescentRate    = 0;
 			double maxSpeedY           = 0;
+			int    maxFuel             = 0;
 
 			ConfigurationSection jetpackSection = section.getConfigurationSection("Jetpack");
 			if (jetpackSection != null) {
@@ -120,6 +121,7 @@ public class WearableAddon extends WearableService {
 				ascendPower         = jetpackSection.getDouble("Ascend_Power", 0.35);
 				glideDescentRate    = jetpackSection.getDouble("Glide_Descent_Rate", -0.05);
 				maxSpeedY           = jetpackSection.getDouble("Max_Speed_Y", 0.8);
+				maxFuel             = jetpackSection.getInt("Max_Fuel", 3600);
 			}
 
 			Wearable wearable = Wearable.builder()
@@ -137,6 +139,7 @@ public class WearableAddon extends WearableService {
 			                            .ascendPower(ascendPower)
 			                            .glideDescentRate(glideDescentRate)
 			                            .maxSpeedY(maxSpeedY)
+			                            .maxFuel(maxFuel)
 			                            .build();
 
 			register(key, wearable);
