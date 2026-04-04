@@ -76,6 +76,12 @@ public class MinecartVehicle implements VehicleEntity {
 	}
 
 	@Override
+	public void setFacing(float yaw) {
+		if (minecart == null || minecart.isDead()) return;
+		minecart.setRotation(yaw, 0);
+	}
+
+	@Override
 	public boolean isAlive() {
 		return minecart != null && !minecart.isDead() && minecart.isValid();
 	}

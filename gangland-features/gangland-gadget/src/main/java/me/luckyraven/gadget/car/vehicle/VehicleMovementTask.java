@@ -79,11 +79,13 @@ public class VehicleMovementTask extends BukkitRunnable {
 			cancel();
 			return true;
 		}
+
 		if (!driver.isOnline() || driver.getVehicle() != entity.getBukkitEntity()) {
 			carService.parkCar(entity.getEntityUUID());
 			cancel();
 			return true;
 		}
+
 		return false;
 	}
 
@@ -93,15 +95,21 @@ public class VehicleMovementTask extends BukkitRunnable {
 	 */
 	private void tickBurnout(VehicleEntity entity, Car car, boolean left, boolean right) {
 		currentSpeed = decelerate(currentSpeed, car.getDeceleration() * physicsConfig.getCarHardBrakeMultiplier());
+
 		if (left) currentYaw -= (float) car.getTurnSpeed();
 		if (right) currentYaw += (float) car.getTurnSpeed();
+
 		entity.updateMovement(currentSpeed, currentYaw);
+		entity.setFacing(currentYaw);
 		ParticleUtil.spawnBurnoutSmoke(entity.getLocation(), currentYaw);
+
 		World world = entity.getLocation().getWorld();
 		if (world != null) {
 			world.playSound(entity.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.3f, 1.5f);
 		}
+
 		if (car.isFuelEnabled()) session.consumeFuel(physicsConfig.getCarFuelConsumePerTick());
+
 		session.updateDisplays(buildFuelDisplay(car));
 	}
 
@@ -152,11 +160,14 @@ public class VehicleMovementTask extends BukkitRunnable {
 		entity.updateMovement(currentSpeed, currentYaw);
 		if (Math.abs(currentSpeed) > 0.001) {
 			ExhaustSide side = session.getExhaustSide();
+
 			ParticleUtil.spawnCarExhaust(entity.getLocation(), currentYaw,
 			                             side == ExhaustSide.LEFT || side == ExhaustSide.BOTH,
 			                             side == ExhaustSide.RIGHT || side == ExhaustSide.BOTH);
+
 			if (car.isFuelEnabled()) session.consumeFuel(physicsConfig.getCarFuelConsumePerTick());
 		}
+
 		session.updateDisplays(buildFuelDisplay(car));
 	}
 
@@ -165,6 +176,7 @@ public class VehicleMovementTask extends BukkitRunnable {
 	 */
 	private String buildFuelDisplay(Car car) {
 		if (!car.isFuelEnabled()) return null;
+
 		return FuelBar.render(session.getCurrentFuel(), session.getMaxFuel());
 	}
 
@@ -174,6 +186,7 @@ public class VehicleMovementTask extends BukkitRunnable {
 	private double decelerate(double speed, double amount) {
 		if (speed > 0) return Math.max(0, speed - amount);
 		if (speed < 0) return Math.min(0, speed + amount);
+
 		return 0;
 	}
 }

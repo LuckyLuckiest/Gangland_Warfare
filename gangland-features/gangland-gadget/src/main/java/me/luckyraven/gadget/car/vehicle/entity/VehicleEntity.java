@@ -37,6 +37,14 @@ public interface VehicleEntity {
 	void updateMovement(double speed, float yaw);
 
 	/**
+	 * Forces the entity to face the given yaw direction without changing its position. Used during burnout where
+	 * velocity is near-zero and the heading must be set explicitly.
+	 *
+	 * @param yaw heading in degrees
+	 */
+	void setFacing(float yaw);
+
+	/**
 	 * Returns {@code true} if the underlying entity is still alive and valid.
 	 */
 	boolean isAlive();
