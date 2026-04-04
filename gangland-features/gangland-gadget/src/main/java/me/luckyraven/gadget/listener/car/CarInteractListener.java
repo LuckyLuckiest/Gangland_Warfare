@@ -3,8 +3,10 @@ package me.luckyraven.gadget.listener.car;
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarKey;
 import me.luckyraven.gadget.car.CarService;
+import me.luckyraven.gadget.car.ExhaustSide;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.item.fuel.Fuel;
+import me.luckyraven.item.fuel.FuelKey;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
@@ -70,8 +72,8 @@ public class CarInteractListener implements Listener {
 		// For a brand-new car (no NBT), default to the fuel definition's maximum capacity.
 		ItemBuilder itemBuilder = new ItemBuilder(item);
 		int         fuel;
-		if (itemBuilder.hasNBTTag(CarKey.CAR_FUEL.getKey())) {
-			fuel = itemBuilder.getIntegerTagData(CarKey.CAR_FUEL.getKey());
+		if (itemBuilder.hasNBTTag(FuelKey.FUEL_CURRENT.getKey())) {
+			fuel = itemBuilder.getIntegerTagData(FuelKey.FUEL_CURRENT.getKey());
 		} else if (car.isFuelEnabled() && car.getFuelKey() != null) {
 			Fuel fuelDef = fuelService.getFuel(car.getFuelKey());
 			fuel = fuelDef != null ? fuelDef.getMaxFuel() : 0;
@@ -82,7 +84,13 @@ public class CarInteractListener implements Listener {
 		                 itemBuilder.getIntegerTagData(CarKey.CAR_DURABILITY.getKey()) :
 		                 car.getMaxDurability();
 
-		boolean placed = carService.placeCar(player, carId, spawnLoc, fuel, durability);
+		ExhaustSide exhaustSide = itemBuilder.hasNBTTag(CarKey.CAR_EXHAUST_SIDE.getKey())
+		                          ?
+		                          ExhaustSide.fromString(itemBuilder.getStringTagData(CarKey.CAR_EXHAUST_SIDE.getKey()))
+		                          :
+		                          null;
+
+		boolean placed = carService.placeCar(player, carId, spawnLoc, fuel, durability, exhaustSide);
 
 		if (placed) {
 			if (item.getAmount() > 1) {

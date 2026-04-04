@@ -2,6 +2,7 @@ package me.luckyraven.gadget.car;
 
 import lombok.Builder;
 import lombok.Getter;
+import me.luckyraven.item.fuel.FuelKey;
 import me.luckyraven.util.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -31,6 +32,7 @@ public class Car {
 	// Fuel
 	private final boolean fuelEnabled;
 	private final String  fuelKey;
+	private final int     maxFuel;
 
 	// Repair
 	private final int maxDurability;
@@ -78,6 +80,12 @@ public class Car {
 		builder.addTag(CarKey.CAR_ID.getKey(), carId);
 		builder.addTag(CarKey.CAR_DURABILITY.getKey(), maxDurability);
 		builder.addTag(CarKey.CAR_MAX_DURABILITY.getKey(), maxDurability);
+
+		if (fuelEnabled && fuelKey != null && !fuelKey.isEmpty() && maxFuel > 0) {
+			builder.addTag(FuelKey.FUEL_ID.getKey(), fuelKey);
+			builder.addTag(FuelKey.FUEL_CURRENT.getKey(), maxFuel);
+			builder.addTag(FuelKey.FUEL_MAX.getKey(), maxFuel);
+		}
 
 		return builder.build();
 	}

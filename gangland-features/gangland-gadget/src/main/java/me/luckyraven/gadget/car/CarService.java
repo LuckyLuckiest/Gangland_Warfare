@@ -12,6 +12,7 @@ import me.luckyraven.gadget.car.vehicle.packet.VehicleInputInterceptor;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.item.fuel.Fuel;
+import me.luckyraven.item.fuel.FuelKey;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.ItemBuilder;
 import org.bukkit.Bukkit;
@@ -77,6 +78,7 @@ public class CarService {
 	private final NamespacedKey pdcFuel;
 	private final NamespacedKey pdcDurability;
 	private final NamespacedKey pdcPlacer;
+	private final NamespacedKey pdcExhaustSide;
 
 	public CarService(CarManager carManager, VehicleRegistry vehicleRegistry, JavaPlugin plugin,
 	                  IRepository<ParkedCar> parkedCarRepository, FuelService fuelService,
@@ -88,10 +90,11 @@ public class CarService {
 		this.fuelService         = fuelService;
 		this.physicsConfig       = physicsConfig;
 
-		this.pdcCarId      = new NamespacedKey(plugin, "car_id");
-		this.pdcFuel       = new NamespacedKey(plugin, "car_fuel");
-		this.pdcDurability = new NamespacedKey(plugin, "car_durability");
-		this.pdcPlacer     = new NamespacedKey(plugin, "car_placer");
+		this.pdcCarId       = new NamespacedKey(plugin, "car_id");
+		this.pdcFuel        = new NamespacedKey(plugin, "car_fuel");
+		this.pdcDurability  = new NamespacedKey(plugin, "car_durability");
+		this.pdcPlacer      = new NamespacedKey(plugin, "car_placer");
+		this.pdcExhaustSide = new NamespacedKey(plugin, "car_exhaust_side");
 	}
 
 	// ------------------------------------------------------------------
@@ -107,7 +110,8 @@ public class CarService {
 	 *
 	 * @return {@code true} if the entity was placed successfully
 	 */
-	public boolean placeCar(Player player, String carId, Location location, int fuel, int durability) {
+	public boolean placeCar(Player player, String carId, Location location, int fuel, int durability,
+	                        @Nullable ExhaustSide exhaustSide) {
 		Car car = carManager.getCar(carId);
 		if (car == null) return false;
 
@@ -121,8 +125,9 @@ public class CarService {
 		if (entityUUID == null) return false;
 
 		storePdc(entity, carId, fuel, durability, player.getUniqueId());
+		storePdcExhaustSide(entity, exhaustSide);
 
-		ParkedVehicle pv     = new ParkedVehicle(entity, car, player.getUniqueId(), fuel, durability);
+		ParkedVehicle pv     = new ParkedVehicle(entity, car, player.getUniqueId(), fuel, durability, exhaustSide);
 		ParkedCar     record = buildRecord(entityUUID, pv, spawnLoc);
 		parkedVehicles.put(entityUUID, pv);
 		if (record != null) {
@@ -160,7 +165,7 @@ public class CarService {
 		int  maxFuel = fuelDef != null ? fuelDef.getMaxFuel() : 0;
 
 		VehicleSession session = new VehicleSession(entity, car, player, parked.getDurability(), parked.getFuel(),
-		                                            maxFuel);
+		                                            maxFuel, parked.getExhaustSide());
 		VehicleMovementTask task = new VehicleMovementTask(session, this, physicsConfig);
 		session.setTask(task);
 
@@ -206,9 +211,10 @@ public class CarService {
 		UUID placerUUID  = session.getDriverUUID();
 
 		storePdc(session.getEntity(), session.getCar().getCarId(), currentFuel, durability, placerUUID);
+		storePdcExhaustSide(session.getEntity(), session.getExhaustSide());
 
 		ParkedVehicle pv = new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, currentFuel,
-		                                     durability);
+		                                     durability, session.getExhaustSide());
 		parkedVehicles.put(entityUUID, pv);
 		vehicleRegistry.unregister(entityUUID);
 
@@ -247,8 +253,11 @@ public class CarService {
 		ItemStack   item    = parked.getCar().buildItem();
 		ItemBuilder builder = new ItemBuilder(item);
 		builder.addTag(CarKey.CAR_DURABILITY.getKey(), parked.getDurability());
-		builder.addTag(CarKey.CAR_FUEL.getKey(), parked.getFuel());
+		builder.addTag(FuelKey.FUEL_CURRENT.getKey(), parked.getFuel());
 		builder.addTag(CarKey.CAR_OWNER.getKey(), player.getUniqueId().toString());
+		if (parked.getExhaustSide() != null) {
+			builder.addTag(CarKey.CAR_EXHAUST_SIDE.getKey(), parked.getExhaustSide().name());
+		}
 		player.getInventory().addItem(builder.build());
 	}
 
@@ -328,7 +337,7 @@ public class CarService {
 			UUID placerUUID  = session.getDriverUUID();
 
 			ParkedVehicle pv = new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, currentFuel,
-			                                     durability);
+			                                     durability, session.getExhaustSide());
 			parkedVehicles.put(entityUUID, pv);
 
 			Entity entity = session.getEntity().getBukkitEntity();
@@ -372,7 +381,7 @@ public class CarService {
 			if (freshCar == null) continue;
 			parkedVehicles.put(entityUUID,
 			                   new ParkedVehicle(old.getEntity(), freshCar, old.getPlacerUUID(), old.getFuel(),
-			                                     old.getDurability()));
+			                                     old.getDurability(), old.getExhaustSide()));
 		}
 
 		for (VehicleSession session : vehicleRegistry.getAllSessions()) {
@@ -410,7 +419,7 @@ public class CarService {
 
 			storePdc(entity, record.getCarId(), record.getFuel(), record.getDurability(), record.getPlacerUUID());
 			parkedVehicles.put(entityUUID, new ParkedVehicle(entity, car, record.getPlacerUUID(), record.getFuel(),
-			                                                 record.getDurability()));
+			                                                 record.getDurability(), null));
 			parkedCarRecords.put(entityUUID, record);
 		}
 	}
@@ -539,6 +548,13 @@ public class CarService {
 		if (placerUUID != null) {
 			pdc.set(pdcPlacer, PersistentDataType.STRING, placerUUID.toString());
 		}
+	}
+
+	private void storePdcExhaustSide(VehicleEntity vehicleEntity, @Nullable ExhaustSide exhaustSide) {
+		if (exhaustSide == null) return;
+		Entity entity = vehicleEntity.getBukkitEntity();
+		if (entity == null) return;
+		entity.getPersistentDataContainer().set(pdcExhaustSide, PersistentDataType.STRING, exhaustSide.name());
 	}
 
 	private void removeInputHandler(Player player) {

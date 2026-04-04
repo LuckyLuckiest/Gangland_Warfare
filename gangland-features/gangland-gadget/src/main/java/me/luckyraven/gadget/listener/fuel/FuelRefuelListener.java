@@ -45,7 +45,9 @@ public class FuelRefuelListener implements Listener {
 		if (Fuel.isFuelItem(offHand) && !Fuel.isFuelItem(mainHand)) {
 			String fuelKey = Fuel.getFuelKey(offHand);
 			if (fuelKey == null) return;
-			if (tryRefuel(player, mainHand, offHand, fuelKey)) {
+			ItemStack updated = tryRefuel(player, mainHand, offHand, fuelKey);
+			if (updated != null) {
+				player.getInventory().setItemInOffHand(updated);
 				event.setCancelled(true);
 			}
 			return;
@@ -55,7 +57,9 @@ public class FuelRefuelListener implements Listener {
 		if (Fuel.isFuelItem(mainHand) && !Fuel.isFuelItem(offHand)) {
 			String fuelKey = Fuel.getFuelKey(mainHand);
 			if (fuelKey == null) return;
-			if (tryRefuel(player, offHand, mainHand, fuelKey)) {
+			ItemStack updated = tryRefuel(player, offHand, mainHand, fuelKey);
+			if (updated != null) {
+				player.getInventory().setItemInMainHand(updated);
 				event.setCancelled(true);
 			}
 		}
@@ -77,7 +81,9 @@ public class FuelRefuelListener implements Listener {
 		if (Fuel.isFuelItem(clicked) && !Fuel.isFuelItem(cursor)) {
 			String fuelKey = Fuel.getFuelKey(clicked);
 			if (fuelKey == null) return;
-			if (tryRefuelInInventory(player, cursor, clicked, fuelKey, event)) {
+			ItemStack updated = tryRefuelInInventory(player, cursor, clicked, fuelKey);
+			if (updated != null) {
+				event.setCurrentItem(updated);
 				event.setCancelled(true);
 			}
 			return;
@@ -87,7 +93,9 @@ public class FuelRefuelListener implements Listener {
 		if (Fuel.isFuelItem(cursor) && !Fuel.isFuelItem(clicked)) {
 			String fuelKey = Fuel.getFuelKey(cursor);
 			if (fuelKey == null) return;
-			if (tryRefuelInInventory(player, clicked, cursor, fuelKey, event)) {
+			ItemStack updated = tryRefuelInInventory(player, clicked, cursor, fuelKey);
+			if (updated != null) {
+				event.getView().setCursor(updated);
 				event.setCancelled(true);
 			}
 		}
@@ -96,70 +104,65 @@ public class FuelRefuelListener implements Listener {
 	/**
 	 * Attempts to refuel a fuel item using a material item (world interaction).
 	 *
-	 * @return true if refueling occurred
+	 * @return the updated fuel ItemStack, or {@code null} if refueling did not occur
 	 */
-	private boolean tryRefuel(Player player, ItemStack materialItem, ItemStack fuelItem, String fuelKey) {
+	private ItemStack tryRefuel(Player player, ItemStack materialItem, ItemStack fuelItem, String fuelKey) {
 		Fuel fuel = fuelService.getFuel(fuelKey);
-		if (fuel == null) return false;
+		if (fuel == null) return null;
 
 		Material expectedMaterial = fuel.getFuelMaterial().get();
-		if (expectedMaterial == null || materialItem.getType() != expectedMaterial) return false;
+		if (expectedMaterial == null || materialItem.getType() != expectedMaterial) return null;
 
 		int current = Fuel.getCurrentFuel(fuelItem);
 		int max     = Fuel.getMaxFuel(fuelItem);
 		if (current >= max) {
 			ChatUtil.sendActionBar(player, "&cFuel is already full!");
-			return false;
+			return null;
 		}
 
 		// Consume one material item
 		materialItem.setAmount(materialItem.getAmount() - 1);
 
-		// Add fuel
-		fuelService.addFuel(player, fuelKey, fuel.getFuelPerItem());
+		// Write fuel directly to the item
+		int       newFuel = Math.min(max, current + fuel.getFuelPerItem());
+		ItemStack updated = Fuel.setCurrentFuel(fuelItem, newFuel);
 
 		// Play feedback
 		player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.2f);
-
-		// Update action bar
-		int newFuel = Math.min(max, current + fuel.getFuelPerItem());
 		ChatUtil.sendActionBar(player, FuelBar.render(newFuel, max));
-		return true;
+		return updated;
 	}
 
 	/**
 	 * Attempts to refuel via inventory click (cursor + clicked item interaction).
 	 *
-	 * @return true if refueling occurred
+	 * @return the updated fuel ItemStack, or {@code null} if refueling did not occur
 	 */
-	private boolean tryRefuelInInventory(Player player, ItemStack materialItem, ItemStack fuelItem, String fuelKey,
-	                                     InventoryClickEvent event) {
+	private ItemStack tryRefuelInInventory(Player player, ItemStack materialItem, ItemStack fuelItem, String fuelKey) {
 		Fuel fuel = fuelService.getFuel(fuelKey);
-		if (fuel == null) return false;
+		if (fuel == null) return null;
 
 		Material expectedMaterial = fuel.getFuelMaterial().get();
-		if (expectedMaterial == null || materialItem.getType() != expectedMaterial) return false;
+		if (expectedMaterial == null || materialItem.getType() != expectedMaterial) return null;
 
 		int current = Fuel.getCurrentFuel(fuelItem);
 		int max     = Fuel.getMaxFuel(fuelItem);
 		if (current >= max) {
 			ChatUtil.sendActionBar(player, "&cFuel is already full!");
-			return false;
+			return null;
 		}
 
 		// Consume one material item from cursor/clicked
 		materialItem.setAmount(materialItem.getAmount() - 1);
 
-		// Add fuel to the item
-		fuelService.addFuel(player, fuelKey, fuel.getFuelPerItem());
+		// Write fuel directly to the item
+		int       newFuel = Math.min(max, current + fuel.getFuelPerItem());
+		ItemStack updated = Fuel.setCurrentFuel(fuelItem, newFuel);
 
 		// Play feedback
 		player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.2f);
-
-		// Update action bar
-		int newFuel = Math.min(max, current + fuel.getFuelPerItem());
 		ChatUtil.sendActionBar(player, FuelBar.render(newFuel, max));
-		return true;
+		return updated;
 	}
 
 }

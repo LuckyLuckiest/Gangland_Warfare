@@ -57,6 +57,7 @@ sports_car:
    Fuel:
       Enabled: false
       Fuel_Key: ""
+      Max_Fuel: 3200
    Repair:
       Max_Durability: 500
 
@@ -79,5 +80,6 @@ pickup_truck:
    Fuel:
       Enabled: true
       Fuel_Key: "gasoline"
+      Max_Fuel: 10600
    Repair:
       Max_Durability: 800

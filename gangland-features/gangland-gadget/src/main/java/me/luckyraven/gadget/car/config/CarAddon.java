@@ -94,10 +94,12 @@ public class CarAddon extends CarManager {
 
 			boolean fuelEnabled = false;
 			String  fuelKey     = "";
+			int     maxFuel     = 0;
 
 			if (fuelSection != null) {
 				fuelEnabled = fuelSection.getBoolean("Enabled", false);
 				fuelKey     = fuelSection.getString("Fuel_Key", "");
+				maxFuel     = fuelSection.getInt("Max_Fuel", 0);
 			}
 
 			// Repair section
@@ -123,6 +125,7 @@ public class CarAddon extends CarManager {
 			             .maxHealth(maxHealth)
 			             .fuelEnabled(fuelEnabled)
 			             .fuelKey(fuelKey)
+			             .maxFuel(maxFuel)
 			             .maxDurability(maxDurability)
 			             .dropOnDeath(dropOnDeath)
 			             .droppable(droppable)
