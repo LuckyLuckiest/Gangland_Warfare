@@ -3,6 +3,7 @@ package me.luckyraven.weapon.listener.selective;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
@@ -56,8 +57,8 @@ public class WeaponSelectiveFireChangeListener implements Listener {
 		weapon.updateWeaponData(itemBuilder);
 		weapon.updateWeapon(player, itemBuilder, player.getInventory().getHeldItemSlot());
 
-		ChatUtil.sendActionBar(player, "&6Selective Fire > &e" +
-		                               ChatUtil.capitalize(weapon.getCurrentSelectiveFire().name().toLowerCase()));
+		ActionBarManager.send(player, "&6Selective Fire > &e" +
+		                              ChatUtil.capitalize(weapon.getCurrentSelectiveFire().name().toLowerCase()));
 	}
 
 }

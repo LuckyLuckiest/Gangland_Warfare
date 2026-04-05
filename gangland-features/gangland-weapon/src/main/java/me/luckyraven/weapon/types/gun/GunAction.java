@@ -3,7 +3,7 @@ package me.luckyraven.weapon.types.gun;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.utilities.ChatUtil;
+import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.dto.SoundData;
 import me.luckyraven.weapon.events.projectile.WeaponShootEvent;
@@ -40,7 +40,7 @@ public class GunAction {
 		if (weapon.isBroken()) {
 			SoundConfiguration.playSounds(shooter, soundData.getEmptyMagCustom(), soundData.getEmptyMagDefault());
 
-			ChatUtil.sendActionBar(shooter, "&cBroken");
+			ActionBarManager.send(shooter, "&cBroken");
 			return;
 		}
 

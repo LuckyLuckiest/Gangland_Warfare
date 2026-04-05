@@ -4,7 +4,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.utilities.ChatUtil;
+import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.Ammunition;
@@ -45,8 +45,8 @@ public abstract class Reload implements Cloneable {
 		if (reloadData == null) return;
 
 		if (weapon.getReloadActionBarData() != null) {
-			ChatUtil.sendActionBar(plugin, player, weapon.getReloadActionBarData().getReloading(),
-			                       reloadData.getCooldown());
+			ActionBarManager.send(plugin, player, weapon.getReloadActionBarData().getReloading(),
+			                      reloadData.getCooldown());
 		}
 
 		// start executing the reload process
@@ -83,7 +83,7 @@ public abstract class Reload implements Cloneable {
 
 		// open the reload chamber action bar status
 		if (weapon.getReloadActionBarData() != null) {
-			ChatUtil.sendActionBar(player, weapon.getReloadActionBarData().getOpening());
+			ActionBarManager.send(player, weapon.getReloadActionBarData().getOpening());
 		}
 
 		// start reloading sound

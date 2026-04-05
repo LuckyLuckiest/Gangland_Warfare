@@ -8,6 +8,7 @@ import me.luckyraven.gadget.car.ExhaustSide;
 import me.luckyraven.gadget.car.vehicle.entity.VehicleEntity;
 import me.luckyraven.item.fuel.FuelKey;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
@@ -108,7 +109,7 @@ public class VehicleSession {
 		healthBar.setTitle(buildHealthTitle());
 
 		if (fuelDisplay != null) {
-			ChatUtil.sendActionBar(driver, fuelDisplay);
+			ActionBarManager.sendBackground(driver, fuelDisplay, 10);
 		}
 	}
 

@@ -4,7 +4,7 @@ import com.cryptomorin.xseries.XPotion;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.timer.RepeatingTimer;
-import me.luckyraven.util.utilities.ChatUtil;
+import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.weapon.dto.BiologicalData;
 import me.luckyraven.weapon.events.WeaponEntityDamageEvent;
@@ -61,8 +61,8 @@ public class BiologicalAction {
 		RepeatingTimer timer = new RepeatingTimer(plugin, 1L, time -> {
 			if (time.getTickCount() % data.getChargeTimePerLevel() == 0 && charge[0] < data.getMaxChargeLevel()) {
 				charge[0]++;
-				ChatUtil.sendActionBar(player, "§6Charging... §e[" + "■".repeat(charge[0]) +
-				                               "□".repeat(data.getMaxChargeLevel() - charge[0]) + "]");
+				ActionBarManager.send(player, "§6Charging... §e[" + "■".repeat(charge[0]) +
+				                              "□".repeat(data.getMaxChargeLevel() - charge[0]) + "]");
 			}
 			// visual ring that grows with charge level
 			ParticleUtil.spawnChargeRing(player.getLocation(), charge[0], data.getMaxChargeLevel());
@@ -124,7 +124,7 @@ public class BiologicalAction {
 		// area-of-effect burst pulse
 		ParticleUtil.spawnAreaPulse(player.getLocation(), radius);
 
-		ChatUtil.sendActionBar(player, "&aReleased at charge level " + level);
+		ActionBarManager.send(player, "&aReleased at charge level " + level);
 	}
 
 	public void stop(Map<UUID, RepeatingTimer> activeTasks) {

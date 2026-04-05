@@ -5,6 +5,7 @@ import lombok.Getter;
 import me.luckyraven.copsncrooks.jail.JailRegistry;
 import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.util.downed.DownedPlayerRegistry;
+import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -64,7 +65,7 @@ public class DetainmentService {
 		setState(player, DetainmentState.HANDCUFFED);
 		applyVisuals(player, true);
 		ChatUtil.sendTitle(player, "&cHandcuffed", "&7You are restrained");
-		ChatUtil.sendActionBar(plugin, player, "&cYou are handcuffed", 40L);
+		ActionBarManager.send(plugin, player, "&cYou are handcuffed", 40L);
 	}
 
 	public void jail(Player player, int jailId) {
@@ -73,7 +74,7 @@ public class DetainmentService {
 		applyVisuals(player, true);
 		teleportToJail(player);
 		ChatUtil.sendTitle(player, "&4Jailed", "&7You have been transported to jail");
-		ChatUtil.sendActionBar(plugin, player, "&4You are jailed", 40L);
+		ActionBarManager.send(plugin, player, "&4You are jailed", 40L);
 	}
 
 	public void release(Player player) {
@@ -135,11 +136,11 @@ public class DetainmentService {
 		applyVisuals(player, false);
 
 		if (state == DetainmentState.HANDCUFFED) {
-			ChatUtil.sendActionBar(plugin, player, "&cHandcuffed &8- &7You cannot interact", 25L);
+			ActionBarManager.send(plugin, player, "&cHandcuffed &8- &7You cannot interact", 25L);
 			return;
 		}
 
-		ChatUtil.sendActionBar(plugin, player, "&4Jailed &8- &7You cannot interact", 25L);
+		ActionBarManager.send(plugin, player, "&4Jailed &8- &7You cannot interact", 25L);
 	}
 
 	private void teleportToJail(Player player) {

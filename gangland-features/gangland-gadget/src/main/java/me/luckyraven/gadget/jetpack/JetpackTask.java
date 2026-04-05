@@ -5,6 +5,7 @@ import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.item.fuel.FuelBar;
 import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.item.wearable.WearableTrait;
+import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.util.utilities.PlayerUtil;
@@ -191,7 +192,7 @@ public class JetpackTask extends BukkitRunnable {
 		} else {
 			actionBar = FuelBar.render(currentFuel, maxFuel);
 		}
-		ChatUtil.sendActionBar(player, actionBar);
+		ActionBarManager.sendBackground(player, actionBar, 10);
 	}
 
 	private int getEffectiveConsumptionRate(Wearable jetpack) {

@@ -5,7 +5,7 @@ import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.item.fuel.FuelBar;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
-import me.luckyraven.util.utilities.ChatUtil;
+import me.luckyraven.util.utilities.ActionBarManager;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -116,7 +116,7 @@ public class FuelRefuelListener implements Listener {
 		int current = Fuel.getCurrentFuel(fuelItem);
 		int max     = Fuel.getMaxFuel(fuelItem);
 		if (current >= max) {
-			ChatUtil.sendActionBar(player, "&cFuel is already full!");
+			ActionBarManager.send(player, "&cFuel is already full!");
 			return null;
 		}
 
@@ -129,7 +129,7 @@ public class FuelRefuelListener implements Listener {
 
 		// Play feedback
 		player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.2f);
-		ChatUtil.sendActionBar(player, FuelBar.render(newFuel, max));
+		ActionBarManager.send(player, FuelBar.render(newFuel, max));
 		return updated;
 	}
 
@@ -148,7 +148,7 @@ public class FuelRefuelListener implements Listener {
 		int current = Fuel.getCurrentFuel(fuelItem);
 		int max     = Fuel.getMaxFuel(fuelItem);
 		if (current >= max) {
-			ChatUtil.sendActionBar(player, "&cFuel is already full!");
+			ActionBarManager.send(player, "&cFuel is already full!");
 			return null;
 		}
 
@@ -161,7 +161,7 @@ public class FuelRefuelListener implements Listener {
 
 		// Play feedback
 		player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.2f);
-		ChatUtil.sendActionBar(player, FuelBar.render(newFuel, max));
+		ActionBarManager.send(player, FuelBar.render(newFuel, max));
 		return updated;
 	}
 

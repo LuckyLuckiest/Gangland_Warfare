@@ -2,6 +2,7 @@ package me.luckyraven.weapon.listener.reload;
 
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
@@ -62,7 +63,7 @@ public class WeaponDroppedListener implements Listener {
 
 		// check if the magazine is already full
 		if (weapon.isMagazineFull()) {
-			ChatUtil.sendActionBar(player, "&cMagazine is full!");
+			ActionBarManager.send(player, "&cMagazine is full!");
 			event.setCancelled(true);
 			return;
 		}
