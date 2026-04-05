@@ -5,6 +5,7 @@ import com.viaversion.viaversion.api.ViaAPI;
 import com.zaxxer.hikari.HikariConfig;
 import lombok.CustomLog;
 import lombok.Getter;
+import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
 import me.luckyraven.copsncrooks.npc.police.CopService;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
@@ -84,6 +85,10 @@ public final class Gangland extends JavaPlugin {
 		// shutdown cop service
 		CopService copService = initializer.getCopService();
 		if (copService != null) copService.shutdown();
+
+		// shutdown civilian service
+		CivilianService civilianService = initializer.getCivilianService();
+		if (civilianService != null) civilianService.shutdown();
 	}
 
 	@Override
