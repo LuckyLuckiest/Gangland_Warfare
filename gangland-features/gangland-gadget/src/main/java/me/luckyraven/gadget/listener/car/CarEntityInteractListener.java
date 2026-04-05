@@ -2,11 +2,11 @@ package me.luckyraven.gadget.listener.car;
 
 import me.luckyraven.gadget.car.CarService;
 import me.luckyraven.gadget.car.vehicle.ParkedVehicle;
-import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.item.fuel.FuelBar;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
@@ -60,27 +60,31 @@ public class CarEntityInteractListener implements Listener {
 
 				int canFuel = Fuel.getCurrentFuel(heldItem);
 				if (canFuel <= 0) {
-					ChatUtil.sendActionBar(player, "&cFuel can is empty!");
+					ActionBarManager.send(player, "&cFuel can is empty!");
 					return;
 				}
 
-				FuelService                  fuelService    = carService.getFuelService();
-				me.luckyraven.item.fuel.Fuel fuelDef        = fuelService.getFuel(heldFuelKey);
-				int                          maxCarFuel     = fuelDef != null ? fuelDef.getMaxFuel() : 0;
-				int                          currentCarFuel = parked.getFuel();
-				int                          spaceInCar     = maxCarFuel - currentCarFuel;
+				int maxCarFuel     = parked.getCar().getMaxFuel();
+				int currentCarFuel = parked.getFuel();
+				int spaceInCar     = maxCarFuel - currentCarFuel;
 
 				if (spaceInCar <= 0) {
-					ChatUtil.sendActionBar(player, "&cCar fuel is already full!");
+					ActionBarManager.send(player, "&cCar fuel is already full!");
 					return;
 				}
 
 				int toTransfer = Math.min(canFuel, spaceInCar);
-				carService.refuelParkedCar(entityUUID, toTransfer);
-				player.getInventory().setItemInMainHand(Fuel.setCurrentFuel(heldItem, canFuel - toTransfer));
+				if (!carService.refuelParkedCar(entityUUID, toTransfer)) {
+					ActionBarManager.send(player, "&cCould not refuel the car!");
+					return;
+				}
+
+				int newCarFuel  = parked.getFuel();
+				int actualAdded = newCarFuel - currentCarFuel;
+				player.getInventory().setItemInMainHand(Fuel.setCurrentFuel(heldItem, canFuel - actualAdded));
 
 				player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.2f);
-				ChatUtil.sendActionBar(player, FuelBar.render(currentCarFuel + toTransfer, maxCarFuel));
+				ActionBarManager.send(player, FuelBar.render(newCarFuel, maxCarFuel));
 				return;
 			}
 		}

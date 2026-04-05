@@ -54,7 +54,7 @@ public class FuelService {
 	@Nullable
 	public Fuel findFuelByMaterial(Material material) {
 		for (Fuel fuel : fuelRegistry.values()) {
-			Material fuelMat = fuel.getFuelMaterial().parseMaterial();
+			Material fuelMat = fuel.getFuelMaterial().get();
 			if (fuelMat != null && fuelMat == material) return fuel;
 		}
 		return null;

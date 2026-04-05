@@ -11,7 +11,6 @@ import me.luckyraven.gadget.car.vehicle.entity.VehicleEntity;
 import me.luckyraven.gadget.car.vehicle.packet.VehicleInputInterceptor;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
-import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.item.fuel.FuelKey;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.ItemBuilder;
@@ -434,18 +433,15 @@ public class CarService {
 	 * @param entityUUID UUID of the parked car entity
 	 * @param amount fuel ticks to add
 	 */
-	public void refuelParkedCar(UUID entityUUID, int amount) {
+	public boolean refuelParkedCar(UUID entityUUID, int amount) {
 		ParkedVehicle parked = parkedVehicles.get(entityUUID);
-		if (parked == null || amount <= 0) return;
+		if (parked == null || amount <= 0) return false;
 
 		Car car = parked.getCar();
-		if (!car.isFuelEnabled() || car.getFuelKey() == null) return;
+		if (!car.isFuelEnabled() || car.getFuelKey() == null) return false;
 
-		Fuel fuelDef = fuelService.getFuel(car.getFuelKey());
-		int  maxFuel = fuelDef != null ? fuelDef.getMaxFuel() : 0;
-
-		int toAdd = Math.min(amount, maxFuel - parked.getFuel());
-		if (toAdd <= 0) return;
+		int toAdd = Math.clamp(amount, 0, car.getMaxFuel() - parked.getFuel());
+		if (toAdd == 0) return false;
 
 		parked.addFuel(toAdd);
 		storePdc(parked.getEntity(), car.getCarId(), parked.getFuel(), parked.getDurability(), parked.getPlacerUUID());
@@ -455,6 +451,8 @@ public class CarService {
 			record.setFuel(parked.getFuel());
 			parkedCarRepository.save(record);
 		}
+
+		return true;
 	}
 
 	/**
