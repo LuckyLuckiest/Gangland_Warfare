@@ -72,6 +72,7 @@ public class CarInteractListener implements Listener {
 		// For a brand-new car (no NBT), default to the fuel definition's maximum capacity.
 		ItemBuilder itemBuilder = new ItemBuilder(item);
 		int         fuel;
+		int         maxFuel;
 		if (itemBuilder.hasNBTTag(FuelKey.FUEL_CURRENT.getKey())) {
 			fuel = itemBuilder.getIntegerTagData(FuelKey.FUEL_CURRENT.getKey());
 		} else if (car.isFuelEnabled() && car.getFuelKey() != null) {
@@ -79,6 +80,11 @@ public class CarInteractListener implements Listener {
 			fuel = fuelDef != null ? fuelDef.getMaxFuel() : 0;
 		} else {
 			fuel = 0;
+		}
+		if (itemBuilder.hasNBTTag(FuelKey.FUEL_MAX.getKey())) {
+			maxFuel = itemBuilder.getIntegerTagData(FuelKey.FUEL_MAX.getKey());
+		} else {
+			maxFuel = car.getMaxFuel();
 		}
 		int durability = itemBuilder.hasNBTTag(CarKey.CAR_DURABILITY.getKey()) ?
 		                 itemBuilder.getIntegerTagData(CarKey.CAR_DURABILITY.getKey()) :
@@ -90,7 +96,7 @@ public class CarInteractListener implements Listener {
 		                          :
 		                          null;
 
-		boolean placed = carService.placeCar(player, carId, spawnLoc, fuel, durability, exhaustSide);
+		boolean placed = carService.placeCar(player, carId, spawnLoc, fuel, maxFuel, durability, exhaustSide);
 
 		if (placed) {
 			if (item.getAmount() > 1) {

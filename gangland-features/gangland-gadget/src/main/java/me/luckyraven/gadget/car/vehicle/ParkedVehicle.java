@@ -20,15 +20,17 @@ public class ParkedVehicle {
 	private final UUID          placerUUID;
 	@Nullable
 	private final ExhaustSide   exhaustSide;
+	private final int           maxFuel;
 	private       int           fuel;
 	private       int           durability;
 
-	public ParkedVehicle(VehicleEntity entity, Car car, UUID placerUUID, int fuel, int durability,
+	public ParkedVehicle(VehicleEntity entity, Car car, UUID placerUUID, int fuel, int maxFuel, int durability,
 	                     @Nullable ExhaustSide exhaustSide) {
 		this.entity      = entity;
 		this.car         = car;
 		this.placerUUID  = placerUUID;
 		this.fuel        = fuel;
+		this.maxFuel     = maxFuel;
 		this.durability  = durability;
 		this.exhaustSide = exhaustSide;
 	}

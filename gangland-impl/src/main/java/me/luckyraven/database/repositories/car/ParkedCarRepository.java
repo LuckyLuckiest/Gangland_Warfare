@@ -1,6 +1,7 @@
 package me.luckyraven.database.repositories.car;
 
 import me.luckyraven.database.tables.car.ParkedCarTable;
+import me.luckyraven.gadget.car.ExhaustSide;
 import me.luckyraven.gadget.car.ParkedCar;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
@@ -33,17 +34,19 @@ public class ParkedCarRepository extends AbstractRepository<ParkedCar> {
 		List<Object[]>  data = getDatabase().table(parkedCarTable.getName()).selectAll();
 
 		for (Object[] result : data) {
-			int    v          = 0;
-			String dbId       = String.valueOf(result[v++]);
-			String carId      = String.valueOf(result[v++]);
-			String world      = String.valueOf(result[v++]);
-			double x          = (double) result[v++];
-			double y          = (double) result[v++];
-			double z          = (double) result[v++];
-			float  yaw        = (float) (double) result[v++];
-			int    fuel       = (int) result[v++];
-			int    durability = (int) result[v++];
-			Object placerRaw  = result[v];
+			int    v              = 0;
+			String dbId           = String.valueOf(result[v++]);
+			String carId          = String.valueOf(result[v++]);
+			String world          = String.valueOf(result[v++]);
+			double x              = (double) result[v++];
+			double y              = (double) result[v++];
+			double z              = (double) result[v++];
+			float  yaw            = (float) (double) result[v++];
+			int    fuel           = (int) result[v++];
+			int    maxFuel        = (int) result[v++];
+			int    durability     = (int) result[v++];
+			Object placerRaw      = result[v++];
+			Object exhaustSideRaw = result[v];
 
 			UUID placerUUID = null;
 			if (placerRaw != null) {
@@ -55,7 +58,13 @@ public class ParkedCarRepository extends AbstractRepository<ParkedCar> {
 				}
 			}
 
-			cars.add(new ParkedCar(dbId, carId, world, x, y, z, yaw, fuel, durability, placerUUID));
+			ExhaustSide exhaustSide = null;
+			if (exhaustSideRaw != null && !exhaustSideRaw.toString().isEmpty()) {
+				exhaustSide = ExhaustSide.fromString(exhaustSideRaw.toString());
+			}
+
+			cars.add(new ParkedCar(dbId, carId, world, x, y, z, yaw, fuel, maxFuel, durability, placerUUID,
+			                       exhaustSide));
 		}
 
 		return cars;

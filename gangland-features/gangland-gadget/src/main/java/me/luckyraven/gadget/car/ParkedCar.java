@@ -14,32 +14,36 @@ import java.util.UUID;
 @Getter
 public class ParkedCar {
 
-	private final String dbId;
-	private final String carId;
-	private final String world;
-	private final double x;
-	private final double y;
-	private final double z;
-	private final float  yaw;
+	private final String      dbId;
+	private final String      carId;
+	private final String      world;
+	private final double      x;
+	private final double      y;
+	private final double      z;
+	private final float       yaw;
 	@Nullable
-	private final UUID   placerUUID;
+	private final UUID        placerUUID;
+	@Nullable
+	private final ExhaustSide exhaustSide;
+	private final int         maxFuel;
 	@Setter
-	private       int    fuel;
+	private       int         fuel;
 	@Setter
-	private       int    durability;
+	private       int         durability;
 
-	public ParkedCar(String dbId, String carId, String world,
-	                 double x, double y, double z, float yaw,
-	                 int fuel, int durability, @Nullable UUID placerUUID) {
-		this.dbId       = dbId;
-		this.carId      = carId;
-		this.world      = world;
-		this.x          = x;
-		this.y          = y;
-		this.z          = z;
-		this.yaw        = yaw;
-		this.fuel       = fuel;
-		this.durability = durability;
-		this.placerUUID = placerUUID;
+	public ParkedCar(String dbId, String carId, String world, double x, double y, double z, float yaw, int fuel,
+	                 int maxFuel, int durability, @Nullable UUID placerUUID, @Nullable ExhaustSide exhaustSide) {
+		this.dbId        = dbId;
+		this.carId       = carId;
+		this.world       = world;
+		this.x           = x;
+		this.y           = y;
+		this.z           = z;
+		this.yaw         = yaw;
+		this.fuel        = fuel;
+		this.maxFuel     = maxFuel;
+		this.durability  = durability;
+		this.placerUUID  = placerUUID;
+		this.exhaustSide = exhaustSide;
 	}
 }

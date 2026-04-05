@@ -129,6 +129,7 @@ public class VehicleSession {
 
 		builder.addTag(CarKey.CAR_DURABILITY.getKey(), currentDurability);
 		builder.addTag(FuelKey.FUEL_CURRENT.getKey(), currentFuel);
+		builder.addTag(FuelKey.FUEL_MAX.getKey(), maxFuel);
 		builder.addTag(CarKey.CAR_OWNER.getKey(), driverUUID.toString());
 		builder.addTag(CarKey.CAR_EXHAUST_SIDE.getKey(), exhaustSide.name());
 

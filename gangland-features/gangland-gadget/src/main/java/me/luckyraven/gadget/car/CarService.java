@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <h3>Lifecycle</h3>
  * <ol>
  *   <li>Player right-clicks the car item on a block → {@link #placeCar} spawns the entity and
- *       registers a {@link ParkedVehicle}. The item is consumed by the caller.</li>
+ *       registers a {@link ParkedVehicle}. The caller consumes the item.</li>
  *   <li>Player right-clicks the entity → {@link #mountCar} creates a {@link VehicleSession},
  *       mounts the player, and starts the movement task.</li>
  *   <li>Player dismounts (shift) → {@link #parkCar} tears down the session, returns to parked.</li>
@@ -75,6 +75,7 @@ public class CarService {
 	// PersistentDataContainer keys stored on the Minecart entity
 	private final NamespacedKey pdcCarId;
 	private final NamespacedKey pdcFuel;
+	private final NamespacedKey pdcFuelMax;
 	private final NamespacedKey pdcDurability;
 	private final NamespacedKey pdcPlacer;
 	private final NamespacedKey pdcExhaustSide;
@@ -92,6 +93,7 @@ public class CarService {
 
 		this.pdcCarId       = new NamespacedKey(plugin, "car_id");
 		this.pdcFuel        = new NamespacedKey(plugin, "car_fuel");
+		this.pdcFuelMax     = new NamespacedKey(plugin, "car_fuel_max");
 		this.pdcDurability  = new NamespacedKey(plugin, "car_durability");
 		this.pdcPlacer      = new NamespacedKey(plugin, "car_placer");
 		this.pdcExhaustSide = new NamespacedKey(plugin, "car_exhaust_side");
@@ -107,11 +109,12 @@ public class CarService {
 	 * the item from the player's hand.
 	 *
 	 * @param fuel initial fuel value (read from the item's NBT)
+	 * @param maxFuel max fuel capacity (read from the item's NBT; falls back to the car config value)
 	 * @param durability initial durability value (read from the item's NBT)
 	 *
 	 * @return {@code true} if the entity was placed successfully
 	 */
-	public boolean placeCar(Player player, String carId, Location location, int fuel, int durability,
+	public boolean placeCar(Player player, String carId, Location location, int fuel, int maxFuel, int durability,
 	                        @Nullable ExhaustSide exhaustSide) {
 		Car car = carManager.getCar(carId);
 		if (car == null) return false;
@@ -125,11 +128,12 @@ public class CarService {
 		UUID entityUUID = entity.getEntityUUID();
 		if (entityUUID == null) return false;
 
-		storePdc(entity, carId, fuel, durability, player.getUniqueId());
+		storePdc(entity, carId, fuel, maxFuel, durability, player.getUniqueId());
 		storePdcExhaustSide(entity, exhaustSide);
 
-		ParkedVehicle pv     = new ParkedVehicle(entity, car, player.getUniqueId(), fuel, durability, exhaustSide);
-		ParkedCar     record = buildRecord(entityUUID, pv, spawnLoc);
+		ParkedVehicle pv = new ParkedVehicle(entity, car, player.getUniqueId(), fuel, maxFuel, durability,
+		                                     exhaustSide);
+		ParkedCar record = buildRecord(entityUUID, pv, spawnLoc);
 		parkedVehicles.put(entityUUID, pv);
 		if (record != null) {
 			storePdcDbId(entity, record.getDbId());
@@ -180,12 +184,12 @@ public class CarService {
 				parkedVehicles.put(entityUUID, parked);
 				return false;
 			}
-			Location respawnLoc = new Location(spawnWorld, record.getX(), record.getY(),
-			                                   record.getZ(), record.getYaw(), 0f);
+			Location respawnLoc = new Location(spawnWorld, record.getX(), record.getY(), record.getZ(), record.getYaw(),
+			                                   0f);
 			entity.despawn();
 			entity.spawn(respawnLoc);
-			storePdc(entity, record.getCarId(), record.getFuel(),
-			         record.getDurability(), record.getPlacerUUID());
+			storePdc(entity, record.getCarId(), record.getFuel(), parked.getMaxFuel(), record.getDurability(),
+			         record.getPlacerUUID());
 			storePdcDbId(entity, record.getDbId());
 
 			UUID newEntityUUID = entity.getEntityUUID();
@@ -197,7 +201,7 @@ public class CarService {
 			parkedCarRecords.put(newEntityUUID, record);
 		}
 
-		int maxFuel = car.getMaxFuel();
+		int maxFuel = parked.getMaxFuel();
 
 		VehicleSession session = new VehicleSession(entity, car, player, parked.getDurability(), parked.getFuel(),
 		                                            maxFuel, parked.getExhaustSide());
@@ -245,10 +249,12 @@ public class CarService {
 		int  currentFuel = session.getCurrentFuel();
 		UUID placerUUID  = session.getDriverUUID();
 
-		storePdc(session.getEntity(), session.getCar().getCarId(), currentFuel, durability, placerUUID);
+		int maxFuel = session.getMaxFuel();
+
+		storePdc(session.getEntity(), session.getCar().getCarId(), currentFuel, maxFuel, durability, placerUUID);
 		storePdcExhaustSide(session.getEntity(), session.getExhaustSide());
 
-		ParkedVehicle pv = new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, currentFuel,
+		ParkedVehicle pv = new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, currentFuel, maxFuel,
 		                                     durability, session.getExhaustSide());
 		parkedVehicles.put(entityUUID, pv);
 		vehicleRegistry.unregister(entityUUID);
@@ -260,7 +266,8 @@ public class CarService {
 			ParkedCar existing = parkedCarRecords.get(entityUUID);
 			String    dbId     = existing != null ? existing.getDbId() : UUID.randomUUID().toString();
 			ParkedCar record = new ParkedCar(dbId, session.getCar().getCarId(), loc.getWorld().getName(), loc.getX(),
-			                                 loc.getY(), loc.getZ(), loc.getYaw(), currentFuel, durability, placerUUID);
+			                                 loc.getY(), loc.getZ(), loc.getYaw(), currentFuel, maxFuel, durability,
+			                                 placerUUID, session.getExhaustSide());
 			parkedCarRecords.put(entityUUID, record);
 			parkedCarRepository.save(record);
 		}
@@ -289,6 +296,7 @@ public class CarService {
 		ItemBuilder builder = new ItemBuilder(item);
 		builder.addTag(CarKey.CAR_DURABILITY.getKey(), parked.getDurability());
 		builder.addTag(FuelKey.FUEL_CURRENT.getKey(), parked.getFuel());
+		builder.addTag(FuelKey.FUEL_MAX.getKey(), parked.getMaxFuel());
 		builder.addTag(CarKey.CAR_OWNER.getKey(), player.getUniqueId().toString());
 		if (parked.getExhaustSide() != null) {
 			builder.addTag(CarKey.CAR_EXHAUST_SIDE.getKey(), parked.getExhaustSide().name());
@@ -372,7 +380,7 @@ public class CarService {
 			UUID placerUUID  = session.getDriverUUID();
 
 			ParkedVehicle pv = new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, currentFuel,
-			                                     durability, session.getExhaustSide());
+			                                     session.getMaxFuel(), durability, session.getExhaustSide());
 			parkedVehicles.put(entityUUID, pv);
 
 			Entity entity = session.getEntity().getBukkitEntity();
@@ -382,7 +390,8 @@ public class CarService {
 				String    dbId     = existing != null ? existing.getDbId() : UUID.randomUUID().toString();
 				ParkedCar record = new ParkedCar(dbId, session.getCar().getCarId(), loc.getWorld().getName(),
 				                                 loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), currentFuel,
-				                                 durability, placerUUID);
+				                                 session.getMaxFuel(), durability, placerUUID,
+				                                 session.getExhaustSide());
 				parkedCarRecords.put(entityUUID, record);
 			}
 		}
@@ -390,7 +399,7 @@ public class CarService {
 
 		// DB persistence is handled by PeriodicalUpdates.forceUpdate() which runs after
 		// destroyAll() completes. The data supplier returns parkedCarRecords.values(), so
-		// all records (including the just-converted sessions) are flushed by the force-save.
+		// the force-save flushes all records (including the just-converted sessions).
 
 		for (ParkedVehicle parked : parkedVehicles.values()) {
 			parked.getEntity().despawn();
@@ -412,11 +421,14 @@ public class CarService {
 		for (UUID entityUUID : new ArrayList<>(parkedVehicles.keySet())) {
 			ParkedVehicle old = parkedVehicles.get(entityUUID);
 			if (old == null) continue;
+
 			Car freshCar = carManager.getCar(old.getCar().getCarId());
 			if (freshCar == null) continue;
-			parkedVehicles.put(entityUUID,
-			                   new ParkedVehicle(old.getEntity(), freshCar, old.getPlacerUUID(), old.getFuel(),
-			                                     old.getDurability(), old.getExhaustSide()));
+
+			ParkedVehicle parkedVehicle = new ParkedVehicle(old.getEntity(), freshCar, old.getPlacerUUID(),
+			                                                old.getFuel(), old.getMaxFuel(), old.getDurability(),
+			                                                old.getExhaustSide());
+			parkedVehicles.put(entityUUID, parkedVehicle);
 		}
 
 		for (VehicleSession session : vehicleRegistry.getAllSessions()) {
@@ -456,6 +468,9 @@ public class CarService {
 
 			Minecart survivor = findSurvivor(spawnLoc.getChunk(), record.getDbId());
 
+			// Use the persisted max fuel from the DB record; fall back to config if not set (0 = legacy row).
+			int maxFuel = record.getMaxFuel() > 0 ? record.getMaxFuel() : car.getMaxFuel();
+
 			VehicleEntity entity;
 			if (survivor != null) {
 				// Reclaim the surviving entity — do not spawn a duplicate.
@@ -468,10 +483,13 @@ public class CarService {
 			UUID entityUUID = entity.getEntityUUID();
 			if (entityUUID == null) continue;
 
-			storePdc(entity, record.getCarId(), record.getFuel(), record.getDurability(), record.getPlacerUUID());
+			storePdc(entity, record.getCarId(), record.getFuel(), maxFuel, record.getDurability(),
+			         record.getPlacerUUID());
 			storePdcDbId(entity, record.getDbId());
-			parkedVehicles.put(entityUUID, new ParkedVehicle(entity, car, record.getPlacerUUID(), record.getFuel(),
-			                                                 record.getDurability(), null));
+
+			ParkedVehicle parkedVehicle = new ParkedVehicle(entity, car, record.getPlacerUUID(), record.getFuel(),
+			                                                maxFuel, record.getDurability(), record.getExhaustSide());
+			parkedVehicles.put(entityUUID, parkedVehicle);
 			parkedCarRecords.put(entityUUID, record);
 		}
 	}
@@ -490,11 +508,12 @@ public class CarService {
 		Car car = parked.getCar();
 		if (!car.isFuelEnabled() || car.getFuelKey() == null) return false;
 
-		int toAdd = Math.clamp(amount, 0, car.getMaxFuel() - parked.getFuel());
+		int toAdd = Math.clamp(amount, 0, parked.getMaxFuel() - parked.getFuel());
 		if (toAdd == 0) return false;
 
 		parked.addFuel(toAdd);
-		storePdc(parked.getEntity(), car.getCarId(), parked.getFuel(), parked.getDurability(), parked.getPlacerUUID());
+		storePdc(parked.getEntity(), car.getCarId(), parked.getFuel(), parked.getMaxFuel(), parked.getDurability(),
+		         parked.getPlacerUUID());
 
 		ParkedCar record = parkedCarRecords.get(entityUUID);
 		if (record != null) {
@@ -598,10 +617,11 @@ public class CarService {
 		ParkedCar existing = parkedCarRecords.get(entityUUID);
 		String    dbId     = existing != null ? existing.getDbId() : UUID.randomUUID().toString();
 		return new ParkedCar(dbId, pv.getCar().getCarId(), loc.getWorld().getName(), loc.getX(), loc.getY(), loc.getZ(),
-		                     loc.getYaw(), pv.getFuel(), pv.getDurability(), pv.getPlacerUUID());
+		                     loc.getYaw(), pv.getFuel(), pv.getMaxFuel(), pv.getDurability(), pv.getPlacerUUID(),
+		                     pv.getExhaustSide());
 	}
 
-	private void storePdc(VehicleEntity vehicleEntity, String carId, int fuel, int durability,
+	private void storePdc(VehicleEntity vehicleEntity, String carId, int fuel, int maxFuel, int durability,
 	                      @Nullable UUID placerUUID) {
 		Entity entity = vehicleEntity.getBukkitEntity();
 		if (entity == null) return;
@@ -609,6 +629,7 @@ public class CarService {
 		PersistentDataContainer pdc = entity.getPersistentDataContainer();
 		pdc.set(pdcCarId, PersistentDataType.STRING, carId);
 		pdc.set(pdcFuel, PersistentDataType.INTEGER, fuel);
+		pdc.set(pdcFuelMax, PersistentDataType.INTEGER, maxFuel);
 		pdc.set(pdcDurability, PersistentDataType.INTEGER, durability);
 		if (placerUUID != null) {
 			pdc.set(pdcPlacer, PersistentDataType.STRING, placerUUID.toString());
