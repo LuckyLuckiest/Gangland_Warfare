@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import me.luckyraven.item.fuel.FuelKey;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Color;
 import org.bukkit.Material;
@@ -57,12 +58,20 @@ public class Wearable {
 
 	// Jetpack-specific fields (null/zero for non-jetpack wearables)
 	@Nullable
-	private final String fuelKey;
-	private final int    fuelConsumptionRate;
-	private final double ascendPower;
-	private final double glideDescentRate;
-	private final double maxSpeedY;
-	private final int    maxFuel;
+	private final String             fuelKey;
+	private final int                fuelConsumptionRate;
+	private final double             ascendPower;
+	private final double             glideDescentRate;
+	private final double             maxSpeedY;
+	private final int                maxFuel;
+	@Nullable
+	private final SoundConfiguration thrustDefaultSound;
+	@Nullable
+	private final SoundConfiguration thrustCustomSound;
+	@Nullable
+	private final SoundConfiguration glideDefaultSound;
+	@Nullable
+	private final SoundConfiguration glideCustomSound;
 
 	/**
 	 * Extra generic damage reduction from vanilla {@code PROTECTION} enchantment. Each level contributes 1.5 %.

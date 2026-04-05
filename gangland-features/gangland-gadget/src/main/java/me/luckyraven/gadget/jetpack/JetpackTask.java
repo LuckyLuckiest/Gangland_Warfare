@@ -5,6 +5,7 @@ import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.item.fuel.FuelBar;
 import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.item.wearable.WearableTrait;
+import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.util.utilities.ParticleUtil;
@@ -34,19 +35,15 @@ import org.bukkit.util.Vector;
  */
 public class JetpackTask extends BukkitRunnable {
 
-	private final JetpackSession      session;
-	private final JetpackService      jetpackService;
-	private final FuelService         fuelService;
-	private final GadgetPhysicsConfig physicsConfig;
+	private static final int                 SOUND_INTERVAL_TICKS = 10;
+	private final        JetpackSession      session;
+	private final        JetpackService      jetpackService;
+	private final        FuelService         fuelService;
+	private final        GadgetPhysicsConfig physicsConfig;
 
-	/**
-	 * Consecutive ticks of active thrust; drives the ramp-up curve.
-	 */
 	private int     thrustTicks         = 0;
-	/**
-	 * Previous tick's state of shift+jump held, used for rising-edge detection of the glide toggle.
-	 */
 	private boolean prevGlideToggleHeld = false;
+	private int     soundTick           = 0;
 
 	public JetpackTask(JetpackSession session, JetpackService jetpackService, FuelService fuelService,
 	                   GadgetPhysicsConfig physicsConfig) {
@@ -74,6 +71,7 @@ public class JetpackTask extends BukkitRunnable {
 		double newY     = applyVerticalPhysics(player, jetpack, velocity.getY(), hasFuel, spaceHeld, onGround);
 		applyHorizontalPhysics(player, velocity.getX(), newY, velocity.getZ(), hasFuel, spaceHeld, onGround);
 		updateActionBar(player, spaceHeld, hasFuel);
+		playFlightSounds(player, jetpack);
 	}
 
 	private boolean checkGuards(Player player, Wearable jetpack) {
@@ -101,8 +99,8 @@ public class JetpackTask extends BukkitRunnable {
 		}
 	}
 
-	private double applyVerticalPhysics(Player player, Wearable jetpack, double currentY,
-	                                    boolean hasFuel, boolean spaceHeld, boolean onGround) {
+	private double applyVerticalPhysics(Player player, Wearable jetpack, double currentY, boolean hasFuel,
+	                                    boolean spaceHeld, boolean onGround) {
 		if (session.isGlideModeActive()) {
 			thrustTicks = 0;
 			if (hasFuel) {
@@ -137,8 +135,8 @@ public class JetpackTask extends BukkitRunnable {
 		return currentY;
 	}
 
-	private void applyHorizontalPhysics(Player player, double newX, double newY, double newZ,
-	                                    boolean hasFuel, boolean spaceHeld, boolean onGround) {
+	private void applyHorizontalPhysics(Player player, double newX, double newY, double newZ, boolean hasFuel,
+	                                    boolean spaceHeld, boolean onGround) {
 		if (onGround && !(hasFuel && spaceHeld)) return;
 
 		boolean fwd = session.isInputForward();
@@ -209,6 +207,18 @@ public class JetpackTask extends BukkitRunnable {
 		int    capped    = Math.min(fuelEfficientLevel, WearableTrait.FUEL_EFFICIENT.getMaxLevel());
 		double reduction = capped * WearableTrait.FUEL_EFFICIENT.getEffectPerLevel();
 		return Math.max(1, (int) (baseRate * (1.0 - reduction)));
+	}
+
+	private void playFlightSounds(Player player, Wearable jetpack) {
+		soundTick++;
+		if (soundTick < SOUND_INTERVAL_TICKS) return;
+		soundTick = 0;
+
+		if (session.isThrusting()) {
+			SoundConfiguration.playSounds(player, jetpack.getThrustDefaultSound(), jetpack.getThrustCustomSound());
+		} else if (session.isGliding()) {
+			SoundConfiguration.playSounds(player, jetpack.getGlideDefaultSound(), jetpack.getGlideCustomSound());
+		}
 	}
 
 	private boolean isWearingJetpack(Player player, Wearable jetpack) {

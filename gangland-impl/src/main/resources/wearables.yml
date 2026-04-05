@@ -100,7 +100,18 @@ jetpack:
       LIGHTWEIGHT: 2
    Jetpack:
       Fuel_Key: "gasoline"
-      Fuel_Consumption_Rate: 2
-      Ascend_Power: 0.35
+      Fuel_Consumption_Rate: 1
+      Ascend_Power: 0.2
       Glide_Descent_Rate: -0.05
-      Max_Speed_Y: 0.8
+      Max_Speed_Y: 0.45
+      Sound:
+         Thrust:
+            Default_Sound:
+               Sound: ENTITY_BLAZE_SHOOT
+               Volume: 0.6
+               Pitch: 1.8
+         Glide:
+            Default_Sound:
+               Sound: ITEM_ELYTRA_FLYING
+               Volume: 0.4
+               Pitch: 1.0

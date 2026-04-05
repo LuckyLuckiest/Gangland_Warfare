@@ -7,11 +7,13 @@ import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.item.wearable.WearableTrait;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
+import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.*;
@@ -26,6 +28,22 @@ public class WearableAddon extends WearableService {
 	public WearableAddon(Consumer<String> permissionRegistrar, FileManager fileManager) {
 		this.permissionRegistrar = permissionRegistrar;
 		this.fileManager         = fileManager;
+	}
+
+	/**
+	 * Reads a sound sub-section at {@code path} inside {@code parent} and constructs a {@link SoundConfiguration}.
+	 * Returns {@code null} if the sub-section or its {@code Sound} key is missing.
+	 */
+	@Nullable
+	private static SoundConfiguration parseSoundConfig(ConfigurationSection parent, String path,
+	                                                   SoundConfiguration.SoundType type) {
+		ConfigurationSection sub = parent.getConfigurationSection(path);
+		if (sub == null) return null;
+		String sound = sub.getString("Sound");
+		if (sound == null || sound.isEmpty()) return null;
+		float volume = (float) sub.getDouble("Volume", 1.0);
+		float pitch  = (float) sub.getDouble("Pitch", 1.0);
+		return new SoundConfiguration(type, sound, volume, pitch);
 	}
 
 	/**
@@ -69,7 +87,7 @@ public class WearableAddon extends WearableService {
 			String name           = section.getString("Name");
 
 			if (materialString == null || name == null) {
-				log.warn("Wearable '" + key + "' is missing Material or Name - skipped.");
+				log.warn("Wearable '{}' is missing Material or Name - skipped.", key);
 				continue;
 			}
 
@@ -107,12 +125,16 @@ public class WearableAddon extends WearableService {
 			}
 
 			// Jetpack section (optional)
-			String fuelKey             = null;
-			int    fuelConsumptionRate = 0;
-			double ascendPower         = 0;
-			double glideDescentRate    = 0;
-			double maxSpeedY           = 0;
-			int    maxFuel             = 0;
+			String             fuelKey             = null;
+			int                fuelConsumptionRate = 0;
+			double             ascendPower         = 0;
+			double             glideDescentRate    = 0;
+			double             maxSpeedY           = 0;
+			int                maxFuel             = 0;
+			SoundConfiguration thrustDefaultSound  = null;
+			SoundConfiguration thrustCustomSound   = null;
+			SoundConfiguration glideDefaultSound   = null;
+			SoundConfiguration glideCustomSound    = null;
 
 			ConfigurationSection jetpackSection = section.getConfigurationSection("Jetpack");
 			if (jetpackSection != null) {
@@ -122,6 +144,18 @@ public class WearableAddon extends WearableService {
 				glideDescentRate    = jetpackSection.getDouble("Glide_Descent_Rate", -0.05);
 				maxSpeedY           = jetpackSection.getDouble("Max_Speed_Y", 0.8);
 				maxFuel             = jetpackSection.getInt("Max_Fuel", 3600);
+
+				ConfigurationSection soundSection = jetpackSection.getConfigurationSection("Sound");
+				if (soundSection != null) {
+					thrustDefaultSound = parseSoundConfig(soundSection, "Thrust.Default_Sound",
+					                                      SoundConfiguration.SoundType.VANILLA);
+					thrustCustomSound  = parseSoundConfig(soundSection, "Thrust.Custom_Sound",
+					                                      SoundConfiguration.SoundType.CUSTOM);
+					glideDefaultSound  = parseSoundConfig(soundSection, "Glide.Default_Sound",
+					                                      SoundConfiguration.SoundType.VANILLA);
+					glideCustomSound   = parseSoundConfig(soundSection, "Glide.Custom_Sound",
+					                                      SoundConfiguration.SoundType.CUSTOM);
+				}
 			}
 
 			Wearable wearable = Wearable.builder()
@@ -130,7 +164,7 @@ public class WearableAddon extends WearableService {
 			                            .name(name)
 			                            .lore(lore.isEmpty() ? null : lore)
 			                            .wearableKey(key)
-			                            .baseDamageReduction(Math.min(Math.max(baseDamageReduction, 0.0), 1.0))
+			                            .baseDamageReduction(Math.clamp(baseDamageReduction, 0.0, 1.0))
 			                            .traits(traits)
 			                            .leatherColor(leatherColor)
 			                            .temporary(false)
@@ -140,6 +174,10 @@ public class WearableAddon extends WearableService {
 			                            .glideDescentRate(glideDescentRate)
 			                            .maxSpeedY(maxSpeedY)
 			                            .maxFuel(maxFuel)
+			                            .thrustDefaultSound(thrustDefaultSound)
+			                            .thrustCustomSound(thrustCustomSound)
+			                            .glideDefaultSound(glideDefaultSound)
+			                            .glideCustomSound(glideCustomSound)
 			                            .build();
 
 			register(key, wearable);
