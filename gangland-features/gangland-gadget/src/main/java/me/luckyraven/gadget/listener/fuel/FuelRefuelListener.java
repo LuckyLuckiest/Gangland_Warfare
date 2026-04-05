@@ -3,6 +3,7 @@ package me.luckyraven.gadget.listener.fuel;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.item.fuel.FuelBar;
+import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ActionBarManager;
@@ -77,6 +78,21 @@ public class FuelRefuelListener implements Listener {
 
 		if (cursor == null || clicked == null) return;
 
+		// Cursor = fuel container (e.g. gasoline), clicked = fuel-enabled wearable (e.g. jetpack)
+		if (Fuel.isFuelItem(cursor) && !Wearable.isRegisteredWearable(cursor) && Fuel.isFuelItem(clicked) &&
+		    Wearable.isRegisteredWearable(clicked)) {
+			String cursorKey  = Fuel.getFuelKey(cursor);
+			String clickedKey = Fuel.getFuelKey(clicked);
+			if (cursorKey == null || !cursorKey.equals(clickedKey)) return;
+			ItemStack[] pair = tryTransferFuelToWearable(player, cursor, clicked);
+			if (pair != null) {
+				event.getView().setCursor(pair[0]);
+				event.setCurrentItem(pair[1]);
+				event.setCancelled(true);
+			}
+			return;
+		}
+
 		// Cursor = fuel material, clicked = fuel item
 		if (Fuel.isFuelItem(clicked) && !Fuel.isFuelItem(cursor)) {
 			String fuelKey = Fuel.getFuelKey(clicked);
@@ -131,6 +147,33 @@ public class FuelRefuelListener implements Listener {
 		player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.2f);
 		ActionBarManager.send(player, FuelBar.render(newFuel, max));
 		return updated;
+	}
+
+	/**
+	 * Transfers as much fuel as possible from a fuel container (e.g. gasoline can) to a fuel-enabled wearable (e.g.
+	 * jetpack). Returns {@code [updatedContainer, updatedWearable]}, or {@code null} if no transfer occurred.
+	 */
+	private ItemStack[] tryTransferFuelToWearable(Player player, ItemStack container, ItemStack wearable) {
+		int containerFuel = Fuel.getCurrentFuel(container);
+		int wearableFuel  = Fuel.readFuelCurrent(wearable);
+		int wearableMax   = Fuel.readFuelMax(wearable);
+
+		if (containerFuel <= 0) {
+			ActionBarManager.send(player, "&cNo fuel in container!");
+			return null;
+		}
+		if (wearableFuel >= wearableMax) {
+			ActionBarManager.send(player, "&cFuel is already full!");
+			return null;
+		}
+
+		int       transfer         = Math.min(containerFuel, wearableMax - wearableFuel);
+		ItemStack updatedContainer = Fuel.setCurrentFuel(container, containerFuel - transfer);
+		ItemStack updatedWearable  = Fuel.writeFuelCurrent(wearable, wearableFuel + transfer);
+
+		player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.2f);
+		ActionBarManager.send(player, FuelBar.render(wearableFuel + transfer, wearableMax));
+		return new ItemStack[]{updatedContainer, updatedWearable};
 	}
 
 	/**
