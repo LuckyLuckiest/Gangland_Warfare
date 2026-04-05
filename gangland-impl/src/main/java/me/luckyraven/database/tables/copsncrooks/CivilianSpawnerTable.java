@@ -14,17 +14,22 @@ public class CivilianSpawnerTable extends Table<CivilianSpawner> {
 	public CivilianSpawnerTable() {
 		super("civilian_spawner");
 
-		Attribute<Integer> id     = new Attribute<>("id", true, Integer.class);
-		Attribute<String>  typeId = new Attribute<>("type_id", false, String.class);
-		Attribute<String>  world  = new Attribute<>("world", false, String.class);
-		Attribute<Double>  x      = new Attribute<>("x", false, Double.class);
-		Attribute<Double>  y      = new Attribute<>("y", false, Double.class);
-		Attribute<Double>  z      = new Attribute<>("z", false, Double.class);
-		Attribute<Float>   yaw    = new Attribute<>("yaw", false, Float.class);
-		Attribute<Float>   pitch  = new Attribute<>("pitch", false, Float.class);
+		Attribute<Integer> id      = new Attribute<>("id", true, Integer.class);
+		Attribute<String>  typeId  = new Attribute<>("type_id", false, String.class);
+		Attribute<String>  groupId = new Attribute<>("group_id", false, String.class);
+		Attribute<String>  world   = new Attribute<>("world", false, String.class);
+		Attribute<Double>  x       = new Attribute<>("x", false, Double.class);
+		Attribute<Double>  y       = new Attribute<>("y", false, Double.class);
+		Attribute<Double>  z       = new Attribute<>("z", false, Double.class);
+		Attribute<Float>   yaw     = new Attribute<>("yaw", false, Float.class);
+		Attribute<Float>   pitch   = new Attribute<>("pitch", false, Float.class);
+
+		typeId.setCanBeNull(true);
+		groupId.setCanBeNull(true);
 
 		this.addAttribute(id);
 		this.addAttribute(typeId);
+		this.addAttribute(groupId);
 		this.addAttribute(world);
 		this.addAttribute(x);
 		this.addAttribute(y);
@@ -37,8 +42,9 @@ public class CivilianSpawnerTable extends Table<CivilianSpawner> {
 	public Object[] getData(CivilianSpawner data) {
 		Location location = data.getLocation();
 
-		return new Object[]{data.getId(), data.getTypeId(), Objects.requireNonNull(location.getWorld()).getName(),
-		                    location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch()};
+		return new Object[]{data.getId(), data.getTypeId(), data.getGroupId(),
+		                    Objects.requireNonNull(location.getWorld()).getName(), location.getX(), location.getY(),
+		                    location.getZ(), location.getYaw(), location.getPitch()};
 	}
 
 	@Override

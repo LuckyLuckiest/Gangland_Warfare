@@ -63,6 +63,7 @@ class CivilianSpawnerInfoCommand extends SubArgument {
 			int      z        = location.getBlockZ();
 			String   world    = location.getWorld() != null ? location.getWorld().getName() : "?";
 			String   typeId   = spawner.getTypeId() != null ? spawner.getTypeId() : "any";
+			String   groupId  = spawner.getGroupId() != null ? spawner.getGroupId() : "none";
 
 			String tpCommand = String.format("/%s civilian spawner teleport %d", Gangland.SHORT_PREFIX, id);
 
@@ -73,8 +74,9 @@ class CivilianSpawnerInfoCommand extends SubArgument {
 
 			sender.spigot().sendMessage(message);
 
-			String info = String.format(" &bX: &7%d\n &bY: &7%d\n &bZ: &7%d\n &bWorld: &7%s\n &bType: &7%s",
-			                            x, y, z, world, typeId);
+			String info = String.format(
+					" &bX: &7%d\n &bY: &7%d\n &bZ: &7%d\n &bWorld: &7%s\n &bType: &7%s\n &bGroup: &7%s",
+					x, y, z, world, typeId, groupId);
 
 			sender.sendMessage(GanglandChatUtil.color(info));
 		}, sender -> gangland.getInitializer().getCivilianSpawnManager().getSpawnerIds()

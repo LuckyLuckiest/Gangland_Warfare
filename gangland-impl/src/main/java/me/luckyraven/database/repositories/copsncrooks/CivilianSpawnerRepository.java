@@ -39,8 +39,11 @@ public class CivilianSpawnerRepository extends AbstractRepository<CivilianSpawne
 		for (Object[] result : data) {
 			int v = 0;
 
-			int    id        = (int) result[v++];
-			String typeId    = String.valueOf(result[v++]);
+			int    id     = (int) result[v++];
+			String typeId = result[v] != null ? String.valueOf(result[v]) : null;
+			v++;
+			String groupId = result[v] != null ? String.valueOf(result[v]) : null;
+			v++;
 			String worldName = String.valueOf(result[v++]);
 			double x         = (double) result[v++];
 			double y         = (double) result[v++];
@@ -53,7 +56,7 @@ public class CivilianSpawnerRepository extends AbstractRepository<CivilianSpawne
 			if (world == null) continue;
 			Location location = new Location(world, x, y, z, (float) yaw, (float) pitch);
 
-			copSpawners.add(new CivilianSpawner(id, location, typeId));
+			copSpawners.add(new CivilianSpawner(id, location, typeId, groupId));
 
 			CopSpawnManager.ID = id;
 		}
