@@ -106,6 +106,13 @@ public class Settings implements FileInitializer {
 	private static @Getter boolean civilianAiEnabled;
 	private static @Getter int     civilianAiTickRate;
 
+	// civilian spawner proximity configuration
+	private static @Getter double civilianSpawnerActivationRadius;
+	private static @Getter double civilianSpawnerDespawnRadius;
+	private static @Getter int    civilianSpawnerMaxNpcs;
+	private static @Getter int    civilianSpawnerCheckInterval;
+	private static @Getter String civilianSpawnerDefaultTypeId;
+
 	// civilian spawn configuration
 	private static @Getter double civilianSpawnMinDistance, civilianSpawnMaxDistance, civilianSpawnPhase1MinDistance;
 	private static @Getter double civilianSpawnRadiusShrinkStep, civilianSpawnSpawnerPreferenceRadius,
@@ -382,6 +389,16 @@ public class Settings implements FileInitializer {
 
 		civilianAiEnabled  = civilianBehaviour.getBoolean("Enabled", true);
 		civilianAiTickRate = civilianBehaviour.getInt("AI_Tick_Rate", 20);
+
+		// civilian spawner proximity
+		var civilianSpawnerProximity = civilian.getConfigurationSection("Spawner_Proximity");
+		Objects.requireNonNull(civilianSpawnerProximity);
+
+		civilianSpawnerActivationRadius = civilianSpawnerProximity.getDouble("Activation_Radius", 60.0);
+		civilianSpawnerDespawnRadius    = civilianSpawnerProximity.getDouble("Despawn_Radius", 80.0);
+		civilianSpawnerMaxNpcs          = civilianSpawnerProximity.getInt("Max_Npcs_Per_Spawner", 5);
+		civilianSpawnerCheckInterval    = civilianSpawnerProximity.getInt("Check_Interval", 100);
+		civilianSpawnerDefaultTypeId    = civilianSpawnerProximity.getString("Default_Type_Id", "");
 
 		// cop spawn
 		var civiliansSpawn = civilian.getConfigurationSection("Spawn");

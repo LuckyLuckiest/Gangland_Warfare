@@ -452,6 +452,23 @@ Civilians:
       Phase1_Attempts: 20
       # Number of attempts per shrink step in phase-2 of spawn location selection.
       Phase2_Attempts: 15
+   # Controls automatic civilian spawning from registered spawner points based on player proximity.
+   # Civilians spawn at spawner locations when a player enters the activation radius, similar to
+   # Minecraft village spawning. They despawn when all players move beyond the despawn radius.
+   Spawner_Proximity:
+      # Radius within which a player activates a civilian spawner (blocks). Large values mean
+      # civilians are already present when the player arrives at the location.
+      Activation_Radius: 60.0
+      # Radius beyond which all civilians from a spawner are despawned when no player is within it (blocks).
+      # Should be larger than Activation_Radius to avoid immediate despawn on the boundary.
+      Despawn_Radius: 80.0
+      # Maximum number of civilians that can be alive at once per spawner.
+      Max_Npcs_Per_Spawner: 5
+      # Ticks between each proximity check cycle. 100 ticks = 5 seconds at 20 TPS.
+      Check_Interval: 100
+      # Default civilian type ID to use when a spawner has no pinned type.
+      # Must match a type key defined in entity_marker.yml. Leave empty to skip untyped spawners.
+      Default_Type_Id: ""
 
 # +------------+ #
 # | Loot Chest | #

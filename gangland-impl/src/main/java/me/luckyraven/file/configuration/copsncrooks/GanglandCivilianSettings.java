@@ -72,4 +72,31 @@ public class GanglandCivilianSettings implements CivilianSettings {
 	public int getMinRepathAfterLossTicks() {
 		return Settings.getNpcNavMinRepathAfterLossTicks();
 	}
+
+	// ── Spawner proximity ─────────────────────────────────────────────────────
+
+	@Override
+	public double getCivilianSpawnerActivationRadius() {
+		return Settings.getCivilianSpawnerActivationRadius();
+	}
+
+	@Override
+	public double getCivilianSpawnerDespawnRadius() {
+		return Settings.getCivilianSpawnerDespawnRadius();
+	}
+
+	@Override
+	public int getCivilianSpawnerMaxNpcs() {
+		return Settings.getCivilianSpawnerMaxNpcs();
+	}
+
+	@Override
+	public int getCivilianSpawnerCheckInterval() {
+		return Settings.getCivilianSpawnerCheckInterval();
+	}
+
+	@Override
+	public String getCivilianSpawnerDefaultTypeId() {
+		return Settings.getCivilianSpawnerDefaultTypeId();
+	}
 }
