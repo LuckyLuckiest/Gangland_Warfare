@@ -1,5 +1,6 @@
 package me.luckyraven.gadget.listener.car;
 
+import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarService;
 import me.luckyraven.gadget.car.vehicle.ParkedVehicle;
 import me.luckyraven.item.fuel.Fuel;
@@ -55,37 +56,38 @@ public class CarEntityInteractListener implements Listener {
 			String        heldFuelKey = Fuel.getFuelKey(heldItem);
 			ParkedVehicle parked      = carService.getParkedVehicle(entityUUID);
 
-			if (parked != null && parked.getCar().isFuelEnabled() && heldFuelKey != null &&
-			    heldFuelKey.equals(parked.getCar().getFuelKey())) {
+			if (parked != null) {
+				Car car = parked.getCar();
+				if (car.isFuelEnabled() && heldFuelKey != null && heldFuelKey.equals(car.getFuelKey())) {
+					int canFuel = Fuel.getCurrentFuel(heldItem);
+					if (canFuel <= 0) {
+						ActionBarManager.send(player, "&cFuel can is empty!");
+						return;
+					}
 
-				int canFuel = Fuel.getCurrentFuel(heldItem);
-				if (canFuel <= 0) {
-					ActionBarManager.send(player, "&cFuel can is empty!");
+					int maxCarFuel     = parked.getMaxFuel();
+					int currentCarFuel = parked.getFuel();
+					int spaceInCar     = maxCarFuel - currentCarFuel;
+
+					if (spaceInCar <= 0) {
+						ActionBarManager.send(player, "&cCar fuel is already full!");
+						return;
+					}
+
+					int toTransfer = Math.min(canFuel, spaceInCar);
+					if (!carService.refuelParkedCar(entityUUID, toTransfer)) {
+						ActionBarManager.send(player, "&cCould not refuel the car!");
+						return;
+					}
+
+					int newCarFuel  = parked.getFuel();
+					int actualAdded = newCarFuel - currentCarFuel;
+					player.getInventory().setItemInMainHand(Fuel.setCurrentFuel(heldItem, canFuel - actualAdded));
+
+					player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.2f);
+					ActionBarManager.send(player, FuelBar.render(newCarFuel, maxCarFuel));
 					return;
 				}
-
-				int maxCarFuel     = parked.getCar().getMaxFuel();
-				int currentCarFuel = parked.getFuel();
-				int spaceInCar     = maxCarFuel - currentCarFuel;
-
-				if (spaceInCar <= 0) {
-					ActionBarManager.send(player, "&cCar fuel is already full!");
-					return;
-				}
-
-				int toTransfer = Math.min(canFuel, spaceInCar);
-				if (!carService.refuelParkedCar(entityUUID, toTransfer)) {
-					ActionBarManager.send(player, "&cCould not refuel the car!");
-					return;
-				}
-
-				int newCarFuel  = parked.getFuel();
-				int actualAdded = newCarFuel - currentCarFuel;
-				player.getInventory().setItemInMainHand(Fuel.setCurrentFuel(heldItem, canFuel - actualAdded));
-
-				player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.2f);
-				ActionBarManager.send(player, FuelBar.render(newCarFuel, maxCarFuel));
-				return;
 			}
 		}
 
