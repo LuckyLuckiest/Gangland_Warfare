@@ -9,6 +9,7 @@ import me.luckyraven.data.teleportation.IllegalTeleportException;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gadget.jetpack.JetpackService;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.downed.DownedPlayerRegistry;
@@ -59,6 +60,7 @@ public class CustomPlayerDeath implements Listener {
 	private final Gangland              gangland;
 	private final UserManager<Player>   userManager;
 	private final WaypointManager       waypointManager;
+	private final JetpackService        jetpackService;
 	private final Map<UUID, BukkitTask> respawnTasks   = new ConcurrentHashMap<>();
 	private final Map<UUID, GameMode>   savedGameModes = new ConcurrentHashMap<>();
 
@@ -68,6 +70,7 @@ public class CustomPlayerDeath implements Listener {
 
 		this.userManager     = init.getUserManager();
 		this.waypointManager = init.getWaypointManager();
+		this.jetpackService  = init.getJetpackService();
 		instance             = this;
 	}
 
@@ -157,6 +160,8 @@ public class CustomPlayerDeath implements Listener {
 
 	private void enterDownedState(Player player) {
 		if (!player.isOnline()) return;
+
+		if (jetpackService != null) jetpackService.deactivate(player);
 
 		UUID uuid = player.getUniqueId();
 		DownedPlayerRegistry.add(uuid);
