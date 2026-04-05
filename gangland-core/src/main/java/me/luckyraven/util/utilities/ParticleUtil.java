@@ -11,6 +11,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class ParticleUtil {
@@ -215,18 +216,26 @@ public class ParticleUtil {
 		Location rightNozzle = loc.clone().add(behind).add(right.clone().multiply(0.3)).add(0, 0.8, 0);
 
 		// Flame core
-		world.spawnParticle(flame, leftNozzle, 3, 0.05, 0.05, 0.05, 0.02, null);
-		world.spawnParticle(flame, rightNozzle, 3, 0.05, 0.05, 0.05, 0.02, null);
+		Random random          = new Random();
+		int    flameCount      = 3;
+		int    leftFlameCount  = random.nextInt(flameCount, flameCount * 2);
+		int    rightFlameCount = random.nextInt(flameCount, flameCount * 2);
+		world.spawnParticle(flame, leftNozzle, leftFlameCount, 0.05, 0.05, 0.05, 0.02, null);
+		world.spawnParticle(flame, rightNozzle, rightFlameCount, 0.05, 0.05, 0.05, 0.02, null);
 
 		// Smoke trail slightly below flame
-		Location leftSmoke  = leftNozzle.clone().add(0, -0.3, 0);
-		Location rightSmoke = rightNozzle.clone().add(0, -0.3, 0);
-		world.spawnParticle(smoke, leftSmoke, 2, 0.08, 0.08, 0.08, 0.01, null);
-		world.spawnParticle(smoke, rightSmoke, 2, 0.08, 0.08, 0.08, 0.01, null);
+		int      smokeCount      = 2;
+		int      leftSmokeCount  = random.nextInt(smokeCount, smokeCount * 2);
+		int      rightSmokeCount = random.nextInt(smokeCount, smokeCount * 2);
+		Location leftSmoke       = leftNozzle.clone().add(0, -0.3, 0);
+		Location rightSmoke      = rightNozzle.clone().add(0, -0.3, 0);
+		world.spawnParticle(smoke, leftSmoke, leftSmokeCount, 0.08, 0.08, 0.08, 0.01, null);
+		world.spawnParticle(smoke, rightSmoke, rightSmokeCount, 0.08, 0.08, 0.08, 0.01, null);
 	}
 
 	/**
-	 * Spawns light smoke particles for jetpack glide mode (no fuel remaining).
+	 * Spawns weak flame and thick smoke from both jetpack nozzles during glide mode, making it visually clear to others
+	 * that the player is using a jetpack.
 	 */
 	public static void spawnJetpackGlide(Player player) {
 		Location loc   = player.getLocation();
@@ -236,7 +245,27 @@ public class ParticleUtil {
 		Particle smoke = XParticle.SMOKE.get();
 		if (smoke == null) smoke = Particle.SMOKE;
 
-		world.spawnParticle(smoke, loc.clone().add(0, 0.5, 0), 1, 0.1, 0.1, 0.1, 0.005, null);
+		Vector direction = loc.getDirection().setY(0).normalize();
+		Vector right     = direction.clone().crossProduct(new Vector(0, 1, 0));
+		if (right.lengthSquared() < 0.001) {
+			right = direction.clone().crossProduct(new Vector(1, 0, 0));
+		}
+		right.normalize();
+
+		Vector   behind      = direction.clone().multiply(-0.4);
+		Location leftNozzle  = loc.clone().add(behind).add(right.clone().multiply(-0.3)).add(0, 0.8, 0);
+		Location rightNozzle = loc.clone().add(behind).add(right.clone().multiply(0.3)).add(0, 0.8, 0);
+
+		// Heavy smoke trail below nozzles
+		Random   random     = new Random();
+		int      count      = 4;
+		int      leftCount  = random.nextInt(count, count * 2);
+		int      rightCount = random.nextInt(count, count * 2);
+		Location leftSmoke  = leftNozzle.clone().add(0, -0.3, 0);
+		Location rightSmoke = rightNozzle.clone().add(0, -0.3, 0);
+
+		world.spawnParticle(smoke, leftSmoke, leftCount, 0.12, 0.10, 0.12, 0.02, null);
+		world.spawnParticle(smoke, rightSmoke, rightCount, 0.12, 0.10, 0.12, 0.02, null);
 	}
 
 	/**
@@ -289,12 +318,12 @@ public class ParticleUtil {
 		double rightZ  = Math.sin(radians) * 0.3;
 
 		if (leftNozzle) {
-			world.spawnParticle(smoke, vehicleLocation.clone().add(behindX + rightX, 0.3, behindZ + rightZ),
-			                    2, 0.05, 0.05, 0.05, 0.008, null);
+			world.spawnParticle(smoke, vehicleLocation.clone().add(behindX + rightX, 0.3, behindZ + rightZ), 2, 0.05,
+			                    0.05, 0.05, 0.008, null);
 		}
 		if (rightNozzle) {
-			world.spawnParticle(smoke, vehicleLocation.clone().add(behindX - rightX, 0.3, behindZ - rightZ),
-			                    2, 0.05, 0.05, 0.05, 0.008, null);
+			world.spawnParticle(smoke, vehicleLocation.clone().add(behindX - rightX, 0.3, behindZ - rightZ), 2, 0.05,
+			                    0.05, 0.05, 0.008, null);
 		}
 	}
 
