@@ -65,9 +65,8 @@ public class CivilianNpc extends AbstractNpc {
 	private @Nullable Integer spawnerId;
 
 	public CivilianNpc(NPC npc, CivilianTypeConfig typeConfig, @Nullable String groupId,
-	                   Map<CivilianState, CivilianBehavior> behaviors,
-	                   Location spawnLocation, CivilianNavigationConfig navConfig,
-	                   @Nullable ItemParser itemParser) {
+	                   Map<CivilianState, CivilianBehavior> behaviors, Location spawnLocation,
+	                   CivilianNavigationConfig navConfig, @Nullable ItemParser itemParser) {
 		super(npc, spawnLocation, navConfig);
 		this.typeConfig = typeConfig;
 		this.groupId    = groupId;
@@ -79,8 +78,7 @@ public class CivilianNpc extends AbstractNpc {
 
 	@Override
 	public boolean canUseWeapons() {
-		return typeConfig.hostile()
-		       && (!typeConfig.weaponNamePool().isEmpty() || !typeConfig.weaponPool().isEmpty());
+		return typeConfig.hostile() && (!typeConfig.weaponNamePool().isEmpty() || !typeConfig.weaponPool().isEmpty());
 	}
 
 	@Override
@@ -122,6 +120,8 @@ public class CivilianNpc extends AbstractNpc {
 	 * Transitions the NPC to a new AI state, invoking exit/enter callbacks.
 	 */
 	public void transitionTo(CivilianState newState) {
+		log.info("Transitioning civilian {}-{} from {} state to {} state.", npc.getName(), npc.getId(), currentState,
+		         newState);
 		if (currentState == newState) return;
 
 		CivilianBehavior oldBehavior = behaviors.get(currentState);
