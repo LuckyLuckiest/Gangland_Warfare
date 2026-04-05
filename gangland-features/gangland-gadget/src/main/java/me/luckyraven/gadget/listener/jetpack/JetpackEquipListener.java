@@ -14,6 +14,7 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
@@ -28,7 +29,7 @@ public class JetpackEquipListener implements Listener {
 
 	private final JetpackService jetpackService;
 
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.MONITOR)
 	public void onInventoryClick(InventoryClickEvent event) {
 		if (!(event.getWhoClicked() instanceof Player player)) return;
 		if (isCreativeOrSpectator(player)) return;
@@ -61,6 +62,14 @@ public class JetpackEquipListener implements Listener {
 		if (item == null || !item.getType().name().endsWith("_CHESTPLATE")) return;
 
 		jetpackService.scheduleChestplateCheck(player);
+	}
+
+	@EventHandler(priority = EventPriority.HIGH)
+	public void onToggleFly(PlayerToggleFlightEvent event) {
+		if (!jetpackService.isActive(event.getPlayer())) return;
+
+		event.setCancelled(true);
+		event.getPlayer().setFlying(false);
 	}
 
 	private boolean isCreativeOrSpectator(Player player) {
