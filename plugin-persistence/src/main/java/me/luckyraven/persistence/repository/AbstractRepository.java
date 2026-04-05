@@ -8,9 +8,7 @@ import me.luckyraven.persistence.database.component.Table;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -73,8 +71,9 @@ public abstract class AbstractRepository<T> implements IRepository<T> {
 	}
 
 	public void saveAll(Collection<T> collection, Runnable onComplete) {
+		List<T> snapshot = new ArrayList<>(collection);
 		databaseHelper.runQueriesAsync(database -> {
-			for (T row : collection) {
+			for (T row : snapshot) {
 				saveRow(row, database);
 			}
 		}, onComplete);
@@ -111,7 +110,7 @@ public abstract class AbstractRepository<T> implements IRepository<T> {
 
 		Map<String, Object> search = table.searchCriteria(data);
 		Object[] select = dbTable.select((String) search.get("search"), (Object[]) search.get("info"),
-										 (int[]) search.get("type"), new String[]{"*"});
+		                                 (int[]) search.get("type"), new String[]{"*"});
 		return select.length != 0;
 	}
 
