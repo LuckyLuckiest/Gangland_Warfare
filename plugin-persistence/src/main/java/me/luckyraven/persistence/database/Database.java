@@ -683,12 +683,24 @@ public interface Database {
 
 			if (value == null) statement.setNull(index, type);
 			else switch (type) {
-				case Types.TINYINT -> statement.setByte(index, ((Number) value).byteValue());
-				case Types.SMALLINT -> statement.setShort(index, ((Number) value).shortValue());
-				case Types.INTEGER -> statement.setInt(index, ((Number) value).intValue());
-				case Types.BIGINT -> statement.setLong(index, ((Number) value).longValue());
-				case Types.FLOAT, Types.REAL -> statement.setFloat(index, ((Number) value).floatValue());
-				case Types.DOUBLE, Types.NUMERIC -> statement.setDouble(index, ((Number) value).doubleValue());
+				case Types.TINYINT -> statement.setByte(index, value instanceof String s ?
+				                                               Byte.parseByte(s) :
+				                                               ((Number) value).byteValue());
+				case Types.SMALLINT -> statement.setShort(index, value instanceof String s ?
+				                                                 Short.parseShort(s) :
+				                                                 ((Number) value).shortValue());
+				case Types.INTEGER -> statement.setInt(index, value instanceof String s ?
+				                                              Integer.parseInt(s) :
+				                                              ((Number) value).intValue());
+				case Types.BIGINT -> statement.setLong(index, value instanceof String s ?
+				                                              Long.parseLong(s) :
+				                                              ((Number) value).longValue());
+				case Types.FLOAT, Types.REAL -> statement.setFloat(index, value instanceof String s ?
+				                                                          Float.parseFloat(s) :
+				                                                          ((Number) value).floatValue());
+				case Types.DOUBLE, Types.NUMERIC -> statement.setDouble(index, value instanceof String s ?
+				                                                               Double.parseDouble(s) :
+				                                                               ((Number) value).doubleValue());
 				case Types.BOOLEAN -> {
 					switch (value) {
 						case Boolean b -> statement.setBoolean(index, (boolean) value);
