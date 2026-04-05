@@ -650,5 +650,45 @@
 	"item_wearable_list": {
 		"usage": "/glw item wearable list",
 		"description": "Shows all registered wearable items."
+	},
+	"civilian_help": {
+		"usage": "/glw civilian help <page>",
+		"description": "Shows the specified page in civilian menu."
+	},
+	"civilian_list": {
+		"usage": "/glw civilian list",
+		"description": "Shows all active civilian NPCs."
+	},
+	"civilian_groups": {
+		"usage": "/glw civilian groups",
+		"description": "Shows all active civilian groups."
+	},
+	"civilian_spawn": {
+		"usage": "/glw civilian spawn <typeId>",
+		"description": "Spawns a civilian of the specified type near you."
+	},
+	"civilian_spawngroup": {
+		"usage": "/glw civilian spawngroup <groupId>",
+		"description": "Spawns a civilian group of the specified id at your location."
+	},
+	"civilian_spawner_set": {
+		"usage": "/glw civilian spawner set",
+		"description": "Sets a civilian spawner at your current location."
+	},
+	"civilian_spawner_remove": {
+		"usage": "/glw civilian spawner remove <id>",
+		"description": "Removes the civilian spawner with the specified id."
+	},
+	"civilian_spawner_list": {
+		"usage": "/glw civilian spawner list",
+		"description": "Shows all the available civilian spawners."
+	},
+	"civilian_spawner_info": {
+		"usage": "/glw civilian spawner info <id>",
+		"description": "Shows the information of the civilian spawner with the specified id."
+	},
+	"civilian_spawner_teleport": {
+		"usage": "/glw civilian spawner teleport <id>",
+		"description": "Teleports the player to the civilian spawner with the specified id."
 	}
 }

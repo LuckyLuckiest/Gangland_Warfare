@@ -42,6 +42,7 @@ public class CivilianService {
 	private CivilianSpawnManager spawnManager;
 
 	private EntityMarkManager  entityMarkManager;
+	@Getter
 	private EntityMarkerConfig markerConfig;
 	private boolean            initialized;
 
@@ -57,21 +58,17 @@ public class CivilianService {
 	 * @param itemParser item string parser (nullable — falls back to XMaterial)
 	 * @param weaponService gangland weapon registry (nullable — disables weapon assignment)
 	 */
-	public void initialize(JavaPlugin plugin, EntityMarkerConfig markerConfig,
-	                       EntityMarkManager entityMarkManager,
-	                       IRepository<CivilianSpawner> spawnerRepository,
-	                       CivilianSettings civilianSettings,
-	                       SpawnConfigProvider spawnConfigProvider,
-	                       @Nullable ItemParser itemParser,
+	public void initialize(JavaPlugin plugin, EntityMarkerConfig markerConfig, EntityMarkManager entityMarkManager,
+	                       IRepository<CivilianSpawner> spawnerRepository, CivilianSettings civilianSettings,
+	                       SpawnConfigProvider spawnConfigProvider, @Nullable ItemParser itemParser,
 	                       @Nullable WeaponService weaponService) {
 		if (initialized) return;
 
 		this.markerConfig      = markerConfig;
 		this.entityMarkManager = entityMarkManager;
-		this.spawnManager      = new CivilianSpawnManager(spawnConfigProvider, spawnerRepository, this,
-		                                                  markerConfig);
-		this.npcFactory        = new CivilianNpcFactory(plugin, entityMarkManager, itemParser,
-		                                                weaponService, civilianSettings);
+		this.spawnManager      = new CivilianSpawnManager(spawnConfigProvider, spawnerRepository, this, markerConfig);
+		this.npcFactory        = new CivilianNpcFactory(plugin, entityMarkManager, itemParser, weaponService,
+		                                                civilianSettings);
 
 		if (!civilianSettings.isCivilianAiEnabled()) {
 			log.info("Civilian AI is disabled — NPCs will not tick.");
@@ -118,6 +115,13 @@ public class CivilianService {
 	 */
 	public Collection<CivilianNpc> getActiveNpcs() {
 		return activeNpcs.values();
+	}
+
+	/**
+	 * Returns all currently active civilian groups (unmodifiable view).
+	 */
+	public Collection<CivilianGroup> getActiveGroups() {
+		return activeGroups.values();
 	}
 
 	// ── Group spawning ────────────────────────────────────────────────────────
