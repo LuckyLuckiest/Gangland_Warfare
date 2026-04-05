@@ -58,7 +58,7 @@ public class VehicleMovementTask extends BukkitRunnable {
 				tickBurnout(entity, car, left, right);
 				return;
 			}
-			updateSteering(driver, left, right);
+			updateSteering(driver, forward, left, right);
 			updateSpeed(car, forward, backward);
 		} else {
 			coastToStop(car);
@@ -121,15 +121,17 @@ public class VehicleMovementTask extends BukkitRunnable {
 	}
 
 	/**
-	 * Updates {@link #currentYaw} based on driver input. A/D is dominant while moving; otherwise the heading syncs to
-	 * the driver's look direction.
+	 * Updates {@link #currentYaw} based on driver input.
+	 * <p>
+	 * W pressed from a stop re-aligns the heading to the driver's look direction. A/D steers while moving. When neither
+	 * condition applies (coasting, decelerating with no A/D input) the heading is preserved.
 	 */
-	private void updateSteering(Player driver, boolean left, boolean right) {
-		if (Math.abs(currentSpeed) > 0.001 && (left || right)) {
+	private void updateSteering(Player driver, boolean forward, boolean left, boolean right) {
+		if (forward && Math.abs(currentSpeed) <= 0.001) {
+			currentYaw = driver.getLocation().getYaw();
+		} else if (Math.abs(currentSpeed) > 0.001 && (left || right)) {
 			if (left) currentYaw -= (float) session.getCar().getTurnSpeed();
 			if (right) currentYaw += (float) session.getCar().getTurnSpeed();
-		} else {
-			currentYaw = driver.getLocation().getYaw();
 		}
 	}
 
