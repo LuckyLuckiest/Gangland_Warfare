@@ -6,7 +6,9 @@ import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.gadget.jetpack.packet.JetpackInputInterceptor;
 import me.luckyraven.item.wearable.Wearable;
+import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,11 +25,14 @@ public class JetpackService {
 	private final FuelService               fuelService;
 	private final JavaPlugin                plugin;
 	private final GadgetPhysicsConfig       physicsConfig;
+	private final WearableService           wearableService;
 
-	public JetpackService(FuelService fuelService, JavaPlugin plugin, GadgetPhysicsConfig physicsConfig) {
-		this.fuelService   = fuelService;
-		this.plugin        = plugin;
-		this.physicsConfig = physicsConfig;
+	public JetpackService(FuelService fuelService, JavaPlugin plugin, GadgetPhysicsConfig physicsConfig,
+	                      WearableService wearableService) {
+		this.fuelService     = fuelService;
+		this.plugin          = plugin;
+		this.physicsConfig   = physicsConfig;
+		this.wearableService = wearableService;
 	}
 
 	/**
@@ -49,9 +54,9 @@ public class JetpackService {
 
 		Channel channel = VehicleInputInterceptor.getChannel(player);
 		if (channel != null) {
-			channel.pipeline().addBefore(
-					"packet_handler", JetpackInputInterceptor.HANDLER_NAME,
-					new JetpackInputInterceptor(session));
+			channel.pipeline()
+			       .addBefore("packet_handler", JetpackInputInterceptor.HANDLER_NAME,
+			                  new JetpackInputInterceptor(session));
 		}
 	}
 
@@ -90,6 +95,25 @@ public class JetpackService {
 	@Nullable
 	public JetpackSession getSession(Player player) {
 		return activeSessions.get(player.getUniqueId());
+	}
+
+	/**
+	 * Schedules a next-tick check of the player's chestplate slot and activates or deactivates the jetpack
+	 * accordingly.
+	 */
+	public void scheduleChestplateCheck(Player player) {
+		player.getServer().getScheduler().runTask(plugin, () -> {
+			ItemStack chestplate = player.getInventory().getChestplate();
+			Wearable  wearable   = chestplate != null ? wearableService.resolveWearable(chestplate) : null;
+
+			if (wearable != null && wearable.isJetpack()) {
+				activate(player, wearable);
+				return;
+			}
+
+			if (!isActive(player)) return;
+			deactivate(player);
+		});
 	}
 
 	/**

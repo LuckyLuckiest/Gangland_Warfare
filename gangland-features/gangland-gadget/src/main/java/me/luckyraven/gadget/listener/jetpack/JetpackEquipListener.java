@@ -2,19 +2,20 @@ package me.luckyraven.gadget.listener.jetpack;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.gadget.jetpack.JetpackService;
-import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
-import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * Handles jetpack equip/unequip via inventory interactions. When a jetpack is placed in the chestplate slot, enables
@@ -22,35 +23,44 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 @ListenerHandler
 @RequiredArgsConstructor
-@AutowireTarget({WearableService.class, JetpackService.class})
+@AutowireTarget({JetpackService.class})
 public class JetpackEquipListener implements Listener {
 
-	private final JavaPlugin      plugin;
-	private final WearableService wearableService;
-	private final JetpackService  jetpackService;
+	private final JetpackService jetpackService;
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onInventoryClick(InventoryClickEvent event) {
 		if (!(event.getWhoClicked() instanceof Player player)) return;
 		if (isCreativeOrSpectator(player)) return;
 
-		// Only care about chestplate slot changes
-		if (event.getSlotType() != InventoryType.SlotType.ARMOR) return;
-		if (event.getSlot() != 38) return; // 38 = chestplate slot
+		InventoryAction action = event.getAction();
 
-		// Schedule check for next tick since the inventory hasn't updated yet
-		player.getServer().getScheduler().runTask(plugin, () -> {
-			ItemStack newChestplate = player.getInventory().getChestplate();
-			Wearable  wearable      = newChestplate != null ? wearableService.resolveWearable(newChestplate) : null;
+		// Drag/drop directly onto the chestplate slot
+		boolean isDirectChestplateSlot = event.getSlotType() == InventoryType.SlotType.ARMOR && event.getSlot() == 38;
+		// Shift-click a chestplate item in the inventory to auto-equip it
+		boolean isMoveToChestplate = action == InventoryAction.MOVE_TO_OTHER_INVENTORY &&
+		                             event.getCurrentItem() != null &&
+		                             event.getCurrentItem().getType().name().endsWith("_CHESTPLATE");
 
-			if (wearable != null && wearable.isJetpack()) {
-				jetpackService.activate(player, wearable);
-			} else {
-				if (jetpackService.isActive(player)) {
-					jetpackService.deactivate(player);
-				}
-			}
-		});
+		if (!isDirectChestplateSlot && !isMoveToChestplate) return;
+
+		jetpackService.scheduleChestplateCheck(player);
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onInteract(PlayerInteractEvent event) {
+		if (event.getHand() != EquipmentSlot.HAND) return;
+
+		Action action = event.getAction();
+		if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) return;
+
+		Player    player = event.getPlayer();
+		ItemStack item   = event.getItem();
+
+		if (isCreativeOrSpectator(player)) return;
+		if (item == null || !item.getType().name().endsWith("_CHESTPLATE")) return;
+
+		jetpackService.scheduleChestplateCheck(player);
 	}
 
 	private boolean isCreativeOrSpectator(Player player) {

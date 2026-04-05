@@ -583,7 +583,7 @@ public final class Initializer {
 
 	public void jetpackServiceInit() {
 		if (jetpackService == null) {
-			jetpackService = new JetpackService(fuelService, gangland, gadgetPhysicsConfig);
+			jetpackService = new JetpackService(fuelService, gangland, gadgetPhysicsConfig, wearableAddon);
 		}
 	}
 
