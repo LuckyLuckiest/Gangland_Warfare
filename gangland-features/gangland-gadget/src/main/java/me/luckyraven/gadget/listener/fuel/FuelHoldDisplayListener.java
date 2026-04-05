@@ -5,12 +5,14 @@ import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.item.fuel.FuelBar;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
@@ -86,7 +88,7 @@ public class FuelHoldDisplayListener implements Listener {
 
 		int current = fuelService.getFuelLevel(player, fuelKey);
 		int max     = fuelService.getMaxFuelLevel(player, fuelKey);
-		ChatUtil.sendActionBar(player, FuelBar.render(current, max));
+		ActionBarManager.send(player, FuelBar.render(current, max));
 	}
 
 	@EventHandler
@@ -99,6 +101,19 @@ public class FuelHoldDisplayListener implements Listener {
 		} else {
 			stopDisplay(player);
 		}
+	}
+
+	@EventHandler
+	public void onPickup(EntityPickupItemEvent event) {
+		if (!(event.getEntity() instanceof Player player)) return;
+
+		// Inventory is not yet updated at this point — defer one tick
+		plugin.getServer().getScheduler().runTask(plugin, () -> {
+			ItemStack heldItem = player.getInventory().getItemInMainHand();
+			if (Fuel.isFuelItem(heldItem)) {
+				startDisplay(player);
+			}
+		});
 	}
 
 	@EventHandler
@@ -116,8 +131,9 @@ public class FuelHoldDisplayListener implements Listener {
 
 	@EventHandler
 	public void onQuit(PlayerQuitEvent event) {
+		UUID id = event.getPlayer().getUniqueId();
 		stopDisplay(event.getPlayer());
-		fuelService.clearCache(event.getPlayer().getUniqueId());
+		fuelService.clearCache(id);
 	}
 
 	private void startDisplay(Player player) {
@@ -138,7 +154,7 @@ public class FuelHoldDisplayListener implements Listener {
 
 			int current = Fuel.getCurrentFuel(heldItem);
 			int max     = Fuel.getMaxFuel(heldItem);
-			ChatUtil.sendActionBar(player, FuelBar.render(current, max));
+			ActionBarManager.sendBackground(player, FuelBar.render(current, max));
 		}, 0L, DISPLAY_INTERVAL_TICKS);
 
 		displayTasks.put(playerId, task);
