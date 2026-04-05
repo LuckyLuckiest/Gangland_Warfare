@@ -1,7 +1,7 @@
 package me.luckyraven.copsncrooks.npc.civilian.state.behavior;
 
-import me.luckyraven.copsncrooks.npc.civilian.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianState;
+import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.civilian.state.CivilianBehavior;
 import org.bukkit.Location;
 import org.bukkit.World;

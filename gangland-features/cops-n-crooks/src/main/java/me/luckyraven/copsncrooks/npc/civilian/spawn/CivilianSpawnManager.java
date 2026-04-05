@@ -3,10 +3,10 @@ package me.luckyraven.copsncrooks.npc.civilian.spawn;
 import lombok.CustomLog;
 import me.luckyraven.copsncrooks.entity.EntitySpawner;
 import me.luckyraven.copsncrooks.entity.SpawnConfigProvider;
-import me.luckyraven.copsncrooks.npc.civilian.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianTypeConfig;
 import me.luckyraven.copsncrooks.npc.civilian.config.EntityMarkerConfig;
+import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.persistence.repository.IRepository;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -76,8 +76,30 @@ public class CivilianSpawnManager extends EntitySpawner<CivilianSpawner> {
 		return spawnCivilian(spawnLoc, typeId);
 	}
 
+	/**
+	 * Creates a type spawner at the given location. When a player enters the activation radius this spawner will spawn
+	 * civilians of the given {@code typeId} defined in entity_marker.yml.
+	 */
+	public void setTypeSpawnerLocation(Location location, String typeId) {
+		ID++;
+		CivilianSpawner spawner = new CivilianSpawner(ID, location, typeId, null);
+		spawners.put(ID, spawner);
+		repository.save(spawner);
+	}
+
+	/**
+	 * Creates a group spawner at the given location. When a player enters the activation radius this spawner will spawn
+	 * a full civilian group defined by {@code groupId} in entity_marker.yml.
+	 */
+	public void setGroupSpawnerLocation(Location location, String groupId) {
+		ID++;
+		CivilianSpawner spawner = new CivilianSpawner(ID, location, null, groupId);
+		spawners.put(ID, spawner);
+		repository.save(spawner);
+	}
+
 	@Override
 	protected CivilianSpawner createSpawnerPoint(int id, Location location) {
-		return new CivilianSpawner(id, location, null);
+		return new CivilianSpawner(id, location, null, null);
 	}
 }

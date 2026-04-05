@@ -1,8 +1,8 @@
 package me.luckyraven.copsncrooks.npc.civilian.state.behavior;
 
 import me.luckyraven.copsncrooks.npc.civilian.CivilianGroup;
-import me.luckyraven.copsncrooks.npc.civilian.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianState;
+import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.civilian.state.CivilianBehavior;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -96,9 +96,9 @@ public class CivilianWanderBehavior implements CivilianBehavior {
 
 		Location candidate = base.clone().add(offsetX, 0, offsetZ);
 
-		// Snap to the highest non-air block at that X/Z
+		// Snap to the standing position above the highest non-air block at that X/Z
 		int highestY = world.getHighestBlockYAt(candidate);
-		candidate.setY(highestY);
+		candidate.setY(highestY + 1);
 
 		return candidate;
 	}

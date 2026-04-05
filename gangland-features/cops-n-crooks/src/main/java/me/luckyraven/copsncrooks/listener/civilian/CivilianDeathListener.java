@@ -2,9 +2,9 @@ package me.luckyraven.copsncrooks.listener.civilian;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.events.npc.CivilianDeathEvent;
-import me.luckyraven.copsncrooks.npc.civilian.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianDropConfig;
+import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.item.ItemParser;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.Bukkit;

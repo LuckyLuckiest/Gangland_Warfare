@@ -1,7 +1,8 @@
-package me.luckyraven.copsncrooks.npc.civilian;
+package me.luckyraven.copsncrooks.npc.civilian.npc;
 
 import me.luckyraven.copsncrooks.entity.EntityMark;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
+import me.luckyraven.copsncrooks.npc.civilian.CivilianState;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianGroupConfig;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianNavigationConfig;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianSettings;
@@ -75,6 +76,7 @@ public class CivilianNpcFactory {
 		NPC        npc        = CitizensAPI.getNPCRegistry().createNPC(entityType, plainName);
 		npc.setProtected(false);
 		npc.data().setPersistent(NPC.Metadata.SHOULD_SAVE, false);
+		npc.data().setPersistent(NPC.Metadata.USE_MINECRAFT_AI, false);
 		npc.spawn(spawnLocation);
 
 		if (!npc.isSpawned()) {

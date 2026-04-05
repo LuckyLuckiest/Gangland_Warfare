@@ -1,10 +1,12 @@
-package me.luckyraven.copsncrooks.npc.civilian;
+package me.luckyraven.copsncrooks.npc.civilian.npc;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.copsncrooks.entity.npc.AbstractNpc;
+import me.luckyraven.copsncrooks.npc.civilian.CivilianGroup;
+import me.luckyraven.copsncrooks.npc.civilian.CivilianState;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianNavigationConfig;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianTypeConfig;
 import me.luckyraven.copsncrooks.npc.civilian.state.CivilianBehavior;
@@ -54,6 +56,13 @@ public class CivilianNpc extends AbstractNpc {
 	@Getter
 	@Setter
 	private @Nullable CivilianGroup group;
+
+	/**
+	 * The spawner ID that created this NPC via proximity spawning, or {@code null} if spawned manually.
+	 */
+	@Getter
+	@Setter
+	private @Nullable Integer spawnerId;
 
 	public CivilianNpc(NPC npc, CivilianTypeConfig typeConfig, @Nullable String groupId,
 	                   Map<CivilianState, CivilianBehavior> behaviors,
