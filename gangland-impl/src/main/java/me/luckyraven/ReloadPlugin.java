@@ -26,6 +26,7 @@ import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarService;
+import me.luckyraven.gadget.jetpack.JetpackService;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.unique.UniqueItemUtil;
@@ -115,6 +116,7 @@ public final class ReloadPlugin {
 		copSpawnerInitialize(resetCache);
 		// gadgets
 		carServiceInitialize();
+		jetpackServiceInitialize();
 	}
 
 	/**
@@ -393,6 +395,16 @@ public final class ReloadPlugin {
 		CarService carService = initializer.getCarService();
 		if (carService == null) return;
 		carService.refreshCarDefinitions();
+	}
+
+	/**
+	 * Refreshes {@link me.luckyraven.item.wearable.Wearable} references in all active jetpack sessions after the
+	 * wearable addon has been reloaded from config.
+	 */
+	public void jetpackServiceInitialize() {
+		JetpackService jetpackService = initializer.getJetpackService();
+		if (jetpackService == null) return;
+		jetpackService.refreshSessions();
 	}
 
 	/**

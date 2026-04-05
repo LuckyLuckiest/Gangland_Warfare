@@ -13,7 +13,8 @@ import org.bukkit.entity.Player;
 public class JetpackSession {
 
 	private final Player   player;
-	private final Wearable jetpackWearable;
+	@Setter
+	private       Wearable jetpackWearable;
 
 	@Setter
 	private          JetpackTask task;

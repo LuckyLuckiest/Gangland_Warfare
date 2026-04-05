@@ -12,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -114,6 +115,29 @@ public class JetpackService {
 			if (!isActive(player)) return;
 			deactivate(player);
 		});
+	}
+
+	/**
+	 * Refreshes the {@link Wearable} definition references held by all active jetpack sessions. Must be called after
+	 * the wearable addon has been reloaded from config (e.g. on {@code /glw reload}) so that existing sessions
+	 * immediately pick up updated physics values. Sessions whose player is offline or no longer wearing a jetpack are
+	 * deactivated.
+	 */
+	public void refreshSessions() {
+		for (JetpackSession session : new ArrayList<>(activeSessions.values())) {
+			Player player = session.getPlayer();
+			if (!player.isOnline()) {
+				deactivate(player);
+				continue;
+			}
+			ItemStack chestplate    = player.getInventory().getChestplate();
+			Wearable  freshWearable = chestplate != null ? wearableService.resolveWearable(chestplate) : null;
+			if (freshWearable != null && freshWearable.isJetpack()) {
+				session.setJetpackWearable(freshWearable);
+			} else {
+				deactivate(player);
+			}
+		}
 	}
 
 	/**
