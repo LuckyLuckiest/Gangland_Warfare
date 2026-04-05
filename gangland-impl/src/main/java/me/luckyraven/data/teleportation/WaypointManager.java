@@ -79,7 +79,7 @@ public class WaypointManager {
 		helper.runQueries(database -> {
 			Database config = database.table(waypointTable.getName());
 
-			List<Object[]> rowsData = config.selectAll();
+			List<Object[]> rowsData = waypointTable.selectAllTableQuery(database);
 
 			// remove all the data from the table
 

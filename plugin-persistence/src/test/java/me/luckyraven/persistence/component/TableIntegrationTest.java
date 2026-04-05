@@ -359,6 +359,59 @@ class TableIntegrationTest {
 	}
 
 	@Test
+	@DisplayName(
+			"selectAllTableQuery - returns rows in definition order after a new column is ALTER TABLE'd into the middle")
+	void selectAllTableQuery_preservesDefinitionColumnOrderAfterAlterTable() {
+		// 1. Original table [id, name, score] — insert a row with known values
+		helper.runQueries(db -> table.insertTableQuery(db, new TestEntity("ord1", "Alice", 42)));
+
+		// 2. Extended definition places 'bonus' between 'name' and 'score': [id, name, bonus, score]
+		Table<TestEntity> extendedTable = new Table<>(TestTable.TABLE_NAME) {
+			{
+				addAttribute(new Attribute<>("id", true, String.class));
+				addAttribute(new Attribute<>("name", false, String.class));
+				Attribute<Integer> bonus = new Attribute<>("bonus", false, Integer.class);
+				bonus.setCanBeNull(true);
+				addAttribute(bonus);
+				addAttribute(new Attribute<>("score", false, Integer.class));
+			}
+
+			@Override
+			public Object[] getData(TestEntity e) {
+				return new Object[]{e.getId(), e.getName(), null, e.getScore()};
+			}
+
+			@Override
+			public Map<String, Object> searchCriteria(TestEntity e) {
+				return createSearchCriteria("id = ?", new Object[]{e.getId()}, new int[]{Types.VARCHAR}, new int[]{0});
+			}
+		};
+
+		// 3. validateSchema adds 'bonus' via ALTER TABLE — SQLite physically appends it at the end.
+		//    DB physical order is now [id, name, score, bonus], not [id, name, bonus, score].
+		helper.runQueries(extendedTable::validateSchema);
+
+		// 4. Set a known bonus value so a column-swap would produce a clearly wrong result
+		helper.runQueries(db ->
+								  db.table(TestTable.TABLE_NAME).update(
+										  "id = ?", new Object[]{"ord1"}, new int[]{Types.VARCHAR},
+						                  new String[]{"bonus"}, new Object[]{99}, new int[]{Types.INTEGER}));
+
+		// 5. selectAllTableQuery must return [id, name, bonus, score] (definition order).
+		//    A plain SELECT * would return [id, name, score, bonus] (physical order), making row[2]=42 and row[3]=99 —
+		//    the exact swap that breaks repository deserialization when a column is added mid-definition.
+		helper.runQueries(db -> {
+			List<Object[]> rows = extendedTable.selectAllTableQuery(db);
+			assertEquals(1, rows.size());
+			Object[] row = rows.getFirst();
+			assertEquals("ord1", row[0], "row[0] must be id");
+			assertEquals("Alice", row[1], "row[1] must be name");
+			assertEquals(99, ((Number) row[2]).intValue(), "row[2] must be bonus (definition order), not score");
+			assertEquals(42, ((Number) row[3]).intValue(), "row[3] must be score (definition order), not bonus");
+		});
+	}
+
+	@Test
 	@DisplayName("getColumns - returns the attribute names defined in addAttribute()")
 	void getColumns_returnsAttributeNames() {
 		Set<String> cols = table.getColumns();

@@ -37,7 +37,7 @@ public class DetainmentRepository extends AbstractRepository<DetainedPlayer> {
 	@Override
 	protected Collection<DetainedPlayer> doLoadAll() throws SQLException {
 		List<DetainedPlayer> detained = new ArrayList<>();
-		List<Object[]>       data     = getDatabase().table(detainmentTable.getName()).selectAll();
+		List<Object[]>       data     = detainmentTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
 			int v = 0;

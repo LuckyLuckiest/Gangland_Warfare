@@ -29,9 +29,8 @@ public class GangRepository extends AbstractRepository<Gang> {
 
 	@Override
 	protected Collection<Gang> doLoadAll() throws SQLException {
-		List<Gang> gangs = new ArrayList<>();
-
-		List<Object[]> gangsData = getDatabase().table(gangTable.getName()).selectAll();
+		List<Gang>     gangs     = new ArrayList<>();
+		List<Object[]> gangsData = gangTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : gangsData) {
 			int    v           = 0;

@@ -27,7 +27,7 @@ public class MemberManager {
 		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
 
 		helper.runQueries(database -> {
-			List<Object[]> rowsData = database.table(memberTable.getName()).selectAll();
+			List<Object[]> rowsData = memberTable.selectAllTableQuery(database);
 
 			for (Object[] result : rowsData) {
 				int    v            = 0;
@@ -70,8 +70,8 @@ public class MemberManager {
 		helper.runQueries(database -> {
 			Map<String, Object> search = memberTable.searchCriteria(member);
 			Object[] memberInfo = database.table(memberTable.getName())
-										  .select((String) search.get("search"), (Object[]) search.get("info"),
-												  (int[]) search.get("type"), new String[]{"*"});
+			                              .select((String) search.get("search"), (Object[]) search.get("info"),
+			                                      (int[]) search.get("type"), new String[]{"*"});
 
 			// create member data into a database
 			if (memberInfo.length == 0) {

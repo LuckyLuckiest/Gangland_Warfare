@@ -359,6 +359,47 @@ public interface Database {
 	}
 
 	/**
+	 * Selects all rows from the table and returns them with columns in the order specified by {@code orderedColumns}.
+	 * <p>
+	 * Unlike {@link #selectAll()}, which issues {@code SELECT *} and returns values in the physical DB column order,
+	 * this overload issues {@code SELECT col1, col2, ...} with an explicit column list so that the returned
+	 * {@code Object[]} indices always match the caller-supplied order regardless of how the table was physically laid
+	 * out (e.g. after an {@code ALTER TABLE ADD COLUMN} appended a column to the end).
+	 *
+	 * @param orderedColumns the column names to select, in the desired output order
+	 *
+	 * @return a list of rows; each {@code Object[]} has values at the same positions as {@code orderedColumns}
+	 *
+	 * @throws SQLException the sql exception
+	 */
+	default List<Object[]> selectAll(String[] orderedColumns) throws SQLException {
+		Connection conn = getConnection();
+		if (conn == null) throw new SQLException("There is no connection");
+		String t = getTable();
+		if (t == null) throw new SQLException("No table selected");
+
+		String cols  = String.join(", ", orderedColumns);
+		String query = "SELECT " + cols + " FROM " + t + ";";
+
+		try (PreparedStatement statement = conn.prepareStatement(query)) {
+			ResultSet             resultSet   = statement.executeQuery();
+			List<Object[]>        results     = new ArrayList<>();
+			Map<String, Class<?>> columnTypes = getColumnTypes(resultSet);
+
+			while (resultSet.next()) {
+				Object[] row = new Object[orderedColumns.length];
+				for (int i = 0; i < orderedColumns.length; i++) {
+					String   col  = orderedColumns[i];
+					Class<?> type = columnTypes.get(col);
+					row[i] = getValueFromResultSet(resultSet, col, type);
+				}
+				results.add(row);
+			}
+			return results;
+		}
+	}
+
+	/**
 	 * Updates the value in the specified <i>row</i> in the database, additionally the <i>values</i> specified are used
 	 * to specify the column name to be specifically updated.<br/><br/>
 	 *
@@ -389,7 +430,7 @@ public interface Database {
 	 * @throws SQLException the sql exception
 	 */
 	default Database update(String row, Object[] rowPlaceholders, int[] rowTypes, String[] columns,
-							Object[] colPlaceholders, int[] colTypes) throws SQLException {
+	                        Object[] colPlaceholders, int[] colTypes) throws SQLException {
 		Connection conn = getConnection();
 		if (conn == null) throw new SQLException("There is no connection");
 		String t = getTable();
@@ -603,7 +644,7 @@ public interface Database {
 
 		try (PreparedStatement statement = conn.prepareStatement(query)) {
 			if (whereClause != null && !whereClause.isEmpty()) preparePlaceholderStatements(statement, placeholders,
-																							types, 0);
+			                                                                                types, 0);
 
 			ResultSet             resultSet   = statement.executeQuery();
 			Map<String, Class<?>> columnTypes = getColumnTypes(resultSet);
@@ -634,7 +675,7 @@ public interface Database {
 	 * @throws SQLException the sql exception
 	 */
 	default void preparePlaceholderStatements(PreparedStatement statement, Object[] placeholders, int[] types,
-											  int startPos) throws SQLException {
+	                                          int startPos) throws SQLException {
 		for (int i = 0; i < placeholders.length; i++) {
 			Object value = placeholders[i];
 			int    type  = types[i];
@@ -662,7 +703,7 @@ public interface Database {
 					statement.setTimestamp(index, timestamp);
 				}
 				case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR,
-					 Types.LONGNVARCHAR -> statement.setString(index, String.valueOf(value));
+				     Types.LONGNVARCHAR -> statement.setString(index, String.valueOf(value));
 				default -> statement.setObject(index, value);
 			}
 		}

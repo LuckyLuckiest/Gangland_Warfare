@@ -154,11 +154,16 @@ public final class QueryBuilder {
 
 		/**
 		 * Returns every matching row as a separate {@code Object[]}. Delegates to
-		 * {@link Database#selectAll(String, Object[], int[])} when conditions are present, or plain
-		 * {@link Database#selectAll()} when there are none.
+		 * {@link Database#selectAll(String, Object[], int[])} when conditions are present. When there are no conditions,
+		 * uses an explicit column list (if specific columns were requested) so that the returned row indices are
+		 * independent of the physical DB column order.
 		 */
 		public List<Object[]> executeAll() throws SQLException {
 			if (conditions.isEmpty()) {
+				boolean isStar = selectCols.length == 1 && "*".equals(selectCols[0]);
+				if (!isStar) {
+					return qb.database.table(qb.tableName).selectAll(selectCols);
+				}
 				return qb.database.table(qb.tableName).selectAll();
 			}
 			String   where = buildWhereClause();

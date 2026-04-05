@@ -32,7 +32,7 @@ public class WaypointRepository extends AbstractRepository<Waypoint> {
 	@Override
 	protected Collection<Waypoint> doLoadAll() throws SQLException {
 		List<Waypoint> waypoints = new ArrayList<>();
-		List<Object[]> data      = getDatabase().table(waypointTable.getName()).selectAll();
+		List<Object[]> data      = waypointTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
 			int    v        = 0;

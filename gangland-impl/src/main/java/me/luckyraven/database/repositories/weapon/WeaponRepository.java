@@ -40,15 +40,13 @@ public class WeaponRepository extends AbstractRepository<Weapon> {
 	 */
 	public void deleteAll() {
 		DatabaseHelper helper = new DatabaseHelper(getPlugin(), getDatabaseHandler());
-		helper.runQueriesAsync(database ->
-									   QueryBuilder.on(database, weaponTable.getName()).delete().execute()
-		);
+		helper.runQueriesAsync(database -> QueryBuilder.on(database, weaponTable.getName()).delete().execute());
 	}
 
 	@Override
 	protected Collection<Weapon> doLoadAll() throws SQLException {
 		List<Weapon>   weapons = new ArrayList<>();
-		List<Object[]> data    = getDatabase().table(weaponTable.getName()).selectAll();
+		List<Object[]> data    = weaponTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
 			UUID   uuid = UUID.fromString(String.valueOf(result[0]));

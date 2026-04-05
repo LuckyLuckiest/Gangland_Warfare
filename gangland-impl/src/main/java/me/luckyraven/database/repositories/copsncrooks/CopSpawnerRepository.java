@@ -34,7 +34,7 @@ public class CopSpawnerRepository extends AbstractRepository<CopSpawner> {
 	@Override
 	protected Collection<CopSpawner> doLoadAll() throws SQLException {
 		List<CopSpawner> copSpawners = new ArrayList<>();
-		List<Object[]>   data        = getDatabase().table(copSpawnerTable.getName()).selectAll();
+		List<Object[]>   data        = copSpawnerTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
 			int v = 0;

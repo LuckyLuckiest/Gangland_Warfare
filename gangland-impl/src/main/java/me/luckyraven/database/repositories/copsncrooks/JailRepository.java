@@ -35,7 +35,7 @@ public class JailRepository extends AbstractRepository<Jail> {
 	@Override
 	protected Collection<Jail> doLoadAll() throws SQLException {
 		List<Jail>     jails = new ArrayList<>();
-		List<Object[]> data  = getDatabase().table(jailTable.getName()).selectAll();
+		List<Object[]> data  = jailTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
 			int v = 0;

@@ -30,7 +30,7 @@ public class PluginDataRepository extends AbstractRepository<PluginData> {
 	@Override
 	protected Collection<PluginData> doLoadAll() throws SQLException {
 		List<PluginData> pluginDataList = new ArrayList<>();
-		List<Object[]>   data           = getDatabase().table(pluginDataTable.getName()).selectAll();
+		List<Object[]>   data           = pluginDataTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
 			int  v              = 0;

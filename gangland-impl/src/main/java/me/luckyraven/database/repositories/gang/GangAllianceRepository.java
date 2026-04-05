@@ -46,7 +46,7 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> {
 	@Override
 	protected Collection<GangAlliance> doLoadAll() throws SQLException {
 		List<GangAlliance> alliances      = new ArrayList<>();
-		List<Object[]>     gangAlliesData = getDatabase().table(gangAllianceTable.getName()).selectAll();
+		List<Object[]>     gangAlliesData = gangAllianceTable.selectAllTableQuery(getDatabase());
 
 		// Load all gang alliances
 		for (Object[] result : gangAlliesData) {
@@ -77,9 +77,9 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> {
 	@Override
 	protected void doDelete(GangAlliance data) throws SQLException {
 		QueryBuilder.on(getDatabase(), gangAllianceTable.getName())
-					.delete()
-					.where("gang_id", data.gang().getId())
-					.where("ally_id", data.ally().getId())
-					.execute();
+		            .delete()
+		            .where("gang_id", data.gang().getId())
+		            .where("ally_id", data.ally().getId())
+		            .execute();
 	}
 }

@@ -34,7 +34,7 @@ public final class TestRepository extends AbstractRepository<TestEntity> {
 	@Override
 	protected Collection<TestEntity> doLoadAll() throws SQLException {
 		List<TestEntity> entities = new ArrayList<>();
-		List<Object[]>   rows     = getDatabase().table(table.getName()).selectAll();
+		List<Object[]>   rows     = table.selectAllTableQuery(getDatabase());
 
 		for (Object[] row : rows) {
 			String id    = (String) row[0];

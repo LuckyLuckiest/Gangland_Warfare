@@ -40,7 +40,7 @@ public class RankParentRepository extends AbstractRepository<RankParent> {
 		Database dataTable = getDatabase().table(rankParentTable.getName());
 
 		Object[] existing = dataTable.select("id = ?", new Object[]{headId}, new int[]{Types.INTEGER},
-											 new String[]{"*"});
+		                                     new String[]{"*"});
 
 		if (existing.length == 0) {
 			insertData(new RankParent(headId, tailId), getDatabase());
@@ -50,7 +50,7 @@ public class RankParentRepository extends AbstractRepository<RankParent> {
 	@Override
 	protected Collection<RankParent> doLoadAll() throws SQLException {
 		List<RankParent> rankParents = new ArrayList<>();
-		List<Object[]>   data        = getDatabase().table(rankParentTable.getName()).selectAll();
+		List<Object[]>   data        = rankParentTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
 			int rankId   = (int) result[0];

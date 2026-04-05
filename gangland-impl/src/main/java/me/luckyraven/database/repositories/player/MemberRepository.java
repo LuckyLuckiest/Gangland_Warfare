@@ -44,7 +44,7 @@ public class MemberRepository extends AbstractRepository<Member> {
 	@Override
 	protected Collection<Member> doLoadAll() throws SQLException {
 		List<Member>   members = new ArrayList<>();
-		List<Object[]> data    = getDatabase().table(memberTable.getName()).selectAll();
+		List<Object[]> data    = memberTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
 			int v = 0;

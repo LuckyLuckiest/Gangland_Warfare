@@ -271,7 +271,7 @@ public final class ReloadPlugin {
 
 		helper.runQueries(database -> {
 			// select all users from the user table
-			List<Object[]> allUsers = database.table(userTable.getName()).selectAll();
+			List<Object[]> allUsers = userTable.selectAllTableQuery(database);
 
 			for (Object[] userData : allUsers) {
 				String uuidString = String.valueOf(userData[0]);

@@ -31,7 +31,7 @@ public class UserRepository extends AbstractRepository<User<? extends OfflinePla
 	protected Collection<User<? extends OfflinePlayer>> doLoadAll() throws SQLException {
 		Map<UUID, User<? extends OfflinePlayer>> users = new HashMap<>();
 
-		List<Object[]> data = getDatabase().table(userTable.getName()).selectAll();
+		List<Object[]> data = userTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
 			int    v          = 0;

@@ -211,6 +211,31 @@ public abstract class Table<T> {
 		}
 	}
 
+	/**
+	 * Selects all rows from the backing database table and returns them with columns in the same order as this table's
+	 * attribute definition.
+	 * <p>
+	 * This is the safe alternative to calling {@code database.table(name).selectAll()} directly. The plain
+	 * {@link Database#selectAll()} issues {@code SELECT *}, which returns values in the physical DB column order. When
+	 * {@link #validateSchema} adds a new column via {@code ALTER TABLE ADD COLUMN}, that column is physically appended
+	 * at the end regardless of its position in the attribute {@link java.util.LinkedHashMap}. Callers reading the
+	 * result by positional index would therefore receive values in the wrong slots.
+	 * <p>
+	 * This method issues {@code SELECT col1, col2, ...} with an explicit column list derived from {@link #getColumns()}
+	 * (which preserves insertion/definition order), so the returned {@code Object[]} indices always match the order in
+	 * which attributes were registered via {@link #addAttribute}.
+	 *
+	 * @param database an unscoped {@link Database} instance (the method scopes it internally)
+	 *
+	 * @return list of rows; each {@code Object[]} has values positionally matching the attribute definition order
+	 *
+	 * @throws SQLException if the query fails
+	 */
+	public List<Object[]> selectAllTableQuery(Database database) throws SQLException {
+		String[] orderedColumns = getColumns().toArray(String[]::new);
+		return database.table(name).selectAll(orderedColumns);
+	}
+
 	protected Map<String, Object> createSearchCriteria(String searchQuery, Object[] queryPlaceholder,
 	                                                   int[] queryDataTypes, int[] ignoredIndexes) {
 		return Map.of("search", searchQuery, "info", queryPlaceholder, "type", queryDataTypes, "index", ignoredIndexes);

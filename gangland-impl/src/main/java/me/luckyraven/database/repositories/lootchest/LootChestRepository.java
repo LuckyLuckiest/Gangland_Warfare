@@ -37,7 +37,7 @@ public class LootChestRepository extends AbstractRepository<LootChestData> {
 	@Override
 	protected Collection<LootChestData> doLoadAll() throws SQLException {
 		List<LootChestData> list = new ArrayList<>();
-		List<Object[]>      data = getDatabase().table(lootChestTable.getName()).selectAll();
+		List<Object[]>      data = lootChestTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
 			int v = 0;
@@ -67,16 +67,16 @@ public class LootChestRepository extends AbstractRepository<LootChestData> {
 			}
 
 			var lootChestData = LootChestData.builder()
-											 .id(id)
-											 .location(location)
-											 .lootTableId(lootTableId)
-											 .tier(tier)
-											 .respawnTime(respawnTime)
-											 .inventorySize(inventorySize)
-											 .displayName(displayName)
-											 .lastOpened(lastOpened)
-											 .isLooted(isLooted)
-											 .build();
+			                                 .id(id)
+			                                 .location(location)
+			                                 .lootTableId(lootTableId)
+			                                 .tier(tier)
+			                                 .respawnTime(respawnTime)
+			                                 .inventorySize(inventorySize)
+			                                 .displayName(displayName)
+			                                 .lastOpened(lastOpened)
+			                                 .isLooted(isLooted)
+			                                 .build();
 
 			list.add(lootChestData);
 		}

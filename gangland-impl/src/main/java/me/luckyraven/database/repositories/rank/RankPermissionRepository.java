@@ -32,7 +32,7 @@ public class RankPermissionRepository extends AbstractRepository<RankPermission>
 	@Override
 	protected Collection<RankPermission> doLoadAll() throws SQLException {
 		List<RankPermission> rankPermissions = new ArrayList<>();
-		List<Object[]>       data            = getDatabase().table(rankPermissionTable.getName()).selectAll();
+		List<Object[]>       data            = rankPermissionTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
 			int rankId       = (int) result[0];

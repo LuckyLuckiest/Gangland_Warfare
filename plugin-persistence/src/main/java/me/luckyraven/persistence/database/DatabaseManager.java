@@ -78,14 +78,15 @@ public class DatabaseManager {
 		LinkedHashMap<String, List<Object[]>> data = new LinkedHashMap<>();
 
 		for (String table : handler.getDatabase().getTables()) {
-			Database config = handler.getDatabase().table(table);
+			Database config  = handler.getDatabase().table(table);
+			String[] columns = config.getColumns().toArray(String[]::new);
 
 			List<Object[]> info = new ArrayList<>();
 			try {
-				info.addAll(config.selectAll());
+				info.addAll(config.selectAll(columns));
 			} catch (SQLException ignored) { }
 
-			if (!info.isEmpty()) data.put(table, config.selectAll());
+			if (!info.isEmpty()) data.put(table, info);
 		}
 
 		// need to disable the database after gathering the information

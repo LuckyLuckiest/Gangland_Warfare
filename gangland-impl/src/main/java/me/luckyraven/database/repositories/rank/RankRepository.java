@@ -43,7 +43,7 @@ public class RankRepository extends AbstractRepository<Rank> {
 
 		// Resolve or insert the tail rank
 		Object[] tailRow = dataTable.select("name = ?", new Object[]{tailName}, new int[]{Types.VARCHAR},
-											new String[]{"*"});
+		                                    new String[]{"*"});
 		int tailId;
 
 		if (tailRow.length == 0) {
@@ -55,7 +55,7 @@ public class RankRepository extends AbstractRepository<Rank> {
 
 		// Resolve or insert the head rank
 		Object[] headRow = dataTable.select("name = ?", new Object[]{headName}, new int[]{Types.VARCHAR},
-											new String[]{"*"});
+		                                    new String[]{"*"});
 		int headId;
 
 		if (headRow.length == 0) {
@@ -71,7 +71,7 @@ public class RankRepository extends AbstractRepository<Rank> {
 	@Override
 	protected Collection<Rank> doLoadAll() throws SQLException {
 		List<Rank>     ranks = new ArrayList<>();
-		List<Object[]> data  = getDatabase().table(rankTable.getName()).selectAll();
+		List<Object[]> data  = rankTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
 			int    id   = (int) result[0];

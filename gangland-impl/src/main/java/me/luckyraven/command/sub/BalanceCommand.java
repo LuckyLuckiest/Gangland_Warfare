@@ -85,7 +85,7 @@ public final class BalanceCommand extends Command {
 
 			helper.runQueries(database -> {
 				// get all the user's data
-				List<Object[]> usersData = database.table(userTable.getName()).selectAll();
+				List<Object[]> usersData = userTable.selectAllTableQuery(database);
 
 				// get only the uuids
 				Map<UUID, Double> uuids = usersData.stream()
@@ -125,7 +125,7 @@ public final class BalanceCommand extends Command {
 
 			helper.runQueries(database -> {
 				// get all the user's data
-				List<Object[]> usersData = database.table(userTable.getName()).selectAll();
+				List<Object[]> usersData = userTable.selectAllTableQuery(database);
 
 				// get only the uuids
 				Map<UUID, Double> uuids = usersData.stream()

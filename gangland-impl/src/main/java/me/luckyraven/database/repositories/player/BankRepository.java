@@ -32,9 +32,8 @@ public class BankRepository extends AbstractRepository<Bank> {
 
 	@Override
 	protected Collection<Bank> doLoadAll() throws SQLException {
-		List<Bank> banks = new ArrayList<>();
-
-		List<Object[]> data = getDatabase().table(bankTable.getName()).selectAll();
+		List<Bank>     banks = new ArrayList<>();
+		List<Object[]> data  = bankTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
 			int    v           = 0;

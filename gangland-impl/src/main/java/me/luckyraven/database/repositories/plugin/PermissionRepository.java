@@ -30,7 +30,7 @@ public class PermissionRepository extends AbstractRepository<Permission> {
 	@Override
 	protected Collection<Permission> doLoadAll() throws SQLException {
 		List<Permission> permissions = new ArrayList<>();
-		List<Object[]>   data        = getDatabase().table(permissionTable.getName()).selectAll();
+		List<Object[]>   data        = permissionTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
 			int    id         = (int) result[0];

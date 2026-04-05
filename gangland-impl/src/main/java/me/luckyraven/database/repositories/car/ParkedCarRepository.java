@@ -31,7 +31,7 @@ public class ParkedCarRepository extends AbstractRepository<ParkedCar> {
 	@Override
 	protected Collection<ParkedCar> doLoadAll() throws SQLException {
 		List<ParkedCar> cars = new ArrayList<>();
-		List<Object[]>  data = getDatabase().table(parkedCarTable.getName()).selectAll();
+		List<Object[]>  data = parkedCarTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
 			int    v              = 0;
