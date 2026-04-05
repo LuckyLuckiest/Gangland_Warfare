@@ -49,7 +49,7 @@ public class JetpackEquipListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onInteract(PlayerInteractEvent event) {
-		if (event.getHand() != EquipmentSlot.HAND) return;
+		if (event.getHand() != EquipmentSlot.HAND && event.getHand() != EquipmentSlot.OFF_HAND) return;
 
 		Action action = event.getAction();
 		if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) return;
