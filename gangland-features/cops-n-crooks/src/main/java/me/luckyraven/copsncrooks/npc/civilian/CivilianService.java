@@ -8,20 +8,21 @@ import me.luckyraven.copsncrooks.npc.civilian.config.CivilianGroupConfig;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianSettings;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianTypeConfig;
 import me.luckyraven.copsncrooks.npc.civilian.config.EntityMarkerConfig;
+import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
+import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpcFactory;
 import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
 import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawner;
 import me.luckyraven.item.ItemParser;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.weapon.WeaponService;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Manages the lifecycle and AI ticking of all active civilian NPCs.
@@ -44,6 +45,7 @@ public class CivilianService {
 	private EntityMarkManager  entityMarkManager;
 	@Getter
 	private EntityMarkerConfig markerConfig;
+	private JavaPlugin         plugin;
 	private boolean            initialized;
 
 	// ── Initialization ────────────────────────────────────────────────────────
@@ -64,6 +66,7 @@ public class CivilianService {
 	                       @Nullable WeaponService weaponService) {
 		if (initialized) return;
 
+		this.plugin            = plugin;
 		this.markerConfig      = markerConfig;
 		this.entityMarkManager = entityMarkManager;
 		this.spawnManager      = new CivilianSpawnManager(spawnConfigProvider, spawnerRepository, this, markerConfig);
@@ -79,8 +82,14 @@ public class CivilianService {
 		int tickRate = civilianSettings.getCivilianAiTickRate();
 		plugin.getServer().getScheduler().runTaskTimer(plugin, this::tickAll, tickRate, tickRate);
 
+		int checkInterval = civilianSettings.getCivilianSpawnerCheckInterval();
+		plugin.getServer().getScheduler().runTaskTimer(plugin,
+		                                               () -> tickProximitySpawners(civilianSettings),
+		                                               checkInterval, checkInterval);
+
 		initialized = true;
-		log.info("CivilianService initialized (tick rate: {} ticks).", tickRate);
+		log.info("CivilianService initialized (tick rate: {} ticks, proximity check: {} ticks).",
+		         tickRate, checkInterval);
 	}
 
 	// ── NPC registry ─────────────────────────────────────────────────────────
@@ -133,14 +142,17 @@ public class CivilianService {
 	 * @param location the center spawn location for the group
 	 * @param groupId the group key as defined in entity_marker.yml
 	 */
-	public void spawnGroup(Location location, String groupId) {
+	@Nullable
+	public CivilianGroup spawnGroup(Location location, String groupId) {
 		CivilianGroupConfig groupConfig = markerConfig.groups().get(groupId);
 		if (groupConfig == null) {
 			log.warn("Unknown civilian group '{}' — skipping spawn.", groupId);
-			return;
+			return null;
 		}
 
 		CivilianGroup group = new CivilianGroup(groupId, groupConfig);
+
+		List<CivilianNpc> spawned = new ArrayList<>();
 
 		for (Map.Entry<String, Integer> entry : groupConfig.members().entrySet()) {
 			String typeId = entry.getKey();
@@ -158,17 +170,22 @@ public class CivilianService {
 
 				npc.setGroup(group);
 				group.addMember(npc);
-				register(npc);
+				spawned.add(npc);
 			}
 		}
 
 		if (!group.isEmpty()) {
 			registerGroup(group);
+			// Defer registration by 1 tick so Citizens finishes entity initialisation for all group members
+			plugin.getServer().getScheduler().runTaskLater(plugin, () -> spawned.forEach(this::register), 1L);
 			log.debug("Spawned group '{}' with {} members at {}.", groupId, group.getMembers().size(), location);
+			return group;
 		}
+
+		return null;
 	}
 
-	// ── Shutdown ──────────────────────────────────────────────────────────────
+	// ── Spawner proximity ─────────────────────────────────────────────────────
 
 	/**
 	 * Destroys all active civilian NPCs and clears all registries.
@@ -183,6 +200,100 @@ public class CivilianService {
 		}
 		activeNpcs.clear();
 		activeGroups.clear();
+	}
+
+	/**
+	 * Checks all registered spawners each interval. Spawns civilians when a player enters the activation radius and
+	 * despawns them when all players leave the despawn radius.
+	 */
+	private void tickProximitySpawners(CivilianSettings settings) {
+		Collection<? extends Player> players = Bukkit.getOnlinePlayers();
+		if (players.isEmpty()) {
+			spawnManager.getSpawners().forEach(spawner -> despawnFromSpawner(spawner.getId()));
+			return;
+		}
+
+		double activationRadiusSq = Math.pow(settings.getCivilianSpawnerActivationRadius(), 2);
+		double despawnRadiusSq    = Math.pow(settings.getCivilianSpawnerDespawnRadius(), 2);
+		int    maxNpcs            = settings.getCivilianSpawnerMaxNpcs();
+		String defaultTypeId      = settings.getCivilianSpawnerDefaultTypeId();
+
+		for (CivilianSpawner spawner : spawnManager.getSpawners()) {
+			Location spawnerLoc = spawner.getLocation();
+			if (spawnerLoc.getWorld() == null) continue;
+
+			boolean anyWithinActivation = false;
+			boolean anyWithinDespawn    = false;
+
+			for (Player player : players) {
+				if (!player.getWorld().equals(spawnerLoc.getWorld())) continue;
+				double distSq = player.getLocation().distanceSquared(spawnerLoc);
+				if (distSq <= activationRadiusSq) {
+					anyWithinActivation = true;
+					break;
+				}
+				if (distSq <= despawnRadiusSq) {
+					anyWithinDespawn = true;
+				}
+			}
+
+			if (anyWithinActivation) {
+				if (spawner.getGroupId() != null) {
+					// Group spawner — spawn one group if none currently alive from this spawner
+					boolean hasActiveGroup = activeGroups.values()
+							.stream()
+							.anyMatch(g -> Integer.valueOf(spawner.getId()).equals(g.getSpawnerId()) && !g.isEmpty());
+
+					if (!hasActiveGroup) {
+						CivilianGroup group = spawnGroup(spawnerLoc, spawner.getGroupId());
+						if (group != null) {
+							group.setSpawnerId(spawner.getId());
+						}
+					}
+				} else {
+					// Individual NPC spawner — fill up to maxNpcs
+					long aliveCount = activeNpcs.values()
+							.stream()
+							.filter(npc -> Integer.valueOf(spawner.getId()).equals(npc.getSpawnerId()))
+							.filter(npc -> npc.isValid() && !npc.isMarkedForRemoval())
+							.count();
+
+					if (aliveCount < maxNpcs) {
+						String typeId = spawner.getTypeId() != null ? spawner.getTypeId() : defaultTypeId;
+						if (typeId == null || typeId.isBlank()) continue;
+
+						CivilianNpc npc = spawnManager.spawnCivilian(spawnerLoc, typeId);
+						if (npc != null) {
+							npc.setSpawnerId(spawner.getId());
+						}
+					}
+				}
+			} else if (!anyWithinDespawn) {
+				despawnFromSpawner(spawner.getId());
+			}
+		}
+	}
+
+	// ── Shutdown ──────────────────────────────────────────────────────────────
+
+	/**
+	 * Marks all civilians spawned from the given spawner for removal. {@link #tickAll} will destroy them on the next
+	 * tick.
+	 */
+	private void despawnFromSpawner(int spawnerId) {
+		// Individual NPCs tracked to this spawner
+		activeNpcs.values()
+				.stream()
+				.filter(npc -> Integer.valueOf(spawnerId).equals(npc.getSpawnerId()))
+				.forEach(CivilianNpc::markForRemoval);
+
+		// Group members whose group was spawned from this spawner
+		activeGroups.values()
+				.stream()
+				.filter(g -> Integer.valueOf(spawnerId).equals(g.getSpawnerId()))
+				.flatMap(g -> g.getMembers()
+						.stream())
+				.forEach(CivilianNpc::markForRemoval);
 	}
 
 	// ── Internal tick ─────────────────────────────────────────────────────────
