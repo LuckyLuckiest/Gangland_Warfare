@@ -25,7 +25,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public abstract class EntitySpawner<S extends EntitySpawnerPoint> {
 
-	public static int ID = 0;
+	public int ID = 0;
 
 	protected final SpawnConfigProvider config;
 	protected final IRepository<S>      repository;
@@ -193,9 +193,13 @@ public abstract class EntitySpawner<S extends EntitySpawnerPoint> {
 
 	private void loadStoredSpawners() {
 		spawners.clear();
+		ID = 0;
 		Collection<S> loadedSpawners = repository.loadAll();
 		for (S spawner : loadedSpawners) {
 			spawners.put(spawner.getId(), spawner);
+			if (spawner.getId() > ID) {
+				ID = spawner.getId();
+			}
 		}
 	}
 

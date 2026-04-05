@@ -1,6 +1,5 @@
 package me.luckyraven.database.repositories.copsncrooks;
 
-import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
 import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawner;
 import me.luckyraven.database.tables.copsncrooks.CopSpawnerTable;
 import me.luckyraven.persistence.database.Database;
@@ -53,8 +52,6 @@ public class CopSpawnerRepository extends AbstractRepository<CopSpawner> {
 			Location location = new Location(world, x, y, z, (float) yaw, (float) pitch);
 
 			copSpawners.add(new CopSpawner(id, location));
-
-			CopSpawnManager.ID = id;
 		}
 
 		return copSpawners;
