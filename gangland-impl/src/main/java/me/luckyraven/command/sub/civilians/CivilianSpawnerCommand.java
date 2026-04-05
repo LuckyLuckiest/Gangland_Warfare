@@ -30,13 +30,14 @@ class CivilianSpawnerCommand extends SubArgument {
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
 			String message = GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(),
-			                                               "<set/remove/list/info/teleport>");
+			                                               "<set/setgroup/remove/list/info/teleport>");
 			sender.sendMessage(message);
 		};
 	}
 
 	private void initializeArguments() {
 		Argument setArg      = new CivilianSpawnerSetCommand(gangland, tree, this);
+		Argument setGroupArg = new CivilianSpawnerSetGroupCommand(gangland, tree, this);
 		Argument removeArg   = new CivilianSpawnerRemoveCommand(gangland, tree, this);
 		Argument listArg     = new CivilianSpawnerListCommand(gangland, tree, this);
 		Argument infoArg     = new CivilianSpawnerInfoCommand(gangland, tree, this);
@@ -45,6 +46,7 @@ class CivilianSpawnerCommand extends SubArgument {
 		List<Argument> arguments = new ArrayList<>();
 
 		arguments.add(setArg);
+		arguments.add(setGroupArg);
 		arguments.add(removeArg);
 		arguments.add(listArg);
 		arguments.add(infoArg);

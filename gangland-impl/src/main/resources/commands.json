@@ -675,6 +675,10 @@
 		"usage": "/glw civilian spawner set",
 		"description": "Sets a civilian spawner at your current location."
 	},
+	"civilian_spawner_setgroup": {
+		"usage": "/glw civilian spawner setgroup <groupId>",
+		"description": "Sets a group civilian spawner at your current location for the specified group."
+	},
 	"civilian_spawner_remove": {
 		"usage": "/glw civilian spawner remove <id>",
 		"description": "Removes the civilian spawner with the specified id."
