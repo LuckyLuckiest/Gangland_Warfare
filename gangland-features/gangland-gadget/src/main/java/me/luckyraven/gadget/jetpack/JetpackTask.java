@@ -105,10 +105,14 @@ public class JetpackTask extends BukkitRunnable {
 	                                    boolean hasFuel, boolean spaceHeld, boolean onGround) {
 		if (session.isGlideModeActive()) {
 			thrustTicks = 0;
-			ParticleUtil.spawnJetpackGlide(player);
-			session.setThrusting(false);
-			session.setGliding(true);
-			return 0.0;
+			if (hasFuel) {
+				fuelService.consumeFuelFromWearable(player, getEffectiveConsumptionRate(jetpack));
+				ParticleUtil.spawnJetpackGlide(player);
+				session.setThrusting(false);
+				session.setGliding(true);
+				return 0.0;
+			}
+			session.setGlideModeActive(false);
 		}
 		if (hasFuel && spaceHeld) {
 			fuelService.consumeFuelFromWearable(player, getEffectiveConsumptionRate(jetpack));
