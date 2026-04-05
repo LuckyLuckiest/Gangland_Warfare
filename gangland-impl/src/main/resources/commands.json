@@ -587,6 +587,14 @@
 		"usage": "/glw fuel remove <amount>",
 		"description": "Removes fuel from the item in hand."
 	},
+	"fuel_defuel": {
+		"usage": "/glw fuel defuel",
+		"description": "Drains all current fuel from the item in hand without changing max capacity."
+	},
+	"fuel_defuel_amount": {
+		"usage": "/glw fuel defuel <amount>",
+		"description": "Drains the specified amount of fuel from the item in hand without changing max capacity."
+	},
 	"item": {
 		"usage": "/glw item",
 		"description": "Shows item help page."

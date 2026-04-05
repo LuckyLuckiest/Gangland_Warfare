@@ -37,6 +37,7 @@ public final class FuelCommand extends Command {
 		Argument remove = new FuelRemoveCommand(getGangland(), getArgumentTree(), getArgument());
 		Argument info   = new FuelInfoCommand(getGangland(), getArgumentTree(), getArgument());
 		Argument refuel = new FuelRefuelCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument defuel = new FuelDefuelCommand(getGangland(), getArgumentTree(), getArgument());
 
 		List<Argument> arguments = new ArrayList<>();
 
@@ -44,6 +45,7 @@ public final class FuelCommand extends Command {
 		arguments.add(remove);
 		arguments.add(info);
 		arguments.add(refuel);
+		arguments.add(defuel);
 
 		getArgument().addAllSubArguments(arguments);
 	}
