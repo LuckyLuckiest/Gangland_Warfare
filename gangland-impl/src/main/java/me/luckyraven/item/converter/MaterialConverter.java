@@ -13,13 +13,14 @@ public class MaterialConverter extends ItemAttributes {
 	@Override
 	public ItemStack convert(String type, String modifier, Map<String, String> attributes) {
 		try {
-			Optional<XMaterial> xMaterial = XMaterial.matchXMaterial(type.toUpperCase());
+			String              lookup    = (modifier != null && !modifier.isBlank()) ? modifier : type;
+			Optional<XMaterial> xMaterial = XMaterial.matchXMaterial(lookup.toUpperCase());
 
 			Material material;
 			if (xMaterial.isPresent()) {
 				material = xMaterial.get().get();
 			} else {
-				material = Material.valueOf(type.toUpperCase());
+				material = Material.valueOf(lookup.toUpperCase());
 			}
 
 			if (material == null) return null;
