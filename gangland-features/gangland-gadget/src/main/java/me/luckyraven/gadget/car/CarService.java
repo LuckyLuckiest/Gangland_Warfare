@@ -78,6 +78,7 @@ public class CarService {
 	private final NamespacedKey pdcDurability;
 	private final NamespacedKey pdcPlacer;
 	private final NamespacedKey pdcExhaustSide;
+	private final NamespacedKey pdcDbId;
 
 	public CarService(CarManager carManager, VehicleRegistry vehicleRegistry, JavaPlugin plugin,
 	                  IRepository<ParkedCar> parkedCarRepository, FuelService fuelService,
@@ -94,6 +95,7 @@ public class CarService {
 		this.pdcDurability  = new NamespacedKey(plugin, "car_durability");
 		this.pdcPlacer      = new NamespacedKey(plugin, "car_placer");
 		this.pdcExhaustSide = new NamespacedKey(plugin, "car_exhaust_side");
+		this.pdcDbId        = new NamespacedKey(plugin, "car_db_id");
 	}
 
 	// ------------------------------------------------------------------
@@ -130,6 +132,7 @@ public class CarService {
 		ParkedCar     record = buildRecord(entityUUID, pv, spawnLoc);
 		parkedVehicles.put(entityUUID, pv);
 		if (record != null) {
+			storePdcDbId(entity, record.getDbId());
 			parkedCarRecords.put(entityUUID, record);
 			parkedCarRepository.save(record);
 		}
@@ -159,6 +162,40 @@ public class CarService {
 
 		VehicleEntity entity = parked.getEntity();
 		Car           car    = parked.getCar();
+
+		// Entity may have died between reload and this interaction (e.g. minecart physics on
+		// non-rail terrain after a server restart). Only re-spawn when the entity is definitively
+		// gone (null or isDead=true). Do NOT re-spawn for isValid()=false — the entity still exists
+		// physically in that case and despawn()+spawn() would leave two entities in the world.
+		Entity bukkitEntity = entity.getBukkitEntity();
+		if (bukkitEntity == null || bukkitEntity.isDead()) {
+			ParkedCar record = parkedCarRecords.remove(entityUUID);
+			if (record == null) {
+				parkedVehicles.put(entityUUID, parked);
+				return false;
+			}
+			World spawnWorld = Bukkit.getWorld(record.getWorld());
+			if (spawnWorld == null) {
+				parkedCarRecords.put(entityUUID, record);
+				parkedVehicles.put(entityUUID, parked);
+				return false;
+			}
+			Location respawnLoc = new Location(spawnWorld, record.getX(), record.getY(),
+			                                   record.getZ(), record.getYaw(), 0f);
+			entity.despawn();
+			entity.spawn(respawnLoc);
+			storePdc(entity, record.getCarId(), record.getFuel(),
+			         record.getDurability(), record.getPlacerUUID());
+			storePdcDbId(entity, record.getDbId());
+
+			UUID newEntityUUID = entity.getEntityUUID();
+			if (newEntityUUID == null || !entity.isAlive()) {
+				parkedCarRecords.put(entityUUID, record);
+				parkedVehicles.put(entityUUID, parked);
+				return false;
+			}
+			parkedCarRecords.put(newEntityUUID, record);
+		}
 
 		int maxFuel = car.getMaxFuel();
 
@@ -394,8 +431,12 @@ public class CarService {
 
 	/**
 	 * Loads parked vehicle data from the database and re-spawns each car entity. Call this once on plugin enable after
-	 * {@link CarManager} is ready. Minecart entities do not survive server restarts, so they are re-created here from
-	 * the saved records.
+	 * {@link CarManager} is ready.
+	 *
+	 * <p>Minecart entities are normally despawned on shutdown, but they can survive if the server
+	 * crashed or entity chunk-saves raced ahead of the plugin's cleanup. This method first scans loaded worlds for any
+	 * leftover car-tagged minecarts keyed by their {@code car_db_id} PDC value, reclaims those instead of spawning a
+	 * duplicate, and removes any orphans that no longer have a matching database record.
 	 */
 	public void reloadParkedVehicles() {
 		Collection<ParkedCar> records = parkedCarRepository.loadAll();
@@ -409,22 +450,31 @@ public class CarService {
 
 			Location spawnLoc = new Location(world, record.getX(), record.getY(), record.getZ(), record.getYaw(), 0f);
 
-			VehicleEntity entity = createVehicleEntity(car);
-			entity.spawn(spawnLoc);
+			// Force-load the chunk so any entity that survived from a previous session
+			// (crash or chunk-save race) is present before we check for it.
+			spawnLoc.getChunk().load();
+
+			Minecart survivor = findSurvivor(spawnLoc.getChunk(), record.getDbId());
+
+			VehicleEntity entity;
+			if (survivor != null) {
+				// Reclaim the surviving entity — do not spawn a duplicate.
+				entity = new MinecartVehicle(car, survivor);
+			} else {
+				entity = createVehicleEntity(car);
+				entity.spawn(spawnLoc);
+			}
 
 			UUID entityUUID = entity.getEntityUUID();
 			if (entityUUID == null) continue;
 
 			storePdc(entity, record.getCarId(), record.getFuel(), record.getDurability(), record.getPlacerUUID());
+			storePdcDbId(entity, record.getDbId());
 			parkedVehicles.put(entityUUID, new ParkedVehicle(entity, car, record.getPlacerUUID(), record.getFuel(),
 			                                                 record.getDurability(), null));
 			parkedCarRecords.put(entityUUID, record);
 		}
 	}
-
-	// ------------------------------------------------------------------
-	// Damage
-	// ------------------------------------------------------------------
 
 	/**
 	 * Adds fuel to a parked (undriven) vehicle, capped at the fuel definition's max capacity. Updates both the
@@ -455,6 +505,10 @@ public class CarService {
 		return true;
 	}
 
+	// ------------------------------------------------------------------
+	// Damage
+	// ------------------------------------------------------------------
+
 	/**
 	 * Applies damage to a parked vehicle and persists the updated durability. Destroys the vehicle without returning an
 	 * item if durability reaches zero.
@@ -476,16 +530,16 @@ public class CarService {
 		}
 	}
 
-	// ------------------------------------------------------------------
-	// Queries
-	// ------------------------------------------------------------------
-
 	/**
 	 * Returns {@code true} if the entity UUID belongs to a parked (undriven) vehicle.
 	 */
 	public boolean isParkedVehicle(UUID entityUUID) {
 		return parkedVehicles.containsKey(entityUUID);
 	}
+
+	// ------------------------------------------------------------------
+	// Queries
+	// ------------------------------------------------------------------
 
 	/**
 	 * Returns the parked vehicle for the given entity UUID, or {@code null}.
@@ -501,6 +555,20 @@ public class CarService {
 	@Nullable
 	public VehicleSession getSession(Player player) {
 		return vehicleRegistry.getByPlayer(player.getUniqueId());
+	}
+
+	/**
+	 * Scans a single chunk for a {@link Minecart} whose {@code car_db_id} PDC value matches {@code dbId}. Returns
+	 * {@code null} if none is found or the entity is dead.
+	 */
+	@Nullable
+	private Minecart findSurvivor(org.bukkit.Chunk chunk, String dbId) {
+		for (Entity e : chunk.getEntities()) {
+			if (!(e instanceof Minecart mc) || mc.isDead()) continue;
+			String stored = mc.getPersistentDataContainer().get(pdcDbId, PersistentDataType.STRING);
+			if (dbId.equals(stored)) return mc;
+		}
+		return null;
 	}
 
 	// ------------------------------------------------------------------
@@ -545,6 +613,12 @@ public class CarService {
 		if (placerUUID != null) {
 			pdc.set(pdcPlacer, PersistentDataType.STRING, placerUUID.toString());
 		}
+	}
+
+	private void storePdcDbId(VehicleEntity vehicleEntity, String dbId) {
+		Entity entity = vehicleEntity.getBukkitEntity();
+		if (entity == null) return;
+		entity.getPersistentDataContainer().set(pdcDbId, PersistentDataType.STRING, dbId);
 	}
 
 	private void storePdcExhaustSide(VehicleEntity vehicleEntity, @Nullable ExhaustSide exhaustSide) {
