@@ -11,6 +11,7 @@ import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -34,13 +35,22 @@ class JailCreateCommand extends SubArgument {
 
 			JailService jailService = gangland.getInitializer().getJailService();
 			Location    location    = player.getLocation();
+			int         blocks      = 5;
 
-			// TODO need to do a broder check rather than exact location
 			boolean checkForJail = jailService.getJailRegistry().getCells()
-					.stream().anyMatch(jail -> jail.getLocation().equals(location));
+					.stream().anyMatch(jail -> {
+						Location jailLoc = jail.getLocation();
+						if (jailLoc == null) return false;
+
+						World jailLocWorld  = jailLoc.getWorld();
+						World locationWorld = location.getWorld();
+						if (jailLocWorld == null || !jailLocWorld.equals(locationWorld)) return false;
+						return jailLoc.distanceSquared(location) < Math.pow(blocks, 2);
+					});
 
 			if (checkForJail) {
-				sender.sendMessage(GanglandChatUtil.errorMessage("Location is already a jail!"));
+				sender.sendMessage(GanglandChatUtil.errorMessage(
+						"A jail already exists within " + blocks + " blocks of this location!"));
 				return;
 			}
 
