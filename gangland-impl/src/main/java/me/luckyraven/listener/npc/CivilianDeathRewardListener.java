@@ -2,6 +2,8 @@ package me.luckyraven.listener.npc;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.events.npc.CivilianDeathEvent;
+import me.luckyraven.copsncrooks.npc.civilian.CivilianState;
+import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.events.level.LevelUpEvent;
@@ -25,13 +27,21 @@ public class CivilianDeathRewardListener implements Listener {
 	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
 	public void onCivilianDeath(CivilianDeathEvent event) {
 		Player killer = event.getKiller();
-		if (killer == null || event.getExperience() <= 0) return;
+		if (killer == null) return;
 
 		User<Player> user = userManager.getUser(killer);
 		if (user == null) return;
 
-		Level        level        = user.getLevel();
-		LevelUpEvent levelUpEvent = new UserLevelUpEvent(false, user, level);
-		level.addExperience(event.getExperience(), levelUpEvent);
+		// XP reward
+		if (event.getExperience() > 0) {
+			Level        level        = user.getLevel();
+			LevelUpEvent levelUpEvent = new UserLevelUpEvent(false, user, level);
+			level.addExperience(event.getExperience(), levelUpEvent);
+		}
+
+		CivilianNpc civilianNpc = event.getCivilianNpc();
+		if (!(civilianNpc.isHostile() && civilianNpc.getCurrentState() == CivilianState.COMBAT)) {
+			user.getWanted().incrementLevel();
+		}
 	}
 }
