@@ -2,6 +2,7 @@ package me.luckyraven.weapon.reload.type;
 
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
+import me.luckyraven.util.downed.DownedPlayerRegistry;
 import me.luckyraven.util.timer.SequenceTimer;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.ammo.Ammunition;
@@ -57,6 +58,11 @@ public class InstantReload extends Reload {
 		// the sound that plays at the middle
 		long midSound = reloadData.getCooldown() / 2;
 		timer.addIntervalTaskPair(midSound, time -> {
+			if (player != null && (player.isDead() || DownedPlayerRegistry.isDowned(player.getUniqueId()))) {
+				stopReloading();
+				return;
+			}
+
 			if (player != null) {
 				SoundConfiguration.playSounds(player, getWeapon().getSoundData().getReloadCustomMid(), null);
 			}
@@ -65,6 +71,11 @@ public class InstantReload extends Reload {
 		long remaining = Math.max(0, reloadData.getCooldown() - midSound);
 		// continue execution after the sound had finished
 		timer.addIntervalTaskPair(remaining, time -> {
+			if (player != null && (player.isDead() || DownedPlayerRegistry.isDowned(player.getUniqueId()))) {
+				stopReloading();
+				return;
+			}
+
 			AmmunitionData ammunitionData = getWeapon().getAmmunitionData();
 			if (ammunitionData == null) return;
 

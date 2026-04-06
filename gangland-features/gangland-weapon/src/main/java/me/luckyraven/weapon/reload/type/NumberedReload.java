@@ -2,6 +2,7 @@ package me.luckyraven.weapon.reload.type;
 
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
+import me.luckyraven.util.downed.DownedPlayerRegistry;
 import me.luckyraven.util.timer.SequenceTimer;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.ammo.Ammunition;
@@ -86,6 +87,11 @@ public class NumberedReload extends Reload {
 			timer.addIntervalTaskPair(reloadData.getCooldown(), time -> {
 				if (!isReloading()) return;
 
+				if (player != null && (player.isDead() || DownedPlayerRegistry.isDowned(player.getUniqueId()))) {
+					stopReloading();
+					return;
+				}
+
 				if (inventory != null) {
 					// if ammo was dropped mid-reload, abort the remaining insertions
 					boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1), amount);
@@ -123,6 +129,11 @@ public class NumberedReload extends Reload {
 
 		// end reloading the gun
 		timer.addIntervalTaskPair(1, time -> {
+			if (player != null && (player.isDead() || DownedPlayerRegistry.isDowned(player.getUniqueId()))) {
+				stopReloading();
+				return;
+			}
+
 			super.endReloading(player);
 		});
 
