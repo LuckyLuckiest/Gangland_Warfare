@@ -42,7 +42,7 @@ public class InstantReload extends Reload {
 
 	@Override
 	protected void executeReload(JavaPlugin plugin, Player player, boolean removeAmmunition) {
-		PlayerInventory inventory = player.getInventory();
+		PlayerInventory inventory = player != null ? player.getInventory() : null;
 
 		timer = new SequenceTimer(plugin);
 
@@ -57,8 +57,9 @@ public class InstantReload extends Reload {
 		// the sound that plays at the middle
 		long midSound = reloadData.getCooldown() / 2;
 		timer.addIntervalTaskPair(midSound, time -> {
-			// play the sound at the middle
-			SoundConfiguration.playSounds(player, getWeapon().getSoundData().getReloadCustomMid(), null);
+			if (player != null) {
+				SoundConfiguration.playSounds(player, getWeapon().getSoundData().getReloadCustomMid(), null);
+			}
 		});
 
 		long remaining = Math.max(0, reloadData.getCooldown() - midSound);
@@ -67,35 +68,36 @@ public class InstantReload extends Reload {
 			AmmunitionData ammunitionData = getWeapon().getAmmunitionData();
 			if (ammunitionData == null) return;
 
-			// if ammo was lost before or during the reload start (e.g. dropped), abort immediately
-			boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1), ammunitionData.getConsumeRate());
-			if (removeAmmunition && !contains) {
-				stopReloading();
-				return;
-			}
+			if (inventory != null) {
+				// if ammo was lost before or during the reload start (e.g. dropped), abort immediately
+				boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1),
+				                                             ammunitionData.getConsumeRate());
+				if (removeAmmunition && !contains) {
+					stopReloading();
+					return;
+				}
 
-			// remove the magazine the moment the reloading starts to prevent bugs
-			if (removeAmmunition) {
-				// consume the item
-				inventory.removeItem(getAmmunition().buildItem(ammunitionData.getConsumeRate()));
+				// remove the magazine the moment the reloading starts to prevent bugs
+				if (removeAmmunition) {
+					inventory.removeItem(getAmmunition().buildItem(ammunitionData.getConsumeRate()));
+				}
 			}
 
 			// add to the weapon capacity
 			getWeapon().addAmmunition(ammunitionData.getRestore());
 
-			// update the weapon data
-			int newSlot = findWeaponSlot(inventory, getWeapon());
+			if (inventory != null) {
+				// update the weapon data in the player's inventory
+				int newSlot = findWeaponSlot(inventory, getWeapon());
 
-			if (newSlot > -1) {
-				ItemStack   existingItem = inventory.getItem(newSlot);
-				ItemBuilder heldWeapon;
+				if (newSlot > -1) {
+					ItemStack existingItem = inventory.getItem(newSlot);
+					ItemBuilder heldWeapon = new ItemBuilder(
+							Objects.requireNonNullElseGet(existingItem, () -> getWeapon().buildItem()));
 
-				// retrieve the existing item rather than building a new one
-				heldWeapon = new ItemBuilder(
-						Objects.requireNonNullElseGet(existingItem, () -> getWeapon().buildItem()));
-
-				getWeapon().updateWeaponData(heldWeapon);
-				getWeapon().updateWeapon(player, heldWeapon, newSlot);
+					getWeapon().updateWeaponData(heldWeapon);
+					getWeapon().updateWeapon(player, heldWeapon, newSlot);
+				}
 			}
 
 			// end reloading the gun

@@ -47,7 +47,7 @@ public class NumberedReload extends Reload {
 
 	@Override
 	protected void executeReload(JavaPlugin plugin, Player player, boolean removeAmmunition) {
-		PlayerInventory inventory = player.getInventory();
+		PlayerInventory inventory = player != null ? player.getInventory() : null;
 
 		timer = new SequenceTimer(plugin);
 
@@ -63,64 +63,60 @@ public class NumberedReload extends Reload {
 		int leftToInsert       = ammunitionData.getMaxMagCapacity() - getWeapon().getCurrentMagCapacity();
 		int numberOfInsertions = leftToInsert / ammunitionData.getRestore();
 
-		int numberOfAmmunition = 0;
-		for (int i = 0; i < inventory.getSize(); i++) {
-			ItemStack item = inventory.getItem(i);
-
-			if (item == null || item.getType() == Material.AIR || !Ammunition.isAmmunition(item)) continue;
-
-			Ammunition ammo = getAmmunition();
-
-			if (item.equals(ammo.buildItem(item.getAmount()))) {
-				numberOfAmmunition += item.getAmount();
+		if (inventory != null) {
+			// limit insertions by how much ammo the player actually carries
+			int numberOfAmmunition = 0;
+			for (int i = 0; i < inventory.getSize(); i++) {
+				ItemStack item = inventory.getItem(i);
+				if (item == null || item.getType() == Material.AIR || !Ammunition.isAmmunition(item)) continue;
+				Ammunition ammo = getAmmunition();
+				if (item.equals(ammo.buildItem(item.getAmount()))) {
+					numberOfAmmunition += item.getAmount();
+				}
 			}
+			int maxPossibleInsertions = numberOfAmmunition / amount;
+			numberOfInsertions = Math.min(numberOfInsertions, maxPossibleInsertions);
 		}
-
-		int maxPossibleInsertions = numberOfAmmunition / amount;
-
-		numberOfInsertions = Math.min(numberOfInsertions, maxPossibleInsertions);
+		// NPC path (inventory == null): use full numberOfInsertions — NPCs have unlimited ammo supply
 
 		ReloadData reloadData = getWeapon().getReloadData();
 		if (reloadData == null) return;
 
 		for (int i = 0; i < numberOfInsertions; ++i) {
 			timer.addIntervalTaskPair(reloadData.getCooldown(), time -> {
-				if (!isReloading()) {
-					return;
-				}
+				if (!isReloading()) return;
 
-				// if ammo was dropped mid-reload, abort the remaining insertions
-				boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1), amount);
-				if (removeAmmunition && !contains) {
-					stopReloading();
-					return;
+				if (inventory != null) {
+					// if ammo was dropped mid-reload, abort the remaining insertions
+					boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1), amount);
+					if (removeAmmunition && !contains) {
+						stopReloading();
+						return;
+					}
 				}
 
 				// reload middle sound
-				SoundConfiguration.playSounds(player, getWeapon().getSoundData().getReloadCustomMid(), null);
+				if (player != null) {
+					SoundConfiguration.playSounds(player, getWeapon().getSoundData().getReloadCustomMid(), null);
+				}
 
-				// take the item
-				if (removeAmmunition) {
-					// consume the item
+				if (inventory != null && removeAmmunition) {
 					inventory.removeItem(getAmmunition().buildItem(amount));
 				}
 
 				// add to the weapon capacity
 				getWeapon().addAmmunition(ammunitionData.getRestore());
 
-				// update the weapon data
-				int newSlot = findWeaponSlot(inventory, getWeapon());
-
-				if (newSlot > -1) {
-					ItemStack   existingItem = inventory.getItem(newSlot);
-					ItemBuilder heldWeapon;
-
-					// retrieve the existing item rather than building a new one
-					heldWeapon = new ItemBuilder(
-							Objects.requireNonNullElseGet(existingItem, () -> getWeapon().buildItem()));
-
-					getWeapon().updateWeaponData(heldWeapon);
-					getWeapon().updateWeapon(player, heldWeapon, newSlot);
+				if (inventory != null) {
+					// update the weapon data in the player's inventory
+					int newSlot = findWeaponSlot(inventory, getWeapon());
+					if (newSlot > -1) {
+						ItemStack existingItem = inventory.getItem(newSlot);
+						ItemBuilder heldWeapon = new ItemBuilder(
+								Objects.requireNonNullElseGet(existingItem, () -> getWeapon().buildItem()));
+						getWeapon().updateWeaponData(heldWeapon);
+						getWeapon().updateWeapon(player, heldWeapon, newSlot);
+					}
 				}
 			});
 		}

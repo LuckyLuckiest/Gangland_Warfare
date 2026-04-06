@@ -44,7 +44,7 @@ public abstract class Reload implements Cloneable {
 
 		if (reloadData == null) return;
 
-		if (weapon.getReloadActionBarData() != null) {
+		if (player != null && weapon.getReloadActionBarData() != null) {
 			ActionBarManager.send(plugin, player, weapon.getReloadActionBarData().getReloading(),
 			                      reloadData.getCooldown());
 		}
@@ -81,6 +81,8 @@ public abstract class Reload implements Cloneable {
 		// set that the weapon is reloading
 		this.reloading.set(true);
 
+		if (player == null) return;
+
 		// open the reload chamber action bar status
 		if (weapon.getReloadActionBarData() != null) {
 			ActionBarManager.send(player, weapon.getReloadActionBarData().getOpening());
@@ -97,17 +99,18 @@ public abstract class Reload implements Cloneable {
 	}
 
 	protected void endReloading(Player player) {
+		// set the weapon as not reloading
+		this.reloading.set(false);
+		this.currentPlayer = null;
+
+		if (player == null) return;
+
 		// end reloading sound
 		SoundConfiguration.playSounds(player, weapon.getSoundData().getReloadCustomEnd(),
 		                              weapon.getSoundData().getReloadDefaultAfter());
 
 		// un-scope the player to resume the showdown
 		weapon.unScope(player, true);
-
-		// set the weapon as not reloading
-		this.reloading.set(false);
-
-		this.currentPlayer = null;
 
 		Bukkit.getPluginManager().callEvent(new WeaponReloadCompleteEvent(weapon, player));
 	}
