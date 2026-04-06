@@ -70,7 +70,8 @@ public class ProjectileDamageListener implements Listener {
 
 	@EventHandler(priority = EventPriority.LOW)
 	public void onProjectileLaunch(WeaponProjectileLaunchEvent event) {
-		if (!(event.getProjectile().getShooter() instanceof Player player)) return;
+		if (!(event.getProjectile().getShooter() instanceof LivingEntity)) return;
+		Player player = event.getProjectile().getShooter() instanceof Player p ? p : null;
 
 		GunWeapon weapon = (GunWeapon) event.getWeapon();
 
@@ -82,8 +83,8 @@ public class ProjectileDamageListener implements Listener {
 		projectileStates.put(entityId, new ProjectileState(weapon));
 		eventQueues.put(entityId, new ProjectileEventQueue(entityId));
 
-		// Handle tracer particles on launch
-		if (weapon.getModifiersData().hasTracer()) {
+		// Handle tracer particles on launch (player shooters only)
+		if (player != null && weapon.getModifiersData().hasTracer()) {
 			Location start = event.getProjectile().getLocation();
 			Vector vector = event.getProjectile()
 			                     .getVelocity()
