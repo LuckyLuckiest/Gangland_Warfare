@@ -4,17 +4,17 @@ import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianInventoryConfig;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
+import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.item.ItemParser;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ChatUtil;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -27,6 +27,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CivilianInteractListener implements Listener {
 
+	private final JavaPlugin      plugin;
 	private final CivilianService civilianService;
 	@Nullable
 	private final ItemParser      itemParser;
@@ -48,11 +49,10 @@ public class CivilianInteractListener implements Listener {
 
 	// ── Helpers ───────────────────────────────────────────────────────────────
 
-	// TODO Trader inventory needs to use the custom inventory
 	private void openTraderInventory(Player player, CivilianInventoryConfig config) {
-		String    title     = ChatUtil.color(config.title());
-		int       size      = normalizeSize(config.size());
-		Inventory inventory = Bukkit.createInventory(null, size, title);
+		String           title   = ChatUtil.color(config.title());
+		int              size    = normalizeSize(config.size());
+		InventoryHandler handler = new InventoryHandler(plugin, title, size, player);
 
 		for (Map.Entry<Integer, String> entry : config.slotItems().entrySet()) {
 			int    slot      = entry.getKey();
@@ -62,11 +62,11 @@ public class CivilianInteractListener implements Listener {
 
 			ItemStack item = resolveItem(itemEntry);
 			if (item != null) {
-				inventory.setItem(slot, item);
+				handler.setItem(slot, item, false);
 			}
 		}
 
-		player.openInventory(inventory);
+		handler.open(player);
 	}
 
 	private int normalizeSize(int size) {

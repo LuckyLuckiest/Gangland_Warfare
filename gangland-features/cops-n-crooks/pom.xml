@@ -45,6 +45,11 @@
             <artifactId>gangland-weapon</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>inventory-api</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
 
         <!-- Citizens dependency -->
         <dependency>
