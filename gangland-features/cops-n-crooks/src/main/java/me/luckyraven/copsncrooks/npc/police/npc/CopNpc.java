@@ -15,6 +15,8 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -25,15 +27,22 @@ public class CopNpc extends AbstractNpc {
 	@Getter
 	private final CopTierConfig              tierConfig;
 	private final Map<CopState, CopBehavior> behaviors;
-
+	/**
+	 * Non-player entities that attacked this cop while it was focused on a player. Engaged in order after the player
+	 * target is resolved — cops finish their primary job first.
+	 */
+	private final Deque<LivingEntity>        pendingEntityAttackers = new ArrayDeque<>();
 	@Getter
-	private CopState currentState = CopState.IDLE;
+	private       CopState                   currentState           = CopState.IDLE;
 	@Getter
 	@Setter
-	private UUID     targetPlayerId;
+	private       UUID                       targetPlayerId;
 	@Getter
 	@Setter
-	private boolean  combatForced;
+	private       LivingEntity               targetEntity;
+	@Getter
+	@Setter
+	private       boolean                    combatForced;
 
 	public CopNpc(NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors,
 	              Location spawnLocation, CopConfigProvider configProvider) {
@@ -107,15 +116,25 @@ public class CopNpc extends AbstractNpc {
 
 	/**
 	 * Runs a single AI tick using the current state's behavior.
+	 *
+	 * @param target the resolved target — may be a {@link Player} (wanted player) or any
+	 *        {@link org.bukkit.entity.LivingEntity} (e.g. a wanted hostile civilian). Pass {@code null} when no target is
+	 * 		available.
 	 */
-	public void tick(Player target) {
+	public void tick(org.bukkit.entity.LivingEntity target) {
 		if (!isValid()) {
 			markForRemoval();
 			return;
 		}
 
-		// Store target so behaviors can access it via getTargetPlayerId()
-		setTargetPlayerId(target != null ? target.getUniqueId() : null);
+		// Store target so behaviors can access it
+		if (target instanceof Player p) {
+			setTargetPlayerId(p.getUniqueId());
+			setTargetEntity(null);
+		} else {
+			setTargetEntity(target);
+			setTargetPlayerId(null);
+		}
 
 		decrementAttackCooldown();
 		updateNavigationProgress();
@@ -143,8 +162,32 @@ public class CopNpc extends AbstractNpc {
 		return !(distanceTo(player) > tierConfig.cuffRadius());
 	}
 
+	/**
+	 * Adds an entity that attacked this cop to the pending attacker queue. Duplicates are removed before insertion so
+	 * each entity appears at most once.
+	 */
+	public void addEntityAttacker(LivingEntity attacker) {
+		if (attacker == null) return;
+		pendingEntityAttackers.remove(attacker);
+		pendingEntityAttackers.addLast(attacker);
+	}
+
+	/**
+	 * Polls the next live entity attacker from the pending queue, removing dead/invalid entries along the way.
+	 *
+	 * @return the next valid entity attacker, or {@code null} if the queue is empty
+	 */
+	public LivingEntity pollNextEntityAttacker() {
+		while (!pendingEntityAttackers.isEmpty()) {
+			LivingEntity candidate = pendingEntityAttackers.poll();
+			if (candidate != null && candidate.isValid() && !candidate.isDead()) return candidate;
+		}
+		return null;
+	}
+
 	@Override
 	protected void cleanupTransientState() {
+		pendingEntityAttackers.clear();
 		CopBehavior behavior = behaviors.get(currentState);
 		if (behavior == null) return;
 		behavior.onExit(this);

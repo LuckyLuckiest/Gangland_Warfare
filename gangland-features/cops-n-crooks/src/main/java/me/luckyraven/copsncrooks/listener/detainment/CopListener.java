@@ -9,6 +9,7 @@ import me.luckyraven.copsncrooks.npc.police.npc.CopNpc;
 import me.luckyraven.util.downed.PlayerDownedEvent;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -80,7 +81,7 @@ public class CopListener implements Listener {
 
 	/**
 	 * Removes a player from the cop-attacker registry when they are downed (GTA-style death that prevents actual
-	 * death). Mirrors the behaviour of {@link #onPlayerDeath} for the downed state.
+	 * death). Mirrors the behavior of {@link #onPlayerDeath} for the downed state.
 	 *
 	 * @param event the player downed event
 	 */
@@ -107,7 +108,31 @@ public class CopListener implements Listener {
 			attacker = player;
 		} else if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player player) {
 			attacker = player;
-		} else return;
+		} else {
+			// Friendly fire: cancel damage when a cop is hit by another cop's attack
+			boolean isCopFire = copManager.isCopNpc(damager) ||
+			                    (damager instanceof Projectile p && p.getShooter() instanceof Entity shooterEntity &&
+			                     copManager.isCopNpc(shooterEntity));
+			if (isCopFire) {
+				event.setCancelled(true);
+				return;
+			}
+
+			// Non-cop NPC attacker — queue it so this cop engages after finishing with the player
+			CopNpc attackedCop = copManager.findCopByEntity(victim);
+			if (attackedCop != null) {
+				LivingEntity entityAttacker = null;
+				if (damager instanceof LivingEntity le) {
+					entityAttacker = le;
+				} else if (damager instanceof Projectile proj && proj.getShooter() instanceof LivingEntity le) {
+					entityAttacker = le;
+				}
+				if (entityAttacker != null) {
+					attackedCop.addEntityAttacker(entityAttacker);
+				}
+			}
+			return;
+		}
 
 		CopNpc cop = copManager.findCopByEntity(victim);
 		if (cop == null) return;

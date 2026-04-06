@@ -340,6 +340,9 @@ public final class Initializer {
 		// civilian service
 		civilianLoader();
 
+		// wire civilian service into cop manager so cops can pursue wanted hostile civilians
+		copService.getCopManager().setCivilianService(civilianService);
+
 		// repair system
 		repairLoader();
 

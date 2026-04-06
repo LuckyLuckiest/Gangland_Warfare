@@ -47,6 +47,12 @@ public class CuffingBehavior implements CopBehavior {
 
 	@Override
 	public void tick(CopNpc cop) {
+		// Cuffing only applies to players; entity targets (hostile civilians) go straight to COMBAT
+		if (cop.getTargetPlayerId() == null && cop.getTargetEntity() != null) {
+			cop.transitionTo(CopState.COMBAT);
+			return;
+		}
+
 		Player target = cop.getTargetPlayerId() != null ? Bukkit.getPlayer(cop.getTargetPlayerId()) : null;
 		if (target == null || !target.isOnline()) {
 			cop.transitionTo(CopState.RETURNING);

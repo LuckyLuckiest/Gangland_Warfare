@@ -5,6 +5,7 @@ import me.luckyraven.copsncrooks.npc.police.npc.CopNpc;
 import me.luckyraven.copsncrooks.npc.police.state.CopBehavior;
 import me.luckyraven.copsncrooks.npc.police.state.CopState;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -24,23 +25,27 @@ public class CombatBehavior implements CopBehavior {
 
 	@Override
 	public void tick(CopNpc cop) {
-		Player target = resolveTarget(cop);
-		if (target == null || !target.isOnline()) {
+		LivingEntity target = resolveTarget(cop);
+		if (target == null || !target.isValid() || target.isDead()) {
 			cop.transitionTo(CopState.RETURNING);
 			return;
 		}
 
-		if (detainmentService.isRestrained(target)) {
+		// Restrained check only applies to players
+		if (target instanceof Player player && detainmentService.isRestrained(player)) {
 			cop.transitionTo(CopState.RETURNING);
 			return;
 		}
 
-		double distance = cop.distanceTo(target);
-
+		double distance    = cop.distanceTo(target);
 		double attackRange = cop.getTierConfig().canUseWeapons() ? (combatRange * 3) : combatRange;
 
 		if (distance <= attackRange && cop.canAttack() && cop.hasLineOfSight(target)) {
-			cop.attack(target);
+			if (target instanceof Player player) {
+				cop.attack(player);
+			} else {
+				cop.attackEntity(target);
+			}
 		}
 
 		// Ranged cops hold their firing position; melee cops close in
@@ -62,8 +67,12 @@ public class CombatBehavior implements CopBehavior {
 		cop.stopNavigation();
 	}
 
-	private Player resolveTarget(CopNpc cop) {
+	private LivingEntity resolveTarget(CopNpc cop) {
 		UUID id = cop.getTargetPlayerId();
-		return id != null ? Bukkit.getPlayer(id) : null;
+		if (id != null) {
+			return Bukkit.getPlayer(id);
+		}
+		LivingEntity entity = cop.getTargetEntity();
+		return (entity != null && entity.isValid() && !entity.isDead()) ? entity : null;
 	}
 }

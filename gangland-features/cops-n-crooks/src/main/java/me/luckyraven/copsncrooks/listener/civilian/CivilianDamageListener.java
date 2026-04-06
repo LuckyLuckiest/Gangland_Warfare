@@ -8,6 +8,7 @@ import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.util.downed.PlayerDownedEvent;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -39,27 +40,53 @@ public class CivilianDamageListener implements Listener {
 		CivilianNpc npc = civilianService.getNpc(damaged.getUniqueId());
 		if (npc == null) return;
 
-		Entity damager = event.getDamager();
-		Player attacker;
-		if (damager instanceof Player player) {
-			attacker = player;
-		} else if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player player) {
-			attacker = player;
-		} else {
+		Entity                   damager = event.getDamager();
+		CivilianAIBehaviorConfig ai      = npc.getTypeConfig().ai();
+
+		// Player attacker (direct hit or via projectile)
+		Player playerAttacker = null;
+		if (damager instanceof Player p) {
+			playerAttacker = p;
+		} else if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player p) {
+			playerAttacker = p;
+		}
+
+		if (playerAttacker != null) {
+			if (npc.isHostile() && ai.combatEnabled()) {
+				npc.setTargetPlayerId(playerAttacker.getUniqueId());
+				if (npc.getCurrentState() != CivilianState.COMBAT) {
+					npc.transitionTo(CivilianState.COMBAT);
+				}
+			} else if (!npc.isHostile() && ai.fleeEnabled()) {
+				if (npc.getCurrentState() != CivilianState.FLEEING) {
+					npc.setLastAttackerLocation(playerAttacker.getLocation().clone());
+					npc.transitionTo(CivilianState.FLEEING);
+				}
+			}
 			return;
 		}
 
-		CivilianAIBehaviorConfig ai = npc.getTypeConfig().ai();
+		// Non-player LivingEntity attacker (NPC-to-NPC: cop shoots civilian, civilian shoots civilian, etc.)
+		LivingEntity entityAttacker = null;
+		if (damager instanceof LivingEntity le) {
+			entityAttacker = le;
+		} else if (damager instanceof Projectile projectile && projectile.getShooter() instanceof LivingEntity le) {
+			entityAttacker = le;
+		}
 
-		if (npc.isHostile() && ai.combatEnabled()) {
-			npc.setTargetPlayerId(attacker.getUniqueId());
-			if (npc.getCurrentState() != CivilianState.COMBAT) {
-				npc.transitionTo(CivilianState.COMBAT);
-			}
-		} else if (!npc.isHostile() && ai.fleeEnabled()) {
-			if (npc.getCurrentState() != CivilianState.FLEEING) {
-				npc.setLastAttackerLocation(attacker.getLocation().clone());
-				npc.transitionTo(CivilianState.FLEEING);
+		if (entityAttacker != null) {
+			if (npc.isHostile() && ai.combatEnabled()) {
+				// Bump the attacker to the front of the entity target queue so the civilian
+				// immediately fights back, regardless of what it was previously targeting.
+				npc.addEntityTargetToFront(entityAttacker);
+				if (npc.getCurrentState() != CivilianState.COMBAT) {
+					npc.transitionTo(CivilianState.COMBAT);
+				}
+			} else if (!npc.isHostile() && ai.fleeEnabled()) {
+				if (npc.getCurrentState() != CivilianState.FLEEING) {
+					npc.setLastAttackerLocation(entityAttacker.getLocation().clone());
+					npc.transitionTo(CivilianState.FLEEING);
+				}
 			}
 		}
 	}

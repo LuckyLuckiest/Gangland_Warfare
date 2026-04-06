@@ -6,6 +6,7 @@ import me.luckyraven.copsncrooks.npc.police.state.CopBehavior;
 import me.luckyraven.copsncrooks.npc.police.state.CopState;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -25,34 +26,48 @@ public class PursuingBehavior implements CopBehavior {
 
 	@Override
 	public void tick(CopNpc cop) {
-		Player target = resolveTarget(cop);
-		if (target == null || !target.isOnline()) {
+		LivingEntity target = resolveTarget(cop);
+		if (target == null || !target.isValid() || target.isDead()) {
 			cop.transitionTo(CopState.RETURNING);
 			return;
 		}
 
-		if (detainmentService.isRestrained(target)) {
-			cop.transitionTo(CopState.RETURNING);
-			return;
-		}
-
-		double distance = cop.distanceTo(target);
-
-		if (distance <= cuffRadius && cop.hasLineOfSight(target)) {
-			if (cop.getTierConfig().skipCuffing() || cop.isCombatForced()) {
-				cop.transitionTo(CopState.COMBAT);
-			} else {
-				cop.transitionTo(CopState.CUFFING);
+		// Restrained check and cuffing only apply to players
+		if (target instanceof Player player) {
+			if (detainmentService.isRestrained(player)) {
+				cop.transitionTo(CopState.RETURNING);
+				return;
 			}
-			return;
+
+			double distance = cop.distanceTo(player);
+
+			if (distance <= cuffRadius && cop.hasLineOfSight(player)) {
+				if (cop.getTierConfig().skipCuffing() || cop.isCombatForced()) {
+					cop.transitionTo(CopState.COMBAT);
+				} else {
+					cop.transitionTo(CopState.CUFFING);
+				}
+				return;
+			}
+
+			// Ranged cops shoot while closing in
+			if (cop.isUsingRangedWeapon() && cop.hasLineOfSight(player) && cop.canAttack()) {
+				cop.attack(player);
+			}
+		} else {
+			// Entity target (hostile civilian NPC): go straight to COMBAT once in cuff range
+			double distance = cop.distanceTo(target);
+			if (distance <= cuffRadius && cop.hasLineOfSight(target)) {
+				cop.transitionTo(CopState.COMBAT);
+				return;
+			}
+
+			if (cop.isUsingRangedWeapon() && cop.hasLineOfSight(target) && cop.canAttack()) {
+				cop.attackEntity(target);
+			}
 		}
 
-		// Ranged cops shoot while closing in - they still navigate to cuff range
-		if (cop.isUsingRangedWeapon() && cop.hasLineOfSight(target) && cop.canAttack()) {
-			cop.attack(target);
-		}
-
-		// When pathfinding has repeatedly failed, scan toward the player to find the closest reachable edge before any gap
+		// When pathfinding has repeatedly failed, scan toward the target to find the closest reachable edge
 		if (cop.isNavigationHopeless()) {
 			cop.navigateTo(cop.resolveHopelessFallbackLocation(target));
 			return;
@@ -71,8 +86,12 @@ public class PursuingBehavior implements CopBehavior {
 		cop.stopNavigation();
 	}
 
-	private Player resolveTarget(CopNpc cop) {
+	private LivingEntity resolveTarget(CopNpc cop) {
 		UUID id = cop.getTargetPlayerId();
-		return id != null ? Bukkit.getPlayer(id) : null;
+		if (id != null) {
+			return Bukkit.getPlayer(id);
+		}
+		LivingEntity entity = cop.getTargetEntity();
+		return (entity != null && entity.isValid() && !entity.isDead()) ? entity : null;
 	}
 }

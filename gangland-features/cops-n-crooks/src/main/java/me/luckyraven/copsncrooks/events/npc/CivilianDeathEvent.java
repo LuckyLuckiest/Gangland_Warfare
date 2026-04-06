@@ -15,14 +15,16 @@ import org.jetbrains.annotations.Nullable;
 public class CivilianDeathEvent extends NpcEvent {
 	private static final HandlerList HANDLERS = new HandlerList();
 
+	private final CivilianNpc civilianNpc;
 	@Nullable
-	private final Player killer;
-	private final double experience;
+	private final Player      killer;
+	private final double      experience;
 
 	public CivilianDeathEvent(CivilianNpc npc, @Nullable Player killer, double experience) {
 		super(npc);
-		this.killer     = killer;
-		this.experience = experience;
+		this.civilianNpc = npc;
+		this.killer      = killer;
+		this.experience  = experience;
 	}
 
 	public static HandlerList getHandlerList() {

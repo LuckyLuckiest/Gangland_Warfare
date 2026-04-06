@@ -1,8 +1,11 @@
 package me.luckyraven.copsncrooks.npc.police;
 
 import lombok.Getter;
+import lombok.Setter;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
+import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
+import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.police.config.CopConfigProvider;
 import me.luckyraven.copsncrooks.npc.police.npc.CopNpc;
 import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
@@ -39,6 +42,9 @@ public class CopManager {
 	private final Map<UUID, BukkitTask> spawnTasks;
 	private final Set<UUID>             activeCombatAlerts;
 	private final Set<UUID>             copAttackers;
+
+	@Setter
+	private CivilianService civilianService;
 
 	public CopManager(JavaPlugin plugin, CopSpawnManager spawnManager, TargetingManager targetingManager,
 	                  CopConfigProvider configProvider, EntityMarkManager entityMarkManager,
@@ -408,7 +414,7 @@ public class CopManager {
 					continue;
 				}
 
-				Player target = resolveTarget(cop, player);
+				LivingEntity target = resolveTarget(cop, player);
 				cop.tick(target);
 			}
 		}, 0L, configProvider.getAiTickRate());
@@ -423,22 +429,34 @@ public class CopManager {
 	 *   <li>Current cop-attacker target — keep if still online and in the attacker registry.</li>
 	 *   <li>Nearest wanted player in the world.</li>
 	 *   <li>Nearest cop-attacker (combat mode) — someone who previously hit a cop.</li>
+	 *   <li>Nearest wanted hostile civilian NPC.</li>
 	 *   <li>No valid target — transition to RETURNING.</li>
 	 * </ol>
 	 *
 	 * @param cop the cop NPC
 	 * @param defaultTarget the reference player used to find the nearest wanted target
 	 *
-	 * @return the resolved target, or null if no target available
+	 * @return the resolved target (Player or hostile civilian LivingEntity), or null if no target available
 	 */
-	private Player resolveTarget(CopNpc cop, Player defaultTarget) {
+	private LivingEntity resolveTarget(CopNpc cop, Player defaultTarget) {
+		// Check if cop is already pursuing a wanted civilian entity
+		LivingEntity currentEntity = cop.getTargetEntity();
+		if (currentEntity != null) {
+			if (currentEntity.isValid() && !currentEntity.isDead()) {
+				return currentEntity;
+			}
+			// Stale entity target — clear and fall through to player search
+			cop.setTargetEntity(null);
+			cop.setCombatForced(false);
+		}
+
 		UUID currentTargetId = cop.getTargetPlayerId();
 
 		if (currentTargetId != null) {
 			Player currentTarget = Bukkit.getPlayer(currentTargetId);
 
-			if (currentTarget != null && currentTarget.isOnline() && !currentTarget.isDead()
-			    && !DownedPlayerRegistry.isDowned(currentTargetId)) {
+			if (currentTarget != null && currentTarget.isOnline() && !currentTarget.isDead() &&
+			    !DownedPlayerRegistry.isDowned(currentTargetId)) {
 				// Keep if still wanted
 				if (targetingManager.isWanted(currentTargetId)) {
 					return currentTarget;
@@ -471,6 +489,7 @@ public class CopManager {
 		Player attacker = findNearestCopAttacker(cop);
 		if (attacker != null) {
 			cop.setTargetPlayerId(attacker.getUniqueId());
+			cop.setTargetEntity(null);
 			cop.setCombatForced(true);
 			if (cop.getCurrentState() != CopState.COMBAT) {
 				cop.transitionTo(CopState.COMBAT);
@@ -478,8 +497,33 @@ public class CopManager {
 			return attacker;
 		}
 
+		// 3. Find the nearest wanted hostile civilian NPC
+		LivingEntity wantedCivilian = findNearestWantedCivilian(cop);
+		if (wantedCivilian != null) {
+			cop.setTargetEntity(wantedCivilian);
+			cop.setTargetPlayerId(null);
+			cop.setCombatForced(true);
+			if (cop.getCurrentState() != CopState.COMBAT && cop.getCurrentState() != CopState.PURSUING) {
+				cop.transitionTo(CopState.PURSUING);
+			}
+			return wantedCivilian;
+		}
+
+		// 4. Check entities that directly attacked this cop (self-defence, lowest priority)
+		LivingEntity pendingAttacker = cop.pollNextEntityAttacker();
+		if (pendingAttacker != null) {
+			cop.setTargetEntity(pendingAttacker);
+			cop.setTargetPlayerId(null);
+			cop.setCombatForced(true);
+			if (cop.getCurrentState() != CopState.COMBAT) {
+				cop.transitionTo(CopState.COMBAT);
+			}
+			return pendingAttacker;
+		}
+
 		// No valid target — return to spawn
 		cop.setTargetPlayerId(null);
+		cop.setTargetEntity(null);
 		cop.setCombatForced(false);
 		if (cop.getCurrentState() != CopState.RETURNING && cop.getCurrentState() != CopState.IDLE) {
 			cop.transitionTo(CopState.RETURNING);
@@ -506,8 +550,8 @@ public class CopManager {
 
 		for (UUID attackerId : copAttackers) {
 			Player attacker = Bukkit.getPlayer(attackerId);
-			if (attacker == null || !attacker.isOnline() || attacker.isDead()
-			    || DownedPlayerRegistry.isDowned(attackerId)) continue;
+			if (attacker == null || !attacker.isOnline() || attacker.isDead() ||
+			    DownedPlayerRegistry.isDowned(attackerId)) continue;
 			if (!attacker.getWorld().equals(copLoc.getWorld())) continue;
 
 			double dist = attacker.getLocation().distanceSquared(copLoc);
@@ -515,6 +559,39 @@ public class CopManager {
 
 			bestDist = dist;
 			best     = attacker;
+		}
+
+		return best;
+	}
+
+	/**
+	 * Finds the nearest active hostile civilian NPC that is wanted by police (i.e. in combat), relative to the cop.
+	 *
+	 * @param cop the cop NPC
+	 *
+	 * @return the nearest wanted civilian entity, or null
+	 */
+	private LivingEntity findNearestWantedCivilian(CopNpc cop) {
+		if (civilianService == null || !cop.isValid()) return null;
+
+		LivingEntity copEntity = cop.getEntity();
+		if (copEntity == null) return null;
+
+		LivingEntity best     = null;
+		double       bestDist = Double.MAX_VALUE;
+
+		for (CivilianNpc civilian : civilianService.getActiveNpcs()) {
+			if (!civilian.isHostile() || !civilian.isWantedByPolice() || !civilian.isValid()) continue;
+
+			LivingEntity civEntity = civilian.getEntity();
+			if (civEntity == null) continue;
+			if (!civEntity.getWorld().equals(copEntity.getWorld())) continue;
+
+			double dist = civEntity.getLocation().distanceSquared(copEntity.getLocation());
+			if (dist >= bestDist) continue;
+
+			bestDist = dist;
+			best     = civEntity;
 		}
 
 		return best;

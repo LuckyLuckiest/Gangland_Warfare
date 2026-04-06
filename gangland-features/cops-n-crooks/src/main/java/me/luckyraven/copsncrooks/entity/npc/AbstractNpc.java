@@ -210,8 +210,7 @@ public abstract class AbstractNpc {
 	 */
 	public boolean canAttack() {
 		if (attackCooldown > 0 || reloading) return false;
-		if (heldWeapon != null && heldWeapon.isReloading()) return false;
-		return true;
+		return heldWeapon == null || !heldWeapon.isReloading();
 	}
 
 	/**
@@ -235,6 +234,24 @@ public abstract class AbstractNpc {
 		}
 
 		performMeleeAttack(player);
+	}
+
+	/**
+	 * Attacks the target entity using the gangland weapon (if available and line of sight) or melee fallback. Used for
+	 * NPC-to-NPC combat where the target is not a player.
+	 */
+	public void attackEntity(LivingEntity target) {
+		if (!isValid() || !canAttack() || target == null) return;
+		if (target.isDead()) return;
+
+		faceTargetEntity(target);
+
+		if (canUseWeapons() && heldWeapon != null && hasLineOfSight(target)) {
+			performGanglandWeaponAttack();
+			return;
+		}
+
+		performMeleeAttackOnEntity(target);
 	}
 
 	/**
@@ -264,6 +281,45 @@ public abstract class AbstractNpc {
 		LivingEntity entity = getEntity();
 		if (entity == null) return false;
 		return entity.hasLineOfSight(player);
+	}
+
+	/**
+	 * Returns the distance between this NPC and the given entity.
+	 */
+	public double distanceTo(LivingEntity target) {
+		if (!isValid() || target == null) return Double.MAX_VALUE;
+
+		LivingEntity entity = getEntity();
+		if (entity == null) return Double.MAX_VALUE;
+
+		Location entityLocation = entity.getLocation();
+		Location targetLocation = target.getLocation();
+
+		if (entityLocation.getWorld() == null || !entityLocation.getWorld().equals(targetLocation.getWorld())) {
+			return Double.MAX_VALUE;
+		}
+
+		return entityLocation.distance(targetLocation);
+	}
+
+	/**
+	 * Returns whether the NPC has a direct line of sight to the given entity.
+	 */
+	public boolean hasLineOfSight(LivingEntity target) {
+		if (!isValid() || target == null) return false;
+		LivingEntity entity = getEntity();
+		if (entity == null) return false;
+		return entity.hasLineOfSight(target);
+	}
+
+	/**
+	 * Returns whether the NPC should hold position instead of closing distance (ranged hold check) for a non-player
+	 * entity target.
+	 */
+	public boolean shouldHoldPursuitPosition(LivingEntity target) {
+		if (!isUsingRangedWeapon() || !hasLineOfSight(target)) return false;
+		double distance = distanceTo(target);
+		return distance >= rangedMinDistance && distance <= rangedMaxDistance;
 	}
 
 	// ── Navigation ───────────────────────────────────────────────────────────
@@ -357,6 +413,45 @@ public abstract class AbstractNpc {
 		return findBestRingApproachLocation(from, to, 1.5, Math.min(distance, 16.0), Math.min(distance * 0.5, 8.0));
 	}
 
+	/**
+	 * Resolves the navigation target while pursuing a non-player entity.
+	 */
+	public Location resolvePursuitLocation(LivingEntity target) {
+		if (!isValid() || target == null) return null;
+		Location targetLocation = target.getLocation().clone();
+		Location safe           = normalizeToStandableLocation(targetLocation);
+		return safe != null ? safe : targetLocation;
+	}
+
+	/**
+	 * Resolves the best reachable position when pathfinding has been declared hopeless for a non-player entity target.
+	 */
+	public Location resolveHopelessFallbackLocation(LivingEntity target) {
+		if (!isValid() || target == null) return null;
+
+		LivingEntity entity = getEntity();
+		if (entity == null) return null;
+
+		Location from = entity.getLocation();
+		Location to   = target.getLocation();
+
+		if (from.getWorld() == null || !from.getWorld().equals(to.getWorld())) return null;
+
+		if (from.distanceSquared(to) <= hopelessCloseThreshold * hopelessCloseThreshold) {
+			Location safe = normalizeToStandableLocation(to);
+			return safe != null ? safe : to;
+		}
+
+		Location gapWalk = findLastReachableGroundBeforeGap(from, to, 32.0);
+		if (gapWalk != null) return gapWalk;
+
+		Location lineApproach = findLineApproachLocation(from, to, 32.0);
+		if (lineApproach != null) return lineApproach;
+
+		double distance = from.distance(to);
+		return findBestRingApproachLocation(from, to, 1.5, Math.min(distance, 16.0), Math.min(distance * 0.5, 8.0));
+	}
+
 	// ── Tick helpers (called by subclass tick methods) ───────────────────────
 
 	/**
@@ -396,7 +491,7 @@ public abstract class AbstractNpc {
 			for (int dist : distances) {
 				Location candidate = origin.clone().add(dx * dist, 0, dz * dist);
 				Location standable = normalizeToStandableLocation(candidate);
-				if (standable == null || !isBasicSafeStandLocation(standable)) continue;
+				if (!isBasicSafeStandLocation(standable)) continue;
 
 				double score = Math.abs(angleOffset) * 0.5 + Math.abs(dist - midDist) * 0.3 +
 				               ThreadLocalRandom.current().nextDouble(0, 18.0);
@@ -418,7 +513,7 @@ public abstract class AbstractNpc {
 			for (int dist : distances) {
 				Location candidate = origin.clone().add(dx * dist, 0, dz * dist);
 				Location standable = normalizeToStandableLocation(candidate);
-				if (standable == null || !isBasicSafeStandLocation(standable)) continue;
+				if (!isBasicSafeStandLocation(standable)) continue;
 				return standable;
 			}
 		}
@@ -493,6 +588,16 @@ public abstract class AbstractNpc {
 
 		Location shooterEye = entity.getLocation().add(0, 1.6, 0);
 		Vector   direction  = player.getEyeLocation().toVector().subtract(shooterEye.toVector()).normalize();
+		Location rotated    = entity.getLocation().setDirection(direction);
+		entity.teleport(rotated);
+	}
+
+	protected void faceTargetEntity(LivingEntity target) {
+		Entity entity = npc.getEntity();
+		if (entity == null) return;
+
+		Location shooterEye = entity.getLocation().add(0, 1.6, 0);
+		Vector   direction  = target.getEyeLocation().toVector().subtract(shooterEye.toVector()).normalize();
 		Location rotated    = entity.getLocation().setDirection(direction);
 		entity.teleport(rotated);
 	}
@@ -584,6 +689,24 @@ public abstract class AbstractNpc {
 		                         .multiply(0.3)
 		                         .setY(0.1);
 		player.setVelocity(player.getVelocity().add(knockback));
+	}
+
+	protected void performMeleeAttackOnEntity(LivingEntity target) {
+		if (!isValid() || target == null) return;
+
+		LivingEntity entity = getEntity();
+		if (entity == null) return;
+
+		target.damage(getAttackDamage(), entity);
+		attackCooldown = 5;
+
+		Vector knockback = target.getLocation()
+		                         .toVector()
+		                         .subtract(entity.getLocation().toVector())
+		                         .normalize()
+		                         .multiply(0.3)
+		                         .setY(0.1);
+		target.setVelocity(target.getVelocity().add(knockback));
 	}
 
 	protected void refreshHeldItem() {
@@ -815,8 +938,8 @@ public abstract class AbstractNpc {
 
 		// Portal blocks are passable so they pass the feet check above, but NPCs must never target them
 		Material feetType = feet.getType();
-		if (feetType == Material.NETHER_PORTAL || feetType == Material.END_PORTAL ||
-		    feetType == Material.END_GATEWAY) return false;
+		if (feetType == Material.NETHER_PORTAL || feetType == Material.END_PORTAL || feetType == Material.END_GATEWAY)
+			return false;
 
 		if (below.isPassable()) return false;
 

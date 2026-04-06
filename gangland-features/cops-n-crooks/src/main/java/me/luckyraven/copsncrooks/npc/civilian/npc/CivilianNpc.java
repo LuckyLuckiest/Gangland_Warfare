@@ -21,9 +21,7 @@ import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 @CustomLog
@@ -35,13 +33,22 @@ public class CivilianNpc extends AbstractNpc {
 	private final @Nullable String                               groupId;
 	private final           Map<CivilianState, CivilianBehavior> behaviors;
 	private final @Nullable ItemParser                           itemParser;
-
+	/**
+	 * Queue of non-player entity targets for NPC-to-NPC combat. The head of the queue is the current active entity
+	 * target. Entity targets take priority over the player target (self-defense). Use {@link #addEntityTargetToFront}
+	 * to bump an attacker to the front.
+	 */
+	private final           Deque<LivingEntity>                  entityTargetQueue = new ArrayDeque<>();
 	@Getter
-	private CivilianState currentState = CivilianState.IDLE;
-
+	private                 CivilianState                        currentState      = CivilianState.IDLE;
 	@Getter
 	@Setter
-	private @Nullable UUID targetPlayerId;
+	private @Nullable       UUID                                 targetPlayerId;
+	/**
+	 * True when this hostile civilian is actively in combat — used by cops to identify wanted NPCs.
+	 */
+	@Getter
+	private                 boolean                              wantedByPolice;
 
 	/**
 	 * Location of the last entity that damaged this NPC — used by flee behavior.
@@ -124,6 +131,11 @@ public class CivilianNpc extends AbstractNpc {
 		         newState);
 		if (currentState == newState) return;
 
+		// Update wanted-by-police flag: hostile civilians become wanted when entering combat
+		if (isHostile()) {
+			wantedByPolice = (newState == CivilianState.COMBAT);
+		}
+
 		CivilianBehavior oldBehavior = behaviors.get(currentState);
 		if (oldBehavior != null) oldBehavior.onExit(this);
 
@@ -168,8 +180,45 @@ public class CivilianNpc extends AbstractNpc {
 		return typeConfig.hostile();
 	}
 
+	/**
+	 * Returns the current active entity target (head of queue), skipping and removing any stale entries. Entity targets
+	 * take priority over the player target — civilians fight back before resuming offence.
+	 */
+	@Nullable
+	public LivingEntity getTargetEntity() {
+		while (!entityTargetQueue.isEmpty()) {
+			LivingEntity head = entityTargetQueue.peek();
+			if (head != null && head.isValid() && !head.isDead()) return head;
+			entityTargetQueue.poll();
+		}
+		return null;
+	}
+
+	// ── Entity target queue ───────────────────────────────────────────────────
+
+	/**
+	 * Replaces the entire entity target queue with a single entity. Pass {@code null} to clear all entity targets.
+	 */
+	public void setTargetEntity(@Nullable LivingEntity entity) {
+		entityTargetQueue.clear();
+		if (entity != null) entityTargetQueue.addLast(entity);
+	}
+
+	/**
+	 * Inserts {@code entity} at the front of the entity target queue, making it the immediate target. Duplicate entries
+	 * are removed before insertion so the entity appears exactly once. Use this when the civilian is attacked — the
+	 * attacker becomes the highest-priority target.
+	 */
+	public void addEntityTargetToFront(LivingEntity entity) {
+		if (entity == null) return;
+		entityTargetQueue.remove(entity);
+		entityTargetQueue.addFirst(entity);
+	}
+
 	@Override
 	protected void cleanupTransientState() {
+		entityTargetQueue.clear();
+		wantedByPolice = false;
 		CivilianBehavior behavior = behaviors.get(currentState);
 		if (behavior == null) return;
 		behavior.onExit(this);

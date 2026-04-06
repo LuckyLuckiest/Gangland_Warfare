@@ -4,6 +4,7 @@ import me.luckyraven.copsncrooks.npc.civilian.CivilianState;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.civilian.state.CivilianBehavior;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -35,12 +36,13 @@ public class CivilianIdleBehavior implements CivilianBehavior {
 
 	@Override
 	public void tick(CivilianNpc npc) {
-		// Re-engage a remembered combat target that has returned within range
+		double reEngageRange = npc.getTypeConfig().ai().attackRange() * 2;
+
+		// Re-engage a remembered player combat target that has returned within range
 		UUID targetId = npc.getTargetPlayerId();
 		if (targetId != null) {
 			Player target = Bukkit.getPlayer(targetId);
 			if (target != null && target.isOnline()) {
-				double reEngageRange = npc.getTypeConfig().ai().attackRange() * 2;
 				if (npc.distanceTo(target) <= reEngageRange) {
 					npc.transitionTo(CivilianState.COMBAT);
 					return;
@@ -48,6 +50,14 @@ public class CivilianIdleBehavior implements CivilianBehavior {
 			} else {
 				npc.setTargetPlayerId(null);
 			}
+		}
+
+		// Re-engage a remembered NPC entity combat target that has returned within range
+		// getTargetEntity() automatically purges dead/invalid entries from the queue
+		LivingEntity targetEntity = npc.getTargetEntity();
+		if (targetEntity != null && npc.distanceTo(targetEntity) <= reEngageRange) {
+			npc.transitionTo(CivilianState.COMBAT);
+			return;
 		}
 
 		// Ambient look-around

@@ -4,7 +4,7 @@ import me.luckyraven.copsncrooks.npc.police.npc.CopNpc;
 import me.luckyraven.copsncrooks.npc.police.state.CopBehavior;
 import me.luckyraven.copsncrooks.npc.police.state.CopState;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.LivingEntity;
 
 import java.util.UUID;
 
@@ -21,7 +21,7 @@ public class IdleBehavior implements CopBehavior {
 
 	@Override
 	public void tick(CopNpc cop) {
-		Player target = resolveTarget(cop);
+		LivingEntity target = resolveTarget(cop);
 		if (target == null) return;
 
 		double distance = cop.distanceTo(target);
@@ -39,8 +39,12 @@ public class IdleBehavior implements CopBehavior {
 	public void onExit(CopNpc cop) {
 	}
 
-	private Player resolveTarget(CopNpc cop) {
+	private LivingEntity resolveTarget(CopNpc cop) {
 		UUID id = cop.getTargetPlayerId();
-		return id != null ? Bukkit.getPlayer(id) : null;
+		if (id != null) {
+			return Bukkit.getPlayer(id);
+		}
+		LivingEntity entity = cop.getTargetEntity();
+		return (entity != null && entity.isValid() && !entity.isDead()) ? entity : null;
 	}
 }
