@@ -4,6 +4,7 @@ import me.luckyraven.copsncrooks.entity.npc.AbstractNpc;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianState;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.civilian.state.CivilianBehavior;
+import me.luckyraven.util.downed.DownedPlayerRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -38,14 +39,9 @@ public class CivilianCombatBehavior implements CivilianBehavior {
 		double attackRange = npc.getTypeConfig().ai().attackRange();
 		double distance    = npc.distanceTo(target);
 
-		// Lost track of the target — give up
-		if (distance > attackRange * 2) {
+		// Lost track of the target — give up only at 4× attack range so the NPC commits to pursuit
+		if (distance > attackRange * 4) {
 			npc.setTargetPlayerId(null);
-			npc.transitionTo(CivilianState.IDLE);
-			return;
-		}
-
-		if (npc.isNavigationHopeless()) {
 			npc.transitionTo(CivilianState.IDLE);
 			return;
 		}
@@ -58,6 +54,10 @@ public class CivilianCombatBehavior implements CivilianBehavior {
 
 			if (pursuitLoc != null) {
 				npc.navigateTo(pursuitLoc);
+			} else {
+				npc.setTargetPlayerId(null);
+				npc.transitionTo(CivilianState.IDLE);
+				return;
 			}
 		} else {
 			npc.stopNavigation();
@@ -72,7 +72,7 @@ public class CivilianCombatBehavior implements CivilianBehavior {
 	@Override
 	public void onExit(CivilianNpc npc) {
 		npc.stopNavigation();
-		npc.setTargetPlayerId(null);
+		// targetPlayerId is intentionally preserved so IDLE can re-engage if the target returns in range
 	}
 
 	// ── Helpers ───────────────────────────────────────────────────────────────
@@ -83,7 +83,8 @@ public class CivilianCombatBehavior implements CivilianBehavior {
 		if (targetId == null) return null;
 
 		Player player = Bukkit.getPlayer(targetId);
-		if (player == null || !player.isOnline()) {
+		if (player == null || !player.isOnline() || player.isDead() ||
+		    DownedPlayerRegistry.isDowned(targetId)) {
 			npc.setTargetPlayerId(null);
 			return null;
 		}

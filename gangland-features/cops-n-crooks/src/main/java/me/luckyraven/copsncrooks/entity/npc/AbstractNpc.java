@@ -6,9 +6,8 @@ import lombok.Setter;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
+import me.luckyraven.util.downed.DownedPlayerRegistry;
 import me.luckyraven.weapon.Weapon;
-import me.luckyraven.weapon.dto.AmmunitionData;
-import me.luckyraven.weapon.dto.ReloadData;
 import me.luckyraven.weapon.events.projectile.WeaponShootEvent;
 import me.luckyraven.weapon.projectile.WeaponProjectile;
 import me.luckyraven.weapon.types.gun.GunWeapon;
@@ -24,6 +23,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Base class for all gangland Citizens NPC types (cops, civilians, etc.).
@@ -205,18 +205,22 @@ public abstract class AbstractNpc {
 	}
 
 	/**
-	 * Returns whether the attack cooldown has elapsed and the NPC is not reloading.
+	 * Returns whether the attack cooldown has elapsed, the NPC is not reloading, and the held weapon (if any) is not
+	 * mid-reload.
 	 */
 	public boolean canAttack() {
-		return attackCooldown <= 0 && !reloading;
+		if (attackCooldown > 0 || reloading) return false;
+		if (heldWeapon != null && heldWeapon.isReloading()) return false;
+		return true;
 	}
 
 	/**
 	 * Attacks the target player using the highest-priority available attack: gangland weapon → vanilla ranged → melee
-	 * fallback.
+	 * fallback. Does nothing if the target is dead or in a downed state.
 	 */
 	public void attack(Player player) {
 		if (!isValid() || !canAttack() || player == null) return;
+		if (player.isDead() || DownedPlayerRegistry.isDowned(player.getUniqueId())) return;
 
 		faceTarget(player);
 
@@ -356,11 +360,81 @@ public abstract class AbstractNpc {
 	// ── Tick helpers (called by subclass tick methods) ───────────────────────
 
 	/**
-	 * Decrements the attack cooldown by the AI tick rate.
+	 * Scans a forward-biased cone of positions and returns the best walkable destination for wandering.
+	 * <p>
+	 * Probes 9 angles within ±90° of the entity's current facing direction at three distances ({@code minDist},
+	 * midpoint, {@code maxDist}). Each candidate is validated with {@link #normalizeToStandableLocation} and
+	 * {@link #isBasicSafeStandLocation}. The best-scoring candidate (forward + near-median distance preferred) is
+	 * returned. Falls back to a full 360° sweep at 45° increments if nothing in the forward cone is walkable.
+	 *
+	 * @param minDist minimum probe distance in blocks
+	 * @param maxDist maximum probe distance in blocks
+	 *
+	 * @return a validated standable location, or {@code null} if none found
+	 */
+	public Location findForwardWanderDestination(int minDist, int maxDist) {
+		LivingEntity entity = getEntity();
+		if (entity == null) return null;
+
+		Location origin = entity.getLocation();
+		if (origin.getWorld() == null) return null;
+
+		float  yaw     = origin.getYaw();
+		double midDist = (minDist + maxDist) / 2.0;
+
+		int[] angleOffsets = {0, -20, 20, -45, 45, -70, 70, -90, 90};
+		int[] distances    = {minDist, (int) midDist, maxDist};
+
+		Location best      = null;
+		double   bestScore = Double.MAX_VALUE;
+
+		for (int angleOffset : angleOffsets) {
+			double rad = Math.toRadians(yaw + angleOffset);
+			double dx  = -Math.sin(rad);
+			double dz  = Math.cos(rad);
+
+			for (int dist : distances) {
+				Location candidate = origin.clone().add(dx * dist, 0, dz * dist);
+				Location standable = normalizeToStandableLocation(candidate);
+				if (standable == null || !isBasicSafeStandLocation(standable)) continue;
+
+				double score = Math.abs(angleOffset) * 0.5 + Math.abs(dist - midDist) * 0.3 +
+				               ThreadLocalRandom.current().nextDouble(0, 18.0);
+				if (score < bestScore) {
+					bestScore = score;
+					best      = standable;
+				}
+			}
+		}
+
+		if (best != null) return best;
+
+		// Fallback: full 360° sweep
+		for (int angle = 0; angle < 360; angle += 45) {
+			double rad = Math.toRadians(angle);
+			double dx  = -Math.sin(rad);
+			double dz  = Math.cos(rad);
+
+			for (int dist : distances) {
+				Location candidate = origin.clone().add(dx * dist, 0, dz * dist);
+				Location standable = normalizeToStandableLocation(candidate);
+				if (standable == null || !isBasicSafeStandLocation(standable)) continue;
+				return standable;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Decrements the attack cooldown by one server tick. Called once per server tick (period = 0), so cooldown values
+	 * are always in server ticks regardless of the logical AI tick rate.
 	 */
 	protected void decrementAttackCooldown() {
-		if (attackCooldown > 0) attackCooldown = Math.max(0, attackCooldown - aiTickRate);
+		if (attackCooldown > 0) attackCooldown--;
 	}
+
+	// ── Private attack helpers ────────────────────────────────────────────────
 
 	/**
 	 * Updates navigation progress tracking for throttling and stuck detection.
@@ -413,8 +487,6 @@ public abstract class AbstractNpc {
 		stuckSampleTicks = 0;
 	}
 
-	// ── Private attack helpers ────────────────────────────────────────────────
-
 	protected void faceTarget(Player player) {
 		Entity entity = npc.getEntity();
 		if (entity == null) return;
@@ -451,8 +523,7 @@ public abstract class AbstractNpc {
 			heldWeapon.addAmmunition(1);
 		} else {
 			projectile.launchProjectile();
-			SoundConfiguration.playSoundsAtLocation(shooter.getEyeLocation(),
-			                                        heldWeapon.getSoundData().getShotCustom(),
+			SoundConfiguration.playSoundsAtLocation(shooter.getEyeLocation(), heldWeapon.getSoundData().getShotCustom(),
 			                                        heldWeapon.getSoundData().getShotDefault());
 			refreshHeldItem();
 		}
@@ -466,28 +537,13 @@ public abstract class AbstractNpc {
 	}
 
 	protected void triggerReload() {
-		if (reloading || plugin == null) return;
-
-		reloading = true;
-
-		ReloadData reloadData = heldWeapon.getReloadData();
-		if (reloadData == null) return;
-
-		int reloadTicks = reloadData.getCooldown();
-
-		Bukkit.getScheduler().runTaskLater(plugin, () -> {
-			AmmunitionData ammunitionData = heldWeapon.getAmmunitionData();
-			if (ammunitionData == null) return;
-
-			if (!isValid()) {
-				reloading = false;
-				return;
-			}
-
-			heldWeapon.addAmmunition(ammunitionData.getMaxMagCapacity());
-			refreshHeldItem();
-			reloading = false;
-		}, reloadTicks);
+		if (plugin == null || heldWeapon == null) return;
+		if (heldWeapon.isReloading()) return;
+		if (heldWeapon.getReloadData() == null) return;
+		// player = null: skips all player UI (sounds, action bar, scope) but uses the weapon's
+		// actual reload timer so isReloading() gates canAttack() correctly.
+		// removeAmmunition = false: NPCs have no inventory to deduct from.
+		heldWeapon.reload(plugin, null, false);
 	}
 
 	protected void performVanillaRangedAttack(Player player) {
@@ -547,6 +603,8 @@ public abstract class AbstractNpc {
 		equipment.setItemInMainHand(builder.build());
 	}
 
+	// ── Navigation helpers ────────────────────────────────────────────────────
+
 	protected boolean isHoldingVanillaRangedWeapon() {
 		if (!isValid()) return false;
 
@@ -562,8 +620,6 @@ public abstract class AbstractNpc {
 		return type == Material.BOW || type == Material.CROSSBOW;
 	}
 
-	// ── Navigation helpers ────────────────────────────────────────────────────
-
 	private boolean shouldRecalculateNavigation(Location target) {
 		if (target == null) return false;
 
@@ -572,8 +628,7 @@ public abstract class AbstractNpc {
 			       navigationThrottleTicks >= minRepathAfterLossTicks;
 		}
 
-		if (lastNavigationTarget == null || lastNavigationTarget.getWorld() == null ||
-		    target.getWorld() == null) {
+		if (lastNavigationTarget == null || lastNavigationTarget.getWorld() == null || target.getWorld() == null) {
 			return true;
 		}
 
@@ -640,8 +695,8 @@ public abstract class AbstractNpc {
 		return null;
 	}
 
-	private Location findBestRingApproachLocation(Location npcLocation, Location playerLocation,
-	                                              double minRadius, double maxRadius, double idealRadius) {
+	private Location findBestRingApproachLocation(Location npcLocation, Location playerLocation, double minRadius,
+	                                              double maxRadius, double idealRadius) {
 		Location bestLocation = null;
 		double   bestScore    = Double.MAX_VALUE;
 
@@ -757,10 +812,16 @@ public abstract class AbstractNpc {
 		Block below = feet.getRelative(0, -1, 0);
 
 		if (!feet.isPassable() || !head.isPassable()) return false;
-		if (below.isPassable() || !below.getType().isSolid()) return false;
+
+		// Portal blocks are passable so they pass the feet check above, but NPCs must never target them
+		Material feetType = feet.getType();
+		if (feetType == Material.NETHER_PORTAL || feetType == Material.END_PORTAL ||
+		    feetType == Material.END_GATEWAY) return false;
+
+		if (below.isPassable()) return false;
 
 		Material supportType = below.getType();
-		return supportType != Material.LAVA && supportType != Material.WATER &&
-		       supportType != Material.CACTUS && supportType != Material.MAGMA_BLOCK;
+		return supportType != Material.LAVA && supportType != Material.WATER && supportType != Material.CACTUS &&
+		       supportType != Material.MAGMA_BLOCK;
 	}
 }

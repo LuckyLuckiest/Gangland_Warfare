@@ -144,6 +144,15 @@ public class CivilianNpc extends AbstractNpc {
 			return;
 		}
 
+		// If the entity has been teleported to a different world (e.g. through a portal), remove it
+		// so the spawner can replace it rather than waiting indefinitely for it to die elsewhere.
+		LivingEntity entity = getEntity();
+		if (entity != null && spawnLocation.getWorld() != null &&
+		    !entity.getWorld().equals(spawnLocation.getWorld())) {
+			markForRemoval();
+			return;
+		}
+
 		decrementAttackCooldown();
 		updateNavigationProgress();
 

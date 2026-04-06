@@ -5,7 +5,6 @@ import me.luckyraven.copsncrooks.npc.civilian.CivilianState;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.civilian.state.CivilianBehavior;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -15,32 +14,56 @@ import java.util.concurrent.ThreadLocalRandom;
  * <p>
  * If the NPC belongs to a group and has strayed beyond the group's {@code stayTogetherRange}, it navigates back toward
  * the group center instead. Reverts to {@link CivilianState#IDLE} once the destination is reached or navigation becomes
- * stuck.
+ * stuck. Periodically picks a fresh destination mid-path so the NPC appears to change its mind. While walking, the NPC
+ * looks toward any nearby living entity it notices.
  */
 public class CivilianWanderBehavior implements CivilianBehavior {
 
-	private static final int ARRIVAL_CHECK_INTERVAL = 20;
+	private static final int ARRIVAL_CHECK_INTERVAL = 1;
 	private static final int MAX_STUCK_REVERTS      = 3;
+	private static final int REDIRECT_MIN_TICKS     = 60;
+	private static final int REDIRECT_MAX_TICKS     = 120;
+	private static final int MIN_LOOK_TICKS         = 10;
+	private static final int MAX_LOOK_TICKS         = 20;
+	private static final int LOOK_RADIUS            = 10;
 
 	private int stuckCount;
 	private int arrivalCheckTicks;
+	private int redirectCountdown;
+	private int lookCountdown;
 
 	@Override
 	public void onEnter(CivilianNpc npc) {
 		stuckCount        = 0;
 		arrivalCheckTicks = 0;
+		redirectCountdown = ThreadLocalRandom.current().nextInt(REDIRECT_MIN_TICKS, REDIRECT_MAX_TICKS + 1);
+		lookCountdown     = ThreadLocalRandom.current().nextInt(MIN_LOOK_TICKS, MAX_LOOK_TICKS + 1);
 		navigateToDestination(npc);
 	}
 
 	@Override
 	public void tick(CivilianNpc npc) {
-		arrivalCheckTicks++;
+		// Look at nearby entities while walking
+		lookCountdown--;
+		if (lookCountdown <= 0) {
+			lookCountdown = ThreadLocalRandom.current().nextInt(MIN_LOOK_TICKS, MAX_LOOK_TICKS + 1);
+			CivilianLookController.lookAtNearbyEntityIfPresent(npc, LOOK_RADIUS);
+		}
 
+		arrivalCheckTicks++;
 		if (arrivalCheckTicks < ARRIVAL_CHECK_INTERVAL) return;
 		arrivalCheckTicks = 0;
 
 		if (!npc.getNpc().getNavigator().isNavigating()) {
-			npc.transitionTo(CivilianState.IDLE);
+			navigateToDestination(npc);
+			return;
+		}
+
+		// Periodically reconsider direction even while navigating
+		redirectCountdown--;
+		if (redirectCountdown <= 0) {
+			redirectCountdown = ThreadLocalRandom.current().nextInt(REDIRECT_MIN_TICKS, REDIRECT_MAX_TICKS + 1);
+			navigateToDestination(npc);
 			return;
 		}
 
@@ -65,7 +88,6 @@ public class CivilianWanderBehavior implements CivilianBehavior {
 	private void navigateToDestination(CivilianNpc npc) {
 		CivilianGroup group = npc.getGroup();
 
-		// If straying from group, head back to group center
 		if (group != null && group.isMemberStraying(npc)) {
 			Location center = group.getGroupCenter();
 			if (center != null) {
@@ -77,6 +99,8 @@ public class CivilianWanderBehavior implements CivilianBehavior {
 		Location destination = randomNearbyLocation(npc);
 		if (destination != null) {
 			npc.navigateTo(destination);
+		} else {
+			npc.transitionTo(CivilianState.IDLE);
 		}
 	}
 
@@ -84,22 +108,10 @@ public class CivilianWanderBehavior implements CivilianBehavior {
 	private Location randomNearbyLocation(CivilianNpc npc) {
 		if (!npc.isValid()) return null;
 
-		Location base  = npc.getEntity().getLocation();
-		World    world = base.getWorld();
-		if (world == null) return null;
+		int range   = npc.getTypeConfig().ai().wanderRange();
+		int maxDist = Math.min(8, range);
+		int minDist = Math.min(3, maxDist);
 
-		int range = npc.getTypeConfig().ai().wanderRange();
-
-		ThreadLocalRandom rng     = ThreadLocalRandom.current();
-		double            offsetX = rng.nextDouble(-range, range + 1);
-		double            offsetZ = rng.nextDouble(-range, range + 1);
-
-		Location candidate = base.clone().add(offsetX, 0, offsetZ);
-
-		// Snap to the standing position above the highest non-air block at that X/Z
-		int highestY = world.getHighestBlockYAt(candidate);
-		candidate.setY(highestY + 1);
-
-		return candidate;
+		return npc.findForwardWanderDestination(minDist, maxDist);
 	}
 }

@@ -14,6 +14,7 @@ import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
 import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawner;
 import me.luckyraven.item.ItemParser;
 import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.weapon.WeaponService;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -80,16 +81,22 @@ public class CivilianService {
 		}
 
 		int tickRate = civilianSettings.getCivilianAiTickRate();
-		plugin.getServer().getScheduler().runTaskTimer(plugin, this::tickAll, tickRate, tickRate);
+		RepeatingTimer tickTimer = new RepeatingTimer(plugin, tickRate, 0, timer -> {
+			tickAll();
+		});
+
+		tickTimer.start(false);
 
 		int checkInterval = civilianSettings.getCivilianSpawnerCheckInterval();
-		plugin.getServer().getScheduler().runTaskTimer(plugin,
-		                                               () -> tickProximitySpawners(civilianSettings),
-		                                               checkInterval, checkInterval);
+		RepeatingTimer checkTimer = new RepeatingTimer(plugin, checkInterval, 0, timer -> {
+			tickProximitySpawners(civilianSettings);
+		});
+
+		checkTimer.start(false);
 
 		initialized = true;
-		log.info("CivilianService initialized (tick rate: {} ticks, proximity check: {} ticks).",
-		         tickRate, checkInterval);
+		log.info("CivilianService initialized (tick rate: {} ticks, proximity check: {} ticks).", tickRate,
+		         checkInterval);
 	}
 
 	// ── NPC registry ─────────────────────────────────────────────────────────
@@ -303,10 +310,19 @@ public class CivilianService {
 		activeNpcs.entrySet().removeIf(entry -> {
 			CivilianNpc npc = entry.getValue();
 			if (npc.isMarkedForRemoval() || !npc.isValid()) {
-				npc.destroy(entityMarkManager);
+				try {
+					npc.destroy(entityMarkManager);
+				} catch (Exception e) {
+					log.warn("Error destroying civilian NPC during tick: {}", e.getMessage());
+				}
 				return true;
 			}
-			npc.tick();
+			try {
+				npc.tick();
+			} catch (Exception e) {
+				log.warn("Civilian NPC tick threw exception, marking for removal: {}", e.getMessage());
+				npc.markForRemoval();
+			}
 			return false;
 		});
 
