@@ -8,6 +8,7 @@ import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.weapon.dto.ThrowableData;
 import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
 import me.luckyraven.weapon.projectile.ProjectileState;
+import me.luckyraven.weapon.util.PotionEffectParser;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -18,10 +19,12 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class ThrowableAction {
 
@@ -62,7 +65,10 @@ public class ThrowableAction {
 		World    world  = player.getWorld();
 		Location eyeLoc = player.getEyeLocation();
 
-		Item grenade = world.dropItem(eyeLoc, new ItemStack(weapon.getMaterial()));
+		ItemStack visual = data.getDisplayItem() != null
+		                   ? data.getDisplayItem().clone()
+		                   : new ItemStack(weapon.getMaterial());
+		Item grenade = world.dropItem(eyeLoc, visual);
 		grenade.setPickupDelay(Integer.MAX_VALUE);
 
 		Vector throwVec = eyeLoc.getDirection().normalize().multiply(1.2).add(new Vector(0, 0.2, 0));
@@ -157,6 +163,20 @@ public class ThrowableAction {
 	}
 
 	private void detonate(Location center, ThrowableData data, Player player, World world) {
+		// dispatch on throwable type — only EXPLOSIVE goes through the legacy createExplosion path
+		ThrowableType type = data.getType() != null ? data.getType() : ThrowableType.EXPLOSIVE;
+		switch (type) {
+			case STUN -> {
+				detonateStun(center, data, world);
+				return;
+			}
+			case SMOKE -> {
+				spawnSmokeCloud(center, data, world);
+				return;
+			}
+			case EXPLOSIVE -> { /* fall through to legacy explosive handler below */ }
+		}
+
 		ParticleUtil.spawnExplosionBurst(center);
 
 		double flatBonus = weapon.getModifiersData().hasFlatDamage() ?
@@ -225,6 +245,70 @@ public class ThrowableAction {
 				player.setVelocity(player.getVelocity().add(new Vector(0, 2.0, 0)));
 			}
 		}
+	}
+
+	/**
+	 * Stun (flashbang) detonation: no damage, no explosion. Applies the configured potion effects to every living
+	 * entity within {@code explosionRadius}, including the thrower, and renders a single particle burst.
+	 */
+	private void detonateStun(Location center, ThrowableData data, World world) {
+		ParticleUtil.spawnExplosionBurst(center);
+
+		List<PotionEffect> effects = PotionEffectParser.parseList(data.getEffects());
+		if (effects.isEmpty()) return;
+
+		double radius   = data.getExplosionRadius();
+		double radiusSq = radius * radius;
+
+		for (Entity nearby : world.getNearbyEntities(center, radius, radius, radius)) {
+			if (!(nearby instanceof LivingEntity target)) continue;
+			if (target.getLocation().distanceSquared(center) > radiusSq) continue;
+			for (PotionEffect effect : effects) target.addPotionEffect(effect);
+		}
+	}
+
+	/**
+	 * Smoke cloud detonation: no damage. Spawns a {@link RepeatingTimer} that emits smoke particles in a sphere of
+	 * {@code cloudRadius} (or {@code explosionRadius} when zero) and re-applies the configured potion effects to all
+	 * living entities inside the cloud every 10 ticks. The timer self-cancels after {@code cloudDuration} ticks.
+	 */
+	private void spawnSmokeCloud(Location center, ThrowableData data, World world) {
+		List<PotionEffect> effects = PotionEffectParser.parseList(data.getEffects());
+
+		double radius   = data.getCloudRadius() > 0 ? data.getCloudRadius() : data.getExplosionRadius();
+		double radiusSq = radius * radius;
+		int    duration = data.getCloudDuration();
+
+		// initial visual pulse so the player gets immediate feedback
+		ParticleUtil.spawnAreaPulse(center, radius);
+
+		int[] elapsed = {0};
+		RepeatingTimer cloud = new RepeatingTimer(plugin, 1L, time -> {
+			if (elapsed[0] >= duration) {
+				time.stop();
+				return;
+			}
+			elapsed[0]++;
+
+			// emit a few smoke trails per tick at random offsets within the cloud volume
+			Random rng = ThreadLocalRandom.current();
+			for (int i = 0; i < 4; i++) {
+				double dx = (rng.nextDouble() * 2 - 1) * radius;
+				double dy = (rng.nextDouble() * 2 - 1) * (radius * 0.6);
+				double dz = (rng.nextDouble() * 2 - 1) * radius;
+				ParticleUtil.spawnSmokeTrail(center.clone().add(dx, dy, dz));
+			}
+
+			// refresh effects on entities inside the cloud every 10 ticks
+			if (elapsed[0] % 10 != 0 || effects.isEmpty()) return;
+			for (Entity nearby : world.getNearbyEntities(center, radius, radius, radius)) {
+				if (!(nearby instanceof LivingEntity target)) continue;
+				if (target.getLocation().distanceSquared(center) > radiusSq) continue;
+				for (PotionEffect effect : effects) target.addPotionEffect(effect);
+			}
+		});
+
+		cloud.start(false);
 	}
 
 }
