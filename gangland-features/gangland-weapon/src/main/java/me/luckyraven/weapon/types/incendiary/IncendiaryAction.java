@@ -3,7 +3,6 @@ package me.luckyraven.weapon.types.incendiary;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.dto.IncendiaryData;
@@ -15,10 +14,8 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,63 +29,39 @@ public class IncendiaryAction {
 	 */
 	public static final Set<UUID> pendingDamage = ConcurrentHashMap.newKeySet();
 
-	private final JavaPlugin                plugin;
-	private final WeaponService             weaponService;
-	private final IncendiaryWeapon          weapon;
-	private final RecoilCompatibility       recoilCompatibility;
-	private final WeaponRaytracer           raytracer;
-	private final Map<UUID, RepeatingTimer> activeTasks;
+	private final WeaponService       weaponService;
+	private final IncendiaryWeapon    weapon;
+	private final RecoilCompatibility recoilCompatibility;
+	private final WeaponRaytracer     raytracer;
 
-	public IncendiaryAction(JavaPlugin plugin, WeaponService weaponService, IncendiaryWeapon weapon,
-	                        RecoilCompatibility recoilCompatibility, WeaponRaytracer raytracer,
-	                        Map<UUID, RepeatingTimer> activeTasks) {
-		this.plugin              = plugin;
+	public IncendiaryAction(WeaponService weaponService, IncendiaryWeapon weapon,
+	                        RecoilCompatibility recoilCompatibility, WeaponRaytracer raytracer) {
 		this.weaponService       = weaponService;
 		this.weapon              = weapon;
 		this.recoilCompatibility = recoilCompatibility;
 		this.raytracer           = raytracer;
-		this.activeTasks         = activeTasks;
 	}
 
 	/**
-	 * Starts continuous fire spray. Toggles off if already active. Fuel is tracked via
-	 * {@code weapon.getCurrentMagCapacity()} — unlimited when no ammunitionData is set.
+	 * Fires one cone burst forward — used by both SINGLE (one press → one cone) and AUTO (driven by a
+	 * {@link me.luckyraven.util.timer.RepeatingTimer} in {@link me.luckyraven.weapon.listener.WeaponInteract}). Returns
+	 * {@code true} if the burst was actually fired, {@code false} if blocked by ammo/durability state — callers in
+	 * AUTO mode use this to break the loop when the magazine empties.
 	 */
-	public void start(Player player) {
-		UUID weaponUuid = weapon.getUuid();
-
-		if (activeTasks.containsKey(weaponUuid)) {
-			stop();
-			return;
-		}
-
-		if (weapon.isBroken()) return;
+	public boolean fireOnce(Player player) {
+		if (weapon.isBroken()) return false;
 
 		IncendiaryData data       = weapon.getIncendiaryData();
 		boolean        tracksAmmo = weapon.getAmmunitionData() != null;
 
-		if (tracksAmmo && weapon.isMagazineEmpty()) return;
+		if (tracksAmmo && weapon.isMagazineEmpty()) return false;
 
-		// spray-start sound
+		// shoot sound
 		SoundConfiguration.playSounds(player, weapon.getSoundData().getShotCustom(),
 		                              weapon.getSoundData().getShotDefault());
 
-		RepeatingTimer timer = new RepeatingTimer(plugin, data.getTickRate(), time -> {
-			if (weapon.isBroken() || (tracksAmmo && weapon.isMagazineEmpty())) {
-				stop();
-				time.stop();
-				return;
-			}
-			sprayFire(player, data, tracksAmmo);
-		});
-
-		timer.start(false);
-		activeTasks.put(weaponUuid, timer);
-	}
-
-	public void stop() {
-		RepeatingTimer timer = activeTasks.remove(weapon.getUuid());
-		if (timer != null) timer.stop();
+		sprayFire(player, data, tracksAmmo);
+		return true;
 	}
 
 	// --- Per-tick spray ---
@@ -96,7 +69,6 @@ public class IncendiaryAction {
 	private void sprayFire(Player player, IncendiaryData data, boolean tracksAmmo) {
 		ItemBuilder heldWeapon = weaponService.getHeldWeaponItem(player);
 		if (heldWeapon == null) {
-			stop();
 			return;
 		}
 
