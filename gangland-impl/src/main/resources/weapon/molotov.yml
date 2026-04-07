@@ -17,6 +17,7 @@ Information:
    Drop_Hologram: false
 
 Throw:
+   Type: EXPLOSIVE
    Fuse_Time: 40
    Explosion_Radius: 3.0
    Explosion_Damage: 2

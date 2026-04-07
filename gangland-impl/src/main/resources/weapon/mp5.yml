@@ -18,6 +18,10 @@ Information:
 
 Shoot:
    Selective_Fire: auto
+   Allowed_Modes:
+      - single
+      - burst
+      - auto
 
    Projectile:
       Speed: 4

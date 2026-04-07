@@ -5,7 +5,7 @@
 Information:
    Name: "&7Pump Shotgun&r"
    Category: gun
-   Material: WOODEN_AXE
+   Material: IRON_AXE
    Durability:
       Base: 100
       Change:
@@ -18,6 +18,8 @@ Information:
 
 Shoot:
    Selective_Fire: single
+   Allowed_Modes:
+      - single
 
    Projectile:
       Speed: 4
@@ -55,8 +57,10 @@ Shoot:
       Push: 0.15
       Power_Up: 0.0006
       Pattern:
-         - 5;0
+         - 2.5;1
          - 0;0
+         - 0.5;1
+         - 1;1
 
    Sound:
       Default_Sound:
@@ -81,7 +85,7 @@ Ammunition:
    Capacity: 8
    Ammo_Type: slugs
    Consume: 1
-   Restore: 8
+   Restore: 2
 
 Reload:
    Cooldown: 4
@@ -95,6 +99,19 @@ Reload:
          Sound: BLOCK_WOODEN_TRAPDOOR_CLOSE
          Volume: 1.0
          Pitch: 1.2
+      Custom_Sound:
+         Start:
+            Sound: sound.gta.double_barreled_shotgun_reload_start
+            Volume: 1
+            Pitch: 1
+         Mid:
+            Sound: sound.gta.double_barreled_shotgun_reload_mid
+            Volume: 1
+            Pitch: 1
+         End:
+            Sound: sound.gta.double_barreled_shotgun_reload_end
+            Volume: 1
+            Pitch: 1
 
    Action_Bar:
       Reloading: "&cChambering shells...&r"
@@ -106,6 +123,8 @@ Scope:
    Level: 1
 
 Modifiers:
+   Break_Blocks:
+      - GLASS-3
    Flat_Damage: 0.0
    Armor_Piercing: 0.1
 

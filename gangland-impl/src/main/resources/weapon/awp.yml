@@ -18,6 +18,8 @@ Information:
 
 Shoot:
    Selective_Fire: single
+   Allowed_Modes:
+      - single
 
    Projectile:
       Speed: 8

@@ -18,9 +18,13 @@ Information:
    Drop_Hologram: false
 
 Shoot:
+   Selective_Fire: single
+   Allowed_Modes:
+      - single
    Charge_Time_Per_Level: 15
    Max_Charge_Level: 3
-   Area_Radius: 4.0
+   Range: 35.0
+   Base_Damage: 5.0
    Effects_Per_Level:
       - "GLOWING-200-0,NAUSEA-100-0"
       - "GLOWING-300-0,LEVITATION-60-1,WEAKNESS-200-1"

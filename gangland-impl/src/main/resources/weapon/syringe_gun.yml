@@ -9,13 +9,17 @@ Information:
          On_Repair: 25
    Lore:
       - "&7Hold right-click to charge."
-      - "&7Release (left-click) to fire."
+      - "&7Release to fire a single shot."
    Drop_Hologram: false
 
 Shoot:
+   Selective_Fire: single
+   Allowed_Modes:
+      - single
    Charge_Time_Per_Level: 20
    Max_Charge_Level: 3
-   Area_Radius: 5.0
+   Range: 30.0
+   Base_Damage: 4.0
    Effects_Per_Level:
       - "POISON-60-1"
       - "POISON-100-1,SLOWNESS-80-1"

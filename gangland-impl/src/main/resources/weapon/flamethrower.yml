@@ -9,10 +9,14 @@ Information:
          On_Repair: 100
    Lore:
       - "&7Sprays continuous fire."
-      - "&7Right-click to toggle."
+      - "&7Hold right-click to spray."
    Drop_Hologram: false
 
 Shoot:
+   Selective_Fire: auto
+   Allowed_Modes:
+      - single
+      - auto
    Rate: 2
    Range: 5.0
    Cone_Angle: 30.0

@@ -18,6 +18,8 @@ Information:
 
 Shoot:
    Selective_Fire: single
+   Allowed_Modes:
+      - single
 
    Projectile:
       Speed: 3
@@ -32,7 +34,7 @@ Shoot:
             Amount: 0
       Consumed_Amount: 1
       Per_Shot: 1
-      Cooldown: 2.5
+      Cooldown: 10
       Distance: 80
       Particle: true
 
@@ -78,13 +80,13 @@ Shoot:
          Pitch: 1.0
 
 Ammunition:
-   Capacity: 1
+   Capacity: 6
    Ammo_Type: rocket
    Consume: 1
-   Restore: 1
+   Restore: 2
 
 Reload:
-   Cooldown: 6
+   Cooldown: 2
 
    Sound:
       Default_Sound_Before:
@@ -100,7 +102,7 @@ Reload:
       Reloading: "&cLoading rocket...&r"
       Opening: "&cOpening...&r"
 
-   Type: instant
+   Type: num-2
 
 Scope:
    Level: 1

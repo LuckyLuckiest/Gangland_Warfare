@@ -1,0 +1,51 @@
+Information:
+   Name: "&8Smoke Grenade"
+   Category: throwable
+   Material: STICK
+   Durability:
+      Base: 1
+      Change:
+         On_Shot: 0
+         On_Repair: 0
+   Lore:
+      - "&7Pull the pin. Disappear."
+      - "&7Lingering smoke cloud blinds anyone inside."
+   Drop_Hologram: false
+
+Throw:
+   Type: SMOKE
+   Fuse_Time: 40
+   # Cloud lifetime in ticks (200 = 10 seconds)
+   Cloud_Duration: 200
+   Cloud_Radius: 4.0
+   # Effects refreshed on entities inside the cloud every 10 ticks
+   Effects:
+      - "BLINDNESS-60-0"
+      - "SLOWNESS-60-1"
+   # No damage / no explosion radius — keep these zero
+   Explosion_Radius: 0.0
+   Explosion_Damage: 0
+   Fire_Ticks: 0
+   Bounces: true
+   Max_Bounces: 3
+   Sticky: false
+   Entity_Type: SNOWBALL
+   Display_Item:
+      Material: TNT
+      Name: "&8Smoke Canister"
+   Recoil:
+      Amount: 0.0
+      Push: 0.08
+      Power_Up: 0.0
+      Pattern: []
+   Sound:
+      Default_Sound:
+         Sound: ENTITY_SNOWBALL_THROW
+         Volume: 1.0
+         Pitch: 0.7
+
+Modifiers:
+   Flat_Damage: 0.0
+
+Death_Messages:
+   - "&c%victim% suffocated in %killer%'s smoke."

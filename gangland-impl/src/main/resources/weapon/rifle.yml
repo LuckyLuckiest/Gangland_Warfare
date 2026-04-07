@@ -43,6 +43,12 @@ Shoot:
    # The type of fire when using the weapon
    # SINGLE, BURST, AUTO
    Selective_Fire: auto
+   # Restricts which fire modes the player can cycle through with Shift+F.
+   # If omitted, the weapon is locked to the configured Selective_Fire mode.
+   Allowed_Modes:
+      - single
+      - burst
+      - auto
 
    # Projectile configuration
    Projectile:

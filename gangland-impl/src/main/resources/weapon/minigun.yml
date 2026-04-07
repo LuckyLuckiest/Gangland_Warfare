@@ -5,7 +5,7 @@
 Information:
    Name: "&8Minigun&r"
    Category: gun
-   Material: NETHERITE_PICKAXE
+   Material: IRON_HORSE_ARMOR
    Durability:
       Base: 100
       Change:
@@ -18,6 +18,8 @@ Information:
 
 Shoot:
    Selective_Fire: auto
+   Allowed_Modes:
+      - auto
 
    Projectile:
       Speed: 5
@@ -113,6 +115,9 @@ Modifiers:
       - GLASS-1
       - ICE-2
    Tracer: FF0000-true-0.6
+   Ricochet:
+      - 3-STONE,COBBLESTONE,IRON_BLOCK-0.8
+      - 2-CONCRETE-0.7
    Armor_Piercing: 0.25
 
 Death_Messages:

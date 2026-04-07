@@ -1,0 +1,49 @@
+Information:
+   Name: "&fFlashbang"
+   Category: throwable
+   Material: ENDER_PEARL
+   Durability:
+      Base: 1
+      Change:
+         On_Shot: 0
+         On_Repair: 0
+   Lore:
+      - "&7Blinds and disorients on detonation."
+      - "&7Fuse: &e2s"
+   Drop_Hologram: false
+
+Throw:
+   Type: STUN
+   Fuse_Time: 40
+   Explosion_Radius: 6.0
+   # Effects applied once on detonation to every living entity in radius
+   Effects:
+      - "BLINDNESS-100-0"
+      - "NAUSEA-140-0"
+      - "SLOWNESS-60-2"
+   # Stun grenades deal no damage
+   Explosion_Damage: 0
+   Fire_Ticks: 0
+   Bounces: true
+   Max_Bounces: 4
+   Sticky: false
+   Entity_Type: SNOWBALL
+   Display_Item:
+      Material: FIREWORK_STAR
+      Name: "&fFlashbang"
+   Recoil:
+      Amount: 0.0
+      Push: 0.08
+      Power_Up: 0.0
+      Pattern: []
+   Sound:
+      Default_Sound:
+         Sound: ENTITY_SNOWBALL_THROW
+         Volume: 1.0
+         Pitch: 1.4
+
+Modifiers:
+   Flat_Damage: 0.0
+
+Death_Messages:
+   - "&c%victim% was disoriented by %killer%'s flashbang."
