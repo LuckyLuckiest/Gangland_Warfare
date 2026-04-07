@@ -18,6 +18,7 @@ public class Ammunition implements Comparable<Ammunition> {
 	private final String       name;
 	private final String       displayName;
 	private final Material     material;
+	private final int          customModelData;
 	private       List<String> lore;
 
 	public static boolean isAmmunition(ItemStack item) {
@@ -60,6 +61,11 @@ public class Ammunition implements Comparable<Ammunition> {
 
 		builder.setDisplayName(displayName).setLore(lore);
 		builder.setAmount(amount);
+
+		if (customModelData > 0) {
+			builder.setCustomModelData(customModelData);
+		}
+
 		builder.addTag("ammo", name);
 
 		return builder.build();

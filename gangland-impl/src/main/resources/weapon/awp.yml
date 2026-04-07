@@ -6,6 +6,8 @@ Information:
    Name: "&bAWP&r"
    Category: gun
    Material: NETHERITE_HOE
+   # Optional resource-pack model id (0 = no override).
+   Custom_Model_Data: 0
    Durability:
       Base: 100
       Change:

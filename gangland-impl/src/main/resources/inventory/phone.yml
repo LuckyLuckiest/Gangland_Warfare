@@ -17,6 +17,8 @@ Slots:
    11:
       Item: DIAMOND
       Name: "&eMission"
+      # Optional resource-pack model id (0 = no override).
+      Custom_Model_Data: 0
       OnClick:
          Inventory: phone_mission
    13:

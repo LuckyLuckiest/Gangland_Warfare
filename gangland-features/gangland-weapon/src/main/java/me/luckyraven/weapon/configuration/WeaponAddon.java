@@ -53,6 +53,8 @@ public class WeaponAddon {
 		if (xMaterialOptional.isPresent()) material = xMaterialOptional.get().get();
 		else material = XMaterial.FEATHER.get();
 
+		int customModelData = informationSection.getInt("Custom_Model_Data", 0);
+
 		ConfigurationSection durabilitySection = Objects.requireNonNull(
 				informationSection.getConfigurationSection("Durability"));
 		short                durability              = (short) durabilitySection.getInt("Base");
@@ -70,8 +72,8 @@ public class WeaponAddon {
 		List<String> deathMessages = config.getStringList("Death_Messages");
 		if (deathMessages.isEmpty()) deathMessages = null;
 
-		WeaponBaseData base = new WeaponBaseData(fileName, displayName, category, material, durability, lore,
-		                                         dropHologram, deathMessages);
+		WeaponBaseData base = new WeaponBaseData(fileName, displayName, category, material, customModelData,
+		                                         durability, lore, dropHologram, deathMessages);
 
 		/* dispatch to type-specific parser */
 		ConfigurationSection shootSection = resolveShootSection(config);

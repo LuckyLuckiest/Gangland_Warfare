@@ -37,6 +37,7 @@ public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon
 	private final String                 displayName;
 	private final WeaponType             category;
 	private final Material               material;
+	private final int                    customModelData;
 	private final short                  durability;
 	private final List<String>           lore;
 	private final boolean                dropHologram;
@@ -85,13 +86,15 @@ public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon
 	private SpreadManager        spread;
 
 	protected Weapon(UUID uuid, String name, String displayName, WeaponType category, Material material,
-	                 short durability, List<String> lore, boolean dropHologram, @Nullable List<String> deathMessages,
-	                 @Nullable ReloadData reloadData, @Nullable AmmunitionData ammunitionData) {
+	                 int customModelData, short durability, List<String> lore, boolean dropHologram,
+	                 @Nullable List<String> deathMessages, @Nullable ReloadData reloadData,
+	                 @Nullable AmmunitionData ammunitionData) {
 		this.uuid              = uuid;
 		this.name              = name;
 		this.displayName       = displayName;
 		this.category          = category;
 		this.material          = material;
+		this.customModelData   = customModelData;
 		this.durability        = durability;
 		this.currentDurability = durability;
 		this.lore              = lore;
@@ -197,6 +200,10 @@ public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon
 		short currentDamage = (short) Math.floor(
 				(durability - currentDurability) * (builder.getItemMaxDurability() / (double) durability));
 		builder.setDurability(currentDamage);
+
+		if (customModelData > 0) {
+			builder.setCustomModelData(customModelData);
+		}
 
 		initializeTags(builder);
 		builder.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);

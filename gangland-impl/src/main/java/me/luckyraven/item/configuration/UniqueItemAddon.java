@@ -72,9 +72,10 @@ public class UniqueItemAddon implements Comparator<UniqueItem> {
 
 			if (section == null) continue;
 
-			String permission     = section.getString("Permission");
-			String materialString = section.getString("Material");
-			String name           = section.getString("Name");
+			String permission      = section.getString("Permission");
+			String materialString  = section.getString("Material");
+			int    customModelData = section.getInt("Custom_Model_Data", 0);
+			String name            = section.getString("Name");
 
 			// configuration items that can be not available
 			List<String> lore = section.getStringList("Lore");
@@ -129,6 +130,7 @@ public class UniqueItemAddon implements Comparator<UniqueItem> {
 			                           .permission(permission)
 			                           .uniqueItem(key)
 			                           .material(material.get())
+			                           .customModelData(customModelData)
 			                           .name(name)
 			                           .addOnJoin(addOnJoin)
 			                           .addOnRespawn(addOnRespawn)

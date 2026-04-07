@@ -47,6 +47,7 @@ public class Wearable {
 
 	private final String                      permission;
 	private final Material                    material;
+	private final int                         customModelData;
 	private final String                      name;
 	private final List<String>                lore;
 	private final String                      wearableKey;
@@ -226,6 +227,10 @@ public class Wearable {
 		builder.setDisplayName(name);
 
 		if (lore != null && !lore.isEmpty()) builder.setLore(lore);
+
+		if (customModelData > 0) {
+			builder.setCustomModelData(customModelData);
+		}
 
 		// Stamp registry key and base data into NBT
 		builder.addTag(NBT_KEY, wearableKey);

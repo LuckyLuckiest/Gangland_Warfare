@@ -37,8 +37,8 @@ public class MeleeWeaponParser {
 		AmmunitionData ammunitionData = parsed != null ? parsed.ammo() : null;
 
 		return new MeleeWeapon(null, base.fileName(), base.displayName(), base.category(),
-		                       base.material(), base.durability(), base.lore(), base.dropHologram(),
-		                       base.deathMessages(), meleeData, reloadData, ammunitionData);
+		                       base.material(), base.customModelData(), base.durability(), base.lore(),
+		                       base.dropHologram(), base.deathMessages(), meleeData, reloadData, ammunitionData);
 	}
 
 }

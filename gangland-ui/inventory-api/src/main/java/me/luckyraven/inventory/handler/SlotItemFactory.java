@@ -24,14 +24,19 @@ public final class SlotItemFactory {
 									 List<String> lore, boolean enchanted) {
 		ItemBuilder itemBuilder = new ItemBuilder(validateMaterial(item).get());
 
-		String color    = (String) data.get("color");
-		String dataInfo = (String) data.get("data");
+		String  color           = (String) data.get("color");
+		String  dataInfo        = (String) data.get("data");
+		Integer customModelData = (Integer) data.get("customModelData");
 
 		if (color != null) itemBuilder.addTag("color", color);
 		if (dataInfo != null) itemBuilder.addTag("data", dataInfo);
 
 		itemBuilder.setDisplayName(itemName);
 		itemBuilder.setLore(lore);
+
+		if (customModelData != null && customModelData > 0) {
+			itemBuilder.setCustomModelData(customModelData);
+		}
 
 		if (enchanted) {
 			itemBuilder.addEnchantment(XEnchantment.UNBREAKING.get(), 1)

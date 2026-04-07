@@ -41,9 +41,9 @@ public class IncendiaryWeaponParser {
 		AmmunitionData ammunitionData = parsed != null ? parsed.ammo() : null;
 
 		IncendiaryWeapon weapon = new IncendiaryWeapon(null, base.fileName(), base.displayName(), base.category(),
-		                                               base.material(), base.durability(), base.lore(),
-		                                               base.dropHologram(), base.deathMessages(), incendiaryData,
-		                                               reloadData, ammunitionData);
+		                                               base.material(), base.customModelData(), base.durability(),
+		                                               base.lore(), base.dropHologram(), base.deathMessages(),
+		                                               incendiaryData, reloadData, ammunitionData);
 
 		// Selective fire is optional for incendiary — defaults to AUTO + [auto] when absent so existing yml that
 		// predates the selective-fire integration keeps the old "spray on right-click" behaviour.

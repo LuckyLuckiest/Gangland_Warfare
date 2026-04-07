@@ -14,6 +14,7 @@ public record WeaponBaseData(
 		String displayName,
 		WeaponType category,
 		Material material,
+		int customModelData,
 		short durability,
 		List<String> lore,
 		boolean dropHologram,

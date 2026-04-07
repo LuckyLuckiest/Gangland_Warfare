@@ -19,8 +19,8 @@ final class ConditionalSlotParser {
 	private ConditionalSlotParser() { }
 
 	static ConditionalSlotData parse(ConfigurationSection conditionSection, String defaultItem, String defaultName,
-									 Map<String, Object> defaultData, List<String> defaultLore,
-									 boolean defaultEnchanted, boolean defaultDraggable) {
+	                                 Map<String, Object> defaultData, List<String> defaultLore,
+	                                 boolean defaultEnchanted, boolean defaultDraggable) {
 		String valueExpression = conditionSection.getString("Value");
 		if (valueExpression == null || valueExpression.isEmpty()) {
 			throw new IllegalArgumentException("Condition must have a Value");
@@ -35,22 +35,22 @@ final class ConditionalSlotParser {
 		if (falseSection == null) falseSection = conditionSection.getConfigurationSection("false");
 
 		var trueData = parseBranchData(trueSection, defaultItem, defaultName, defaultData, defaultLore,
-									   defaultEnchanted, defaultDraggable);
+		                               defaultEnchanted, defaultDraggable);
 		var falseData = parseBranchData(falseSection, defaultItem, defaultName, defaultData, defaultLore,
-										defaultEnchanted, defaultDraggable);
+		                                defaultEnchanted, defaultDraggable);
 
 		return new ConditionalSlotData(condition, trueData, falseData);
 	}
 
 	static ConditionalSlotData.BranchData parseBranchData(@Nullable ConfigurationSection branchSection,
-														  String defaultItem, String defaultName,
-														  Map<String, Object> defaultData, List<String> defaultLore,
-														  boolean defaultEnchanted, boolean defaultDraggable) {
+	                                                      String defaultItem, String defaultName,
+	                                                      Map<String, Object> defaultData, List<String> defaultLore,
+	                                                      boolean defaultEnchanted, boolean defaultDraggable) {
 		if (branchSection == null) {
 			ItemBuilder item = SlotItemFactory.create(defaultItem, defaultName, defaultData, defaultLore,
-													  defaultEnchanted);
+			                                          defaultEnchanted);
 			return new ConditionalSlotData.BranchData(item, defaultName, defaultLore, false, defaultDraggable, null,
-													  null, null);
+			                                          null, null);
 		}
 
 		Map<String, Object> itemData = new HashMap<>();
@@ -63,6 +63,11 @@ final class ConditionalSlotParser {
 
 		boolean enchanted = branchSection.getBoolean("Enchanted", defaultEnchanted);
 		boolean draggable = branchSection.getBoolean("Draggable", defaultDraggable);
+
+		Object defaultCmd      = defaultData != null ? defaultData.get("customModelData") : null;
+		int    defaultCmdValue = defaultCmd instanceof Integer cmd ? cmd : 0;
+		int    customModelData = branchSection.getInt("Custom_Model_Data", defaultCmdValue);
+		if (customModelData > 0) itemData.put("customModelData", customModelData);
 
 		ItemBuilder itemBuilder = SlotItemFactory.create(item, name, itemData, lore, enchanted);
 
@@ -77,7 +82,7 @@ final class ConditionalSlotParser {
 		boolean hasAction        = clickAction != null || rightClickAction != null;
 
 		return new ConditionalSlotData.BranchData(itemBuilder, name, lore, hasAction, draggable, clickAction,
-												  rightClickAction, nestedData);
+		                                          rightClickAction, nestedData);
 	}
 
 	@Nullable

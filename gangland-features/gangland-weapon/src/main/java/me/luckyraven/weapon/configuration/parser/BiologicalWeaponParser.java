@@ -43,9 +43,9 @@ public class BiologicalWeaponParser {
 		AmmunitionData ammunitionData = parsed != null ? parsed.ammo() : null;
 
 		BiologicalWeapon weapon = new BiologicalWeapon(null, base.fileName(), base.displayName(), base.category(),
-		                                               base.material(), base.durability(), base.lore(),
-		                                               base.dropHologram(), base.deathMessages(), biologicalData,
-		                                               reloadData, ammunitionData);
+		                                               base.material(), base.customModelData(), base.durability(),
+		                                               base.lore(), base.dropHologram(), base.deathMessages(),
+		                                               biologicalData, reloadData, ammunitionData);
 
 		// Selective fire is optional for biological. The actual mechanic is the same regardless of mode (charge then
 		// release), but the field is set so the listener doesn't NPE on Shift-F. Default = SINGLE locked.

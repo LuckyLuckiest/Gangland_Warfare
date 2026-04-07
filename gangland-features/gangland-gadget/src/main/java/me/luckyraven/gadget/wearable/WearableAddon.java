@@ -99,6 +99,7 @@ public class WearableAddon extends WearableService {
 			}
 
 			String       permission          = section.getString("Permission");
+			int          customModelData     = section.getInt("Custom_Model_Data", 0);
 			double       baseDamageReduction = section.getDouble("Base_Damage_Reduction", 0.0);
 			List<String> lore                = section.getStringList("Lore");
 
@@ -161,6 +162,7 @@ public class WearableAddon extends WearableService {
 			Wearable wearable = Wearable.builder()
 			                            .permission(permission)
 			                            .material(material)
+			                            .customModelData(customModelData)
 			                            .name(name)
 			                            .lore(lore.isEmpty() ? null : lore)
 			                            .wearableKey(key)

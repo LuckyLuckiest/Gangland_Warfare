@@ -60,9 +60,10 @@ public class AmmunitionAddon {
 			var xMaterialOptional = XMaterial.matchXMaterial(materialString);
 			var xMaterial         = xMaterialOptional.orElse(XMaterial.IRON_PICKAXE);
 
-			List<String> lore = section.getStringList("Lore");
+			int          customModelData = section.getInt("Custom_Model_Data", 0);
+			List<String> lore            = section.getStringList("Lore");
 
-			Ammunition ammo = new Ammunition(key, name, xMaterial.get(), lore);
+			Ammunition ammo = new Ammunition(key, name, xMaterial.get(), customModelData, lore);
 
 			manager.register(key, ammo);
 			temp.add(key);

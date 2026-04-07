@@ -22,6 +22,8 @@
 9mm:
    # [Material] is used to get the material type, you can use any type of material from any minecraft version.
    Material: "GOLD_NUGGET"
+   # [Custom_Model_Data] optional resource-pack model id (0 = no override).
+   Custom_Model_Data: 0
    # [Name] this will show the displayed name of the ammo.
    Name: "&c9mm&r"
    # [Lore] can show the description of the ammo.

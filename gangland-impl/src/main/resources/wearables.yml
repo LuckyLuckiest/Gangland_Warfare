@@ -17,6 +17,7 @@
 #
 # Fields:
 #   Material            - Bukkit material name; must be an armor type
+#   Custom_Model_Data   - optional resource-pack model id (0 = no override)
 #   Name                - display name (supports & color codes)
 #   Base_Damage_Reduction - flat damage reduction per piece (0.0–1.0, e.g. 0.10 = 10%)
 #   Leather_Color       - hex color string ("#RRGGBB") for leather armor; leave blank otherwise
@@ -36,6 +37,7 @@
 police_vest:
    Permission: "gangland.wearables.police_vest"
    Material: IRON_CHESTPLATE
+   Custom_Model_Data: 0
    Name: "&7Police Vest"
    Base_Damage_Reduction: 0.10
    Leather_Color: ""

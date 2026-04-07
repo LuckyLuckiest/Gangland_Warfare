@@ -87,8 +87,8 @@ public class GunWeaponParser {
 		                                              .build();
 
 		GunWeapon gun = new GunWeapon(null, base.fileName(), base.displayName(), base.category(),
-		                              base.material(), base.durability(), base.lore(), base.dropHologram(),
-		                              base.deathMessages(), selectiveFire, weaponConsumedOnShot,
+		                              base.material(), base.customModelData(), base.durability(), base.lore(),
+		                              base.dropHologram(), base.deathMessages(), selectiveFire, weaponConsumedOnShot,
 		                              projectileData, reloadData, ammunitionData);
 
 		gun.setAllowedSelectiveFires(parsedSelectiveFire.allowed());

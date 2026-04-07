@@ -17,6 +17,8 @@ phone:
    Permission: "gangland.uniqueitem.phone"
    # The material type of this unique item.
    Material: COMPASS
+   # Optional resource-pack model id (0 = no override).
+   Custom_Model_Data: 0
    # The display name of this unique item.
    Name: "&6&k||| &8&lPhone &6&k|||"
    # The lore of this unique item.

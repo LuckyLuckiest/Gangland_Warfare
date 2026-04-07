@@ -42,9 +42,11 @@ final class InventoryParser {
 
 			String itemName = section.getString("Name");
 			if (itemName == null) itemName = item.toLowerCase().replace('_', ' ');
-			List<String> lore      = section.getStringList("Lore");
-			boolean      enchanted = section.getBoolean("Enchanted");
-			boolean      draggable = section.getBoolean("Draggable");
+			List<String> lore            = section.getStringList("Lore");
+			boolean      enchanted       = section.getBoolean("Enchanted");
+			boolean      draggable       = section.getBoolean("Draggable");
+			int          customModelData = section.getInt("Custom_Model_Data", 0);
+			if (customModelData > 0) data.put("customModelData", customModelData);
 
 			var  conditionSection = section.getConfigurationSection("Condition");
 			Slot slot;
@@ -86,9 +88,11 @@ final class InventoryParser {
 
 				String itemName = section.getString("Name");
 				if (itemName == null) itemName = item.toLowerCase().replace('_', ' ');
-				List<String> lore      = section.getStringList("Lore");
-				boolean      enchanted = section.getBoolean("Enchanted");
-				boolean      draggable = section.getBoolean("Draggable");
+				List<String> lore            = section.getStringList("Lore");
+				boolean      enchanted       = section.getBoolean("Enchanted");
+				boolean      draggable       = section.getBoolean("Draggable");
+				int          customModelData = section.getInt("Custom_Model_Data", 0);
+				if (customModelData > 0) data.put("customModelData", customModelData);
 
 				staticItems.put(slotIndex,
 								processEventItems(gangland, "Static_Items", config, slotIndex, item, itemName, data,

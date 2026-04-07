@@ -20,12 +20,12 @@ public class IncendiaryWeapon extends Weapon {
 	private final IncendiaryData incendiaryData;
 
 	public IncendiaryWeapon(UUID uuid, String name, String displayName, WeaponType category, Material material,
-	                        short durability, List<String> lore, boolean dropHologram,
+	                        int customModelData, short durability, List<String> lore, boolean dropHologram,
 	                        @Nullable List<String> deathMessages,
 	                        IncendiaryData incendiaryData, @Nullable ReloadData reloadData,
 	                        @Nullable AmmunitionData ammunitionData) {
-		super(uuid, name, displayName, category, material, durability, lore, dropHologram, deathMessages, reloadData,
-		      ammunitionData);
+		super(uuid, name, displayName, category, material, customModelData, durability, lore, dropHologram,
+		      deathMessages, reloadData, ammunitionData);
 		this.incendiaryData = incendiaryData;
 	}
 

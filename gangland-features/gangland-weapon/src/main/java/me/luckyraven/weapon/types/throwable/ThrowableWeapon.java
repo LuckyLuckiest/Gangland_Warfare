@@ -20,11 +20,11 @@ public class ThrowableWeapon extends Weapon {
 	private final ThrowableData throwableData;
 
 	public ThrowableWeapon(UUID uuid, String name, String displayName, WeaponType category, Material material,
-	                       short durability, List<String> lore, boolean dropHologram,
+	                       int customModelData, short durability, List<String> lore, boolean dropHologram,
 	                       @Nullable List<String> deathMessages, ThrowableData throwableData,
 	                       @Nullable ReloadData reloadData, @Nullable AmmunitionData ammunitionData) {
-		super(uuid, name, displayName, category, material, durability, lore, dropHologram, deathMessages, reloadData,
-		      ammunitionData);
+		super(uuid, name, displayName, category, material, customModelData, durability, lore, dropHologram,
+		      deathMessages, reloadData, ammunitionData);
 		this.throwableData = throwableData;
 	}
 

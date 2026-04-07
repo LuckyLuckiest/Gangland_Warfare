@@ -29,11 +29,11 @@ public class GunWeapon extends Weapon {
 	private DamageData damageData;
 
 	public GunWeapon(UUID uuid, String name, String displayName, WeaponType category, Material material,
-	                 short durability, List<String> lore, boolean dropHologram, @Nullable List<String> deathMessages,
-	                 SelectiveFire selectiveFire, int weaponConsumedOnShot, ProjectileData projectileData,
-	                 ReloadData reloadData, @Nullable AmmunitionData ammunitionData) {
-		super(uuid, name, displayName, category, material, durability, lore, dropHologram, deathMessages, reloadData,
-		      ammunitionData);
+	                 int customModelData, short durability, List<String> lore, boolean dropHologram,
+	                 @Nullable List<String> deathMessages, SelectiveFire selectiveFire, int weaponConsumedOnShot,
+	                 ProjectileData projectileData, ReloadData reloadData, @Nullable AmmunitionData ammunitionData) {
+		super(uuid, name, displayName, category, material, customModelData, durability, lore, dropHologram,
+		      deathMessages, reloadData, ammunitionData);
 		this.projectileData       = projectileData;
 		this.weaponConsumedOnShot = weaponConsumedOnShot;
 		this.setCurrentSelectiveFire(selectiveFire);

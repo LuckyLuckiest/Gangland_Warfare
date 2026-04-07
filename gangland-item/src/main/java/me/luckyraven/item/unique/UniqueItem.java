@@ -25,6 +25,7 @@ public class UniqueItem implements Comparable<ItemStack> {
 	private final String   permission;
 	private final String   uniqueItem;
 	private final Material material;
+	private final int      customModelData;
 	private final String   name;
 	private final boolean  addOnJoin;
 	private final boolean  addOnRespawn;
@@ -71,6 +72,10 @@ public class UniqueItem implements Comparable<ItemStack> {
 		itemBuilder.setDisplayName(name);
 
 		if (lore != null) itemBuilder.setLore(lore);
+
+		if (customModelData > 0) {
+			itemBuilder.setCustomModelData(customModelData);
+		}
 
 		itemBuilder.addTag(UniqueItemKeys.UNIQUE_ITEM_KEY, uniqueItem);
 

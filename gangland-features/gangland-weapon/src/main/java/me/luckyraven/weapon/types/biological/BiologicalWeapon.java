@@ -20,12 +20,12 @@ public class BiologicalWeapon extends Weapon {
 	private final BiologicalData biologicalData;
 
 	public BiologicalWeapon(UUID uuid, String name, String displayName, WeaponType category, Material material,
-	                        short durability, List<String> lore, boolean dropHologram,
+	                        int customModelData, short durability, List<String> lore, boolean dropHologram,
 	                        @Nullable List<String> deathMessages,
 	                        BiologicalData biologicalData, @Nullable ReloadData reloadData,
 	                        @Nullable AmmunitionData ammunitionData) {
-		super(uuid, name, displayName, category, material, durability, lore, dropHologram, deathMessages, reloadData,
-		      ammunitionData);
+		super(uuid, name, displayName, category, material, customModelData, durability, lore, dropHologram,
+		      deathMessages, reloadData, ammunitionData);
 		this.biologicalData = biologicalData;
 	}
 
