@@ -30,8 +30,13 @@ public class GunWeaponParser {
 		ConfigurationSection shootSection = config.getConfigurationSection("Shoot");
 		if (shootSection == null) throw new InvalidConfigurationException("Shoot section not found");
 
-		String        selectiveFireString = shootSection.getString("Selective_Fire");
-		SelectiveFire selectiveFire       = SelectiveFire.getType(Objects.requireNonNull(selectiveFireString));
+		SelectiveFireSectionParser.ParsedSelectiveFire parsedSelectiveFire = SelectiveFireSectionParser.parse(
+				shootSection, base.fileName());
+		if (parsedSelectiveFire == null) {
+			throw new InvalidConfigurationException(
+					"Gun weapon '" + base.fileName() + "' is missing Selective_Fire under Shoot:");
+		}
+		SelectiveFire selectiveFire = parsedSelectiveFire.current();
 
 		ConfigurationSection projectileSection = Objects.requireNonNull(
 				shootSection.getConfigurationSection("Projectile"));
@@ -85,6 +90,8 @@ public class GunWeaponParser {
 		                              base.material(), base.durability(), base.lore(), base.dropHologram(),
 		                              base.deathMessages(), selectiveFire, weaponConsumedOnShot,
 		                              projectileData, reloadData, ammunitionData);
+
+		gun.setAllowedSelectiveFires(parsedSelectiveFire.allowed());
 
 		gun.getDamageData().setExplosionDamage(projectileExplosionDamage);
 		gun.getDamageData().setFireTicks(projectileFireTicks);

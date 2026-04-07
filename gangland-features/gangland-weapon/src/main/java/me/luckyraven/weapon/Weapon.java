@@ -63,6 +63,12 @@ public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon
 	// Runtime state
 	private       int                    currentMagCapacity;
 	private       SelectiveFire          currentSelectiveFire;
+	/**
+	 * Modes the weapon is permitted to cycle through. Set by the parser from the {@code Allowed_Modes} yml key. Empty
+	 * or {@code null} means "no restriction" — the legacy 3-mode SINGLE/BURST/AUTO cycle is used. The configured
+	 * starting {@link #currentSelectiveFire} must always be present in this set when the set is non-empty.
+	 */
+	private       Set<SelectiveFire>     allowedSelectiveFires;
 
 	private String changingDisplayName;
 	private short  currentDurability;
