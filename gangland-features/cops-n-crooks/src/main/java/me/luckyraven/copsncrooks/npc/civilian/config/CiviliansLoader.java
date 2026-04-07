@@ -18,17 +18,17 @@ import java.util.function.Consumer;
 
 @Getter
 @CustomLog
-public class EntityMarkerLoader extends FileLoader<EntityMarkerConfig> {
+public class CiviliansLoader extends FileLoader<CiviliansConfig> {
 
 	@Getter(AccessLevel.NONE)
 	private final @Nullable ItemParser       itemParser;
 	@Getter(AccessLevel.NONE)
 	private final           CivilianSettings civilianSettings;
 
-	private EntityMarkerConfig loadedConfig;
+	private CiviliansConfig loadedConfig;
 
-	public EntityMarkerLoader(JavaPlugin plugin, @Nullable ItemParser itemParser,
-	                          CivilianSettings civilianSettings) {
+	public CiviliansLoader(JavaPlugin plugin, @Nullable ItemParser itemParser,
+	                       CivilianSettings civilianSettings) {
 		super(plugin);
 		this.itemParser       = itemParser;
 		this.civilianSettings = civilianSettings;
@@ -40,11 +40,11 @@ public class EntityMarkerLoader extends FileLoader<EntityMarkerConfig> {
 	}
 
 	@Override
-	protected void loadData(Consumer<EntityMarkerConfig> consumer, FileManager fileManager) {
+	protected void loadData(Consumer<CiviliansConfig> consumer, FileManager fileManager) {
 		FileConfiguration yaml;
 
 		try {
-			String fileName = "entity_marker";
+			String fileName = "civilians";
 			fileManager.checkFileLoaded(fileName);
 			FileHandler handler = Objects.requireNonNull(fileManager.getFile(fileName));
 			yaml = handler.getFileConfiguration();
@@ -55,11 +55,11 @@ public class EntityMarkerLoader extends FileLoader<EntityMarkerConfig> {
 		boolean aiEnabled  = civilianSettings.isCivilianAiEnabled();
 		int     aiTickRate = civilianSettings.getCivilianAiTickRate();
 
-		YamlEntityMarkerConfigProvider provider = new YamlEntityMarkerConfigProvider(yaml, aiEnabled, aiTickRate,
-		                                                                             itemParser);
+		YamlCiviliansConfigProvider provider = new YamlCiviliansConfigProvider(yaml, aiEnabled, aiTickRate,
+		                                                                       itemParser);
 		loadedConfig = provider.getConfig();
 
-		log.info("Loaded entity marker config with {} types and {} groups",
+		log.info("Loaded civilians config with {} types and {} groups",
 		         loadedConfig.types().size(), loadedConfig.groups().size());
 
 		if (consumer != null) {

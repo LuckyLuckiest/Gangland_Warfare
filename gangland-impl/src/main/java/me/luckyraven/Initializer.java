@@ -21,7 +21,7 @@ import me.luckyraven.copsncrooks.jail.JailRegistry;
 import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianSettings;
-import me.luckyraven.copsncrooks.npc.civilian.config.EntityMarkerLoader;
+import me.luckyraven.copsncrooks.npc.civilian.config.CiviliansLoader;
 import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
 import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawner;
 import me.luckyraven.copsncrooks.npc.police.CopManager;
@@ -189,7 +189,7 @@ public final class Initializer {
 	private WeaponLoader               weaponLoader;
 	private LootChestLoader            lootChestLoader;
 	private CopLoader                  copLoader;
-	private EntityMarkerLoader         entityMarkerLoader;
+	private CiviliansLoader            civiliansLoader;
 	private RepairLoader               repairLoader;
 	private RepairManager              repairManager;
 	private RepairAnvilGui             repairAnvilGui;
@@ -321,17 +321,17 @@ public final class Initializer {
 		// sign manager
 		signLoader();
 
-		// item parser (must be before entity marker loader — weapon pool parsing needs it)
+		// item parser (must be before civilians loader — weapon pool parsing needs it)
 		itemParserManager = new ItemParserManager(weaponManager, ammunitionManager, wearableAddon, carAddon);
 
-		// entity marker loader (reads entity_marker.yml; resolves weapon pools via ItemParser)
-		entityMarkerLoader = new EntityMarkerLoader(gangland, itemParserManager.getParser(), civilianSettings);
-		entityMarkerLoader.load(false, null, fileManager);
+		// civilians loader (reads civilians.yml; resolves weapon pools via ItemParser)
+		civiliansLoader = new CiviliansLoader(gangland, itemParserManager.getParser(), civilianSettings);
+		civiliansLoader.load(false, null, fileManager);
 
 		// entity mark manager (uses the loaded default entity lists instead of settings.yml)
 		entityMarkManager = new EntityMarkManager(gangland,
-		                                          entityMarkerLoader.getLoadedConfig().defaultPoliceEntities(),
-		                                          entityMarkerLoader.getLoadedConfig().defaultCivilianEntities());
+		                                          civiliansLoader.getLoadedConfig().defaultPoliceEntities(),
+		                                          civiliansLoader.getLoadedConfig().defaultCivilianEntities());
 
 		// loot chest manager
 		lootChestLoader();
@@ -400,8 +400,8 @@ public final class Initializer {
 		FileHandler copsFile = new FileHandler(gangland, "cops", ".yml");
 		fileManager.addFile(copsFile, true);
 
-		FileHandler entityMarkerFile = new FileHandler(gangland, "entity_marker", ".yml");
-		fileManager.addFile(entityMarkerFile, true);
+		FileHandler civiliansFile = new FileHandler(gangland, "civilians", ".yml");
+		fileManager.addFile(civiliansFile, true);
 
 		FileHandler repairFile = new FileHandler(gangland, "repair", ".yml");
 		fileManager.addFile(repairFile, true);
@@ -567,7 +567,7 @@ public final class Initializer {
 		                                                          .getRepository(CivilianSpawner.class);
 		var ganglandCivilianSpawnConfigProvider = new GanglandCivilianSpawnConfigProvider();
 
-		civilianService.initialize(gangland, entityMarkerLoader.getLoadedConfig(), entityMarkManager, repository,
+		civilianService.initialize(gangland, civiliansLoader.getLoadedConfig(), entityMarkManager, repository,
 		                           civilianSettings, ganglandCivilianSpawnConfigProvider, itemParserManager.getParser(),
 		                           weaponManager);
 		civilianSpawnManager = civilianService.getSpawnManager();

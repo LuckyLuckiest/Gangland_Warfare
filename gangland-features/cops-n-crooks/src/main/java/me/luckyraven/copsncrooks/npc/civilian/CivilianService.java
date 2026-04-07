@@ -7,7 +7,7 @@ import me.luckyraven.copsncrooks.entity.SpawnConfigProvider;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianGroupConfig;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianSettings;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianTypeConfig;
-import me.luckyraven.copsncrooks.npc.civilian.config.EntityMarkerConfig;
+import me.luckyraven.copsncrooks.npc.civilian.config.CiviliansConfig;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpcFactory;
 import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
@@ -43,11 +43,11 @@ public class CivilianService {
 	@Getter
 	private CivilianSpawnManager spawnManager;
 
-	private EntityMarkManager  entityMarkManager;
+	private EntityMarkManager entityMarkManager;
 	@Getter
-	private EntityMarkerConfig markerConfig;
-	private JavaPlugin         plugin;
-	private boolean            initialized;
+	private CiviliansConfig   civiliansConfig;
+	private JavaPlugin        plugin;
+	private boolean           initialized;
 
 	// ── Initialization ────────────────────────────────────────────────────────
 
@@ -55,22 +55,23 @@ public class CivilianService {
 	 * Wires dependencies and starts the AI tick scheduler.
 	 *
 	 * @param plugin the owning plugin
-	 * @param markerConfig loaded entity_marker.yml config
+	 * @param civiliansConfig loaded civilians.yml config
 	 * @param entityMarkManager entity classification manager
 	 * @param civilianSettings civilian settings
 	 * @param itemParser item string parser (nullable — falls back to XMaterial)
 	 * @param weaponService gangland weapon registry (nullable — disables weapon assignment)
 	 */
-	public void initialize(JavaPlugin plugin, EntityMarkerConfig markerConfig, EntityMarkManager entityMarkManager,
+	public void initialize(JavaPlugin plugin, CiviliansConfig civiliansConfig, EntityMarkManager entityMarkManager,
 	                       IRepository<CivilianSpawner> spawnerRepository, CivilianSettings civilianSettings,
 	                       SpawnConfigProvider spawnConfigProvider, @Nullable ItemParser itemParser,
 	                       @Nullable WeaponService weaponService) {
 		if (initialized) return;
 
 		this.plugin            = plugin;
-		this.markerConfig      = markerConfig;
+		this.civiliansConfig   = civiliansConfig;
 		this.entityMarkManager = entityMarkManager;
-		this.spawnManager      = new CivilianSpawnManager(spawnConfigProvider, spawnerRepository, this, markerConfig);
+		this.spawnManager      = new CivilianSpawnManager(spawnConfigProvider, spawnerRepository, this,
+		                                                  civiliansConfig);
 		this.npcFactory        = new CivilianNpcFactory(plugin, entityMarkManager, itemParser, weaponService,
 		                                                civilianSettings);
 
@@ -143,15 +144,15 @@ public class CivilianService {
 	// ── Group spawning ────────────────────────────────────────────────────────
 
 	/**
-	 * Spawns a complete group from entity_marker.yml at the given location. All members are registered with this
-	 * service and linked to the group.
+	 * Spawns a complete group from civilians.yml at the given location. All members are registered with this service
+	 * and linked to the group.
 	 *
 	 * @param location the center spawn location for the group
-	 * @param groupId the group key as defined in entity_marker.yml
+	 * @param groupId the group key as defined in civilians.yml
 	 */
 	@Nullable
 	public CivilianGroup spawnGroup(Location location, String groupId) {
-		CivilianGroupConfig groupConfig = markerConfig.groups().get(groupId);
+		CivilianGroupConfig groupConfig = civiliansConfig.groups().get(groupId);
 		if (groupConfig == null) {
 			log.warn("Unknown civilian group '{}' — skipping spawn.", groupId);
 			return null;
@@ -165,7 +166,7 @@ public class CivilianService {
 			String typeId = entry.getKey();
 			int    count  = entry.getValue();
 
-			CivilianTypeConfig typeConfig = markerConfig.types().get(typeId);
+			CivilianTypeConfig typeConfig = civiliansConfig.types().get(typeId);
 			if (typeConfig == null) {
 				log.warn("Group '{}' references unknown type '{}' — skipping.", groupId, typeId);
 				continue;

@@ -58,7 +58,7 @@ class CivilianSpawnCommand extends SubArgument {
 			sender.sendMessage(GanglandChatUtil.commandMessage("&aCivilian &e" + typeId + "&a spawned near you."));
 		}, sender -> {
 			CivilianService service = gangland.getInitializer().getCivilianService();
-			return new ArrayList<>(service.getMarkerConfig().types().keySet());
+			return new ArrayList<>(service.getCiviliansConfig().types().keySet());
 		});
 
 		this.addSubArgument(typeArg);

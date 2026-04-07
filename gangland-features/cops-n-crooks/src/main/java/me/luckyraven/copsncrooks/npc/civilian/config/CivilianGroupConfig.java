@@ -7,7 +7,7 @@ import java.util.Map;
  * <p>
  * A group spawns multiple NPC types together; members stay near each other and share trait bonuses.
  *
- * @param groupId unique key from entity_marker.yml
+ * @param groupId unique key from civilians.yml
  * @param displayName color-coded group name
  * @param hostile if true all members are treated as hostile regardless of their type setting
  * @param healthBonus extra max health added to every member (half-hearts)

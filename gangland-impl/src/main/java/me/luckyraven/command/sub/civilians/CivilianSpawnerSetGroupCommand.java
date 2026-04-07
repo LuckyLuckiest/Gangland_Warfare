@@ -46,7 +46,7 @@ class CivilianSpawnerSetGroupCommand extends SubArgument {
 			String          groupId = args[3];
 			CivilianService service = gangland.getInitializer().getCivilianService();
 
-			if (!service.getMarkerConfig().groups().containsKey(groupId)) {
+			if (!service.getCiviliansConfig().groups().containsKey(groupId)) {
 				sender.sendMessage(GanglandChatUtil.commandMessage("&cUnknown group &e" + groupId + "&c."));
 				return;
 			}
@@ -58,7 +58,7 @@ class CivilianSpawnerSetGroupCommand extends SubArgument {
 					"&aGroup spawner &e" + groupId + "&a set at your location."));
 		}, sender -> {
 			CivilianService service = gangland.getInitializer().getCivilianService();
-			return new ArrayList<>(service.getMarkerConfig().groups().keySet());
+			return new ArrayList<>(service.getCiviliansConfig().groups().keySet());
 		});
 
 		this.addSubArgument(groupArg);

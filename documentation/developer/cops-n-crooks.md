@@ -119,9 +119,12 @@ Subclasses must implement:
 
 ```java
 boolean canUseWeapons();           // Whether this NPC type uses the weapon pipeline
-double  getAttackDamage();         // Base melee damage
-void    equip();                   // Apply armor + weapon to EntityEquipment
-void    cleanupTransientState();   // Release behavior resources on destroy
+
+double getAttackDamage();         // Base melee damage
+
+void equip();                   // Apply armor + weapon to EntityEquipment
+
+void cleanupTransientState();   // Release behavior resources on destroy
 ```
 
 ---
@@ -171,8 +174,8 @@ Entry point for the cop subsystem. Called once during plugin enable:
 ```java
 CopService copService = new CopService();
 CopManager copManager = copService.initialize(
-    plugin, copConfigProvider, entityMarkManager,
-    weaponService, spawnerRepository, detainmentService
+		plugin, copConfigProvider, entityMarkManager,
+		weaponService, spawnerRepository, detainmentService
 );
 ```
 
@@ -270,17 +273,17 @@ Record holding per-tier configuration:
 
 ```java
 record CopTierConfig(
-    int tier,                    // Tier number (1-5)
-    String displayName,          // e.g. "Officer", "SWAT"
-    double health,               // Max health in half-hearts
-    double damage,               // Base melee damage
-    double speed,                // Movement speed
-    double cuffRadius,           // Blocks within which cuffing is attempted
-    boolean canUseWeapons,       // Whether this tier uses the weapon pipeline
-    boolean skipCuffing,         // Whether this tier skips cuffing (goes straight to combat)
-    List<String> weaponNamePool, // Gangland weapon names for random selection
-    List<ItemStack> weaponPool,  // Vanilla weapon fallbacks
-    ItemStack helmet, chestplate, leggings, boots  // Armor
+		int tier,                    // Tier number (1-5)
+		String displayName,          // e.g. "Officer", "SWAT"
+		double health,               // Max health in half-hearts
+		double damage,               // Base melee damage
+		double speed,                // Movement speed
+		double cuffRadius,           // Blocks within which cuffing is attempted
+		boolean canUseWeapons,       // Whether this tier uses the weapon pipeline
+		boolean skipCuffing,         // Whether this tier skips cuffing (goes straight to combat)
+		List<String> weaponNamePool, // Gangland weapon names for random selection
+		List<ItemStack> weaponPool,  // Vanilla weapon fallbacks
+		ItemStack helmet, chestplate, leggings, boots  // Armor
 )
 ```
 
@@ -381,10 +384,14 @@ Global mutex ensuring only one cop across ALL groups can cuff a given target at 
 
 ```java
 boolean tryAcquire(UUID targetId, UUID copId)  // Atomic putIfAbsent
+
 boolean isOwner(UUID targetId, UUID copId)      // Check ownership
-void    release(UUID targetId, UUID copId)      // Release only if owner
-void    forceRelease(UUID targetId)             // Admin force-release
-void    releaseByCop(UUID copId)                // Release all held by cop (on cop death)
+
+void release(UUID targetId, UUID copId)      // Release only if owner
+
+void forceRelease(UUID targetId)             // Admin force-release
+
+void releaseByCop(UUID copId)                // Release all held by cop (on cop death)
 ```
 
 ### CopSpawnManager
@@ -421,9 +428,9 @@ npc/civilian/
   CivilianGroup         Spawn-group with stay-together behavior
   CivilianState         Enum: IDLE, WANDERING, FLEEING, COMBAT
   config/
-    EntityMarkerConfig       Top-level config (types + groups)
-    EntityMarkerLoader       YAML loader for entity_marker.yml
-    YamlEntityMarkerConfigProvider   YAML-backed provider
+    CiviliansConfig       Top-level config (types + groups)
+    CiviliansLoader       YAML loader for civilians.yml
+    YamlCiviliansConfigProvider   YAML-backed provider
     CivilianTypeConfig       Per-type record (full NPC config)
     CivilianGroupConfig      Group definition (member types + counts)
     CivilianAIBehaviorConfig Per-type AI behavior settings
@@ -455,9 +462,11 @@ Central manager for all civilian NPCs. Initialized once:
 
 ```java
 CivilianService civilianService = new CivilianService();
-civilianService.initialize(plugin, markerConfig, entityMarkManager,
-    spawnerRepository, civilianSettings, spawnConfigProvider,
-    itemParser, weaponService);
+civilianService.
+
+initialize(plugin, markerConfig, entityMarkManager,
+           spawnerRepository, civilianSettings, spawnConfigProvider,
+           itemParser, weaponService);
 ```
 
 Two scheduled tasks run after initialization:
@@ -471,14 +480,14 @@ Two scheduled tasks run after initialization:
 
 Key methods:
 
-| Method                          | Purpose                                               |
-|---------------------------------|-------------------------------------------------------|
-| `register(CivilianNpc)`         | Registers an already-spawned NPC for AI ticking       |
-| `registerGroup(CivilianGroup)`  | Registers a civilian group                            |
-| `getNpc(UUID)`                  | Looks up NPC by entity UUID                           |
-| `getActiveNpcs()`               | Returns all active civilian NPCs                      |
-| `spawnGroup(Location, groupId)` | Spawns a complete group from entity_marker.yml config |
-| `shutdown()`                    | Destroys all NPCs and clears registries               |
+| Method                          | Purpose                                           |
+|---------------------------------|---------------------------------------------------|
+| `register(CivilianNpc)`         | Registers an already-spawned NPC for AI ticking   |
+| `registerGroup(CivilianGroup)`  | Registers a civilian group                        |
+| `getNpc(UUID)`                  | Looks up NPC by entity UUID                       |
+| `getActiveNpcs()`               | Returns all active civilian NPCs                  |
+| `spawnGroup(Location, groupId)` | Spawns a complete group from civilians.yml config |
+| `shutdown()`                    | Destroys all NPCs and clears registries           |
 
 ### CivilianNpc
 
@@ -505,22 +514,22 @@ leaving `COMBAT`. Cops use `CivilianNpc.isWantedByPolice()` to identify civilian
 
 ### CivilianTypeConfig
 
-Record holding per-type configuration loaded from `entity_marker.yml`:
+Record holding per-type configuration loaded from `civilians.yml`:
 
 ```java
 record CivilianTypeConfig(
-    String typeId,                         // e.g. "pedestrian", "gang_member"
-    String displayName,                    // Color-coded name
-    EntityType entityType,                 // Citizens body type
-    double health,                         // Max health
-    boolean hostile,                       // Whether NPC attacks players
-    CivilianWearableConfig wearables,      // Armor (raw ItemParser strings)
-    List<String> itemPool,                 // Random items given on spawn
-    List<String> weaponNamePool,           // Gangland weapon names (hostile types)
-    List<ItemStack> weaponPool,            // Vanilla weapon fallback
-    CivilianDropConfig drops,              // Death drop config
-    CivilianAIBehaviorConfig ai,           // Per-type AI settings
-    CivilianInventoryConfig inventory      // Trader inventory (nullable)
+		String typeId,                         // e.g. "pedestrian", "gang_member"
+		String displayName,                    // Color-coded name
+		EntityType entityType,                 // Citizens body type
+		double health,                         // Max health
+		boolean hostile,                       // Whether NPC attacks players
+		CivilianWearableConfig wearables,      // Armor (raw ItemParser strings)
+		List<String> itemPool,                 // Random items given on spawn
+		List<String> weaponNamePool,           // Gangland weapon names (hostile types)
+		List<ItemStack> weaponPool,            // Vanilla weapon fallback
+		CivilianDropConfig drops,              // Death drop config
+		CivilianAIBehaviorConfig ai,           // Per-type AI settings
+		CivilianInventoryConfig inventory      // Trader inventory (nullable)
 )
 ```
 
@@ -530,14 +539,14 @@ Per-type AI behavior settings:
 
 ```java
 record CivilianAIBehaviorConfig(
-    boolean wanderEnabled,       // Whether NPC wanders when idle
-    int     wanderRange,         // Blocks radius for wander targets
-    boolean fleeEnabled,         // Whether NPC flees when damaged
-    int     fleeRange,           // How far (blocks) the NPC runs
-    boolean combatEnabled,       // Whether NPC engages in combat
-    double  attackDamage,        // Base damage per attack
-    double  attackRange,         // Detection/attack range (blocks)
-    int     attackIntervalTicks  // Server ticks between attacks
+		boolean wanderEnabled,       // Whether NPC wanders when idle
+		int wanderRange,         // Blocks radius for wander targets
+		boolean fleeEnabled,         // Whether NPC flees when damaged
+		int fleeRange,           // How far (blocks) the NPC runs
+		boolean combatEnabled,       // Whether NPC engages in combat
+		double attackDamage,        // Base damage per attack
+		double attackRange,         // Detection/attack range (blocks)
+		int attackIntervalTicks  // Server ticks between attacks
 )
 ```
 
@@ -635,14 +644,22 @@ record CivilianAIBehaviorConfig(
 Manages a spawn-group of civilians that stay together:
 
 ```java
-// Spawned from entity_marker.yml group definitions
+// Spawned from civilians.yml group definitions
 CivilianGroup group = civilianService.spawnGroup(location, "street_gang");
 
 // Group tracks:
-group.getGroupCenter()          // Average location of alive members
-group.isMemberStraying(npc)     // Distance to center > stayTogetherRange
-group.pruneDeadMembers()        // Remove invalid members
-group.isEmpty()                 // All members dead
+group.
+
+getGroupCenter()          // Average location of alive members
+group.
+
+isMemberStraying(npc)     // Distance to center > stayTogetherRange
+group.
+
+pruneDeadMembers()        // Remove invalid members
+group.
+
+isEmpty()                 // All members dead
 ```
 
 Group coherence is enforced during `WANDERING`: if a member's distance from the group center exceeds
@@ -666,9 +683,13 @@ Spawner points are persisted via `IRepository<S>`:
 
 ```java
 setSpawnerLocation(Location)    // Register new spawner point (auto-incrementing ID)
+
 removeSpawner(int id)           // Delete spawner
+
 getSpawnerLocations()           // List all registered locations
+
 getSpawnerIds()                 // List all IDs
+
 reloadSpawners()                // Reload from database
 ```
 
@@ -714,7 +735,9 @@ Base class for spawner point data:
 
 ```java
 int getId()
+
 Location getLocation()
+
 void setLocation(Location)
 ```
 
@@ -726,12 +749,13 @@ Enum classifying NPC entities:
 
 ```java
 enum EntityMark {
-    CIVILIAN,    // Civilian NPC
-    POLICE,      // Cop NPC
-    UNSET;       // Unknown / not an NPC
+	CIVILIAN,    // Civilian NPC
+	POLICE,      // Cop NPC
+	UNSET;       // Unknown / not an NPC
 
-    boolean isCivilian()       // true for CIVILIAN and POLICE
-    boolean countForWanted()   // true for CIVILIAN and POLICE
+	boolean isCivilian()       // true for CIVILIAN and POLICE
+
+	boolean countForWanted()   // true for CIVILIAN and POLICE
 }
 ```
 
@@ -751,18 +775,22 @@ Core data class tracking a player's wanted status:
 
 ```java
 // Fields:
-int     level         // Current wanted level (0 = not wanted, capped at maxLevel)
-int     maxLevel      // Maximum wanted level (configurable)
-int     increments    // How many levels to add per incrementLevel() call
+int level         // Current wanted level (0 = not wanted, capped at maxLevel)
+int maxLevel      // Maximum wanted level (configurable)
+int increments    // How many levels to add per incrementLevel() call
 boolean wanted        // Derived: level > 0
-Player  owner         // The owning player
+Player owner         // The owning player
 
 // Key methods:
-void    setLevel(int level)     // Clamps [0, maxLevel], fires events
-void    incrementLevel()        // setLevel(level + increments)
-void    decrementLevel()        // setLevel(level - 1)
-String  getLevelStars()         // e.g. "★★★☆☆" for 3/5
-void    reset()                 // Sets level to 0 and stops timer
+void setLevel(int level)     // Clamps [0, maxLevel], fires events
+
+void incrementLevel()        // setLevel(level + increments)
+
+void decrementLevel()        // setLevel(level - 1)
+
+String getLevelStars()         // e.g. "★★★☆☆" for 3/5
+
+void reset()                 // Sets level to 0 and stops timer
 ```
 
 When `setLevel()` changes the level:
@@ -795,11 +823,14 @@ Each timer tick:
 ```java
 // Timer configuration:
 double getTimerTime()                // Base interval in seconds
+
 boolean isTimerMultiplierEnabled()   // Whether to scale interval by level
+
 double getTimerMultiplierAmount()    // Multiplier base (e.g. 1.5)
 
 // Money loss:
 double getTakeMoneyAmount()          // Base money taken per tick
+
 double getTakeMoneyMultiplier()      // Money scaling multiplier per level
 ```
 
@@ -817,10 +848,18 @@ Tracks consecutive kills per player and triggers wanted level increments at conf
 KillCombo killCombo = new KillCombo(plugin, wantedKillCounter);
 
 // Configurable callbacks:
-killCombo.setOnWantedLevelTrigger(event -> { /* increment wanted */ });
-killCombo.setOnComboIncrement(event -> { /* display combo UI */ });
-killCombo.setOnComboReset(event -> { /* clear combo UI */ });
-killCombo.setOnPlayerDeath(playerId -> { /* handle death reset */ });
+killCombo.
+
+setOnWantedLevelTrigger(event ->{ /* increment wanted */ });
+		killCombo.
+
+setOnComboIncrement(event ->{ /* display combo UI */ });
+		killCombo.
+
+setOnComboReset(event ->{ /* clear combo UI */ });
+		killCombo.
+
+setOnPlayerDeath(playerId ->{ /* handle death reset */ });
 ```
 
 #### Flow
@@ -869,12 +908,17 @@ double levelMultiplier               // User level scaling factor
 Map<CommandSender, Double> userSetBounty  // Per-setter bounty contributions
 
 // Key methods:
-void   addBounty(CommandSender, amount, userLevel)  // Level-scaled add
-void   addBounty(CommandSender, amount)              // Direct add
-void   removeBounty(CommandSender)                   // Remove sender's contribution
+void addBounty(CommandSender, amount, userLevel)  // Level-scaled add
+
+void addBounty(CommandSender, amount)              // Direct add
+
+void removeBounty(CommandSender)                   // Remove sender's contribution
+
 double calculateLevelScaledBounty(base, level)       // base * (1 + level * multiplier / 10)
+
 double getAutoBountyIncrease(userLevel, wantedLevel) // baseAmount * wantedLevel, then scaled
-void   resetBounty()                                  // Clear all
+
+void resetBounty()                                  // Clear all
 ```
 
 ### BountyExecutor
@@ -899,9 +943,9 @@ Each tick:
 
 ```java
 enum DetainmentState {
-    NORMAL,       // Free player
-    HANDCUFFED,   // Restrained, cannot interact, visual effects
-    JAILED        // Teleported to jail cell, fully restrained
+	NORMAL,       // Free player
+	HANDCUFFED,   // Restrained, cannot interact, visual effects
+	JAILED        // Teleported to jail cell, fully restrained
 }
 ```
 
@@ -911,9 +955,9 @@ Data class:
 
 ```java
 class DetainedPlayer {
-    UUID            playerId;
-    Integer         jailId;      // Nullable -- only set when JAILED
-    DetainmentState state;
+	UUID            playerId;
+	Integer         jailId;      // Nullable -- only set when JAILED
+	DetainmentState state;
 }
 ```
 
@@ -959,12 +1003,19 @@ In-memory registry of jail cells:
 
 ```java
 Jail getJail(int id)                      // Get jail by ID
+
 Location getJailLocation(int id)          // Get jail location by ID
+
 Location getJailLocation(UUID playerId)   // Get jail location for a jailed player
+
 Jail setJailLocation(int id, Location, maxCapacity)  // Create or update
+
 void detainPlayer(int jailId, UUID)       // Add player to jail (releases from previous)
+
 void releasePlayer(UUID)                  // Remove player from all jails
+
 Integer getJailIdForPlayer(UUID)          // Which jail is a player in?
+
 Integer findAvailableJailId()             // First available jail cell
 ```
 
@@ -974,10 +1025,15 @@ Persistence layer wrapping `JailRegistry` with `IRepository<Jail>`:
 
 ```java
 Jail setJailLocation(Location, maxCapacity)   // Create + persist
+
 void detainPlayer(int jailId, UUID playerId)  // Detain + persist
+
 void removeJail(int jailId)                   // Delete + persist
+
 void releasePlayer(UUID playerId)             // Release + persist all
+
 void saveAll()                                // Flush to database
+
 void reload()                                 // Clear + reload from database
 ```
 
@@ -1026,32 +1082,33 @@ The module fires 11 custom Bukkit events:
 ### Listening to Events
 
 ```java
+
 @EventHandler
 public void onWantedStart(WantedStartEvent event) {
-    Player player = event.getPlayer();
-    int level = event.getWantedLevel();
-    // Spawn cops, update scoreboard, etc.
+	Player player = event.getPlayer();
+	int    level  = event.getWantedLevel();
+	// Spawn cops, update scoreboard, etc.
 }
 
 @EventHandler
 public void onCopDeath(CopDeathEvent event) {
-    Player killer = event.getKiller();
-    if (killer != null) {
-        // Award experience, increment wanted level, etc.
-    }
+	Player killer = event.getKiller();
+	if (killer != null) {
+		// Award experience, increment wanted level, etc.
+	}
 }
 
 @EventHandler
 public void onCivilianDeath(CivilianDeathEvent event) {
-    CivilianNpc npc = event.getCivilianNpc();
-    double xp = event.getExperience();
-    // Award XP, check if NPC counts for wanted level, etc.
+	CivilianNpc npc = event.getCivilianNpc();
+	double      xp  = event.getExperience();
+	// Award XP, check if NPC counts for wanted level, etc.
 }
 
 @EventHandler
 public void onCuffed(CuffedEvent event) {
-    Player target = event.getTarget();
-    // Trigger detainment, jail the player, etc.
+	Player target = event.getTarget();
+	// Trigger detainment, jail the player, etc.
 }
 ```
 
@@ -1083,89 +1140,89 @@ these via contract interfaces (`CopSettings`, `WantedSettings`, `BountySettings`
 
 ```yaml
 Wanted:
-  enable: true
-  repeating_timer: 60          # Base interval (seconds) for wanted decay
-  timer_multiplier_enabled: true
-  timer_multiplier: 1.5        # Timer interval scales by multiplier^level
-  take_money: true
-  take_money_amount: 100.0     # Base money lost per decay tick
-  take_money_multiplier: 1.2   # Money scales by multiplier^level
-  max_level: 5                 # Maximum wanted stars
-  increments: 1                # Stars added per incrementLevel()
-  kill_combo:
-    kill_counter: [3, 5, 7, 10, 15]   # Kills needed per level threshold
-    reset_after: 30                     # Seconds of inactivity before combo resets
+   enable: true
+   repeating_timer: 60          # Base interval (seconds) for wanted decay
+   timer_multiplier_enabled: true
+   timer_multiplier: 1.5        # Timer interval scales by multiplier^level
+   take_money: true
+   take_money_amount: 100.0     # Base money lost per decay tick
+   take_money_multiplier: 1.2   # Money scales by multiplier^level
+   max_level: 5                 # Maximum wanted stars
+   increments: 1                # Stars added per incrementLevel()
+   kill_combo:
+      kill_counter: [3, 5, 7, 10, 15]   # Kills needed per level threshold
+      reset_after: 30                     # Seconds of inactivity before combo resets
 ```
 
 #### Cop Behavior Section
 
 ```yaml
 Cops:
-  max_cops_per_player: 8
-  cops_per_wanted_level:       # Map of wanted level -> target cop count
-    1: 2
-    2: 3
-    3: 5
-    4: 6
-    5: 8
-  behaviour:
-    ai_tick_rate: 4            # Ticks between AI evaluations
-    spawn_check_rate: 60       # Ticks between spawn checks
-    cuff_radius: 3.5           # Blocks
-    max_cuff_attempts: 3
-    cuff_cooldown_ticks: 40    # Wind-up duration
-    alert_range: 32.0          # Blocks
-    combat_range: 5.0          # Melee range (ranged = 3x)
-    attack_cooldown_ticks: 10
-  spawn:
-    min_distance: 20.0
-    max_distance: 45.0
-    phase1_min_distance: 30.0
-    radius_shrink_step: 5.0
-    vertical_search_range: 10
-    spawn_y_offset: 0
-    min_open_horizontal_sides: 2
-    spawner_preference_radius: 40.0
-    visibility_check_distance: 30.0
-    phase1_attempts: 10
-    phase2_attempts: 5
-  return:
-    max_return_ticks: 200
-    station_arrival_distance: 3.0
-  navigation:
-    recalculation_ticks: 10
-    stuck_check_interval_ticks: 5
-    max_stuck_checks: 4
-    max_hopeless_stuck_checks: 8
-    hopeless_close_threshold: 5.0
-    min_progress_distance: 0.5
-    ranged_min_distance: 8.0
-    ranged_max_distance: 25.0
-    min_repath_after_loss_ticks: 2
-  weapon:
-    starting_ammo_magazines: 3
+   max_cops_per_player: 8
+   cops_per_wanted_level: # Map of wanted level -> target cop count
+      1: 2
+      2: 3
+      3: 5
+      4: 6
+      5: 8
+   behaviour:
+      ai_tick_rate: 4            # Ticks between AI evaluations
+      spawn_check_rate: 60       # Ticks between spawn checks
+      cuff_radius: 3.5           # Blocks
+      max_cuff_attempts: 3
+      cuff_cooldown_ticks: 40    # Wind-up duration
+      alert_range: 32.0          # Blocks
+      combat_range: 5.0          # Melee range (ranged = 3x)
+      attack_cooldown_ticks: 10
+   spawn:
+      min_distance: 20.0
+      max_distance: 45.0
+      phase1_min_distance: 30.0
+      radius_shrink_step: 5.0
+      vertical_search_range: 10
+      spawn_y_offset: 0
+      min_open_horizontal_sides: 2
+      spawner_preference_radius: 40.0
+      visibility_check_distance: 30.0
+      phase1_attempts: 10
+      phase2_attempts: 5
+   return:
+      max_return_ticks: 200
+      station_arrival_distance: 3.0
+   navigation:
+      recalculation_ticks: 10
+      stuck_check_interval_ticks: 5
+      max_stuck_checks: 4
+      max_hopeless_stuck_checks: 8
+      hopeless_close_threshold: 5.0
+      min_progress_distance: 0.5
+      ranged_min_distance: 8.0
+      ranged_max_distance: 25.0
+      min_repath_after_loss_ticks: 2
+   weapon:
+      starting_ammo_magazines: 3
 ```
 
 #### Detainment Section
 
 ```yaml
 Detainment:
-  jail_max_capacity: 10        # Max players per jail cell
+   jail_max_capacity: 10        # Max players per jail cell
 ```
 
 #### Civilian Section
 
 ```yaml
 Civilians:
-  behaviour:
-    ai_enabled: true
-    ai_tick_rate: 4
-    spawner_check_interval: 40
-  spawn:
-    activation_radius: 48.0
-    despawn_radius: 64.0
-    max_npcs_per_spawner: 3
-    default_type_id: "pedestrian"
+   behaviour:
+      ai_enabled: true
+      ai_tick_rate: 4
+      spawner_check_interval: 40
+   spawn:
+      activation_radius: 48.0
+      despawn_radius: 64.0
+      max_npcs_per_spawner: 3
+      default_type_id: "pedestrian"
 ```
 
 ### cops.yml
@@ -1174,92 +1231,92 @@ Per-tier cop configuration loaded by `CopLoader`:
 
 ```yaml
 tiers:
-  1:
-    display_name: "&9Officer"
-    health: 20.0
-    damage: 3.0
-    speed: 1.0
-    cuff_radius: 3.5
-    can_use_weapons: false
-    skip_cuffing: false
-    weapon_pool:
-      - WOODEN_SWORD
-    armor:
-      helmet: CHAINMAIL_HELMET
-      chestplate: CHAINMAIL_CHESTPLATE
-      leggings: CHAINMAIL_LEGGINGS
-      boots: CHAINMAIL_BOOTS
-  2:
-    display_name: "&1Sergeant"
-    # ... higher stats
-  3:
-    display_name: "&5Lieutenant"
-    can_use_weapons: true
-    weapon_name_pool:
-      - "Pistol"
-    # ...
-  4:
-    display_name: "&4SWAT"
-    skip_cuffing: true
-    weapon_name_pool:
-      - "Rifle"
-      - "SMG"
-    # ...
-  5:
-    display_name: "&cMilitary"
-    skip_cuffing: true
-    # ... highest stats and weapons
+   1:
+      display_name: "&9Officer"
+      health: 20.0
+      damage: 3.0
+      speed: 1.0
+      cuff_radius: 3.5
+      can_use_weapons: false
+      skip_cuffing: false
+      weapon_pool:
+         - WOODEN_SWORD
+      armor:
+         helmet: CHAINMAIL_HELMET
+         chestplate: CHAINMAIL_CHESTPLATE
+         leggings: CHAINMAIL_LEGGINGS
+         boots: CHAINMAIL_BOOTS
+   2:
+      display_name: "&1Sergeant"
+      # ... higher stats
+   3:
+      display_name: "&5Lieutenant"
+      can_use_weapons: true
+      weapon_name_pool:
+         - "Pistol"
+      # ...
+   4:
+      display_name: "&4SWAT"
+      skip_cuffing: true
+      weapon_name_pool:
+         - "Rifle"
+         - "SMG"
+      # ...
+   5:
+      display_name: "&cMilitary"
+      skip_cuffing: true
+      # ... highest stats and weapons
 ```
 
-### entity_marker.yml
+### civilians.yml
 
-Civilian type and group definitions loaded by `EntityMarkerLoader`:
+Civilian type and group definitions loaded by `CiviliansLoader`:
 
 ```yaml
 types:
-  pedestrian:
-    display_name: "&7Pedestrian"
-    entity_type: PLAYER
-    health: 20.0
-    hostile: false
-    ai:
-      wander_enabled: true
-      wander_range: 8
-      flee_enabled: true
-      flee_range: 20
-      combat_enabled: false
-    wearables:
-      helmet: LEATHER_HELMET
-    drops:
-      money: 5.0
-      experience: 10.0
-  gang_member:
-    display_name: "&cGang Member"
-    hostile: true
-    ai:
-      wander_enabled: true
-      wander_range: 6
-      flee_enabled: false
-      combat_enabled: true
-      attack_damage: 4.0
-      attack_range: 6.0
-    weapon_name_pool:
-      - "Pistol"
-  trader:
-    display_name: "&6Trader"
-    hostile: false
-    ai:
-      wander_enabled: false
-    inventory:
-      title: "&6Trader"
-      items:
-        - "DIAMOND_SWORD:1:5000"
+   pedestrian:
+      display_name: "&7Pedestrian"
+      entity_type: PLAYER
+      health: 20.0
+      hostile: false
+      ai:
+         wander_enabled: true
+         wander_range: 8
+         flee_enabled: true
+         flee_range: 20
+         combat_enabled: false
+      wearables:
+         helmet: LEATHER_HELMET
+      drops:
+         money: 5.0
+         experience: 10.0
+   gang_member:
+      display_name: "&cGang Member"
+      hostile: true
+      ai:
+         wander_enabled: true
+         wander_range: 6
+         flee_enabled: false
+         combat_enabled: true
+         attack_damage: 4.0
+         attack_range: 6.0
+      weapon_name_pool:
+         - "Pistol"
+   trader:
+      display_name: "&6Trader"
+      hostile: false
+      ai:
+         wander_enabled: false
+      inventory:
+         title: "&6Trader"
+         items:
+            - "DIAMOND_SWORD:1:5000"
 
 groups:
-  street_gang:
-    members:
-      gang_member: 3
-    stay_together_range: 15.0
+   street_gang:
+      members:
+         gang_member: 3
+      stay_together_range: 15.0
 ```
 
 ---

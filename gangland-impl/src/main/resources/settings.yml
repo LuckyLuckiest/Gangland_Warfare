@@ -421,7 +421,7 @@ NPC_Navigation:
 # +----------+ #
 
 # Configuration for civilian NPC AI behavior. Per-type behavior (wander range, flee range, etc.)
-# is configured in entity_marker.yml.
+# is configured in civilians.yml.
 Civilians:
    Behaviour:
       # Set to false to disable all civilian NPC AI ticking.
@@ -467,7 +467,7 @@ Civilians:
       # Ticks between each proximity check cycle. 100 ticks = 5 seconds at 20 TPS.
       Check_Interval: 100
       # Default civilian type ID to use when a spawner has no pinned type.
-      # Must match a type key defined in entity_marker.yml. Leave empty to skip untyped spawners.
+      # Must match a type key defined in civilians.yml. Leave empty to skip untyped spawners.
       Default_Type_Id: ""
 
 # +------------+ #

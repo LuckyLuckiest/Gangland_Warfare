@@ -14,18 +14,18 @@ file is renamed with a `-old` suffix and a fresh default is generated.
 
 ## Configuration Files
 
-| File                | Purpose                                      |
-|---------------------|----------------------------------------------|
-| `settings.yml`      | Main runtime configuration (all systems)     |
-| `cops.yml`          | Per-tier cop NPC definitions                 |
-| `entity_marker.yml` | Civilian type definitions and spawner config |
-| `cars.yml`          | Car type definitions                         |
-| `wearables.yml`     | Wearable armor definitions                   |
-| `unique_items.yml`  | Unique item definitions                      |
-| `ammunition.yml`    | Ammunition type definitions                  |
-| `scoreboard.yml`    | Scoreboard layout and lines                  |
-| `repair.yml`        | Repair material definitions                  |
-| `plugin.yml`        | Spigot plugin metadata (not user-editable)   |
+| File               | Purpose                                      |
+|--------------------|----------------------------------------------|
+| `settings.yml`     | Main runtime configuration (all systems)     |
+| `cops.yml`         | Per-tier cop NPC definitions                 |
+| `civilians.yml`    | Civilian type definitions and spawner config |
+| `cars.yml`         | Car type definitions                         |
+| `wearables.yml`    | Wearable armor definitions                   |
+| `unique_items.yml` | Unique item definitions                      |
+| `ammunition.yml`   | Ammunition type definitions                  |
+| `scoreboard.yml`   | Scoreboard layout and lines                  |
+| `repair.yml`       | Repair material definitions                  |
+| `plugin.yml`       | Spigot plugin metadata (not user-editable)   |
 
 ---
 
@@ -401,7 +401,7 @@ tiers:
 
 ---
 
-## entity_marker.yml
+## civilians.yml
 
 Defines civilian NPC types and spawner configurations.
 

@@ -60,7 +60,7 @@ public class CivilianNpcFactory {
 	 * Spawns and configures a single civilian NPC of the given type.
 	 *
 	 * @param spawnLocation the target spawn location
-	 * @param typeConfig type configuration resolved from entity_marker.yml
+	 * @param typeConfig type configuration resolved from civilians.yml
 	 * @param groupId the group this civilian belongs to, or {@code null}
 	 * @param groupConfig group trait overrides (health/speed bonus), or {@code null}
 	 *

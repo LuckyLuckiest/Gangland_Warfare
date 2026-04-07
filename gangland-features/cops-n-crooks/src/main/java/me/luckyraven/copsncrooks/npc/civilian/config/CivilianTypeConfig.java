@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Full configuration for one civilian NPC type (e.g. "pedestrian", "gang_member", "trader").
  *
- * @param typeId unique key from entity_marker.yml
+ * @param typeId unique key from civilians.yml
  * @param displayName raw color-coded name string (translated on spawn via ChatUtil)
  * @param entityType Citizens NPC body entity type
  * @param health max health in half-hearts

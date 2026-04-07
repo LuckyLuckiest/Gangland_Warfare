@@ -301,7 +301,7 @@ Concrete sign type implementations for the sign-api framework.
 | `settings.yml`           | Main runtime configuration (database type, auto-save interval, economy settings, world settings).                                |
 | `commands.json`          | Command metadata (descriptions, usage, permissions) for the help system.                                                         |
 | `cops.yml`               | Cop NPC tiers, equipment, and spawn configuration.                                                                               |
-| `entity_marker.yml`      | Civilian NPC types, groups, behaviors, and equipment configuration.                                                              |
+| `civilians.yml`          | Civilian NPC types, groups, behaviors, and equipment configuration.                                                              |
 | `ammunition.yml`         | Ammunition type definitions (name, material, max stack, price).                                                                  |
 | `cars.yml`               | Vehicle type definitions (speed, fuel capacity, model).                                                                          |
 | `scoreboard.yml`         | Scoreboard layout and line definitions with placeholders.                                                                        |
@@ -691,19 +691,19 @@ Civilian NPC system.
 
 **Civilian Configuration Classes (`config/`):**
 
-| Class                                 | Description                                                               |
-|---------------------------------------|---------------------------------------------------------------------------|
-| `CivilianSettings.java`               | Interface contract for civilian global settings.                          |
-| `CivilianGroupConfig.java`            | Configuration for a civilian group (spawn weight, max count).             |
-| `CivilianTypeConfig.java`             | Configuration for a civilian type (skin, name format).                    |
-| `CivilianAIBehaviorConfig.java`       | AI behavior parameters (flee distance, combat aggression, wander radius). |
-| `CivilianNavigationConfig.java`       | Pathfinding settings (speed, range).                                      |
-| `CivilianInventoryConfig.java`        | Equipment and inventory configuration.                                    |
-| `CivilianWearableConfig.java`         | Armor configuration for civilians.                                        |
-| `CivilianDropConfig.java`             | Drop table configuration on death.                                        |
-| `EntityMarkerConfig.java`             | Top-level entity marker configuration container.                          |
-| `EntityMarkerLoader.java`             | Loads entity marker config from YAML.                                     |
-| `YamlEntityMarkerConfigProvider.java` | YAML-based implementation of entity marker config.                        |
+| Class                              | Description                                                               |
+|------------------------------------|---------------------------------------------------------------------------|
+| `CivilianSettings.java`            | Interface contract for civilian global settings.                          |
+| `CivilianGroupConfig.java`         | Configuration for a civilian group (spawn weight, max count).             |
+| `CivilianTypeConfig.java`          | Configuration for a civilian type (skin, name format).                    |
+| `CivilianAIBehaviorConfig.java`    | AI behavior parameters (flee distance, combat aggression, wander radius). |
+| `CivilianNavigationConfig.java`    | Pathfinding settings (speed, range).                                      |
+| `CivilianInventoryConfig.java`     | Equipment and inventory configuration.                                    |
+| `CivilianWearableConfig.java`      | Armor configuration for civilians.                                        |
+| `CivilianDropConfig.java`          | Drop table configuration on death.                                        |
+| `CiviliansConfig.java`             | Top-level civilians configuration container.                              |
+| `CiviliansLoader.java`             | Loads civilians config from YAML.                                         |
+| `YamlCiviliansConfigProvider.java` | YAML-based implementation of civilians config.                            |
 
 ### Subpackage: `npc/police/`
 

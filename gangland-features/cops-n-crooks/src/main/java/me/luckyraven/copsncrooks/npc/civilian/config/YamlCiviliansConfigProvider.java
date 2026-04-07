@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 /**
- * Reads {@code entity_marker.yml} and builds an {@link EntityMarkerConfig}.
+ * Reads {@code civilians.yml} and builds a {@link CiviliansConfig}.
  * <p>
  * Weapon-pool and wearable entries follow the same parsing convention as {@code YamlCopConfigProvider}: entries
  * prefixed with {@code weapon:} go into {@code weaponNamePool} for gangland weapon resolution; all other entries are
@@ -23,19 +23,19 @@ import java.util.*;
  */
 @Getter
 @CustomLog
-public class YamlEntityMarkerConfigProvider {
+public class YamlCiviliansConfigProvider {
 
-	private final EntityMarkerConfig config;
+	private final CiviliansConfig config;
 
-	public YamlEntityMarkerConfigProvider(FileConfiguration yaml, boolean aiEnabled, int aiTickRate,
-	                                      @Nullable ItemParser itemParser) {
+	public YamlCiviliansConfigProvider(FileConfiguration yaml, boolean aiEnabled, int aiTickRate,
+	                                   @Nullable ItemParser itemParser) {
 		List<String> defaultCivilian = loadDefaultEntities(yaml, "Default_Entities.Civilian");
 		List<String> defaultPolice   = loadDefaultEntities(yaml, "Default_Entities.Police");
 
 		Map<String, CivilianTypeConfig>  types  = loadTypes(yaml, itemParser, aiEnabled);
 		Map<String, CivilianGroupConfig> groups = loadGroups(yaml);
 
-		this.config = new EntityMarkerConfig(defaultCivilian, defaultPolice, types, groups, aiEnabled, aiTickRate);
+		this.config = new CiviliansConfig(defaultCivilian, defaultPolice, types, groups, aiEnabled, aiTickRate);
 	}
 
 	// ── Loaders ───────────────────────────────────────────────────────────────

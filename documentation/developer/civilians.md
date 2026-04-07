@@ -100,7 +100,7 @@ Each `CivilianNpc` operates as a finite state machine with 5 states:
 
 ## Civilian Configuration
 
-### Per-Type Config (entity_marker.yml)
+### Per-Type Config (civilians.yml)
 
 Each civilian type is defined with its own behavior parameters:
 

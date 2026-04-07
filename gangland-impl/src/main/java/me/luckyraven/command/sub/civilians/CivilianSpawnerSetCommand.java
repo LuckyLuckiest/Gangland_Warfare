@@ -46,7 +46,7 @@ class CivilianSpawnerSetCommand extends SubArgument {
 			String          typeId  = args[3];
 			CivilianService service = gangland.getInitializer().getCivilianService();
 
-			if (!service.getMarkerConfig().types().containsKey(typeId)) {
+			if (!service.getCiviliansConfig().types().containsKey(typeId)) {
 				sender.sendMessage(GanglandChatUtil.commandMessage("&cUnknown type &e" + typeId + "&c."));
 				return;
 			}
@@ -58,7 +58,7 @@ class CivilianSpawnerSetCommand extends SubArgument {
 					"&aCivilian spawner &e" + typeId + "&a set at your location."));
 		}, sender -> {
 			CivilianService service = gangland.getInitializer().getCivilianService();
-			return new ArrayList<>(service.getMarkerConfig().types().keySet());
+			return new ArrayList<>(service.getCiviliansConfig().types().keySet());
 		});
 
 		this.addSubArgument(typeArg);

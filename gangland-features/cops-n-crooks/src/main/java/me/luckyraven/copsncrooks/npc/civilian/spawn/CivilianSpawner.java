@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
  * A single registered civilian spawn point.
  * <p>
  * A spawner is either a <em>type spawner</em> (non-null {@code typeId}) that spawns individual civilians, or a
- * <em>group spawner</em> (non-null {@code groupId}) that spawns a full civilian group from entity_marker.yml.
+ * <em>group spawner</em> (non-null {@code groupId}) that spawns a full civilian group from civilians.yml.
  * Both fields being null causes the proximity system to fall back to the configured default type.
  */
 @Getter

@@ -44,7 +44,7 @@ public interface CivilianSettings extends NpcNavigationConfig {
 
 	/**
 	 * Default civilian type ID to use when a spawner has no pinned type. Must match a type key defined in
-	 * entity_marker.yml. Empty string disables auto-spawn for untyped spawners.
+	 * civilians.yml. Empty string disables auto-spawn for untyped spawners.
 	 */
 	String getCivilianSpawnerDefaultTypeId();
 }

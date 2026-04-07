@@ -5,7 +5,7 @@ import me.luckyraven.copsncrooks.entity.EntitySpawner;
 import me.luckyraven.copsncrooks.entity.SpawnConfigProvider;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianTypeConfig;
-import me.luckyraven.copsncrooks.npc.civilian.config.EntityMarkerConfig;
+import me.luckyraven.copsncrooks.npc.civilian.config.CiviliansConfig;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.persistence.repository.IRepository;
 import org.bukkit.Location;
@@ -21,22 +21,22 @@ import org.jetbrains.annotations.Nullable;
 @CustomLog
 public class CivilianSpawnManager extends EntitySpawner<CivilianSpawner> {
 
-	private final CivilianService    civilianService;
-	private final EntityMarkerConfig markerConfig;
+	private final CivilianService civilianService;
+	private final CiviliansConfig civiliansConfig;
 
 	/**
 	 * @param config spawn location config (min/max distances, clearance, etc.)
 	 * @param repository persistent spawner storage; may be {@code null} to skip persistence
 	 * @param civilianService manages active civilian NPCs and provides the factory
-	 * @param markerConfig loaded entity_marker.yml config (used to resolve type definitions)
+	 * @param civiliansConfig loaded civilians.yml config (used to resolve type definitions)
 	 */
 	public CivilianSpawnManager(SpawnConfigProvider config,
 	                            IRepository<CivilianSpawner> repository,
 	                            CivilianService civilianService,
-	                            EntityMarkerConfig markerConfig) {
+	                            CiviliansConfig civiliansConfig) {
 		super(config, repository);
 		this.civilianService = civilianService;
-		this.markerConfig    = markerConfig;
+		this.civiliansConfig = civiliansConfig;
 	}
 
 	// ── EntitySpawner contract ────────────────────────────────────────────────
@@ -48,7 +48,7 @@ public class CivilianSpawnManager extends EntitySpawner<CivilianSpawner> {
 	 */
 	@Nullable
 	public CivilianNpc spawnCivilian(Location location, String typeId) {
-		CivilianTypeConfig typeConfig = markerConfig.types().get(typeId);
+		CivilianTypeConfig typeConfig = civiliansConfig.types().get(typeId);
 		if (typeConfig == null) {
 			log.warn("Cannot spawn civilian: unknown type '{}'.", typeId);
 			return null;
@@ -78,7 +78,7 @@ public class CivilianSpawnManager extends EntitySpawner<CivilianSpawner> {
 
 	/**
 	 * Creates a type spawner at the given location. When a player enters the activation radius this spawner will spawn
-	 * civilians of the given {@code typeId} defined in entity_marker.yml.
+	 * civilians of the given {@code typeId} defined in civilians.yml.
 	 */
 	public void setTypeSpawnerLocation(Location location, String typeId) {
 		ID++;
@@ -89,7 +89,7 @@ public class CivilianSpawnManager extends EntitySpawner<CivilianSpawner> {
 
 	/**
 	 * Creates a group spawner at the given location. When a player enters the activation radius this spawner will spawn
-	 * a full civilian group defined by {@code groupId} in entity_marker.yml.
+	 * a full civilian group defined by {@code groupId} in civilians.yml.
 	 */
 	public void setGroupSpawnerLocation(Location location, String groupId) {
 		ID++;
