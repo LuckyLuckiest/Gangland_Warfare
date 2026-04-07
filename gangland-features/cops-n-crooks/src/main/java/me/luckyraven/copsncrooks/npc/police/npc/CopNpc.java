@@ -46,7 +46,7 @@ public class CopNpc extends AbstractNpc {
 
 	public CopNpc(NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors,
 	              Location spawnLocation, CopConfigProvider configProvider) {
-		super(npc, spawnLocation, configProvider);
+		super(npc, spawnLocation, configProvider, tierConfig.difficulty());
 		this.tierConfig   = tierConfig;
 		this.behaviors    = behaviors;
 		this.combatForced = false;

@@ -31,6 +31,8 @@ Default_Entities:
 # Inventory     — Optional trader inventory opened on right-click. Omit for non-trader types.
 # AI            — Per-type behavior settings (wander range, flee, combat).
 #                 Technical navigation settings (recalculation ticks, stuck detection) live in settings.yml.
+#                 Combat.Difficulty selects a combat profile (EASY, NORMAL, HARD, DEADLY) that scales
+#                 aim error, reaction time, fire rate, and melee damage. Defaults to NORMAL when omitted.
 
 Types:
    pedestrian:
@@ -97,6 +99,7 @@ Types:
             Attack_Damage: 4.0
             Attack_Range: 12.0
             Attack_Interval_Ticks: 20
+            Difficulty: NORMAL
 
    trader:
       Display_Name: "&e&lTrader"

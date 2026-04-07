@@ -31,6 +31,8 @@
 #     Chestplate:   Armor piece for the chest slot; leave blank for none
 #     Leggings:     Armor piece for the legs slot; leave blank for none
 #     Boots:        Armor piece for the feet slot; leave blank for none
+#   Difficulty:     Combat profile that scales aim error, reaction time, fire rate, and melee
+#                   damage. One of EASY, NORMAL, HARD, DEADLY. Defaults to NORMAL when omitted.
 # ============================================
 Cops:
    Tiers:
@@ -42,6 +44,7 @@ Cops:
          Cuff_Radius: 3.0
          Can_Use_Weapons: false
          Skip_Cuffing: false
+         Difficulty: EASY
          # Accepts vanilla materials (IRON_SWORD) or custom items (weapon:rifle, LEATHER_HELMET{color=blue})
          Weapon_Pool:
             - "WOODEN_SWORD"
@@ -58,6 +61,7 @@ Cops:
          Cuff_Radius: 3.5
          Can_Use_Weapons: false
          Skip_Cuffing: false
+         Difficulty: EASY
          Weapon_Pool:
             - "STONE_SWORD"
          Wearables:
@@ -73,6 +77,7 @@ Cops:
          Cuff_Radius: 4.0
          Can_Use_Weapons: true
          Skip_Cuffing: false
+         Difficulty: NORMAL
          Weapon_Pool:
             - "weapon:rifle"
             - "CROSSBOW"
@@ -89,6 +94,7 @@ Cops:
          Cuff_Radius: 4.5
          Can_Use_Weapons: true
          Skip_Cuffing: true
+         Difficulty: HARD
          Weapon_Pool:
             - "weapon:rifle"
             - "CROSSBOW"
@@ -105,6 +111,7 @@ Cops:
          Cuff_Radius: 5.0
          Can_Use_Weapons: true
          Skip_Cuffing: true
+         Difficulty: DEADLY
          Weapon_Pool:
             - "weapon:rifle"
             - "CROSSBOW"

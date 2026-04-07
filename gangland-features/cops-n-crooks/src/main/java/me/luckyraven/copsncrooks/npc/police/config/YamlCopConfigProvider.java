@@ -1,6 +1,8 @@
 package me.luckyraven.copsncrooks.npc.police.config;
 
 import com.cryptomorin.xseries.XMaterial;
+import lombok.CustomLog;
+import me.luckyraven.copsncrooks.entity.npc.NpcDifficulty;
 import me.luckyraven.item.ItemParser;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -18,6 +20,7 @@ import java.util.*;
  * names. Cop-count scaling is delegated to {@link CopSettings}, whose implementation lives in {@code gangland-impl} and
  * reads from {@code settings.yml} via {@code SettingAddon}.
  */
+@CustomLog
 public class YamlCopConfigProvider implements CopConfigProvider {
 
 	private final Map<Integer, CopTierConfig> tiers;
@@ -350,9 +353,24 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 			                                   parseItem(section.getString("Wearables.Helmet"), itemParser),
 			                                   parseItem(section.getString("Wearables.Chestplate"), itemParser),
 			                                   parseItem(section.getString("Wearables.Leggings"), itemParser),
-			                                   parseItem(section.getString("Wearables.Boots"), itemParser));
+			                                   parseItem(section.getString("Wearables.Boots"), itemParser),
+			                                   parseDifficulty(section.getString("Difficulty"), "tier " + tierNum));
 
 			tiers.put(tierNum, tierConfig);
+		}
+	}
+
+	/**
+	 * Parses a difficulty key from YAML, defaulting to {@link NpcDifficulty#NORMAL} when the value is missing or
+	 * unrecognised. Logs a single warning per invalid value so config typos surface during startup.
+	 */
+	private NpcDifficulty parseDifficulty(@Nullable String raw, String contextLabel) {
+		if (raw == null || raw.isBlank()) return NpcDifficulty.NORMAL;
+		try {
+			return NpcDifficulty.valueOf(raw.trim().toUpperCase(Locale.ROOT));
+		} catch (IllegalArgumentException e) {
+			log.warning("Unknown NPC difficulty '" + raw + "' for " + contextLabel + " — defaulting to NORMAL.");
+			return NpcDifficulty.NORMAL;
 		}
 	}
 

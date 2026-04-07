@@ -74,7 +74,7 @@ public class CivilianNpc extends AbstractNpc {
 	public CivilianNpc(NPC npc, CivilianTypeConfig typeConfig, @Nullable String groupId,
 	                   Map<CivilianState, CivilianBehavior> behaviors, Location spawnLocation,
 	                   CivilianNavigationConfig navConfig, @Nullable ItemParser itemParser) {
-		super(npc, spawnLocation, navConfig);
+		super(npc, spawnLocation, navConfig, typeConfig.ai().difficulty());
 		this.typeConfig = typeConfig;
 		this.groupId    = groupId;
 		this.behaviors  = behaviors;

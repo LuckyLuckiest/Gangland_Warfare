@@ -59,6 +59,9 @@ public abstract class AbstractNpc {
 	protected       boolean    reloading;
 	protected       JavaPlugin plugin;
 
+	// ── Difficulty ───────────────────────────────────────────────────────────
+	@Getter
+	protected NpcDifficulty difficulty;
 	// ── State ────────────────────────────────────────────────────────────────
 	@Getter
 	protected boolean markedForRemoval;
@@ -66,7 +69,11 @@ public abstract class AbstractNpc {
 	@Setter
 	protected int     despawnTicks;
 	protected int     attackCooldown;
-
+	/**
+	 * Last target {@link #attack}/{@link #attackEntity} engaged — used to detect a fresh acquisition for
+	 * reaction-time.
+	 */
+	private   LivingEntity  previousAttackTarget;
 	// ── Navigation state ─────────────────────────────────────────────────────
 	private Location lastNavigationTarget;
 	private Location lastProgressLocation;
@@ -75,10 +82,11 @@ public abstract class AbstractNpc {
 	private int      consecutiveStuckChecks;
 	private boolean  navigationHopeless;
 
-	protected AbstractNpc(NPC npc, Location spawnLocation, NpcNavigationConfig navConfig) {
+	protected AbstractNpc(NPC npc, Location spawnLocation, NpcNavigationConfig navConfig, NpcDifficulty difficulty) {
 		this.npc           = npc;
 		this.spawnLocation = spawnLocation;
 		this.aiTickRate    = navConfig.getAiTickRate();
+		this.difficulty    = difficulty != null ? difficulty : NpcDifficulty.NORMAL;
 
 		this.navigationRecalculationTicks = navConfig.getNavigationRecalculationTicks();
 		this.stuckCheckIntervalTicks      = navConfig.getStuckCheckIntervalTicks();
@@ -219,8 +227,12 @@ public abstract class AbstractNpc {
 	 * fallback. Does nothing if the target is dead or in a downed state.
 	 */
 	public void attack(Player player) {
-		if (!isValid() || !canAttack() || player == null) return;
+		if (!isValid() || player == null) return;
 		if (player.isDead() || DownedPlayerRegistry.isDowned(player.getUniqueId())) return;
+
+		applyReactionTimeOnTargetSwitch(player);
+
+		if (!canAttack()) return;
 
 		faceTarget(player);
 
@@ -242,8 +254,12 @@ public abstract class AbstractNpc {
 	 * NPC-to-NPC combat where the target is not a player.
 	 */
 	public void attackEntity(LivingEntity target) {
-		if (!isValid() || !canAttack() || target == null) return;
+		if (!isValid() || target == null) return;
 		if (target.isDead()) return;
+
+		applyReactionTimeOnTargetSwitch(target);
+
+		if (!canAttack()) return;
 
 		faceTargetEntity(target);
 
@@ -589,7 +605,8 @@ public abstract class AbstractNpc {
 
 		Location shooterEye = entity.getLocation().add(0, 1.6, 0);
 		Vector   direction  = player.getEyeLocation().toVector().subtract(shooterEye.toVector()).normalize();
-		Location rotated    = entity.getLocation().setDirection(direction);
+		direction = applyAimError(direction);
+		Location rotated = entity.getLocation().setDirection(direction);
 		entity.teleport(rotated);
 	}
 
@@ -599,7 +616,8 @@ public abstract class AbstractNpc {
 
 		Location shooterEye = entity.getLocation().add(0, 1.6, 0);
 		Vector   direction  = target.getEyeLocation().toVector().subtract(shooterEye.toVector()).normalize();
-		Location rotated    = entity.getLocation().setDirection(direction);
+		direction = applyAimError(direction);
+		Location rotated = entity.getLocation().setDirection(direction);
 		entity.teleport(rotated);
 	}
 
@@ -638,7 +656,7 @@ public abstract class AbstractNpc {
 		}
 
 		int cooldown = gun.getProjectileData().getCooldown();
-		attackCooldown = Math.max(cooldown, 5);
+		attackCooldown = scaleCooldown(Math.max(cooldown, 5));
 
 		if (heldWeapon.isMagazineEmpty()) {
 			triggerReload();
@@ -674,7 +692,7 @@ public abstract class AbstractNpc {
 			player.damage(getAttackDamage(), shooter);
 		}
 
-		attackCooldown = 15;
+		attackCooldown = scaleCooldown(15);
 	}
 
 	protected void performMeleeAttack(Player player) {
@@ -683,8 +701,8 @@ public abstract class AbstractNpc {
 		LivingEntity entity = getEntity();
 		if (entity == null) return;
 
-		player.damage(getAttackDamage(), entity);
-		attackCooldown = 5;
+		player.damage(getAttackDamage() * difficulty.getMeleeDamageMultiplier(), entity);
+		attackCooldown = scaleCooldown(5);
 
 		Vector knockback = player.getLocation()
 		                         .toVector()
@@ -701,8 +719,8 @@ public abstract class AbstractNpc {
 		LivingEntity entity = getEntity();
 		if (entity == null) return;
 
-		target.damage(getAttackDamage(), entity);
-		attackCooldown = 5;
+		target.damage(getAttackDamage() * difficulty.getMeleeDamageMultiplier(), entity);
+		attackCooldown = scaleCooldown(5);
 
 		Vector knockback = target.getLocation()
 		                         .toVector()
@@ -730,8 +748,6 @@ public abstract class AbstractNpc {
 		equipment.setItemInMainHand(builder.build());
 	}
 
-	// ── Navigation helpers ────────────────────────────────────────────────────
-
 	protected boolean isHoldingVanillaRangedWeapon() {
 		if (!isValid()) return false;
 
@@ -745,6 +761,49 @@ public abstract class AbstractNpc {
 		Material  type     = mainHand.getType();
 
 		return type == Material.BOW || type == Material.CROSSBOW;
+	}
+
+	/**
+	 * Applies a difficulty-driven random angular offset to the given aim direction. Because {@code WeaponShooting}
+	 * later reads {@code shooter.getEyeLocation().getDirection()} after the NPC has been teleported to face the
+	 * returned vector, the imperfect aim propagates into the bullet path with no changes required to the weapon module.
+	 * Weapon-level spread compounds on top of this naturally via {@code SpreadManager.applySpread}.
+	 */
+	private Vector applyAimError(Vector direction) {
+		double error = difficulty.getAimError();
+		if (error <= 0) return direction;
+
+		ThreadLocalRandom rng     = ThreadLocalRandom.current();
+		double            offsetX = (rng.nextDouble() - 0.5) * error;
+		double            offsetY = (rng.nextDouble() - 0.5) * error;
+		double            offsetZ = (rng.nextDouble() - 0.5) * error;
+		return direction.add(new Vector(offsetX, offsetY, offsetZ)).normalize();
+	}
+
+	/**
+	 * Injects a difficulty-driven reaction-time delay into {@link #attackCooldown} on the first attack against a
+	 * freshly acquired target. The next {@link #canAttack()} check after this method runs will return false until the
+	 * reaction window elapses, then sustained fire on the same target uses the normal per-shot cooldown.
+	 */
+	private void applyReactionTimeOnTargetSwitch(LivingEntity target) {
+		if (target == previousAttackTarget) return;
+		previousAttackTarget = target;
+
+		int reaction = difficulty.getReactionTimeTicks();
+		if (reaction > 0 && attackCooldown < reaction) {
+			attackCooldown = reaction;
+		}
+	}
+
+	// ── Navigation helpers ────────────────────────────────────────────────────
+
+	/**
+	 * Scales a base cooldown value by the difficulty's fire-rate multiplier, with a minimum floor of 5 ticks so an
+	 * aggressive multiplier cannot collapse the cooldown to zero.
+	 */
+	private int scaleCooldown(int baseCooldown) {
+		int scaled = (int) Math.round(baseCooldown * difficulty.getFireRateMultiplier());
+		return Math.max(scaled, 5);
 	}
 
 	private boolean shouldRecalculateNavigation(Location target) {

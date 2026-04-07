@@ -1,7 +1,9 @@
 package me.luckyraven.copsncrooks.npc.civilian.config;
 
 import com.cryptomorin.xseries.XMaterial;
+import lombok.CustomLog;
 import lombok.Getter;
+import me.luckyraven.copsncrooks.entity.npc.NpcDifficulty;
 import me.luckyraven.item.ItemParser;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -20,6 +22,7 @@ import java.util.*;
  * parsed via {@link ItemParser} into ItemStacks for {@code weaponPool}.
  */
 @Getter
+@CustomLog
 public class YamlEntityMarkerConfigProvider {
 
 	private final EntityMarkerConfig config;
@@ -97,7 +100,7 @@ public class YamlEntityMarkerConfigProvider {
 
 			// AI behavior
 			ConfigurationSection     aiSection = section.getConfigurationSection("AI");
-			CivilianAIBehaviorConfig ai        = parseAI(aiSection);
+			CivilianAIBehaviorConfig ai        = parseAI(aiSection, typeId);
 
 			// Inventory (optional — trader type)
 			CivilianInventoryConfig inventory = parseInventory(section.getConfigurationSection("Inventory"),
@@ -145,9 +148,9 @@ public class YamlEntityMarkerConfigProvider {
 
 	// ── Parse helpers ─────────────────────────────────────────────────────────
 
-	private CivilianAIBehaviorConfig parseAI(@Nullable ConfigurationSection ai) {
+	private CivilianAIBehaviorConfig parseAI(@Nullable ConfigurationSection ai, String typeId) {
 		if (ai == null) {
-			return new CivilianAIBehaviorConfig(false, 0, false, 0, false, 0.0, 0.0, 0);
+			return new CivilianAIBehaviorConfig(false, 0, false, 0, false, 0.0, 0.0, 0, NpcDifficulty.NORMAL);
 		}
 
 		boolean wanderEnabled = ai.getBoolean("Wander.Enabled", false);
@@ -161,8 +164,24 @@ public class YamlEntityMarkerConfigProvider {
 		double  attackRange         = ai.getDouble("Combat.Attack_Range", 10.0);
 		int     attackIntervalTicks = ai.getInt("Combat.Attack_Interval_Ticks", 20);
 
+		NpcDifficulty difficulty = parseDifficulty(ai.getString("Combat.Difficulty"), "civilian type '" + typeId + "'");
+
 		return new CivilianAIBehaviorConfig(wanderEnabled, wanderRange, fleeEnabled, fleeRange,
-		                                    combatEnabled, attackDamage, attackRange, attackIntervalTicks);
+		                                    combatEnabled, attackDamage, attackRange, attackIntervalTicks, difficulty);
+	}
+
+	/**
+	 * Parses a difficulty key from YAML, defaulting to {@link NpcDifficulty#NORMAL} when the value is missing or
+	 * unrecognised. Logs a single warning per invalid value so config typos surface during startup.
+	 */
+	private NpcDifficulty parseDifficulty(@Nullable String raw, String contextLabel) {
+		if (raw == null || raw.isBlank()) return NpcDifficulty.NORMAL;
+		try {
+			return NpcDifficulty.valueOf(raw.trim().toUpperCase(Locale.ROOT));
+		} catch (IllegalArgumentException e) {
+			log.warning("Unknown NPC difficulty '" + raw + "' for " + contextLabel + " — defaulting to NORMAL.");
+			return NpcDifficulty.NORMAL;
+		}
 	}
 
 	@Nullable

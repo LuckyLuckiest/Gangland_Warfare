@@ -1,5 +1,7 @@
 package me.luckyraven.copsncrooks.npc.civilian.config;
 
+import me.luckyraven.copsncrooks.entity.npc.NpcDifficulty;
+
 /**
  * Per-type AI behavior configuration for a civilian NPC.
  * <p>
@@ -14,6 +16,7 @@ package me.luckyraven.copsncrooks.npc.civilian.config;
  * @param attackDamage base damage dealt per attack
  * @param attackRange range in blocks within which a combat target is detected
  * @param attackIntervalTicks server ticks between attacks
+ * @param difficulty difficulty profile that scales aim error, reaction time, fire rate, and melee damage
  */
 public record CivilianAIBehaviorConfig(
 		boolean wanderEnabled,
@@ -23,6 +26,7 @@ public record CivilianAIBehaviorConfig(
 		boolean combatEnabled,
 		double attackDamage,
 		double attackRange,
-		int attackIntervalTicks
+		int attackIntervalTicks,
+		NpcDifficulty difficulty
 ) {
 }

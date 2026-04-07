@@ -1,5 +1,6 @@
 package me.luckyraven.copsncrooks.npc.police.config;
 
+import me.luckyraven.copsncrooks.entity.npc.NpcDifficulty;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -21,7 +22,8 @@ public record CopTierConfig(
 		ItemStack helmet,
 		ItemStack chestplate,
 		ItemStack leggings,
-		ItemStack boots
+		ItemStack boots,
+		NpcDifficulty difficulty
 ) {
 
 	/**
