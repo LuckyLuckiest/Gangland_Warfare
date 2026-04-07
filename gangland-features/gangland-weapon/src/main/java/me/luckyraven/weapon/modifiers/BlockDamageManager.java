@@ -1,9 +1,9 @@
-package me.luckyraven.weapon.projectile;
+package me.luckyraven.weapon.modifiers;
 
 import com.cryptomorin.xseries.XSound;
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.weapon.modifiers.BlockBreakModifier;
+import me.luckyraven.weapon.modifiers.action.BlockBreakModifier;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
@@ -13,7 +13,6 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -22,27 +21,17 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class BlockDamageManager {
 
-	private static final int REGENERATION_DELAY_TICKS = 100;
-	private static final int REGENERATION_STEP_TICKS  = 4;
-	private static final int MAX_DAMAGE_STAGE         = 9;
-
-	/**
-	 * Materials that should actually break when hit enough times. Other blocks will just show max crack state without
-	 * breaking.
-	 */
-	private static final Set<String> BREAKABLE_MATERIALS = Set.of("GLASS", "GLASS_PANE", "STAINED_GLASS",
-																  "STAINED_GLASS_PANE", "ICE", "PACKED_ICE", "BLUE_ICE",
-																  "FROSTED_ICE", "GLOWSTONE", "SEA_LANTERN",
-																  "REDSTONE_LAMP", "MELON", "PUMPKIN", "JACK_O_LANTERN",
-																  "TERRACOTTA", "GLAZED_TERRACOTTA");
+	private static final int MAX_DAMAGE_STAGE = 9;
 
 	private final JavaPlugin                      plugin;
+	private final BlockRegenerationSettings       settings;
 	private final Map<Location, BlockDamageState> damagedBlocks;
 
 	private int entityIdCounter;
 
-	public BlockDamageManager(JavaPlugin plugin) {
+	public BlockDamageManager(JavaPlugin plugin, BlockRegenerationSettings settings) {
 		this.plugin          = plugin;
+		this.settings        = settings;
 		this.damagedBlocks   = new ConcurrentHashMap<>();
 		this.entityIdCounter = Integer.MAX_VALUE - 100000;
 	}
@@ -63,8 +52,14 @@ public class BlockDamageManager {
 			return false;
 		}
 
+		// Ignore hits on a location that's mid-restore (block is currently AIR pending reappearance).
+		BlockDamageState existing = damagedBlocks.get(location);
+		if (existing != null && existing.isBroken()) {
+			return false;
+		}
+
 		var state = damagedBlocks.computeIfAbsent(location, loc -> new BlockDamageState(block.getBlockData().clone(),
-																						generateEntityId(), material));
+		                                                                                generateEntityId(), material));
 
 		// Cancel any ongoing regeneration
 		state.cancelRegeneration();
@@ -82,16 +77,23 @@ public class BlockDamageManager {
 		// Send crack animation to nearby players
 		sendBlockDamage(location, damageStage, state.getEntityId());
 
-		// Check if block should break
+		// Check if block should reach the threshold
 		if (currentHits >= hitsRequired) {
-			if (shouldBreakBlock(material)) {
-				breakBlock(block, location);
-				return true;
-			} else {
-				// Block reached max damage but shouldn't break
-				// Keep it at max crack state and start regeneration
-				scheduleRegeneration(location, state);
-				return false;
+			switch (modifier.mode()) {
+				case DESTROY -> {
+					destroyBlock(block, location);
+					return true;
+				}
+				case RESTORE -> {
+					breakAndScheduleRestore(block, location, state, hitsRequired);
+					return true;
+				}
+				case CRACK_ONLY -> {
+					// Block reached max damage but should not break.
+					// Keep it at max crack state and start regeneration.
+					scheduleRegeneration(location, state);
+					return false;
+				}
 			}
 		}
 
@@ -102,38 +104,29 @@ public class BlockDamageManager {
 	}
 
 	/**
-	 * Clears all block damage states (useful for plugin disable).
+	 * Clears all block damage states (useful for plugin disable). Restores any blocks that are mid-restore so the world
+	 * is left in a sane state after a reload.
 	 */
 	public void clearAll() {
 		for (Map.Entry<Location, BlockDamageState> entry : damagedBlocks.entrySet()) {
 			BlockDamageState state = entry.getValue();
 			state.cancelRegeneration();
+			if (state.isBroken()) {
+				Block block = entry.getKey().getBlock();
+				if (block.getType() == Material.AIR) {
+					block.setBlockData(state.getOriginalData());
+				}
+			}
 			clearBlockDamage(entry.getKey(), state.getEntityId());
 		}
 		damagedBlocks.clear();
 	}
 
 	/**
-	 * Checks if a material should actually break or just show crack effect.
-	 */
-	private boolean shouldBreakBlock(Material material) {
-		String name = material.name();
-
-		// Check against breakable materials list
-		for (String breakable : BREAKABLE_MATERIALS) {
-			if (name.contains(breakable)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
 	 * Sends block damage animation to all players within render distance.
 	 */
 	private void sendBlockDamage(Location location, int stage, int entityId) {
-		float progress = Math.min(1.0f, Math.max(0.0f, stage / (float) MAX_DAMAGE_STAGE));
+		float progress = Math.clamp(stage / (float) MAX_DAMAGE_STAGE, 0.0f, 1.0f);
 
 		World world = Objects.requireNonNull(location.getWorld());
 		for (Player player : world.getPlayers()) {
@@ -163,7 +156,7 @@ public class BlockDamageManager {
 		// Schedule the start of smooth regeneration
 		BukkitTask delayTask = Bukkit.getScheduler().runTaskLater(plugin, () -> {
 			startSmoothRegeneration(location, state);
-		}, REGENERATION_DELAY_TICKS);
+		}, settings.getRegenerationDelayTicks());
 
 		state.setRegenerationTask(delayTask);
 	}
@@ -192,34 +185,74 @@ public class BlockDamageManager {
 			// Update the visual
 			sendBlockDamage(location, newStage, state.getEntityId());
 
-		}, 0L, REGENERATION_STEP_TICKS);
+		}, 0L, settings.getRegenerationStepTicks());
 
 		state.setRegenerationTask(regenTask);
 	}
 
 	/**
-	 * Breaks the block and plays appropriate effects.
+	 * Permanently breaks the block — used by {@link BreakMode#DESTROY}. Discards the damage state.
 	 */
-	private void breakBlock(Block block, Location location) {
+	private void destroyBlock(Block block, Location location) {
 		BlockDamageState state = damagedBlocks.remove(location);
 		if (state != null) {
 			state.cancelRegeneration();
 			clearBlockDamage(location, state.getEntityId());
 		}
 
-		Material material = block.getType();
-		World    world    = block.getWorld();
-
-		// Play break sound
-		XSound.Record breakSound = getBlockBreakSound(material);
-		breakSound.soundPlayer().atLocation(location).play();
-
-		// Spawn break particles
-		world.spawnParticle(Particle.BLOCK, location.clone().add(0.5, 0.5, 0.5), 25, 0.3, 0.3, 0.3, 0.05,
-							block.getBlockData());
+		playBreakEffects(block, location);
 
 		// Set to air (doesn't drop items)
 		block.setType(Material.AIR);
+	}
+
+	/**
+	 * Breaks the block and schedules its restoration after the configured delay — used by {@link BreakMode#RESTORE}.
+	 * The damage state is kept in {@link #damagedBlocks} with {@code broken = true} so a follow-up restore task can
+	 * find it.
+	 */
+	private void breakAndScheduleRestore(Block block, Location location, BlockDamageState state, int hitsRequired) {
+		state.cancelRegeneration();
+		playBreakEffects(block, location);
+		clearBlockDamage(location, state.getEntityId());
+		block.setType(Material.AIR);
+		state.setBroken(true);
+
+		BukkitTask restoreTask = Bukkit.getScheduler().runTaskLater(plugin, () -> {
+			// State was replaced or already cleaned up
+			if (damagedBlocks.get(location) != state) {
+				return;
+			}
+			// Someone (player or another plugin) filled the gap — leave it alone
+			if (block.getType() != Material.AIR) {
+				damagedBlocks.remove(location);
+				return;
+			}
+
+			block.setBlockData(state.getOriginalData());
+			state.setBroken(false);
+			state.setHitCount(hitsRequired);
+			state.setCurrentStage(MAX_DAMAGE_STAGE);
+			sendBlockDamage(location, MAX_DAMAGE_STAGE, state.getEntityId());
+			startSmoothRegeneration(location, state);
+		}, settings.getRestoreDelayTicks());
+
+		state.setRegenerationTask(restoreTask);
+	}
+
+	/**
+	 * Plays break sound and particle effects for a block. Captures block data before any mutation so the particle uses
+	 * the original block.
+	 */
+	private void playBreakEffects(Block block, Location location) {
+		Material  material  = block.getType();
+		BlockData blockData = block.getBlockData();
+		World     world     = block.getWorld();
+
+		XSound.Record breakSound = getBlockBreakSound(material);
+		breakSound.soundPlayer().atLocation(location).play();
+
+		world.spawnParticle(Particle.BLOCK, location.clone().add(0.5, 0.5, 0.5), 25, 0.3, 0.3, 0.3, 0.05, blockData);
 	}
 
 	/**
@@ -230,11 +263,11 @@ public class BlockDamageManager {
 
 		if (name.contains("GLASS")) return XSound.BLOCK_GLASS_BREAK.record();
 		if (name.contains("STONE") || name.contains("COBBLE") || name.contains("BRICK") ||
-			(name.contains("CONCRETE") && !name.contains("POWDER"))) {
+		    (name.contains("CONCRETE") && !name.contains("POWDER"))) {
 			return XSound.BLOCK_STONE_BREAK.record();
 		}
 		if (name.contains("WOOD") || name.contains("PLANKS") || name.contains("LOG") || name.contains("FENCE") ||
-			name.contains("DOOR")) {
+		    name.contains("DOOR")) {
 			return XSound.BLOCK_WOOD_BREAK.record();
 		}
 		if (name.contains("GRAVEL") || name.contains("SAND") || name.contains("CONCRETE_POWDER")) {
@@ -244,7 +277,7 @@ public class BlockDamageManager {
 			return XSound.BLOCK_WOOL_BREAK.record();
 		}
 		if (name.contains("IRON") || name.contains("GOLD") || name.contains("COPPER") || name.contains("NETHERITE") ||
-			name.contains("CHAIN") || name.contains("LANTERN")) {
+		    name.contains("CHAIN") || name.contains("LANTERN")) {
 			return XSound.BLOCK_METAL_BREAK.record();
 		}
 		if (name.contains("TERRACOTTA")) return XSound.BLOCK_STONE_BREAK.record();
@@ -276,6 +309,8 @@ public class BlockDamageManager {
 		private int        currentStage;
 		@Setter
 		private BukkitTask regenerationTask;
+		@Setter
+		private boolean    broken;
 
 		public BlockDamageState(BlockData originalData, int entityId, Material material) {
 			this.originalData = originalData;
@@ -283,6 +318,7 @@ public class BlockDamageManager {
 			this.material     = material;
 			this.hitCount     = 0;
 			this.currentStage = 0;
+			this.broken       = false;
 		}
 
 		public void incrementHits() {

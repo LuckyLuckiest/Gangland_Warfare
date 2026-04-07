@@ -525,3 +525,18 @@ Gadgets:
       Hard_Brake_Multiplier: 3.0
       # Fuel units consumed per tick while the car is moving.
       Fuel_Consume_Per_Tick: 1
+
+# +-------------------------+ #
+# | Block Regeneration      | #
+# +-------------------------+ #
+
+# Tuning for the weapon Break_Blocks modifier. Controls how blocks broken/cracked by gunfire
+# return to their original state. Per-weapon mode (RESTORE / CRACK_ONLY / DESTROY) is configured
+# on each weapon's Modifiers.Break_Blocks entry.
+Block_Regeneration:
+   # Ticks between a block fully breaking and reappearing in RESTORE mode (20 ticks = 1 second).
+   Restore_Delay_Ticks: 100
+   # Ticks between the last hit on a cracked block and the start of crack reverse-decay.
+   Regeneration_Delay_Ticks: 100
+   # Ticks between each crack-stage decrement during reverse-decay.
+   Regeneration_Step_Ticks: 4

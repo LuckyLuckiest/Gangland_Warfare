@@ -165,6 +165,11 @@ public class Settings implements FileInitializer {
 	private static @Getter double gadgetCarHardBrakeMultiplier;
 	private static @Getter int    gadgetCarFuelConsumePerTick;
 
+	// block regeneration (weapon Break_Blocks modifier tuning)
+	private static @Getter int blockRestoreDelayTicks;
+	private static @Getter int blockRegenerationDelayTicks;
+	private static @Getter int blockRegenerationStepTicks;
+
 	// loot chest configuration
 	private static @Getter long   lootChestCountdownTimer;
 	private static @Getter String lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
@@ -531,6 +536,14 @@ public class Settings implements FileInitializer {
 		gadgetCarReverseSpeedRatio   = gadgetsCar.getDouble("Reverse_Speed_Ratio", 0.5);
 		gadgetCarHardBrakeMultiplier = gadgetsCar.getDouble("Hard_Brake_Multiplier", 3.0);
 		gadgetCarFuelConsumePerTick  = gadgetsCar.getInt("Fuel_Consume_Per_Tick", 1);
+
+		// block regeneration
+		var blockRegeneration = settings.getConfigurationSection("Block_Regeneration");
+		Objects.requireNonNull(blockRegeneration);
+
+		blockRestoreDelayTicks      = blockRegeneration.getInt("Restore_Delay_Ticks", 100);
+		blockRegenerationDelayTicks = blockRegeneration.getInt("Regeneration_Delay_Ticks", 100);
+		blockRegenerationStepTicks  = blockRegeneration.getInt("Regeneration_Step_Ticks", 4);
 
 		addEachFieldReflection();
 		convertToPlaceholder();

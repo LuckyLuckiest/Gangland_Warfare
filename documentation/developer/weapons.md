@@ -657,7 +657,7 @@ boolean canRicochet()          // Check against max bounces
 
 ### `BlockDamageManager`
 
-**Path:** `me.luckyraven.weapon.projectile.BlockDamageManager`
+**Path:** `me.luckyraven.weapon.modifiers.BlockDamageManager`
 
 Manages progressive block crack animations from projectile impacts.
 

@@ -58,6 +58,7 @@ import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
 import me.luckyraven.file.configuration.lootchest.GanglandLootChestMessages;
 import me.luckyraven.file.configuration.lootchest.LootChestSettings;
+import me.luckyraven.file.configuration.weapon.GanglandBlockRegenerationSettings;
 import me.luckyraven.file.configuration.weapon.GanglandRepairMessages;
 import me.luckyraven.file.configuration.weapon.WeaponLoader;
 import me.luckyraven.gadget.car.CarManager;
@@ -113,7 +114,7 @@ import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import me.luckyraven.weapon.configuration.WeaponAddon;
-import me.luckyraven.weapon.projectile.BlockDamageManager;
+import me.luckyraven.weapon.modifiers.BlockDamageManager;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;
 import me.luckyraven.weapon.raytrace.WeaponVisualSpawner;
 import me.luckyraven.weapon.wearable.WearableService;
@@ -313,7 +314,7 @@ public final class Initializer {
 
 		// Weapon manager
 		weaponManager       = new WeaponManager(gangland);
-		blockDamageManager  = new BlockDamageManager(gangland);
+		blockDamageManager  = new BlockDamageManager(gangland, new GanglandBlockRegenerationSettings());
 		weaponVisualSpawner = new WeaponVisualSpawner();
 		weaponRaytracer     = new WeaponRaytracer(weaponManager, wearableAddon, blockDamageManager,
 		                                          weaponVisualSpawner);
@@ -322,8 +323,13 @@ public final class Initializer {
 		// sign manager
 		signLoader();
 
-		// item parser (must be before civilians loader — weapon pool parsing needs it)
+		// item parser (must be before civilians loader — weapon pool parsing needs it,
+		// and before inventoryLoader.initialize() — slot YAML parses prefixed item refs via the resolver)
 		itemParserManager = new ItemParserManager(weaponManager, ammunitionManager, wearableAddon, carAddon);
+
+		// inventory loader: actual file load is deferred to here so the slot resolver can dereference
+		// itemParserManager (registered earlier in inventoryLoader() but only invoked once load() runs).
+		inventoryLoader.initialize();
 
 		// civilians loader (reads civilians.yml; resolves weapon pools via ItemParser)
 		civiliansLoader = new CiviliansLoader(gangland, itemParserManager.getParser(), civilianSettings);
@@ -505,7 +511,9 @@ public final class Initializer {
 
 		// Lets slot YAML reference prefixed items (weapon:awp, wearable:police_vest, ammo:9mm, unique:phone, …)
 		// via the central ItemParser. Must run before any inventory file is read.
-		SlotItemFactory.setItemResolver(itemParserManager.getParser()::parse);
+		// Deferred lookup: itemParserManager is created later in postInitialize (after addonsLoader returns),
+		// so the lambda must dereference the field on each invocation, not capture it at registration time.
+		SlotItemFactory.setItemResolver(slot -> itemParserManager.getParser().parse(slot));
 
 		evaluator = new BooleanExpressionEvaluator(placeholderService);
 
@@ -517,7 +525,14 @@ public final class Initializer {
 		inventoryLoader.addExpectedFile(new FileHandler(gangland, "phone", "inventory", ".yml"));
 		inventoryLoader.addExpectedFile(new FileHandler(gangland, "phone_gang", "inventory", ".yml"));
 
-		inventoryLoader.initialize();
+		// inventoryLoader.initialize() triggers slot YAML parsing, which invokes the item resolver registered
+		// above; that resolver dereferences itemParserManager. On first startup, itemParserManager doesn't exist
+		// yet (it's constructed later in postInitialize), so we skip initialize() here and let postInitialize
+		// call it explicitly after the item parser is wired. On reload, itemParserManager is already alive, so
+		// it's safe — and necessary, since ReloadPlugin calls inventoryLoader() directly.
+		if (itemParserManager != null) {
+			inventoryLoader.initialize();
+		}
 	}
 
 	public void lootChestLoader() {

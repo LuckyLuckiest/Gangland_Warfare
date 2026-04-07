@@ -1,6 +1,7 @@
 package me.luckyraven.weapon.configuration;
 
 import com.cryptomorin.xseries.XMaterial;
+import lombok.CustomLog;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.weapon.SelectiveFire;
@@ -8,7 +9,8 @@ import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.configuration.parser.*;
 import me.luckyraven.weapon.dto.*;
-import me.luckyraven.weapon.modifiers.*;
+import me.luckyraven.weapon.modifiers.BreakMode;
+import me.luckyraven.weapon.modifiers.action.*;
 import me.luckyraven.weapon.types.WeaponType;
 import me.luckyraven.weapon.util.BlockGroupResolver;
 import org.bukkit.Color;
@@ -20,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+@CustomLog
 public class WeaponAddon {
 
 	private final Map<String, Weapon> weapons;
@@ -215,12 +218,24 @@ public class WeaponAddon {
 
 		for (String entry : modifiersSection.getStringList("Break_Blocks")) {
 			String[] parts = entry.split("-");
-			if (parts.length != 2) continue;
+			if (parts.length != 2 && parts.length != 3) continue;
 			try {
 				Set<Material> materials = BlockGroupResolver.resolve(parts[0].trim());
-				if (!materials.isEmpty()) weapon.getModifiersData()
-				                                .addBreakBlock(new BlockBreakModifier(materials, Integer.parseInt(
-														parts[1].trim())));
+				if (materials.isEmpty()) continue;
+
+				int       hits = Integer.parseInt(parts[1].trim());
+				BreakMode mode = BreakMode.RESTORE;
+				if (parts.length == 3) {
+					String token = parts[2].trim().toUpperCase(Locale.ROOT);
+					try {
+						mode = BreakMode.valueOf(token);
+					} catch (IllegalArgumentException ex) {
+						log.warn("Unknown break mode '{}' in weapon '{}', defaulting to RESTORE", parts[2],
+						         weapon.getName());
+					}
+				}
+
+				weapon.getModifiersData().addBreakBlock(new BlockBreakModifier(materials, hits, mode));
 			} catch (NumberFormatException ignored) { }
 		}
 

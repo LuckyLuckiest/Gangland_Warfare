@@ -113,9 +113,11 @@ Scope:
 
 Modifiers:
    Flat_Damage: 1.0
+   # Format: MATERIAL_OR_GROUP-HITS_REQUIRED[-MODE]
+   # Modes: RESTORE (break + regen, default), CRACK_ONLY (never break, regen from max crack), DESTROY (break, no regen)
    Break_Blocks:
-      - GLASS-2
-      - ICE-4
+      - GLASS-2-RESTORE
+      - ICE-4-CRACK_ONLY
    Penetration: 3-3-0.2
    Tracer: FFD700-true-1.0
    Armor_Piercing: 0.5
