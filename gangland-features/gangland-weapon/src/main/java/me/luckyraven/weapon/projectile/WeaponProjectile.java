@@ -12,6 +12,7 @@ import me.luckyraven.weapon.types.gun.GunWeapon;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -42,7 +43,7 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 	}
 
 	@Override
-	public void launchProjectile() {
+	public Projectile launchProjectile() {
 		// Get the eye location
 		Location eyeLocation = getShooter().getEyeLocation();
 		Vector   velocity    = getVelocity();
@@ -59,32 +60,57 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 		// Calculate weapon position (side of player) - this is where projectile spawns
 		Location weaponPosition = eyeLocation.clone().add(rightVector).add(downVector);
 
-		// Spawn projectile at weapon position, not at center
-		Projectile projectile = getShooter().getWorld().spawn(weaponPosition, bulletType);
+		// apply spread + speed to obtain the launch velocity
+		Vector spread         = weapon.getSpread().applySpread(velocity);
+		Vector launchVelocity = spread.multiply(getSpeed());
+
+		return doLaunch(weaponPosition, launchVelocity);
+	}
+
+	/**
+	 * Spawns this projectile at an explicit location with an explicit velocity, bypassing the shooter-relative
+	 * weapon-position offset, spread, and speed multiplication. Used for ricochet relaunches where the modifier handler
+	 * already computes the impact location and reflected velocity.
+	 */
+	public Projectile launchProjectile(Location spawnLocation, Vector launchVelocity) {
+		return doLaunch(spawnLocation, launchVelocity);
+	}
+
+	@Override
+	public double getSpeed() {
+		return weapon.getProjectileData().getSpeed();
+	}
+
+	/**
+	 * Shared spawn logic for both the normal shooter-relative launch and the explicit-position relaunch.
+	 */
+	private Projectile doLaunch(Location spawnLocation, Vector launchVelocity) {
+		World world = spawnLocation.getWorld();
+		if (world == null) {
+			return null;
+		}
+
+		// Mirror the spawn location/velocity onto this WProjectile so any consumer reading getLocation()/
+		// getVelocity() after the launch sees the values that were actually used.
+		setLocation(spawnLocation.toVector());
+		setVelocity(launchVelocity);
+
+		Projectile projectile = world.spawn(spawnLocation, bulletType);
 
 		projectile.setSilent(true);
 		projectile.setGravity(false);
 		projectile.setShooter(getShooter());
+		projectile.setVelocity(launchVelocity);
 
-		// apply spread
-		Vector spread = weapon.getSpread().applySpread(velocity);
+		if (weapon.getProjectileData().isParticle() && getShooter() instanceof Player) {
+			Location clone = spawnLocation.clone();
+			Location endLocation = clone.add(
+					launchVelocity.clone().normalize().multiply(weapon.getProjectileData().getDistance()));
 
-		// set the velocity according to the modified values
-		setVelocity(spread.multiply(getSpeed()));
-		projectile.setVelocity(getVelocity());
-
-		if (weapon.getProjectileData().isParticle()) {
-			if (getShooter() instanceof Player) {
-				// Calculate end location using the actual projectile velocity (with spread applied)
-				Location clone = weaponPosition.clone();
-				Location endLocation = clone.add(
-						getVelocity().normalize().multiply(weapon.getProjectileData().getDistance()));
-
-				// Spawn particle line from weapon position following the projectile trajectory
-				ParticleUtil.spawnLine(weaponPosition, endLocation, XParticle.DUST.get(),
-				                       weapon.getProjectileData().getDistance(),
-				                       new Particle.DustOptions(Color.GRAY.getBukkitColor(), 0.5F));
-			}
+			// Spawn particle line from spawn position following the projectile trajectory
+			ParticleUtil.spawnLine(spawnLocation, endLocation, XParticle.DUST.get(),
+			                       weapon.getProjectileData().getDistance(),
+			                       new Particle.DustOptions(Color.GRAY.getBukkitColor(), 0.5F));
 		}
 
 		// call the projectile launch event
@@ -92,11 +118,8 @@ public abstract class WeaponProjectile<T extends Projectile> extends WProjectile
 		Bukkit.getPluginManager().callEvent(event);
 
 		startFlybyCheck(projectile);
-	}
 
-	@Override
-	public double getSpeed() {
-		return weapon.getProjectileData().getSpeed();
+		return projectile;
 	}
 
 	private void startFlybyCheck(Projectile projectile) {

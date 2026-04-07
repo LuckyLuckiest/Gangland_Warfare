@@ -25,6 +25,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
@@ -41,14 +42,16 @@ public class ProjectileDamageListener implements Listener {
 	private final static Map<Integer, GunWeapon>       weaponInstance   = new ConcurrentHashMap<>();
 	private final static Map<Integer, ProjectileState> projectileStates = new ConcurrentHashMap<>();
 
+	private final JavaPlugin         plugin;
 	private final WeaponService      weaponManager;
 	private final BlockDamageManager blockDamageManager;
 	private final WearableService    wearableService;
 
 	private final Map<Integer, ProjectileEventQueue> eventQueues;
 
-	public ProjectileDamageListener(WeaponService weaponService, BlockDamageManager blockDamageManager,
-	                                WearableService wearableService) {
+	public ProjectileDamageListener(JavaPlugin plugin, WeaponService weaponService,
+	                                BlockDamageManager blockDamageManager, WearableService wearableService) {
+		this.plugin             = plugin;
 		this.weaponManager      = weaponService;
 		this.blockDamageManager = blockDamageManager;
 		this.wearableService    = wearableService;
@@ -91,7 +94,7 @@ public class ProjectileDamageListener implements Listener {
 			                     .normalize()
 			                     .multiply(weapon.getProjectileData().getDistance());
 			Location end = start.clone().add(vector);
-			ModifierHandler.spawnTracerParticles(weapon, start, end, player);
+			ModifierHandler.spawnTracerParticles(weapon, start, end);
 		}
 	}
 
@@ -111,9 +114,9 @@ public class ProjectileDamageListener implements Listener {
 			GunWeapon weapon = weaponInstance.get(projectileId);
 			if (weapon != null) {
 				ProjectileState state = projectileStates.get(projectileId);
-				double damage = state != null ?
-				                state.getCurrentDamage() :
-				                weapon.getProjectileData().getDamage();
+
+				double damage = state != null ? state.getCurrentDamage() : weapon.getProjectileData().getDamage();
+
 				event.setDamage(damage);
 			}
 			return;
@@ -184,7 +187,7 @@ public class ProjectileDamageListener implements Listener {
 			return;
 		}
 
-		// If we have a damage event but no hit event - wait for the hit event
+		// If we have a damage event but no hit event, wait for the hit event
 		if (hasDamageEvent && !hasHitEvent) return;
 
 		if (!hasDamageEvent) return;
@@ -284,7 +287,7 @@ public class ProjectileDamageListener implements Listener {
 		}
 
 		// Handle entity penetration
-		return state != null && ModifierHandler.handleEntityPenetration(state, projectile);
+		return state != null && ModifierHandler.handleEntityPenetration(state);
 	}
 
 	private void processHitEvent(ProjectileHitEvent event, Weapon weapon, ProjectileState state,
@@ -293,28 +296,52 @@ public class ProjectileDamageListener implements Listener {
 		Block      hitBlock     = event.getHitBlock();
 		BlockFace  hitBlockFace = event.getHitBlockFace();
 
-		// Handle ricochet first
+		// Handle block hit with break modifiers — always apply block damage,
+		// even if the projectile ricochets off or penetrates through afterward
+		if (hitBlock != null) {
+			handleBlockHit(hitBlock, weapon);
+		}
+
+		// Handle ricochet
 		if (hitBlock != null && state != null && hitBlockFace != null) {
-			if (ModifierHandler.handleRicochet(state, projectile, hitBlock, hitBlockFace)) {
-				// Projectile ricocheted, don't remove it
-				// Reset the event queue for this projectile to handle next hit
-				int projectileId = projectile.getEntityId();
-				eventQueues.put(projectileId, new ProjectileEventQueue(projectileId));
+			Projectile newProjectile = ModifierHandler.handleRicochet(plugin, state, projectile, hitBlock,
+			                                                          hitBlockFace);
+			if (newProjectile != null) {
+				// Cancel the event so Spigot doesn't run its default block-hit handling on the spent original
+				event.setCancelled(true);
+
+				// Migrate per-projectile bookkeeping from the original entity ID to the freshly spawned bullet
+				int             oldId          = projectile.getEntityId();
+				int             newId          = newProjectile.getEntityId();
+				GunWeapon       migratedWeapon = weaponInstance.remove(oldId);
+				ProjectileState migratedState  = projectileStates.remove(oldId);
+				if (migratedWeapon != null) {
+					weaponInstance.put(newId, migratedWeapon);
+				}
+				if (migratedState != null) {
+					projectileStates.put(newId, migratedState);
+				}
+				eventQueues.remove(oldId);
+				eventQueues.put(newId, new ProjectileEventQueue(newId));
+
+				// Spawn tracer particles along the deflected path (player shooters only)
+				if (newProjectile.getShooter() instanceof Player player && weapon instanceof GunWeapon gunWeapon) {
+					double   distance = gunWeapon.getProjectileData().getDistance();
+					Location start    = newProjectile.getLocation();
+					Location end      = start.clone().add(newProjectile.getVelocity().normalize().multiply(distance));
+					ModifierHandler.spawnTracerParticles(weapon, start, end);
+				}
 				return;
 			}
 
 			// Handle block penetration
-			if (ModifierHandler.handleBlockPenetration(state, projectile, hitBlock)) {
+			if (ModifierHandler.handleBlockPenetration(state, hitBlock)) {
 				// Projectile penetrated, let it continue
+				event.setCancelled(true);
 				int projectileId = projectile.getEntityId();
 				eventQueues.put(projectileId, new ProjectileEventQueue(projectileId));
 				return;
 			}
-		}
-
-		// Handle block hit with break modifiers
-		if (hitBlock != null) {
-			handleBlockHit(hitBlock, weapon);
 		}
 
 		// Remove projectile if it didn't ricochet or penetrate

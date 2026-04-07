@@ -3,6 +3,7 @@ package me.luckyraven.weapon.projectile.type;
 import me.luckyraven.weapon.projectile.WeaponProjectile;
 import me.luckyraven.weapon.types.gun.GunWeapon;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -22,9 +23,11 @@ public class Spread extends WeaponProjectile<Snowball> {
 
 
 	@Override
-	public void launchProjectile() {
+	public Projectile launchProjectile() {
+		Projectile last = null;
 		for (int i = 0; i < pelletsCount; i++) {
-			super.launchProjectile();
+			last = super.launchProjectile();
 		}
+		return last;
 	}
 }

@@ -6,6 +6,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Projectile;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,7 +31,7 @@ public abstract class WProjectile {
 		this.velocity     = velocity;
 	}
 
-	public abstract void launchProjectile();
+	public abstract Projectile launchProjectile();
 
 	public abstract double getSpeed();
 

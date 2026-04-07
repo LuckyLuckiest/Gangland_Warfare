@@ -1,22 +1,21 @@
 package me.luckyraven.weapon.modifiers;
 
 import com.cryptomorin.xseries.XAttribute;
-import com.cryptomorin.xseries.XSound;
 import com.cryptomorin.xseries.particles.XParticle;
+import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.dto.ModifiersData;
 import me.luckyraven.weapon.projectile.ProjectileState;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Particle;
-import org.bukkit.World;
+import me.luckyraven.weapon.projectile.WeaponProjectile;
+import me.luckyraven.weapon.types.gun.GunWeapon;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 import java.util.Objects;
@@ -92,11 +91,10 @@ public class ModifierHandler {
 	 * Handles entity penetration logic.
 	 *
 	 * @param state The projectile state
-	 * @param projectile The projectile entity
 	 *
 	 * @return true if the projectile should continue, false if it should stop
 	 */
-	public static boolean handleEntityPenetration(ProjectileState state, Projectile projectile) {
+	public static boolean handleEntityPenetration(ProjectileState state) {
 		if (!state.canPenetrateEntity()) {
 			return false;
 		}
@@ -117,12 +115,11 @@ public class ModifierHandler {
 	 * Handles block penetration logic.
 	 *
 	 * @param state The projectile state
-	 * @param projectile The projectile entity
 	 * @param hitBlock The block that was hit
 	 *
 	 * @return true if the projectile should continue through the block
 	 */
-	public static boolean handleBlockPenetration(ProjectileState state, Projectile projectile, Block hitBlock) {
+	public static boolean handleBlockPenetration(ProjectileState state, Block hitBlock) {
 		if (!state.canPenetrateBlock()) {
 			return false;
 		}
@@ -145,18 +142,24 @@ public class ModifierHandler {
 
 	/**
 	 * Handles ricochet logic when a projectile hits a block.
+	 * <p>
+	 * Spigot removes the original projectile the moment it hits a block, so reusing it for the bounce never produces a
+	 * visible deflected trajectory. Instead, this method instantiates a fresh {@link WeaponProjectile} via
+	 * {@code ProjectileType#createInstance} (the same path used by {@code GunAction}) and relaunches it through
+	 * {@link WeaponProjectile#launchProjectile(Location, Vector)} at the impact point with the reflected velocity.
 	 *
+	 * @param plugin The owning plugin (needed by the new {@code WeaponProjectile}'s scheduled tasks)
 	 * @param state The projectile state
 	 * @param projectile The projectile entity
 	 * @param hitBlock The block that was hit
 	 * @param hitBlockFace The face of the block that was hit
 	 *
-	 * @return true if the projectile ricocheted, false otherwise
+	 * @return the newly spawned ricochet projectile, or {@code null} if the projectile did not ricochet
 	 */
-	public static boolean handleRicochet(ProjectileState state, Projectile projectile, Block hitBlock,
-										 BlockFace hitBlockFace) {
+	public static Projectile handleRicochet(JavaPlugin plugin, ProjectileState state, Projectile projectile,
+	                                        Block hitBlock, BlockFace hitBlockFace) {
 		if (!state.canRicochet()) {
-			return false;
+			return null;
 		}
 
 		ModifiersData modifiers     = state.getWeapon().getModifiersData();
@@ -172,25 +175,49 @@ public class ModifierHandler {
 		}
 
 		if (matchingModifier == null) {
-			return false;
+			return null;
 		}
+
+		if (!(projectile.getShooter() instanceof LivingEntity shooter)) {
+			return null;
+		}
+
+		GunWeapon gunWeapon = (GunWeapon) state.getWeapon();
 
 		// Calculate reflected velocity
 		Vector velocity  = projectile.getVelocity();
 		Vector normal    = getBlockFaceNormal(hitBlockFace);
 		Vector reflected = reflectVector(velocity, normal);
 
-		// Apply the reflected velocity
-		projectile.setVelocity(reflected);
+		// Instantiate a brand-new WeaponProjectile of the same type as the original (mirrors GunAction's flow)
+		// and relaunch it at the impact location with the reflected velocity. The original is removed below.
+		WeaponProjectile<?> ricochetProjectile = gunWeapon.getProjectileData()
+		                                                  .getType()
+		                                                  .createInstance(plugin, shooter, gunWeapon);
 
-		// Increment bounce count and apply damage reduction
+		// Offset slightly along the surface normal so the new projectile does not immediately re-collide.
+		Location spawnLoc = projectile.getLocation().clone().add(normal.clone().multiply(0.5));
+
+		Projectile newProjectile = ricochetProjectile.launchProjectile(spawnLoc, reflected);
+
+		// If the underlying spawn could not happen (e.g. impact location had no world), bail out without destroying
+		// the original — let the normal block-hit cleanup path run instead.
+		if (newProjectile == null) {
+			return null;
+		}
+
+		// Remove the spent original projectile
+		projectile.remove();
+
+		// Increment bounce count and apply damage reduction (carried over to the new projectile via state migration
+		// in ProjectileDamageListener)
 		state.setBounceCount(state.getBounceCount() + 1);
 		state.applyRicochetReduction(matchingModifier.damageRetention());
 
 		// Play ricochet effect
 		playRicochetEffect(hitBlock.getLocation().add(0.5, 0.5, 0.5));
 
-		return true;
+		return newProjectile;
 	}
 
 	/**
@@ -199,9 +226,8 @@ public class ModifierHandler {
 	 * @param weapon The weapon with tracer modifier
 	 * @param from Start location
 	 * @param to End location
-	 * @param player The player who shot (for visibility)
 	 */
-	public static void spawnTracerParticles(Weapon weapon, Location from, Location to, Player player) {
+	public static void spawnTracerParticles(Weapon weapon, Location from, Location to) {
 		ModifiersData modifiers = weapon.getModifiersData();
 
 		if (!modifiers.hasTracer()) {
@@ -298,7 +324,9 @@ public class ModifierHandler {
 		world.spawnParticle(Objects.requireNonNull(critParticle), location, 5, 0.1, 0.1, 0.1, 0.05);
 
 		// Ricochet sound using XSound for cross-version compatibility
-		XSound.BLOCK_ANVIL_LAND.record().withVolume(0.3f).withPitch(2.0f).soundPlayer().atLocation(location).play();
+		SoundConfiguration sound = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+		                                                  Sound.BLOCK_ANVIL_LAND.toString(), 0.3f, 2.0f);
+		SoundConfiguration.playSoundsAtLocation(location, sound, null);
 	}
 
 }
