@@ -3,6 +3,7 @@ package me.luckyraven.weapon.types.gun;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.util.timer.Timer;
 import me.luckyraven.weapon.WeaponService;
+import me.luckyraven.weapon.raytrace.WeaponRaytracer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -49,6 +50,7 @@ public class FullAutoTask extends Timer {
 	private final WeaponService       weaponService;
 	private final GunWeapon           weapon;
 	private final RecoilCompatibility recoilCompatibility;
+	private final WeaponRaytracer     raytracer;
 	private final Player              player;
 	private final ItemStack           itemStack;
 	private final Runnable            onCancel;
@@ -56,14 +58,15 @@ public class FullAutoTask extends Timer {
 	private int tickIndex;
 
 	public FullAutoTask(JavaPlugin plugin, WeaponService weaponService, GunWeapon weapon,
-	                    RecoilCompatibility recoilCompatibility, Player player, ItemStack weaponItem,
-	                    Runnable onCancel) {
+	                    RecoilCompatibility recoilCompatibility, WeaponRaytracer raytracer, Player player,
+	                    ItemStack weaponItem, Runnable onCancel) {
 		super(plugin, weapon.getProjectileData().getCooldown(), 1L);
 
 		this.plugin              = plugin;
 		this.weaponService       = weaponService;
 		this.weapon              = weapon;
 		this.recoilCompatibility = recoilCompatibility;
+		this.raytracer           = raytracer;
 		this.player              = player;
 		this.itemStack           = weaponItem;
 		this.onCancel            = onCancel;
@@ -90,7 +93,7 @@ public class FullAutoTask extends Timer {
 		int shotsPerSecond = Math.clamp(tickValue, 1, 20);
 
 		if (AUTO[shotsPerSecond][tickIndex]) {
-			GunAction gunAction = new GunAction(plugin, weaponService, weapon, recoilCompatibility);
+			GunAction gunAction = new GunAction(plugin, weaponService, weapon, recoilCompatibility, raytracer);
 
 			gunAction.weaponShoot(player);
 		}

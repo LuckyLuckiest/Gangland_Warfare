@@ -7,7 +7,8 @@ import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.dto.SoundData;
 import me.luckyraven.weapon.events.projectile.WeaponShootEvent;
-import me.luckyraven.weapon.projectile.WeaponProjectile;
+import me.luckyraven.weapon.raytrace.WeaponRaytracer;
+import me.luckyraven.weapon.raytrace.WeaponShooting;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -18,13 +19,15 @@ public class GunAction {
 	private final WeaponService       weaponService;
 	private final GunWeapon           weapon;
 	private final RecoilCompatibility recoilCompatibility;
+	private final WeaponRaytracer     raytracer;
 
 	public GunAction(JavaPlugin plugin, WeaponService weaponService, GunWeapon weapon,
-	                 RecoilCompatibility recoilCompatibility) {
+	                 RecoilCompatibility recoilCompatibility, WeaponRaytracer raytracer) {
 		this.plugin              = plugin;
 		this.weaponService       = weaponService;
 		this.weapon              = weapon;
 		this.recoilCompatibility = recoilCompatibility;
+		this.raytracer           = raytracer;
 	}
 
 	public void weaponShoot(Player shooter) {
@@ -54,20 +57,18 @@ public class GunAction {
 			return;
 		}
 
-		WeaponProjectile<?> weaponProjectile = weapon.getProjectileData()
-		                                             .getType()
-		                                             .createInstance(plugin, shooter, weapon);
-		WeaponShootEvent weaponShootEvent = new WeaponShootEvent(weapon, weaponProjectile);
-		Bukkit.getPluginManager().callEvent(weaponShootEvent);
+		// All projectile types now flow through the unified raytracer via WeaponShooting.
+		// Hitscan (BULLET, SPREAD) uses fireInstant; slow visual projectiles (ROCKET, FLARE)
+		// use a per-tick SteppedProjectileTask that drives a cosmetic Bukkit entity.
+		WeaponShootEvent shootEvent = new WeaponShootEvent(weapon, shooter);
+		Bukkit.getPluginManager().callEvent(shootEvent);
 
-		// launch the projectile
-		if (weaponShootEvent.isCancelled()) {
-			// substitute for the consumed shot
+		if (shootEvent.isCancelled()) {
 			weapon.addAmmunition(1);
 			return;
 		}
 
-		weaponProjectile.launchProjectile();
+		WeaponShooting.fire(plugin, raytracer, shooter, weapon);
 
 		weapon.updateWeaponData(heldWeapon);
 

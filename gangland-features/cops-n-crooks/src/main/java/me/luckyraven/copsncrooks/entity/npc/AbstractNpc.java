@@ -9,7 +9,8 @@ import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.downed.DownedPlayerRegistry;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.events.projectile.WeaponShootEvent;
-import me.luckyraven.weapon.projectile.WeaponProjectile;
+import me.luckyraven.weapon.raytrace.WeaponRaytracer;
+import me.luckyraven.weapon.raytrace.WeaponShooting;
 import me.luckyraven.weapon.types.gun.GunWeapon;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.*;
@@ -619,15 +620,18 @@ public abstract class AbstractNpc {
 		LivingEntity shooter = getEntity();
 		if (shooter == null) return;
 
-		WeaponProjectile<?> projectile = gun.getProjectileData().getType().createInstance(plugin, shooter, gun);
-
-		WeaponShootEvent event = new WeaponShootEvent(heldWeapon, projectile);
+		WeaponShootEvent event = new WeaponShootEvent(heldWeapon, shooter);
 		Bukkit.getPluginManager().callEvent(event);
 
 		if (event.isCancelled()) {
 			heldWeapon.addAmmunition(1);
 		} else {
-			projectile.launchProjectile();
+			// Resolve the unified raytracer via Bukkit's ServicesManager (registered in Initializer)
+			// rather than threading it through the NPC factory chain.
+			var registration = Bukkit.getServicesManager().getRegistration(WeaponRaytracer.class);
+			if (registration != null) {
+				WeaponShooting.fire(plugin, registration.getProvider(), shooter, gun);
+			}
 			SoundConfiguration.playSoundsAtLocation(shooter.getEyeLocation(), heldWeapon.getSoundData().getShotCustom(),
 			                                        heldWeapon.getSoundData().getShotDefault());
 			refreshHeldItem();

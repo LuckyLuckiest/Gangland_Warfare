@@ -7,18 +7,17 @@ import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.dto.IncendiaryData;
-import me.luckyraven.weapon.events.WeaponEntityDamageEvent;
-import org.bukkit.Bukkit;
+import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
+import me.luckyraven.weapon.raytrace.RaytraceRequest;
+import me.luckyraven.weapon.raytrace.WeaponMuzzle;
+import me.luckyraven.weapon.raytrace.WeaponRaytracer;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -37,14 +36,17 @@ public class IncendiaryAction {
 	private final WeaponService             weaponService;
 	private final IncendiaryWeapon          weapon;
 	private final RecoilCompatibility       recoilCompatibility;
+	private final WeaponRaytracer           raytracer;
 	private final Map<UUID, RepeatingTimer> activeTasks;
 
 	public IncendiaryAction(JavaPlugin plugin, WeaponService weaponService, IncendiaryWeapon weapon,
-	                        RecoilCompatibility recoilCompatibility, Map<UUID, RepeatingTimer> activeTasks) {
+	                        RecoilCompatibility recoilCompatibility, WeaponRaytracer raytracer,
+	                        Map<UUID, RepeatingTimer> activeTasks) {
 		this.plugin              = plugin;
 		this.weaponService       = weaponService;
 		this.weapon              = weapon;
 		this.recoilCompatibility = recoilCompatibility;
+		this.raytracer           = raytracer;
 		this.activeTasks         = activeTasks;
 	}
 
@@ -120,7 +122,7 @@ public class IncendiaryAction {
 		// fire spray
 		Location eye    = player.getEyeLocation();
 		Vector   dir    = eye.getDirection().normalize();
-		Location muzzle = computeMuzzle(eye, dir);
+		Location muzzle = WeaponMuzzle.compute(player, dir);
 
 		double flatBonus = weapon.getModifiersData().hasFlatDamage() ?
 		                   weapon.getModifiersData().getFlatDamage().bonus() :
@@ -128,30 +130,26 @@ public class IncendiaryAction {
 
 		ParticleUtil.spawnFlameCone(muzzle, dir, data.getRange(), data.getConeAngle());
 
-		Set<LivingEntity> hit = hitScan(player, muzzle, dir, data);
-		applyFireDamage(player, hit, data, flatBonus);
-		applyVehicleDamage(player, muzzle, dir, data, flatBonus);
+		fireCone(player, dir, data, flatBonus);
 	}
 
-	private Location computeMuzzle(Location eye, Vector dir) {
-		Vector right = dir.clone().crossProduct(new Vector(0, 1, 0));
-		if (right.lengthSquared() < 0.001) right = new Vector(1, 0, 0);
-		right.normalize();
-		return eye.clone().add(dir.clone().multiply(0.5)).add(right.multiply(0.25)).add(0, -0.15, 0);
-	}
-
-	private Set<LivingEntity> hitScan(Player player, Location muzzle, Vector dir, IncendiaryData data) {
+	/**
+	 * Sprays a cone of rays through the unified raytracer. Each ray reports its impact via a custom
+	 * {@link RaytraceRequest#getImpactHandler()} that applies fire ticks to LivingEntity hits and fires
+	 * {@link WeaponRaytraceImpactEvent} as the canonical hook for vehicle / NPC reactions.
+	 */
+	private void fireCone(Player player, Vector dir, IncendiaryData data, double flatBonus) {
 		double halfAngle = Math.toRadians(data.getConeAngle() / 2.0);
 		int    rays      = Math.max(4, (int) (data.getConeAngle() / 8));
-		World  world     = player.getWorld();
 
 		Vector perp1 = dir.clone().crossProduct(new Vector(0, 1, 0));
-		if (perp1.lengthSquared() < 0.001) perp1 = dir.clone().crossProduct(new Vector(1, 0, 0));
+		if (perp1.lengthSquared() < 0.001) {
+			perp1 = dir.clone().crossProduct(new Vector(1, 0, 0));
+		}
 		perp1.normalize();
 		Vector perp2 = dir.clone().crossProduct(perp1).normalize();
 
 		ThreadLocalRandom rng = ThreadLocalRandom.current();
-		Set<LivingEntity> hit = new HashSet<>();
 
 		for (int r = 0; r < rays; r++) {
 			double theta = rng.nextDouble() * halfAngle;
@@ -161,47 +159,45 @@ public class IncendiaryAction {
 			                   .add(perp2.clone().multiply(Math.sin(theta) * Math.sin(phi)))
 			                   .normalize();
 
-			RayTraceResult result = world.rayTraceEntities(muzzle, rayDir, data.getRange(), 0.3,
-			                                               e -> e instanceof LivingEntity && !e.equals(player));
-			if (result != null && result.getHitEntity() instanceof LivingEntity target) {
-				hit.add(target);
-			}
-		}
+			RaytraceRequest request = RaytraceRequest.builder()
+			                                         .shooter(player)
+			                                         .weapon(weapon)
+			                                         .origin(player.getEyeLocation())
+			                                         .direction(rayDir)
+			                                         .maxDistance(data.getRange())
+			                                         .baseDamage(flatBonus > 0 ? flatBonus : 0.001)
+			                                         .hitboxExpansion(0.3)
+			                                         .maxIterations(1)
+			                                         .impactHandler(
+															 event -> applyIncendiaryImpact(event, data, flatBonus))
+			                                         .build();
 
-		return hit;
+			raytracer.fireInstant(request);
+		}
 	}
 
-	private void applyFireDamage(Player player, Set<LivingEntity> hit, IncendiaryData data, double flatBonus) {
-		for (LivingEntity target : hit) {
+	private void applyIncendiaryImpact(WeaponRaytraceImpactEvent event, IncendiaryData data, double flatBonus) {
+		Entity hit = event.getHitEntity();
+		if (hit == null) {
+			return;
+		}
+
+		if (hit instanceof LivingEntity target) {
+			// Always attribute damage to the shooter so getKiller() is set and the death message
+			// is correctly assigned. When there is no configured flat bonus a sub-tick amount
+			// (0.001) is used so the combat tracker is updated without meaningfully changing
+			// health.
 			target.setFireTicks(data.getFireDuration());
-			// Always attribute damage to the shooter so getKiller() is set and
-			// the death message/kill credit is correctly assigned. When there is
-			// no configured flat bonus a sub-tick amount (0.001) is used so that
-			// the combat tracker is updated without meaningfully changing health.
 			double attributed = flatBonus > 0 ? flatBonus : 0.001;
 			target.setNoDamageTicks(0);
 			pendingDamage.add(target.getUniqueId());
-			target.damage(attributed, player);
+			target.damage(attributed, event.getShooter());
+			return;
 		}
-	}
 
-	private void applyVehicleDamage(Player player, Location muzzle, Vector dir, IncendiaryData data, double flatBonus) {
-		if (flatBonus <= 0) return;
-
-		double halfAngle = Math.toRadians(data.getConeAngle() / 2.0);
-
-		for (Entity entity : player.getNearbyEntities(data.getRange(), data.getRange(), data.getRange())) {
-			if (entity instanceof LivingEntity || entity.equals(player)) continue;
-
-			Vector toEntity = entity.getLocation().toVector().subtract(muzzle.toVector());
-			double dist     = toEntity.length();
-
-			if (dist > data.getRange() || dist < 0.001) continue;
-			if (dir.dot(toEntity.normalize()) < Math.cos(halfAngle)) continue;
-
-			WeaponEntityDamageEvent event = new WeaponEntityDamageEvent(weapon, entity, flatBonus, player);
-			Bukkit.getPluginManager().callEvent(event);
-		}
+		// Non-living entity (vehicle, etc.). The unified WeaponRaytraceImpactEvent has already
+		// fired with damage = flatBonus (set in the request), so CarDamageListener picks it up via
+		// its WeaponRaytraceImpactEvent handler. Nothing to do here.
 	}
 
 }

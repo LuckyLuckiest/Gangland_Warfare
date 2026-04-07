@@ -13,6 +13,7 @@ import me.luckyraven.weapon.SelectiveFire;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.dto.ScopeData;
+import me.luckyraven.weapon.raytrace.WeaponRaytracer;
 import me.luckyraven.weapon.types.biological.BiologicalAction;
 import me.luckyraven.weapon.types.biological.BiologicalWeapon;
 import me.luckyraven.weapon.types.gun.FullAutoTask;
@@ -48,12 +49,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 @ListenerHandler
-@AutowireTarget({WeaponService.class, RecoilCompatibility.class})
+@AutowireTarget({WeaponService.class, RecoilCompatibility.class, WeaponRaytracer.class})
 public class WeaponInteract implements Listener {
 
 	private final JavaPlugin          plugin;
 	private final WeaponService       weaponService;
 	private final RecoilCompatibility recoilCompatibility;
+	private final WeaponRaytracer     raytracer;
 
 	private final Map<UUID, AtomicReference<WeaponData>> continuousFire;
 	private final Map<UUID, Boolean>                     singleShotLock;
@@ -62,10 +64,12 @@ public class WeaponInteract implements Listener {
 	private final Map<UUID, Long>                        meleeCooldowns;
 	private final Set<UUID>                              activeMeleeSwings;
 
-	public WeaponInteract(JavaPlugin plugin, WeaponService weaponService, RecoilCompatibility recoilCompatibility) {
+	public WeaponInteract(JavaPlugin plugin, WeaponService weaponService, RecoilCompatibility recoilCompatibility,
+	                      WeaponRaytracer raytracer) {
 		this.plugin              = plugin;
 		this.weaponService       = weaponService;
 		this.recoilCompatibility = recoilCompatibility;
+		this.raytracer           = raytracer;
 		this.continuousFire      = new ConcurrentHashMap<>();
 		this.singleShotLock      = new ConcurrentHashMap<>();
 		this.autoTasks           = new ConcurrentHashMap<>();
@@ -186,6 +190,11 @@ public class WeaponInteract implements Listener {
 	public void onEntityDamage(EntityDamageByEntityEvent event) {
 		if (!(event.getDamager() instanceof Player player)) return;
 
+		// Allow damage that was applied programmatically by the unified raytracer (gun hitscan,
+		// stepped slow projectiles, etc.). Without this guard the raytracer's living.damage(...)
+		// call would be cancelled below as if it were a vanilla fist punch with a gun in hand.
+		if (WeaponRaytracer.isRaytraceDamageInProgress()) return;
+
 		// allow damage that was applied programmatically by MeleeAction or ThrowableAction itself
 		UUID targetUuid = event.getEntity().getUniqueId();
 		if (MeleeAction.pendingDamage.remove(targetUuid)) return;
@@ -207,7 +216,7 @@ public class WeaponInteract implements Listener {
 			UUID wUuid = melee.getUuid();
 			if (activeMeleeSwings.add(wUuid)) {
 				plugin.getServer().getScheduler().runTaskLater(plugin, () -> activeMeleeSwings.remove(wUuid), 1L);
-				boolean hit = new MeleeAction(melee, recoilCompatibility, meleeCooldowns).activate(player);
+				boolean hit = new MeleeAction(melee, recoilCompatibility, raytracer, meleeCooldowns).activate(player);
 				if (hit) melee.applyOnHitDurability(player, player.getInventory().getHeldItemSlot());
 			}
 			return;
@@ -269,20 +278,22 @@ public class WeaponInteract implements Listener {
 						plugin.getServer()
 						      .getScheduler()
 						      .runTaskLater(plugin, () -> activeMeleeSwings.remove(wUuid), 1L);
-						boolean hit = new MeleeAction(melee, recoilCompatibility, meleeCooldowns).activate(player);
+						boolean hit = new MeleeAction(melee, recoilCompatibility, raytracer, meleeCooldowns).activate(
+								player);
 						if (hit) melee.applyOnHitDurability(player, player.getInventory().getHeldItemSlot());
 					}
 				}
 			}
 			case IncendiaryWeapon incendiary -> {
 				IncendiaryAction action = new IncendiaryAction(plugin, weaponService, incendiary, recoilCompatibility,
-				                                               activeTasks);
+				                                               raytracer, activeTasks);
 
 				if (rightClick) action.start(player);
 				else if (leftClick) action.stop();
 			}
 			case BiologicalWeapon biological -> {
-				BiologicalAction action = new BiologicalAction(plugin, biological, recoilCompatibility, activeTasks);
+				BiologicalAction action = new BiologicalAction(plugin, biological, recoilCompatibility, raytracer,
+				                                               activeTasks);
 
 				if (rightClick) action.start(player);
 				else if (leftClick) action.fire(player);
@@ -356,10 +367,11 @@ public class WeaponInteract implements Listener {
 	private void shootFullAuto(GunWeapon weapon, Player player, ItemStack item) {
 		UUID weaponUuid = weapon.getUuid();
 		if (!autoTasks.containsKey(weaponUuid)) {
-			var autoTask = new FullAutoTask(plugin, weaponService, weapon, recoilCompatibility, player, item, () -> {
-				autoTasks.remove(weaponUuid);
-				continuousFire.remove(weaponUuid);
-			});
+			var autoTask = new FullAutoTask(plugin, weaponService, weapon, recoilCompatibility, raytracer, player, item,
+			                                () -> {
+												autoTasks.remove(weaponUuid);
+												continuousFire.remove(weaponUuid);
+											});
 
 			autoTasks.put(weaponUuid, autoTask);
 
@@ -520,7 +532,7 @@ public class WeaponInteract implements Listener {
 
 	private void shootInterval(Player player, GunWeapon weapon) {
 
-		GunAction gunAction = new GunAction(plugin, weaponService, weapon, recoilCompatibility);
+		GunAction gunAction = new GunAction(plugin, weaponService, weapon, recoilCompatibility, raytracer);
 
 		// shoot the weapon
 		gunAction.weaponShoot(player);

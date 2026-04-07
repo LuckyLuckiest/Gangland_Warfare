@@ -9,20 +9,19 @@ import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.events.WeaponEntityDamageEvent;
-import me.luckyraven.weapon.listener.projectile.ProjectileDamageListener;
+import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
 import me.luckyraven.weapon.types.melee.MeleeWeapon;
 import me.luckyraven.weapon.types.throwable.ThrowableAction;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -39,9 +38,10 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>{@link VehicleDamageEvent} — player left-click. Bukkit fires this instead of
  *       {@code EntityDamageEvent} for vehicle entities. Uses melee weapon damage if held;
  *       falls back to the raw punch value. Shift + left-click picks up a parked car.</li>
- *   <li>{@link ProjectileHitEvent} at {@code HIGH} — weapon projectiles. Reads the weapon's
- *       current damage via {@link ProjectileDamageListener#getDamageForProjectile} before the
- *       weapon system's {@code HIGHEST}-priority cleanup removes the data.</li>
+ *   <li>{@link WeaponRaytraceImpactEvent} — fired by the unified weapon raytracer for any gun /
+ *       slow projectile / incendiary / biological / throwable shot. Replaces the old
+ *       {@code ProjectileHitEvent}-driven path; the legacy projectile lookup via
+ *       {@code ProjectileDamageListener#getDamageForProjectile} has been removed.</li>
  *   <li>{@link EntityDamageEvent} at {@code NORMAL} — explosions, fire, and other non-projectile
  *       sources. Projectile cause is skipped here to avoid double-counting with the hook above.</li>
  * </ul>
@@ -121,33 +121,6 @@ public class CarDamageListener implements Listener {
 	}
 
 	// ------------------------------------------------------------------
-	// Weapon projectiles
-	// ------------------------------------------------------------------
-
-	/**
-	 * Fires at {@code HIGH} so the weapon's per-projectile data is still available before the weapon system cleans it
-	 * up at {@code HIGHEST}. Skips non-weapon projectiles (vanilla arrows, snowballs, etc.) — those fall through to
-	 * {@link #onEntityDamage}.
-	 */
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onProjectileHit(ProjectileHitEvent event) {
-		Entity hitEntity = event.getHitEntity();
-		if (hitEntity == null) return;
-
-		UUID           entityUUID = hitEntity.getUniqueId();
-		VehicleSession session    = carService.getVehicleRegistry().getByEntity(entityUUID);
-		ParkedVehicle  parked     = carService.getParkedVehicle(entityUUID);
-		if (session == null && parked == null) return;
-
-		Projectile projectile   = event.getEntity();
-		double     weaponDamage = ProjectileDamageListener.getDamageForProjectile(projectile.getEntityId());
-		if (weaponDamage < 0) return; // not a weapon projectile; EntityDamageEvent will handle it
-
-		int damage = Math.max(1, (int) Math.ceil(weaponDamage));
-		applyDamage(entityUUID, session, parked, damage);
-	}
-
-	// ------------------------------------------------------------------
 	// Explosions, fire, and other environmental sources
 	// ------------------------------------------------------------------
 
@@ -195,6 +168,42 @@ public class CarDamageListener implements Listener {
 		VehicleSession session    = carService.getVehicleRegistry().getByEntity(entityUUID);
 		ParkedVehicle  parked     = carService.getParkedVehicle(entityUUID);
 		if (session == null && parked == null) return;
+		int damage = Math.max(1, (int) Math.ceil(event.getDamage()));
+		applyDamage(entityUUID, session, parked, damage);
+	}
+
+	/**
+	 * Handles vehicle hits from the unified weapon raytracer. Vehicles are not {@code LivingEntity} so
+	 * {@code WeaponRaytracer} skips its default damage pipeline for them — this handler is the canonical hook for
+	 * routing weapon damage onto a car.
+	 * <p>
+	 * Suppresses damage for one tick after the shooter right-clicks the same kind of vehicle so the player can enter a
+	 * car they are aiming at without accidentally shooting it. The existing {@link #pendingRightClickInteract} flag
+	 * (set by {@link #onCarRightClick}) tracks this state.
+	 */
+	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+	public void onWeaponRaytraceImpact(WeaponRaytraceImpactEvent event) {
+		Entity hit = event.getHitEntity();
+		if (hit == null) return;
+
+		UUID           entityUUID = hit.getUniqueId();
+		VehicleSession session    = carService.getVehicleRegistry().getByEntity(entityUUID);
+		ParkedVehicle  parked     = carService.getParkedVehicle(entityUUID);
+		if (session == null && parked == null) return;
+
+		LivingEntity shooter = event.getShooter();
+
+		// Never damage the vehicle the shooter is currently riding — friendly fire on your own ride.
+		if (shooter != null && hit.equals(shooter.getVehicle())) {
+			return;
+		}
+
+		// If the shooter is mid-vehicle-entry (right-clicked a car within the last tick), suppress
+		// the shot rather than damaging the car they're trying to get into.
+		if (shooter != null && pendingRightClickInteract.contains(shooter.getUniqueId())) {
+			return;
+		}
+
 		int damage = Math.max(1, (int) Math.ceil(event.getDamage()));
 		applyDamage(entityUUID, session, parked, damage);
 	}

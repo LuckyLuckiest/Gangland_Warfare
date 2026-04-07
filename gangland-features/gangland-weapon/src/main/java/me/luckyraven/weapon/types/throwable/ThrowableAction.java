@@ -6,6 +6,9 @@ import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.weapon.dto.ThrowableData;
+import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
+import me.luckyraven.weapon.projectile.ProjectileState;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -183,15 +186,28 @@ public class ThrowableAction {
 		      .getScheduler()
 		      .runTaskLater(plugin, () -> registeredUuids.forEach(pendingVehicleExplosionDamage::remove), 1L);
 
+		ProjectileState explosionState = new ProjectileState(weapon, totalDmg);
+
 		for (Entity nearby : world.getNearbyEntities(center, data.getExplosionRadius(), data.getExplosionRadius(),
 		                                             data.getExplosionRadius())) {
 			if (!(nearby instanceof LivingEntity target)) continue;
 			if (nearby.getLocation().distanceSquared(center) > radiusSq) continue;
+
+			// Fire the unified impact event so future event consumers (and the cops-n-crooks
+			// raytrace handlers added in the gangland-weapon raytrace refactor) react to grenade
+			// explosions through the same hook as gun shots. The legacy {@code target.damage(...)}
+			// call below still drives the existing EntityDamageByEntityEvent path for cops-n-crooks
+			// listeners that haven't been migrated.
+			WeaponRaytraceImpactEvent impactEvent = new WeaponRaytraceImpactEvent(
+					weapon, player, target, null, null, target.getLocation(), totalDmg, explosionState);
+			Bukkit.getPluginManager().callEvent(impactEvent);
+			if (impactEvent.isCancelled()) continue;
+
 			if (totalDmg > 0) {
 				UUID targetUuid = target.getUniqueId();
 				pendingDamage.add(targetUuid);
 				pendingKillerWeapon.put(targetUuid, weapon.getName());
-				target.damage(totalDmg, player);
+				target.damage(impactEvent.getDamage(), player);
 			}
 			if (data.getFireTicks() > 0) target.setFireTicks(data.getFireTicks());
 		}

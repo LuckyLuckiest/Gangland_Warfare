@@ -7,6 +7,8 @@ import me.luckyraven.copsncrooks.npc.civilian.config.CivilianAIBehaviorConfig;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.util.downed.PlayerDownedEvent;
 import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
+import me.luckyraven.weapon.raytrace.WeaponRaytracer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -35,6 +37,10 @@ public class CivilianDamageListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onCivilianDamage(EntityDamageByEntityEvent event) {
+		// Weapon-system shots route through WeaponRaytraceImpactEvent (see onWeaponRaytraceImpact below).
+		// Skip here to avoid double-processing the same shot via two separate code paths.
+		if (WeaponRaytracer.isRaytraceDamageInProgress()) return;
+
 		Entity damaged = event.getEntity();
 
 		CivilianNpc npc = civilianService.getNpc(damaged.getUniqueId());
@@ -87,6 +93,53 @@ public class CivilianDamageListener implements Listener {
 					npc.setLastAttackerLocation(entityAttacker.getLocation().clone());
 					npc.transitionTo(CivilianState.FLEEING);
 				}
+			}
+		}
+	}
+
+	/**
+	 * Handles weapon-system shots against civilian NPCs. This is the canonical hook for any gangland weapon (gun,
+	 * incendiary, biological, melee, throwable) hitting a civilian — the legacy {@link #onCivilianDamage} handler skips
+	 * during a raytrace via the {@link WeaponRaytracer#isRaytraceDamageInProgress()} guard.
+	 */
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	public void onWeaponRaytraceImpact(WeaponRaytraceImpactEvent event) {
+		Entity damaged = event.getHitEntity();
+		if (damaged == null) return;
+
+		CivilianNpc npc = civilianService.getNpc(damaged.getUniqueId());
+		if (npc == null) return;
+
+		LivingEntity attacker = event.getShooter();
+		if (attacker == null) return;
+
+		CivilianAIBehaviorConfig ai = npc.getTypeConfig().ai();
+
+		if (attacker instanceof Player playerAttacker) {
+			if (npc.isHostile() && ai.combatEnabled()) {
+				npc.setTargetPlayerId(playerAttacker.getUniqueId());
+				if (npc.getCurrentState() != CivilianState.COMBAT) {
+					npc.transitionTo(CivilianState.COMBAT);
+				}
+			} else if (!npc.isHostile() && ai.fleeEnabled()) {
+				if (npc.getCurrentState() != CivilianState.FLEEING) {
+					npc.setLastAttackerLocation(playerAttacker.getLocation().clone());
+					npc.transitionTo(CivilianState.FLEEING);
+				}
+			}
+			return;
+		}
+
+		// Non-player LivingEntity shooter (cop NPC, hostile civilian, etc.)
+		if (npc.isHostile() && ai.combatEnabled()) {
+			npc.addEntityTargetToFront(attacker);
+			if (npc.getCurrentState() != CivilianState.COMBAT) {
+				npc.transitionTo(CivilianState.COMBAT);
+			}
+		} else if (!npc.isHostile() && ai.fleeEnabled()) {
+			if (npc.getCurrentState() != CivilianState.FLEEING) {
+				npc.setLastAttackerLocation(attacker.getLocation().clone());
+				npc.transitionTo(CivilianState.FLEEING);
 			}
 		}
 	}

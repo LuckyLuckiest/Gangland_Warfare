@@ -8,6 +8,9 @@ import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.weapon.dto.BiologicalData;
 import me.luckyraven.weapon.events.WeaponEntityDamageEvent;
+import me.luckyraven.weapon.raytrace.RaytraceRequest;
+import me.luckyraven.weapon.raytrace.WeaponMuzzle;
+import me.luckyraven.weapon.raytrace.WeaponRaytracer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -16,6 +19,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,17 +29,24 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class BiologicalAction {
 
+	/**
+	 * Maximum distance the chemical beam can travel before the cloud disperses in air.
+	 */
+	private static final double BEAM_RANGE = 30.0;
+
 	private final JavaPlugin                plugin;
 	private final BiologicalWeapon          weapon;
 	private final RecoilCompatibility       recoilCompatibility;
+	private final WeaponRaytracer           raytracer;
 	private final Map<UUID, RepeatingTimer> activeTasks;
 	private final Map<UUID, int[]>          chargeLevels;
 
 	public BiologicalAction(JavaPlugin plugin, BiologicalWeapon weapon, RecoilCompatibility recoilCompatibility,
-	                        Map<UUID, RepeatingTimer> activeTasks) {
+	                        WeaponRaytracer raytracer, Map<UUID, RepeatingTimer> activeTasks) {
 		this.plugin              = plugin;
 		this.weapon              = weapon;
 		this.recoilCompatibility = recoilCompatibility;
+		this.raytracer           = raytracer;
 		this.activeTasks         = activeTasks;
 		this.chargeLevels        = new ConcurrentHashMap<>();
 	}
@@ -97,32 +108,12 @@ public class BiologicalAction {
 		                   weapon.getModifiersData().getFlatDamage().bonus() :
 		                   0.0;
 
-		Location beamOrigin = player.getLocation().add(0, 1.0, 0);
+		// Fire a single ray through the unified raytracer to find where the chemical cloud should
+		// disperse — the impact point of the first hit (entity or block), or the max-range point
+		// if nothing was hit.
+		Location aoeCenter = computeBeamLanding(player, flatBonus);
 
-		for (Entity entity : player.getNearbyEntities(radius, radius, radius)) {
-			if (!(entity instanceof LivingEntity target)) continue;
-			if (entity.equals(player)) continue;
-			if (target.getLocation().distanceSquared(player.getLocation()) > radius * radius) continue;
-			for (PotionEffect effect : effects) target.addPotionEffect(effect);
-			if (flatBonus > 0) {
-				// apply flat bonus without attacker so it bypasses armor and the weapon event guard
-				target.damage(flatBonus);
-			}
-			// directed beam to each infected target
-			ParticleUtil.spawnBeam(beamOrigin, target.getLocation().add(0, target.getHeight() / 2.0, 0));
-		}
-
-		// Fire WeaponEntityDamageEvent for non-living entities (vehicles) in the biological radius
-		if (flatBonus > 0) {
-			for (Entity entity : player.getNearbyEntities(radius, radius, radius)) {
-				if (entity instanceof LivingEntity || entity.equals(player)) continue;
-				if (entity.getLocation().distanceSquared(player.getLocation()) > radius * radius) continue;
-				Bukkit.getPluginManager().callEvent(new WeaponEntityDamageEvent(weapon, entity, flatBonus, player));
-			}
-		}
-
-		// area-of-effect burst pulse
-		ParticleUtil.spawnAreaPulse(player.getLocation(), radius);
+		applyAreaCloud(player, aoeCenter, effects, radius, flatBonus);
 
 		ActionBarManager.send(player, "&aReleased at charge level " + level);
 	}
@@ -131,6 +122,63 @@ public class BiologicalAction {
 		RepeatingTimer timer = activeTasks.remove(weapon.getUuid());
 		if (timer != null) timer.stop();
 		chargeLevels.remove(weapon.getUuid());
+	}
+
+	/**
+	 * Submits one raytrace through the unified raytracer and returns the impact point. If no hit is found within
+	 * {@link #BEAM_RANGE}, returns the projected end point of the ray (the cloud disperses in mid-air at maximum
+	 * range).
+	 */
+	private Location computeBeamLanding(Player player, double flatBonus) {
+		final Location[] impact = new Location[1];
+
+		Vector   aimDir = player.getEyeLocation().getDirection();
+		Location origin = player.getEyeLocation();
+
+		RaytraceRequest request = RaytraceRequest.builder()
+		                                         .shooter(player)
+		                                         .weapon(weapon)
+		                                         .origin(origin.clone())
+		                                         .direction(aimDir.clone().normalize())
+		                                         .maxDistance(BEAM_RANGE)
+		                                         .baseDamage(flatBonus)
+		                                         .hitboxExpansion(0.3)
+		                                         .maxIterations(1)
+		                                         .impactHandler(event -> impact[0] = event.getImpactPoint())
+		                                         .build();
+
+		raytracer.fireInstant(request);
+
+		if (impact[0] != null) {
+			return impact[0];
+		}
+		return origin.clone().add(aimDir.clone().normalize().multiply(BEAM_RANGE));
+	}
+
+	private void applyAreaCloud(Player player, Location center, List<PotionEffect> effects, double radius,
+	                            double flatBonus) {
+		Location beamOrigin = WeaponMuzzle.compute(player, player.getEyeLocation().getDirection());
+
+		for (Entity entity : center.getWorld().getNearbyEntities(center, radius, radius, radius)) {
+			if (entity.equals(player)) continue;
+			if (entity.getLocation().distanceSquared(center) > radius * radius) continue;
+
+			if (entity instanceof LivingEntity target) {
+				for (PotionEffect effect : effects) target.addPotionEffect(effect);
+				if (flatBonus > 0) {
+					// apply flat bonus without attacker so it bypasses armor and the weapon event guard
+					target.damage(flatBonus);
+				}
+				ParticleUtil.spawnBeam(beamOrigin, target.getLocation().add(0, target.getHeight() / 2.0, 0));
+			} else if (flatBonus > 0) {
+				// Non-living entities (vehicles) — fire WeaponEntityDamageEvent so CarDamageListener
+				// applies the configured flat bonus.
+				Bukkit.getPluginManager().callEvent(new WeaponEntityDamageEvent(weapon, entity, flatBonus, player));
+			}
+		}
+
+		// area-of-effect burst pulse at the cloud center, not the player
+		ParticleUtil.spawnAreaPulse(center, radius);
 	}
 
 	private List<PotionEffect> parseEffects(BiologicalData data, int level) {

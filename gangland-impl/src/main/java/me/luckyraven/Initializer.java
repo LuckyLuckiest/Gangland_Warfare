@@ -113,12 +113,15 @@ import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import me.luckyraven.weapon.configuration.WeaponAddon;
 import me.luckyraven.weapon.projectile.BlockDamageManager;
+import me.luckyraven.weapon.raytrace.WeaponRaytracer;
+import me.luckyraven.weapon.raytrace.WeaponVisualSpawner;
 import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
@@ -162,6 +165,8 @@ public final class Initializer {
 	private HologramService            hologramService;
 	private LootChestManager           lootChestManager;
 	private BlockDamageManager         blockDamageManager;
+	private WeaponVisualSpawner        weaponVisualSpawner;
+	private WeaponRaytracer            weaponRaytracer;
 	private CopService                 copService;
 	private CopSpawnManager            copSpawnManager;
 	private CivilianService            civilianService;
@@ -306,8 +311,11 @@ public final class Initializer {
 		waypointManager.initialize();
 
 		// Weapon manager
-		weaponManager      = new WeaponManager(gangland);
-		blockDamageManager = new BlockDamageManager(gangland);
+		weaponManager       = new WeaponManager(gangland);
+		blockDamageManager  = new BlockDamageManager(gangland);
+		weaponVisualSpawner = new WeaponVisualSpawner();
+		weaponRaytracer     = new WeaponRaytracer(weaponManager, wearableAddon, blockDamageManager,
+		                                          weaponVisualSpawner);
 		weaponManager.initialize();
 
 		// sign manager
@@ -690,6 +698,12 @@ public final class Initializer {
 		dependencyContainer.registerInstance(SignInformation.class, signInformation);
 		dependencyContainer.registerInstance(HologramService.class, hologramService);
 		dependencyContainer.registerInstance(BlockDamageManager.class, blockDamageManager);
+		dependencyContainer.registerInstance(WeaponVisualSpawner.class, weaponVisualSpawner);
+		dependencyContainer.registerInstance(WeaponRaytracer.class, weaponRaytracer);
+
+		// Also publish via Bukkit ServicesManager so cross-module consumers (cops-n-crooks NPCs)
+		// can resolve the raytracer without threading it through their factory chains.
+		Bukkit.getServicesManager().register(WeaponRaytracer.class, weaponRaytracer, gangland, ServicePriority.Normal);
 		dependencyContainer.registerInstance(RepairManager.class, repairManager);
 		dependencyContainer.registerInstance(RepairAnvilGui.class, repairAnvilGui);
 		dependencyContainer.registerInstance(CopManager.class, copService.getCopManager());

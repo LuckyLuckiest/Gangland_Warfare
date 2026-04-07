@@ -1,436 +1,51 @@
 package me.luckyraven.weapon.listener.projectile;
 
-import lombok.Getter;
-import lombok.Setter;
 import me.luckyraven.util.autowire.AutowireTarget;
-import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.listener.ListenerHandler;
-import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
-import me.luckyraven.weapon.events.projectile.WeaponProjectileHitEvent;
-import me.luckyraven.weapon.events.projectile.WeaponProjectileLaunchEvent;
-import me.luckyraven.weapon.modifiers.BlockBreakModifier;
-import me.luckyraven.weapon.modifiers.ModifierHandler;
-import me.luckyraven.weapon.projectile.BlockDamageManager;
-import me.luckyraven.weapon.projectile.ProjectileState;
-import me.luckyraven.weapon.types.gun.GunWeapon;
-import me.luckyraven.weapon.wearable.WearableService;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.entity.*;
+import me.luckyraven.weapon.raytrace.WeaponVisualSpawner;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.projectiles.ProjectileSource;
-import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
-
+/**
+ * Vestigial listener that exists only to suppress the legacy {@code ProjectileHitEvent} /
+ * {@code EntityDamageByEntityEvent} chain for cosmetic visual projectiles spawned by the new {@code WeaponRaytracer}.
+ * All weapon damage logic now runs through the unified raytracer; this class only guards against vanilla event handling
+ * for the visual carrier entities (Fireball, Firework, Snowball, etc.) so they don't double-process or trigger spurious
+ * cops-n-crooks NPC reactions on contact.
+ */
 @ListenerHandler
-@AutowireTarget({WeaponService.class, WearableService.class})
+@AutowireTarget({WeaponService.class})
 public class ProjectileDamageListener implements Listener {
 
-	private final static Map<Integer, GunWeapon>       weaponInstance   = new ConcurrentHashMap<>();
-	private final static Map<Integer, ProjectileState> projectileStates = new ConcurrentHashMap<>();
+	private final WeaponVisualSpawner visualSpawner;
 
-	private final JavaPlugin         plugin;
-	private final WeaponService      weaponManager;
-	private final BlockDamageManager blockDamageManager;
-	private final WearableService    wearableService;
-
-	private final Map<Integer, ProjectileEventQueue> eventQueues;
-
-	public ProjectileDamageListener(JavaPlugin plugin, WeaponService weaponService,
-	                                BlockDamageManager blockDamageManager, WearableService wearableService) {
-		this.plugin             = plugin;
-		this.weaponManager      = weaponService;
-		this.blockDamageManager = blockDamageManager;
-		this.wearableService    = wearableService;
-		this.eventQueues        = new ConcurrentHashMap<>();
-	}
-
-	/**
-	 * Returns the effective damage for a weapon projectile (accounting for penetration/ricochet state reductions), or
-	 * {@code -1} if the given entity ID does not belong to a weapon projectile. Read this <em>before</em>
-	 * {@link ProjectileHitEvent} at {@code HIGHEST} priority, which is when the per-projectile data is cleaned up.
-	 */
-	public static double getDamageForProjectile(int projectileEntityId) {
-		GunWeapon weapon = weaponInstance.get(projectileEntityId);
-		if (weapon == null) return -1;
-
-		ProjectileState state = projectileStates.get(projectileEntityId);
-		return state != null ? state.getCurrentDamage() : weapon.getProjectileData().getDamage();
-	}
-
-	@EventHandler(priority = EventPriority.LOW)
-	public void onProjectileLaunch(WeaponProjectileLaunchEvent event) {
-		if (!(event.getProjectile().getShooter() instanceof LivingEntity)) return;
-		Player player = event.getProjectile().getShooter() instanceof Player p ? p : null;
-
-		GunWeapon weapon = (GunWeapon) event.getWeapon();
-
-		if (weapon == null) return;
-
-		int entityId = event.getProjectile().getEntityId();
-
-		weaponInstance.put(entityId, weapon);
-		projectileStates.put(entityId, new ProjectileState(weapon));
-		eventQueues.put(entityId, new ProjectileEventQueue(entityId));
-
-		// Handle tracer particles on launch (player shooters only)
-		if (player != null && weapon.getModifiersData().hasTracer()) {
-			Location start = event.getProjectile().getLocation();
-			Vector vector = event.getProjectile()
-			                     .getVelocity()
-			                     .normalize()
-			                     .multiply(weapon.getProjectileData().getDistance());
-			Location end = start.clone().add(vector);
-			ModifierHandler.spawnTracerParticles(weapon, start, end);
-		}
+	public ProjectileDamageListener(WeaponVisualSpawner visualSpawner) {
+		this.visualSpawner = visualSpawner;
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onProjectileEntityDamage(EntityDamageByEntityEvent event) {
 		if (!(event.getDamager() instanceof Projectile projectile)) return;
 
-		Entity hitEntity = event.getEntity();
-		if (hitEntity instanceof ItemFrame || hitEntity instanceof ArmorStand) return;
-
-		int projectileId = projectile.getEntityId();
-
-		// Non-living entities (vehicles, etc.) are not processed through the queue.
-		// Set the weapon's configured damage on the event so downstream listeners (e.g.
-		// CarDamageListener) receive the correct value instead of vanilla projectile damage.
-		if (!(hitEntity instanceof LivingEntity)) {
-			GunWeapon weapon = weaponInstance.get(projectileId);
-			if (weapon != null) {
-				ProjectileState state = projectileStates.get(projectileId);
-
-				double damage = state != null ? state.getCurrentDamage() : weapon.getProjectileData().getDamage();
-
-				event.setDamage(damage);
-			}
-			return;
+		// Cosmetic visuals do not drive damage — cancel the event so no downstream listener
+		// (including cops-n-crooks NPC AI) reacts to a purely visual projectile hitting an entity.
+		if (visualSpawner.isCosmetic(projectile.getEntityId())) {
+			event.setCancelled(true);
 		}
-
-		if (!weaponInstance.containsKey(projectileId)) return;
-
-		var queue = eventQueues.computeIfAbsent(projectileId, ProjectileEventQueue::new);
-
-		// Add damage event to queue
-		queue.addDamageEvent(event);
-
-		// Try to process queue
-		boolean isPlayer = event.getDamager() instanceof Player;
-		tryProcessQueue(projectileId, isPlayer ? (Player) event.getDamager() : null);
 	}
 
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onProjectileHit(ProjectileHitEvent event) {
-		var projectile   = event.getEntity();
-		int projectileId = projectile.getEntityId();
+		int projectileId = event.getEntity().getEntityId();
 
-		if (!weaponInstance.containsKey(projectileId)) return;
-
-		// Reset noDamageTicks before entity.hurt() is called (which happens after all
-		// ProjectileHitEvent handlers complete). Without this, Minecraft's invulnerability
-		// window from a prior hit causes entity.hurt() to short-circuit and skip firing
-		// EntityDamageByEntityEvent entirely, leaving the queue stuck waiting for a damage
-		// event that never arrives and causing rapid-fire projectiles to silently do nothing.
-		Entity hitEntity = event.getHitEntity();
-		if (hitEntity instanceof LivingEntity livingEntity) {
-			livingEntity.setNoDamageTicks(0);
+		if (visualSpawner.isCosmetic(projectileId)) {
+			visualSpawner.unregisterCosmetic(projectileId);
 		}
-
-		var queue = eventQueues.computeIfAbsent(projectileId, ProjectileEventQueue::new);
-
-		// Add hit event to queue
-		queue.addHitEvent(event);
-
-		// Try to process queue
-		boolean isPlayer = event.getEntity().getShooter() instanceof Player;
-		tryProcessQueue(projectileId, isPlayer ? (Player) event.getEntity().getShooter() : null);
-	}
-
-	private void tryProcessQueue(int projectileId, Player shooter) {
-		ProjectileEventQueue queue = eventQueues.get(projectileId);
-
-		if (queue != null && queue.isProcessed()) return;
-
-		if (queue == null) {
-			eventQueues.put(projectileId, queue = new ProjectileEventQueue(projectileId));
-		}
-
-		// Check if we have both events OR if the hit event happened without damage (block hit)
-		boolean hasDamageEvent = queue.hasDamageEvent();
-		boolean hasHitEvent    = queue.hasHitEvent();
-
-		// If we have a hit event but no damage event, it is a block/miss hit
-		if (hasHitEvent && !hasDamageEvent) {
-			Entity hitEntity = queue.getHitEvent().getHitEntity();
-			// Block hit OR non-living entity (damage was set directly in onProjectileEntityDamage)
-			if (!(hitEntity instanceof LivingEntity)) {
-				executeQueue(projectileId, queue, shooter);
-				return;
-			}
-
-			// Living entity hit but damage event not yet received — wait
-			return;
-		}
-
-		// If we have a damage event but no hit event, wait for the hit event
-		if (hasDamageEvent && !hasHitEvent) return;
-
-		if (!hasDamageEvent) return;
-
-		executeQueue(projectileId, queue, shooter);
-	}
-
-	private void executeQueue(int projectileId, ProjectileEventQueue queue, Player shooter) {
-		if (queue.isProcessed()) return;
-		queue.setProcessed(true);
-
-		GunWeapon weapon = weaponInstance.get(projectileId);
-		if (weapon == null) {
-			cleanup(projectileId);
-			return;
-		}
-
-		ProjectileState state = projectileStates.get(projectileId);
-
-		var newEvent = new WeaponProjectileHitEvent(weapon);
-		Bukkit.getPluginManager().callEvent(newEvent);
-
-		if (newEvent.isCancelled()) return;
-
-		// Process damage events FIRST (in order they were added)
-		boolean shouldContinue = true;
-		for (EntityDamageByEntityEvent damageEvent : queue.getDamageEvents()) {
-			shouldContinue = processDamageEvent(damageEvent, weapon, shooter, state);
-		}
-
-		// Then process hit event
-		ProjectileHitEvent hitEvent = queue.getHitEvent();
-		if (hitEvent != null) {
-			processHitEvent(hitEvent, weapon, state, shouldContinue);
-		}
-
-		// Cleanup only if projectile should not continue
-		if (!shouldContinue || (hitEvent != null && hitEvent.getEntity().isDead())) {
-			cleanup(projectileId);
-		}
-	}
-
-	private boolean processDamageEvent(EntityDamageByEntityEvent event, GunWeapon weapon, Player shooter,
-	                                   ProjectileState state) {
-		if (!(event.getEntity() instanceof LivingEntity entity)) return false;
-		if (!(event.getDamager() instanceof Projectile projectile)) return false;
-
-		var random         = new Random();
-		var projectileData = weapon.getProjectileData();
-		var damageData     = weapon.getDamageData();
-
-		boolean criticalHitOccurred = random.nextDouble() < damageData.getCriticalHitChance() / 100D;
-
-		// Use state's current damage (accounts for penetration/ricochet reductions)
-		double baseDamage = state != null ? state.getCurrentDamage() : projectileData.getDamage();
-
-		// Reduce critical-hit bonus via TOUGHENED trait across worn armor
-		double critBonus = criticalHitOccurred ? damageData.getCriticalHitDamage() : 0;
-		if (critBonus > 0) {
-			critBonus = wearableService.reduceCritBonus(critBonus, entity);
-		}
-
-		double damage = baseDamage + critBonus;
-
-		// Apply armor piercing modifier
-		damage = ModifierHandler.calculateArmorPiercingDamage(damage, entity, weapon);
-
-		// Apply wearable damage reduction (projectile-specific path)
-		damage = wearableService.applyWearableReduction(damage, entity, true);
-
-		// Apply flat damage bonus (after reductions - armor cannot soak this bonus)
-		damage = ModifierHandler.applyFlatDamage(damage, weapon);
-
-		// Apply head damage bonus (after armor reduction - headshots bypass protection)
-		boolean isHeadshot = weaponManager.isHeadPosition(projectile.getLocation(), entity.getLocation());
-		if (isHeadshot) {
-			damage += damageData.getHeadDamage();
-		}
-
-		event.setDamage(damage);
-
-		if (criticalHitOccurred && shooter != null) {
-			var sound = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, "ITEM_SHIELD_BREAK", 1F, 1F);
-			sound.playSound(shooter);
-		}
-
-		// Apply fire ticks with wearable FIRE_RESISTANT and vanilla FIRE_PROTECTION reduction
-		int fireTicks = wearableService.reduceFireTicks(damageData.getFireTicks(), entity);
-		entity.setFireTicks(fireTicks);
-		entity.setNoDamageTicks(0);
-
-		// Impact sound — plays at the hit location so all nearby players hear it
-		SoundConfiguration impactCustom  = weapon.getSoundData().getImpactCustom();
-		SoundConfiguration impactDefault = weapon.getSoundData().getImpactDefault();
-		if (impactCustom != null || impactDefault != null) {
-			SoundConfiguration.playSoundsAtLocation(entity.getLocation(), impactCustom, impactDefault);
-		}
-
-		// Handle entity penetration
-		return state != null && ModifierHandler.handleEntityPenetration(state);
-	}
-
-	private void processHitEvent(ProjectileHitEvent event, Weapon weapon, ProjectileState state,
-	                             boolean continueFromDamage) {
-		Projectile projectile   = event.getEntity();
-		Block      hitBlock     = event.getHitBlock();
-		BlockFace  hitBlockFace = event.getHitBlockFace();
-
-		// Handle block hit with break modifiers — always apply block damage,
-		// even if the projectile ricochets off or penetrates through afterward
-		if (hitBlock != null) {
-			handleBlockHit(hitBlock, weapon);
-		}
-
-		// Handle ricochet
-		if (hitBlock != null && state != null && hitBlockFace != null) {
-			Projectile newProjectile = ModifierHandler.handleRicochet(plugin, state, projectile, hitBlock,
-			                                                          hitBlockFace);
-			if (newProjectile != null) {
-				// Cancel the event so Spigot doesn't run its default block-hit handling on the spent original
-				event.setCancelled(true);
-
-				// Migrate per-projectile bookkeeping from the original entity ID to the freshly spawned bullet
-				int             oldId          = projectile.getEntityId();
-				int             newId          = newProjectile.getEntityId();
-				GunWeapon       migratedWeapon = weaponInstance.remove(oldId);
-				ProjectileState migratedState  = projectileStates.remove(oldId);
-				if (migratedWeapon != null) {
-					weaponInstance.put(newId, migratedWeapon);
-				}
-				if (migratedState != null) {
-					projectileStates.put(newId, migratedState);
-				}
-				eventQueues.remove(oldId);
-				eventQueues.put(newId, new ProjectileEventQueue(newId));
-
-				// Spawn tracer particles along the deflected path (player shooters only)
-				if (newProjectile.getShooter() instanceof Player player && weapon instanceof GunWeapon gunWeapon) {
-					double   distance = gunWeapon.getProjectileData().getDistance();
-					Location start    = newProjectile.getLocation();
-					Location end      = start.clone().add(newProjectile.getVelocity().normalize().multiply(distance));
-					ModifierHandler.spawnTracerParticles(weapon, start, end);
-				}
-				return;
-			}
-
-			// Handle block penetration
-			if (ModifierHandler.handleBlockPenetration(state, hitBlock)) {
-				// Projectile penetrated, let it continue
-				event.setCancelled(true);
-				int projectileId = projectile.getEntityId();
-				eventQueues.put(projectileId, new ProjectileEventQueue(projectileId));
-				return;
-			}
-		}
-
-		// Remove projectile if it didn't ricochet or penetrate
-		if (!projectile.isDead() && !continueFromDamage) {
-			projectile.remove();
-		}
-
-		// set the explosive damage
-		explosiveProjectile(event);
-	}
-
-	private void handleBlockHit(Block block, Weapon weapon) {
-		List<BlockBreakModifier> modifiers = weapon.getModifiersData().getBreakBlocks();
-
-		for (BlockBreakModifier modifier : modifiers) {
-			if (!modifier.appliesTo(block.getType())) continue;
-
-			blockDamageManager.applyDamage(block, modifier);
-			break;
-		}
-	}
-
-	private void explosiveProjectile(ProjectileHitEvent event) {
-		Projectile projectile = event.getEntity();
-
-		if (!(projectile instanceof Fireball fireball)) return;
-
-		ProjectileSource shooter = fireball.getShooter();
-
-		if (!(shooter instanceof LivingEntity)) return;
-
-		Entity   targetEntity = event.getHitEntity();
-		Location hitEntity    = targetEntity != null ? targetEntity.getLocation() : fireball.getLocation();
-
-		Block    hitBlock = event.getHitBlock();
-		Location hitLoc   = hitBlock != null ? hitBlock.getLocation() : hitEntity;
-
-		// damage nearby entities
-		int       entityId        = projectile.getEntityId();
-		GunWeapon weapon          = weaponInstance.get(entityId);
-		double    explosionRadius = weapon.getDamageData().getExplosionDamage();
-
-		for (Entity entity : fireball.getNearbyEntities(explosionRadius, explosionRadius, explosionRadius)) {
-			if (!(entity instanceof LivingEntity target && entity != shooter)) continue;
-
-			double distance = target.getLocation().distance(hitLoc);
-			double damage   = 20 * (1 - (distance / explosionRadius));
-
-			target.damage(Math.max(damage, 0D), fireball);
-		}
-	}
-
-	private void cleanup(int projectileId) {
-		weaponInstance.remove(projectileId);
-		projectileStates.remove(projectileId);
-		eventQueues.remove(projectileId);
-	}
-
-	@Getter
-	private static class ProjectileEventQueue {
-		private final int                             projectileId;
-		private final List<EntityDamageByEntityEvent> damageEvents;
-
-		private ProjectileHitEvent hitEvent;
-		@Setter
-		private boolean            processed;
-
-		public ProjectileEventQueue(int projectileId) {
-			this.projectileId = projectileId;
-			this.damageEvents = new ArrayList<>();
-			this.processed    = false;
-		}
-
-		public void addDamageEvent(EntityDamageByEntityEvent event) {
-			damageEvents.add(event);
-		}
-
-		public void addHitEvent(ProjectileHitEvent event) {
-			this.hitEvent = event;
-		}
-
-		public boolean hasDamageEvent() {
-			return !damageEvents.isEmpty();
-		}
-
-		public boolean hasHitEvent() {
-			return hitEvent != null;
-		}
-
 	}
 
 }

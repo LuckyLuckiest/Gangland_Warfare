@@ -3,7 +3,7 @@ package me.luckyraven.weapon.events.projectile;
 import lombok.Getter;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.events.WeaponEvent;
-import me.luckyraven.weapon.projectile.WeaponProjectile;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
@@ -13,14 +13,14 @@ public class WeaponShootEvent extends WeaponEvent implements Cancellable {
 
 	private static final HandlerList handler = new HandlerList();
 
-	private final WeaponProjectile<?> weaponProjectile;
+	private final LivingEntity shooter;
 
 	private boolean cancelled;
 
-	public WeaponShootEvent(Weapon weapon, WeaponProjectile<?> weaponProjectile) {
+	public WeaponShootEvent(Weapon weapon, LivingEntity shooter) {
 		super(weapon);
 
-		this.weaponProjectile = weaponProjectile;
+		this.shooter = shooter;
 	}
 
 	public static HandlerList getHandlerList() {

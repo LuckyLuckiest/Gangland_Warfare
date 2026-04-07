@@ -8,6 +8,8 @@ import me.luckyraven.copsncrooks.npc.police.CopManager;
 import me.luckyraven.copsncrooks.npc.police.npc.CopNpc;
 import me.luckyraven.util.downed.PlayerDownedEvent;
 import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
+import me.luckyraven.weapon.raytrace.WeaponRaytracer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -97,6 +99,10 @@ public class CopListener implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onCopDamaged(EntityDamageByEntityEvent event) {
+		// Weapon-system shots route through WeaponRaytraceImpactEvent (see onWeaponRaytraceImpact below).
+		// Skip here to avoid double-processing the same shot via two separate code paths.
+		if (WeaponRaytracer.isRaytraceDamageInProgress()) return;
+
 		Entity victim = event.getEntity();
 
 		if (!copManager.isCopNpc(victim)) return;
@@ -139,6 +145,43 @@ public class CopListener implements Listener {
 
 		// Alert system: put ALL cops for this player into combat mode
 		copManager.onCopAttackedAlert(cop, attacker);
+	}
+
+	/**
+	 * Handles weapon-system shots against cop NPCs. Canonical hook for any gangland weapon hitting a cop. Mirrors the
+	 * legacy {@link #onCopDamaged} branches but operates on {@link WeaponRaytraceImpactEvent}, which is fired by
+	 * {@code WeaponRaytracer} for every unified hit detection result. Critical: this handler also enforces the cop
+	 * friendly-fire cancel — if both shooter and victim are cop NPCs, {@code event.setCancelled(true)} stops the
+	 * raytracer from applying damage.
+	 */
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onWeaponRaytraceImpact(WeaponRaytraceImpactEvent event) {
+		Entity victim = event.getHitEntity();
+		if (victim == null) return;
+
+		if (!copManager.isCopNpc(victim)) return;
+
+		LivingEntity shooter = event.getShooter();
+		if (shooter == null) return;
+
+		// Friendly fire: cancel when a cop is hit by another cop's weapon
+		if (copManager.isCopNpc(shooter)) {
+			event.setCancelled(true);
+			return;
+		}
+
+		if (shooter instanceof Player attacker) {
+			CopNpc cop = copManager.findCopByEntity(victim);
+			if (cop == null) return;
+			copManager.onCopAttackedAlert(cop, attacker);
+			return;
+		}
+
+		// Non-player, non-cop LivingEntity attacker (hostile civilian, etc.)
+		CopNpc attackedCop = copManager.findCopByEntity(victim);
+		if (attackedCop != null) {
+			attackedCop.addEntityAttacker(shooter);
+		}
 	}
 
 	/**

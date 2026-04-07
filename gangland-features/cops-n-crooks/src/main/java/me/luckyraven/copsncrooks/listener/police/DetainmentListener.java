@@ -31,7 +31,7 @@ public class DetainmentListener implements Listener {
 
 	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
 	public void onWeaponShoot(WeaponShootEvent event) {
-		if (!(event.getWeaponProjectile().getShooter() instanceof Player player)) return;
+		if (!(event.getShooter() instanceof Player player)) return;
 		if (!detainmentService.isRestrained(player)) return;
 
 		event.setCancelled(true);

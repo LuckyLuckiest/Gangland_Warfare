@@ -22,8 +22,17 @@ public class ProjectileState {
 	private double currentDamageMultiplier;
 
 	public ProjectileState(GunWeapon weapon) {
+		this(weapon, weapon.getProjectileData().getDamage());
+	}
+
+	/**
+	 * Constructs a projectile state for any weapon type with an explicit base damage. Used by non-gun weapon actions
+	 * (incendiary, biological, melee, throwable) that don't carry a {@code ProjectileData} object but still want to
+	 * drive the unified raytracer.
+	 */
+	public ProjectileState(Weapon weapon, double baseDamage) {
 		this.weapon                  = weapon;
-		this.baseDamage              = weapon.getProjectileData().getDamage();
+		this.baseDamage              = baseDamage;
 		this.blocksPenetrated        = 0;
 		this.entitiesPenetrated      = 0;
 		this.bounceCount             = 0;
