@@ -16,7 +16,15 @@ public class BiologicalData implements Cloneable {
 	private int          chargeTimePerLevel;
 	private int          maxChargeLevel;
 	private List<String> effectsPerLevel;
-	private double       areaRadius;
+	/**
+	 * Maximum raytrace distance for the released shot, in blocks.
+	 */
+	private double       range;
+	/**
+	 * Damage dealt at charge level 1. Each additional level multiplies this value linearly (level N →
+	 * {@code N * baseDamage}).
+	 */
+	private double       baseDamage;
 
 	@Override
 	public BiologicalData clone() {
