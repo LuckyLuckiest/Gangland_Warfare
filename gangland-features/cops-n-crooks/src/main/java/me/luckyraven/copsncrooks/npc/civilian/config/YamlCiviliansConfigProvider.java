@@ -179,7 +179,7 @@ public class YamlEntityMarkerConfigProvider {
 		try {
 			return NpcDifficulty.valueOf(raw.trim().toUpperCase(Locale.ROOT));
 		} catch (IllegalArgumentException e) {
-			log.warning("Unknown NPC difficulty '" + raw + "' for " + contextLabel + " — defaulting to NORMAL.");
+			log.warn("Unknown NPC difficulty '{}' for {} — defaulting to NORMAL.", raw, contextLabel);
 			return NpcDifficulty.NORMAL;
 		}
 	}
