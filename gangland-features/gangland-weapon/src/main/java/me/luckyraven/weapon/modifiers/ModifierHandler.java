@@ -3,6 +3,8 @@ package me.luckyraven.weapon.modifiers;
 import com.cryptomorin.xseries.XAttribute;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.dto.ModifiersData;
+import me.luckyraven.weapon.modifiers.action.ArmorPiercingModifier;
+import me.luckyraven.weapon.modifiers.action.PenetrationModifier;
 import me.luckyraven.weapon.projectile.ProjectileState;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -11,9 +13,9 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.LivingEntity;
 
 /**
- * Pure helpers for the weapon modifier pipeline. Damage / penetration math used by the unified
- * {@code WeaponRaytracer}; reflection math, ricochet projectile spawning, and tracer-particle
- * rendering have been moved into the raytracer itself.
+ * Pure helpers for the weapon modifier pipeline. Damage / penetration math used by the unified {@code WeaponRaytracer};
+ * reflection math, ricochet projectile spawning, and tracer-particle rendering have been moved into the raytracer
+ * itself.
  */
 public class ModifierHandler {
 

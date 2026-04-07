@@ -1,4 +1,4 @@
-package me.luckyraven.weapon.modifiers;
+package me.luckyraven.weapon.modifiers.action;
 
 /**
  * Adds a flat bonus to the projectile's damage, applied after all other modifiers.

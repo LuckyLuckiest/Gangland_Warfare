@@ -1,4 +1,4 @@
-package me.luckyraven.weapon.modifiers;
+package me.luckyraven.weapon.modifiers.action;
 
 /**
  * Allows projectiles to penetrate through blocks or entities.

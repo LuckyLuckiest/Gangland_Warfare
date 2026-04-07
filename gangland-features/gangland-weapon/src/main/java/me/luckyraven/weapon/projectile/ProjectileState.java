@@ -3,7 +3,7 @@ package me.luckyraven.weapon.projectile;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.weapon.Weapon;
-import me.luckyraven.weapon.modifiers.RicochetModifier;
+import me.luckyraven.weapon.modifiers.action.RicochetModifier;
 import me.luckyraven.weapon.types.gun.GunWeapon;
 
 /**

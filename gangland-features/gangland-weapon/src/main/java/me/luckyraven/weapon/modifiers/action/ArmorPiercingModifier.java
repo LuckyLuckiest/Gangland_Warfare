@@ -1,4 +1,4 @@
-package me.luckyraven.weapon.modifiers;
+package me.luckyraven.weapon.modifiers.action;
 
 /**
  * Bypasses target armor.

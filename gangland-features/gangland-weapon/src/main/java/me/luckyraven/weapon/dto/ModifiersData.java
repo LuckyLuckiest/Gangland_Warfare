@@ -3,7 +3,7 @@ package me.luckyraven.weapon.dto;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.exception.PluginException;
-import me.luckyraven.weapon.modifiers.*;
+import me.luckyraven.weapon.modifiers.action.*;
 
 import java.util.ArrayList;
 import java.util.List;

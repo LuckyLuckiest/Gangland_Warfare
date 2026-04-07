@@ -5,7 +5,7 @@ import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.weapon.dto.MeleeData;
 import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
-import me.luckyraven.weapon.modifiers.ArmorPiercingModifier;
+import me.luckyraven.weapon.modifiers.action.ArmorPiercingModifier;
 import me.luckyraven.weapon.raytrace.RaytraceRequest;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;
 import org.bukkit.entity.Entity;
