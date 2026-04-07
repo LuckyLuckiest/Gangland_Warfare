@@ -1,0 +1,45 @@
+# +-----------------+ #
+# |    Tomahawk     | #
+# +-----------------+ #
+
+Information:
+   Name: "&fTomahawk&r"
+   Category: throwable
+   Material: STONE_AXE
+   Durability:
+      Base: 1
+      Change:
+         On_Shot: 0
+         On_Repair: 0
+   Lore:
+      - "&7A balanced throwing axe.&r"
+      - "&7Sticks where it lands.&r"
+   Drop_Hologram: false
+
+Throw:
+   Fuse_Time: 0
+   Explosion_Radius: 0.0
+   Explosion_Damage: 14
+   Fire_Ticks: 0
+   Bounces: false
+   Max_Bounces: 0
+   Sticky: true
+   Entity_Type: SNOWBALL
+   Recoil:
+      Amount: 0.0
+      Push: 0.05
+      Power_Up: 0.0
+      Pattern: []
+   Sound:
+      Default_Sound:
+         Sound: ENTITY_SNOWBALL_THROW
+         Volume: 1.0
+         Pitch: 0.9
+
+Modifiers:
+   Flat_Damage: 0.0
+
+Death_Messages:
+   - "&c%victim% caught %killer%'s %item% with their face."
+   - "&c%killer% threw a tomahawk through %victim%."
+   - "&c%victim% got split open by %killer%'s axe."

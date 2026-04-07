@@ -1,0 +1,74 @@
+# +-----------------+ #
+# |     Ray Gun     | #
+# +-----------------+ #
+
+Information:
+   Name: "&dRay Gun&r"
+   Category: biological
+   Material: RECOVERY_COMPASS
+   Durability:
+      Base: 100
+      Change:
+         On_Shot: 0
+         On_Repair: 25
+   Lore:
+      - "&dExperimental energy weapon.&r"
+      - "&7Hold right-click to charge.&r"
+      - "&7Release to unleash radiation.&r"
+   Drop_Hologram: false
+
+Shoot:
+   Charge_Time_Per_Level: 15
+   Max_Charge_Level: 3
+   Area_Radius: 4.0
+   Effects_Per_Level:
+      - "GLOWING-200-0,NAUSEA-100-0"
+      - "GLOWING-300-0,LEVITATION-60-1,WEAKNESS-200-1"
+      - "WITHER-120-2,LEVITATION-100-2,GLOWING-400-0,BLINDNESS-160-0"
+   Recoil:
+      Amount: 0.0
+      Push: 0.06
+      Power_Up: 0.0
+      Pattern: []
+   Sound:
+      Default_Sound:
+         Sound: ENTITY_ELDER_GUARDIAN_CURSE
+         Volume: 0.7
+         Pitch: 1.5
+      Empty_Default_Sound:
+         Sound: BLOCK_BEACON_DEACTIVATE
+         Volume: 0.6
+         Pitch: 1.5
+
+Ammunition:
+   Ammo_Type: pathogen_vial
+   Capacity: 5
+   Consume: 1
+   Restore: 5
+
+Reload:
+   Cooldown: 4
+   Type: instant
+   Sound:
+      Default_Sound_Before:
+         Sound: BLOCK_BEACON_POWER_SELECT
+         Volume: 0.8
+         Pitch: 1.2
+      Default_Sound_After:
+         Sound: BLOCK_BEACON_ACTIVATE
+         Volume: 0.6
+         Pitch: 1.2
+   Action_Bar:
+      Reloading: "&dRecharging core...&r"
+      Opening: "&dOpening...&r"
+
+Scope:
+   Level: 1
+
+Modifiers:
+   Flat_Damage: 0.0
+
+Death_Messages:
+   - "&c%victim% was irradiated by %killer%'s %item%."
+   - "&c%killer% disintegrated %victim% with the ray gun."
+   - "&c%victim% glowed brightly thanks to %killer%."

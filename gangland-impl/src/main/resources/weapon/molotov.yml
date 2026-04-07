@@ -1,0 +1,45 @@
+# +-----------------+ #
+# |    Molotov      | #
+# +-----------------+ #
+
+Information:
+   Name: "&6Molotov Cocktail&r"
+   Category: throwable
+   Material: HONEY_BOTTLE
+   Durability:
+      Base: 1
+      Change:
+         On_Shot: 0
+         On_Repair: 0
+   Lore:
+      - "&7A bottle of fuel and a rag.&r"
+      - "&7Light it. Throw it. Run.&r"
+   Drop_Hologram: false
+
+Throw:
+   Fuse_Time: 40
+   Explosion_Radius: 3.0
+   Explosion_Damage: 2
+   Fire_Ticks: 100
+   Bounces: false
+   Max_Bounces: 0
+   Sticky: true
+   Entity_Type: SPLASH_POTION
+   Recoil:
+      Amount: 0.0
+      Push: 0.08
+      Power_Up: 0.0
+      Pattern: []
+   Sound:
+      Default_Sound:
+         Sound: ENTITY_SPLASH_POTION_THROW
+         Volume: 1.0
+         Pitch: 1.0
+
+Modifiers:
+   Flat_Damage: 0.0
+
+Death_Messages:
+   - "&c%victim% burned alive in %killer%'s %item%."
+   - "&c%killer% set %victim% ablaze."
+   - "&c%victim% couldn't outrun the fire from %killer%."

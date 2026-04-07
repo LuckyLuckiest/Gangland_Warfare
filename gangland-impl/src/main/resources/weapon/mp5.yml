@@ -1,0 +1,117 @@
+# +-----------------+ #
+# |       MP5       | #
+# +-----------------+ #
+
+Information:
+   Name: "&fMP5&r"
+   Category: gun
+   Material: GOLDEN_HOE
+   Durability:
+      Base: 100
+      Change:
+         On_Shot: 0
+         On_Repair: 0
+   Lore:
+      - "&7Compact 9mm SMG with a blistering rate of fire.&r"
+      - "&7Excellent up close, mediocre at range.&r"
+   Drop_Hologram: true
+
+Shoot:
+   Selective_Fire: auto
+
+   Projectile:
+      Speed: 4
+      Type: BULLET
+      Damage:
+         Base: 4
+         Explosion_Damage: 0
+         Fire_Ticks: 0
+         Head: 3
+         Critical_Hit:
+            Chance: 3
+            Amount: 3
+      Consumed_Amount: 1
+      Per_Shot: 1
+      Cooldown: 0.1
+      Distance: 25
+      Particle: true
+
+   Weapon_Consumed:
+      Consume_On_Shot: 0
+      Time: -1
+
+   Spread:
+      Starting_Spread: 0.08
+      Time: 4
+      Change:
+         Base: 0.06
+         Bounds:
+            Reset_On_Bound: true
+            Min: 0.08
+            Max: 1.4
+
+   Recoil:
+      Amount: 0.04
+      Push: 0.04
+      Power_Up: 0.0002
+      Pattern:
+         - 2;1
+         - 1;0
+         - 0;0
+         - -1;0
+
+   Sound:
+      Default_Sound:
+         Sound: ENTITY_GENERIC_EXPLODE
+         Volume: 0.9
+         Pitch: 2.0
+      Empty_Default_Sound:
+         Sound: ENTITY_BLAZE_BURN
+         Volume: 0.8
+         Pitch: 1.2
+      Flyby_Range: 2.5
+      Flyby_Default_Sound:
+         Sound: ENTITY_ARROW_SHOOT
+         Volume: 0.5
+         Pitch: 2.2
+      Impact_Default_Sound:
+         Sound: BLOCK_STONE_HIT
+         Volume: 0.8
+         Pitch: 1.6
+
+Ammunition:
+   Capacity: 30
+   Ammo_Type: "9mm"
+   Consume: 1
+   Restore: 30
+
+Reload:
+   Cooldown: 3
+
+   Sound:
+      Default_Sound_Before:
+         Sound: BLOCK_PISTON_CONTRACT
+         Volume: 0.8
+         Pitch: 1.5
+      Default_Sound_After:
+         Sound: BLOCK_PISTON_EXTEND
+         Volume: 0.8
+         Pitch: 1.5
+
+   Action_Bar:
+      Reloading: "&cReloading...&r"
+      Opening: "&cOpening...&r"
+
+   Type: instant
+
+Scope:
+   Level: 1
+
+Modifiers:
+   Flat_Damage: 0.0
+   Armor_Piercing: 0.15
+
+Death_Messages:
+   - "&c%victim% was riddled by %killer%'s %item%."
+   - "&c%killer% sprayed %victim% down."
+   - "&c%victim% couldn't outrun %killer%'s SMG."

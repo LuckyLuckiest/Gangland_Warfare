@@ -1,0 +1,43 @@
+# +-----------------+ #
+# |     Crowbar     | #
+# +-----------------+ #
+
+Information:
+   Name: "&7Crowbar&r"
+   Category: melee
+   Material: STONE_PICKAXE
+   Durability:
+      Base: 300
+      Change:
+         On_Shot: 1
+         On_Repair: 60
+   Lore:
+      - "&7A heavy iron pry bar.&r"
+      - "&7Slow, but it sends people flying.&r"
+   Drop_Hologram: false
+
+Attack:
+   Damage: 7.5
+   Range: 2.7
+   Cooldown: 18
+   Knockback: 0.9
+   Selective_Fire: single
+   Recoil:
+      Amount: 0.0
+      Push: 0.04
+      Power_Up: 0.0
+      Pattern: []
+   Sound:
+      Default_Sound:
+         Sound: BLOCK_ANVIL_LAND
+         Volume: 0.8
+         Pitch: 1.4
+
+Modifiers:
+   Flat_Damage: 1.0
+   Armor_Piercing: 0.0
+
+Death_Messages:
+   - "&c%victim% was clubbed down by %killer%'s %item%."
+   - "&c%killer% bashed %victim%'s skull in."
+   - "&c%victim% got a crowbar to the face from %killer%."

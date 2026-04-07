@@ -1,0 +1,121 @@
+# +-----------------+ #
+# |     Minigun     | #
+# +-----------------+ #
+
+Information:
+   Name: "&8Minigun&r"
+   Category: gun
+   Material: NETHERITE_PICKAXE
+   Durability:
+      Base: 100
+      Change:
+         On_Shot: 0
+         On_Repair: 0
+   Lore:
+      - "&7A 6-barrel rotary cannon. 200-round drum.&r"
+      - "&7Heavy. Inaccurate. Annihilating.&r"
+   Drop_Hologram: true
+
+Shoot:
+   Selective_Fire: auto
+
+   Projectile:
+      Speed: 5
+      Type: BULLET
+      Damage:
+         Base: 6
+         Explosion_Damage: 0
+         Fire_Ticks: 0
+         Head: 4
+         Critical_Hit:
+            Chance: 2
+            Amount: 3
+      Consumed_Amount: 1
+      Per_Shot: 1
+      Cooldown: 0.05
+      Distance: 40
+      Particle: true
+
+   Weapon_Consumed:
+      Consume_On_Shot: 0
+      Time: -1
+
+   Spread:
+      Starting_Spread: 0.15
+      Time: 3
+      Change:
+         Base: 0.08
+         Bounds:
+            Reset_On_Bound: true
+            Min: 0.15
+            Max: 2.5
+
+   Recoil:
+      Amount: 0.06
+      Push: 0.06
+      Power_Up: 0.0003
+      Pattern:
+         - 1;1
+         - 1;-1
+         - -1;1
+         - -1;-1
+
+   Sound:
+      Default_Sound:
+         Sound: ENTITY_GENERIC_EXPLODE
+         Volume: 1.4
+         Pitch: 2.0
+      Empty_Default_Sound:
+         Sound: ENTITY_BLAZE_BURN
+         Volume: 1.0
+         Pitch: 0.8
+      Flyby_Range: 3.0
+      Flyby_Default_Sound:
+         Sound: ENTITY_ARROW_SHOOT
+         Volume: 0.6
+         Pitch: 2.0
+      Impact_Default_Sound:
+         Sound: BLOCK_STONE_HIT
+         Volume: 1.0
+         Pitch: 1.8
+
+Ammunition:
+   Capacity: 200
+   Ammo_Type: "5,56"
+   Consume: 1
+   Restore: 200
+
+Reload:
+   Cooldown: 8
+
+   Sound:
+      Default_Sound_Before:
+         Sound: BLOCK_ANVIL_USE
+         Volume: 1.0
+         Pitch: 0.6
+      Default_Sound_After:
+         Sound: BLOCK_ANVIL_LAND
+         Volume: 1.0
+         Pitch: 0.6
+
+   Action_Bar:
+      Reloading: "&cSwapping drum...&r"
+      Opening: "&cSpinning up...&r"
+
+   Type: instant
+
+Scope:
+   Level: 1
+
+Modifiers:
+   Flat_Damage: 0.0
+   Break_Blocks:
+      - GLASS-1
+      - ICE-2
+   Tracer: FF0000-true-0.6
+   Armor_Piercing: 0.25
+
+Death_Messages:
+   - "&c%victim% was shredded by %killer%'s %item%."
+   - "&c%killer% turned %victim% into swiss cheese."
+   - "&c%victim% danced for %killer%'s minigun."

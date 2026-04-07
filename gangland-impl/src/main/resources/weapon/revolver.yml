@@ -1,0 +1,115 @@
+# +-----------------+ #
+# |     Revolver    | #
+# +-----------------+ #
+
+Information:
+   Name: "&7Revolver&r"
+   Category: gun
+   Material: STONE_HOE
+   Durability:
+      Base: 100
+      Change:
+         On_Shot: 0
+         On_Repair: 0
+   Lore:
+      - "&7Six rounds of high-caliber justice.&r"
+      - "&7Slow, heavy, and unforgiving.&r"
+   Drop_Hologram: true
+
+Shoot:
+   Selective_Fire: single
+
+   Projectile:
+      Speed: 5
+      Type: BULLET
+      Damage:
+         Base: 12
+         Explosion_Damage: 0
+         Fire_Ticks: 0
+         Head: 8
+         Critical_Hit:
+            Chance: 8
+            Amount: 6
+      Consumed_Amount: 1
+      Per_Shot: 1
+      Cooldown: 0.8
+      Distance: 40
+      Particle: true
+
+   Weapon_Consumed:
+      Consume_On_Shot: 0
+      Time: -1
+
+   Spread:
+      Starting_Spread: 0.06
+      Time: 8
+      Change:
+         Base: 0.06
+         Bounds:
+            Reset_On_Bound: true
+            Min: 0.06
+            Max: 0.4
+
+   Recoil:
+      Amount: 0.12
+      Push: 0.1
+      Power_Up: 0.0004
+      Pattern:
+         - 4;0.5
+         - 0;0
+
+   Sound:
+      Default_Sound:
+         Sound: ENTITY_GENERIC_EXPLODE
+         Volume: 1.2
+         Pitch: 1.6
+      Empty_Default_Sound:
+         Sound: BLOCK_NOTE_BLOCK_HAT
+         Volume: 1.0
+         Pitch: 0.8
+      Flyby_Range: 3.0
+      Flyby_Default_Sound:
+         Sound: ENTITY_ARROW_SHOOT
+         Volume: 0.7
+         Pitch: 1.6
+      Impact_Default_Sound:
+         Sound: BLOCK_ANVIL_HIT
+         Volume: 0.9
+         Pitch: 1.4
+
+Ammunition:
+   Capacity: 6
+   Ammo_Type: "9mm"
+   Consume: 1
+   Restore: 6
+
+Reload:
+   Cooldown: 4
+
+   Sound:
+      Default_Sound_Before:
+         Sound: BLOCK_LEVER_CLICK
+         Volume: 1.0
+         Pitch: 1.0
+      Default_Sound_After:
+         Sound: BLOCK_LEVER_CLICK
+         Volume: 1.0
+         Pitch: 0.7
+
+   Action_Bar:
+      Reloading: "&cSwinging cylinder...&r"
+      Opening: "&cOpening...&r"
+
+   Type: one
+
+Scope:
+   Level: 1
+
+Modifiers:
+   Flat_Damage: 1.0
+   Armor_Piercing: 0.3
+
+Death_Messages:
+   - "&c%victim% caught a slug from %killer%'s %item%."
+   - "&c%killer% emptied a chamber into %victim%."
+   - "&c%victim% lost the duel with %killer%."

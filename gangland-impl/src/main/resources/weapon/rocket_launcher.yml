@@ -1,0 +1,115 @@
+# +-----------------+ #
+# | Rocket Launcher | #
+# +-----------------+ #
+
+Information:
+   Name: "&cRocket Launcher&r"
+   Category: gun
+   Material: NETHERITE_AXE
+   Durability:
+      Base: 100
+      Change:
+         On_Shot: 0
+         On_Repair: 0
+   Lore:
+      - "&7Shoulder-fired guided rocket.&r"
+      - "&7Perfect for crowds. And cars.&r"
+   Drop_Hologram: true
+
+Shoot:
+   Selective_Fire: single
+
+   Projectile:
+      Speed: 3
+      Type: ROCKET
+      Damage:
+         Base: 30
+         Explosion_Damage: 50
+         Fire_Ticks: 40
+         Head: 0
+         Critical_Hit:
+            Chance: 0
+            Amount: 0
+      Consumed_Amount: 1
+      Per_Shot: 1
+      Cooldown: 2.5
+      Distance: 80
+      Particle: true
+
+   Weapon_Consumed:
+      Consume_On_Shot: 0
+      Time: -1
+
+   Spread:
+      Starting_Spread: 0.0
+      Time: 1
+      Change:
+         Base: 0.0
+         Bounds:
+            Reset_On_Bound: true
+            Min: 0.0
+            Max: 0.0
+
+   Recoil:
+      Amount: 0.3
+      Push: 0.25
+      Power_Up: 0.001
+      Pattern:
+         - 6;0
+         - 0;0
+
+   Sound:
+      Default_Sound:
+         Sound: ENTITY_FIREWORK_ROCKET_LAUNCH
+         Volume: 1.5
+         Pitch: 0.7
+      Empty_Default_Sound:
+         Sound: BLOCK_NOTE_BLOCK_HAT
+         Volume: 1.0
+         Pitch: 0.6
+      Flyby_Range: 4.0
+      Flyby_Default_Sound:
+         Sound: ENTITY_FIREWORK_ROCKET_BLAST
+         Volume: 1.0
+         Pitch: 1.0
+      Impact_Default_Sound:
+         Sound: ENTITY_GENERIC_EXPLODE
+         Volume: 1.5
+         Pitch: 1.0
+
+Ammunition:
+   Capacity: 1
+   Ammo_Type: rocket
+   Consume: 1
+   Restore: 1
+
+Reload:
+   Cooldown: 6
+
+   Sound:
+      Default_Sound_Before:
+         Sound: BLOCK_IRON_TRAPDOOR_OPEN
+         Volume: 1.0
+         Pitch: 0.7
+      Default_Sound_After:
+         Sound: BLOCK_IRON_TRAPDOOR_CLOSE
+         Volume: 1.0
+         Pitch: 0.7
+
+   Action_Bar:
+      Reloading: "&cLoading rocket...&r"
+      Opening: "&cOpening...&r"
+
+   Type: instant
+
+Scope:
+   Level: 1
+
+Modifiers:
+   Flat_Damage: 0.0
+   Armor_Piercing: 1.0
+
+Death_Messages:
+   - "&c%victim% was obliterated by %killer%'s %item%."
+   - "&c%killer% sent %victim% to orbit."
+   - "&c%victim% caught a rocket from %killer%."

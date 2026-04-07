@@ -1,0 +1,43 @@
+# +-----------------+ #
+# |     Machete     | #
+# +-----------------+ #
+
+Information:
+   Name: "&fMachete&r"
+   Category: melee
+   Material: IRON_HOE
+   Durability:
+      Base: 200
+      Change:
+         On_Shot: 1
+         On_Repair: 50
+   Lore:
+      - "&7A long, heavy blade.&r"
+      - "&7Range: &e3 blocks"
+   Drop_Hologram: false
+
+Attack:
+   Damage: 9.0
+   Range: 3.0
+   Cooldown: 12
+   Knockback: 0.5
+   Selective_Fire: single
+   Recoil:
+      Amount: 0.0
+      Push: 0.06
+      Power_Up: 0.0
+      Pattern: []
+   Sound:
+      Default_Sound:
+         Sound: ENTITY_PLAYER_ATTACK_STRONG
+         Volume: 1.0
+         Pitch: 1.0
+
+Modifiers:
+   Flat_Damage: 0.0
+   Armor_Piercing: 0.1
+
+Death_Messages:
+   - "&c%victim% was hacked apart by %killer%'s %item%."
+   - "&c%killer% cleaved %victim% in half."
+   - "&c%victim% bled out from %killer%'s machete."

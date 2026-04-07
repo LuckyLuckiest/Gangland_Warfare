@@ -1,0 +1,121 @@
+# +-----------------+ #
+# |     Pistol      | #
+# +-----------------+ #
+
+Information:
+   Name: "&fPistol&r"
+   Category: gun
+   Material: WOODEN_HOE
+   Durability:
+      Base: 100
+      Change:
+         On_Shot: 0
+         On_Repair: 0
+   Lore:
+      - "&7A reliable 9mm sidearm.&r"
+      - "&7Last resort when your primary runs dry.&r"
+   Drop_Hologram: true
+
+Shoot:
+   Selective_Fire: single
+
+   Projectile:
+      Speed: 4
+      Type: BULLET
+      Damage:
+         Base: 5
+         Explosion_Damage: 0
+         Fire_Ticks: 0
+         Head: 4
+         Critical_Hit:
+            Chance: 5
+            Amount: 3
+      Consumed_Amount: 1
+      Per_Shot: 1
+      Cooldown: 0.3
+      Distance: 30
+      Particle: true
+
+   Weapon_Consumed:
+      Consume_On_Shot: 0
+      Time: -1
+
+   Spread:
+      Starting_Spread: 0.04
+      Time: 5
+      Change:
+         Base: 0.04
+         Bounds:
+            Reset_On_Bound: true
+            Min: 0.04
+            Max: 0.6
+
+   Recoil:
+      Amount: 0.04
+      Push: 0.03
+      Power_Up: 0.0001
+      Pattern:
+         - 1.5;0.5
+         - 0;0
+
+   Sound:
+      Default_Sound:
+         Sound: BLOCK_PISTON_EXTEND
+         Volume: 1.0
+         Pitch: 2.0
+      Empty_Default_Sound:
+         Sound: BLOCK_NOTE_BLOCK_HAT
+         Volume: 1.0
+         Pitch: 1.0
+      Flyby_Range: 2.5
+      Flyby_Default_Sound:
+         Sound: ENTITY_ARROW_SHOOT
+         Volume: 0.5
+         Pitch: 2.0
+      Impact_Default_Sound:
+         Sound: BLOCK_STONE_HIT
+         Volume: 0.8
+         Pitch: 1.5
+
+Ammunition:
+   Capacity: 12
+   Ammo_Type: "9mm"
+   Consume: 1
+   Restore: 12
+
+Reload:
+   Cooldown: 2
+
+   Sound:
+      Default_Sound_Before:
+         Sound: BLOCK_IRON_DOOR_OPEN
+         Volume: 0.8
+         Pitch: 1.5
+      Default_Sound_After:
+         Sound: BLOCK_IRON_DOOR_CLOSE
+         Volume: 0.8
+         Pitch: 1.5
+
+   Action_Bar:
+      Reloading: "&cReloading...&r"
+      Opening: "&cOpening...&r"
+
+   Type: instant
+
+Scope:
+   Level: 1
+
+   Sound:
+      Default_Sound:
+         Sound: ITEM_SPYGLASS_USE
+         Volume: 1
+         Pitch: 1
+
+Modifiers:
+   Flat_Damage: 0.0
+   Armor_Piercing: 0.1
+
+Death_Messages:
+   - "&c%victim% was capped by %killer%'s %item%."
+   - "&c%killer% put %victim% down with a sidearm."
+   - "&c%victim% never saw %killer%'s pistol coming."

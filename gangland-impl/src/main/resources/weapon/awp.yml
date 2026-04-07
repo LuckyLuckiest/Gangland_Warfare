@@ -1,0 +1,123 @@
+# +-----------------+ #
+# |       AWP       | #
+# +-----------------+ #
+
+Information:
+   Name: "&bAWP&r"
+   Category: gun
+   Material: NETHERITE_HOE
+   Durability:
+      Base: 100
+      Change:
+         On_Shot: 0
+         On_Repair: 0
+   Lore:
+      - "&7.50 BMG bolt-action sniper rifle.&r"
+      - "&7One shot. One kill. Don't miss.&r"
+   Drop_Hologram: true
+
+Shoot:
+   Selective_Fire: single
+
+   Projectile:
+      Speed: 8
+      Type: BULLET
+      Damage:
+         Base: 50
+         Explosion_Damage: 0
+         Fire_Ticks: 0
+         Head: 50
+         Critical_Hit:
+            Chance: 10
+            Amount: 30
+      Consumed_Amount: 1
+      Per_Shot: 1
+      Cooldown: 1.8
+      Distance: 120
+      Particle: true
+
+   Weapon_Consumed:
+      Consume_On_Shot: 0
+      Time: -1
+
+   Spread:
+      Starting_Spread: 0.0
+      Time: 1
+      Change:
+         Base: 0.0
+         Bounds:
+            Reset_On_Bound: true
+            Min: 0.0
+            Max: 0.0
+
+   Recoil:
+      Amount: 0.25
+      Push: 0.2
+      Power_Up: 0.001
+      Pattern:
+         - 8;0
+         - 0;0
+
+   Sound:
+      Default_Sound:
+         Sound: ENTITY_GENERIC_EXPLODE
+         Volume: 1.5
+         Pitch: 0.8
+      Empty_Default_Sound:
+         Sound: BLOCK_NOTE_BLOCK_HAT
+         Volume: 1.0
+         Pitch: 0.6
+      Flyby_Range: 4.0
+      Flyby_Default_Sound:
+         Sound: ENTITY_ARROW_SHOOT
+         Volume: 1.0
+         Pitch: 0.8
+      Impact_Default_Sound:
+         Sound: BLOCK_ANVIL_LAND
+         Volume: 1.0
+         Pitch: 1.4
+
+Ammunition:
+   Capacity: 5
+   Ammo_Type: "50_bmg"
+   Consume: 1
+   Restore: 5
+
+Reload:
+   Cooldown: 5
+
+   Sound:
+      Default_Sound_Before:
+         Sound: BLOCK_IRON_TRAPDOOR_OPEN
+         Volume: 1.0
+         Pitch: 0.8
+      Default_Sound_After:
+         Sound: BLOCK_IRON_TRAPDOOR_CLOSE
+         Volume: 1.0
+         Pitch: 0.8
+
+   Action_Bar:
+      Reloading: "&cReloading...&r"
+      Opening: "&cOpening...&r"
+
+   Type: instant
+
+Scope:
+   Level: 4
+
+   Sound:
+      Default_Sound:
+         Sound: ITEM_SPYGLASS_USE
+         Volume: 1
+         Pitch: 0.8
+
+Modifiers:
+   Flat_Damage: 5.0
+   Penetration: 5-5-0.1
+   Tracer: 33CCFF-true-1.0
+   Armor_Piercing: 0.7
+
+Death_Messages:
+   - "&c%victim% was vaporized by %killer%'s %item%."
+   - "&c%killer% put a .50 through %victim%."
+   - "&c%victim% never heard the shot from %killer%."
