@@ -75,6 +75,7 @@ import me.luckyraven.gadget.wearable.WearableAddon;
 import me.luckyraven.hologram.HologramService;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
+import me.luckyraven.inventory.handler.SlotItemFactory;
 import me.luckyraven.item.ItemParser;
 import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
@@ -501,6 +502,10 @@ public final class Initializer {
 	 */
 	public void inventoryLoader() {
 		InventoryAddon.setItemSourceProvider(gangland);
+
+		// Lets slot YAML reference prefixed items (weapon:awp, wearable:police_vest, ammo:9mm, unique:phone, …)
+		// via the central ItemParser. Must run before any inventory file is read.
+		SlotItemFactory.setItemResolver(itemParserManager.getParser()::parse);
 
 		evaluator = new BooleanExpressionEvaluator(placeholderService);
 

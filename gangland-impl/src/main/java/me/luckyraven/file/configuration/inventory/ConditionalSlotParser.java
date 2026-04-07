@@ -57,7 +57,9 @@ final class ConditionalSlotParser {
 		String              item     = InventoryParser.getItemInfo(branchSection, itemData);
 		if (item == null) item = defaultItem;
 
-		String       name = branchSection.getString("Name", defaultName);
+		String name = branchSection.getString("Name", defaultName);
+		// Auto-generate a fallback name only for raw materials. Prefixed items keep the parser-supplied name.
+		if (name == null && !item.contains(":")) name = item.toLowerCase().replace('_', ' ');
 		List<String> lore = branchSection.getStringList("Lore");
 		if (lore.isEmpty()) lore = defaultLore;
 

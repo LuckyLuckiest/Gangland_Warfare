@@ -15,7 +15,7 @@ public record SlotContext(
 		@Nullable ConfigurationSection rightClickSection,
 		int slotLoc,
 		String item,
-		String itemName,
+		@Nullable String itemName,
 		Map<String, Object> data,
 		List<String> lore,
 		boolean enchanted,
