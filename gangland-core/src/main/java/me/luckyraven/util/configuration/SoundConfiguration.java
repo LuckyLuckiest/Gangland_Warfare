@@ -3,7 +3,6 @@ package me.luckyraven.util.configuration;
 import com.cryptomorin.xseries.XSound;
 import me.luckyraven.exception.PluginException;
 import org.bukkit.Location;
-import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -40,11 +39,12 @@ public record SoundConfiguration(SoundType type, @NotNull String sound, float vo
 
 		if (type == SoundType.VANILLA) {
 			Optional<XSound> xSoundOptional = XSound.of(sound);
-			if (xSoundOptional.isPresent()) {
-				Sound s = xSoundOptional.get().get();
-				if (s == null) return false;
-				world.playSound(location, s, volume, pitch);
-			}
+			xSoundOptional.ifPresent(sound -> sound.record()
+			                                       .withVolume(volume)
+			                                       .withPitch(pitch)
+			                                       .soundPlayer()
+			                                       .atLocation(location)
+			                                       .play());
 			return true;
 		}
 
@@ -59,14 +59,12 @@ public record SoundConfiguration(SoundType type, @NotNull String sound, float vo
 	public boolean playSound(Player player) {
 		if (type == SoundType.VANILLA) {
 			Optional<XSound> xSoundOptional = XSound.of(sound);
-
-			if (xSoundOptional.isPresent()) {
-				Sound sound = xSoundOptional.get().get();
-
-				if (sound == null) return false;
-
-				player.playSound(player.getLocation(), sound, volume, pitch);
-			}
+			xSoundOptional.ifPresent(sound -> sound.record()
+			                                       .withVolume(volume)
+			                                       .withPitch(pitch)
+			                                       .soundPlayer()
+			                                       .forPlayers(player)
+			                                       .play());
 
 			return true;
 		}
