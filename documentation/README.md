@@ -8,9 +8,10 @@
 
 ### Version Changelogs
 
-| Version                                 | Status  | Changelog                        |
-|-----------------------------------------|---------|----------------------------------|
-| [v0.7.3-DEV](./v0.7.3-DEV/CHANGELOG.md) | Current | Cops N Crooks, Wearables, Repair |
+| Version                                 | Status  | Changelog                                 |
+|-----------------------------------------|---------|-------------------------------------------|
+| [v0.7.4-DEV](./v0.7.4-DEV/CHANGELOG.md) | Current | Smarter NPC AI, bug fixes, developer docs |
+| [v0.7.3-DEV](./v0.7.3-DEV/CHANGELOG.md) | Stable  | Cops N Crooks, Wearables, Repair          |
 
 ---
 
@@ -46,6 +47,30 @@ Guides for features introduced in v0.7.3-DEV.
 | 2 | [Jail & Detainment](./v0.7.3-DEV/jail-detainment.md) | Handcuffing, jailing, and player restraint        |
 | 3 | [Wearables](./v0.7.3-DEV/wearables.md)               | Custom armor pieces, traits, and damage reduction |
 | 4 | [Repair System](./v0.7.3-DEV/repair.md)              | Repairing weapons and wearables with materials    |
+
+---
+
+### Developer Documentation (Codebase Internals)
+
+In-depth technical documentation for developers working on the codebase.
+
+| #  | Guide                                                       | Summary                                                      |
+|----|-------------------------------------------------------------|--------------------------------------------------------------|
+| 1  | [Architecture Overview](./developer/architecture.md)        | Plugin lifecycle, initialization, event system, module graph |
+| 2  | [Module Reference](./developer/modules.md)                  | Every module with classes, purpose, and dependencies         |
+| 3  | [Dependency Injection](./developer/dependency-injection.md) | DI container, autowiring, listener discovery                 |
+| 4  | [Persistence Layer](./developer/persistence.md)             | Repository pattern, database, tables, auto-save              |
+| 5  | [Command System](./developer/commands.md)                   | Argument tree, dispatch, tab completion, adding commands     |
+| 6  | [Weapon System](./developer/weapons.md)                     | Projectiles, modifiers, reload, damage pipeline              |
+| 7  | [Cops N Crooks](./developer/cops-n-crooks.md)               | NPC AI, spawning, wanted system, bounty tracking             |
+| 8  | [Gadget System](./developer/gadgets.md)                     | Cars, jetpacks, fuel, repair, physics                        |
+| 9  | [Civilian NPCs](./developer/civilians.md)                   | Behaviors, spawning, trader interaction                      |
+| 10 | [Item System](./developer/items.md)                         | Parsing, unique items, fuel, wearables, repair               |
+| 11 | [UI Framework](./developer/ui-framework.md)                 | Inventory, scoreboard, signs, loot chests, holograms         |
+| 12 | [Version Compatibility](./developer/compatibility.md)       | NMS adapters, version detection, recoil                      |
+| 13 | [Configuration Reference](./developer/configuration.md)     | All YAML files, settings, formulas, defaults                 |
+
+[Full Developer Docs Index](./developer/README.md)
 
 ---
 
