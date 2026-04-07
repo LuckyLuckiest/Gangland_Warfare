@@ -47,7 +47,8 @@ public class WeaponSelectiveFireChangeListener implements Listener {
 		// change the selective fire of the weapon and cancel opening the inventory
 		event.setCancelled(true);
 
-		weapon.setCurrentSelectiveFire(weapon.getCurrentSelectiveFire().getNextState());
+		weapon.setCurrentSelectiveFire(
+				weapon.getCurrentSelectiveFire().getNextState(weapon.getAllowedSelectiveFires()));
 
 		// update the weapon data
 		ItemBuilder itemBuilder = weaponService.getHeldWeaponItem(player);
