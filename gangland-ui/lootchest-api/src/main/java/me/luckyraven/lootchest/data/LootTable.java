@@ -2,14 +2,15 @@ package me.luckyraven.lootchest.data;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.lootchest.item.LootItemProvider;
+import me.luckyraven.item.ItemParser;
 import me.luckyraven.lootchest.item.LootItemReference;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 
 /**
- * Represents a collection of loot item references with weighted random selection and rarity-based spawn chances
+ * Represents a collection of loot item references with weighted random selection and rarity-based spawn chances. Actual
+ * ItemStacks are produced by delegating to the global {@link ItemParser} — this module never parses items itself.
  */
 @Getter
 @RequiredArgsConstructor
@@ -28,14 +29,14 @@ public class LootTable {
 	private final Random random = new Random();
 
 	/**
-	 * Generates random loot based on weights and rarity spawn chances
+	 * Generates random loot based on weights and rarity spawn chances.
 	 *
-	 * @param tierId The tier of the chest being opened
-	 * @param provider The provider to fetch actual items from configurations
+	 * @param tierId the tier of the chest being opened
+	 * @param parser the shared item parser used to resolve item strings into ItemStacks
 	 *
-	 * @return List of generated ItemStacks
+	 * @return list of generated ItemStacks
 	 */
-	public List<ItemStack> generateLoot(String tierId, LootItemProvider provider) {
+	public List<ItemStack> generateLoot(String tierId, ItemParser parser) {
 		// Filter items by tier requirement
 		List<LootItemReference> availableItems = filterByTier(tierId);
 		if (availableItems.isEmpty()) return Collections.emptyList();
@@ -51,28 +52,29 @@ public class LootTable {
 		// Calculate total effective weight
 		double totalWeight = spawnableItems.stream().mapToDouble(LootItemReference::getEffectiveWeight).sum();
 
-		// Prevent duplicate weapons/unique items
-		Set<String> selectedIds = new HashSet<>();
+		// Prevent duplicate non-stackable items (weapons, cars, wearables, unique items — anything with maxStackSize 1)
+		Set<String> selectedNonStackableIds = new HashSet<>();
 
-		while (result.size() < itemCount) {
+		int safetyGuard = itemCount * 10;
+
+		while (result.size() < itemCount && safetyGuard-- > 0) {
 			LootItemReference selected = selectWeightedRandom(spawnableItems, totalWeight);
 			if (selected == null) continue;
 
-			// For weapons and unique items, don't allow duplicates
-			if ((selected.getCategory() == LootItemReference.LootCategory.WEAPON ||
-			     selected.getCategory() == LootItemReference.LootCategory.UNIQUE ||
-			     selected.getCategory() == LootItemReference.LootCategory.WEARABLE ||
-			     selected.getCategory() == LootItemReference.LootCategory.CAR) &&
-			    selectedIds.contains(selected.getReferenceId())) {
+			ItemStack item = createItemFromReference(selected, parser);
+			if (item == null) continue;
+
+			boolean stackable = item.getMaxStackSize() > 1;
+
+			if (!stackable && selectedNonStackableIds.contains(selected.getId())) {
 				continue;
 			}
 
-			ItemStack item = createItemFromReference(selected, provider);
-
-			if (item == null) continue;
-
 			result.add(item);
-			selectedIds.add(selected.getReferenceId());
+
+			if (!stackable) {
+				selectedNonStackableIds.add(selected.getId());
+			}
 		}
 
 		return result;
@@ -134,22 +136,20 @@ public class LootTable {
 	}
 
 	/**
-	 * Creates an actual ItemStack from a reference using the provider
+	 * Parses the reference's item string through the shared parser and applies the rolled stack amount.
 	 */
-	private ItemStack createItemFromReference(LootItemReference reference, LootItemProvider provider) {
-		int amount = reference.generateAmount();
+	private ItemStack createItemFromReference(LootItemReference reference, ItemParser parser) {
+		ItemStack item = parser.parse(reference.getItemString());
 
-		return switch (reference.getCategory()) {
-			case WEAPON -> provider.getWeapon(reference.getReferenceId());
-			case AMMO -> provider.getAmmunition(reference.getReferenceId(), amount);
-			case UNIQUE -> provider.getUniqueItem(reference.getReferenceId());
-			case REPAIR -> provider.getRepairItem(reference.getReferenceId(), amount);
-			case CONSUMABLE -> provider.getConsumable(reference.getReferenceId(), amount);
-			case MATERIAL -> provider.getMaterial(reference.getReferenceId(), amount);
-			case MISC -> provider.getMiscItem(reference.getReferenceId(), amount);
-			case WEARABLE -> provider.getWearable(reference.getReferenceId());
-			case CAR -> provider.getCar(reference.getReferenceId());
-		};
+		if (item == null) return null;
+
+		int rolled = reference.generateAmount();
+		int capped = Math.min(rolled, item.getMaxStackSize());
+		int amount = Math.max(1, capped);
+
+		item.setAmount(amount);
+
+		return item;
 	}
 
 }

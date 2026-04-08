@@ -140,7 +140,7 @@ Full documentation is available in the [`documentation/`](./documentation/) fold
 | [Gangs](./documentation/features/gangs.md)                         | Creation, ranks, bank, and alliances              |
 | [Economy](./documentation/features/economy.md)                     | Balances, bank, death penalty, and admin commands |
 | [Waypoints](./documentation/features/waypoints.md)                 | Types, teleportation, and safe zones              |
-| [Loot Chests](./documentation/features/loot-chests.md)             | Tiers, keys, and loot table configuration         |
+| [Loot Chests](./documentation/features/loot_chests.md)             | Tiers, keys, and loot table configuration         |
 | [Levels](./documentation/features/levels.md)                       | XP formula and skill upgrades                     |
 | [Ranks](./documentation/features/ranks.md)                         | Hierarchy, inheritance, and permission management |
 | [Database & Setup](./documentation/features/database.md)           | MySQL/SQLite, auto-save, and setup checklist      |

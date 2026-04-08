@@ -1,6 +1,6 @@
 # Waypoints
 
-[← Economy](./economy.md) | [Back to Index](../README.md) | [Next: Loot Chests →](./loot-chests.md)
+[← Economy](./economy.md) | [Back to Index](../README.md) | [Next: Loot Chests →](./loot_chests.md)
 
 ---
 
@@ -100,4 +100,4 @@ that gang can teleport to it. These waypoints are also safe zones.
 
 ---
 
-[← Economy](./economy.md) | [Back to Index](../README.md) | [Next: Loot Chests →](./loot-chests.md)
+[← Economy](./economy.md) | [Back to Index](../README.md) | [Next: Loot Chests →](./loot_chests.md)

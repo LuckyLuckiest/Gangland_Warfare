@@ -24,7 +24,7 @@ Guides for features that are part of the base plugin and not tied to a specific 
 | 1  | [Gangs](./features/gangs.md)                   | Creating gangs, member management, alliances, and gang bank      |
 | 2  | [Economy](./features/economy.md)               | Personal balance, bank accounts, death penalties, admin commands |
 | 3  | [Waypoints](./features/waypoints.md)           | Teleportation destinations, costs, timers, and safe zones        |
-| 4  | [Loot Chests](./features/loot-chests.md)       | Randomized reward containers, tiers, and keys                    |
+| 4  | [Loot Chests](./features/loot_chests.md)       | Randomized reward containers, tiers, and keys                    |
 | 5  | [Levels](./features/levels.md)                 | XP system, level formulas, and skill upgrades                    |
 | 6  | [Unique Items](./features/unique-items.md)     | Phone, lockpicks, keys, and custom inventory behavior            |
 | 7  | [Scoreboard](./features/scoreboard.md)         | Live stat display, drivers, and animated titles                  |
@@ -84,7 +84,7 @@ In-depth technical documentation for developers working on the codebase.
 | Wearable traits                | [Wearables → Traits](./v0.7.3-DEV/wearables.md#traits)                                  |
 | Repair materials               | [Repair System → Built-in Materials](./v0.7.3-DEV/repair.md#built-in-repair-materials)  |
 | Trade sign setup               | [Trade Signs → Setting Up a Sign](./features/trade-signs.md#setting-up-a-sign)          |
-| Loot chest tiers               | [Loot Chests → Tiers](./features/loot-chests.md#tiers)                                  |
+| Loot chest tiers               | [Loot Chests → Tiers](./features/loot_chests.md#tiers)                                  |
 | Economy admin commands         | [Economy → Admin Commands](./features/economy.md#admin-economy-commands)                |
 
 ---

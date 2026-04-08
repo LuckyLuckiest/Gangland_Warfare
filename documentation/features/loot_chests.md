@@ -44,7 +44,7 @@ Three loot tables ship with the plugin:
 | `military_loot` | Military Loot | 3–7             | Rare, epic, and legendary weapons |
 | `supply_cache`  | Supply Cache  | 4–8             | Mixed common-to-rare items        |
 
-Loot tables are configured in `loot-chests.yml`. Item categories that can appear include:
+Loot tables are configured in `loot_chests.yml`. Item categories that can appear include:
 
 - **AMMO** — Any configured ammo type from `ammunition.yml`.
 - **WEAPON** — Any configured weapon.

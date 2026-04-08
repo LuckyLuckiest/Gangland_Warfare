@@ -52,7 +52,7 @@ public interface LootChestMessagesProvider {
 	String getInvalidChest();
 
 	/**
-	 * Sent when no {@link me.luckyraven.lootchest.item.LootItemProvider} has been registered.
+	 * Sent when no {@link me.luckyraven.item.ItemParser} has been wired into the loot chest service.
 	 */
 	String getNoItemProvider();
 

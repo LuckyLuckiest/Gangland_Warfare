@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.hologram.HologramService;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.item.ItemParser;
 import me.luckyraven.lootchest.config.LootChestConfig;
 import me.luckyraven.lootchest.config.LootChestMessagesProvider;
 import me.luckyraven.lootchest.data.*;
@@ -20,7 +21,6 @@ import me.luckyraven.lootchest.handler.lootchest.ChestCooldownCompleteHandler;
 import me.luckyraven.lootchest.handler.lootchest.ChestCooldownTickHandler;
 import me.luckyraven.lootchest.handler.lootchest.SessionCompleteHandler;
 import me.luckyraven.lootchest.handler.lootchest.SessionStartHandler;
-import me.luckyraven.lootchest.item.LootItemProvider;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import org.bukkit.Bukkit;
@@ -74,9 +74,9 @@ public abstract class LootChestService {
 	private final CrackingFailedHandler        crackingFailedHandler;
 
 	@Getter
-	private LootChestConfig  config;
+	private LootChestConfig config;
 	@Setter
-	private LootItemProvider itemProvider;
+	private ItemParser      itemParser;
 
 	@Getter
 	private LootChestMessagesProvider messagesProvider;
@@ -220,8 +220,8 @@ public abstract class LootChestService {
 	 * (even on cooldown), it can still be opened. Only blocks when empty AND on cooldown.
 	 */
 	public OpenResult tryOpenChest(Player player, LootChestData chestData) {
-		if (itemProvider == null) {
-			return OpenResult.NO_ITEM_PROVIDER;
+		if (itemParser == null) {
+			return OpenResult.NO_ITEM_PARSER;
 		}
 
 		if (hasActiveSession(player)) {
@@ -524,7 +524,7 @@ public abstract class LootChestService {
 			} else {
 				// Generate new loot
 				String tierId = tier != null ? tier.id() : "default";
-				items = lootTable.generateLoot(tierId, itemProvider);
+				items = lootTable.generateLoot(tierId, itemParser);
 			}
 
 			// Create new shared inventory
@@ -599,7 +599,7 @@ public abstract class LootChestService {
 		NO_PERMISSION,
 		INVALID_LOOT_TABLE,
 		INVALID_CHEST,
-		NO_ITEM_PROVIDER,
+		NO_ITEM_PARSER,
 		CRACKING_STARTED
 	}
 

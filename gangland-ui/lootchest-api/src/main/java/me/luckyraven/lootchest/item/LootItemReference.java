@@ -3,24 +3,24 @@ package me.luckyraven.lootchest.item;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Represents a reference to an item from existing configurations (weapons, ammo, etc.) Items are not defined here -
- * they are fetched from their respective managers
+ * A loot table entry. Holds only loot-level metadata (weight, rarity, tier, amount range) — item identity is stored as
+ * an {@code itemString} resolved through the global {@code ItemParser} at roll time, so every converter registered with
+ * the parser is automatically usable here.
  */
 @Getter
 @Builder
 public class LootItemReference {
 
-	private final String       id;
-	private final LootCategory category;
-	private final String       referenceId;
-	private final int          minAmount;
-	private final int          maxAmount;
-	private final double       weight;
-	private final Rarity       rarity;
-	private final String       tierRequirement;
+	private final String id;
+	private final String itemString;
+	private final int    minAmount;
+	private final int    maxAmount;
+	private final double weight;
+	private final Rarity rarity;
+	private final String tierRequirement;
 
 	/**
 	 * Gets the effective weight considering rarity
@@ -30,24 +30,14 @@ public class LootItemReference {
 	}
 
 	/**
-	 * Generates a random amount within the configured range
+	 * Generates a random amount within the configured range (inclusive).
 	 */
 	public int generateAmount() {
-		Random random = new Random();
+		if (maxAmount <= minAmount) {
+			return Math.max(1, minAmount);
+		}
 
-		return random.nextInt(minAmount, maxAmount + 1);
-	}
-
-	public enum LootCategory {
-		WEAPON,
-		AMMO,
-		UNIQUE,
-		REPAIR,
-		CONSUMABLE,
-		MATERIAL,
-		MISC,
-		WEARABLE,
-		CAR
+		return ThreadLocalRandom.current().nextInt(minAmount, maxAmount + 1);
 	}
 
 	public enum Rarity {

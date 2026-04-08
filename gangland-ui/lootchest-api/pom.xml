@@ -38,6 +38,12 @@
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-item</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
             <artifactId>hologram-api</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>

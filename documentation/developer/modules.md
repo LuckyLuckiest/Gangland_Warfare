@@ -309,7 +309,7 @@ Concrete sign type implementations for the sign-api framework.
 | `wearables.yml`          | Wearable armor definitions (material, traits, damage reduction, leather color).                                                  |
 | `repair.yml`             | Repair material definitions and costs.                                                                                           |
 | `weapon/*.yml`           | Per-weapon-type YAML files: `rifle.yml`, `knife.yml`, `grenade.yml`, `flamethrower.yml`, `syringe_gun.yml`.                      |
-| `loot/loot-chests.yml`   | Loot chest definitions (location, tier, cooldown).                                                                               |
+| `loot/loot_chests.yml`   | Loot chest definitions (location, tier, cooldown).                                                                               |
 | `loot/tiers.yml`         | Loot tier definitions (rarity weights, item pools).                                                                              |
 | `inventory/*.yml`        | GUI layout definitions: `phone.yml`, `phone_gang.yml`, `gang_info.yml`, `gang_stat.yml`, `alliance_stat.yml`, `user_stat.yml`.   |
 | `message/message_en.yml` | English message strings.                                                                                                         |

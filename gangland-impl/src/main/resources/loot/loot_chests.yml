@@ -7,12 +7,17 @@
 # |    |\\_______/ ||     o    |_|    o   /// |    | \\\     | #
 # |     \__________/           |_|       /_/  o    o  \_\    | #
 # |                                                          | #
-# |                  File: loot-chests.yml                   | #
+# |                  File: loot_chests.yml                   | #
 # |                  Author: [LuckyRaven10]                  | #
 #  \                                                        /  #
 #   +------------------------------------------------------+   #
 
 # The loot tables to generate the required items in.
+#
+# Each entry under "Items" must specify an "Item" string parsed by the global ItemParser.
+# Format: "<type>:<id>{attr=value,...}" — e.g. "weapon:ak47", "ammo:9mm{name=&6Gold Bullets}",
+# "material:diamond". Stack-size is rolled by Min_Amount/Max_Amount and applied after parsing
+# (clamped to the item's max stack size, so weapons/uniques always end up as 1).
 Loot_Tables:
    # Street-level loot (common items)
    street_loot:
@@ -28,44 +33,27 @@ Loot_Tables:
       #   rare: 0.2  # Make rare items even rarer in street loot
 
       Items:
-         # Reference to ammo configured in ammunition.yml
          9mm_ammo:
-            Reference: "9mm"
-            Category: AMMO
+            Item: "ammo:9mm"
             Rarity: COMMON
             Min_Amount: 5
             Max_Amount: 20
             Weight: 10.0
 
          slugs_ammo:
-            Reference: "slugs"
-            Category: AMMO
+            Item: "ammo:slugs"
             Rarity: UNCOMMON
             Min_Amount: 3
             Max_Amount: 10
             Weight: 6.0
 
-         # Reference to weapon configured in weapons folder
          pistol_weapon:
-            Reference: "pistol"
-            Category: WEAPON
+            Item: "weapon:pistol"
             Rarity: RARE
             Weight: 2.0
-            # Weapons ignore Min/Max_Amount
 
-         # Reference to repair item
-         pistol_repair:
-            Reference: "pistol_kit"
-            Category: REPAIR
-            Rarity: UNCOMMON
-            Min_Amount: 1
-            Max_Amount: 2
-            Weight: 4.0
-
-         # Reference to unique item
          lockpick_item:
-            Reference: "lockpick"
-            Category: UNIQUE
+            Item: "unique:lockpick"
             Rarity: RARE
             Weight: 1.5
 
@@ -85,66 +73,47 @@ Loot_Tables:
          legendary: 0.10
 
       Items:
-         # Rifles
          assault_rifle:
-            Reference: "m4a1"
-            Category: WEAPON
+            Item: "weapon:rifle"
             Rarity: RARE
             Weight: 3.0
 
          sniper_rifle:
-            Reference: "awp"
-            Category: WEAPON
+            Item: "weapon:awp"
             Rarity: EPIC
             Weight: 1.5
             Tier_Requirement: "epic"  # Only spawns in epic+ tier chests
 
-         # Ammo
          556_ammo:
-            Reference: "5,56"
-            Category: AMMO
+            Item: "ammo:5,56"
             Rarity: COMMON
             Min_Amount: 20
             Max_Amount: 60
             Weight: 8.0
 
          762_ammo:
-            Reference: "7,62"
-            Category: AMMO
+            Item: "ammo:7,62"
             Rarity: COMMON
             Min_Amount: 15
             Max_Amount: 45
             Weight: 7.0
 
          50_bmg_ammo:
-            Reference: "50_bmg"
-            Category: AMMO
+            Item: "ammo:50_bmg"
             Rarity: RARE
             Min_Amount: 5
             Max_Amount: 15
             Weight: 3.0
             Tier_Requirement: "epic"
 
-         # Repair
-         rifle_repair:
-            Reference: "rifle_kit"
-            Category: REPAIR
-            Rarity: UNCOMMON
-            Min_Amount: 1
-            Max_Amount: 2
-            Weight: 5.0
-
-         # Unique items
          epic_key:
-            Reference: "epic_key"
-            Category: UNIQUE
+            Item: "unique:epic_key"
             Rarity: RARE
             Weight: 1.0
             Tier_Requirement: "rare"
 
          legendary_weapon:
-            Reference: "golden_ak47"
-            Category: WEAPON
+            Item: "weapon:golden_ak47"
             Rarity: LEGENDARY
             Weight: 0.5
             Tier_Requirement: "legendary"
@@ -160,81 +129,60 @@ Loot_Tables:
          - "rare"
 
       Items:
-         # Various ammo types
          9mm_ammo:
-            Reference: "9mm"
-            Category: AMMO
+            Item: "ammo:9mm"
             Rarity: COMMON
             Min_Amount: 10
             Max_Amount: 30
             Weight: 10.0
 
          762_ammo:
-            Reference: "7,62"
-            Category: AMMO
+            Item: "ammo:7,62"
             Rarity: UNCOMMON
             Min_Amount: 10
             Max_Amount: 25
             Weight: 7.0
 
          slugs_ammo:
-            Reference: "slugs"
-            Category: AMMO
+            Item: "ammo:slugs"
             Rarity: UNCOMMON
             Min_Amount: 5
             Max_Amount: 15
             Weight: 6.0
 
          flare_ammo:
-            Reference: "flare"
-            Category: AMMO
+            Item: "ammo:flare"
             Rarity: RARE
             Min_Amount: 2
             Max_Amount: 5
             Weight: 3.0
 
          rocket_ammo:
-            Reference: "rocket"
-            Category: AMMO
+            Item: "ammo:rocket"
             Rarity: EPIC
             Min_Amount: 1
             Max_Amount: 3
             Weight: 1.0
             Tier_Requirement: "rare"
 
-         # Repair items
-         general_repair:
-            Reference: "general_kit"
-            Category: REPAIR
-            Rarity: COMMON
-            Min_Amount: 2
-            Max_Amount: 5
-            Weight: 8.0
-
-         # Weapons (uncommon finds)
          smg_weapon:
-            Reference: "mp5"
-            Category: WEAPON
+            Item: "weapon:mp5"
             Rarity: UNCOMMON
             Weight: 3.0
 
          shotgun_weapon:
-            Reference: "shotgun"
-            Category: WEAPON
+            Item: "weapon:shotgun"
             Rarity: RARE
             Weight: 2.0
             Tier_Requirement: "uncommon"
 
-         # Keys for higher tier chests
          rare_key:
-            Reference: "rare_key"
-            Category: UNIQUE
+            Item: "unique:rare_key"
             Rarity: RARE
             Weight: 0.8
 
          epic_key:
-            Reference: "epic_key"
-            Category: UNIQUE
+            Item: "unique:epic_key"
             Rarity: EPIC
             Weight: 0.3
             Tier_Requirement: "rare"

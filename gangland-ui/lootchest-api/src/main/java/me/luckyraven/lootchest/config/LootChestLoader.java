@@ -46,8 +46,8 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 		FileConfiguration tiersConfig;
 
 		try {
-			// Load loot-chests.yml
-			String lootChestsFileName = "loot-chests";
+			// Load loot_chests.yml
+			String lootChestsFileName = "loot_chests";
 			fileManager.checkFileLoaded(lootChestsFileName);
 			FileHandler lootChestsHandler = Objects.requireNonNull(fileManager.getFile(lootChestsFileName));
 			lootChestsConfig = lootChestsHandler.getFileConfiguration();
@@ -67,7 +67,7 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 		// Load global rarity settings from tiers.yml
 		Map<LootItemReference.Rarity, Double> globalRarityChances = loadGlobalRaritySettings(tiersConfig);
 
-		// Load loot tables from loot-chests.yml
+		// Load loot tables from loot_chests.yml
 		Map<String, LootTable> lootTables = loadLootTables(lootChestsConfig, globalRarityChances);
 
 		// Build config using settings from SettingAddon via the provider
@@ -133,7 +133,7 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 	}
 
 	private Map<String, LootTable> loadLootTables(FileConfiguration config,
-												  Map<LootItemReference.Rarity, Double> globalRarities) {
+	                                              Map<LootItemReference.Rarity, Double> globalRarities) {
 		Map<String, LootTable> lootTables    = new HashMap<>();
 		ConfigurationSection   tablesSection = config.getConfigurationSection("Loot_Tables");
 
@@ -150,12 +150,12 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 
 			// Load rarity overrides for this table
 			Map<LootItemReference.Rarity, Double> rarityOverrides = loadTableRarityOverrides(tableSection,
-																							 globalRarities);
+			                                                                                 globalRarities);
 
 			List<LootItemReference> items = loadLootItemReferences(tableSection.getConfigurationSection("Items"));
 
 			LootTable lootTable = new LootTable(tableId, displayName, items, minItems, maxItems, allowedTiers,
-												rarityOverrides);
+			                                    rarityOverrides);
 			lootTables.put(tableId, lootTable);
 		}
 
@@ -163,7 +163,7 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 	}
 
 	private Map<LootItemReference.Rarity, Double> loadTableRarityOverrides(ConfigurationSection tableSection,
-																		   Map<LootItemReference.Rarity, Double> globalRarities) {
+	                                                                       Map<LootItemReference.Rarity, Double> globalRarities) {
 
 		Map<LootItemReference.Rarity, Double> overrides = new EnumMap<>(LootItemReference.Rarity.class);
 		overrides.putAll(globalRarities);
@@ -190,17 +190,11 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 			ConfigurationSection itemSection = itemsSection.getConfigurationSection(itemId);
 			if (itemSection == null) continue;
 
-			// Reference ID - the key in the original config file (e.g., "ak47", "9mm")
-			String referenceId = itemSection.getString("Reference", itemId);
-
-			// Category determines which provider method to use
-			String categoryStr = itemSection.getString("Category", "MISC");
-
-			LootItemReference.LootCategory category;
-			try {
-				category = LootItemReference.LootCategory.valueOf(categoryStr.toUpperCase());
-			} catch (IllegalArgumentException e) {
-				category = LootItemReference.LootCategory.MISC;
+			// Item string parsed by the global ItemParser (e.g. "weapon:ak47", "ammo:9mm{name=&6Gold Bullets}")
+			String itemString = itemSection.getString("Item");
+			if (itemString == null || itemString.isBlank()) {
+				log.warn("Loot entry '{}' has no 'Item' string — skipping", itemId);
+				continue;
 			}
 
 			// Rarity affects spawn chance
@@ -213,20 +207,19 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 			}
 
 			int    minAmount       = itemSection.getInt("Min_Amount", 1);
-			int    maxAmount       = itemSection.getInt("Max_Amount", 1);
+			int    maxAmount       = itemSection.getInt("Max_Amount", minAmount);
 			double weight          = itemSection.getDouble("Weight", 1.0);
 			String tierRequirement = itemSection.getString("Tier_Requirement");
 
 			LootItemReference lootItem = LootItemReference.builder()
-														  .id(itemId)
-														  .referenceId(referenceId)
-														  .category(category)
-														  .rarity(rarity)
-														  .minAmount(minAmount)
-														  .maxAmount(maxAmount)
-														  .weight(weight)
-														  .tierRequirement(tierRequirement)
-														  .build();
+			                                              .id(itemId)
+			                                              .itemString(itemString)
+			                                              .rarity(rarity)
+			                                              .minAmount(minAmount)
+			                                              .maxAmount(maxAmount)
+			                                              .weight(weight)
+			                                              .tierRequirement(tierRequirement)
+			                                              .build();
 
 			items.add(lootItem);
 		}
