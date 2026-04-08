@@ -21,7 +21,8 @@ public class PlayerItemInitEvent extends Event {
 
 	private final Player player;
 
-	public PlayerItemInitEvent(@NotNull Player player) {
+	public PlayerItemInitEvent(@NotNull Player player, boolean async) {
+		super(async);
 		this.player = player;
 	}
 
