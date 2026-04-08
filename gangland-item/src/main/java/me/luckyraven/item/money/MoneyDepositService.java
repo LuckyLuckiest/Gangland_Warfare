@@ -1,6 +1,7 @@
 package me.luckyraven.item.money;
 
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Contract used by gangland-item money listeners to credit a player's balance and notify them of the deposit.
@@ -31,5 +32,14 @@ public interface MoneyDepositService {
 	 * outside of the standard pickup notification, such as in the drop log.
 	 */
 	String getCurrencySymbol();
+
+	/**
+	 * Runs the given text through the impl-side placeholder pipeline (PlaceholderAPI when present, the gangland
+	 * placeholder handler otherwise) so callers in gangland-item can resolve {@code %gangland_*%} placeholders without
+	 * importing the impl module. {@code player} may be {@code null} when there is no specific viewer (e.g. the item
+	 * parser building a money template); resolution then falls back to player-independent placeholders such as the
+	 * settings-backed {@code %gangland_money_symbol%}.
+	 */
+	String resolvePlaceholders(@Nullable Player player, String text);
 
 }

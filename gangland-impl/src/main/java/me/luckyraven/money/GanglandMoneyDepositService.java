@@ -1,13 +1,16 @@
 package me.luckyraven.money;
 
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.Gangland;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyDepositService;
 import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Gangland-impl implementation of the {@link MoneyDepositService} contract: looks up the {@link User} for the picking
@@ -17,9 +20,9 @@ import org.bukkit.entity.Player;
 @RequiredArgsConstructor
 public class GanglandMoneyDepositService implements MoneyDepositService {
 
-	private static final String SYMBOL_PLACEHOLDER = "%symbol%";
 	private static final String AMOUNT_PLACEHOLDER = "%amount%";
 
+	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
 	private final MoneyAddon          moneyAddon;
 
@@ -27,10 +30,6 @@ public class GanglandMoneyDepositService implements MoneyDepositService {
 		// Whole-number drops are the common case; only show decimals when the rolled value isn't whole.
 		if (amount == Math.floor(amount)) return Long.toString((long) amount);
 		return Double.toString(amount);
-	}
-
-	private static String applyPlaceholders(String input, String symbol, String amountText) {
-		return input.replace(SYMBOL_PLACEHOLDER, symbol).replace(AMOUNT_PLACEHOLDER, amountText);
 	}
 
 	@Override
@@ -42,18 +41,25 @@ public class GanglandMoneyDepositService implements MoneyDepositService {
 
 		user.getEconomy().deposit(amount);
 
-		String symbol     = moneyAddon.getCurrencySymbol();
 		String amountText = formatAmount(amount);
 
 		String chatTemplate = moneyAddon.getPickupChatMessage();
 		if (chatTemplate != null && !chatTemplate.isEmpty()) {
-			player.sendMessage(ChatUtil.color(applyPlaceholders(chatTemplate, symbol, amountText)));
+			String resolved = applyAmountAndResolve(player, chatTemplate, amountText);
+			player.sendMessage(ChatUtil.color(resolved));
 		}
 
 		String actionBarTemplate = moneyAddon.getPickupActionBar();
 		if (actionBarTemplate != null && !actionBarTemplate.isEmpty()) {
-			ActionBarManager.send(player, applyPlaceholders(actionBarTemplate, symbol, amountText));
+			String resolved = applyAmountAndResolve(player, actionBarTemplate, amountText);
+			ActionBarManager.send(player, resolved);
 		}
+	}
+
+	@Override
+	public String resolvePlaceholders(@Nullable Player player, String text) {
+		if (text == null || text.isEmpty()) return text;
+		return gangland.getInitializer().getPlaceholderService().convert(player, text);
 	}
 
 	@Override
@@ -66,7 +72,12 @@ public class GanglandMoneyDepositService implements MoneyDepositService {
 
 	@Override
 	public String getCurrencySymbol() {
-		return moneyAddon.getCurrencySymbol();
+		return Settings.getMoneySymbol();
+	}
+
+	private String applyAmountAndResolve(Player player, String input, String amountText) {
+		String replaced = input.replace(AMOUNT_PLACEHOLDER, amountText);
+		return resolvePlaceholders(player, replaced);
 	}
 
 }
