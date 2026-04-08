@@ -53,6 +53,7 @@ import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.file.configuration.GadgetPhysicsConfigImpl;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.file.configuration.SettingsLookupImpl;
 import me.luckyraven.file.configuration.copsncrooks.*;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
@@ -114,6 +115,7 @@ import me.luckyraven.sign.service.SignInteraction;
 import me.luckyraven.sign.service.SignInteractionService;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.autowire.DependencyContainer;
+import me.luckyraven.util.autowire.bean.BeanFactory;
 import me.luckyraven.util.listener.ListenerPriority;
 import me.luckyraven.util.placeholder.replacer.Replacer;
 import me.luckyraven.weapon.WeaponManager;
@@ -380,6 +382,17 @@ public final class Initializer {
 		listenerManager = new ListenerManager(gangland);
 		events();
 		listenerManager.registerEvents();
+
+		// @Configuration / @Bean wiring. Runs AFTER events() so every manager registered manually
+		// is already in the container and can be consumed as a bean dependency. NEVER call this
+		// from a soft /glw reload — it must only run on plugin enable; re-running against a
+		// populated container would duplicate-register every bean.
+		BeanFactory beanFactory = new BeanFactory(
+				listenerManager.getDependencyContainer(),
+				gangland,
+				new SettingsLookupImpl());
+		beanFactory.scan("me.luckyraven.config");
+		beanFactory.instantiate();
 
 		// Commands
 		commandManager = new CommandManager(gangland, Gangland.FULL_PREFIX, Gangland.SHORT_PREFIX);
