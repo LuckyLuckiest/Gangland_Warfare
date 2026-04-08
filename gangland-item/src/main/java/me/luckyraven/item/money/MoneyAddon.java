@@ -3,6 +3,7 @@ package me.luckyraven.item.money;
 import lombok.CustomLog;
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.item.money.MoneyItem.PickupSound;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
@@ -26,9 +27,8 @@ public class MoneyAddon {
 	private final Map<MoneyDropContext, DropSource> dropSources = new EnumMap<>(MoneyDropContext.class);
 
 	private String defaultVariationId = "small";
-	private String currencySymbol     = "$";
-	private String pickupChatMessage  = "&a+ %symbol%%amount% &7added to your purse.";
-	private String pickupActionBar    = "&a+ %symbol%%amount%";
+	private String pickupChatMessage  = "&a+ %gangland_money_symbol%%amount% &7added to your purse.";
+	private String pickupActionBar    = "&a+ %gangland_money_symbol%%amount%";
 
 	/**
 	 * Master switch driven by {@code Money_Drop.Enabled} in {@code settings.yml}. The impl side calls
@@ -56,7 +56,6 @@ public class MoneyAddon {
 		ConfigurationSection moneySection = config.getConfigurationSection("Money");
 		if (moneySection != null) {
 			defaultVariationId = moneySection.getString("Default_Variation", defaultVariationId);
-			currencySymbol     = moneySection.getString("Currency_Symbol", currencySymbol);
 			pickupChatMessage  = moneySection.getString("Pickup_Chat_Message", pickupChatMessage);
 			pickupActionBar    = moneySection.getString("Pickup_Action_Bar", pickupActionBar);
 
@@ -182,18 +181,31 @@ public class MoneyAddon {
 		int          max             = vs.getInt("Max", min);
 		boolean      glow            = vs.getBoolean("Glow", false);
 
-		Sound  pickupSound = null;
-		String soundName   = vs.getString("Pickup_Sound");
-		if (soundName != null && !soundName.isEmpty()) {
-			try {
-				pickupSound = Sound.valueOf(soundName.toUpperCase(Locale.ROOT));
-			} catch (IllegalArgumentException ex) {
-				log.warn("Invalid Pickup_Sound '{}' for money variation '{}'", soundName, id);
-			}
-		}
+		PickupSound pickupSound = parsePickupSound(id, vs.getConfigurationSection("Pickup_Sound"));
 
 		return new MoneyItem(id.toLowerCase(Locale.ROOT), material, customModelData, displayName,
 		                     Collections.unmodifiableList(lore), min, max, glow, pickupSound);
+	}
+
+	@Nullable
+	private PickupSound parsePickupSound(String id, @Nullable ConfigurationSection section) {
+		if (section == null) return null;
+
+		String soundName = section.getString("Sound");
+		if (soundName == null || soundName.isEmpty()) return null;
+
+		Sound sound;
+		try {
+			sound = Sound.valueOf(soundName.toUpperCase(Locale.ROOT));
+		} catch (IllegalArgumentException ex) {
+			log.warn("Invalid Pickup_Sound.Sound '{}' for money variation '{}'", soundName, id);
+			return null;
+		}
+
+		float volume = (float) section.getDouble("Volume", 1.0D);
+		float pitch  = (float) section.getDouble("Pitch", 1.0D);
+
+		return new PickupSound(sound, volume, pitch);
 	}
 
 	/**

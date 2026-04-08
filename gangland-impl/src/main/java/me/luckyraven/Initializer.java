@@ -183,6 +183,7 @@ public final class Initializer {
 	private DetainmentService          detainmentService;
 	private DetainmentRegistry         detainmentRegistry;
 	private JailService                jailService;
+	private MoneyDepositService        moneyDepositService;
 	// Addons
 	private Settings                   settings;
 	private ScoreboardAddon            scoreboardAddon;
@@ -330,10 +331,15 @@ public final class Initializer {
 		// sign manager
 		signLoader();
 
+		// money deposit service must be constructed before the item parser so MoneyConverter can resolve the
+		// currency symbol via the contract (which delegates to Settings.getMoneySymbol()). Registered in the DI
+		// container further down so listeners can also pick it up.
+		moneyDepositService = new GanglandMoneyDepositService(gangland, userManager, moneyAddon);
+
 		// item parser (must be before civilians loader — weapon pool parsing needs it,
 		// and before inventoryLoader.initialize() — slot YAML parses prefixed item refs via the resolver)
 		itemParserManager = new ItemParserManager(weaponManager, ammunitionManager, wearableAddon, carAddon,
-		                                          moneyAddon, uniqueItemAddon);
+		                                          moneyAddon, moneyDepositService, uniqueItemAddon);
 
 		// inventory loader: actual file load is deferred to here so the slot resolver can dereference
 		// itemParserManager (registered earlier in inventoryLoader() but only invoked once load() runs).
@@ -755,8 +761,6 @@ public final class Initializer {
 		dependencyContainer.registerInstance(CarManager.class, carAddon);
 		dependencyContainer.registerInstance(CarService.class, carService);
 		dependencyContainer.registerInstance(FuelService.class, fuelService);
-		// also expose under the gangland-item interface key so the moved fuel listeners can resolve via DI
-		dependencyContainer.registerInstance(me.luckyraven.item.fuel.FuelService.class, fuelService);
 		dependencyContainer.registerInstance(JetpackService.class, jetpackService);
 		dependencyContainer.registerInstance(CivilianService.class, civilianService);
 		dependencyContainer.registerInstance(ItemParser.class, itemParserManager.getParser());
@@ -770,10 +774,9 @@ public final class Initializer {
 		dependencyContainer.registerInstance(RepairService.class,
 		                                     new GanglandRepairService(gangland, weaponManager, repairAnvilGui));
 
-		// money drop wiring
+		// money drop wiring (deposit service was constructed earlier so the item parser could use it)
 		dependencyContainer.registerInstance(MoneyAddon.class, moneyAddon);
-		dependencyContainer.registerInstance(MoneyDepositService.class,
-		                                     new GanglandMoneyDepositService(userManager, moneyAddon));
+		dependencyContainer.registerInstance(MoneyDepositService.class, moneyDepositService);
 		dependencyContainer.registerInstance(MoneyDropClassifier.class,
 		                                     new GanglandMoneyDropClassifier(copService, civilianService));
 

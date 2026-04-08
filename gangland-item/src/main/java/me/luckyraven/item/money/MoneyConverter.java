@@ -19,14 +19,8 @@ public class MoneyConverter implements ItemConverter {
 
 	private static final String AMOUNT_ATTRIBUTE = "amount";
 
-	private final MoneyAddon moneyAddon;
-
-	private static int clamp(int value, int min, int max) {
-		if (max < min) return min;
-		if (value < min) return min;
-		if (value > max) return max;
-		return value;
-	}
+	private final MoneyAddon          moneyAddon;
+	private final MoneyDepositService depositService;
 
 	@Override
 	public ItemStack convert(String type, String modifier, Map<String, String> attributes) {
@@ -40,13 +34,13 @@ public class MoneyConverter implements ItemConverter {
 		if (attributes != null && attributes.containsKey(AMOUNT_ATTRIBUTE)) {
 			try {
 				int requested = Integer.parseInt(attributes.get(AMOUNT_ATTRIBUTE));
-				amount = clamp(requested, variation.getMin(), variation.getMax());
+				amount = Math.clamp(requested, variation.getMin(), variation.getMax());
 			} catch (NumberFormatException ignored) {
 				// fall back to the rolled amount
 			}
 		}
 
-		return MoneyItemFactory.build(variation, amount, moneyAddon.getCurrencySymbol());
+		return MoneyItemFactory.build(variation, amount, depositService);
 	}
 
 }
