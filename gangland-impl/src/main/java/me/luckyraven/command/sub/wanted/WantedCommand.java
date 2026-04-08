@@ -44,9 +44,11 @@ public final class WantedCommand extends Command {
 	protected void initializeArguments() {
 		WantedAddCommand    wantedAdd    = new WantedAddCommand(getGangland(), getArgumentTree(), getArgument());
 		WantedRemoveCommand wantedRemove = new WantedRemoveCommand(getGangland(), getArgumentTree(), getArgument());
+		WantedClearCommand  wantedClear  = new WantedClearCommand(getGangland(), getArgumentTree(), getArgument());
 
 		getArgument().addSubArgument(wantedAdd);
 		getArgument().addSubArgument(wantedRemove);
+		getArgument().addSubArgument(wantedClear);
 	}
 
 	@Override
