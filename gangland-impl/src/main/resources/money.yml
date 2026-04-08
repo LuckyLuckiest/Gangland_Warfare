@@ -1,0 +1,110 @@
+# =============================================================================
+#  money.yml — cash drop variations and per-source drop rules
+# =============================================================================
+#
+# Cash items are dropped by mobs, cops, civilians, and players on death. The
+# dropped item carries an NBT tag with its rolled amount; walking over it (or
+# right-clicking it while holding it) deposits the amount into the player's
+# balance instead of placing the item in the inventory.
+#
+# The MASTER ENABLE/DISABLE flag for this whole feature lives in settings.yml
+# under `Money_Drop.Enabled`. Set that to `false` if you want to turn cash
+# drops off without deleting this file.
+#
+# Placeholders supported in `Display_Name`, `Lore`, `Pickup_Chat_Message`, and
+# `Pickup_Action_Bar`:
+#   %symbol% — the currency symbol (see Money.Currency_Symbol below)
+#   %amount% — the rolled cash amount for the dropped/picked-up item
+# =============================================================================
+
+Money:
+   # Variation chosen by the `money:<no-modifier>` parser shorthand and as the
+   # fallback when a configured drop source can't pick a variation.
+   Default_Variation: small
+
+   # Currency symbol shown to players. Independent from settings.yml's
+   # Money_Symbol so you can give cash drops their own symbol if desired.
+   Currency_Symbol: '$'
+
+   # Chat line shown to the player when they pick up cash. Sent through the
+   # standard color translator (& codes supported).
+   Pickup_Chat_Message: "&a+ %symbol%%amount% &7added to your purse."
+
+   # Action bar flash shown alongside the chat line. Set to an empty string to
+   # disable the action bar half of the notification.
+   Pickup_Action_Bar: "&a&l+ %symbol%%amount%"
+
+   # Per-source drop rules. Each source picks one of its listed variations
+   # using weighted random selection. Set `Enabled: false` for a source to
+   # disable cash drops from entities of that type.
+   Drop_Sources:
+      PLAYER:
+         Enabled: true
+         Variations:
+            small: {weight: 50}
+            medium: {weight: 30}
+            large: {weight: 20}
+         # When true, the rolled amount is augmented by `floor(balance * Balance_Fraction)`,
+         # then clamped to the variation's Max. Lets player kills mirror the
+         # existing User.Death.Money loss rule (settings.yml -> User.Death.Money).
+         Scale_With_Balance: true
+         Balance_Fraction: 0.15
+      COP:
+         Enabled: true
+         Variations:
+            medium: {weight: 70}
+            large: {weight: 30}
+      CIVILIAN:
+         Enabled: true
+         Variations:
+            small: {weight: 80}
+            medium: {weight: 20}
+      MOB:
+         Enabled: true
+         Variations:
+            small: {weight: 100}
+
+# =============================================================================
+#  Variations — the actual cash items.
+# =============================================================================
+#
+# Each variation is a registered item that the parser can produce via
+# `money:<id>` (e.g. `money:large`). The `Min` / `Max` fields define the random
+# amount range that's rolled into the NBT each time the item is built.
+# =============================================================================
+Variations:
+   small:
+      Material: SUNFLOWER
+      Custom_Model_Data: 1001
+      Display_Name: "&e&l$&r &eSmall Cash Stack"
+      Lore:
+         - "&7Worth &a%symbol%%amount%"
+         - "&7Walk over or right-click to collect."
+      Min: 10
+      Max: 100
+      Glow: false
+      Pickup_Sound: ENTITY_EXPERIENCE_ORB_PICKUP
+
+   medium:
+      Material: SUNFLOWER
+      Custom_Model_Data: 1002
+      Display_Name: "&6&l$&r &6Medium Cash Stack"
+      Lore:
+         - "&7Worth &a%symbol%%amount%"
+         - "&7Walk over or right-click to collect."
+      Min: 100
+      Max: 500
+      Glow: false
+      Pickup_Sound: ENTITY_EXPERIENCE_ORB_PICKUP
+
+   large:
+      Material: SUNFLOWER
+      Custom_Model_Data: 1003
+      Display_Name: "&c&l$&r &cLarge Cash Stack"
+      Lore:
+         - "&7Worth &a%symbol%%amount%"
+         - "&7Walk over or right-click to collect."
+      Min: 500
+      Max: 2000
+      Glow: true
+      Pickup_Sound: ENTITY_EXPERIENCE_ORB_PICKUP

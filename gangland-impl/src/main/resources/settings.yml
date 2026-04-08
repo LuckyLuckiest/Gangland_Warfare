@@ -503,6 +503,15 @@ Loot_Chest:
       Commands:
          - ""
 
+# +--------------------+ #
+# | Money Drop Config  | #
+# +--------------------+ #
+# Master switch for the cash item drop system. Variations, weights, and the
+# per-source rules live in money.yml. When this flag is false, no entity drops
+# money and the right-click / pickup handlers become inert.
+Money_Drop:
+   Enabled: true
+
 # +-----------------+ #
 # | Gadgets Config  | #
 # +-----------------+ #

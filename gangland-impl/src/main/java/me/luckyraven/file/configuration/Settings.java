@@ -178,6 +178,9 @@ public class Settings implements FileInitializer {
 			lootChestRewardExperienceMinimum, lootChestRewardExperienceMaximum;
 	private static @Getter List<String> lootChestRewardCommands;
 
+	// money drop (cash items dropped by mobs / cops / civilians / players on death)
+	private static @Getter boolean moneyDropEnabled;
+
 	public Settings(FileManager fileManager) {
 		try {
 			String fileName = "settings";
@@ -516,6 +519,10 @@ public class Settings implements FileInitializer {
 		lootChestRewardExperienceMinimum = lootChestRewards.getDouble("Experience.Minimum", 5);
 		lootChestRewardExperienceMaximum = lootChestRewards.getDouble("Experience.Maximum", 100);
 		lootChestRewardCommands          = lootChestRewards.getStringList("Commands");
+
+		// money drop (cash items)
+		var moneyDrop = settings.getConfigurationSection("Money_Drop");
+		moneyDropEnabled = moneyDrop == null || moneyDrop.getBoolean("Enabled", true);
 
 		// gadgets
 		var gadgets = settings.getConfigurationSection("Gadgets");
