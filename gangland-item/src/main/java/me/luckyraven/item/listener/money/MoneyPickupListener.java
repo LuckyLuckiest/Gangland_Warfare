@@ -2,6 +2,7 @@ package me.luckyraven.item.listener.money;
 
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyDepositService;
+import me.luckyraven.item.money.MoneyItem;
 import me.luckyraven.item.money.MoneyItemUtil;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
@@ -36,20 +37,35 @@ public class MoneyPickupListener implements Listener {
 		ItemStack stack = event.getItem().getItemStack();
 		if (!MoneyItemUtil.isMoneyItem(stack)) return;
 
-		int amount = MoneyItemUtil.readAmount(stack);
-		if (amount <= 0) {
+		int perItem = MoneyItemUtil.readAmount(stack);
+		if (perItem <= 0) {
 			// Tagged but corrupted; remove silently to avoid leaving garbage on the ground
 			event.setCancelled(true);
 			event.getItem().remove();
 			return;
 		}
 
+		// Stack count matters: a stack of 5 small bills worth $10 each deposits $50, not $10.
+		int    total       = perItem * stack.getAmount();
 		String variationId = MoneyItemUtil.readVariationId(stack);
 
 		event.setCancelled(true);
 		event.getItem().remove();
 
-		depositService.deposit(player, amount, variationId);
+		depositService.deposit(player, total, variationId);
+		playPickupSound(player, variationId);
+	}
+
+	private void playPickupSound(Player player, String variationId) {
+		if (variationId == null) return;
+
+		MoneyItem variation = moneyAddon.getVariation(variationId);
+		if (variation == null) return;
+
+		MoneyItem.PickupSound sound = variation.getPickupSound();
+		if (sound == null) return;
+
+		player.playSound(player.getLocation(), sound.sound(), sound.volume(), sound.pitch());
 	}
 
 }
