@@ -68,8 +68,6 @@ public class CarAddon extends CarManager {
 
 			String       permission      = section.getString("Permission");
 			int          customModelData = section.getInt("Custom_Model_Data", 0);
-			boolean      dropOnDeath     = section.getBoolean("Drop_On_Death", false);
-			boolean      droppable       = section.getBoolean("Droppable", true);
 			List<String> lore            = section.getStringList("Lore");
 
 			// Vehicle section
@@ -127,8 +125,6 @@ public class CarAddon extends CarManager {
 			             .fuelKey(fuelKey)
 			             .maxFuel(maxFuel)
 			             .maxDurability(maxDurability)
-			             .dropOnDeath(dropOnDeath)
-			             .droppable(droppable)
 			             .build();
 
 			register(key, car);

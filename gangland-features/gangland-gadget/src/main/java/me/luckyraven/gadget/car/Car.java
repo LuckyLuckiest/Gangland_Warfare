@@ -37,10 +37,6 @@ public class Car {
 	// Repair
 	private final int maxDurability;
 
-	// Drop behavior
-	private final boolean dropOnDeath;
-	private final boolean droppable;
-
 	/**
 	 * Checks whether the given ItemStack is a car item by looking for the car NBT tag.
 	 */
