@@ -3,6 +3,7 @@ package me.luckyraven.command.sub.weapon;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.util.GanglandChatUtil;
@@ -18,13 +19,17 @@ import org.bukkit.inventory.ItemStack;
 class AmmunitionInfoCommand extends SubArgument {
 
 	private final Gangland            gangland;
+	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
 	protected AmmunitionInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "info", tree, parent);
 
 		this.gangland    = gangland;
+		this.tree        = tree;
 		this.userManager = gangland.getInitializer().getUserManager();
+
+		ammunitionInfo();
 	}
 
 	@Override
@@ -35,24 +40,61 @@ class AmmunitionInfoCommand extends SubArgument {
 
 			if (user == null) return;
 
-			// get the held item
 			ItemStack itemStack = player.getInventory().getItemInMainHand();
 
-			// check if it was an ammunition
 			if (!Ammunition.isAmmunition(itemStack)) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Not ammunition!"));
+				user.sendMessage(GanglandChatUtil.prefixMessage("Not an ammunition!"));
 				return;
 			}
 
-			// get the ammunition as the held item
 			AmmunitionManager ammunitionManager = gangland.getInitializer().getAmmunitionManager();
 			Ammunition        ammunition        = Ammunition.getHeldAmmunition(ammunitionManager, itemStack);
 
-			// display the necessary information
-			JsonFormatter jsonFormatter = new JsonFormatter();
+			if (ammunition == null) {
+				user.sendMessage(GanglandChatUtil.prefixMessage("Ammunition not registered."));
+				return;
+			}
 
-			user.sendMessage(jsonFormatter.formatToJson(GanglandChatUtil.color(ammunition.toString()), " ".repeat(3)));
+			sendInfo(user, ammunition);
 		};
+	}
+
+	private void ammunitionInfo() {
+		Argument name = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
+
+			String            ammoName          = args[2];
+			AmmunitionManager ammunitionManager = gangland.getInitializer().getAmmunitionManager();
+			Ammunition        ammunition        = ammunitionManager.getAmmunition(ammoName);
+
+			if (ammunition == null) {
+				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid ammunition: &c" + ammoName));
+				return;
+			}
+
+			sendInfo(user, ammunition);
+		}, sender -> gangland.getInitializer().getAmmunitionManager().getAmmunitionKeys()
+				.stream().toList());
+
+		this.addSubArgument(name);
+	}
+
+	private void sendInfo(User<Player> user, Ammunition ammunition) {
+		JsonFormatter jsonFormatter = new JsonFormatter();
+		user.sendMessage(jsonFormatter.formatToJson(GanglandChatUtil.color(buildInfo(ammunition)), " ".repeat(3)));
+	}
+
+	private String buildInfo(Ammunition ammunition) {
+		StringBuilder info = new StringBuilder();
+		info.append("&7Name&8: &b").append(ammunition.getName())
+		    .append("\n&7Display Name&8: &b").append(ammunition.getDisplayName())
+		    .append("\n&7Material&8: &b").append(ammunition.getMaterial().name())
+		    .append("\n&7Custom Model Data&8: &b").append(ammunition.getCustomModelData());
+
+		return info.toString();
 	}
 
 }
