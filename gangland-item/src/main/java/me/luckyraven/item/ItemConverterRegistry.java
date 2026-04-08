@@ -17,6 +17,12 @@ public class ItemConverterRegistry {
 		converters.put(type.toLowerCase(), converter);
 	}
 
+	public void register(String[] types, ItemConverter converter) {
+		for (String type : types) {
+			register(type, converter);
+		}
+	}
+
 	/**
 	 * Gets a converter for a specific type.
 	 *

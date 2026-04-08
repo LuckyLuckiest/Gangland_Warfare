@@ -5,50 +5,61 @@ import me.luckyraven.item.event.PlayerItemInitEvent;
 import me.luckyraven.item.unique.UniqueItem;
 import me.luckyraven.item.unique.UniqueItemUtil;
 import me.luckyraven.util.autowire.AutowireTarget;
+import me.luckyraven.util.downed.PlayerDownedEvent;
+import me.luckyraven.util.downed.PlayerUndownedEvent;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.listener.ListenerPriority;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.plugin.java.JavaPlugin;
 
 @ListenerHandler(priority = ListenerPriority.LOW)
-@AutowireTarget({UniqueItemRegistry.class})
+@AutowireTarget({UniqueItemRegistry.class, JavaPlugin.class})
 public class LoadUniqueItem implements Listener {
 
 	private final UniqueItemRegistry uniqueItemAddon;
+	private final JavaPlugin         plugin;
 
-	public LoadUniqueItem(UniqueItemRegistry uniqueItemAddon) {
+	public LoadUniqueItem(UniqueItemRegistry uniqueItemAddon, JavaPlugin plugin) {
 		this.uniqueItemAddon = uniqueItemAddon;
+		this.plugin          = plugin;
 	}
 
 	@EventHandler
 	public void onJoinGiveItem(PlayerItemInitEvent event) {
-		Player player      = event.getPlayer();
-		var    uniqueItems = uniqueItemAddon.getUniqueItems();
+		Player player = event.getPlayer();
 
-		for (var uniqueItem : uniqueItems.values()) {
-			if (!uniqueItem.isAddOnJoin()) continue;
-			if (!uniqueItem.isAddToInventory()) continue;
+		// PlayerItemInitEvent is fired async (bridged from the async UserDataInitEvent), so inventory
+		// modifications must be hopped back to the main thread.
+		Runnable giveItems = () -> {
+			var uniqueItems = uniqueItemAddon.getUniqueItems();
 
-			if (UniqueItemUtil.hasUniqueItem(player, uniqueItem) && !uniqueItem.isAllowDuplicates()) continue;
+			for (var uniqueItem : uniqueItems.values()) {
+				if (!uniqueItem.isAddOnJoin()) continue;
+				if (!uniqueItem.isAddToInventory()) continue;
 
-			uniqueItem.addItemToInventory(player);
+				if (UniqueItemUtil.hasUniqueItem(player, uniqueItem) && !uniqueItem.isAllowDuplicates()) continue;
+
+				uniqueItem.addItemToInventory(player);
+			}
+		};
+
+		if (event.isAsynchronous()) {
+			Bukkit.getScheduler().runTask(plugin, giveItems);
+		} else {
+			giveItems.run();
 		}
 	}
 
 	@EventHandler
-	public void beforePlayerDeath(EntityDamageEvent event) {
-		if (!(event.getEntity() instanceof Player player)) return;
-
-		double remainingHealth = player.getHealth() - event.getFinalDamage();
-
-		if (remainingHealth > 0) return;
-
-		var uniqueItems = uniqueItemAddon.getUniqueItems();
+	public void onPlayerDowned(PlayerDownedEvent event) {
+		Player player      = event.getPlayer();
+		var    uniqueItems = uniqueItemAddon.getUniqueItems();
 
 		for (var uniqueItem : uniqueItems.values()) {
 			if (!uniqueItem.isDroppable()) continue;
@@ -60,8 +71,16 @@ public class LoadUniqueItem implements Listener {
 
 	@EventHandler
 	public void onPlayerRespawn(PlayerRespawnEvent event) {
-		Player player      = event.getPlayer();
-		var    uniqueItems = uniqueItemAddon.getUniqueItems();
+		giveRespawnItems(event.getPlayer());
+	}
+
+	@EventHandler
+	public void onPlayerUndowned(PlayerUndownedEvent event) {
+		giveRespawnItems(event.getPlayer());
+	}
+
+	private void giveRespawnItems(Player player) {
+		var uniqueItems = uniqueItemAddon.getUniqueItems();
 
 		for (var uniqueItem : uniqueItems.values()) {
 			if (!uniqueItem.isAddOnRespawn()) continue;

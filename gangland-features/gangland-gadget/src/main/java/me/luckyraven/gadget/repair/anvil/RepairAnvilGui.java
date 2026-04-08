@@ -106,7 +106,7 @@ public class RepairAnvilGui {
 
 	private void updateWeaponInHand(@NotNull Player player, @NotNull Repairable repairable,
 	                                @NotNull ItemStack originalWeaponItem) {
-		ItemStack repaired = repairable.buildItem();
+		ItemStack repaired = repairable.buildItem(player);
 		player.getInventory().setItemInMainHand(repaired);
 	}
 }

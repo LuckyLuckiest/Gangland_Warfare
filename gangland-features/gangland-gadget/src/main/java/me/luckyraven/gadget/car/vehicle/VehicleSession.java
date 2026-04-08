@@ -124,7 +124,7 @@ public class VehicleSession {
 	 * Builds the car item with updated durability and fuel NBT values to return to the player.
 	 */
 	public ItemStack buildReturnItem() {
-		ItemStack   item    = car.buildItem();
+		ItemStack   item    = car.buildItem(Bukkit.getPlayer(driverUUID));
 		ItemBuilder builder = new ItemBuilder(item);
 
 		builder.addTag(CarKey.CAR_DURABILITY.getKey(), currentDurability);

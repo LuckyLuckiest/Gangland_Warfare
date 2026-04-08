@@ -292,7 +292,7 @@ public class CarService {
 			parkedCarRepository.delete(record);
 		}
 
-		ItemStack   item    = parked.getCar().buildItem();
+		ItemStack   item    = parked.getCar().buildItem(player);
 		ItemBuilder builder = new ItemBuilder(item);
 		builder.addTag(CarKey.CAR_DURABILITY.getKey(), parked.getDurability());
 		builder.addTag(FuelKey.FUEL_CURRENT.getKey(), parked.getFuel());

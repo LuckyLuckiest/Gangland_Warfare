@@ -34,6 +34,16 @@ public enum Messages {
 	RECEIVED_WEAPON("Commands.Weapons.Weapon.Received", Type.COMMAND),
 	GAVE_WEAPON("Commands.Weapons.Weapon.Gave", Type.COMMAND),
 
+	// commands - item money
+	ITEM_MONEY_GAVE("Commands.Item.Money.Gave", Type.COMMAND),
+	ITEM_MONEY_INVALID("Commands.Item.Money.Invalid", Type.ERROR),
+	ITEM_MONEY_NOT_HELD("Commands.Item.Money.Not_Held", Type.ERROR),
+	ITEM_MONEY_NOT_REGISTERED("Commands.Item.Money.Not_Registered", Type.ERROR),
+	ITEM_MONEY_LIST_HEADER("Commands.Item.Money.List_Header", Type.COMMAND),
+
+	// commands - wanted
+	WANTED_CLEARED_OTHER("Commands.Wanted.Cleared_Other", Type.COMMAND),
+
 	// commands - economy
 	BALANCE_PLAYER("Commands.Economy.Balance.Player", Type.COMMAND),
 	BALANCE_TARGET("Commands.Economy.Balance.Target", Type.COMMAND),

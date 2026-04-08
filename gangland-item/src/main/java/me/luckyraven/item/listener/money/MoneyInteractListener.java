@@ -2,6 +2,7 @@ package me.luckyraven.item.listener.money;
 
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyDepositService;
+import me.luckyraven.item.money.MoneyItem;
 import me.luckyraven.item.money.MoneyItemUtil;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
@@ -30,7 +31,10 @@ public class MoneyInteractListener implements Listener {
 		this.depositService = depositService;
 	}
 
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	// NOTE: do NOT use ignoreCancelled = true here. Bukkit cancels PlayerInteractEvent by default for RIGHT_CLICK_AIR
+	// when nothing is hit, so an ignoreCancelled listener would never receive air clicks — exactly the case we want
+	// to handle for picking up money by right-clicking an empty hand-target.
+	@EventHandler(priority = EventPriority.HIGH)
 	public void onMoneyInteract(PlayerInteractEvent event) {
 		if (!moneyAddon.isEnabled()) return;
 		if (event.getHand() != EquipmentSlot.HAND) return;
@@ -50,6 +54,19 @@ public class MoneyInteractListener implements Listener {
 		consumeOne(event.getPlayer(), heldItem);
 
 		depositService.deposit(event.getPlayer(), amount, variationId);
+		playPickupSound(event.getPlayer(), variationId);
+	}
+
+	private void playPickupSound(Player player, String variationId) {
+		if (variationId == null) return;
+
+		MoneyItem variation = moneyAddon.getVariation(variationId);
+		if (variation == null) return;
+
+		MoneyItem.PickupSound sound = variation.getPickupSound();
+		if (sound == null) return;
+
+		player.playSound(player.getLocation(), sound.sound(), sound.volume(), sound.pitch());
 	}
 
 	private void consumeOne(Player player, ItemStack heldItem) {

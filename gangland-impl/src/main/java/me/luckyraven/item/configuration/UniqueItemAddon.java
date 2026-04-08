@@ -2,6 +2,7 @@ package me.luckyraven.item.configuration;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
+import lombok.Setter;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.gadget.fuel.FuelService;
@@ -9,42 +10,56 @@ import me.luckyraven.item.contract.UniqueItemRegistry;
 import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.item.unique.UniqueItem;
 import me.luckyraven.persistence.FileHandler;
+import me.luckyraven.persistence.FileInitializer;
 import me.luckyraven.persistence.FileManager;
+import me.luckyraven.util.Placeholder;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.*;
 
 @CustomLog
-public class UniqueItemAddon implements Comparator<UniqueItem>, UniqueItemRegistry {
+public class UniqueItemAddon implements Comparator<UniqueItem>, UniqueItemRegistry, FileInitializer {
 
 	private final Map<String, UniqueItem> uniqueItems;
 	private final PermissionManager       permissionManager;
-	private final FileManager             fileManager;
+	private final FileHandler             fileHandler;
 	private final FuelService             fuelService;
+
+	/**
+	 * Placeholder resolver injected by the impl side so each loaded {@link UniqueItem} can resolve {@code %gangland_*%}
+	 * tokens in its display name and lore at item-build time.
+	 */
+	@Setter
+	@Nullable
+	private Placeholder placeholder;
 
 	public UniqueItemAddon(PermissionManager permissionManager, FileManager fileManager, FuelService fuelService) {
 		this.uniqueItems       = new HashMap<>();
-		this.fileManager       = fileManager;
 		this.permissionManager = permissionManager;
 		this.fuelService       = fuelService;
-	}
 
-	public void initialize() {
-		FileConfiguration fileConfiguration;
 		try {
 			String fileName = "unique_items";
 
 			fileManager.checkFileLoaded(fileName);
 
-			FileHandler file = Objects.requireNonNull(fileManager.getFile(fileName));
-			fileConfiguration = file.getFileConfiguration();
+			this.fileHandler = Objects.requireNonNull(fileManager.getFile(fileName));
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
+	}
 
-		registerUniqueItem(permissionManager, fileConfiguration);
+	@Override
+	public FileHandler getFileHandler() {
+		return fileHandler;
+	}
+
+	@Override
+	public void initialize() {
+		registerUniqueItem(permissionManager, fileHandler.getFileConfiguration());
 	}
 
 	public UniqueItem getUniqueItem(String key) {
@@ -145,6 +160,7 @@ public class UniqueItemAddon implements Comparator<UniqueItem>, UniqueItemRegist
 			                           .droppable(droppable)
 			                           .lootKey(lootKey)
 			                           .fuel(fuel)
+			                           .placeholder(placeholder)
 			                           .build();
 
 			this.uniqueItems.put(key, uniqueItem);

@@ -1,4 +1,4 @@
-package me.luckyraven.command.sub.item;
+package me.luckyraven.command.sub.item.money;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
@@ -12,13 +12,13 @@ import org.bukkit.command.CommandSender;
 import java.util.ArrayList;
 import java.util.List;
 
-class ItemUniqueCommand extends SubArgument {
+public class ItemMoneyCommand extends SubArgument {
 
 	private final Gangland       gangland;
 	private final Tree<Argument> tree;
 
-	ItemUniqueCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(gangland, "unique", tree, parent);
+	public ItemMoneyCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+		super(gangland, "money", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
@@ -33,9 +33,9 @@ class ItemUniqueCommand extends SubArgument {
 	}
 
 	private void initializeArguments() {
-		Argument give = new ItemUniqueGiveCommand(gangland, tree, this);
-		Argument info = new ItemUniqueInfoCommand(gangland, tree, this);
-		Argument list = new ItemUniqueListCommand(gangland, tree, this);
+		Argument give = new ItemMoneyGiveCommand(gangland, tree, this);
+		Argument info = new ItemMoneyInfoCommand(gangland, tree, this);
+		Argument list = new ItemMoneyListCommand(gangland, tree, this);
 
 		List<Argument> arguments = new ArrayList<>();
 

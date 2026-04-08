@@ -1,6 +1,6 @@
 # Levels
 
-[← Loot Chests](./loot-chests.md) | [Back to Index](../README.md) | [Next: Unique Items →](./unique-items.md)
+[← Loot Chests](./loot_chests.md) | [Back to Index](../README.md) | [Next: Unique Items →](./unique-items.md)
 
 ---
 
@@ -104,4 +104,4 @@ The formula field accepts standard mathematical expressions. Available variables
 
 ---
 
-[← Loot Chests](./loot-chests.md) | [Back to Index](../README.md) | [Next: Unique Items →](./unique-items.md)
+[← Loot Chests](./loot_chests.md) | [Back to Index](../README.md) | [Next: Unique Items →](./unique-items.md)

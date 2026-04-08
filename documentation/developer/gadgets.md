@@ -106,8 +106,6 @@ Immutable `@Builder` value object holding a car type's configuration. Built by `
 | `fuelKey`         | String   | Reference to a registered Fuel definition           |
 | `maxFuel`         | int      | Maximum fuel capacity (ticks)                       |
 | `maxDurability`   | int      | Maximum durability (hit points)                     |
-| `dropOnDeath`     | boolean  | Return item to player on car destruction            |
-| `droppable`       | boolean  | Whether the item can be dropped from inventory      |
 
 **Static helpers:**
 

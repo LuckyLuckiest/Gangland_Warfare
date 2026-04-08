@@ -98,6 +98,15 @@ Commands:
       Weapon:
          Received: "You received &8(&7%amount%&8) &e%weapon% &7weapon."
          Gave: "You gave a &8(&7%amount%&8) &e%weapon% &7weapon to &3%player%&7."
+   Item:
+      Money:
+         Gave: "Gave &b%name% &7x&b%amount%&7."
+         Invalid: "&cInvalid money item &3%name%&c."
+         Not_Held: "&cYou are not holding a money item."
+         Not_Registered: "&cMoney item not registered &3%name%&c."
+         List_Header: "List of money items"
+   Wanted:
+      Cleared_Other: "Cleared wanted level of &b%player%&7."
    Economy:
       Balance:
          Player: "Your balance is: &b%money_symbol%%balance%"

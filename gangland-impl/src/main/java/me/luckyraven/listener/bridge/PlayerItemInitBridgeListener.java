@@ -18,7 +18,7 @@ public class PlayerItemInitBridgeListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onUserDataInit(UserDataInitEvent event) {
-		Bukkit.getPluginManager().callEvent(new PlayerItemInitEvent(event.getPlayer()));
+		Bukkit.getPluginManager().callEvent(new PlayerItemInitEvent(event.getPlayer(), event.isAsynchronous()));
 	}
 
 }

@@ -29,6 +29,7 @@ public abstract class FolderLoader extends FileLoader<FileHandler> {
 		this.expectedFolderFiles = new ArrayList<>();
 	}
 
+	@Override
 	public abstract void initialize();
 
 	public void addFile(FileHandler fileHandler) {
@@ -52,6 +53,16 @@ public abstract class FolderLoader extends FileLoader<FileHandler> {
 	@Override
 	public void clear() {
 		folderFiles.clear();
+	}
+
+	/**
+	 * Folder loaders own many files; the orchestrator's regenerate-on-failure path doesn't apply here, so we return
+	 * {@code null} and let {@link FileManager} skip recovery if a folder loader is ever registered with it. Per-file
+	 * errors are already handled inside {@link #loadData(Consumer, FileManager)}.
+	 */
+	@Override
+	protected FileHandler resolvePrimaryHandler(FileManager fileManager) {
+		return null;
 	}
 
 	@Override
@@ -93,7 +104,7 @@ public abstract class FolderLoader extends FileLoader<FileHandler> {
 				temp.add(fileHandler.getName());
 			} catch (Exception exception) {
 				log.error("{}: There was a problem registering the {} {}", UnhandledError.FILE_LOADER_ERROR,
-						  getFolderName(), fileHandler.getName(), exception);
+				          getFolderName(), fileHandler.getName(), exception);
 			}
 		}
 
@@ -112,7 +123,7 @@ public abstract class FolderLoader extends FileLoader<FileHandler> {
 				if (!folderFiles.contains(temp)) addFile(temp);
 			} catch (IOException exception) {
 				log.error("{}: There was a problem with loading the file {}.", UnhandledError.FILE_CREATE_ERROR,
-						  file.getName(), exception);
+				          file.getName(), exception);
 			}
 		}
 	}

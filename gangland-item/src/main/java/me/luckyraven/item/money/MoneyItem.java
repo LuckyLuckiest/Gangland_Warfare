@@ -14,7 +14,7 @@ import java.util.List;
  * <ul>
  *   <li>How the dropped {@code ItemStack} looks (material, custom model data, display name, lore, glow).</li>
  *   <li>The min/max amount range that {@link MoneyAddon#rollAmount} samples from when an item is built.</li>
- *   <li>Optional pickup feedback (sound).</li>
+ *   <li>Optional pickup feedback (sound + volume + pitch).</li>
  * </ul>
  */
 @Getter
@@ -30,7 +30,7 @@ public class MoneyItem {
 	private final boolean      glow;
 
 	@Nullable
-	private final Sound pickupSound;
+	private final PickupSound pickupSound;
 
 	public MoneyItem(String id,
 	                 Material material,
@@ -40,7 +40,7 @@ public class MoneyItem {
 	                 int min,
 	                 int max,
 	                 boolean glow,
-	                 @Nullable Sound pickupSound) {
+	                 @Nullable PickupSound pickupSound) {
 		this.id              = id;
 		this.material        = material;
 		this.customModelData = customModelData;
@@ -51,5 +51,11 @@ public class MoneyItem {
 		this.glow            = glow;
 		this.pickupSound     = pickupSound;
 	}
+
+	/**
+	 * Pickup feedback for a cash variation. Played by the pickup and right-click listeners at the player's location
+	 * after a successful deposit.
+	 */
+	public record PickupSound(Sound sound, float volume, float pitch) { }
 
 }

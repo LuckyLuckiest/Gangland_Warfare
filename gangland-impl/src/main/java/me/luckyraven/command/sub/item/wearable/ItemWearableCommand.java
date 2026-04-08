@@ -1,4 +1,4 @@
-package me.luckyraven.command.sub.item;
+package me.luckyraven.command.sub.item.wearable;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
@@ -12,12 +12,12 @@ import org.bukkit.command.CommandSender;
 import java.util.ArrayList;
 import java.util.List;
 
-class ItemWearableCommand extends SubArgument {
+public class ItemWearableCommand extends SubArgument {
 
 	private final Gangland       gangland;
 	private final Tree<Argument> tree;
 
-	ItemWearableCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	public ItemWearableCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "wearable", tree, parent);
 
 		this.gangland = gangland;

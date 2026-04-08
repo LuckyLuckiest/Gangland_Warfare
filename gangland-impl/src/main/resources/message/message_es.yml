@@ -98,6 +98,15 @@ Commands:
       Weapon:
          Received: "Recibiste &8(&7%amount%&8) &e%weapon% &7arma."
          Gave: "Le diste &8(&7%amount%&8) &e%weapon% &7arma a &3%player%&7."
+   Item:
+      Money:
+         Gave: "Diste &b%name% &7x&b%amount%&7."
+         Invalid: "&cArtículo de dinero inválido &3%name%&c."
+         Not_Held: "&cNo estás sosteniendo un artículo de dinero."
+         Not_Registered: "&cArtículo de dinero no registrado &3%name%&c."
+         List_Header: "Lista de artículos de dinero"
+   Wanted:
+      Cleared_Other: "Nivel de búsqueda eliminado de &b%player%&7."
    Economy:
       Balance:
          Player: "Tu saldo es: &b%money_symbol%%balance%"

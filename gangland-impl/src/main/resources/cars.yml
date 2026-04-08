@@ -20,8 +20,6 @@
 #   Display_Name        - display name (supports & color codes)
 #   Custom_Model_Data   - integer for resource pack model
 #   Permission          - permission node required to use (optional)
-#   Drop_On_Death       - whether the item drops on player death
-#   Droppable           - whether the player can manually drop the item
 #   Lore                - list of lore lines
 #
 #   Vehicle:
@@ -43,8 +41,6 @@ sports_car:
    Material: MINECART
    Display_Name: "&6Sports Car"
    Custom_Model_Data: 1001
-   Drop_On_Death: false
-   Droppable: false
    Lore:
       - "&7A sleek and fast street car"
       - "&8Top speed: Fast"
@@ -66,8 +62,6 @@ pickup_truck:
    Material: MINECART
    Display_Name: "&2Pickup Truck"
    Custom_Model_Data: 1002
-   Drop_On_Death: true
-   Droppable: true
    Lore:
       - "&7Heavy duty transport"
       - "&8Top speed: Moderate"

@@ -155,7 +155,7 @@ public class LootChestListener implements Listener {
 			case INVALID_CHEST -> {
 				player.sendMessage(msg != null ? msg.getInvalidChest() : ChatUtil.color("&cThis chest is invalid!"));
 			}
-			case NO_ITEM_PROVIDER -> {
+			case NO_ITEM_PARSER -> {
 				player.sendMessage(msg != null ?
 								   msg.getNoItemProvider() :
 								   ChatUtil.color("&cLoot system is not configured properly!"));

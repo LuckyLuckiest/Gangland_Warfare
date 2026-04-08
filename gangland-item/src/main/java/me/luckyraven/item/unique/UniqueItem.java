@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.Placeholder;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -14,6 +15,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @AllArgsConstructor
@@ -44,6 +46,13 @@ public class UniqueItem implements Comparable<ItemStack> {
 	@Nullable
 	private Fuel fuel;
 
+	/**
+	 * Placeholder resolver injected by {@code UniqueItemAddon} via the builder so {@link #buildItem(Player)} can
+	 * resolve {@code %gangland_*%} tokens in the display name and lore.
+	 */
+	@Nullable
+	private Placeholder placeholder;
+
 	@Override
 	public int compareTo(@NotNull ItemStack itemStack) {
 		ItemMeta meta = itemStack.getItemMeta();
@@ -67,11 +76,16 @@ public class UniqueItem implements Comparable<ItemStack> {
 	}
 
 	public ItemStack buildItem() {
+		return buildItem(null);
+	}
+
+	public ItemStack buildItem(@Nullable Player player) {
 		ItemBuilder itemBuilder = new ItemBuilder(material);
 
-		itemBuilder.setDisplayName(name);
+		itemBuilder.setDisplayName(resolvePlaceholder(player, name));
 
-		if (lore != null) itemBuilder.setLore(lore);
+		List<String> resolvedLore = resolvePlaceholder(player, lore);
+		if (resolvedLore != null) itemBuilder.setLore(resolvedLore);
 
 		if (customModelData > 0) {
 			itemBuilder.setCustomModelData(customModelData);
@@ -88,6 +102,20 @@ public class UniqueItem implements Comparable<ItemStack> {
 		}
 
 		return itemBuilder.build();
+	}
+
+	private String resolvePlaceholder(@Nullable Player player, @Nullable String text) {
+		if (text == null || text.isEmpty() || placeholder == null) return text;
+		return placeholder.convert(player, text);
+	}
+
+	private List<String> resolvePlaceholder(@Nullable Player player, @Nullable List<String> loreLines) {
+		if (loreLines == null || loreLines.isEmpty() || placeholder == null) return loreLines;
+		List<String> resolved = new ArrayList<>(loreLines.size());
+		for (String line : loreLines) {
+			resolved.add(line == null ? null : placeholder.convert(player, line));
+		}
+		return resolved;
 	}
 
 	private boolean addItem(Player player, int inventorySlot) {
@@ -112,7 +140,7 @@ public class UniqueItem implements Comparable<ItemStack> {
 	private void createItem(Player player, int inventorySlot) {
 		PlayerInventory inventory = player.getInventory();
 
-		inventory.setItem(inventorySlot, buildItem());
+		inventory.setItem(inventorySlot, buildItem(player));
 	}
 
 }

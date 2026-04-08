@@ -3,8 +3,8 @@ package me.luckyraven.file.configuration;
 import lombok.CustomLog;
 import lombok.Getter;
 import me.luckyraven.exception.PluginException;
-import me.luckyraven.file.FileInitializer;
 import me.luckyraven.persistence.FileHandler;
+import me.luckyraven.persistence.FileInitializer;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.configuration.ConfigurationSection;
@@ -13,6 +13,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,8 @@ public class Settings implements FileInitializer {
 	private static final @Getter Map<String, Object> settingsPlaceholder = new LinkedHashMap<>();
 
 	private static FileConfiguration settings;
+
+	private final FileHandler fileHandler;
 
 	// update configuration
 	private static @Getter boolean updaterEnabled, notifyPrivilegedPlayers, updaterAutoUpdate;
@@ -187,12 +190,17 @@ public class Settings implements FileInitializer {
 
 			fileManager.checkFileLoaded(fileName);
 
-			FileHandler file = Objects.requireNonNull(fileManager.getFile(fileName));
+			this.fileHandler = Objects.requireNonNull(fileManager.getFile(fileName));
 
-			settings = file.getFileConfiguration();
+			settings = fileHandler.getFileConfiguration();
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
+	}
+
+	@Override
+	public FileHandler getFileHandler() {
+		return fileHandler;
 	}
 
 	public static String formatDouble(double value) {
@@ -218,13 +226,7 @@ public class Settings implements FileInitializer {
 
 	@Override
 	public void initialize() {
-		try {
-			init();
-		} catch (Exception exception) {
-			// create a new file
-			// initialize again
-//			init();
-		}
+		init();
 	}
 
 	private void init() {
@@ -560,6 +562,9 @@ public class Settings implements FileInitializer {
 		Field[] fields = this.getClass().getDeclaredFields();
 
 		for (Field field : fields) {
+			// only static fields are exposed via the placeholder map; skip instance fields like fileHandler
+			if (!Modifier.isStatic(field.getModifiers())) continue;
+
 			field.setAccessible(true);
 			try {
 				Object value = field.get(null);

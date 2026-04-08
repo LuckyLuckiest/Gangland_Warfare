@@ -9,19 +9,21 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @CustomLog
 public class FileManager {
 
-	private final JavaPlugin       plugin;
-	private final Set<FileHandler> files;
+	private final JavaPlugin            plugin;
+	private final Set<FileHandler>      files;
+	private final List<FileInitializer> initializers;
+	private       int                   nextInitializerIndex;
 
 	public FileManager(JavaPlugin plugin) {
-		this.files  = new HashSet<>();
-		this.plugin = plugin;
+		this.files                = new HashSet<>();
+		this.initializers         = new ArrayList<>();
+		this.nextInitializerIndex = 0;
+		this.plugin               = plugin;
 	}
 
 	/**
@@ -39,7 +41,7 @@ public class FileManager {
 			file.create(true);
 		} catch (IOException exception) {
 			log.warn("{} {}.{}: {}", UnhandledError.FILE_CREATE_ERROR, file.getName(), file.getFileType(),
-					 exception.getMessage());
+			         exception.getMessage());
 		}
 	}
 
@@ -115,21 +117,29 @@ public class FileManager {
 	}
 
 	/**
-	 * Reloads all the files are stored
+	 * Reloads every stored file from disk. If a file is missing or corrupted, it is regenerated from the bundled jar
+	 * resource so subsequent {@link FileInitializer}s see fresh data instead of the stale in-memory state from before
+	 * the reload.
 	 */
 	public void reloadFiles() {
 		for (FileHandler file : files) {
 			try {
 				file.reloadData();
 			} catch (IOException exception) {
-				log.warn("{} {}.{}: {}", UnhandledError.FILE_LOADER_ERROR, file.getName(), file.getFileType(),
-						 exception.getMessage());
+				log.warn("{} {}.{}: {} - regenerating from jar", UnhandledError.FILE_LOADER_ERROR, file.getName(),
+				         file.getFileType(), exception.getMessage());
+				try {
+					file.createNewFile();
+				} catch (IOException recreate) {
+					log.error("Could not regenerate {}.{} on reload: {}", file.getName(), file.getFileType(),
+					          recreate.getMessage());
+				}
 			}
 		}
 	}
 
 	/**
-	 * Loads all the files that are stored in the plugin's resource folder without storing them in the files dataset
+	 * Loads all the files that are stored in the plugin's resource folder without storing them in the file dataset
 	 *
 	 * @param resourceFile the path of a file in the resource folder
 	 *
@@ -169,6 +179,72 @@ public class FileManager {
 	 */
 	public Set<FileHandler> getFiles() {
 		return Collections.unmodifiableSet(files);
+	}
+
+	/**
+	 * Registers a file-backed initializer so {@link #initializeAll()} can run it with automatic recovery (regenerate
+	 * the underlying file from the bundled jar resource and retry once if the first attempt throws).
+	 *
+	 * @param initializer the initializer to register
+	 */
+	public void registerInitializer(FileInitializer initializer) {
+		initializers.add(initializer);
+	}
+
+	/**
+	 * Drops every registered initializer and resets the iteration cursor. Call this at the start of a reload so the
+	 * registry doesn't leak references to the old addon instances that {@code addonsClear()} just discarded.
+	 */
+	public void clearInitializers() {
+		initializers.clear();
+		nextInitializerIndex = 0;
+	}
+
+	/**
+	 * Runs every {@link FileInitializer} that has been registered since the last call, in registration order. Any
+	 * failure is logged loudly, the underlying file is regenerated from the bundled jar resource via
+	 * {@link FileHandler#createNewFile()}, and the initializer is retried once. A second failure is logged at error
+	 * level and the loop continues to the next initializer rather than aborting plugin load.
+	 * <p>
+	 * Subsequent calls only process initializers registered after the previous call, so the orchestrator can be invoked
+	 * in stages when later loaders depend on values populated by earlier ones.
+	 */
+	public void initializeAll() {
+		while (nextInitializerIndex < initializers.size()) {
+			runInitializer(initializers.get(nextInitializerIndex));
+			nextInitializerIndex++;
+		}
+	}
+
+	private void runInitializer(FileInitializer initializer) {
+		FileHandler handler = initializer.getFileHandler();
+
+		try {
+			initializer.initialize();
+		} catch (Exception first) {
+			if (handler == null) {
+				// Multi-file or folder loader - no single file to regenerate. Just log and move on.
+				log.error("Failed to initialize {}: {}", initializer.getClass().getSimpleName(), first.getMessage(),
+				          first);
+				return;
+			}
+
+			log.warn("Failed to initialize {}.{}: {} - regenerating from jar and retrying", handler.getName(),
+			         handler.getFileType(), first.getMessage());
+			try {
+				handler.createNewFile();
+			} catch (IOException recreate) {
+				log.error("Could not regenerate {}.{}: {}", handler.getName(), handler.getFileType(),
+				          recreate.getMessage());
+				return;
+			}
+			try {
+				initializer.initialize();
+			} catch (Exception second) {
+				log.error("Initialization still failing for {}.{} after regeneration: {}", handler.getName(),
+				          handler.getFileType(), second.getMessage(), second);
+			}
+		}
 	}
 
 }

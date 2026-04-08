@@ -243,6 +243,10 @@
 		"usage": "/glw safewand",
 		"description": "Gives the player a safe wand."
 	},
+	"respawn": {
+		"usage": "/glw respawn",
+		"description": "Respawns a downed player."
+	},
 	"wanted": {
 		"usage": "/glw wanted",
 		"description": "Shows the current wanted status."
@@ -258,6 +262,14 @@
 	"wanted_remove": {
 		"usage": "/glw wanted remove <amount>",
 		"description": "Removes wanted level."
+	},
+	"wanted_clear": {
+		"usage": "/glw wanted clear",
+		"description": "Clears your wanted level."
+	},
+	"wanted_clear_others": {
+		"usage": "/glw wanted clear <player>",
+		"description": "Clears the wanted level of the specified player."
 	},
 	"resource_pack": {
 		"usage": "/glw resource",
@@ -650,6 +662,22 @@
 	"item_wearable_list": {
 		"usage": "/glw item wearable list",
 		"description": "Shows all registered wearable items."
+	},
+	"item_money": {
+		"usage": "/glw item money",
+		"description": "Shows money item help."
+	},
+	"item_money_give": {
+		"usage": "/glw item money give <name> <amount>",
+		"description": "Gives the specified money item."
+	},
+	"item_money_info": {
+		"usage": "/glw item money info <name>",
+		"description": "Shows information about the specified money item or the one in hand."
+	},
+	"item_money_list": {
+		"usage": "/glw item money list",
+		"description": "Shows all registered money items."
 	},
 	"civilian_help": {
 		"usage": "/glw civilian help <page>",

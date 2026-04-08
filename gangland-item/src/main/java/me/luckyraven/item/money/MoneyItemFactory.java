@@ -17,31 +17,49 @@ import java.util.List;
  */
 public final class MoneyItemFactory {
 
-	private static final String SYMBOL_PLACEHOLDER = "%symbol%";
 	private static final String AMOUNT_PLACEHOLDER = "%amount%";
 
 	private MoneyItemFactory() {
 	}
 
 	/**
-	 * Builds a money {@link ItemStack} from the given variation and rolled amount.
+	 * Builds a money {@link ItemStack} of size 1 from the given variation and rolled amount.
 	 *
 	 * @param variation the variation definition
 	 * @param amount the rolled amount to embed in NBT and substitute into lore
-	 * @param currencySymbol the currency symbol used for {@code %symbol%} placeholders in display name and lore
+	 * @param depositService used to resolve {@code %gangland_*%} placeholders in the display name and lore via the
+	 * 		impl-side placeholder pipeline
 	 *
 	 * @return a fresh {@code ItemStack} carrying the cash NBT tags
 	 */
-	public static ItemStack build(MoneyItem variation, int amount, String currencySymbol) {
+	public static ItemStack build(MoneyItem variation, int amount, MoneyDepositService depositService) {
+		return build(variation, amount, depositService, 1);
+	}
+
+	/**
+	 * Builds a money {@link ItemStack} with the given stack count. Two money items with the same variation id and the
+	 * same rolled amount have identical NBT and will stack naturally; that lets the give command hand out a single
+	 * stack of N money items instead of N separate stacks-of-one when the underlying material allows it.
+	 *
+	 * @param variation the variation definition
+	 * @param amount the rolled amount to embed in NBT and substitute into lore
+	 * @param depositService used to resolve {@code %gangland_*%} placeholders in the display name and lore via the
+	 * 		impl-side placeholder pipeline
+	 * @param stackCount how many money items the resulting stack should contain (caller is responsible for clamping
+	 * 		to the material's max stack size)
+	 *
+	 * @return a fresh {@code ItemStack} carrying the cash NBT tags
+	 */
+	public static ItemStack build(MoneyItem variation, int amount, MoneyDepositService depositService, int stackCount) {
 		List<String> renderedLore = new ArrayList<>(variation.getLore().size());
 		for (String line : variation.getLore()) {
-			renderedLore.add(applyPlaceholders(line, currencySymbol, amount));
+			renderedLore.add(applyPlaceholders(line, depositService, amount));
 		}
 
-		String renderedName = applyPlaceholders(variation.getDisplayName(), currencySymbol, amount);
+		String renderedName = applyPlaceholders(variation.getDisplayName(), depositService, amount);
 
 		ItemBuilder builder = new ItemBuilder(variation.getMaterial())
-				.setAmount(1)
+				.setAmount(Math.max(1, stackCount))
 				.setDisplayName(renderedName)
 				.setLore(renderedLore)
 				.addTag(MoneyItemUtil.MARKER_TAG, (byte) 1)
@@ -60,10 +78,10 @@ public final class MoneyItemFactory {
 		return builder.build();
 	}
 
-	private static String applyPlaceholders(String input, String currencySymbol, int amount) {
+	private static String applyPlaceholders(String input, MoneyDepositService depositService, int amount) {
 		if (input == null) return "";
-		return input.replace(SYMBOL_PLACEHOLDER, currencySymbol)
-		            .replace(AMOUNT_PLACEHOLDER, Integer.toString(amount));
+		String replaced = input.replace(AMOUNT_PLACEHOLDER, Integer.toString(amount));
+		return depositService.resolvePlaceholders(null, replaced);
 	}
 
 }

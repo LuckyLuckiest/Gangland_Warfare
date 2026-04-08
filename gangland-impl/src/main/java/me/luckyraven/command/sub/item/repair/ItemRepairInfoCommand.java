@@ -1,13 +1,12 @@
-package me.luckyraven.command.sub.item;
+package me.luckyraven.command.sub.item.repair;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.item.configuration.UniqueItemAddon;
-import me.luckyraven.item.unique.UniqueItem;
-import me.luckyraven.item.unique.UniqueItemUtil;
+import me.luckyraven.gadget.repair.RepairManager;
+import me.luckyraven.gadget.repair.material.RepairMaterial;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.JsonFormatter;
@@ -16,12 +15,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-class ItemUniqueInfoCommand extends SubArgument {
+class ItemRepairInfoCommand extends SubArgument {
 
 	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
 
-	ItemUniqueInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	ItemRepairInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "info", tree, parent);
 
 		this.gangland    = gangland;
@@ -38,26 +37,25 @@ class ItemUniqueInfoCommand extends SubArgument {
 
 			ItemStack itemStack = player.getInventory().getItemInMainHand();
 
-			if (!UniqueItemUtil.isUniqueItem(itemStack)) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Not a unique item!"));
+			if (!RepairMaterial.isRepairMaterial(itemStack)) {
+				user.sendMessage(GanglandChatUtil.prefixMessage("Not a repair item!"));
 				return;
 			}
 
-			String          key             = UniqueItemUtil.getUniqueItemKey(itemStack);
-			UniqueItemAddon uniqueItemAddon = gangland.getInitializer().getUniqueItemAddon();
-			UniqueItem      uniqueItem      = uniqueItemAddon.getUniqueItem(key);
+			String         id            = RepairMaterial.getMaterialId(itemStack);
+			RepairManager  repairManager = gangland.getInitializer().getRepairManager();
+			RepairMaterial material      = repairManager.getMaterialManager().getMaterial(id);
 
-			if (uniqueItem == null) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Unique item not registered: &c" + key));
+			if (material == null) {
+				user.sendMessage(GanglandChatUtil.prefixMessage("Repair item not registered: &c" + id));
 				return;
 			}
 
-			String info = "&7Key&8: &b" + uniqueItem.getUniqueItem() +
-			              "\n&7Name&8: &b" + uniqueItem.getName() +
-			              "\n&7Material&8: &b" + uniqueItem.getMaterial().name() +
-			              "\n&7Add On Join&8: &b" + uniqueItem.isAddOnJoin() +
-			              "\n&7Add On Respawn&8: &b" + uniqueItem.isAddOnRespawn() +
-			              "\n&7Drop On Death&8: &b" + uniqueItem.isDropOnDeath();
+			String info = "&7Id&8: &b" + material.getId() +
+			              "\n&7Uses&8: &b" + RepairMaterial.getCurrentUses(itemStack) +
+			              "&7/&b" + material.data().getMaxUses() +
+			              "\n&7Restore Amount&8: &b" + material.data().getRestoreAmount() +
+			              "\n&7Restore Percent&8: &b" + material.data().getRestorePercent() + "%";
 
 			JsonFormatter jsonFormatter = new JsonFormatter();
 

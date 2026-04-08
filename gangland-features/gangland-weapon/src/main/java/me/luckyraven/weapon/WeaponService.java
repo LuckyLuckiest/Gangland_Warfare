@@ -77,7 +77,7 @@ public abstract class WeaponService implements Comparator<Weapon> {
 
 		if (ammunitionData == null) return true;
 
-		var item        = ammunitionData.getAmmoType().buildItem();
+		var item        = ammunitionData.getAmmoType().buildItem(player);
 		var consumeRate = ammunitionData.getConsumeRate();
 
 		return player.getInventory().containsAtLeast(item, consumeRate);

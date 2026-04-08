@@ -30,8 +30,7 @@ public class MoneyDropListener implements Listener {
 	private final MoneyDepositService depositService;
 	private final MoneyDropClassifier classifier;
 
-	public MoneyDropListener(MoneyAddon moneyAddon,
-	                         MoneyDepositService depositService,
+	public MoneyDropListener(MoneyAddon moneyAddon, MoneyDepositService depositService,
 	                         MoneyDropClassifier classifier) {
 		this.moneyAddon     = moneyAddon;
 		this.depositService = depositService;
@@ -76,11 +75,9 @@ public class MoneyDropListener implements Listener {
 
 		if (amount <= 0) return;
 
-		World world = origin.getWorld();
-		if (world == null) return;
-
+		World     world    = origin.getWorld();
 		Location  location = origin.getLocation();
-		ItemStack item     = MoneyItemFactory.build(variation, amount, moneyAddon.getCurrencySymbol());
+		ItemStack item     = MoneyItemFactory.build(variation, amount, depositService);
 		world.dropItemNaturally(location, item);
 	}
 

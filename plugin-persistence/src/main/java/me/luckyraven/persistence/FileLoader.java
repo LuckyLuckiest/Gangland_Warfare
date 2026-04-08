@@ -11,12 +11,15 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.function.Consumer;
 
 @CustomLog
-public abstract class FileLoader<T> {
+public abstract class FileLoader<T> implements FileInitializer {
 
 	private static final Logger logger = LogManager.getLogger(FileLoader.class.getSimpleName());
 
 	private final JavaPlugin plugin;
-
+	protected boolean     boundDisable;
+	protected Consumer<T> boundConsumer;
+	protected FileManager boundFileManager;
+	protected FileHandler primaryHandler;
 	private boolean isLoaded = false;
 
 	public FileLoader(JavaPlugin plugin) {
@@ -32,6 +35,34 @@ public abstract class FileLoader<T> {
 	 * Loads data from the plugin.
 	 */
 	protected abstract void loadData(Consumer<T> consumer, FileManager fileManager);
+
+	/**
+	 * Resolves the primary {@link FileHandler} this loader is responsible for. Folder loaders or multi-file loaders may
+	 * return {@code null}; the orchestrator will then skip the regenerate-on-failure step for them.
+	 */
+	@org.jetbrains.annotations.Nullable
+	protected abstract FileHandler resolvePrimaryHandler(FileManager fileManager);
+
+	/**
+	 * Binds the parameters that {@link #initialize()} will pass to {@link #load(boolean, Consumer, FileManager)}, and
+	 * resolves the primary file handler so the orchestrator can recover from initialization failures.
+	 */
+	public void bind(boolean disable, Consumer<T> consumer, FileManager fileManager) {
+		this.boundDisable     = disable;
+		this.boundConsumer    = consumer;
+		this.boundFileManager = fileManager;
+		this.primaryHandler   = resolvePrimaryHandler(fileManager);
+	}
+
+	@Override
+	public void initialize() {
+		load(boundDisable, boundConsumer, boundFileManager);
+	}
+
+	@Override
+	public FileHandler getFileHandler() {
+		return primaryHandler;
+	}
 
 	/**
 	 * Used to communicate with the program if all the data is loaded inside the plugin.

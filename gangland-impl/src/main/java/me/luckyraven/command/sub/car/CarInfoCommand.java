@@ -42,7 +42,10 @@ class CarInfoCommand extends SubArgument {
 				return;
 			}
 
-			String   carId    = Car.getCarId(itemStack);
+			String carId = Car.getCarId(itemStack);
+
+			if (carId == null) return;
+
 			CarAddon carAddon = gangland.getInitializer().getCarAddon();
 			Car      car      = carAddon.getCar(carId);
 
@@ -58,8 +61,7 @@ class CarInfoCommand extends SubArgument {
 			              "\n&7Max Health&8: &b" + car.getMaxHealth() +
 			              "\n&7Max Durability&8: &b" + car.getMaxDurability() +
 			              "\n&7Fuel Enabled&8: &b" + car.isFuelEnabled() +
-			              "\n&7Fuel Key&8: &b" + car.getFuelKey() +
-			              "\n&7Drop On Death&8: &b" + car.isDropOnDeath();
+			              "\n&7Fuel Key&8: &b" + car.getFuelKey();
 
 			JsonFormatter jsonFormatter = new JsonFormatter();
 

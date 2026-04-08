@@ -8,6 +8,7 @@ import me.luckyraven.exception.PluginException;
 import me.luckyraven.item.repair.Repairable;
 import me.luckyraven.item.repair.RepairableType;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.Placeholder;
 import me.luckyraven.weapon.dto.*;
 import me.luckyraven.weapon.durability.DurabilityCalculator;
 import me.luckyraven.weapon.projectile.recoil.RecoilManager;
@@ -84,6 +85,9 @@ public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon
 	private RecoilManager        recoil;
 	@Setter(AccessLevel.NONE)
 	private SpreadManager        spread;
+	// Placeholder resolver for display name + lore (injected by WeaponAddon after construction).
+	@Nullable
+	private Placeholder          placeholder;
 
 	protected Weapon(UUID uuid, String name, String displayName, WeaponType category, Material material,
 	                 int customModelData, short durability, List<String> lore, boolean dropHologram,
@@ -194,8 +198,14 @@ public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon
 	@NotNull
 	@Override
 	public ItemStack buildItem() {
+		return buildItem(null);
+	}
+
+	@NotNull
+	public ItemStack buildItem(@Nullable Player player) {
 		ItemBuilder builder = new ItemBuilder(material);
-		builder.setDisplayName(changingDisplayName).setLore(lore);
+		builder.setDisplayName(resolvePlaceholder(player, changingDisplayName))
+		       .setLore(resolvePlaceholder(player, lore));
 
 		short currentDamage = (short) Math.floor(
 				(durability - currentDurability) * (builder.getItemMaxDurability() / (double) durability));
@@ -211,8 +221,12 @@ public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon
 	}
 
 	public void updateWeaponData(ItemBuilder itemBuilder) {
+		updateWeaponData(itemBuilder, null);
+	}
+
+	public void updateWeaponData(ItemBuilder itemBuilder, @Nullable Player player) {
 		this.changingDisplayName = buildDisplayName();
-		itemBuilder.setDisplayName(changingDisplayName);
+		itemBuilder.setDisplayName(resolvePlaceholder(player, changingDisplayName));
 
 		boolean updatedSelectiveFire = false, updatedCurrentAmmo = false;
 
@@ -354,6 +368,29 @@ public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon
 			push(player, recoilData.getPushPowerUp() / 2, recoilData.getPushVelocity() / 2);
 		}
 		// When sneaking and not scoped, no push is applied (implicitly returns)
+	}
+
+	/**
+	 * Runs {@code text} through the injected placeholder resolver so configured {@code %gangland_*%} placeholders in
+	 * the display name or lore are replaced before the item is rendered. Returns the original text unchanged when the
+	 * resolver is absent or the input is empty.
+	 */
+	protected String resolvePlaceholder(@Nullable Player player, @Nullable String text) {
+		if (text == null || text.isEmpty() || placeholder == null) return text;
+		return placeholder.convert(player, text);
+	}
+
+	/**
+	 * Resolves every line of a lore list via {@link #resolvePlaceholder(Player, String)}. Returns the original list
+	 * unchanged when it is {@code null} or empty, or when the resolver is absent.
+	 */
+	protected List<String> resolvePlaceholder(@Nullable Player player, @Nullable List<String> loreLines) {
+		if (loreLines == null || loreLines.isEmpty() || placeholder == null) return loreLines;
+		List<String> resolved = new ArrayList<>(loreLines.size());
+		for (String line : loreLines) {
+			resolved.add(line == null ? null : placeholder.convert(player, line));
+		}
+		return resolved;
 	}
 
 	/**

@@ -2,14 +2,18 @@ package me.luckyraven.gadget.car.config;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
+import lombok.Setter;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarManager;
 import me.luckyraven.persistence.FileHandler;
+import me.luckyraven.persistence.FileInitializer;
 import me.luckyraven.persistence.FileManager;
+import me.luckyraven.util.Placeholder;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,30 +22,41 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 @CustomLog
-public class CarAddon extends CarManager {
+public class CarAddon extends CarManager implements FileInitializer {
 
 	private final Consumer<String> permissionRegistrar;
-	private final FileManager      fileManager;
+	private final FileHandler      fileHandler;
+
+	/**
+	 * Placeholder resolver injected by the impl side; threaded into every parsed {@link Car} via the builder so its
+	 * display name and lore resolve {@code %gangland_*%} tokens at item-build time.
+	 */
+	@Setter
+	@Nullable
+	private Placeholder placeholder;
 
 	public CarAddon(Consumer<String> permissionRegistrar, FileManager fileManager) {
 		this.permissionRegistrar = permissionRegistrar;
-		this.fileManager         = fileManager;
-	}
 
-	public void initialize() {
-		FileConfiguration fileConfiguration;
 		try {
 			String fileName = "cars";
 
 			fileManager.checkFileLoaded(fileName);
 
-			FileHandler file = Objects.requireNonNull(fileManager.getFile(fileName));
-			fileConfiguration = file.getFileConfiguration();
+			this.fileHandler = Objects.requireNonNull(fileManager.getFile(fileName));
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
+	}
 
-		loadCars(fileConfiguration);
+	@Override
+	public FileHandler getFileHandler() {
+		return fileHandler;
+	}
+
+	@Override
+	public void initialize() {
+		loadCars(fileHandler.getFileConfiguration());
 	}
 
 	private void loadCars(FileConfiguration config) {
@@ -68,8 +83,6 @@ public class CarAddon extends CarManager {
 
 			String       permission      = section.getString("Permission");
 			int          customModelData = section.getInt("Custom_Model_Data", 0);
-			boolean      dropOnDeath     = section.getBoolean("Drop_On_Death", false);
-			boolean      droppable       = section.getBoolean("Droppable", true);
 			List<String> lore            = section.getStringList("Lore");
 
 			// Vehicle section
@@ -127,8 +140,7 @@ public class CarAddon extends CarManager {
 			             .fuelKey(fuelKey)
 			             .maxFuel(maxFuel)
 			             .maxDurability(maxDurability)
-			             .dropOnDeath(dropOnDeath)
-			             .droppable(droppable)
+			             .placeholder(placeholder)
 			             .build();
 
 			register(key, car);

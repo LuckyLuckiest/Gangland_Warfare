@@ -2,11 +2,14 @@ package me.luckyraven.gadget.wearable;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
+import lombok.Setter;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.item.wearable.WearableTrait;
 import me.luckyraven.persistence.FileHandler;
+import me.luckyraven.persistence.FileInitializer;
 import me.luckyraven.persistence.FileManager;
+import me.luckyraven.util.Placeholder;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.Color;
@@ -20,14 +23,31 @@ import java.util.*;
 import java.util.function.Consumer;
 
 @CustomLog
-public class WearableAddon extends WearableService {
+public class WearableAddon extends WearableService implements FileInitializer {
 
 	private final Consumer<String> permissionRegistrar;
-	private final FileManager      fileManager;
+	private final FileHandler      fileHandler;
+
+	/**
+	 * Placeholder resolver injected by the impl side; threaded into every built {@link Wearable} so its display name
+	 * and lore resolve {@code %gangland_*%} tokens at item-build time.
+	 */
+	@Setter
+	@Nullable
+	private Placeholder placeholder;
 
 	public WearableAddon(Consumer<String> permissionRegistrar, FileManager fileManager) {
 		this.permissionRegistrar = permissionRegistrar;
-		this.fileManager         = fileManager;
+
+		try {
+			String fileName = "wearables";
+
+			fileManager.checkFileLoaded(fileName);
+
+			this.fileHandler = Objects.requireNonNull(fileManager.getFile(fileName));
+		} catch (IOException exception) {
+			throw new PluginException(exception);
+		}
 	}
 
 	/**
@@ -60,20 +80,14 @@ public class WearableAddon extends WearableService {
 		}
 	}
 
+	@Override
+	public FileHandler getFileHandler() {
+		return fileHandler;
+	}
+
+	@Override
 	public void initialize() {
-		FileConfiguration fileConfiguration;
-		try {
-			String fileName = "wearables";
-
-			fileManager.checkFileLoaded(fileName);
-
-			FileHandler file = Objects.requireNonNull(fileManager.getFile(fileName));
-			fileConfiguration = file.getFileConfiguration();
-		} catch (IOException exception) {
-			throw new PluginException(exception);
-		}
-
-		loadWearables(fileConfiguration);
+		loadWearables(fileHandler.getFileConfiguration());
 	}
 
 	private void loadWearables(FileConfiguration config) {
@@ -180,6 +194,7 @@ public class WearableAddon extends WearableService {
 			                            .thrustCustomSound(thrustCustomSound)
 			                            .glideDefaultSound(glideDefaultSound)
 			                            .glideCustomSound(glideCustomSound)
+			                            .placeholder(placeholder)
 			                            .build();
 
 			register(key, wearable);

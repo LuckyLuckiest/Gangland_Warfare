@@ -1,17 +1,20 @@
 package me.luckyraven.weapon.ammo;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.Placeholder;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@AllArgsConstructor
 @RequiredArgsConstructor
 @Getter
 public class Ammunition implements Comparable<Ammunition> {
@@ -20,6 +23,22 @@ public class Ammunition implements Comparable<Ammunition> {
 	private final Material     material;
 	private final int          customModelData;
 	private       List<String> lore;
+
+	/**
+	 * Placeholder resolver injected by {@code AmmunitionAddon} after construction so {@link #buildItem(Player)} can
+	 * resolve {@code %gangland_*%} tokens in the display name and lore.
+	 */
+	@Setter
+	@Nullable
+	private Placeholder placeholder;
+
+	public Ammunition(String name, String displayName, Material material, int customModelData, List<String> lore) {
+		this.name            = name;
+		this.displayName     = displayName;
+		this.material        = material;
+		this.customModelData = customModelData;
+		this.lore            = lore;
+	}
 
 	public static boolean isAmmunition(ItemStack item) {
 		if (item == null || item.getType().equals(Material.AIR) || item.getAmount() == 0) return false;
@@ -53,13 +72,21 @@ public class Ammunition implements Comparable<Ammunition> {
 
 
 	public ItemStack buildItem() {
-		return buildItem(1);
+		return buildItem(null, 1);
 	}
 
 	public ItemStack buildItem(int amount) {
+		return buildItem(null, amount);
+	}
+
+	public ItemStack buildItem(@Nullable Player player) {
+		return buildItem(player, 1);
+	}
+
+	public ItemStack buildItem(@Nullable Player player, int amount) {
 		ItemBuilder builder = new ItemBuilder(material);
 
-		builder.setDisplayName(displayName).setLore(lore);
+		builder.setDisplayName(resolvePlaceholder(player, displayName)).setLore(resolvePlaceholder(player, lore));
 		builder.setAmount(amount);
 
 		if (customModelData > 0) {
@@ -84,6 +111,20 @@ public class Ammunition implements Comparable<Ammunition> {
 	@Override
 	public String toString() {
 		return String.format("Ammunition{ammo='%s',name='%s',material='%s'}", name, displayName, material.toString());
+	}
+
+	private String resolvePlaceholder(@Nullable Player player, @Nullable String text) {
+		if (text == null || text.isEmpty() || placeholder == null) return text;
+		return placeholder.convert(player, text);
+	}
+
+	private List<String> resolvePlaceholder(@Nullable Player player, @Nullable List<String> loreLines) {
+		if (loreLines == null || loreLines.isEmpty() || placeholder == null) return loreLines;
+		List<String> resolved = new ArrayList<>(loreLines.size());
+		for (String line : loreLines) {
+			resolved.add(line == null ? null : placeholder.convert(player, line));
+		}
+		return resolved;
 	}
 
 }
