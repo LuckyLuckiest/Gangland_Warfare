@@ -81,7 +81,7 @@ public class InstantReload extends Reload {
 
 			if (inventory != null) {
 				// if ammo was lost before or during the reload start (e.g. dropped), abort immediately
-				boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1),
+				boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(player, 1),
 				                                             ammunitionData.getConsumeRate());
 				if (removeAmmunition && !contains) {
 					stopReloading();
@@ -90,7 +90,7 @@ public class InstantReload extends Reload {
 
 				// remove the magazine the moment the reloading starts to prevent bugs
 				if (removeAmmunition) {
-					inventory.removeItem(getAmmunition().buildItem(ammunitionData.getConsumeRate()));
+					inventory.removeItem(getAmmunition().buildItem(player, ammunitionData.getConsumeRate()));
 				}
 			}
 
@@ -104,9 +104,9 @@ public class InstantReload extends Reload {
 				if (newSlot > -1) {
 					ItemStack existingItem = inventory.getItem(newSlot);
 					ItemBuilder heldWeapon = new ItemBuilder(
-							Objects.requireNonNullElseGet(existingItem, () -> getWeapon().buildItem()));
+							Objects.requireNonNullElseGet(existingItem, () -> getWeapon().buildItem(player)));
 
-					getWeapon().updateWeaponData(heldWeapon);
+					getWeapon().updateWeaponData(heldWeapon, player);
 					getWeapon().updateWeapon(player, heldWeapon, newSlot);
 				}
 			}

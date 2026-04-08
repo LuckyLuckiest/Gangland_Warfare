@@ -2,14 +2,17 @@ package me.luckyraven.gadget.car.config;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
+import lombok.Setter;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarManager;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
+import me.luckyraven.util.Placeholder;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,6 +25,14 @@ public class CarAddon extends CarManager {
 
 	private final Consumer<String> permissionRegistrar;
 	private final FileManager      fileManager;
+
+	/**
+	 * Placeholder resolver injected by the impl side; threaded into every parsed {@link Car} via the builder so its
+	 * display name and lore resolve {@code %gangland_*%} tokens at item-build time.
+	 */
+	@Setter
+	@Nullable
+	private Placeholder placeholder;
 
 	public CarAddon(Consumer<String> permissionRegistrar, FileManager fileManager) {
 		this.permissionRegistrar = permissionRegistrar;
@@ -125,6 +136,7 @@ public class CarAddon extends CarManager {
 			             .fuelKey(fuelKey)
 			             .maxFuel(maxFuel)
 			             .maxDurability(maxDurability)
+			             .placeholder(placeholder)
 			             .build();
 
 			register(key, car);

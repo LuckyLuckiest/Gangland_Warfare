@@ -2,7 +2,9 @@ package me.luckyraven.weapon.configuration;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
+import lombok.Setter;
 import me.luckyraven.persistence.FileHandler;
+import me.luckyraven.util.Placeholder;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.weapon.SelectiveFire;
 import me.luckyraven.weapon.Weapon;
@@ -26,6 +28,15 @@ import java.util.*;
 public class WeaponAddon {
 
 	private final Map<String, Weapon> weapons;
+
+	/**
+	 * Placeholder resolver handed over by the impl side at init time. Each parsed {@link Weapon} has this injected
+	 * after construction so its {@code buildItem} / {@code updateWeaponData} calls resolve {@code %gangland_*%} tokens
+	 * in the display name and lore.
+	 */
+	@Setter
+	@Nullable
+	private Placeholder placeholder;
 
 	public WeaponAddon() {
 		this.weapons = new HashMap<>();
@@ -99,6 +110,10 @@ public class WeaponAddon {
 		applyOptionalShootConfig(shootSection, weapon);
 		applyScope(config, weapon);
 		applyModifiers(config, weapon);
+
+		// hand the placeholder resolver to the weapon instance so its rendering path can resolve
+		// %gangland_*% tokens in display name and lore
+		weapon.setPlaceholder(placeholder);
 
 		weapons.put(fileName, weapon);
 	}

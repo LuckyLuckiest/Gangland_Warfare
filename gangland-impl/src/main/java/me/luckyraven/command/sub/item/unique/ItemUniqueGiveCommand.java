@@ -99,7 +99,7 @@ class ItemUniqueGiveCommand extends SubArgument {
 
 		if (uniqueItem == null) return false;
 
-		ItemStack       sampleItem   = uniqueItem.buildItem();
+		ItemStack       sampleItem   = uniqueItem.buildItem(player);
 		int             maxStackSize = sampleItem.getMaxStackSize();
 		int             slots        = (int) Math.ceil(amount / (double) maxStackSize);
 		int             amountLeft   = amount;
@@ -111,7 +111,7 @@ class ItemUniqueGiveCommand extends SubArgument {
 
 			if (amountGive <= 0) break;
 
-			ItemStack item = uniqueItem.buildItem();
+			ItemStack item = uniqueItem.buildItem(player);
 
 			item.setAmount(amountGive);
 

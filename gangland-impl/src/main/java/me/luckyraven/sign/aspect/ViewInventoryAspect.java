@@ -112,7 +112,7 @@ public class ViewInventoryAspect implements SignAspect {
 
 		// Add weapon in center-left position
 		int       weaponSlot = 3;
-		ItemStack weaponItem = weapon.buildItem();
+		ItemStack weaponItem = weapon.buildItem(player);
 
 		List<String> weaponLore = new ArrayList<>();
 		weaponLore.add("&7Type: &f" + weapon.getCategory().name());
@@ -224,7 +224,7 @@ public class ViewInventoryAspect implements SignAspect {
 			lore.add("&7Fuel: &aUnlimited");
 		}
 
-		ItemStack carItem = new ItemBuilder(car.buildItem()).setLore(lore).build();
+		ItemStack carItem = new ItemBuilder(car.buildItem(player)).setLore(lore).build();
 
 		inventory.setItem(4, carItem, false, null);
 
@@ -260,7 +260,7 @@ public class ViewInventoryAspect implements SignAspect {
 			lore.add("  &7Fuel Type: &f" + wearable.getFuelKey());
 		}
 
-		ItemStack wearableItem = new ItemBuilder(wearable.buildItem()).setLore(lore).build();
+		ItemStack wearableItem = new ItemBuilder(wearable.buildItem(player)).setLore(lore).build();
 		inventory.setItem(3, wearableItem, false, null);
 
 		// If jetpack, show required fuel item in slot 5
@@ -271,7 +271,7 @@ public class ViewInventoryAspect implements SignAspect {
 				fuelLore.add("&7Required Fuel");
 				fuelLore.add("&7Type: &f" + fuelUniqueItem.getName());
 
-				ItemStack fuelItem = new ItemBuilder(fuelUniqueItem.buildItem()).setLore(fuelLore).build();
+				ItemStack fuelItem = new ItemBuilder(fuelUniqueItem.buildItem(player)).setLore(fuelLore).build();
 				inventory.setItem(5, fuelItem, false, null);
 			}
 		}

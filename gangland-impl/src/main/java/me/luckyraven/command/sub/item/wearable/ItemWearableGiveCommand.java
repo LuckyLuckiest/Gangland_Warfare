@@ -99,7 +99,7 @@ class ItemWearableGiveCommand extends SubArgument {
 
 		if (wearable == null) return false;
 
-		ItemStack       sampleItem   = wearable.buildItem();
+		ItemStack       sampleItem   = wearable.buildItem(player);
 		int             maxStackSize = sampleItem.getMaxStackSize();
 		int             slots        = (int) Math.ceil(amount / (double) maxStackSize);
 		int             amountLeft   = amount;
@@ -111,7 +111,7 @@ class ItemWearableGiveCommand extends SubArgument {
 
 			if (amountGive <= 0) break;
 
-			ItemStack item = wearable.buildItem();
+			ItemStack item = wearable.buildItem(player);
 
 			item.setAmount(amountGive);
 

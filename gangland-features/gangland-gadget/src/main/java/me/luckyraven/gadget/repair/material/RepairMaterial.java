@@ -1,11 +1,12 @@
 package me.luckyraven.gadget.repair.material;
 
-import lombok.Getter;
 import me.luckyraven.gadget.repair.RepairKeys;
 import me.luckyraven.gadget.repair.config.RepairMaterialData;
 import me.luckyraven.item.repair.RepairableType;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.Placeholder;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,13 +14,19 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
-public class RepairMaterial {
-
-	private final RepairMaterialData data;
+/**
+ * @param placeholder Placeholder resolver injected by {@code RepairMaterialManager} at load time so
+ *        {@link #buildItem(Player)} can resolve {@code %gangland_*%} tokens in the display name and lore.
+ */
+public record RepairMaterial(RepairMaterialData data, @Nullable Placeholder placeholder) {
 
 	public RepairMaterial(@NotNull RepairMaterialData data) {
-		this.data = data;
+		this(data, null);
+	}
+
+	public RepairMaterial(@NotNull RepairMaterialData data, @Nullable Placeholder placeholder) {
+		this.data        = data;
+		this.placeholder = placeholder;
 	}
 
 	public static boolean isRepairMaterial(@Nullable ItemStack item) {
@@ -89,20 +96,30 @@ public class RepairMaterial {
 
 	@NotNull
 	public ItemStack buildItem() {
-		return buildItem(data.getMaxUses());
+		return buildItem(null, data.getMaxUses());
 	}
 
 	@NotNull
 	public ItemStack buildItem(int currentUses) {
+		return buildItem(null, currentUses);
+	}
+
+	@NotNull
+	public ItemStack buildItem(@Nullable Player player) {
+		return buildItem(player, data.getMaxUses());
+	}
+
+	@NotNull
+	public ItemStack buildItem(@Nullable Player player, int currentUses) {
 		ItemBuilder builder = new ItemBuilder(data.getMaterial());
 
-		String displayName = data.getDisplayName();
+		String displayName = resolvePlaceholder(player, data.getDisplayName());
 		if (data.getMaxUses() > 1) {
 			displayName = displayName + " &8[&7" + currentUses + "&8/&7" + data.getMaxUses() + "&8]";
 		}
 		builder.setDisplayName(displayName);
 
-		List<String> lore = new ArrayList<>(data.getLore());
+		List<String> lore = new ArrayList<>(resolvePlaceholder(player, data.getLore()));
 		if (data.getMaxUses() > 1) {
 			lore.add("&7Uses: &e" + currentUses + "&7/&e" + data.getMaxUses());
 		}
@@ -117,5 +134,21 @@ public class RepairMaterial {
 		builder.addTag(RepairKeys.REPAIR_MATERIAL_MAX_USES, data.getMaxUses());
 
 		return builder.build();
+	}
+
+	private String resolvePlaceholder(@Nullable Player player, @Nullable String text) {
+		if (text == null || text.isEmpty() || placeholder == null) return text;
+		return placeholder.convert(player, text);
+	}
+
+	private List<String> resolvePlaceholder(@Nullable Player player, @Nullable List<String> loreLines) {
+		if (loreLines == null || loreLines.isEmpty() || placeholder == null) {
+			return loreLines == null ? new ArrayList<>() : loreLines;
+		}
+		List<String> resolved = new ArrayList<>(loreLines.size());
+		for (String line : loreLines) {
+			resolved.add(line == null ? null : placeholder.convert(player, line));
+		}
+		return resolved;
 	}
 }

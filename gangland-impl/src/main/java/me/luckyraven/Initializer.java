@@ -475,6 +475,9 @@ public final class Initializer {
 			uniqueItemAddon = new UniqueItemAddon(permissionManager, fileManager, fuelService);
 		}
 
+		// hand the placeholder resolver to each addon BEFORE its initialize() runs so every parsed instance
+		// receives the resolver via its constructor / builder chain
+		uniqueItemAddon.setPlaceholder(placeholderService);
 		uniqueItemAddon.initialize();
 
 		// initialize wearable addon
@@ -482,6 +485,7 @@ public final class Initializer {
 			wearableAddon = new WearableAddon(permissionManager::addPermission, fileManager);
 		}
 
+		wearableAddon.setPlaceholder(placeholderService);
 		wearableAddon.initialize();
 
 		gadgetPhysicsConfig = new GadgetPhysicsConfigImpl();
@@ -491,6 +495,7 @@ public final class Initializer {
 			carAddon = new CarAddon(permissionManager::addPermission, fileManager);
 		}
 
+		carAddon.setPlaceholder(placeholderService);
 		carAddon.initialize();
 
 		// initialize money addon (cash drop variations + per-source rules)
@@ -625,6 +630,9 @@ public final class Initializer {
 		repairLoader  = new RepairLoader(gangland);
 		repairManager = new RepairManager();
 
+		// hand the placeholder resolver to the repair manager BEFORE load() so each parsed RepairMaterial
+		// receives the resolver via its constructor and can resolve %gangland_*% in display name + lore
+		repairManager.setPlaceholder(placeholderService);
 		repairLoader.load(false, config -> repairManager.load(config), fileManager);
 
 		repairManager.setMessages(new GanglandRepairMessages());
@@ -655,11 +663,16 @@ public final class Initializer {
 			ammunitionManager = new AmmunitionManager();
 		}
 
+		// hand the placeholder resolver to the ammo addon BEFORE initialize() so each parsed Ammunition instance
+		// has its resolver set when buildItem(...) renders display name + lore
+		ammunitionAddon.setPlaceholder(placeholderService);
 		ammunitionAddon.initialize(ammunitionManager);
 
 		if (weaponAddon == null) {
 			weaponAddon = new WeaponAddon();
 		}
+
+		weaponAddon.setPlaceholder(placeholderService);
 
 		weaponLoader = new WeaponLoader(gangland);
 

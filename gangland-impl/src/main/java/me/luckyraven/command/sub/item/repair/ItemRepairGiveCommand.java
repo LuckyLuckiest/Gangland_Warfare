@@ -99,7 +99,7 @@ class ItemRepairGiveCommand extends SubArgument {
 
 		if (repairMaterial == null) return false;
 
-		ItemStack       sampleItem   = repairMaterial.buildItem();
+		ItemStack       sampleItem   = repairMaterial.buildItem(player);
 		int             maxStackSize = sampleItem.getMaxStackSize();
 		int             slots        = (int) Math.ceil(amount / (double) maxStackSize);
 		int             amountLeft   = amount;
@@ -111,7 +111,7 @@ class ItemRepairGiveCommand extends SubArgument {
 
 			if (amountGive <= 0) break;
 
-			ItemStack item = repairMaterial.buildItem();
+			ItemStack item = repairMaterial.buildItem(player);
 
 			item.setAmount(amountGive);
 

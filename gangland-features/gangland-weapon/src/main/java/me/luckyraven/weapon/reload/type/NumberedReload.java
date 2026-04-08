@@ -94,7 +94,7 @@ public class NumberedReload extends Reload {
 
 				if (inventory != null) {
 					// if ammo was dropped mid-reload, abort the remaining insertions
-					boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(1), amount);
+					boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(player, 1), amount);
 					if (removeAmmunition && !contains) {
 						stopReloading();
 						return;
@@ -107,7 +107,7 @@ public class NumberedReload extends Reload {
 				}
 
 				if (inventory != null && removeAmmunition) {
-					inventory.removeItem(getAmmunition().buildItem(amount));
+					inventory.removeItem(getAmmunition().buildItem(player, amount));
 				}
 
 				// add to the weapon capacity
@@ -119,8 +119,8 @@ public class NumberedReload extends Reload {
 					if (newSlot > -1) {
 						ItemStack existingItem = inventory.getItem(newSlot);
 						ItemBuilder heldWeapon = new ItemBuilder(
-								Objects.requireNonNullElseGet(existingItem, () -> getWeapon().buildItem()));
-						getWeapon().updateWeaponData(heldWeapon);
+								Objects.requireNonNullElseGet(existingItem, () -> getWeapon().buildItem(player)));
+						getWeapon().updateWeaponData(heldWeapon, player);
 						getWeapon().updateWeapon(player, heldWeapon, newSlot);
 					}
 				}

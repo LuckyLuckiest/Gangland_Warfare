@@ -2,6 +2,7 @@ package me.luckyraven.item.configuration;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
+import lombok.Setter;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.gadget.fuel.FuelService;
@@ -10,8 +11,10 @@ import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.item.unique.UniqueItem;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
+import me.luckyraven.util.Placeholder;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.*;
@@ -23,6 +26,14 @@ public class UniqueItemAddon implements Comparator<UniqueItem>, UniqueItemRegist
 	private final PermissionManager       permissionManager;
 	private final FileManager             fileManager;
 	private final FuelService             fuelService;
+
+	/**
+	 * Placeholder resolver injected by the impl side so each loaded {@link UniqueItem} can resolve {@code %gangland_*%}
+	 * tokens in its display name and lore at item-build time.
+	 */
+	@Setter
+	@Nullable
+	private Placeholder placeholder;
 
 	public UniqueItemAddon(PermissionManager permissionManager, FileManager fileManager, FuelService fuelService) {
 		this.uniqueItems       = new HashMap<>();
@@ -145,6 +156,7 @@ public class UniqueItemAddon implements Comparator<UniqueItem>, UniqueItemRegist
 			                           .droppable(droppable)
 			                           .lootKey(lootKey)
 			                           .fuel(fuel)
+			                           .placeholder(placeholder)
 			                           .build();
 
 			this.uniqueItems.put(key, uniqueItem);

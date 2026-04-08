@@ -103,7 +103,7 @@ class AmmunitionGiveCommand extends SubArgument {
 
 		if (ammunition == null) return false;
 
-		ItemStack       sampleItem   = ammunition.buildItem();
+		ItemStack       sampleItem   = ammunition.buildItem(player);
 		int             maxStackSize = sampleItem.getMaxStackSize();
 		int             slots        = (int) Math.ceil(amount / (double) maxStackSize);
 		int             amountLeft   = amount;
@@ -115,7 +115,7 @@ class AmmunitionGiveCommand extends SubArgument {
 
 			if (amountGive <= 0) break;
 
-			ItemStack item = ammunition.buildItem();
+			ItemStack item = ammunition.buildItem(player);
 
 			item.setAmount(amountGive);
 

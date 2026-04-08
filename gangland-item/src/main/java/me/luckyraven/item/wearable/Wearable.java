@@ -4,20 +4,19 @@ import lombok.Builder;
 import lombok.Getter;
 import me.luckyraven.item.fuel.FuelKey;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.Placeholder;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -73,6 +72,13 @@ public class Wearable {
 	private final SoundConfiguration glideDefaultSound;
 	@Nullable
 	private final SoundConfiguration glideCustomSound;
+
+	/**
+	 * Placeholder resolver injected by {@code WearableAddon} at load time via the builder so {@link #buildItem(Player)}
+	 * can resolve {@code %gangland_*%} tokens in the display name and lore.
+	 */
+	@Nullable
+	private final Placeholder placeholder;
 
 	/**
 	 * Extra generic damage reduction from vanilla {@code PROTECTION} enchantment. Each level contributes 1.5 %.
@@ -223,10 +229,15 @@ public class Wearable {
 	 * Leather armor additionally has its dye color applied when {@link #leatherColor} is set.
 	 */
 	public ItemStack buildItem() {
-		ItemBuilder builder = new ItemBuilder(material);
-		builder.setDisplayName(name);
+		return buildItem(null);
+	}
 
-		if (lore != null && !lore.isEmpty()) builder.setLore(lore);
+	public ItemStack buildItem(@Nullable Player player) {
+		ItemBuilder builder = new ItemBuilder(material);
+		builder.setDisplayName(resolvePlaceholder(player, name));
+
+		List<String> resolvedLore = resolvePlaceholder(player, lore);
+		if (resolvedLore != null && !resolvedLore.isEmpty()) builder.setLore(resolvedLore);
 
 		if (customModelData > 0) {
 			builder.setCustomModelData(customModelData);
@@ -318,6 +329,20 @@ public class Wearable {
 	public boolean rollReactive() {
 		double chance = traitBonus(WearableTrait.REACTIVE);
 		return chance > 0 && ThreadLocalRandom.current().nextDouble() < chance;
+	}
+
+	private String resolvePlaceholder(@Nullable Player player, @Nullable String text) {
+		if (text == null || text.isEmpty() || placeholder == null) return text;
+		return placeholder.convert(player, text);
+	}
+
+	private List<String> resolvePlaceholder(@Nullable Player player, @Nullable List<String> loreLines) {
+		if (loreLines == null || loreLines.isEmpty() || placeholder == null) return loreLines;
+		List<String> resolved = new ArrayList<>(loreLines.size());
+		for (String line : loreLines) {
+			resolved.add(line == null ? null : placeholder.convert(player, line));
+		}
+		return resolved;
 	}
 
 	/**

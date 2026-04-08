@@ -2,11 +2,13 @@ package me.luckyraven.gadget.wearable;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
+import lombok.Setter;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.item.wearable.WearableTrait;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
+import me.luckyraven.util.Placeholder;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.Color;
@@ -24,6 +26,14 @@ public class WearableAddon extends WearableService {
 
 	private final Consumer<String> permissionRegistrar;
 	private final FileManager      fileManager;
+
+	/**
+	 * Placeholder resolver injected by the impl side; threaded into every built {@link Wearable} so its display name
+	 * and lore resolve {@code %gangland_*%} tokens at item-build time.
+	 */
+	@Setter
+	@Nullable
+	private Placeholder placeholder;
 
 	public WearableAddon(Consumer<String> permissionRegistrar, FileManager fileManager) {
 		this.permissionRegistrar = permissionRegistrar;
@@ -180,6 +190,7 @@ public class WearableAddon extends WearableService {
 			                            .thrustCustomSound(thrustCustomSound)
 			                            .glideDefaultSound(glideDefaultSound)
 			                            .glideCustomSound(glideCustomSound)
+			                            .placeholder(placeholder)
 			                            .build();
 
 			register(key, wearable);

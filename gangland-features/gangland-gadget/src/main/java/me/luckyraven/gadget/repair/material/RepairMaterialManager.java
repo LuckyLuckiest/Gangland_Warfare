@@ -1,8 +1,10 @@
 package me.luckyraven.gadget.repair.material;
 
 import lombok.CustomLog;
+import lombok.Setter;
 import me.luckyraven.gadget.repair.config.RepairConfig;
 import me.luckyraven.gadget.repair.config.RepairMaterialData;
+import me.luckyraven.util.Placeholder;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,10 +17,18 @@ public class RepairMaterialManager {
 
 	private final Map<String, RepairMaterial> materials = new HashMap<>();
 
+	/**
+	 * Placeholder resolver passed down from {@code RepairManager}; threaded into every parsed {@link RepairMaterial} so
+	 * its display name and lore resolve {@code %gangland_*%} tokens at item-build time.
+	 */
+	@Setter
+	@Nullable
+	private Placeholder placeholder;
+
 	public void load(@NotNull RepairConfig config) {
 		materials.clear();
 		for (Map.Entry<String, RepairMaterialData> entry : config.getRepairMaterials().entrySet()) {
-			materials.put(entry.getKey(), new RepairMaterial(entry.getValue()));
+			materials.put(entry.getKey(), new RepairMaterial(entry.getValue(), placeholder));
 		}
 		log.info("Loaded {} repair material types", materials.size());
 	}

@@ -47,9 +47,12 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 	@Override
 	public @Nullable String onRequest(OfflinePlayer player, @NotNull String parameter) {
-		if (player == null) return null;
-
 		String param = parameter.toLowerCase();
+
+		if (player == null) {
+			String value = getSetting(param);
+			return value == null ? "NA" : value;
+		}
 
 		if (ConditionalFlashWrapper.isConditionalFlash(param)) {
 			return ConditionalFlashWrapper.processConditionalFlash(param, this::resolveInnerPlaceholder, player);

@@ -7,6 +7,7 @@ import me.luckyraven.gadget.repair.events.RepairStartEvent;
 import me.luckyraven.gadget.repair.material.RepairMaterial;
 import me.luckyraven.gadget.repair.material.RepairMaterialManager;
 import me.luckyraven.item.repair.Repairable;
+import me.luckyraven.util.Placeholder;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -27,6 +28,15 @@ public class RepairManager {
 
 	public void setMessages(@NotNull RepairMessages messages) {
 		this.messages = messages;
+	}
+
+	/**
+	 * Hands the impl-side placeholder resolver down to the {@link RepairMaterialManager} so every parsed
+	 * {@link RepairMaterial} can resolve {@code %gangland_*%} tokens in its display name and lore. Must be called
+	 * before {@link #load(RepairConfig)}.
+	 */
+	public void setPlaceholder(@Nullable Placeholder placeholder) {
+		materialManager.setPlaceholder(placeholder);
 	}
 
 	public void load(@NotNull RepairConfig config) {
@@ -72,8 +82,8 @@ public class RepairManager {
 
 		Bukkit.getPluginManager().callEvent(new RepairCompleteEvent(player, repairable, repairMaterial, actualGain));
 
-		SoundConfiguration.playSounds(player, repairMaterial.getData().getRepairDefaultSound(),
-		                              repairMaterial.getData().getRepairCustomSound());
+		SoundConfiguration.playSounds(player, repairMaterial.data().getRepairDefaultSound(),
+		                              repairMaterial.data().getRepairCustomSound());
 
 		if (messages != null) {
 			player.sendMessage(messages.getRepairComplete(actualGain, newValue, max));
@@ -83,7 +93,7 @@ public class RepairManager {
 	}
 
 	private int calculateRestore(int maxDurability, @NotNull RepairMaterial repairMaterial) {
-		var data        = repairMaterial.getData();
+		var data        = repairMaterial.data();
 		int fromFlat    = data.getRestoreAmount();
 		int fromPercent = (int) (maxDurability * data.getRestorePercent() / 100.0);
 		return Math.max(fromFlat, fromPercent);

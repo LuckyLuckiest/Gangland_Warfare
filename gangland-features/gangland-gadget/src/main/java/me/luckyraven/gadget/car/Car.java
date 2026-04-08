@@ -4,10 +4,13 @@ import lombok.Builder;
 import lombok.Getter;
 import me.luckyraven.item.fuel.FuelKey;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.Placeholder;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Builder
@@ -38,6 +41,13 @@ public class Car {
 	private final int maxDurability;
 
 	/**
+	 * Placeholder resolver injected by {@code CarAddon} via the builder so {@link #buildItem(Player)} can resolve
+	 * {@code %gangland_*%} tokens in the display name and lore.
+	 */
+	@Nullable
+	private final Placeholder placeholder;
+
+	/**
 	 * Checks whether the given ItemStack is a car item by looking for the car NBT tag.
 	 */
 	public static boolean isCarItem(@Nullable ItemStack item) {
@@ -62,11 +72,16 @@ public class Car {
 	 * Builds an ItemStack representing this car in inventory form, stamped with identifying NBT tags.
 	 */
 	public ItemStack buildItem() {
-		ItemBuilder builder = new ItemBuilder(itemMaterial);
-		builder.setDisplayName(displayName);
+		return buildItem(null);
+	}
 
-		if (lore != null && !lore.isEmpty()) {
-			builder.setLore(lore);
+	public ItemStack buildItem(@Nullable Player player) {
+		ItemBuilder builder = new ItemBuilder(itemMaterial);
+		builder.setDisplayName(resolvePlaceholder(player, displayName));
+
+		List<String> resolvedLore = resolvePlaceholder(player, lore);
+		if (resolvedLore != null && !resolvedLore.isEmpty()) {
+			builder.setLore(resolvedLore);
 		}
 
 		if (customModelData > 0) {
@@ -84,5 +99,19 @@ public class Car {
 		}
 
 		return builder.build();
+	}
+
+	private String resolvePlaceholder(@Nullable Player player, @Nullable String text) {
+		if (text == null || text.isEmpty() || placeholder == null) return text;
+		return placeholder.convert(player, text);
+	}
+
+	private List<String> resolvePlaceholder(@Nullable Player player, @Nullable List<String> loreLines) {
+		if (loreLines == null || loreLines.isEmpty() || placeholder == null) return loreLines;
+		List<String> resolved = new ArrayList<>(loreLines.size());
+		for (String line : loreLines) {
+			resolved.add(line == null ? null : placeholder.convert(player, line));
+		}
+		return resolved;
 	}
 }

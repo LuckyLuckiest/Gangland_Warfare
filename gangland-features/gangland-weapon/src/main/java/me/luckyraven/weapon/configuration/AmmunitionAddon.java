@@ -2,13 +2,16 @@ package me.luckyraven.weapon.configuration;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
+import lombok.Setter;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
+import me.luckyraven.util.Placeholder;
 import me.luckyraven.weapon.ammo.Ammunition;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,6 +26,14 @@ import java.util.Objects;
 public class AmmunitionAddon {
 
 	private final FileManager fileManager;
+
+	/**
+	 * Placeholder resolver injected by the impl side; propagated to each parsed {@link Ammunition} so its rendering
+	 * path can resolve {@code %gangland_*%} tokens.
+	 */
+	@Setter
+	@Nullable
+	private Placeholder placeholder;
 
 	public AmmunitionAddon(FileManager fileManager) {
 		this.fileManager = fileManager;
@@ -64,6 +75,7 @@ public class AmmunitionAddon {
 			List<String> lore            = section.getStringList("Lore");
 
 			Ammunition ammo = new Ammunition(key, name, xMaterial.get(), customModelData, lore);
+			ammo.setPlaceholder(placeholder);
 
 			manager.register(key, ammo);
 			temp.add(key);

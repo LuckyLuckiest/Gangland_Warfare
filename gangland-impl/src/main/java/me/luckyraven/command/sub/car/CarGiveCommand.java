@@ -99,7 +99,7 @@ class CarGiveCommand extends SubArgument {
 
 		if (car == null) return false;
 
-		ItemStack       sampleItem   = car.buildItem();
+		ItemStack       sampleItem   = car.buildItem(player);
 		int             maxStackSize = sampleItem.getMaxStackSize();
 		int             slots        = (int) Math.ceil(amount / (double) maxStackSize);
 		int             amountLeft   = amount;
@@ -111,7 +111,7 @@ class CarGiveCommand extends SubArgument {
 
 			if (amountGive <= 0) break;
 
-			ItemStack item = car.buildItem();
+			ItemStack item = car.buildItem(player);
 			item.setAmount(amountGive);
 			items[i] = item;
 			           amountLeft -= amountGive;
