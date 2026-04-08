@@ -31,6 +31,11 @@ public class RepairLoader extends FileLoader<RepairConfig> {
 	}
 
 	@Override
+	protected FileHandler resolvePrimaryHandler(FileManager fileManager) {
+		return fileManager.getFile("repair");
+	}
+
+	@Override
 	protected void loadData(Consumer<RepairConfig> consumer, FileManager fileManager) {
 		FileConfiguration repairConfig;
 

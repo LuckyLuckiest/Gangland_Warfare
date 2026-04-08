@@ -5,6 +5,7 @@ import lombok.CustomLog;
 import lombok.Setter;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.FileHandler;
+import me.luckyraven.persistence.FileInitializer;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.util.Placeholder;
 import me.luckyraven.weapon.ammo.Ammunition;
@@ -23,36 +24,42 @@ import java.util.Objects;
  * {@link AmmunitionManager}. Does not store any data itself.
  */
 @CustomLog
-public class AmmunitionAddon {
+public class AmmunitionAddon implements FileInitializer {
 
-	private final FileManager fileManager;
-
+	private final FileHandler       fileHandler;
+	private final AmmunitionManager ammunitionManager;
 	/**
 	 * Placeholder resolver injected by the impl side; propagated to each parsed {@link Ammunition} so its rendering
 	 * path can resolve {@code %gangland_*%} tokens.
 	 */
 	@Setter
 	@Nullable
-	private Placeholder placeholder;
+	private       Placeholder       placeholder;
 
-	public AmmunitionAddon(FileManager fileManager) {
-		this.fileManager = fileManager;
-	}
-
-	public void initialize(AmmunitionManager manager) {
-		FileConfiguration fileConfiguration;
+	public AmmunitionAddon(FileManager fileManager, AmmunitionManager ammunitionManager) {
 		try {
 			String fileName = "ammunition";
 
 			fileManager.checkFileLoaded(fileName);
 
-			FileHandler file = Objects.requireNonNull(fileManager.getFile(fileName));
-			fileConfiguration = file.getFileConfiguration();
+			this.fileHandler       = Objects.requireNonNull(fileManager.getFile(fileName));
+			this.ammunitionManager = ammunitionManager;
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
+	}
 
-		registerAmmunition(manager, fileConfiguration);
+	@Override
+	public FileHandler getFileHandler() {
+		return fileHandler;
+	}
+
+	@Override
+	public void initialize() {
+		Objects.requireNonNull(ammunitionManager,
+		                       "AmmunitionAddon.setAmmunitionManager() must be called before initialize()");
+
+		registerAmmunition(ammunitionManager, fileHandler.getFileConfiguration());
 	}
 
 	private void registerAmmunition(AmmunitionManager manager, FileConfiguration ammunition) {

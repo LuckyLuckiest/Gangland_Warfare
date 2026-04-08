@@ -7,6 +7,7 @@ import me.luckyraven.exception.PluginException;
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarManager;
 import me.luckyraven.persistence.FileHandler;
+import me.luckyraven.persistence.FileInitializer;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.util.Placeholder;
 import org.bukkit.Material;
@@ -21,10 +22,10 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 @CustomLog
-public class CarAddon extends CarManager {
+public class CarAddon extends CarManager implements FileInitializer {
 
 	private final Consumer<String> permissionRegistrar;
-	private final FileManager      fileManager;
+	private final FileHandler      fileHandler;
 
 	/**
 	 * Placeholder resolver injected by the impl side; threaded into every parsed {@link Car} via the builder so its
@@ -36,23 +37,26 @@ public class CarAddon extends CarManager {
 
 	public CarAddon(Consumer<String> permissionRegistrar, FileManager fileManager) {
 		this.permissionRegistrar = permissionRegistrar;
-		this.fileManager         = fileManager;
-	}
 
-	public void initialize() {
-		FileConfiguration fileConfiguration;
 		try {
 			String fileName = "cars";
 
 			fileManager.checkFileLoaded(fileName);
 
-			FileHandler file = Objects.requireNonNull(fileManager.getFile(fileName));
-			fileConfiguration = file.getFileConfiguration();
+			this.fileHandler = Objects.requireNonNull(fileManager.getFile(fileName));
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
+	}
 
-		loadCars(fileConfiguration);
+	@Override
+	public FileHandler getFileHandler() {
+		return fileHandler;
+	}
+
+	@Override
+	public void initialize() {
+		loadCars(fileHandler.getFileConfiguration());
 	}
 
 	private void loadCars(FileConfiguration config) {

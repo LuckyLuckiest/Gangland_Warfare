@@ -40,6 +40,17 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 		loadedConfig = null;
 	}
 
+	/**
+	 * Returns the primary loot chest YAML (loot_chests.yml). This loader also reads tiers.yml, but the FileInitializer
+	 * contract only exposes one handler; if the failure turns out to be in tiers.yml, the retry will fail again and
+	 * {@link FileManager#initializeAll()} will log it loudly — which is still better than the previous silent-crash
+	 * behaviour.
+	 */
+	@Override
+	protected FileHandler resolvePrimaryHandler(FileManager fileManager) {
+		return fileManager.getFile("loot_chests");
+	}
+
 	@Override
 	protected void loadData(Consumer<LootChestConfig> consumer, FileManager fileManager) {
 		FileConfiguration lootChestsConfig;

@@ -42,6 +42,11 @@ public class CopLoader extends FileLoader<CopConfig> {
 	}
 
 	@Override
+	protected FileHandler resolvePrimaryHandler(FileManager fileManager) {
+		return fileManager.getFile("cops");
+	}
+
+	@Override
 	protected void loadData(Consumer<CopConfig> consumer, FileManager fileManager) {
 		FileConfiguration copsConfig;
 

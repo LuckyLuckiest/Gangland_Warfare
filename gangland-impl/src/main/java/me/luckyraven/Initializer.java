@@ -52,6 +52,7 @@ import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.file.configuration.GadgetPhysicsConfigImpl;
 import me.luckyraven.file.configuration.Messages;
+import me.luckyraven.file.configuration.MoneyAddonInitializer;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.copsncrooks.*;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
@@ -347,7 +348,9 @@ public final class Initializer {
 
 		// civilians loader (reads civilians.yml; resolves weapon pools via ItemParser)
 		civiliansLoader = new CiviliansLoader(gangland, itemParserManager.getParser(), civilianSettings);
-		civiliansLoader.load(false, null, fileManager);
+		civiliansLoader.bind(false, null, fileManager);
+		fileManager.registerInitializer(civiliansLoader);
+		fileManager.initializeAll();
 
 		// entity mark manager (uses the loaded default entity lists instead of settings.yml)
 		entityMarkManager = new EntityMarkManager(gangland,
@@ -447,7 +450,8 @@ public final class Initializer {
 	public void addonsLoader() {
 		// initialize settings addon
 		settings = new Settings(fileManager);
-		settings.initialize();
+		fileManager.registerInitializer(settings);
+		fileManager.initializeAll();
 
 		// initialize language addon
 		languageLoader = new LanguageLoader(gangland);
@@ -478,7 +482,7 @@ public final class Initializer {
 		// hand the placeholder resolver to each addon BEFORE its initialize() runs so every parsed instance
 		// receives the resolver via its constructor / builder chain
 		uniqueItemAddon.setPlaceholder(placeholderService);
-		uniqueItemAddon.initialize();
+		fileManager.registerInitializer(uniqueItemAddon);
 
 		// initialize wearable addon
 		if (wearableAddon == null) {
@@ -486,7 +490,7 @@ public final class Initializer {
 		}
 
 		wearableAddon.setPlaceholder(placeholderService);
-		wearableAddon.initialize();
+		fileManager.registerInitializer(wearableAddon);
 
 		gadgetPhysicsConfig = new GadgetPhysicsConfigImpl();
 
@@ -496,17 +500,18 @@ public final class Initializer {
 		}
 
 		carAddon.setPlaceholder(placeholderService);
-		carAddon.initialize();
+		fileManager.registerInitializer(carAddon);
+
+		fileManager.initializeAll();
 
 		// initialize money addon (cash drop variations + per-source rules)
 		if (moneyAddon == null) {
 			moneyAddon = new MoneyAddon();
 		}
 
-		FileHandler moneyFile = fileManager.getFile("money");
-		if (moneyFile != null && moneyFile.getFileConfiguration() != null) {
-			moneyAddon.load(moneyFile.getFileConfiguration());
-		}
+		fileManager.registerInitializer(new MoneyAddonInitializer(fileManager, moneyAddon));
+		fileManager.initializeAll();
+
 		moneyAddon.setEnabled(Settings.isMoneyDropEnabled());
 	}
 
@@ -514,6 +519,9 @@ public final class Initializer {
 	 * Clears the addons information cached.
 	 */
 	public void addonsClear() {
+		// drop stale FileInitializer references so the next addonsLoader() starts with a clean orchestrator state
+		fileManager.clearInitializers();
+
 		// clear the inventory loader
 		inventoryLoader.clear();
 		// clear the ammunition addons
@@ -536,6 +544,8 @@ public final class Initializer {
 	 */
 	public void scoreboardLoader() {
 		scoreboardAddon = new ScoreboardAddon(fileManager);
+		fileManager.registerInitializer(scoreboardAddon);
+		fileManager.initializeAll();
 	}
 
 	/**
@@ -594,7 +604,9 @@ public final class Initializer {
 		var provider = new LootChestSettings();
 		lootChestLoader = new LootChestLoader(gangland, lootChestManager, provider);
 
-		lootChestLoader.load(false, null, fileManager);
+		lootChestLoader.bind(false, null, fileManager);
+		fileManager.registerInitializer(lootChestLoader);
+		fileManager.initializeAll();
 
 		// share the global item parser so loot tables resolve item strings through the same converter registry
 		lootChestManager.setItemParser(itemParserManager.getParser());
@@ -605,7 +617,9 @@ public final class Initializer {
 	public void copLoader() {
 		copLoader = new CopLoader(gangland, itemParserManager.getParser(), new GanglandCopSettings());
 
-		copLoader.load(false, null, fileManager);
+		copLoader.bind(false, null, fileManager);
+		fileManager.registerInitializer(copLoader);
+		fileManager.initializeAll();
 
 		copService = new CopService();
 		IRepository<CopSpawner> repository = ganglandDatabase.getRepositoryRegistry().getRepository(CopSpawner.class);
@@ -633,7 +647,9 @@ public final class Initializer {
 		// hand the placeholder resolver to the repair manager BEFORE load() so each parsed RepairMaterial
 		// receives the resolver via its constructor and can resolve %gangland_*% in display name + lore
 		repairManager.setPlaceholder(placeholderService);
-		repairLoader.load(false, config -> repairManager.load(config), fileManager);
+		repairLoader.bind(false, config -> repairManager.load(config), fileManager);
+		fileManager.registerInitializer(repairLoader);
+		fileManager.initializeAll();
 
 		repairManager.setMessages(new GanglandRepairMessages());
 		repairAnvilGui = new RepairAnvilGui(gangland, repairManager);
@@ -655,18 +671,19 @@ public final class Initializer {
 	}
 
 	public void weaponLoader() {
-		if (ammunitionAddon == null) {
-			ammunitionAddon = new AmmunitionAddon(fileManager);
-		}
-
 		if (ammunitionManager == null) {
 			ammunitionManager = new AmmunitionManager();
+		}
+
+		if (ammunitionAddon == null) {
+			ammunitionAddon = new AmmunitionAddon(fileManager, ammunitionManager);
 		}
 
 		// hand the placeholder resolver to the ammo addon BEFORE initialize() so each parsed Ammunition instance
 		// has its resolver set when buildItem(...) renders display name + lore
 		ammunitionAddon.setPlaceholder(placeholderService);
-		ammunitionAddon.initialize(ammunitionManager);
+		fileManager.registerInitializer(ammunitionAddon);
+		fileManager.initializeAll();
 
 		if (weaponAddon == null) {
 			weaponAddon = new WeaponAddon();

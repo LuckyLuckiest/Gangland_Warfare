@@ -40,6 +40,11 @@ public class CiviliansLoader extends FileLoader<CiviliansConfig> {
 	}
 
 	@Override
+	protected FileHandler resolvePrimaryHandler(FileManager fileManager) {
+		return fileManager.getFile("civilians");
+	}
+
+	@Override
 	protected void loadData(Consumer<CiviliansConfig> consumer, FileManager fileManager) {
 		FileConfiguration yaml;
 
