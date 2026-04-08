@@ -16,6 +16,7 @@ import java.util.List;
  * @param conditionalOnSetting setting keys that must resolve to {@code true} via {@link SettingsLookup}
  * @param publishToServicesManager whether to also publish the resulting bean via Bukkit's {@code ServicesManager}
  * @param isGeneric whether the return type is parameterized; consumers must disambiguate via {@link Qualifier}
+ * @param phase bootstrap phase the bean belongs to, inherited from {@link Configuration#phase()}
  */
 public record BeanDefinition(
 		Method factoryMethod,
@@ -26,7 +27,8 @@ public record BeanDefinition(
 		List<Class<?>> conditionalOnBean,
 		List<String> conditionalOnSetting,
 		boolean publishToServicesManager,
-		boolean isGeneric
+		boolean isGeneric,
+		Phase phase
 ) {
 
 	/**

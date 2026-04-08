@@ -1,6 +1,7 @@
 package me.luckyraven.listener;
 
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.util.autowire.DependencyContainer;
 import me.luckyraven.util.listener.ListenerService;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -9,8 +10,8 @@ import java.lang.reflect.Method;
 
 public class ListenerManager extends ListenerService {
 
-	public ListenerManager(JavaPlugin plugin) {
-		super(plugin);
+	public ListenerManager(JavaPlugin plugin, DependencyContainer dependencyContainer) {
+		super(plugin, dependencyContainer);
 	}
 
 	@Override

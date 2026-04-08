@@ -2,7 +2,6 @@ package me.luckyraven.util.listener;
 
 import lombok.CustomLog;
 import lombok.Getter;
-import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.autowire.DependencyContainer;
 import me.luckyraven.util.utilities.ReflectionUtil;
 import org.bukkit.Bukkit;
@@ -25,10 +24,16 @@ public abstract class ListenerService {
 	@Getter
 	private final DependencyContainer dependencyContainer;
 
-	public ListenerService(JavaPlugin plugin) {
+	/**
+	 * Construct the listener service against the project's single root {@link DependencyContainer}. Every
+	 * {@code @ListenerHandler} class scanned by {@link #scanAndRegisterListeners(String, JavaPlugin)} is built via this
+	 * container's constructor injection, so listeners can declare any registered bean as a constructor parameter and
+	 * receive it automatically.
+	 */
+	protected ListenerService(JavaPlugin plugin, DependencyContainer dependencyContainer) {
 		this.plugin              = plugin;
 		this.listeners           = new ArrayList<>();
-		this.dependencyContainer = new DependencyContainer();
+		this.dependencyContainer = dependencyContainer;
 	}
 
 	public abstract boolean invokeMethod(String condition) throws InvocationTargetException, IllegalAccessException;
@@ -48,10 +53,15 @@ public abstract class ListenerService {
 	}
 
 	/**
-	 * Automatically scans and registers all classes annotated with @ListenerHandler in the specified package.
+	 * Automatically scans and registers all classes annotated with {@code @ListenerHandler} in the specified package.
+	 * Each class is constructor-injected from the shared root {@link DependencyContainer}, so any bean already
+	 * registered (via {@code @Bean} factory methods, repositories, kernel objects) can appear as a parameter on the
+	 * listener's constructor and resolve automatically.
 	 *
-	 * @param basePackage The base package to scan (e.g., "me.luckyraven.listener")
-	 * @param plugin The plugin instance to pass to listener constructors
+	 * @param basePackage the base package to scan (e.g. {@code "me.luckyraven.listener"})
+	 * @param plugin the plugin instance — used only for the resource scan classloader and for Bukkit's
+	 *        {@code registerEvents}; listeners themselves do not need to take {@code JavaPlugin} as a constructor parameter
+	 * 		unless they want to.
 	 */
 	public void scanAndRegisterListeners(String basePackage, JavaPlugin plugin) {
 		try {
@@ -72,80 +82,20 @@ public abstract class ListenerService {
 				ListenerPriority priority   = annotation.priority();
 				String           condition  = annotation.condition();
 
-				// check if the condition is met
 				if (!condition.isEmpty()) {
 					boolean invoke = invokeMethod(condition);
-
 					if (!invoke) continue;
 				}
 
-				// instantiate and register the listener
 				try {
-					Listener listener = instantiateListener(clazz, plugin);
-
-					if (listener != null) {
-						addEvent(listener, priority);
-					}
+					Listener listener = (Listener) dependencyContainer.createInstance(clazz);
+					addEvent(listener, priority);
 				} catch (Exception exception) {
-					log.warn("Failed to instantiate class {}: {}", clazz.getName(), exception.getMessage());
+					log.warn("Failed to instantiate listener {}: {}", clazz.getName(), exception.getMessage());
 				}
 			}
 		} catch (Exception exception) {
 			log.warn("Error scanning listeners: {}", exception.getMessage());
-		}
-	}
-
-	/**
-	 * Attempts to instantiate a listener with various constructor patterns. Now with autowiring support.
-	 */
-	private Listener instantiateListener(Class<?> clazz, JavaPlugin plugin) throws Exception {
-		// Check if class wants specific autowired targets
-		if (clazz.isAnnotationPresent(AutowireTarget.class)) {
-			AutowireTarget autowireTarget = clazz.getAnnotation(AutowireTarget.class);
-			Class<?>[]     targetTypes    = autowireTarget.value();
-
-			// Check if all required types are available
-			boolean allAvailable = true;
-			for (Class<?> type : targetTypes) {
-				if (!dependencyContainer.hasInstance(type)) {
-					log.warn("Required autowire target {} not available for {}", type.getName(), clazz.getName());
-					allAvailable = false;
-					break;
-				}
-			}
-
-			if (allAvailable) {
-				try {
-					return (Listener) dependencyContainer.createInstance(clazz, plugin);
-				} catch (Exception e) {
-					log.warn("Failed to create listener with autowiring: {}", e.getMessage());
-					// Fall through to traditional instantiation
-				}
-			}
-		}
-
-		// Traditional instantiation methods
-		try {
-			// Try constructor with JavaPlugin parameter
-			return (Listener) clazz.getConstructor(JavaPlugin.class).newInstance(plugin);
-		} catch (NoSuchMethodException e) {
-			try {
-				// Try constructor with plugin parameter specifically
-				return (Listener) clazz.getConstructor(plugin.getClass()).newInstance(plugin);
-			} catch (NoSuchMethodException e2) {
-				try {
-					// Try no-args constructor
-					return (Listener) clazz.getConstructor().newInstance();
-				} catch (NoSuchMethodException e3) {
-					// Last attempt: use autowiring
-					try {
-						return (Listener) dependencyContainer.createInstance(clazz, plugin);
-					} catch (Exception e4) {
-						log.warn("No suitable constructor found for {}", clazz.getName());
-						return null;
-					}
-				}
-			}
 		}
 	}
 

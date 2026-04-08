@@ -1,35 +1,28 @@
 package me.luckyraven;
 
 import lombok.AccessLevel;
+import lombok.CustomLog;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import me.luckyraven.command.CommandManager;
-import me.luckyraven.command.CommandTabCompleter;
 import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.compatibility.CompatibilitySetup;
 import me.luckyraven.compatibility.CompatibilityWorker;
 import me.luckyraven.compatibility.VersionSetup;
-import me.luckyraven.compatibility.recoil.RecoilCompatibility;
+import me.luckyraven.context.GanglandContext;
 import me.luckyraven.copsncrooks.bounty.BountySettings;
 import me.luckyraven.copsncrooks.combo.KillCombo;
-import me.luckyraven.copsncrooks.detainment.DetainedPlayer;
 import me.luckyraven.copsncrooks.detainment.DetainmentRegistry;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
-import me.luckyraven.copsncrooks.jail.Jail;
-import me.luckyraven.copsncrooks.jail.JailRegistry;
 import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianSettings;
 import me.luckyraven.copsncrooks.npc.civilian.config.CiviliansLoader;
 import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
-import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawner;
-import me.luckyraven.copsncrooks.npc.police.CopManager;
 import me.luckyraven.copsncrooks.npc.police.CopService;
 import me.luckyraven.copsncrooks.npc.police.config.CopLoader;
 import me.luckyraven.copsncrooks.npc.police.config.CopSettings;
 import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
-import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawner;
 import me.luckyraven.copsncrooks.wanted.WantedSettings;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.member.MemberManager;
@@ -41,37 +34,26 @@ import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
 import me.luckyraven.data.plugin.PluginManager;
 import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
-import me.luckyraven.data.teleportation.WaypointTeleport;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.GanglandDatabaseSettings;
 import me.luckyraven.database.repositories.lootchest.LootChestRepository;
-import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.file.configuration.GadgetPhysicsConfigImpl;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.MoneyAddonInitializer;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.file.configuration.SettingsLookupImpl;
-import me.luckyraven.file.configuration.copsncrooks.*;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
 import me.luckyraven.file.configuration.lootchest.GanglandLootChestMessages;
 import me.luckyraven.file.configuration.lootchest.LootChestSettings;
-import me.luckyraven.file.configuration.weapon.GanglandBlockRegenerationSettings;
-import me.luckyraven.file.configuration.weapon.GanglandRepairMessages;
 import me.luckyraven.file.configuration.weapon.WeaponLoader;
-import me.luckyraven.gadget.car.CarManager;
 import me.luckyraven.gadget.car.CarService;
-import me.luckyraven.gadget.car.ParkedCar;
 import me.luckyraven.gadget.car.config.CarAddon;
-import me.luckyraven.gadget.car.vehicle.VehicleRegistry;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.gadget.jetpack.JetpackService;
-import me.luckyraven.gadget.repair.GanglandRepairService;
 import me.luckyraven.gadget.repair.RepairManager;
 import me.luckyraven.gadget.repair.anvil.RepairAnvilGui;
 import me.luckyraven.gadget.repair.config.RepairLoader;
@@ -80,23 +62,16 @@ import me.luckyraven.hologram.HologramService;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
 import me.luckyraven.inventory.handler.SlotItemFactory;
-import me.luckyraven.item.ItemParser;
 import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
-import me.luckyraven.item.contract.*;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyDepositService;
-import me.luckyraven.item.money.MoneyDropClassifier;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.lootchest.LootChestManager;
-import me.luckyraven.lootchest.LootChestService;
 import me.luckyraven.lootchest.config.LootChestLoader;
 import me.luckyraven.lootchest.data.LootChestData;
-import me.luckyraven.money.GanglandMoneyDepositService;
-import me.luckyraven.money.GanglandMoneyDropClassifier;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
-import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.persistence.database.DatabaseSettingsProvider;
 import me.luckyraven.persistence.database.component.Table;
@@ -104,44 +79,25 @@ import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
-import me.luckyraven.sign.GanglandSignInformation;
 import me.luckyraven.sign.SignManager;
 import me.luckyraven.sign.bulk.BulkActionManager;
-import me.luckyraven.sign.registry.SignFormatRegistry;
-import me.luckyraven.sign.registry.SignTypeRegistry;
-import me.luckyraven.sign.service.SignFormatterService;
 import me.luckyraven.sign.service.SignInformation;
-import me.luckyraven.sign.service.SignInteraction;
-import me.luckyraven.sign.service.SignInteractionService;
 import me.luckyraven.util.TimeMessages;
-import me.luckyraven.util.autowire.DependencyContainer;
-import me.luckyraven.util.autowire.bean.BeanFactory;
-import me.luckyraven.util.listener.ListenerPriority;
-import me.luckyraven.util.placeholder.replacer.Replacer;
 import me.luckyraven.weapon.WeaponManager;
-import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import me.luckyraven.weapon.configuration.WeaponAddon;
 import me.luckyraven.weapon.modifiers.BlockDamageManager;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;
 import me.luckyraven.weapon.raytrace.WeaponVisualSpawner;
-import me.luckyraven.weapon.wearable.WearableService;
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.Permission;
-import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-@Slf4j
 @Getter
+@CustomLog
 public final class Initializer {
 
 	@Getter(value = AccessLevel.NONE)
@@ -152,6 +108,10 @@ public final class Initializer {
 	private final VersionSetup       versionSetup;
 	private final CompatibilitySetup compatibilitySetup;
 	private final PlaceholderService placeholderService;
+
+	// Single root DI container + bean factory orchestration. Owns the entire bean lifecycle from FILE phase through
+	// COMMAND phase. Created in postInitialize() before any bean is constructed.
+	private GanglandContext context;
 
 	// on plugin enable
 	// Managers
@@ -243,171 +203,52 @@ public final class Initializer {
 	}
 
 	/**
-	 * Initializes the rest of the necessary classes that would conflict with the first object initialization.
-	 * </b>
-	 * This is used to safeguard the first initialization.
+	 * Bootstraps the entire plugin via {@link GanglandContext}. The legacy hand-rolled construction sequence has been
+	 * replaced by a phased bean pipeline:
+	 * <ol>
+	 *     <li>Build the kernel objects ({@code FileManager}, {@code PermissionManager}, {@code CompatibilityWorker},
+	 *     {@code DatabaseManager}) up-front for failure isolation.</li>
+	 *     <li>Add the static file handlers ({@code settings.yml}, {@code cops.yml}, etc.) so {@code FileManager} can
+	 *     load them when the FILE phase fires its initializers.</li>
+	 *     <li>Construct the {@link GanglandContext} and seed every kernel object into its container so the
+	 *     {@code @Configuration} classes under {@code me.luckyraven.config} can constructor-inject them.</li>
+	 *     <li>Call {@link GanglandContext#bootstrap(Runnable)} which runs the FILE → DATABASE → CONFIG bean phases,
+	 *     then invokes {@link #hydrateFromContext()} (so legacy {@code gangland.getInitializer().getX()} reads inside
+	 *     bean {@code initialize()} methods resolve), then runs the LIFECYCLE pass, and finally drives the listener
+	 *     and command scans against the same root container.</li>
+	 * </ol>
+	 *
+	 * <p>The legacy helper methods ({@link #addonsLoader()}, {@link #scoreboardLoader()}, {@link #inventoryLoader()},
+	 * {@link #weaponLoader()}, {@link #lootChestLoader()}, {@link #addonsClear()}) are
+	 * intentionally retained because {@code ReloadPlugin} still calls them on soft reload. Their bodies remain a
+	 * second source of truth for that path until the reload flow is migrated to the bean pipeline as well.
 	 */
 	public void postInitialize() {
-		// Compatibility loader
+		// --- Kernel objects: built up-front so the rest of the bootstrap can fail loudly if any of these break ---
 		compatibilityWorker = new CompatibilityWorker(gangland.getViaAPI(), compatibilitySetup);
 
-		// permission manager
 		var permissionWorker = new PermissionWorker(Gangland.FULL_PREFIX);
-
 		permissionManager = new PermissionManager(permissionWorker);
 
-		// File
 		fileManager = new FileManager(gangland);
-		files();
+		seedFileHandlers();
 
-		// Database
-		DatabaseSettingsProvider settings = new GanglandDatabaseSettings();
-		databaseManager = new DatabaseManager(gangland, settings);
-		databases(settings);
-		databaseManager.initializeDatabases();
+		DatabaseSettingsProvider databaseSettings = new GanglandDatabaseSettings();
+		databaseManager = new DatabaseManager(gangland, databaseSettings);
 
-		// add all registered plugin permissions
-		Set<Permission> permissions = Bukkit.getPluginManager().getPermissions();
-		Set<String> ganglandPermissions = permissions.stream()
-				.map(Permission::getName)
-				.filter(permission -> permission.startsWith(Gangland.FULL_PREFIX))
-				.collect(Collectors.toSet());
+		// Scoreboard manager has no file dependencies and is referenced by multiple beans; pre-build it so we can
+		// seed it as a kernel object.
+		scoreboardManager = new ScoreboardManager(gangland);
 
-		permissionManager.addAllPermissions(ganglandPermissions);
+		// --- Build the root container + bean orchestrator ---
+		this.context = new GanglandContext(gangland);
+		seedKernelBeans(databaseSettings);
 
-		// settings extension
-		signInformation  = new GanglandSignInformation();
-		bountySettings   = new GanglandBountySettings();
-		wantedSettings   = new GanglandWantedSettings();
-		copSettings      = new GanglandCopSettings();
-		civilianSettings = new GanglandCivilianSettings();
-
-		// User manager
-		userManager        = new UserManager<>(gangland);
-		offlineUserManager = new UserManager<>(gangland);
-
-		// initialize the database
-		ganglandDatabase = GanglandDatabase.findInstance(databaseManager);
-
-		// manage if the database was null
-		if (ganglandDatabase == null) {
-			throw new PluginException("Gangland Database instance is not found.");
-			// plugin crashes
-		}
-
-		// wire data suppliers so repositories can flush memory on auto-save
-		userManager.initialize();
-		offlineUserManager.initialize();
-
-		List<Table<?>> tables = ganglandDatabase.getTables();
-
-		// plugin manager
-		pluginManager = new PluginManager(gangland);
-		pluginManager.initialize();
-
-		// Rank manager
-		rankManager = new RankManager(gangland);
-		rankManager.initialize();
-
-		// Gang manager
-		gangManager   = new GangManager(gangland);
-		memberManager = new MemberManager(gangland);
-
-		// initialize the gang and member classes
-		MemberTable memberTable = getInstanceFromTables(MemberTable.class, tables);
-
-		gangManager.initialize();
-		memberManager.initialize(memberTable, gangManager, rankManager);
-
-		// Waypoint manager
-		waypointManager = new WaypointManager(gangland);
-		waypointManager.initialize();
-
-		// Weapon manager
-		weaponManager       = new WeaponManager(gangland);
-		blockDamageManager  = new BlockDamageManager(gangland, new GanglandBlockRegenerationSettings());
-		weaponVisualSpawner = new WeaponVisualSpawner();
-		weaponRaytracer     = new WeaponRaytracer(weaponManager, wearableAddon, blockDamageManager,
-		                                          weaponVisualSpawner);
-		weaponManager.initialize();
-
-		// sign manager
-		signLoader();
-
-		// money deposit service must be constructed before the item parser so MoneyConverter can resolve the
-		// currency symbol via the contract (which delegates to Settings.getMoneySymbol()). Registered in the DI
-		// container further down so listeners can also pick it up.
-		moneyDepositService = new GanglandMoneyDepositService(gangland, userManager, moneyAddon);
-
-		// item parser (must be before civilians loader — weapon pool parsing needs it,
-		// and before inventoryLoader.initialize() — slot YAML parses prefixed item refs via the resolver)
-		itemParserManager = new ItemParserManager(weaponManager, ammunitionManager, wearableAddon, carAddon,
-		                                          moneyAddon, moneyDepositService, uniqueItemAddon);
-
-		// inventory loader: actual file load is deferred to here so the slot resolver can dereference
-		// itemParserManager (registered earlier in inventoryLoader() but only invoked once load() runs).
-		inventoryLoader.initialize();
-
-		// civilians loader (reads civilians.yml; resolves weapon pools via ItemParser)
-		civiliansLoader = new CiviliansLoader(gangland, itemParserManager.getParser(), civilianSettings);
-		civiliansLoader.bind(false, null, fileManager);
-		fileManager.registerInitializer(civiliansLoader);
-		fileManager.initializeAll();
-
-		// entity mark manager (uses the loaded default entity lists instead of settings.yml)
-		entityMarkManager = new EntityMarkManager(gangland,
-		                                          civiliansLoader.getLoadedConfig().defaultPoliceEntities(),
-		                                          civiliansLoader.getLoadedConfig().defaultCivilianEntities());
-
-		// loot chest manager
-		lootChestLoader();
-
-		// kill combo
-		killCombo = new KillCombo(gangland, Settings.getWantedKillCounter());
-
-		// detainment
-		detainment();
-
-		// cop service
-		copLoader();
-
-		// civilian service
-		civilianLoader();
-
-		// wire civilian service into cop manager so cops can pursue wanted hostile civilians
-		copService.getCopManager().setCivilianService(civilianService);
-
-		// repair system
-		repairLoader();
-
-		// car service
-		carServiceInit();
-
-		// jetpack service
-		jetpackServiceInit();
-
-		// Events
-		listenerManager = new ListenerManager(gangland);
-		events();
-		listenerManager.registerEvents();
-
-		// @Configuration / @Bean wiring. Runs AFTER events() so every manager registered manually
-		// is already in the container and can be consumed as a bean dependency. NEVER call this
-		// from a soft /glw reload — it must only run on plugin enable; re-running against a
-		// populated container would duplicate-register every bean.
-		BeanFactory beanFactory = new BeanFactory(
-				listenerManager.getDependencyContainer(),
-				gangland,
-				new SettingsLookupImpl());
-		beanFactory.scan("me.luckyraven.config");
-		beanFactory.instantiate();
-
-		// Commands
-		commandManager = new CommandManager(gangland, Gangland.FULL_PREFIX, Gangland.SHORT_PREFIX);
-		commands(gangland);
-
-		// Placeholder
-		placeholder = new GanglandPlaceholder(gangland, Gangland.FULL_PREFIX, Replacer.Closure.PERCENT);
+		// --- Drive the phased bean pipeline ---
+		// hydrateFromContext fires AFTER bean creation finishes and BEFORE the lifecycle pass, so legacy
+		// gangland.getInitializer().getX() calls inside bean .initialize() methods (WeaponLoader, InventoryLoader)
+		// resolve against this Initializer's now-populated fields.
+		context.bootstrap(this::hydrateFromContext);
 	}
 
 	/**
@@ -627,62 +468,6 @@ public final class Initializer {
 		lootChestManager.setMessagesProvider(new GanglandLootChestMessages());
 	}
 
-	public void copLoader() {
-		copLoader = new CopLoader(gangland, itemParserManager.getParser(), new GanglandCopSettings());
-
-		copLoader.bind(false, null, fileManager);
-		fileManager.registerInitializer(copLoader);
-		fileManager.initializeAll();
-
-		copService = new CopService();
-		IRepository<CopSpawner> repository = ganglandDatabase.getRepositoryRegistry().getRepository(CopSpawner.class);
-		copService.initialize(gangland, copLoader.getLoadedProvider(), entityMarkManager, weaponManager, repository,
-		                      detainmentService);
-		copSpawnManager = copService.getCopManager().getSpawnManager();
-	}
-
-	public void civilianLoader() {
-		civilianService = new CivilianService();
-		IRepository<CivilianSpawner> repository = ganglandDatabase.getRepositoryRegistry()
-		                                                          .getRepository(CivilianSpawner.class);
-		var ganglandCivilianSpawnConfigProvider = new GanglandCivilianSpawnConfigProvider();
-
-		civilianService.initialize(gangland, civiliansLoader.getLoadedConfig(), entityMarkManager, repository,
-		                           civilianSettings, ganglandCivilianSpawnConfigProvider, itemParserManager.getParser(),
-		                           weaponManager);
-		civilianSpawnManager = civilianService.getSpawnManager();
-	}
-
-	public void repairLoader() {
-		repairLoader  = new RepairLoader(gangland);
-		repairManager = new RepairManager();
-
-		// hand the placeholder resolver to the repair manager BEFORE load() so each parsed RepairMaterial
-		// receives the resolver via its constructor and can resolve %gangland_*% in display name + lore
-		repairManager.setPlaceholder(placeholderService);
-		repairLoader.bind(false, config -> repairManager.load(config), fileManager);
-		fileManager.registerInitializer(repairLoader);
-		fileManager.initializeAll();
-
-		repairManager.setMessages(new GanglandRepairMessages());
-		repairAnvilGui = new RepairAnvilGui(gangland, repairManager);
-	}
-
-	public void carServiceInit() {
-		IRepository<ParkedCar> parkedCarRepository = ganglandDatabase.getRepositoryRegistry()
-		                                                             .getRepository(ParkedCar.class);
-		carService = new CarService(carAddon, new VehicleRegistry(), gangland, parkedCarRepository, fuelService,
-		                            gadgetPhysicsConfig);
-		parkedCarRepository.setDataSupplier(() -> new ArrayList<>(carService.getParkedCarRecords().values()));
-		carService.reloadParkedVehicles();
-	}
-
-	public void jetpackServiceInit() {
-		if (jetpackService == null) {
-			jetpackService = new JetpackService(fuelService, gangland, gadgetPhysicsConfig, wearableAddon);
-		}
-	}
-
 	public void weaponLoader() {
 		if (ammunitionManager == null) {
 			ammunitionManager = new AmmunitionManager();
@@ -722,123 +507,124 @@ public final class Initializer {
 				.orElseThrow(() -> new RuntimeException("There was a problem finding class, " + clazz.getName()));
 	}
 
-	private void detainment() {
-		JailRegistry jailRegistry = new JailRegistry();
-
-		RepositoryRegistry          repositoryRegistry   = ganglandDatabase.getRepositoryRegistry();
-		IRepository<Jail>           jailRepository       = repositoryRegistry.getRepository(Jail.class);
-		IRepository<DetainedPlayer> detainmentRepository = repositoryRegistry.getRepository(DetainedPlayer.class);
-
-		jailService = new JailService(jailRegistry, jailRepository);
-
-		detainmentRegistry = new DetainmentRegistry(detainmentRepository, jailRegistry);
-		detainmentService  = new DetainmentService(gangland, detainmentRegistry, jailService,
-		                                           jailService.getJailRegistry(), Gangland.FULL_PREFIX);
+	/**
+	 * Adds every static {@link FileHandler} the plugin owns to the {@link FileManager}. The actual yaml load happens
+	 * later when each {@link me.luckyraven.persistence.FileInitializer} bean is invoked in the FILE phase. This is a
+	 * direct copy of the legacy {@code files()} body, minus the {@code addonsLoader()} call (the addons are now
+	 *
+	 * @Bean methods in {@link me.luckyraven.config.FileConfig}).
+	 */
+	private void seedFileHandlers() {
+		fileManager.addFile(new FileHandler(gangland, "settings", ".yml"), true);
+		fileManager.addFile(new FileHandler(gangland, "scoreboard", ".yml"), true);
+		fileManager.addFile(new FileHandler(gangland, "ammunition", ".yml"), true);
+		fileManager.addFile(new FileHandler(gangland, "unique_items", ".yml"), true);
+		fileManager.addFile(new FileHandler(gangland, "loot_chests", "loot", ".yml"), true);
+		fileManager.addFile(new FileHandler(gangland, "tiers", "loot", ".yml"), true);
+		fileManager.addFile(new FileHandler(gangland, "cops", ".yml"), true);
+		fileManager.addFile(new FileHandler(gangland, "civilians", ".yml"), true);
+		fileManager.addFile(new FileHandler(gangland, "repair", ".yml"), true);
+		fileManager.addFile(new FileHandler(gangland, "wearables", ".yml"), true);
+		fileManager.addFile(new FileHandler(gangland, "cars", ".yml"), true);
+		fileManager.addFile(new FileHandler(gangland, "money", ".yml"), true);
 	}
 
-	private void signLoader() {
-		SignTypeRegistry     registry         = new SignTypeRegistry();
-		SignFormatRegistry   formatRegistry   = new SignFormatRegistry();
-		SignFormatterService formatterService = new SignFormatterService(formatRegistry);
-
-		String signPrefix = Gangland.SHORT_PREFIX + "-";
-
-		SignInteraction signInteraction = new SignInteraction(signPrefix, registry, formatterService, signInformation);
-		bulkActionManager = new BulkActionManager(gangland, signInformation);
-
-		signManager = new SignManager(gangland, Gangland.SHORT_PREFIX, registry, signInteraction);
-
-		signManager.initialize();
+	/**
+	 * Registers every kernel-built singleton into the root container so {@code @Configuration} classes can pull them
+	 * via constructor injection. {@code Gangland} and {@code DependencyContainer} are self-registered by
+	 * {@link GanglandContext}'s constructor.
+	 */
+	private void seedKernelBeans(DatabaseSettingsProvider databaseSettings) {
+		context.register(JavaPlugin.class, gangland);
+		context.register(InformationManager.class, informationManager);
+		context.register(VersionSetup.class, versionSetup);
+		context.register(CompatibilitySetup.class, compatibilitySetup);
+		context.register(CompatibilityWorker.class, compatibilityWorker);
+		context.register(PlaceholderService.class, placeholderService);
+		context.register(PermissionManager.class, permissionManager);
+		context.register(FileManager.class, fileManager);
+		context.register(DatabaseManager.class, databaseManager);
+		context.register(DatabaseSettingsProvider.class, databaseSettings);
+		context.register(ScoreboardManager.class, scoreboardManager);
+		context.register(Initializer.class, this);
 	}
 
-	private void databases(DatabaseSettingsProvider settings) {
-		int type;
+	/**
+	 * Pulls every produced bean back out of the root container and assigns it to the matching {@code Initializer}
+	 * field, so legacy code paths that still read {@code gangland.getInitializer().getX()} continue to work without
+	 * changes. Called by {@link GanglandContext#bootstrap(Runnable)} between bean creation and the lifecycle pass.
+	 */
+	@SuppressWarnings("unchecked")
+	private void hydrateFromContext() {
+		ganglandDatabase = context.get(GanglandDatabase.class);
 
-		if (Settings.getDatabaseType().equalsIgnoreCase("mysql")) type = DatabaseHandler.MYSQL;
-		else type = DatabaseHandler.SQLITE;
+		// data layer
+		userManager        = (UserManager<Player>) context.getContainer().getInstance("online", UserManager.class);
+		offlineUserManager = (UserManager<OfflinePlayer>) context.getContainer()
+		                                                         .getInstance("offline", UserManager.class);
+		pluginManager      = context.get(PluginManager.class);
+		rankManager        = context.get(RankManager.class);
+		gangManager        = context.get(GangManager.class);
+		memberManager      = context.get(MemberManager.class);
+		waypointManager    = context.get(WaypointManager.class);
 
-		// Primary database
-		GanglandDatabase ganglandDatabase = new GanglandDatabase(gangland, Gangland.FULL_PREFIX, settings);
-		ganglandDatabase.setType(type);
+		// settings extensions
+		signInformation  = context.get(SignInformation.class);
+		bountySettings   = context.get(BountySettings.class);
+		wantedSettings   = context.get(WantedSettings.class);
+		copSettings      = context.get(CopSettings.class);
+		civilianSettings = context.get(CivilianSettings.class);
 
-		// Scan and register all repositories BEFORE adding to database manager
-		RepositoryRegistry repositoryRegistry = ganglandDatabase.getRepositoryRegistry();
-		repositoryRegistry.scanAndRegisterRepositories("me.luckyraven.database.repositories");
+		// file-phase addons
+		settings            = context.get(Settings.class);
+		languageLoader      = context.get(LanguageLoader.class);
+		scoreboardAddon     = context.get(ScoreboardAddon.class);
+		ammunitionManager   = context.get(AmmunitionManager.class);
+		ammunitionAddon     = context.get(AmmunitionAddon.class);
+		fuelService         = context.get(FuelService.class);
+		uniqueItemAddon     = context.get(UniqueItemAddon.class);
+		wearableAddon       = context.get(WearableAddon.class);
+		carAddon            = context.get(CarAddon.class);
+		moneyAddon          = context.get(MoneyAddon.class);
+		weaponAddon         = context.get(WeaponAddon.class);
+		weaponLoader        = context.get(WeaponLoader.class);
+		inventoryLoader     = context.get(InventoryLoader.class);
+		gadgetPhysicsConfig = context.get(GadgetPhysicsConfig.class);
+		evaluator           = context.get(ConditionEvaluator.class);
 
-		databaseManager.addDatabase(ganglandDatabase);
-	}
+		// gameplay
+		weaponManager       = context.get(WeaponManager.class);
+		blockDamageManager  = context.get(BlockDamageManager.class);
+		weaponVisualSpawner = context.get(WeaponVisualSpawner.class);
+		weaponRaytracer     = context.get(WeaponRaytracer.class);
+		signManager         = context.get(SignManager.class);
+		bulkActionManager   = context.get(BulkActionManager.class);
+		hologramService     = context.get(HologramService.class);
+		lootChestManager    = context.get(LootChestManager.class);
+		lootChestLoader     = context.get(LootChestLoader.class);
+		moneyDepositService = context.get(MoneyDepositService.class);
+		itemParserManager   = context.get(ItemParserManager.class);
 
-	private void events() {
-		String basePackage = this.getClass().getPackage().getName();
-		// Register components first (order matters!)
-		// Register all the managers and services that listeners might need
-		DependencyContainer dependencyContainer = listenerManager.getDependencyContainer();
+		// cops + gadgets
+		civiliansLoader      = context.get(CiviliansLoader.class);
+		entityMarkManager    = context.get(EntityMarkManager.class);
+		killCombo            = context.get(KillCombo.class);
+		jailService          = context.get(JailService.class);
+		detainmentRegistry   = context.get(DetainmentRegistry.class);
+		detainmentService    = context.get(DetainmentService.class);
+		copLoader            = context.get(CopLoader.class);
+		copService           = context.get(CopService.class);
+		copSpawnManager      = context.get(CopSpawnManager.class);
+		civilianService      = context.get(CivilianService.class);
+		civilianSpawnManager = context.get(CivilianSpawnManager.class);
+		repairManager        = context.get(RepairManager.class);
+		repairAnvilGui       = context.get(RepairAnvilGui.class);
+		carService           = context.get(CarService.class);
+		jetpackService       = context.get(JetpackService.class);
 
-//		listenerManager.scanAndRegisterComponents(basePackage, gangland);
-
-		dependencyContainer.registerInstance(JavaPlugin.class, gangland);
-		dependencyContainer.registerInstance(UserManager.class, userManager);
-		dependencyContainer.registerInstance(RankManager.class, rankManager);
-		dependencyContainer.registerInstance(GangManager.class, gangManager);
-		dependencyContainer.registerInstance(WeaponService.class, weaponManager);
-		dependencyContainer.registerInstance(WearableService.class, wearableAddon);
-		dependencyContainer.registerInstance(SignInteractionService.class, signManager.getSignService());
-		dependencyContainer.registerInstance(BulkActionManager.class, bulkActionManager);
-		dependencyContainer.registerInstance(LootChestService.class, lootChestManager);
-		dependencyContainer.registerInstance(RecoilCompatibility.class, compatibilityWorker.getRecoilCompatibility());
-		dependencyContainer.registerInstance(SignInformation.class, signInformation);
-		dependencyContainer.registerInstance(HologramService.class, hologramService);
-		dependencyContainer.registerInstance(BlockDamageManager.class, blockDamageManager);
-		dependencyContainer.registerInstance(WeaponVisualSpawner.class, weaponVisualSpawner);
-		dependencyContainer.registerInstance(WeaponRaytracer.class, weaponRaytracer);
-
-		// Also publish via Bukkit ServicesManager so cross-module consumers (cops-n-crooks NPCs)
-		// can resolve the raytracer without threading it through their factory chains.
-		Bukkit.getServicesManager().register(WeaponRaytracer.class, weaponRaytracer, gangland, ServicePriority.Normal);
-		dependencyContainer.registerInstance(RepairManager.class, repairManager);
-		dependencyContainer.registerInstance(RepairAnvilGui.class, repairAnvilGui);
-		dependencyContainer.registerInstance(CopManager.class, copService.getCopManager());
-		dependencyContainer.registerInstance(KillCombo.class, killCombo);
-		dependencyContainer.registerInstance(DetainmentService.class, detainmentService);
-		dependencyContainer.registerInstance(JailService.class, jailService);
-		dependencyContainer.registerInstance(CarManager.class, carAddon);
-		dependencyContainer.registerInstance(CarService.class, carService);
-		dependencyContainer.registerInstance(FuelService.class, fuelService);
-		dependencyContainer.registerInstance(JetpackService.class, jetpackService);
-		dependencyContainer.registerInstance(CivilianService.class, civilianService);
-		dependencyContainer.registerInstance(ItemParser.class, itemParserManager.getParser());
-
-		// gangland-item contract wiring (used by the listeners that moved out of impl/gadget)
-		dependencyContainer.registerInstance(UniqueItemAddon.class, uniqueItemAddon);
-		dependencyContainer.registerInstance(UniqueItemRegistry.class, uniqueItemAddon);
-		dependencyContainer.registerInstance(UniqueItemInteractionService.class,
-		                                     new GanglandUniqueItemInteractionService(gangland));
-		dependencyContainer.registerInstance(WearableEquipService.class, wearableAddon);
-		dependencyContainer.registerInstance(RepairService.class,
-		                                     new GanglandRepairService(gangland, weaponManager, repairAnvilGui));
-
-		// money drop wiring (deposit service was constructed earlier so the item parser could use it)
-		dependencyContainer.registerInstance(MoneyAddon.class, moneyAddon);
-		dependencyContainer.registerInstance(MoneyDepositService.class, moneyDepositService);
-		dependencyContainer.registerInstance(MoneyDropClassifier.class,
-		                                     new GanglandMoneyDropClassifier(copService, civilianService));
-
-		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
-
-		// waypoint
-		Waypoint         dummy         = new Waypoint("dummy", Gangland.FULL_PREFIX);
-		WaypointTeleport dummyTeleport = new WaypointTeleport(dummy);
-
-		listenerManager.addEvent(dummyTeleport, ListenerPriority.NORMAL);
-	}
-
-	private void commands(Gangland gangland) {
-		PluginCommand command = this.gangland.getCommand(Gangland.SHORT_PREFIX);
-
-		if (command == null) return;
-
-		command.setExecutor(commandManager);
-		commandManager.scanAndRegisterCommands("me.luckyraven.command.sub", gangland.getClass().getClassLoader());
-		command.setTabCompleter(new CommandTabCompleter(CommandManager.getCommands()));
+		// glue
+		listenerManager = context.get(ListenerManager.class);
+		commandManager  = context.get(CommandManager.class);
+		placeholder     = context.get(GanglandPlaceholder.class);
 	}
 }

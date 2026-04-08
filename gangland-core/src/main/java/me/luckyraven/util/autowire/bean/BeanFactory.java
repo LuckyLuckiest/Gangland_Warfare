@@ -14,6 +14,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * Spring-style bean factory built on top of {@link DependencyContainer}. Discovers {@link Configuration}-annotated
@@ -34,10 +35,11 @@ import java.util.*;
 @CustomLog
 public class BeanFactory {
 
-	private final DependencyContainer container;
-	private final JavaPlugin          plugin;
-	private final SettingsLookup      settings;
-	private final List<Class<?>>      configClasses = new ArrayList<>();
+	private final DependencyContainer                container;
+	private final JavaPlugin                         plugin;
+	private final SettingsLookup                     settings;
+	private final List<Class<?>>                     configClasses = new ArrayList<>();
+	private final Map<Phase, Consumer<List<Object>>> phaseHooks    = new EnumMap<>(Phase.class);
 
 	public BeanFactory(DependencyContainer container, JavaPlugin plugin, SettingsLookup settings) {
 		this.container = container;
@@ -54,6 +56,23 @@ public class BeanFactory {
 			}
 		}
 		return out;
+	}
+
+	/**
+	 * Register a hook that runs immediately after the given phase finishes invoking and registering all of its beans.
+	 * The hook receives the list of beans freshly registered in that phase, in topological invocation order. Use this
+	 * to bridge bean instantiation with side-effecting subsystems that live outside {@code gangland-core} — e.g. the
+	 * gangland-impl bootstrap installs a FILE-phase hook that calls {@code FileManager.initializeAll()} between every
+	 * file initializer, and a DATABASE-phase hook that walks {@code RepositoryRegistry.getAllRepositories()} and
+	 * publishes each repo back into the container so later @Bean parameters of type {@code IRepository<X>} resolve.
+	 *
+	 * <p>Hooks are evaluated <i>per bean</i>, not per phase: the hook fires after every individual bean in the phase
+	 * is registered, with the cumulative list of phase-so-far. This is what makes staged FILE loading work — Settings
+	 * has to finish loading before ScoreboardAddon's bean method runs and reads {@code Settings.getX()} at construction
+	 * time.
+	 */
+	public void setPhaseHook(Phase phase, Consumer<List<Object>> hook) {
+		phaseHooks.put(phase, hook);
 	}
 
 	/**
@@ -77,13 +96,38 @@ public class BeanFactory {
 	}
 
 	/**
-	 * Instantiate every discovered configuration, evaluate conditions, build the dependency graph and invoke every
-	 * {@code @Bean} method in topological order. Throws on missing deps, ambiguous bean references, dependency cycles
-	 * or any user-code exception during invocation.
+	 * Instantiate every discovered configuration and run every bean phase, then run lifecycle callbacks. See
+	 * {@link #instantiate(Runnable)} for the full contract — this overload is shorthand for the no-callback case.
 	 */
 	public void instantiate() {
-		List<Object>         configInstances = new ArrayList<>();
-		List<BeanDefinition> definitions     = new ArrayList<>();
+		instantiate(null);
+	}
+
+	/**
+	 * Instantiate every discovered configuration, evaluate conditions and run every {@link Phase} in declared order.
+	 * Within each phase: build the dependency graph from that phase's beans, topologically sort them, invoke every
+	 * {@code @Bean} method, register the result and fire the phase hook (cumulative list of phase-so-far) after each
+	 * bean.
+	 *
+	 * <p>After every bean phase finishes but BEFORE the lifecycle pass runs, the optional
+	 * {@code beforeLifecycle} callback is invoked. This is the hook for code that needs to bridge the gap between
+	 * "every bean exists" and "every bean's {@code initialize()} runs" — e.g. {@code Initializer.hydrateFromContext()}
+	 * populates the legacy {@code Initializer} fields here so that bean {@code initialize()} methods which still call
+	 * {@code gangland.getInitializer().getX()} resolve correctly.
+	 *
+	 * <p>Then the lifecycle pass runs: {@code @PostConstruct} on every configuration and bean, followed by any
+	 * zero-arg {@code void initialize()} method on every bean (the convention-based hook described in
+	 * {@link #runInitialize(java.util.List)}).
+	 *
+	 * <p>Throws on missing deps, ambiguous bean references, dependency cycles or any user-code exception during
+	 * invocation.
+	 */
+	public void instantiate(Runnable beforeLifecycle) {
+		List<Object>                     configInstances = new ArrayList<>();
+		Map<Phase, List<BeanDefinition>> phaseDefs       = new EnumMap<>(Phase.class);
+		for (Phase phase : Phase.values()) {
+			phaseDefs.put(phase, new ArrayList<>());
+		}
 
 		for (Class<?> configClass : configClasses) {
 			if (!classConditionsMet(configClass)) {
@@ -102,6 +146,8 @@ public class BeanFactory {
 			}
 			configInstances.add(configInstance);
 
+			Phase classPhase = configClass.getAnnotation(Configuration.class).phase();
+
 			for (Method method : configClass.getDeclaredMethods()) {
 				if (!method.isAnnotationPresent(Bean.class)) {
 					continue;
@@ -111,26 +157,51 @@ public class BeanFactory {
 					         configClass.getSimpleName(), method.getName());
 					continue;
 				}
-				definitions.add(buildDefinition(configInstance, method));
+				phaseDefs.get(classPhase).add(buildDefinition(configInstance, method, classPhase));
 			}
 		}
 
-		List<BeanDefinition> ordered = BeanGraph.topologicalSort(definitions);
+		List<Object> allRegisteredBeans = new ArrayList<>();
 
-		List<Object> registeredBeans = new ArrayList<>(ordered.size());
-		for (BeanDefinition def : ordered) {
-			Object bean = invokeBean(def);
-			registerBean(def, bean);
-			registeredBeans.add(bean);
+		for (Phase phase : Phase.values()) {
+			List<BeanDefinition> defs = phaseDefs.get(phase);
+			if (defs.isEmpty()) {
+				continue;
+			}
+
+			List<BeanDefinition>   ordered    = BeanGraph.topologicalSort(defs);
+			List<Object>           phaseBeans = new ArrayList<>(ordered.size());
+			Consumer<List<Object>> hook       = phaseHooks.get(phase);
+
+			for (BeanDefinition def : ordered) {
+				Object bean = invokeBean(def);
+				registerBean(def, bean);
+				phaseBeans.add(bean);
+				allRegisteredBeans.add(bean);
+
+				// Fire hook per-bean with the cumulative phase list. The hook is responsible for being idempotent
+				// across beans it has already seen — e.g. FileManager.initializeAll() naturally is, since each
+				// FileInitializer is registered once and only un-loaded ones execute.
+				if (hook != null) {
+					hook.accept(phaseBeans);
+				}
+			}
+
+			log.info("{} phase complete: {} bean(s)", phase, phaseBeans.size());
+		}
+
+		if (beforeLifecycle != null) {
+			beforeLifecycle.run();
 		}
 
 		runPostConstruct(configInstances);
-		runPostConstruct(registeredBeans);
+		runPostConstruct(allRegisteredBeans);
 
-		log.info("Bean wiring complete: {} configs, {} beans", configInstances.size(), ordered.size());
+		log.info("Bean wiring complete: {} configs, {} beans across {} phases",
+		         configInstances.size(), allRegisteredBeans.size(), Phase.values().length);
 	}
 
-	private BeanDefinition buildDefinition(Object configInstance, Method method) {
+	private BeanDefinition buildDefinition(Object configInstance, Method method, Phase phase) {
 		Bean   beanAnnotation = method.getAnnotation(Bean.class);
 		String name           = beanAnnotation.name().isEmpty() ? method.getName() : beanAnnotation.name();
 
@@ -162,7 +233,8 @@ public class BeanFactory {
 				conditionalOnBean,
 				conditionalOnSetting,
 				beanAnnotation.publishToServicesManager(),
-				beanAnnotation.isGeneric()
+				beanAnnotation.isGeneric(),
+				phase
 		);
 	}
 
@@ -306,5 +378,99 @@ public class BeanFactory {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Convention-based lifecycle hook. After every bean is wired and {@code @PostConstruct} has run, walk every bean
+	 * and invoke any zero-argument {@code public void initialize()} method declared on the bean's runtime class. Beans
+	 * that don't define such a method are skipped silently. This replaces the hand-coded {@code .initialize()} calls
+	 * scattered across the legacy {@code Initializer.postInitialize()} (UserManager, RankManager, GangManager,
+	 * MemberManager, WeaponManager, SignManager, WeaponLoader, etc.) — each of those managers already exposes a no-arg
+	 * {@code initialize()} contract; this hook just calls them automatically.
+	 *
+	 * <p><b>Skip rule:</b> beans that implement an interface named {@code FileInitializer} are skipped because their
+	 * {@code initialize()} method is the file-load hook driven separately by {@code FileManager.initializeAll()} in the
+	 * FILE phase post-hook. Calling it again here would re-load the same yaml file. The check uses the interface
+	 * <i>name</i> rather than the {@code Class} so {@code gangland-core} doesn't need a dependency on
+	 * {@code plugin-persistence}.
+	 *
+	 * <p>Lookup is cached implicitly via the runtime class because each bean is visited at most once thanks to the
+	 * identity-set used by {@link #runPostConstruct}.
+	 */
+	private void runInitialize(List<?> targets) {
+		Set<Object> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+		for (Object target : targets) {
+			if (target == null || !visited.add(target)) {
+				continue;
+			}
+			if (implementsInterfaceNamed(target.getClass(), "FileInitializer")) {
+				continue;
+			}
+			Method initialize = findInitializeMethod(target.getClass());
+			if (initialize == null) {
+				continue;
+			}
+			initialize.setAccessible(true);
+			try {
+				initialize.invoke(target);
+			} catch (IllegalAccessException | InvocationTargetException cause) {
+				Throwable root = cause instanceof InvocationTargetException ite && ite.getCause() != null
+				                 ? ite.getCause() : cause;
+				throw new IllegalStateException(
+						"initialize() on " + target.getClass().getSimpleName() + " threw during invocation",
+						root);
+			}
+		}
+	}
+
+	/**
+	 * Reflection-by-name interface check. Walks the class hierarchy looking for any implemented interface whose simple
+	 * name matches {@code targetSimpleName}. Used by {@link #runInitialize(List)} to skip {@code FileInitializer} beans
+	 * without importing the type.
+	 */
+	private boolean implementsInterfaceNamed(Class<?> clazz, String targetSimpleName) {
+		Class<?> cursor = clazz;
+		while (cursor != null && cursor != Object.class) {
+			for (Class<?> iface : cursor.getInterfaces()) {
+				if (iface.getSimpleName().equals(targetSimpleName)) {
+					return true;
+				}
+				// Walk parent interfaces too — FileInitializer might be inherited via a marker subinterface.
+				if (implementsInterfaceNamed(iface, targetSimpleName)) {
+					return true;
+				}
+			}
+			cursor = cursor.getSuperclass();
+		}
+		return false;
+	}
+
+	/**
+	 * Walk the class hierarchy looking for a public, zero-arg, void-returning method named {@code initialize}. The walk
+	 * goes superclass-first so a subclass override is preferred (Java reflection returns the most-specific method
+	 * automatically when calling {@code getMethod}, but we use {@code getDeclaredMethods} to also catch package-private
+	 * overrides). Returns {@code null} if no such method exists.
+	 */
+	private Method findInitializeMethod(Class<?> clazz) {
+		Class<?> cursor = clazz;
+		while (cursor != null && cursor != Object.class) {
+			for (Method method : cursor.getDeclaredMethods()) {
+				if (!method.getName().equals("initialize")) {
+					continue;
+				}
+				if (method.getParameterCount() != 0) {
+					continue;
+				}
+				if (method.getReturnType() != void.class) {
+					continue;
+				}
+				if (Modifier.isStatic(method.getModifiers())) {
+					continue;
+				}
+				return method;
+			}
+			cursor = cursor.getSuperclass();
+		}
+		return null;
 	}
 }

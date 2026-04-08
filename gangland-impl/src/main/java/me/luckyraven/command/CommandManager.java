@@ -13,6 +13,7 @@ import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.UnhandledError;
+import me.luckyraven.util.autowire.DependencyContainer;
 import me.luckyraven.util.command.CommandService;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -41,14 +42,19 @@ public final class CommandManager extends CommandService<Command> implements Com
 
 	private static final Map<String, Command> commands = new HashMap<>();
 
-	private final Gangland gangland;
-	private final String   fullPrefix;
-	private final String   shortPrefix;
+	private final Gangland            gangland;
+	private final DependencyContainer dependencyContainer;
+	private final String              fullPrefix;
+	private final String              shortPrefix;
 
-	public CommandManager(Gangland gangland, String fullPrefix, String shortPrefix) {
-		this.gangland    = gangland;
-		this.fullPrefix  = fullPrefix;
-		this.shortPrefix = shortPrefix;
+	public CommandManager(Gangland gangland,
+	                      DependencyContainer dependencyContainer,
+	                      String fullPrefix,
+	                      String shortPrefix) {
+		this.gangland            = gangland;
+		this.dependencyContainer = dependencyContainer;
+		this.fullPrefix          = fullPrefix;
+		this.shortPrefix         = shortPrefix;
 	}
 
 	public static List<Command> getPermissibleCommands(CommandSender sender) {
@@ -182,7 +188,10 @@ public final class CommandManager extends CommandService<Command> implements Com
 			throw new IllegalArgumentException(clazz.getName() + " does not extend CommandHandler");
 		}
 
-		return (Command) clazz.getConstructor(Gangland.class).newInstance(gangland);
+		// Construct via the root container so commands can declare any registered bean as a constructor parameter
+		// (UserManager, GangManager, WeaponManager, etc.) and receive it automatically. The legacy
+		// (Gangland) constructor still works because the container resolves Gangland the same as any other bean.
+		return (Command) dependencyContainer.createInstance(clazz);
 	}
 
 	@Override
