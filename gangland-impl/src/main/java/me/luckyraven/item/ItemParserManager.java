@@ -2,6 +2,7 @@ package me.luckyraven.item;
 
 import lombok.Getter;
 import me.luckyraven.gadget.car.CarManager;
+import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.converter.*;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyConverter;
@@ -16,7 +17,8 @@ public class ItemParserManager {
 	private final ItemParser            parser;
 
 	public ItemParserManager(WeaponService weaponService, AmmunitionManager ammunitionManager,
-	                         WearableService wearableService, CarManager carManager, MoneyAddon moneyAddon) {
+	                         WearableService wearableService, CarManager carManager, MoneyAddon moneyAddon,
+	                         UniqueItemAddon uniqueItemAddon) {
 		this.registry = new ItemConverterRegistry();
 		this.parser   = new ItemParser(registry);
 
@@ -24,6 +26,7 @@ public class ItemParserManager {
 		registry.register("weapon", new WeaponConverter(weaponService));
 		registry.register("wearable", new WearableConverter(wearableService));
 		registry.register("car", new CarConverter(carManager));
+		registry.register("unique", new UniqueConverter(uniqueItemAddon));
 		registry.register("money", new MoneyConverter(moneyAddon));
 		registry.register("cash", new MoneyConverter(moneyAddon));
 

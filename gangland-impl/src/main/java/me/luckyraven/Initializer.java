@@ -86,7 +86,6 @@ import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyDepositService;
 import me.luckyraven.item.money.MoneyDropClassifier;
 import me.luckyraven.listener.ListenerManager;
-import me.luckyraven.lootchest.GanglandLootItemProvider;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.lootchest.LootChestService;
 import me.luckyraven.lootchest.config.LootChestLoader;
@@ -334,7 +333,7 @@ public final class Initializer {
 		// item parser (must be before civilians loader — weapon pool parsing needs it,
 		// and before inventoryLoader.initialize() — slot YAML parses prefixed item refs via the resolver)
 		itemParserManager = new ItemParserManager(weaponManager, ammunitionManager, wearableAddon, carAddon,
-		                                          moneyAddon);
+		                                          moneyAddon, uniqueItemAddon);
 
 		// inventory loader: actual file load is deferred to here so the slot resolver can dereference
 		// itemParserManager (registered earlier in inventoryLoader() but only invoked once load() runs).
@@ -407,7 +406,7 @@ public final class Initializer {
 		FileHandler uniqueItemsFile = new FileHandler(gangland, "unique_items", ".yml");
 		fileManager.addFile(uniqueItemsFile, true);
 
-		FileHandler lootChestFile = new FileHandler(gangland, "loot-chests", "loot", ".yml");
+		FileHandler lootChestFile = new FileHandler(gangland, "loot_chests", "loot", ".yml");
 		fileManager.addFile(lootChestFile, true);
 
 		FileHandler tiersFile = new FileHandler(gangland, "tiers", "loot", ".yml");
@@ -586,10 +585,8 @@ public final class Initializer {
 
 		lootChestLoader.load(false, null, fileManager);
 
-		// set the item provider so loot can be generated
-		var itemProvider = new GanglandLootItemProvider(weaponManager, ammunitionManager, uniqueItemAddon,
-		                                                wearableAddon, carAddon);
-		lootChestManager.setItemProvider(itemProvider);
+		// share the global item parser so loot tables resolve item strings through the same converter registry
+		lootChestManager.setItemParser(itemParserManager.getParser());
 
 		lootChestManager.setMessagesProvider(new GanglandLootChestMessages());
 	}
