@@ -6,6 +6,7 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.JsonFormatter;
@@ -43,7 +44,7 @@ class AmmunitionInfoCommand extends SubArgument {
 			ItemStack itemStack = player.getInventory().getItemInMainHand();
 
 			if (!Ammunition.isAmmunition(itemStack)) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Not an ammunition!"));
+				user.sendMessage(Messages.INVALID_AMMO.toString().replace("%args%", itemStack.getType().name()));
 				return;
 			}
 
@@ -51,7 +52,7 @@ class AmmunitionInfoCommand extends SubArgument {
 			Ammunition        ammunition        = Ammunition.getHeldAmmunition(ammunitionManager, itemStack);
 
 			if (ammunition == null) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Ammunition not registered."));
+				user.sendMessage(Messages.INVALID_AMMO.toString().replace("%args%", itemStack.getType().name()));
 				return;
 			}
 
@@ -71,7 +72,7 @@ class AmmunitionInfoCommand extends SubArgument {
 			Ammunition        ammunition        = ammunitionManager.getAmmunition(ammoName);
 
 			if (ammunition == null) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid ammunition: &c" + ammoName));
+				user.sendMessage(Messages.INVALID_AMMO.toString().replace("%args%", ammoName));
 				return;
 			}
 

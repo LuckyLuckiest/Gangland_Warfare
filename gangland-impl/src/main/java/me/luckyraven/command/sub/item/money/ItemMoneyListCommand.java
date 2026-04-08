@@ -3,6 +3,7 @@ package me.luckyraven.command.sub.item.money;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyItem;
 import me.luckyraven.util.GanglandChatUtil;
@@ -29,7 +30,7 @@ class ItemMoneyListCommand extends SubArgument {
 			MoneyAddon             moneyAddon = gangland.getInitializer().getMoneyAddon();
 			Map<String, MoneyItem> variations = moneyAddon.getVariations();
 
-			sender.sendMessage(GanglandChatUtil.commandMessage("List of money items"));
+			sender.sendMessage(Messages.ITEM_MONEY_LIST_HEADER.toString());
 
 			Iterator<Map.Entry<String, MoneyItem>> iterator = variations.entrySet().iterator();
 			StringBuilder                          builder  = new StringBuilder();

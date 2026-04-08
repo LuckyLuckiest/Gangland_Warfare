@@ -6,6 +6,7 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.JsonFormatter;
@@ -45,7 +46,7 @@ class WeaponInfoCommand extends SubArgument {
 			Weapon    weapon    = gangland.getInitializer().getWeaponManager().validateAndGetWeapon(player, itemStack);
 
 			if (weapon == null) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Not a weapon!"));
+				user.sendMessage(Messages.INVALID_WEAPON.toString().replace("%args%", itemStack.getType().name()));
 				return;
 			}
 
@@ -64,7 +65,7 @@ class WeaponInfoCommand extends SubArgument {
 			Weapon weapon     = gangland.getInitializer().getWeaponAddon().getWeapon(weaponName);
 
 			if (weapon == null) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid weapon: &c" + weaponName));
+				user.sendMessage(Messages.INVALID_WEAPON.toString().replace("%args%", weaponName));
 				return;
 			}
 

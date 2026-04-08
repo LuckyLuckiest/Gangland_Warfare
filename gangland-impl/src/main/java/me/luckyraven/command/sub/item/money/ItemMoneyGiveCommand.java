@@ -8,6 +8,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.item.money.MoneyAddon;
+import me.luckyraven.item.money.MoneyDepositService;
 import me.luckyraven.item.money.MoneyItem;
 import me.luckyraven.item.money.MoneyItemFactory;
 import me.luckyraven.util.GanglandChatUtil;
@@ -54,9 +55,11 @@ class ItemMoneyGiveCommand extends SubArgument {
 			boolean gave     = giveMoneyItem(player, itemName, 1);
 
 			if (gave) {
-				user.sendMessage(GanglandChatUtil.commandMessage("Gave &b" + itemName + " &7x&b1&7."));
+				user.sendMessage(Messages.ITEM_MONEY_GAVE.toString()
+				                                         .replace("%name%", itemName)
+				                                         .replace("%amount%", "1"));
 			} else {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid money item: &c" + itemName));
+				user.sendMessage(Messages.ITEM_MONEY_INVALID.toString().replace("%name%", itemName));
 			}
 		}, sender -> {
 			MoneyAddon moneyAddon = gangland.getInitializer().getMoneyAddon();
@@ -83,10 +86,11 @@ class ItemMoneyGiveCommand extends SubArgument {
 			boolean gave = giveMoneyItem(player, itemName, itemAmount);
 
 			if (gave) {
-				user.sendMessage(GanglandChatUtil.commandMessage(
-						"Gave &b" + itemName + " &7x&b" + itemAmount + "&7."));
+				user.sendMessage(Messages.ITEM_MONEY_GAVE.toString()
+				                                         .replace("%name%", itemName)
+				                                         .replace("%amount%", String.valueOf(itemAmount)));
 			} else {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid money item: &c" + itemName));
+				user.sendMessage(Messages.ITEM_MONEY_INVALID.toString().replace("%name%", itemName));
 			}
 		}, sender -> List.of("<amount>"));
 
@@ -95,19 +99,32 @@ class ItemMoneyGiveCommand extends SubArgument {
 	}
 
 	private boolean giveMoneyItem(Player player, String name, int amount) {
-		MoneyAddon moneyAddon = gangland.getInitializer().getMoneyAddon();
-		MoneyItem  variation  = moneyAddon.getVariation(name);
+		MoneyAddon          moneyAddon     = gangland.getInitializer().getMoneyAddon();
+		MoneyDepositService depositService = gangland.getInitializer().getMoneyDepositService();
+		MoneyItem           variation      = moneyAddon.getVariation(name);
 
 		if (variation == null) return false;
 		if (amount <= 0) return true;
 
-		String          symbol    = moneyAddon.getCurrencySymbol();
-		PlayerInventory inventory = player.getInventory();
-		ItemStack[]     items     = new ItemStack[amount];
+		// Roll once and build a single stack so identical-NBT items merge for stackable materials. Items larger than
+		// one slot are split across slots; non-stackable materials (max stack size 1) naturally produce N separate
+		// stacks-of-one.
+		int rolled = moneyAddon.rollAmount(variation);
 
-		for (int i = 0; i < amount; i++) {
-			int rolled = moneyAddon.rollAmount(variation);
-			items[i] = MoneyItemFactory.build(variation, rolled, symbol);
+		ItemStack template     = MoneyItemFactory.build(variation, rolled, depositService);
+		int       maxStackSize = template.getMaxStackSize();
+		int       slots        = (int) Math.ceil(amount / (double) maxStackSize);
+		int       amountLeft   = amount;
+
+		PlayerInventory inventory = player.getInventory();
+		ItemStack[]     items     = new ItemStack[slots];
+
+		for (int i = 0; i < slots; i++) {
+			int amountGive = Math.min(amountLeft, maxStackSize);
+			if (amountGive <= 0) break;
+
+			items[i] = MoneyItemFactory.build(variation, rolled, depositService, amountGive);
+			amountLeft -= amountGive;
 		}
 
 		Map<Integer, ItemStack> left = inventory.addItem(items);

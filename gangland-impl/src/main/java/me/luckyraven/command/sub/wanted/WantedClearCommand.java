@@ -8,7 +8,6 @@ import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.Bukkit;
@@ -43,7 +42,7 @@ class WantedClearCommand extends SubArgument {
 			Wanted wanted = user.getWanted();
 			wanted.setLevel(0);
 
-			sender.sendMessage(GanglandChatUtil.commandMessage("Wanted level cleared."));
+			sender.sendMessage(Messages.WANTED_CLEARED.toString());
 		};
 	}
 
@@ -68,8 +67,8 @@ class WantedClearCommand extends SubArgument {
 
 			targetUser.getWanted().setLevel(0);
 
-			sender.sendMessage(GanglandChatUtil.commandMessage(
-					"Cleared wanted level of &b" + target.getName() + "&7."));
+			sender.sendMessage(
+					Messages.WANTED_CLEARED_OTHER.toString().replace("%player%", target.getName()));
 		}, sender -> Bukkit.getOnlinePlayers()
 				.stream().map(Player::getName).toList());
 

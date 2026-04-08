@@ -6,6 +6,7 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyItem;
 import me.luckyraven.item.money.MoneyItemUtil;
@@ -44,7 +45,7 @@ class ItemMoneyInfoCommand extends SubArgument {
 			ItemStack itemStack = player.getInventory().getItemInMainHand();
 
 			if (!MoneyItemUtil.isMoneyItem(itemStack)) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Not a money item!"));
+				user.sendMessage(Messages.ITEM_MONEY_NOT_HELD.toString());
 				return;
 			}
 
@@ -53,7 +54,7 @@ class ItemMoneyInfoCommand extends SubArgument {
 			MoneyItem  variation  = id == null ? null : moneyAddon.getVariation(id);
 
 			if (variation == null) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Money item not registered: &c" + id));
+				user.sendMessage(Messages.ITEM_MONEY_NOT_REGISTERED.toString().replace("%name%", String.valueOf(id)));
 				return;
 			}
 
@@ -78,7 +79,7 @@ class ItemMoneyInfoCommand extends SubArgument {
 			MoneyItem  variation  = moneyAddon.getVariation(id);
 
 			if (variation == null) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid money item: &c" + id));
+				user.sendMessage(Messages.ITEM_MONEY_INVALID.toString().replace("%name%", id));
 				return;
 			}
 
