@@ -1,9 +1,10 @@
-package me.luckyraven.listener.inventory;
+package me.luckyraven.item.listener.unique;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.Gangland;
+import me.luckyraven.item.contract.UniqueItemRegistry;
 import me.luckyraven.item.unique.UniqueItemUtil;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.GameRule;
 import org.bukkit.event.EventHandler;
@@ -18,9 +19,10 @@ import org.bukkit.inventory.ItemStack;
 
 @ListenerHandler
 @RequiredArgsConstructor
+@AutowireTarget({UniqueItemRegistry.class})
 public class UniqueItemInventoryRestrict implements Listener {
 
-	private final Gangland gangland;
+	private final UniqueItemRegistry uniqueItemAddon;
 
 	@EventHandler(priority = EventPriority.LOW)
 	public void onUniqueItemInventoryClick(InventoryClickEvent event) {
@@ -46,7 +48,7 @@ public class UniqueItemInventoryRestrict implements Listener {
 
 		var itemBuilder   = new ItemBuilder(clickedItem);
 		var uniqueItemKey = itemBuilder.getStringTagData("uniqueItem");
-		var uniqueItem    = gangland.getInitializer().getUniqueItemAddon().getUniqueItem(uniqueItemKey);
+		var uniqueItem    = uniqueItemAddon.getUniqueItem(uniqueItemKey);
 
 		if (uniqueItem == null) return;
 		if (uniqueItem.isMovable()) return;
@@ -66,7 +68,7 @@ public class UniqueItemInventoryRestrict implements Listener {
 
 			var itemBuilder   = new ItemBuilder(item);
 			var uniqueItemKey = itemBuilder.getStringTagData("uniqueItem");
-			var uniqueItem    = gangland.getInitializer().getUniqueItemAddon().getUniqueItem(uniqueItemKey);
+			var uniqueItem    = uniqueItemAddon.getUniqueItem(uniqueItemKey);
 
 			return uniqueItem != null && !uniqueItem.isDropOnDeath();
 		});
@@ -81,7 +83,7 @@ public class UniqueItemInventoryRestrict implements Listener {
 
 		var itemBuilder   = new ItemBuilder(droppedItem);
 		var uniqueItemKey = itemBuilder.getStringTagData("uniqueItem");
-		var uniqueItem    = gangland.getInitializer().getUniqueItemAddon().getUniqueItem(uniqueItemKey);
+		var uniqueItem    = uniqueItemAddon.getUniqueItem(uniqueItemKey);
 
 		if (uniqueItem == null) return;
 		if (uniqueItem.isDroppable()) return;

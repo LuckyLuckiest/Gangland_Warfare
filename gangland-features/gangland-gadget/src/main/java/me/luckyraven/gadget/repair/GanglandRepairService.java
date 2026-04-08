@@ -1,18 +1,13 @@
-package me.luckyraven.gadget.listener.repair;
+package me.luckyraven.gadget.repair;
 
-import me.luckyraven.gadget.repair.RepairManager;
 import me.luckyraven.gadget.repair.anvil.RepairAnvilGui;
+import me.luckyraven.item.contract.RepairService;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.WeaponTag;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -20,39 +15,38 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-public class RepairListener implements Listener {
+/**
+ * Implements the gangland-item {@link RepairService} contract by recognising a held weapon and opening the configured
+ * {@link RepairAnvilGui} for it. Mirrors the original behaviour of {@code RepairListener} so the listener itself can
+ * stay free of gangland-gadget/-weapon imports.
+ */
+public class GanglandRepairService implements RepairService {
 
 	private final JavaPlugin     plugin;
 	private final WeaponService  weaponService;
-	private final RepairManager  repairManager;
 	private final RepairAnvilGui repairAnvilGui;
 
-	public RepairListener(@NotNull JavaPlugin plugin, @NotNull WeaponService weaponService,
-	                      @NotNull RepairManager repairManager, @NotNull RepairAnvilGui repairAnvilGui) {
+	public GanglandRepairService(@NotNull JavaPlugin plugin,
+	                             @NotNull WeaponService weaponService,
+	                             @NotNull RepairAnvilGui repairAnvilGui) {
 		this.plugin         = plugin;
 		this.weaponService  = weaponService;
-		this.repairManager  = repairManager;
 		this.repairAnvilGui = repairAnvilGui;
 	}
 
-	@EventHandler(priority = EventPriority.HIGH)
-	public void onAnvilOpen(InventoryOpenEvent event) {
-		if (event.getInventory().getType() != InventoryType.ANVIL) return;
-		if (!(event.getPlayer() instanceof Player player)) return;
+	@Override
+	public boolean tryOpenRepairFor(Player player, ItemStack heldItem) {
+		if (heldItem == null || !weaponService.isWeapon(heldItem)) return false;
 
-		ItemStack heldItem = player.getInventory().getItemInMainHand();
-		if (!weaponService.isWeapon(heldItem)) return;
-
-		Weapon weapon = getWeaponFromItem(heldItem, player);
-		if (weapon == null) return;
-
-		event.setCancelled(true);
+		Weapon weapon = resolveWeapon(heldItem, player);
+		if (weapon == null) return false;
 
 		Bukkit.getScheduler().runTask(plugin, () -> repairAnvilGui.open(player, weapon, heldItem));
+		return true;
 	}
 
 	@Nullable
-	private Weapon getWeaponFromItem(@NotNull ItemStack item, @NotNull Player player) {
+	private Weapon resolveWeapon(@NotNull ItemStack item, @NotNull Player player) {
 		ItemBuilder builder = new ItemBuilder(item);
 		String      uuidStr = builder.getStringTagData(Weapon.getTagProperName(WeaponTag.UUID));
 		String      type    = builder.getStringTagData(Weapon.getTagProperName(WeaponTag.WEAPON));
@@ -66,4 +60,5 @@ public class RepairListener implements Listener {
 			return null;
 		}
 	}
+
 }

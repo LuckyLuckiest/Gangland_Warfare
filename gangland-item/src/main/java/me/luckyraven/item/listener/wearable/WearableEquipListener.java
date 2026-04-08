@@ -1,10 +1,10 @@
-package me.luckyraven.gadget.listener.wearable;
+package me.luckyraven.item.listener.wearable;
 
+import me.luckyraven.item.contract.WearableEquipService;
 import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ChatUtil;
-import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -23,12 +23,12 @@ import org.bukkit.inventory.ItemStack;
  * <p>On drop: if the wearable is marked as non-droppable the drop event is cancelled.
  */
 @ListenerHandler
-@AutowireTarget({WearableService.class})
+@AutowireTarget({WearableEquipService.class})
 public class WearableEquipListener implements Listener {
 
-	private final WearableService wearableService;
+	private final WearableEquipService wearableService;
 
-	public WearableEquipListener(WearableService wearableService) {
+	public WearableEquipListener(WearableEquipService wearableService) {
 		this.wearableService = wearableService;
 	}
 

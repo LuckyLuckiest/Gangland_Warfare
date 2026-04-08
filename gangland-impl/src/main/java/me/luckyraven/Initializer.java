@@ -69,6 +69,7 @@ import me.luckyraven.gadget.car.vehicle.VehicleRegistry;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.gadget.jetpack.JetpackService;
+import me.luckyraven.gadget.repair.GanglandRepairService;
 import me.luckyraven.gadget.repair.RepairManager;
 import me.luckyraven.gadget.repair.anvil.RepairAnvilGui;
 import me.luckyraven.gadget.repair.config.RepairLoader;
@@ -80,12 +81,18 @@ import me.luckyraven.inventory.handler.SlotItemFactory;
 import me.luckyraven.item.ItemParser;
 import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
+import me.luckyraven.item.contract.*;
+import me.luckyraven.item.money.MoneyAddon;
+import me.luckyraven.item.money.MoneyDepositService;
+import me.luckyraven.item.money.MoneyDropClassifier;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.lootchest.GanglandLootItemProvider;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.lootchest.LootChestService;
 import me.luckyraven.lootchest.config.LootChestLoader;
 import me.luckyraven.lootchest.data.LootChestData;
+import me.luckyraven.money.GanglandMoneyDepositService;
+import me.luckyraven.money.GanglandMoneyDropClassifier;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.database.DatabaseHandler;
@@ -185,6 +192,7 @@ public final class Initializer {
 	private WeaponAddon                weaponAddon;
 	private UniqueItemAddon            uniqueItemAddon;
 	private WearableAddon              wearableAddon;
+	private MoneyAddon                 moneyAddon;
 	// Loader
 	private LanguageLoader             languageLoader;
 	private InventoryLoader            inventoryLoader;
@@ -325,7 +333,8 @@ public final class Initializer {
 
 		// item parser (must be before civilians loader — weapon pool parsing needs it,
 		// and before inventoryLoader.initialize() — slot YAML parses prefixed item refs via the resolver)
-		itemParserManager = new ItemParserManager(weaponManager, ammunitionManager, wearableAddon, carAddon);
+		itemParserManager = new ItemParserManager(weaponManager, ammunitionManager, wearableAddon, carAddon,
+		                                          moneyAddon);
 
 		// inventory loader: actual file load is deferred to here so the slot resolver can dereference
 		// itemParserManager (registered earlier in inventoryLoader() but only invoked once load() runs).
@@ -419,6 +428,9 @@ public final class Initializer {
 		FileHandler carsFile = new FileHandler(gangland, "cars", ".yml");
 		fileManager.addFile(carsFile, true);
 
+		FileHandler moneyFile = new FileHandler(gangland, "money", ".yml");
+		fileManager.addFile(moneyFile, true);
+
 		scoreboardManager = new ScoreboardManager(gangland);
 
 		addonsLoader();
@@ -475,6 +487,17 @@ public final class Initializer {
 		}
 
 		carAddon.initialize();
+
+		// initialize money addon (cash drop variations + per-source rules)
+		if (moneyAddon == null) {
+			moneyAddon = new MoneyAddon();
+		}
+
+		FileHandler moneyFile = fileManager.getFile("money");
+		if (moneyFile != null && moneyFile.getFileConfiguration() != null) {
+			moneyAddon.load(moneyFile.getFileConfiguration());
+		}
+		moneyAddon.setEnabled(Settings.isMoneyDropEnabled());
 	}
 
 	/**
@@ -494,6 +517,8 @@ public final class Initializer {
 		wearableAddon.clear();
 		// clear the car addons
 		carAddon.clear();
+		// clear the money addon
+		if (moneyAddon != null) moneyAddon.clear();
 	}
 
 	/**
@@ -733,9 +758,27 @@ public final class Initializer {
 		dependencyContainer.registerInstance(CarManager.class, carAddon);
 		dependencyContainer.registerInstance(CarService.class, carService);
 		dependencyContainer.registerInstance(FuelService.class, fuelService);
+		// also expose under the gangland-item interface key so the moved fuel listeners can resolve via DI
+		dependencyContainer.registerInstance(me.luckyraven.item.fuel.FuelService.class, fuelService);
 		dependencyContainer.registerInstance(JetpackService.class, jetpackService);
 		dependencyContainer.registerInstance(CivilianService.class, civilianService);
 		dependencyContainer.registerInstance(ItemParser.class, itemParserManager.getParser());
+
+		// gangland-item contract wiring (used by the listeners that moved out of impl/gadget)
+		dependencyContainer.registerInstance(UniqueItemAddon.class, uniqueItemAddon);
+		dependencyContainer.registerInstance(UniqueItemRegistry.class, uniqueItemAddon);
+		dependencyContainer.registerInstance(UniqueItemInteractionService.class,
+		                                     new GanglandUniqueItemInteractionService(gangland));
+		dependencyContainer.registerInstance(WearableEquipService.class, wearableAddon);
+		dependencyContainer.registerInstance(RepairService.class,
+		                                     new GanglandRepairService(gangland, weaponManager, repairAnvilGui));
+
+		// money drop wiring
+		dependencyContainer.registerInstance(MoneyAddon.class, moneyAddon);
+		dependencyContainer.registerInstance(MoneyDepositService.class,
+		                                     new GanglandMoneyDepositService(userManager, moneyAddon));
+		dependencyContainer.registerInstance(MoneyDropClassifier.class,
+		                                     new GanglandMoneyDropClassifier(copService, civilianService));
 
 		listenerManager.scanAndRegisterListeners("me.luckyraven", gangland);
 

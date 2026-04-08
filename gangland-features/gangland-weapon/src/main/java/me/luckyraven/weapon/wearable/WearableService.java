@@ -1,5 +1,6 @@
 package me.luckyraven.weapon.wearable;
 
+import me.luckyraven.item.contract.WearableEquipService;
 import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.item.wearable.WearableTrait;
 import org.bukkit.entity.LivingEntity;
@@ -31,7 +32,7 @@ import java.util.Map;
  *   <li>Otherwise → null (no reduction applied).</li>
  * </ol>
  */
-public class WearableService {
+public class WearableService implements WearableEquipService {
 
 	private static final EquipmentSlot[] ARMOR_SLOTS = {
 			EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET

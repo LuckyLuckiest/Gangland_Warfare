@@ -1,10 +1,10 @@
-package me.luckyraven.listener.inventory;
+package me.luckyraven.item.listener.unique;
 
-import me.luckyraven.Gangland;
-import me.luckyraven.events.user.UserDataInitEvent;
-import me.luckyraven.item.configuration.UniqueItemAddon;
+import me.luckyraven.item.contract.UniqueItemRegistry;
+import me.luckyraven.item.event.PlayerItemInitEvent;
 import me.luckyraven.item.unique.UniqueItem;
 import me.luckyraven.item.unique.UniqueItemUtil;
+import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.listener.ListenerPriority;
 import org.bukkit.entity.Player;
@@ -16,16 +16,17 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 @ListenerHandler(priority = ListenerPriority.LOW)
+@AutowireTarget({UniqueItemRegistry.class})
 public class LoadUniqueItem implements Listener {
 
-	private final UniqueItemAddon uniqueItemAddon;
+	private final UniqueItemRegistry uniqueItemAddon;
 
-	public LoadUniqueItem(Gangland gangland) {
-		this.uniqueItemAddon = gangland.getInitializer().getUniqueItemAddon();
+	public LoadUniqueItem(UniqueItemRegistry uniqueItemAddon) {
+		this.uniqueItemAddon = uniqueItemAddon;
 	}
 
 	@EventHandler
-	public void onJoinGiveItem(UserDataInitEvent event) {
+	public void onJoinGiveItem(PlayerItemInitEvent event) {
 		Player player      = event.getPlayer();
 		var    uniqueItems = uniqueItemAddon.getUniqueItems();
 
@@ -86,4 +87,3 @@ public class LoadUniqueItem implements Listener {
 		}
 	}
 }
-

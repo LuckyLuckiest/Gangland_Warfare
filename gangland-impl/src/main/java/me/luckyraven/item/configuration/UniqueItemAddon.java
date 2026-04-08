@@ -5,6 +5,7 @@ import lombok.CustomLog;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.gadget.fuel.FuelService;
+import me.luckyraven.item.contract.UniqueItemRegistry;
 import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.item.unique.UniqueItem;
 import me.luckyraven.persistence.FileHandler;
@@ -16,7 +17,7 @@ import java.io.IOException;
 import java.util.*;
 
 @CustomLog
-public class UniqueItemAddon implements Comparator<UniqueItem> {
+public class UniqueItemAddon implements Comparator<UniqueItem>, UniqueItemRegistry {
 
 	private final Map<String, UniqueItem> uniqueItems;
 	private final PermissionManager       permissionManager;

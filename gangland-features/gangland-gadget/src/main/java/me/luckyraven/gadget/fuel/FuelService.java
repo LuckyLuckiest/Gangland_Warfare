@@ -17,8 +17,12 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>Fuel definitions are registered during initialization (typically by {@code UniqueItemAddon}).
  * Gadgets (cars, jetpacks, etc.) reference a fuel key to specify which fuel type they consume.
+ *
+ * <p>Implements the narrow {@code me.luckyraven.item.fuel.FuelService} contract used by the gangland-item fuel
+ * listeners. The interface name collides with this class's simple name, so the {@code implements} clause uses the
+ * fully-qualified form.
  */
-public class FuelService {
+public class FuelService implements me.luckyraven.item.fuel.FuelService {
 
 	private final Map<String, Fuel> fuelRegistry = new ConcurrentHashMap<>();
 

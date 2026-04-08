@@ -1,9 +1,9 @@
-package me.luckyraven.gadget.listener.fuel;
+package me.luckyraven.item.listener.fuel;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.item.fuel.FuelBar;
+import me.luckyraven.item.fuel.FuelService;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ActionBarManager;
