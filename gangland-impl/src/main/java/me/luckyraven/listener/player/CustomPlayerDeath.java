@@ -14,6 +14,7 @@ import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.downed.DownedPlayerRegistry;
 import me.luckyraven.util.downed.PlayerDownedEvent;
+import me.luckyraven.util.downed.PlayerUndownedEvent;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.util.utilities.TimeUtil;
@@ -256,6 +257,10 @@ public class CustomPlayerDeath implements Listener {
 		}
 
 		player.sendTitle("", "", 0, 1, 1);
+
+		// Vanilla PlayerRespawnEvent does not fire here (player never actually died), so notify listeners
+		// that the player is back on their feet via the custom counterpart.
+		Bukkit.getPluginManager().callEvent(new PlayerUndownedEvent(player));
 	}
 
 	private void cleanup(UUID uuid) {
