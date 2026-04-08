@@ -117,21 +117,29 @@ public class FileManager {
 	}
 
 	/**
-	 * Reloads all the files are stored
+	 * Reloads every stored file from disk. If a file is missing or corrupted, it is regenerated from the bundled jar
+	 * resource so subsequent {@link FileInitializer}s see fresh data instead of the stale in-memory state from before
+	 * the reload.
 	 */
 	public void reloadFiles() {
 		for (FileHandler file : files) {
 			try {
 				file.reloadData();
 			} catch (IOException exception) {
-				log.warn("{} {}.{}: {}", UnhandledError.FILE_LOADER_ERROR, file.getName(), file.getFileType(),
-				         exception.getMessage());
+				log.warn("{} {}.{}: {} - regenerating from jar", UnhandledError.FILE_LOADER_ERROR, file.getName(),
+				         file.getFileType(), exception.getMessage());
+				try {
+					file.createNewFile();
+				} catch (IOException recreate) {
+					log.error("Could not regenerate {}.{} on reload: {}", file.getName(), file.getFileType(),
+					          recreate.getMessage());
+				}
 			}
 		}
 	}
 
 	/**
-	 * Loads all the files that are stored in the plugin's resource folder without storing them in the files dataset
+	 * Loads all the files that are stored in the plugin's resource folder without storing them in the file dataset
 	 *
 	 * @param resourceFile the path of a file in the resource folder
 	 *
@@ -221,8 +229,8 @@ public class FileManager {
 				return;
 			}
 
-			log.warn("Failed to initialize {}.{}: {} - regenerating from jar and retrying",
-			         handler.getName(), handler.getFileType(), first.getMessage());
+			log.warn("Failed to initialize {}.{}: {} - regenerating from jar and retrying", handler.getName(),
+			         handler.getFileType(), first.getMessage());
 			try {
 				handler.createNewFile();
 			} catch (IOException recreate) {
