@@ -1,4 +1,4 @@
-package me.luckyraven.command.sub.item;
+package me.luckyraven.command.sub.item.repair;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
@@ -7,8 +7,8 @@ import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.gadget.wearable.WearableAddon;
-import me.luckyraven.item.wearable.Wearable;
+import me.luckyraven.gadget.repair.RepairManager;
+import me.luckyraven.gadget.repair.material.RepairMaterial;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -20,20 +20,20 @@ import org.bukkit.inventory.PlayerInventory;
 import java.util.List;
 import java.util.Map;
 
-class ItemWearableGiveCommand extends SubArgument {
+class ItemRepairGiveCommand extends SubArgument {
 
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
-	ItemWearableGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	ItemRepairGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "give", tree, parent);
 
 		this.gangland    = gangland;
 		this.tree        = tree;
 		this.userManager = gangland.getInitializer().getUserManager();
 
-		wearableGive();
+		repairGive();
 	}
 
 	@Override
@@ -42,7 +42,7 @@ class ItemWearableGiveCommand extends SubArgument {
 				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 	}
 
-	private void wearableGive() {
+	private void repairGive() {
 		Argument name = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
@@ -50,16 +50,16 @@ class ItemWearableGiveCommand extends SubArgument {
 			if (user == null) return;
 
 			String  itemName = args[3];
-			boolean gave     = giveWearable(player, itemName, 1);
+			boolean gave     = giveRepairItem(player, itemName, 1);
 
 			if (gave) {
 				user.sendMessage(GanglandChatUtil.commandMessage("Gave &b" + itemName + " &7x&b1&7."));
 			} else {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid wearable: &c" + itemName));
+				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid repair item: &c" + itemName));
 			}
 		}, sender -> {
-			WearableAddon wearableAddon = gangland.getInitializer().getWearableAddon();
-			return wearableAddon.getWearables().keySet()
+			RepairManager repairManager = gangland.getInitializer().getRepairManager();
+			return repairManager.getMaterialManager().getAllMaterials().keySet()
 					.stream().toList();
 		});
 
@@ -79,13 +79,13 @@ class ItemWearableGiveCommand extends SubArgument {
 				return;
 			}
 
-			boolean gave = giveWearable(player, itemName, itemAmount);
+			boolean gave = giveRepairItem(player, itemName, itemAmount);
 
 			if (gave) {
 				user.sendMessage(GanglandChatUtil.commandMessage(
 						"Gave &b" + itemName + " &7x&b" + itemAmount + "&7."));
 			} else {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid wearable: &c" + itemName));
+				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid repair item: &c" + itemName));
 			}
 		}, sender -> List.of("<amount>"));
 
@@ -93,13 +93,13 @@ class ItemWearableGiveCommand extends SubArgument {
 		this.addSubArgument(name);
 	}
 
-	private boolean giveWearable(Player player, String name, int amount) {
-		WearableAddon wearableAddon = gangland.getInitializer().getWearableAddon();
-		Wearable      wearable      = wearableAddon.getWearable(name);
+	private boolean giveRepairItem(Player player, String name, int amount) {
+		RepairManager  repairManager  = gangland.getInitializer().getRepairManager();
+		RepairMaterial repairMaterial = repairManager.getMaterialManager().getMaterial(name);
 
-		if (wearable == null) return false;
+		if (repairMaterial == null) return false;
 
-		ItemStack       sampleItem   = wearable.buildItem();
+		ItemStack       sampleItem   = repairMaterial.buildItem();
 		int             maxStackSize = sampleItem.getMaxStackSize();
 		int             slots        = (int) Math.ceil(amount / (double) maxStackSize);
 		int             amountLeft   = amount;
@@ -111,7 +111,7 @@ class ItemWearableGiveCommand extends SubArgument {
 
 			if (amountGive <= 0) break;
 
-			ItemStack item = wearable.buildItem();
+			ItemStack item = repairMaterial.buildItem();
 
 			item.setAmount(amountGive);
 

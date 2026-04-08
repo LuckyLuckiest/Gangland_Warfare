@@ -1,4 +1,4 @@
-package me.luckyraven.command.sub.item;
+package me.luckyraven.command.sub.item.wearable;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
@@ -12,13 +12,13 @@ import org.bukkit.command.CommandSender;
 import java.util.ArrayList;
 import java.util.List;
 
-class ItemRepairCommand extends SubArgument {
+public class ItemWearableCommand extends SubArgument {
 
 	private final Gangland       gangland;
 	private final Tree<Argument> tree;
 
-	ItemRepairCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-		super(gangland, "repair", tree, parent);
+	public ItemWearableCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+		super(gangland, "wearable", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
@@ -33,9 +33,9 @@ class ItemRepairCommand extends SubArgument {
 	}
 
 	private void initializeArguments() {
-		Argument give = new ItemRepairGiveCommand(gangland, tree, this);
-		Argument info = new ItemRepairInfoCommand(gangland, tree, this);
-		Argument list = new ItemRepairListCommand(gangland, tree, this);
+		Argument give = new ItemWearableGiveCommand(gangland, tree, this);
+		Argument info = new ItemWearableInfoCommand(gangland, tree, this);
+		Argument list = new ItemWearableListCommand(gangland, tree, this);
 
 		List<Argument> arguments = new ArrayList<>();
 

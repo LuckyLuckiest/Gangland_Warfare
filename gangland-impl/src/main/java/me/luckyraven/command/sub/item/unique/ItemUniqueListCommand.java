@@ -1,4 +1,4 @@
-package me.luckyraven.command.sub.item;
+package me.luckyraven.command.sub.item.unique;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;

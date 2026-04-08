@@ -1,4 +1,4 @@
-package me.luckyraven.command.sub.item;
+package me.luckyraven.command.sub.item.wearable;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;

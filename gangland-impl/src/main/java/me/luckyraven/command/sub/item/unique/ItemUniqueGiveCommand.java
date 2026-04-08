@@ -1,4 +1,4 @@
-package me.luckyraven.command.sub.item;
+package me.luckyraven.command.sub.item.unique;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
@@ -7,8 +7,8 @@ import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.gadget.repair.RepairManager;
-import me.luckyraven.gadget.repair.material.RepairMaterial;
+import me.luckyraven.item.configuration.UniqueItemAddon;
+import me.luckyraven.item.unique.UniqueItem;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -20,20 +20,20 @@ import org.bukkit.inventory.PlayerInventory;
 import java.util.List;
 import java.util.Map;
 
-class ItemRepairGiveCommand extends SubArgument {
+class ItemUniqueGiveCommand extends SubArgument {
 
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
-	ItemRepairGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	ItemUniqueGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "give", tree, parent);
 
 		this.gangland    = gangland;
 		this.tree        = tree;
 		this.userManager = gangland.getInitializer().getUserManager();
 
-		repairGive();
+		uniqueGive();
 	}
 
 	@Override
@@ -42,7 +42,7 @@ class ItemRepairGiveCommand extends SubArgument {
 				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
 	}
 
-	private void repairGive() {
+	private void uniqueGive() {
 		Argument name = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
@@ -50,16 +50,16 @@ class ItemRepairGiveCommand extends SubArgument {
 			if (user == null) return;
 
 			String  itemName = args[3];
-			boolean gave     = giveRepairItem(player, itemName, 1);
+			boolean gave     = giveUniqueItem(player, itemName, 1);
 
 			if (gave) {
 				user.sendMessage(GanglandChatUtil.commandMessage("Gave &b" + itemName + " &7x&b1&7."));
 			} else {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid repair item: &c" + itemName));
+				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid unique item: &c" + itemName));
 			}
 		}, sender -> {
-			RepairManager repairManager = gangland.getInitializer().getRepairManager();
-			return repairManager.getMaterialManager().getAllMaterials().keySet()
+			UniqueItemAddon uniqueItemAddon = gangland.getInitializer().getUniqueItemAddon();
+			return uniqueItemAddon.getUniqueItems().keySet()
 					.stream().toList();
 		});
 
@@ -79,13 +79,13 @@ class ItemRepairGiveCommand extends SubArgument {
 				return;
 			}
 
-			boolean gave = giveRepairItem(player, itemName, itemAmount);
+			boolean gave = giveUniqueItem(player, itemName, itemAmount);
 
 			if (gave) {
 				user.sendMessage(GanglandChatUtil.commandMessage(
 						"Gave &b" + itemName + " &7x&b" + itemAmount + "&7."));
 			} else {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid repair item: &c" + itemName));
+				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid unique item: &c" + itemName));
 			}
 		}, sender -> List.of("<amount>"));
 
@@ -93,13 +93,13 @@ class ItemRepairGiveCommand extends SubArgument {
 		this.addSubArgument(name);
 	}
 
-	private boolean giveRepairItem(Player player, String name, int amount) {
-		RepairManager  repairManager  = gangland.getInitializer().getRepairManager();
-		RepairMaterial repairMaterial = repairManager.getMaterialManager().getMaterial(name);
+	private boolean giveUniqueItem(Player player, String name, int amount) {
+		UniqueItemAddon uniqueItemAddon = gangland.getInitializer().getUniqueItemAddon();
+		UniqueItem      uniqueItem      = uniqueItemAddon.getUniqueItem(name);
 
-		if (repairMaterial == null) return false;
+		if (uniqueItem == null) return false;
 
-		ItemStack       sampleItem   = repairMaterial.buildItem();
+		ItemStack       sampleItem   = uniqueItem.buildItem();
 		int             maxStackSize = sampleItem.getMaxStackSize();
 		int             slots        = (int) Math.ceil(amount / (double) maxStackSize);
 		int             amountLeft   = amount;
@@ -111,7 +111,7 @@ class ItemRepairGiveCommand extends SubArgument {
 
 			if (amountGive <= 0) break;
 
-			ItemStack item = repairMaterial.buildItem();
+			ItemStack item = uniqueItem.buildItem();
 
 			item.setAmount(amountGive);
 

@@ -1,4 +1,4 @@
-package me.luckyraven.command.sub.item;
+package me.luckyraven.command.sub.item.unique;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
@@ -12,12 +12,12 @@ import org.bukkit.command.CommandSender;
 import java.util.ArrayList;
 import java.util.List;
 
-class ItemUniqueCommand extends SubArgument {
+public class ItemUniqueCommand extends SubArgument {
 
 	private final Gangland       gangland;
 	private final Tree<Argument> tree;
 
-	ItemUniqueCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	public ItemUniqueCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
 		super(gangland, "unique", tree, parent);
 
 		this.gangland = gangland;
