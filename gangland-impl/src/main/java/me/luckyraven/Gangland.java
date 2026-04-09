@@ -41,7 +41,6 @@ public final class Gangland extends JavaPlugin {
 	public static final String FULL_PREFIX  = "gangland";
 	public static final String SHORT_PREFIX = "glw";
 
-	private Initializer             initializer;
 	private GanglandContext         context;
 	private ReloadPlugin            reloadPlugin;
 	private UpdateChecker           updateChecker;
@@ -52,8 +51,6 @@ public final class Gangland extends JavaPlugin {
 	public void onLoad() {
 		// disable HikariCP logs
 		disableAllLogs(HikariConfig.class);
-
-		initializer = new Initializer(this);
 	}
 
 	@Override
@@ -82,33 +79,22 @@ public final class Gangland extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
-		// must initialize so the plugin works as normal — setContext() is called inside postInitialize()
-		// before bootstrap() runs, so gangland.getContext() is available to commands during construction.
-		initializer.postInitialize();
+		// Create the root DI context and drive the full phased bean pipeline (KERNEL → FILE → DATABASE →
+		// CONFIG → LIFECYCLE → LISTENER → COMMAND). KernelConfig produces every bootstrap-critical singleton;
+		// all managers, services, and addons are wired by @Configuration classes under me.luckyraven.config.
+		this.context = new GanglandContext(this);
+		context.bootstrap();
 
 		reloadPlugin = new ReloadPlugin(context);
 
 		// checks for dependencies
 		dependencyHandler();
 
-		// PlayerBootstrapService handles online/offline player loading via BeanLifecycle
-		// ScoreboardLifecycleService handles scoreboard creation via BeanLifecycle
-		// PeriodicalUpdates handles auto-save timer via BeanLifecycle
-
 		// initialize bstats
 		bStats();
 
 		// check for new updates
 		updateCheckerInitializer();
-	}
-
-	/**
-	 * Package-private setter so {@link Initializer#postInitialize()} can publish the context before
-	 * {@link GanglandContext#bootstrap()} runs — commands and other beans need {@code gangland.getContext()} during
-	 * construction.
-	 */
-	void setContext(GanglandContext context) {
-		this.context = context;
 	}
 
 	/**

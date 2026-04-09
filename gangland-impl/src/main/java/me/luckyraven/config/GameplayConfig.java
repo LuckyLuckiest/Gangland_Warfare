@@ -80,9 +80,7 @@ import org.bukkit.plugin.ServicePriority;
  * </li>
  * </ol>
  *
- * <p>Tiny bridge / contract beans (those used to be the manual {@code dependencyContainer.registerInstance(...)}
- * dump in the legacy {@code Initializer.events()}) live here too because they're trivial wrappers over the managers
- * they bind to.
+ * <p>Tiny bridge / contract beans live here too because they're trivial wrappers over the managers they bind to.
  */
 @CustomLog
 @Configuration
@@ -101,9 +99,8 @@ public class GameplayConfig {
 	// ---------------------------------------------------------------------------------------------------------------
 
 	/**
-	 * ScoreboardManager is kernel-seeded by {@code Initializer.postInitialize()} and registered into the container
-	 * before bootstrap, so no @Bean method is needed here. The {@link ScoreboardAddon} is wired into it via setter
-	 * after the FILE phase produces it.
+	 * ScoreboardManager is produced by {@code KernelConfig} in the KERNEL phase, so no @Bean method is needed here.
+	 * The {@link ScoreboardAddon} is wired into it via setter after the FILE phase produces it.
 	 */
 	@PostConstruct
 	public void wireScoreboardAddon() {
@@ -341,7 +338,7 @@ public class GameplayConfig {
 	 * {@link InventoryLoader} can't initialize during the FILE phase because its load callback parses prefixed item
 	 * refs (weapon:awp, wearable:police_vest, …) via {@link ItemParserManager}, which is a CONFIG-phase bean. By the
 	 * time this {@code @PostConstruct} runs, every bean is registered AND the per-bean hydrate hook has populated
-	 * {@code Initializer.itemParserManager}, so the {@code SlotItemFactory} resolver lambda set up in
+	 * the {@code ItemParserManager}, so the {@code SlotItemFactory} resolver lambda set up in
 	 * {@code FileConfig.inventoryLoader()} can dereference it.
 	 */
 	@PostConstruct

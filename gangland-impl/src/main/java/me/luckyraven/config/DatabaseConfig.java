@@ -20,9 +20,8 @@ import me.luckyraven.util.autowire.bean.Phase;
  * {@code GanglandContext} DATABASE phase hook can walk it and republish each {@code IRepository} into the root
  * container by its concrete class.
  *
- * <p>Note: {@link DatabaseManager} and {@link DatabaseSettingsProvider} are seeded into the container by
- * {@code Initializer.postInitialize()} during the kernel-seed step (because the legacy bootstrap created them before
- * the bean framework existed and they have no other dependencies). They appear here only as constructor parameters.
+ * <p>Note: {@link DatabaseManager} and {@link DatabaseSettingsProvider} are produced by {@code KernelConfig} in the
+ * KERNEL phase. They appear here as {@code @Bean} method parameters.
  */
 @CustomLog
 @Configuration(phase = Phase.DATABASE)

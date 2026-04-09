@@ -219,8 +219,7 @@ public class FileConfig {
 	/**
 	 * {@link WeaponLoader} reads its own folder of YAML files (rifle, grenade, knife, flamethrower, syringe_gun) and
 	 * registers them via {@link WeaponAddon}. Constructor injection supplies {@link FileManager},
-	 * {@link AmmunitionManager} and {@link WeaponAddon} so the loader no longer reaches back through
-	 * {@code gangland.getInitializer()} at runtime.
+	 * {@link AmmunitionManager} and {@link WeaponAddon} directly.
 	 */
 	@Bean
 	public WeaponLoader weaponLoader(FileManager fileManager,
@@ -273,9 +272,7 @@ public class FileConfig {
 		InventoryAddon.setPermissionManager(permissionManager);
 		InventoryAddon.setPlaceholderService(placeholderService);
 		// Slot resolver uses a deferred lookup of the parser via the GanglandContext on every parse so the lambda
-		// stays valid even though the parser doesn't exist yet at this point in the FILE phase. The context bean
-		// itself is registered into the container at construction time, so we can capture it directly here without
-		// reaching back through the Initializer.
+		// stays valid even though the parser doesn't exist yet at this point in the FILE phase.
 		SlotItemFactory.setItemResolver(slot -> {
 			ItemParserManager mgr = context.get(ItemParserManager.class);
 			return mgr.getParser().parse(slot);

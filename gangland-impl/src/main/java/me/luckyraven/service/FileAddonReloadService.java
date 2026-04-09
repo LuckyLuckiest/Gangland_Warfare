@@ -22,9 +22,8 @@ import me.luckyraven.weapon.configuration.WeaponAddon;
 /**
  * Orchestrates the file addon clear/reload/re-initialize cycle as a single {@link BeanLifecycle} bean. On reload, this
  * service clears every addon's cached state, reloads all YAML files from disk, then re-registers and re-initializes
- * every {@link me.luckyraven.persistence.FileInitializer} in the same staged order as the legacy
- * {@code Initializer.addonsLoader()} — Settings first, then downstream addons, with {@link FileManager#initializeAll()}
- * between groups.
+ * every {@link me.luckyraven.persistence.FileInitializer} in staged order — Settings first, then downstream addons,
+ * with {@link FileManager#initializeAll()} between groups.
  *
  * <p>On first load ({@code onInitialize(true)}), this bean is a no-op because FILE-phase bean construction already
  * handles the initial load via the per-bean phase hook.
@@ -95,9 +94,9 @@ public final class FileAddonReloadService implements BeanLifecycle {
 	}
 
 	/**
-	 * Reloads all YAML files from disk and re-registers every {@link me.luckyraven.persistence.FileInitializer} in the
-	 * staged order that mirrors the legacy {@code Initializer.addonsLoader()}. On first load this is a no-op because
-	 * the FILE-phase bean construction already handles the initial load.
+	 * Reloads all YAML files from disk and re-registers every {@link me.luckyraven.persistence.FileInitializer} in
+	 * staged order. On first load this is a no-op because the FILE-phase bean construction already handles the
+	 * initial load.
 	 */
 	@Override
 	public void onInitialize(boolean firstLoad) {

@@ -27,27 +27,26 @@ import java.util.Set;
  *
  * <p>The bootstrap pipeline is:
  * <ol>
- *     <li><b>Seed:</b> {@code Initializer.postInitialize()} constructs the kernel objects (Gangland, FileManager,
- *     PermissionManager, CompatibilityWorker, PlaceholderService, …) up-front for failure isolation, then registers
- *     each via {@link #register(Class, Object)} so {@code @Configuration} classes can constructor-inject them.</li>
+ *     <li><b>Kernel:</b> {@code KernelConfig} ({@link Phase#KERNEL}) produces every bootstrap-critical singleton
+ *     (version detection, compatibility, permissions, file management, database, scoreboard) via standard
+ *     {@code @Bean} methods. Dependency ordering within the kernel phase is resolved by
+ *     {@link me.luckyraven.util.autowire.bean.BeanGraph} topological sort.</li>
  *     <li><b>Scan:</b> {@link #bootstrap} scans {@code me.luckyraven.config} for {@code @Configuration} classes and
  *     hands them to {@link BeanFactory}.</li>
  *     <li><b>Instantiate:</b> {@link BeanFactory#instantiate()} runs each {@link Phase} in declared order.
  *     {@link GanglandContext} pre-installs two phase hooks before invocation:
  *     <ul>
  *         <li>{@link Phase#FILE}: after every file-initializer bean, call {@link FileManager#initializeAll()} so the
- *         file is loaded before the next file bean reads it (preserves the staged behavior of the legacy
- *         {@code Initializer.addonsLoader()}).</li>
+ *         file is loaded before the next file bean reads it.</li>
  *         <li>{@link Phase#DATABASE}: after each database bean, walk every {@link RepositoryRegistry} present in the
  *         container and publish every {@link IRepository} into the container by its concrete class. Uses an identity
  *         set to make repeat invocations idempotent so per-bean firing doesn't double-register.</li>
  *     </ul></li>
  *     <li><b>Lifecycle:</b> {@link BeanFactory} runs {@code @PostConstruct} on every config + bean, then walks every
- *     bean and invokes any zero-arg {@code void initialize()} method (replacing the dozens of explicit
- *     {@code .initialize()} calls in the legacy initializer).</li>
+ *     bean and invokes any zero-arg {@code void initialize()} method.</li>
  *     <li><b>Listeners:</b> {@link #bootstrap} pulls the {@link ListenerManager} bean out of the container and
- *     calls {@code scanAndRegisterListeners} — which now constructor-injects every {@code @ListenerHandler} class
- *     from the same root container.</li>
+ *     calls {@code scanAndRegisterListeners} — which constructor-injects every {@code @ListenerHandler} class from
+ *     the same root container.</li>
  *     <li><b>Commands:</b> Same shape: pull {@link CommandManager} from the container, scan, bind the resulting
  *     executor and tab completer to the {@link PluginCommand}.</li>
  * </ol>
@@ -88,15 +87,6 @@ public final class GanglandContext {
 	}
 
 	/**
-	 * Seed a kernel-phase singleton into the container before {@link #bootstrap} runs. The instance is registered by
-	 * its declared type and every superclass / interface (per {@link DependencyContainer#registerInstance}). Calling
-	 * this after {@link #bootstrap} is allowed but defeats the point of phasing.
-	 */
-	public <T> void register(Class<T> type, T instance) {
-		container.registerInstance(type, instance);
-	}
-
-	/**
 	 * Convenience accessor for legacy code that needs a bean by raw type.
 	 */
 	public <T> T get(Class<T> type) {
@@ -123,24 +113,24 @@ public final class GanglandContext {
 	}
 
 	/**
-	 * Drive the phased bean instantiation, then run the listener and command scans. Must be called exactly once, after
-	 * every kernel object has been seeded via {@link #register(Class, Object)}.
+	 * Drive the phased bean instantiation, then run the listener and command scans. Must be called exactly once.
+	 * {@code KernelConfig} produces all kernel singletons (FileManager, PermissionManager, etc.) during the
+	 * {@link Phase#KERNEL} phase before FILE-phase hooks need them.
 	 *
 	 * <p>Phase hooks are installed before scanning so that FILE-phase beans trigger staged file loading and
 	 * DATABASE-phase beans trigger repository republishing into the container.
 	 */
 	public void bootstrap() {
-		FileManager fileManager = container.getInstance(FileManager.class);
-		if (fileManager == null) {
-			throw new IllegalStateException(
-					"GanglandContext.bootstrap(): FileManager must be seeded into the context before bootstrap. "
-					+ "Call register(FileManager.class, ...) from Initializer.postInitialize() first.");
-		}
-
 		// FILE phase: after each file-initializer bean is registered, run FileManager.initializeAll() so the file is
 		// loaded before the next FILE-phase bean's @Bean method runs (downstream addons typically read settings at
 		// construction time, so the staged initializeAll() preserves the addonsLoader() behavior).
-		beanFactory.setPhaseHook(Phase.FILE, beans -> fileManager.initializeAll());
+		// FileManager is produced by KernelConfig in the KERNEL phase, so it is guaranteed to be in the container.
+		beanFactory.setPhaseHook(Phase.FILE, beans -> {
+			FileManager fm = container.getInstance(FileManager.class);
+			if (fm != null) {
+				fm.initializeAll();
+			}
+		});
 
 		// DATABASE phase: after each database bean, find any RepositoryRegistry in the container and republish every
 		// repository into the container by its concrete class so later @Bean parameters of type IRepository<X> (or a

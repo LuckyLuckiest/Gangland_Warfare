@@ -7,9 +7,8 @@ import java.util.List;
 /**
  * Stateless helper for picking a concrete {@link Table} subtype out of a {@link GanglandDatabase}'s table list.
  *
- * <p>Replaces the legacy {@code Initializer.getInstanceFromTables(...)} service-locator helper. Lives in the database
- * package so any caller that already has a {@link GanglandDatabase} reference can perform the lookup without dragging
- * {@link me.luckyraven.Initializer} into its dependency graph.
+ * <p>Lives in the database package so any caller that already has a {@link GanglandDatabase} reference can perform the
+ * lookup without additional dependencies.
  */
 public final class TableLookup {
 

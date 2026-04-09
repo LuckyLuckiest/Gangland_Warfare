@@ -175,9 +175,8 @@ public class CopsAndGadgetsConfig {
 		IRepository<CivilianSpawner> repo    = repositoryRegistry.getRepository(CivilianSpawner.class);
 		service.initialize(gangland, civiliansLoader.getLoadedConfig(), entityMarkManager, repo,
 		                   civilianSettings, spawnConfigProvider, itemParserManager.getParser(), weaponManager);
-		// Wire the civilian service into the cop manager so cops can pursue wanted hostile civilians. Folded into
-		// this @Bean body (was a @PostConstruct that re-fetched both beans via getInitializer().getContext()) — the
-		// CopService param above forces the topo sort to build it before this bean runs.
+		// Wire the civilian service into the cop manager so cops can pursue wanted hostile civilians. The CopService
+		// param above forces the topo sort to build it before this bean runs.
 		copService.getCopManager().setCivilianService(service);
 		return service;
 	}

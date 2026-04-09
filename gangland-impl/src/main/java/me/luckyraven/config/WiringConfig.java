@@ -42,9 +42,7 @@ public class WiringConfig {
 		Waypoint         dummy           = new Waypoint("dummy", Gangland.FULL_PREFIX);
 		WaypointTeleport dummyTeleport   = new WaypointTeleport(dummy);
 		// Pre-register the dummy waypoint listener so it is included when GanglandContext.runListenerPhase() calls
-		// registerEvents(). This used to live at the bottom of the legacy Initializer.events() method, then briefly
-		// in a @PostConstruct that routed back through gangland.getInitializer().getContext() — folded inline here
-		// so the listener is owned by the same bean that produces the manager.
+		// registerEvents(). Folded inline here so the listener is owned by the same bean that produces the manager.
 		listenerManager.addEvent(dummyTeleport, ListenerPriority.NORMAL);
 		return listenerManager;
 	}
@@ -63,9 +61,9 @@ public class WiringConfig {
 		GanglandPlaceholder placeholder = new GanglandPlaceholder(Gangland.FULL_PREFIX, Replacer.Closure.PERCENT,
 		                                                          userManager, memberManager, gangManager,
 		                                                          uniqueItemAddon);
-		// Wire the placeholder back into the kernel-seeded PlaceholderService so its convert() fallback path can
-		// resolve gangland-specific tokens. PlaceholderService is constructed in Initializer's load-phase constructor,
-		// long before this CONFIG bean exists, so the link has to flow CONFIG → kernel via this setter.
+		// Wire the placeholder back into the KERNEL-phase PlaceholderService so its convert() fallback path can
+		// resolve gangland-specific tokens. PlaceholderService is produced by KernelConfig before this CONFIG bean
+		// exists, so the link has to flow CONFIG → kernel via this setter.
 		placeholderService.setPlaceholder(placeholder);
 		return placeholder;
 	}

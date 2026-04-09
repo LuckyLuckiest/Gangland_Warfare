@@ -2,6 +2,7 @@ package me.luckyraven.config;
 
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
+import me.luckyraven.context.GanglandContext;
 import me.luckyraven.copsncrooks.bounty.BountySettings;
 import me.luckyraven.copsncrooks.wanted.WantedSettings;
 import me.luckyraven.data.account.gang.GangManager;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 
 /**
  * CONFIG-phase wiring for the data layer: user / rank / gang / member / plugin / waypoint managers, plus the permission
- * propagation step that used to live inline in {@code Initializer.postInitialize()}.
+ * propagation step that collects every Bukkit permission with the plugin's prefix.
  *
  * <p>Both {@link UserManager} beans share the same raw class but differ by generic parameter — they're disambiguated
  * via {@link Qualifier} so consumers downstream can pick the right flavour. {@code @Bean(isGeneric = true)} flags them
@@ -36,12 +37,12 @@ import java.util.stream.Collectors;
 @Configuration
 public class DataConfig {
 
-	private final Gangland          gangland;
-	private final PermissionManager permissionManager;
+	private final Gangland        gangland;
+	private final GanglandContext context;
 
-	public DataConfig(Gangland gangland, PermissionManager permissionManager) {
-		this.gangland          = gangland;
-		this.permissionManager = permissionManager;
+	public DataConfig(Gangland gangland, GanglandContext context) {
+		this.gangland = gangland;
+		this.context  = context;
 	}
 
 	@Bean(name = "online", isGeneric = true)
@@ -66,7 +67,7 @@ public class DataConfig {
 	}
 
 	@Bean
-	public RankManager rankManager(GanglandDatabase database) {
+	public RankManager rankManager(GanglandDatabase database, PermissionManager permissionManager) {
 		return new RankManager(gangland, database, permissionManager);
 	}
 
@@ -83,19 +84,20 @@ public class DataConfig {
 	}
 
 	@Bean
-	public WaypointManager waypointManager(GanglandDatabase database) {
+	public WaypointManager waypointManager(GanglandDatabase database, PermissionManager permissionManager) {
 		return new WaypointManager(gangland, database, permissionManager);
 	}
 
 	/**
-	 * Mirrors the post-database permission collection step that {@code Initializer.postInitialize()} performed inline.
-	 * Runs as a {@code @PostConstruct} so it fires after every CONFIG bean (including the kernel-seeded
-	 * {@link PermissionManager}) is in place but before LIFECYCLE — the gang manager's {@code initialize()} doesn't
-	 * depend on the permission set, so timing is fine.
+	 * Collects every Bukkit permission that starts with the plugin's prefix and registers them into the
+	 * {@link PermissionManager}. Runs as a {@code @PostConstruct} so it fires after every CONFIG bean is in place but
+	 * before LIFECYCLE — the gang manager's {@code initialize()} doesn't depend on the permission set, so timing is
+	 * fine.
 	 */
 	@PostConstruct
 	public void registerGanglandPermissions() {
-		Set<Permission> permissions = Bukkit.getPluginManager().getPermissions();
+		PermissionManager permissionManager = context.get(PermissionManager.class);
+		Set<Permission>   permissions       = Bukkit.getPluginManager().getPermissions();
 		Set<String> ganglandPermissions = permissions.stream()
 				.map(Permission::getName)
 				.filter(name -> name.startsWith(Gangland.FULL_PREFIX))
