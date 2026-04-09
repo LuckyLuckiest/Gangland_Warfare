@@ -6,8 +6,8 @@
 
 ## Overview
 
-Gangland Warfare is a multi-module Spigot plugin built on Java 21. It follows a two-phase
-initialization lifecycle, uses a custom lightweight DI container for wiring, and relies on
+Gangland Warfare is a multi-module Spigot plugin built on Java 21. It uses a Spring-style bean framework
+(`BeanFactory` + `@Configuration` classes) for phased bootstrap and dependency injection, and relies on
 an event-driven architecture with a generic repository persistence layer.
 
 **Entry Point:** `me.luckyraven.Gangland` (extends `JavaPlugin`)  
@@ -20,29 +20,29 @@ an event-driven architecture with a generic repository persistence layer.
 
 ### Gangland.java
 
-The main plugin class is intentionally thin -- it delegates all work to `Initializer`.
+The main plugin class is intentionally thin -- it delegates all work to `GanglandContext`.
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                     Gangland.java                        │
+╭─────────────────────────────────────────────────────────╮
+│                     Gangland.java                       │
 │                                                         │
 │  Static:                                                │
-│    FULL_PREFIX  = "gangland"                             │
-│    SHORT_PREFIX = "glw"                                  │
+│    FULL_PREFIX  = "gangland"                            │
+│    SHORT_PREFIX = "glw"                                 │
 │                                                         │
 │  Fields:                                                │
-│    Initializer initializer                               │
-│    ReloadPlugin reloadPlugin                             │
-│    PeriodicalUpdates periodicalUpdates                    │
-│    UpdateChecker updateChecker                            │
-│    PlaceholderAPIExpansion placeholderAPIExpansion        │
-│    ViaAPI<?> viaAPI                                      │
+│    GanglandContext context                              │
+│    ReloadPlugin reloadPlugin                            │
+│    UpdateChecker updateChecker                          │
+│    PlaceholderAPIExpansion placeholderAPIExpansion      │
+│    ViaAPI<?> viaAPI                                     │
 │                                                         │
-│  onLoad()    → Disable HikariCP logs, create Initializer │
-│  onEnable()  → initializer.postInitialize()              │
-│  onDisable() → Nullify Vault, deactivate gadgets,        │
-│                initializer.shutdown()                     │
-└─────────────────────────────────────────────────────────┘
+│  onLoad()    → Disable HikariCP logs                    │
+│  onEnable()  → new GanglandContext(this)                │
+│               → context.bootstrap()                     │
+│  onDisable() → Nullify Vault, context.shutdownBeans(),  │
+│                force save, close database               │
+╰─────────────────────────────────────────────────────────╯
 ```
 
 ### Lifecycle Sequence
@@ -51,146 +51,99 @@ The main plugin class is intentionally thin -- it delegates all work to `Initial
 Server Start
     │
     ├── onLoad()
-    │     ├── Suppress HikariCP debug logging
-    │     └── new Initializer(this)
-    │           ├── InformationManager (plugin metadata)
-    │           ├── VersionSetup (MC version detection)
-    │           ├── CompatibilitySetup (NMS adapter selection)
-    │           └── PlaceholderService (placeholder registration)
+    │     ╰── Suppress HikariCP debug logging
     │
     ├── onEnable()
-    │     └── initializer.postInitialize()
-    │           ├── Phase 1: Configuration
-    │           ├── Phase 2: Database
-    │           ├── Phase 3: Core Managers
-    │           ├── Phase 4: Gadget Services
-    │           ├── Phase 5: UI & Data
-    │           ├── Phase 6: Feature Services
-    │           ├── Phase 7: Weapon System
-    │           ├── Phase 8: DI Registration & Listener Scan
-    │           └── Phase 9: Command Registration
+    │     ├── new GanglandContext(this)
+    │     │     ├── Creates DependencyContainer
+    │     │     ├── Creates BeanFactory
+    │     │     ╰── Self-registers context + container + Gangland
+    │     │
+    │     ╰── context.bootstrap()
+    │           ├── Install FILE phase hook (FileManager.initializeAll() per bean)
+    │           ├── Install DATABASE phase hook (publish repos to container)
+    │           ├── Scan me.luckyraven.config for @Configuration classes
+    │           ├── BeanFactory.instantiate()
+    │           │     ├── KERNEL phase   → version, compatibility, permissions, files, DB, scoreboard
+    │           │     ├── FILE phase     → Settings, addons, file initializers (staged loading)
+    │           │     ├── DATABASE phase → GanglandDatabase, RepositoryRegistry
+    │           │     ├── CONFIG phase   → all managers, services, gadgets, cops, weapons
+    │           │     ├── LIFECYCLE      → @PostConstruct + convention-based initialize()
+    │           │     ╰── (per-bean BeanLifecycle.onInitialize(true) runs in topo order)
+    │           │
+    │           ├── LISTENER phase → scan @ListenerHandler, constructor-inject, register
+    │           ╰── COMMAND phase  → scan @CommandHandler, constructor-inject, bind to /glw
     │
-    └── onDisable()
+    ╰── onDisable()
           ├── Nullify Vault economy reference
-          ├── Deactivate jetpacks for all players
-          └── initializer.shutdown()
-                ├── Save all repositories
-                ├── Cancel scheduled tasks
-                └── Disconnect database
+          ├── context.shutdownBeans() (reverse topological order)
+          │     ╰── BeanLifecycle.onShutdown() on each bean
+          ├── PeriodicalUpdates.forceUpdate() (flush pending data)
+          ╰── DatabaseManager.closeConnections()
 ```
 
 ---
 
-## Initialization Flow (Initializer.java)
+## Bean Bootstrap Pipeline
 
-The `Initializer` class orchestrates all plugin setup in a deterministic order. Dependencies
-must be registered before the classes that consume them.
+The `GanglandContext.bootstrap()` method drives the entire plugin setup. `BeanFactory` discovers
+`@Configuration` classes in `me.luckyraven.config`, collects their `@Bean` methods, topologically
+sorts them per phase, and invokes each exactly once. The result is registered as a singleton in
+the shared `DependencyContainer`.
 
-### Phase 1 -- Configuration
+### Configuration Classes
 
-| Component    | Class         | Purpose                    |
-|--------------|---------------|----------------------------|
-| File Manager | `FileManager` | YAML file loading/saving   |
-| Settings     | `Settings`    | Main runtime configuration |
-| Messages     | `Messages`    | i18n message strings       |
+| Class                  | Phase    | Beans produced                                                           |
+|------------------------|----------|--------------------------------------------------------------------------|
+| `KernelConfig`         | KERNEL   | InformationManager, VersionSetup, CompatibilitySetup, PermissionManager, |
+|                        |          | FileManager, DatabaseManager, ScoreboardManager, PlaceholderService      |
+| `FileConfig`           | FILE     | Settings, LanguageLoader, 13+ FileInitializer addons                     |
+| `DatabaseConfig`       | DATABASE | GanglandDatabase, RepositoryRegistry                                     |
+| `DataConfig`           | CONFIG   | UserManager (online/offline), RankManager, GangManager, MemberManager,   |
+|                        |          | WaypointManager, PluginManager                                           |
+| `GameplayConfig`       | CONFIG   | WeaponManager, SignManager, ItemParserManager, LootChestManager,         |
+|                        |          | HologramService, RepairService, MoneyDepositService, BlockDamageManager  |
+| `SchedulingConfig`     | CONFIG   | PeriodicalUpdates, PlayerBootstrapService, ScoreboardLifecycleService    |
+| `WiringConfig`         | CONFIG   | ListenerManager, CommandManager, GanglandPlaceholder                     |
+| `CopsAndGadgetsConfig` | CONFIG   | CopService, CivilianService, JailService, DetainmentService,             |
+|                        |          | CarService, JetpackService, MoneyDropClassifier                          |
 
-### Phase 2 -- Database
+### Phase Hooks
 
-| Component           | Class                | Purpose                         |
-|---------------------|----------------------|---------------------------------|
-| Database            | `GanglandDatabase`   | HikariCP wrapper (MySQL/SQLite) |
-| Repository Registry | `RepositoryRegistry` | Auto-scan `@Repository` classes |
+Two hooks are installed before `BeanFactory.instantiate()` runs:
 
-The registry scans `me.luckyraven.database.repositories` and creates tables in
-dependency-sorted order.
+- **FILE hook:** After every file-initializer bean, calls `FileManager.initializeAll()` so YAML
+  is loaded before the next FILE bean reads it at construction time
+- **DATABASE hook:** After each database bean, walks `RepositoryRegistry.getAllRepositories()`
+  and publishes every `IRepository` into the container by its concrete class
 
-### Phase 3 -- Core Managers
+### Listener & Command Phases
 
-| Manager             | Purpose                                |
-|---------------------|----------------------------------------|
-| `UserManager`       | Online/offline player profile caching  |
-| `GangManager`       | Gang lifecycle and metadata            |
-| `MemberManager`     | Gang membership tracking               |
-| `RankManager`       | Hierarchical rank/permission system    |
-| `PermissionManager` | Runtime permission evaluation          |
-| `WaypointManager`   | Teleportation waypoint registry        |
-| `BountyManager`     | Player bounty tracking                 |
-| `SignManager`       | Custom sign type registry and handling |
+After all bean phases complete, `GanglandContext` runs two final phases:
 
-### Phase 4 -- Gadget Services
-
-| Service             | Purpose                             |
-|---------------------|-------------------------------------|
-| `CarService`        | Vehicle spawning, movement, parking |
-| `JetpackService`    | Jetpack flight mechanics            |
-| `FuelManager`       | Fuel tracking for cars/jetpacks     |
-| `AmmunitionManager` | Ammo type validation and stacking   |
-
-### Phase 5 -- UI & Data
-
-| Component           | Purpose                          |
-|---------------------|----------------------------------|
-| `LootChestManager`  | Loot chest lifecycle             |
-| `ScoreboardManager` | Per-player FastBoard scoreboard  |
-| `HologramService`   | Floating text display management |
-
-### Phase 6 -- Feature Services
-
-| Service             | Purpose                         |
-|---------------------|---------------------------------|
-| `CopService`        | Police NPC spawning and pursuit |
-| `CopSpawnManager`   | Cop spawn point management      |
-| `DetainmentService` | Handcuff and jail mechanics     |
-| `JailManager`       | Jail location registry          |
-| `CivilianService`   | Civilian NPC lifecycle          |
-
-### Phase 7 -- Weapon System
-
-| Component       | Purpose                            |
-|-----------------|------------------------------------|
-| `WeaponManager` | Weapon config loading and lookup   |
-| `WeaponService` | Weapon equip/damage/event dispatch |
-
-### Phase 8 -- DI Registration & Listener Scan
-
-```java
-// Register the plugin itself for injection
-dependencyContainer.registerInstance(JavaPlugin.class, gangland);
-
-// Auto-discover and instantiate all @ListenerHandler classes
-listenerManager.scanAndRegisterListeners("me.luckyraven", plugin);
-```
-
-The listener manager:
-
-1. Scans all classes in `me.luckyraven` package
-2. Filters for `@ListenerHandler` annotation + `Listener` interface
-3. Uses `DependencyContainer.createInstance()` to resolve constructor dependencies
-4. Registers each listener with `Bukkit.getPluginManager().registerEvents()`
-
-### Phase 9 -- Command Registration
-
-```java
-CommandManager commandManager = new CommandManager(gangland);
-// Sub-commands registered programmatically
-commandManager.register(new GangCommand(gangland, tree));
-commandManager.register(new BankCommand(gangland, tree));
-// ... all 17 command groups
-```
+1. **Listeners:** Pulls `ListenerManager` from the container, scans `me.luckyraven` for
+   `@ListenerHandler` classes, instantiates each via constructor injection, and registers
+   with Bukkit's event system
+2. **Commands:** Pulls `CommandManager` from the container, scans `me.luckyraven.command.sub`
+   for `@CommandHandler` classes, instantiates each via constructor injection, and binds
+   the executor to the `/glw` `PluginCommand`
 
 ---
 
-## Dependency Injection
+## Dependency Injection (Beans System)
 
-See [Dependency Injection](./dependency-injection.md) for full details.
+See [Beans System & Dependency Injection](./dependency-injection.md) for the full developer guide.
 
 **Summary:**
 
-- `DependencyContainer` stores instances by type in `ConcurrentHashMap`
-- Constructor injection via reflection
-- `@AutowireTarget` / `@Autowired` annotations
+- `BeanFactory` discovers `@Configuration` classes and invokes `@Bean` factory methods
+- `DependencyContainer` stores singletons by type in `ConcurrentHashMap`
+- Constructor injection via reflection for beans, listeners, and commands
+- `@Qualifier` disambiguates when multiple beans share a raw type (e.g. generic `UserManager`)
+- `BeanLifecycle` interface provides managed reload (`onPreClear` / `onClear` / `onInitialize`)
+  and shutdown (`onShutdown`) in topological order
+- `@ConditionalOnSetting` / `@ConditionalOnBean` for optional feature trees
 - Type hierarchy auto-registration (superclasses + interfaces)
-- Used primarily for wiring event listeners
 
 ---
 
@@ -266,17 +219,17 @@ The `PeriodicalUpdates` class manages periodic maintenance using a `RepeatingTim
 PeriodicalUpdates.task() [runs every N minutes]
     │
     ├── PluginDataCleanupService.run()
-    │     └── Clean up expired weapon data
+    │     ╰── Clean up expired weapon data
     │
     ├── resetCache()
-    │     └── Clear stale in-memory caches
+    │     ╰── Clear stale in-memory caches
     │
-    └── updatingDatabase() [async]
-          └── RepositoryRegistry.saveAllRepositories()
+    ╰── updatingDatabase() [async]
+          ╰── RepositoryRegistry.saveAllRepositories()
                 ├── UserRepository.saveAllFromMemory()
                 ├── GangRepository.saveAllFromMemory()
                 ├── BankRepository.saveAllFromMemory()
-                └── ... (all repositories)
+                ╰── ... (all repositories)
 ```
 
 ### Configuration
@@ -284,12 +237,12 @@ PeriodicalUpdates.task() [runs every N minutes]
 ```yaml
 # settings.yml
 Database:
-  Auto_Save:
-    Enable: true
-    Time: 10       # minutes between saves
-    Debug: true    # log performance timing
-  Clean_Up:
-    Time: 30       # days before old data cleanup
+   Auto_Save:
+      Enable: true
+      Time: 10       # minutes between saves
+      Debug: true    # log performance timing
+   Clean_Up:
+      Time: 30       # days before old data cleanup
 ```
 
 ### Lifecycle
@@ -303,42 +256,42 @@ Database:
 ## Module Dependency Graph
 
 ```
-                         ┌──────────────┐
-                         │ gangland-build│  (shade assembly → final JAR)
-                         └──────┬───────┘
+                         ╭────────────────╮
+                         │ gangland-build │  (shade assembly → final JAR)
+                         ╰──────┬─────────╯
                                 │ depends on ALL modules
                                 │
-                    ┌───────────┴───────────┐
+                    ╭───────────┴───────────╮
                     │                       │
-             ┌──────┴──────┐         ┌──────┴──────┐
+             ╭──────┴──────╮         ╭──────┴───────╮
              │gangland-impl│         │gangland-comp │
              │  (main code)│         │  (version-*) │
-             └──┬──┬──┬──┬┘         └──────┬───────┘
-                │  │  │  │                 │
-    ┌───────────┘  │  │  └────────┐       │
-    │              │  │           │       │
-┌───┴──────┐  ┌───┴──┴───┐  ┌───┴───┐  ┌┴──────────┐
-│gangland- │  │gangland-  │  │gangland│  │version-impl│
-│features/ │  │ui/        │  │-item   │  │(interfaces)│
-│  cops    │  │ inventory │  └───┬───┘  └────────────┘
-│  weapon  │  │ scoreboard│      │
-│  gadget  │  │ sign      │      │
-└───┬──────┘  │ lootchest │  ┌───┴────────┐
+             ╰──┬──┬──┬──┬─╯         ╰──────┬───────╯
+                │  │  │  │                  │
+    ╭───────────╯  │  │  ╰────────╮         │
+    │              │  │           │         │
+╭───┴──────╮  ╭────┴──┴───╮   ╭───┴────╮  ╭─┴──────────╮
+│gangland- │  │gangland-  │   │gangland│  │version-impl│
+│features/ │  │ui/        │   │-item   │  │(interfaces)│
+│  cops    │  │ inventory │   ╰───┬────╯  ╰────────────╯
+│  weapon  │  │ scoreboard│       │
+│  gadget  │  │ sign      │       │
+╰───┬──────╯  │ lootchest │  ╭────┴────────╮
     │         │ hologram  │  │gangland-core│
-    │         └───┬───────┘  │  (DI, utils)│
-    │             │          └───┬─────────┘
+    │         ╰───┬───────╯  │  (DI, utils)│
+    │             │          ╰───┬─────────╯
     │             │              │
-    └─────────┬──┴──────────────┘
+    ╰─────────┬───┴──────────────╯
               │
-        ┌─────┴──────────┐
+        ╭─────┴────────────╮
         │plugin-persistence│
         │ (repos, DB)      │
-        └─────┬────────────┘
+        ╰─────┬────────────╯
               │
-        ┌─────┴──────┐
+        ╭─────┴───────╮
         │plugin-common│
         │ (logger)    │
-        └─────────────┘
+        ╰─────────────╯
 ```
 
 ### Dependency Rules
@@ -360,11 +313,12 @@ Database:
 The plugin targets Spigot exclusively. Paper-specific APIs (`io.papermc.paper.*`) are
 never used. This maximizes server compatibility at the cost of Paper-only optimizations.
 
-### Why Custom DI, Not Guice/Spring?
+### Why Custom Bean Framework, Not Guice/Spring?
 
-The `DependencyContainer` is ~200 lines of code and provides exactly what's needed:
-constructor injection for listeners. A full DI framework would add unnecessary complexity
-and JAR size for a Spigot plugin.
+The bean framework (`BeanFactory` + `DependencyContainer`) is purpose-built for a Spigot plugin:
+phased bootstrap with hooks (FILE loading, repository publishing), topological ordering with
+cycle detection, and managed reload/shutdown via `BeanLifecycle`. A full Spring or Guice
+deployment would add unnecessary complexity, JAR size, and classpath conflicts for a Spigot plugin.
 
 ### Why Repository Pattern, Not Raw SQL?
 

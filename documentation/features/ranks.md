@@ -26,9 +26,9 @@ When a rank has a parent, it inherits all permissions from that parent recursive
 
 ```
 Recruit  (can: gang.chat)
-   └── Member  (can: gang.deposit, gang.invite)
-          └── Officer  (can: gang.kick, gang.promote)
-                 └── Leader  (can: gang.delete, gang.rename)
+   ╰── Member  (can: gang.deposit, gang.invite)
+          ╰── Officer  (can: gang.kick, gang.promote)
+                 ╰── Leader  (can: gang.delete, gang.rename)
 ```
 
 A Leader in this chain can do everything — all permissions from every rank below them are inherited.
@@ -109,7 +109,7 @@ This will display the full tree with all inherited permissions at each level.
 ## API
 
 ```java
-RankManager rankManager = gangland.getInitializer().getRankManager();
+RankManager rankManager = gangland.getContext().get(RankManager.class);
 
 // Get a rank by name
 Optional<Rank> rank = rankManager.getRank("Leader");

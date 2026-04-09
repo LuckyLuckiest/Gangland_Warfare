@@ -20,19 +20,19 @@ supports permission checks, tab completion, and typo suggestions.
 ```
 Player types: /glw gang create MyGang
                 │    │     │      │
-                │    │     │      └── args[2] = "MyGang"
-                │    │     └── args[1] = "create"  (SubArgument)
-                │    └── args[0] = "gang"     (Command group)
-                └── /glw command handler     (CommandManager)
+                │    │     │      ╰── args[2] = "MyGang"
+                │    │     ╰── args[1] = "create"  (SubArgument)
+                │    ╰── args[0] = "gang"     (Command group)
+                ╰── /glw command handler     (CommandManager)
 
 CommandManager.onCommand(sender, "glw", args)
-    └── root Argument.execute("glw", sender, args)
-          └── traverseList(tree, args, 0)
+    ╰── root Argument.execute("glw", sender, args)
+          ╰── traverseList(tree, args, 0)
                 ├── match "gang" → GangCommand node
-                │     └── match "create" → GangCreateCommand node
-                │           └── SUCCESS → executeArgument(sender, args)
+                │     ╰── match "create" → GangCreateCommand node
+                │           ╰── SUCCESS → executeArgument(sender, args)
                 ├── NO_PERMISSION → "You don't have permission"
-                └── NOT_FOUND → suggestion via SpellChecker
+                ╰── NOT_FOUND → suggestion via SpellChecker
 ```
 
 ---
@@ -108,7 +108,7 @@ Abstract base class for concrete command implementations. Extends `Argument`.
 
 ```java
 abstract class SubArgument extends Argument {
-    protected abstract TriConsumer<Argument, CommandSender, String[]> action();
+	protected abstract TriConsumer<Argument, CommandSender, String[]> action();
 }
 ```
 
@@ -120,9 +120,9 @@ Wrapper returned by tree traversal with the outcome state.
 
 ```java
 enum ResultState {
-    SUCCESS,        // Argument found and permission granted
-    NO_PERMISSION,  // Argument found but permission denied
-    NOT_FOUND       // No matching argument in tree
+	SUCCESS,        // Argument found and permission granted
+	NO_PERMISSION,  // Argument found but permission denied
+	NOT_FOUND       // No matching argument in tree
 }
 ```
 
@@ -130,8 +130,12 @@ enum ResultState {
 
 ```java
 ArgumentResult.success(argument)      // matched with permission
-ArgumentResult.noPermission(argument) // matched without permission
-ArgumentResult.notFound()             // no match
+ArgumentResult.
+
+noPermission(argument) // matched without permission
+ArgumentResult.
+
+notFound()             // no match
 ```
 
 ### Argument Types
@@ -223,22 +227,22 @@ import org.bukkit.command.CommandSender;
 
 public class YourCommand extends SubArgument {
 
-    private final Gangland gangland;
+	private final Gangland gangland;
 
-    public YourCommand(Gangland gangland, Tree<Argument> tree) {
-        super(gangland, "yourcommand", tree, null, "gangland.command.yourcommand");
-        this.gangland = gangland;
+	public YourCommand(Gangland gangland, Tree<Argument> tree) {
+		super(gangland, "yourcommand", tree, null, "gangland.command.yourcommand");
+		this.gangland = gangland;
 
-        // Register sub-arguments
-        addSubArgument(new YourSubCommand(gangland, tree, this));
-    }
+		// Register sub-arguments
+		addSubArgument(new YourSubCommand(gangland, tree, this));
+	}
 
-    @Override
-    protected TriConsumer<Argument, CommandSender, String[]> action() {
-        return (argument, sender, args) -> {
-            sender.sendMessage("Usage: /glw yourcommand <sub>");
-        };
-    }
+	@Override
+	protected TriConsumer<Argument, CommandSender, String[]> action() {
+		return (argument, sender, args) -> {
+			sender.sendMessage("Usage: /glw yourcommand <sub>");
+		};
+	}
 }
 ```
 
@@ -247,29 +251,36 @@ public class YourCommand extends SubArgument {
 ```java
 class YourSubCommand extends SubArgument {
 
-    private final Gangland gangland;
+	private final Gangland gangland;
 
-    protected YourSubCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
-        super(gangland, "sub", tree, parent);
-        this.gangland = gangland;
-    }
+	protected YourSubCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+		super(gangland, "sub", tree, parent);
+		this.gangland = gangland;
+	}
 
-    @Override
-    protected TriConsumer<Argument, CommandSender, String[]> action() {
-        return (argument, sender, args) -> {
-            // Command logic here
-            sender.sendMessage("Executed!");
-        };
-    }
+	@Override
+	protected TriConsumer<Argument, CommandSender, String[]> action() {
+		return (argument, sender, args) -> {
+			// Command logic here
+			sender.sendMessage("Executed!");
+		};
+	}
 }
 ```
 
-### Step 3: Register in Initializer
+### Step 3: Annotate with @CommandHandler
 
-Add the command group to the CommandManager in `Initializer.postInitialize()`:
+Annotate your command class with `@CommandHandler`. The bean framework auto-discovers and registers it during the
+COMMAND phase of bootstrap — no manual registration needed:
 
 ```java
-commandManager.register(new YourCommand(gangland, tree));
+
+@CommandHandler
+public final class YourCommand extends Command {
+	public YourCommand(Gangland gangland, /* injected dependencies */) {
+		super(gangland, "yourcommand");
+	}
+}
 ```
 
 ### Step 4: Add to commands.json
@@ -304,15 +315,15 @@ When an `Argument` is created with a permission string, it calls `addPermission(
 
 ```java
 public void addPermission(String permission) {
-    if (plugin instanceof Gangland gangland) {
-        gangland.getInitializer().getPermissionManager().addPermission(permission);
-        return;
-    }
-    // Fallback: register directly with Bukkit PluginManager
-    PluginManager pluginManager = Bukkit.getPluginManager();
-    if (!permissions.contains(permission)) {
-        pluginManager.addPermission(new Permission(permission));
-    }
+	if (plugin instanceof Gangland gangland) {
+		gangland.getContext().get(PermissionManager.class).addPermission(permission);
+		return;
+	}
+	// Fallback: register directly with Bukkit PluginManager
+	PluginManager pluginManager = Bukkit.getPluginManager();
+	if (!permissions.contains(permission)) {
+		pluginManager.addPermission(new Permission(permission));
+	}
 }
 ```
 
@@ -340,18 +351,37 @@ Lists all registered permissions at runtime.
 Commands catch all `Throwable` in the execute method:
 
 ```java
-try {
-    ArgumentResult<Argument> argument = traverseList(modifiedArg, sender, args);
-    switch (argument.getState()) {
-        case SUCCESS -> argument.getArgument().executeArgument(sender, args);
-        case NO_PERMISSION -> sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
-        case NOT_FOUND -> notFound(commandPrefix, sender, args, modifiedArg);
+try{
+ArgumentResult<Argument> argument = traverseList(modifiedArg, sender, args);
+    switch(argument.
+
+getState()){
+		case SUCCESS ->argument.
+
+getArgument().
+
+executeArgument(sender, args);
+        case NO_PERMISSION ->sender.
+
+sendMessage(Messages.COMMAND_NO_PERM.toString());
+		case NOT_FOUND ->
+
+notFound(commandPrefix, sender, args, modifiedArg);
     }
-} catch (Throwable throwable) {
-    if (throwable.getMessage() != null) sender.sendMessage(throwable.getMessage());
-    else sender.sendMessage("null");
-    log.warn(throwable.getMessage(), throwable);
-}
+			}catch(
+Throwable throwable){
+		if(throwable.
+
+getMessage() !=null)sender.
+
+sendMessage(throwable.getMessage());
+		else sender.
+
+sendMessage("null");
+    log.
+
+warn(throwable.getMessage(),throwable);
+		}
 ```
 
 This prevents command errors from crashing the server while still logging the stack trace.

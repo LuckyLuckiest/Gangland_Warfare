@@ -230,10 +230,10 @@ Cops:
 
 ## API
 
-The main entry point for the cops system is `CopService`, accessible from the plugin initializer.
+The main entry point for the cops system is `CopService`, accessible from the plugin context.
 
 ```java
-CopService copService = gangland.getInitializer().getCopService();
+CopService copService = gangland.getContext().get(CopService.class);
 
 // Check if a player is being pursued
 boolean pursued = copService.isBeingPursued(player);
@@ -252,7 +252,7 @@ despawnCopsFor(player);
 The `CopSpawnManager` handles spawner persistence:
 
 ```java
-CopSpawnManager spawnerManager = gangland.getInitializer().getCopSpawnManager();
+CopSpawnManager spawnerManager = gangland.getContext().get(CopSpawnManager.class);
 
 // Get all registered spawner locations
 List<CopSpawner> spawners = spawnerManager.getSpawners();

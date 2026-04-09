@@ -21,7 +21,7 @@ traders with configurable inventories.
 
 ```
 AbstractNpc
-  └── CivilianNpc         Per-instance civilian with behavior state machine
+  ╰── CivilianNpc         Per-instance civilian with behavior state machine
           │
 CivilianService           Lifecycle management, spawn/despawn coordination
 CivilianSpawner           Spawn point management, wave-based spawning
@@ -57,23 +57,23 @@ Central service for civilian NPC lifecycle management.
 Each `CivilianNpc` operates as a finite state machine with 5 states:
 
 ```
-                    ┌─────────────────────────┐
+                    ╭─────────────────────────╮
                     │                         │
                     v                         │
-              ┌──────────┐                    │
-              │   IDLE   │◄───────────┐       │
-              └────┬─────┘            │       │
+              ╭──────────╮                    │
+              │   IDLE   │◄───────────╮       │
+              ╰────┬─────╯            │       │
                    │                  │       │
-         ┌─────────┼─────────┐       │       │
-         v         v         v       │       │
-    ┌─────────┐ ┌──────┐ ┌──────┐   │       │
-    │ WANDER  │ │ LOOK │ │ FLEE │───┘       │
-    └────┬────┘ └──────┘ └──────┘           │
-         │                                   │
-         v                                   │
-    ┌─────────┐                              │
-    │ COMBAT  │──────────────────────────────┘
-    └─────────┘
+         ╭─────────┼─────────╮        │       │
+         v         v         v        │       │
+    ╭─────────╮ ╭──────╮ ╭──────╮     │       │
+    │ WANDER  │ │ LOOK │ │ FLEE │─────╯       │
+    ╰────┬────╯ ╰──────╯ ╰──────╯             │
+         │                                    │
+         v                                    │
+    ╭─────────╮                               │
+    │ COMBAT  │───────────────────────────────╯
+    ╰─────────╯
 ```
 
 ### State Descriptions
@@ -106,20 +106,20 @@ Each civilian type is defined with its own behavior parameters:
 
 ```yaml
 civilian_types:
-  street_vendor:
-    display_name: "&eStreet Vendor"
-    skin: "vendor_skin_data"
-    behaviour:
-      wander_range: 10.0
-      flee_range: 20.0
-      combat_enabled: false
-      look_range: 8.0
-    inventory:
-      title: "&6Street Vendor"
-      size: 27
-      items:
-        0: "weapon:pistol{amount=1}"
-        1: "ammo:9mm{amount=32}"
+   street_vendor:
+      display_name: "&eStreet Vendor"
+      skin: "vendor_skin_data"
+      behaviour:
+         wander_range: 10.0
+         flee_range: 20.0
+         combat_enabled: false
+         look_range: 8.0
+      inventory:
+         title: "&6Street Vendor"
+         size: 27
+         items:
+            0: "weapon:pistol{amount=1}"
+            1: "ammo:9mm{amount=32}"
 ```
 
 ### CivilianNavigationConfig (12 methods)
@@ -248,9 +248,9 @@ Items in the inventory config are parsed using the `ItemParser`:
 
 ```yaml
 Civilians:
-  Behaviour:
-    Enabled: true           # Master toggle for civilian AI
-    AI_Tick_Rate: 20        # Ticks between AI evaluations
+   Behaviour:
+      Enabled: true           # Master toggle for civilian AI
+      AI_Tick_Rate: 20        # Ticks between AI evaluations
 ```
 
 The AI tick rate controls how frequently each civilian evaluates its state machine.

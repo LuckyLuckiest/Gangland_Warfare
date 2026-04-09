@@ -103,7 +103,7 @@ Any key added under `Repair_Materials` is automatically registered on load.
 ## API
 
 ```java
-RepairManager repairManager = gangland.getInitializer().getRepairManager();
+RepairManager repairManager = gangland.getContext().get(RepairManager.class);
 
 // Check if an item is a registered repair material
 boolean isMaterial = repairManager.isRepairMaterial(itemStack);

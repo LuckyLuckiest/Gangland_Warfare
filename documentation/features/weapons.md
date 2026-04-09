@@ -332,7 +332,7 @@ public void onWeaponShoot(WeaponShootEvent event) {
 ### Weapon Manager
 
 ```java
-WeaponManager weaponManager = gangland.getInitializer().getWeaponManager();
+WeaponManager weaponManager = gangland.getContext().get(WeaponManager.class);
 
 // Get a weapon template by name
 GanglandWeapon weapon = weaponManager.getWeapon("Rifle");

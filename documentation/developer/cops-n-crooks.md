@@ -89,11 +89,11 @@ When `attack(Player)` is called, the NPC selects the highest-priority available 
 
 ```
 navigateTo(location)
-  |
-  +-- shouldRecalculateNavigation(location)
-  |     Throttles by recalculation interval, checks distance delta >= 2.25 blocks
-  |
-  +-- updateNavigationProgress()    (called each tick by subclasses)
+  │
+  ╰── shouldRecalculateNavigation(location)
+  │     Throttles by recalculation interval, checks distance delta >= 2.25 blocks
+  │
+  ╰── updateNavigationProgress()    (called each tick by subclasses)
         Samples position every stuckCheckIntervalTicks
         If progress < minProgressDistance:
           consecutiveStuckChecks++
@@ -292,44 +292,44 @@ Higher tiers (e.g., SWAT, Military) have `skipCuffing = true` -- they engage in 
 ### Cop AI State Machine
 
 ```
-                                    +---------------------------+
-                                    |          IDLE             |
-                                    | Scans for targets within  |
-                                    | alertRange. Stands still. |
-                                    +---------------------------+
-                                                |
+                                    ╭───────────────────────────╮
+                                    │          IDLE             │
+                                    │ Scans for targets within  │
+                                    │ alertRange. Stands still. │
+                                    ╰───────────────────────────╯
+                                                │
                                     target detected within alertRange
                                     and has line of sight
-                                                |
+                                                │
                                                 v
-+-------------------+              +---------------------------+
-|    RETURNING      |<-------------|        PURSUING           |
-| Navigates to      |  target lost | Navigates toward target.  |
-| nearest station.  |  or detained | Ranged cops shoot while   |
-| Waits for no      |              | closing distance.         |
-| observers, then   |              +---------------------------+
-| despawns.         |                   |                |
-| Re-engages if     |      within cuffRadius       combatForced
-| target freed.     |      + has LOS               OR skipCuffing
-+-------------------+           |                        |
+╭───────────────────╮              ╭───────────────────────────╮
+│    RETURNING      │<─────────────│        PURSUING           │
+│ Navigates to      │  target lost │ Navigates toward target.  │
+│ nearest station.  │  or detained │ Ranged cops shoot while   │
+│ Waits for no      │              │ closing distance.         │
+│ observers, then   │              ╰───────────────────────────╯
+│ despawns.         │                   │                │
+│ Re-engages if     │      within cuffRadius       combatForced
+│ target freed.     │      + has LOS               OR skipCuffing
+╰───────────────────╯           │                        │
        ^                        v                        v
-       |               +------------------+    +------------------+
-       |               |     CUFFING      |    |     COMBAT       |
-       +<--------------| Wind-up timer,   |    | Attacks target   |
-       |  cuff success | then attemptCuff.|    | within range.    |
-       |               | One cop per      |    | Ranged cops hold |
-       +<--------------| target via       |    | firing position. |
-          target out   | CuffLockRegistry.|    | Melee cops close |
-          of range     +------------------+    | distance.        |
-                              |                +------------------+
-                              |                        |
+       │               ╭──────────────────╮    ╭──────────────────╮
+       │               │     CUFFING      │    │     COMBAT       │
+       ├<──────────────│ Wind-up timer,   │    │ Attacks target   │
+       │  cuff success │ then attemptCuff.│    │ within range.    │
+       │               │ One cop per      │    │ Ranged cops hold │
+       ╰<──────────────│ target via       │    │ firing position. │
+          target out   │ CuffLockRegistry.│    │ Melee cops close │
+          of range     ╰──────────────────╯    │ distance.        │
+                              │                ╰──────────────────╯
+                              │                        │
                          target escapes          target detained
-                         -> PURSUING             or killed
-                                                       |
+                         ─> PURSUING             or killed
+                                                       │
                                                        v
-                                               +------------------+
-                                               |    RETURNING     |
-                                               +------------------+
+                                               ╭──────────────────╮
+                                               │    RETURNING     │
+                                               ╰──────────────────╯
 ```
 
 #### State Details
@@ -553,51 +553,51 @@ record CivilianAIBehaviorConfig(
 ### Civilian AI State Machine
 
 ```
-                    +------------------------+
-                    |         IDLE           |
-                    | Stands still, looks    |
-                    | around at nearby       |
-                    | entities. Re-engages   |
-                    | remembered targets     |
-                    | within 2x attackRange. |
-                    +------------------------+
-                       |               |
+                    ╭────────────────────────╮
+                    │         IDLE           │
+                    │ Stands still, looks    │
+                    │ around at nearby       │
+                    │ entities. Re-engages   │
+                    │ remembered targets     │
+                    │ within 2x attackRange. │
+                    ╰────────────────────────╯
+                       │               │
            70% chance after        remembered target
            idle countdown          returns in range
-                       |               |
+                       │               │
                        v               v
-           +-----------------+   +-----------------+
-           |   WANDERING     |   |     COMBAT      |
-           | Random forward- |   | Pursues and     |
-           | biased movement.|   | attacks target  |
-           | Group members   |   | (player or NPC).|
-           | return to group |   | Entity targets  |
-           | center if       |   | take priority   |
-           | straying.       |   | (self-defense). |
-           +-----------------+   | Gives up at 4x  |
-                  |              | attackRange.     |
-           arrival or           +-----------------+
-           stuck x3                    |
-                  |              target lost or
+           ╭─────────────────╮   ╭─────────────────╮
+           │   WANDERING     │   │     COMBAT      │
+           │ Random forward- │   │ Pursues and     │
+           │ biased movement.│   │ attacks target  │
+           │ Group members   │   │ (player or NPC).│
+           │ return to group │   │ Entity targets  │
+           │ center if       │   │ take priority   │
+           │ straying.       │   │ (self-defense). │
+           ╰─────────────────╯   │ Gives up at 4x  │
+                  │              │ attackRange.    │
+           arrival or            ╰─────────────────╯
+           stuck x3                    │
+                  │              target lost or
                   v              out of range
-                IDLE                   |
+                IDLE                   │
                                        v
                                      IDLE
 
            (from any state when damaged and flee enabled)
-                       |
+                       │
                        v
-           +-----------------+
-           |    FLEEING      |
-           | Runs away from  |
-           | attacker until  |
-           | fleeRange       |
-           | exceeded.       |
-           +-----------------+
-                  |
+           ╭─────────────────╮
+           │    FLEEING      │
+           │ Runs away from  │
+           │ attacker until  │
+           │ fleeRange       │
+           │ exceeded.       │
+           ╰─────────────────╯
+                  │
            arrived or
            navigation hopeless
-                  |
+                  │
                   v
                 IDLE
 ```
@@ -698,24 +698,24 @@ reloadSpawners()                // Reload from database
 ```
 findSpawnLocation(player):
 
-  PHASE 1 -- Preferred Ring (behind player)
-  +--------------------------------------------------+
-  | For each of spawnPhase1Attempts attempts:         |
-  |   Random angle, random distance [p1Min, maxDist]  |
-  |   Check chunk loaded                              |
-  |   findGroundNearY (±verticalSearchRange)          |
-  |   Require: behind player (>90 deg from facing)    |
-  |   Require: indoor/outdoor matches player          |
-  +--------------------------------------------------+
+  PHASE 1 ─ Preferred Ring (behind player)
+  ╭───────────────────────────────────────────────────╮
+  │ For each of spawnPhase1Attempts attempts:         │
+  │   Random angle, random distance [p1Min, maxDist]  │
+  │   Check chunk loaded                              │
+  │   findGroundNearY (±verticalSearchRange)          │
+  │   Require: behind player (>90 deg from facing)    │
+  │   Require: indoor/outdoor matches player          │
+  ╰───────────────────────────────────────────────────╯
 
-  PHASE 2 -- Shrinking Ring (any direction)
-  +--------------------------------------------------+
-  | For max = maxDist down to minDist (step shrink):  |
-  |   For each of spawnPhase2Attempts attempts:       |
-  |     Random angle, random distance [min, max]      |
-  |     Same ground/chunk/indoor validation           |
-  |     No behind-player requirement                  |
-  +--------------------------------------------------+
+  PHASE 2 ─ Shrinking Ring (any direction)
+  ╭───────────────────────────────────────────────────╮
+  │ For max = maxDist down to minDist (step shrink):  │
+  │   For each of spawnPhase2Attempts attempts:       │
+  │     Random angle, random distance [min, max]      │
+  │     Same ground/chunk/indoor validation           │
+  │     No behind─player requirement                  │
+  ╰───────────────────────────────────────────────────╯
 ```
 
 Ground validation (`isValidGround`):
@@ -866,17 +866,17 @@ setOnPlayerDeath(playerId ->{ /* handle death reset */ });
 
 ```
 Player kills entity
-  |
+  │
   recordKill(killer, wantedKiller, killed, resetAfterSeconds)
-  |
-  +-- Get or create KillComboTracker for player
-  +-- tracker.addKill(killed, points=1)
-  +-- Fire onComboIncrement callback
-  +-- checkWantedLevelTrigger:
-  |     Compare pointKillCount against wantedKillCounter thresholds
-  |     Thresholds auto-scale linearly if fewer than maxLevel entries
-  |     If threshold met -> fire onWantedLevelTrigger callback
-  +-- tracker.restartTimer() (resets inactivity countdown)
+  │
+  ├── Get or create KillComboTracker for player
+  ├── tracker.addKill(killed, points=1)
+  ├── Fire onComboIncrement callback
+  ├── checkWantedLevelTrigger:
+  │     Compare pointKillCount against wantedKillCounter thresholds
+  │     Thresholds auto-scale linearly if fewer than maxLevel entries
+  │     If threshold met -> fire onWantedLevelTrigger callback
+  ╰── tracker.restartTimer() (resets inactivity countdown)
 ```
 
 ### KillComboTracker
@@ -1331,8 +1331,8 @@ through:
 1. **Contract interfaces** -- `WantedSettings`, `BountySettings`, `CopSettings`, `CivilianSettings` are implemented
    in `gangland-impl` and passed during initialization
 2. **Event bus** -- Bukkit events fired by this module are handled by listeners in `gangland-impl`
-3. **DependencyContainer** -- `CopManager`, `CivilianService`, etc. are registered in the DI container by
-   `Initializer.java`
+3. **DependencyContainer** -- `CopService`, `CivilianService`, etc. are produced as `@Bean` methods in
+   `CopsAndGadgetsConfig` and registered in the DI container automatically during the CONFIG phase
 
 ### With gangland-weapon
 

@@ -35,23 +35,23 @@ plugin-persistence
     │   ├── DatabaseHandler.java    # Abstract HikariCP lifecycle
     │   ├── DatabaseHelper.java     # Sync/async query execution
     │   ├── DatabaseManager.java    # Multi-database registry + backup
-    │   └── DatabaseSettingsProvider.java  # Settings contract
+    │   ╰── DatabaseSettingsProvider.java  # Settings contract
     ├── repository
     │   ├── IRepository.java
     │   ├── AbstractRepository.java
     │   ├── Repository.java         # @Repository annotation
-    │   └── RepositoryRegistry.java
+    │   ╰── RepositoryRegistry.java
     ├── FileHandler.java
     ├── FileLoader.java
     ├── FileManager.java
-    └── FolderLoader.java
+    ╰── FolderLoader.java
 
 gangland-impl
   me.luckyraven.database
     ├── GanglandDatabase.java
     ├── GanglandDatabaseSettings.java
     ├── tables/          # Concrete Table<T> definitions
-    └── repositories/    # Concrete AbstractRepository<T> implementations
+    ╰── repositories/    # Concrete AbstractRepository<T> implementations
 ```
 
 ---
@@ -65,17 +65,17 @@ The top-level contract that every repository must implement:
 ```java
 public interface IRepository<T> {
 
-    Collection<T> loadAll();
+	Collection<T> loadAll();
 
-    void save(T data);
+	void save(T data);
 
-    void saveAll(Collection<T> collection);
+	void saveAll(Collection<T> collection);
 
-    void saveAllFromMemory();
+	void saveAllFromMemory();
 
-    void delete(T data);
+	void delete(T data);
 
-    void setDataSupplier(Supplier<Collection<T>> dataSupplier);
+	void setDataSupplier(Supplier<Collection<T>> dataSupplier);
 }
 ```
 
@@ -96,19 +96,19 @@ abstract methods:
 ```java
 public abstract class AbstractRepository<T> implements IRepository<T> {
 
-    // --- Abstract (must implement) ---
+	// --- Abstract (must implement) ---
 
-    /** Load all rows from DB. Called inside a synchronized DatabaseHelper block. */
-    protected abstract Collection<T> doLoadAll() throws SQLException;
+	/** Load all rows from DB. Called inside a synchronized DatabaseHelper block. */
+	protected abstract Collection<T> doLoadAll() throws SQLException;
 
-    /** Optional pre-save hook. Return null to skip. */
-    protected abstract <E> Consumer<E> processSave();
+	/** Optional pre-save hook. Return null to skip. */
+	protected abstract <E> Consumer<E> processSave();
 
-    /** Return the Table<T> that defines the schema for this repository. */
-    protected abstract Table<T> getTable();
+	/** Return the Table<T> that defines the schema for this repository. */
+	protected abstract Table<T> getTable();
 
-    /** Delete a single entity from DB. */
-    protected abstract void doDelete(T data) throws SQLException;
+	/** Delete a single entity from DB. */
+	protected abstract void doDelete(T data) throws SQLException;
 }
 ```
 
@@ -140,28 +140,34 @@ Central registry that manages all repository instances. Keyed by entity type (`C
 ```java
 public class RepositoryRegistry {
 
-    RepositoryRegistry(JavaPlugin plugin, DatabaseHandler databaseHandler);
+	RepositoryRegistry(JavaPlugin plugin, DatabaseHandler databaseHandler);
 
-    // Auto-discovery
-    void scanAndRegisterRepositories(String basePackage);
+	// Auto-discovery
+	void scanAndRegisterRepositories(String basePackage);
 
-    // Manual registration
-    <T> void registerRepository(IRepository<T> instance, Class<T> entityType);
+	// Manual registration
+	<T> void registerRepository(IRepository<T> instance, Class<T> entityType);
 
-    // Retrieval
-    <T> IRepository<T> getRepository(Class<T> entityType);
-    <T> IRepository<T> getGenericRepository(Class<?> rawEntityType);
-    boolean hasRepository(Class<?> entityType);
-    Collection<IRepository<?>> getAllRepositories();
+	// Retrieval
+	<T> IRepository<T> getRepository(Class<T> entityType);
 
-    // Table management
-    List<Table<?>> getRegisteredTables();
-    Table<?> getTable(String tableName);
-    void createTables();
+	<T> IRepository<T> getGenericRepository(Class<?> rawEntityType);
 
-    // Bulk save
-    void saveAll();
-    void saveAll(Runnable onComplete);
+	boolean hasRepository(Class<?> entityType);
+
+	Collection<IRepository<?>> getAllRepositories();
+
+	// Table management
+	List<Table<?>> getRegisteredTables();
+
+	Table<?> getTable(String tableName);
+
+	void createTables();
+
+	// Bulk save
+	void saveAll();
+
+	void saveAll(Runnable onComplete);
 }
 ```
 
@@ -204,22 +210,23 @@ counter reaches zero, `onComplete` fires.
 ### @Repository Annotation
 
 ```java
+
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Repository {
 
-    /** The entity class this repository manages. Used as the registry key. */
-    Class<?> value();
+	/** The entity class this repository manages. Used as the registry key. */
+	Class<?> value();
 
-    /** Optional custom name for the repository. */
-    String name() default "";
+	/** Optional custom name for the repository. */
+	String name() default "";
 
-    /** Condition method (e.g. "SettingAddon.isGangEnabled()"). Empty = always register. */
-    String condition() default "";
+	/** Condition method (e.g. "SettingAddon.isGangEnabled()"). Empty = always register. */
+	String condition() default "";
 
-    /** When true, the registry handles generic type matching more flexibly. */
-    boolean isGeneric() default false;
+	/** When true, the registry handles generic type matching more flexibly. */
+	boolean isGeneric() default false;
 }
 ```
 
@@ -263,23 +270,30 @@ Abstract base that manages database lifecycle with HikariCP.
 ```java
 public abstract class DatabaseHandler {
 
-    public static final int MYSQL = 0, SQLITE = 1;
+	public static final int MYSQL = 0, SQLITE = 1;
 
-    // Must implement
-    abstract void createSchema() throws SQLException, IOException;
-    abstract void createTables() throws SQLException;
-    abstract void insertInitialData() throws SQLException;
-    abstract String getSchema();
+	// Must implement
+	abstract void createSchema() throws SQLException, IOException;
 
-    // Lifecycle
-    void initialize();                 // Runs createSchema -> createTables -> insertInitialData
-    void enforceType(int type);        // Force a specific DB type (throws on failure)
-    void setType(int type);            // Try type, fall back to SQLite if MySQL fails
+	abstract void createTables() throws SQLException;
 
-    // Accessors
-    Database getDatabase();
-    int getType();
-    DatabaseSettingsProvider getSettings();
+	abstract void insertInitialData() throws SQLException;
+
+	abstract String getSchema();
+
+	// Lifecycle
+	void initialize();                 // Runs createSchema -> createTables -> insertInitialData
+
+	void enforceType(int type);        // Force a specific DB type (throws on failure)
+
+	void setType(int type);            // Try type, fall back to SQLite if MySQL fails
+
+	// Accessors
+	Database getDatabase();
+
+	int getType();
+
+	DatabaseSettingsProvider getSettings();
 }
 ```
 
@@ -298,12 +312,17 @@ class.
 
 ```java
 public interface DatabaseSettingsProvider {
-    boolean isSqliteBackup();
-    boolean isSqliteFailedMysql();
-    String getMysqlHost();
-    int getMysqlPort();
-    String getMysqlUsername();
-    String getMysqlPassword();
+	boolean isSqliteBackup();
+
+	boolean isSqliteFailedMysql();
+
+	String getMysqlHost();
+
+	int getMysqlPort();
+
+	String getMysqlUsername();
+
+	String getMysqlPassword();
 }
 ```
 
@@ -316,22 +335,23 @@ Manages connection lifecycle and provides sync/async query execution.
 ```java
 public class DatabaseHelper {
 
-    DatabaseHelper(JavaPlugin plugin, DatabaseHandler databaseHandler);
+	DatabaseHelper(JavaPlugin plugin, DatabaseHandler databaseHandler);
 
-    /** Synchronous query execution with auto-reconnect and rollback-on-error. */
-    void runQueries(QueryRunnable queryRunnable);
+	/** Synchronous query execution with auto-reconnect and rollback-on-error. */
+	void runQueries(QueryRunnable queryRunnable);
 
-    /** Async execution via Bukkit scheduler. Falls back to sync if plugin is disabled. */
-    void runQueriesAsync(QueryRunnable queryRunnable);
-    void runQueriesAsync(QueryRunnable queryRunnable, Runnable onComplete);
+	/** Async execution via Bukkit scheduler. Falls back to sync if plugin is disabled. */
+	void runQueriesAsync(QueryRunnable queryRunnable);
 
-    /** Rolls back the current transaction if not in auto-commit mode. */
-    void rollbackConnection();
+	void runQueriesAsync(QueryRunnable queryRunnable, Runnable onComplete);
 
-    @FunctionalInterface
-    interface QueryRunnable {
-        void run(Database database) throws SQLException;
-    }
+	/** Rolls back the current transaction if not in auto-commit mode. */
+	void rollbackConnection();
+
+	@FunctionalInterface
+	interface QueryRunnable {
+		void run(Database database) throws SQLException;
+	}
 }
 ```
 
@@ -350,13 +370,17 @@ Manages multiple `DatabaseHandler` instances and provides cross-database backup.
 ```java
 public class DatabaseManager {
 
-    DatabaseManager(JavaPlugin plugin, DatabaseSettingsProvider settings);
+	DatabaseManager(JavaPlugin plugin, DatabaseSettingsProvider settings);
 
-    void addDatabase(DatabaseHandler database);
-    void initializeDatabases();          // Calls initialize() on each handler
-    void closeConnections();             // Disconnects all, optionally backing up first
-    DatabaseHandler startBackup(DatabaseHandler handler);  // Backup to opposite DB type
-    List<DatabaseHandler> getDatabases();
+	void addDatabase(DatabaseHandler database);
+
+	void initializeDatabases();          // Calls initialize() on each handler
+
+	void closeConnections();             // Disconnects all, optionally backing up first
+
+	DatabaseHandler startBackup(DatabaseHandler handler);  // Backup to opposite DB type
+
+	List<DatabaseHandler> getDatabases();
 }
 ```
 
@@ -367,12 +391,12 @@ The concrete `DatabaseHandler` for Gangland Warfare. Wraps HikariCP and owns the
 ```java
 public class GanglandDatabase extends DatabaseHandler {
 
-    GanglandDatabase(JavaPlugin plugin, String schema, DatabaseSettingsProvider settings);
+	GanglandDatabase(JavaPlugin plugin, String schema, DatabaseSettingsProvider settings);
 
-    RepositoryRegistry getRepositoryRegistry();
+	RepositoryRegistry getRepositoryRegistry();
 
-    // Implementation delegates table creation to RepositoryRegistry.createTables()
-    // Schema: "gangland" for MySQL, "database/gangland" for SQLite
+	// Implementation delegates table creation to RepositoryRegistry.createTables()
+	// Schema: "gangland" for MySQL, "database/gangland" for SQLite
 }
 ```
 
@@ -387,31 +411,38 @@ Each database table is defined as a `Table<T>` subclass that declares its column
 ```java
 public abstract class Table<T> {
 
-    Table(String name);
+	Table(String name);
 
-    // Must implement
-    abstract Object[] getData(T data);                    // Entity -> column values array
-    abstract Map<String, Object> searchCriteria(T data);  // WHERE clause for upsert lookups
+	// Must implement
+	abstract Object[] getData(T data);                    // Entity -> column values array
 
-    // Column management
-    protected void addAttribute(Attribute<?> attribute);
-    Attribute<?> get(String column);
-    Set<String> getColumns();                             // Insertion-ordered column names
-    Map<String, Attribute<?>> getAttributes();
+	abstract Map<String, Object> searchCriteria(T data);  // WHERE clause for upsert lookups
 
-    // DDL generation
-    String[] createTableQuery(Database database);         // CREATE TABLE column definitions
-    void validateSchema(Database database);               // Add/drop/fix columns vs. live DB
+	// Column management
+	protected void addAttribute(Attribute<?> attribute);
 
-    // DML execution
-    void insertTableQuery(Database database, T data);     // INSERT row
-    void updateTableQuery(Database database, T data);     // UPDATE row (excludes search columns)
-    List<Object[]> selectAllTableQuery(Database database); // SELECT with explicit column order
+	Attribute<?> get(String column);
 
-    // Helper for building searchCriteria maps
-    protected Map<String, Object> createSearchCriteria(
-        String searchQuery, Object[] queryPlaceholder,
-        int[] queryDataTypes, int[] ignoredIndexes);
+	Set<String> getColumns();                             // Insertion-ordered column names
+
+	Map<String, Attribute<?>> getAttributes();
+
+	// DDL generation
+	String[] createTableQuery(Database database);         // CREATE TABLE column definitions
+
+	void validateSchema(Database database);               // Add/drop/fix columns vs. live DB
+
+	// DML execution
+	void insertTableQuery(Database database, T data);     // INSERT row
+
+	void updateTableQuery(Database database, T data);     // UPDATE row (excludes search columns)
+
+	List<Object[]> selectAllTableQuery(Database database); // SELECT with explicit column order
+
+	// Helper for building searchCriteria maps
+	protected Map<String, Object> createSearchCriteria(
+			String searchQuery, Object[] queryPlaceholder,
+			int[] queryDataTypes, int[] ignoredIndexes);
 }
 ```
 
@@ -442,25 +473,36 @@ Describes a single database column.
 ```java
 public class Attribute<T> {
 
-    // Constructors
-    Attribute(String name, boolean primaryKey, Class<T> classType);
-    Attribute(String name, boolean primaryKey, int size, Class<T> classType);
-    Attribute(String name, int type, boolean primaryKey, Class<T> classType);
-    Attribute(String name, boolean primaryKey, int type, int size, Class<T> classType);
+	// Constructors
+	Attribute(String name, boolean primaryKey, Class<T> classType);
 
-    // Properties
-    String getName();          // Always lowercase
-    int getType();             // java.sql.Types constant (auto-inferred from classType)
-    int getSize();             // Column size (UUID=36, String=255, others=0)
-    boolean isPrimaryKey();
-    boolean isUnique();
-    boolean isCanBeNull();     // Default: false
-    T getDefaultValue();       // SQL DEFAULT value
+	Attribute(String name, boolean primaryKey, int size, Class<T> classType);
 
-    // Foreign key
-    void setForeignKey(Attribute<?> attribute, Table<?> associatedTable);
-    Attribute<?> getForeignKey();
-    Table<?> getAssociatedTable();
+	Attribute(String name, int type, boolean primaryKey, Class<T> classType);
+
+	Attribute(String name, boolean primaryKey, int type, int size, Class<T> classType);
+
+	// Properties
+	String getName();          // Always lowercase
+
+	int getType();             // java.sql.Types constant (auto-inferred from classType)
+
+	int getSize();             // Column size (UUID=36, String=255, others=0)
+
+	boolean isPrimaryKey();
+
+	boolean isUnique();
+
+	boolean isCanBeNull();     // Default: false
+
+	T getDefaultValue();       // SQL DEFAULT value
+
+	// Foreign key
+	void setForeignKey(Attribute<?> attribute, Table<?> associatedTable);
+
+	Attribute<?> getForeignKey();
+
+	Table<?> getAssociatedTable();
 }
 ```
 
@@ -471,13 +513,17 @@ Default sizes by type: `UUID` = 36, `String` = 255, everything else = 0 (no size
 Field-level annotation for declarative attribute configuration:
 
 ```java
+
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface AttributeLink {
-    boolean primaryKey() default false;
-    boolean unique() default false;
-    boolean nullable() default true;
-    String defaultValue() default "";
+	boolean primaryKey() default false;
+
+	boolean unique() default false;
+
+	boolean nullable() default true;
+
+	String defaultValue() default "";
 }
 ```
 
@@ -570,40 +616,65 @@ Fluent SQL builder that wraps the `Database` interface, replacing raw parallel a
 QueryBuilder qb = QueryBuilder.on(database, "users");
 
 // INSERT
-qb.insert()
-  .set("name", "Alice")
-  .set("balance", 500.0)
-  .execute();
+qb.
+
+insert()
+  .
+
+set("name","Alice")
+  .
+
+set("balance",500.0)
+  .
+
+execute();
 
 // SELECT -- single row
 Object[] row = qb.select("name", "balance")
-  .where("uuid", uuid.toString())
-  .executeOne();
+                 .where("uuid", uuid.toString())
+                 .executeOne();
 
 // SELECT -- all matching rows
 List<Object[]> rows = qb.select("*")
-  .where("active", true)
-  .executeAll();
+                        .where("active", true)
+                        .executeAll();
 
 // UPDATE
-qb.update()
-  .set("balance", 600.0)
-  .where("uuid", uuid.toString())
-  .execute();
+qb.
+
+update()
+  .
+
+set("balance",600.0)
+  .
+
+where("uuid",uuid.toString())
+		.
+
+execute();
 
 // DELETE -- multi-condition
-qb.delete()
-  .where("uuid", uuid.toString())
-  .where("active", false)
-  .execute();
+qb.
+
+delete()
+  .
+
+where("uuid",uuid.toString())
+		.
+
+where("active",false)
+  .
+
+execute();
 ```
 
 ### Column record
 
 ```java
 public record Column(String name, Object value, int type) {
-    static Column of(String name, Object value);               // JDBC type auto-inferred
-    static Column of(String name, Object value, int type);     // Explicit JDBC type
+	static Column of(String name, Object value);               // JDBC type auto-inferred
+
+	static Column of(String name, Object value, int type);     // Explicit JDBC type
 }
 ```
 
@@ -621,34 +692,34 @@ The periodic save cycle is managed by `PeriodicalUpdates` in `gangland-impl`:
 
 ```
 PeriodicalUpdates(gangland, interval)
-  |
+  │
   v  (RepeatingTimer fires every `interval` seconds)
 task()
-  |
+  │
   v
 updatingDatabase(onComplete)
-  |
-  +--> Save user + bank data directly via table queries
-  |    (handles online + offline user cache, then clears offline cache)
-  |
-  +--> repositoryRegistry.saveAll(onComplete)
-         |
-         +--> For each RepositoryEntry:
-         |      AbstractRepository.saveAllFromMemory(countDown)
-         |        |
-         |        +--> dataSupplier.get()  (snapshot the in-memory collection)
-         |        +--> DatabaseHelper.runQueriesAsync(...)
-         |              |
-         |              +--> Bukkit.getScheduler().runTaskAsynchronously(...)
-         |                     |
-         |                     +--> For each entity: saveRow(data, database)
-         |                     |      1. consumeSave(data)  -- pre-save hook
-         |                     |      2. isRowAvailable()   -- SELECT check
-         |                     |      3. updateData() or insertData()
-         |                     |
-         |                     +--> countDown.run()
-         |
-         +--> When AtomicInteger reaches 0: onComplete.run()
+  │
+  ├──> Save user + bank data directly via table queries
+  │    (handles online + offline user cache, then clears offline cache)
+  │
+  ╰──> repositoryRegistry.saveAll(onComplete)
+         │
+         ├──> For each RepositoryEntry:
+         │      AbstractRepository.saveAllFromMemory(countDown)
+         │        │
+         │        ├──> dataSupplier.get()  (snapshot the in-memory collection)
+         │        ╰──> DatabaseHelper.runQueriesAsync(...)
+         │              │
+         │              ╰──> Bukkit.getScheduler().runTaskAsynchronously(...)
+         │                     │
+         │                     ├──> For each entity: saveRow(data, database)
+         │                     │      1. consumeSave(data)  -- pre-save hook
+         │                     │      2. isRowAvailable()   -- SELECT check
+         │                     │      3. updateData() or insertData()
+         │                     │
+         │                     ╰──> countDown.run()
+         │
+         ╰──> When AtomicInteger reaches 0: onComplete.run()
 ```
 
 ### Data supplier registration
@@ -657,7 +728,13 @@ Each manager registers its data supplier after repository initialization:
 
 ```java
 IRepository<Gang> gangRepo = repositoryRegistry.getRepository(Gang.class);
-gangRepo.setDataSupplier(() -> gangManager.getGangs().values());
+gangRepo.
+
+setDataSupplier(() ->gangManager.
+
+getGangs().
+
+values());
 ```
 
 This supplier is invoked by `saveAllFromMemory()` to snapshot the current in-memory state before the async save begins.
@@ -675,20 +752,29 @@ Wraps a single YAML file with read/write/reload support.
 ```java
 public class FileHandler {
 
-    FileHandler(JavaPlugin plugin, File file);
-    FileHandler(JavaPlugin plugin, String name, String fileType);
-    FileHandler(JavaPlugin plugin, String name, String directory, String fileType);
+	FileHandler(JavaPlugin plugin, File file);
 
-    void create(boolean inJar);         // Create file; copy from JAR resources if inJar=true
-    void delete();
-    void save();                        // Save current FileConfiguration to disk
-    void reloadData();                  // Reload and validate config version
-    void createNewFile();               // Backup old file and create fresh copy from JAR
+	FileHandler(JavaPlugin plugin, String name, String fileType);
 
-    FileConfiguration getFileConfiguration();
-    boolean isLoaded();
-    String getName();
-    String getDirectory();
+	FileHandler(JavaPlugin plugin, String name, String directory, String fileType);
+
+	void create(boolean inJar);         // Create file; copy from JAR resources if inJar=true
+
+	void delete();
+
+	void save();                        // Save current FileConfiguration to disk
+
+	void reloadData();                  // Reload and validate config version
+
+	void createNewFile();               // Backup old file and create fresh copy from JAR
+
+	FileConfiguration getFileConfiguration();
+
+	boolean isLoaded();
+
+	String getName();
+
+	String getDirectory();
 }
 ```
 
@@ -702,16 +788,23 @@ Registry for all loaded `FileHandler` instances.
 ```java
 public class FileManager {
 
-    FileManager(JavaPlugin plugin);
+	FileManager(JavaPlugin plugin);
 
-    void addFile(FileHandler file, boolean create);
-    FileHandler getFile(String fileName);
-    boolean contains(String fileName);
-    boolean filesLoaded();
-    void checkFileLoaded(String name);
-    void reloadFiles();
-    YamlConfiguration loadFromResources(String resourceFile);
-    Set<FileHandler> getFiles();
+	void addFile(FileHandler file, boolean create);
+
+	FileHandler getFile(String fileName);
+
+	boolean contains(String fileName);
+
+	boolean filesLoaded();
+
+	void checkFileLoaded(String name);
+
+	void reloadFiles();
+
+	YamlConfiguration loadFromResources(String resourceFile);
+
+	Set<FileHandler> getFiles();
 }
 ```
 
@@ -722,12 +815,15 @@ Base class for loading structured data from files with retry support.
 ```java
 public abstract class FileLoader<T> {
 
-    abstract void clear();
-    abstract void loadData(Consumer<T> consumer, FileManager fileManager);
+	abstract void clear();
 
-    void load(boolean disable, Consumer<T> consumer, FileManager fileManager);
-    void tryAgain(boolean disable, Consumer<T> consumer, FileManager fileManager);
-    boolean isDataLoaded();
+	abstract void loadData(Consumer<T> consumer, FileManager fileManager);
+
+	void load(boolean disable, Consumer<T> consumer, FileManager fileManager);
+
+	void tryAgain(boolean disable, Consumer<T> consumer, FileManager fileManager);
+
+	boolean isDataLoaded();
 }
 ```
 
@@ -739,14 +835,17 @@ e.g., one file per weapon type).
 ```java
 public abstract class FolderLoader extends FileLoader<FileHandler> {
 
-    FolderLoader(JavaPlugin plugin, String folder);
+	FolderLoader(JavaPlugin plugin, String folder);
 
-    abstract void initialize();
+	abstract void initialize();
 
-    void addFile(FileHandler fileHandler);
-    void addExpectedFile(FileHandler fileHandler);
-    String getFolderName();
-    List<FileHandler> getFiles();
+	void addFile(FileHandler fileHandler);
+
+	void addExpectedFile(FileHandler fileHandler);
+
+	String getFolderName();
+
+	List<FileHandler> getFiles();
 }
 ```
 
@@ -778,45 +877,45 @@ import java.util.UUID;
 
 public class BountyTable extends Table<Bounty> {
 
-    public BountyTable() {
-        super("bounty");  // SQL table name
+	public BountyTable() {
+		super("bounty");  // SQL table name
 
-        // Define columns
-        Attribute<UUID>   uuid   = new Attribute<>("uuid", true, UUID.class);   // primary key
-        Attribute<String> target = new Attribute<>("target", false, String.class);
-        Attribute<Double> reward = new Attribute<>("reward", false, Double.class);
+		// Define columns
+		Attribute<UUID>   uuid   = new Attribute<>("uuid", true, UUID.class);   // primary key
+		Attribute<String> target = new Attribute<>("target", false, String.class);
+		Attribute<Double> reward = new Attribute<>("reward", false, Double.class);
 
-        // Configure defaults and constraints
-        reward.setDefaultValue(0D);
-        target.setCanBeNull(true);
+		// Configure defaults and constraints
+		reward.setDefaultValue(0D);
+		target.setCanBeNull(true);
 
-        // Register columns in order (LinkedHashMap preserves insertion order)
-        this.addAttribute(uuid);
-        this.addAttribute(target);
-        this.addAttribute(reward);
-    }
+		// Register columns in order (LinkedHashMap preserves insertion order)
+		this.addAttribute(uuid);
+		this.addAttribute(target);
+		this.addAttribute(reward);
+	}
 
-    @Override
-    public Object[] getData(Bounty data) {
-        // Must match column order from addAttribute calls
-        return new Object[]{
-            data.getUuid().toString(),
-            data.getTarget(),
-            data.getReward()
-        };
-    }
+	@Override
+	public Object[] getData(Bounty data) {
+		// Must match column order from addAttribute calls
+		return new Object[]{
+				data.getUuid().toString(),
+				data.getTarget(),
+				data.getReward()
+		};
+	}
 
-    @Override
-    public Map<String, Object> searchCriteria(Bounty data) {
-        // Define WHERE clause for upsert lookups
-        // "index" array contains the column indexes to EXCLUDE from UPDATE (typically PKs)
-        return createSearchCriteria(
-            "uuid = ?",                                    // search query
-            new Object[]{data.getUuid().toString()},       // placeholder values
-            new int[]{Types.CHAR},                         // placeholder types
-            new int[]{0}                                   // ignored indexes (column 0 = uuid)
-        );
-    }
+	@Override
+	public Map<String, Object> searchCriteria(Bounty data) {
+		// Define WHERE clause for upsert lookups
+		// "index" array contains the column indexes to EXCLUDE from UPDATE (typically PKs)
+		return createSearchCriteria(
+				"uuid = ?",                                    // search query
+				new Object[]{data.getUuid().toString()},       // placeholder values
+				new int[]{Types.CHAR},                         // placeholder types
+				new int[]{0}                                   // ignored indexes (column 0 = uuid)
+		);
+	}
 }
 ```
 
@@ -825,18 +924,18 @@ public class BountyTable extends Table<Bounty> {
 ```java
 public class BountyTable extends Table<Bounty> {
 
-    public BountyTable(UserTable userTable) {
-        super("bounty");
+	public BountyTable(UserTable userTable) {
+		super("bounty");
 
-        Attribute<UUID> uuid = new Attribute<>("uuid", true, UUID.class);
-        // ... other attributes ...
+		Attribute<UUID> uuid = new Attribute<>("uuid", true, UUID.class);
+		// ... other attributes ...
 
-        // Establish foreign key: bounty.uuid -> user.uuid
-        uuid.setForeignKey(userTable.get("uuid"), userTable);
+		// Establish foreign key: bounty.uuid -> user.uuid
+		uuid.setForeignKey(userTable.get("uuid"), userTable);
 
-        this.addAttribute(uuid);
-        // ...
-    }
+		this.addAttribute(uuid);
+		// ...
+	}
 }
 ```
 
@@ -864,48 +963,48 @@ import java.util.function.Consumer;
 @Repository(value = Bounty.class)
 public class BountyRepository extends AbstractRepository<Bounty> {
 
-    private final BountyTable bountyTable;
+	private final BountyTable bountyTable;
 
-    public BountyRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-        super(plugin, databaseHandler);
-        this.bountyTable = new BountyTable();
-    }
+	public BountyRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
+		super(plugin, databaseHandler);
+		this.bountyTable = new BountyTable();
+	}
 
-    @Override
-    protected Collection<Bounty> doLoadAll() throws SQLException {
-        List<Bounty> bounties = new ArrayList<>();
+	@Override
+	protected Collection<Bounty> doLoadAll() throws SQLException {
+		List<Bounty> bounties = new ArrayList<>();
 
-        List<Object[]> data = bountyTable.selectAllTableQuery(getDatabase());
+		List<Object[]> data = bountyTable.selectAllTableQuery(getDatabase());
 
-        for (Object[] result : data) {
-            int    v      = 0;
-            UUID   uuid   = UUID.fromString(String.valueOf(result[v++]));
-            String target = (String) result[v++];
-            double reward = (double) result[v];
+		for (Object[] result : data) {
+			int    v      = 0;
+			UUID   uuid   = UUID.fromString(String.valueOf(result[v++]));
+			String target = (String) result[v++];
+			double reward = (double) result[v];
 
-            bounties.add(new Bounty(uuid, target, reward));
-        }
+			bounties.add(new Bounty(uuid, target, reward));
+		}
 
-        return bounties;
-    }
+		return bounties;
+	}
 
-    @Override
-    protected <E> Consumer<E> processSave() {
-        // Return null for no pre-save processing,
-        // or return a Consumer to run before each save
-        return null;
-    }
+	@Override
+	protected <E> Consumer<E> processSave() {
+		// Return null for no pre-save processing,
+		// or return a Consumer to run before each save
+		return null;
+	}
 
-    @Override
-    protected Table<Bounty> getTable() {
-        return bountyTable;
-    }
+	@Override
+	protected Table<Bounty> getTable() {
+		return bountyTable;
+	}
 
-    @Override
-    protected void doDelete(Bounty data) throws SQLException {
-        Database table = getDatabase().table(bountyTable.getName());
-        table.delete("uuid", data.getUuid().toString(), Types.VARCHAR);
-    }
+	@Override
+	protected void doDelete(Bounty data) throws SQLException {
+		Database table = getDatabase().table(bountyTable.getName());
+		table.delete("uuid", data.getUuid().toString(), Types.VARCHAR);
+	}
 }
 ```
 
@@ -915,7 +1014,11 @@ In the manager or service that owns the in-memory data:
 
 ```java
 IRepository<Bounty> bountyRepo = repositoryRegistry.getRepository(Bounty.class);
-bountyRepo.setDataSupplier(() -> bountyManager.getAllBounties());
+bountyRepo.
+
+setDataSupplier(() ->bountyManager.
+
+getAllBounties());
 ```
 
 This enables `saveAllFromMemory()` to find the data to persist during auto-save cycles.
@@ -927,13 +1030,19 @@ This enables `saveAllFromMemory()` to find the data to persist during auto-save 
 Collection<Bounty> bounties = bountyRepo.loadAll();
 
 // Save one entity (async)
-bountyRepo.save(bounty);
+bountyRepo.
+
+save(bounty);
 
 // Delete one entity (async)
-bountyRepo.delete(bounty);
+bountyRepo.
+
+delete(bounty);
 
 // Bulk save from memory (async, used by auto-save)
-bountyRepo.saveAllFromMemory();
+bountyRepo.
+
+saveAllFromMemory();
 ```
 
 No additional registration code is needed -- the `@Repository` annotation ensures auto-discovery during
@@ -944,9 +1053,10 @@ No additional registration code is needed -- the `@Repository` annotation ensure
 To only register a repository when a feature is enabled:
 
 ```java
+
 @Repository(value = Bounty.class, condition = "me.luckyraven.file.configuration.SettingAddon.isBountyEnabled()")
 public class BountyRepository extends AbstractRepository<Bounty> {
-    // ...
+	// ...
 }
 ```
 
@@ -957,9 +1067,10 @@ The condition string must point to a public static method that returns `boolean`
 For entities with type parameters (e.g., `User<? extends OfflinePlayer>`):
 
 ```java
+
 @Repository(value = User.class, isGeneric = true)
 public class UserRepository extends AbstractRepository<User<? extends OfflinePlayer>> {
-    // ...
+	// ...
 }
 
 // Retrieve with:

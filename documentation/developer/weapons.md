@@ -54,42 +54,42 @@ programmatically through the weapon pipeline.
 ## Architecture Diagram
 
 ```
-                          +---------------------+
-                          |    WeaponAddon       |  <-- YAML config loader
-                          |  (registers weapons) |
-                          +---------+-----------+
-                                    |
+                          ╭──────────────────────╮
+                          │    WeaponAddon       │  <── YAML config loader
+                          │  (registers weapons) │
+                          ╰─────────┬────────────╯
+                                    │
                                     v
-+-------------------+     +-------------------+     +---------------------+
-|  AmmunitionAddon  |---->| AmmunitionManager |<----| AmmunitionSection   |
-| (ammunition.yml)  |     | (ammo registry)   |     |     Parser          |
-+-------------------+     +-------------------+     +---------------------+
-                                    |
+╭───────────────────╮     ╭───────────────────╮     ╭─────────────────────╮
+│  AmmunitionAddon  │────>│ AmmunitionManager │<────│ AmmunitionSection   │
+│ (ammunition.yml)  │     │ (ammo registry)   │     │     Parser          │
+╰───────────────────╯     ╰───────────────────╯     ╰─────────────────────╯
+                                    │
                                     v
-                          +-------------------+
-                          |  WeaponService     |  <-- Runtime weapon registry
-                          |  (UUID -> Weapon)  |      Validates held items
-                          +---------+---------+      Provides weapon lookups
-                                    |
-                    +---------------+----------------+
-                    |               |                 |
+                          ╭────────────────────╮
+                          │  WeaponService     │  <── Runtime weapon registry
+                          │  (UUID ─> Weapon)  │      Validates held items
+                          ╰─────────┬──────────╯      Provides weapon lookups
+                                    │
+                    ╭───────────────┼─────────────────╮
+                    │               │                 │
                     v               v                 v
-          +-------------+  +--------------+  +----------------+
-          | WeaponInteract| | ProjectileDamage| | WeaponReload   |
-          |  (clicks)    | |   Listener    | |   Listener     |
-          +------+------+  +------+-------+  +-------+-------+
-                 |                 |                   |
-                 v                 v                   v
-          +-----------+    +-------------+    +--------------+
-          |  *Action   |    | ModifierHandler|    |   Reload     |
-          | (per type) |    | (damage calc) |    | (Instant/Num)|
-          +-----------+    +-------------+    +--------------+
-                 |
+          ╭───────────────╮  ╭─────────────────╮ ╭────────────────╮
+          │ WeaponInteract│  │ ProjectileDamage│ │ WeaponReload   │
+          │  (clicks)     │  │   Listener      │ │   Listener     │
+          ╰──────┬────────╯  ╰──────┬──────────╯ ╰───────┬────────╯
+                 │                  │                    │
+                 v                  v                    v
+          ╭────────────╮    ╭────────────────╮    ╭──────────────╮
+          │  *Action   │    │ ModifierHandler│    │   Reload     │
+          │ (per type) │    │ (damage calc)  │    │ (Instant/Num)│
+          ╰─────┬──────╯    ╰────────────────╯    ╰──────────────╯
+                 │
                  v
-          +-----------+
-          | *Weapon    |
-          | (per type) |
-          +-----------+
+          ╭────────────╮
+          │ *Weapon    │
+          │ (per type) │
+          ╰────────────╯
 ```
 
 ---
@@ -143,37 +143,51 @@ The base data class for all weapons. Extends no Bukkit class; implements `Repair
 ```java
 // Scope toggle
 void scope(Player player, boolean bypass)
+
 void unScope(Player player, boolean bypass)
 
 // Magazine management
 boolean consumeShot()          // Deducts 1 round; overridden by GunWeapon/IncendiaryWeapon
+
 boolean isMagazineEmpty()
+
 boolean isMagazineFull()
-void    addAmmunition(int amount)
+
+void addAmmunition(int amount)
+
 boolean requiresReload()
 
 // Reload delegation
-void    reload(JavaPlugin plugin, Player player, boolean removeAmmunition)
-void    stopReloading()
+void reload(JavaPlugin plugin, Player player, boolean removeAmmunition)
+
+void stopReloading()
+
 boolean isReloading()
 
 // Item building
 ItemStack buildItem()          // Creates the ItemStack with NBT tags
+
 void updateWeaponData(ItemBuilder itemBuilder)  // Syncs ammo/fire mode to NBT
+
 void updateWeapon(Player player, ItemBuilder itemBuilder, int slot)
+
 void removeWeapon(Player player, int slot)
 
 // Durability
-void    increaseDurability(ItemBuilder, int amount)
-void    decreaseDurability(ItemBuilder, int amount)
+void increaseDurability(ItemBuilder, int amount)
+
+void decreaseDurability(ItemBuilder, int amount)
+
 boolean isBroken()
-void    applyOnHitDurability(Player player, int slot)
+
+void applyOnHitDurability(Player player, int slot)
 
 // Push (recoil knockback on shooter)
 void applyPush(Player player)  // Only when grounded, reduced when sneaking/scoped
 
 // Cloning
 abstract Weapon copyWithUUID(UUID newUuid)
+
 Weapon clone()                 // Deep-copies all mutable DTOs
 ```
 
@@ -194,12 +208,16 @@ Central runtime registry mapping `UUID -> Weapon`. Every active weapon instance 
 ```java
 // Weapon identification
 static UUID getWeaponUUID(ItemStack item)  // Reads UUID from NBT
+
 String getHeldWeaponName(ItemStack item)   // Reads "weapon" tag from NBT
+
 boolean isWeapon(ItemStack item)           // Checks UUID exists in registry
 
 // Weapon retrieval
 Weapon getWeapon(String type)                     // By config name
+
 Weapon getWeapon(Player, UUID, String, boolean)   // Full lookup with new-instance flag
+
 Weapon validateAndGetWeapon(Player, ItemStack)     // Complete validation from held item
 
 // Ammunition check
@@ -207,7 +225,9 @@ boolean hasAmmunition(Player player, Weapon weapon)
 
 // Utility
 ItemBuilder getHeldWeaponItem(Player player)       // Checks main hand, then off hand
+
 boolean isHeadPosition(Location l1, Location l2)   // Y difference > 1.4 = headshot
+
 void clear()
 ```
 
@@ -257,7 +277,9 @@ AUTO --> BURST --> SINGLE --> AUTO --> ...
 
 ```java
 SelectiveFire.getType("auto")       // parse from config string
-selectiveFire.getNextState()        // cycle to next mode
+selectiveFire.
+
+getNextState()        // cycle to next mode
 ```
 
 ---
@@ -268,11 +290,11 @@ selectiveFire.getNextState()        // cycle to next mode
 
 ```
                      Weapon (abstract)
-                        |
-         +--------------+---------------+------------------+------------------+
-         |              |               |                  |                  |
+                        │
+         ╭──────────────┼───────────────┬──────────────────┬──────────────────╮
+         │              │               │                  │                  │
       GunWeapon    MeleeWeapon   ThrowableWeapon    IncendiaryWeapon   BiologicalWeapon
-         |              |               |                  |                  |
+         │              │               │                  │                  │
       GunAction    MeleeAction   ThrowableAction    IncendiaryAction   BiologicalAction
 ```
 
@@ -284,7 +306,7 @@ Each weapon type has:
 ### `WeaponType` (enum)
 
 ```java
-GUN, MELEE, THROWABLE, INCENDIARY, BIOLOGICAL, OTHER
+GUN,MELEE,THROWABLE,INCENDIARY,BIOLOGICAL,OTHER
 ```
 
 Parsed from config strings with aliases:
@@ -549,12 +571,17 @@ of the default 1.
 Low-level projectile tracking with location, velocity, distance, and environment awareness.
 
 ```java
-abstract void   launchProjectile()
+abstract void launchProjectile()
+
 abstract double getSpeed()
+
 double getGravity()              // 0.05 default
+
 double getDomainDrag()           // 0.96 in water, 0.98 in storm, 0.99 normal
-Block  getCurrentBlock()
-int    getMaxAliveTicks()        // 600 (30 seconds)
+
+Block getCurrentBlock()
+
+int getMaxAliveTicks()        // 600 (30 seconds)
 ```
 
 ### `WeaponProjectile<T extends Projectile>` (abstract)
@@ -593,11 +620,12 @@ Multi-projectile shotgun pattern. Overrides `launchProjectile()` to fire
 `pelletsCount` (default 8) individual projectiles, each with independent spread.
 
 ```java
+
 @Override
 public void launchProjectile() {
-    for (int i = 0; i < pelletsCount; i++) {
-        super.launchProjectile();  // Each gets its own spread offset
-    }
+	for (int i = 0; i < pelletsCount; i++) {
+		super.launchProjectile();  // Each gets its own spread offset
+	}
 }
 ```
 
@@ -615,7 +643,9 @@ Explosive projectile using a Fireball entity. Adds:
 
 ```java
 void startSmokeTrail(Fireball rocket)        // Continuous particle trail
+
 void createExplosion(Location, float power)   // Explosion with particles + sound
+
 void startHoming(LivingEntity target, double homingStrength)  // Lock-on guidance
 ```
 
@@ -624,10 +654,21 @@ void startHoming(LivingEntity target, double homingStrength)  // Lock-on guidanc
 Factory enum that creates the correct `WeaponProjectile` subclass:
 
 ```java
-BULLET  -> new Bullet(plugin, shooter, weapon)
-SPREAD  -> new Spread(plugin, shooter, weapon)
-FLARE   -> new Flare(plugin, shooter, weapon)
-ROCKET  -> new Rocket(plugin, shooter, weapon)
+BULLET  ->new
+
+Bullet(plugin, shooter, weapon)
+
+SPREAD  ->new
+
+Spread(plugin, shooter, weapon)
+
+FLARE   ->new
+
+Flare(plugin, shooter, weapon)
+
+ROCKET  ->new
+
+Rocket(plugin, shooter, weapon)
 ```
 
 ### `ProjectileState`
@@ -648,10 +689,15 @@ Tracks the runtime state of a single active projectile for modifier calculations
 
 ```java
 double getCurrentDamage()                       // baseDamage * currentDamageMultiplier
-void   applyPenetrationReduction(double reduction) // multiplier *= (1.0 - reduction)
-void   applyRicochetReduction(double retention)    // multiplier *= retention
+
+void applyPenetrationReduction(double reduction) // multiplier *= (1.0 - reduction)
+
+void applyRicochetReduction(double retention)    // multiplier *= retention
+
 boolean canPenetrateBlock()    // Check against modifiers limit
+
 boolean canPenetrateEntity()   // Check against modifiers limit
+
 boolean canRicochet()          // Check against max bounces
 ```
 
@@ -709,7 +755,9 @@ Represents an ammo type (e.g., "9mm", "Shotgun Shells").
 
 ```java
 static boolean isAmmunition(ItemStack item)  // Checks for "ammo" NBT tag
+
 ItemStack buildItem()                        // Creates ammo ItemStack with NBT
+
 ItemStack buildItem(int amount)              // Creates stack of given size
 ```
 
@@ -731,7 +779,9 @@ Simple registry mapping config keys to `Ammunition` instances. Loaded by
 
 ```java
 void register(String key, Ammunition ammo)
+
 Ammunition getAmmunition(String key)
+
 Set<String> getAmmunitionKeys()
 ```
 
@@ -747,11 +797,11 @@ Container for all modifier instances on a weapon:
 
 ```java
 List<BlockBreakModifier> breakBlocks    // Multiple block-type entries
-PenetrationModifier      penetration    // Single instance
-List<RicochetModifier>   ricochets      // Multiple surface-type entries
-TracerModifier           tracer         // Single instance
-ArmorPiercingModifier    armorPiercing  // Single instance
-FlatDamageModifier       flatDamage     // Single instance
+PenetrationModifier penetration    // Single instance
+List<RicochetModifier> ricochets      // Multiple surface-type entries
+TracerModifier tracer         // Single instance
+ArmorPiercingModifier armorPiercing  // Single instance
+FlatDamageModifier flatDamage     // Single instance
 ```
 
 ### Individual Modifiers
@@ -778,9 +828,9 @@ Destroys blocks after repeated projectile hits.
 
 ```java
 record BlockBreakModifier(
-    Set<Material> targetMaterials,  // Materials this modifier affects
-    int hitsRequired,               // Hits to reach max damage / break
-    boolean actuallyBreaks          // Whether block breaks or just shows max crack
+		Set<Material> targetMaterials,  // Materials this modifier affects
+		int hitsRequired,               // Hits to reach max damage / break
+		boolean actuallyBreaks          // Whether block breaks or just shows max crack
 )
 ```
 
@@ -793,9 +843,9 @@ Allows projectiles to pass through blocks and entities with damage falloff.
 
 ```java
 record PenetrationModifier(
-    int penetrateBlocks,      // Max blocks to pass through
-    int penetrateEntities,    // Max entities to damage and continue
-    double damageReduction    // Damage lost per penetration (0.0 - 1.0)
+		int penetrateBlocks,      // Max blocks to pass through
+		int penetrateEntities,    // Max entities to damage and continue
+		double damageReduction    // Damage lost per penetration (0.0 - 1.0)
 )
 ```
 
@@ -810,9 +860,9 @@ Allows projectiles to bounce off surfaces.
 
 ```java
 record RicochetModifier(
-    int maxBounces,                 // Maximum number of ricochets
-    Set<Material> bounceOffBlocks,  // Valid surface materials (empty = all)
-    double damageRetention          // Damage kept per bounce (0.0 - 1.0)
+		int maxBounces,                 // Maximum number of ricochets
+		Set<Material> bounceOffBlocks,  // Valid surface materials (empty = all)
+		double damageRetention          // Damage kept per bounce (0.0 - 1.0)
 )
 ```
 
@@ -828,9 +878,9 @@ Adds colored particle trails to projectiles.
 
 ```java
 record TracerModifier(
-    Color color,          // RGB particle color
-    boolean glowing,      // Whether projectile glows
-    float particleSize    // Size of dust particles
+		Color color,          // RGB particle color
+		boolean glowing,      // Whether projectile glows
+		float particleSize    // Size of dust particles
 )
 ```
 
@@ -859,10 +909,12 @@ Central class for applying modifier effects. All methods are static.
 ```java
 // Damage calculation
 static double calculateArmorPiercingDamage(double baseDamage, LivingEntity target, Weapon weapon)
+
 static double applyFlatDamage(double baseDamage, Weapon weapon)
 
 // Penetration
 static boolean handleEntityPenetration(ProjectileState state, Projectile projectile)
+
 static boolean handleBlockPenetration(ProjectileState state, Projectile projectile, Block hitBlock)
 
 // Ricochet
@@ -887,32 +939,32 @@ sound/scope effects.
 
 ```
 reload(plugin, player, removeAmmunition)
-  |
-  +-> Show action bar ("Reloading...")
-  +-> executeReload(plugin, player, removeAmmunition)  [subclass]
-        |
-        +-> startReloading(player)
-        |     +-> Set reloading = true
-        |     +-> Show "Opening" action bar
-        |     +-> Play reload start sound
-        |     +-> Apply scope (slowdown)
-        |     +-> Fire WeaponReloadStartEvent
-        |
-        +-> [Type-specific reload logic]
-        |
-        +-> endReloading(player)
-              +-> Set reloading = false
-              +-> Play reload end sound
-              +-> Remove scope
-              +-> Fire WeaponReloadCompleteEvent
+  │
+  ├─> Show action bar ("Reloading...")
+  ├─> executeReload(plugin, player, removeAmmunition)  [subclass]
+        │
+        ├─> startReloading(player)
+        │     ├─> Set reloading = true
+        │     ├─> Show "Opening" action bar
+        │     ├─> Play reload start sound
+        │     ├─> Apply scope (slowdown)
+        │     ├─> Fire WeaponReloadStartEvent
+        │
+        ├─> [Type-specific reload logic]
+        │
+        ├─> endReloading(player)
+              ├─> Set reloading = false
+              ├─> Play reload end sound
+              ├─> Remove scope
+              ├─> Fire WeaponReloadCompleteEvent
 ```
 
 ### `ReloadType` (enum)
 
 ```java
-INSTANT  -> InstantReload     // Full magazine in one step
-ONE      -> NumberedReload    // One round at a time
-NUM      -> NumberedReload    // Multiple rounds at a time (amount from config)
+INSTANT  ->InstantReload     // Full magazine in one step
+ONE      ->NumberedReload    // One round at a time
+NUM      ->NumberedReload    // Multiple rounds at a time (amount from config)
 ```
 
 ### `InstantReload`
@@ -944,7 +996,7 @@ After all insertions:
 **Insertion count calculation:**
 
 ```java
-int leftToInsert       = maxMagCapacity - currentMagCapacity;
+int leftToInsert = maxMagCapacity - currentMagCapacity;
 int numberOfInsertions = leftToInsert / restore;
 // Limited by actual ammo in player inventory
 // NPCs (null inventory) get unlimited insertions
@@ -1025,9 +1077,9 @@ Applies camera rotation (recoil) to the player after each shot, using NMS compat
 
 ```yaml
 Pattern:
-  - "0.5;-1.2"    # Shot 1: yaw=0.5, pitch=-1.2
-  - "0.3;-0.8"    # Shot 2: yaw=0.3, pitch=-0.8
-  - "-0.2;-1.0"   # Shot 3: etc.
+   - "0.5;-1.2"    # Shot 1: yaw=0.5, pitch=-1.2
+   - "0.3;-0.8"    # Shot 2: yaw=0.3, pitch=-0.8
+   - "-0.2;-1.0"   # Shot 3: etc.
 ```
 
 The pattern repeats cyclically. Reset occurs when:
@@ -1139,152 +1191,152 @@ Each weapon is defined in its own YAML file. The `WeaponAddon` class orchestrate
 
 ```yaml
 Information:
-  Name: "&6AK-47"
-  Category: "gun"            # gun, melee, throwable, incendiary, biological
-  Material: "WOODEN_HOE"
-  Durability:
-    Base: 500
-    Change:
-      On_Shot: 1
-      On_Repair: 10
-  Lore:
-    - "&7A reliable assault rifle"
-  Drop_Hologram: true
+   Name: "&6AK-47"
+   Category: "gun"            # gun, melee, throwable, incendiary, biological
+   Material: "WOODEN_HOE"
+   Durability:
+      Base: 500
+      Change:
+         On_Shot: 1
+         On_Repair: 10
+   Lore:
+      - "&7A reliable assault rifle"
+   Drop_Hologram: true
 
 Death_Messages:
-  - "&c{victim} was gunned down by {killer}"
+   - "&c{victim} was gunned down by {killer}"
 
 Scope:
-  Level: 2
-  Sound:
-    Default_Sound: { Sound: "ITEM_SPYGLASS_USE", Volume: 1.0, Pitch: 1.0 }
+   Level: 2
+   Sound:
+      Default_Sound: {Sound: "ITEM_SPYGLASS_USE", Volume: 1.0, Pitch: 1.0}
 
 Modifiers:
-  Break_Blocks:
-    - "GLASS-3"              # Material group - hits required
-  Penetration: "2-3-0.25"   # blocks-entities-damageReduction
-  Ricochet:
-    - "3-STONE,IRON_BLOCK-0.8"  # bounces-materials-retention
-  Tracer: "FF0000-true-1.0" # hexColor-glowing-particleSize
-  Armor_Piercing: "0.5"     # bypass percentage (0.0-1.0)
-  Flat_Damage: "5.0"        # bonus damage
+   Break_Blocks:
+      - "GLASS-3"              # Material group - hits required
+   Penetration: "2-3-0.25"   # blocks-entities-damageReduction
+   Ricochet:
+      - "3-STONE,IRON_BLOCK-0.8"  # bounces-materials-retention
+   Tracer: "FF0000-true-1.0" # hexColor-glowing-particleSize
+   Armor_Piercing: "0.5"     # bypass percentage (0.0-1.0)
+   Flat_Damage: "5.0"        # bonus damage
 ```
 
 **Gun-specific section:**
 
 ```yaml
 Shoot:
-  Selective_Fire: "auto"     # auto, burst, single
-  Projectile:
-    Speed: 5
-    Type: "bullet"           # bullet, spread, flare, rocket
-    Damage:
-      Base: 8
-      Explosion_Damage: 0
-      Fire_Ticks: 0
-      Head: 4
-      Critical_Hit:
-        Chance: 15
-        Amount: 3
-    Consumed_Amount: 1
-    Per_Shot: 1              # Burst: shots per burst
-    Cooldown: 3              # Ticks between shots
-    Distance: 100
-    Particle: true
-  Weapon_Consumed:
-    Consume_On_Shot: 0       # Remove weapon after N shots (0=never)
-  Recoil:
-    Amount: 1.5
-    Push: 0.1
-    Power_Up: 0.05
-    Pattern:
-      - "0.5;-1.2"
-      - "0.3;-0.8"
-  Spread:
-    Starting_Spread: 0.01
-    Time: 500                # ms before spread resets
-    Change:
-      Base: 0.005
-      Bounds:
-        Reset_On_Bound: false
-        Min: 0.01
-        Max: 0.1
-  Sound:
-    Default_Sound: { Sound: "ENTITY_GENERIC_EXPLODE", Volume: 0.5, Pitch: 2.0 }
-    Custom_Sound: { Sound: "custom.ak47.shot", Volume: 1.0, Pitch: 1.0 }
-    Empty_Default_Sound: { Sound: "BLOCK_COMPARATOR_CLICK", Volume: 1.0, Pitch: 1.0 }
-    Flyby_Range: 10.0
-    Flyby_Default_Sound: { Sound: "ENTITY_ARROW_SHOOT", Volume: 0.3, Pitch: 2.0 }
-    Impact_Default_Sound: { Sound: "ENTITY_ARMOR_STAND_HIT", Volume: 0.5, Pitch: 1.5 }
+   Selective_Fire: "auto"     # auto, burst, single
+   Projectile:
+      Speed: 5
+      Type: "bullet"           # bullet, spread, flare, rocket
+      Damage:
+         Base: 8
+         Explosion_Damage: 0
+         Fire_Ticks: 0
+         Head: 4
+         Critical_Hit:
+            Chance: 15
+            Amount: 3
+      Consumed_Amount: 1
+      Per_Shot: 1              # Burst: shots per burst
+      Cooldown: 3              # Ticks between shots
+      Distance: 100
+      Particle: true
+   Weapon_Consumed:
+      Consume_On_Shot: 0       # Remove weapon after N shots (0=never)
+   Recoil:
+      Amount: 1.5
+      Push: 0.1
+      Power_Up: 0.05
+      Pattern:
+         - "0.5;-1.2"
+         - "0.3;-0.8"
+   Spread:
+      Starting_Spread: 0.01
+      Time: 500                # ms before spread resets
+      Change:
+         Base: 0.005
+         Bounds:
+            Reset_On_Bound: false
+            Min: 0.01
+            Max: 0.1
+   Sound:
+      Default_Sound: {Sound: "ENTITY_GENERIC_EXPLODE", Volume: 0.5, Pitch: 2.0}
+      Custom_Sound: {Sound: "custom.ak47.shot", Volume: 1.0, Pitch: 1.0}
+      Empty_Default_Sound: {Sound: "BLOCK_COMPARATOR_CLICK", Volume: 1.0, Pitch: 1.0}
+      Flyby_Range: 10.0
+      Flyby_Default_Sound: {Sound: "ENTITY_ARROW_SHOOT", Volume: 0.3, Pitch: 2.0}
+      Impact_Default_Sound: {Sound: "ENTITY_ARMOR_STAND_HIT", Volume: 0.5, Pitch: 1.5}
 
 Ammunition:
-  Ammo_Type: "762mm"         # Key from ammunition.yml
-  Capacity: 30
-  Consume: 1                 # Ammo items consumed from inventory per reload
-  Restore: 30                # Rounds added to magazine per reload
+   Ammo_Type: "762mm"         # Key from ammunition.yml
+   Capacity: 30
+   Consume: 1                 # Ammo items consumed from inventory per reload
+   Restore: 30                # Rounds added to magazine per reload
 
 Reload:
-  Cooldown: 40               # Ticks for reload
-  Type: "instant"            # instant, one, num-N
-  Sound:
-    Default_Sound_Before: { Sound: "BLOCK_IRON_DOOR_OPEN", Volume: 1.0, Pitch: 2.0 }
-    Default_Sound_After: { Sound: "BLOCK_IRON_DOOR_CLOSE", Volume: 1.0, Pitch: 2.0 }
-    Custom_Sound:
-      Start: { Sound: "custom.reload.start", Volume: 1.0, Pitch: 1.0 }
-      Mid: { Sound: "custom.reload.mid", Volume: 1.0, Pitch: 1.0 }
-      End: { Sound: "custom.reload.end", Volume: 1.0, Pitch: 1.0 }
-  Action_Bar:
-    Reloading: "&eReloading..."
-    Opening: "&7Opening chamber..."
+   Cooldown: 40               # Ticks for reload
+   Type: "instant"            # instant, one, num-N
+   Sound:
+      Default_Sound_Before: {Sound: "BLOCK_IRON_DOOR_OPEN", Volume: 1.0, Pitch: 2.0}
+      Default_Sound_After: {Sound: "BLOCK_IRON_DOOR_CLOSE", Volume: 1.0, Pitch: 2.0}
+      Custom_Sound:
+         Start: {Sound: "custom.reload.start", Volume: 1.0, Pitch: 1.0}
+         Mid: {Sound: "custom.reload.mid", Volume: 1.0, Pitch: 1.0}
+         End: {Sound: "custom.reload.end", Volume: 1.0, Pitch: 1.0}
+   Action_Bar:
+      Reloading: "&eReloading..."
+      Opening: "&7Opening chamber..."
 ```
 
 **Melee-specific section (under `Shoot:` / `Attack:` / `Melee:`):**
 
 ```yaml
 Attack:
-  Damage: 6.0
-  Range: 3.0
-  Cooldown: 10       # Ticks between swings
-  Knockback: 0.5
+   Damage: 6.0
+   Range: 3.0
+   Cooldown: 10       # Ticks between swings
+   Knockback: 0.5
 ```
 
 **Throwable-specific section (under `Shoot:` / `Throw:` / `Throwable:`):**
 
 ```yaml
 Throw:
-  Fuse_Time: 60           # Ticks before detonation
-  Explosion_Radius: 4.0
-  Explosion_Damage: 12
-  Fire_Ticks: 40
-  Bounces: true
-  Max_Bounces: 3
-  Sticky: false
+   Fuse_Time: 60           # Ticks before detonation
+   Explosion_Radius: 4.0
+   Explosion_Damage: 12
+   Fire_Ticks: 40
+   Bounces: true
+   Max_Bounces: 3
+   Sticky: false
 ```
 
 **Incendiary-specific section:**
 
 ```yaml
 Shoot:
-  Cone_Angle: 30.0
-  Range: 8.0
-  Fire_Duration: 60
-  Tick_Rate: 2
-  Consume_Rate: 1
+   Cone_Angle: 30.0
+   Range: 8.0
+   Fire_Duration: 60
+   Tick_Rate: 2
+   Consume_Rate: 1
 ```
 
 **Biological-specific section:**
 
 ```yaml
 Shoot:
-  Charge_Time_Per_Level: 20
-  Max_Charge_Level: 5
-  Effects_Per_Level:
-    - "POISON-100-1"
-    - "POISON-100-2,SLOWNESS-60-1"
-    - "POISON-200-2,SLOWNESS-100-2"
-    - "POISON-200-3,SLOWNESS-100-2,WITHER-60-1"
-    - "POISON-300-3,SLOWNESS-200-3,WITHER-100-2"
-  Area_Radius: 6.0
+   Charge_Time_Per_Level: 20
+   Max_Charge_Level: 5
+   Effects_Per_Level:
+      - "POISON-100-1"
+      - "POISON-100-2,SLOWNESS-60-1"
+      - "POISON-200-2,SLOWNESS-100-2"
+      - "POISON-200-3,SLOWNESS-100-2,WITHER-60-1"
+      - "POISON-300-3,SLOWNESS-200-3,WITHER-100-2"
+   Area_Radius: 6.0
 ```
 
 ### Parser Classes
@@ -1306,14 +1358,14 @@ Common fields shared across all parsers:
 
 ```java
 record WeaponBaseData(
-    String fileName,
-    String displayName,
-    WeaponType category,
-    Material material,
-    short durability,
-    List<String> lore,
-    boolean dropHologram,
-    @Nullable List<String> deathMessages
+		String fileName,
+		String displayName,
+		WeaponType category,
+		Material material,
+		short durability,
+		List<String> lore,
+		boolean dropHologram,
+		@Nullable List<String> deathMessages
 )
 ```
 
@@ -1324,10 +1376,10 @@ Parses `ammunition.yml` and registers entries into `AmmunitionManager`:
 ```yaml
 # ammunition.yml
 762mm:
-  Name: "&e7.62mm"
-  Material: "IRON_NUGGET"
-  Lore:
-    - "&7Standard rifle round"
+   Name: "&e7.62mm"
+   Material: "IRON_NUGGET"
+   Lore:
+      - "&7Standard rifle round"
 ```
 
 ---
@@ -1340,16 +1392,16 @@ All weapon events extend `WeaponEvent`, which provides `getWeapon()`.
 
 ```
 WeaponEvent (abstract)
-  |
-  +-- WeaponShootEvent            [Cancellable] - Gun fires
-  +-- WeaponProjectileLaunchEvent [Cancellable] - Projectile entity spawned
-  +-- WeaponProjectileHitEvent    [Cancellable] - Projectile hits target/block
-  +-- WeaponReloadEvent           [Cancellable] - Reload requested (drop listener)
-  +-- WeaponReloadStartEvent                    - Reload begins
-  +-- WeaponReloadCompleteEvent                 - Reload finishes
-  +-- WeaponChangeSelectiveFireEvent [Cancellable] - Fire mode toggled
-  +-- WeaponEntityDamageEvent                   - Non-projectile damage to entity
-  +-- WeaponKillEntityEvent       [Cancellable] - Entity killed by weapon
+  │
+  ├── WeaponShootEvent               [Cancellable] ─ Gun fires
+  ├── WeaponProjectileLaunchEvent    [Cancellable] ─ Projectile entity spawned
+  ├── WeaponProjectileHitEvent       [Cancellable] ─ Projectile hits target/block
+  ├── WeaponReloadEvent              [Cancellable] ─ Reload requested (drop listener)
+  ├── WeaponReloadStartEvent                       ─ Reload begins
+  ├── WeaponReloadCompleteEvent                    ─ Reload finishes
+  ├── WeaponChangeSelectiveFireEvent [Cancellable] ─ Fire mode toggled
+  ├── WeaponEntityDamageEvent                      ─ Non-projectile damage to entity
+  ╰── WeaponKillEntityEvent          [Cancellable] ─ Entity killed by weapon
 ```
 
 ### Event Details
@@ -1467,133 +1519,133 @@ Complete flow from player click to damage application:
 
 ```
                     Player Input
-                        |
+                        │
                         v
-              +-------------------+
-              | WeaponInteract    |
-              | onPlayerInteract  |
-              +--------+----------+
-                       |
-            +----------+-----------+
-            |                      |
+              ╭───────────────────╮
+              │ WeaponInteract    │
+              │ onPlayerInteract  │
+              ╰────────┬──────────╯
+                       │
+            ╭──────────┼───────────╮
+            │                      │
          GunWeapon              Non-Gun
-            |                      |
+            │                      │
             v                      v
-     +-------------+     +------------------+
-     | GunAction   |     | MeleeAction /    |
-     | weaponShoot |     | ThrowableAction /|
-     +------+------+     | IncendiaryAction/|
-            |             | BiologicalAction |
-            v             +--------+---------+
-     +--------------+              |
-     | consumeShot  |              v
-     +--------------+     [Direct damage or
-            |              AoE calculation]
+     ╭─────────────╮     ╭──────────────────╮
+     │ GunAction   │     │ MeleeAction /    │
+     │ weaponShoot │     │ ThrowableAction /│
+     ╰──────┬──────╯     │ IncendiaryAction/│
+            │            │ BiologicalAction │
+            v            ╰────────┬─────────╯
+     ╭──────────────╮             │
+     │ consumeShot  │             v
+     ╰──────┬───────╯     [Direct damage or
+            │              AoE calculation]
             v
-     +-------------------+
-     | WeaponShootEvent  |  <-- Cancellable
-     +--------+----------+
-              |
+     ╭───────────────────╮
+     │ WeaponShootEvent  │  <── Cancellable
+     ╰────────┬──────────╯
+              │
               v
-     +------------------------+
-     | ProjectileType         |
-     | .createInstance()      |
-     +--------+---------------+
-              |
+     ╭────────────────────────╮
+     │ ProjectileType         │
+     │ .createInstance()      │
+     ╰────────┬───────────────╯
+              │
               v
-     +------------------------+
-     | WeaponProjectile       |
-     | .launchProjectile()    |
-     +--------+---------------+
-              |
+     ╭────────────────────────╮
+     │ WeaponProjectile       │
+     │ .launchProjectile()    │
+     ╰────────┬───────────────╯
+              │
               v
-     +------------------------------+
-     | WeaponProjectileLaunchEvent  |  <-- Cancellable
-     +--------+---------------------+
-              |
+     ╭──────────────────────────────╮
+     │ WeaponProjectileLaunchEvent  │  <── Cancellable
+     ╰────────┬─────────────────────╯
+              │
               v
      [Projectile travels through world]
      [SpreadManager applied to direction]
      [Flyby sounds for nearby players]
-              |
+              │
               v
-     +------------------------+
-     | ProjectileHitEvent     |  (Bukkit)
-     +--------+---------------+
-              |
+     ╭────────────────────────╮
+     │ ProjectileHitEvent     │  (Bukkit)
+     ╰────────┬───────────────╯
+              │
               v
-     +------------------------------+
-     | ProjectileDamageListener     |
-     | (event queue synchronization)|
-     +--------+---------------------+
-              |
+     ╭──────────────────────────────╮
+     │ ProjectileDamageListener     │
+     │ (event queue synchronization)│
+     ╰────────┬─────────────────────╯
+              │
               v
-     +----------------------------+
-     | WeaponProjectileHitEvent   |  <-- Cancellable
-     +--------+-------------------+
-              |
+     ╭────────────────────────────╮
+     │ WeaponProjectileHitEvent   │  <── Cancellable
+     ╰────────┬───────────────────╯
+              │
               v
-     +----------------------------------+
-     | Damage Calculation               |
-     |                                  |
-     | 1. Base damage from ProjectileData|
-     |    (or ProjectileState if         |
-     |     penetrated/ricocheted)        |
-     |                                  |
-     | 2. Critical hit roll             |
-     |    (chance % -> bonus damage)    |
-     |    Reduced by TOUGHENED trait     |
-     |                                  |
-     | 3. Armor Piercing modifier       |
-     |    (reduces effective armor)     |
-     |                                  |
-     | 4. Wearable damage reduction     |
-     |    (multiplicative per slot)     |
-     |    REACTIVE: chance to nullify   |
-     |                                  |
-     | 5. Flat Damage bonus             |
-     |    (added after reductions)      |
-     |                                  |
-     | 6. Headshot bonus                |
-     |    (Y diff > 1.4 blocks)         |
-     |                                  |
-     | 7. Fire ticks                    |
-     |    (reduced by FIRE_RESISTANT +  |
-     |     FIRE_PROTECTION enchant)     |
-     +--------+-------------------------+
-              |
+     ╭───────────────────────────────────╮
+     │ Damage Calculation                │
+     │                                   │
+     │ 1. Base damage from ProjectileData│
+     │    (or ProjectileState if         │
+     │     penetrated/ricocheted)        │
+     │                                   │
+     │ 2. Critical hit roll              │
+     │    (chance % -> bonus damage)     │
+     │    Reduced by TOUGHENED trait     │
+     │                                   │
+     │ 3. Armor Piercing modifier        │
+     │    (reduces effective armor)      │
+     │                                   │
+     │ 4. Wearable damage reduction      │
+     │    (multiplicative per slot)      │
+     │    REACTIVE: chance to nullify    │
+     │                                   │
+     │ 5. Flat Damage bonus              │
+     │    (added after reductions)       │
+     │                                   │
+     │ 6. Headshot bonus                 │
+     │    (Y diff > 1.4 blocks)          │
+     │                                   │
+     │ 7. Fire ticks                     │
+     │    (reduced by FIRE_RESISTANT +   │
+     │     FIRE_PROTECTION enchant)      │
+     ╰────────┬──────────────────────────╯
+              │
               v
-     +----------------------------------+
-     | event.setDamage(finalDamage)     |
-     +--------+-------------------------+
-              |
+     ╭───────────────────────────────────╮
+     │ event.setDamage(finalDamage)      │
+     ╰────────┬──────────────────────────╯
+              │
               v
-     +----------------------------------+
-     | Modifier post-processing:        |
-     |                                  |
-     | - Entity penetration:            |
-     |   Increment count, reduce mult,  |
-     |   continue projectile if allowed |
-     |                                  |
-     | - Ricochet:                      |
-     |   Reflect velocity, reduce mult, |
-     |   reset queue for next hit       |
-     |                                  |
-     | - Block penetration:             |
-     |   Check if penetrable material,  |
-     |   increment count, reduce mult   |
-     |                                  |
-     | - Block break:                   |
-     |   Apply crack damage via         |
-     |   BlockDamageManager             |
-     +--------+-------------------------+
-              |
+     ╭───────────────────────────────────╮
+     │ Modifier post-processing:         │
+     │                                   │
+     │ - Entity penetration:             │
+     │   Increment count, reduce mult,   │
+     │   continue projectile if allowed  │
+     │                                   │
+     │ - Ricochet:                       │
+     │   Reflect velocity, reduce mult,  │
+     │   reset queue for next hit        │
+     │                                   │
+     │ - Block penetration:              │
+     │   Check if penetrable material,   │
+     │   increment count, reduce mult    │
+     │                                   │
+     │ - Block break:                    │
+     │   Apply crack damage via          │
+     │   BlockDamageManager              │
+     ╰────────┬──────────────────────────╯
+              │
               v
-     +----------------------------------+
-     | If lethal:                       |
-     | WeaponKillEntityEvent            |
-     | (fired by gangland-impl)         |
-     +----------------------------------+
+     ╭───────────────────────────────────╮
+     │ If lethal:                        │
+     │ WeaponKillEntityEvent             │
+     │ (fired by gangland-impl)          │
+     ╰───────────────────────────────────╯
 ```
 
 ### Damage Formula Summary
@@ -1662,9 +1714,9 @@ persist across inventory actions, drops, and server restarts.
 
 ```
 uuid           = "550e8400-e29b-41d4-a716-446655440000"  (String)
-weapon         = "ak47"                                   (String)
-selective-fire = "AUTO"                                   (String)
-ammo-left      = 24                                       (Integer)
+weapon         = "ak47"                                  (String)
+selective-fire = "AUTO"                                  (String)
+ammo-left      = 24                                      (Integer)
 ```
 
 **Tag lifecycle:**
@@ -1702,11 +1754,12 @@ The weapon durability is mapped to the item's visual durability bar for display.
 
 ```java
 // Weapon -> Item display
-scale = itemMaxDurability / weaponMaxDurability
-itemDamageValue = floor((weaponMaxDurability - currentDurability) * scale)
+scale =itemMaxDurability /
+weaponMaxDurability
+		itemDamageValue = floor((weaponMaxDurability - currentDurability) * scale)
 
 // Item display -> Weapon (loading from existing item)
-weaponCurrentDurability = weaponMaxDurability - (itemCurrentDamage / scale)
+weaponCurrentDurability =weaponMaxDurability -(itemCurrentDamage /scale)
 ```
 
 This allows weapons to use any Minecraft material (even those with low vanilla durability)
@@ -1721,8 +1774,12 @@ while supporting arbitrary weapon durability values.
 
 ```java
 String getRepairableId()           // weapon name
-int    getCurrentRepairDurability() // currentDurability
-void   setCurrentRepairDurability() // updates currentDurability
-int    getMaxRepairDurability()    // max durability
+
+int getCurrentRepairDurability() // currentDurability
+
+void setCurrentRepairDurability() // updates currentDurability
+
+int getMaxRepairDurability()    // max durability
+
 RepairableType getRepairableType() // WEAPON
 ```

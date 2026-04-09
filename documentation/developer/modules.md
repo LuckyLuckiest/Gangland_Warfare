@@ -38,12 +38,12 @@ interfaces defined in feature modules.
 
 ### Entry Point Classes
 
-| Class                    | Description                                                                                                                                                        |
-|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `Gangland.java`          | Extends `JavaPlugin`. The Spigot plugin entry point. Delegates all initialization to `Initializer`.                                                                |
-| `Initializer.java`       | Two-phase bootstrap: `onLoad` (version detection, compatibility, placeholders) and `postInitialize`/`onEnable` (configs, database, managers, listeners, commands). |
-| `PeriodicalUpdates.java` | Scheduled tasks for auto-save and cache cleanup on configurable intervals.                                                                                         |
-| `ReloadPlugin.java`      | Handles plugin hot-reload logic, re-reading configuration files and resetting managers.                                                                            |
+| Class                    | Description                                                                                                                                                              |
+|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Gangland.java`          | Extends `JavaPlugin`. The Spigot plugin entry point. Creates `GanglandContext` and calls `bootstrap()`.                                                                  |
+| `GanglandContext.java`   | Single root DI context. Owns the `DependencyContainer` and `BeanFactory`, drives the phased bootstrap pipeline (KERNEL → FILE → DATABASE → CONFIG → LISTENER → COMMAND). |
+| `PeriodicalUpdates.java` | Scheduled tasks for auto-save and cache cleanup on configurable intervals.                                                                                               |
+| `ReloadPlugin.java`      | Handles plugin hot-reload logic, re-reading configuration files and resetting managers.                                                                                  |
 
 ### Package: `command/`
 
@@ -1434,55 +1434,55 @@ Each version module contains exactly 2 Java files:
 
 ```
 gangland-build (shade assembly)
-  +-- gangland-impl (main plugin)
-  |     +-- gangland-core
-  |     +-- gangland-item
-  |     +-- plugin-persistence
-  |     +-- plugin-common
-  |     +-- cops-n-crooks
-  |     +-- gangland-weapon
-  |     +-- gangland-gadget
-  |     +-- scoreboard-api
-  |     +-- inventory-api
-  |     +-- sign-api
-  |     +-- lootchest-api
-  |     +-- hologram-api
-  |     +-- version-impl
-  |     +-- version-1_10_R1 ... version-1_21_R7
-  |
-  +-- gangland-core (no plugin dependencies)
-  |     +-- plugin-common
-  |
-  +-- gangland-item (no plugin dependencies)
-  |     +-- plugin-common
-  |     +-- gangland-core
-  |
-  +-- plugin-persistence
-  |     +-- plugin-common
-  |
-  +-- cops-n-crooks
-  |     +-- gangland-core
-  |     +-- gangland-weapon
-  |     +-- plugin-common
-  |
-  +-- gangland-weapon
-  |     +-- gangland-core
-  |     +-- gangland-item
-  |     +-- plugin-common
-  |     +-- version-impl
-  |
-  +-- gangland-gadget
-  |     +-- gangland-core
-  |     +-- gangland-item
-  |     +-- gangland-weapon
-  |     +-- plugin-common
-  |
-  +-- UI modules (scoreboard, inventory, sign, lootchest, hologram)
-  |     +-- gangland-core
-  |     +-- plugin-common
-  |
-  +-- version-impl (no plugin dependencies)
-        +-- plugin-common
+  ├── gangland-impl (main plugin)
+  │     ├── gangland-core
+  │     ├── gangland-item
+  │     ├── plugin-persistence
+  │     ├── plugin-common
+  │     ├── cops-n-crooks
+  │     ├── gangland-weapon
+  │     ├── gangland-gadget
+  │     ├── scoreboard-api
+  │     ├── inventory-api
+  │     ├── sign-api
+  │     ├── lootchest-api
+  │     ├── hologram-api
+  │     ├── version-impl
+  │     ╰── version-1_10_R1 ... version-1_21_R7
+  │
+  ├── gangland-core (no plugin dependencies)
+  │     ╰── plugin-common
+  │
+  ├── gangland-item (no plugin dependencies)
+  │     ├── plugin-common
+  │     ╰── gangland-core
+  │
+  ├── plugin-persistence
+  │     ╰── plugin-common
+  │
+  ├── cops-n-crooks
+  │     ├── gangland-core
+  │     ├── gangland-weapon
+  │     ╰── plugin-common
+  │
+  ├── gangland-weapon
+  │     ├── gangland-core
+  │     ├── gangland-item
+  │     ├── plugin-common
+  │     ╰── version-impl
+  │
+  ├── gangland-gadget
+  │     ├── gangland-core
+  │     ├── gangland-item
+  │     ├── gangland-weapon
+  │     ╰── plugin-common
+  │
+  ├── UI modules (scoreboard, inventory, sign, lootchest, hologram)
+  │     ├── gangland-core
+  │     ╰── plugin-common
+  │
+  ╰── version-impl (no plugin dependencies)
+        ╰── plugin-common
 ```
 
 ---

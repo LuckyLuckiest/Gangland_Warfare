@@ -23,16 +23,16 @@ auto-registration via the `DependencyContainer` scan.
 
 ```
 InventoryBuilder (record)
-    |-- creates --> InventoryHandler (core runtime object)
-    |-- creates --> MultiInventory (paginated variant)
+    ├── creates ──> InventoryHandler (core runtime object)
+    ├── creates ──> MultiInventory (paginated variant)
     
 InventoryHandler
-    |-- registered in --> InventoryRegistry (singleton, per-player tracking)
-    |-- events routed by --> InventoryClickHandler, InventoryCloseHandler, InventoryDragHandler
+    ├── registered in ──> InventoryRegistry (singleton, per-player tracking)
+    ├── events routed by ──> InventoryClickHandler, InventoryCloseHandler, InventoryDragHandler
     
 Slot (data model)
-    |-- evaluated by --> ConditionEvaluator / BooleanExpressionEvaluator
-    |-- produces --> ConditionalSlotResult (resolved item + actions)
+    ├── evaluated by ──> ConditionEvaluator / BooleanExpressionEvaluator
+    ├── produces ──> ConditionalSlotResult (resolved item + actions)
 ```
 
 ### InventoryHandler (Core Class)
@@ -63,30 +63,36 @@ handler.setItem(int slot, ItemBuilder item, boolean draggable,
                 TriConsumer<Player, InventoryHandler, ItemBuilder> clickAction);
 
 // Set an item with separate left-click and right-click handlers
-handler.setItem(int slot, ItemBuilder item, boolean draggable,
-                TriConsumer<Player, InventoryHandler, ItemBuilder> leftClick,
-                TriConsumer<Player, InventoryHandler, ItemBuilder> rightClick);
+handler.
+
+setItem(int slot, ItemBuilder item, boolean draggable,
+        TriConsumer<Player, InventoryHandler, ItemBuilder> leftClick,
+        TriConsumer<Player, InventoryHandler, ItemBuilder> rightClick);
 
 // Set a raw ItemStack (no click handler)
-handler.setItem(int slot, ItemStack itemStack, boolean draggable);
+handler.
+
+setItem(int slot, ItemStack itemStack, boolean draggable);
 
 // Remove an item and its handlers from a slot
-handler.removeItem(int slot);
+handler.
+
+removeItem(int slot);
 
 // Open the inventory for a player (re-registers in InventoryRegistry)
 handler.open(Player player);
 
 // Close the inventory for a player
-handler.close(Player player);
+		handler.close(Player player);
 
 // Rename the inventory (re-creates the Bukkit Inventory, preserves contents)
-handler.rename(JavaPlugin plugin, String name);
+		handler.rename(JavaPlugin plugin,String name);
 
 // Copy contents from another handler, resolving placeholders
-handler.copyContent(Placeholder placeholder, InventoryHandler source, Player player);
+		handler.copyContent(Placeholder placeholder,InventoryHandler source,Player player);
 
 // Clear all items
-handler.clear();
+		handler.clear();
 ```
 
 **Example -- creating a simple inventory programmatically:**
@@ -96,27 +102,37 @@ InventoryHandler menu = new InventoryHandler(plugin, "My Menu", 27, player);
 
 // Glass pane border item (not draggable, no click action)
 ItemBuilder glass = new ItemBuilder(Material.BLACK_STAINED_GLASS_PANE)
-        .setDisplayName(" ");
-menu.setItem(0, glass, false, null);
+		.setDisplayName(" ");
+menu.
+
+setItem(0,glass, false,null);
 
 // Clickable item
 ItemBuilder diamond = new ItemBuilder(Material.DIAMOND)
-        .setDisplayName("&bClick Me")
-        .setLore("&7Left-click to execute", "&7Right-click for info");
+		.setDisplayName("&bClick Me")
+		.setLore("&7Left-click to execute", "&7Right-click for info");
 
-menu.setItem(13, diamond, false,
-    // Left-click
-    (p, inv, item) -> {
-        p.performCommand("glw shop buy diamond");
-        p.closeInventory();
+menu.
+
+setItem(13,diamond, false,
+		// Left-click
+		(p, inv, item) ->{
+		p.
+
+performCommand("glw shop buy diamond");
+        p.
+
+closeInventory();
     },
-    // Right-click
-    (p, inv, item) -> {
-        p.sendMessage("This diamond costs $500!");
-    }
-);
+			// Right-click
+			(p,inv,item)->{
+		p.
 
-menu.open(player);
+sendMessage("This diamond costs $500!");
+    }
+			);
+
+			menu.open(player);
 ```
 
 ### InventoryBuilder (Record)
@@ -128,13 +144,13 @@ or `MultiInventory` instances from YAML-parsed `InventoryData`.
 
 ```java
 InventoryHandler createInventory(
-    JavaPlugin plugin,
-    Placeholder placeholder,    // resolves %placeholder% tokens
-    Player player,
-    Fill fill,                  // border/fill material
-    Fill line,                  // vertical/horizontal line material
-    ConditionEvaluator evaluator,
-    InventoryOpener inventoryOpener
+		JavaPlugin plugin,
+		Placeholder placeholder,    // resolves %placeholder% tokens
+		Player player,
+		Fill fill,                  // border/fill material
+		Fill line,                  // vertical/horizontal line material
+		ConditionEvaluator evaluator,
+		InventoryOpener inventoryOpener
 )
 ```
 
@@ -152,12 +168,12 @@ Processing pipeline per slot:
 
 ```java
 MultiInventory createMultiInventory(
-    JavaPlugin plugin,
-    Placeholder placeholder,
-    Player player,
-    List<ItemStack> items,      // dynamic item list to paginate
-    ButtonTags buttonTags,      // custom head textures for nav buttons
-    Fill fill
+		JavaPlugin plugin,
+		Placeholder placeholder,
+		Player player,
+		List<ItemStack> items,      // dynamic item list to paginate
+		ButtonTags buttonTags,      // custom head textures for nav buttons
+		Fill fill
 )
 ```
 
@@ -186,17 +202,17 @@ Each slot in an inventory is represented by a `Slot` object:
 
 ```java
 public class Slot {
-    private final int         slot;       // slot index (0-53)
-    private final boolean     clickable;  // whether click events fire
-    private final boolean     draggable;  // whether item can be dragged out
-    private final ItemBuilder item;       // the displayed item
+	private final int         slot;       // slot index (0-53)
+	private final boolean     clickable;  // whether click events fire
+	private final boolean     draggable;  // whether item can be dragged out
+	private final ItemBuilder item;       // the displayed item
 
-    // Optional conditional display logic
-    private ConditionalSlotData conditionalData;
+	// Optional conditional display logic
+	private ConditionalSlotData conditionalData;
 
-    // Click handlers
-    private TriConsumer<Player, InventoryHandler, ItemBuilder> clickableSlot;     // left-click
-    private TriConsumer<Player, InventoryHandler, ItemBuilder> rightClickSlot;    // right-click
+	// Click handlers
+	private TriConsumer<Player, InventoryHandler, ItemBuilder> clickableSlot;     // left-click
+	private TriConsumer<Player, InventoryHandler, ItemBuilder> rightClickSlot;    // right-click
 }
 ```
 
@@ -212,9 +228,9 @@ The condition system enables YAML-driven dynamic slot content based on player st
 
 ```java
 public record SlotCondition(String valueExpression) {
-    public boolean evaluate(Player player, ConditionEvaluator evaluator) {
-        return evaluator.evaluate(player, valueExpression);
-    }
+	public boolean evaluate(Player player, ConditionEvaluator evaluator) {
+		return evaluator.evaluate(player, valueExpression);
+	}
 }
 ```
 
@@ -222,7 +238,7 @@ public record SlotCondition(String valueExpression) {
 
 ```java
 public interface ConditionEvaluator {
-    boolean evaluate(Player player, String expression);
+	boolean evaluate(Player player, String expression);
 }
 ```
 
@@ -233,9 +249,9 @@ as boolean (`true`/`yes`/`1` = true, `false`/`no`/`0`/`na` = false, non-zero num
 
 ```java
 public class ConditionalSlotData {
-    private final SlotCondition condition;
-    private final BranchData    trueData;   // shown when condition is true
-    private final BranchData    falseData;  // shown when condition is false
+	private final SlotCondition condition;
+	private final BranchData    trueData;   // shown when condition is true
+	private final BranchData    falseData;  // shown when condition is false
 }
 ```
 
@@ -272,8 +288,11 @@ Condition: %gangland_has_gang%
 
 ```java
 InventoryHandler nextPage();      // advance to next page
+
 InventoryHandler previousPage();  // go back one page
+
 InventoryHandler homePage();      // return to page 0
+
 boolean hasNextPage();            // check if more pages exist
 ```
 
@@ -281,15 +300,15 @@ boolean hasNextPage();            // check if more pages exist
 
 ```java
 static MultiInventory dynamicMultiInventory(
-    JavaPlugin plugin,
-    Player player,
-    List<ItemStack> items,
-    String title,
-    boolean staticItemsAllowed,
-    boolean fixedSize,
-    Fill fill,
-    ButtonTags buttonTags,
-    Map<ItemStack, TriConsumer<...>> staticItems
+		JavaPlugin plugin,
+		Player player,
+		List<ItemStack> items,
+		String title,
+		boolean staticItemsAllowed,
+		boolean fixedSize,
+		Fill fill,
+		ButtonTags buttonTags,
+		Map<ItemStack, TriConsumer<...>>staticItems
 )
 ```
 
@@ -297,13 +316,13 @@ static MultiInventory dynamicMultiInventory(
 
 ```java
 public record PageConfig(
-    int maxRows,          // usable rows per page (typically 4)
-    int maxColumns,       // usable columns (7 without static items, 6 with)
-    int perPage,          // items per page (maxRows * maxColumns)
-    int pages,            // total page count
-    int remainingAmount,  // items on the last page
-    int finalPage,        // slot count for the last page
-    int initialPage       // slot count for non-final pages (usually MAX_SLOTS=54)
+		int maxRows,          // usable rows per page (typically 4)
+		int maxColumns,       // usable columns (7 without static items, 6 with)
+		int perPage,          // items per page (maxRows * maxColumns)
+		int pages,            // total page count
+		int remainingAmount,  // items on the last page
+		int finalPage,        // slot count for the last page
+		int initialPage       // slot count for non-final pages (usually MAX_SLOTS=54)
 )
 ```
 
@@ -320,13 +339,13 @@ Each button plays `BLOCK_WOODEN_BUTTON_CLICK_ON` on click.
 **`ButtonTags`** -- custom head textures for navigation:
 
 ```java
-public record ButtonTags(String previousPage, String homePage, String nextPage) {}
+public record ButtonTags(String previousPage, String homePage, String nextPage) { }
 ```
 
 **`Fill`** -- border/line material:
 
 ```java
-public record Fill(String name, String material) {}
+public record Fill(String name, String material) { }
 ```
 
 ### Slot Event Handlers
@@ -338,7 +357,7 @@ parsing to wire behavior to slots.
 
 ```java
 public interface SlotEventHandler {
-    Slot handle(SlotContext context, InventoryOpener opener);
+	Slot handle(SlotContext context, InventoryOpener opener);
 }
 ```
 
@@ -346,16 +365,16 @@ public interface SlotEventHandler {
 
 ```java
 public record SlotContext(
-    ConfigurationSection eventSection,      // left-click config
-    ConfigurationSection rightClickSection, // right-click config
-    int slotLoc,                            // slot position
-    String item,                            // material name
-    String itemName,                        // display name
-    Map<String, Object> data,              // NBT tag data (color, head)
-    List<String> lore,                      // lore lines
-    boolean enchanted,                      // enchantment glow
-    boolean draggable                       // can be dragged
-) {}
+		ConfigurationSection eventSection,      // left-click config
+		ConfigurationSection rightClickSection, // right-click config
+		int slotLoc,                            // slot position
+		String item,                            // material name
+		String itemName,                        // display name
+		Map<String, Object> data,              // NBT tag data (color, head)
+		List<String> lore,                      // lore lines
+		boolean enchanted,                      // enchantment glow
+		boolean draggable                       // can be dragged
+) { }
 ```
 
 **`ClickSlotHandler`** -- the standard handler for `OnClick`/`OnInteract` events:
@@ -368,10 +387,10 @@ public record SlotContext(
 
 ```java
 public abstract class AbstractCommandSlotHandler implements SlotEventHandler {
-    // Reads Command/Inventory/Permission from config, then calls:
-    protected void onSlotAction(Player player, InventoryHandler inv, ItemBuilder builder) {
-        // Override in subclasses for additional behavior
-    }
+	// Reads Command/Inventory/Permission from config, then calls:
+	protected void onSlotAction(Player player, InventoryHandler inv, ItemBuilder builder) {
+		// Override in subclasses for additional behavior
+	}
 }
 ```
 
@@ -393,18 +412,32 @@ color tags, data tags, enchantments.
 // In InventoryClickHandler.onInventoryClick:
 InventoryHandler inv = InventoryRegistry.getInstance().findByInventory(topInventory);
 
-if (event.isRightClick()) {
-    var rightClickAction = inv.getRightClickSlots().get(rawSlot);
-    if (rightClickAction != null) {
-        rightClickAction.accept(player, inv, itemBuilder);
-        event.setCancelled(!inv.getDraggableSlots().contains(rawSlot));
-        return;
-    }
-}
+if(event.
+
+isRightClick()){
+var rightClickAction = inv.getRightClickSlots().get(rawSlot);
+    if(rightClickAction !=null){
+		rightClickAction.
+
+accept(player, inv, itemBuilder);
+        event.
+
+setCancelled(!inv.getDraggableSlots().
+
+contains(rawSlot));
+		return;
+		}
+		}
 
 var leftClickAction = inv.getClickableSlots().get(rawSlot);
-leftClickAction.accept(player, inv, itemBuilder);
-event.setCancelled(!inv.getDraggableSlots().contains(rawSlot));
+leftClickAction.
+
+accept(player, inv, itemBuilder);
+event.
+
+setCancelled(!inv.getDraggableSlots().
+
+contains(rawSlot));
 ```
 
 ### InventoryRegistry (Singleton Service)
@@ -412,11 +445,29 @@ event.setCancelled(!inv.getDraggableSlots().contains(rawSlot));
 Thread-safe per-player inventory tracking using `ConcurrentHashMap`:
 
 ```java
-InventoryRegistry.getInstance().registerInventory(UUID, InventoryHandler);
-InventoryRegistry.getInstance().unregisterInventory(UUID, InventoryHandler);
-InventoryRegistry.getInstance().findByInventory(Inventory);  // reverse lookup
-InventoryRegistry.getInstance().getInventories(UUID);         // all inventories for player
-InventoryRegistry.getInstance().clear(UUID);                  // cleanup on quit
+InventoryRegistry.getInstance().
+
+registerInventory(UUID, InventoryHandler);
+InventoryRegistry.
+
+getInstance().
+
+unregisterInventory(UUID, InventoryHandler);
+InventoryRegistry.
+
+getInstance().
+
+findByInventory(Inventory);  // reverse lookup
+InventoryRegistry.
+
+getInstance().
+
+getInventories(UUID);         // all inventories for player
+InventoryRegistry.
+
+getInstance().
+
+clear(UUID);                  // cleanup on quit
 ```
 
 ### InventoryOpener
@@ -424,9 +475,10 @@ InventoryRegistry.getInstance().clear(UUID);                  // cleanup on quit
 Functional interface that decouples `inventory-api` from `gangland-impl`:
 
 ```java
+
 @FunctionalInterface
 public interface InventoryOpener {
-    void openInventory(Player player, String inventoryName);
+	void openInventory(Player player, String inventoryName);
 }
 ```
 
@@ -441,15 +493,15 @@ and opens it for the player.
 
 ```
 ScoreboardAddon (config loader)
-    |-- reads YAML --> Line / StaticLine objects
+    ├── reads YAML ──> Line / StaticLine objects
     
 Scoreboard (orchestrator)
-    |-- uses --> RepeatingTimer (tick every 1 tick)
-    |-- delegates to --> DriverHandler (abstract)
-                            |-- DriverV1 (clustered updates)
-                            |-- DriverV2 (built-in clustering)
-                            |-- DriverV3 (minimal-diff, change detection)
-                                |-- wraps --> FastBoard (packet-based scoreboard)
+    ├── uses ──> RepeatingTimer (tick every 1 tick)
+    ├── delegates to ──> DriverHandler (abstract)
+                            ├── DriverV1 (clustered updates)
+                            ├── DriverV2 (built-in clustering)
+                            ├── DriverV3 (minimal-diff, change detection)
+                                ├── wraps ──> FastBoard (packet-based scoreboard)
 ```
 
 ### Scoreboard (Orchestrator)
@@ -458,9 +510,11 @@ Creates a `RepeatingTimer` that fires every tick (50ms) and calls `driver.update
 
 ```java
 public class Scoreboard {
-    public Scoreboard(JavaPlugin plugin, DriverHandler driver);
-    public void start();  // begins tick-based updates
-    public void end();    // stops timer and deletes FastBoard
+	public Scoreboard(JavaPlugin plugin, DriverHandler driver);
+
+	public void start();  // begins tick-based updates
+
+	public void end();    // stops timer and deletes FastBoard
 }
 ```
 
@@ -470,20 +524,21 @@ Wraps FastBoard with ViaVersion compatibility and per-line update intervals:
 
 ```java
 public abstract class DriverHandler {
-    // Fields
-    private final Placeholder placeholder;
-    private final FastBoard   fastBoard;
-    private final List<Line>  lines;
-    private final Line        title;
-    private final Map<Line, Long> lineUpdateCounts;
-    private long globalTickCount;
+	// Fields
+	private final Placeholder     placeholder;
+	private final FastBoard       fastBoard;
+	private final List<Line>      lines;
+	private final Line            title;
+	private final Map<Line, Long> lineUpdateCounts;
+	private       long            globalTickCount;
 
-    // Abstract -- each driver version implements its own update strategy
-    public abstract void update();
+	// Abstract -- each driver version implements its own update strategy
+	public abstract void update();
 
-    // Shared helpers
-    protected String updateLine(Line line);   // resolves placeholders
-    protected void incrementTick();
+	// Shared helpers
+	protected String updateLine(Line line);   // resolves placeholders
+
+	protected void incrementTick();
 }
 ```
 
@@ -501,9 +556,9 @@ minimizing FastBoard API calls.
 
 ```java
 public class DriverV3 extends DriverHandler {
-    private final Map<Long, List<Line>> clusters;        // lines grouped by interval
-    private final Map<Long, Integer>    clustersInterval; // tick counters per cluster
-    private final Map<Line, String>     cache;            // last rendered text per line
+	private final Map<Long, List<Line>> clusters;        // lines grouped by interval
+	private final Map<Long, Integer>    clustersInterval; // tick counters per cluster
+	private final Map<Line, String>     cache;            // last rendered text per line
 }
 ```
 
@@ -520,14 +575,17 @@ Strategy:
 
 ```java
 public class Line {
-    private final long         interval;  // update interval in ticks (0 = static)
-    private final List<String> contents;  // rotating content frames
-    private final int          usedIndex; // position index in the scoreboard
+	private final long         interval;  // update interval in ticks (0 = static)
+	private final List<String> contents;  // rotating content frames
+	private final int          usedIndex; // position index in the scoreboard
 
-    public void addContent(String content);      // add a frame (auto-colorized)
-    public String getCurrentContent();           // current frame
-    public String update(Placeholder, Player);   // resolve placeholders, advance frame
-    public boolean isStatic();                   // true if interval==0 or StaticLine
+	public void addContent(String content);      // add a frame (auto-colorized)
+
+	public String getCurrentContent();           // current frame
+
+	public String update(Placeholder, Player);   // resolve placeholders, advance frame
+
+	public boolean isStatic();                   // true if interval==0 or StaticLine
 }
 ```
 
@@ -539,20 +597,20 @@ Loads scoreboard configuration from `scoreboard.yml`:
 
 ```yaml
 Board:
-  Title:
-    Interval: 20          # ticks between title frame changes
-    Lines:
-      - "&6Gangland &7Warfare"
-      - "&eGangland &7Warfare"
-  Rows:
-    1:
-      Interval: 0         # static line
+   Title:
+      Interval: 20          # ticks between title frame changes
       Lines:
-        - "&7&m                    "
-    2:
-      Interval: 20        # update every second
-      Lines:
-        - "&fKills: &a%gangland_kills%"
+         - "&6Gangland &7Warfare"
+         - "&eGangland &7Warfare"
+   Rows:
+      1:
+         Interval: 0         # static line
+         Lines:
+            - "&7&m                    "
+      2:
+         Interval: 20        # update every second
+         Lines:
+            - "&fKills: &a%gangland_kills%"
 ```
 
 **Example -- creating a scoreboard for a player:**
@@ -561,18 +619,22 @@ Board:
 ScoreboardAddon addon = new ScoreboardAddon(fileManager);
 
 DriverV3 driver = new DriverV3(
-    placeholder,                // Placeholder resolver
-    viaAPI,                     // ViaVersion API (nullable)
-    player,                     // target player
-    addon.getTitle(),           // title Line
-    new ArrayList<>(addon.getLines())  // content Lines
+		placeholder,                // Placeholder resolver
+		viaAPI,                     // ViaVersion API (nullable)
+		player,                     // target player
+		addon.getTitle(),           // title Line
+		new ArrayList<>(addon.getLines())  // content Lines
 );
 
 Scoreboard scoreboard = new Scoreboard(plugin, driver);
-scoreboard.start();
+scoreboard.
+
+start();
 
 // Later, on quit:
-scoreboard.end();
+scoreboard.
+
+end();
 ```
 
 ---
@@ -585,25 +647,25 @@ The sign system uses a **Chain of Responsibility** pattern with composable aspec
 
 ```
 SignService (abstract, initialization)
-    |-- registers --> SignTypeDefinition (bundles type + validator + parser + handler + aspects)
-        |-- into --> SignTypeRegistry (lookup by typed/generated name)
+    ├── registers ──> SignTypeDefinition (bundles type + validator + parser + handler + aspects)
+        ├── into ──> SignTypeRegistry (lookup by typed/generated name)
 
-Player places sign --> SignCreation listener
-    |-- validates via --> SignValidator / AbstractSignValidator
-    |-- formats via --> SignFormatterService
+Player places sign ──> SignCreation listener
+    ├── validates via ──> SignValidator / AbstractSignValidator
+    ├── formats via ──> SignFormatterService
 
-Player right-clicks sign --> PlayerSignInteract listener
-    |-- looks up --> SignTypeRegistry.findByLine(firstLine)
-    |-- parses via --> SignParser / AbstractSignParser --> ParsedSign
-    |-- executes via --> SignHandler / AspectBasedSignHandler
-        |-- chains --> List<SignAspect> (sorted by priority)
-            |-- each produces --> AspectResult
+Player right─clicks sign ──> PlayerSignInteract listener
+    ├── looks up ──> SignTypeRegistry.findByLine(firstLine)
+    ├── parses via ──> SignParser / AbstractSignParser ──> ParsedSign
+    ├── executes via ──> SignHandler / AspectBasedSignHandler
+        ├── chains ──> List<SignAspect> (sorted by priority)
+            ├── each produces ──> AspectResult
 ```
 
 ### SignType
 
 ```java
-public record SignType(String typed, String generated) {}
+public record SignType(String typed, String generated) { }
 ```
 
 - `typed`: the raw text a player writes on line 1 (e.g., `[Trade]`)
@@ -614,16 +676,17 @@ public record SignType(String typed, String generated) {}
 Bundles all components for a sign type:
 
 ```java
+
 @Builder
 public class SignTypeDefinition {
-    private final SignType      signType;
-    private final SignValidator signValidator;
-    private final SignParser    signParser;
-    private final SignHandler   handler;
-    private final BulkSignHandler bulkHandler;  // optional, for shift-click bulk actions
-    private final List<SignAspect> aspects;
+	private final SignType         signType;
+	private final SignValidator    signValidator;
+	private final SignParser       signParser;
+	private final SignHandler      handler;
+	private final BulkSignHandler  bulkHandler;  // optional, for shift-click bulk actions
+	private final List<SignAspect> aspects;
 
-    public List<SignAspect> getSortedAspects();  // sorted by priority (highest first)
+	public List<SignAspect> getSortedAspects();  // sorted by priority (highest first)
 }
 ```
 
@@ -633,13 +696,16 @@ Dual-keyed registry for fast lookup:
 
 ```java
 public class SignTypeRegistry {
-    private final Map<String, SignTypeDefinition> definitionsByTyped;
-    private final Map<String, SignTypeDefinition> definitionsByGenerated;
+	private final Map<String, SignTypeDefinition> definitionsByTyped;
+	private final Map<String, SignTypeDefinition> definitionsByGenerated;
 
-    public void register(SignTypeDefinition definition);
-    public Optional<SignTypeDefinition> findByLine(String line);     // checks both maps
-    public Optional<SignTypeDefinition> getDefinition(SignType type);
-    public boolean isRegistered(String typedName);
+	public void register(SignTypeDefinition definition);
+
+	public Optional<SignTypeDefinition> findByLine(String line);     // checks both maps
+
+	public Optional<SignTypeDefinition> getDefinition(SignType type);
+
+	public boolean isRegistered(String typedName);
 }
 ```
 
@@ -651,9 +717,11 @@ Stores `SignFormat` definitions for display formatting:
 
 ```java
 public class SignFormatRegistry {
-    public void register(SignFormat format);
-    public Optional<SignFormat> getFormat(String formatName);
-    public Optional<SignFormat> getFormatByPrefix(String prefix);
+	public void register(SignFormat format);
+
+	public Optional<SignFormat> getFormat(String formatName);
+
+	public Optional<SignFormat> getFormatByPrefix(String prefix);
 }
 ```
 
@@ -662,15 +730,17 @@ public class SignFormatRegistry {
 Defines the expected line structure for a sign type:
 
 ```java
+
 @Builder
 public class SignFormat {
-    private final String formatName;
-    private final String signTypePrefix;
-    private final List<SignLineFormat> lineFormats;
-    private final Map<String, ConditionalLineFormat> conditionalLines;
+	private final String                             formatName;
+	private final String                             signTypePrefix;
+	private final List<SignLineFormat>               lineFormats;
+	private final Map<String, ConditionalLineFormat> conditionalLines;
 
-    public SignLineFormat getLineFormat(int lineNumber);
-    public boolean hasConditionalFormat(int lineNumber, String triggerValue);
+	public SignLineFormat getLineFormat(int lineNumber);
+
+	public boolean hasConditionalFormat(int lineNumber, String triggerValue);
 }
 ```
 
@@ -682,8 +752,9 @@ Conditional formats allow different formatting rules based on values on other li
 
 ```java
 public interface SignValidator {
-    void validate(String[] lines) throws SignValidationException;
-    SignType getSignType();
+	void validate(String[] lines) throws SignValidationException;
+
+	SignType getSignType();
 }
 ```
 
@@ -704,7 +775,7 @@ Subclasses override `isValidContent(String)` and optionally `performCustomValida
 
 ```java
 public interface SignParser {
-    ParsedSign parse(String[] lines, Location location) throws SignValidationException;
+	ParsedSign parse(String[] lines, Location location) throws SignValidationException;
 }
 ```
 
@@ -712,8 +783,11 @@ public interface SignParser {
 
 ```java
 protected String cleanLine(String line);                           // strip color codes
+
 protected double parsePrice(String line, String moneySymbol);     // extract price
+
 protected int parseAmount(String line);                            // extract amount
+
 protected String parseContent(String line);                        // extract content text
 ```
 
@@ -721,14 +795,21 @@ protected String parseContent(String line);                        // extract co
 
 ```java
 public interface ParsedSign {
-    SignType getSignType();
-    String getContent();
-    double getPrice();
-    int getAmount();
-    Location getLocation();
-    String[] getRawLines();
-    <T> T getMetadata(String key, Class<T> type);
-    boolean hasMetadata(String key);
+	SignType getSignType();
+
+	String getContent();
+
+	double getPrice();
+
+	int getAmount();
+
+	Location getLocation();
+
+	String[] getRawLines();
+
+	<T> T getMetadata(String key, Class<T> type);
+
+	boolean hasMetadata(String key);
 }
 ```
 
@@ -741,10 +822,13 @@ type-specific data.
 
 ```java
 public interface SignAspect {
-    AspectResult execute(Player player, ParsedSign sign);
-    boolean canExecute(Player player, ParsedSign sign);
-    String getName();
-    default int getPriority() { return 0; }  // higher = executed first
+	AspectResult execute(Player player, ParsedSign sign);
+
+	boolean canExecute(Player player, ParsedSign sign);
+
+	String getName();
+
+	default int getPriority() { return 0; }  // higher = executed first
 }
 ```
 
@@ -752,15 +836,18 @@ public interface SignAspect {
 
 ```java
 public class AspectResult {
-    private final boolean success;
-    private final String  message;
-    private final boolean continueExecution;  // if false, stops the chain
+	private final boolean success;
+	private final String  message;
+	private final boolean continueExecution;  // if false, stops the chain
 
-    // Factory methods:
-    static AspectResult success(String message);        // success, continue chain
-    static AspectResult failure(String message);        // failure, stop chain
-    static AspectResult successContinue(String message); // success, continue
-    static AspectResult successStop(String message);     // success, stop chain
+	// Factory methods:
+	static AspectResult success(String message);        // success, continue chain
+
+	static AspectResult failure(String message);        // failure, stop chain
+
+	static AspectResult successContinue(String message); // success, continue
+
+	static AspectResult successStop(String message);     // success, stop chain
 }
 ```
 
@@ -768,20 +855,20 @@ public class AspectResult {
 
 ```java
 public class AspectBasedSignHandler implements SignHandler {
-    private final List<SignAspect> aspects;
+	private final List<SignAspect> aspects;
 
-    public List<AspectResult> handle(Player player, ParsedSign sign) {
-        for (SignAspect aspect : aspects) {
-            if (!aspect.canExecute(player, sign)) {
-                results.add(AspectResult.failure(...));
-                break;  // stop chain on precondition failure
-            }
-            AspectResult result = aspect.execute(player, sign);
-            results.add(result);
-            if (!result.isContinueExecution()) break;  // stop if aspect says so
-        }
-        return results;
-    }
+	public List<AspectResult> handle(Player player, ParsedSign sign) {
+		for (SignAspect aspect : aspects) {
+			if (!aspect.canExecute(player, sign)) {
+				results.add(AspectResult.failure(...));
+				break;  // stop chain on precondition failure
+			}
+			AspectResult result = aspect.execute(player, sign);
+			results.add(result);
+			if (!result.isContinueExecution()) break;  // stop if aspect says so
+		}
+		return results;
+	}
 }
 ```
 
@@ -791,14 +878,17 @@ Abstract service that ties together the registry, validation, parsing, and forma
 
 ```java
 public abstract class SignInteractionService {
-    private final String              prefix;           // e.g., "[GLW]"
-    private final SignTypeRegistry    registry;
-    private final SignFormatterService formatterService;
+	private final String               prefix;           // e.g., "[GLW]"
+	private final SignTypeRegistry     registry;
+	private final SignFormatterService formatterService;
 
-    public abstract boolean handlerInteraction(Player player, ParsedSign sign);
-    public void validateSign(String[] lines) throws SignValidationException;
-    public Optional<ParsedSign> parseSign(String[] lines, Location location);
-    public String[] formatForDisplay(String[] lines, String moneySymbol);
+	public abstract boolean handlerInteraction(Player player, ParsedSign sign);
+
+	public void validateSign(String[] lines) throws SignValidationException;
+
+	public Optional<ParsedSign> parseSign(String[] lines, Location location);
+
+	public String[] formatForDisplay(String[] lines, String moneySymbol);
 }
 ```
 
@@ -808,11 +898,11 @@ Abstract initializer that registers all sign type definitions:
 
 ```java
 public abstract class SignService {
-    public abstract List<SignTypeDefinition> setupSigns() throws SignValidationException;
+	public abstract List<SignTypeDefinition> setupSigns() throws SignValidationException;
 
-    public void initialize() {
-        // calls setupSigns() and registers each definition in the registry
-    }
+	public void initialize() {
+		// calls setupSigns() and registers each definition in the registry
+	}
 }
 ```
 
@@ -839,23 +929,23 @@ public abstract class SignService {
 ```java
 public class MySignService extends SignService {
 
-    @Override
-    public List<SignTypeDefinition> setupSigns() {
-        SignType tradeType = new SignType("[Trade]", "&2[Trade]");
+	@Override
+	public List<SignTypeDefinition> setupSigns() {
+		SignType tradeType = new SignType("[Trade]", "&2[Trade]");
 
-        SignTypeDefinition tradeDef = SignTypeDefinition.builder()
-            .signType(tradeType)
-            .signValidator(new TradeSignValidator(tradeType, "$"))
-            .signParser(new TradeSignParser(tradeType))
-            .handler(new AspectBasedSignHandler(List.of(
-                new PermissionAspect("gangland.sign.trade"),
-                new BalanceCheckAspect(),
-                new TradeExecuteAspect()
-            )))
-            .build();
+		SignTypeDefinition tradeDef = SignTypeDefinition.builder()
+		                                                .signType(tradeType)
+		                                                .signValidator(new TradeSignValidator(tradeType, "$"))
+		                                                .signParser(new TradeSignParser(tradeType))
+		                                                .handler(new AspectBasedSignHandler(List.of(
+																new PermissionAspect("gangland.sign.trade"),
+				                                                new BalanceCheckAspect(),
+				                                                new TradeExecuteAspect()
+														)))
+		                                                .build();
 
-        return List.of(tradeDef);
-    }
+		return List.of(tradeDef);
+	}
 }
 ```
 
@@ -867,22 +957,22 @@ public class MySignService extends SignService {
 
 ```
 LootChestConfig (settings, tiers, loot tables)
-    |-- loaded by --> LootChestLoader
+    ├── loaded by ──> LootChestLoader
 
 LootChestData (chest definition: location, tier, items, cooldown state)
-    |-- creates --> LootChestSession (active player session)
-        |-- optionally creates --> CrackingSession (lockpick minigame)
+    ├── creates ──> LootChestSession (active player session)
+        ├── optionally creates ──> CrackingSession (lockpick minigame)
 
 LootChestHandler<T> (abstract handler chain)
-    |-- subclassed by:
+    ├── subclassed by:
         SessionStartHandler, SessionCompleteHandler
         ChestCooldownTickHandler, ChestCooldownCompleteHandler
         CrackingStartHandler, CrackingTickHandler,
         CrackingSuccessHandler, CrackingFailedHandler
 
 LootChestEvent (abstract base)
-    |-- Cracking events: Start, During, Success, Failure, End
-    |-- Chest events: Open, Close, DuringCooldown, CooldownComplete
+    ├── Cracking events: Start, During, Success, Failure, End
+    ├── Chest events: Open, Close, DuringCooldown, CooldownComplete
 ```
 
 ### LootChestData
@@ -890,37 +980,46 @@ LootChestEvent (abstract base)
 Represents a placed loot chest in the world:
 
 ```java
+
 @Builder
 public class LootChestData {
-    private final UUID     id;
-    private final Location location;
-    private final String   lootTableId;
-    private final LootTier tier;
-    private final long     respawnTime;
-    private final int      inventorySize;
-    private final String   displayName;
+	private final UUID     id;
+	private final Location location;
+	private final String   lootTableId;
+	private final LootTier tier;
+	private final long     respawnTime;
+	private final int      inventorySize;
+	private final String   displayName;
 
-    // Mutable state
-    private long    lastOpened;
-    private boolean isLooted;
-    private long    cooldownEndTime;
-    private List<ItemStack> currentInventory;  // persisted between sessions
-    private int[]           currentSlotMapping;
+	// Mutable state
+	private long            lastOpened;
+	private boolean         isLooted;
+	private long            cooldownEndTime;
+	private List<ItemStack> currentInventory;  // persisted between sessions
+	private int[]           currentSlotMapping;
 
-    // Optional cracking minigame settings
-    private boolean crackingEnabled;
-    private long    crackingTimeSeconds;
+	// Optional cracking minigame settings
+	private boolean crackingEnabled;
+	private long    crackingTimeSeconds;
 
-    // Key methods
-    public void markAsLooted();
-    public void startCooldown(long cooldownSeconds);
-    public boolean isOnCooldown();
-    public long getRemainingCooldownSeconds();
-    public boolean hasItemsRemaining();
-    public boolean isBlocked();              // empty AND on cooldown
-    public boolean canRespawn();
-    public void respawn();                   // resets all state
-    public void clearInventory();
+	// Key methods
+	public void markAsLooted();
+
+	public void startCooldown(long cooldownSeconds);
+
+	public boolean isOnCooldown();
+
+	public long getRemainingCooldownSeconds();
+
+	public boolean hasItemsRemaining();
+
+	public boolean isBlocked();              // empty AND on cooldown
+
+	public boolean canRespawn();
+
+	public void respawn();                   // resets all state
+
+	public void clearInventory();
 }
 ```
 
@@ -928,15 +1027,18 @@ public class LootChestData {
 
 ```java
 public record LootTier(
-    String id,
-    String displayName,
-    int level,
-    UnlockRequirement unlockRequirement,
-    String unlockItemId          // for KEY/LOCKPICK types
+		String id,
+		String displayName,
+		int level,
+		UnlockRequirement unlockRequirement,
+		String unlockItemId          // for KEY/LOCKPICK types
 ) {
-    public enum UnlockRequirement {
-        NONE, LOCKPICK, KEY, PERMISSION
-    }
+	public enum UnlockRequirement {
+		NONE,
+		LOCKPICK,
+		KEY,
+		PERMISSION
+	}
 }
 ```
 
@@ -946,28 +1048,35 @@ Manages an active player-chest interaction:
 
 ```java
 public class LootChestSession {
-    private final UUID             sessionId;
-    private final Player           player;
-    private final LootChestData    chestData;
-    private final InventoryHandler inventory;
-    private final List<ItemStack>  generatedLoot;
-    private final boolean          usingSharedInventory;
-    private int[]                  slotMapping;
-    private SessionState           state;
-    private boolean                itemTaken;
+	private final UUID             sessionId;
+	private final Player           player;
+	private final LootChestData    chestData;
+	private final InventoryHandler inventory;
+	private final List<ItemStack>  generatedLoot;
+	private final boolean          usingSharedInventory;
+	private       int[]            slotMapping;
+	private       SessionState     state;
+	private       boolean          itemTaken;
 
-    // Cracking state
-    private boolean crackingRequired;
-    private boolean crackingCompleted;
+	// Cracking state
+	private boolean crackingRequired;
+	private boolean crackingCompleted;
 
-    public void open();              // populates inventory and opens for player
-    public void markItemTaken();     // tracks that player took an item
-    public void close();             // syncs inventory state back to LootChestData
-    public void cancel();
+	public void open();              // populates inventory and opens for player
 
-    public enum SessionState {
-        OPEN, CRACKING, LOOTING, CLOSED, CANCELLED
-    }
+	public void markItemTaken();     // tracks that player took an item
+
+	public void close();             // syncs inventory state back to LootChestData
+
+	public void cancel();
+
+	public enum SessionState {
+		OPEN,
+		CRACKING,
+		LOOTING,
+		CLOSED,
+		CANCELLED
+	}
 }
 ```
 
@@ -984,31 +1093,38 @@ The lockpick/cracking minigame runs on a 1-second timer:
 
 ```java
 public class CrackingSession {
-    private final Player        player;
-    private final LootChestData chestData;
-    private final LootTier      tier;
-    private final long          totalTime;
-    private long                timeRemaining;
-    private int                 progress;        // 0-100
-    private int                 targetProgress;  // default 100
-    private CrackState          state;
+	private final Player        player;
+	private final LootChestData chestData;
+	private final LootTier      tier;
+	private final long          totalTime;
+	private       long          timeRemaining;
+	private       int           progress;        // 0-100
+	private       int           targetProgress;  // default 100
+	private       CrackState    state;
 
-    public void start(
-        BiConsumer<CrackingSession, Long> onTick,     // called every second
-        Consumer<CrackingSession> onSuccess,           // called on completion
-        Consumer<CrackingSession> onFailed             // called on timeout
-    );
+	public void start(
+			BiConsumer<CrackingSession, Long> onTick,     // called every second
+			Consumer<CrackingSession> onSuccess,           // called on completion
+			Consumer<CrackingSession> onFailed             // called on timeout
+	);
 
-    public void addProgress(int amount);    // auto-completes at target
-    public void complete();                 // marks as completed
-    public void cancel();                   // cancels and stops timer
+	public void addProgress(int amount);    // auto-completes at target
 
-    public double getProgressPercentage();  // 0.0 - 1.0
-    public double getTimePercentage();      // 0.0 - 1.0
+	public void complete();                 // marks as completed
 
-    public enum CrackState {
-        PENDING, IN_PROGRESS, COMPLETED, FAILED, CANCELLED
-    }
+	public void cancel();                   // cancels and stops timer
+
+	public double getProgressPercentage();  // 0.0 - 1.0
+
+	public double getTimePercentage();      // 0.0 - 1.0
+
+	public enum CrackState {
+		PENDING,
+		IN_PROGRESS,
+		COMPLETED,
+		FAILED,
+		CANCELLED
+	}
 }
 ```
 
@@ -1018,9 +1134,11 @@ public class CrackingSession {
 
 ```java
 public abstract class LootChestHandler<T> {
-    public void addHandler(Consumer<T> handler);
-    public void removeHandler(Consumer<T> handler);
-    public void handle(T session);  // invokes all registered handlers in order
+	public void addHandler(Consumer<T> handler);
+
+	public void removeHandler(Consumer<T> handler);
+
+	public void handle(T session);  // invokes all registered handlers in order
 }
 ```
 
@@ -1065,16 +1183,17 @@ All extend `LootChestEvent` (which extends Bukkit `Event`):
 **`LootChestConfig`** -- built from a `LootChestSettingsProvider`:
 
 ```java
+
 @Builder
 public class LootChestConfig {
-    private final Map<String, LootTier>  tiers;
-    private final Map<String, LootTable> lootTables;
-    private final long                   defaultCountdownTime;
-    private final String                 openingSound;
-    private final String                 lockedSound;
-    private final String                 closingSound;
-    private final List<String>           allowedBlockTypes;
-    private final Map<Rarity, Double>    globalRarityChances;
+	private final Map<String, LootTier>  tiers;
+	private final Map<String, LootTable> lootTables;
+	private final long                   defaultCountdownTime;
+	private final String                 openingSound;
+	private final String                 lockedSound;
+	private final String                 closingSound;
+	private final List<String>           allowedBlockTypes;
+	private final Map<Rarity, Double>    globalRarityChances;
 }
 ```
 
@@ -1092,9 +1211,9 @@ The hologram system uses invisible armor stands to display floating text:
 
 ```
 HologramService (manager, ConcurrentHashMap-backed)
-    |-- creates/manages --> Hologram (armor stand lines)
-    |-- optional --> BukkitTask (auto-updating holograms)
-    |-- protected by --> HologramProtectionListener
+    ├── creates/manages --> Hologram (armor stand lines)
+    ├── optional --> BukkitTask (auto-updating holograms)
+    ├── protected by --> HologramProtectionListener
 ```
 
 ### HologramService
@@ -1103,28 +1222,31 @@ Central manager for all holograms:
 
 ```java
 public class HologramService {
-    // Create a static hologram
-    public Hologram createHologram(Location location, String... lines);
+	// Create a static hologram
+	public Hologram createHologram(Location location, String... lines);
 
-    // Create a hologram that auto-updates on an interval
-    public Hologram createUpdatingHologram(
-        Location location,
-        long updateIntervalTicks,
-        BiConsumer<Hologram, Long> updater,
-        String... initialLines
-    );
+	// Create a hologram that auto-updates on an interval
+	public Hologram createUpdatingHologram(
+			Location location,
+			long updateIntervalTicks,
+			BiConsumer<Hologram, Long> updater,
+			String... initialLines
+	);
 
-    // Lookup
-    public Optional<Hologram> getHologram(UUID id);
-    public Optional<Hologram> getHologramAt(Location location);
+	// Lookup
+	public Optional<Hologram> getHologram(UUID id);
 
-    // Removal
-    public void removeHologram(UUID id);
-    public void removeHologramAt(Location location);
-    public void cancelUpdateTask(UUID hologramId);
+	public Optional<Hologram> getHologramAt(Location location);
 
-    // Cleanup
-    public void clear();  // despawns all holograms and cancels all tasks
+	// Removal
+	public void removeHologram(UUID id);
+
+	public void removeHologramAt(Location location);
+
+	public void cancelUpdateTask(UUID hologramId);
+
+	// Cleanup
+	public void clear();  // despawns all holograms and cancels all tasks
 }
 ```
 
@@ -1134,19 +1256,24 @@ Each hologram is a list of invisible, marker armor stands stacked vertically:
 
 ```java
 public class Hologram {
-    private static final double LINE_HEIGHT = 0.25;  // spacing between lines
+	private static final double LINE_HEIGHT = 0.25;  // spacing between lines
 
-    private final UUID             id;
-    private final Location         baseLocation;
-    private final List<ArmorStand> lines;
-    private boolean                spawned;
+	private final UUID             id;
+	private final Location         baseLocation;
+	private final List<ArmorStand> lines;
+	private       boolean          spawned;
 
-    public void spawn(String... text);              // create armor stands
-    public void update(String... text);             // update all lines (respawns if count changed)
-    public void updateLine(int lineIndex, String text);  // update single line
-    public void despawn();                          // remove all armor stands
-    public void teleport(Location newLocation);     // move hologram
-    public int getLineCount();
+	public void spawn(String... text);              // create armor stands
+
+	public void update(String... text);             // update all lines (respawns if count changed)
+
+	public void updateLine(int lineIndex, String text);  // update single line
+
+	public void despawn();                          // remove all armor stands
+
+	public void teleport(Location newLocation);     // move hologram
+
+	public int getLineCount();
 }
 ```
 
@@ -1165,30 +1292,34 @@ HologramService hologramService = new HologramService(plugin);
 
 // Static hologram
 Hologram label = hologramService.createHologram(
-    chestLocation.clone().add(0, 2, 0),
-    "&6Loot Chest",
-    "&7Tier: &eGold",
-    "&aRight-click to open"
+		chestLocation.clone().add(0, 2, 0),
+		"&6Loot Chest",
+		"&7Tier: &eGold",
+		"&aRight-click to open"
 );
 
 // Auto-updating hologram (updates every second)
 Hologram timer = hologramService.createUpdatingHologram(
-    location.clone().add(0, 2.5, 0),
-    20L,  // 20 ticks = 1 second
-    (hologram, currentTime) -> {
-        long remaining = cooldownEnd - currentTime;
-        hologram.update(
-            "&cOn Cooldown",
-            "&7Respawns in: &e" + (remaining / 1000) + "s"
-        );
-    },
-    "&cOn Cooldown",
-    "&7Calculating..."
+		location.clone().add(0, 2.5, 0),
+		20L,  // 20 ticks = 1 second
+		(hologram, currentTime) -> {
+			long remaining = cooldownEnd - currentTime;
+			hologram.update(
+					"&cOn Cooldown",
+					"&7Respawns in: &e" + (remaining / 1000) + "s"
+			);
+		},
+		"&cOn Cooldown",
+		"&7Calculating..."
 );
 
 // Later cleanup
-hologramService.removeHologram(label.getId());
-hologramService.clear();  // remove everything
+hologramService.
+
+removeHologram(label.getId());
+		hologramService.
+
+clear();  // remove everything
 ```
 
 ### HologramProtectionListener
@@ -1226,17 +1357,17 @@ sign interactions that open custom inventory GUIs.
 gangland-core (Placeholder, ItemBuilder, ChatUtil, TriConsumer)
     ^
     |
-inventory-api -----> (standalone, depends on gangland-core)
+inventory-api ─────> (standalone, depends on gangland-core)
     ^
     |
-scoreboard-api ----> (standalone, depends on gangland-core)
+scoreboard-api ────> (standalone, depends on gangland-core)
     
-sign-api ----------> (standalone, depends on gangland-core)
+sign-api ──────────> (standalone, depends on gangland-core)
     
-hologram-api -------> (standalone, depends on gangland-core)
+hologram-api ───────> (standalone, depends on gangland-core)
     ^
     |
-lootchest-api ------> (depends on inventory-api, hologram-api, gangland-core)
+lootchest-api ──────> (depends on inventory-api, hologram-api, gangland-core)
 ```
 
 All UI modules depend on `gangland-core` for shared utilities (`Placeholder`, `ItemBuilder`, `ChatUtil`,

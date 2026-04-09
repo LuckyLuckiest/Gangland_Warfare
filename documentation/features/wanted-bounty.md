@@ -151,7 +151,7 @@ Bounty:
 
 ```java
 // Access the wanted executor
-WantedExecutor wanted = gangland.getInitializer().getWantedExecutor();
+WantedExecutor wanted = gangland.getContext().get(WantedExecutor.class);
 
 // Get a player's current wanted level
 int stars = wanted.getLevel(user);
@@ -165,7 +165,7 @@ wanted.
 removeLevel(user, 1);
 
 // Bounty
-BountyExecutor bounty = gangland.getInitializer().getBountyExecutor();
+BountyExecutor bounty = gangland.getContext().get(BountyExecutor.class);
 
 long currentBounty = bounty.getBounty(user);
 bounty.

@@ -99,7 +99,7 @@ the [Cops N Crooks guide](./cops-n-crooks.md#configuration).
 The `DetainmentService` is the single point of contact for all arrest logic.
 
 ```java
-DetainmentService detainment = gangland.getInitializer().getDetainmentService();
+DetainmentService detainment = gangland.getContext().get(DetainmentService.class);
 
 // Check a player's state
 DetainmentState state = detainment.getState(player);
@@ -127,7 +127,7 @@ release(player);
 The `JailService` manages jail locations:
 
 ```java
-JailService jailService = gangland.getInitializer().getJailService();
+JailService jailService = gangland.getContext().get(JailService.class);
 
 // Get all jails
 List<Jail> jails = jailService.getAllJails();

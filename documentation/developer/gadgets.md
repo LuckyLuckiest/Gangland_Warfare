@@ -19,20 +19,20 @@ provides three major subsystems:
 
 ```
 gangland-gadget
-    depends on --> gangland-item     (Fuel, Wearable, Repairable data models)
-    depends on --> gangland-weapon   (WeaponService, projectile damage lookup)
-    depends on --> gangland-core     (ItemBuilder, ActionBarManager, ParticleUtil)
-    depends on --> plugin-common     (custom logging)
-    depends on --> plugin-persistence (IRepository for ParkedCar)
+    depends on ──> gangland-item      (Fuel, Wearable, Repairable data models)
+    depends on ──> gangland-weapon    (WeaponService, projectile damage lookup)
+    depends on ──> gangland-core      (ItemBuilder, ActionBarManager, ParticleUtil)
+    depends on ──> plugin-common      (custom logging)
+    depends on ──> plugin-persistence (IRepository for ParkedCar)
 ```
 
 ### Gadget Types
 
 ```java
 public enum GadgetType {
-    CAR,
-    WEARABLE,
-    JETPACK
+	CAR,
+	WEARABLE,
+	JETPACK
 }
 ```
 
@@ -46,40 +46,40 @@ world. Cars are backed by Minecart entities with custom velocity-based movement 
 ### Architecture Diagram
 
 ```
-                  +------------------+
-                  |    CarAddon      |  Reads cars.yml, builds Car objects
-                  |  (config loader) |
-                  +--------+---------+
-                           |
+                  ╭──────────────────╮
+                  │    CarAddon      │  Reads cars.yml, builds Car objects
+                  │  (config loader) │
+                  ╰────────┬─────────╯
+                           │
                            v
-                  +------------------+
-                  |   CarManager     |  Registry: carId -> Car
-                  +--------+---------+
-                           |
+                  ╭──────────────────╮
+                  │   CarManager     │  Registry: carId ─> Car
+                  ╰────────┬─────────╯
+                           │
                            v
-+-------------+   +------------------+   +-------------------+
-| CarInteract |-->|   CarService     |-->| VehicleRegistry   |
-|  Listener   |   | (lifecycle API)  |   | (active sessions) |
-+-------------+   +--------+---------+   +-------------------+
-                           |
-              +------------+------------+
-              |            |            |
-              v            v            v
-     +---------------+ +----------+ +------------------+
-     | MinecartVehicle| |VehicleSes| |VehicleMovementTask|
-     | (entity wrap) | |  sion    | | (tick handler)   |
-     +---------------+ +----------+ +------------------+
-              |                            ^
-              v                            |
-     +------------------+    +---------------------------+
-     |  ParkedVehicle   |    | VehicleInputInterceptor   |
-     |  (in-world idle) |    | (Netty packet capture)    |
-     +------------------+    +---------------------------+
-              |
+╭─────────────╮   ╭──────────────────╮   ╭───────────────────╮
+│ CarInteract │──>│   CarService     │──>│ VehicleRegistry   │
+│  Listener   │   │ (lifecycle API)  │   │ (active sessions) │
+╰─────────────╯   ╰────────┬─────────╯   ╰───────────────────╯
+                           │
+              ╭────────────┼─────────────────╮
+              │            │                 │
+              v            v                 v
+     ╭────────────────╮ ╭──────────────╮ ╭───────────────────╮
+     │ MinecartVehicle│ │VehicleSession│ │VehicleMovementTask│
+     │ (entity wrap)  │ │              │ │ (tick handler)    │
+     ╰────────────────╯ ╰──────────────╯ ╰───────────────────╯
+              │                              ^
+              v                              │
+     ╭──────────────────╮    ╭───────────────────────────╮
+     │  ParkedVehicle   │    │ VehicleInputInterceptor   │
+     │  (in-world idle) │    │ (Netty packet capture)    │
+     ╰──────────────────╯    ╰───────────────────────────╯
+              │
               v
-     +------------------+
-     |   ParkedCar      |  DB record (IRepository)
-     +------------------+
+     ╭──────────────────╮
+     │   ParkedCar      │  DB record (IRepository)
+     ╰──────────────────╯
 ```
 
 ### Car (data model)
@@ -117,11 +117,11 @@ Immutable `@Builder` value object holding a car type's configuration. Built by `
 
 ```java
 public enum CarKey {
-    CAR_ID("car"),
-    CAR_OWNER("car_owner"),
-    CAR_DURABILITY("car_durability"),
-    CAR_MAX_DURABILITY("car_max_durability"),
-    CAR_EXHAUST_SIDE("car_exhaust_side");
+	CAR_ID("car"),
+	CAR_OWNER("car_owner"),
+	CAR_DURABILITY("car_durability"),
+	CAR_MAX_DURABILITY("car_max_durability"),
+	CAR_EXHAUST_SIDE("car_exhaust_side");
 }
 ```
 
@@ -148,43 +148,43 @@ Extends `CarManager`. Reads `cars.yml` via `FileManager` and constructs `Car` ob
 
 ```yaml
 sports_car:
-  Material: "MINECART"
-  Display_Name: "&6Sports Car"
-  Custom_Model_Data: 100
-  Permission: "gangland.car.sports"
-  Drop_On_Death: false
-  Droppable: true
-  Lore:
-    - "&7A fast sports car"
-  Vehicle:
-    Max_Speed: 0.8          # blocks/tick
-    Acceleration: 0.04      # blocks/tick^2
-    Deceleration: 0.02      # blocks/tick^2
-    Turn_Speed: 4.0          # degrees/tick
-    Max_Health: 100.0
-  Fuel:
-    Enabled: true
-    Fuel_Key: "gasoline"
-    Max_Fuel: 6000
-  Repair:
-    Max_Durability: 500
+   Material: "MINECART"
+   Display_Name: "&6Sports Car"
+   Custom_Model_Data: 100
+   Permission: "gangland.car.sports"
+   Drop_On_Death: false
+   Droppable: true
+   Lore:
+      - "&7A fast sports car"
+   Vehicle:
+      Max_Speed: 0.8          # blocks/tick
+      Acceleration: 0.04      # blocks/tick^2
+      Deceleration: 0.02      # blocks/tick^2
+      Turn_Speed: 4.0          # degrees/tick
+      Max_Health: 100.0
+   Fuel:
+      Enabled: true
+      Fuel_Key: "gasoline"
+      Max_Fuel: 6000
+   Repair:
+      Max_Durability: 500
 ```
 
 ### CarService (core lifecycle API)
 
-**File:** `me.luckyraven.gadget.car.CarService` -- 659 lines
+**File:** `me.luckyraven.gadget.car.CarService` ── 659 lines
 
 The central API for the car system. Manages the full vehicle lifecycle:
 
 ```
-Item in inventory --> placeCar() --> Parked in world --> mountCar() --> Active session
-                                          ^                                  |
-                                          |                                  |
-                                   parkCar() <---------- dismount (shift) ---+
-                                          |
-                                   pickupCar() --> Item back in inventory
-                                          |
-                                   destroyCar() --> Entity removed
+Item in inventory ──> placeCar() ──> Parked in world ──> mountCar() ──> Active session
+                                          ^                                  │
+                                          │                                  │
+                                   parkCar() <────────── dismount (shift) ───╯
+                                          │
+                                   pickupCar() ──> Item back in inventory
+                                          │
+                                   destroyCar() ──> Entity removed
 ```
 
 #### Lifecycle Methods
@@ -234,16 +234,25 @@ Abstraction over the underlying Bukkit entity used to represent a drivable car.
 
 ```java
 public interface VehicleEntity {
-    void spawn(Location location);
-    void mount(Player player);
-    void despawn();
-    void updateMovement(double speed, float yaw);
-    void setFacing(float yaw);
-    boolean isAlive();
-    Location getLocation();
-    Entity getBukkitEntity();
-    UUID getEntityUUID();
-    default void wobble(JavaPlugin plugin) {}
+	void spawn(Location location);
+
+	void mount(Player player);
+
+	void despawn();
+
+	void updateMovement(double speed, float yaw);
+
+	void setFacing(float yaw);
+
+	boolean isAlive();
+
+	Location getLocation();
+
+	Entity getBukkitEntity();
+
+	UUID getEntityUUID();
+
+	default void wobble(JavaPlugin plugin) { }
 }
 ```
 
@@ -267,8 +276,12 @@ Implements `VehicleEntity` using a `Minecart` as the host entity. Key behaviors:
 ```java
 double radians = Math.toRadians(yaw);
 double dx = -Math.sin(radians) * speed;
-double dz =  Math.cos(radians) * speed;
-minecart.setVelocity(new Vector(dx, minecart.getVelocity().getY(), dz));
+double dz = Math.cos(radians) * speed;
+minecart.
+
+setVelocity(new Vector(dx, minecart.getVelocity().
+
+getY(),dz));
 ```
 
 Negative speed naturally produces reverse movement along the same yaw axis. The Y component is
@@ -276,7 +289,7 @@ preserved from the entity's current velocity so gravity still works.
 
 ### VehicleSession (driver state)
 
-**File:** `me.luckyraven.gadget.car.vehicle.VehicleSession` -- 151 lines
+**File:** `me.luckyraven.gadget.car.vehicle.VehicleSession` ── 151 lines
 
 Represents an active driving session. Created when a player mounts a car, destroyed on park/destroy.
 
@@ -316,35 +329,35 @@ Represents an active driving session. Created when a player mounts a car, destro
 
 ### VehicleMovementTask (tick-based physics)
 
-**File:** `me.luckyraven.gadget.car.vehicle.VehicleMovementTask` -- 195 lines
+**File:** `me.luckyraven.gadget.car.vehicle.VehicleMovementTask` ── 195 lines
 
 Extends `BukkitRunnable`, scheduled at `runTaskTimer(plugin, 1L, 1L)` (every tick = 50ms).
 
 #### Physics Diagram
 
 ```
-                        +-------------------+
-                        |  checkGuards()    |  Entity dead? -> destroyCar
-                        |                   |  Driver offline? -> parkCar
-                        +---------+---------+
-                                  |
-                        +---------v---------+
-                        | Read WASD input   |  From volatile session fields
-                        +---------+---------+
-                                  |
-                    +-------------+-------------+
-                    |             |              |
+                        ╭───────────────────╮
+                        │  checkGuards()    │  Entity dead? ─> destroyCar
+                        │                   │  Driver offline? ─> parkCar
+                        ╰─────────┬─────────╯
+                                  │
+                        ╭─────────v─────────╮
+                        │ Read WASD input   │  From volatile session fields
+                        ╰─────────┬─────────╯
+                                  │
+                    ╭─────────────┼──────────────╮
+                    │             │              │
                W && S held   Has fuel?      No fuel
-                    |             |              |
+                    │             │              │
                tickBurnout  updateSteering  coastToStop
-                    |        updateSpeed        |
-                    |             |              |
-                    +------+------+--------------+
-                           |
-                  +--------v--------+
-                  |  finalizeTick   |  Apply velocity, exhaust particles,
-                  |                 |  consume fuel, refresh HUD
-                  +-----------------+
+                    │        updateSpeed         │
+                    │             │              │
+                    ╰──────┬──────╯──────────────╯
+                           │
+                  ╭────────v────────╮
+                  │  finalizeTick   │  Apply velocity, exhaust particles,
+                  │                 │  consume fuel, refresh HUD
+                  ╰─────────────────╯
 ```
 
 #### Steering Logic
@@ -389,9 +402,9 @@ When both forward and backward are held:
 
 ```java
 private double decelerate(double speed, double amount) {
-    if (speed > 0) return Math.max(0, speed - amount);
-    if (speed < 0) return Math.min(0, speed + amount);
-    return 0;
+	if (speed > 0) return Math.max(0, speed - amount);
+	if (speed < 0) return Math.min(0, speed + amount);
+	return 0;
 }
 ```
 
@@ -484,10 +497,13 @@ live entity references.
 
 ```java
 public enum ExhaustSide {
-    LEFT, RIGHT, BOTH;
+	LEFT,
+	RIGHT,
+	BOTH;
 
-    public static ExhaustSide random();         // random from all 3 values
-    public static ExhaustSide fromString(String); // with random fallback
+	public static ExhaustSide random();         // random from all 3 values
+
+	public static ExhaustSide fromString(String); // with random fallback
 }
 ```
 
@@ -531,20 +547,20 @@ anti-cheat kick.
 ### Architecture Diagram
 
 ```
-+---------------------+     +------------------+     +------------------------+
-| JetpackEquipListener|---->| JetpackService   |---->| JetpackSession         |
-| (chestplate events) |     | (lifecycle API)  |     | (per-player state)     |
-+---------------------+     +--------+---------+     +------------------------+
-                                     |                          ^
-+------------------------+           |                          |
-|JetpackActivateListener |---->      |                          |
-| (join/quit)            |           v                          |
-+------------------------+   +------------------+    +------------------------+
-                             | JetpackTask      |    |JetpackInputInterceptor |
-+------------------------+   | (tick physics)   |--->| (Netty packet capture) |
-|JetpackFallDamageListener|  +------------------+    +------------------------+
-| (cancel fall damage)   |
-+------------------------+
+╭─────────────────────╮     ╭──────────────────╮     ╭────────────────────────╮
+│ JetpackEquipListener│────>│ JetpackService   │────>│ JetpackSession         │
+│ (chestplate events) │     │ (lifecycle API)  │     │ (per-player state)     │
+╰─────────────────────╯     ╰────────┬─────────╯     ╰────────────────────────╯
+                                     │                          ^
+╭────────────────────────╮           │                          │
+│JetpackActivateListener │────>      │                          │
+│ (join/quit)            │           v                          │
+╰────────────────────────╯   ╭──────────────────╮    ╭────────────────────────╮
+                             │ JetpackTask      │    │JetpackInputInterceptor │
+╭─────────────────────────╮  │ (tick physics)   │───>│ (Netty packet capture) │
+│JetpackFallDamageListener│  ╰──────────────────╯    ╰────────────────────────╯
+│ (cancel fall damage)    │
+╰─────────────────────────╯
 ```
 
 ### JetpackService (lifecycle manager)
@@ -590,30 +606,30 @@ Extends `BukkitRunnable`, runs every tick (50ms). All physics constants sourced 
 #### Vertical Physics Diagram
 
 ```
-                   +------------------+
-                   |  checkGuards()   |  Offline? -> deactivate
-                   |                  |  Not wearing jetpack? -> deactivate
-                   +--------+---------+
-                            |
-                   +--------v---------+
-                   | handleGlideToggle|  Sneak+Space (combo) toggles glide mode
-                   +--------+---------+
-                            |
-               +------------+------------+
-               |            |            |
+                   ╭──────────────────╮
+                   │  checkGuards()   │  Offline? ─> deactivate
+                   │                  │  Not wearing jetpack? ─> deactivate
+                   ╰────────┬─────────╯
+                            │
+                   ╭────────v─────────╮
+                   │ handleGlideToggle│  Sneak+Space (combo) toggles glide mode
+                   ╰────────┬─────────╯
+                            │
+               ╭────────────┼────────────╮
+               │            │            │
           Glide mode    Space held    Airborne,
           active        + has fuel    no thrust
-               |            |            |
+               │            │            │
                v            v            v
            newY = 0     ASCEND:       DESCEND:
         (hover/glide)   ramp thrust   apply gravity
                         particles     glide particles
-                            |            |
-               +------------+------------+
-               |
+                            │            │
+               ╭────────────┴────────────╯
+               │
                v
         applyHorizontalPhysics()  (WASD influence while airborne)
-               |
+               │
                v
         player.setVelocity(newX, newY, newZ)
 ```
@@ -624,7 +640,11 @@ Thrust power ramps from 10% to 100% of `ascendPower` over `thrustRampTicks` tick
 
 ```java
 double ramp = Math.min(thrustTicks / (double) physicsConfig.getJetpackThrustRampTicks(), 1.0);
-newY = Math.min(currentY + jetpack.getAscendPower() * (0.1 + 0.9 * ramp), jetpack.getMaxSpeedY());
+newY =Math.
+
+min(currentY +jetpack.getAscendPower() *(0.1+0.9*ramp),jetpack.
+
+getMaxSpeedY());
 ```
 
 This creates a smooth liftoff feel -- the player doesn't instantly shoot upward.
@@ -634,8 +654,12 @@ This creates a smooth liftoff feel -- the player doesn't instantly shoot upward.
 When airborne with no thrust:
 
 ```java
-newY = Math.max(currentY - physicsConfig.getJetpackDescentAccel(),
-                physicsConfig.getJetpackMaxDescentSpeed());
+newY =Math.
+
+max(currentY -physicsConfig.getJetpackDescentAccel(),
+                physicsConfig.
+
+getJetpackMaxDescentSpeed());
 ```
 
 Descent gradually accelerates each tick until hitting the terminal descent speed.
@@ -647,14 +671,26 @@ While airborne, WASD applies directional influence in the player's look directio
 ```java
 // Normalize input direction vector
 // Apply per-tick influence
-newX += dx * physicsConfig.getJetpackHorizInfluence();
-newZ += dz * physicsConfig.getJetpackHorizInfluence();
+newX +=dx *physicsConfig.
+
+getJetpackHorizInfluence();
+
+newZ +=dz *physicsConfig.
+
+getJetpackHorizInfluence();
 
 // Cap horizontal speed
 double horizSpeed = Math.sqrt(newX * newX + newZ * newZ);
-if (horizSpeed > physicsConfig.getJetpackMaxHorizSpeed()) {
-    newX = newX / horizSpeed * physicsConfig.getJetpackMaxHorizSpeed();
-    newZ = newZ / horizSpeed * physicsConfig.getJetpackMaxHorizSpeed();
+if(horizSpeed >physicsConfig.
+
+getJetpackMaxHorizSpeed()){
+newX =newX /horizSpeed *physicsConfig.
+
+getJetpackMaxHorizSpeed();
+
+newZ =newZ /horizSpeed *physicsConfig.
+
+getJetpackMaxHorizSpeed();
 }
 ```
 
@@ -675,7 +711,9 @@ The `FUEL_EFFICIENT` wearable trait reduces consumption:
 ```java
 int capped = Math.min(fuelEfficientLevel, WearableTrait.FUEL_EFFICIENT.getMaxLevel());
 double reduction = capped * WearableTrait.FUEL_EFFICIENT.getEffectPerLevel();
-return Math.max(1, (int)(baseRate * (1.0 - reduction)));
+return Math.
+
+max(1,(int)(baseRate *(1.0-reduction)));
 ```
 
 #### Sound System
@@ -785,7 +823,7 @@ Renders a 20-segment fuel gauge for the action bar:
 
 ```
 fuel_icon Fuel ||||||||||||||||||| current/max
-               ^--- green (filled) + gray (empty)
+               ^─── green (filled) + gray (empty)
 ```
 
 Used by `VehicleMovementTask`, `JetpackTask`, `FuelHoldDisplayListener`, and
@@ -800,27 +838,27 @@ The repair system restores durability to weapons and wearables using consumable 
 ### Architecture Diagram
 
 ```
-+----------------+     +----------------+     +-------------------+
-| RepairListener |---->| RepairAnvilGui |---->| RepairManager     |
-| (anvil hijack) |     | (GUI handler)  |     | (applies repair)  |
-+----------------+     +----------------+     +---------+---------+
-                                                        |
-                                              +---------+---------+
-                                              |                   |
-                                    +---------v------+  +---------v---------+
-                                    |RepairMaterial  |  | RepairMaterialMgr |
-                                    |Manager (lookup)|  | (registry)        |
-                                    +----------------+  +-------------------+
-                                              |
-                                    +---------v---------+
-                                    | RepairMaterialData|  (config values)
-                                    +-------------------+
+╭────────────────╮     ╭────────────────╮     ╭───────────────────╮
+│ RepairListener │────>│ RepairAnvilGui │────>│ RepairManager     │
+│ (anvil hijack) │     │ (GUI handler)  │     │ (applies repair)  │
+╰────────────────╯     ╰────────────────╯     ╰─────────┬─────────╯
+                                                        │
+                                              ╭─────────┴─────────╮
+                                              │                   │
+                                    ╭─────────v──────╮  ╭─────────v─────────╮
+                                    │RepairMaterial  │  │ RepairMaterialMgr │
+                                    │Manager (lookup)│  │ (registry)        │
+                                    ╰────────────────╯  ╰───────────────────╯
+                                              │
+                                    ╭─────────v─────────╮
+                                    │ RepairMaterialData│  (config values)
+                                    ╰───────────────────╯
 
 Config loading:
-+-------------+     +-------------------+     +-------------+
-| RepairLoader|---->|YamlRepairConfig   |---->| RepairConfig|
-| (FileLoader)|     |Provider (parser)  |     | (data bag)  |
-+-------------+     +-------------------+     +-------------+
+╭─────────────╮     ╭───────────────────╮     ╭─────────────╮
+│ RepairLoader│────>│YamlRepairConfig   │────>│ RepairConfig│
+│ (FileLoader)│     │Provider (parser)  │     │ (data bag)  │
+╰─────────────╯     ╰───────────────────╯     ╰─────────────╯
 ```
 
 ### RepairManager (core API)
@@ -883,8 +921,8 @@ Wrapper around `RepairMaterialData` providing item building and static utilities
 **NBT keys (RepairKeys):**
 
 ```java
-public static final String REPAIR_MATERIAL_ID       = "gangland_repair_material_id";
-public static final String REPAIR_MATERIAL_USES     = "gangland_repair_material_uses";
+public static final String REPAIR_MATERIAL_ID = "gangland_repair_material_id";
+public static final String REPAIR_MATERIAL_USES = "gangland_repair_material_uses";
 public static final String REPAIR_MATERIAL_MAX_USES = "gangland_repair_material_max_uses";
 ```
 
@@ -940,11 +978,15 @@ Contract for localized repair messages. Implementation lives in `gangland-impl`.
 
 ```java
 public interface RepairMessages {
-    String getAlreadyFullyRepaired();
-    String getRepairComplete(int restored, int current, int max);
-    String getIncompatibleMaterial();
-    String getRepairCancelled();
-    String getNoMaterialAvailable();
+	String getAlreadyFullyRepaired();
+
+	String getRepairComplete(int restored, int current, int max);
+
+	String getIncompatibleMaterial();
+
+	String getRepairCancelled();
+
+	String getNoMaterialAvailable();
 }
 ```
 
@@ -952,14 +994,21 @@ public interface RepairMessages {
 
 ```java
 public interface Repairable {
-    String getRepairableId();
-    int getCurrentRepairDurability();
-    void setCurrentRepairDurability(int durability);
-    int getMaxRepairDurability();
-    RepairableType getRepairableType();
-    ItemStack buildItem();
-    boolean isFullyRepaired();    // current >= max
-    boolean canBeRepaired();      // current < max
+	String getRepairableId();
+
+	int getCurrentRepairDurability();
+
+	void setCurrentRepairDurability(int durability);
+
+	int getMaxRepairDurability();
+
+	RepairableType getRepairableType();
+
+	ItemStack buildItem();
+
+	boolean isFullyRepaired();    // current >= max
+
+	boolean canBeRepaired();      // current < max
 }
 ```
 
@@ -978,34 +1027,34 @@ Implemented by `Weapon` (and potentially other item types).
 
 ```yaml
 Repair_Materials:
-  basic_kit:
-    Display_Name: "&aBasic Repair Kit"
-    Material: "PAPER"
-    Custom_Model_Data: 50
-    Uses: 3
-    Restore_Amount: 50
-    Restore_Percent: 0.0
-    Compatible_Types:
-      - WEAPON
-    Lore:
-      - "&7Restores 50 durability"
-    Sound:
-      Default_Sound:
-        Sound: "BLOCK_ANVIL_USE"
-        Volume: 1.0
-        Pitch: 1.0
-  advanced_kit:
-    Display_Name: "&6Advanced Repair Kit"
-    Material: "PAPER"
-    Custom_Model_Data: 51
-    Uses: 1
-    Restore_Amount: 0
-    Restore_Percent: 50.0
-    Compatible_Types:
-      - WEAPON
-      - WEARABLE
-    Lore:
-      - "&7Restores 50% of max durability"
+   basic_kit:
+      Display_Name: "&aBasic Repair Kit"
+      Material: "PAPER"
+      Custom_Model_Data: 50
+      Uses: 3
+      Restore_Amount: 50
+      Restore_Percent: 0.0
+      Compatible_Types:
+         - WEAPON
+      Lore:
+         - "&7Restores 50 durability"
+      Sound:
+         Default_Sound:
+            Sound: "BLOCK_ANVIL_USE"
+            Volume: 1.0
+            Pitch: 1.0
+   advanced_kit:
+      Display_Name: "&6Advanced Repair Kit"
+      Material: "PAPER"
+      Custom_Model_Data: 51
+      Uses: 1
+      Restore_Amount: 0
+      Restore_Percent: 50.0
+      Compatible_Types:
+         - WEAPON
+         - WEARABLE
+      Lore:
+         - "&7Restores 50% of max durability"
 ```
 
 ### Events
@@ -1031,33 +1080,33 @@ objects. Each wearable can optionally include a Jetpack section.
 
 ```yaml
 jetpack_mk1:
-  Material: "LEATHER_CHESTPLATE"
-  Name: "&bJetpack MK1"
-  Permission: "gangland.wearable.jetpack_mk1"
-  Base_Damage_Reduction: 0.15
-  Leather_Color: "#3498DB"
-  Lore:
-    - "&7A basic jetpack"
-  Traits:
-    fuel_efficient: 2
-  Jetpack:
-    Fuel_Key: "gasoline"
-    Fuel_Consumption_Rate: 2
-    Ascend_Power: 0.35
-    Glide_Descent_Rate: -0.05
-    Max_Speed_Y: 0.8
-    Max_Fuel: 3600
-    Sound:
-      Thrust:
-        Default_Sound:
-          Sound: "ENTITY_BLAZE_SHOOT"
-          Volume: 0.5
-          Pitch: 1.5
-      Glide:
-        Default_Sound:
-          Sound: "ENTITY_PHANTOM_FLAP"
-          Volume: 0.3
-          Pitch: 1.0
+   Material: "LEATHER_CHESTPLATE"
+   Name: "&bJetpack MK1"
+   Permission: "gangland.wearable.jetpack_mk1"
+   Base_Damage_Reduction: 0.15
+   Leather_Color: "#3498DB"
+   Lore:
+      - "&7A basic jetpack"
+   Traits:
+      fuel_efficient: 2
+   Jetpack:
+      Fuel_Key: "gasoline"
+      Fuel_Consumption_Rate: 2
+      Ascend_Power: 0.35
+      Glide_Descent_Rate: -0.05
+      Max_Speed_Y: 0.8
+      Max_Fuel: 3600
+      Sound:
+         Thrust:
+            Default_Sound:
+               Sound: "ENTITY_BLAZE_SHOOT"
+               Volume: 0.5
+               Pitch: 1.5
+         Glide:
+            Default_Sound:
+               Sound: "ENTITY_PHANTOM_FLAP"
+               Volume: 0.3
+               Pitch: 1.0
 ```
 
 ---

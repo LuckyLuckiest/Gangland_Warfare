@@ -20,23 +20,23 @@ packets to rotate the player's camera.
 ## Architecture
 
 ```
-                    ┌──────────────────┐
+                    ╭──────────────────╮
                     │  gangland-impl   │
                     │  (RecoilManager) │
-                    └────────┬─────────┘
+                    ╰────────┬─────────╯
                              │ uses
-                    ┌────────┴─────────┐
+                    ╭────────┴─────────╮
                     │   version-impl   │
                     │  (Compatibility) │
                     │  (interface)     │
-                    └────────┬─────────┘
+                    ╰────────┬─────────╯
                              │ implemented by
-              ┌──────────────┼──────────────┐
+              ╭──────────────┼──────────────╮
               │              │              │
-    ┌─────────┴──┐  ┌───────┴────┐  ┌──────┴───────┐
-    │version-1_10│  │version-1_16│  │version-1_21  │
-    │  _R1       │  │  _R3       │  │  _R7         │
-    └────────────┘  └────────────┘  └──────────────┘
+    ╭─────────┴──╮  ╭────────┴────╮  ╭──────┴───────╮
+    │version-1_10│  │version-1_16 │  │version-1_21  │
+    │  _R1       │  │  _R3        │  │  _R7         │
+    ╰────────────╯  ╰─────────────╯  ╰──────────────╯
          ...             ...              ...
                   (28 modules total)
 ```
@@ -45,7 +45,7 @@ packets to rotate the player's camera.
 
 ```java
 public interface Compatibility {
-    RecoilCompatibility getRecoilCompatibility();
+	RecoilCompatibility getRecoilCompatibility();
 }
 ```
 
@@ -55,7 +55,7 @@ Each version module provides a `VersionImplementation` class that implements thi
 
 ```java
 public interface RecoilCompatibility {
-    void applyRecoil(Player player, float pitch, float yaw);
+	void applyRecoil(Player player, float pitch, float yaw);
 }
 ```
 
@@ -82,7 +82,7 @@ Server starts
     │
     ├── Instantiate via reflection
     │
-    └── Store as active Compatibility instance
+    ╰── Store as active Compatibility instance
 ```
 
 If the version is not supported, the compatibility layer is null and recoil effects are
@@ -144,13 +144,13 @@ Player fires weapon
     │     │
     │     ├── Get active Compatibility instance
     │     ├── Get RecoilCompatibility from it
-    │     └── recoilCompat.applyRecoil(player, pitch, yaw)
+    │     ╰── recoilCompat.applyRecoil(player, pitch, yaw)
     │           │
     │           ├── [NMS] Create position/rotation packet
     │           ├── [NMS] Set relative pitch and yaw offsets
-    │           └── [NMS] Send packet to player's connection
+    │           ╰── [NMS] Send packet to player's connection
     │
-    └── Player camera rotates by (pitch, yaw) offset
+    ╰── Player camera rotates by (pitch, yaw) offset
 ```
 
 ### NMS Implementation (Example: 1.21)
@@ -160,23 +160,23 @@ For modern versions (1.17+), the implementation typically looks like:
 ```java
 public class RecoilCompatibilityImpl implements RecoilCompatibility {
 
-    @Override
-    public void applyRecoil(Player player, float pitch, float yaw) {
-        // Get CraftPlayer handle
-        ServerPlayer serverPlayer = ((CraftPlayer) player).getHandle();
+	@Override
+	public void applyRecoil(Player player, float pitch, float yaw) {
+		// Get CraftPlayer handle
+		ServerPlayer serverPlayer = ((CraftPlayer) player).getHandle();
 
-        // Create relative position packet (flags indicate relative values)
-        ClientboundPlayerPositionPacket packet = new ClientboundPlayerPositionPacket(
-            0, 0, 0,       // x, y, z (0 = no movement)
-            yaw,            // yaw offset
-            pitch,          // pitch offset
-            RELATIVE_FLAGS, // all values are relative
-            0               // teleport ID
-        );
+		// Create relative position packet (flags indicate relative values)
+		ClientboundPlayerPositionPacket packet = new ClientboundPlayerPositionPacket(
+				0, 0, 0,       // x, y, z (0 = no movement)
+				yaw,            // yaw offset
+				pitch,          // pitch offset
+				RELATIVE_FLAGS, // all values are relative
+				0               // teleport ID
+		);
 
-        // Send packet
-        serverPlayer.connection.send(packet);
-    }
+		// Send packet
+		serverPlayer.connection.send(packet);
+	}
 }
 ```
 
@@ -184,6 +184,7 @@ For older versions (pre-1.17), the NMS package names differ:
 
 ```java
 // 1.16 and earlier use versioned NMS packages
+
 import net.minecraft.server.v1_16_R3.PacketPlayOutPosition;
 import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
 ```
@@ -195,9 +196,9 @@ Each weapon defines its own recoil pattern:
 ```yaml
 # Example weapon config
 recoil:
-  pitch: 2.5      # Vertical kick (positive = up)
-  yaw: 0.3        # Horizontal drift
-  recovery: 0.8   # Recovery speed multiplier
+   pitch: 2.5      # Vertical kick (positive = up)
+   yaw: 0.3        # Horizontal drift
+   recovery: 0.8   # Recovery speed multiplier
 ```
 
 The `RecoilManager` may also apply modifiers:
@@ -232,14 +233,15 @@ Create a new directory:
 ```
 gangland-compatibility/version-X_XX_RX/
   ├── pom.xml
-  └── src/main/java/me/luckyraven/compatibility/vX_XX_RX/
+  ╰── src/main/java/me/luckyraven/compatibility/vX_XX_RX/
         ├── VersionImplementation.java
-        └── RecoilCompatibilityImpl.java
+        ╰── RecoilCompatibilityImpl.java
 ```
 
 ### Step 2: pom.xml
 
 ```xml
+
 <project>
     <parent>
         <groupId>me.luckyraven</groupId>
@@ -272,12 +274,12 @@ package me.luckyraven.compatibility.vX_XX_RX;
 
 public class VersionImplementation implements Compatibility {
 
-    private final RecoilCompatibility recoilCompatibility = new RecoilCompatibilityImpl();
+	private final RecoilCompatibility recoilCompatibility = new RecoilCompatibilityImpl();
 
-    @Override
-    public RecoilCompatibility getRecoilCompatibility() {
-        return recoilCompatibility;
-    }
+	@Override
+	public RecoilCompatibility getRecoilCompatibility() {
+		return recoilCompatibility;
+	}
 }
 ```
 
@@ -288,11 +290,11 @@ package me.luckyraven.compatibility.vX_XX_RX;
 
 public class RecoilCompatibilityImpl implements RecoilCompatibility {
 
-    @Override
-    public void applyRecoil(Player player, float pitch, float yaw) {
-        // Use the correct NMS classes for this version
-        // Send position packet with relative pitch/yaw
-    }
+	@Override
+	public void applyRecoil(Player player, float pitch, float yaw) {
+		// Use the correct NMS classes for this version
+		// Send position packet with relative pitch/yaw
+	}
 }
 ```
 
@@ -301,12 +303,14 @@ public class RecoilCompatibilityImpl implements RecoilCompatibility {
 Add to `gangland-compatibility/pom.xml`:
 
 ```xml
+
 <module>version-X_XX_RX</module>
 ```
 
 And to the root `pom.xml`:
 
 ```xml
+
 <module>gangland-compatibility/version-X_XX_RX</module>
 ```
 
