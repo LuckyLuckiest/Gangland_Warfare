@@ -105,6 +105,25 @@ public final class GanglandContext {
 	}
 
 	/**
+	 * Runs the reload lifecycle on all beans implementing {@link me.luckyraven.util.autowire.bean.BeanLifecycle}:
+	 * {@code onPreClear()} and {@code onClear()} in reverse topological order, then {@code onInitialize(false)} in
+	 * forward topological order. Call this from the reload orchestrator after files have been reloaded and scoreboards
+	 * have been killed — this replaces the hard-coded {@code ReloadPlugin.databaseInitialize()} sequence.
+	 */
+	public void reloadBeans() {
+		beanFactory.reloadLifecycleBeans();
+	}
+
+	/**
+	 * Runs graceful shutdown on all beans implementing {@link me.luckyraven.util.autowire.bean.BeanLifecycle} in
+	 * reverse topological order. Call this from {@code Gangland.onDisable()} <b>before</b> flushing pending data and
+	 * closing database connections — shutdown callbacks may convert active sessions into saveable state.
+	 */
+	public void shutdownBeans() {
+		beanFactory.shutdownLifecycleBeans();
+	}
+
+	/**
 	 * Drive the phased bean instantiation, then run the listener and command scans. Must be called exactly once, after
 	 * every kernel object has been seeded via {@link #register(Class, Object)}.
 	 *

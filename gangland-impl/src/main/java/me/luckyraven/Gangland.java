@@ -5,15 +5,10 @@ import com.viaversion.viaversion.api.ViaAPI;
 import com.zaxxer.hikari.HikariConfig;
 import lombok.CustomLog;
 import lombok.Getter;
-import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
-import me.luckyraven.copsncrooks.npc.police.CopService;
 import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
-import me.luckyraven.gadget.car.CarService;
-import me.luckyraven.gadget.jetpack.JetpackService;
-import me.luckyraven.hologram.HologramService;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.updater.UpdateChecker;
@@ -59,16 +54,11 @@ public final class Gangland extends JavaPlugin {
 		// vault soft dependency economy check
 		if (EconomyHandler.getVaultEconomy() != null) EconomyHandler.setVaultEconomy(null);
 
-		// deactivate all jetpack sessions before shutdown
-		JetpackService jetpackService = initializer.getJetpackService();
-		if (jetpackService != null) jetpackService.deactivateAll();
+		// unified bean lifecycle shutdown — deactivates sessions, converts active car data to parked records,
+		// despawns NPCs and holograms, all in reverse topological order
+		initializer.getContext().shutdownBeans();
 
-		// convert active car sessions to parked records BEFORE force-save so the data supplier
-		// includes the converted sessions when PeriodicalUpdates flushes all repositories
-		CarService carService = initializer.getCarService();
-		if (carService != null) carService.destroyAll();
-
-		// force save
+		// force save all pending data (must run AFTER bean shutdown so converted car records are included)
 		if (this.periodicalUpdates != null) {
 			this.periodicalUpdates.forceUpdate();
 			this.periodicalUpdates.stop();
@@ -77,18 +67,6 @@ public final class Gangland extends JavaPlugin {
 		// closing all connections
 		DatabaseManager databaseManager = initializer.getDatabaseManager();
 		if (databaseManager != null && !databaseManager.getDatabases().isEmpty()) databaseManager.closeConnections();
-
-		// shutdown hologram service
-		HologramService hologramService = initializer.getHologramService();
-		if (hologramService != null) hologramService.clear();
-
-		// shutdown cop service
-		CopService copService = initializer.getCopService();
-		if (copService != null) copService.shutdown();
-
-		// shutdown civilian service
-		CivilianService civilianService = initializer.getCivilianService();
-		if (civilianService != null) civilianService.shutdown();
 	}
 
 	@Override
@@ -102,7 +80,10 @@ public final class Gangland extends JavaPlugin {
 		dependencyHandler();
 
 		// initializes users and members who joined and not registered in postInitialize
-		reloadPlugin.userInitialize(false);
+		reloadPlugin.loadOnlinePlayers();
+
+		// set up scoreboards for players who were already online during plugin enable
+		if (Settings.isScoreboardEnabled()) reloadPlugin.scoreboardReload();
 
 		// initializes the periodical updates
 		periodicalUpdatesInitializer();

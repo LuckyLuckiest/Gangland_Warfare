@@ -3,12 +3,13 @@ package me.luckyraven.data.account.gang;
 import me.luckyraven.Gangland;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class GangManager {
+public class GangManager implements BeanLifecycle {
 
 	private final Gangland           gangland;
 	private final GanglandDatabase   database;
@@ -66,6 +67,16 @@ public class GangManager {
 
 	public void clear() {
 		gangs.clear();
+	}
+
+	@Override
+	public void onClear() {
+		clear();
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		initialize();
 	}
 
 	public boolean contains(Gang gang) {

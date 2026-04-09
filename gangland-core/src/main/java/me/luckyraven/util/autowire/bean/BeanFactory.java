@@ -38,8 +38,9 @@ public class BeanFactory {
 	private final DependencyContainer                container;
 	private final JavaPlugin                         plugin;
 	private final SettingsLookup                     settings;
-	private final List<Class<?>>                     configClasses = new ArrayList<>();
-	private final Map<Phase, Consumer<List<Object>>> phaseHooks    = new EnumMap<>(Phase.class);
+	private final List<Class<?>>                     configClasses      = new ArrayList<>();
+	private final Map<Phase, Consumer<List<Object>>> phaseHooks         = new EnumMap<>(Phase.class);
+	private final List<Object>                       allRegisteredBeans = new ArrayList<>();
 
 	public BeanFactory(DependencyContainer container, JavaPlugin plugin, SettingsLookup settings) {
 		this.container = container;
@@ -123,6 +124,8 @@ public class BeanFactory {
 	 * invocation.
 	 */
 	public void instantiate(Runnable beforeLifecycle) {
+		allRegisteredBeans.clear();
+
 		List<Object>                     configInstances = new ArrayList<>();
 		Map<Phase, List<BeanDefinition>> phaseDefs       = new EnumMap<>(Phase.class);
 		for (Phase phase : Phase.values()) {
@@ -161,8 +164,6 @@ public class BeanFactory {
 			}
 		}
 
-		List<Object> allRegisteredBeans = new ArrayList<>();
-
 		for (Phase phase : Phase.values()) {
 			List<BeanDefinition> defs = phaseDefs.get(phase);
 			if (defs.isEmpty()) {
@@ -176,6 +177,15 @@ public class BeanFactory {
 			for (BeanDefinition def : ordered) {
 				Object bean = invokeBean(def);
 				registerBean(def, bean);
+
+				// Auto-initialize BeanLifecycle beans immediately after registration, preserving the same
+				// timing as the old inline initialize() calls in @Bean methods. This ensures each bean is
+				// populated with data before the next bean in topo order is constructed — critical for beans
+				// that read from earlier beans during their own construction (e.g. SignManager reads WeaponManager).
+				if (bean instanceof BeanLifecycle lifecycle) {
+					lifecycle.onInitialize(true);
+				}
+
 				phaseBeans.add(bean);
 				allRegisteredBeans.add(bean);
 
@@ -199,6 +209,53 @@ public class BeanFactory {
 
 		log.info("Bean wiring complete: {} configs, {} beans across {} phases",
 		         configInstances.size(), allRegisteredBeans.size(), Phase.values().length);
+	}
+
+	/**
+	 * Runs the full reload lifecycle on all beans implementing {@link BeanLifecycle}. The sequence is:
+	 * <ol>
+	 *     <li>{@link BeanLifecycle#onPreClear()} in <b>reverse</b> topological order (dependents first)</li>
+	 *     <li>{@link BeanLifecycle#onClear()} in <b>reverse</b> topological order</li>
+	 *     <li>{@link BeanLifecycle#onInitialize(boolean)} with {@code firstLoad=false} in <b>forward</b> topological
+	 *     order (dependencies first)</li>
+	 * </ol>
+	 *
+	 * <p>This method replaces the hand-coded reload sequence in the legacy {@code ReloadPlugin.databaseInitialize()}.
+	 */
+	public void reloadLifecycleBeans() {
+		List<BeanLifecycle> forward  = filterLifecycleBeans();
+		List<BeanLifecycle> reversed = new ArrayList<>(forward);
+		Collections.reverse(reversed);
+
+		for (BeanLifecycle bean : reversed) {
+			bean.onPreClear();
+		}
+
+		for (BeanLifecycle bean : reversed) {
+			bean.onClear();
+		}
+
+		for (BeanLifecycle bean : forward) {
+			bean.onInitialize(false);
+		}
+
+		log.info("Lifecycle reload complete: {} bean(s)", forward.size());
+	}
+
+	/**
+	 * Runs graceful shutdown on all beans implementing {@link BeanLifecycle} in <b>reverse</b> topological order. Call
+	 * this during plugin disable, <b>before</b> flushing pending data and closing database connections — shutdown
+	 * callbacks may convert active sessions into saveable state (e.g. {@code CarService.destroyAll()}).
+	 */
+	public void shutdownLifecycleBeans() {
+		List<BeanLifecycle> reversed = new ArrayList<>(filterLifecycleBeans());
+		Collections.reverse(reversed);
+
+		for (BeanLifecycle bean : reversed) {
+			bean.onShutdown();
+		}
+
+		log.info("Lifecycle shutdown complete: {} bean(s)", reversed.size());
 	}
 
 	private BeanDefinition buildDefinition(Object configInstance, Method method, Phase phase) {
@@ -406,6 +463,9 @@ public class BeanFactory {
 			if (implementsInterfaceNamed(target.getClass(), "FileInitializer")) {
 				continue;
 			}
+			if (target instanceof BeanLifecycle) {
+				continue;
+			}
 			Method initialize = findInitializeMethod(target.getClass());
 			if (initialize == null) {
 				continue;
@@ -422,6 +482,10 @@ public class BeanFactory {
 			}
 		}
 	}
+
+	// ----------------------------------------------------------------------------------------------------------------
+	// Lifecycle management — reload and shutdown
+	// ----------------------------------------------------------------------------------------------------------------
 
 	/**
 	 * Reflection-by-name interface check. Walks the class hierarchy looking for any implemented interface whose simple
@@ -472,5 +536,31 @@ public class BeanFactory {
 			cursor = cursor.getSuperclass();
 		}
 		return null;
+	}
+
+	/**
+	 * Calls {@link BeanLifecycle#onInitialize(boolean)} on every lifecycle bean in forward topological order. Used both
+	 * during first-boot (with {@code firstLoad=true}) and as part of {@link #reloadLifecycleBeans()} (with
+	 * {@code firstLoad=false}).
+	 */
+	private void runLifecycleInitialize(boolean firstLoad) {
+		for (BeanLifecycle bean : filterLifecycleBeans()) {
+			bean.onInitialize(firstLoad);
+		}
+	}
+
+	/**
+	 * Returns all registered beans that implement {@link BeanLifecycle}, in forward topological order, de-duplicated by
+	 * identity. Beans that do not implement the interface are silently excluded.
+	 */
+	private List<BeanLifecycle> filterLifecycleBeans() {
+		List<BeanLifecycle> result  = new ArrayList<>();
+		Set<Object>         visited = Collections.newSetFromMap(new IdentityHashMap<>());
+		for (Object bean : allRegisteredBeans) {
+			if (bean instanceof BeanLifecycle lifecycle && visited.add(bean)) {
+				result.add(lifecycle);
+			}
+		}
+		return result;
 	}
 }

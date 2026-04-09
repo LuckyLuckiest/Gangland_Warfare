@@ -3,11 +3,12 @@ package me.luckyraven.weapon;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.repositories.weapon.WeaponRepository;
 import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.weapon.configuration.WeaponAddon;
 
 import java.util.Collection;
 
-public class WeaponManager extends WeaponService {
+public class WeaponManager extends WeaponService implements BeanLifecycle {
 
 	private final WeaponAddon      weaponAddon;
 	private final GanglandDatabase database;
@@ -32,6 +33,16 @@ public class WeaponManager extends WeaponService {
 		}
 
 		repository.setDataSupplier(() -> getWeapons().values());
+	}
+
+	@Override
+	public void onClear() {
+		clear();
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		initialize();
 	}
 
 }

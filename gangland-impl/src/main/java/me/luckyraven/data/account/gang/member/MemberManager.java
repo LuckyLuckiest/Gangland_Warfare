@@ -6,14 +6,16 @@ import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.TableLookup;
 import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 
 import java.util.*;
 
-public class MemberManager {
+public class MemberManager implements BeanLifecycle {
 
 	private final Gangland          gangland;
 	private final GanglandDatabase  database;
@@ -117,6 +119,17 @@ public class MemberManager {
 
 	public void clear() {
 		members.clear();
+	}
+
+	@Override
+	public void onClear() {
+		clear();
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		MemberTable memberTable = TableLookup.find(MemberTable.class, database.getTables());
+		initialize(memberTable);
 	}
 
 	public boolean contains(Member member) {

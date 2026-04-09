@@ -1,22 +1,30 @@
 package me.luckyraven.lootchest;
 
+import lombok.CustomLog;
 import me.luckyraven.Gangland;
 import me.luckyraven.database.repositories.lootchest.LootChestRepository;
+import me.luckyraven.exception.PluginException;
 import me.luckyraven.hologram.HologramService;
 import me.luckyraven.lootchest.data.LootChestData;
 import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.persistence.repository.RepositoryRegistry;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.util.timer.CountdownTimer;
 
 import java.util.Collection;
 
-public class LootChestManager extends LootChestService {
+@CustomLog
+public class LootChestManager extends LootChestService implements BeanLifecycle {
 
-	private final Gangland gangland;
+	private final Gangland           gangland;
+	private final RepositoryRegistry repositoryRegistry;
 
-	public LootChestManager(Gangland gangland, String prefix, HologramService hologramService) {
+	public LootChestManager(Gangland gangland, String prefix, HologramService hologramService,
+	                        RepositoryRegistry repositoryRegistry) {
 		super(gangland, hologramService, prefix);
 
-		this.gangland = gangland;
+		this.gangland           = gangland;
+		this.repositoryRegistry = repositoryRegistry;
 	}
 
 	public void initialize(LootChestRepository repository, boolean reload) {
@@ -36,6 +44,30 @@ public class LootChestManager extends LootChestService {
 		}
 
 		repository.setDataSupplier(this::getAllChests);
+	}
+
+	/**
+	 * Clears chest instance data and active sessions, but preserves config data (tiers, loot tables) which are reloaded
+	 * from YAML files by {@code filesReload()} before this method runs. The parent {@code clear()} wipes everything
+	 * including tiers and loot tables — calling it here would destroy the config that was just reloaded.
+	 */
+	@Override
+	public void onClear() {
+		cancelSessions();
+		clearChests();
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		IRepository<LootChestData> repo = repositoryRegistry.getRepository(LootChestData.class);
+
+		if (!(repo instanceof LootChestRepository castedRepo)) {
+			String message = "LootChestData repository is not initialized!";
+			log.error(message);
+			throw new PluginException(message);
+		}
+
+		initialize(castedRepo, !firstLoad);
 	}
 
 	private void registerLootChests(IRepository<LootChestData> repository) {

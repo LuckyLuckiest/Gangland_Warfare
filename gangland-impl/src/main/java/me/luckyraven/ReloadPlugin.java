@@ -1,50 +1,29 @@
 package me.luckyraven;
 
 import lombok.CustomLog;
-import me.luckyraven.copsncrooks.detainment.DetainmentRegistry;
-import me.luckyraven.copsncrooks.jail.JailService;
-import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
-import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.context.GanglandContext;
 import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.data.plugin.PluginManager;
-import me.luckyraven.data.rank.RankManager;
-import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.TableLookup;
-import me.luckyraven.database.repositories.lootchest.LootChestRepository;
-import me.luckyraven.database.tables.gang.GangAllianceTable;
-import me.luckyraven.database.tables.gang.GangTable;
-import me.luckyraven.database.tables.lootchest.LootChestTable;
 import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.events.user.UserDataInitEvent;
-import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.gadget.car.Car;
-import me.luckyraven.gadget.car.CarService;
-import me.luckyraven.gadget.jetpack.JetpackService;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.unique.UniqueItemUtil;
-import me.luckyraven.listener.ListenerManager;
-import me.luckyraven.listener.player.CreateAccount;
-import me.luckyraven.lootchest.LootChestManager;
-import me.luckyraven.lootchest.LootChestService;
-import me.luckyraven.lootchest.data.LootChestData;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
-import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.scoreboard.Scoreboard;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.driver.DriverHandler;
-import me.luckyraven.weapon.WeaponManager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -56,14 +35,14 @@ import java.util.UUID;
 @CustomLog
 public final class ReloadPlugin {
 
-	private final Gangland         gangland;
-	private final Initializer      initializer;
-	private final GanglandDatabase ganglandDatabase;
+	private final Gangland        gangland;
+	private final Initializer     initializer;
+	private final GanglandContext context;
 
 	public ReloadPlugin(Gangland gangland) {
-		this.gangland         = gangland;
-		this.initializer      = gangland.getInitializer();
-		this.ganglandDatabase = initializer.getGanglandDatabase();
+		this.gangland    = gangland;
+		this.initializer = gangland.getInitializer();
+		this.context     = initializer.getContext();
 	}
 
 	/**
@@ -76,7 +55,12 @@ public final class ReloadPlugin {
 		// when resetting the cache, there would be a problem with the scoreboard trying to get some values
 		// first killing all scoreboards, then initializing the data
 		killAllScoreboards();
-		databaseInitialize(resetCache);
+		if (resetCache) {
+			context.reloadBeans();
+			// re-populate online and offline users — reloadBeans() clears them via onClear()
+			// but onInitialize(false) only sets data suppliers, not the actual user objects
+			loadOnlinePlayers();
+		}
 		if (Settings.isScoreboardEnabled()) scoreboardReload();
 		periodicalUpdatesReload();
 	}
@@ -92,318 +76,6 @@ public final class ReloadPlugin {
 		initializer.addonsLoader();
 		// third, update message addon with new language configuration
 		Messages.setMessageConfiguration(initializer.getLanguageLoader().getMessage());
-	}
-
-	/**
-	 * Properly and in-order initializes the database data.
-	 *
-	 * @param resetCache if old data needs to be cleared
-	 */
-	public void databaseInitialize(boolean resetCache) {
-		// order matters
-		pluginDataInitialize(resetCache);
-		rankInitialize(resetCache);
-		gangInitialize(resetCache);
-		memberInitialize(resetCache);
-		// order doesn't matter
-		userInitialize(resetCache);
-		waypointInitialize(resetCache);
-		weaponInitialize(resetCache);
-		// required to be after weapon
-		lootChestInitialize(resetCache);
-		// cops-n-crooks data
-		jailInitialize(resetCache);
-		detainmentInitialize(resetCache);
-		copSpawnerInitialize(resetCache);
-		// gadgets
-		carServiceInitialize();
-		jetpackServiceInitialize();
-	}
-
-	/**
-	 * Initializes the plugin data (effective for reloads).
-	 *
-	 * @param resetCache if old data needs to be cleared
-	 */
-	public void pluginDataInitialize(boolean resetCache) {
-		PluginManager pluginManager = initializer.getPluginManager();
-
-		if (resetCache) pluginManager.clear();
-
-		pluginManager.initialize();
-	}
-
-	/**
-	 * Initializes the rank data (effective for reloads).
-	 *
-	 * @param resetCache if old data needs to be cleared
-	 *
-	 * @implNote Very important to run this method after {@link RankManager} and its repositories are initialized.
-	 */
-	public void rankInitialize(boolean resetCache) {
-		RankManager rankManager = initializer.getRankManager();
-
-		if (resetCache) rankManager.clear();
-
-		rankManager.initialize();
-	}
-
-	/**
-	 * Initializes the gang data (effective for reloads).
-	 *
-	 * @param resetCache if old data needs to be cleared
-	 *
-	 * @implNote Very important to run this method after {@link GangManager}, {@link GangTable}, and
-	 *        {@link GangAllianceTable} initialization.
-	 */
-	public void gangInitialize(boolean resetCache) {
-		GangManager gangManager = initializer.getGangManager();
-
-		if (resetCache) gangManager.clear();
-
-		gangManager.initialize();
-	}
-
-	/**
-	 * Initializes members' data (effective for reloads).
-	 *
-	 * @param resetCache if old data needs to be cleared
-	 *
-	 * @implNote Very important to run this method after {@link RankManager} and its repositories are initialized.
-	 */
-	public void memberInitialize(boolean resetCache) {
-		MemberManager memberManager = initializer.getMemberManager();
-
-		if (resetCache) memberManager.clear();
-
-		List<Table<?>> tables      = ganglandDatabase.getTables();
-		MemberTable    memberTable = TableLookup.find(MemberTable.class, tables);
-
-		memberManager.initialize(memberTable);
-	}
-
-	/**
-	 * Initializes the user and new members data (effective for reloads).
-	 *
-	 * @param resetCache if old data needs to be cleared
-	 *
-	 * @implNote Very important to run this method after {@link ListenerManager}, {@link CreateAccount},
-	 *        {@link UserManager}, {@link MemberManager} {@link UserTable}, {@link BankTable}, and {@link MemberTable}
-	 * 		initialization.
-	 */
-	public void userInitialize(boolean resetCache) {
-		UserManager<Player> userManager   = initializer.getUserManager();
-		MemberManager       memberManager = initializer.getMemberManager();
-
-		if (resetCache) {
-			for (User<Player> user : userManager.getUsers().values()) {
-				// stop the timers
-				user.getWanted().stopTimer();
-				user.getBounty().stopTimer();
-
-				// stop scoreboard
-				if (user.getScoreboard() == null) continue;
-
-				user.getScoreboard().end();
-				user.setScoreboard(null);
-			}
-
-			userManager.clear();
-		}
-
-		List<Table<?>>  tables          = ganglandDatabase.getTables();
-		UserTable       userTable       = TableLookup.find(UserTable.class, tables);
-		BankTable       bankTable       = TableLookup.find(BankTable.class, tables);
-		MemberTable     memberTable     = TableLookup.find(MemberTable.class, tables);
-		UniqueItemAddon uniqueItemAddon = initializer.getUniqueItemAddon();
-
-		// get the online users
-		for (Player player : Bukkit.getOnlinePlayers()) {
-			User<Player> onlineUser = userManager.getUser(player);
-
-			if (onlineUser != null) continue;
-
-			var newUser = new User<>(gangland, player);
-
-			// add all the unique items
-			var uniqueItems = uniqueItemAddon.getUniqueItems();
-
-			for (var uniqueItem : uniqueItems.values()) {
-				if (!uniqueItem.isAddOnJoin()) continue;
-				if (!uniqueItem.isAddToInventory()) continue;
-
-				if (UniqueItemUtil.hasUniqueItem(player, uniqueItem) && !uniqueItem.isAllowDuplicates()) continue;
-
-				uniqueItem.addItemToInventory(player);
-			}
-
-			initializer.getUserManager().initializeUserData(newUser, userTable, bankTable);
-
-			UserDataInitEvent userDataInitEvent = new UserDataInitEvent(false, newUser);
-			Bukkit.getPluginManager().callEvent(userDataInitEvent);
-
-			userManager.add(newUser);
-
-			// this member doesn't have a gang because they are new
-			Member member = memberManager.getMember(player.getUniqueId());
-
-			// initialize the rank permissions
-			if (member != null) {
-				initializer.getUserManager().initializeUserPermission(newUser, member);
-				continue;
-			}
-
-			// for a new member
-			Member newMember = new Member(player.getUniqueId());
-
-			initializer.getMemberManager().initializeMemberData(newMember, memberTable);
-
-			memberManager.add(newMember);
-		}
-
-		// get the offline users
-		UserManager<OfflinePlayer> offlineUserManager = initializer.getOfflineUserManager();
-
-		if (resetCache) {
-			offlineUserManager.clear();
-		}
-
-		DatabaseHelper helper = new DatabaseHelper(gangland, ganglandDatabase);
-
-		helper.runQueries(database -> {
-			// select all users from the user table
-			List<Object[]> allUsers = userTable.selectAllTableQuery(database);
-
-			for (Object[] userData : allUsers) {
-				String uuidString = String.valueOf(userData[0]);
-				UUID   uuid       = UUID.fromString(uuidString);
-
-				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-				if (offlinePlayer.isOnline()) continue;
-
-				User<OfflinePlayer> existingUser = offlineUserManager.getUser(offlinePlayer);
-				if (existingUser != null) continue;
-
-				User<OfflinePlayer> offlineUser = new User<>(gangland, offlinePlayer);
-
-				offlineUserManager.initializeUserData(offlineUser, userTable, bankTable);
-
-				offlineUserManager.add(offlineUser);
-			}
-		});
-	}
-
-	/**
-	 * Initializes the waypoint data (effective for reloads).
-	 *
-	 * @param resetCache if old data needs to be cleared
-	 *
-	 * @implNote Very important to run this method after {@link WaypointManager} and its repositories are
-	 * 		initialized.
-	 */
-	public void waypointInitialize(boolean resetCache) {
-		WaypointManager waypointManager = initializer.getWaypointManager();
-
-		if (resetCache) waypointManager.clear();
-
-		waypointManager.initialize();
-	}
-
-	/**
-	 * Initializes the weapon data (effective for reloads).
-	 *
-	 * @param resetCache if old data needs to be cleared
-	 *
-	 * @implNote Very important to run this method after {@link WeaponManager} and its repositories are initialized.
-	 */
-	public void weaponInitialize(boolean resetCache) {
-		WeaponManager weaponManager = initializer.getWeaponManager();
-
-		if (resetCache) weaponManager.clear();
-
-		weaponManager.initialize();
-	}
-
-	/**
-	 * Initializes the loot chest data (effective for reloads).
-	 *
-	 * @param resetCache if old data needs to be cleared
-	 *
-	 * @implNote Very important to run this method after {@link LootChestService} and {@link LootChestTable}
-	 * 		initialization.
-	 */
-	public void lootChestInitialize(boolean resetCache) {
-		LootChestManager lootChestManager = initializer.getLootChestManager();
-
-		if (resetCache) lootChestManager.clear();
-
-		// Reload config from files first
-		initializer.lootChestLoader();
-
-		IRepository<LootChestData> repository = ganglandDatabase.getRepositoryRegistry()
-		                                                        .getRepository(LootChestData.class);
-
-		if (!(repository instanceof LootChestRepository repo)) {
-			String message = "LootChestData repository is not initialized!";
-
-			log.error(message);
-			throw new PluginException(message);
-		}
-
-		lootChestManager.initialize(repo, true);
-	}
-
-	/**
-	 * Initializes the jail data (effective for reloads).
-	 *
-	 * @param resetCache if old data needs to be cleared
-	 */
-	public void jailInitialize(boolean resetCache) {
-		JailService jailService = initializer.getJailService();
-
-		if (resetCache) jailService.reload();
-	}
-
-	/**
-	 * Initializes the detainment data (effective for reloads).
-	 *
-	 * @param resetCache if old data needs to be cleared
-	 */
-	public void detainmentInitialize(boolean resetCache) {
-		DetainmentRegistry registry = initializer.getDetainmentRegistry();
-
-		if (resetCache) registry.reload();
-	}
-
-	/**
-	 * Initializes the cop spawner data (effective for reloads).
-	 *
-	 * @param resetCache if old data needs to be cleared
-	 */
-	public void copSpawnerInitialize(boolean resetCache) {
-		CopSpawnManager copSpawnManager = initializer.getCopSpawnManager();
-
-		if (resetCache) copSpawnManager.reloadSpawners();
-	}
-
-	/**
-	 * Refreshes {@link Car} config references in all in-memory parked vehicles and active sessions after
-	 * {@link me.luckyraven.gadget.car.config.CarAddon} has been reloaded from {@code cars.yml}.
-	 */
-	public void carServiceInitialize() {
-		CarService carService = initializer.getCarService();
-		if (carService == null) return;
-		carService.refreshCarDefinitions();
-	}
-
-	/**
-	 * Refreshes {@link me.luckyraven.item.wearable.Wearable} references in all active jetpack sessions after the
-	 * wearable addon has been reloaded from config.
-	 */
-	public void jetpackServiceInitialize() {
-		JetpackService jetpackService = initializer.getJetpackService();
-		if (jetpackService == null) return;
-		jetpackService.refreshSessions();
 	}
 
 	/**
@@ -452,6 +124,93 @@ public final class ReloadPlugin {
 		// Simple inventory reload for special inventories ONLY
 		InventoryHandler.removeAllSpecialInventories();
 		initializer.inventoryLoader();
+	}
+
+	/**
+	 * Loads online and offline players into the user managers. Called once during first enable to pick up any players
+	 * who joined before the plugin finished initializing. Not part of the bean lifecycle — this is a one-time bootstrap
+	 * step.
+	 */
+	public void loadOnlinePlayers() {
+		GanglandDatabase           ganglandDatabase = initializer.getGanglandDatabase();
+		UserManager<Player>        userManager      = initializer.getUserManager();
+		MemberManager              memberManager    = initializer.getMemberManager();
+		UserManager<OfflinePlayer> offlineManager   = initializer.getOfflineUserManager();
+
+		List<Table<?>>  tables          = ganglandDatabase.getTables();
+		UserTable       userTable       = TableLookup.find(UserTable.class, tables);
+		BankTable       bankTable       = TableLookup.find(BankTable.class, tables);
+		MemberTable     memberTable     = TableLookup.find(MemberTable.class, tables);
+		UniqueItemAddon uniqueItemAddon = initializer.getUniqueItemAddon();
+
+		// get the online users
+		for (Player player : Bukkit.getOnlinePlayers()) {
+			User<Player> onlineUser = userManager.getUser(player);
+
+			if (onlineUser != null) continue;
+
+			var newUser = new User<>(gangland, player);
+
+			// add all the unique items
+			var uniqueItems = uniqueItemAddon.getUniqueItems();
+
+			for (var uniqueItem : uniqueItems.values()) {
+				if (!uniqueItem.isAddOnJoin()) continue;
+				if (!uniqueItem.isAddToInventory()) continue;
+
+				if (UniqueItemUtil.hasUniqueItem(player, uniqueItem) && !uniqueItem.isAllowDuplicates()) continue;
+
+				uniqueItem.addItemToInventory(player);
+			}
+
+			userManager.initializeUserData(newUser, userTable, bankTable);
+
+			UserDataInitEvent userDataInitEvent = new UserDataInitEvent(false, newUser);
+			Bukkit.getPluginManager().callEvent(userDataInitEvent);
+
+			userManager.add(newUser);
+
+			// this member doesn't have a gang because they are new
+			Member member = memberManager.getMember(player.getUniqueId());
+
+			// initialize the rank permissions
+			if (member != null) {
+				userManager.initializeUserPermission(newUser, member);
+				continue;
+			}
+
+			// for a new member
+			Member newMember = new Member(player.getUniqueId());
+
+			memberManager.initializeMemberData(newMember, memberTable);
+
+			memberManager.add(newMember);
+		}
+
+		// get the offline users
+		DatabaseHelper helper = new DatabaseHelper(gangland, ganglandDatabase);
+
+		helper.runQueries(database -> {
+			// select all users from the user table
+			List<Object[]> allUsers = userTable.selectAllTableQuery(database);
+
+			for (Object[] userData : allUsers) {
+				String uuidString = String.valueOf(userData[0]);
+				UUID   uuid       = UUID.fromString(uuidString);
+
+				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+				if (offlinePlayer.isOnline()) continue;
+
+				User<OfflinePlayer> existingUser = offlineManager.getUser(offlinePlayer);
+				if (existingUser != null) continue;
+
+				User<OfflinePlayer> offlineUser = new User<>(gangland, offlinePlayer);
+
+				offlineManager.initializeUserData(offlineUser, userTable, bankTable);
+
+				offlineManager.add(offlineUser);
+			}
+		});
 	}
 
 	private void killAllScoreboards() {

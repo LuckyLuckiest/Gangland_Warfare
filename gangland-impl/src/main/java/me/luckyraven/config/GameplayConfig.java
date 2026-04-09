@@ -9,8 +9,6 @@ import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.repositories.lootchest.LootChestRepository;
-import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
 import me.luckyraven.file.configuration.inventory.itemsource.GangItemSourceProvider;
@@ -34,10 +32,8 @@ import me.luckyraven.item.money.MoneyDepositService;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.lootchest.LootChestService;
 import me.luckyraven.lootchest.config.LootChestLoader;
-import me.luckyraven.lootchest.data.LootChestData;
 import me.luckyraven.money.GanglandMoneyDepositService;
 import me.luckyraven.persistence.FileManager;
-import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
@@ -143,9 +139,7 @@ public class GameplayConfig {
 
 	@Bean
 	public WeaponManager weaponManager(WeaponAddon weaponAddon, GanglandDatabase database) {
-		WeaponManager manager = new WeaponManager(weaponAddon, database);
-		manager.initialize();
-		return manager;
+		return new WeaponManager(weaponAddon, database);
 	}
 
 	@Bean
@@ -295,12 +289,8 @@ public class GameplayConfig {
 	public LootChestManager lootChestManager(HologramService hologramService,
 	                                         RepositoryRegistry repositoryRegistry,
 	                                         ItemParserManager itemParserManager) {
-		LootChestManager           manager = new LootChestManager(gangland, Gangland.FULL_PREFIX, hologramService);
-		IRepository<LootChestData> repo    = repositoryRegistry.getRepository(LootChestData.class);
-		if (!(repo instanceof LootChestRepository castedRepo)) {
-			throw new PluginException("LootChestData repository is not initialized!");
-		}
-		manager.initialize(castedRepo, false);
+		LootChestManager manager = new LootChestManager(gangland, Gangland.FULL_PREFIX, hologramService,
+		                                                repositoryRegistry);
 		manager.setItemParser(itemParserManager.getParser());
 		manager.setMessagesProvider(new GanglandLootChestMessages());
 		return manager;

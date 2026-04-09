@@ -4,6 +4,7 @@ import lombok.Getter;
 import me.luckyraven.copsncrooks.jail.Jail;
 import me.luckyraven.copsncrooks.jail.JailRegistry;
 import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -11,7 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class DetainmentRegistry {
+public class DetainmentRegistry implements BeanLifecycle {
 
 	private final IRepository<DetainedPlayer> detainmentRepository;
 	private final JailRegistry                jailRegistry;
@@ -23,8 +24,6 @@ public class DetainmentRegistry {
 		this.detainmentRepository = detainmentRepository;
 		this.jailRegistry         = jailRegistry;
 		this.detainedPlayers      = new ConcurrentHashMap<>();
-
-		initialize();
 
 		// Set the data supplier so the repository can save the current state
 		detainmentRepository.setDataSupplier(detainedPlayers::values);
@@ -101,7 +100,17 @@ public class DetainmentRegistry {
 	 */
 	public void reload() {
 		detainedPlayers.clear();
-		initialize();
+		loadDetainedPlayers();
+	}
+
+	@Override
+	public void onClear() {
+		detainedPlayers.clear();
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		loadDetainedPlayers();
 	}
 
 	/**
@@ -118,7 +127,7 @@ public class DetainmentRegistry {
 		return emptyJail == null ? null : emptyJail.getId();
 	}
 
-	private void initialize() {
+	private void loadDetainedPlayers() {
 		for (DetainedPlayer detainedPlayer : detainmentRepository.loadAll()) {
 			detainedPlayers.put(detainedPlayer.getPlayerId(), detainedPlayer);
 		}

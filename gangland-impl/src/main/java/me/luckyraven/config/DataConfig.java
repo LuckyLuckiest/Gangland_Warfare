@@ -12,8 +12,6 @@ import me.luckyraven.data.plugin.PluginManager;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.TableLookup;
-import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.util.autowire.bean.Bean;
 import me.luckyraven.util.autowire.bean.Configuration;
 import me.luckyraven.util.autowire.bean.PostConstruct;
@@ -51,10 +49,7 @@ public class DataConfig {
 	                                       MemberManager memberManager,
 	                                       BountySettings bountySettings,
 	                                       WantedSettings wantedSettings) {
-		UserManager<Player> manager = new UserManager<>(gangland, database, memberManager, bountySettings,
-		                                                wantedSettings);
-		manager.initialize();
-		return manager;
+		return new UserManager<>(gangland, database, memberManager, bountySettings, wantedSettings);
 	}
 
 	@Bean(name = "offline", isGeneric = true)
@@ -62,51 +57,34 @@ public class DataConfig {
 	                                                     MemberManager memberManager,
 	                                                     BountySettings bountySettings,
 	                                                     WantedSettings wantedSettings) {
-		UserManager<OfflinePlayer> manager = new UserManager<>(gangland, database, memberManager, bountySettings,
-		                                                       wantedSettings);
-		manager.initialize();
-		return manager;
+		return new UserManager<>(gangland, database, memberManager, bountySettings, wantedSettings);
 	}
 
 	@Bean
 	public PluginManager pluginManager(GanglandDatabase database) {
-		PluginManager manager = new PluginManager(gangland, database);
-		manager.initialize();
-		return manager;
+		return new PluginManager(gangland, database);
 	}
 
 	@Bean
 	public RankManager rankManager(GanglandDatabase database) {
-		RankManager manager = new RankManager(gangland, database, permissionManager);
-		manager.initialize();
-		return manager;
+		return new RankManager(gangland, database, permissionManager);
 	}
 
 	@Bean
 	public GangManager gangManager(GanglandDatabase database) {
-		GangManager manager = new GangManager(gangland, database);
-		manager.initialize();
-		return manager;
+		return new GangManager(gangland, database);
 	}
 
 	@Bean
 	public MemberManager memberManager(GangManager gangManager,
 	                                   RankManager rankManager,
 	                                   GanglandDatabase database) {
-		// rankManager and gangManager are guaranteed initialized here because the topo sort built them first and
-		// each of those @Bean methods calls .initialize() inline. Without that, MemberManager.initialize() would
-		// dereference an empty rank tree and NPE on rankManager.getRankTree().getRoot().
-		MemberManager memberManager = new MemberManager(gangland, database, gangManager, rankManager);
-		MemberTable   memberTable   = TableLookup.find(MemberTable.class, database.getTables());
-		memberManager.initialize(memberTable);
-		return memberManager;
+		return new MemberManager(gangland, database, gangManager, rankManager);
 	}
 
 	@Bean
 	public WaypointManager waypointManager(GanglandDatabase database) {
-		WaypointManager manager = new WaypointManager(gangland, database, permissionManager);
-		manager.initialize();
-		return manager;
+		return new WaypointManager(gangland, database, permissionManager);
 	}
 
 	/**

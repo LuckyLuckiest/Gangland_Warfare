@@ -10,11 +10,12 @@ import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawner;
 import me.luckyraven.copsncrooks.npc.police.state.CopBehaviorFactory;
 import me.luckyraven.copsncrooks.npc.police.targeting.WantedTargetingManager;
 import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.weapon.WeaponService;
 import org.bukkit.plugin.java.JavaPlugin;
 
 @Getter
-public class CopService {
+public class CopService implements BeanLifecycle {
 
 	private CopManager             copManager;
 	private WantedTargetingManager targetingManager;
@@ -62,5 +63,10 @@ public class CopService {
 		if (copManager == null) return;
 
 		copManager.shutdown();
+	}
+
+	@Override
+	public void onShutdown() {
+		shutdown();
 	}
 }

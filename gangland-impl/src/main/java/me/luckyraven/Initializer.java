@@ -26,8 +26,6 @@ import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.GanglandDatabaseSettings;
-import me.luckyraven.database.repositories.lootchest.LootChestRepository;
-import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.LanguageLoader;
 import me.luckyraven.file.configuration.GadgetPhysicsConfigImpl;
 import me.luckyraven.file.configuration.Messages;
@@ -36,8 +34,6 @@ import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
 import me.luckyraven.file.configuration.inventory.itemsource.GangItemSourceProvider;
-import me.luckyraven.file.configuration.lootchest.GanglandLootChestMessages;
-import me.luckyraven.file.configuration.lootchest.LootChestSettings;
 import me.luckyraven.file.configuration.weapon.WeaponLoader;
 import me.luckyraven.gadget.car.CarService;
 import me.luckyraven.gadget.car.config.CarAddon;
@@ -53,14 +49,10 @@ import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.lootchest.LootChestManager;
-import me.luckyraven.lootchest.config.LootChestLoader;
-import me.luckyraven.lootchest.data.LootChestData;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.persistence.database.DatabaseSettingsProvider;
-import me.luckyraven.persistence.repository.IRepository;
-import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
 import me.luckyraven.util.TimeMessages;
@@ -124,7 +116,6 @@ public final class Initializer {
 	private LanguageLoader             languageLoader;
 	private InventoryLoader            inventoryLoader;
 	private WeaponLoader               weaponLoader;
-	private LootChestLoader            lootChestLoader;
 	// Gadgets
 	private CarAddon                   carAddon;
 	private CarService                 carService;
@@ -172,7 +163,7 @@ public final class Initializer {
 	 * </ol>
 	 *
 	 * <p>The legacy helper methods ({@link #addonsLoader()}, {@link #scoreboardLoader()}, {@link #inventoryLoader()},
-	 * {@link #weaponLoader()}, {@link #lootChestLoader()}, {@link #addonsClear()}) are
+	 * {@link #weaponLoader()}, {@link #addonsClear()}) are
 	 * intentionally retained because {@code ReloadPlugin} still calls them on soft reload. Their bodies remain a
 	 * second source of truth for that path until the reload flow is migrated to the bean pipeline as well.
 	 */
@@ -392,40 +383,6 @@ public final class Initializer {
 		}
 	}
 
-	public void lootChestLoader() {
-		if (hologramService == null) {
-			hologramService = new HologramService(gangland);
-		}
-
-		if (lootChestManager == null) {
-			lootChestManager = new LootChestManager(gangland, Gangland.FULL_PREFIX, hologramService);
-		}
-
-		RepositoryRegistry         repositoryRegistry  = ganglandDatabase.getRepositoryRegistry();
-		IRepository<LootChestData> lootChestRepository = repositoryRegistry.getRepository(LootChestData.class);
-
-		if (!(lootChestRepository instanceof LootChestRepository repo)) {
-			String message = "LootChestData repository is not initialized!";
-
-			log.error(message);
-			throw new PluginException(message);
-		}
-
-		lootChestManager.initialize(repo, false);
-
-		var provider = new LootChestSettings();
-		lootChestLoader = new LootChestLoader(gangland, lootChestManager, provider);
-
-		lootChestLoader.bind(false, null, fileManager);
-		fileManager.registerInitializer(lootChestLoader);
-		fileManager.initializeAll();
-
-		// share the global item parser so loot tables resolve item strings through the same converter registry
-		lootChestManager.setItemParser(itemParserManager.getParser());
-
-		lootChestManager.setMessagesProvider(new GanglandLootChestMessages());
-	}
-
 	public void weaponLoader() {
 		if (ammunitionManager == null) {
 			ammunitionManager = new AmmunitionManager();
@@ -539,7 +496,6 @@ public final class Initializer {
 		weaponManager     = context.get(WeaponManager.class);
 		hologramService   = context.get(HologramService.class);
 		lootChestManager  = context.get(LootChestManager.class);
-		lootChestLoader   = context.get(LootChestLoader.class);
 		itemParserManager = context.get(ItemParserManager.class);
 
 		// cops + gadgets

@@ -7,12 +7,13 @@ import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.util.datastructure.Tree;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class RankManager {
+public class RankManager implements BeanLifecycle {
 
 	private final Gangland                 gangland;
 	private final GanglandDatabase         database;
@@ -215,6 +216,16 @@ public class RankManager {
 		Rank.setID(0);
 		ranks.clear();
 		rankTree.clear();
+	}
+
+	@Override
+	public void onClear() {
+		clear();
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		initialize();
 	}
 
 	public Permission getPermission(int id) {

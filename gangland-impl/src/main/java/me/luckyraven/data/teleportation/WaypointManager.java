@@ -8,13 +8,14 @@ import me.luckyraven.database.tables.waypoint.WaypointTable;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.sql.Types;
 import java.util.*;
 
-public class WaypointManager {
+public class WaypointManager implements BeanLifecycle {
 
 	private final Gangland               gangland;
 	private final GanglandDatabase       database;
@@ -63,6 +64,16 @@ public class WaypointManager {
 		Waypoint.setID(0);
 		waypoints.clear();
 		selectedWaypoints.clear();
+	}
+
+	@Override
+	public void onClear() {
+		clear();
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		initialize();
 	}
 
 	@Nullable

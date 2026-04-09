@@ -4,12 +4,13 @@ import me.luckyraven.Gangland;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.util.utilities.TimeUtil;
 
 import java.time.Instant;
 import java.util.*;
 
-public class PluginManager {
+public class PluginManager implements BeanLifecycle {
 
 	private final Gangland         gangland;
 	private final GanglandDatabase database;
@@ -45,6 +46,16 @@ public class PluginManager {
 
 	public void clear() {
 		pluginDataList.clear();
+	}
+
+	@Override
+	public void onClear() {
+		clear();
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		initialize();
 	}
 
 	public List<PluginData> getPluginDataList() {

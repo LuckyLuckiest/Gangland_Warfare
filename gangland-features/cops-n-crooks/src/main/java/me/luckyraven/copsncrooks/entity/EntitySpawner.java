@@ -1,6 +1,7 @@
 package me.luckyraven.copsncrooks.entity;
 
 import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -23,7 +24,7 @@ import java.util.concurrent.ThreadLocalRandom;
  *
  * @param <S> the concrete spawner-point type
  */
-public abstract class EntitySpawner<S extends EntitySpawnerPoint> {
+public abstract class EntitySpawner<S extends EntitySpawnerPoint> implements BeanLifecycle {
 
 	public int ID = 0;
 
@@ -36,7 +37,6 @@ public abstract class EntitySpawner<S extends EntitySpawnerPoint> {
 		this.repository = repository;
 		this.spawners   = new ConcurrentHashMap<>();
 
-		reloadSpawners();
 		repository.setDataSupplier(spawners::values);
 	}
 
@@ -50,6 +50,17 @@ public abstract class EntitySpawner<S extends EntitySpawnerPoint> {
 	// ── Spawner registry ──────────────────────────────────────────────────────
 
 	public void reloadSpawners() {
+		loadStoredSpawners();
+	}
+
+	@Override
+	public void onClear() {
+		spawners.clear();
+		ID = 0;
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
 		loadStoredSpawners();
 	}
 

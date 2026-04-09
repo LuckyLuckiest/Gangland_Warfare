@@ -6,6 +6,7 @@ import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.gadget.jetpack.packet.JetpackInputInterceptor;
 import me.luckyraven.item.wearable.Wearable;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -20,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Manages active jetpack sessions. Handles activation, deactivation, and lifecycle of jetpack flight for all players.
  */
-public class JetpackService {
+public class JetpackService implements BeanLifecycle {
 
 	private final Map<UUID, JetpackSession> activeSessions = new ConcurrentHashMap<>();
 	private final FuelService               fuelService;
@@ -160,6 +161,16 @@ public class JetpackService {
 			}
 		}
 		activeSessions.clear();
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		if (!firstLoad) refreshSessions();
+	}
+
+	@Override
+	public void onShutdown() {
+		deactivateAll();
 	}
 
 }

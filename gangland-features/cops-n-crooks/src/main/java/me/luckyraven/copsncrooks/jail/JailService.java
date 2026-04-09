@@ -2,11 +2,12 @@ package me.luckyraven.copsncrooks.jail;
 
 import lombok.Getter;
 import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.bukkit.Location;
 
 import java.util.UUID;
 
-public class JailService {
+public class JailService implements BeanLifecycle {
 
 	public static int ID = 0;
 
@@ -17,8 +18,6 @@ public class JailService {
 	public JailService(JailRegistry jailRegistry, IRepository<Jail> jailRepository) {
 		this.jailRegistry   = jailRegistry;
 		this.jailRepository = jailRepository;
-
-		initialize();
 
 		// Set the data supplier so the repository can save the current state
 		jailRepository.setDataSupplier(jailRegistry::getCells);
@@ -66,10 +65,20 @@ public class JailService {
 	 */
 	public void reload() {
 		jailRegistry.clear();
-		initialize();
+		loadJails();
 	}
 
-	private void initialize() {
+	@Override
+	public void onClear() {
+		jailRegistry.clear();
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		loadJails();
+	}
+
+	private void loadJails() {
 		for (Jail jail : jailRepository.loadAll()) {
 			jailRegistry.addJail(jail);
 		}

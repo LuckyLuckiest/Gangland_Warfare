@@ -24,6 +24,7 @@ import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.util.feature.Executor;
 import me.luckyraven.util.timer.Timer;
 import org.bukkit.OfflinePlayer;
@@ -37,7 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class UserManager<T extends OfflinePlayer> {
+public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 
 	private final Gangland         gangland;
 	private final GanglandDatabase database;
@@ -193,6 +194,29 @@ public class UserManager<T extends OfflinePlayer> {
 
 	public void clear() {
 		users.clear();
+	}
+
+	@Override
+	public void onPreClear() {
+		for (User<T> user : users.values()) {
+			user.getWanted().stopTimer();
+			user.getBounty().stopTimer();
+
+			if (user.getScoreboard() == null) continue;
+
+			user.getScoreboard().end();
+			user.setScoreboard(null);
+		}
+	}
+
+	@Override
+	public void onClear() {
+		clear();
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		initialize();
 	}
 
 	public boolean contains(User<T> user) {

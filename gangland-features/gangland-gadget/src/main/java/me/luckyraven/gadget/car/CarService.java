@@ -14,6 +14,7 @@ import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.item.fuel.FuelKey;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -52,7 +53,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * re-spawns the Minecart entities so the cars appear in the world exactly where they were left.
  */
 @Getter
-public class CarService {
+public class CarService implements BeanLifecycle {
 
 	private final CarManager             carManager;
 	private final VehicleRegistry        vehicleRegistry;
@@ -576,6 +577,20 @@ public class CarService {
 		return vehicleRegistry.getByPlayer(player.getUniqueId());
 	}
 
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		if (!firstLoad) refreshCarDefinitions();
+	}
+
+	// ------------------------------------------------------------------
+	// Internal helpers
+	// ------------------------------------------------------------------
+
+	@Override
+	public void onShutdown() {
+		destroyAll();
+	}
+
 	/**
 	 * Scans a single chunk for a {@link Minecart} whose {@code car_db_id} PDC value matches {@code dbId}. Returns
 	 * {@code null} if none is found or the entity is dead.
@@ -589,10 +604,6 @@ public class CarService {
 		}
 		return null;
 	}
-
-	// ------------------------------------------------------------------
-	// Internal helpers
-	// ------------------------------------------------------------------
 
 	private VehicleEntity createVehicleEntity(Car car) {
 		return new MinecartVehicle(car);

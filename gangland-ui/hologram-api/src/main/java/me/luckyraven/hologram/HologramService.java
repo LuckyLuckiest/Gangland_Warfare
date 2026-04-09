@@ -1,6 +1,7 @@
 package me.luckyraven.hologram;
 
 import lombok.Getter;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -14,7 +15,7 @@ import java.util.function.BiConsumer;
 /**
  * Service for managing holograms throughout the plugin
  */
-public class HologramService {
+public class HologramService implements BeanLifecycle {
 
 	private final JavaPlugin              plugin;
 	@Getter
@@ -122,6 +123,11 @@ public class HologramService {
 		holograms.values().forEach(Hologram::despawn);
 		holograms.clear();
 		hologramsByLocation.clear();
+	}
+
+	@Override
+	public void onShutdown() {
+		clear();
 	}
 
 }

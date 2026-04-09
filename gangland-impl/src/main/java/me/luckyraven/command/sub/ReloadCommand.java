@@ -42,13 +42,6 @@ public final class ReloadCommand extends Command {
 			                                            true);
 									  });
 
-		Argument data = new Argument(getGangland(), new String[]{"database", "data"}, getArgumentTree(),
-		                             (argument, sender, args) -> {
-										 reloadProcess("database",
-			                                           () -> getGangland().getReloadPlugin().databaseInitialize(true),
-			                                           true);
-									 });
-
 		Argument scoreboard = new Argument(getGangland(), "scoreboard", getArgumentTree(), (argument, sender, args) -> {
 			reloadProcess("scoreboard", () -> {
 				if (Settings.isScoreboardEnabled()) getGangland().getReloadPlugin().scoreboardReload();
@@ -71,7 +64,6 @@ public final class ReloadCommand extends Command {
 		List<Argument> arguments = new ArrayList<>();
 
 		arguments.add(files);
-		arguments.add(data);
 		arguments.add(scoreboard);
 		arguments.add(inventory);
 		arguments.add(cleanup);

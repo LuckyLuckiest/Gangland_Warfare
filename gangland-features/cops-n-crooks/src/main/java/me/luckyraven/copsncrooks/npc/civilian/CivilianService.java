@@ -14,6 +14,7 @@ import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
 import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawner;
 import me.luckyraven.item.ItemParser;
 import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.weapon.WeaponService;
 import org.bukkit.Bukkit;
@@ -32,7 +33,7 @@ import java.util.*;
  * civilian and removes dead or marked ones.
  */
 @CustomLog
-public class CivilianService {
+public class CivilianService implements BeanLifecycle {
 
 	private final Map<UUID, CivilianNpc>     activeNpcs   = new HashMap<>();
 	private final Map<String, CivilianGroup> activeGroups = new HashMap<>();
@@ -208,6 +209,11 @@ public class CivilianService {
 		}
 		activeNpcs.clear();
 		activeGroups.clear();
+	}
+
+	@Override
+	public void onShutdown() {
+		shutdown();
 	}
 
 	/**

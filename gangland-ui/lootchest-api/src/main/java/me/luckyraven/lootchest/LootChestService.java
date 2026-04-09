@@ -374,18 +374,10 @@ public abstract class LootChestService {
 	}
 
 	public void clear() {
-		activeSessions.values().forEach(LootChestSession::cancel);
-		crackingSessions.values().forEach(CrackingSession::cancel);
-
-		activeSessions.clear();
-		crackingSessions.clear();
-		registeredChests.clear();
-		chestsByLocation.clear();
+		cancelSessions();
+		clearChests();
 		lootTables.clear();
 		tiers.clear();
-
-		cooldownManager.clear();
-		hologramService.clear();
 	}
 
 	public Collection<LootChestData> getAllChests() {
@@ -398,6 +390,29 @@ public abstract class LootChestService {
 
 	public Collection<LootTable> getAllLootTables() {
 		return Collections.unmodifiableCollection(lootTables.values());
+	}
+
+	/**
+	 * Cancels all active loot and cracking sessions.
+	 */
+	protected void cancelSessions() {
+		activeSessions.values().forEach(LootChestSession::cancel);
+		crackingSessions.values().forEach(CrackingSession::cancel);
+
+		activeSessions.clear();
+		crackingSessions.clear();
+	}
+
+	/**
+	 * Clears all registered chest instances, locations, cooldowns, and holograms. Does <b>not</b> clear config data
+	 * (tiers, loot tables).
+	 */
+	protected void clearChests() {
+		registeredChests.clear();
+		chestsByLocation.clear();
+
+		cooldownManager.clear();
+		hologramService.clear();
 	}
 
 	/**
