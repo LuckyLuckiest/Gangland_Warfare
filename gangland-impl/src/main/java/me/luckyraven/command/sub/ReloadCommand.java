@@ -2,8 +2,10 @@ package me.luckyraven.command.sub;
 
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
+import me.luckyraven.PeriodicalUpdates;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.context.GanglandContext;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.command.CommandHandler;
@@ -31,7 +33,7 @@ public final class ReloadCommand extends Command {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		reloadProcess("", () -> getGangland().getReloadPlugin().reload(true), true);
+		reloadProcess("", () -> getGangland().getReloadPlugin().reload(), true);
 	}
 
 	@Override
@@ -44,20 +46,24 @@ public final class ReloadCommand extends Command {
 
 		Argument scoreboard = new Argument(getGangland(), "scoreboard", getArgumentTree(), (argument, sender, args) -> {
 			reloadProcess("scoreboard", () -> {
-				if (Settings.isScoreboardEnabled()) getGangland().getReloadPlugin().scoreboardReload();
+				if (Settings.isScoreboardEnabled()) {
+					getGangland().getReloadPlugin().scoreboardReload();
+				}
 			}, false);
 		});
 
+		GanglandContext context = getGangland().getContext();
+
 		Argument inventory = new Argument(getGangland(), "inventory", getArgumentTree(), (argument, sender, args) -> {
 			reloadProcess("inventory", () -> {
-				getGangland().getPeriodicalUpdates().resetCache();
+				context.get(PeriodicalUpdates.class).resetCache();
 				getGangland().getReloadPlugin().inventoryReload();
 			}, false);
 		});
 
 		Argument cleanup = new Argument(getGangland(), "cleanup", getArgumentTree(), (argument, sender, args) -> {
 			reloadProcess("cleanup", () -> {
-				getGangland().getPeriodicalUpdates().getCleanupService().forceCleanup();
+				context.get(PeriodicalUpdates.class).getCleanupService().forceCleanup();
 			}, false);
 		});
 
@@ -83,7 +89,12 @@ public final class ReloadCommand extends Command {
 		GanglandChatUtil.sendToOperators(permission, reloading);
 
 		try {
-			if (forceUpdate) getGangland().getPeriodicalUpdates().forceUpdate();
+			if (forceUpdate) {
+				PeriodicalUpdates updates = getGangland().getContext().get(PeriodicalUpdates.class);
+				if (updates != null) {
+					updates.forceUpdate();
+				}
+			}
 			runnable.run();
 
 			String reloadComplete = "&aReload has been completed.";

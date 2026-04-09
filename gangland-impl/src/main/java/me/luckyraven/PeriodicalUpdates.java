@@ -16,6 +16,7 @@ import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.util.timer.RepeatingTimer;
 import me.luckyraven.util.utilities.TimeUtil;
 import me.luckyraven.weapon.Weapon;
@@ -29,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 @CustomLog
-public final class PeriodicalUpdates {
+public final class PeriodicalUpdates implements BeanLifecycle {
 
 	private final Gangland                   gangland;
 	private final GanglandDatabase           database;
@@ -144,6 +145,42 @@ public final class PeriodicalUpdates {
 		this.repeatingTimer = null;
 	}
 
+	// ----------------------------------------------------------------------------------------------------------------
+	// BeanLifecycle — reload and shutdown
+	// ----------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Stops the repeating timer before data is cleared during a reload pass.
+	 */
+	@Override
+	public void onPreClear() {
+		stop();
+	}
+
+	/**
+	 * Re-reads the auto-save interval from {@link Settings} (which may have changed during the file reload pass),
+	 * recreates the repeating timer, and starts it.
+	 */
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		if (Settings.isAutoSave()) {
+			long interval = Settings.getAutoSaveTime() * 60L;
+			this.repeatingTimer = new RepeatingTimer(gangland, 20L * interval, timer -> task());
+		}
+		initializeCleanupService();
+		start();
+	}
+
+	/**
+	 * Stops the timer on plugin disable. Does <b>not</b> call {@link #forceUpdate()} — the final force-save is handled
+	 * explicitly by {@code Gangland.onDisable()} after all beans have shut down, so that converted records from other
+	 * beans (e.g. CarService active sessions → parked records) are included in the save.
+	 */
+	@Override
+	public void onShutdown() {
+		stop();
+	}
+
 	/**
 	 * Starts the periodical update tasks.
 	 */
@@ -207,8 +244,8 @@ public final class PeriodicalUpdates {
 			for (T row : collection) {
 				Map<String, Object> search = table.searchCriteria(row);
 				Object[] data = database.table(table.getName())
-										.select((String) search.get("search"), (Object[]) search.get("info"),
-												(int[]) search.get("type"), new String[]{"*"});
+				                        .select((String) search.get("search"), (Object[]) search.get("info"),
+				                                (int[]) search.get("type"), new String[]{"*"});
 
 				if (data.length == 0) {
 					table.insertTableQuery(database, row);
@@ -241,7 +278,7 @@ public final class PeriodicalUpdates {
 
 		if (Settings.isAutoSaveDebug()) {
 			log.info("Cleanup interval config changed. Adjusted scheduled scan date to: {}",
-					 new Date(expectedScheduledDate));
+			         new Date(expectedScheduledDate));
 		}
 	}
 

@@ -1,0 +1,61 @@
+package me.luckyraven.service;
+
+import lombok.CustomLog;
+import me.luckyraven.Gangland;
+import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.scoreboard.Scoreboard;
+import me.luckyraven.scoreboard.ScoreboardManager;
+import me.luckyraven.scoreboard.driver.DriverHandler;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
+import org.bukkit.entity.Player;
+
+/**
+ * Creates scoreboards for all online players as part of the {@link BeanLifecycle}. Scoreboard <i>destruction</i> is
+ * already handled by {@link UserManager#onPreClear()}, which stops and nulls every user's scoreboard before data is
+ * cleared.
+ *
+ * <p>Depends on {@link PlayerBootstrapService} (via constructor param) to force topological ordering: players must be
+ * loaded into the user manager before scoreboards can be created for them.
+ */
+@CustomLog
+public final class ScoreboardLifecycleService implements BeanLifecycle {
+
+	private final Gangland            gangland;
+	private final ScoreboardManager   scoreboardManager;
+	private final UserManager<Player> userManager;
+
+	@SuppressWarnings("unused") // forces topo ordering — players loaded before scoreboards created
+	private final PlayerBootstrapService playerBootstrapService;
+
+	public ScoreboardLifecycleService(Gangland gangland,
+	                                  ScoreboardManager scoreboardManager,
+	                                  UserManager<Player> userManager,
+	                                  PlayerBootstrapService playerBootstrapService) {
+		this.gangland               = gangland;
+		this.scoreboardManager      = scoreboardManager;
+		this.userManager            = userManager;
+		this.playerBootstrapService = playerBootstrapService;
+	}
+
+	/**
+	 * Creates and starts scoreboards for all online players if the scoreboard feature is enabled.
+	 */
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		if (!Settings.isScoreboardEnabled()) {
+			return;
+		}
+
+		for (User<Player> user : userManager.getUsers().values()) {
+			DriverHandler driverHandler = scoreboardManager.getDriverHandler(user.getUser());
+			Scoreboard    scoreboard    = new Scoreboard(gangland, driverHandler);
+
+			user.setScoreboard(scoreboard);
+			user.getScoreboard().start();
+		}
+
+		log.info("Scoreboard lifecycle complete: {} scoreboard(s) created", userManager.getUsers().size());
+	}
+}

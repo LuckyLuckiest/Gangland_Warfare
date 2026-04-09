@@ -108,10 +108,7 @@ public class Argument implements Cloneable {
 	 */
 	public void addPermission(String permission) {
 		if (plugin instanceof Gangland gangland) {
-			// Phase 3 holdout: Argument is constructed bottom-up by Command subclasses (not via DI), so threading
-			// PermissionManager through every Argument constructor is a separate refactor. Until then, this one call
-			// reaches the running Initializer's PermissionManager directly.
-			gangland.getInitializer().getPermissionManager().addPermission(permission);
+			gangland.getContext().get(me.luckyraven.data.permission.PermissionManager.class).addPermission(permission);
 			return;
 		}
 

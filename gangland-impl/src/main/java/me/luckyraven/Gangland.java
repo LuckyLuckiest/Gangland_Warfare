@@ -5,13 +5,20 @@ import com.viaversion.viaversion.api.ViaAPI;
 import com.zaxxer.hikari.HikariConfig;
 import lombok.CustomLog;
 import lombok.Getter;
+import me.luckyraven.context.GanglandContext;
+import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.economy.EconomyHandler;
+import me.luckyraven.data.permission.PermissionManager;
+import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
 import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
+import me.luckyraven.data.rank.RankManager;
+import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.updater.UpdateChecker;
+import me.luckyraven.weapon.configuration.WeaponAddon;
 import net.milkbowl.vault.economy.Economy;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -35,8 +42,8 @@ public final class Gangland extends JavaPlugin {
 	public static final String SHORT_PREFIX = "glw";
 
 	private Initializer             initializer;
+	private GanglandContext         context;
 	private ReloadPlugin            reloadPlugin;
-	private PeriodicalUpdates       periodicalUpdates;
 	private UpdateChecker           updateChecker;
 	private PlaceholderAPIExpansion placeholderAPIExpansion;
 	private ViaAPI<?>               viaAPI;
@@ -52,41 +59,41 @@ public final class Gangland extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		// vault soft dependency economy check
-		if (EconomyHandler.getVaultEconomy() != null) EconomyHandler.setVaultEconomy(null);
+		if (EconomyHandler.getVaultEconomy() != null) {
+			EconomyHandler.setVaultEconomy(null);
+		}
 
 		// unified bean lifecycle shutdown — deactivates sessions, converts active car data to parked records,
 		// despawns NPCs and holograms, all in reverse topological order
-		initializer.getContext().shutdownBeans();
+		context.shutdownBeans();
 
-		// force save all pending data (must run AFTER bean shutdown so converted car records are included)
-		if (this.periodicalUpdates != null) {
-			this.periodicalUpdates.forceUpdate();
-			this.periodicalUpdates.stop();
+		// force save all pending data AFTER bean shutdown so converted records (CarService etc.) are included
+		PeriodicalUpdates periodicalUpdates = context.get(PeriodicalUpdates.class);
+		if (periodicalUpdates != null) {
+			periodicalUpdates.forceUpdate();
 		}
 
 		// closing all connections
-		DatabaseManager databaseManager = initializer.getDatabaseManager();
-		if (databaseManager != null && !databaseManager.getDatabases().isEmpty()) databaseManager.closeConnections();
+		DatabaseManager databaseManager = context.get(DatabaseManager.class);
+		if (databaseManager != null && !databaseManager.getDatabases().isEmpty()) {
+			databaseManager.closeConnections();
+		}
 	}
 
 	@Override
 	public void onEnable() {
-		// must initialize so the plugin works as normal
+		// must initialize so the plugin works as normal — setContext() is called inside postInitialize()
+		// before bootstrap() runs, so gangland.getContext() is available to commands during construction.
 		initializer.postInitialize();
 
-		reloadPlugin = new ReloadPlugin(this);
+		reloadPlugin = new ReloadPlugin(context);
 
 		// checks for dependencies
 		dependencyHandler();
 
-		// initializes users and members who joined and not registered in postInitialize
-		reloadPlugin.loadOnlinePlayers();
-
-		// set up scoreboards for players who were already online during plugin enable
-		if (Settings.isScoreboardEnabled()) reloadPlugin.scoreboardReload();
-
-		// initializes the periodical updates
-		periodicalUpdatesInitializer();
+		// PlayerBootstrapService handles online/offline player loading via BeanLifecycle
+		// ScoreboardLifecycleService handles scoreboard creation via BeanLifecycle
+		// PeriodicalUpdates handles auto-save timer via BeanLifecycle
 
 		// initialize bstats
 		bStats();
@@ -96,27 +103,12 @@ public final class Gangland extends JavaPlugin {
 	}
 
 	/**
-	 * Initializes the plugin periodical update cycle.
+	 * Package-private setter so {@link Initializer#postInitialize()} can publish the context before
+	 * {@link GanglandContext#bootstrap()} runs — commands and other beans need {@code gangland.getContext()} during
+	 * construction.
 	 */
-	void periodicalUpdatesInitializer() {
-		// periodical updates
-		int minutes = Settings.getAutoSaveTime();
-
-		var database           = initializer.getGanglandDatabase();
-		var pluginManager      = initializer.getPluginManager();
-		var userManager        = initializer.getUserManager();
-		var offlineUserManager = initializer.getOfflineUserManager();
-		var weaponManager      = initializer.getWeaponManager();
-
-		if (Settings.isAutoSave()) {
-			this.periodicalUpdates = new PeriodicalUpdates(this, database, pluginManager, userManager,
-			                                               offlineUserManager, weaponManager, minutes * 60L);
-		} else {
-			this.periodicalUpdates = new PeriodicalUpdates(this, database, pluginManager, userManager,
-			                                               offlineUserManager, weaponManager);
-		}
-
-		periodicalUpdates.start();
+	void setContext(GanglandContext context) {
+		this.context = context;
 	}
 
 	/**
@@ -127,24 +119,20 @@ public final class Gangland extends JavaPlugin {
 		Metrics metrics  = new Metrics(this, pluginId);
 
 		// number of weapons loaded
-		metrics.addCustomChart(new SingleLineChart("number_of_weapons", () -> initializer.getWeaponAddon().size()));
+		metrics.addCustomChart(new SingleLineChart("number_of_weapons", () -> context.get(WeaponAddon.class).size()));
 
 		// number of inventories loaded
 		metrics.addCustomChart(new SingleLineChart("number_of_inventories", InventoryAddon::size));
 
 		// number of ranks
-		metrics.addCustomChart(new SingleLineChart("number_of_ranks", () -> initializer.getRankManager().size()));
+		metrics.addCustomChart(new SingleLineChart("number_of_ranks", () -> context.get(RankManager.class).size()));
 
 		// number of gangs
-		metrics.addCustomChart(new SingleLineChart("number_of_gangs", () -> initializer.getGangManager().size()));
-
-		// number of permissions
-//		metrics.addCustomChart(
-//				new SingleLineChart("number_of_permissions", () -> initializer.getPermissionManager().size()));
+		metrics.addCustomChart(new SingleLineChart("number_of_gangs", () -> context.get(GangManager.class).size()));
 
 		// number of waypoints
 		metrics.addCustomChart(
-				new SingleLineChart("number_of_waypoints", () -> initializer.getWaypointManager().size()));
+				new SingleLineChart("number_of_waypoints", () -> context.get(WaypointManager.class).size()));
 
 		// scoreboard driver
 		metrics.addCustomChart(new AdvancedPie("scoreboard_driver", () -> {
@@ -190,7 +178,8 @@ public final class Gangland extends JavaPlugin {
 		// soft dependencies
 		Dependency placeholderApi = new Dependency("PlaceholderAPI", Dependency.Type.SOFT);
 		placeholderApi.validate(() -> {
-			this.placeholderAPIExpansion = new PlaceholderAPIExpansion(this, FULL_PREFIX, initializer.getPlaceholder());
+			GanglandPlaceholder placeholder = context.get(GanglandPlaceholder.class);
+			this.placeholderAPIExpansion = new PlaceholderAPIExpansion(this, FULL_PREFIX, placeholder);
 			this.placeholderAPIExpansion.register();
 		});
 
@@ -212,7 +201,9 @@ public final class Gangland extends JavaPlugin {
 	 * Initializes the update checker timer, which checks if there was a new update for the plugin published.
 	 */
 	private void updateCheckerInitializer() {
-		if (!Settings.isUpdaterEnabled()) return;
+		if (!Settings.isUpdaterEnabled()) {
+			return;
+		}
 
 		// there needs to be checks every 6 hours
 		// give an option if there was an update
@@ -220,10 +211,10 @@ public final class Gangland extends JavaPlugin {
 		int resourceId = 131157;
 
 		// initialize the update checker
-		updateChecker = new UpdateChecker(this, FULL_PREFIX, resourceId, hours * 60 * 60L);
+		this.updateChecker = new UpdateChecker(this, FULL_PREFIX, resourceId, hours * 60 * 60L);
 
 		// add the necessary permissions for checking for updates
-		initializer.getPermissionManager().addPermission(updateChecker.getCheckPermission());
+		context.get(PermissionManager.class).addPermission(updateChecker.getCheckPermission());
 
 		// the tasks and timer should be async, so there is no load on the main server thread
 		updateChecker.start();

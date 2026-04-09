@@ -381,7 +381,7 @@ public final class DebugCommand extends Command {
 
 	private @NotNull Argument getUpdateData() {
 		return new Argument(getGangland(), "update-data", getArgumentTree(), (argument, sender, args) -> {
-			getGangland().getPeriodicalUpdates().forceUpdate();
+			getGangland().getContext().get(me.luckyraven.PeriodicalUpdates.class).forceUpdate();
 		});
 	}
 

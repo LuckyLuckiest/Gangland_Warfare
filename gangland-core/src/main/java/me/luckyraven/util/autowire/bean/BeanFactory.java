@@ -110,15 +110,11 @@ public class BeanFactory {
 	 * {@code @Bean} method, register the result and fire the phase hook (cumulative list of phase-so-far) after each
 	 * bean.
 	 *
-	 * <p>After every bean phase finishes but BEFORE the lifecycle pass runs, the optional
-	 * {@code beforeLifecycle} callback is invoked. This is the hook for code that needs to bridge the gap between
-	 * "every bean exists" and "every bean's {@code initialize()} runs" — e.g. {@code Initializer.hydrateFromContext()}
-	 * populates the legacy {@code Initializer} fields here so that bean {@code initialize()} methods which still call
-	 * {@code gangland.getInitializer().getX()} resolve correctly.
+	 * <p>After every bean phase finishes but BEFORE the {@code @PostConstruct} pass runs, the optional
+	 * {@code beforeLifecycle} callback is invoked. This allows bridge code to run between bean creation and lifecycle
+	 * initialization.
 	 *
-	 * <p>Then the lifecycle pass runs: {@code @PostConstruct} on every configuration and bean, followed by any
-	 * zero-arg {@code void initialize()} method on every bean (the convention-based hook described in
-	 * {@link #runInitialize(java.util.List)}).
+	 * <p>Then the lifecycle pass runs: {@code @PostConstruct} on every configuration and bean.
 	 *
 	 * <p>Throws on missing deps, ambiguous bean references, dependency cycles or any user-code exception during
 	 * invocation.

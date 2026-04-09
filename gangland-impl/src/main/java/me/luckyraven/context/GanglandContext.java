@@ -52,9 +52,8 @@ import java.util.Set;
  *     executor and tab completer to the {@link PluginCommand}.</li>
  * </ol>
  *
- * <p>The container is intentionally exposed via {@link #getContainer()} for code paths that still need direct
- * access during the migration window (e.g. {@code Initializer.hydrateFromContext()}). New code should prefer
- * {@code @Bean} methods or {@link #get(Class)} / {@link #getAll(Class)}.
+ * <p>The container is intentionally exposed via {@link #getContainer()} for code paths that need direct access
+ * (e.g. qualified bean lookups). New code should prefer {@code @Bean} methods or {@link #get(Class)}.
  */
 @CustomLog
 public final class GanglandContext {
@@ -127,15 +126,10 @@ public final class GanglandContext {
 	 * Drive the phased bean instantiation, then run the listener and command scans. Must be called exactly once, after
 	 * every kernel object has been seeded via {@link #register(Class, Object)}.
 	 *
-	 * <p>The {@code afterBeanCreation} callback runs after every bean phase finishes but BEFORE the lifecycle pass
-	 * (PostConstruct + initialize()). It is also fired after every individual bean in every phase via the per-bean
-	 * phase hooks below — that incremental fire is what lets a CONFIG-phase {@code @Bean} method (e.g.
-	 * {@code DataConfig.memberManager}) call {@code gangland.getInitializer().getGanglandDatabase()} and get a non-null
-	 * result, because the hydrate runs after the GanglandDatabase bean is registered in the DATABASE phase but before
-	 * the CONFIG phase's beans run. The hydrate is idempotent so re-running it cheaply across many invocations is
-	 * fine.
+	 * <p>Phase hooks are installed before scanning so that FILE-phase beans trigger staged file loading and
+	 * DATABASE-phase beans trigger repository republishing into the container.
 	 */
-	public void bootstrap(Runnable afterBeanCreation) {
+	public void bootstrap() {
 		FileManager fileManager = container.getInstance(FileManager.class);
 		if (fileManager == null) {
 			throw new IllegalStateException(
@@ -143,33 +137,18 @@ public final class GanglandContext {
 					+ "Call register(FileManager.class, ...) from Initializer.postInitialize() first.");
 		}
 
-		Runnable hydrate = afterBeanCreation != null ? afterBeanCreation : () -> { };
-
 		// FILE phase: after each file-initializer bean is registered, run FileManager.initializeAll() so the file is
 		// loaded before the next FILE-phase bean's @Bean method runs (downstream addons typically read settings at
-		// construction time, so the staged initializeAll() preserves the legacy addonsLoader() behavior).
-		// Then re-run hydrate so Initializer's file-side fields refresh as each addon registers.
-		beanFactory.setPhaseHook(Phase.FILE, beans -> {
-			fileManager.initializeAll();
-			hydrate.run();
-		});
+		// construction time, so the staged initializeAll() preserves the addonsLoader() behavior).
+		beanFactory.setPhaseHook(Phase.FILE, beans -> fileManager.initializeAll());
 
 		// DATABASE phase: after each database bean, find any RepositoryRegistry in the container and republish every
 		// repository into the container by its concrete class so later @Bean parameters of type IRepository<X> (or a
 		// concrete repository class) resolve automatically. Idempotent via publishedRepositories identity set.
-		// Hydrate runs immediately after so Initializer.ganglandDatabase is populated before the CONFIG phase
-		// starts and any manager.initialize() that reads it from the legacy field returns the correct instance.
-		beanFactory.setPhaseHook(Phase.DATABASE, beans -> {
-			publishRepositoriesFromContainer();
-			hydrate.run();
-		});
-
-		// CONFIG phase: hydrate after each bean so cross-bean references via gangland.getInitializer().getX() work
-		// for any manager whose @Bean method calls .initialize() inline.
-		beanFactory.setPhaseHook(Phase.CONFIG, beans -> hydrate.run());
+		beanFactory.setPhaseHook(Phase.DATABASE, beans -> publishRepositoriesFromContainer());
 
 		beanFactory.scan(CONFIG_PACKAGE);
-		beanFactory.instantiate(afterBeanCreation);
+		beanFactory.instantiate();
 
 		runListenerPhase();
 		runCommandPhase();
