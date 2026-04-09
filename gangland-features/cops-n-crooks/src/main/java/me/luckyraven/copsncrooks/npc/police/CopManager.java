@@ -475,7 +475,7 @@ public class CopManager {
 
 		// 1. Find the nearest wanted player (skip downed players)
 		Player wanted = targetingManager.findBestTarget(defaultTarget);
-		if (wanted != null && !DownedPlayerRegistry.isDowned(wanted.getUniqueId())) {
+		if (wanted != null && !wanted.isDead() && !DownedPlayerRegistry.isDowned(wanted.getUniqueId())) {
 			cop.setTargetPlayerId(wanted.getUniqueId());
 			cop.setCombatForced(false);
 			// Leave combat mode so the cop pursues/cuffs normally instead of attacking

@@ -9,6 +9,7 @@ import me.luckyraven.util.downed.PlayerDownedEvent;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;
+import net.citizensnpcs.api.CitizensAPI;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -51,9 +52,10 @@ public class CivilianDamageListener implements Listener {
 
 		// Player attacker (direct hit or via projectile)
 		Player playerAttacker = null;
-		if (damager instanceof Player p) {
+		if (damager instanceof Player p && !CitizensAPI.getNPCRegistry().isNPC(p)) {
 			playerAttacker = p;
-		} else if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player p) {
+		} else if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player p
+		           && !CitizensAPI.getNPCRegistry().isNPC(p)) {
 			playerAttacker = p;
 		}
 
@@ -115,7 +117,7 @@ public class CivilianDamageListener implements Listener {
 
 		CivilianAIBehaviorConfig ai = npc.getTypeConfig().ai();
 
-		if (attacker instanceof Player playerAttacker) {
+		if (attacker instanceof Player playerAttacker && !CitizensAPI.getNPCRegistry().isNPC(playerAttacker)) {
 			if (npc.isHostile() && ai.combatEnabled()) {
 				npc.setTargetPlayerId(playerAttacker.getUniqueId());
 				if (npc.getCurrentState() != CivilianState.COMBAT) {

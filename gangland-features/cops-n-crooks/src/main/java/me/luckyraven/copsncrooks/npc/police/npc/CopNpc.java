@@ -8,6 +8,7 @@ import me.luckyraven.copsncrooks.npc.police.config.CopConfigProvider;
 import me.luckyraven.copsncrooks.npc.police.config.CopTierConfig;
 import me.luckyraven.copsncrooks.npc.police.state.CopBehavior;
 import me.luckyraven.copsncrooks.npc.police.state.CopState;
+import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -121,14 +122,16 @@ public class CopNpc extends AbstractNpc {
 	 *        {@link org.bukkit.entity.LivingEntity} (e.g. a wanted hostile civilian). Pass {@code null} when no target is
 	 * 		available.
 	 */
-	public void tick(org.bukkit.entity.LivingEntity target) {
+	public void tick(LivingEntity target) {
 		if (!isValid()) {
 			markForRemoval();
 			return;
 		}
 
-		// Store target so behaviors can access it
-		if (target instanceof Player p) {
+		// Store target so behaviors can access it.
+		// PLAYER-type NPC entities pass instanceof Player but must be stored as entity targets —
+		// Bukkit.getPlayer(npcUuid) returns null, so targetPlayerId would be unresolvable next tick.
+		if (target instanceof Player p && !CitizensAPI.getNPCRegistry().isNPC(p)) {
 			setTargetPlayerId(p.getUniqueId());
 			setTargetEntity(null);
 		} else {

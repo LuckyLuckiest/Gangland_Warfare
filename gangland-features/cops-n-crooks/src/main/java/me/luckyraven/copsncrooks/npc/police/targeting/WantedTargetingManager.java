@@ -50,7 +50,7 @@ public class WantedTargetingManager implements TargetingManager {
 
 			Player candidate = Bukkit.getPlayer(entry.getKey());
 
-			if (candidate == null || !candidate.isOnline()) continue;
+			if (candidate == null || !candidate.isOnline() || candidate.isDead()) continue;
 			if (!candidate.getWorld().equals(from.getWorld())) continue;
 
 			double distance = candidate.getLocation().distanceSquared(from.getLocation());

@@ -10,6 +10,7 @@ import me.luckyraven.util.downed.PlayerDownedEvent;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;
+import net.citizensnpcs.api.CitizensAPI;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -110,9 +111,10 @@ public class CopListener implements Listener {
 		Entity damager = event.getDamager();
 
 		Player attacker;
-		if (damager instanceof Player player) {
+		if (damager instanceof Player player && !CitizensAPI.getNPCRegistry().isNPC(player)) {
 			attacker = player;
-		} else if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player player) {
+		} else if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player player
+		           && !CitizensAPI.getNPCRegistry().isNPC(player)) {
 			attacker = player;
 		} else {
 			// Friendly fire: cancel damage when a cop is hit by another cop's attack
@@ -170,7 +172,7 @@ public class CopListener implements Listener {
 			return;
 		}
 
-		if (shooter instanceof Player attacker) {
+		if (shooter instanceof Player attacker && !CitizensAPI.getNPCRegistry().isNPC(attacker)) {
 			CopNpc cop = copManager.findCopByEntity(victim);
 			if (cop == null) return;
 			copManager.onCopAttackedAlert(cop, attacker);
