@@ -19,11 +19,11 @@ import java.util.List;
 import java.util.Objects;
 
 @ListenerHandler
-public class BountyIncrease implements Listener {
+public class BountyIncreaseListener implements Listener {
 
 	private final UserManager<Player> userManager;
 
-	public BountyIncrease(@Qualifier("online") UserManager<Player> userManager) {
+	public BountyIncreaseListener(@Qualifier("online") UserManager<Player> userManager) {
 		this.userManager = userManager;
 	}
 

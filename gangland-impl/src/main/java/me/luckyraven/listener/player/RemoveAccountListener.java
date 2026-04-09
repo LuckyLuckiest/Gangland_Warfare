@@ -23,7 +23,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
 @ListenerHandler(priority = ListenerPriority.LOW)
-public final class RemoveAccount implements Listener {
+public final class RemoveAccountListener implements Listener {
 
 	private final Gangland                   gangland;
 	private final GanglandDatabase           ganglandDatabase;
@@ -31,11 +31,11 @@ public final class RemoveAccount implements Listener {
 	private final UserManager<OfflinePlayer> offlineUserManager;
 	private final WeaponManager              weaponManager;
 
-	public RemoveAccount(Gangland gangland,
-	                     GanglandDatabase ganglandDatabase,
-	                     @Qualifier("online") UserManager<Player> userManager,
-	                     @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
-	                     WeaponManager weaponManager) {
+	public RemoveAccountListener(Gangland gangland,
+	                             GanglandDatabase ganglandDatabase,
+	                             @Qualifier("online") UserManager<Player> userManager,
+	                             @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
+	                             WeaponManager weaponManager) {
 		this.gangland           = gangland;
 		this.ganglandDatabase   = ganglandDatabase;
 		this.userManager        = userManager;

@@ -1,10 +1,8 @@
-package me.luckyraven.features.phone;
+package me.luckyraven.data.account.gang;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.Getter;
 import me.luckyraven.Gangland;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.file.configuration.Settings;
@@ -39,7 +37,7 @@ public class Phone {
 	}
 
 	private void gangInventory(User<Player> user, GangManager gangManager,
-							   TriConsumer<Player, InventoryHandler, ItemBuilder> callback) {
+	                           TriConsumer<Player, InventoryHandler, ItemBuilder> callback) {
 		// show create gang and search for gang
 		String title = "&6&lGang";
 		int    size  = 5 * 9;
@@ -58,13 +56,13 @@ public class Phone {
 			for (Gang gang : gangs) {
 				ItemBuilder itemBuilder = new ItemBuilder(XMaterial.PLAYER_HEAD.get()).setDisplayName(
 						String.format("&r%s%s&7 Gang", ColorUtil.getColorCode(gang.getColor()),
-									  gang.getDisplayNameString())).setLore("&e" + gang.getDescription());
+						              gang.getDisplayNameString())).setLore("&e" + gang.getDescription());
 
 				UUID uuid = gang.getMembers()
 						.stream()
 						.filter(member -> Objects.requireNonNull(member.getRank())
-												 .getName()
-												 .equalsIgnoreCase(Settings.getGangRankTail()))
+						                         .getName()
+						                         .equalsIgnoreCase(Settings.getGangRankTail()))
 						.findFirst()
 						.map(Member::getUuid)
 						.orElse(null);
@@ -87,11 +85,11 @@ public class Phone {
 			String title1 = "&6&lGangs View";
 
 			ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
-												   Settings.getNextPage());
+			                                       Settings.getNextPage());
 
 			MultiInventory multiInventory = MultiInventoryCreation.dynamicMultiInventory(gangland, player1, gangsItems,
-																						 title1, true, true, fill,
-																						 buttonTags, staticItems);
+			                                                                             title1, true, true, fill,
+			                                                                             buttonTags, staticItems);
 
 			if (multiInventory == null) return;
 
@@ -109,9 +107,9 @@ public class Phone {
 					List<ItemStack> items = gangsItems.stream()
 							.filter(itemStack -> Objects.requireNonNull(
 																itemStack.getItemMeta())
-														.getDisplayName()
-														.toLowerCase()
-														.contains(output.toLowerCase()))
+							                            .getDisplayName()
+							                            .toLowerCase()
+							                            .contains(output.toLowerCase()))
 							.toList();
 
 					multiInventory.updateItems(gangland, items, stateSnapshot.getPlayer(), true, fill, staticItems);

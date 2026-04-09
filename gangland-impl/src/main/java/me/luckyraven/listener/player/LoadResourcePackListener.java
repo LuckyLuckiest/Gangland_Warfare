@@ -14,7 +14,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 
 @ListenerHandler
-public class LoadResourcePack implements Listener {
+public class LoadResourcePackListener implements Listener {
 
 	@EventHandler
 	public void onResourcePackStatus(PlayerResourcePackStatusEvent event) {

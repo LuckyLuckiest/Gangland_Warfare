@@ -13,13 +13,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
 @ListenerHandler(condition = "isScoreboardEnabled",
-				 priority = ListenerPriority.LOW)
-public class PlayerScoreboard implements Listener {
+                 priority = ListenerPriority.LOW)
+public class PlayerScoreboardListener implements Listener {
 
 	private final Gangland          gangland;
 	private final ScoreboardManager scoreboardManager;
 
-	public PlayerScoreboard(Gangland gangland, ScoreboardManager scoreboardManager) {
+	public PlayerScoreboardListener(Gangland gangland, ScoreboardManager scoreboardManager) {
 		this.gangland          = gangland;
 		this.scoreboardManager = scoreboardManager;
 	}

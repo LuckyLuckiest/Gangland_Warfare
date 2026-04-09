@@ -1,4 +1,4 @@
-package me.luckyraven.data;
+package me.luckyraven.command;
 
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.util.GanglandChatUtil;

@@ -9,11 +9,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
 @ListenerHandler
-public class WantedLevel implements Listener {
+public class WantedLevelListener implements Listener {
 
 	private final KillCombo killCombo;
 
-	public WantedLevel(KillCombo killCombo) {
+	public WantedLevelListener(KillCombo killCombo) {
 		this.killCombo = killCombo;
 	}
 

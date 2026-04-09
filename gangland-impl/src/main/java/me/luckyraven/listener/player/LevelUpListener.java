@@ -1,11 +1,11 @@
 package me.luckyraven.listener.player;
 
+import me.luckyraven.data.account.Level;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.events.gang.GangLevelUpEvent;
 import me.luckyraven.events.user.UserLevelUpEvent;
-import me.luckyraven.features.level.Level;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.listener.ListenerHandler;
@@ -16,11 +16,11 @@ import org.bukkit.event.Listener;
 import java.util.List;
 
 @ListenerHandler
-public class LevelUp implements Listener {
+public class LevelUpListener implements Listener {
 
 	private final UserManager<Player> userManager;
 
-	public LevelUp(@Qualifier("online") UserManager<Player> userManager) {
+	public LevelUpListener(@Qualifier("online") UserManager<Player> userManager) {
 		this.userManager = userManager;
 	}
 
@@ -61,8 +61,8 @@ public class LevelUp implements Listener {
 
 	private String replacePlaceholders(String message, Level level) {
 		return message.replace("%level%", String.valueOf(level.getLevelValue()))
-					  .replace("%next_level%", String.valueOf(level.nextLevel()))
-					  .replace("%max_level%", String.valueOf(level.getMaxLevel()));
+		              .replace("%next_level%", String.valueOf(level.nextLevel()))
+		              .replace("%max_level%", String.valueOf(level.getMaxLevel()));
 	}
 
 }

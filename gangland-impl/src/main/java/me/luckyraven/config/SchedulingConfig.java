@@ -1,7 +1,10 @@
 package me.luckyraven.config;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.PeriodicalUpdates;
+import me.luckyraven.bootstrap.FileAddonReloadService;
+import me.luckyraven.bootstrap.PeriodicalUpdates;
+import me.luckyraven.bootstrap.PlayerBootstrapService;
+import me.luckyraven.bootstrap.ScoreboardLifecycleService;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.plugin.PluginManager;
@@ -18,9 +21,6 @@ import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
-import me.luckyraven.service.FileAddonReloadService;
-import me.luckyraven.service.PlayerBootstrapService;
-import me.luckyraven.service.ScoreboardLifecycleService;
 import me.luckyraven.util.autowire.bean.Bean;
 import me.luckyraven.util.autowire.bean.Configuration;
 import me.luckyraven.util.autowire.bean.Qualifier;

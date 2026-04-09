@@ -14,12 +14,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
 @ListenerHandler(condition = "isGangEnabled")
-public class GangMembersDamage implements Listener {
+public class GangMembersDamageListener implements Listener {
 
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 
-	public GangMembersDamage(@Qualifier("online") UserManager<Player> userManager, GangManager gangManager) {
+	public GangMembersDamageListener(@Qualifier("online") UserManager<Player> userManager, GangManager gangManager) {
 		this.userManager = userManager;
 		this.gangManager = gangManager;
 	}

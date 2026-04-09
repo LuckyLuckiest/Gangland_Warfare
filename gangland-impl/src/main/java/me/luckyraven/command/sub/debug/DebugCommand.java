@@ -4,6 +4,7 @@ import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.particles.XParticle;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import me.luckyraven.Gangland;
+import me.luckyraven.bootstrap.PeriodicalUpdates;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
@@ -381,7 +382,7 @@ public final class DebugCommand extends Command {
 
 	private @NotNull Argument getUpdateData() {
 		return new Argument(getGangland(), "update-data", getArgumentTree(), (argument, sender, args) -> {
-			getGangland().getContext().get(me.luckyraven.PeriodicalUpdates.class).forceUpdate();
+			getGangland().getContext().get(PeriodicalUpdates.class).forceUpdate();
 		});
 	}
 

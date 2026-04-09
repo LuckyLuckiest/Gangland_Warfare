@@ -2,11 +2,12 @@ package me.luckyraven.config;
 
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
+import me.luckyraven.bootstrap.GanglandContext;
 import me.luckyraven.compatibility.CompatibilityWorker;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
-import me.luckyraven.context.GanglandContext;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.data.economy.GanglandMoneyDepositService;
 import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
@@ -32,7 +33,6 @@ import me.luckyraven.item.money.MoneyDepositService;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.lootchest.LootChestService;
 import me.luckyraven.lootchest.config.LootChestLoader;
-import me.luckyraven.money.GanglandMoneyDepositService;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.scoreboard.ScoreboardManager;
@@ -99,8 +99,8 @@ public class GameplayConfig {
 	// ---------------------------------------------------------------------------------------------------------------
 
 	/**
-	 * ScoreboardManager is produced by {@code KernelConfig} in the KERNEL phase, so no @Bean method is needed here.
-	 * The {@link ScoreboardAddon} is wired into it via setter after the FILE phase produces it.
+	 * ScoreboardManager is produced by {@code KernelConfig} in the KERNEL phase, so no @Bean method is needed here. The
+	 * {@link ScoreboardAddon} is wired into it via setter after the FILE phase produces it.
 	 */
 	@PostConstruct
 	public void wireScoreboardAddon() {
@@ -337,8 +337,8 @@ public class GameplayConfig {
 	/**
 	 * {@link InventoryLoader} can't initialize during the FILE phase because its load callback parses prefixed item
 	 * refs (weapon:awp, wearable:police_vest, …) via {@link ItemParserManager}, which is a CONFIG-phase bean. By the
-	 * time this {@code @PostConstruct} runs, every bean is registered AND the per-bean hydrate hook has populated
-	 * the {@code ItemParserManager}, so the {@code SlotItemFactory} resolver lambda set up in
+	 * time this {@code @PostConstruct} runs, every bean is registered AND the per-bean hydrate hook has populated the
+	 * {@code ItemParserManager}, so the {@code SlotItemFactory} resolver lambda set up in
 	 * {@code FileConfig.inventoryLoader()} can dereference it.
 	 */
 	@PostConstruct

@@ -1,4 +1,4 @@
-package me.luckyraven.money;
+package me.luckyraven.data.economy;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.data.account.user.User;

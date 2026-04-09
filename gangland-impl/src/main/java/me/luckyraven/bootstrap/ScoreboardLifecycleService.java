@@ -1,4 +1,4 @@
-package me.luckyraven.service;
+package me.luckyraven.bootstrap;
 
 import lombok.CustomLog;
 import me.luckyraven.Gangland;

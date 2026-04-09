@@ -13,8 +13,8 @@ import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.events.user.UserDataInitEvent;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.component.Table;
-import me.luckyraven.updater.UpdateChecker;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.UpdateChecker;
 import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.listener.ListenerPriority;
@@ -29,7 +29,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import java.util.List;
 
 @ListenerHandler(priority = ListenerPriority.LOWEST)
-public final class CreateAccount implements Listener {
+public final class CreateAccountListener implements Listener {
 
 	private final Gangland                   gangland;
 	private final UserManager<Player>        userManager;
@@ -37,11 +37,11 @@ public final class CreateAccount implements Listener {
 	private final MemberManager              memberManager;
 	private final GanglandDatabase           ganglandDatabase;
 
-	public CreateAccount(Gangland gangland,
-	                     @Qualifier("online") UserManager<Player> userManager,
-	                     @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
-	                     MemberManager memberManager,
-	                     GanglandDatabase ganglandDatabase) {
+	public CreateAccountListener(Gangland gangland,
+	                             @Qualifier("online") UserManager<Player> userManager,
+	                             @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
+	                             MemberManager memberManager,
+	                             GanglandDatabase ganglandDatabase) {
 		this.gangland           = gangland;
 		this.userManager        = userManager;
 		this.offlineUserManager = offlineUserManager;

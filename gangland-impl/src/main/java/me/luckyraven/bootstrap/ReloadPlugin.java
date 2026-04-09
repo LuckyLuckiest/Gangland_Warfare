@@ -1,7 +1,7 @@
-package me.luckyraven;
+package me.luckyraven.bootstrap;
 
 import lombok.CustomLog;
-import me.luckyraven.context.GanglandContext;
+import me.luckyraven.Gangland;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Settings;
@@ -10,7 +10,6 @@ import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.scoreboard.Scoreboard;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.driver.DriverHandler;
-import me.luckyraven.service.FileAddonReloadService;
 import org.bukkit.entity.Player;
 
 /**

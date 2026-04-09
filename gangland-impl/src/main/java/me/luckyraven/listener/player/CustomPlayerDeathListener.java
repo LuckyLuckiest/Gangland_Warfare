@@ -46,7 +46,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ListenerHandler
-public class CustomPlayerDeath implements Listener {
+public class CustomPlayerDeathListener implements Listener {
 
 	/**
 	 * Minimum health set when a player is downed — keeps them alive server-side.
@@ -56,7 +56,7 @@ public class CustomPlayerDeath implements Listener {
 	/**
 	 * Static reference so {@link RespawnCommand} can reach this instance.
 	 */
-	private static CustomPlayerDeath instance;
+	private static CustomPlayerDeathListener instance;
 
 	private final Gangland              gangland;
 	private final UserManager<Player>   userManager;
@@ -65,10 +65,10 @@ public class CustomPlayerDeath implements Listener {
 	private final Map<UUID, BukkitTask> respawnTasks   = new ConcurrentHashMap<>();
 	private final Map<UUID, GameMode>   savedGameModes = new ConcurrentHashMap<>();
 
-	public CustomPlayerDeath(Gangland gangland,
-	                         @Qualifier("online") UserManager<Player> userManager,
-	                         WaypointManager waypointManager,
-	                         JetpackService jetpackService) {
+	public CustomPlayerDeathListener(Gangland gangland,
+	                                 @Qualifier("online") UserManager<Player> userManager,
+	                                 WaypointManager waypointManager,
+	                                 JetpackService jetpackService) {
 		this.gangland        = gangland;
 		this.userManager     = userManager;
 		this.waypointManager = waypointManager;

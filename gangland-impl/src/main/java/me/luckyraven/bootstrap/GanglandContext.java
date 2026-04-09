@@ -1,4 +1,4 @@
-package me.luckyraven.context;
+package me.luckyraven.bootstrap;
 
 import lombok.CustomLog;
 import lombok.Getter;
@@ -14,6 +14,8 @@ import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.util.autowire.DependencyContainer;
 import me.luckyraven.util.autowire.bean.BeanFactory;
+import me.luckyraven.util.autowire.bean.BeanGraph;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.util.autowire.bean.Phase;
 import org.bukkit.command.PluginCommand;
 
@@ -30,7 +32,7 @@ import java.util.Set;
  *     <li><b>Kernel:</b> {@code KernelConfig} ({@link Phase#KERNEL}) produces every bootstrap-critical singleton
  *     (version detection, compatibility, permissions, file management, database, scoreboard) via standard
  *     {@code @Bean} methods. Dependency ordering within the kernel phase is resolved by
- *     {@link me.luckyraven.util.autowire.bean.BeanGraph} topological sort.</li>
+ *     {@link BeanGraph} topological sort.</li>
  *     <li><b>Scan:</b> {@link #bootstrap} scans {@code me.luckyraven.config} for {@code @Configuration} classes and
  *     hands them to {@link BeanFactory}.</li>
  *     <li><b>Instantiate:</b> {@link BeanFactory#instantiate()} runs each {@link Phase} in declared order.
@@ -94,19 +96,19 @@ public final class GanglandContext {
 	}
 
 	/**
-	 * Runs the reload lifecycle on all beans implementing {@link me.luckyraven.util.autowire.bean.BeanLifecycle}:
-	 * {@code onPreClear()} and {@code onClear()} in reverse topological order, then {@code onInitialize(false)} in
-	 * forward topological order. Call this from the reload orchestrator after files have been reloaded and scoreboards
-	 * have been killed — this replaces the hard-coded {@code ReloadPlugin.databaseInitialize()} sequence.
+	 * Runs the reload lifecycle on all beans implementing {@link BeanLifecycle}: {@code onPreClear()} and
+	 * {@code onClear()} in reverse topological order, then {@code onInitialize(false)} in forward topological order.
+	 * Call this from the reload orchestrator after files have been reloaded and scoreboards have been killed — this
+	 * replaces the hard-coded {@code ReloadPlugin.databaseInitialize()} sequence.
 	 */
 	public void reloadBeans() {
 		beanFactory.reloadLifecycleBeans();
 	}
 
 	/**
-	 * Runs graceful shutdown on all beans implementing {@link me.luckyraven.util.autowire.bean.BeanLifecycle} in
-	 * reverse topological order. Call this from {@code Gangland.onDisable()} <b>before</b> flushing pending data and
-	 * closing database connections — shutdown callbacks may convert active sessions into saveable state.
+	 * Runs graceful shutdown on all beans implementing {@link BeanLifecycle} in reverse topological order. Call this
+	 * from {@code Gangland.onDisable()} <b>before</b> flushing pending data and closing database connections — shutdown
+	 * callbacks may convert active sessions into savable state.
 	 */
 	public void shutdownBeans() {
 		beanFactory.shutdownLifecycleBeans();

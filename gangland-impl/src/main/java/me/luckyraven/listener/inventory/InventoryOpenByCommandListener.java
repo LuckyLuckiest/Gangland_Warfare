@@ -21,15 +21,15 @@ import java.util.Set;
 import java.util.stream.IntStream;
 
 @ListenerHandler
-public class InventoryOpenByCommand implements Listener {
+public class InventoryOpenByCommandListener implements Listener {
 
 	private final Gangland           gangland;
 	private final PlaceholderService placeholderService;
 	private final ConditionEvaluator conditionEvaluator;
 
-	public InventoryOpenByCommand(Gangland gangland,
-	                              PlaceholderService placeholderService,
-	                              ConditionEvaluator conditionEvaluator) {
+	public InventoryOpenByCommandListener(Gangland gangland,
+	                                      PlaceholderService placeholderService,
+	                                      ConditionEvaluator conditionEvaluator) {
 		this.gangland           = gangland;
 		this.placeholderService = placeholderService;
 		this.conditionEvaluator = conditionEvaluator;
@@ -57,7 +57,7 @@ public class InventoryOpenByCommand implements Listener {
 	}
 
 	private boolean checkCommand(PlayerCommandPreprocessEvent event, List<OpenInventory> openInventories,
-								 String[] command, InventoryBuilder builder, Player player) {
+	                             String[] command, InventoryBuilder builder, Player player) {
 		for (OpenInventory openInventory : openInventories) {
 			if (openInventory == null) continue;
 			// only check command types
@@ -71,7 +71,7 @@ public class InventoryOpenByCommand implements Listener {
 
 			// check each content
 			boolean arraysEqual = IntStream.range(0, command.length)
-										   .allMatch(i -> command[i].equals(inventoryCommandArr[i]));
+			                               .allMatch(i -> command[i].equals(inventoryCommandArr[i]));
 			if (!arraysEqual) continue;
 
 			String permission = builder.permission();

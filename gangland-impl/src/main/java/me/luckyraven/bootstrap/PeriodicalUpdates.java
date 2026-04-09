@@ -1,7 +1,8 @@
-package me.luckyraven;
+package me.luckyraven.bootstrap;
 
 import lombok.CustomLog;
 import lombok.Getter;
+import me.luckyraven.Gangland;
 import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;

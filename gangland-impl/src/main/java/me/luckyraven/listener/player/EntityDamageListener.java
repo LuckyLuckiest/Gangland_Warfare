@@ -37,7 +37,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import java.util.UUID;
 
 @ListenerHandler
-public class EntityDamage implements Listener {
+public class EntityDamageListener implements Listener {
 
 	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
@@ -46,12 +46,12 @@ public class EntityDamage implements Listener {
 	private final BountySettings      bountySettings;
 	private final WantedSettings      wantedSettings;
 
-	public EntityDamage(Gangland gangland,
-	                    @Qualifier("online") UserManager<Player> userManager,
-	                    EntityMarkManager entityMarkManager,
-	                    KillCombo killCombo,
-	                    BountySettings bountySettings,
-	                    WantedSettings wantedSettings) {
+	public EntityDamageListener(Gangland gangland,
+	                            @Qualifier("online") UserManager<Player> userManager,
+	                            EntityMarkManager entityMarkManager,
+	                            KillCombo killCombo,
+	                            BountySettings bountySettings,
+	                            WantedSettings wantedSettings) {
 		this.gangland          = gangland;
 		this.userManager       = userManager;
 		this.entityMarkManager = entityMarkManager;

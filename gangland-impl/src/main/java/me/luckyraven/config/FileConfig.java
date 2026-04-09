@@ -2,7 +2,7 @@ package me.luckyraven.config;
 
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
-import me.luckyraven.context.GanglandContext;
+import me.luckyraven.bootstrap.GanglandContext;
 import me.luckyraven.copsncrooks.bounty.BountySettings;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianSettings;
 import me.luckyraven.copsncrooks.npc.police.config.CopSettings;

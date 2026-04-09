@@ -7,7 +7,6 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.command.data.InformationManager;
-import me.luckyraven.data.HelpInfo;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;

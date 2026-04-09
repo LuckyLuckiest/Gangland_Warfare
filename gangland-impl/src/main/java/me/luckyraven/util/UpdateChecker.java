@@ -1,9 +1,8 @@
-package me.luckyraven.updater;
+package me.luckyraven.util;
 
 import lombok.CustomLog;
 import lombok.Getter;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.plugin.java.JavaPlugin;
 

@@ -1,10 +1,10 @@
 package me.luckyraven.listener.loot;
 
+import me.luckyraven.data.account.Level;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.events.level.LevelUpEvent;
 import me.luckyraven.events.user.UserLevelUpEvent;
-import me.luckyraven.features.level.Level;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.lootchest.data.LootChestSession;
 import me.luckyraven.lootchest.events.lootchest.LootChestCooldownCompleteEvent;
@@ -23,13 +23,13 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ListenerHandler
-public class LootChestEarnGoods implements Listener {
+public class LootChestEarnGoodsListener implements Listener {
 
 	private final Random                 random;
 	private final UserManager<Player>    userManager;
 	private final Map<Player, Set<UUID>> openedLootChests;
 
-	public LootChestEarnGoods(@Qualifier("online") UserManager<Player> userManager) {
+	public LootChestEarnGoodsListener(@Qualifier("online") UserManager<Player> userManager) {
 		this.random           = new Random();
 		this.userManager      = userManager;
 		this.openedLootChests = new ConcurrentHashMap<>();

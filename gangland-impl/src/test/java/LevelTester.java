@@ -1,7 +1,7 @@
+import me.luckyraven.data.account.Level;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.events.level.LevelUpEvent;
 import me.luckyraven.events.user.UserLevelUpEvent;
-import me.luckyraven.features.level.Level;
 
 import java.util.Scanner;
 

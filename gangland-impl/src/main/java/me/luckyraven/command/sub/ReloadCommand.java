@@ -2,10 +2,10 @@ package me.luckyraven.command.sub;
 
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
-import me.luckyraven.PeriodicalUpdates;
+import me.luckyraven.bootstrap.GanglandContext;
+import me.luckyraven.bootstrap.PeriodicalUpdates;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.context.GanglandContext;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.command.CommandHandler;

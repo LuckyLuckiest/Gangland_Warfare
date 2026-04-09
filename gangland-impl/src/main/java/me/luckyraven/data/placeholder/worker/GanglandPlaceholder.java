@@ -2,13 +2,13 @@ package me.luckyraven.data.placeholder.worker;
 
 import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.data.account.Bank;
+import me.luckyraven.data.account.Level;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.features.level.Level;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.unique.UniqueItem;

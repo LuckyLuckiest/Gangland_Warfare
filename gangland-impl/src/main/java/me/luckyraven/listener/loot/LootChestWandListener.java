@@ -21,7 +21,7 @@ import java.util.List;
 
 @ListenerHandler
 @RequiredArgsConstructor
-public class LootChestWandHandler implements Listener {
+public class LootChestWandListener implements Listener {
 
 	private final Gangland         gangland;
 	private final LootChestManager lootChestManager;

@@ -1,7 +1,7 @@
 package me.luckyraven.events.level;
 
 import lombok.Getter;
-import me.luckyraven.features.level.Level;
+import me.luckyraven.data.account.Level;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 

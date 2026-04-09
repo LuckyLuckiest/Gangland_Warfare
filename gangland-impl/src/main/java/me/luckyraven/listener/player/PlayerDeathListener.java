@@ -31,7 +31,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ListenerHandler
-public class PlayerDeath implements Listener {
+public class PlayerDeathListener implements Listener {
 
 	private static final long DEATH_DEDUP_WINDOW_MS = 500L;
 
@@ -40,9 +40,9 @@ public class PlayerDeath implements Listener {
 	private final GanglandPlaceholder placeholder;
 	private final Map<UUID, Long>     recentDeaths = new ConcurrentHashMap<>();
 
-	public PlayerDeath(@Qualifier("online") UserManager<Player> userManager,
-	                   WeaponManager weaponManager,
-	                   GanglandPlaceholder placeholder) {
+	public PlayerDeathListener(@Qualifier("online") UserManager<Player> userManager,
+	                           WeaponManager weaponManager,
+	                           GanglandPlaceholder placeholder) {
 		this.userManager   = userManager;
 		this.weaponManager = weaponManager;
 		this.placeholder   = placeholder;

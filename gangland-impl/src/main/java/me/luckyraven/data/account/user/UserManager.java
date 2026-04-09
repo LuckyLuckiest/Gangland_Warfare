@@ -11,6 +11,7 @@ import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.copsncrooks.wanted.WantedExecutor;
 import me.luckyraven.copsncrooks.wanted.WantedSettings;
 import me.luckyraven.data.account.Bank;
+import me.luckyraven.data.account.Level;
 import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.rank.Permission;
@@ -19,7 +20,6 @@ import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.events.user.UserBountyEvent;
-import me.luckyraven.features.level.Level;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.repository.IRepository;
@@ -146,7 +146,7 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 
 				if (userBounty.getAmount() < Settings.getBountyTimerMax()) {
 					Executor executor = new BountyExecutor(gangland, bountyEvent, user, bountySettings);
-					Timer timer = executor.createTimer();
+					Timer    timer    = executor.createTimer();
 
 					timer.start(true);
 				}
@@ -158,7 +158,7 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 				WantedEvent wantedEvent = new WantedEvent(true, userWanted);
 
 				Executor executor = new WantedExecutor(gangland, wantedEvent, user, wantedSettings);
-				Timer timer = executor.createTimer();
+				Timer    timer    = executor.createTimer();
 
 				timer.start(true);
 			}
