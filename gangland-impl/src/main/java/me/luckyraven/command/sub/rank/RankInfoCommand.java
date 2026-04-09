@@ -21,13 +21,13 @@ class RankInfoCommand extends SubArgument {
 	private final Tree<Argument> tree;
 	private final RankManager    rankManager;
 
-	protected RankInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected RankInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent, RankManager rankManager) {
 		super(gangland, "info", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
 
-		this.rankManager = gangland.getInitializer().getRankManager();
+		this.rankManager = rankManager;
 
 		rankInfo();
 	}

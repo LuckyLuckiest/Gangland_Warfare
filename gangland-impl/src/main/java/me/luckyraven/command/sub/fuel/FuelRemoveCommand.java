@@ -23,12 +23,12 @@ class FuelRemoveCommand extends SubArgument {
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
-	FuelRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	FuelRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager) {
 		super(gangland, "remove", tree, parent);
 
 		this.gangland    = gangland;
 		this.tree        = tree;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.userManager = userManager;
 
 		removeAmount();
 	}

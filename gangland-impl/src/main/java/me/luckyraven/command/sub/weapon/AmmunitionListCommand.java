@@ -15,19 +15,19 @@ import java.util.Set;
 
 class AmmunitionListCommand extends SubArgument {
 
-	private final Gangland gangland;
+	private final AmmunitionManager ammunitionManager;
 
-	protected AmmunitionListCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected AmmunitionListCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                                AmmunitionManager ammunitionManager) {
 		super(gangland, "list", tree, parent);
 
-		this.gangland = gangland;
+		this.ammunitionManager = ammunitionManager;
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			AmmunitionManager ammunitionManager = gangland.getInitializer().getAmmunitionManager();
-			Set<String>       ammunition        = ammunitionManager.getAmmunitionKeys();
+			Set<String> ammunition = ammunitionManager.getAmmunitionKeys();
 
 			sender.sendMessage(GanglandChatUtil.commandMessage("List of ammunition"));
 

@@ -10,8 +10,9 @@ import org.jetbrains.annotations.Nullable;
 @RequiredArgsConstructor
 public class PlaceholderAPIExpansion extends PlaceholderExpansion {
 
-	private final Gangland gangland;
-	private final String   prefix;
+	private final Gangland            gangland;
+	private final String              prefix;
+	private final GanglandPlaceholder placeholder;
 
 	@Override
 	public @NotNull String getIdentifier() {
@@ -35,7 +36,7 @@ public class PlaceholderAPIExpansion extends PlaceholderExpansion {
 
 	@Override
 	public @Nullable String onPlaceholderRequest(Player player, @NotNull String params) {
-		return gangland.getInitializer().getPlaceholder().onRequest(player, params);
+		return placeholder.onRequest(player, params);
 	}
 
 }

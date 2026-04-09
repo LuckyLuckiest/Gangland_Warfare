@@ -2,9 +2,11 @@ package me.luckyraven.command;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.data.HelpInfo;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.datastructure.Tree;
@@ -17,6 +19,16 @@ import java.util.Set;
 
 @Getter
 public abstract class Command {
+
+	/**
+	 * Static binding to the singleton {@link InformationManager}, set once by {@code GanglandContext.runCommandPhase()}
+	 * before commands are scanned. Subclasses use {@link #getCommandInformation(String)} / {@link #getCommands()}
+	 * during their constructors to build help info — passing the manager through every subclass {@code super(...)} call
+	 * would touch 25+ files for one read, so a single binding is used here. The setter is package-private (via
+	 * {@link Setter} default access) so only command-package code can rebind it.
+	 */
+	@Setter(value = AccessLevel.PUBLIC)
+	private static InformationManager informationManager;
 
 	@Getter(value = AccessLevel.PROTECTED)
 	private final Gangland       gangland;
@@ -48,11 +60,17 @@ public abstract class Command {
 		this.argument = new Argument(gangland, args, argumentTree, this::onExecute, this.permission);
 		this.argumentTree.add(argument.getNode());
 
-		initializeArguments();
+		// initializeArguments() is invoked by CommandManager.createInstance() AFTER the subclass constructor
+		// finishes — this delay is required because subclass fields (constructor-injected dependencies) aren't
+		// assigned until after super() returns, and many subclasses pass those fields to sub-arguments.
 	}
 
 	protected abstract void onExecute(Argument argument, CommandSender commandSender, String[] arguments);
 
+	/**
+	 * Build and attach sub-arguments to this command. Called by {@code CommandManager.createInstance()} once the
+	 * subclass constructor has fully run, so subclass fields (constructor-injected beans) are guaranteed non-null.
+	 */
 	protected abstract void initializeArguments();
 
 	protected abstract void help(CommandSender sender, int page);
@@ -79,7 +97,7 @@ public abstract class Command {
 	}
 
 	public Map<String, CommandInformation> getCommands() {
-		return gangland.getInitializer().getInformationManager().getCommands();
+		return informationManager.getCommands();
 	}
 
 }

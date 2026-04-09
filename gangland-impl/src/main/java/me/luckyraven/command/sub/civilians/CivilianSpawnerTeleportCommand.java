@@ -15,14 +15,17 @@ import org.bukkit.entity.Player;
 
 class CivilianSpawnerTeleportCommand extends SubArgument {
 
-	private final Gangland       gangland;
-	private final Tree<Argument> tree;
+	private final Gangland             gangland;
+	private final Tree<Argument>       tree;
+	private final CivilianSpawnManager civilianSpawnManager;
 
-	CivilianSpawnerTeleportCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CivilianSpawnerTeleportCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                               CivilianSpawnManager civilianSpawnManager) {
 		super(gangland, new String[]{"teleport", "tp"}, tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland             = gangland;
+		this.tree                 = tree;
+		this.civilianSpawnManager = civilianSpawnManager;
 
 		this.idArgument();
 	}
@@ -50,8 +53,7 @@ class CivilianSpawnerTeleportCommand extends SubArgument {
 				return;
 			}
 
-			CivilianSpawnManager spawnManager = gangland.getInitializer().getCivilianSpawnManager();
-			Location             location     = spawnManager.getSpawnerLocation(id);
+			Location location = civilianSpawnManager.getSpawnerLocation(id);
 
 			if (location == null) {
 				sender.sendMessage(Messages.LOCATION_NOT_FOUND.toString().replace("%location%", idStr));
@@ -61,7 +63,7 @@ class CivilianSpawnerTeleportCommand extends SubArgument {
 			player.teleport(location);
 			sender.sendMessage(
 					GanglandChatUtil.commandMessage("Teleported to civilian spawner &e(&b" + id + "&e)&7."));
-		}, sender -> gangland.getInitializer().getCivilianSpawnManager().getSpawnerIds()
+		}, sender -> civilianSpawnManager.getSpawnerIds()
 				.stream().map(String::valueOf).toList());
 
 		this.addSubArgument(idArg);

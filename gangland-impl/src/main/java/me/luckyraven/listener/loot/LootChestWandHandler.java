@@ -23,7 +23,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LootChestWandHandler implements Listener {
 
-	private final Gangland gangland;
+	private final Gangland         gangland;
+	private final LootChestManager lootChestManager;
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerInteract(PlayerInteractEvent event) {
@@ -38,7 +39,7 @@ public class LootChestWandHandler implements Listener {
 		// Handle left click - open configuration menu
 		if (action == Action.LEFT_CLICK_BLOCK || action == Action.LEFT_CLICK_AIR) {
 			event.setCancelled(true);
-			LootChestWand wand = LootChestWand.getWand(heldItem, gangland);
+			LootChestWand wand = LootChestWand.getWand(heldItem, gangland, lootChestManager);
 
 			if (wand != null) {
 				wand.openConfigInventory(player, fill);
@@ -54,8 +55,7 @@ public class LootChestWandHandler implements Listener {
 		if (block == null) return;
 
 		// If a loot chest already exists here, cancel the event and let LootChestListener handle opening it
-		LootChestManager manager = gangland.getInitializer().getLootChestManager();
-		if (manager.getChestAt(block.getLocation()).isPresent()) {
+		if (lootChestManager.getChestAt(block.getLocation()).isPresent()) {
 			// Cancel event to prevent vanilla chest from opening, LootChestListener will handle the rest
 			event.setCancelled(true);
 			return;
@@ -78,7 +78,7 @@ public class LootChestWandHandler implements Listener {
 			return;
 		}
 
-		LootChestWand wand = LootChestWand.getWand(heldItem, gangland);
+		LootChestWand wand = LootChestWand.getWand(heldItem, gangland, lootChestManager);
 
 		if (wand == null) return;
 
@@ -91,7 +91,7 @@ public class LootChestWandHandler implements Listener {
 		}
 
 		// Check if chest already exists at location
-		if (manager.getChestAt(block.getLocation()).isPresent()) {
+		if (lootChestManager.getChestAt(block.getLocation()).isPresent()) {
 			player.sendMessage(ChatUtil.color("&cA loot chest already exists at this location!"));
 			return;
 		}

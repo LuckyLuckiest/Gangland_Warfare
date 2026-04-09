@@ -15,19 +15,18 @@ import java.util.Map;
 
 class ItemWearableListCommand extends SubArgument {
 
-	private final Gangland gangland;
+	private final WearableAddon wearableAddon;
 
-	ItemWearableListCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	ItemWearableListCommand(Gangland gangland, Tree<Argument> tree, Argument parent, WearableAddon wearableAddon) {
 		super(gangland, "list", tree, parent);
 
-		this.gangland = gangland;
+		this.wearableAddon = wearableAddon;
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			WearableAddon         wearableAddon = gangland.getInitializer().getWearableAddon();
-			Map<String, Wearable> wearables     = wearableAddon.getWearables();
+			Map<String, Wearable> wearables = wearableAddon.getWearables();
 
 			sender.sendMessage(GanglandChatUtil.commandMessage("List of wearables"));
 

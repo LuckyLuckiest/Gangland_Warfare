@@ -24,17 +24,19 @@ import java.util.jar.JarFile;
 @CustomLog
 public class LanguageLoader {
 
-	private final Gangland gangland;
+	private final Gangland    gangland;
+	private final FileManager fileManager;
 
 	private @Getter YamlConfiguration message;
 
-	public LanguageLoader(Gangland gangland) {
-		this.gangland = gangland;
+	public LanguageLoader(Gangland gangland, FileManager fileManager) {
+		this.gangland    = gangland;
+		this.fileManager = fileManager;
 	}
 
 	public void initialize() {
 		try {
-			message = loadMessage(gangland.getInitializer().getFileManager());
+			message = loadMessage(fileManager);
 		} catch (IOException | InvalidConfigurationException exception) {
 			log.warn("{}: {}", UnhandledError.FILE_LOADER_ERROR, exception.getMessage());
 

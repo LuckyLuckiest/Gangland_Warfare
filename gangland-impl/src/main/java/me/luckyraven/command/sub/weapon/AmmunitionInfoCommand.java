@@ -22,13 +22,17 @@ class AmmunitionInfoCommand extends SubArgument {
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
+	private final AmmunitionManager   ammunitionManager;
 
-	protected AmmunitionInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected AmmunitionInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                                UserManager<Player> userManager,
+	                                AmmunitionManager ammunitionManager) {
 		super(gangland, "info", tree, parent);
 
-		this.gangland    = gangland;
-		this.tree        = tree;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.gangland          = gangland;
+		this.tree              = tree;
+		this.userManager       = userManager;
+		this.ammunitionManager = ammunitionManager;
 
 		ammunitionInfo();
 	}
@@ -48,8 +52,7 @@ class AmmunitionInfoCommand extends SubArgument {
 				return;
 			}
 
-			AmmunitionManager ammunitionManager = gangland.getInitializer().getAmmunitionManager();
-			Ammunition        ammunition        = Ammunition.getHeldAmmunition(ammunitionManager, itemStack);
+			Ammunition ammunition = Ammunition.getHeldAmmunition(ammunitionManager, itemStack);
 
 			if (ammunition == null) {
 				user.sendMessage(Messages.INVALID_AMMO.toString().replace("%args%", itemStack.getType().name()));
@@ -67,9 +70,8 @@ class AmmunitionInfoCommand extends SubArgument {
 
 			if (user == null) return;
 
-			String            ammoName          = args[2];
-			AmmunitionManager ammunitionManager = gangland.getInitializer().getAmmunitionManager();
-			Ammunition        ammunition        = ammunitionManager.getAmmunition(ammoName);
+			String     ammoName   = args[2];
+			Ammunition ammunition = ammunitionManager.getAmmunition(ammoName);
 
 			if (ammunition == null) {
 				user.sendMessage(Messages.INVALID_AMMO.toString().replace("%args%", ammoName));
@@ -77,7 +79,7 @@ class AmmunitionInfoCommand extends SubArgument {
 			}
 
 			sendInfo(user, ammunition);
-		}, sender -> gangland.getInitializer().getAmmunitionManager().getAmmunitionKeys()
+		}, sender -> ammunitionManager.getAmmunitionKeys()
 				.stream().toList());
 
 		this.addSubArgument(name);

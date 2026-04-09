@@ -1,7 +1,6 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.command.sub.RespawnCommand;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
@@ -12,6 +11,7 @@ import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.gadget.jetpack.JetpackService;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TimeMessages;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.downed.DownedPlayerRegistry;
 import me.luckyraven.util.downed.PlayerDownedEvent;
 import me.luckyraven.util.downed.PlayerUndownedEvent;
@@ -65,13 +65,14 @@ public class CustomPlayerDeath implements Listener {
 	private final Map<UUID, BukkitTask> respawnTasks   = new ConcurrentHashMap<>();
 	private final Map<UUID, GameMode>   savedGameModes = new ConcurrentHashMap<>();
 
-	public CustomPlayerDeath(Gangland gangland) {
-		this.gangland = gangland;
-		Initializer init = gangland.getInitializer();
-
-		this.userManager     = init.getUserManager();
-		this.waypointManager = init.getWaypointManager();
-		this.jetpackService  = init.getJetpackService();
+	public CustomPlayerDeath(Gangland gangland,
+	                         @Qualifier("online") UserManager<Player> userManager,
+	                         WaypointManager waypointManager,
+	                         JetpackService jetpackService) {
+		this.gangland        = gangland;
+		this.userManager     = userManager;
+		this.waypointManager = waypointManager;
+		this.jetpackService  = jetpackService;
 		instance             = this;
 	}
 

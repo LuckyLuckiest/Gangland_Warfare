@@ -15,19 +15,18 @@ import java.util.Map;
 
 class CarListCommand extends SubArgument {
 
-	private final Gangland gangland;
+	private final CarAddon carAddon;
 
-	CarListCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CarListCommand(Gangland gangland, Tree<Argument> tree, Argument parent, CarAddon carAddon) {
 		super(gangland, "list", tree, parent);
 
-		this.gangland = gangland;
+		this.carAddon = carAddon;
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			CarAddon         carAddon = gangland.getInitializer().getCarAddon();
-			Map<String, Car> cars     = carAddon.getCars();
+			Map<String, Car> cars = carAddon.getCars();
 
 			sender.sendMessage(GanglandChatUtil.commandMessage("List of cars"));
 

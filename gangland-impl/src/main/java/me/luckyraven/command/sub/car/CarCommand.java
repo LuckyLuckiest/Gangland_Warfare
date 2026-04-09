@@ -3,8 +3,12 @@ package me.luckyraven.command.sub.car;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.gadget.car.config.CarAddon;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,8 +17,14 @@ import java.util.Map;
 @CommandHandler
 public final class CarCommand extends Command {
 
-	public CarCommand(Gangland gangland) {
+	private final UserManager<Player> userManager;
+	private final CarAddon            carAddon;
+
+	public CarCommand(Gangland gangland, @Qualifier("online") UserManager<Player> userManager, CarAddon carAddon) {
 		super(gangland, "car", true, "cars");
+
+		this.userManager = userManager;
+		this.carAddon    = carAddon;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -33,9 +43,9 @@ public final class CarCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument give = new CarGiveCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument info = new CarInfoCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument list = new CarListCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument give = new CarGiveCommand(getGangland(), getArgumentTree(), getArgument(), userManager, carAddon);
+		Argument info = new CarInfoCommand(getGangland(), getArgumentTree(), getArgument(), userManager, carAddon);
+		Argument list = new CarListCommand(getGangland(), getArgumentTree(), getArgument(), carAddon);
 
 		List<Argument> arguments = new ArrayList<>();
 

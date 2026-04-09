@@ -19,10 +19,11 @@ class WaypointListCommand extends SubArgument {
 
 	private final WaypointManager waypointManager;
 
-	protected WaypointListCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected WaypointListCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                              WaypointManager waypointManager) {
 		super(gangland, "list", tree, parent);
 
-		this.waypointManager = gangland.getInitializer().getWaypointManager();
+		this.waypointManager = waypointManager;
 	}
 
 	@Override

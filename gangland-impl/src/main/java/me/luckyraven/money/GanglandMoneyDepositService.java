@@ -1,9 +1,9 @@
 package me.luckyraven.money;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.Gangland;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyDepositService;
@@ -22,9 +22,9 @@ public class GanglandMoneyDepositService implements MoneyDepositService {
 
 	private static final String AMOUNT_PLACEHOLDER = "%amount%";
 
-	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
 	private final MoneyAddon          moneyAddon;
+	private final PlaceholderService  placeholderService;
 
 	private static String formatAmount(double amount) {
 		// Whole-number drops are the common case; only show decimals when the rolled value isn't whole.
@@ -59,7 +59,7 @@ public class GanglandMoneyDepositService implements MoneyDepositService {
 	@Override
 	public String resolvePlaceholders(@Nullable Player player, String text) {
 		if (text == null || text.isEmpty()) return text;
-		return gangland.getInitializer().getPlaceholderService().convert(player, text);
+		return placeholderService.convert(player, text);
 	}
 
 	@Override

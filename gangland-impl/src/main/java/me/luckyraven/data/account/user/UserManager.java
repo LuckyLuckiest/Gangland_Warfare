@@ -4,10 +4,12 @@ import com.google.common.base.Preconditions;
 import me.luckyraven.Gangland;
 import me.luckyraven.copsncrooks.bounty.Bounty;
 import me.luckyraven.copsncrooks.bounty.BountyExecutor;
+import me.luckyraven.copsncrooks.bounty.BountySettings;
 import me.luckyraven.copsncrooks.events.bounty.BountyEvent;
 import me.luckyraven.copsncrooks.events.wanted.WantedEvent;
 import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.copsncrooks.wanted.WantedExecutor;
+import me.luckyraven.copsncrooks.wanted.WantedSettings;
 import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.gang.member.MemberManager;
@@ -37,16 +39,27 @@ import java.util.Map;
 
 public class UserManager<T extends OfflinePlayer> {
 
-	private final Gangland        gangland;
-	private final Map<T, User<T>> users;
+	private final Gangland         gangland;
+	private final GanglandDatabase database;
+	private final MemberManager    memberManager;
+	private final BountySettings   bountySettings;
+	private final WantedSettings   wantedSettings;
+	private final Map<T, User<T>>  users;
 
-	public UserManager(Gangland gangland) {
-		this.gangland = gangland;
-		this.users    = new HashMap<>();
+	public UserManager(Gangland gangland,
+	                   GanglandDatabase database,
+	                   MemberManager memberManager,
+	                   BountySettings bountySettings,
+	                   WantedSettings wantedSettings) {
+		this.gangland       = gangland;
+		this.database       = database;
+		this.memberManager  = memberManager;
+		this.bountySettings = bountySettings;
+		this.wantedSettings = wantedSettings;
+		this.users          = new HashMap<>();
 	}
 
 	public void initialize() {
-		GanglandDatabase   database           = gangland.getInitializer().getGanglandDatabase();
 		RepositoryRegistry repositoryRegistry = database.getRepositoryRegistry();
 
 		IRepository<User<? extends OfflinePlayer>> userRepository = repositoryRegistry.getGenericRepository(User.class);
@@ -60,18 +73,18 @@ public class UserManager<T extends OfflinePlayer> {
 	}
 
 	public void initializeUserData(User<T> user, UserTable userTable, BankTable bankTable) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
+		DatabaseHelper helper = new DatabaseHelper(gangland, database);
 
-		helper.runQueries(database -> {
+		helper.runQueries(db -> {
 			// <--------------- Data Info --------------->
 			Map<String, Object> userSearch = userTable.searchCriteria(user);
-			Object[] userData = database.table(userTable.getName())
-										.select((String) userSearch.get("search"), (Object[]) userSearch.get("info"),
-												(int[]) userSearch.get("type"), new String[]{"*"});
+			Object[] userData = db.table(userTable.getName())
+			                      .select((String) userSearch.get("search"), (Object[]) userSearch.get("info"),
+			                              (int[]) userSearch.get("type"), new String[]{"*"});
 
 			// create player data into a database
 			if (userData.length == 0) {
-				if (!Settings.isAutoSave()) userTable.insertTableQuery(database, user);
+				if (!Settings.isAutoSave()) userTable.insertTableQuery(db, user);
 				return;
 			}
 
@@ -92,16 +105,14 @@ public class UserManager<T extends OfflinePlayer> {
 			user.getWanted().setLevel(wanted);
 
 			// get the gang id from the member manager
-			MemberManager memberManager = gangland.getInitializer().getMemberManager();
-
 			user.setGangId(memberManager.getMember(user.getUuid()).getGangId());
 
 			// check for the availability of the bank from the accounts connected to the user
 			// <--------------- Bank Info --------------->
 			Map<String, Object> bankSearch = bankTable.searchCriteria(user);
-			Object[] bankData = database.table(bankTable.getName())
-										.select((String) bankSearch.get("search"), (Object[]) bankSearch.get("info"),
-												(int[]) bankSearch.get("type"), new String[]{"*"});
+			Object[] bankData = db.table(bankTable.getName())
+			                      .select((String) bankSearch.get("search"), (Object[]) bankSearch.get("info"),
+			                              (int[]) bankSearch.get("type"), new String[]{"*"});
 
 			boolean hasBank = bankData.length != 0;
 
@@ -133,8 +144,7 @@ public class UserManager<T extends OfflinePlayer> {
 				BountyEvent bountyEvent = new UserBountyEvent(true, user);
 
 				if (userBounty.getAmount() < Settings.getBountyTimerMax()) {
-					Executor executor = new BountyExecutor(gangland, bountyEvent, user,
-														   gangland.getInitializer().getBountySettings());
+					Executor executor = new BountyExecutor(gangland, bountyEvent, user, bountySettings);
 					Timer timer = executor.createTimer();
 
 					timer.start(true);
@@ -146,8 +156,7 @@ public class UserManager<T extends OfflinePlayer> {
 			if (userWanted.isWanted() && Settings.isWantedTimerEnabled()) {
 				WantedEvent wantedEvent = new WantedEvent(true, userWanted);
 
-				Executor executor = new WantedExecutor(gangland, wantedEvent, user,
-													   gangland.getInitializer().getWantedSettings());
+				Executor executor = new WantedExecutor(gangland, wantedEvent, user, wantedSettings);
 				Timer timer = executor.createTimer();
 
 				timer.start(true);

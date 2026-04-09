@@ -1,6 +1,7 @@
 package me.luckyraven.data.teleportation;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.tables.gang.GangTable;
 import me.luckyraven.database.tables.waypoint.WaypointTable;
@@ -16,17 +17,20 @@ import java.util.*;
 public class WaypointManager {
 
 	private final Gangland               gangland;
+	private final GanglandDatabase       database;
+	private final PermissionManager      permissionManager;
 	private final Map<Integer, Waypoint> waypoints;
 	private final Map<Player, Waypoint>  selectedWaypoints;
 
-	public WaypointManager(Gangland gangland) {
+	public WaypointManager(Gangland gangland, GanglandDatabase database, PermissionManager permissionManager) {
 		this.gangland          = gangland;
+		this.database          = database;
+		this.permissionManager = permissionManager;
 		this.waypoints         = new HashMap<>();
 		this.selectedWaypoints = new HashMap<>();
 	}
 
 	public void initialize() {
-		GanglandDatabase      database   = gangland.getInitializer().getGanglandDatabase();
 		IRepository<Waypoint> repository = database.getRepositoryRegistry().getRepository(Waypoint.class);
 
 		Collection<Waypoint> loaded = repository.loadAll();
@@ -37,7 +41,7 @@ public class WaypointManager {
 
 			if (id > maxId) maxId = id;
 
-			gangland.getInitializer().getPermissionManager().addPermission("waypoint." + id);
+			permissionManager.addPermission("waypoint." + id);
 			waypoints.put(id, waypoint);
 		}
 
@@ -74,7 +78,7 @@ public class WaypointManager {
 
 	public void refactorIds() {
 		WaypointTable  waypointTable = new WaypointTable(new GangTable());
-		DatabaseHelper helper        = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
+		DatabaseHelper helper        = new DatabaseHelper(gangland, database);
 
 		helper.runQueries(database -> {
 			Database config = database.table(waypointTable.getName());

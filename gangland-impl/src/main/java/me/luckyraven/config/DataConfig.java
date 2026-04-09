@@ -2,6 +2,8 @@ package me.luckyraven.config;
 
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
+import me.luckyraven.copsncrooks.bounty.BountySettings;
+import me.luckyraven.copsncrooks.wanted.WantedSettings;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.UserManager;
@@ -10,8 +12,8 @@ import me.luckyraven.data.plugin.PluginManager;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.TableLookup;
 import me.luckyraven.database.tables.player.MemberTable;
-import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.util.autowire.bean.Bean;
 import me.luckyraven.util.autowire.bean.Configuration;
 import me.luckyraven.util.autowire.bean.PostConstruct;
@@ -21,7 +23,6 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -37,43 +38,53 @@ import java.util.stream.Collectors;
 @Configuration
 public class DataConfig {
 
-	private final Gangland gangland;
+	private final Gangland          gangland;
+	private final PermissionManager permissionManager;
 
-	public DataConfig(Gangland gangland) {
-		this.gangland = gangland;
+	public DataConfig(Gangland gangland, PermissionManager permissionManager) {
+		this.gangland          = gangland;
+		this.permissionManager = permissionManager;
 	}
 
 	@Bean(name = "online", isGeneric = true)
-	public UserManager<Player> userManager(GanglandDatabase database) {
-		UserManager<Player> manager = new UserManager<>(gangland);
+	public UserManager<Player> userManager(GanglandDatabase database,
+	                                       MemberManager memberManager,
+	                                       BountySettings bountySettings,
+	                                       WantedSettings wantedSettings) {
+		UserManager<Player> manager = new UserManager<>(gangland, database, memberManager, bountySettings,
+		                                                wantedSettings);
 		manager.initialize();
 		return manager;
 	}
 
 	@Bean(name = "offline", isGeneric = true)
-	public UserManager<OfflinePlayer> offlineUserManager(GanglandDatabase database) {
-		UserManager<OfflinePlayer> manager = new UserManager<>(gangland);
+	public UserManager<OfflinePlayer> offlineUserManager(GanglandDatabase database,
+	                                                     MemberManager memberManager,
+	                                                     BountySettings bountySettings,
+	                                                     WantedSettings wantedSettings) {
+		UserManager<OfflinePlayer> manager = new UserManager<>(gangland, database, memberManager, bountySettings,
+		                                                       wantedSettings);
 		manager.initialize();
 		return manager;
 	}
 
 	@Bean
-	public PluginManager pluginManager() {
-		PluginManager manager = new PluginManager(gangland);
+	public PluginManager pluginManager(GanglandDatabase database) {
+		PluginManager manager = new PluginManager(gangland, database);
 		manager.initialize();
 		return manager;
 	}
 
 	@Bean
-	public RankManager rankManager() {
-		RankManager manager = new RankManager(gangland);
+	public RankManager rankManager(GanglandDatabase database) {
+		RankManager manager = new RankManager(gangland, database, permissionManager);
 		manager.initialize();
 		return manager;
 	}
 
 	@Bean
-	public GangManager gangManager() {
-		GangManager manager = new GangManager(gangland);
+	public GangManager gangManager(GanglandDatabase database) {
+		GangManager manager = new GangManager(gangland, database);
 		manager.initialize();
 		return manager;
 	}
@@ -85,20 +96,15 @@ public class DataConfig {
 		// rankManager and gangManager are guaranteed initialized here because the topo sort built them first and
 		// each of those @Bean methods calls .initialize() inline. Without that, MemberManager.initialize() would
 		// dereference an empty rank tree and NPE on rankManager.getRankTree().getRoot().
-		MemberManager  memberManager = new MemberManager(gangland);
-		List<Table<?>> tables        = database.getTables();
-		MemberTable memberTable = tables.stream()
-				.filter(MemberTable.class::isInstance)
-				.map(MemberTable.class::cast)
-				.findFirst()
-				.orElseThrow(() -> new IllegalStateException("MemberTable not registered"));
-		memberManager.initialize(memberTable, gangManager, rankManager);
+		MemberManager memberManager = new MemberManager(gangland, database, gangManager, rankManager);
+		MemberTable   memberTable   = TableLookup.find(MemberTable.class, database.getTables());
+		memberManager.initialize(memberTable);
 		return memberManager;
 	}
 
 	@Bean
-	public WaypointManager waypointManager() {
-		WaypointManager manager = new WaypointManager(gangland);
+	public WaypointManager waypointManager(GanglandDatabase database) {
+		WaypointManager manager = new WaypointManager(gangland, database, permissionManager);
 		manager.initialize();
 		return manager;
 	}
@@ -111,8 +117,7 @@ public class DataConfig {
 	 */
 	@PostConstruct
 	public void registerGanglandPermissions() {
-		PermissionManager permissionManager = gangland.getInitializer().getPermissionManager();
-		Set<Permission>   permissions       = Bukkit.getPluginManager().getPermissions();
+		Set<Permission> permissions = Bukkit.getPluginManager().getPermissions();
 		Set<String> ganglandPermissions = permissions.stream()
 				.map(Permission::getName)
 				.filter(name -> name.startsWith(Gangland.FULL_PREFIX))

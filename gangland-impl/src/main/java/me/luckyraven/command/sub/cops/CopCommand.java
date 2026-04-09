@@ -3,6 +3,8 @@ package me.luckyraven.command.sub.cops;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.copsncrooks.npc.police.CopService;
+import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
 import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 
@@ -13,8 +15,14 @@ import java.util.Map;
 @CommandHandler
 public class CopCommand extends Command {
 
-	public CopCommand(Gangland gangland) {
+	private final CopService      copService;
+	private final CopSpawnManager copSpawnManager;
+
+	public CopCommand(Gangland gangland, CopService copService, CopSpawnManager copSpawnManager) {
 		super(gangland, "cop", false, "cops");
+
+		this.copService      = copService;
+		this.copSpawnManager = copSpawnManager;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -32,8 +40,8 @@ public class CopCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument spawner = new CopSpawnerCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument list    = new CopListCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument spawner = new CopSpawnerCommand(getGangland(), getArgumentTree(), getArgument(), copSpawnManager);
+		Argument list    = new CopListCommand(getGangland(), getArgumentTree(), getArgument(), copService);
 
 		List<Argument> arguments = new ArrayList<>();
 

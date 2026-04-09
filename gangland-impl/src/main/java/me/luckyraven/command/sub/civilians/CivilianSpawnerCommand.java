@@ -3,6 +3,8 @@ package me.luckyraven.command.sub.civilians;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
+import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -14,14 +16,19 @@ import java.util.List;
 
 class CivilianSpawnerCommand extends SubArgument {
 
-	private final Gangland       gangland;
-	private final Tree<Argument> tree;
+	private final Gangland             gangland;
+	private final Tree<Argument>       tree;
+	private final CivilianService      civilianService;
+	private final CivilianSpawnManager civilianSpawnManager;
 
-	CivilianSpawnerCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CivilianSpawnerCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                       CivilianService civilianService, CivilianSpawnManager civilianSpawnManager) {
 		super(gangland, "spawner", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland             = gangland;
+		this.tree                 = tree;
+		this.civilianService      = civilianService;
+		this.civilianSpawnManager = civilianSpawnManager;
 
 		initializeArguments();
 	}
@@ -36,12 +43,13 @@ class CivilianSpawnerCommand extends SubArgument {
 	}
 
 	private void initializeArguments() {
-		Argument setArg      = new CivilianSpawnerSetCommand(gangland, tree, this);
-		Argument setGroupArg = new CivilianSpawnerSetGroupCommand(gangland, tree, this);
-		Argument removeArg   = new CivilianSpawnerRemoveCommand(gangland, tree, this);
-		Argument listArg     = new CivilianSpawnerListCommand(gangland, tree, this);
-		Argument infoArg     = new CivilianSpawnerInfoCommand(gangland, tree, this);
-		Argument teleportArg = new CivilianSpawnerTeleportCommand(gangland, tree, this);
+		Argument setArg = new CivilianSpawnerSetCommand(gangland, tree, this, civilianService, civilianSpawnManager);
+		Argument setGroupArg = new CivilianSpawnerSetGroupCommand(gangland, tree, this, civilianService,
+		                                                          civilianSpawnManager);
+		Argument removeArg   = new CivilianSpawnerRemoveCommand(gangland, tree, this, civilianSpawnManager);
+		Argument listArg     = new CivilianSpawnerListCommand(gangland, tree, this, civilianSpawnManager);
+		Argument infoArg     = new CivilianSpawnerInfoCommand(gangland, tree, this, civilianSpawnManager);
+		Argument teleportArg = new CivilianSpawnerTeleportCommand(gangland, tree, this, civilianSpawnManager);
 
 		List<Argument> arguments = new ArrayList<>();
 

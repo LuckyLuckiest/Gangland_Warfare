@@ -20,13 +20,14 @@ class WantedClearCommand extends SubArgument {
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
-	public WantedClearCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	public WantedClearCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                          UserManager<Player> userManager) {
 		super(gangland, "clear", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
 
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.userManager = userManager;
 
 		clearTarget();
 	}

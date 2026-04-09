@@ -20,13 +20,13 @@ class RankPermissionCommand extends SubArgument {
 	private final Tree<Argument> tree;
 	private final RankManager    rankManager;
 
-	protected RankPermissionCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected RankPermissionCommand(Gangland gangland, Tree<Argument> tree, Argument parent, RankManager rankManager) {
 		super(gangland, new String[]{"permission", "perm"}, tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
 
-		this.rankManager = gangland.getInitializer().getRankManager();
+		this.rankManager = rankManager;
 
 		rankPermission();
 	}

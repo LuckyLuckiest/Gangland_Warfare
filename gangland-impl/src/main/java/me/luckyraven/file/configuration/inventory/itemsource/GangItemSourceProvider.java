@@ -1,7 +1,6 @@
 package me.luckyraven.file.configuration.inventory.itemsource;
 
 import com.cryptomorin.xseries.XMaterial;
-import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangAlliance;
 import me.luckyraven.data.account.gang.GangManager;
@@ -21,10 +20,12 @@ import java.util.List;
 
 public class GangItemSourceProvider implements ItemSourceProvider {
 
-	private final Gangland gangland;
+	private final UserManager<Player> userManager;
+	private final GangManager         gangManager;
 
-	public GangItemSourceProvider(Gangland gangland) {
-		this.gangland = gangland;
+	public GangItemSourceProvider(UserManager<Player> userManager, GangManager gangManager) {
+		this.userManager = userManager;
+		this.gangManager = gangManager;
 	}
 
 	@Override
@@ -37,9 +38,6 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 	}
 
 	private List<ItemStack> getGangMembers(Player player) {
-		UserManager<Player> userManager = gangland.getInitializer().getUserManager();
-		GangManager         gangManager = gangland.getInitializer().getGangManager();
-
 		User<Player> user = userManager.getUser(player);
 
 		if (user == null || !user.hasGang()) return new ArrayList<>();
@@ -75,9 +73,6 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 	}
 
 	private List<ItemStack> getGangAllies(Player player) {
-		UserManager<Player> userManager = gangland.getInitializer().getUserManager();
-		GangManager         gangManager = gangland.getInitializer().getGangManager();
-
 		User<Player> user = userManager.getUser(player);
 
 		if (user == null || !user.hasGang()) return new ArrayList<>();

@@ -13,6 +13,7 @@ import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.WeaponManager;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -26,14 +27,20 @@ class WeaponGiveCommand extends SubArgument {
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
+	private final WeaponManager       weaponManager;
+	private final WeaponLoader        weaponLoader;
 
-	protected WeaponGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected WeaponGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                            UserManager<Player> userManager,
+	                            WeaponManager weaponManager,
+	                            WeaponLoader weaponLoader) {
 		super(gangland, "give", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.gangland      = gangland;
+		this.tree          = tree;
+		this.userManager   = userManager;
+		this.weaponManager = weaponManager;
+		this.weaponLoader  = weaponLoader;
 
 		weaponGive();
 	}
@@ -62,8 +69,6 @@ class WeaponGiveCommand extends SubArgument {
 				user.sendMessage(invalidWeapon.replace("%args%", weaponName));
 			}
 		}, sender -> {
-			WeaponLoader weaponLoader = gangland.getInitializer().getWeaponLoader();
-
 			return weaponLoader.getFiles()
 					.stream().map(FileHandler::getName).toList();
 		});
@@ -102,7 +107,7 @@ class WeaponGiveCommand extends SubArgument {
 	}
 
 	private boolean giveWeapon(Player player, String name, int amount) {
-		Weapon weapon = gangland.getInitializer().getWeaponManager().getWeapon(player, null, name, true);
+		Weapon weapon = weaponManager.getWeapon(player, null, name, true);
 
 		if (weapon == null) return false;
 

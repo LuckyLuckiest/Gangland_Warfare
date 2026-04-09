@@ -16,10 +16,10 @@ class RankListCommand extends SubArgument {
 
 	private final RankManager rankManager;
 
-	protected RankListCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected RankListCommand(Gangland gangland, Tree<Argument> tree, Argument parent, RankManager rankManager) {
 		super(gangland, "list", tree, parent);
 
-		this.rankManager = gangland.getInitializer().getRankManager();
+		this.rankManager = rankManager;
 	}
 
 	@Override

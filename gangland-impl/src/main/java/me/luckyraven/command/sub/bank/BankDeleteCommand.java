@@ -1,7 +1,6 @@
 package me.luckyraven.command.sub.bank;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
@@ -31,21 +30,23 @@ class BankDeleteCommand extends SubArgument {
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
+	private final GanglandDatabase    ganglandDatabase;
 
 	private final Map<User<Player>, AtomicReference<String>> deleteBankName;
 	private final Map<CommandSender, CountdownTimer>         deleteBankTimer;
 
 	private final ConfirmArgument confirmDelete;
 
-	protected BankDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected BankDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                            UserManager<Player> userManager, GanglandDatabase ganglandDatabase) {
 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.userManager     = gangland.getInitializer().getUserManager();
-		this.deleteBankName  = new HashMap<>();
-		this.deleteBankTimer = new HashMap<>();
+		this.gangland         = gangland;
+		this.tree             = tree;
+		this.userManager      = userManager;
+		this.ganglandDatabase = ganglandDatabase;
+		this.deleteBankName   = new HashMap<>();
+		this.deleteBankTimer  = new HashMap<>();
 
 		this.confirmDelete = bankDeleteConfirm();
 		this.addSubArgument(confirmDelete);
@@ -112,9 +113,7 @@ class BankDeleteCommand extends SubArgument {
 			user.setBank(null);
 
 			// remove the bank from the database
-			Initializer       initializer      = gangland.getInitializer();
-			GanglandDatabase  ganglandDatabase = initializer.getGanglandDatabase();
-			IRepository<Bank> bankRepository   = ganglandDatabase.getRepositoryRegistry().getRepository(Bank.class);
+			IRepository<Bank> bankRepository = ganglandDatabase.getRepositoryRegistry().getRepository(Bank.class);
 
 			bankRepository.delete(bank);
 

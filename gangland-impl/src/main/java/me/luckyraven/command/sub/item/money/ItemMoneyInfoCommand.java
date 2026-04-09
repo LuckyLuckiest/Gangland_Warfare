@@ -23,13 +23,17 @@ class ItemMoneyInfoCommand extends SubArgument {
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
+	private final MoneyAddon          moneyAddon;
 
-	ItemMoneyInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	ItemMoneyInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                     UserManager<Player> userManager,
+	                     MoneyAddon moneyAddon) {
 		super(gangland, "info", tree, parent);
 
 		this.gangland    = gangland;
 		this.tree        = tree;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.userManager = userManager;
+		this.moneyAddon  = moneyAddon;
 
 		moneyInfo();
 	}
@@ -49,9 +53,8 @@ class ItemMoneyInfoCommand extends SubArgument {
 				return;
 			}
 
-			MoneyAddon moneyAddon = gangland.getInitializer().getMoneyAddon();
-			String     id         = MoneyItemUtil.readVariationId(itemStack);
-			MoneyItem  variation  = id == null ? null : moneyAddon.getVariation(id);
+			String    id        = MoneyItemUtil.readVariationId(itemStack);
+			MoneyItem variation = id == null ? null : moneyAddon.getVariation(id);
 
 			if (variation == null) {
 				user.sendMessage(Messages.ITEM_MONEY_NOT_REGISTERED.toString().replace("%name%", String.valueOf(id)));
@@ -74,9 +77,8 @@ class ItemMoneyInfoCommand extends SubArgument {
 
 			if (user == null) return;
 
-			String     id         = args[3];
-			MoneyAddon moneyAddon = gangland.getInitializer().getMoneyAddon();
-			MoneyItem  variation  = moneyAddon.getVariation(id);
+			String    id        = args[3];
+			MoneyItem variation = moneyAddon.getVariation(id);
 
 			if (variation == null) {
 				user.sendMessage(Messages.ITEM_MONEY_INVALID.toString().replace("%name%", id));
@@ -88,7 +90,6 @@ class ItemMoneyInfoCommand extends SubArgument {
 
 			user.sendMessage(jsonFormatter.formatToJson(GanglandChatUtil.color(info), " ".repeat(3)));
 		}, sender -> {
-			MoneyAddon moneyAddon = gangland.getInitializer().getMoneyAddon();
 			return moneyAddon.getVariations().keySet()
 					.stream().toList();
 		});

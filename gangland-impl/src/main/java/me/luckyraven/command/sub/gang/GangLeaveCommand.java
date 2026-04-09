@@ -34,16 +34,17 @@ class GangLeaveCommand extends SubArgument {
 	private final HashMap<User<Player>, CountdownTimer> leaveTimer;
 	private final ConfirmArgument                       leaveConfirm;
 
-	protected GangLeaveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected GangLeaveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                           UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+	                           RankManager rankManager) {
 		super(gangland, "leave", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.userManager   = gangland.getInitializer().getUserManager();
-		this.memberManager = gangland.getInitializer().getMemberManager();
-		this.gangManager   = gangland.getInitializer().getGangManager();
-		this.rankManager   = gangland.getInitializer().getRankManager();
+		this.gangland      = gangland;
+		this.tree          = tree;
+		this.userManager   = userManager;
+		this.memberManager = memberManager;
+		this.gangManager   = gangManager;
+		this.rankManager   = rankManager;
 
 		this.leaveTimer   = new HashMap<>();
 		this.leaveConfirm = leaveConfirm();

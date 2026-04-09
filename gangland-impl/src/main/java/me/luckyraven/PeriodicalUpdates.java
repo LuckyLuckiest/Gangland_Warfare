@@ -9,6 +9,7 @@ import me.luckyraven.data.plugin.PluginData;
 import me.luckyraven.data.plugin.PluginDataCleanupService;
 import me.luckyraven.data.plugin.PluginManager;
 import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.TableLookup;
 import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.file.configuration.Settings;
@@ -30,25 +31,44 @@ import java.util.Map;
 @CustomLog
 public final class PeriodicalUpdates {
 
-	private final Initializer        initializer;
-	private final GanglandDatabase   database;
-	private final DatabaseHelper     helper;
-	private final RepositoryRegistry repositoryRegistry;
+	private final Gangland                   gangland;
+	private final GanglandDatabase           database;
+	private final DatabaseHelper             helper;
+	private final RepositoryRegistry         repositoryRegistry;
+	private final PluginManager              pluginManager;
+	private final UserManager<Player>        userManager;
+	private final UserManager<OfflinePlayer> offlineUserManager;
+	private final WeaponManager              weaponManager;
 
 	@Getter
 	private PluginDataCleanupService cleanupService;
 	private RepeatingTimer           repeatingTimer;
 
-	public PeriodicalUpdates(Gangland gangland, long interval) {
-		this(gangland);
+	public PeriodicalUpdates(Gangland gangland,
+	                         GanglandDatabase database,
+	                         PluginManager pluginManager,
+	                         UserManager<Player> userManager,
+	                         UserManager<OfflinePlayer> offlineUserManager,
+	                         WeaponManager weaponManager,
+	                         long interval) {
+		this(gangland, database, pluginManager, userManager, offlineUserManager, weaponManager);
 		this.repeatingTimer = new RepeatingTimer(gangland, 20L * interval, timer -> task());
 	}
 
-	public PeriodicalUpdates(Gangland gangland) {
-		this.initializer        = gangland.getInitializer();
-		this.database           = initializer.getGanglandDatabase();
+	public PeriodicalUpdates(Gangland gangland,
+	                         GanglandDatabase database,
+	                         PluginManager pluginManager,
+	                         UserManager<Player> userManager,
+	                         UserManager<OfflinePlayer> offlineUserManager,
+	                         WeaponManager weaponManager) {
+		this.gangland           = gangland;
+		this.database           = database;
+		this.pluginManager      = pluginManager;
+		this.userManager        = userManager;
+		this.offlineUserManager = offlineUserManager;
+		this.weaponManager      = weaponManager;
 		this.helper             = new DatabaseHelper(gangland, database);
-		this.repositoryRegistry = initializer.getGanglandDatabase().getRepositoryRegistry();
+		this.repositoryRegistry = database.getRepositoryRegistry();
 	}
 
 	/**
@@ -72,18 +92,14 @@ public final class PeriodicalUpdates {
 		List<Table<?>> tables = database.getTables();
 
 		// adjust plugin scan dates before the repository save
-		PluginManager pluginManager = initializer.getPluginManager();
-
 		for (PluginData pluginData : pluginManager.getPluginDataList()) {
 			adjustScheduledScanDate(pluginData);
 		}
 
 		// save user and bank data - kept as direct table updates so the offline cache can be
 		// cleared synchronously after saving
-		UserManager<Player>        userManager        = initializer.getUserManager();
-		UserManager<OfflinePlayer> offlineUserManager = initializer.getOfflineUserManager();
-		UserTable                  userTable          = initializer.getInstanceFromTables(UserTable.class, tables);
-		BankTable                  bankTable          = initializer.getInstanceFromTables(BankTable.class, tables);
+		UserTable userTable = TableLookup.find(UserTable.class, tables);
+		BankTable bankTable = TableLookup.find(BankTable.class, tables);
 
 		// online users
 		Collection<User<Player>> onlineUsers = userManager.getUsers().values();
@@ -142,12 +158,7 @@ public final class PeriodicalUpdates {
 	}
 
 	private void initializeCleanupService() {
-		GanglandDatabase database = initializer.getGanglandDatabase();
-
-		PluginManager pluginManager    = initializer.getPluginManager();
-		WeaponManager weaponManager    = initializer.getWeaponManager();
-		var           weaponRepository = database.getRepositoryRegistry().getRepository(Weapon.class);
-
+		var weaponRepository = database.getRepositoryRegistry().getRepository(Weapon.class);
 		cleanupService = new PluginDataCleanupService(pluginManager, weaponRepository, weaponManager);
 	}
 

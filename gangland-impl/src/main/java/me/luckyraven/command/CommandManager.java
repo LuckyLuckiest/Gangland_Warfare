@@ -191,7 +191,15 @@ public final class CommandManager extends CommandService<Command> implements Com
 		// Construct via the root container so commands can declare any registered bean as a constructor parameter
 		// (UserManager, GangManager, WeaponManager, etc.) and receive it automatically. The legacy
 		// (Gangland) constructor still works because the container resolves Gangland the same as any other bean.
-		return (Command) dependencyContainer.createInstance(clazz);
+		Command instance = (Command) dependencyContainer.createInstance(clazz);
+
+		// Build sub-arguments AFTER the constructor returns so subclass fields (constructor-injected beans) are
+		// fully assigned. The Command base class deliberately does NOT call initializeArguments() in its constructor
+		// — Java init order means subclass fields are still null at the point super() runs, so any sub-argument that
+		// receives one of those fields would NPE.
+		instance.initializeArguments();
+
+		return instance;
 	}
 
 	@Override

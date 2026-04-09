@@ -22,12 +22,13 @@ class WaypointInfoCommand extends SubArgument {
 	private final Tree<Argument>  tree;
 	private final WaypointManager waypointManager;
 
-	protected WaypointInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected WaypointInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                              WaypointManager waypointManager) {
 		super(gangland, "info", tree, parent);
 
 		this.gangland        = gangland;
 		this.tree            = tree;
-		this.waypointManager = gangland.getInitializer().getWaypointManager();
+		this.waypointManager = waypointManager;
 
 		this.nameArgument();
 	}

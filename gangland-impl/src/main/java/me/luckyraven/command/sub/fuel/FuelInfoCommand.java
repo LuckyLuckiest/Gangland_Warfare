@@ -20,11 +20,11 @@ class FuelInfoCommand extends SubArgument {
 	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
 
-	FuelInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	FuelInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager) {
 		super(gangland, "info", tree, parent);
 
 		this.gangland    = gangland;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.userManager = userManager;
 	}
 
 	@Override

@@ -1,6 +1,5 @@
 package me.luckyraven.listener.loot;
 
-import me.luckyraven.Gangland;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.events.level.LevelUpEvent;
@@ -11,6 +10,7 @@ import me.luckyraven.lootchest.data.LootChestSession;
 import me.luckyraven.lootchest.events.lootchest.LootChestCooldownCompleteEvent;
 import me.luckyraven.lootchest.events.lootchest.LootChestOpenEvent;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -29,9 +29,9 @@ public class LootChestEarnGoods implements Listener {
 	private final UserManager<Player>    userManager;
 	private final Map<Player, Set<UUID>> openedLootChests;
 
-	public LootChestEarnGoods(Gangland gangland) {
+	public LootChestEarnGoods(@Qualifier("online") UserManager<Player> userManager) {
 		this.random           = new Random();
-		this.userManager      = gangland.getInitializer().getUserManager();
+		this.userManager      = userManager;
 		this.openedLootChests = new ConcurrentHashMap<>();
 	}
 

@@ -4,8 +4,8 @@ import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.particles.XParticle;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.command.Command;
+import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.gang.Gang;
@@ -14,23 +14,28 @@ import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.data.permission.PermissionManager;
+import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
 import me.luckyraven.data.rank.Rank;
+import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.teleportation.Waypoint;
+import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.multi.MultiInventory;
 import me.luckyraven.inventory.multi.MultiInventoryCreation;
 import me.luckyraven.inventory.part.ButtonTags;
 import me.luckyraven.inventory.part.Fill;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.color.Color;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
 import me.luckyraven.util.command.CommandHandler;
 import me.luckyraven.util.datastructure.JsonFormatter;
-import me.luckyraven.util.placeholder.PlaceholderHandler;
 import me.luckyraven.util.ray.RayTrace;
 import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.WeaponManager;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -47,13 +52,42 @@ import java.util.*;
 @CommandHandler
 public final class DebugCommand extends Command {
 
-	public DebugCommand(Gangland gangland) {
+	private final UserManager<Player> userManager;
+	private final GangManager         gangManager;
+	private final MemberManager       memberManager;
+	private final RankManager         rankManager;
+	private final WaypointManager     waypointManager;
+	private final PermissionManager   permissionManager;
+	private final WeaponManager       weaponManager;
+	private final GanglandPlaceholder placeholder;
+	private final CommandManager      commandManager;
+
+	public DebugCommand(Gangland gangland,
+	                    @Qualifier("online") UserManager<Player> userManager,
+	                    GangManager gangManager,
+	                    MemberManager memberManager,
+	                    RankManager rankManager,
+	                    WaypointManager waypointManager,
+	                    PermissionManager permissionManager,
+	                    WeaponManager weaponManager,
+	                    GanglandPlaceholder placeholder,
+	                    CommandManager commandManager) {
 		super(gangland, "debug", false);
+
+		this.userManager       = userManager;
+		this.gangManager       = gangManager;
+		this.memberManager     = memberManager;
+		this.rankManager       = rankManager;
+		this.waypointManager   = waypointManager;
+		this.permissionManager = permissionManager;
+		this.weaponManager     = weaponManager;
+		this.placeholder       = placeholder;
+		this.commandManager    = commandManager;
 	}
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		getGangland().getInitializer().getCommandManager().show(commandSender);
+		commandManager.show(commandSender);
 	}
 
 	@Override
@@ -147,7 +181,6 @@ public final class DebugCommand extends Command {
 
 	private @NotNull Argument getUserData() {
 		return new Argument(getGangland(), "user-data", getArgumentTree(), (argument, sender, args) -> {
-			UserManager<Player> userManager = getGangland().getInitializer().getUserManager();
 			if (sender instanceof Player player) {
 				User<Player> user = userManager.getUser(player);
 
@@ -164,8 +197,6 @@ public final class DebugCommand extends Command {
 
 	private @NotNull Argument getGangData() {
 		return new Argument(getGangland(), "gang-data", getArgumentTree(), (argument, sender, args) -> {
-			UserManager<Player> userManager = getGangland().getInitializer().getUserManager();
-			GangManager         gangManager = getGangland().getInitializer().getGangManager();
 			if (sender instanceof Player player) {
 				User<Player> user = userManager.getUser(player);
 
@@ -179,7 +210,7 @@ public final class DebugCommand extends Command {
 					user.sendMessage("Not in a gang...");
 				}
 			} else {
-				Collection<Gang> values = getGangland().getInitializer().getGangManager().getGangs().values();
+				Collection<Gang> values = gangManager.getGangs().values();
 				for (Gang gang : values) {
 					sender.sendMessage(gang.toString());
 				}
@@ -189,7 +220,6 @@ public final class DebugCommand extends Command {
 
 	private @NotNull Argument getMemberData() {
 		return new Argument(getGangland(), "member-data", getArgumentTree(), (argument, sender, args) -> {
-			MemberManager memberManager = getGangland().getInitializer().getMemberManager();
 			if (sender instanceof Player player) {
 				Member member = memberManager.getMember(player.getUniqueId());
 
@@ -205,7 +235,7 @@ public final class DebugCommand extends Command {
 
 	private @NotNull Argument getRankData() {
 		return new Argument(getGangland(), "rank-data", getArgumentTree(), (argument, sender, args) -> {
-			Collection<Rank> values = getGangland().getInitializer().getRankManager().getRanks().values();
+			Collection<Rank> values = rankManager.getRanks().values();
 			if (sender instanceof Player) {
 				for (Rank rank : values) {
 					sender.sendMessage(convertToJson(rank.toString()));
@@ -220,7 +250,7 @@ public final class DebugCommand extends Command {
 
 	private @NotNull Argument getWaypointData() {
 		return new Argument(getGangland(), "waypoint-data", getArgumentTree(), (argument, sender, args) -> {
-			Collection<Waypoint> values = getGangland().getInitializer().getWaypointManager().getWaypoints().values();
+			Collection<Waypoint> values = waypointManager.getWaypoints().values();
 			if (sender instanceof Player) {
 				for (Waypoint waypoint : values) {
 					sender.sendMessage(convertToJson(waypoint.toString()));
@@ -274,12 +304,11 @@ public final class DebugCommand extends Command {
 	private @NotNull Argument getAnvil() {
 		return new Argument(getGangland(), "anvil", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
-				Initializer  initializer = getGangland().getInitializer();
-				User<Player> user        = initializer.getUserManager().getUser(player);
+				User<Player> user = userManager.getUser(player);
 
 				if (user == null) return;
 
-				Gang gang = initializer.getGangManager().getGang(user.getGangId());
+				Gang gang = gangManager.getGang(user.getGangId());
 
 				String text = "";
 				if (gang != null) text = gang.getDescription();
@@ -300,10 +329,7 @@ public final class DebugCommand extends Command {
 
 	private @NotNull Argument getPerm() {
 		return new Argument(getGangland(), "perms", getArgumentTree(), (argument, sender, args) -> {
-			String[] array = getGangland().getInitializer()
-			                              .getPermissionManager()
-			                              .getPermissions()
-			                              .toArray(String[]::new);
+			String[] array = permissionManager.getPermissions().toArray(String[]::new);
 			sender.sendMessage(array);
 		});
 	}
@@ -342,13 +368,11 @@ public final class DebugCommand extends Command {
 	private @NotNull Argument getPlaceholder() {
 		return new Argument(getGangland(), "placeholder-data", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
-				PlaceholderHandler handler = getGangland().getInitializer().getPlaceholder();
-
 				String[] placeholders = {"%player%", "%info%", "%user_gang-id%"};
 
 				Arrays.stream(placeholders)
 						.forEach(string -> sender.sendMessage(
-								string + " -> " + handler.replacePlaceholder(player, string)));
+								string + " -> " + placeholder.replacePlaceholder(player, string)));
 			} else {
 				sender.sendMessage("Can't process non-player data.");
 			}
@@ -364,7 +388,7 @@ public final class DebugCommand extends Command {
 	private @NotNull Argument getInventoriesData() {
 		return new Argument(getGangland(), "inv-data", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
-				User<Player> user = getGangland().getInitializer().getUserManager().getUser(player);
+				User<Player> user = userManager.getUser(player);
 
 				if (user == null) return;
 
@@ -375,7 +399,7 @@ public final class DebugCommand extends Command {
 						                 .map(NamespacedKey::getKey)
 						                 .toArray(String[]::new));
 			} else {
-				for (User<Player> user : getGangland().getInitializer().getUserManager().getUsers().values()) {
+				for (User<Player> user : userManager.getUsers().values()) {
 
 					List<String> inventories = user.getInventories()
 							.stream().map(InventoryHandler::getTitle).map(NamespacedKey::getKey).toList();
@@ -415,7 +439,7 @@ public final class DebugCommand extends Command {
 
 	private @NotNull Argument getGiveGun() {
 		return new Argument(getGangland(), "weapon", getArgumentTree(), (argument, sender, args) -> {
-			Collection<Weapon> values = getGangland().getInitializer().getWeaponManager().getWeapons().values();
+			Collection<Weapon> values = weaponManager.getWeapons().values();
 			for (Weapon weapon : values) {
 				sender.sendMessage(weapon.getUuid().toString());
 			}

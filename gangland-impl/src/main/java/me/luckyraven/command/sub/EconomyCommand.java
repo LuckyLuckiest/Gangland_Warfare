@@ -10,6 +10,7 @@ import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -26,8 +27,12 @@ import java.util.stream.Stream;
 @CommandHandler
 public final class EconomyCommand extends Command {
 
-	public EconomyCommand(Gangland gangland) {
+	private final UserManager<Player> userManager;
+
+	public EconomyCommand(Gangland gangland, @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "economy", false, "eco");
+
+		this.userManager = userManager;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -46,8 +51,7 @@ public final class EconomyCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		UserManager<Player>                     userManager = getGangland().getInitializer().getUserManager();
-		HashMap<String, Supplier<List<Player>>> specifiers  = new HashMap<>();
+		HashMap<String, Supplier<List<Player>>> specifiers = new HashMap<>();
 
 		// glw economy deposit
 		Argument deposit = new Argument(getGangland(), new String[]{"deposit", "add"}, getArgumentTree(),

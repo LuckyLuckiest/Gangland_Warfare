@@ -18,12 +18,14 @@ import java.util.Optional;
 
 class LootChestRemoveCommand extends SubArgument {
 
-	private final Gangland gangland;
+	private final LootChestManager lootChestManager;
+	private final GanglandDatabase ganglandDatabase;
 
-	protected LootChestRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected LootChestRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                                 LootChestManager lootChestManager, GanglandDatabase ganglandDatabase) {
 		super(gangland, "remove", tree, parent);
-
-		this.gangland = gangland;
+		this.lootChestManager = lootChestManager;
+		this.ganglandDatabase = ganglandDatabase;
 	}
 
 	@Override
@@ -40,10 +42,9 @@ class LootChestRemoveCommand extends SubArgument {
 				return;
 			}
 
-			Location         location = targetBlock.getLocation();
-			LootChestManager manager  = gangland.getInitializer().getLootChestManager();
+			Location location = targetBlock.getLocation();
 
-			Optional<LootChestData> chestOptional = manager.getChestAt(location);
+			Optional<LootChestData> chestOptional = lootChestManager.getChestAt(location);
 
 			if (chestOptional.isEmpty()) {
 				player.sendMessage(GanglandChatUtil.commandMessage("&cNo loot chest found at that location!"));
@@ -53,10 +54,9 @@ class LootChestRemoveCommand extends SubArgument {
 			LootChestData chestData = chestOptional.get();
 
 			// Remove from service (handles holograms, cooldowns, etc.)
-			manager.unregisterChest(chestData.getId());
+			lootChestManager.unregisterChest(chestData.getId());
 
 			// Remove from database via repository
-			GanglandDatabase ganglandDatabase = gangland.getInitializer().getGanglandDatabase();
 			var lootChestRepository = ganglandDatabase.getRepositoryRegistry()
 			                                          .getRepository(LootChestData.class);
 			lootChestRepository.delete(chestData);

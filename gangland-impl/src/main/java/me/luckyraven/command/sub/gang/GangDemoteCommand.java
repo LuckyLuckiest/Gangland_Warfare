@@ -32,16 +32,17 @@ class GangDemoteCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
 
-	protected GangDemoteCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected GangDemoteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                            UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+	                            RankManager rankManager) {
 		super(gangland, "demote", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.userManager   = gangland.getInitializer().getUserManager();
-		this.memberManager = gangland.getInitializer().getMemberManager();
-		this.gangManager   = gangland.getInitializer().getGangManager();
-		this.rankManager   = gangland.getInitializer().getRankManager();
+		this.gangland      = gangland;
+		this.tree          = tree;
+		this.userManager   = userManager;
+		this.memberManager = memberManager;
+		this.gangManager   = gangManager;
+		this.rankManager   = rankManager;
 
 		this.addSubArgument(gangDemote());
 	}

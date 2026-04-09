@@ -1,16 +1,15 @@
 package me.luckyraven.listener.player;
 
-import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.EconomyHandler;
+import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.datastructure.ScientificCalculator;
 import me.luckyraven.util.downed.PlayerDownedEvent;
 import me.luckyraven.util.listener.ListenerHandler;
-import me.luckyraven.util.placeholder.PlaceholderHandler;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.util.utilities.NumberUtil;
 import me.luckyraven.weapon.Weapon;
@@ -36,15 +35,17 @@ public class PlayerDeath implements Listener {
 
 	private static final long DEATH_DEDUP_WINDOW_MS = 500L;
 
-	private final Initializer         initializer;
 	private final UserManager<Player> userManager;
 	private final WeaponManager       weaponManager;
+	private final GanglandPlaceholder placeholder;
 	private final Map<UUID, Long>     recentDeaths = new ConcurrentHashMap<>();
 
-	public PlayerDeath(Gangland gangland) {
-		this.initializer   = gangland.getInitializer();
-		this.userManager   = initializer.getUserManager();
-		this.weaponManager = initializer.getWeaponManager();
+	public PlayerDeath(@Qualifier("online") UserManager<Player> userManager,
+	                   WeaponManager weaponManager,
+	                   GanglandPlaceholder placeholder) {
+		this.userManager   = userManager;
+		this.weaponManager = weaponManager;
+		this.placeholder   = placeholder;
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -110,8 +111,6 @@ public class PlayerDeath implements Listener {
 
 		if (Settings.isDeathMoneyCommandEnabled()) {
 			for (String executable : Settings.getDeathMoneyCommandExecutables()) {
-				PlaceholderHandler placeholder = initializer.getPlaceholder();
-
 				String exec = placeholder.replacePlaceholder(player, executable.replace("/", ""));
 				Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), exec);
 			}

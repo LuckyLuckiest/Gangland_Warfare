@@ -91,8 +91,8 @@ public class FileConfig {
 	 * loader itself so consumers that need it (e.g. reload command) can constructor-inject it.
 	 */
 	@Bean
-	public LanguageLoader languageLoader(Settings settings) {
-		LanguageLoader loader = new LanguageLoader(gangland);
+	public LanguageLoader languageLoader(FileManager fileManager, Settings settings) {
+		LanguageLoader loader = new LanguageLoader(gangland, fileManager);
 		loader.initialize();
 		Messages.setMessageConfiguration(loader.getMessage());
 		TimeMessages.initialize();
@@ -218,15 +218,15 @@ public class FileConfig {
 
 	/**
 	 * {@link WeaponLoader} reads its own folder of YAML files (rifle, grenade, knife, flamethrower, syringe_gun) and
-	 * registers them via {@link WeaponAddon}. The {@code initialize()} call inside the @Bean body is safe because the
-	 * per-bean hydrate hook in {@code GanglandContext} has already populated {@code Initializer.ammunitionManager} and
-	 * {@code Initializer.weaponAddon} (both are FILE-phase beans that ran before this one, per the constructor
-	 * parameter ordering). The loader's runtime calls to {@code gangland.getInitializer().getAmmunitionManager()}
-	 * therefore resolve correctly.
+	 * registers them via {@link WeaponAddon}. Constructor injection supplies {@link FileManager},
+	 * {@link AmmunitionManager} and {@link WeaponAddon} so the loader no longer reaches back through
+	 * {@code gangland.getInitializer()} at runtime.
 	 */
 	@Bean
-	public WeaponLoader weaponLoader(AmmunitionManager ammunitionManager, WeaponAddon weaponAddon) {
-		WeaponLoader loader = new WeaponLoader(gangland);
+	public WeaponLoader weaponLoader(FileManager fileManager,
+	                                 AmmunitionManager ammunitionManager,
+	                                 WeaponAddon weaponAddon) {
+		WeaponLoader loader = new WeaponLoader(gangland, fileManager, weaponAddon, ammunitionManager);
 		loader.addExpectedFile(new FileHandler(gangland, "rifle", "weapon", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "grenade", "weapon", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "knife", "weapon", ".yml"));
@@ -262,16 +262,25 @@ public class FileConfig {
 	 * is wired. Until then we just construct it and pre-register the inventory file handlers.
 	 */
 	@Bean
-	public InventoryLoader inventoryLoader(BooleanExpressionEvaluator evaluator) {
-		InventoryAddon.setItemSourceProvider(gangland);
+	public InventoryLoader inventoryLoader(FileManager fileManager,
+	                                       BooleanExpressionEvaluator evaluator,
+	                                       GanglandContext context,
+	                                       PermissionManager permissionManager,
+	                                       PlaceholderService placeholderService) {
+		// Static-state wiring for InventoryAddon. The class has all-static methods (called from listeners and other
+		// static-style code paths) so its dependencies are bound here once during the FILE phase. The user manager is
+		// a CONFIG-phase bean and isn't available yet — it's wired later by GameplayConfig.wireInventoryAddonUser().
+		InventoryAddon.setPermissionManager(permissionManager);
+		InventoryAddon.setPlaceholderService(placeholderService);
 		// Slot resolver uses a deferred lookup of the parser via the GanglandContext on every parse so the lambda
-		// stays valid even though the parser doesn't exist yet at this point in the FILE phase.
+		// stays valid even though the parser doesn't exist yet at this point in the FILE phase. The context bean
+		// itself is registered into the container at construction time, so we can capture it directly here without
+		// reaching back through the Initializer.
 		SlotItemFactory.setItemResolver(slot -> {
-			GanglandContext   ctx = gangland.getInitializer().getContext();
-			ItemParserManager mgr = ctx.get(ItemParserManager.class);
+			ItemParserManager mgr = context.get(ItemParserManager.class);
 			return mgr.getParser().parse(slot);
 		});
-		InventoryLoader loader = new InventoryLoader(gangland);
+		InventoryLoader loader = new InventoryLoader(gangland, fileManager);
 		loader.addExpectedFile(new FileHandler(gangland, "gang_info", "inventory", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "phone", "inventory", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "phone_gang", "inventory", ".yml"));

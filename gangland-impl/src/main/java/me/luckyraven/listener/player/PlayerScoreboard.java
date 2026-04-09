@@ -16,10 +16,12 @@ import org.bukkit.event.Listener;
 				 priority = ListenerPriority.LOW)
 public class PlayerScoreboard implements Listener {
 
-	private final Gangland gangland;
+	private final Gangland          gangland;
+	private final ScoreboardManager scoreboardManager;
 
-	public PlayerScoreboard(Gangland gangland) {
-		this.gangland = gangland;
+	public PlayerScoreboard(Gangland gangland, ScoreboardManager scoreboardManager) {
+		this.gangland          = gangland;
+		this.scoreboardManager = scoreboardManager;
 	}
 
 	@EventHandler
@@ -29,9 +31,8 @@ public class PlayerScoreboard implements Listener {
 		if (user.getScoreboard() != null) return;
 
 		// create a scoreboard when the player joins
-		ScoreboardManager scoreboardManager = gangland.getInitializer().getScoreboardManager();
-		DriverHandler     driverHandler     = scoreboardManager.getDriverHandler(event.getPlayer());
-		Scoreboard        scoreboard        = new Scoreboard(gangland, driverHandler);
+		DriverHandler driverHandler = scoreboardManager.getDriverHandler(event.getPlayer());
+		Scoreboard    scoreboard    = new Scoreboard(gangland, driverHandler);
 
 		user.setScoreboard(scoreboard);
 		user.getScoreboard().start();

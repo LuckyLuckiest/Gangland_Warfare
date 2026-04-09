@@ -18,12 +18,12 @@ class RankParentAddCommand extends SubArgument {
 	private final Tree<Argument> tree;
 	private final RankManager    rankManager;
 
-	RankParentAddCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	RankParentAddCommand(Gangland gangland, Tree<Argument> tree, Argument parent, RankManager rankManager) {
 		super(gangland, "add", tree, parent);
 
 		this.gangland    = gangland;
 		this.tree        = tree;
-		this.rankManager = gangland.getInitializer().getRankManager();
+		this.rankManager = rankManager;
 
 		rankParent();
 	}

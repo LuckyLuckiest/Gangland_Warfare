@@ -16,18 +16,27 @@ import java.util.*;
 public class MemberManager {
 
 	private final Gangland          gangland;
+	private final GanglandDatabase  database;
+	private final GangManager       gangManager;
+	private final RankManager       rankManager;
 	private final Map<UUID, Member> members;
 
-	public MemberManager(Gangland gangland) {
-		this.gangland = gangland;
-		this.members  = new HashMap<>();
+	public MemberManager(Gangland gangland,
+	                     GanglandDatabase database,
+	                     GangManager gangManager,
+	                     RankManager rankManager) {
+		this.gangland    = gangland;
+		this.database    = database;
+		this.gangManager = gangManager;
+		this.rankManager = rankManager;
+		this.members     = new HashMap<>();
 	}
 
-	public void initialize(MemberTable memberTable, GangManager gangManager, RankManager rankManager) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
+	public void initialize(MemberTable memberTable) {
+		DatabaseHelper helper = new DatabaseHelper(gangland, database);
 
-		helper.runQueries(database -> {
-			List<Object[]> rowsData = memberTable.selectAllTableQuery(database);
+		helper.runQueries(db -> {
+			List<Object[]> rowsData = memberTable.selectAllTableQuery(db);
 
 			for (Object[] result : rowsData) {
 				int    v            = 0;
@@ -58,27 +67,24 @@ public class MemberManager {
 		});
 
 		// Set data supplier so repositoryRegistry.saveAll() can persist members
-		GanglandDatabase    database         = gangland.getInitializer().getGanglandDatabase();
 		IRepository<Member> memberRepository = database.getRepositoryRegistry().getRepository(Member.class);
 
 		memberRepository.setDataSupplier(members::values);
 	}
 
 	public void initializeMemberData(Member member, MemberTable memberTable) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, gangland.getInitializer().getGanglandDatabase());
+		DatabaseHelper helper = new DatabaseHelper(gangland, database);
 
-		helper.runQueries(database -> {
+		helper.runQueries(db -> {
 			Map<String, Object> search = memberTable.searchCriteria(member);
-			Object[] memberInfo = database.table(memberTable.getName())
-			                              .select((String) search.get("search"), (Object[]) search.get("info"),
-			                                      (int[]) search.get("type"), new String[]{"*"});
+			Object[] memberInfo = db.table(memberTable.getName())
+			                        .select((String) search.get("search"), (Object[]) search.get("info"),
+			                                (int[]) search.get("type"), new String[]{"*"});
 
 			// create member data into a database
 			if (memberInfo.length == 0) {
-				if (!Settings.isAutoSave()) memberTable.insertTableQuery(database, member);
+				if (!Settings.isAutoSave()) memberTable.insertTableQuery(db, member);
 			} else {
-				RankManager rankManager = gangland.getInitializer().getRankManager();
-
 				int    v            = 1;
 				int    gangId       = (int) memberInfo[v++];
 				double contribution = (double) memberInfo[v++];

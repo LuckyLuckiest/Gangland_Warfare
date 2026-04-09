@@ -38,29 +38,51 @@ import java.util.List;
 public class SignManager extends SignService {
 
 	@Getter(AccessLevel.NONE)
-	private final Gangland           gangland;
-	private final String             shortPrefix;
-	private final SignFormatRegistry formatRegistry;
+	private final Gangland                   gangland;
+	private final String                     shortPrefix;
+	private final SignFormatRegistry         formatRegistry;
+	@Getter(AccessLevel.NONE)
+	private final WeaponService              weaponService;
+	@Getter(AccessLevel.NONE)
+	private final AmmunitionManager          ammunitionManager;
+	@Getter(AccessLevel.NONE)
+	private final UniqueItemAddon            uniqueItemAddon;
+	@Getter(AccessLevel.NONE)
+	private final UserManager<Player>        userManager;
+	@Getter(AccessLevel.NONE)
+	private final UserManager<OfflinePlayer> offlineUserManager;
+	@Getter(AccessLevel.NONE)
+	private final WearableService            wearableService;
+	@Getter(AccessLevel.NONE)
+	private final CarManager                 carManager;
 
-	public SignManager(Gangland gangland, String shortPrefix, SignTypeRegistry registry,
-	                   SignInteraction signInteraction) {
+	public SignManager(Gangland gangland,
+	                   String shortPrefix,
+	                   SignTypeRegistry registry,
+	                   SignInteraction signInteraction,
+	                   WeaponService weaponService,
+	                   AmmunitionManager ammunitionManager,
+	                   UniqueItemAddon uniqueItemAddon,
+	                   UserManager<Player> userManager,
+	                   UserManager<OfflinePlayer> offlineUserManager,
+	                   WearableService wearableService,
+	                   CarManager carManager) {
 		super(registry, signInteraction);
 
-		this.gangland       = gangland;
-		this.shortPrefix    = shortPrefix;
-		this.formatRegistry = signInteraction.getFormatterService().getFormatRegistry();
+		this.gangland           = gangland;
+		this.shortPrefix        = shortPrefix;
+		this.formatRegistry     = signInteraction.getFormatterService().getFormatRegistry();
+		this.weaponService      = weaponService;
+		this.ammunitionManager  = ammunitionManager;
+		this.uniqueItemAddon    = uniqueItemAddon;
+		this.userManager        = userManager;
+		this.offlineUserManager = offlineUserManager;
+		this.wearableService    = wearableService;
+		this.carManager         = carManager;
 	}
 
 	@Override
 	public List<SignTypeDefinition> setupSigns() throws SignValidationException {
-		WeaponService              weaponService      = gangland.getInitializer().getWeaponManager();
-		AmmunitionManager          ammunitionManager  = gangland.getInitializer().getAmmunitionManager();
-		UniqueItemAddon            uniqueItemAddon    = gangland.getInitializer().getUniqueItemAddon();
-		UserManager<Player>        userManager        = gangland.getInitializer().getUserManager();
-		UserManager<OfflinePlayer> offlineUserManager = gangland.getInitializer().getOfflineUserManager();
-		WearableService            wearableService    = gangland.getInitializer().getWearableAddon();
-		CarManager                 carManager         = gangland.getInitializer().getCarAddon();
-
 		List<SignTypeDefinition> definitions = new ArrayList<>();
 
 		String signPrefix = shortPrefix + "-";

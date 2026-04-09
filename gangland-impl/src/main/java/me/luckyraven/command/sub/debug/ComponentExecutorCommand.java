@@ -14,6 +14,7 @@ import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -28,8 +29,21 @@ import java.util.stream.Stream;
 @CommandHandler
 public final class ComponentExecutorCommand extends Command {
 
-	public ComponentExecutorCommand(Gangland gangland) {
+	private final UserManager<Player> userManager;
+	private final MemberManager       memberManager;
+	private final GangManager         gangManager;
+	private final RankManager         rankManager;
+
+	public ComponentExecutorCommand(Gangland gangland,
+	                                @Qualifier("online") UserManager<Player> userManager,
+	                                MemberManager memberManager,
+	                                GangManager gangManager,
+	                                RankManager rankManager) {
 		super(gangland, "option", false);
+		this.userManager   = userManager;
+		this.memberManager = memberManager;
+		this.gangManager   = gangManager;
+		this.rankManager   = rankManager;
 	}
 
 	@Override
@@ -37,11 +51,6 @@ public final class ComponentExecutorCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		UserManager<Player> userManager   = getGangland().getInitializer().getUserManager();
-		MemberManager       memberManager = getGangland().getInitializer().getMemberManager();
-		GangManager         gangManager   = getGangland().getInitializer().getGangManager();
-		RankManager         rankManager   = getGangland().getInitializer().getRankManager();
-
 		Argument gang     = gangArgument(userManager, memberManager, gangManager, rankManager);
 		Argument resource = resourcePack();
 

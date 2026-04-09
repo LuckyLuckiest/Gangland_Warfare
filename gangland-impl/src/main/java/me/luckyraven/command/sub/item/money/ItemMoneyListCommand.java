@@ -16,18 +16,17 @@ import java.util.Map;
 
 class ItemMoneyListCommand extends SubArgument {
 
-	private final Gangland gangland;
+	private final MoneyAddon moneyAddon;
 
-	ItemMoneyListCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	ItemMoneyListCommand(Gangland gangland, Tree<Argument> tree, Argument parent, MoneyAddon moneyAddon) {
 		super(gangland, "list", tree, parent);
 
-		this.gangland = gangland;
+		this.moneyAddon = moneyAddon;
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			MoneyAddon             moneyAddon = gangland.getInitializer().getMoneyAddon();
 			Map<String, MoneyItem> variations = moneyAddon.getVariations();
 
 			sender.sendMessage(Messages.ITEM_MONEY_LIST_HEADER.toString());

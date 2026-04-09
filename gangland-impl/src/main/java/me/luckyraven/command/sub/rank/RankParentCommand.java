@@ -3,6 +3,7 @@ package me.luckyraven.command.sub.rank;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -16,12 +17,14 @@ class RankParentCommand extends SubArgument {
 
 	private final Gangland       gangland;
 	private final Tree<Argument> tree;
+	private final RankManager    rankManager;
 
-	protected RankParentCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected RankParentCommand(Gangland gangland, Tree<Argument> tree, Argument parent, RankManager rankManager) {
 		super(gangland, "parent", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland    = gangland;
+		this.tree        = tree;
+		this.rankManager = rankManager;
 
 		initializeArguments();
 	}
@@ -34,8 +37,8 @@ class RankParentCommand extends SubArgument {
 	}
 
 	private void initializeArguments() {
-		Argument addArg    = new RankParentAddCommand(gangland, tree, this);
-		Argument removeArg = new RankParentRemoveCommand(gangland, tree, this);
+		Argument addArg    = new RankParentAddCommand(gangland, tree, this, rankManager);
+		Argument removeArg = new RankParentRemoveCommand(gangland, tree, this, rankManager);
 
 		List<Argument> arguments = new ArrayList<>();
 		arguments.add(addArg);

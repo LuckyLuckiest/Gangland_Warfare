@@ -21,14 +21,16 @@ import java.util.StringJoiner;
 
 class ItemWearableInfoCommand extends SubArgument {
 
-	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
+	private final WearableAddon       wearableAddon;
 
-	ItemWearableInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	ItemWearableInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                        UserManager<Player> userManager,
+	                        WearableAddon wearableAddon) {
 		super(gangland, "info", tree, parent);
 
-		this.gangland    = gangland;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.userManager   = userManager;
+		this.wearableAddon = wearableAddon;
 	}
 
 	@Override
@@ -50,8 +52,7 @@ class ItemWearableInfoCommand extends SubArgument {
 
 			if (key == null) return;
 
-			WearableAddon wearableAddon = gangland.getInitializer().getWearableAddon();
-			Wearable      wearable      = wearableAddon.getWearable(key);
+			Wearable wearable = wearableAddon.getWearable(key);
 
 			if (wearable == null) {
 				user.sendMessage(GanglandChatUtil.prefixMessage("Wearable not registered: &c" + key));

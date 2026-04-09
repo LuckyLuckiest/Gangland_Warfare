@@ -19,14 +19,20 @@ import java.util.Collection;
 
 class JailThrowCommand extends SubArgument {
 
-	private final Gangland       gangland;
-	private final Tree<Argument> tree;
+	private final Gangland           gangland;
+	private final Tree<Argument>     tree;
+	private final DetainmentService  detainmentService;
+	private final DetainmentRegistry detainmentRegistry;
 
-	protected JailThrowCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected JailThrowCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                           DetainmentService detainmentService,
+	                           DetainmentRegistry detainmentRegistry) {
 		super(gangland, "throw", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland           = gangland;
+		this.tree               = tree;
+		this.detainmentService  = detainmentService;
+		this.detainmentRegistry = detainmentRegistry;
 
 		throwPlayer();
 	}
@@ -49,9 +55,6 @@ class JailThrowCommand extends SubArgument {
 			}
 
 			// find an empty jail and throw the player there
-			DetainmentRegistry detainmentRegistry = gangland.getInitializer().getDetainmentRegistry();
-			DetainmentService  detainmentService  = gangland.getInitializer().getDetainmentService();
-
 			Jail jail = detainmentRegistry.findEmptyJail();
 
 			if (jail == null) {
@@ -67,8 +70,7 @@ class JailThrowCommand extends SubArgument {
 			detainmentService.jail(target, jail.getId());
 			sender.sendMessage(GanglandChatUtil.commandMessage("&aThrown &e" + target.getName() + "&a to jail."));
 		}, sender -> {
-			Collection<? extends Player> onlinePlayers     = Bukkit.getOnlinePlayers();
-			DetainmentService            detainmentService = gangland.getInitializer().getDetainmentService();
+			Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
 
 			return onlinePlayers.stream()
 					.filter(player -> !detainmentService.isHandcuffed(player))

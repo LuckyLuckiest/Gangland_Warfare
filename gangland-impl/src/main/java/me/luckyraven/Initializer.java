@@ -3,27 +3,16 @@ package me.luckyraven;
 import lombok.AccessLevel;
 import lombok.CustomLog;
 import lombok.Getter;
-import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.compatibility.CompatibilitySetup;
 import me.luckyraven.compatibility.CompatibilityWorker;
 import me.luckyraven.compatibility.VersionSetup;
 import me.luckyraven.context.GanglandContext;
-import me.luckyraven.copsncrooks.bounty.BountySettings;
-import me.luckyraven.copsncrooks.combo.KillCombo;
 import me.luckyraven.copsncrooks.detainment.DetainmentRegistry;
-import me.luckyraven.copsncrooks.detainment.DetainmentService;
-import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
-import me.luckyraven.copsncrooks.npc.civilian.config.CivilianSettings;
-import me.luckyraven.copsncrooks.npc.civilian.config.CiviliansLoader;
-import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
 import me.luckyraven.copsncrooks.npc.police.CopService;
-import me.luckyraven.copsncrooks.npc.police.config.CopLoader;
-import me.luckyraven.copsncrooks.npc.police.config.CopSettings;
 import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
-import me.luckyraven.copsncrooks.wanted.WantedSettings;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
@@ -46,6 +35,7 @@ import me.luckyraven.file.configuration.MoneyAddonInitializer;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
+import me.luckyraven.file.configuration.inventory.itemsource.GangItemSourceProvider;
 import me.luckyraven.file.configuration.lootchest.GanglandLootChestMessages;
 import me.luckyraven.file.configuration.lootchest.LootChestSettings;
 import me.luckyraven.file.configuration.weapon.WeaponLoader;
@@ -54,9 +44,6 @@ import me.luckyraven.gadget.car.config.CarAddon;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.gadget.jetpack.JetpackService;
-import me.luckyraven.gadget.repair.RepairManager;
-import me.luckyraven.gadget.repair.anvil.RepairAnvilGui;
-import me.luckyraven.gadget.repair.config.RepairLoader;
 import me.luckyraven.gadget.wearable.WearableAddon;
 import me.luckyraven.hologram.HologramService;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
@@ -65,8 +52,6 @@ import me.luckyraven.inventory.handler.SlotItemFactory;
 import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.money.MoneyAddon;
-import me.luckyraven.item.money.MoneyDepositService;
-import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.lootchest.config.LootChestLoader;
 import me.luckyraven.lootchest.data.LootChestData;
@@ -74,27 +59,18 @@ import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.persistence.database.DatabaseSettingsProvider;
-import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
-import me.luckyraven.sign.SignManager;
-import me.luckyraven.sign.bulk.BulkActionManager;
-import me.luckyraven.sign.service.SignInformation;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.weapon.WeaponManager;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import me.luckyraven.weapon.configuration.WeaponAddon;
-import me.luckyraven.weapon.modifiers.BlockDamageManager;
-import me.luckyraven.weapon.raytrace.WeaponRaytracer;
-import me.luckyraven.weapon.raytrace.WeaponVisualSpawner;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.List;
 
 @Getter
 @CustomLog
@@ -123,30 +99,18 @@ public final class Initializer {
 	private DatabaseManager            databaseManager;
 	private GangManager                gangManager;
 	private MemberManager              memberManager;
-	private ListenerManager            listenerManager;
-	private CommandManager             commandManager;
 	private RankManager                rankManager;
 	private WaypointManager            waypointManager;
 	private ScoreboardManager          scoreboardManager;
 	private WeaponManager              weaponManager;
-	private SignManager                signManager;
-	private BulkActionManager          bulkActionManager;
-	private EntityMarkManager          entityMarkManager;
 	private ItemParserManager          itemParserManager;
 	private HologramService            hologramService;
 	private LootChestManager           lootChestManager;
-	private BlockDamageManager         blockDamageManager;
-	private WeaponVisualSpawner        weaponVisualSpawner;
-	private WeaponRaytracer            weaponRaytracer;
 	private CopService                 copService;
 	private CopSpawnManager            copSpawnManager;
 	private CivilianService            civilianService;
-	private CivilianSpawnManager       civilianSpawnManager;
-	private KillCombo                  killCombo;
-	private DetainmentService          detainmentService;
 	private DetainmentRegistry         detainmentRegistry;
 	private JailService                jailService;
-	private MoneyDepositService        moneyDepositService;
 	// Addons
 	private Settings                   settings;
 	private ScoreboardAddon            scoreboardAddon;
@@ -161,11 +125,6 @@ public final class Initializer {
 	private InventoryLoader            inventoryLoader;
 	private WeaponLoader               weaponLoader;
 	private LootChestLoader            lootChestLoader;
-	private CopLoader                  copLoader;
-	private CiviliansLoader            civiliansLoader;
-	private RepairLoader               repairLoader;
-	private RepairManager              repairManager;
-	private RepairAnvilGui             repairAnvilGui;
 	// Gadgets
 	private CarAddon                   carAddon;
 	private CarService                 carService;
@@ -181,12 +140,6 @@ public final class Initializer {
 	private CompatibilityWorker        compatibilityWorker;
 	// Condition Evaluator
 	private ConditionEvaluator         evaluator;
-	// Settings extension
-	private SignInformation            signInformation;
-	private BountySettings             bountySettings;
-	private WantedSettings             wantedSettings;
-	private CopSettings                copSettings;
-	private CivilianSettings           civilianSettings;
 
 	public Initializer(Gangland gangland) {
 		this.gangland = gangland;
@@ -237,8 +190,9 @@ public final class Initializer {
 		databaseManager = new DatabaseManager(gangland, databaseSettings);
 
 		// Scoreboard manager has no file dependencies and is referenced by multiple beans; pre-build it so we can
-		// seed it as a kernel object.
-		scoreboardManager = new ScoreboardManager(gangland);
+		// seed it as a kernel object. PlaceholderService exists from the load-phase constructor, so it can be
+		// passed in here. The FILE-phase ScoreboardAddon is wired in later via GameplayConfig.wireScoreboardAddon().
+		scoreboardManager = new ScoreboardManager(gangland, placeholderService);
 
 		// --- Build the root container + bean orchestrator ---
 		this.context = new GanglandContext(gangland);
@@ -293,7 +247,7 @@ public final class Initializer {
 		FileHandler moneyFile = new FileHandler(gangland, "money", ".yml");
 		fileManager.addFile(moneyFile, true);
 
-		scoreboardManager = new ScoreboardManager(gangland);
+		scoreboardManager = new ScoreboardManager(gangland, placeholderService);
 
 		addonsLoader();
 	}
@@ -308,7 +262,7 @@ public final class Initializer {
 		fileManager.initializeAll();
 
 		// initialize language addon
-		languageLoader = new LanguageLoader(gangland);
+		languageLoader = new LanguageLoader(gangland, fileManager);
 		languageLoader.initialize();
 
 		Messages.setMessageConfiguration(languageLoader.getMessage());
@@ -406,7 +360,11 @@ public final class Initializer {
 	 * Loads the inventory handler.
 	 */
 	public void inventoryLoader() {
-		InventoryAddon.setItemSourceProvider(gangland);
+		// Phase 3: migrate reload to bean pipeline. Until then, the legacy ReloadPlugin path constructs
+		// GangItemSourceProvider here directly using whatever managers the hydrated initializer holds.
+		if (userManager != null && gangManager != null) {
+			InventoryAddon.setItemSourceProvider(new GangItemSourceProvider(userManager, gangManager));
+		}
 
 		// Lets slot YAML reference prefixed items (weapon:awp, wearable:police_vest, ammo:9mm, unique:phone, …)
 		// via the central ItemParser. Must run before any inventory file is read.
@@ -418,7 +376,7 @@ public final class Initializer {
 
 		InventoryAddon.setConditionEvaluator(evaluator);
 
-		inventoryLoader = new InventoryLoader(gangland);
+		inventoryLoader = new InventoryLoader(gangland, fileManager);
 
 		inventoryLoader.addExpectedFile(new FileHandler(gangland, "gang_info", "inventory", ".yml"));
 		inventoryLoader.addExpectedFile(new FileHandler(gangland, "phone", "inventory", ".yml"));
@@ -489,7 +447,7 @@ public final class Initializer {
 
 		weaponAddon.setPlaceholder(placeholderService);
 
-		weaponLoader = new WeaponLoader(gangland);
+		weaponLoader = new WeaponLoader(gangland, fileManager, weaponAddon, ammunitionManager);
 
 		weaponLoader.addExpectedFile(new FileHandler(gangland, "rifle", "weapon", ".yml"));
 		weaponLoader.addExpectedFile(new FileHandler(gangland, "grenade", "weapon", ".yml"));
@@ -497,14 +455,6 @@ public final class Initializer {
 		weaponLoader.addExpectedFile(new FileHandler(gangland, "flamethrower", "weapon", ".yml"));
 		weaponLoader.addExpectedFile(new FileHandler(gangland, "syringe_gun", "weapon", ".yml"));
 		weaponLoader.initialize();
-	}
-
-	public <E> E getInstanceFromTables(Class<E> clazz, List<Table<?>> tables) {
-		return tables.stream()
-				.filter(clazz::isInstance)
-				.map(clazz::cast)
-				.findFirst()
-				.orElseThrow(() -> new RuntimeException("There was a problem finding class, " + clazz.getName()));
 	}
 
 	/**
@@ -568,13 +518,6 @@ public final class Initializer {
 		memberManager      = context.get(MemberManager.class);
 		waypointManager    = context.get(WaypointManager.class);
 
-		// settings extensions
-		signInformation  = context.get(SignInformation.class);
-		bountySettings   = context.get(BountySettings.class);
-		wantedSettings   = context.get(WantedSettings.class);
-		copSettings      = context.get(CopSettings.class);
-		civilianSettings = context.get(CivilianSettings.class);
-
 		// file-phase addons
 		settings            = context.get(Settings.class);
 		languageLoader      = context.get(LanguageLoader.class);
@@ -593,38 +536,22 @@ public final class Initializer {
 		evaluator           = context.get(ConditionEvaluator.class);
 
 		// gameplay
-		weaponManager       = context.get(WeaponManager.class);
-		blockDamageManager  = context.get(BlockDamageManager.class);
-		weaponVisualSpawner = context.get(WeaponVisualSpawner.class);
-		weaponRaytracer     = context.get(WeaponRaytracer.class);
-		signManager         = context.get(SignManager.class);
-		bulkActionManager   = context.get(BulkActionManager.class);
-		hologramService     = context.get(HologramService.class);
-		lootChestManager    = context.get(LootChestManager.class);
-		lootChestLoader     = context.get(LootChestLoader.class);
-		moneyDepositService = context.get(MoneyDepositService.class);
-		itemParserManager   = context.get(ItemParserManager.class);
+		weaponManager     = context.get(WeaponManager.class);
+		hologramService   = context.get(HologramService.class);
+		lootChestManager  = context.get(LootChestManager.class);
+		lootChestLoader   = context.get(LootChestLoader.class);
+		itemParserManager = context.get(ItemParserManager.class);
 
 		// cops + gadgets
-		civiliansLoader      = context.get(CiviliansLoader.class);
-		entityMarkManager    = context.get(EntityMarkManager.class);
-		killCombo            = context.get(KillCombo.class);
-		jailService          = context.get(JailService.class);
-		detainmentRegistry   = context.get(DetainmentRegistry.class);
-		detainmentService    = context.get(DetainmentService.class);
-		copLoader            = context.get(CopLoader.class);
-		copService           = context.get(CopService.class);
-		copSpawnManager      = context.get(CopSpawnManager.class);
-		civilianService      = context.get(CivilianService.class);
-		civilianSpawnManager = context.get(CivilianSpawnManager.class);
-		repairManager        = context.get(RepairManager.class);
-		repairAnvilGui       = context.get(RepairAnvilGui.class);
-		carService           = context.get(CarService.class);
-		jetpackService       = context.get(JetpackService.class);
+		jailService        = context.get(JailService.class);
+		detainmentRegistry = context.get(DetainmentRegistry.class);
+		copService         = context.get(CopService.class);
+		copSpawnManager    = context.get(CopSpawnManager.class);
+		civilianService    = context.get(CivilianService.class);
+		carService         = context.get(CarService.class);
+		jetpackService     = context.get(JetpackService.class);
 
 		// glue
-		listenerManager = context.get(ListenerManager.class);
-		commandManager  = context.get(CommandManager.class);
-		placeholder     = context.get(GanglandPlaceholder.class);
+		placeholder = context.get(GanglandPlaceholder.class);
 	}
 }

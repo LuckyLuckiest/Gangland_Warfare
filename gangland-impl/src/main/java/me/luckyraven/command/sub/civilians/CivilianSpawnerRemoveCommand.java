@@ -14,14 +14,17 @@ import org.bukkit.command.CommandSender;
 
 class CivilianSpawnerRemoveCommand extends SubArgument {
 
-	private final Gangland       gangland;
-	private final Tree<Argument> tree;
+	private final Gangland             gangland;
+	private final Tree<Argument>       tree;
+	private final CivilianSpawnManager civilianSpawnManager;
 
-	CivilianSpawnerRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CivilianSpawnerRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                             CivilianSpawnManager civilianSpawnManager) {
 		super(gangland, "remove", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland             = gangland;
+		this.tree                 = tree;
+		this.civilianSpawnManager = civilianSpawnManager;
 
 		idArgument();
 	}
@@ -44,17 +47,16 @@ class CivilianSpawnerRemoveCommand extends SubArgument {
 				return;
 			}
 
-			CivilianSpawnManager spawnManager = gangland.getInitializer().getCivilianSpawnManager();
-			Location             location     = spawnManager.getSpawnerLocation(id);
+			Location location = civilianSpawnManager.getSpawnerLocation(id);
 			if (location == null) {
 				sender.sendMessage(Messages.LOCATION_NOT_FOUND.toString().replace("%location%", idStr));
 				return;
 			}
 
-			spawnManager.removeSpawner(id);
+			civilianSpawnManager.removeSpawner(id);
 
 			sender.sendMessage(GanglandChatUtil.commandMessage("&aCivilian spawner &e" + id + "&a removed."));
-		}, sender -> gangland.getInitializer().getCivilianSpawnManager().getSpawnerIds()
+		}, sender -> civilianSpawnManager.getSpawnerIds()
 				.stream().map(String::valueOf).toList());
 
 		this.addSubArgument(idArg);

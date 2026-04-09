@@ -25,13 +25,16 @@ class CarGiveCommand extends SubArgument {
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
+	private final CarAddon            carAddon;
 
-	CarGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CarGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	               UserManager<Player> userManager, CarAddon carAddon) {
 		super(gangland, "give", tree, parent);
 
 		this.gangland    = gangland;
 		this.tree        = tree;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.userManager = userManager;
+		this.carAddon    = carAddon;
 
 		carGive();
 	}
@@ -57,11 +60,8 @@ class CarGiveCommand extends SubArgument {
 			} else {
 				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid car: &c" + carName));
 			}
-		}, sender -> {
-			CarAddon carAddon = gangland.getInitializer().getCarAddon();
-			return carAddon.getCars().keySet()
-					.stream().toList();
-		});
+		}, sender -> carAddon.getCars().keySet()
+				.stream().toList());
 
 		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
@@ -94,8 +94,7 @@ class CarGiveCommand extends SubArgument {
 	}
 
 	private boolean giveCarItem(Player player, String name, int amount) {
-		CarAddon carAddon = gangland.getInitializer().getCarAddon();
-		Car      car      = carAddon.getCar(name);
+		Car car = carAddon.getCar(name);
 
 		if (car == null) return false;
 

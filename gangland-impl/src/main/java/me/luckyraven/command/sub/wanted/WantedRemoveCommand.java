@@ -21,13 +21,14 @@ class WantedRemoveCommand extends SubArgument {
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
-	public WantedRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	public WantedRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                           UserManager<Player> userManager) {
 		super(gangland, "remove", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
 
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.userManager = userManager;
 
 		wantedValue();
 	}
@@ -48,7 +49,7 @@ class WantedRemoveCommand extends SubArgument {
 
 			String decreased = Messages.WANTED_DECREASED.toString();
 			String replace = decreased.replace("%amount%", String.valueOf(amount))
-									  .replace("%stars%", wanted.getLevelStars());
+			                          .replace("%stars%", wanted.getLevelStars());
 
 			sender.sendMessage(replace);
 		};
@@ -80,7 +81,7 @@ class WantedRemoveCommand extends SubArgument {
 
 			String decreased = Messages.WANTED_DECREASED.toString();
 			String replace = decreased.replace("%amount%", String.valueOf(realAmount))
-									  .replace("%stars%", wanted.getLevelStars());
+			                          .replace("%stars%", wanted.getLevelStars());
 
 			sender.sendMessage(replace);
 		}, sender -> List.of("<amount>"));

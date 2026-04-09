@@ -25,13 +25,17 @@ class ItemWearableGiveCommand extends SubArgument {
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
+	private final WearableAddon       wearableAddon;
 
-	ItemWearableGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	ItemWearableGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                        UserManager<Player> userManager,
+	                        WearableAddon wearableAddon) {
 		super(gangland, "give", tree, parent);
 
-		this.gangland    = gangland;
-		this.tree        = tree;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.gangland      = gangland;
+		this.tree          = tree;
+		this.userManager   = userManager;
+		this.wearableAddon = wearableAddon;
 
 		wearableGive();
 	}
@@ -58,7 +62,6 @@ class ItemWearableGiveCommand extends SubArgument {
 				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid wearable: &c" + itemName));
 			}
 		}, sender -> {
-			WearableAddon wearableAddon = gangland.getInitializer().getWearableAddon();
 			return wearableAddon.getWearables().keySet()
 					.stream().toList();
 		});
@@ -94,8 +97,7 @@ class ItemWearableGiveCommand extends SubArgument {
 	}
 
 	private boolean giveWearable(Player player, String name, int amount) {
-		WearableAddon wearableAddon = gangland.getInitializer().getWearableAddon();
-		Wearable      wearable      = wearableAddon.getWearable(name);
+		Wearable wearable = wearableAddon.getWearable(name);
 
 		if (wearable == null) return false;
 

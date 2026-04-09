@@ -1,19 +1,20 @@
 package me.luckyraven.command.sub;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.TableLookup;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -30,11 +31,15 @@ import java.util.stream.Collectors;
 public final class BalanceCommand extends Command {
 
 	private final UserManager<Player> userManager;
+	private final GanglandDatabase    ganglandDatabase;
 
-	public BalanceCommand(Gangland gangland) {
+	public BalanceCommand(Gangland gangland,
+	                      @Qualifier("online") UserManager<Player> userManager,
+	                      GanglandDatabase ganglandDatabase) {
 		super(gangland, "balance", false, "bal");
 
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.userManager      = userManager;
+		this.ganglandDatabase = ganglandDatabase;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -76,12 +81,10 @@ public final class BalanceCommand extends Command {
 				return;
 			}
 
-			Initializer      initializer      = getGangland().getInitializer();
-			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
-			DatabaseHelper   helper           = new DatabaseHelper(getGangland(), ganglandDatabase);
-			List<Table<?>>   tables           = ganglandDatabase.getTables();
+			DatabaseHelper helper = new DatabaseHelper(getGangland(), ganglandDatabase);
+			List<Table<?>> tables = ganglandDatabase.getTables();
 
-			UserTable userTable = initializer.getInstanceFromTables(UserTable.class, tables);
+			UserTable userTable = TableLookup.find(UserTable.class, tables);
 
 			helper.runQueries(database -> {
 				// get all the user's data
@@ -116,12 +119,10 @@ public final class BalanceCommand extends Command {
 		}, sender -> {
 			List<String> players = new ArrayList<>();
 
-			Initializer      initializer      = getGangland().getInitializer();
-			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
-			DatabaseHelper   helper           = new DatabaseHelper(getGangland(), ganglandDatabase);
-			List<Table<?>>   tables           = ganglandDatabase.getTables();
+			DatabaseHelper helper = new DatabaseHelper(getGangland(), ganglandDatabase);
+			List<Table<?>> tables = ganglandDatabase.getTables();
 
-			UserTable userTable = initializer.getInstanceFromTables(UserTable.class, tables);
+			UserTable userTable = TableLookup.find(UserTable.class, tables);
 
 			helper.runQueries(database -> {
 				// get all the user's data

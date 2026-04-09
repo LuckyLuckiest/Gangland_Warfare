@@ -3,6 +3,7 @@ package me.luckyraven.command.sub.item.repair;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.gadget.repair.RepairManager;
 import me.luckyraven.gadget.repair.material.RepairMaterial;
 import me.luckyraven.gadget.repair.material.RepairMaterialManager;
 import me.luckyraven.util.GanglandChatUtil;
@@ -15,21 +16,19 @@ import java.util.Map;
 
 class ItemRepairListCommand extends SubArgument {
 
-	private final Gangland gangland;
+	private final RepairManager repairManager;
 
-	ItemRepairListCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	ItemRepairListCommand(Gangland gangland, Tree<Argument> tree, Argument parent, RepairManager repairManager) {
 		super(gangland, "list", tree, parent);
 
-		this.gangland = gangland;
+		this.repairManager = repairManager;
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			RepairMaterialManager materialManager = gangland.getInitializer()
-			                                                .getRepairManager()
-			                                                .getMaterialManager();
-			Map<String, RepairMaterial> materials = materialManager.getAllMaterials();
+			RepairMaterialManager       materialManager = repairManager.getMaterialManager();
+			Map<String, RepairMaterial> materials       = materialManager.getAllMaterials();
 
 			sender.sendMessage(GanglandChatUtil.commandMessage("List of repair items"));
 

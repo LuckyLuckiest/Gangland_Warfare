@@ -3,6 +3,7 @@ package me.luckyraven.command.sub.cops;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -14,14 +15,16 @@ import java.util.List;
 
 class CopSpawnerCommand extends SubArgument {
 
-	private final Gangland       gangland;
-	private final Tree<Argument> tree;
+	private final Gangland        gangland;
+	private final Tree<Argument>  tree;
+	private final CopSpawnManager copSpawnManager;
 
-	CopSpawnerCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CopSpawnerCommand(Gangland gangland, Tree<Argument> tree, Argument parent, CopSpawnManager copSpawnManager) {
 		super(gangland, "spawner", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland        = gangland;
+		this.tree            = tree;
+		this.copSpawnManager = copSpawnManager;
 
 		initializeArguments();
 	}
@@ -36,11 +39,11 @@ class CopSpawnerCommand extends SubArgument {
 	}
 
 	private void initializeArguments() {
-		Argument setArg      = new CopSpawnerSetCommand(gangland, tree, this);
-		Argument removeArg   = new CopSpawnerRemoveCommand(gangland, tree, this);
-		Argument listArg     = new CopSpawnerListCommand(gangland, tree, this);
-		Argument infoArg     = new CopSpawnerInfoCommand(gangland, tree, this);
-		Argument teleportArg = new CopSpawnerTeleportCommand(gangland, tree, this);
+		Argument setArg      = new CopSpawnerSetCommand(gangland, tree, this, copSpawnManager);
+		Argument removeArg   = new CopSpawnerRemoveCommand(gangland, tree, this, copSpawnManager);
+		Argument listArg     = new CopSpawnerListCommand(gangland, tree, this, copSpawnManager);
+		Argument infoArg     = new CopSpawnerInfoCommand(gangland, tree, this, copSpawnManager);
+		Argument teleportArg = new CopSpawnerTeleportCommand(gangland, tree, this, copSpawnManager);
 
 		List<Argument> arguments = new ArrayList<>();
 

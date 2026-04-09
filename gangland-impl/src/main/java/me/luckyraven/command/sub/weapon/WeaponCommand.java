@@ -3,8 +3,14 @@ package me.luckyraven.command.sub.weapon;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.file.configuration.weapon.WeaponLoader;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.command.CommandHandler;
+import me.luckyraven.weapon.WeaponManager;
+import me.luckyraven.weapon.configuration.WeaponAddon;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,8 +19,22 @@ import java.util.Map;
 @CommandHandler
 public final class WeaponCommand extends Command {
 
-	public WeaponCommand(Gangland gangland) {
+	private final UserManager<Player> userManager;
+	private final WeaponManager       weaponManager;
+	private final WeaponAddon         weaponAddon;
+	private final WeaponLoader        weaponLoader;
+
+	public WeaponCommand(Gangland gangland,
+	                     @Qualifier("online") UserManager<Player> userManager,
+	                     WeaponManager weaponManager,
+	                     WeaponAddon weaponAddon,
+	                     WeaponLoader weaponLoader) {
 		super(gangland, "weapon", true);
+
+		this.userManager   = userManager;
+		this.weaponManager = weaponManager;
+		this.weaponAddon   = weaponAddon;
+		this.weaponLoader  = weaponLoader;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -33,9 +53,11 @@ public final class WeaponCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument give = new WeaponGiveCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument info = new WeaponInfoCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument list = new WeaponListCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument give = new WeaponGiveCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                      weaponManager, weaponLoader);
+		Argument info = new WeaponInfoCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                      weaponManager, weaponAddon);
+		Argument list = new WeaponListCommand(getGangland(), getArgumentTree(), getArgument(), weaponAddon);
 
 		List<Argument> arguments = new ArrayList<>();
 

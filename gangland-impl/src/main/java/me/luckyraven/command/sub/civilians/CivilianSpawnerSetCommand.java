@@ -17,14 +17,19 @@ import java.util.ArrayList;
 
 class CivilianSpawnerSetCommand extends SubArgument {
 
-	private final Gangland       gangland;
-	private final Tree<Argument> tree;
+	private final Gangland             gangland;
+	private final Tree<Argument>       tree;
+	private final CivilianService      civilianService;
+	private final CivilianSpawnManager civilianSpawnManager;
 
-	CivilianSpawnerSetCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CivilianSpawnerSetCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                          CivilianService civilianService, CivilianSpawnManager civilianSpawnManager) {
 		super(gangland, "set", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland             = gangland;
+		this.tree                 = tree;
+		this.civilianService      = civilianService;
+		this.civilianSpawnManager = civilianSpawnManager;
 
 		typeIdArgument();
 	}
@@ -43,23 +48,18 @@ class CivilianSpawnerSetCommand extends SubArgument {
 				return;
 			}
 
-			String          typeId  = args[3];
-			CivilianService service = gangland.getInitializer().getCivilianService();
+			String typeId = args[3];
 
-			if (!service.getCiviliansConfig().types().containsKey(typeId)) {
+			if (!civilianService.getCiviliansConfig().types().containsKey(typeId)) {
 				sender.sendMessage(GanglandChatUtil.commandMessage("&cUnknown type &e" + typeId + "&c."));
 				return;
 			}
 
-			CivilianSpawnManager spawnManager = gangland.getInitializer().getCivilianSpawnManager();
-			spawnManager.setTypeSpawnerLocation(player.getLocation(), typeId);
+			civilianSpawnManager.setTypeSpawnerLocation(player.getLocation(), typeId);
 
 			sender.sendMessage(GanglandChatUtil.commandMessage(
 					"&aCivilian spawner &e" + typeId + "&a set at your location."));
-		}, sender -> {
-			CivilianService service = gangland.getInitializer().getCivilianService();
-			return new ArrayList<>(service.getCiviliansConfig().types().keySet());
-		});
+		}, sender -> new ArrayList<>(civilianService.getCiviliansConfig().types().keySet()));
 
 		this.addSubArgument(typeArg);
 	}

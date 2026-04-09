@@ -1,12 +1,14 @@
 package me.luckyraven.listener.inventory;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.inventory.InventoryAddon;
 import me.luckyraven.inventory.InventoryBuilder;
 import me.luckyraven.inventory.InventoryOpener;
 import me.luckyraven.inventory.OpenInventory;
 import me.luckyraven.inventory.State;
+import me.luckyraven.inventory.condition.ConditionEvaluator;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
@@ -21,10 +23,16 @@ import java.util.stream.IntStream;
 @ListenerHandler
 public class InventoryOpenByCommand implements Listener {
 
-	private final Gangland gangland;
+	private final Gangland           gangland;
+	private final PlaceholderService placeholderService;
+	private final ConditionEvaluator conditionEvaluator;
 
-	public InventoryOpenByCommand(Gangland gangland) {
-		this.gangland = gangland;
+	public InventoryOpenByCommand(Gangland gangland,
+	                              PlaceholderService placeholderService,
+	                              ConditionEvaluator conditionEvaluator) {
+		this.gangland           = gangland;
+		this.placeholderService = placeholderService;
+		this.conditionEvaluator = conditionEvaluator;
 	}
 
 	@EventHandler
@@ -78,11 +86,8 @@ public class InventoryOpenByCommand implements Listener {
 				// Create the opener callback
 				InventoryOpener opener = (p, invName) -> InventoryAddon.openInventoryForPlayer(gangland, p, invName);
 
-				var placeholder = gangland.getInitializer().getPlaceholderService();
-				var evaluator   = gangland.getInitializer().getEvaluator();
-
-				var inventoryHandler = builder.createInventory(gangland, placeholder, player, fill, line, evaluator,
-															   opener);
+				var inventoryHandler = builder.createInventory(gangland, placeholderService, player, fill, line,
+				                                               conditionEvaluator, opener);
 
 				inventoryHandler.open(player);
 				event.setCancelled(true);

@@ -5,6 +5,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.part.Fill;
+import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.lootchest.LootChestWand;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -15,12 +16,15 @@ import org.bukkit.inventory.ItemStack;
 
 class LootChestWandEditCommand extends SubArgument {
 
-	private final Gangland gangland;
+	private final Gangland         gangland;
+	private final LootChestManager lootChestManager;
 
-	protected LootChestWandEditCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected LootChestWandEditCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                                   LootChestManager lootChestManager) {
 		super(gangland, "edit", tree, parent);
 
-		this.gangland = gangland;
+		this.gangland         = gangland;
+		this.lootChestManager = lootChestManager;
 	}
 
 	@Override
@@ -37,7 +41,7 @@ class LootChestWandEditCommand extends SubArgument {
 			}
 
 			// Open the configuration inventory
-			LootChestWand wand = LootChestWand.getWand(heldItem, gangland);
+			LootChestWand wand = LootChestWand.getWand(heldItem, gangland, lootChestManager);
 
 			if (wand == null) return;
 

@@ -3,11 +3,15 @@ package me.luckyraven.command.sub.waypoint;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
+import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -21,12 +25,23 @@ public final class WaypointCommand extends Command {
 
 	private final UserManager<Player> userManager;
 	private final WaypointManager     waypointManager;
+	private final GangManager         gangManager;
+	private final GanglandDatabase    ganglandDatabase;
+	private final PermissionManager   permissionManager;
 
-	public WaypointCommand(Gangland gangland) {
+	public WaypointCommand(Gangland gangland,
+	                       @Qualifier("online") UserManager<Player> userManager,
+	                       WaypointManager waypointManager,
+	                       GangManager gangManager,
+	                       GanglandDatabase ganglandDatabase,
+	                       PermissionManager permissionManager) {
 		super(gangland, "waypoint", true);
 
-		this.userManager     = gangland.getInitializer().getUserManager();
-		this.waypointManager = gangland.getInitializer().getWaypointManager();
+		this.userManager       = userManager;
+		this.waypointManager   = waypointManager;
+		this.gangManager       = gangManager;
+		this.ganglandDatabase  = ganglandDatabase;
+		this.permissionManager = permissionManager;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -57,22 +72,33 @@ public final class WaypointCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument create = new WaypointCreateCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument delete = new WaypointDeleteCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument create = new WaypointCreateCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                            waypointManager, permissionManager);
+		Argument delete = new WaypointDeleteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                            waypointManager, ganglandDatabase, permissionManager);
 
-		Argument select   = new WaypointSelectCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument deselect = new WaypointDeselectCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument select = new WaypointSelectCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                            waypointManager);
+		Argument deselect = new WaypointDeselectCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                                waypointManager);
 
-		Argument list = new WaypointListCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument info = new WaypointInfoCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument list = new WaypointListCommand(getGangland(), getArgumentTree(), getArgument(), waypointManager);
+		Argument info = new WaypointInfoCommand(getGangland(), getArgumentTree(), getArgument(), waypointManager);
 
-		Argument type     = new WaypointTypeCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument gangId   = new WaypointGangIdCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument timer    = new WaypointTimerCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument cooldown = new WaypointCooldownCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument shield   = new WaypointShieldCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument cost     = new WaypointCostCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument radius   = new WaypointRadiusCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument type = new WaypointTypeCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                        waypointManager);
+		Argument gangId = new WaypointGangIdCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                            waypointManager, gangManager);
+		Argument timer = new WaypointTimerCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                          waypointManager);
+		Argument cooldown = new WaypointCooldownCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                                waypointManager);
+		Argument shield = new WaypointShieldCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                            waypointManager);
+		Argument cost = new WaypointCostCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                        waypointManager);
+		Argument radius = new WaypointRadiusCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                            waypointManager);
 
 		List<Argument> arguments = new ArrayList<>();
 

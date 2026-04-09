@@ -26,13 +26,13 @@ class RankCreateCommand extends SubArgument {
 	private final Tree<Argument> tree;
 	private final RankManager    rankManager;
 
-	protected RankCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected RankCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent, RankManager rankManager) {
 		super(gangland, "create", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
 
-		this.rankManager = gangland.getInitializer().getRankManager();
+		this.rankManager = rankManager;
 
 		rankCreate();
 	}

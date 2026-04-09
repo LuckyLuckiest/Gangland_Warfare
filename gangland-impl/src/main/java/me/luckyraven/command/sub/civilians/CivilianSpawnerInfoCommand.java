@@ -17,14 +17,17 @@ import org.bukkit.command.CommandSender;
 
 class CivilianSpawnerInfoCommand extends SubArgument {
 
-	private final Gangland       gangland;
-	private final Tree<Argument> tree;
+	private final Gangland             gangland;
+	private final Tree<Argument>       tree;
+	private final CivilianSpawnManager civilianSpawnManager;
 
-	CivilianSpawnerInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CivilianSpawnerInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                           CivilianSpawnManager civilianSpawnManager) {
 		super(gangland, "info", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland             = gangland;
+		this.tree                 = tree;
+		this.civilianSpawnManager = civilianSpawnManager;
 
 		this.idArgument();
 	}
@@ -47,8 +50,7 @@ class CivilianSpawnerInfoCommand extends SubArgument {
 				return;
 			}
 
-			CivilianSpawnManager spawnManager = gangland.getInitializer().getCivilianSpawnManager();
-			CivilianSpawner spawner = spawnManager.getSpawners()
+			CivilianSpawner spawner = civilianSpawnManager.getSpawners()
 					.stream()
 					.filter(s -> s.getId() == id).findFirst().orElse(null);
 
@@ -79,7 +81,7 @@ class CivilianSpawnerInfoCommand extends SubArgument {
 					x, y, z, world, typeId, groupId);
 
 			sender.sendMessage(GanglandChatUtil.color(info));
-		}, sender -> gangland.getInitializer().getCivilianSpawnManager().getSpawnerIds()
+		}, sender -> civilianSpawnManager.getSpawnerIds()
 				.stream().map(String::valueOf).toList());
 
 		this.addSubArgument(idArg);

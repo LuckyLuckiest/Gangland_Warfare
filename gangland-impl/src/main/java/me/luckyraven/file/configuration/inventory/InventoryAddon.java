@@ -2,8 +2,10 @@ package me.luckyraven.file.configuration.inventory;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.data.permission.PermissionManager;
+import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.file.configuration.inventory.itemsource.GangItemSourceProvider;
 import me.luckyraven.inventory.*;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
 import me.luckyraven.inventory.handler.*;
@@ -37,8 +39,11 @@ public class InventoryAddon {
 	static final Map<String, UniqueItemHandler>               uniqueItemHandler = new HashMap<>();
 	static final Map<Class<?>, SlotEventHandler>              slotHandlers      = new HashMap<>();
 
-	private static ItemSourceProvider itemSourceProvider;
-	private static ConditionEvaluator conditionEvaluator;
+	private static ItemSourceProvider  itemSourceProvider;
+	private static ConditionEvaluator  conditionEvaluator;
+	private static UserManager<Player> userManager;
+	private static PermissionManager   permissionManager;
+	private static PlaceholderService  placeholderService;
 
 	static {
 		// Player events
@@ -69,12 +74,24 @@ public class InventoryAddon {
 		slotHandlers.put(PlayerQuitEvent.class, new QuitSlotHandler());
 	}
 
-	public static void setItemSourceProvider(Gangland gangland) {
-		itemSourceProvider = new GangItemSourceProvider(gangland);
+	public static void setItemSourceProvider(ItemSourceProvider provider) {
+		itemSourceProvider = provider;
 	}
 
 	public static void setConditionEvaluator(ConditionEvaluator conditionEvaluator) {
 		InventoryAddon.conditionEvaluator = conditionEvaluator;
+	}
+
+	public static void setUserManager(UserManager<Player> userManager) {
+		InventoryAddon.userManager = userManager;
+	}
+
+	public static void setPermissionManager(PermissionManager permissionManager) {
+		InventoryAddon.permissionManager = permissionManager;
+	}
+
+	public static void setPlaceholderService(PlaceholderService placeholderService) {
+		InventoryAddon.placeholderService = placeholderService;
 	}
 
 	@Nullable
@@ -121,13 +138,13 @@ public class InventoryAddon {
 		String openEvent      = informationSection.getString("Open.Event");
 		String openPermission = informationSection.getString("Open.Permission");
 
-		if (permission != null) gangland.getInitializer().getPermissionManager().addPermission(permission);
+		if (permission != null) permissionManager.addPermission(permission);
 
 		List<Slot> slots        = new ArrayList<>();
 		var        slotsSection = config.getConfigurationSection("Slots");
 		if (slotsSection != null) {
 			InventoryParser.configureSlots(gangland, InventoryHandler.factorOfNine(size), slotsSection.getName(),
-										   config, slots);
+			                               config, slots);
 		}
 
 		var configSection = Objects.requireNonNull(
@@ -165,7 +182,7 @@ public class InventoryAddon {
 	}
 
 	public static void openInventoryForPlayer(Gangland gangland, Player player, String inventoryName) {
-		User<Player> user = gangland.getInitializer().getUserManager().getUser(player);
+		User<Player> user = userManager.getUser(player);
 		if (user == null) return;
 
 		InventoryHandler existing = user.getInventory(inventoryName);
@@ -183,29 +200,29 @@ public class InventoryAddon {
 		Fill line = new Fill(Settings.getInventoryLineName(), Settings.getInventoryLineItem());
 
 		InventoryOpener opener      = (p, invName) -> openInventoryForPlayer(gangland, p, invName);
-		Placeholder     placeholder = gangland.getInitializer().getPlaceholderService();
+		Placeholder     placeholder = placeholderService;
 
 		if (invBuilder.inventoryData().isMultiInventory()) {
 			String          itemSource = invBuilder.inventoryData().getItemSource();
 			List<ItemStack> items      = itemSourceProvider.getItems(player, itemSource);
 			ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
-												   Settings.getNextPage());
+			                                       Settings.getNextPage());
 			MultiInventory multi = invBuilder.createMultiInventory(gangland, placeholder, player, items, buttonTags,
-																   fill);
+			                                                       fill);
 			if (multi != null) {
 				multi.open(player);
 				user.addInventory(multi);
 			}
 		} else {
 			InventoryHandler handler = invBuilder.createInventory(gangland, placeholder, user.getUser(), fill, line,
-																  conditionEvaluator, opener);
+			                                                      conditionEvaluator, opener);
 			handler.open(player);
 			user.addInventory(handler);
 		}
 	}
 
 	private static void registerUniqueItemHandler(String inventoryName, ConfigurationSection informationSection,
-												  @Nullable String openPermission) {
+	                                              @Nullable String openPermission) {
 		ConfigurationSection eventSection = informationSection.getConfigurationSection("Open.Event");
 		if (eventSection == null || !eventSection.contains("OnItemClick")) return;
 
@@ -214,6 +231,6 @@ public class InventoryAddon {
 
 		var allowedActions = InventoryParser.parseActions(eventSection);
 		uniqueItemHandler.put(uniqueItemKey,
-							  new UniqueItemHandler(inventoryName, uniqueItemKey, allowedActions, openPermission));
+		                      new UniqueItemHandler(inventoryName, uniqueItemKey, allowedActions, openPermission));
 	}
 }

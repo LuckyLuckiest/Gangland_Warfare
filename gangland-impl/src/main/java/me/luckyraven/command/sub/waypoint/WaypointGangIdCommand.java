@@ -1,7 +1,6 @@
 package me.luckyraven.command.sub.waypoint;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
@@ -31,17 +30,16 @@ class WaypointGangIdCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final WaypointManager     waypointManager;
 
-	protected WaypointGangIdCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected WaypointGangIdCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                                UserManager<Player> userManager, WaypointManager waypointManager,
+	                                GangManager gangManager) {
 		super(gangland, "gangId", tree, parent, "gang_id");
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		Initializer initializer = gangland.getInitializer();
-
-		this.userManager     = initializer.getUserManager();
-		this.gangManager     = initializer.getGangManager();
-		this.waypointManager = initializer.getWaypointManager();
+		this.gangland        = gangland;
+		this.tree            = tree;
+		this.userManager     = userManager;
+		this.gangManager     = gangManager;
+		this.waypointManager = waypointManager;
 
 		waypointGangId();
 	}

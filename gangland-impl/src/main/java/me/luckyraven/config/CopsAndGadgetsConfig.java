@@ -34,11 +34,11 @@ import me.luckyraven.gadget.wearable.WearableAddon;
 import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.money.MoneyDropClassifier;
 import me.luckyraven.money.GanglandMoneyDropClassifier;
+import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.util.autowire.bean.Bean;
 import me.luckyraven.util.autowire.bean.Configuration;
-import me.luckyraven.util.autowire.bean.PostConstruct;
 import me.luckyraven.weapon.WeaponManager;
 
 import java.util.ArrayList;
@@ -49,14 +49,14 @@ import java.util.ArrayList;
  *
  * <p>Highlights:
  * <ul>
- *     <li>{@link #civiliansLoader(ItemParserManager, CivilianSettings, me.luckyraven.persistence.FileManager)}
+ *     <li>{@link #civiliansLoader(ItemParserManager, CivilianSettings, FileManager)}
  *     binds + registers + loads in one go because the entity-mark manager downstream reads {@code getLoadedConfig()}
  *     immediately.</li>
  *     <li>{@link CopService} and {@link CivilianService} use no-arg constructors and a separate {@code initialize}
  *     call. The {@code @Bean} method body invokes that initializer directly so the LIFECYCLE pass doesn't try to
  *     call a non-existent zero-arg {@code initialize()}.</li>
- *     <li>{@link #copCivilianBridge(CopService, CivilianService)} is a {@code @PostConstruct} bridge that wires
- *     {@code copManager.setCivilianService(civilianService)} after both beans exist — replaces the manual
+ *     <li>{@code civilianService} takes {@link CopService} as a parameter so the topo sort builds it first, then
+ *     wires {@code copManager.setCivilianService(civilianService)} inline before returning — replaces the manual
  *     post-construction call in the legacy {@code postInitialize()}.</li>
  * </ul>
  */
@@ -77,7 +77,7 @@ public class CopsAndGadgetsConfig {
 	@Bean
 	public CiviliansLoader civiliansLoader(ItemParserManager itemParserManager,
 	                                       CivilianSettings civilianSettings,
-	                                       me.luckyraven.persistence.FileManager fileManager) {
+	                                       FileManager fileManager) {
 		CiviliansLoader loader = new CiviliansLoader(gangland, itemParserManager.getParser(), civilianSettings);
 		loader.bind(false, null, fileManager);
 		fileManager.registerInitializer(loader);
@@ -131,7 +131,7 @@ public class CopsAndGadgetsConfig {
 	@Bean
 	public CopLoader copLoader(ItemParserManager itemParserManager,
 	                           CopSettings copSettings,
-	                           me.luckyraven.persistence.FileManager fileManager) {
+	                           FileManager fileManager) {
 		CopLoader loader = new CopLoader(gangland, itemParserManager.getParser(), copSettings);
 		loader.bind(false, null, fileManager);
 		fileManager.registerInitializer(loader);
@@ -163,7 +163,8 @@ public class CopsAndGadgetsConfig {
 	}
 
 	@Bean
-	public CivilianService civilianService(CiviliansLoader civiliansLoader,
+	public CivilianService civilianService(CopService copService,
+	                                       CiviliansLoader civiliansLoader,
 	                                       EntityMarkManager entityMarkManager,
 	                                       RepositoryRegistry repositoryRegistry,
 	                                       CivilianSettings civilianSettings,
@@ -174,26 +175,16 @@ public class CopsAndGadgetsConfig {
 		IRepository<CivilianSpawner> repo    = repositoryRegistry.getRepository(CivilianSpawner.class);
 		service.initialize(gangland, civiliansLoader.getLoadedConfig(), entityMarkManager, repo,
 		                   civilianSettings, spawnConfigProvider, itemParserManager.getParser(), weaponManager);
+		// Wire the civilian service into the cop manager so cops can pursue wanted hostile civilians. Folded into
+		// this @Bean body (was a @PostConstruct that re-fetched both beans via getInitializer().getContext()) — the
+		// CopService param above forces the topo sort to build it before this bean runs.
+		copService.getCopManager().setCivilianService(service);
 		return service;
 	}
 
 	@Bean
 	public CivilianSpawnManager civilianSpawnManager(CivilianService civilianService) {
 		return civilianService.getSpawnManager();
-	}
-
-	/**
-	 * Wires the civilian service into the cop manager so cops can pursue wanted hostile civilians. Has to run after
-	 * both beans exist — runs as a {@code @PostConstruct}, which the bean factory invokes after every CONFIG bean is
-	 * registered (and before LIFECYCLE).
-	 */
-	@PostConstruct
-	public void copCivilianBridge() {
-		CopService      copService      = gangland.getInitializer().getContext().get(CopService.class);
-		CivilianService civilianService = gangland.getInitializer().getContext().get(CivilianService.class);
-		if (copService != null && civilianService != null) {
-			copService.getCopManager().setCivilianService(civilianService);
-		}
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------

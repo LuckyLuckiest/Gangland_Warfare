@@ -1,7 +1,6 @@
 package me.luckyraven.command.sub.gang;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
@@ -14,6 +13,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.TableLookup;
 import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.file.configuration.Messages;
@@ -32,23 +32,29 @@ import java.util.Objects;
 
 class GangKickCommand extends SubArgument {
 
-	private final Gangland            gangland;
-	private final Tree<Argument>      tree;
-	private final UserManager<Player> userManager;
-	private final MemberManager       memberManager;
-	private final GangManager         gangManager;
-	private final RankManager         rankManager;
+	private final Gangland                   gangland;
+	private final Tree<Argument>             tree;
+	private final UserManager<Player>        userManager;
+	private final UserManager<OfflinePlayer> offlineUserManager;
+	private final MemberManager              memberManager;
+	private final GangManager                gangManager;
+	private final RankManager                rankManager;
+	private final GanglandDatabase           ganglandDatabase;
 
-	protected GangKickCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected GangKickCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                          UserManager<Player> userManager, UserManager<OfflinePlayer> offlineUserManager,
+	                          MemberManager memberManager, GangManager gangManager, RankManager rankManager,
+	                          GanglandDatabase ganglandDatabase) {
 		super(gangland, "kick", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.userManager   = gangland.getInitializer().getUserManager();
-		this.memberManager = gangland.getInitializer().getMemberManager();
-		this.gangManager   = gangland.getInitializer().getGangManager();
-		this.rankManager   = gangland.getInitializer().getRankManager();
+		this.gangland           = gangland;
+		this.tree               = tree;
+		this.userManager        = userManager;
+		this.offlineUserManager = offlineUserManager;
+		this.memberManager      = memberManager;
+		this.gangManager        = gangManager;
+		this.rankManager        = rankManager;
+		this.ganglandDatabase   = ganglandDatabase;
 
 		gangKick();
 	}
@@ -181,16 +187,12 @@ class GangKickCommand extends SubArgument {
 			} else {
 				targetUser = new User<>(gangland, offlinePlayer);
 
-				Initializer      initializer      = gangland.getInitializer();
-				GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
-				List<Table<?>>   tables           = ganglandDatabase.getTables();
+				List<Table<?>> tables = ganglandDatabase.getTables();
 
-				UserTable userTable = initializer.getInstanceFromTables(UserTable.class, tables);
-				BankTable bankTable = initializer.getInstanceFromTables(BankTable.class, tables);
+				UserTable userTable = TableLookup.find(UserTable.class, tables);
+				BankTable bankTable = TableLookup.find(BankTable.class, tables);
 
 				User<OfflinePlayer> offlineUser = (User<OfflinePlayer>) targetUser;
-
-				UserManager<OfflinePlayer> offlineUserManager = initializer.getOfflineUserManager();
 
 				offlineUserManager.initializeUserData(offlineUser, userTable, bankTable);
 

@@ -12,15 +12,16 @@ import java.util.*;
 public class PluginManager {
 
 	private final Gangland         gangland;
+	private final GanglandDatabase database;
 	private final List<PluginData> pluginDataList;
 
-	public PluginManager(Gangland gangland) {
+	public PluginManager(Gangland gangland, GanglandDatabase database) {
 		this.gangland       = gangland;
+		this.database       = database;
 		this.pluginDataList = new ArrayList<>();
 	}
 
 	public void initialize() {
-		GanglandDatabase        database   = gangland.getInitializer().getGanglandDatabase();
 		IRepository<PluginData> repository = database.getRepositoryRegistry().getRepository(PluginData.class);
 
 		Collection<PluginData> loaded = repository.loadAll();

@@ -32,15 +32,15 @@ class GangAllyCommand extends SubArgument {
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 
-	protected GangAllyCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected GangAllyCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                          UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager) {
 		super(gangland, "ally", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.userManager   = gangland.getInitializer().getUserManager();
-		this.memberManager = gangland.getInitializer().getMemberManager();
-		this.gangManager   = gangland.getInitializer().getGangManager();
+		this.gangland      = gangland;
+		this.tree          = tree;
+		this.userManager   = userManager;
+		this.memberManager = memberManager;
+		this.gangManager   = gangManager;
 
 		gangAlly();
 	}

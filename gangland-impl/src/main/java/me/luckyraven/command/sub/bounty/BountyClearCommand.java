@@ -22,13 +22,13 @@ class BountyClearCommand extends SubArgument {
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
-	public BountyClearCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	public BountyClearCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                          UserManager<Player> userManager) {
 		super(gangland, new String[]{"clear", "remove", "delete", "del"}, tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.gangland    = gangland;
+		this.tree        = tree;
+		this.userManager = userManager;
 
 		this.bountyClear();
 	}

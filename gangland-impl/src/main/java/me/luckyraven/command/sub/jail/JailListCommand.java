@@ -16,19 +16,17 @@ import org.bukkit.command.CommandSender;
 
 class JailListCommand extends SubArgument {
 
-	private final Gangland gangland;
+	private final JailRegistry jailRegistry;
 
-	protected JailListCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected JailListCommand(Gangland gangland, Tree<Argument> tree, Argument parent, JailRegistry jailRegistry) {
 		super(gangland, "list", tree, parent);
 
-		this.gangland = gangland;
+		this.jailRegistry = jailRegistry;
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			JailRegistry jailRegistry = gangland.getInitializer().getJailService().getJailRegistry();
-
 			sender.sendMessage(GanglandChatUtil.prefixMessage("Jails:"));
 			jailRegistry.getCells().forEach(jail -> {
 				Location location = jail.getLocation();

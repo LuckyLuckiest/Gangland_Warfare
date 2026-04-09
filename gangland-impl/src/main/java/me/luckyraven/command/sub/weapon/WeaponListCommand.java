@@ -7,6 +7,7 @@ import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.configuration.WeaponAddon;
 import org.bukkit.command.CommandSender;
 
 import java.util.Iterator;
@@ -14,18 +15,18 @@ import java.util.Set;
 
 class WeaponListCommand extends SubArgument {
 
-	private final Gangland gangland;
+	private final WeaponAddon weaponAddon;
 
-	protected WeaponListCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected WeaponListCommand(Gangland gangland, Tree<Argument> tree, Argument parent, WeaponAddon weaponAddon) {
 		super(gangland, "list", tree, parent);
 
-		this.gangland = gangland;
+		this.weaponAddon = weaponAddon;
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			Set<String> weapons = gangland.getInitializer().getWeaponAddon().getWeaponKeys();
+			Set<String> weapons = weaponAddon.getWeaponKeys();
 
 			sender.sendMessage(GanglandChatUtil.commandMessage("List of weapons"));
 
@@ -33,7 +34,7 @@ class WeaponListCommand extends SubArgument {
 			StringBuilder    builder  = new StringBuilder();
 
 			while (iterator.hasNext()) {
-				Weapon weapon = gangland.getInitializer().getWeaponAddon().getWeapon(iterator.next());
+				Weapon weapon = weaponAddon.getWeapon(iterator.next());
 				if (weapon == null) continue;
 
 				builder.append("&b").append(weapon.getName());

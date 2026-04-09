@@ -1,28 +1,28 @@
 package me.luckyraven.weapon;
 
-import me.luckyraven.Gangland;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.repositories.weapon.WeaponRepository;
 import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.weapon.configuration.WeaponAddon;
 
 import java.util.Collection;
 
 public class WeaponManager extends WeaponService {
 
-	private final Gangland gangland;
+	private final WeaponAddon      weaponAddon;
+	private final GanglandDatabase database;
 
-	public WeaponManager(Gangland gangland) {
-		super(gangland.getInitializer().getWeaponAddon());
-
-		this.gangland = gangland;
+	public WeaponManager(WeaponAddon weaponAddon, GanglandDatabase database) {
+		super(weaponAddon);
+		this.weaponAddon = weaponAddon;
+		this.database    = database;
 	}
 
 	public void initialize() {
-		GanglandDatabase    database   = gangland.getInitializer().getGanglandDatabase();
 		IRepository<Weapon> repository = database.getRepositoryRegistry().getRepository(Weapon.class);
 
 		if (repository instanceof WeaponRepository weaponRepository) {
-			weaponRepository.setWeaponAddon(gangland.getInitializer().getWeaponAddon());
+			weaponRepository.setWeaponAddon(weaponAddon);
 		}
 
 		Collection<Weapon> loaded = repository.loadAll();

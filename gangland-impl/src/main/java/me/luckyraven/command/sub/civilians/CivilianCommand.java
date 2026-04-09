@@ -3,6 +3,8 @@ package me.luckyraven.command.sub.civilians;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
+import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
 import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 
@@ -13,8 +15,16 @@ import java.util.Map;
 @CommandHandler
 public class CivilianCommand extends Command {
 
-	public CivilianCommand(Gangland gangland) {
+	private final CivilianService      civilianService;
+	private final CivilianSpawnManager civilianSpawnManager;
+
+	public CivilianCommand(Gangland gangland,
+	                       CivilianService civilianService,
+	                       CivilianSpawnManager civilianSpawnManager) {
 		super(gangland, "civilian", false, "civ");
+
+		this.civilianService      = civilianService;
+		this.civilianSpawnManager = civilianSpawnManager;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -32,11 +42,14 @@ public class CivilianCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument spawner    = new CivilianSpawnerCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument list       = new CivilianListCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument groups     = new CivilianGroupsCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument spawn      = new CivilianSpawnCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument spawnGroup = new CivilianSpawnGroupCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument spawner = new CivilianSpawnerCommand(getGangland(), getArgumentTree(), getArgument(), civilianService,
+		                                              civilianSpawnManager);
+		Argument list   = new CivilianListCommand(getGangland(), getArgumentTree(), getArgument(), civilianService);
+		Argument groups = new CivilianGroupsCommand(getGangland(), getArgumentTree(), getArgument(), civilianService);
+		Argument spawn = new CivilianSpawnCommand(getGangland(), getArgumentTree(), getArgument(), civilianService,
+		                                          civilianSpawnManager);
+		Argument spawnGroup = new CivilianSpawnGroupCommand(getGangland(), getArgumentTree(), getArgument(),
+		                                                    civilianService);
 
 		List<Argument> arguments = new ArrayList<>();
 

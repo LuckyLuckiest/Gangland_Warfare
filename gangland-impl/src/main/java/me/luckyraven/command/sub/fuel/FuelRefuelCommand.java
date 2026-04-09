@@ -23,12 +23,12 @@ class FuelRefuelCommand extends SubArgument {
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
-	FuelRefuelCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	FuelRefuelCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager) {
 		super(gangland, "refuel", tree, parent);
 
 		this.gangland    = gangland;
 		this.tree        = tree;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.userManager = userManager;
 
 		refuelAmount();
 	}

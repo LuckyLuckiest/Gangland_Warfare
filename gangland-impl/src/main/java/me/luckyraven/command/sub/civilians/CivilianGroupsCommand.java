@@ -14,19 +14,17 @@ import java.util.Collection;
 
 class CivilianGroupsCommand extends SubArgument {
 
-	private final Gangland gangland;
+	private final CivilianService civilianService;
 
-	CivilianGroupsCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CivilianGroupsCommand(Gangland gangland, Tree<Argument> tree, Argument parent, CivilianService civilianService) {
 		super(gangland, "groups", tree, parent);
-
-		this.gangland = gangland;
+		this.civilianService = civilianService;
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			CivilianService           service = gangland.getInitializer().getCivilianService();
-			Collection<CivilianGroup> groups  = service.getActiveGroups();
+			Collection<CivilianGroup> groups = civilianService.getActiveGroups();
 
 			if (groups.isEmpty()) {
 				sender.sendMessage(GanglandChatUtil.commandMessage("No civilian groups are currently active."));

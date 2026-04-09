@@ -8,6 +8,7 @@ import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.file.configuration.Messages;
@@ -33,15 +34,18 @@ class WaypointCreateCommand extends SubArgument {
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final WaypointManager     waypointManager;
+	private final PermissionManager   permissionManager;
 
-	protected WaypointCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected WaypointCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                                UserManager<Player> userManager, WaypointManager waypointManager,
+	                                PermissionManager permissionManager) {
 		super(gangland, "create", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.userManager     = gangland.getInitializer().getUserManager();
-		this.waypointManager = gangland.getInitializer().getWaypointManager();
+		this.gangland          = gangland;
+		this.tree              = tree;
+		this.userManager       = userManager;
+		this.waypointManager   = waypointManager;
+		this.permissionManager = permissionManager;
 
 		waypointCreate();
 	}
@@ -87,7 +91,7 @@ class WaypointCreateCommand extends SubArgument {
 			}
 
 			// create waypoint permission
-			gangland.getInitializer().getPermissionManager().addPermission(waypoint.getPermission());
+			permissionManager.addPermission(waypoint.getPermission());
 
 			// select the waypoint
 			// using '/glw waypoint select <id>' command to the created waypoint, so it is selected

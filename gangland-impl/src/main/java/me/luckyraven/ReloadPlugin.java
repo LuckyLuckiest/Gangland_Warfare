@@ -13,6 +13,7 @@ import me.luckyraven.data.plugin.PluginManager;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.TableLookup;
 import me.luckyraven.database.repositories.lootchest.LootChestRepository;
 import me.luckyraven.database.tables.gang.GangAllianceTable;
 import me.luckyraven.database.tables.gang.GangTable;
@@ -171,16 +172,14 @@ public final class ReloadPlugin {
 	 * @implNote Very important to run this method after {@link RankManager} and its repositories are initialized.
 	 */
 	public void memberInitialize(boolean resetCache) {
-		RankManager   rankManager   = initializer.getRankManager();
-		GangManager   gangManager   = initializer.getGangManager();
 		MemberManager memberManager = initializer.getMemberManager();
 
 		if (resetCache) memberManager.clear();
 
 		List<Table<?>> tables      = ganglandDatabase.getTables();
-		MemberTable    memberTable = initializer.getInstanceFromTables(MemberTable.class, tables);
+		MemberTable    memberTable = TableLookup.find(MemberTable.class, tables);
 
-		memberManager.initialize(memberTable, gangManager, rankManager);
+		memberManager.initialize(memberTable);
 	}
 
 	/**
@@ -213,9 +212,9 @@ public final class ReloadPlugin {
 		}
 
 		List<Table<?>>  tables          = ganglandDatabase.getTables();
-		UserTable       userTable       = initializer.getInstanceFromTables(UserTable.class, tables);
-		BankTable       bankTable       = initializer.getInstanceFromTables(BankTable.class, tables);
-		MemberTable     memberTable     = initializer.getInstanceFromTables(MemberTable.class, tables);
+		UserTable       userTable       = TableLookup.find(UserTable.class, tables);
+		BankTable       bankTable       = TableLookup.find(BankTable.class, tables);
+		MemberTable     memberTable     = TableLookup.find(MemberTable.class, tables);
 		UniqueItemAddon uniqueItemAddon = initializer.getUniqueItemAddon();
 
 		// get the online users

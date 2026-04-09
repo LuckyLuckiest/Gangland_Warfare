@@ -17,14 +17,15 @@ import org.bukkit.inventory.ItemStack;
 
 class CarInfoCommand extends SubArgument {
 
-	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
+	private final CarAddon            carAddon;
 
-	CarInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CarInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	               UserManager<Player> userManager, CarAddon carAddon) {
 		super(gangland, "info", tree, parent);
 
-		this.gangland    = gangland;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.userManager = userManager;
+		this.carAddon    = carAddon;
 	}
 
 	@Override
@@ -46,8 +47,7 @@ class CarInfoCommand extends SubArgument {
 
 			if (carId == null) return;
 
-			CarAddon carAddon = gangland.getInitializer().getCarAddon();
-			Car      car      = carAddon.getCar(carId);
+			Car car = carAddon.getCar(carId);
 
 			if (car == null) {
 				user.sendMessage(GanglandChatUtil.prefixMessage("Car not registered: &c" + carId));

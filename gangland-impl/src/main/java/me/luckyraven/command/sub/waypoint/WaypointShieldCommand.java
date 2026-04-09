@@ -24,14 +24,14 @@ class WaypointShieldCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 	private final WaypointManager     waypointManager;
 
-	protected WaypointShieldCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected WaypointShieldCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                                UserManager<Player> userManager, WaypointManager waypointManager) {
 		super(gangland, "shield", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.userManager     = gangland.getInitializer().getUserManager();
-		this.waypointManager = gangland.getInitializer().getWaypointManager();
+		this.gangland        = gangland;
+		this.tree            = tree;
+		this.userManager     = userManager;
+		this.waypointManager = waypointManager;
 
 		waypointShield();
 	}

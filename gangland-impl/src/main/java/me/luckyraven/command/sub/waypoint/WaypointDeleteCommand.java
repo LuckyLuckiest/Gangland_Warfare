@@ -1,16 +1,17 @@
 package me.luckyraven.command.sub.waypoint;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.TableLookup;
 import me.luckyraven.database.tables.waypoint.WaypointTable;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.persistence.database.DatabaseHelper;
@@ -32,17 +33,20 @@ class WaypointDeleteCommand extends SubArgument {
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final WaypointManager     waypointManager;
+	private final GanglandDatabase    ganglandDatabase;
+	private final PermissionManager   permissionManager;
 
-	protected WaypointDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected WaypointDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                                UserManager<Player> userManager, WaypointManager waypointManager,
+	                                GanglandDatabase ganglandDatabase, PermissionManager permissionManager) {
 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		Initializer initializer = gangland.getInitializer();
-
-		this.userManager     = initializer.getUserManager();
-		this.waypointManager = initializer.getWaypointManager();
+		this.gangland          = gangland;
+		this.tree              = tree;
+		this.userManager       = userManager;
+		this.waypointManager   = waypointManager;
+		this.ganglandDatabase  = ganglandDatabase;
+		this.permissionManager = permissionManager;
 
 		waypointDelete();
 	}
@@ -70,11 +74,10 @@ class WaypointDeleteCommand extends SubArgument {
 			}
 
 			// delete from the database and refactor the remaining IDs in one async task
-			GanglandDatabase ganglandDatabase = gangland.getInitializer().getGanglandDatabase();
-			DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
-			List<Table<?>>   tables           = ganglandDatabase.getTables();
+			DatabaseHelper helper = new DatabaseHelper(gangland, ganglandDatabase);
+			List<Table<?>> tables = ganglandDatabase.getTables();
 
-			WaypointTable waypointTable = gangland.getInitializer().getInstanceFromTables(WaypointTable.class, tables);
+			WaypointTable waypointTable = TableLookup.find(WaypointTable.class, tables);
 
 			helper.runQueriesAsync(database -> {
 				QueryBuilder.on(database, waypointTable.getName()).delete().where("id", waypoint.getUsedId()).execute();
@@ -88,7 +91,7 @@ class WaypointDeleteCommand extends SubArgument {
 
 			String format = String.format("%s.waypoint.%d", Gangland.FULL_PREFIX, waypoint.getUsedId());
 
-			gangland.getInitializer().getPermissionManager().removePermission(format, true);
+			permissionManager.removePermission(format, true);
 
 			waypointManager.remove(waypoint);
 			deleteWaypointId.remove(sender);

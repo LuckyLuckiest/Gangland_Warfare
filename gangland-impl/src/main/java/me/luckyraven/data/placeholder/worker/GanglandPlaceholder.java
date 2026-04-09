@@ -1,7 +1,5 @@
 package me.luckyraven.data.placeholder.worker;
 
-import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.gang.Gang;
@@ -34,15 +32,17 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	private final GangManager         gangManager;
 	private final UniqueItemAddon     uniqueItemAddon;
 
-	public GanglandPlaceholder(Gangland gangland, String prefix, Replacer.Closure closure) {
+	public GanglandPlaceholder(String prefix,
+	                           Replacer.Closure closure,
+	                           UserManager<Player> userManager,
+	                           MemberManager memberManager,
+	                           GangManager gangManager,
+	                           UniqueItemAddon uniqueItemAddon) {
 		super(prefix, closure);
-
-		Initializer initializer = gangland.getInitializer();
-
-		this.userManager     = initializer.getUserManager();
-		this.memberManager   = initializer.getMemberManager();
-		this.gangManager     = initializer.getGangManager();
-		this.uniqueItemAddon = initializer.getUniqueItemAddon();
+		this.userManager     = userManager;
+		this.memberManager   = memberManager;
+		this.gangManager     = gangManager;
+		this.uniqueItemAddon = uniqueItemAddon;
 	}
 
 	@Override

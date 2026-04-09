@@ -1,6 +1,7 @@
 package me.luckyraven.scoreboard;
 
 import com.viaversion.viaversion.api.ViaAPI;
+import lombok.Setter;
 import me.luckyraven.Gangland;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
@@ -29,7 +30,7 @@ public class ScoreboardManager {
 
 		for (Class<?> clazz : classes) {
 			if (!(DriverHandler.class.isAssignableFrom(clazz) && !clazz.isInterface() &&
-				  !Modifier.isAbstract(clazz.getModifiers()))) continue;
+			      !Modifier.isAbstract(clazz.getModifiers()))) continue;
 
 			@SuppressWarnings("unchecked") // it is known that clazz is a subclass of DriverHandler
 			Class<? extends DriverHandler> driverClass = (Class<? extends DriverHandler>) clazz;
@@ -37,10 +38,20 @@ public class ScoreboardManager {
 		}
 	}
 
-	private final Gangland gangland;
+	private final Gangland    gangland;
+	private final Placeholder placeholder;
 
-	public ScoreboardManager(Gangland gangland) {
-		this.gangland = gangland;
+	/**
+	 * Set by {@code GameplayConfig.scoreboardManager()} after the FILE-phase {@link ScoreboardAddon} bean is built.
+	 * ScoreboardManager is kernel-seeded in the LOAD phase so it can't constructor-inject the FILE-phase addon — the
+	 * link flows the other way via this setter.
+	 */
+	@Setter
+	private ScoreboardAddon scoreboardAddon;
+
+	public ScoreboardManager(Gangland gangland, Placeholder placeholder) {
+		this.gangland    = gangland;
+		this.placeholder = placeholder;
 	}
 
 	public static List<String> getDrivers() {
@@ -48,9 +59,7 @@ public class ScoreboardManager {
 	}
 
 	public DriverHandler getDriverHandler(Player player) {
-		final ViaAPI<?> viaAPI          = gangland.getViaAPI();
-		ScoreboardAddon scoreboardAddon = gangland.getInitializer().getScoreboardAddon();
-		Placeholder     placeholder     = gangland.getInitializer().getPlaceholderService();
+		final ViaAPI<?> viaAPI = gangland.getViaAPI();
 
 		List<Line> lines = scoreboardAddon.getLines();
 		Line       title = scoreboardAddon.getTitle();

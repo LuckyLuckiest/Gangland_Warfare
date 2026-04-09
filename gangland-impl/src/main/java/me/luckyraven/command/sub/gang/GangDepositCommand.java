@@ -31,15 +31,16 @@ class GangDepositCommand extends SubArgument {
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 
-	protected GangDepositCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected GangDepositCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                             UserManager<Player> userManager, MemberManager memberManager,
+	                             GangManager gangManager) {
 		super(gangland, "deposit", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.userManager   = gangland.getInitializer().getUserManager();
-		this.memberManager = gangland.getInitializer().getMemberManager();
-		this.gangManager   = gangland.getInitializer().getGangManager();
+		this.gangland      = gangland;
+		this.tree          = tree;
+		this.userManager   = userManager;
+		this.memberManager = memberManager;
+		this.gangManager   = gangManager;
 
 		this.addSubArgument(gangDeposit());
 	}

@@ -26,13 +26,13 @@ class BountySetCommand extends SubArgument {
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
-	public BountySetCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	public BountySetCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                        UserManager<Player> userManager) {
 		super(gangland, new String[]{"set", "add"}, tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.gangland    = gangland;
+		this.tree        = tree;
+		this.userManager = userManager;
 
 		bountySet();
 	}

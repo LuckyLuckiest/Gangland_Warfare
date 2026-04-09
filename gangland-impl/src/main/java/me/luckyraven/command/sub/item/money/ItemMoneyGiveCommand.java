@@ -27,13 +27,20 @@ class ItemMoneyGiveCommand extends SubArgument {
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
+	private final MoneyAddon          moneyAddon;
+	private final MoneyDepositService moneyDepositService;
 
-	ItemMoneyGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	ItemMoneyGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                     UserManager<Player> userManager,
+	                     MoneyAddon moneyAddon,
+	                     MoneyDepositService moneyDepositService) {
 		super(gangland, "give", tree, parent);
 
-		this.gangland    = gangland;
-		this.tree        = tree;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.gangland            = gangland;
+		this.tree                = tree;
+		this.userManager         = userManager;
+		this.moneyAddon          = moneyAddon;
+		this.moneyDepositService = moneyDepositService;
 
 		moneyGive();
 	}
@@ -62,7 +69,6 @@ class ItemMoneyGiveCommand extends SubArgument {
 				user.sendMessage(Messages.ITEM_MONEY_INVALID.toString().replace("%name%", itemName));
 			}
 		}, sender -> {
-			MoneyAddon moneyAddon = gangland.getInitializer().getMoneyAddon();
 			return moneyAddon.getVariations().keySet()
 					.stream().toList();
 		});
@@ -99,9 +105,7 @@ class ItemMoneyGiveCommand extends SubArgument {
 	}
 
 	private boolean giveMoneyItem(Player player, String name, int amount) {
-		MoneyAddon          moneyAddon     = gangland.getInitializer().getMoneyAddon();
-		MoneyDepositService depositService = gangland.getInitializer().getMoneyDepositService();
-		MoneyItem           variation      = moneyAddon.getVariation(name);
+		MoneyItem variation = moneyAddon.getVariation(name);
 
 		if (variation == null) return false;
 		if (amount <= 0) return true;
@@ -111,7 +115,7 @@ class ItemMoneyGiveCommand extends SubArgument {
 		// stacks-of-one.
 		int rolled = moneyAddon.rollAmount(variation);
 
-		ItemStack template     = MoneyItemFactory.build(variation, rolled, depositService);
+		ItemStack template     = MoneyItemFactory.build(variation, rolled, moneyDepositService);
 		int       maxStackSize = template.getMaxStackSize();
 		int       slots        = (int) Math.ceil(amount / (double) maxStackSize);
 		int       amountLeft   = amount;
@@ -123,7 +127,7 @@ class ItemMoneyGiveCommand extends SubArgument {
 			int amountGive = Math.min(amountLeft, maxStackSize);
 			if (amountGive <= 0) break;
 
-			items[i] = MoneyItemFactory.build(variation, rolled, depositService, amountGive);
+			items[i] = MoneyItemFactory.build(variation, rolled, moneyDepositService, amountGive);
 			amountLeft -= amountGive;
 		}
 

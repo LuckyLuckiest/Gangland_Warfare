@@ -9,9 +9,12 @@ import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangAlliance;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.member.Member;
+import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
+import me.luckyraven.data.rank.RankManager;
+import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.multi.MultiInventory;
@@ -20,6 +23,7 @@ import me.luckyraven.inventory.part.ButtonTags;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.color.MaterialType;
 import me.luckyraven.util.command.CommandHandler;
@@ -38,8 +42,28 @@ import java.util.Objects;
 @CommandHandler(condition = "isGangEnabled")
 public final class GangCommand extends Command {
 
-	public GangCommand(Gangland gangland) {
+	private final UserManager<Player>        userManager;
+	private final UserManager<OfflinePlayer> offlineUserManager;
+	private final GangManager                gangManager;
+	private final MemberManager              memberManager;
+	private final RankManager                rankManager;
+	private final GanglandDatabase           ganglandDatabase;
+
+	public GangCommand(Gangland gangland,
+	                   @Qualifier("online") UserManager<Player> userManager,
+	                   @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
+	                   GangManager gangManager,
+	                   MemberManager memberManager,
+	                   RankManager rankManager,
+	                   GanglandDatabase ganglandDatabase) {
 		super(gangland, "gang", true);
+
+		this.userManager        = userManager;
+		this.offlineUserManager = offlineUserManager;
+		this.gangManager        = gangManager;
+		this.memberManager      = memberManager;
+		this.rankManager        = rankManager;
+		this.ganglandDatabase   = ganglandDatabase;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -52,9 +76,6 @@ public final class GangCommand extends Command {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		UserManager<Player> userManager = getGangland().getInitializer().getUserManager();
-//		GangManager         gangManager = getGangland().getInitializer().getGangManager();
-
 		Player       player = (Player) commandSender;
 		User<Player> user   = userManager.getUser(player);
 
@@ -65,25 +86,41 @@ public final class GangCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument          create       = new GangCreateCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument          delete       = new GangDeleteCommand(getGangland(), getArgumentTree(), getArgument());
-		GangInviteCommand addUser      = new GangInviteCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument          acceptInvite = addUser.gangAccept();
-		Argument          removeUser   = new GangKickCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument          leave        = new GangLeaveCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument          promoteUser  = new GangPromoteCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument          demoteUser   = new GangDemoteCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument create = new GangCreateCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                        memberManager, gangManager, rankManager);
+		Argument delete = new GangDeleteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                        memberManager, gangManager, rankManager, ganglandDatabase);
+		GangInviteCommand addUser = new GangInviteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                                  memberManager, gangManager, rankManager);
+		Argument acceptInvite = addUser.gangAccept();
+		Argument removeUser = new GangKickCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                          offlineUserManager, memberManager, gangManager, rankManager,
+		                                          ganglandDatabase);
+		Argument leave = new GangLeaveCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                      memberManager, gangManager, rankManager);
+		Argument promoteUser = new GangPromoteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                              memberManager, gangManager, rankManager);
+		Argument demoteUser = new GangDemoteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                            memberManager, gangManager, rankManager);
 
 		getArgument().addPermission(getPermission() + ".force_rank");
 
-		Argument deposit     = new GangDepositCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument withdraw    = new GangWithdrawCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument balance     = new GangBalanceCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument name        = new GangRenameCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument description = new GangDescriptionCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument ally        = new GangAllyCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument display     = new GangDisplayCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument color       = new GangColorCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument deposit = new GangDepositCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                          memberManager, gangManager);
+		Argument withdraw = new GangWithdrawCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                            memberManager, gangManager);
+		Argument balance = new GangBalanceCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                          gangManager);
+		Argument name = new GangRenameCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                      gangManager);
+		Argument description = new GangDescriptionCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                                  gangManager);
+		Argument ally = new GangAllyCommand(getGangland(), getArgumentTree(), getArgument(), userManager, memberManager,
+		                                    gangManager);
+		Argument display = new GangDisplayCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                          gangManager);
+		Argument color = new GangColorCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                      gangManager);
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();

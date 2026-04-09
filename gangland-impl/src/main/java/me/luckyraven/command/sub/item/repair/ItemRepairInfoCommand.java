@@ -17,14 +17,16 @@ import org.bukkit.inventory.ItemStack;
 
 class ItemRepairInfoCommand extends SubArgument {
 
-	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
+	private final RepairManager       repairManager;
 
-	ItemRepairInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	ItemRepairInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                      UserManager<Player> userManager,
+	                      RepairManager repairManager) {
 		super(gangland, "info", tree, parent);
 
-		this.gangland    = gangland;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.userManager   = userManager;
+		this.repairManager = repairManager;
 	}
 
 	@Override
@@ -42,9 +44,8 @@ class ItemRepairInfoCommand extends SubArgument {
 				return;
 			}
 
-			String         id            = RepairMaterial.getMaterialId(itemStack);
-			RepairManager  repairManager = gangland.getInitializer().getRepairManager();
-			RepairMaterial material      = repairManager.getMaterialManager().getMaterial(id);
+			String         id       = RepairMaterial.getMaterialId(itemStack);
+			RepairMaterial material = repairManager.getMaterialManager().getMaterial(id);
 
 			if (material == null) {
 				user.sendMessage(GanglandChatUtil.prefixMessage("Repair item not registered: &c" + id));

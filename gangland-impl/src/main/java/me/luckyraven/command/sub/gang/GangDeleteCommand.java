@@ -1,7 +1,6 @@
 package me.luckyraven.command.sub.gang;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
@@ -15,6 +14,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.TableLookup;
 import me.luckyraven.database.repositories.gang.GangAllianceRepository;
 import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.database.tables.player.UserTable;
@@ -47,22 +47,25 @@ class GangDeleteCommand extends SubArgument {
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
+	private final GanglandDatabase    ganglandDatabase;
 
 	private final HashMap<User<Player>, AtomicReference<String>> deleteGangName;
 	private final HashMap<CommandSender, CountdownTimer>         deleteGangTimer;
 
 	private final ConfirmArgument confirmDelete;
 
-	protected GangDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected GangDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                            UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+	                            RankManager rankManager, GanglandDatabase ganglandDatabase) {
 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.userManager   = gangland.getInitializer().getUserManager();
-		this.memberManager = gangland.getInitializer().getMemberManager();
-		this.gangManager   = gangland.getInitializer().getGangManager();
-		this.rankManager   = gangland.getInitializer().getRankManager();
+		this.gangland         = gangland;
+		this.tree             = tree;
+		this.userManager      = userManager;
+		this.memberManager    = memberManager;
+		this.gangManager      = gangManager;
+		this.rankManager      = rankManager;
+		this.ganglandDatabase = ganglandDatabase;
 
 		this.deleteGangName  = new HashMap<>();
 		this.deleteGangTimer = new HashMap<>();
@@ -162,13 +165,11 @@ class GangDeleteCommand extends SubArgument {
 			double total = gang.getMembers()
 					.stream().mapToDouble(Member::getContribution).sum();
 
-			Initializer      initializer      = gangland.getInitializer();
-			GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
-			DatabaseHelper   helper           = new DatabaseHelper(gangland, ganglandDatabase);
-			List<Table<?>>   tables           = ganglandDatabase.getTables();
+			DatabaseHelper helper = new DatabaseHelper(gangland, ganglandDatabase);
+			List<Table<?>> tables = ganglandDatabase.getTables();
 
-			UserTable   userTable   = initializer.getInstanceFromTables(UserTable.class, tables);
-			MemberTable memberTable = initializer.getInstanceFromTables(MemberTable.class, tables);
+			UserTable   userTable   = TableLookup.find(UserTable.class, tables);
+			MemberTable memberTable = TableLookup.find(MemberTable.class, tables);
 
 			var memberRepository = ganglandDatabase.getRepositoryRegistry().getRepository(Member.class);
 

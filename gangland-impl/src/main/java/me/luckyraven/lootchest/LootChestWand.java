@@ -23,12 +23,14 @@ import static me.luckyraven.lootchest.LootChestWandTag.*;
 
 public class LootChestWand {
 
-	private final Gangland gangland;
-	private final String   prefix;
+	private final Gangland         gangland;
+	private final LootChestManager lootChestManager;
+	private final String           prefix;
 
-	public LootChestWand(Gangland gangland, String prefix) {
-		this.gangland = gangland;
-		this.prefix   = prefix;
+	public LootChestWand(Gangland gangland, LootChestManager lootChestManager, String prefix) {
+		this.gangland         = gangland;
+		this.lootChestManager = lootChestManager;
+		this.prefix           = prefix;
 	}
 
 	public static boolean isLootChestWand(ItemStack item) {
@@ -46,10 +48,10 @@ public class LootChestWand {
 		return lootTableId != null && !lootTableId.isEmpty();
 	}
 
-	public static LootChestWand getWand(ItemStack item, Gangland gangland) {
+	public static LootChestWand getWand(ItemStack item, Gangland gangland, LootChestManager lootChestManager) {
 		if (!isLootChestWand(item)) return null;
 
-		return new LootChestWand(gangland, Gangland.SHORT_PREFIX);
+		return new LootChestWand(gangland, lootChestManager, Gangland.SHORT_PREFIX);
 	}
 
 	public ItemStack createWand() {
@@ -176,12 +178,10 @@ public class LootChestWand {
 		if (invSize == 0) invSize = 27;
 		if (displayName == null || displayName.isEmpty()) displayName = "&eLoot Chest";
 
-		LootChestManager manager = gangland.getInitializer().getLootChestManager();
-
 		// Get tier if specified
 		LootTier tier = null;
 		if (tierId != null && !tierId.isEmpty()) {
-			tier = manager.getTier(tierId).orElse(null);
+			tier = lootChestManager.getTier(tierId).orElse(null);
 		}
 
 		// Create chest data
@@ -198,7 +198,7 @@ public class LootChestWand {
 		                             .build();
 
 		// Register with manager
-		manager.registerChest(chestData);
+		lootChestManager.registerChest(chestData);
 
 		player.sendMessage(ChatUtil.color("&a&lLoot Chest Created!"));
 		player.sendMessage(ChatUtil.color(
@@ -209,8 +209,7 @@ public class LootChestWand {
 	}
 
 	private void openLootTableSelection(Player player, Fill fill) {
-		LootChestManager      manager    = gangland.getInitializer().getLootChestManager();
-		Collection<LootTable> lootTables = manager.getAllLootTables();
+		Collection<LootTable> lootTables = lootChestManager.getAllLootTables();
 
 		var size      = Math.min(54, ((lootTables.size() / 9) + 1) * 9 + 9);
 		var inventory = new InventoryHandler(gangland, "&6&lSelect Loot Table", size, player);
@@ -244,8 +243,7 @@ public class LootChestWand {
 	}
 
 	private void openTierSelection(Player player, Fill fill) {
-		LootChestManager     manager = gangland.getInitializer().getLootChestManager();
-		Collection<LootTier> tiers   = manager.getAllTiers();
+		Collection<LootTier> tiers = lootChestManager.getAllTiers();
 
 		var size      = Math.min(54, ((tiers.size() / 9) + 2) * 9);
 		var inventory = new InventoryHandler(gangland, "&b&lSelect Tier", size, player);

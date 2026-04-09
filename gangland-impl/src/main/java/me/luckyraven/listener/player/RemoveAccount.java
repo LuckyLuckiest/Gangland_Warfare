@@ -1,7 +1,6 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.copsncrooks.bounty.Bounty;
 import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.data.account.Bank;
@@ -9,6 +8,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.listener.ListenerPriority;
 import me.luckyraven.weapon.Weapon;
@@ -26,23 +26,27 @@ import org.bukkit.inventory.ItemStack;
 public final class RemoveAccount implements Listener {
 
 	private final Gangland                   gangland;
-	private final Initializer                initializer;
+	private final GanglandDatabase           ganglandDatabase;
 	private final UserManager<Player>        userManager;
 	private final UserManager<OfflinePlayer> offlineUserManager;
 	private final WeaponManager              weaponManager;
 
-	public RemoveAccount(Gangland gangland) {
+	public RemoveAccount(Gangland gangland,
+	                     GanglandDatabase ganglandDatabase,
+	                     @Qualifier("online") UserManager<Player> userManager,
+	                     @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
+	                     WeaponManager weaponManager) {
 		this.gangland           = gangland;
-		this.initializer        = gangland.getInitializer();
-		this.userManager        = initializer.getUserManager();
-		this.offlineUserManager = initializer.getOfflineUserManager();
-		this.weaponManager      = initializer.getWeaponManager();
+		this.ganglandDatabase   = ganglandDatabase;
+		this.userManager        = userManager;
+		this.offlineUserManager = offlineUserManager;
+		this.weaponManager      = weaponManager;
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public synchronized void onPlayerQuit(PlayerQuitEvent event) {
 		Player       player = event.getPlayer();
-		User<Player> user   = gangland.getInitializer().getUserManager().getUser(player);
+		User<Player> user   = userManager.getUser(player);
 
 		if (user == null) return;
 
@@ -71,10 +75,8 @@ public final class RemoveAccount implements Listener {
 		// Remove the user from a user manager group
 		userManager.remove(user);
 
-		GanglandDatabase ganglandDatabase = initializer.getGanglandDatabase();
-
 		IRepository<User<? extends OfflinePlayer>> userRepository = ganglandDatabase.getRepositoryRegistry()
-																					.getGenericRepository(User.class);
+		                                                                            .getGenericRepository(User.class);
 		IRepository<Bank> bankRepository = ganglandDatabase.getRepositoryRegistry().getRepository(Bank.class);
 
 		// must save user info

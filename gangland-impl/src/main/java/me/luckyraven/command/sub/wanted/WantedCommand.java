@@ -6,6 +6,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -15,8 +16,12 @@ import java.util.Map;
 @CommandHandler
 public final class WantedCommand extends Command {
 
-	public WantedCommand(Gangland gangland) {
+	private final UserManager<Player> userManager;
+
+	public WantedCommand(Gangland gangland, @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "wanted", true);
+
+		this.userManager = userManager;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -29,8 +34,6 @@ public final class WantedCommand extends Command {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		UserManager<Player> userManager = getGangland().getInitializer().getUserManager();
-
 		Player       player = (Player) commandSender;
 		User<Player> user   = userManager.getUser(player);
 
@@ -42,9 +45,12 @@ public final class WantedCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		WantedAddCommand    wantedAdd    = new WantedAddCommand(getGangland(), getArgumentTree(), getArgument());
-		WantedRemoveCommand wantedRemove = new WantedRemoveCommand(getGangland(), getArgumentTree(), getArgument());
-		WantedClearCommand  wantedClear  = new WantedClearCommand(getGangland(), getArgumentTree(), getArgument());
+		WantedAddCommand wantedAdd = new WantedAddCommand(getGangland(), getArgumentTree(), getArgument(),
+		                                                  userManager);
+		WantedRemoveCommand wantedRemove = new WantedRemoveCommand(getGangland(), getArgumentTree(), getArgument(),
+		                                                           userManager);
+		WantedClearCommand wantedClear = new WantedClearCommand(getGangland(), getArgumentTree(), getArgument(),
+		                                                        userManager);
 
 		getArgument().addSubArgument(wantedAdd);
 		getArgument().addSubArgument(wantedRemove);

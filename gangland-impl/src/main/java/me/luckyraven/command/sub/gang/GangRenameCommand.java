@@ -25,14 +25,14 @@ class GangRenameCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 
-	protected GangRenameCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected GangRenameCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                            UserManager<Player> userManager, GangManager gangManager) {
 		super(gangland, "rename", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.userManager = gangland.getInitializer().getUserManager();
-		this.gangManager = gangland.getInitializer().getGangManager();
+		this.gangland    = gangland;
+		this.tree        = tree;
+		this.userManager = userManager;
+		this.gangManager = gangManager;
 
 		gangRename();
 	}

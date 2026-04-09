@@ -19,10 +19,10 @@ public final class UncuffCommand extends Command {
 
 	private final DetainmentService detainmentService;
 
-	public UncuffCommand(Gangland gangland) {
+	public UncuffCommand(Gangland gangland, DetainmentService detainmentService) {
 		super(gangland, "uncuff", false);
 
-		this.detainmentService = gangland.getInitializer().getDetainmentService();
+		this.detainmentService = detainmentService;
 
 		var list = getCommands().entrySet()
 				.stream()

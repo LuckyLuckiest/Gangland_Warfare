@@ -26,13 +26,13 @@ class BankDepositCommand extends SubArgument {
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
-	protected BankDepositCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected BankDepositCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                             UserManager<Player> userManager) {
 		super(gangland, "deposit", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.gangland    = gangland;
+		this.tree        = tree;
+		this.userManager = userManager;
 
 		this.addSubArgument(bankDeposit());
 	}

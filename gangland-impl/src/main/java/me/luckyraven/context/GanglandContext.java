@@ -3,8 +3,10 @@ package me.luckyraven.context;
 import lombok.CustomLog;
 import lombok.Getter;
 import me.luckyraven.Gangland;
+import me.luckyraven.command.Command;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.CommandTabCompleter;
+import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.file.configuration.SettingsLookupImpl;
 import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.persistence.FileManager;
@@ -28,7 +30,7 @@ import java.util.Set;
  *     <li><b>Seed:</b> {@code Initializer.postInitialize()} constructs the kernel objects (Gangland, FileManager,
  *     PermissionManager, CompatibilityWorker, PlaceholderService, …) up-front for failure isolation, then registers
  *     each via {@link #register(Class, Object)} so {@code @Configuration} classes can constructor-inject them.</li>
- *     <li><b>Scan:</b> {@link #bootstrap()} scans {@code me.luckyraven.config} for {@code @Configuration} classes and
+ *     <li><b>Scan:</b> {@link #bootstrap} scans {@code me.luckyraven.config} for {@code @Configuration} classes and
  *     hands them to {@link BeanFactory}.</li>
  *     <li><b>Instantiate:</b> {@link BeanFactory#instantiate()} runs each {@link Phase} in declared order.
  *     {@link GanglandContext} pre-installs two phase hooks before invocation:
@@ -43,7 +45,7 @@ import java.util.Set;
  *     <li><b>Lifecycle:</b> {@link BeanFactory} runs {@code @PostConstruct} on every config + bean, then walks every
  *     bean and invokes any zero-arg {@code void initialize()} method (replacing the dozens of explicit
  *     {@code .initialize()} calls in the legacy initializer).</li>
- *     <li><b>Listeners:</b> {@link #bootstrap()} pulls the {@link ListenerManager} bean out of the container and
+ *     <li><b>Listeners:</b> {@link #bootstrap} pulls the {@link ListenerManager} bean out of the container and
  *     calls {@code scanAndRegisterListeners} — which now constructor-injects every {@code @ListenerHandler} class
  *     from the same root container.</li>
  *     <li><b>Commands:</b> Same shape: pull {@link CommandManager} from the container, scan, bind the resulting
@@ -87,9 +89,9 @@ public final class GanglandContext {
 	}
 
 	/**
-	 * Seed a kernel-phase singleton into the container before {@link #bootstrap()} runs. The instance is registered by
+	 * Seed a kernel-phase singleton into the container before {@link #bootstrap} runs. The instance is registered by
 	 * its declared type and every superclass / interface (per {@link DependencyContainer#registerInstance}). Calling
-	 * this after {@link #bootstrap()} is allowed but defeats the point of phasing.
+	 * this after {@link #bootstrap} is allowed but defeats the point of phasing.
 	 */
 	public <T> void register(Class<T> type, T instance) {
 		container.registerInstance(type, instance);
@@ -193,6 +195,10 @@ public final class GanglandContext {
 			log.warn("Plugin command /{} not declared in plugin.yml — skipping command bind", Gangland.SHORT_PREFIX);
 			return;
 		}
+		// Bind the singleton InformationManager to Command's static field BEFORE scanning so subclass constructors
+		// that call getCommands() / getCommandInformation() during their own construction see a non-null manager.
+		// Threading the manager through every Command subclass super(...) call would touch 25+ files for one read.
+		Command.setInformationManager(container.getInstance(InformationManager.class));
 		command.setExecutor(commandManager);
 		commandManager.scanAndRegisterCommands(COMMAND_PACKAGE, gangland.getClass().getClassLoader());
 		command.setTabCompleter(new CommandTabCompleter(CommandManager.getCommands()));

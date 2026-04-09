@@ -3,6 +3,8 @@ package me.luckyraven.command.sub.lootchest;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.lootchest.LootChestWand;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.command.CommandHandler;
@@ -15,8 +17,16 @@ import java.util.Map;
 @CommandHandler
 public class LootChestWandCommand extends Command {
 
-	public LootChestWandCommand(Gangland gangland) {
+	private final LootChestManager lootChestManager;
+	private final GanglandDatabase ganglandDatabase;
+
+	public LootChestWandCommand(Gangland gangland,
+	                            LootChestManager lootChestManager,
+	                            GanglandDatabase ganglandDatabase) {
 		super(gangland, "lootchest", true, "wand", "lootchestwand", "chestwand", "lcwand");
+
+		this.lootChestManager = lootChestManager;
+		this.ganglandDatabase = ganglandDatabase;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -31,7 +41,7 @@ public class LootChestWandCommand extends Command {
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		Player player = (Player) commandSender;
 
-		LootChestWand lootChestWand = new LootChestWand(getGangland(), Gangland.SHORT_PREFIX);
+		LootChestWand lootChestWand = new LootChestWand(getGangland(), lootChestManager, Gangland.SHORT_PREFIX);
 		ItemStack     wand          = lootChestWand.createWand();
 
 		player.getInventory().addItem(wand);
@@ -45,8 +55,10 @@ public class LootChestWandCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument editArg   = new LootChestWandEditCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument removeArg = new LootChestRemoveCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument editArg = new LootChestWandEditCommand(getGangland(), getArgumentTree(), getArgument(),
+		                                                lootChestManager);
+		Argument removeArg = new LootChestRemoveCommand(getGangland(), getArgumentTree(), getArgument(),
+		                                                lootChestManager, ganglandDatabase);
 
 		getArgument().addSubArgument(editArg);
 		getArgument().addSubArgument(removeArg);

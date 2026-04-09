@@ -3,8 +3,11 @@ package me.luckyraven.command.sub.fuel;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,8 +16,12 @@ import java.util.Map;
 @CommandHandler
 public final class FuelCommand extends Command {
 
-	public FuelCommand(Gangland gangland) {
+	private final UserManager<Player> userManager;
+
+	public FuelCommand(Gangland gangland, @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "fuel", true, "fuels");
+
+		this.userManager = userManager;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -33,11 +40,11 @@ public final class FuelCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument add    = new FuelAddCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument remove = new FuelRemoveCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument info   = new FuelInfoCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument refuel = new FuelRefuelCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument defuel = new FuelDefuelCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument add    = new FuelAddCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
+		Argument remove = new FuelRemoveCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
+		Argument info   = new FuelInfoCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
+		Argument refuel = new FuelRefuelCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
+		Argument defuel = new FuelDefuelCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
 
 		List<Argument> arguments = new ArrayList<>();
 

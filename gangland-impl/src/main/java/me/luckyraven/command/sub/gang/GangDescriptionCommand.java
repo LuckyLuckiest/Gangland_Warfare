@@ -23,13 +23,13 @@ class GangDescriptionCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 
-	protected GangDescriptionCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected GangDescriptionCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                                 UserManager<Player> userManager, GangManager gangManager) {
 		super(gangland, new String[]{"desc", "description"}, tree, parent, "description");
 
-		this.gangland = gangland;
-
-		this.userManager = gangland.getInitializer().getUserManager();
-		this.gangManager = gangland.getInitializer().getGangManager();
+		this.gangland    = gangland;
+		this.userManager = userManager;
+		this.gangManager = gangManager;
 	}
 
 	@Override

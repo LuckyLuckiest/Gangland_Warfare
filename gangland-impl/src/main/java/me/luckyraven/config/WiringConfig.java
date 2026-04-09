@@ -6,6 +6,7 @@ import me.luckyraven.command.CommandManager;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointTeleport;
@@ -14,7 +15,6 @@ import me.luckyraven.listener.ListenerManager;
 import me.luckyraven.util.autowire.DependencyContainer;
 import me.luckyraven.util.autowire.bean.Bean;
 import me.luckyraven.util.autowire.bean.Configuration;
-import me.luckyraven.util.autowire.bean.PostConstruct;
 import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.listener.ListenerPriority;
 import me.luckyraven.util.placeholder.replacer.Replacer;
@@ -38,7 +38,15 @@ public class WiringConfig {
 
 	@Bean
 	public ListenerManager listenerManager(DependencyContainer container) {
-		return new ListenerManager(gangland, container);
+		ListenerManager  listenerManager = new ListenerManager(gangland, container);
+		Waypoint         dummy           = new Waypoint("dummy", Gangland.FULL_PREFIX);
+		WaypointTeleport dummyTeleport   = new WaypointTeleport(dummy);
+		// Pre-register the dummy waypoint listener so it is included when GanglandContext.runListenerPhase() calls
+		// registerEvents(). This used to live at the bottom of the legacy Initializer.events() method, then briefly
+		// in a @PostConstruct that routed back through gangland.getInitializer().getContext() — folded inline here
+		// so the listener is owned by the same bean that produces the manager.
+		listenerManager.addEvent(dummyTeleport, ListenerPriority.NORMAL);
+		return listenerManager;
 	}
 
 	@Bean
@@ -46,33 +54,19 @@ public class WiringConfig {
 		return new CommandManager(gangland, container, Gangland.FULL_PREFIX, Gangland.SHORT_PREFIX);
 	}
 
-	/**
-	 * The constructor of {@link GanglandPlaceholder} reads {@code userManager}, {@code memberManager},
-	 * {@code gangManager} and {@code uniqueItemAddon} off {@code gangland.getInitializer()} and stores them in
-	 * {@code final} fields. Listing those beans as parameters here forces the topo sort to construct them first AND
-	 * fires the per-bean hydrate hook in {@code GanglandContext} so that {@code Initializer.memberManager} (etc.) is
-	 * non-null by the time the placeholder constructor reads it. Without these parameters, the placeholder captures
-	 * null and every scoreboard line silently renders as {@code <>} because {@code getMember(uuid)} NPEs deep inside
-	 * the placeholder evaluation chain.
-	 */
 	@Bean
 	public GanglandPlaceholder ganglandPlaceholder(@Qualifier("online") UserManager<Player> userManager,
 	                                               MemberManager memberManager,
 	                                               GangManager gangManager,
-	                                               UniqueItemAddon uniqueItemAddon) {
-		return new GanglandPlaceholder(gangland, Gangland.FULL_PREFIX, Replacer.Closure.PERCENT);
-	}
-
-	/**
-	 * Pre-registers the {@code dummy} waypoint listener with the {@link ListenerManager} before
-	 * {@code GanglandContext.runListenerPhase()} calls {@code registerEvents()}. This used to live at the bottom of the
-	 * legacy {@code Initializer.events()} method.
-	 */
-	@PostConstruct
-	public void registerDummyWaypointListener() {
-		ListenerManager  listenerManager = gangland.getInitializer().getContext().get(ListenerManager.class);
-		Waypoint         dummy           = new Waypoint("dummy", Gangland.FULL_PREFIX);
-		WaypointTeleport dummyTeleport   = new WaypointTeleport(dummy);
-		listenerManager.addEvent(dummyTeleport, ListenerPriority.NORMAL);
+	                                               UniqueItemAddon uniqueItemAddon,
+	                                               PlaceholderService placeholderService) {
+		GanglandPlaceholder placeholder = new GanglandPlaceholder(Gangland.FULL_PREFIX, Replacer.Closure.PERCENT,
+		                                                          userManager, memberManager, gangManager,
+		                                                          uniqueItemAddon);
+		// Wire the placeholder back into the kernel-seeded PlaceholderService so its convert() fallback path can
+		// resolve gangland-specific tokens. PlaceholderService is constructed in Initializer's load-phase constructor,
+		// long before this CONFIG bean exists, so the link has to flow CONFIG → kernel via this setter.
+		placeholderService.setPlaceholder(placeholder);
+		return placeholder;
 	}
 }

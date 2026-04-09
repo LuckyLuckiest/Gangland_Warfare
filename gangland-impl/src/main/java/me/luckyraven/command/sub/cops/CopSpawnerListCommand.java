@@ -16,21 +16,18 @@ import org.bukkit.command.CommandSender;
 
 class CopSpawnerListCommand extends SubArgument {
 
-	private final Gangland gangland;
+	private final CopSpawnManager copSpawnManager;
 
-	CopSpawnerListCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CopSpawnerListCommand(Gangland gangland, Tree<Argument> tree, Argument parent, CopSpawnManager copSpawnManager) {
 		super(gangland, "list", tree, parent);
-
-		this.gangland = gangland;
+		this.copSpawnManager = copSpawnManager;
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, strings) -> {
-			CopSpawnManager spawnManager = gangland.getInitializer().getCopSpawnManager();
-
 			sender.sendMessage(GanglandChatUtil.prefixMessage("Cop spawners:"));
-			spawnManager.getSpawners().forEach(spawner -> {
+			copSpawnManager.getSpawners().forEach(spawner -> {
 				Location location = spawner.getLocation();
 				int      x        = location.getBlockX();
 				int      y        = location.getBlockY();

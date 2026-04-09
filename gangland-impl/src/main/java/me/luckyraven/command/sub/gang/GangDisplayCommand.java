@@ -24,14 +24,14 @@ class GangDisplayCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 
-	protected GangDisplayCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected GangDisplayCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                             UserManager<Player> userManager, GangManager gangManager) {
 		super(gangland, "display", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.userManager = gangland.getInitializer().getUserManager();
-		this.gangManager = gangland.getInitializer().getGangManager();
+		this.gangland    = gangland;
+		this.tree        = tree;
+		this.userManager = userManager;
+		this.gangManager = gangManager;
 
 		gangDisplay();
 	}

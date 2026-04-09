@@ -19,11 +19,12 @@ class GangBalanceCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 
-	protected GangBalanceCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected GangBalanceCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                             UserManager<Player> userManager, GangManager gangManager) {
 		super(gangland, new String[]{"balance", "bal"}, tree, parent);
 
-		this.userManager = gangland.getInitializer().getUserManager();
-		this.gangManager = gangland.getInitializer().getGangManager();
+		this.userManager = userManager;
+		this.gangManager = gangManager;
 	}
 
 	@Override

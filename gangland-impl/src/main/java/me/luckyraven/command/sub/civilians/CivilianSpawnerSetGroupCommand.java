@@ -17,14 +17,19 @@ import java.util.ArrayList;
 
 class CivilianSpawnerSetGroupCommand extends SubArgument {
 
-	private final Gangland       gangland;
-	private final Tree<Argument> tree;
+	private final Gangland             gangland;
+	private final Tree<Argument>       tree;
+	private final CivilianService      civilianService;
+	private final CivilianSpawnManager civilianSpawnManager;
 
-	CivilianSpawnerSetGroupCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CivilianSpawnerSetGroupCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                               CivilianService civilianService, CivilianSpawnManager civilianSpawnManager) {
 		super(gangland, "setgroup", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland             = gangland;
+		this.tree                 = tree;
+		this.civilianService      = civilianService;
+		this.civilianSpawnManager = civilianSpawnManager;
 
 		groupIdArgument();
 	}
@@ -43,23 +48,18 @@ class CivilianSpawnerSetGroupCommand extends SubArgument {
 				return;
 			}
 
-			String          groupId = args[3];
-			CivilianService service = gangland.getInitializer().getCivilianService();
+			String groupId = args[3];
 
-			if (!service.getCiviliansConfig().groups().containsKey(groupId)) {
+			if (!civilianService.getCiviliansConfig().groups().containsKey(groupId)) {
 				sender.sendMessage(GanglandChatUtil.commandMessage("&cUnknown group &e" + groupId + "&c."));
 				return;
 			}
 
-			CivilianSpawnManager spawnManager = gangland.getInitializer().getCivilianSpawnManager();
-			spawnManager.setGroupSpawnerLocation(player.getLocation(), groupId);
+			civilianSpawnManager.setGroupSpawnerLocation(player.getLocation(), groupId);
 
 			sender.sendMessage(GanglandChatUtil.commandMessage(
 					"&aGroup spawner &e" + groupId + "&a set at your location."));
-		}, sender -> {
-			CivilianService service = gangland.getInitializer().getCivilianService();
-			return new ArrayList<>(service.getCiviliansConfig().groups().keySet());
-		});
+		}, sender -> new ArrayList<>(civilianService.getCiviliansConfig().groups().keySet()));
 
 		this.addSubArgument(groupArg);
 	}

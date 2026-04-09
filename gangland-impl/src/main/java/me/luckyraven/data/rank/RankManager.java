@@ -15,6 +15,7 @@ import java.util.*;
 public class RankManager {
 
 	private final Gangland                 gangland;
+	private final GanglandDatabase         database;
 	private final PermissionManager        permissionManager;
 	private final Map<Integer, Rank>       ranks;
 	private final Set<RankParent>          ranksParent;
@@ -23,9 +24,10 @@ public class RankManager {
 
 	private final @Getter Tree<Rank> rankTree;
 
-	public RankManager(Gangland gangland) {
+	public RankManager(Gangland gangland, GanglandDatabase database, PermissionManager permissionManager) {
 		this.gangland          = gangland;
-		this.permissionManager = gangland.getInitializer().getPermissionManager();
+		this.database          = database;
+		this.permissionManager = permissionManager;
 		this.ranks             = new HashMap<>();
 		this.ranksParent       = new HashSet<>();
 		this.rankTree          = new Tree<>();
@@ -34,7 +36,6 @@ public class RankManager {
 	}
 
 	public void initialize() {
-		GanglandDatabase   database = gangland.getInitializer().getGanglandDatabase();
 		RepositoryRegistry registry = database.getRepositoryRegistry();
 
 		IRepository<Rank>           rankRepo           = registry.getRepository(Rank.class);
@@ -99,10 +100,10 @@ public class RankManager {
 		rankTree.add(nodeMap.keySet()
 							 .stream()
 							 .filter(node -> node.getData()
-												 .getName()
-												 .equalsIgnoreCase(Settings.getGangRankHead()))
-							 .findFirst()
-							 .orElse(new Rank(Settings.getGangRankHead(), Rank.getNewId()).getNode()));
+				                                 .getName()
+				                                 .equalsIgnoreCase(Settings.getGangRankHead()))
+				             .findFirst()
+				             .orElse(new Rank(Settings.getGangRankHead(), Rank.getNewId()).getNode()));
 
 		// Wire each node's children
 		for (Map.Entry<Tree.Node<Rank>, List<String>> entry : nodeMap.entrySet()) {

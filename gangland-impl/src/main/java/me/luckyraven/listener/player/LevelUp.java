@@ -1,6 +1,5 @@
 package me.luckyraven.listener.player;
 
-import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
@@ -8,6 +7,7 @@ import me.luckyraven.events.gang.GangLevelUpEvent;
 import me.luckyraven.events.user.UserLevelUpEvent;
 import me.luckyraven.features.level.Level;
 import me.luckyraven.file.configuration.Messages;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,12 +18,10 @@ import java.util.List;
 @ListenerHandler
 public class LevelUp implements Listener {
 
-	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
 
-	public LevelUp(Gangland gangland) {
-		this.gangland    = gangland;
-		this.userManager = gangland.getInitializer().getUserManager();
+	public LevelUp(@Qualifier("online") UserManager<Player> userManager) {
+		this.userManager = userManager;
 	}
 
 	@EventHandler
@@ -49,7 +47,7 @@ public class LevelUp implements Listener {
 
 		if (gang == null) return;
 
-		List<Player> onlinePlayers = gang.getOnlineMembers(gangland.getInitializer().getUserManager())
+		List<Player> onlinePlayers = gang.getOnlineMembers(userManager)
 				.stream().map(User::getUser).toList();
 
 		for (Player player : onlinePlayers) {

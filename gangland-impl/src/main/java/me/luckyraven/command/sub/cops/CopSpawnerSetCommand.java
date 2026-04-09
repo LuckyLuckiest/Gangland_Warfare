@@ -13,12 +13,11 @@ import org.bukkit.entity.Player;
 
 class CopSpawnerSetCommand extends SubArgument {
 
-	private final Gangland gangland;
+	private final CopSpawnManager copSpawnManager;
 
-	CopSpawnerSetCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CopSpawnerSetCommand(Gangland gangland, Tree<Argument> tree, Argument parent, CopSpawnManager copSpawnManager) {
 		super(gangland, "set", tree, parent);
-
-		this.gangland = gangland;
+		this.copSpawnManager = copSpawnManager;
 	}
 
 	@Override
@@ -29,7 +28,6 @@ class CopSpawnerSetCommand extends SubArgument {
 				return;
 			}
 
-			CopSpawnManager copSpawnManager = gangland.getInitializer().getCopSpawnManager();
 			copSpawnManager.setSpawnerLocation(player.getLocation());
 
 			sender.sendMessage(GanglandChatUtil.commandMessage("&aCop spawner set at your location."));

@@ -1,7 +1,6 @@
 package me.luckyraven.command.sub.rank;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
@@ -26,17 +25,19 @@ import java.util.concurrent.atomic.AtomicReference;
 
 class RankDeleteCommand extends SubArgument {
 
-	private final Gangland       gangland;
-	private final Tree<Argument> tree;
-	private final RankManager    rankManager;
+	private final Gangland         gangland;
+	private final Tree<Argument>   tree;
+	private final RankManager      rankManager;
+	private final GanglandDatabase ganglandDatabase;
 
-	protected RankDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected RankDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                            RankManager rankManager, GanglandDatabase ganglandDatabase) {
 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.rankManager = gangland.getInitializer().getRankManager();
+		this.gangland         = gangland;
+		this.tree             = tree;
+		this.rankManager      = rankManager;
+		this.ganglandDatabase = ganglandDatabase;
 
 		rankDelete();
 	}
@@ -55,8 +56,6 @@ class RankDeleteCommand extends SubArgument {
 			Rank rank = rankManager.get(deleteRankName.get(sender).get());
 
 			if (rank != null) {
-				Initializer        initializer        = gangland.getInitializer();
-				GanglandDatabase   ganglandDatabase   = initializer.getGanglandDatabase();
 				RepositoryRegistry repositoryRegistry = ganglandDatabase.getRepositoryRegistry();
 
 				var rankRepository           = repositoryRegistry.getRepository(Rank.class);

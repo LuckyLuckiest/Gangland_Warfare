@@ -1,9 +1,9 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.copsncrooks.bounty.Bounty;
 import me.luckyraven.copsncrooks.bounty.BountyExecutor;
+import me.luckyraven.copsncrooks.bounty.BountySettings;
 import me.luckyraven.copsncrooks.combo.KillCombo;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.events.bounty.BountyEvent;
@@ -11,11 +11,13 @@ import me.luckyraven.copsncrooks.events.combo.KillComboEvent;
 import me.luckyraven.copsncrooks.events.wanted.WantedEvent;
 import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.copsncrooks.wanted.WantedExecutor;
+import me.luckyraven.copsncrooks.wanted.WantedSettings;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.events.user.UserBountyEvent;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.downed.DownedPlayerRegistry;
 import me.luckyraven.util.feature.Executor;
 import me.luckyraven.util.listener.ListenerHandler;
@@ -41,16 +43,21 @@ public class EntityDamage implements Listener {
 	private final UserManager<Player> userManager;
 	private final EntityMarkManager   entityMarkManager;
 	private final KillCombo           killCombo;
+	private final BountySettings      bountySettings;
+	private final WantedSettings      wantedSettings;
 
-	public EntityDamage(Gangland gangland, KillCombo killCombo) {
-		this.gangland = gangland;
-
-		Initializer initializer = gangland.getInitializer();
-
-		this.userManager       = initializer.getUserManager();
-		this.entityMarkManager = initializer.getEntityMarkManager();
-
-		this.killCombo = killCombo;
+	public EntityDamage(Gangland gangland,
+	                    @Qualifier("online") UserManager<Player> userManager,
+	                    EntityMarkManager entityMarkManager,
+	                    KillCombo killCombo,
+	                    BountySettings bountySettings,
+	                    WantedSettings wantedSettings) {
+		this.gangland          = gangland;
+		this.userManager       = userManager;
+		this.entityMarkManager = entityMarkManager;
+		this.killCombo         = killCombo;
+		this.bountySettings    = bountySettings;
+		this.wantedSettings    = wantedSettings;
 		setupKillComboCallbacks();
 	}
 
@@ -214,9 +221,8 @@ public class EntityDamage implements Listener {
 
 		// Start wanted timer if enabled
 		if (Settings.isWantedTimerEnabled() && wanted.isWanted()) {
-			Executor executor = new WantedExecutor(gangland, wantedEvent, damagerUser,
-			                                       gangland.getInitializer().getWantedSettings());
-			Timer timer = executor.createTimer();
+			Executor executor = new WantedExecutor(gangland, wantedEvent, damagerUser, wantedSettings);
+			Timer    timer    = executor.createTimer();
 
 			timer.start(true);
 		}
@@ -233,9 +239,8 @@ public class EntityDamage implements Listener {
 		// Start bounty timer if enabled
 		BountyEvent bountyEvent = new UserBountyEvent(true, damagerUser);
 		if (Settings.isBountyTimerEnabled() && bounty.getAmount() < Settings.getBountyTimerMax()) {
-			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser,
-			                                       gangland.getInitializer().getBountySettings());
-			Timer timer = executor.createTimer();
+			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser, bountySettings);
+			Timer    timer    = executor.createTimer();
 
 			timer.start(true);
 		}
@@ -256,9 +261,8 @@ public class EntityDamage implements Listener {
 		BountyEvent bountyEvent = new UserBountyEvent(true, damagerUser, scaledBounty);
 
 		if (Settings.isBountyTimerEnabled() && userBounty.getAmount() < Settings.getBountyTimerMax()) {
-			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser,
-			                                       gangland.getInitializer().getBountySettings());
-			Timer timer = executor.createTimer();
+			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser, bountySettings);
+			Timer    timer    = executor.createTimer();
 
 			timer.start(true);
 

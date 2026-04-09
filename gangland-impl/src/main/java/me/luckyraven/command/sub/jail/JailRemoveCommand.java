@@ -16,12 +16,18 @@ class JailRemoveCommand extends SubArgument {
 
 	private final Gangland       gangland;
 	private final Tree<Argument> tree;
+	private final JailService    jailService;
+	private final JailRegistry   jailRegistry;
 
-	protected JailRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected JailRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                            JailService jailService,
+	                            JailRegistry jailRegistry) {
 		super(gangland, "remove", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland     = gangland;
+		this.tree         = tree;
+		this.jailService  = jailService;
+		this.jailRegistry = jailRegistry;
 
 		idArgument();
 	}
@@ -44,13 +50,10 @@ class JailRemoveCommand extends SubArgument {
 				return;
 			}
 
-			JailService jailService = gangland.getInitializer().getJailService();
 			jailService.removeJail(id);
 
 			sender.sendMessage(GanglandChatUtil.commandMessage("&aJail &e" + id + "&a removed."));
 		}, sender -> {
-			JailRegistry jailRegistry = gangland.getInitializer().getJailService().getJailRegistry();
-
 			return jailRegistry.getCells()
 					.stream().map(jail -> String.valueOf(jail.getId())).toList();
 		});

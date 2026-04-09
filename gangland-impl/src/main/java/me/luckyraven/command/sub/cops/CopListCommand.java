@@ -27,13 +27,11 @@ class CopListCommand extends SubArgument {
 	private final TargetingManager targetingManager;
 	private final CopManager       copManager;
 
-	CopListCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CopListCommand(Gangland gangland, Tree<Argument> tree, Argument parent, CopService copService) {
 		super(gangland, "list", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		CopService copService = gangland.getInitializer().getCopService();
+		this.gangland         = gangland;
+		this.tree             = tree;
 		this.targetingManager = copService.getTargetingManager();
 		this.copManager       = copService.getCopManager();
 

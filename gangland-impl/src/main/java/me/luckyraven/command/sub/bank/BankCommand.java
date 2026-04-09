@@ -5,8 +5,11 @@ import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -18,8 +21,16 @@ import java.util.Map;
 @CommandHandler
 public final class BankCommand extends Command {
 
-	public BankCommand(Gangland gangland) {
+	private final UserManager<Player> userManager;
+	private final GanglandDatabase    ganglandDatabase;
+
+	public BankCommand(Gangland gangland,
+	                   @Qualifier("online") UserManager<Player> userManager,
+	                   GanglandDatabase ganglandDatabase) {
 		super(gangland, "bank", true);
+
+		this.userManager      = userManager;
+		this.ganglandDatabase = ganglandDatabase;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -49,7 +60,7 @@ public final class BankCommand extends Command {
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		Player       player = (Player) commandSender;
-		User<Player> user   = getGangland().getInitializer().getUserManager().getUser(player);
+		User<Player> user   = userManager.getUser(player);
 
 		if (user == null) return;
 
@@ -68,11 +79,15 @@ public final class BankCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		BankCreateCommand   create   = new BankCreateCommand(getGangland(), getArgumentTree(), getArgument());
-		BankDeleteCommand   delete   = new BankDeleteCommand(getGangland(), getArgumentTree(), getArgument());
-		BankDepositCommand  deposit  = new BankDepositCommand(getGangland(), getArgumentTree(), getArgument());
-		BankWithdrawCommand withdraw = new BankWithdrawCommand(getGangland(), getArgumentTree(), getArgument());
-		BankBalanceCommand  balance  = new BankBalanceCommand(getGangland(), getArgumentTree(), getArgument());
+		BankCreateCommand create = new BankCreateCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
+		BankDeleteCommand delete = new BankDeleteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                                 ganglandDatabase);
+		BankDepositCommand deposit = new BankDepositCommand(getGangland(), getArgumentTree(), getArgument(),
+		                                                    userManager);
+		BankWithdrawCommand withdraw = new BankWithdrawCommand(getGangland(), getArgumentTree(), getArgument(),
+		                                                       userManager);
+		BankBalanceCommand balance = new BankBalanceCommand(getGangland(), getArgumentTree(), getArgument(),
+		                                                    userManager);
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();

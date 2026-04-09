@@ -4,9 +4,16 @@ import lombok.CustomLog;
 import me.luckyraven.Gangland;
 import me.luckyraven.compatibility.CompatibilityWorker;
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
+import me.luckyraven.context.GanglandContext;
+import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.data.placeholder.PlaceholderService;
+import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.repositories.lootchest.LootChestRepository;
 import me.luckyraven.exception.PluginException;
+import me.luckyraven.file.configuration.inventory.InventoryAddon;
+import me.luckyraven.file.configuration.inventory.InventoryLoader;
+import me.luckyraven.file.configuration.inventory.itemsource.GangItemSourceProvider;
 import me.luckyraven.file.configuration.lootchest.GanglandLootChestMessages;
 import me.luckyraven.file.configuration.lootchest.LootChestSettings;
 import me.luckyraven.file.configuration.weapon.GanglandBlockRegenerationSettings;
@@ -33,6 +40,7 @@ import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.scoreboard.ScoreboardManager;
+import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
 import me.luckyraven.sign.SignManager;
 import me.luckyraven.sign.bulk.BulkActionManager;
 import me.luckyraven.sign.registry.SignFormatRegistry;
@@ -48,11 +56,13 @@ import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.weapon.WeaponManager;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
+import me.luckyraven.weapon.configuration.WeaponAddon;
 import me.luckyraven.weapon.modifiers.BlockDamageManager;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;
 import me.luckyraven.weapon.raytrace.WeaponVisualSpawner;
 import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.ServicePriority;
 
@@ -82,19 +92,49 @@ import org.bukkit.plugin.ServicePriority;
 @Configuration
 public class GameplayConfig {
 
-	private final Gangland gangland;
+	private final Gangland        gangland;
+	private final GanglandContext context;
 
-	public GameplayConfig(Gangland gangland) {
+	public GameplayConfig(Gangland gangland, GanglandContext context) {
 		this.gangland = gangland;
+		this.context  = context;
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
 	// Scoreboard
 	// ---------------------------------------------------------------------------------------------------------------
 
-	@Bean
-	public ScoreboardManager scoreboardManager() {
-		return new ScoreboardManager(gangland);
+	/**
+	 * ScoreboardManager is kernel-seeded by {@code Initializer.postInitialize()} and registered into the container
+	 * before bootstrap, so no @Bean method is needed here. The {@link ScoreboardAddon} is wired into it via setter
+	 * after the FILE phase produces it.
+	 */
+	@PostConstruct
+	public void wireScoreboardAddon() {
+		ScoreboardManager scoreboardManager = context.get(ScoreboardManager.class);
+		ScoreboardAddon   scoreboardAddon   = context.get(ScoreboardAddon.class);
+		if (scoreboardManager != null && scoreboardAddon != null) {
+			scoreboardManager.setScoreboardAddon(scoreboardAddon);
+		}
+	}
+
+	/**
+	 * Wires CONFIG-phase beans into the static-state {@link InventoryAddon}. The {@link UserManager} and the
+	 * {@link GangItemSourceProvider} both depend on managers that don't exist until CONFIG, so they're set here (after
+	 * FileConfig already wired the FILE-phase placeholder + permission-manager links).
+	 */
+	@SuppressWarnings("unchecked")
+	@PostConstruct
+	public void wireInventoryAddonUser() {
+		UserManager<Player> userManager = (UserManager<Player>) context.getContainer()
+		                                                               .getInstance("online", UserManager.class);
+		GangManager gangManager = context.get(GangManager.class);
+		if (userManager != null) {
+			InventoryAddon.setUserManager(userManager);
+		}
+		if (userManager != null && gangManager != null) {
+			InventoryAddon.setItemSourceProvider(new GangItemSourceProvider(userManager, gangManager));
+		}
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
@@ -102,8 +142,8 @@ public class GameplayConfig {
 	// ---------------------------------------------------------------------------------------------------------------
 
 	@Bean
-	public WeaponManager weaponManager() {
-		WeaponManager manager = new WeaponManager(gangland);
+	public WeaponManager weaponManager(WeaponAddon weaponAddon, GanglandDatabase database) {
+		WeaponManager manager = new WeaponManager(weaponAddon, database);
 		manager.initialize();
 		return manager;
 	}
@@ -178,8 +218,18 @@ public class GameplayConfig {
 	}
 
 	@Bean
-	public SignManager signManager(SignTypeRegistry signTypeRegistry, SignInteraction signInteraction) {
-		SignManager manager = new SignManager(gangland, Gangland.SHORT_PREFIX, signTypeRegistry, signInteraction);
+	public SignManager signManager(SignTypeRegistry signTypeRegistry,
+	                               SignInteraction signInteraction,
+	                               WeaponManager weaponManager,
+	                               AmmunitionManager ammunitionManager,
+	                               UniqueItemAddon uniqueItemAddon,
+	                               @Qualifier("online") UserManager<Player> userManager,
+	                               @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
+	                               WearableAddon wearableAddon,
+	                               CarAddon carAddon) {
+		SignManager manager = new SignManager(gangland, Gangland.SHORT_PREFIX, signTypeRegistry, signInteraction,
+		                                      weaponManager, ammunitionManager, uniqueItemAddon, userManager,
+		                                      offlineUserManager, wearableAddon, carAddon);
 		manager.initialize();
 		return manager;
 	}
@@ -195,8 +245,9 @@ public class GameplayConfig {
 
 	@Bean
 	public MoneyDepositService moneyDepositService(@Qualifier("online") UserManager<Player> userManager,
-	                                               MoneyAddon moneyAddon) {
-		return new GanglandMoneyDepositService(gangland, userManager, moneyAddon);
+	                                               MoneyAddon moneyAddon,
+	                                               PlaceholderService placeholderService) {
+		return new GanglandMoneyDepositService(userManager, moneyAddon, placeholderService);
 	}
 
 	@Bean
@@ -274,7 +325,7 @@ public class GameplayConfig {
 	// ---------------------------------------------------------------------------------------------------------------
 
 	@Bean
-	public RepairManager repairManager(me.luckyraven.data.placeholder.PlaceholderService placeholderService,
+	public RepairManager repairManager(PlaceholderService placeholderService,
 	                                   FileManager fileManager) {
 		RepairManager repairManager = new RepairManager();
 		repairManager.setPlaceholder(placeholderService);
@@ -297,18 +348,15 @@ public class GameplayConfig {
 	}
 
 	/**
-	 * {@link me.luckyraven.file.configuration.inventory.InventoryLoader} can't initialize during the FILE phase because
-	 * its load callback parses prefixed item refs (weapon:awp, wearable:police_vest, …) via {@link ItemParserManager},
-	 * which is a CONFIG-phase bean. By the time this {@code @PostConstruct} runs, every bean is registered AND the
-	 * per-bean hydrate hook has populated {@code Initializer.itemParserManager}, so the {@code SlotItemFactory}
-	 * resolver lambda set up in {@code FileConfig.inventoryLoader()} can dereference it.
+	 * {@link InventoryLoader} can't initialize during the FILE phase because its load callback parses prefixed item
+	 * refs (weapon:awp, wearable:police_vest, …) via {@link ItemParserManager}, which is a CONFIG-phase bean. By the
+	 * time this {@code @PostConstruct} runs, every bean is registered AND the per-bean hydrate hook has populated
+	 * {@code Initializer.itemParserManager}, so the {@code SlotItemFactory} resolver lambda set up in
+	 * {@code FileConfig.inventoryLoader()} can dereference it.
 	 */
 	@PostConstruct
 	public void initializeInventoryLoader() {
-		me.luckyraven.file.configuration.inventory.InventoryLoader loader =
-				gangland.getInitializer()
-				        .getContext()
-				        .get(me.luckyraven.file.configuration.inventory.InventoryLoader.class);
+		InventoryLoader loader = context.get(InventoryLoader.class);
 		if (loader != null) {
 			loader.initialize();
 		}

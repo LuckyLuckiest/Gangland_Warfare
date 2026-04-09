@@ -1,7 +1,6 @@
 package me.luckyraven.command.sub.waypoint;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
@@ -15,6 +14,7 @@ import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TimeMessages;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.command.CommandHandler;
 import me.luckyraven.util.timer.CountdownTimer;
 import me.luckyraven.util.utilities.TimeUtil;
@@ -32,16 +32,16 @@ public final class TeleportCommand extends Command {
 	private final UserManager<Player> userManager;
 	private final WaypointManager     waypointManager;
 
-	public TeleportCommand(Gangland gangland) {
+	public TeleportCommand(Gangland gangland,
+	                       @Qualifier("online") UserManager<Player> userManager,
+	                       WaypointManager waypointManager) {
 		super(gangland, "teleport", true, "tp");
 
 		reconfirm      = new HashMap<>();
 		reconfirmTimer = new HashMap<>();
 
-		Initializer initializer = gangland.getInitializer();
-
-		this.userManager     = initializer.getUserManager();
-		this.waypointManager = initializer.getWaypointManager();
+		this.userManager     = userManager;
+		this.waypointManager = waypointManager;
 
 		var list = getCommands().entrySet()
 				.stream()

@@ -12,6 +12,8 @@ import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.JsonFormatter;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.WeaponManager;
+import me.luckyraven.weapon.configuration.WeaponAddon;
 import me.luckyraven.weapon.dto.AmmunitionData;
 import me.luckyraven.weapon.dto.ReloadData;
 import org.bukkit.command.CommandSender;
@@ -23,13 +25,20 @@ class WeaponInfoCommand extends SubArgument {
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
+	private final WeaponManager       weaponManager;
+	private final WeaponAddon         weaponAddon;
 
-	protected WeaponInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected WeaponInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                            UserManager<Player> userManager,
+	                            WeaponManager weaponManager,
+	                            WeaponAddon weaponAddon) {
 		super(gangland, "info", tree, parent);
 
-		this.gangland    = gangland;
-		this.tree        = tree;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.gangland      = gangland;
+		this.tree          = tree;
+		this.userManager   = userManager;
+		this.weaponManager = weaponManager;
+		this.weaponAddon   = weaponAddon;
 
 		weaponInfo();
 	}
@@ -43,7 +52,7 @@ class WeaponInfoCommand extends SubArgument {
 			if (user == null) return;
 
 			ItemStack itemStack = player.getInventory().getItemInMainHand();
-			Weapon    weapon    = gangland.getInitializer().getWeaponManager().validateAndGetWeapon(player, itemStack);
+			Weapon    weapon    = weaponManager.validateAndGetWeapon(player, itemStack);
 
 			if (weapon == null) {
 				user.sendMessage(Messages.INVALID_WEAPON.toString().replace("%args%", itemStack.getType().name()));
@@ -62,7 +71,7 @@ class WeaponInfoCommand extends SubArgument {
 			if (user == null) return;
 
 			String weaponName = args[2];
-			Weapon weapon     = gangland.getInitializer().getWeaponAddon().getWeapon(weaponName);
+			Weapon weapon     = weaponAddon.getWeapon(weaponName);
 
 			if (weapon == null) {
 				user.sendMessage(Messages.INVALID_WEAPON.toString().replace("%args%", weaponName));
@@ -70,7 +79,7 @@ class WeaponInfoCommand extends SubArgument {
 			}
 
 			sendInfo(user, weapon);
-		}, sender -> gangland.getInitializer().getWeaponAddon().getWeaponKeys()
+		}, sender -> weaponAddon.getWeaponKeys()
 				.stream().toList());
 
 		this.addSubArgument(name);

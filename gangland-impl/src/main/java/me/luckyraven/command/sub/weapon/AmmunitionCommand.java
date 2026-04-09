@@ -3,8 +3,12 @@ package me.luckyraven.command.sub.weapon;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.command.CommandHandler;
+import me.luckyraven.weapon.ammo.AmmunitionManager;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,8 +17,16 @@ import java.util.Map;
 @CommandHandler
 public final class AmmunitionCommand extends Command {
 
-	public AmmunitionCommand(Gangland gangland) {
+	private final UserManager<Player> userManager;
+	private final AmmunitionManager   ammunitionManager;
+
+	public AmmunitionCommand(Gangland gangland,
+	                         @Qualifier("online") UserManager<Player> userManager,
+	                         AmmunitionManager ammunitionManager) {
 		super(gangland, "ammo", true, "ammunition");
+
+		this.userManager       = userManager;
+		this.ammunitionManager = ammunitionManager;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -33,9 +45,11 @@ public final class AmmunitionCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument give = new AmmunitionGiveCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument info = new AmmunitionInfoCommand(getGangland(), getArgumentTree(), getArgument());
-		Argument list = new AmmunitionListCommand(getGangland(), getArgumentTree(), getArgument());
+		Argument give = new AmmunitionGiveCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                          ammunitionManager);
+		Argument info = new AmmunitionInfoCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                          ammunitionManager);
+		Argument list = new AmmunitionListCommand(getGangland(), getArgumentTree(), getArgument(), ammunitionManager);
 
 		List<Argument> arguments = new ArrayList<>();
 

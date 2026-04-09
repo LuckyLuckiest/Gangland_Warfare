@@ -19,12 +19,14 @@ class JailInfoCommand extends SubArgument {
 
 	private final Gangland       gangland;
 	private final Tree<Argument> tree;
+	private final JailRegistry   jailRegistry;
 
-	protected JailInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected JailInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent, JailRegistry jailRegistry) {
 		super(gangland, "info", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland     = gangland;
+		this.tree         = tree;
+		this.jailRegistry = jailRegistry;
 
 		this.idArgument();
 	}
@@ -47,8 +49,7 @@ class JailInfoCommand extends SubArgument {
 				return;
 			}
 
-			JailRegistry jailRegistry = gangland.getInitializer().getJailService().getJailRegistry();
-			Jail         jail         = jailRegistry.getJail(id);
+			Jail jail = jailRegistry.getJail(id);
 
 			if (jail == null) {
 				sender.sendMessage(Messages.LOCATION_NOT_FOUND.toString().replace("%location%", idStr));
@@ -75,7 +76,6 @@ class JailInfoCommand extends SubArgument {
 
 			sender.sendMessage(GanglandChatUtil.color(info));
 		}, sender -> {
-			JailRegistry jailRegistry = gangland.getInitializer().getJailService().getJailRegistry();
 			return jailRegistry.getCells()
 					.stream().map(jail -> String.valueOf(jail.getId())).toList();
 		});

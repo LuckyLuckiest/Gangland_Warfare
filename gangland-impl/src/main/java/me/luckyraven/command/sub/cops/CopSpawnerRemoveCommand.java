@@ -14,14 +14,16 @@ import org.bukkit.command.CommandSender;
 
 class CopSpawnerRemoveCommand extends SubArgument {
 
-	private final Gangland       gangland;
-	private final Tree<Argument> tree;
+	private final Gangland        gangland;
+	private final Tree<Argument>  tree;
+	private final CopSpawnManager copSpawnManager;
 
-	CopSpawnerRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CopSpawnerRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent, CopSpawnManager copSpawnManager) {
 		super(gangland, "remove", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland        = gangland;
+		this.tree            = tree;
+		this.copSpawnManager = copSpawnManager;
 
 		idArgument();
 	}
@@ -44,8 +46,7 @@ class CopSpawnerRemoveCommand extends SubArgument {
 				return;
 			}
 
-			CopSpawnManager copSpawnManager = gangland.getInitializer().getCopSpawnManager();
-			Location        location        = copSpawnManager.getSpawnerLocation(id);
+			Location location = copSpawnManager.getSpawnerLocation(id);
 			if (location == null) {
 				sender.sendMessage(Messages.LOCATION_NOT_FOUND.toString().replace("%location%", idStr));
 				return;
@@ -54,7 +55,7 @@ class CopSpawnerRemoveCommand extends SubArgument {
 			copSpawnManager.removeSpawner(id);
 
 			sender.sendMessage(GanglandChatUtil.commandMessage("&aCop spawner &e" + id + "&a removed."));
-		}, sender -> gangland.getInitializer().getCopSpawnManager().getSpawnerIds()
+		}, sender -> copSpawnManager.getSpawnerIds()
 				.stream().map(String::valueOf).toList());
 
 		this.addSubArgument(idArg);

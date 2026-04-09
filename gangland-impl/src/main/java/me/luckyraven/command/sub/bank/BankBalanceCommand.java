@@ -17,10 +17,11 @@ class BankBalanceCommand extends SubArgument {
 
 	private final UserManager<Player> userManager;
 
-	protected BankBalanceCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected BankBalanceCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                             UserManager<Player> userManager) {
 		super(gangland, new String[]{"balance", "bal"}, tree, parent);
 
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.userManager = userManager;
 	}
 
 	@Override

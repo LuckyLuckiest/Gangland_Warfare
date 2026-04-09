@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.copsncrooks.jail.Jail;
+import me.luckyraven.copsncrooks.jail.JailRegistry;
 import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
@@ -17,12 +18,16 @@ import org.bukkit.entity.Player;
 
 class JailCreateCommand extends SubArgument {
 
-	private final Gangland gangland;
+	private final JailService  jailService;
+	private final JailRegistry jailRegistry;
 
-	protected JailCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected JailCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                            JailService jailService,
+	                            JailRegistry jailRegistry) {
 		super(gangland, "create", tree, parent);
 
-		this.gangland = gangland;
+		this.jailService  = jailService;
+		this.jailRegistry = jailRegistry;
 	}
 
 	@Override
@@ -33,11 +38,10 @@ class JailCreateCommand extends SubArgument {
 				return;
 			}
 
-			JailService jailService = gangland.getInitializer().getJailService();
-			Location    location    = player.getLocation();
-			int         blocks      = 5;
+			Location location = player.getLocation();
+			int      blocks   = 5;
 
-			boolean checkForJail = jailService.getJailRegistry().getCells()
+			boolean checkForJail = jailRegistry.getCells()
 					.stream().anyMatch(jail -> {
 						Location jailLoc = jail.getLocation();
 						if (jailLoc == null) return false;

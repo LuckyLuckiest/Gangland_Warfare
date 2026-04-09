@@ -5,6 +5,7 @@ import me.luckyraven.command.Command;
 import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.util.command.CommandHandler;
 import me.luckyraven.util.command.CommandPriority;
 import org.bukkit.command.CommandSender;
@@ -15,13 +16,13 @@ import java.util.List;
 @CommandHandler(priority = CommandPriority.LOWEST)
 public final class HelpCommand extends Command {
 
-	public HelpCommand(Gangland gangland) {
+	public HelpCommand(Gangland gangland, InformationManager informationManager) {
 		super(gangland, "help", false, "general", "?");
 
 		List<CommandInformation> list = new ArrayList<>();
 
-		list.add(getCommandInformation("general"));
-		list.add(getCommandInformation("general_page"));
+		list.add(informationManager.getCommands().get("general"));
+		list.add(informationManager.getCommands().get("general_page"));
 		list.addAll(CommandManager.getCommands()
 		                          .values()
 		                          .parallelStream()

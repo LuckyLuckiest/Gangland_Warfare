@@ -1,10 +1,10 @@
 package me.luckyraven.listener.gang;
 
-import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -19,9 +19,9 @@ public class GangMembersDamage implements Listener {
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 
-	public GangMembersDamage(Gangland gangland) {
-		this.userManager = gangland.getInitializer().getUserManager();
-		this.gangManager = gangland.getInitializer().getGangManager();
+	public GangMembersDamage(@Qualifier("online") UserManager<Player> userManager, GangManager gangManager) {
+		this.userManager = userManager;
+		this.gangManager = gangManager;
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)

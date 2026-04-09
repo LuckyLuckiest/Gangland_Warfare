@@ -17,14 +17,17 @@ import java.util.Collection;
 
 class JailReleaseCommand extends SubArgument {
 
-	private final Gangland       gangland;
-	private final Tree<Argument> tree;
+	private final Gangland          gangland;
+	private final Tree<Argument>    tree;
+	private final DetainmentService detainmentService;
 
-	protected JailReleaseCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected JailReleaseCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                             DetainmentService detainmentService) {
 		super(gangland, "release", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland          = gangland;
+		this.tree              = tree;
+		this.detainmentService = detainmentService;
 
 		playerInfo();
 	}
@@ -46,8 +49,6 @@ class JailReleaseCommand extends SubArgument {
 				return;
 			}
 
-			DetainmentService detainmentService = gangland.getInitializer().getDetainmentService();
-
 			if (!detainmentService.isJailed(target)) {
 				sender.sendMessage(
 						GanglandChatUtil.commandMessage("&cPlayer &e" + target.getName() + "&c is not jailed."));
@@ -58,8 +59,7 @@ class JailReleaseCommand extends SubArgument {
 
 			sender.sendMessage(GanglandChatUtil.commandMessage("&aReleased &e" + target.getName() + "&a from jail."));
 		}, sender -> {
-			Collection<? extends Player> onlinePlayers     = Bukkit.getOnlinePlayers();
-			DetainmentService            detainmentService = gangland.getInitializer().getDetainmentService();
+			Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
 
 			return onlinePlayers.stream()
 					.filter(detainmentService::isJailed)

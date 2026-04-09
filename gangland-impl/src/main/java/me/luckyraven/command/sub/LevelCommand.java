@@ -11,6 +11,7 @@ import me.luckyraven.events.user.UserLevelUpEvent;
 import me.luckyraven.features.level.Level;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -22,8 +23,12 @@ import java.util.Map;
 @CommandHandler
 public final class LevelCommand extends Command {
 
-	public LevelCommand(Gangland gangland) {
+	private final UserManager<Player> userManager;
+
+	public LevelCommand(Gangland gangland, @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "level", true);
+
+		this.userManager = userManager;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -37,9 +42,8 @@ public final class LevelCommand extends Command {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		UserManager<Player> userManager = getGangland().getInitializer().getUserManager();
-		Player              player      = (Player) commandSender;
-		User<Player>        user        = userManager.getUser(player);
+		Player       player = (Player) commandSender;
+		User<Player> user   = userManager.getUser(player);
 
 		if (user == null) return;
 
@@ -82,8 +86,6 @@ public final class LevelCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		UserManager<Player> userManager = getGangland().getInitializer().getUserManager();
-
 		String[] expArr = {"exp", "experience"};
 		Argument experience = new Argument(getGangland(), expArr, getArgumentTree(), (argument, sender, args) -> {
 			GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<add/remove>");

@@ -18,14 +18,16 @@ import org.bukkit.inventory.ItemStack;
 
 class ItemUniqueInfoCommand extends SubArgument {
 
-	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
+	private final UniqueItemAddon     uniqueItemAddon;
 
-	ItemUniqueInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	ItemUniqueInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                      UserManager<Player> userManager,
+	                      UniqueItemAddon uniqueItemAddon) {
 		super(gangland, "info", tree, parent);
 
-		this.gangland    = gangland;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.userManager     = userManager;
+		this.uniqueItemAddon = uniqueItemAddon;
 	}
 
 	@Override
@@ -43,9 +45,8 @@ class ItemUniqueInfoCommand extends SubArgument {
 				return;
 			}
 
-			String          key             = UniqueItemUtil.getUniqueItemKey(itemStack);
-			UniqueItemAddon uniqueItemAddon = gangland.getInitializer().getUniqueItemAddon();
-			UniqueItem      uniqueItem      = uniqueItemAddon.getUniqueItem(key);
+			String     key        = UniqueItemUtil.getUniqueItemKey(itemStack);
+			UniqueItem uniqueItem = uniqueItemAddon.getUniqueItem(key);
 
 			if (uniqueItem == null) {
 				user.sendMessage(GanglandChatUtil.prefixMessage("Unique item not registered: &c" + key));

@@ -25,13 +25,17 @@ class ItemUniqueGiveCommand extends SubArgument {
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
+	private final UniqueItemAddon     uniqueItemAddon;
 
-	ItemUniqueGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	ItemUniqueGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                      UserManager<Player> userManager,
+	                      UniqueItemAddon uniqueItemAddon) {
 		super(gangland, "give", tree, parent);
 
-		this.gangland    = gangland;
-		this.tree        = tree;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.gangland        = gangland;
+		this.tree            = tree;
+		this.userManager     = userManager;
+		this.uniqueItemAddon = uniqueItemAddon;
 
 		uniqueGive();
 	}
@@ -58,7 +62,6 @@ class ItemUniqueGiveCommand extends SubArgument {
 				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid unique item: &c" + itemName));
 			}
 		}, sender -> {
-			UniqueItemAddon uniqueItemAddon = gangland.getInitializer().getUniqueItemAddon();
 			return uniqueItemAddon.getUniqueItems().keySet()
 					.stream().toList();
 		});
@@ -94,8 +97,7 @@ class ItemUniqueGiveCommand extends SubArgument {
 	}
 
 	private boolean giveUniqueItem(Player player, String name, int amount) {
-		UniqueItemAddon uniqueItemAddon = gangland.getInitializer().getUniqueItemAddon();
-		UniqueItem      uniqueItem      = uniqueItemAddon.getUniqueItem(name);
+		UniqueItem uniqueItem = uniqueItemAddon.getUniqueItem(name);
 
 		if (uniqueItem == null) return false;
 

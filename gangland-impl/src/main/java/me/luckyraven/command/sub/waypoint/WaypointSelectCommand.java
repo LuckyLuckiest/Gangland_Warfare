@@ -1,7 +1,6 @@
 package me.luckyraven.command.sub.waypoint;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.Initializer;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
@@ -25,16 +24,14 @@ class WaypointSelectCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 	private final WaypointManager     waypointManager;
 
-	protected WaypointSelectCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected WaypointSelectCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                                UserManager<Player> userManager, WaypointManager waypointManager) {
 		super(gangland, new String[]{"select", "selects"}, tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		Initializer initializer = gangland.getInitializer();
-
-		this.userManager     = initializer.getUserManager();
-		this.waypointManager = initializer.getWaypointManager();
+		this.gangland        = gangland;
+		this.tree            = tree;
+		this.userManager     = userManager;
+		this.waypointManager = waypointManager;
 
 		waypointSelect();
 	}

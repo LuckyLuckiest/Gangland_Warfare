@@ -17,12 +17,14 @@ class JailTeleportCommand extends SubArgument {
 
 	private final Gangland       gangland;
 	private final Tree<Argument> tree;
+	private final JailRegistry   jailRegistry;
 
-	JailTeleportCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	JailTeleportCommand(Gangland gangland, Tree<Argument> tree, Argument parent, JailRegistry jailRegistry) {
 		super(gangland, new String[]{"teleport", "tp"}, tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland     = gangland;
+		this.tree         = tree;
+		this.jailRegistry = jailRegistry;
 
 		this.idArgument();
 	}
@@ -50,8 +52,7 @@ class JailTeleportCommand extends SubArgument {
 				return;
 			}
 
-			JailRegistry jailRegistry = gangland.getInitializer().getJailService().getJailRegistry();
-			Location     location     = jailRegistry.getJailLocation(id);
+			Location location = jailRegistry.getJailLocation(id);
 
 			if (location == null) {
 				sender.sendMessage(Messages.LOCATION_NOT_FOUND.toString().replace("%location%", idStr));
@@ -61,7 +62,6 @@ class JailTeleportCommand extends SubArgument {
 			player.teleport(location);
 			sender.sendMessage(GanglandChatUtil.commandMessage("Teleported to jail &e(&b" + id + "&e)&7."));
 		}, sender -> {
-			JailRegistry jailRegistry = gangland.getInitializer().getJailService().getJailRegistry();
 			return jailRegistry.getCells()
 					.stream().map(jail -> String.valueOf(jail.getId())).toList();
 		});

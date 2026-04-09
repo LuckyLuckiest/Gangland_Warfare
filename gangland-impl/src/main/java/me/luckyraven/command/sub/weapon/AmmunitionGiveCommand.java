@@ -25,14 +25,17 @@ class AmmunitionGiveCommand extends SubArgument {
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
+	private final AmmunitionManager   ammunitionManager;
 
-	protected AmmunitionGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	protected AmmunitionGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                                UserManager<Player> userManager,
+	                                AmmunitionManager ammunitionManager) {
 		super(gangland, "give", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
-
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.gangland          = gangland;
+		this.tree              = tree;
+		this.userManager       = userManager;
+		this.ammunitionManager = ammunitionManager;
 
 		ammunitionGive();
 	}
@@ -61,8 +64,6 @@ class AmmunitionGiveCommand extends SubArgument {
 				user.sendMessage(invalidAmmo.replace("%args%", ammoName));
 			}
 		}, sender -> {
-			AmmunitionManager ammunitionManager = gangland.getInitializer().getAmmunitionManager();
-
 			return ammunitionManager.getAmmunitionKeys()
 					.stream().toList();
 		});
@@ -99,7 +100,7 @@ class AmmunitionGiveCommand extends SubArgument {
 	}
 
 	private boolean giveAmmunition(Player player, String name, int amount) {
-		Ammunition ammunition = gangland.getInitializer().getAmmunitionManager().getAmmunition(name);
+		Ammunition ammunition = ammunitionManager.getAmmunition(name);
 
 		if (ammunition == null) return false;
 

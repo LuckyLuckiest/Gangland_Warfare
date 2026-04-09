@@ -15,19 +15,18 @@ import java.util.Map;
 
 class ItemUniqueListCommand extends SubArgument {
 
-	private final Gangland gangland;
+	private final UniqueItemAddon uniqueItemAddon;
 
-	ItemUniqueListCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	ItemUniqueListCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UniqueItemAddon uniqueItemAddon) {
 		super(gangland, "list", tree, parent);
 
-		this.gangland = gangland;
+		this.uniqueItemAddon = uniqueItemAddon;
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			UniqueItemAddon         uniqueItemAddon = gangland.getInitializer().getUniqueItemAddon();
-			Map<String, UniqueItem> uniqueItems     = uniqueItemAddon.getUniqueItems();
+			Map<String, UniqueItem> uniqueItems = uniqueItemAddon.getUniqueItems();
 
 			sender.sendMessage(GanglandChatUtil.commandMessage("List of unique items"));
 

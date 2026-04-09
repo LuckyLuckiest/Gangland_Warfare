@@ -6,6 +6,7 @@ import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.TableLookup;
 import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.database.tables.player.UserTable;
@@ -14,6 +15,7 @@ import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.updater.UpdateChecker;
 import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.listener.ListenerPriority;
 import org.bukkit.Bukkit;
@@ -35,12 +37,16 @@ public final class CreateAccount implements Listener {
 	private final MemberManager              memberManager;
 	private final GanglandDatabase           ganglandDatabase;
 
-	public CreateAccount(Gangland gangland) {
+	public CreateAccount(Gangland gangland,
+	                     @Qualifier("online") UserManager<Player> userManager,
+	                     @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
+	                     MemberManager memberManager,
+	                     GanglandDatabase ganglandDatabase) {
 		this.gangland           = gangland;
-		this.userManager        = gangland.getInitializer().getUserManager();
-		this.offlineUserManager = gangland.getInitializer().getOfflineUserManager();
-		this.memberManager      = gangland.getInitializer().getMemberManager();
-		this.ganglandDatabase   = gangland.getInitializer().getGanglandDatabase();
+		this.userManager        = userManager;
+		this.offlineUserManager = offlineUserManager;
+		this.memberManager      = memberManager;
+		this.ganglandDatabase   = ganglandDatabase;
 	}
 
 	// Need to create the account before any other event
@@ -69,8 +75,8 @@ public final class CreateAccount implements Listener {
 
 		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
 			List<Table<?>> tables    = ganglandDatabase.getTables();
-			UserTable      userTable = gangland.getInitializer().getInstanceFromTables(UserTable.class, tables);
-			BankTable      bankTable = gangland.getInitializer().getInstanceFromTables(BankTable.class, tables);
+			UserTable      userTable = TableLookup.find(UserTable.class, tables);
+			BankTable      bankTable = TableLookup.find(BankTable.class, tables);
 
 			userManager.initializeUserData(user, userTable, bankTable);
 
@@ -92,7 +98,7 @@ public final class CreateAccount implements Listener {
 
 		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
 			List<Table<?>> tables      = ganglandDatabase.getTables();
-			MemberTable    memberTable = gangland.getInitializer().getInstanceFromTables(MemberTable.class, tables);
+			MemberTable    memberTable = TableLookup.find(MemberTable.class, tables);
 
 			memberManager.initializeMemberData(newMember, memberTable);
 		});

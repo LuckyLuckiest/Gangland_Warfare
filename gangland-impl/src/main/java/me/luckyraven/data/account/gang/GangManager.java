@@ -11,19 +11,20 @@ import java.util.stream.Collectors;
 public class GangManager {
 
 	private final Gangland           gangland;
+	private final GanglandDatabase   database;
 	private final Map<Integer, Gang> gangs;
 
-	public GangManager(Gangland gangland) {
+	public GangManager(Gangland gangland, GanglandDatabase database) {
 		this.gangland = gangland;
+		this.database = database;
 		this.gangs    = new HashMap<>();
 	}
 
 	public void initialize() {
 		// get the information from the repositories
-		GanglandDatabase  database       = gangland.getInitializer().getGanglandDatabase();
 		IRepository<Gang> gangRepository = database.getRepositoryRegistry().getRepository(Gang.class);
 		IRepository<GangAlliance> gangAllianceRepository = database.getRepositoryRegistry()
-																   .getRepository(GangAlliance.class);
+		                                                           .getRepository(GangAlliance.class);
 
 		Map<Integer, Gang> gangLookup = gangRepository.loadAll()
 				.stream().collect(Collectors.toMap(Gang::getId, Function.identity()));

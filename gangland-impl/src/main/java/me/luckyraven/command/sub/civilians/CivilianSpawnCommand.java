@@ -18,14 +18,19 @@ import java.util.ArrayList;
 
 class CivilianSpawnCommand extends SubArgument {
 
-	private final Gangland       gangland;
-	private final Tree<Argument> tree;
+	private final Gangland             gangland;
+	private final Tree<Argument>       tree;
+	private final CivilianService      civilianService;
+	private final CivilianSpawnManager civilianSpawnManager;
 
-	CivilianSpawnCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CivilianSpawnCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                     CivilianService civilianService, CivilianSpawnManager civilianSpawnManager) {
 		super(gangland, "spawn", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland             = gangland;
+		this.tree                 = tree;
+		this.civilianService      = civilianService;
+		this.civilianSpawnManager = civilianSpawnManager;
 
 		typeIdArgument();
 	}
@@ -44,9 +49,8 @@ class CivilianSpawnCommand extends SubArgument {
 				return;
 			}
 
-			String               typeId       = args[2];
-			CivilianSpawnManager spawnManager = gangland.getInitializer().getCivilianSpawnManager();
-			CivilianNpc          npc          = spawnManager.spawnNearLocation(player, typeId);
+			String      typeId = args[2];
+			CivilianNpc npc    = civilianSpawnManager.spawnNearLocation(player, typeId);
 
 			if (npc == null) {
 				sender.sendMessage(GanglandChatUtil.commandMessage(
@@ -56,10 +60,7 @@ class CivilianSpawnCommand extends SubArgument {
 			}
 
 			sender.sendMessage(GanglandChatUtil.commandMessage("&aCivilian &e" + typeId + "&a spawned near you."));
-		}, sender -> {
-			CivilianService service = gangland.getInitializer().getCivilianService();
-			return new ArrayList<>(service.getCiviliansConfig().types().keySet());
-		});
+		}, sender -> new ArrayList<>(civilianService.getCiviliansConfig().types().keySet()));
 
 		this.addSubArgument(typeArg);
 	}

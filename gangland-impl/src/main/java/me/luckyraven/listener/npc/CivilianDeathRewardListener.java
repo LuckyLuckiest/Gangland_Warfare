@@ -1,6 +1,5 @@
 package me.luckyraven.listener.npc;
 
-import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.events.npc.CivilianDeathEvent;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianState;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
@@ -9,6 +8,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.events.level.LevelUpEvent;
 import me.luckyraven.events.user.UserLevelUpEvent;
 import me.luckyraven.features.level.Level;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -20,9 +20,13 @@ import org.bukkit.event.Listener;
  * {@link CivilianDeathEvent}.
  */
 @ListenerHandler
-@RequiredArgsConstructor
 public class CivilianDeathRewardListener implements Listener {
+
 	private final UserManager<Player> userManager;
+
+	public CivilianDeathRewardListener(@Qualifier("online") UserManager<Player> userManager) {
+		this.userManager = userManager;
+	}
 
 	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
 	public void onCivilianDeath(CivilianDeathEvent event) {

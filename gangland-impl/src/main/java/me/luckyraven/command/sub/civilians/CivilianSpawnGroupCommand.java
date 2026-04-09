@@ -16,14 +16,17 @@ import java.util.ArrayList;
 
 class CivilianSpawnGroupCommand extends SubArgument {
 
-	private final Gangland       gangland;
-	private final Tree<Argument> tree;
+	private final Gangland        gangland;
+	private final Tree<Argument>  tree;
+	private final CivilianService civilianService;
 
-	CivilianSpawnGroupCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	CivilianSpawnGroupCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                          CivilianService civilianService) {
 		super(gangland, "spawngroup", tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland        = gangland;
+		this.tree            = tree;
+		this.civilianService = civilianService;
 
 		groupIdArgument();
 	}
@@ -42,22 +45,18 @@ class CivilianSpawnGroupCommand extends SubArgument {
 				return;
 			}
 
-			String          groupId = args[2];
-			CivilianService service = gangland.getInitializer().getCivilianService();
+			String groupId = args[2];
 
-			if (!service.getCiviliansConfig().groups().containsKey(groupId)) {
+			if (!civilianService.getCiviliansConfig().groups().containsKey(groupId)) {
 				sender.sendMessage(GanglandChatUtil.commandMessage("&cUnknown group &e" + groupId + "&c."));
 				return;
 			}
 
-			service.spawnGroup(player.getLocation(), groupId);
+			civilianService.spawnGroup(player.getLocation(), groupId);
 
 			sender.sendMessage(
 					GanglandChatUtil.commandMessage("&aCivilian group &e" + groupId + "&a spawned at your location."));
-		}, sender -> {
-			CivilianService service = gangland.getInitializer().getCivilianService();
-			return new ArrayList<>(service.getCiviliansConfig().groups().keySet());
-		});
+		}, sender -> new ArrayList<>(civilianService.getCiviliansConfig().groups().keySet()));
 
 		this.addSubArgument(groupArg);
 	}

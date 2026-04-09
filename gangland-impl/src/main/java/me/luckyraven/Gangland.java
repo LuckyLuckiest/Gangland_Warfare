@@ -121,8 +121,19 @@ public final class Gangland extends JavaPlugin {
 		// periodical updates
 		int minutes = Settings.getAutoSaveTime();
 
-		if (Settings.isAutoSave()) this.periodicalUpdates = new PeriodicalUpdates(this, minutes * 60L);
-		else this.periodicalUpdates = new PeriodicalUpdates(this);
+		var database           = initializer.getGanglandDatabase();
+		var pluginManager      = initializer.getPluginManager();
+		var userManager        = initializer.getUserManager();
+		var offlineUserManager = initializer.getOfflineUserManager();
+		var weaponManager      = initializer.getWeaponManager();
+
+		if (Settings.isAutoSave()) {
+			this.periodicalUpdates = new PeriodicalUpdates(this, database, pluginManager, userManager,
+			                                               offlineUserManager, weaponManager, minutes * 60L);
+		} else {
+			this.periodicalUpdates = new PeriodicalUpdates(this, database, pluginManager, userManager,
+			                                               offlineUserManager, weaponManager);
+		}
 
 		periodicalUpdates.start();
 	}
@@ -198,7 +209,7 @@ public final class Gangland extends JavaPlugin {
 		// soft dependencies
 		Dependency placeholderApi = new Dependency("PlaceholderAPI", Dependency.Type.SOFT);
 		placeholderApi.validate(() -> {
-			this.placeholderAPIExpansion = new PlaceholderAPIExpansion(this, FULL_PREFIX);
+			this.placeholderAPIExpansion = new PlaceholderAPIExpansion(this, FULL_PREFIX, initializer.getPlaceholder());
 			this.placeholderAPIExpansion.register();
 		});
 

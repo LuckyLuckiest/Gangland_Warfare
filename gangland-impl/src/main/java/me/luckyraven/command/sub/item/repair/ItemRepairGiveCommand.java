@@ -25,13 +25,17 @@ class ItemRepairGiveCommand extends SubArgument {
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
+	private final RepairManager       repairManager;
 
-	ItemRepairGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent) {
+	ItemRepairGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                      UserManager<Player> userManager,
+	                      RepairManager repairManager) {
 		super(gangland, "give", tree, parent);
 
-		this.gangland    = gangland;
-		this.tree        = tree;
-		this.userManager = gangland.getInitializer().getUserManager();
+		this.gangland      = gangland;
+		this.tree          = tree;
+		this.userManager   = userManager;
+		this.repairManager = repairManager;
 
 		repairGive();
 	}
@@ -58,7 +62,6 @@ class ItemRepairGiveCommand extends SubArgument {
 				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid repair item: &c" + itemName));
 			}
 		}, sender -> {
-			RepairManager repairManager = gangland.getInitializer().getRepairManager();
 			return repairManager.getMaterialManager().getAllMaterials().keySet()
 					.stream().toList();
 		});
@@ -94,7 +97,6 @@ class ItemRepairGiveCommand extends SubArgument {
 	}
 
 	private boolean giveRepairItem(Player player, String name, int amount) {
-		RepairManager  repairManager  = gangland.getInitializer().getRepairManager();
 		RepairMaterial repairMaterial = repairManager.getMaterialManager().getMaterial(name);
 
 		if (repairMaterial == null) return false;
