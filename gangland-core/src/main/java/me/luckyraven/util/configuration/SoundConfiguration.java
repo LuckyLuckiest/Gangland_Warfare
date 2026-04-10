@@ -48,12 +48,20 @@ public record SoundConfiguration(SoundType type, @NotNull String sound, float vo
 			return true;
 		}
 
-		try {
-			world.playSound(location, sound, volume, pitch);
-		} catch (Exception exception) {
-			return false;
+		// Custom sounds require the resource pack — play individually for each nearby player that has it
+		double  range  = Math.max(16.0, volume * 16.0);
+		boolean played = false;
+
+		for (Player player : world.getPlayers()) {
+			if (player.getLocation().distanceSquared(location) > range * range) continue;
+			if (!ResourcePackTracker.hasResourcePack(player)) continue;
+
+			try {
+				player.playSound(location, sound, volume, pitch);
+				played = true;
+			} catch (Exception ignored) { }
 		}
-		return true;
+		return played;
 	}
 
 	public boolean playSound(Player player) {
