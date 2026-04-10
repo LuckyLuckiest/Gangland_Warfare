@@ -27,6 +27,7 @@ nul
 *.zip
 *.tar.gz
 *.rar
+*.deb
 
 # Claude
 .claude
