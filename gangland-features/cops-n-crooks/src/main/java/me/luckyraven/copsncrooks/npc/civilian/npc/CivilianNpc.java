@@ -127,8 +127,8 @@ public class CivilianNpc extends AbstractNpc {
 	 * Transitions the NPC to a new AI state, invoking exit/enter callbacks.
 	 */
 	public void transitionTo(CivilianState newState) {
-		log.info("Transitioning civilian {}-{} from {} state to {} state.", npc.getName(), npc.getId(), currentState,
-		         newState);
+		log.debug("Transitioning civilian {}-{} from {} state to {} state.", npc.getName(), npc.getId(), currentState,
+		          newState);
 		if (currentState == newState) return;
 
 		// Update wanted-by-police flag: hostile civilians become wanted when entering combat
@@ -159,8 +159,7 @@ public class CivilianNpc extends AbstractNpc {
 		// If the entity has been teleported to a different world (e.g. through a portal), remove it
 		// so the spawner can replace it rather than waiting indefinitely for it to die elsewhere.
 		LivingEntity entity = getEntity();
-		if (entity != null && spawnLocation.getWorld() != null &&
-		    !entity.getWorld().equals(spawnLocation.getWorld())) {
+		if (entity != null && spawnLocation.getWorld() != null && !entity.getWorld().equals(spawnLocation.getWorld())) {
 			markForRemoval();
 			return;
 		}
