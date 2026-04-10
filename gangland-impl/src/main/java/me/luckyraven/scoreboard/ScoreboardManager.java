@@ -1,7 +1,7 @@
 package me.luckyraven.scoreboard;
 
 import com.viaversion.viaversion.api.ViaAPI;
-import lombok.Setter;
+
 import me.luckyraven.Gangland;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
@@ -41,17 +41,12 @@ public class ScoreboardManager {
 	private final Gangland    gangland;
 	private final Placeholder placeholder;
 
-	/**
-	 * Set by {@code GameplayConfig.scoreboardManager()} after the FILE-phase {@link ScoreboardAddon} bean is built.
-	 * ScoreboardManager is kernel-seeded in the LOAD phase so it can't constructor-inject the FILE-phase addon — the
-	 * link flows the other way via this setter.
-	 */
-	@Setter
-	private ScoreboardAddon scoreboardAddon;
+	private final ScoreboardAddon scoreboardAddon;
 
-	public ScoreboardManager(Gangland gangland, Placeholder placeholder) {
-		this.gangland    = gangland;
-		this.placeholder = placeholder;
+	public ScoreboardManager(Gangland gangland, Placeholder placeholder, ScoreboardAddon scoreboardAddon) {
+		this.gangland        = gangland;
+		this.placeholder     = placeholder;
+		this.scoreboardAddon = scoreboardAddon;
 	}
 
 	public static List<String> getDrivers() {

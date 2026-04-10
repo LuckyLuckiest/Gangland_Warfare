@@ -1,6 +1,7 @@
 package me.luckyraven.config;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.bootstrap.GanglandContext;
 import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.compatibility.CompatibilitySetup;
 import me.luckyraven.compatibility.CompatibilityWorker;
@@ -15,8 +16,9 @@ import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.persistence.database.DatabaseSettingsProvider;
-import me.luckyraven.scoreboard.ScoreboardManager;
+
 import me.luckyraven.util.autowire.bean.Bean;
+import me.luckyraven.util.autowire.bean.BeanGraph;
 import me.luckyraven.util.autowire.bean.Configuration;
 import me.luckyraven.util.autowire.bean.Phase;
 
@@ -24,12 +26,12 @@ import me.luckyraven.util.autowire.bean.Phase;
  * KERNEL-phase configuration that produces every bootstrap-critical singleton the plugin needs before the FILE phase
  * begins. These objects were previously constructed by hand in {@code Initializer.java} and seeded into the container
  * via {@code seedKernelBeans()}; they are now standard {@code @Bean} methods whose dependency ordering is resolved
- * automatically by {@link me.luckyraven.util.autowire.bean.BeanGraph}.
+ * automatically by {@link BeanGraph}.
  *
  * <p>Because all {@code @Configuration} constructors are instantiated before any phase runs, this class can only
- * inject beans that are pre-registered in {@link me.luckyraven.context.GanglandContext}'s constructor
- * ({@code Gangland}, {@code GanglandContext}, {@code DependencyContainer}). Every other kernel object is produced by
- * {@code @Bean} methods whose parameters are resolved within the KERNEL phase itself.
+ * inject beans that are pre-registered in {@link GanglandContext}'s constructor ({@code Gangland},
+ * {@code GanglandContext}, {@code DependencyContainer}). Every other kernel object is produced by {@code @Bean} methods
+ * whose parameters are resolved within the KERNEL phase itself.
  */
 @Configuration(phase = Phase.KERNEL)
 public class KernelConfig {
@@ -60,6 +62,7 @@ public class KernelConfig {
 	@Bean
 	public PlaceholderService placeholderService() {
 		PlaceholderService service = new PlaceholderService(gangland);
+		// STRUCTURAL NECESSITY: User is a runtime entity, not a bean — static field is the only injection point.
 		User.setPlaceholder(service);
 		return service;
 	}
@@ -116,8 +119,4 @@ public class KernelConfig {
 		return new DatabaseManager(gangland, databaseSettings);
 	}
 
-	@Bean
-	public ScoreboardManager scoreboardManager(PlaceholderService placeholderService) {
-		return new ScoreboardManager(gangland, placeholderService);
-	}
 }

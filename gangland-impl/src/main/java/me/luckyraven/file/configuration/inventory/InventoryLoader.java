@@ -10,7 +10,7 @@ public class InventoryLoader extends FolderLoader {
 	private final FileManager fileManager;
 
 	public InventoryLoader(Gangland gangland, FileManager fileManager) {
-		super(gangland, "inventory");
+		super(gangland, "inventory", fileManager);
 		this.gangland    = gangland;
 		this.fileManager = fileManager;
 	}

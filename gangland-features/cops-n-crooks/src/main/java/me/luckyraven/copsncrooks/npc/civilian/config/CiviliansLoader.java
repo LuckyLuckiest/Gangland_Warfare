@@ -28,8 +28,10 @@ public class CiviliansLoader extends FileLoader<CiviliansConfig> {
 	private CiviliansConfig loadedConfig;
 
 	public CiviliansLoader(JavaPlugin plugin, @Nullable ItemParser itemParser,
-	                       CivilianSettings civilianSettings) {
-		super(plugin);
+	                       CivilianSettings civilianSettings,
+	                       boolean disable, @Nullable Consumer<CiviliansConfig> consumer,
+	                       FileManager fileManager) {
+		super(plugin, disable, consumer, fileManager);
 		this.itemParser       = itemParser;
 		this.civilianSettings = civilianSettings;
 	}

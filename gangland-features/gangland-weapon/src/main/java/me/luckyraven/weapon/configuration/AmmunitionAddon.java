@@ -2,7 +2,7 @@ package me.luckyraven.weapon.configuration;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
-import lombok.Setter;
+
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileInitializer;
@@ -32,11 +32,13 @@ public class AmmunitionAddon implements FileInitializer {
 	 * Placeholder resolver injected by the impl side; propagated to each parsed {@link Ammunition} so its rendering
 	 * path can resolve {@code %gangland_*%} tokens.
 	 */
-	@Setter
 	@Nullable
-	private       Placeholder       placeholder;
+	private final Placeholder       placeholder;
 
-	public AmmunitionAddon(FileManager fileManager, AmmunitionManager ammunitionManager) {
+	public AmmunitionAddon(FileManager fileManager, AmmunitionManager ammunitionManager,
+	                       @Nullable Placeholder placeholder) {
+		this.placeholder = placeholder;
+
 		try {
 			String fileName = "ammunition";
 

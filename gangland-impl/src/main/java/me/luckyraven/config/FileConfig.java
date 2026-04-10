@@ -31,6 +31,7 @@ import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
+import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
 import me.luckyraven.sign.GanglandSignInformation;
 import me.luckyraven.sign.service.SignInformation;
@@ -94,6 +95,7 @@ public class FileConfig {
 	public LanguageLoader languageLoader(FileManager fileManager, Settings settings) {
 		LanguageLoader loader = new LanguageLoader(gangland, fileManager);
 		loader.initialize();
+		// STRUCTURAL NECESSITY: Messages is a static config holder, not a bean — set once during FILE phase.
 		Messages.setMessageConfiguration(loader.getMessage());
 		TimeMessages.initialize();
 		return loader;
@@ -154,6 +156,12 @@ public class FileConfig {
 		return addon;
 	}
 
+	@Bean
+	public ScoreboardManager scoreboardManager(PlaceholderService placeholderService,
+	                                           ScoreboardAddon scoreboardAddon) {
+		return new ScoreboardManager(gangland, placeholderService, scoreboardAddon);
+	}
+
 	/**
 	 * Empty {@link AmmunitionManager} created in the FILE phase so {@link AmmunitionAddon} can populate it. Belongs to
 	 * FILE rather than CONFIG because its lifecycle is bound to ammunition.yml loading.
@@ -167,8 +175,7 @@ public class FileConfig {
 	public AmmunitionAddon ammunitionAddon(FileManager fileManager,
 	                                       AmmunitionManager ammunitionManager,
 	                                       PlaceholderService placeholderService) {
-		AmmunitionAddon addon = new AmmunitionAddon(fileManager, ammunitionManager);
-		addon.setPlaceholder(placeholderService);
+		AmmunitionAddon addon = new AmmunitionAddon(fileManager, ammunitionManager, placeholderService);
 		fileManager.registerInitializer(addon);
 		return addon;
 	}
@@ -183,8 +190,7 @@ public class FileConfig {
 	                                       FileManager fileManager,
 	                                       FuelService fuelService,
 	                                       PlaceholderService placeholderService) {
-		UniqueItemAddon addon = new UniqueItemAddon(permissionManager, fileManager, fuelService);
-		addon.setPlaceholder(placeholderService);
+		UniqueItemAddon addon = new UniqueItemAddon(permissionManager, fileManager, fuelService, placeholderService);
 		fileManager.registerInitializer(addon);
 		return addon;
 	}
@@ -193,8 +199,7 @@ public class FileConfig {
 	public WearableAddon wearableAddon(PermissionManager permissionManager,
 	                                   FileManager fileManager,
 	                                   PlaceholderService placeholderService) {
-		WearableAddon addon = new WearableAddon(permissionManager::addPermission, fileManager);
-		addon.setPlaceholder(placeholderService);
+		WearableAddon addon = new WearableAddon(permissionManager::addPermission, fileManager, placeholderService);
 		fileManager.registerInitializer(addon);
 		return addon;
 	}
@@ -203,17 +208,14 @@ public class FileConfig {
 	public CarAddon carAddon(PermissionManager permissionManager,
 	                         FileManager fileManager,
 	                         PlaceholderService placeholderService) {
-		CarAddon addon = new CarAddon(permissionManager::addPermission, fileManager);
-		addon.setPlaceholder(placeholderService);
+		CarAddon addon = new CarAddon(permissionManager::addPermission, fileManager, placeholderService);
 		fileManager.registerInitializer(addon);
 		return addon;
 	}
 
 	@Bean
 	public WeaponAddon weaponAddon(AmmunitionAddon ammunitionAddon, PlaceholderService placeholderService) {
-		WeaponAddon addon = new WeaponAddon();
-		addon.setPlaceholder(placeholderService);
-		return addon;
+		return new WeaponAddon(placeholderService);
 	}
 
 	/**
@@ -250,6 +252,8 @@ public class FileConfig {
 	@Bean
 	public BooleanExpressionEvaluator conditionEvaluator(PlaceholderService placeholderService) {
 		BooleanExpressionEvaluator evaluator = new BooleanExpressionEvaluator(placeholderService);
+		// STRUCTURAL NECESSITY: InventoryAddon is all-static — converting to instance-based requires refactoring
+		// every caller across the codebase. These 3 static setters are called once during FILE phase.
 		InventoryAddon.setConditionEvaluator(evaluator);
 		return evaluator;
 	}
@@ -266,13 +270,11 @@ public class FileConfig {
 	                                       GanglandContext context,
 	                                       PermissionManager permissionManager,
 	                                       PlaceholderService placeholderService) {
-		// Static-state wiring for InventoryAddon. The class has all-static methods (called from listeners and other
-		// static-style code paths) so its dependencies are bound here once during the FILE phase. The user manager is
-		// a CONFIG-phase bean and isn't available yet — it's wired later by GameplayConfig.wireInventoryAddonUser().
+		// STRUCTURAL NECESSITY: InventoryAddon is all-static — same as conditionEvaluator above.
 		InventoryAddon.setPermissionManager(permissionManager);
 		InventoryAddon.setPlaceholderService(placeholderService);
-		// Slot resolver uses a deferred lookup of the parser via the GanglandContext on every parse so the lambda
-		// stays valid even though the parser doesn't exist yet at this point in the FILE phase.
+		// STRUCTURAL NECESSITY: SlotItemFactory is in inventory-api which cannot depend on gangland-item.
+		// Deferred lambda bridges the cross-module boundary.
 		SlotItemFactory.setItemResolver(slot -> {
 			ItemParserManager mgr = context.get(ItemParserManager.class);
 			return mgr.getParser().parse(slot);

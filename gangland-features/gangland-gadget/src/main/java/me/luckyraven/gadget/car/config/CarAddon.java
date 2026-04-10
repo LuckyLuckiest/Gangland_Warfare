@@ -2,7 +2,7 @@ package me.luckyraven.gadget.car.config;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
-import lombok.Setter;
+
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarManager;
@@ -31,12 +31,13 @@ public class CarAddon extends CarManager implements FileInitializer {
 	 * Placeholder resolver injected by the impl side; threaded into every parsed {@link Car} via the builder so its
 	 * display name and lore resolve {@code %gangland_*%} tokens at item-build time.
 	 */
-	@Setter
 	@Nullable
-	private Placeholder placeholder;
+	private final Placeholder placeholder;
 
-	public CarAddon(Consumer<String> permissionRegistrar, FileManager fileManager) {
+	public CarAddon(Consumer<String> permissionRegistrar, FileManager fileManager,
+	                @Nullable Placeholder placeholder) {
 		this.permissionRegistrar = permissionRegistrar;
+		this.placeholder         = placeholder;
 
 		try {
 			String fileName = "cars";

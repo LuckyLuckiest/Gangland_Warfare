@@ -2,7 +2,7 @@ package me.luckyraven.gadget.wearable;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
-import lombok.Setter;
+
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.item.wearable.WearableTrait;
@@ -32,12 +32,13 @@ public class WearableAddon extends WearableService implements FileInitializer {
 	 * Placeholder resolver injected by the impl side; threaded into every built {@link Wearable} so its display name
 	 * and lore resolve {@code %gangland_*%} tokens at item-build time.
 	 */
-	@Setter
 	@Nullable
-	private Placeholder placeholder;
+	private final Placeholder placeholder;
 
-	public WearableAddon(Consumer<String> permissionRegistrar, FileManager fileManager) {
+	public WearableAddon(Consumer<String> permissionRegistrar, FileManager fileManager,
+	                     @Nullable Placeholder placeholder) {
 		this.permissionRegistrar = permissionRegistrar;
+		this.placeholder         = placeholder;
 
 		try {
 			String fileName = "wearables";

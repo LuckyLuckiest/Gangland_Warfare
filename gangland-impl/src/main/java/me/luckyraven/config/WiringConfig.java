@@ -61,9 +61,8 @@ public class WiringConfig {
 		GanglandPlaceholder placeholder = new GanglandPlaceholder(Gangland.FULL_PREFIX, Replacer.Closure.PERCENT,
 		                                                          userManager, memberManager, gangManager,
 		                                                          uniqueItemAddon);
-		// Wire the placeholder back into the KERNEL-phase PlaceholderService so its convert() fallback path can
-		// resolve gangland-specific tokens. PlaceholderService is produced by KernelConfig before this CONFIG bean
-		// exists, so the link has to flow CONFIG → kernel via this setter.
+		// STRUCTURAL NECESSITY: cross-phase circular dependency (KERNEL ← CONFIG). PlaceholderService must exist in
+		// KERNEL for FILE-phase addons; GanglandPlaceholder needs CONFIG managers. Cannot be constructor-injected.
 		placeholderService.setPlaceholder(placeholder);
 		return placeholder;
 	}

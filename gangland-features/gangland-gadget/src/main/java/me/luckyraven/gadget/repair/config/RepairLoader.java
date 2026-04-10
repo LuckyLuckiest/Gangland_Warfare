@@ -20,8 +20,9 @@ public class RepairLoader extends FileLoader<RepairConfig> {
 	private RepairConfig         loadedConfig;
 	private RepairConfigProvider loadedProvider;
 
-	public RepairLoader(JavaPlugin plugin) {
-		super(plugin);
+	public RepairLoader(JavaPlugin plugin, boolean disable, Consumer<RepairConfig> consumer,
+	                    FileManager fileManager) {
+		super(plugin, disable, consumer, fileManager);
 	}
 
 	@Override

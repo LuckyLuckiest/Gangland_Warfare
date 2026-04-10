@@ -29,8 +29,9 @@ public class CopLoader extends FileLoader<CopConfig> {
 	private CopConfig         loadedConfig;
 	private CopConfigProvider loadedProvider;
 
-	public CopLoader(JavaPlugin plugin, @Nullable ItemParser itemParser, @Nullable CopSettings copSettings) {
-		super(plugin);
+	public CopLoader(JavaPlugin plugin, @Nullable ItemParser itemParser, @Nullable CopSettings copSettings,
+	                 boolean disable, @Nullable Consumer<CopConfig> consumer, FileManager fileManager) {
+		super(plugin, disable, consumer, fileManager);
 		this.itemParser  = itemParser;
 		this.copSettings = copSettings;
 	}

@@ -20,8 +20,8 @@ public abstract class FolderLoader extends FileLoader<FileHandler> {
 	private final List<FileHandler> folderFiles;
 	private final List<FileHandler> expectedFolderFiles;
 
-	public FolderLoader(JavaPlugin plugin, String folder) {
-		super(plugin);
+	public FolderLoader(JavaPlugin plugin, String folder, FileManager fileManager) {
+		super(plugin, false, null, fileManager);
 
 		this.plugin              = plugin;
 		this.folder              = folder;

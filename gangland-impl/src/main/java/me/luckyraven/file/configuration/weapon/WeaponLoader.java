@@ -19,7 +19,7 @@ public class WeaponLoader extends FolderLoader {
 	                    FileManager fileManager,
 	                    WeaponAddon weaponAddon,
 	                    AmmunitionManager ammunitionManager) {
-		super(gangland, "weapon");
+		super(gangland, "weapon", fileManager);
 		this.fileManager       = fileManager;
 		this.weaponAddon       = weaponAddon;
 		this.ammunitionManager = ammunitionManager;

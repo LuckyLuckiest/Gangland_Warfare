@@ -1,7 +1,6 @@
 package me.luckyraven.lootchest;
 
 import lombok.Getter;
-import lombok.Setter;
 import me.luckyraven.hologram.HologramService;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.item.ItemParser;
@@ -29,6 +28,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -74,16 +74,19 @@ public abstract class LootChestService {
 	private final CrackingFailedHandler        crackingFailedHandler;
 
 	@Getter
-	private LootChestConfig config;
-	@Setter
-	private ItemParser      itemParser;
-
+	private LootChestConfig           config;
+	@Getter
+	private ItemParser                itemParser;
 	@Getter
 	private LootChestMessagesProvider messagesProvider;
 
-	public LootChestService(JavaPlugin plugin, HologramService hologramService, String prefix) {
-		this.plugin = plugin;
-		this.prefix = prefix;
+	public LootChestService(JavaPlugin plugin, HologramService hologramService, String prefix,
+	                        @Nullable ItemParser itemParser,
+	                        @Nullable LootChestMessagesProvider messagesProvider) {
+		this.plugin           = plugin;
+		this.prefix           = prefix;
+		this.itemParser       = itemParser;
+		this.messagesProvider = messagesProvider;
 
 		this.registeredChests       = new ConcurrentHashMap<>();
 		this.chestsByLocation       = new ConcurrentHashMap<>();
@@ -108,6 +111,10 @@ public abstract class LootChestService {
 		this.hologramService = hologramService;
 		this.cooldownManager = new ChestCooldownManager(plugin, hologramService);
 
+		if (messagesProvider != null) {
+			this.cooldownManager.setMessagesProvider(messagesProvider);
+		}
+
 		// Wire up cooldown callbacks
 		this.cooldownManager.setOnCooldownTick((lootChestData, remaining) -> {
 			chestCooldownTickHandler.handle(lootChestData);
@@ -124,11 +131,6 @@ public abstract class LootChestService {
 
 		callEvents();
 		addSounds();
-	}
-
-	public void setMessagesProvider(LootChestMessagesProvider messagesProvider) {
-		this.messagesProvider = messagesProvider;
-		this.cooldownManager.setMessagesProvider(messagesProvider);
 	}
 
 	public void setConfig(LootChestConfig config) {

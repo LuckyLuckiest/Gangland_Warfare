@@ -1,24 +1,55 @@
 package me.luckyraven.copsncrooks.npc.police.spawn;
 
+import me.luckyraven.copsncrooks.detainment.DetainmentService;
+import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.entity.EntitySpawner;
 import me.luckyraven.copsncrooks.npc.police.config.CopConfigProvider;
+import me.luckyraven.copsncrooks.npc.police.config.CopLoader;
 import me.luckyraven.copsncrooks.npc.police.npc.CopNpc;
 import me.luckyraven.copsncrooks.npc.police.npc.CopNpcFactory;
+import me.luckyraven.copsncrooks.npc.police.state.CopBehaviorFactory;
 import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.weapon.WeaponService;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
 public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 
-	private final CopNpcFactory     copNpcFactory;
-	private final CopConfigProvider configProvider;
+	private final JavaPlugin        plugin;
+	private final CopLoader         copLoader;
+	private final EntityMarkManager entityMarkManager;
+	private final WeaponService     weaponService;
+	private final DetainmentService detainmentService;
 
-	public CopSpawnManager(CopNpcFactory copNpcFactory, CopConfigProvider configProvider,
-	                       IRepository<CopSpawner> repository) {
-		super(configProvider, repository);
-		this.copNpcFactory  = copNpcFactory;
-		this.configProvider = configProvider;
+	private CopNpcFactory     copNpcFactory;
+	private CopConfigProvider configProvider;
+
+	public CopSpawnManager(JavaPlugin plugin, CopLoader copLoader, EntityMarkManager entityMarkManager,
+	                       WeaponService weaponService, IRepository<CopSpawner> repository,
+	                       DetainmentService detainmentService) {
+		super(copLoader.getLoadedProvider(), repository);
+		this.plugin            = plugin;
+		this.copLoader         = copLoader;
+		this.entityMarkManager = entityMarkManager;
+		this.weaponService     = weaponService;
+		this.detainmentService = detainmentService;
+
+		rebuildFactories();
+	}
+
+	@Override
+	public void onClear() {
+		super.onClear();
+		copNpcFactory  = null;
+		configProvider = null;
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		super.onInitialize(firstLoad);
+		rebuildFactories();
 	}
 
 	/**
@@ -84,5 +115,13 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	@Override
 	protected CopSpawner createSpawnerPoint(int id, Location location) {
 		return new CopSpawner(id, location);
+	}
+
+	private void rebuildFactories() {
+		CopConfigProvider provider = copLoader.getLoadedProvider();
+		this.configProvider = provider;
+
+		CopBehaviorFactory behaviorFactory = new CopBehaviorFactory(provider, () -> this, detainmentService);
+		this.copNpcFactory = new CopNpcFactory(plugin, provider, behaviorFactory, entityMarkManager, weaponService);
 	}
 }

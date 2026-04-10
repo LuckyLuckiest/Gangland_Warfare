@@ -3,9 +3,12 @@ package me.luckyraven.file;
 import lombok.CustomLog;
 import lombok.Getter;
 import me.luckyraven.Gangland;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.FileManager;
+import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.UnhandledError;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -22,7 +25,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 @CustomLog
-public class LanguageLoader {
+public class LanguageLoader implements BeanLifecycle {
 
 	private final Gangland    gangland;
 	private final FileManager fileManager;
@@ -32,6 +35,14 @@ public class LanguageLoader {
 	public LanguageLoader(Gangland gangland, FileManager fileManager) {
 		this.gangland    = gangland;
 		this.fileManager = fileManager;
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		if (firstLoad) return;
+		initialize();
+		Messages.setMessageConfiguration(message);
+		TimeMessages.initialize();
 	}
 
 	public void initialize() {
@@ -51,7 +62,7 @@ public class LanguageLoader {
 			}
 
 			log.warn("Disabling plugin, reason: unidentifiable message file.\nPlease use languages from the list: {}",
-					 languages);
+			         languages);
 			Bukkit.getServer().getPluginManager().disablePlugin(this.gangland);
 		}
 	}
@@ -87,7 +98,7 @@ public class LanguageLoader {
 			}
 		} catch (IOException exception) {
 			log.error("{}: {}\nThis error occurred since the plugin jar file is not in the plugins folder.",
-					  UnhandledError.MISSING_JAR_ERROR, exception.getMessage());
+			          UnhandledError.MISSING_JAR_ERROR, exception.getMessage());
 		}
 		return files;
 	}

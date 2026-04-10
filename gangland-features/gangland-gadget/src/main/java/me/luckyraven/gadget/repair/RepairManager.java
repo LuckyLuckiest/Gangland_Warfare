@@ -20,22 +20,11 @@ public class RepairManager {
 	private final RepairMaterialManager materialManager;
 
 	@Nullable
-	private RepairMessages messages;
+	private final RepairMessages messages;
 
-	public RepairManager() {
+	public RepairManager(@Nullable Placeholder placeholder, @Nullable RepairMessages messages) {
 		this.materialManager = new RepairMaterialManager();
-	}
-
-	public void setMessages(@NotNull RepairMessages messages) {
-		this.messages = messages;
-	}
-
-	/**
-	 * Hands the impl-side placeholder resolver down to the {@link RepairMaterialManager} so every parsed
-	 * {@link RepairMaterial} can resolve {@code %gangland_*%} tokens in its display name and lore. Must be called
-	 * before {@link #load(RepairConfig)}.
-	 */
-	public void setPlaceholder(@Nullable Placeholder placeholder) {
+		this.messages        = messages;
 		materialManager.setPlaceholder(placeholder);
 	}
 

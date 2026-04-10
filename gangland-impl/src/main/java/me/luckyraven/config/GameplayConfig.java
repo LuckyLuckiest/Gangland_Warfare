@@ -36,8 +36,6 @@ import me.luckyraven.lootchest.LootChestService;
 import me.luckyraven.lootchest.config.LootChestLoader;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
-import me.luckyraven.scoreboard.ScoreboardManager;
-import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
 import me.luckyraven.sign.SignManager;
 import me.luckyraven.sign.bulk.BulkActionManager;
 import me.luckyraven.sign.registry.SignFormatRegistry;
@@ -100,19 +98,6 @@ public class GameplayConfig {
 	// ---------------------------------------------------------------------------------------------------------------
 
 	/**
-	 * ScoreboardManager is produced by {@code KernelConfig} in the KERNEL phase, so no @Bean method is needed here. The
-	 * {@link ScoreboardAddon} is wired into it via setter after the FILE phase produces it.
-	 */
-	@PostConstruct
-	public void wireScoreboardAddon() {
-		ScoreboardManager scoreboardManager = context.get(ScoreboardManager.class);
-		ScoreboardAddon   scoreboardAddon   = context.get(ScoreboardAddon.class);
-		if (scoreboardManager != null && scoreboardAddon != null) {
-			scoreboardManager.setScoreboardAddon(scoreboardAddon);
-		}
-	}
-
-	/**
 	 * Wires CONFIG-phase beans into the static-state {@link InventoryAddon}. The {@link UserManager} and the
 	 * {@link GangItemSourceProvider} both depend on managers that don't exist until CONFIG, so they're set here (after
 	 * FileConfig already wired the FILE-phase placeholder + permission-manager links).
@@ -123,6 +108,8 @@ public class GameplayConfig {
 		UserManager<Player> userManager = (UserManager<Player>) context.getContainer()
 		                                                               .getInstance("online", UserManager.class);
 		GangManager gangManager = context.get(GangManager.class);
+		// STRUCTURAL NECESSITY: InventoryAddon is all-static — these CONFIG-phase deps couldn't be wired in
+		// FileConfig (FILE phase). Called once during CONFIG phase.
 		if (userManager != null) {
 			InventoryAddon.setUserManager(userManager);
 		}
@@ -156,8 +143,7 @@ public class GameplayConfig {
 	}
 
 	@Bean
-	public WeaponRaytracer weaponRaytracer(WeaponManager weaponManager,
-	                                       WearableAddon wearableAddon,
+	public WeaponRaytracer weaponRaytracer(WeaponManager weaponManager, WearableAddon wearableAddon,
 	                                       BlockDamageManager blockDamageManager,
 	                                       WeaponVisualSpawner weaponVisualSpawner) {
 		WeaponRaytracer raytracer = new WeaponRaytracer(weaponManager, wearableAddon, blockDamageManager,
@@ -258,8 +244,8 @@ public class GameplayConfig {
 	                                           MoneyAddon moneyAddon,
 	                                           MoneyDepositService moneyDepositService,
 	                                           UniqueItemAddon uniqueItemAddon) {
-		return new ItemParserManager(weaponManager, ammunitionManager, wearableAddon, carAddon,
-		                             moneyAddon, moneyDepositService, uniqueItemAddon);
+		return new ItemParserManager(weaponManager, ammunitionManager, wearableAddon, carAddon, moneyAddon,
+		                             moneyDepositService, uniqueItemAddon);
 	}
 
 	@Bean
@@ -295,11 +281,8 @@ public class GameplayConfig {
 	public LootChestManager lootChestManager(HologramService hologramService,
 	                                         RepositoryRegistry repositoryRegistry,
 	                                         ItemParserManager itemParserManager) {
-		LootChestManager manager = new LootChestManager(gangland, Gangland.FULL_PREFIX, hologramService,
-		                                                repositoryRegistry);
-		manager.setItemParser(itemParserManager.getParser());
-		manager.setMessagesProvider(new GanglandLootChestMessages());
-		return manager;
+		return new LootChestManager(gangland, Gangland.FULL_PREFIX, hologramService, repositoryRegistry,
+		                            itemParserManager.getParser(), new GanglandLootChestMessages());
 	}
 
 	@Bean
@@ -309,8 +292,8 @@ public class GameplayConfig {
 
 	@Bean
 	public LootChestLoader lootChestLoader(LootChestManager lootChestManager, FileManager fileManager) {
-		LootChestLoader loader = new LootChestLoader(gangland, lootChestManager, new LootChestSettings());
-		loader.bind(false, null, fileManager);
+		LootChestLoader loader = new LootChestLoader(gangland, lootChestManager, new LootChestSettings(), false, null,
+		                                             fileManager);
 		fileManager.registerInitializer(loader);
 		fileManager.initializeAll();
 		return loader;
@@ -321,15 +304,11 @@ public class GameplayConfig {
 	// ---------------------------------------------------------------------------------------------------------------
 
 	@Bean
-	public RepairManager repairManager(PlaceholderService placeholderService,
-	                                   FileManager fileManager) {
-		RepairManager repairManager = new RepairManager();
-		repairManager.setPlaceholder(placeholderService);
-		RepairLoader repairLoader = new RepairLoader(gangland);
-		repairLoader.bind(false, repairManager::load, fileManager);
+	public RepairManager repairManager(PlaceholderService placeholderService, FileManager fileManager) {
+		RepairManager repairManager = new RepairManager(placeholderService, new GanglandRepairMessages());
+		RepairLoader  repairLoader  = new RepairLoader(gangland, false, repairManager::load, fileManager);
 		fileManager.registerInitializer(repairLoader);
 		fileManager.initializeAll();
-		repairManager.setMessages(new GanglandRepairMessages());
 		return repairManager;
 	}
 

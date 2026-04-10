@@ -132,8 +132,8 @@ public class CopsAndGadgetsConfig {
 	public CopLoader copLoader(ItemParserManager itemParserManager,
 	                           CopSettings copSettings,
 	                           FileManager fileManager) {
-		CopLoader loader = new CopLoader(gangland, itemParserManager.getParser(), copSettings);
-		loader.bind(false, null, fileManager);
+		CopLoader loader = new CopLoader(gangland, itemParserManager.getParser(), copSettings,
+		                                 false, null, fileManager);
 		fileManager.registerInitializer(loader);
 		fileManager.initializeAll();
 		return loader;
@@ -218,6 +218,8 @@ public class CopsAndGadgetsConfig {
 		IRepository<ParkedCar> parkedCarRepository = repositoryRegistry.getRepository(ParkedCar.class);
 		CarService carService = new CarService(carAddon, new VehicleRegistry(), gangland, parkedCarRepository,
 		                                       fuelService, gadgetPhysicsConfig);
+		// STRUCTURAL NECESSITY: self-referential — lambda captures carService which doesn't exist until its
+		// own constructor returns. Cannot be constructor-injected.
 		parkedCarRepository.setDataSupplier(() -> new ArrayList<>(carService.getParkedCarRecords().values()));
 		carService.reloadParkedVehicles();
 		return carService;

@@ -2,7 +2,7 @@ package me.luckyraven.weapon.configuration;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
-import lombok.Setter;
+
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.util.Placeholder;
 import me.luckyraven.util.configuration.SoundConfiguration;
@@ -34,12 +34,12 @@ public class WeaponAddon {
 	 * after construction so its {@code buildItem} / {@code updateWeaponData} calls resolve {@code %gangland_*%} tokens
 	 * in the display name and lore.
 	 */
-	@Setter
 	@Nullable
-	private Placeholder placeholder;
+	private final Placeholder placeholder;
 
-	public WeaponAddon() {
-		this.weapons = new HashMap<>();
+	public WeaponAddon(@Nullable Placeholder placeholder) {
+		this.weapons     = new HashMap<>();
+		this.placeholder = placeholder;
 	}
 
 	public void registerWeapon(AmmunitionManager ammunitionManager, FileHandler fileHandler) throws

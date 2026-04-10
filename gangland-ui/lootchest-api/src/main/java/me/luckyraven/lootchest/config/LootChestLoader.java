@@ -27,8 +27,9 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 	@Getter
 	private LootChestConfig loadedConfig;
 
-	public LootChestLoader(JavaPlugin plugin, LootChestService manager, LootChestSettingsProvider settingsProvider) {
-		super(plugin);
+	public LootChestLoader(JavaPlugin plugin, LootChestService manager, LootChestSettingsProvider settingsProvider,
+	                       boolean disable, Consumer<LootChestConfig> consumer, FileManager fileManager) {
+		super(plugin, disable, consumer, fileManager);
 
 		this.manager          = manager;
 		this.settingsProvider = settingsProvider;

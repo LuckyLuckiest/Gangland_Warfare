@@ -5,6 +5,8 @@ import me.luckyraven.Gangland;
 import me.luckyraven.database.repositories.lootchest.LootChestRepository;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.hologram.HologramService;
+import me.luckyraven.item.ItemParser;
+import me.luckyraven.lootchest.config.LootChestMessagesProvider;
 import me.luckyraven.lootchest.data.LootChestData;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
@@ -20,8 +22,10 @@ public class LootChestManager extends LootChestService implements BeanLifecycle 
 	private final RepositoryRegistry repositoryRegistry;
 
 	public LootChestManager(Gangland gangland, String prefix, HologramService hologramService,
-	                        RepositoryRegistry repositoryRegistry) {
-		super(gangland, hologramService, prefix);
+	                        RepositoryRegistry repositoryRegistry,
+	                        ItemParser itemParser,
+	                        LootChestMessagesProvider messagesProvider) {
+		super(gangland, hologramService, prefix, itemParser, messagesProvider);
 
 		this.gangland           = gangland;
 		this.repositoryRegistry = repositoryRegistry;

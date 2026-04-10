@@ -5,6 +5,7 @@ import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileInitializer;
 import me.luckyraven.persistence.FileManager;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -15,7 +16,7 @@ import java.util.Objects;
  * module-isolated and only knows how to consume a {@code ConfigurationSection}; this wrapper owns the {@code money.yml}
  * {@link FileHandler} and feeds the loaded config into the addon when {@link #initialize()} runs.
  */
-public class MoneyAddonInitializer implements FileInitializer {
+public class MoneyAddonInitializer implements FileInitializer, BeanLifecycle {
 
 	private final FileHandler fileHandler;
 	private final MoneyAddon  moneyAddon;
@@ -44,4 +45,14 @@ public class MoneyAddonInitializer implements FileInitializer {
 		moneyAddon.load(fileHandler.getFileConfiguration());
 	}
 
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		if (firstLoad) return;
+		moneyAddon.setEnabled(Settings.isMoneyDropEnabled());
+	}
+
+	@Override
+	public void clear() {
+		moneyAddon.clear();
+	}
 }
