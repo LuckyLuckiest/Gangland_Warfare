@@ -38,7 +38,8 @@ public class PlayerDeathListener implements Listener {
 	private final UserManager<Player> userManager;
 	private final WeaponManager       weaponManager;
 	private final GanglandPlaceholder placeholder;
-	private final Map<UUID, Long>     recentDeaths = new ConcurrentHashMap<>();
+	private final Map<UUID, Long>     recentDeaths      = new ConcurrentHashMap<>();
+	private final Set<UUID>           downedBroadcasted = ConcurrentHashMap.newKeySet();
 
 	public PlayerDeathListener(@Qualifier("online") UserManager<Player> userManager,
 	                           WeaponManager weaponManager,
@@ -50,7 +51,10 @@ public class PlayerDeathListener implements Listener {
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onPlayerDeath(PlayerDeathEvent event) {
-		if (CitizensAPI.getNPCRegistry().isNPC(event.getEntity())) return;
+		if (CitizensAPI.getNPCRegistry().isNPC(event.getEntity())) {
+			event.setDeathMessage(null);
+			return;
+		}
 
 		Player player = event.getEntity();
 		UUID   uuid   = player.getUniqueId();
@@ -58,7 +62,12 @@ public class PlayerDeathListener implements Listener {
 
 		Long lastDeath = recentDeaths.get(uuid);
 		if (lastDeath != null && now - lastDeath < DEATH_DEDUP_WINDOW_MS) {
-			event.setDeathMessage(null);
+			// Only suppress if the downed handler already broadcast; otherwise show the message
+			if (downedBroadcasted.remove(uuid)) {
+				event.setDeathMessage(null);
+			} else {
+				changeDeathMessage(event, player);
+			}
 			return;
 		}
 		recentDeaths.put(uuid, now);
@@ -162,6 +171,7 @@ public class PlayerDeathListener implements Listener {
 	private void broadcastDeathMessage(Player player) {
 		String message = buildDeathMessage(player);
 		if (message == null) return;
+		downedBroadcasted.add(player.getUniqueId());
 		Bukkit.broadcastMessage(message);
 	}
 
@@ -201,7 +211,7 @@ public class PlayerDeathListener implements Listener {
 
 		return ChatUtil.color(template.replace("%killer%", killer.getName())
 		                              .replace("%victim%", player.getName())
-		                              .replace("%item%", weapon.getName()));
+		                              .replace("%item%", weapon.getDisplayName()));
 	}
 
 	private @Nullable String getRandomGlobalMessage(List<String> globalMessages) {
