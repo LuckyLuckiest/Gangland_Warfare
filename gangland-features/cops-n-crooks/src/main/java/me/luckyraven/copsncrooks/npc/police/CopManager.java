@@ -1,17 +1,18 @@
 package me.luckyraven.copsncrooks.npc.police;
 
 import lombok.Getter;
-import lombok.Setter;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
-import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
+import me.luckyraven.copsncrooks.npc.civilian.CivilianNpcRegistry;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.police.config.CopConfigProvider;
+import me.luckyraven.copsncrooks.npc.police.config.CopLoader;
 import me.luckyraven.copsncrooks.npc.police.npc.CopNpc;
 import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
 import me.luckyraven.copsncrooks.npc.police.state.CopState;
 import me.luckyraven.copsncrooks.npc.police.targeting.TargetingManager;
 import me.luckyraven.copsncrooks.wanted.Wanted;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.util.downed.DownedPlayerRegistry;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Bukkit;
@@ -28,13 +29,13 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Central manager for all cop NPCs. Handles spawning, AI ticking, and lifecycle management.
  */
-public class CopManager {
+public class CopManager implements BeanLifecycle {
 
 	private final JavaPlugin            plugin;
 	@Getter
 	private final CopSpawnManager       spawnManager;
 	private final TargetingManager      targetingManager;
-	private final CopConfigProvider     configProvider;
+	private final CopLoader             copLoader;
 	private final EntityMarkManager     entityMarkManager;
 	private final DetainmentService     detainmentService;
 	private final Map<UUID, CopGroup>   groups;
@@ -42,25 +43,26 @@ public class CopManager {
 	private final Map<UUID, BukkitTask> spawnTasks;
 	private final Set<UUID>             activeCombatAlerts;
 	private final Set<UUID>             copAttackers;
-
-	@Setter
-	private CivilianService civilianService;
+	private final CivilianNpcRegistry   civilianNpcRegistry;
+	private       CopConfigProvider     configProvider;
 
 	public CopManager(JavaPlugin plugin, CopSpawnManager spawnManager, TargetingManager targetingManager,
-	                  CopConfigProvider configProvider, EntityMarkManager entityMarkManager,
-	                  DetainmentService detainmentService) {
+	                  CopLoader copLoader, EntityMarkManager entityMarkManager,
+	                  DetainmentService detainmentService, CivilianNpcRegistry civilianNpcRegistry) {
 		this.plugin            = plugin;
 		this.spawnManager      = spawnManager;
 		this.targetingManager  = targetingManager;
-		this.configProvider    = configProvider;
+		this.copLoader         = copLoader;
+		this.configProvider    = copLoader.getLoadedProvider();
 		this.entityMarkManager = entityMarkManager;
 		this.detainmentService = detainmentService;
 
-		this.groups             = new ConcurrentHashMap<>();
-		this.aiTasks            = new ConcurrentHashMap<>();
-		this.spawnTasks         = new ConcurrentHashMap<>();
-		this.activeCombatAlerts = ConcurrentHashMap.newKeySet();
-		this.copAttackers       = ConcurrentHashMap.newKeySet();
+		this.civilianNpcRegistry = civilianNpcRegistry;
+		this.groups              = new ConcurrentHashMap<>();
+		this.aiTasks             = new ConcurrentHashMap<>();
+		this.spawnTasks          = new ConcurrentHashMap<>();
+		this.activeCombatAlerts  = ConcurrentHashMap.newKeySet();
+		this.copAttackers        = ConcurrentHashMap.newKeySet();
 	}
 
 	/**
@@ -137,22 +139,21 @@ public class CopManager {
 	 * @param attacker the attacking player
 	 */
 	public void onCopAttackedAlert(CopNpc copNpc, Player attacker) {
-		// Find the target player that this cop is guarding
-		UUID targetPlayerId = copNpc.getTargetPlayerId();
-		if (targetPlayerId == null) return;
+		// Always force the directly attacked cop into combat with the attacker,
+		// regardless of whether it currently has a target or belongs to a group.
+		onCopAttacked(copNpc, attacker);
 
-		// Get all cops assigned to this target player
-		CopGroup group = groups.get(targetPlayerId);
+		// Alert all other cops in the same group (if any).
+		// The cop may not have a targetPlayerId yet (idle/returning), so we cannot
+		// rely on groups.get(targetPlayerId). Instead, find the group containing this cop.
+		CopGroup group = findGroupContaining(copNpc);
 		if (group == null || group.isEmpty()) return;
 
-		List<CopNpc> cops = group.getCops();
+		activeCombatAlerts.add(group.getTargetPlayerId());
 
-		// Mark this player's cops as being in active combat alert
-		activeCombatAlerts.add(targetPlayerId);
-
-		// Alert ALL cops for this player
-		for (CopNpc alertedCop : cops) {
+		for (CopNpc alertedCop : group.getCops()) {
 			if (!alertedCop.isValid()) continue;
+			if (alertedCop == copNpc) continue;
 
 			onCopAttacked(alertedCop, attacker);
 		}
@@ -266,6 +267,42 @@ public class CopManager {
 			despawnAllForPlayer(playerId);
 		}
 		copAttackers.clear();
+	}
+
+	@Override
+	public void onPreClear() {
+		shutdown();
+	}
+
+	@Override
+	public void onClear() {
+		groups.clear();
+		aiTasks.clear();
+		spawnTasks.clear();
+		activeCombatAlerts.clear();
+		copAttackers.clear();
+		configProvider = null;
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		if (firstLoad) return;
+		this.configProvider = copLoader.getLoadedProvider();
+	}
+
+	@Override
+	public void onShutdown() {
+		shutdown();
+	}
+
+	/**
+	 * Finds the {@link CopGroup} that contains the given cop, or {@code null} if the cop is not in any group.
+	 */
+	private CopGroup findGroupContaining(CopNpc copNpc) {
+		for (CopGroup group : groups.values()) {
+			if (group.getCops().contains(copNpc)) return group;
+		}
+		return null;
 	}
 
 	/**
@@ -572,7 +609,7 @@ public class CopManager {
 	 * @return the nearest wanted civilian entity, or null
 	 */
 	private LivingEntity findNearestWantedCivilian(CopNpc cop) {
-		if (civilianService == null || !cop.isValid()) return null;
+		if (civilianNpcRegistry == null || !cop.isValid()) return null;
 
 		LivingEntity copEntity = cop.getEntity();
 		if (copEntity == null) return null;
@@ -580,7 +617,7 @@ public class CopManager {
 		LivingEntity best     = null;
 		double       bestDist = Double.MAX_VALUE;
 
-		for (CivilianNpc civilian : civilianService.getActiveNpcs()) {
+		for (CivilianNpc civilian : civilianNpcRegistry.getActiveNpcs()) {
 			if (!civilian.isHostile() || !civilian.isWantedByPolice() || !civilian.isValid()) continue;
 
 			LivingEntity civEntity = civilian.getEntity();
