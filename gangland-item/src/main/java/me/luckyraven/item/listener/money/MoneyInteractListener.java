@@ -66,7 +66,7 @@ public class MoneyInteractListener implements Listener {
 		MoneyItem.PickupSound sound = variation.getPickupSound();
 		if (sound == null) return;
 
-		player.playSound(player.getLocation(), sound.sound(), sound.volume(), sound.pitch());
+		sound.soundConfig().playSound(player);
 	}
 
 	private void consumeOne(Player player, ItemStack heldItem) {

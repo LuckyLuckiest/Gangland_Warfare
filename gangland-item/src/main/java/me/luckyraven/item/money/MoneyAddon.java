@@ -1,12 +1,15 @@
 package me.luckyraven.item.money;
 
+import com.cryptomorin.xseries.XSound;
 import lombok.CustomLog;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.item.money.MoneyItem.PickupSound;
+import me.luckyraven.util.configuration.SoundConfiguration;
+import me.luckyraven.util.configuration.SoundConfiguration.SoundType;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -181,31 +184,27 @@ public class MoneyAddon {
 		int          max             = vs.getInt("Max", min);
 		boolean      glow            = vs.getBoolean("Glow", false);
 
-		PickupSound pickupSound = parsePickupSound(id, vs.getConfigurationSection("Pickup_Sound"));
+		PickupSound pickupSound = parsePickupSound(vs.getConfigurationSection("Pickup_Sound"));
 
 		return new MoneyItem(id.toLowerCase(Locale.ROOT), material, customModelData, displayName,
 		                     Collections.unmodifiableList(lore), min, max, glow, pickupSound);
 	}
 
 	@Nullable
-	private PickupSound parsePickupSound(String id, @Nullable ConfigurationSection section) {
+	private PickupSound parsePickupSound(@Nullable ConfigurationSection section) {
 		if (section == null) return null;
 
 		String soundName = section.getString("Sound");
 		if (soundName == null || soundName.isEmpty()) return null;
 
-		Sound sound;
-		try {
-			sound = Sound.valueOf(soundName.toUpperCase(Locale.ROOT));
-		} catch (IllegalArgumentException ex) {
-			log.warn("Invalid Pickup_Sound.Sound '{}' for money variation '{}'", soundName, id);
-			return null;
-		}
-
 		float volume = (float) section.getDouble("Volume", 1.0D);
 		float pitch  = (float) section.getDouble("Pitch", 1.0D);
 
-		return new PickupSound(sound, volume, pitch);
+		// Detect whether the configured sound is a vanilla key or a custom resource pack sound
+		SoundType          soundType   = XSound.of(soundName).isPresent() ? SoundType.VANILLA : SoundType.CUSTOM;
+		SoundConfiguration soundConfig = new SoundConfiguration(soundType, soundName, volume, pitch);
+
+		return new PickupSound(soundConfig);
 	}
 
 	/**

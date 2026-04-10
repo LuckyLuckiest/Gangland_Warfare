@@ -1,8 +1,8 @@
 package me.luckyraven.item.money;
 
 import lombok.Getter;
+import me.luckyraven.util.configuration.SoundConfiguration;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -56,6 +56,6 @@ public class MoneyItem {
 	 * Pickup feedback for a cash variation. Played by the pickup and right-click listeners at the player's location
 	 * after a successful deposit.
 	 */
-	public record PickupSound(Sound sound, float volume, float pitch) { }
+	public record PickupSound(SoundConfiguration soundConfig) { }
 
 }
