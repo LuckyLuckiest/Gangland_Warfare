@@ -1019,9 +1019,13 @@ public abstract class AbstractNpc {
 
 		if (!feet.isPassable() || !head.isPassable()) return false;
 
-		// Portal blocks are passable so they pass the feet check above, but NPCs must never target them
+		// Portal blocks are passable so they pass the checks above, but NPCs must never target them
 		Material feetType = feet.getType();
 		if (feetType == Material.NETHER_PORTAL || feetType == Material.END_PORTAL || feetType == Material.END_GATEWAY)
+			return false;
+
+		Material headType = head.getType();
+		if (headType == Material.NETHER_PORTAL || headType == Material.END_PORTAL || headType == Material.END_GATEWAY)
 			return false;
 
 		if (below.isPassable()) return false;

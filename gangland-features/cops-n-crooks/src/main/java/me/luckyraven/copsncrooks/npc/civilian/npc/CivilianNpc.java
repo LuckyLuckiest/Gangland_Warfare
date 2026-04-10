@@ -85,7 +85,7 @@ public class CivilianNpc extends AbstractNpc {
 
 	@Override
 	public boolean canUseWeapons() {
-		return typeConfig.hostile() && (!typeConfig.weaponNamePool().isEmpty() || !typeConfig.weaponPool().isEmpty());
+		return isHostile() && (!typeConfig.weaponNamePool().isEmpty() || !typeConfig.weaponPool().isEmpty());
 	}
 
 	@Override
@@ -176,7 +176,7 @@ public class CivilianNpc extends AbstractNpc {
 	 * Returns whether this civilian is configured as hostile.
 	 */
 	public boolean isHostile() {
-		return typeConfig.hostile();
+		return typeConfig.hostile() || (group != null && group.getConfig().hostile());
 	}
 
 	/**
