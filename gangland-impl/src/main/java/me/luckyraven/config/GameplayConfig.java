@@ -28,6 +28,7 @@ import me.luckyraven.item.ItemParser;
 import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.contract.*;
+import me.luckyraven.item.listener.money.MoneyProximityPickupTask;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyDepositService;
 import me.luckyraven.lootchest.LootChestManager;
@@ -239,6 +240,14 @@ public class GameplayConfig {
 	                                               MoneyAddon moneyAddon,
 	                                               PlaceholderService placeholderService) {
 		return new GanglandMoneyDepositService(userManager, moneyAddon, placeholderService);
+	}
+
+	@Bean
+	public MoneyProximityPickupTask moneyProximityPickupTask(MoneyAddon moneyAddon,
+	                                                         MoneyDepositService moneyDepositService) {
+		MoneyProximityPickupTask task = new MoneyProximityPickupTask(moneyAddon, moneyDepositService);
+		task.runTaskTimer(gangland, 10L, 10L);
+		return task;
 	}
 
 	@Bean
