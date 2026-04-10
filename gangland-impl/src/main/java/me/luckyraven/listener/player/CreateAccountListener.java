@@ -63,16 +63,28 @@ public final class CreateAccountListener implements Listener {
 
 		user.getEconomy().setBalance(Settings.getUserInitialBalance());
 
-		// remove the player from the offline user manager
+		// Remove the player from the offline user manager
 		User<OfflinePlayer> offlineUser = offlineUserManager.getUser(player);
 
 		if (offlineUser != null) {
 			offlineUserManager.remove(offlineUser);
 		}
 
-		// Add the user to the manager immediately so other handlers can find them
+		// Add user and member to cache immediately so other systems can find them
 		userManager.add(user);
 
+		Member member = memberManager.getMember(player.getUniqueId());
+
+		if (member == null) {
+			member = new Member(player.getUniqueId());
+			memberManager.add(member);
+		}
+
+		Member finalMember = member;
+
+		// Load data from DB asynchronously, then fire the init event on the main thread.
+		// initializeUserData updates the same user object in-place, so the cached reference
+		// gets the DB values once the async load completes.
 		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
 			List<Table<?>> tables    = ganglandDatabase.getTables();
 			UserTable      userTable = TableLookup.find(UserTable.class, tables);
@@ -80,30 +92,20 @@ public final class CreateAccountListener implements Listener {
 
 			userManager.initializeUserData(user, userTable, bankTable);
 
-			// Bukkit events must be fired on the main thread
+			if (!finalMember.hasGang()) {
+				MemberTable memberTable = TableLookup.find(MemberTable.class, tables);
+				memberManager.initializeMemberData(finalMember, memberTable);
+			}
+
+			if (!player.isOnline()) {
+				return;
+			}
+
 			UserDataInitEvent userDataInitEvent = new UserDataInitEvent(true, user);
 			Bukkit.getPluginManager().callEvent(userDataInitEvent);
+
+			userManager.initializeUserPermission(user, finalMember);
 		});
-
-		// need to check if the user already registered
-		Member member = memberManager.getMember(player.getUniqueId());
-
-		if (member != null) {
-			userManager.initializeUserPermission(user, member);
-			return;
-		}
-
-		// if the member is new
-		Member newMember = new Member(player.getUniqueId());
-
-		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
-			List<Table<?>> tables      = ganglandDatabase.getTables();
-			MemberTable    memberTable = TableLookup.find(MemberTable.class, tables);
-
-			memberManager.initializeMemberData(newMember, memberTable);
-		});
-
-		memberManager.add(newMember);
 	}
 
 }

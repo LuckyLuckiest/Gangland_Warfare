@@ -1,6 +1,7 @@
 package me.luckyraven.util.autowire;
 
 import lombok.CustomLog;
+import me.luckyraven.util.autowire.bean.Qualifier;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
@@ -207,8 +208,17 @@ public class DependencyContainer {
 				continue;
 			}
 
-			// Try to get from container
-			Object instance = getInstance(paramType);
+			// Try named lookup first if @Qualifier is present
+			Object instance = null;
+			if (param.isAnnotationPresent(Qualifier.class)) {
+				String qualifierName = param.getAnnotation(Qualifier.class).value();
+				instance = getInstance(qualifierName, paramType);
+			}
+
+			// Fall back to type-based lookup
+			if (instance == null) {
+				instance = getInstance(paramType);
+			}
 
 			if (instance != null) {
 				args[i] = instance;
