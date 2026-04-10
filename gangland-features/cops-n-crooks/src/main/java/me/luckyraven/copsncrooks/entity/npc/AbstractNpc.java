@@ -7,6 +7,8 @@ import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.downed.DownedPlayerRegistry;
+import me.luckyraven.util.timer.SequenceTimer;
+import me.luckyraven.weapon.SelectiveFire;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.events.projectile.WeaponShootEvent;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;
@@ -632,37 +634,13 @@ public abstract class AbstractNpc {
 			return;
 		}
 
-		boolean consumed = heldWeapon.consumeShot();
-		if (!consumed) {
-			triggerReload();
-			return;
-		}
+		SelectiveFire mode = gun.getCurrentSelectiveFire();
+		if (mode == null) mode = SelectiveFire.AUTO;
 
-		LivingEntity shooter = getEntity();
-		if (shooter == null) return;
-
-		WeaponShootEvent event = new WeaponShootEvent(heldWeapon, shooter);
-		Bukkit.getPluginManager().callEvent(event);
-
-		if (event.isCancelled()) {
-			heldWeapon.addAmmunition(1);
-		} else {
-			// Resolve the unified raytracer via Bukkit's ServicesManager (registered in Initializer)
-			// rather than threading it through the NPC factory chain.
-			var registration = Bukkit.getServicesManager().getRegistration(WeaponRaytracer.class);
-			if (registration != null) {
-				WeaponShooting.fire(plugin, registration.getProvider(), shooter, gun);
-			}
-			SoundConfiguration.playSoundsAtLocation(shooter.getEyeLocation(), heldWeapon.getSoundData().getShotCustom(),
-			                                        heldWeapon.getSoundData().getShotDefault());
-			refreshHeldItem();
-		}
-
-		int cooldown = gun.getProjectileData().getCooldown();
-		attackCooldown = scaleCooldown(Math.max(cooldown, 5));
-
-		if (heldWeapon.isMagazineEmpty()) {
-			triggerReload();
+		switch (mode) {
+			case SINGLE -> performSingleShot(gun);
+			case BURST -> performBurstFire(gun);
+			case AUTO -> performAutoShot(gun);
 		}
 	}
 
@@ -764,6 +742,110 @@ public abstract class AbstractNpc {
 		Material  type     = mainHand.getType();
 
 		return type == Material.BOW || type == Material.CROSSBOW;
+	}
+
+	/**
+	 * SINGLE fire mode: fires one shot, then locks for {@code perShot * cooldown} ticks (same window as player
+	 * weapons).
+	 */
+	private void performSingleShot(GunWeapon gun) {
+		if (!fireSingleRound(gun)) return;
+
+		int perShot  = Math.max(gun.getProjectileData().getPerShot(), 1);
+		int cooldown = Math.max(gun.getProjectileData().getCooldown(), 1);
+		attackCooldown = scaleCooldown(Math.max(perShot * cooldown, 5));
+
+		if (heldWeapon.isMagazineEmpty()) {
+			triggerReload();
+		}
+	}
+
+	/**
+	 * AUTO fire mode: fires one shot per call, cooldown equals base weapon cooldown. This is the original behavior —
+	 * the AI tick loop naturally creates continuous fire.
+	 */
+	private void performAutoShot(GunWeapon gun) {
+		if (!fireSingleRound(gun)) return;
+
+		int cooldown = gun.getProjectileData().getCooldown();
+		attackCooldown = scaleCooldown(Math.max(cooldown, 5));
+
+		if (heldWeapon.isMagazineEmpty()) {
+			triggerReload();
+		}
+	}
+
+	/**
+	 * BURST fire mode: fires {@code perShot} rounds spaced by {@code cooldown} ticks each using a
+	 * {@link SequenceTimer}. The attack cooldown covers the full burst duration plus a post-burst pause equal to one
+	 * cooldown interval.
+	 */
+	private void performBurstFire(GunWeapon gun) {
+		if (plugin == null) return;
+
+		int perShot  = Math.max(gun.getProjectileData().getPerShot(), 1);
+		int cooldown = Math.max(gun.getProjectileData().getCooldown(), 1);
+
+		// Lock attackCooldown for the full burst + one extra interval as post-burst pause.
+		// This prevents canAttack() from returning true mid-burst, since the behavior callers
+		// call attack() every AI tick.
+		int totalBurstTicks = perShot * cooldown + cooldown;
+		attackCooldown = scaleCooldown(Math.max(totalBurstTicks, 5));
+
+		SequenceTimer burstTimer = new SequenceTimer(plugin, 1L, 1L);
+
+		for (int i = 0; i < perShot; i++) {
+			int interval = i == 0 ? 0 : cooldown;
+
+			burstTimer.addIntervalTaskPair(interval, timer -> {
+				fireSingleRound(gun);
+
+				if (heldWeapon != null && heldWeapon.isMagazineEmpty()) {
+					triggerReload();
+				}
+			});
+		}
+
+		burstTimer.start(false);
+	}
+
+	/**
+	 * Fires a single round from the given gun weapon: consumes ammo, fires the {@link WeaponShootEvent}, resolves the
+	 * raytracer, and plays sound effects.
+	 *
+	 * @return {@code true} if the shot was fired, {@code false} if ammo was empty or the event was cancelled
+	 */
+	private boolean fireSingleRound(GunWeapon gun) {
+		if (heldWeapon.isBroken() || heldWeapon.isMagazineEmpty()) {
+			triggerReload();
+			return false;
+		}
+
+		boolean consumed = heldWeapon.consumeShot();
+		if (!consumed) {
+			triggerReload();
+			return false;
+		}
+
+		LivingEntity shooter = getEntity();
+		if (shooter == null) return false;
+
+		WeaponShootEvent event = new WeaponShootEvent(heldWeapon, shooter);
+		Bukkit.getPluginManager().callEvent(event);
+
+		if (event.isCancelled()) {
+			heldWeapon.addAmmunition(1);
+			return false;
+		}
+
+		var registration = Bukkit.getServicesManager().getRegistration(WeaponRaytracer.class);
+		if (registration != null) {
+			WeaponShooting.fire(plugin, registration.getProvider(), shooter, gun);
+		}
+		SoundConfiguration.playSoundsAtLocation(shooter.getEyeLocation(), heldWeapon.getSoundData().getShotCustom(),
+		                                        heldWeapon.getSoundData().getShotDefault());
+		refreshHeldItem();
+		return true;
 	}
 
 	/**
