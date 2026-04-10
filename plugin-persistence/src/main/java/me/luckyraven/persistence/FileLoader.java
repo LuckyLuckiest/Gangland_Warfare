@@ -3,27 +3,28 @@ package me.luckyraven.persistence;
 import lombok.CustomLog;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.util.timer.SequenceTimer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
 @CustomLog
 public abstract class FileLoader<T> implements FileInitializer {
 
-	private static final Logger logger = LogManager.getLogger(FileLoader.class.getSimpleName());
+	private final JavaPlugin  plugin;
+	private final boolean     boundDisable;
+	private final Consumer<T> boundConsumer;
+	private final FileManager boundFileManager;
+	private final FileHandler primaryHandler;
+	private       boolean     isLoaded = false;
 
-	private final JavaPlugin plugin;
-	protected boolean     boundDisable;
-	protected Consumer<T> boundConsumer;
-	protected FileManager boundFileManager;
-	protected FileHandler primaryHandler;
-	private boolean isLoaded = false;
-
-	public FileLoader(JavaPlugin plugin) {
-		this.plugin = plugin;
+	public FileLoader(JavaPlugin plugin, boolean disable, @Nullable Consumer<T> consumer, FileManager fileManager) {
+		this.plugin           = plugin;
+		this.boundDisable     = disable;
+		this.boundConsumer    = consumer;
+		this.boundFileManager = fileManager;
+		this.primaryHandler   = resolvePrimaryHandler(fileManager);
 	}
 
 	/**
@@ -40,19 +41,8 @@ public abstract class FileLoader<T> implements FileInitializer {
 	 * Resolves the primary {@link FileHandler} this loader is responsible for. Folder loaders or multi-file loaders may
 	 * return {@code null}; the orchestrator will then skip the regenerate-on-failure step for them.
 	 */
-	@org.jetbrains.annotations.Nullable
+	@Nullable
 	protected abstract FileHandler resolvePrimaryHandler(FileManager fileManager);
-
-	/**
-	 * Binds the parameters that {@link #initialize()} will pass to {@link #load(boolean, Consumer, FileManager)}, and
-	 * resolves the primary file handler so the orchestrator can recover from initialization failures.
-	 */
-	public void bind(boolean disable, Consumer<T> consumer, FileManager fileManager) {
-		this.boundDisable     = disable;
-		this.boundConsumer    = consumer;
-		this.boundFileManager = fileManager;
-		this.primaryHandler   = resolvePrimaryHandler(fileManager);
-	}
 
 	@Override
 	public void initialize() {

@@ -10,6 +10,7 @@ import me.luckyraven.copsncrooks.npc.civilian.config.CivilianTypeConfig;
 import me.luckyraven.copsncrooks.npc.civilian.state.CivilianBehavior;
 import me.luckyraven.copsncrooks.npc.civilian.state.CivilianBehaviorFactory;
 import me.luckyraven.item.ItemParser;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
@@ -36,16 +37,18 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * Factory for creating {@link CivilianNpc} instances backed by Citizens NPCs.
  */
-public class CivilianNpcFactory {
+public class CivilianNpcFactory implements BeanLifecycle {
 
 	private static final int STARTING_AMMO_MAGAZINES = 3;
 
-	private final           JavaPlugin               plugin;
-	private final           EntityMarkManager        entityMarkManager;
-	private final @Nullable ItemParser               itemParser;
-	private final @Nullable WeaponService            weaponService;
-	private final           CivilianBehaviorFactory  behaviorFactory;
-	private final           CivilianNavigationConfig navConfig;
+	private final           JavaPlugin              plugin;
+	private final           EntityMarkManager       entityMarkManager;
+	private final @Nullable ItemParser              itemParser;
+	private final @Nullable WeaponService           weaponService;
+	private final           CivilianSettings        civilianSettings;
+	private final           CivilianBehaviorFactory behaviorFactory;
+
+	private CivilianNavigationConfig navConfig;
 
 	public CivilianNpcFactory(JavaPlugin plugin, EntityMarkManager entityMarkManager,
 	                          @Nullable ItemParser itemParser, @Nullable WeaponService weaponService,
@@ -54,8 +57,15 @@ public class CivilianNpcFactory {
 		this.entityMarkManager = entityMarkManager;
 		this.itemParser        = itemParser;
 		this.weaponService     = weaponService;
+		this.civilianSettings  = civilianSettings;
 		this.behaviorFactory   = new CivilianBehaviorFactory();
 		this.navConfig         = CivilianNavigationConfig.from(civilianSettings);
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		if (firstLoad) return;
+		this.navConfig = CivilianNavigationConfig.from(civilianSettings);
 	}
 
 	/**

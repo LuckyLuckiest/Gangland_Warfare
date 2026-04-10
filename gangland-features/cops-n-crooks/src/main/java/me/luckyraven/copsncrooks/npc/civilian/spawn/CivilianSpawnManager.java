@@ -3,17 +3,20 @@ package me.luckyraven.copsncrooks.npc.civilian.spawn;
 import lombok.CustomLog;
 import me.luckyraven.copsncrooks.entity.EntitySpawner;
 import me.luckyraven.copsncrooks.entity.SpawnConfigProvider;
+import me.luckyraven.copsncrooks.npc.civilian.CivilianNpcRegistry;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianTypeConfig;
 import me.luckyraven.copsncrooks.npc.civilian.config.CiviliansConfig;
+import me.luckyraven.copsncrooks.npc.civilian.config.CiviliansLoader;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
+import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpcFactory;
 import me.luckyraven.persistence.repository.IRepository;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Manages civilian spawn points and delegates NPC creation to {@link CivilianService}.
+ * Manages civilian spawn points and delegates NPC creation to {@link CivilianNpcFactory}.
  * <p>
  * Inherits all location-finding logic (surface search, clearance checks, player-proximity filtering) from
  * {@link EntitySpawner}.
@@ -21,28 +24,47 @@ import org.jetbrains.annotations.Nullable;
 @CustomLog
 public class CivilianSpawnManager extends EntitySpawner<CivilianSpawner> {
 
-	private final CivilianService civilianService;
-	private final CiviliansConfig civiliansConfig;
+	private final CivilianNpcFactory  npcFactory;
+	private final CivilianNpcRegistry registry;
+	private final CiviliansLoader     civiliansLoader;
+
+	private CiviliansConfig civiliansConfig;
 
 	/**
 	 * @param config spawn location config (min/max distances, clearance, etc.)
 	 * @param repository persistent spawner storage; may be {@code null} to skip persistence
-	 * @param civilianService manages active civilian NPCs and provides the factory
-	 * @param civiliansConfig loaded civilians.yml config (used to resolve type definitions)
+	 * @param npcFactory factory for creating civilian NPCs
+	 * @param registry shared NPC tracking registry
+	 * @param civiliansLoader civilians config loader (config is read from the loader so reloads pick up changes)
 	 */
 	public CivilianSpawnManager(SpawnConfigProvider config,
 	                            IRepository<CivilianSpawner> repository,
-	                            CivilianService civilianService,
-	                            CiviliansConfig civiliansConfig) {
+	                            CivilianNpcFactory npcFactory,
+	                            CivilianNpcRegistry registry,
+	                            CiviliansLoader civiliansLoader) {
 		super(config, repository);
-		this.civilianService = civilianService;
-		this.civiliansConfig = civiliansConfig;
+		this.npcFactory      = npcFactory;
+		this.registry        = registry;
+		this.civiliansLoader = civiliansLoader;
+		this.civiliansConfig = civiliansLoader.getLoadedConfig();
+	}
+
+	@Override
+	public void onClear() {
+		super.onClear();
+		civiliansConfig = null;
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		super.onInitialize(firstLoad);
+		this.civiliansConfig = civiliansLoader.getLoadedConfig();
 	}
 
 	// ── EntitySpawner contract ────────────────────────────────────────────────
 
 	/**
-	 * Spawns a civilian of the given type at exactly the given location and registers it with {@link CivilianService}.
+	 * Spawns a civilian of the given type at exactly the given location and registers it with the NPC registry.
 	 *
 	 * @return the created NPC, or {@code null} if spawning failed
 	 */
@@ -54,10 +76,10 @@ public class CivilianSpawnManager extends EntitySpawner<CivilianSpawner> {
 			return null;
 		}
 
-		CivilianNpc npc = civilianService.getNpcFactory().createCivilian(location, typeConfig, null, null);
+		CivilianNpc npc = npcFactory.createCivilian(location, typeConfig, null, null);
 		if (npc == null) return null;
 
-		civilianService.register(npc);
+		registry.register(npc);
 		return npc;
 	}
 

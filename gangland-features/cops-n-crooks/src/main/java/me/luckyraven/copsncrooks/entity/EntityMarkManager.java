@@ -1,5 +1,8 @@
 package me.luckyraven.copsncrooks.entity;
 
+import me.luckyraven.copsncrooks.npc.civilian.config.CiviliansConfig;
+import me.luckyraven.copsncrooks.npc.civilian.config.CiviliansLoader;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -9,19 +12,35 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
 
-public class EntityMarkManager {
+public class EntityMarkManager implements BeanLifecycle {
 
 	private final NamespacedKey         entityMarkKey;
 	private final Map<UUID, EntityMark> entityMarks;
-	private final List<String>          defaultPoliceEntities;
-	private final List<String>          defaultCivilianEntities;
+	private final CiviliansLoader       civiliansLoader;
+	private       List<String>          defaultPoliceEntities;
+	private       List<String>          defaultCivilianEntities;
 
-	public EntityMarkManager(JavaPlugin plugin, List<String> defaultPoliceEntities,
-							 List<String> defaultCivilianEntities) {
-		this.entityMarkKey           = new NamespacedKey(plugin, "entity_mark");
-		this.entityMarks             = new HashMap<>();
-		this.defaultPoliceEntities   = defaultPoliceEntities;
-		this.defaultCivilianEntities = defaultCivilianEntities;
+	public EntityMarkManager(JavaPlugin plugin, CiviliansLoader civiliansLoader) {
+		this.entityMarkKey   = new NamespacedKey(plugin, "entity_mark");
+		this.entityMarks     = new HashMap<>();
+		this.civiliansLoader = civiliansLoader;
+
+		CiviliansConfig config = civiliansLoader.getLoadedConfig();
+		this.defaultPoliceEntities   = config.defaultPoliceEntities();
+		this.defaultCivilianEntities = config.defaultCivilianEntities();
+	}
+
+	@Override
+	public void onClear() {
+		entityMarks.clear();
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		if (firstLoad) return;
+		CiviliansConfig config = civiliansLoader.getLoadedConfig();
+		this.defaultPoliceEntities   = config.defaultPoliceEntities();
+		this.defaultCivilianEntities = config.defaultCivilianEntities();
 	}
 
 	public void setEntityMark(Entity entity, EntityMark mark) {

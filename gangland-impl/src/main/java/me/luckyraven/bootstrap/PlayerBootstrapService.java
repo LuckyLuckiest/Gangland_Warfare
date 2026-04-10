@@ -14,6 +14,7 @@ import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.events.user.UserDataInitEvent;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.unique.UniqueItemUtil;
+import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.util.autowire.bean.BeanLifecycle;
@@ -29,9 +30,8 @@ import java.util.UUID;
  * so it participates in both first-load and reload cycles, replacing the manual
  * {@code ReloadPlugin.loadOnlinePlayers()} call from {@code Gangland.onEnable()}.
  *
- * <p>Depends on {@link FileAddonReloadService} (unused at runtime) solely to force topological ordering: files must be
- * reloaded before players can be loaded, because the addon data (unique items, etc.) is read during user
- * initialization.
+ * <p>Depends on {@link FileManager} (unused at runtime) solely to force topological ordering: files must be reloaded
+ * before players can be loaded, because the addon data (unique items, etc.) is read during user initialization.
  */
 @CustomLog
 public final class PlayerBootstrapService implements BeanLifecycle {
@@ -43,8 +43,9 @@ public final class PlayerBootstrapService implements BeanLifecycle {
 	private final MemberManager              memberManager;
 	private final UniqueItemAddon            uniqueItemAddon;
 
-	@SuppressWarnings("unused") // forces topo ordering — files reload before players load
-	private final FileAddonReloadService fileAddonReloadService;
+	@SuppressWarnings("unused")
+	// forces topo ordering — files to reload before players load
+	private final FileManager fileManager;
 
 	public PlayerBootstrapService(Gangland gangland,
 	                              GanglandDatabase ganglandDatabase,
@@ -52,14 +53,14 @@ public final class PlayerBootstrapService implements BeanLifecycle {
 	                              UserManager<OfflinePlayer> offlineUserManager,
 	                              MemberManager memberManager,
 	                              UniqueItemAddon uniqueItemAddon,
-	                              FileAddonReloadService fileAddonReloadService) {
-		this.gangland               = gangland;
-		this.ganglandDatabase       = ganglandDatabase;
-		this.userManager            = userManager;
-		this.offlineUserManager     = offlineUserManager;
-		this.memberManager          = memberManager;
-		this.uniqueItemAddon        = uniqueItemAddon;
-		this.fileAddonReloadService = fileAddonReloadService;
+	                              FileManager fileManager) {
+		this.gangland           = gangland;
+		this.ganglandDatabase   = ganglandDatabase;
+		this.userManager        = userManager;
+		this.offlineUserManager = offlineUserManager;
+		this.memberManager      = memberManager;
+		this.uniqueItemAddon    = uniqueItemAddon;
+		this.fileManager        = fileManager;
 	}
 
 	/**

@@ -10,9 +10,11 @@ import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.jail.Jail;
 import me.luckyraven.copsncrooks.jail.JailRegistry;
 import me.luckyraven.copsncrooks.jail.JailService;
+import me.luckyraven.copsncrooks.npc.civilian.CivilianNpcRegistry;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianSettings;
 import me.luckyraven.copsncrooks.npc.civilian.config.CiviliansLoader;
+import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpcFactory;
 import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
 import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawner;
 import me.luckyraven.copsncrooks.npc.police.CopManager;
@@ -21,6 +23,7 @@ import me.luckyraven.copsncrooks.npc.police.config.CopLoader;
 import me.luckyraven.copsncrooks.npc.police.config.CopSettings;
 import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
 import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawner;
+import me.luckyraven.copsncrooks.npc.police.targeting.WantedTargetingManager;
 import me.luckyraven.data.economy.GanglandMoneyDropClassifier;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.copsncrooks.GanglandCivilianSpawnConfigProvider;
@@ -55,9 +58,8 @@ import java.util.ArrayList;
  *     <li>{@link CopService} and {@link CivilianService} use no-arg constructors and a separate {@code initialize}
  *     call. The {@code @Bean} method body invokes that initializer directly so the LIFECYCLE pass doesn't try to
  *     call a non-existent zero-arg {@code initialize()}.</li>
- *     <li>{@code civilianService} takes {@link CopService} as a parameter so the topo sort builds it first, then
- *     wires {@code copManager.setCivilianService(civilianService)} inline before returning — replaces the manual
- *     post-construction call in the legacy {@code postInitialize()}.</li>
+ *     <li>{@code CopManager} takes {@link CivilianNpcRegistry} directly via constructor injection — no circular
+ *     dependency or post-construction setter wiring needed.</li>
  * </ul>
  */
 @CustomLog
@@ -78,8 +80,8 @@ public class CopsAndGadgetsConfig {
 	public CiviliansLoader civiliansLoader(ItemParserManager itemParserManager,
 	                                       CivilianSettings civilianSettings,
 	                                       FileManager fileManager) {
-		CiviliansLoader loader = new CiviliansLoader(gangland, itemParserManager.getParser(), civilianSettings);
-		loader.bind(false, null, fileManager);
+		CiviliansLoader loader = new CiviliansLoader(gangland, itemParserManager.getParser(), civilianSettings,
+		                                             false, null, fileManager);
 		fileManager.registerInitializer(loader);
 		fileManager.initializeAll();
 		return loader;
@@ -87,9 +89,7 @@ public class CopsAndGadgetsConfig {
 
 	@Bean
 	public EntityMarkManager entityMarkManager(CiviliansLoader civiliansLoader) {
-		return new EntityMarkManager(gangland,
-		                             civiliansLoader.getLoadedConfig().defaultPoliceEntities(),
-		                             civiliansLoader.getLoadedConfig().defaultCivilianEntities());
+		return new EntityMarkManager(gangland, civiliansLoader);
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
@@ -140,50 +140,70 @@ public class CopsAndGadgetsConfig {
 	}
 
 	@Bean
-	public CopService copService(CopLoader copLoader,
-	                             EntityMarkManager entityMarkManager,
-	                             WeaponManager weaponManager,
-	                             RepositoryRegistry repositoryRegistry,
-	                             DetainmentService detainmentService) {
-		CopService              service = new CopService();
-		IRepository<CopSpawner> repo    = repositoryRegistry.getRepository(CopSpawner.class);
-		service.initialize(gangland, copLoader.getLoadedProvider(), entityMarkManager, weaponManager, repo,
-		                   detainmentService);
-		return service;
+	public WantedTargetingManager wantedTargetingManager() {
+		return new WantedTargetingManager();
 	}
 
 	@Bean
-	public CopManager copManager(CopService copService) {
-		return copService.getCopManager();
+	public CivilianNpcRegistry civilianNpcRegistry() {
+		return new CivilianNpcRegistry();
 	}
 
 	@Bean
-	public CopSpawnManager copSpawnManager(CopService copService) {
-		return copService.getCopManager().getSpawnManager();
+	public CivilianNpcFactory civilianNpcFactory(EntityMarkManager entityMarkManager,
+	                                             ItemParserManager itemParserManager,
+	                                             WeaponManager weaponManager,
+	                                             CivilianSettings civilianSettings) {
+		return new CivilianNpcFactory(gangland, entityMarkManager, itemParserManager.getParser(), weaponManager,
+		                              civilianSettings);
 	}
 
 	@Bean
-	public CivilianService civilianService(CopService copService,
-	                                       CiviliansLoader civiliansLoader,
+	public CopSpawnManager copSpawnManager(CopLoader copLoader,
 	                                       EntityMarkManager entityMarkManager,
+	                                       WeaponManager weaponManager,
 	                                       RepositoryRegistry repositoryRegistry,
-	                                       CivilianSettings civilianSettings,
-	                                       GanglandCivilianSpawnConfigProvider spawnConfigProvider,
-	                                       ItemParserManager itemParserManager,
-	                                       WeaponManager weaponManager) {
-		CivilianService              service = new CivilianService();
-		IRepository<CivilianSpawner> repo    = repositoryRegistry.getRepository(CivilianSpawner.class);
-		service.initialize(gangland, civiliansLoader.getLoadedConfig(), entityMarkManager, repo,
-		                   civilianSettings, spawnConfigProvider, itemParserManager.getParser(), weaponManager);
-		// Wire the civilian service into the cop manager so cops can pursue wanted hostile civilians. The CopService
-		// param above forces the topo sort to build it before this bean runs.
-		copService.getCopManager().setCivilianService(service);
-		return service;
+	                                       DetainmentService detainmentService) {
+		IRepository<CopSpawner> repo = repositoryRegistry.getRepository(CopSpawner.class);
+		return new CopSpawnManager(gangland, copLoader, entityMarkManager, weaponManager, repo, detainmentService);
 	}
 
 	@Bean
-	public CivilianSpawnManager civilianSpawnManager(CivilianService civilianService) {
-		return civilianService.getSpawnManager();
+	public CopManager copManager(CopSpawnManager copSpawnManager,
+	                             WantedTargetingManager wantedTargetingManager,
+	                             CopLoader copLoader,
+	                             EntityMarkManager entityMarkManager,
+	                             DetainmentService detainmentService,
+	                             CivilianNpcRegistry civilianNpcRegistry) {
+		return new CopManager(gangland, copSpawnManager, wantedTargetingManager, copLoader, entityMarkManager,
+		                      detainmentService, civilianNpcRegistry);
+	}
+
+	@Bean
+	public CopService copService(CopManager copManager, WantedTargetingManager wantedTargetingManager) {
+		return new CopService(copManager, wantedTargetingManager);
+	}
+
+	@Bean
+	public CivilianSpawnManager civilianSpawnManager(CivilianNpcFactory civilianNpcFactory,
+	                                                 CivilianNpcRegistry civilianNpcRegistry,
+	                                                 CiviliansLoader civiliansLoader,
+	                                                 GanglandCivilianSpawnConfigProvider spawnConfigProvider,
+	                                                 RepositoryRegistry repositoryRegistry) {
+		IRepository<CivilianSpawner> repo = repositoryRegistry.getRepository(CivilianSpawner.class);
+		return new CivilianSpawnManager(spawnConfigProvider, repo, civilianNpcFactory, civilianNpcRegistry,
+		                                civiliansLoader);
+	}
+
+	@Bean
+	public CivilianService civilianService(CiviliansLoader civiliansLoader,
+	                                       EntityMarkManager entityMarkManager,
+	                                       CivilianSettings civilianSettings,
+	                                       CivilianNpcFactory civilianNpcFactory,
+	                                       CivilianSpawnManager civilianSpawnManager,
+	                                       CivilianNpcRegistry civilianNpcRegistry) {
+		return new CivilianService(gangland, civiliansLoader, entityMarkManager, civilianSettings,
+		                           civilianNpcFactory, civilianSpawnManager, civilianNpcRegistry);
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
@@ -215,7 +235,7 @@ public class CopsAndGadgetsConfig {
 	// ---------------------------------------------------------------------------------------------------------------
 
 	@Bean
-	public MoneyDropClassifier moneyDropClassifier(CopService copService, CivilianService civilianService) {
-		return new GanglandMoneyDropClassifier(copService, civilianService);
+	public MoneyDropClassifier moneyDropClassifier(CopManager copManager, CivilianNpcRegistry civilianNpcRegistry) {
+		return new GanglandMoneyDropClassifier(copManager, civilianNpcRegistry);
 	}
 }

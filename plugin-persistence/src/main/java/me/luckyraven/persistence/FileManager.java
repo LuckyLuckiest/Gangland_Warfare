@@ -2,6 +2,7 @@ package me.luckyraven.persistence;
 
 import lombok.CustomLog;
 import me.luckyraven.util.UnhandledError;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -12,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @CustomLog
-public class FileManager {
+public class FileManager implements BeanLifecycle {
 
 	private final JavaPlugin            plugin;
 	private final Set<FileHandler>      files;
@@ -179,6 +180,23 @@ public class FileManager {
 	 */
 	public Set<FileHandler> getFiles() {
 		return Collections.unmodifiableSet(files);
+	}
+
+	// ── BeanLifecycle ─────────────────────────────────────────────────────────
+
+	@Override
+	public void onClear() {
+		for (FileInitializer initializer : initializers) {
+			initializer.clear();
+		}
+		nextInitializerIndex = 0;
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		if (firstLoad) return;
+		reloadFiles();
+		initializeAll();
 	}
 
 	/**

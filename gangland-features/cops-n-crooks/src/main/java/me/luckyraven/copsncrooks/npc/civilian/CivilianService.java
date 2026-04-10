@@ -3,23 +3,15 @@ package me.luckyraven.copsncrooks.npc.civilian;
 import lombok.CustomLog;
 import lombok.Getter;
 import me.luckyraven.copsncrooks.entity.EntityMarkManager;
-import me.luckyraven.copsncrooks.entity.SpawnConfigProvider;
-import me.luckyraven.copsncrooks.npc.civilian.config.CivilianGroupConfig;
-import me.luckyraven.copsncrooks.npc.civilian.config.CivilianSettings;
-import me.luckyraven.copsncrooks.npc.civilian.config.CivilianTypeConfig;
-import me.luckyraven.copsncrooks.npc.civilian.config.CiviliansConfig;
+import me.luckyraven.copsncrooks.npc.civilian.config.*;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpcFactory;
 import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
 import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawner;
-import me.luckyraven.item.ItemParser;
-import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.util.timer.RepeatingTimer;
-import me.luckyraven.weapon.WeaponService;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
@@ -29,123 +21,104 @@ import java.util.*;
 /**
  * Manages the lifecycle and AI ticking of all active civilian NPCs.
  * <p>
- * Call {@link #initialize} once during plugin enable. The service schedules a repeating task that ticks every active
- * civilian and removes dead or marked ones.
+ * Runtime setup (config reading, timer start) happens in {@link #onInitialize(boolean)}, called by the bean lifecycle
+ * after all beans are constructed.
  */
 @CustomLog
 public class CivilianService implements BeanLifecycle {
 
-	private final Map<UUID, CivilianNpc>     activeNpcs   = new HashMap<>();
-	private final Map<String, CivilianGroup> activeGroups = new HashMap<>();
+	private final JavaPlugin           plugin;
+	private final CiviliansLoader      civiliansLoader;
+	private final EntityMarkManager    entityMarkManager;
+	private final CivilianSettings     civilianSettings;
+	private final CivilianNpcFactory   npcFactory;
+	private final CivilianSpawnManager spawnManager;
+	private final CivilianNpcRegistry  registry;
 
 	@Getter
-	private CivilianNpcFactory npcFactory;
+	private CiviliansConfig civiliansConfig;
 
-	@Getter
-	private CivilianSpawnManager spawnManager;
+	private RepeatingTimer tickTimer;
+	private RepeatingTimer checkTimer;
 
-	private EntityMarkManager entityMarkManager;
-	@Getter
-	private CiviliansConfig   civiliansConfig;
-	private JavaPlugin        plugin;
-	private boolean           initialized;
-
-	// ── Initialization ────────────────────────────────────────────────────────
-
-	/**
-	 * Wires dependencies and starts the AI tick scheduler.
-	 *
-	 * @param plugin the owning plugin
-	 * @param civiliansConfig loaded civilians.yml config
-	 * @param entityMarkManager entity classification manager
-	 * @param civilianSettings civilian settings
-	 * @param itemParser item string parser (nullable — falls back to XMaterial)
-	 * @param weaponService gangland weapon registry (nullable — disables weapon assignment)
-	 */
-	public void initialize(JavaPlugin plugin, CiviliansConfig civiliansConfig, EntityMarkManager entityMarkManager,
-	                       IRepository<CivilianSpawner> spawnerRepository, CivilianSettings civilianSettings,
-	                       SpawnConfigProvider spawnConfigProvider, @Nullable ItemParser itemParser,
-	                       @Nullable WeaponService weaponService) {
-		if (initialized) return;
-
+	public CivilianService(JavaPlugin plugin, CiviliansLoader civiliansLoader, EntityMarkManager entityMarkManager,
+	                       CivilianSettings civilianSettings, CivilianNpcFactory npcFactory,
+	                       CivilianSpawnManager spawnManager, CivilianNpcRegistry registry) {
 		this.plugin            = plugin;
-		this.civiliansConfig   = civiliansConfig;
+		this.civiliansLoader   = civiliansLoader;
 		this.entityMarkManager = entityMarkManager;
-		this.spawnManager      = new CivilianSpawnManager(spawnConfigProvider, spawnerRepository, this,
-		                                                  civiliansConfig);
-		this.npcFactory        = new CivilianNpcFactory(plugin, entityMarkManager, itemParser, weaponService,
-		                                                civilianSettings);
+		this.civilianSettings  = civilianSettings;
+		this.npcFactory        = npcFactory;
+		this.spawnManager      = spawnManager;
+		this.registry          = registry;
+	}
+
+	// ── Lifecycle ─────────────────────────────────────────────────────────────
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		this.civiliansConfig = civiliansLoader.getLoadedConfig();
 
 		if (!civilianSettings.isCivilianAiEnabled()) {
 			log.info("Civilian AI is disabled — NPCs will not tick.");
-			initialized = true;
 			return;
 		}
 
 		int tickRate = civilianSettings.getCivilianAiTickRate();
-		RepeatingTimer tickTimer = new RepeatingTimer(plugin, tickRate, 0, timer -> {
-			tickAll();
-		});
-
+		this.tickTimer = new RepeatingTimer(plugin, tickRate, 0, timer -> tickAll());
 		tickTimer.start(false);
 
 		int checkInterval = civilianSettings.getCivilianSpawnerCheckInterval();
-		RepeatingTimer checkTimer = new RepeatingTimer(plugin, checkInterval, 0, timer -> {
-			tickProximitySpawners(civilianSettings);
-		});
-
+		this.checkTimer = new RepeatingTimer(plugin, checkInterval, 0,
+		                                     timer -> tickProximitySpawners(civilianSettings));
 		checkTimer.start(false);
 
-		initialized = true;
 		log.info("CivilianService initialized (tick rate: {} ticks, proximity check: {} ticks).", tickRate,
 		         checkInterval);
 	}
 
-	// ── NPC registry ─────────────────────────────────────────────────────────
+	@Override
+	public void onPreClear() {
+		if (tickTimer != null) tickTimer.stop();
+		if (checkTimer != null) checkTimer.stop();
+		shutdown();
+	}
 
-	/**
-	 * Registers an already-spawned civilian NPC so it is ticked and cleaned up by this service.
-	 */
+	@Override
+	public void onClear() {
+		civiliansConfig = null;
+		tickTimer       = null;
+		checkTimer      = null;
+	}
+
+	@Override
+	public void onShutdown() {
+		shutdown();
+	}
+
+	// ── Registry delegates ───────────────────────────────────────────────────
+
 	public void register(CivilianNpc npc) {
-		if (npc == null || !npc.isValid()) return;
-		Entity entity = npc.getEntity();
-		if (entity == null) return;
-		activeNpcs.put(entity.getUniqueId(), npc);
+		registry.register(npc);
 	}
 
-	/**
-	 * Registers a civilian group. Members must already be registered via {@link #register}.
-	 */
-	public void registerGroup(CivilianGroup group) {
-		activeGroups.put(group.getGroupId() + "_" + System.nanoTime(), group);
-	}
-
-	/**
-	 * Returns the active civilian NPC for the given entity UUID, or {@code null}.
-	 */
 	@Nullable
 	public CivilianNpc getNpc(UUID entityId) {
-		return activeNpcs.get(entityId);
+		return registry.getNpc(entityId);
 	}
 
-	/**
-	 * Returns all currently active civilian NPCs (unmodifiable view).
-	 */
 	public Collection<CivilianNpc> getActiveNpcs() {
-		return activeNpcs.values();
+		return registry.getActiveNpcs();
 	}
 
-	/**
-	 * Returns all currently active civilian groups (unmodifiable view).
-	 */
 	public Collection<CivilianGroup> getActiveGroups() {
-		return activeGroups.values();
+		return registry.getActiveGroups();
 	}
 
 	// ── Group spawning ────────────────────────────────────────────────────────
 
 	/**
-	 * Spawns a complete group from civilians.yml at the given location. All members are registered with this service
+	 * Spawns a complete group from civilians.yml at the given location. All members are registered with the registry
 	 * and linked to the group.
 	 *
 	 * @param location the center spawn location for the group
@@ -184,9 +157,9 @@ public class CivilianService implements BeanLifecycle {
 		}
 
 		if (!group.isEmpty()) {
-			registerGroup(group);
+			registry.registerGroup(group);
 			// Defer registration by 1 tick so Citizens finishes entity initialisation for all group members
-			plugin.getServer().getScheduler().runTaskLater(plugin, () -> spawned.forEach(this::register), 1L);
+			plugin.getServer().getScheduler().runTaskLater(plugin, () -> spawned.forEach(registry::register), 1L);
 			log.debug("Spawned group '{}' with {} members at {}.", groupId, group.getMembers().size(), location);
 			return group;
 		}
@@ -194,27 +167,23 @@ public class CivilianService implements BeanLifecycle {
 		return null;
 	}
 
-	// ── Spawner proximity ─────────────────────────────────────────────────────
+	// ── Shutdown ──────────────────────────────────────────────────────────────
 
 	/**
 	 * Destroys all active civilian NPCs and clears all registries.
 	 */
 	public void shutdown() {
-		for (CivilianNpc npc : activeNpcs.values()) {
+		for (CivilianNpc npc : registry.getActiveNpcs()) {
 			try {
 				npc.destroy(entityMarkManager);
 			} catch (Exception e) {
 				log.warn("Error destroying civilian NPC during shutdown: {}", e.getMessage());
 			}
 		}
-		activeNpcs.clear();
-		activeGroups.clear();
+		registry.clear();
 	}
 
-	@Override
-	public void onShutdown() {
-		shutdown();
-	}
+	// ── Proximity spawners ────────────────────────────────────────────────────
 
 	/**
 	 * Checks all registered spawners each interval. Spawns civilians when a player enters the activation radius and
@@ -254,7 +223,7 @@ public class CivilianService implements BeanLifecycle {
 			if (anyWithinActivation) {
 				if (spawner.getGroupId() != null) {
 					// Group spawner — spawn one group if none currently alive from this spawner
-					boolean hasActiveGroup = activeGroups.values()
+					boolean hasActiveGroup = registry.getActiveGroups()
 							.stream()
 							.anyMatch(g -> Integer.valueOf(spawner.getId()).equals(g.getSpawnerId()) && !g.isEmpty());
 
@@ -266,7 +235,7 @@ public class CivilianService implements BeanLifecycle {
 					}
 				} else {
 					// Individual NPC spawner — fill up to maxNpcs
-					long aliveCount = activeNpcs.values()
+					long aliveCount = registry.getActiveNpcs()
 							.stream()
 							.filter(npc -> Integer.valueOf(spawner.getId()).equals(npc.getSpawnerId()))
 							.filter(npc -> npc.isValid() && !npc.isMarkedForRemoval())
@@ -288,21 +257,19 @@ public class CivilianService implements BeanLifecycle {
 		}
 	}
 
-	// ── Shutdown ──────────────────────────────────────────────────────────────
-
 	/**
 	 * Marks all civilians spawned from the given spawner for removal. {@link #tickAll} will destroy them on the next
 	 * tick.
 	 */
 	private void despawnFromSpawner(int spawnerId) {
 		// Individual NPCs tracked to this spawner
-		activeNpcs.values()
+		registry.getActiveNpcs()
 				.stream()
 				.filter(npc -> Integer.valueOf(spawnerId).equals(npc.getSpawnerId()))
 				.forEach(CivilianNpc::markForRemoval);
 
 		// Group members whose group was spawned from this spawner
-		activeGroups.values()
+		registry.getActiveGroups()
 				.stream()
 				.filter(g -> Integer.valueOf(spawnerId).equals(g.getSpawnerId()))
 				.flatMap(g -> g.getMembers()
@@ -314,7 +281,7 @@ public class CivilianService implements BeanLifecycle {
 
 	private void tickAll() {
 		// Tick NPCs; collect dead ones for removal
-		activeNpcs.entrySet().removeIf(entry -> {
+		registry.npcMap().entrySet().removeIf(entry -> {
 			CivilianNpc npc = entry.getValue();
 			if (npc.isMarkedForRemoval() || !npc.isValid()) {
 				try {
@@ -334,7 +301,7 @@ public class CivilianService implements BeanLifecycle {
 		});
 
 		// Clean empty groups
-		activeGroups.entrySet().removeIf(entry -> {
+		registry.groupMap().entrySet().removeIf(entry -> {
 			CivilianGroup group = entry.getValue();
 			group.pruneDeadMembers();
 			return group.isEmpty();

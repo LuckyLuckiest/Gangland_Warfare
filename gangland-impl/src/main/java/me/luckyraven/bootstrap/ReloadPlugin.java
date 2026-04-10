@@ -7,15 +7,17 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.persistence.FileManager;
 import me.luckyraven.scoreboard.Scoreboard;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.driver.DriverHandler;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.bukkit.entity.Player;
 
 /**
  * Thin facade over the bean lifecycle for plugin reload operations. The full {@link #reload()} delegates entirely to
- * {@link GanglandContext#reloadBeans()}, which drives every {@link me.luckyraven.util.autowire.bean.BeanLifecycle} bean
- * through its onPreClear → onClear → onInitialize(false) cycle in topological order.
+ * {@link GanglandContext#reloadBeans()}, which drives every {@link BeanLifecycle} bean through its onPreClear → onClear
+ * → onInitialize(false) cycle in topological order.
  *
  * <p>Convenience methods ({@link #filesReload()}, {@link #scoreboardReload()}, {@link #inventoryReload()}) support the
  * sub-command variants ({@code /glw reload files}, etc.) that only reload a subset of the plugin.
@@ -34,7 +36,7 @@ public final class ReloadPlugin {
 	 * <ol>
 	 *     <li>PeriodicalUpdates stops timer</li>
 	 *     <li>UserManager kills scoreboards, stops timers</li>
-	 *     <li>FileAddonReloadService clears addons, reloads files, re-initializes addons</li>
+	 *     <li>FileManager reloads YAML files and re-initializes all file initializers</li>
 	 *     <li>Managers reinitialize from database</li>
 	 *     <li>PlayerBootstrapService loads online/offline players</li>
 	 *     <li>ScoreboardLifecycleService creates scoreboards</li>
@@ -50,9 +52,9 @@ public final class ReloadPlugin {
 	 * players. Used by {@code /glw reload files}.
 	 */
 	public void filesReload() {
-		FileAddonReloadService service = context.get(FileAddonReloadService.class);
-		service.onClear();
-		service.onInitialize(false);
+		FileManager fileManager = context.get(FileManager.class);
+		fileManager.onClear();
+		fileManager.onInitialize(false);
 	}
 
 	/**
