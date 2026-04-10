@@ -8,7 +8,10 @@ import me.luckyraven.persistence.database.component.Table;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -62,7 +65,10 @@ public abstract class AbstractRepository<T> implements IRepository<T> {
 
 	@Override
 	public void save(T data) {
-		databaseHelper.runQueriesAsync(database -> saveRow(data, getDatabase()));
+		databaseHelper.runQueriesAsync(database -> {
+			consumeSave(data);
+			getTable().upsertTableQuery(database, data);
+		});
 	}
 
 	@Override
@@ -74,8 +80,9 @@ public abstract class AbstractRepository<T> implements IRepository<T> {
 		List<T> snapshot = new ArrayList<>(collection);
 		databaseHelper.runQueriesAsync(database -> {
 			for (T row : snapshot) {
-				saveRow(row, database);
+				consumeSave(row);
 			}
+			getTable().batchUpsertTableQuery(database, snapshot);
 		}, onComplete);
 	}
 
@@ -102,36 +109,6 @@ public abstract class AbstractRepository<T> implements IRepository<T> {
 
 	public Database getDatabase() {
 		return getDatabaseHandler().getDatabase();
-	}
-
-	protected boolean isRowAvailable(T data, Database database) throws SQLException {
-		Table<T> table   = getTable();
-		Database dbTable = database.table(table.getName());
-
-		Map<String, Object> search = table.searchCriteria(data);
-		Object[] select = dbTable.select((String) search.get("search"), (Object[]) search.get("info"),
-		                                 (int[]) search.get("type"), new String[]{"*"});
-		return select.length != 0;
-	}
-
-	protected void insertData(T data, Database database) throws SQLException {
-		getTable().insertTableQuery(database, data);
-	}
-
-	protected void updateData(T data, Database database) throws SQLException {
-		getTable().updateTableQuery(database, data);
-	}
-
-	private void saveRow(T data, Database database) throws SQLException {
-		consumeSave(data);
-
-		boolean checkRow = isRowAvailable(data, database);
-
-		if (checkRow) {
-			updateData(data, database);
-		} else {
-			insertData(data, database);
-		}
 	}
 
 	private <E> void consumeSave(E data) {

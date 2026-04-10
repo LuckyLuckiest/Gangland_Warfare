@@ -17,7 +17,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
-
 @Repository(RankParent.class)
 public class RankParentRepository extends AbstractRepository<RankParent> {
 
@@ -43,7 +42,7 @@ public class RankParentRepository extends AbstractRepository<RankParent> {
 		                                     new String[]{"*"});
 
 		if (existing.length == 0) {
-			insertData(new RankParent(headId, tailId), getDatabase());
+			getTable().insertTableQuery(getDatabase(), new RankParent(headId, tailId));
 		}
 	}
 

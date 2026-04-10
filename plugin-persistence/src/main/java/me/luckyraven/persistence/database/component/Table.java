@@ -152,6 +152,83 @@ public abstract class Table<T> {
 	}
 
 	/**
+	 * Persists a single row using an UPSERT statement (INSERT … ON CONFLICT DO UPDATE for SQLite, INSERT … ON DUPLICATE
+	 * KEY UPDATE for MySQL). Eliminates the need for a separate existence check before saving.
+	 *
+	 * @param database an unscoped {@link Database} instance (the method scopes it internally)
+	 * @param data the entity to persist
+	 *
+	 * @throws SQLException if the upsert query fails or no primary key is defined on this table
+	 */
+	public synchronized void upsertTableQuery(Database database, T data) throws SQLException {
+		Object[] values = getData(data);
+		if (values == null || values.length == 0) return;
+
+		String[]   allColumns      = getColumns().toArray(String[]::new);
+		String[]   conflictColumns = getPrimaryKeyColumns();
+		Database   scoped          = database.table(name);
+		String     sql             = scoped.buildUpsertQuery(conflictColumns, allColumns);
+		Connection conn            = database.getConnection();
+		if (conn == null) throw new SQLException("No database connection");
+
+		int[] columnsDataType = attributes.values()
+				.stream().mapToInt(Attribute::getType).toArray();
+
+		try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+			database.preparePlaceholderStatements(stmt, values, columnsDataType, 0);
+			stmt.executeUpdate();
+		}
+	}
+
+	/**
+	 * Persists an entire collection of rows in a single JDBC batch using UPSERT statements. Rows are batched inside a
+	 * transaction for atomicity and performance — the database processes all rows in one round-trip instead of issuing
+	 * individual queries per row.
+	 *
+	 * @param database an unscoped {@link Database} instance (the method scopes it internally)
+	 * @param data the entities to persist; an empty or {@code null} collection is a no-op
+	 *
+	 * @throws SQLException if the batch execution fails or no primary key is defined on this table
+	 */
+	public synchronized void batchUpsertTableQuery(Database database, Collection<? extends T> data) throws
+			SQLException {
+		if (data == null || data.isEmpty()) return;
+
+		String[]   allColumns      = getColumns().toArray(String[]::new);
+		String[]   conflictColumns = getPrimaryKeyColumns();
+		Database   scoped          = database.table(name);
+		String     sql             = scoped.buildUpsertQuery(conflictColumns, allColumns);
+		Connection conn            = database.getConnection();
+		if (conn == null) throw new SQLException("No database connection");
+
+		int[] columnsDataType = attributes.values()
+				.stream().mapToInt(Attribute::getType).toArray();
+
+		boolean prevAutoCommit = conn.getAutoCommit();
+		try {
+			conn.setAutoCommit(false);
+			try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+				for (T row : data) {
+					Object[] values = getData(row);
+					if (values == null || values.length == 0) continue;
+
+					database.preparePlaceholderStatements(stmt, values, columnsDataType, 0);
+					stmt.addBatch();
+				}
+				stmt.executeBatch();
+			}
+			conn.commit();
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+			} catch (SQLException ignored) { }
+			throw e;
+		} finally {
+			conn.setAutoCommit(prevAutoCommit);
+		}
+	}
+
+	/**
 	 * Validates and synchronizes the live database schema against this table's attribute definitions.
 	 * <p>
 	 * Columns present in the definition but absent from the database are added; columns present in the database but
@@ -243,6 +320,14 @@ public abstract class Table<T> {
 
 	protected void addAttribute(Attribute<?> attribute) {
 		attributes.put(attribute.getName(), attribute);
+	}
+
+	private String[] getPrimaryKeyColumns() {
+		return attributes.entrySet()
+				.stream()
+				.filter(e -> e.getValue().isPrimaryKey())
+				.map(Map.Entry::getKey)
+				.toArray(String[]::new);
 	}
 
 	/**

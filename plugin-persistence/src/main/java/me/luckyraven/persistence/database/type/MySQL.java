@@ -6,10 +6,7 @@ import me.luckyraven.persistence.database.Database;
 
 import java.sql.*;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MySQL implements Database {
 
@@ -234,6 +231,49 @@ public class MySQL implements Database {
 		}
 
 		return columns;
+	}
+
+	@Override
+	public String buildUpsertQuery(String[] conflictColumns, String[] allColumns) throws SQLException {
+		if (table == null) throw new SQLException("No table selected");
+		if (conflictColumns == null || conflictColumns.length == 0) {
+			throw new SQLException("Cannot build UPSERT: no conflict columns provided");
+		}
+
+		Set<String> conflictSet = new HashSet<>(Arrays.asList(conflictColumns));
+
+		StringBuilder columnNames  = new StringBuilder();
+		StringBuilder placeholders = new StringBuilder();
+		for (int i = 0; i < allColumns.length; i++) {
+			columnNames.append(allColumns[i]);
+			placeholders.append("?");
+			if (i < allColumns.length - 1) {
+				columnNames.append(", ");
+				placeholders.append(", ");
+			}
+		}
+
+		StringBuilder sql = new StringBuilder();
+		sql.append("INSERT INTO ").append(table)
+		   .append(" (").append(columnNames).append(") VALUES (").append(placeholders).append(")");
+
+		List<String> updateColumns = new ArrayList<>();
+		for (String col : allColumns) {
+			if (!conflictSet.contains(col)) updateColumns.add(col);
+		}
+
+		if (updateColumns.isEmpty()) {
+			sql.append(" ON DUPLICATE KEY UPDATE ")
+			   .append(conflictColumns[0]).append(" = ").append(conflictColumns[0]);
+		} else {
+			sql.append(" ON DUPLICATE KEY UPDATE ");
+			for (int i = 0; i < updateColumns.size(); i++) {
+				sql.append(updateColumns.get(i)).append(" = VALUES(").append(updateColumns.get(i)).append(")");
+				if (i < updateColumns.size() - 1) sql.append(", ");
+			}
+		}
+
+		return sql.append(";").toString();
 	}
 
 	@Override

@@ -161,6 +161,22 @@ public interface Database {
 	String getStringDataType(int columnType, int size);
 
 	/**
+	 * Builds an UPSERT SQL query for the currently selected table. If a row with matching conflict columns already
+	 * exists, the remaining columns are updated; otherwise a new row is inserted.
+	 *
+	 * <p>Each {@link Database} implementation must provide its own syntax (e.g. {@code ON DUPLICATE KEY UPDATE} for
+	 * MySQL, {@code ON CONFLICT … DO UPDATE SET} for SQLite).
+	 *
+	 * @param conflictColumns columns that form the primary/unique key used for conflict detection
+	 * @param allColumns every column in the row (conflict + non-conflict), in insertion order
+	 *
+	 * @return the parameterized SQL string ready for {@link PreparedStatement} binding
+	 *
+	 * @throws SQLException if no table is selected or no conflict columns are provided
+	 */
+	String buildUpsertQuery(String[] conflictColumns, String[] allColumns) throws SQLException;
+
+	/**
 	 * Checks if the class handles connection pool.
 	 *
 	 * @return boolean value.

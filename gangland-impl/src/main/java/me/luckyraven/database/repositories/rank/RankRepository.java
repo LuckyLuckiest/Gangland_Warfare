@@ -48,7 +48,7 @@ public class RankRepository extends AbstractRepository<Rank> {
 
 		if (tailRow.length == 0) {
 			tailId = dataTable.totalRows() + 1;
-			insertData(new Rank(tailName, tailId), getDatabase());
+			getTable().insertTableQuery(getDatabase(), new Rank(tailName, tailId));
 		} else {
 			tailId = (int) tailRow[0];
 		}
@@ -60,7 +60,7 @@ public class RankRepository extends AbstractRepository<Rank> {
 
 		if (headRow.length == 0) {
 			headId = dataTable.totalRows() + 1;
-			insertData(new Rank(headName, headId), getDatabase());
+			getTable().insertTableQuery(getDatabase(), new Rank(headName, headId));
 		} else {
 			headId = (int) headRow[0];
 		}

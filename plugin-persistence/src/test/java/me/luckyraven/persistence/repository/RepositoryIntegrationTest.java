@@ -181,28 +181,6 @@ class RepositoryIntegrationTest {
 		assertDoesNotThrow(() -> repo.delete(new TestEntity("ghost", "Nobody", 0)));
 	}
 
-	// ──────────────────────────────────────── isRowAvailable helper ──
-
-	@Test
-	@DisplayName("isRowAvailable - returns true when the row is present")
-	void isRowAvailable_existingRow_returnsTrue() throws Exception {
-		TestEntity entity = new TestEntity("r1", "Nina", 8);
-		helper.runQueries(db -> repo.getTablePublic().insertTableQuery(db, entity));
-
-		// Access via package-private method - both are in the repository sub-package
-		boolean[] result = {false};
-		helper.runQueries(db -> result[0] = repo.isRowAvailable(entity, db));
-		assertTrue(result[0]);
-	}
-
-	@Test
-	@DisplayName("isRowAvailable - returns false for a row that was never inserted")
-	void isRowAvailable_missingRow_returnsFalse() throws Exception {
-		boolean[] result = {true};
-		helper.runQueries(db -> result[0] = repo.isRowAvailable(new TestEntity("missing", "Nobody", 0), db));
-		assertFalse(result[0]);
-	}
-
 	// ─────────────────────────────────────── accessor plumbing ──
 
 	@Test

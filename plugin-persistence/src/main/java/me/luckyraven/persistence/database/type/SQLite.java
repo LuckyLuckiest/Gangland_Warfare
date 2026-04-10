@@ -10,10 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.*;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SQLite implements Database {
 
@@ -216,6 +213,49 @@ public class SQLite implements Database {
 		}
 
 		return columns;
+	}
+
+	@Override
+	public String buildUpsertQuery(String[] conflictColumns, String[] allColumns) throws SQLException {
+		if (table == null) throw new SQLException("No table selected");
+		if (conflictColumns == null || conflictColumns.length == 0) {
+			throw new SQLException("Cannot build UPSERT: no conflict columns provided");
+		}
+
+		Set<String> conflictSet = new HashSet<>(Arrays.asList(conflictColumns));
+
+		StringBuilder columnNames  = new StringBuilder();
+		StringBuilder placeholders = new StringBuilder();
+		for (int i = 0; i < allColumns.length; i++) {
+			columnNames.append(allColumns[i]);
+			placeholders.append("?");
+			if (i < allColumns.length - 1) {
+				columnNames.append(", ");
+				placeholders.append(", ");
+			}
+		}
+
+		StringBuilder sql = new StringBuilder();
+		sql.append("INSERT INTO ").append(table)
+		   .append(" (").append(columnNames).append(") VALUES (").append(placeholders).append(")")
+		   .append(" ON CONFLICT(").append(String.join(", ", conflictColumns)).append(")");
+
+		List<String> updateColumns = new ArrayList<>();
+		for (String col : allColumns) {
+			if (!conflictSet.contains(col)) updateColumns.add(col);
+		}
+
+		if (updateColumns.isEmpty()) {
+			sql.append(" DO NOTHING");
+		} else {
+			sql.append(" DO UPDATE SET ");
+			for (int i = 0; i < updateColumns.size(); i++) {
+				sql.append(updateColumns.get(i)).append(" = excluded.").append(updateColumns.get(i));
+				if (i < updateColumns.size() - 1) sql.append(", ");
+			}
+		}
+
+		return sql.append(";").toString();
 	}
 
 	@Override

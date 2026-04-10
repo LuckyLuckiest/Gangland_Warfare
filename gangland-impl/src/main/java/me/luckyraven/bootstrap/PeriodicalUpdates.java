@@ -25,10 +25,10 @@ import me.luckyraven.weapon.WeaponManager;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 @CustomLog
 public final class PeriodicalUpdates implements BeanLifecycle {
@@ -241,21 +241,7 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 	}
 
 	private <T> void updateAllData(Table<T> table, Collection<? extends T> collection) {
-		helper.runQueries(database -> {
-			for (T row : collection) {
-				Map<String, Object> search = table.searchCriteria(row);
-				Object[] data = database.table(table.getName())
-				                        .select((String) search.get("search"), (Object[]) search.get("info"),
-				                                (int[]) search.get("type"), new String[]{"*"});
-
-				if (data.length == 0) {
-					table.insertTableQuery(database, row);
-					return;
-				}
-
-				table.updateTableQuery(database, row);
-			}
-		});
+		helper.runQueries(database -> table.batchUpsertTableQuery(database, new ArrayList<>(collection)));
 	}
 
 	/**
