@@ -1,15 +1,17 @@
 package me.luckyraven.util.placeholder;
 
+import me.luckyraven.util.Placeholder;
 import me.luckyraven.util.placeholder.replacer.CharReplacer;
 import me.luckyraven.util.placeholder.replacer.Replacer;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class PlaceholderHandler extends PlaceholderRequest {
+public class PlaceholderHandler extends PlaceholderRequest implements Placeholder {
 
 	private static final String PLACEHOLDER_PATTERN         = "%([^%]+)%";
 	private static final String BRACKET_PLACEHOLDER_PATTERN = "\\{([^{}]+)}";
@@ -42,6 +44,14 @@ public class PlaceholderHandler extends PlaceholderRequest {
 	public String replacePlaceholder(OfflinePlayer player, @NotNull String text) {
 		String format = String.format("%%%s_", prefix);
 		return replacer.apply(player, text.replace(format, "%"), this);
+	}
+
+	@Override
+	public String convert(Player player, String text) {
+		if (!containsPlaceholder(text)) {
+			return text;
+		}
+		return replacePlaceholder(player, text);
 	}
 
 	public List<String> replacePlaceholders(OfflinePlayer player, @NotNull List<String> text) {

@@ -9,6 +9,7 @@ import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.unique.UniqueItem;
@@ -37,12 +38,14 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	                           UserManager<Player> userManager,
 	                           MemberManager memberManager,
 	                           GangManager gangManager,
-	                           UniqueItemAddon uniqueItemAddon) {
+	                           UniqueItemAddon uniqueItemAddon,
+	                           PlaceholderService placeholderService) {
 		super(prefix, closure);
 		this.userManager     = userManager;
 		this.memberManager   = memberManager;
 		this.gangManager     = gangManager;
 		this.uniqueItemAddon = uniqueItemAddon;
+		placeholderService.register(this);
 	}
 
 	@Override

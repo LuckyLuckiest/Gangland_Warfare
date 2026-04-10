@@ -58,12 +58,8 @@ public class WiringConfig {
 	                                               GangManager gangManager,
 	                                               UniqueItemAddon uniqueItemAddon,
 	                                               PlaceholderService placeholderService) {
-		GanglandPlaceholder placeholder = new GanglandPlaceholder(Gangland.FULL_PREFIX, Replacer.Closure.PERCENT,
-		                                                          userManager, memberManager, gangManager,
-		                                                          uniqueItemAddon);
-		// STRUCTURAL NECESSITY: cross-phase circular dependency (KERNEL ← CONFIG). PlaceholderService must exist in
-		// KERNEL for FILE-phase addons; GanglandPlaceholder needs CONFIG managers. Cannot be constructor-injected.
-		placeholderService.setPlaceholder(placeholder);
-		return placeholder;
+		return new GanglandPlaceholder(Gangland.FULL_PREFIX, Replacer.Closure.PERCENT,
+		                               userManager, memberManager, gangManager,
+		                               uniqueItemAddon, placeholderService);
 	}
 }
