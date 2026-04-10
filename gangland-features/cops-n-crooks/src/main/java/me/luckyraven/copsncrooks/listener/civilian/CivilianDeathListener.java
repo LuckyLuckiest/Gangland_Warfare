@@ -14,6 +14,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,6 +40,12 @@ public class CivilianDeathListener implements Listener {
 		// Suppress vanilla drops and XP — we control them entirely
 		event.getDrops().clear();
 		event.setDroppedExp(0);
+
+		// PLAYER-type NPC deaths fire PlayerDeathEvent, whose NMS handler drops inventory
+		// independently of getDrops(). setKeepInventory(true) suppresses that path.
+		if (event instanceof PlayerDeathEvent playerDeathEvent) {
+			playerDeathEvent.setKeepInventory(true);
+		}
 
 		CivilianDropConfig dropConfig = npc.getTypeConfig().drops();
 

@@ -202,5 +202,9 @@ public class CopListener implements Listener {
 
 		event.getDrops().clear();
 		event.setDroppedExp(0);
+
+		if (event instanceof PlayerDeathEvent playerDeathEvent) {
+			playerDeathEvent.setKeepInventory(true);
+		}
 	}
 }
