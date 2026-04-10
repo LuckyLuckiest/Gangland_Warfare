@@ -54,8 +54,7 @@ public class CarInteractListener implements Listener {
 		event.setCancelled(true);
 
 		// Permission check
-		String permission = car.getPermission();
-		if (permission != null && !permission.isEmpty() && !player.hasPermission(permission)) {
+		if (!player.hasPermission(car.getPermission())) {
 			player.sendMessage(ChatUtil.color("&cYou do not have permission to use this car."));
 			return;
 		}

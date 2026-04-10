@@ -88,7 +88,6 @@ public class UniqueItemAddon implements Comparator<UniqueItem>, UniqueItemRegist
 
 			if (section == null) continue;
 
-			String permission      = section.getString("Permission");
 			String materialString  = section.getString("Material");
 			int    customModelData = section.getInt("Custom_Model_Data", 0);
 			String name            = section.getString("Name");
@@ -143,7 +142,6 @@ public class UniqueItemAddon implements Comparator<UniqueItem>, UniqueItemRegist
 			}
 
 			var uniqueItem = UniqueItem.builder()
-			                           .permission(permission)
 			                           .uniqueItem(key)
 			                           .material(material.get())
 			                           .customModelData(customModelData)
@@ -166,8 +164,7 @@ public class UniqueItemAddon implements Comparator<UniqueItem>, UniqueItemRegist
 			this.uniqueItems.put(key, uniqueItem);
 			temp.add(key);
 
-			// add the permission
-			permissionManager.addPermission(permission);
+			permissionManager.addPermission(uniqueItem.getPermission());
 		}
 
 		log.info("Loaded the following unique items:");

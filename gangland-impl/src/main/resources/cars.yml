@@ -19,8 +19,10 @@
 #   Material            - Bukkit material name for the inventory item
 #   Display_Name        - display name (supports & color codes)
 #   Custom_Model_Data   - integer for resource pack model
-#   Permission          - permission node required to use (optional)
 #   Lore                - list of lore lines
+#
+# Permission nodes are derived automatically as "gangland.cars.<key>"
+# (e.g. sports_car → gangland.cars.sports_car).
 #
 #   Vehicle:
 #     Max_Speed         - maximum speed in blocks/tick (default 0.8)
@@ -37,7 +39,6 @@
 #     Max_Durability    - maximum repair durability of the car
 
 sports_car:
-   Permission: "gangland.cars.sports_car"
    Material: MINECART
    Display_Name: "&6Sports Car"
    Custom_Model_Data: 1001
@@ -58,7 +59,6 @@ sports_car:
       Max_Durability: 500
 
 pickup_truck:
-   Permission: "gangland.cars.pickup_truck"
    Material: MINECART
    Display_Name: "&2Pickup Truck"
    Custom_Model_Data: 1002

@@ -112,7 +112,6 @@ public class WearableAddon extends WearableService implements FileInitializer {
 				continue;
 			}
 
-			String       permission          = section.getString("Permission");
 			int          customModelData     = section.getInt("Custom_Model_Data", 0);
 			double       baseDamageReduction = section.getDouble("Base_Damage_Reduction", 0.0);
 			List<String> lore                = section.getStringList("Lore");
@@ -174,7 +173,6 @@ public class WearableAddon extends WearableService implements FileInitializer {
 			}
 
 			Wearable wearable = Wearable.builder()
-			                            .permission(permission)
 			                            .material(material)
 			                            .customModelData(customModelData)
 			                            .name(name)
@@ -198,9 +196,7 @@ public class WearableAddon extends WearableService implements FileInitializer {
 			                            .build();
 
 			register(key, wearable);
-			if (permission != null && !permission.isEmpty()) {
-				permissionRegistrar.accept(permission);
-			}
+			permissionRegistrar.accept(wearable.getPermission());
 			loaded.add(key);
 		}
 

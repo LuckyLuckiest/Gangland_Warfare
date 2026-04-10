@@ -23,7 +23,6 @@ public class Car {
 	private final Material     itemMaterial;
 	private final int          customModelData;
 	private final List<String> lore;
-	private final String       permission;
 
 	// Vehicle physics
 	private final double maxSpeed;
@@ -66,6 +65,15 @@ public class Car {
 			return null;
 		}
 		return new ItemBuilder(item).getStringTagData(CarKey.CAR_ID.getKey());
+	}
+
+	/**
+	 * Returns the permission node for this car, derived from its configuration key.
+	 *
+	 * @return {@code "gangland.cars.<carId>"}
+	 */
+	public String getPermission() {
+		return "gangland.cars." + carId;
 	}
 
 	/**

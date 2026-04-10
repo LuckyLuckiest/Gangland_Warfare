@@ -24,7 +24,6 @@ import java.util.List;
 @Builder
 public class UniqueItem implements Comparable<ItemStack> {
 
-	private final String   permission;
 	private final String   uniqueItem;
 	private final Material material;
 	private final int      customModelData;
@@ -52,6 +51,15 @@ public class UniqueItem implements Comparable<ItemStack> {
 	 */
 	@Nullable
 	private Placeholder placeholder;
+
+	/**
+	 * Returns the permission node for this unique item, derived from its registry key.
+	 *
+	 * @return {@code "gangland.uniqueitem.<uniqueItem>"}
+	 */
+	public String getPermission() {
+		return "gangland.uniqueitem." + uniqueItem;
+	}
 
 	@Override
 	public int compareTo(@NotNull ItemStack itemStack) {

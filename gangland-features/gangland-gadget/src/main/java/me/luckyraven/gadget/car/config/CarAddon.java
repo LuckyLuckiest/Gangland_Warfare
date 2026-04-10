@@ -81,7 +81,6 @@ public class CarAddon extends CarManager implements FileInitializer {
 				continue;
 			}
 
-			String       permission      = section.getString("Permission");
 			int          customModelData = section.getInt("Custom_Model_Data", 0);
 			List<String> lore            = section.getStringList("Lore");
 
@@ -130,7 +129,6 @@ public class CarAddon extends CarManager implements FileInitializer {
 			             .itemMaterial(material)
 			             .customModelData(customModelData)
 			             .lore(lore.isEmpty() ? null : lore)
-			             .permission(permission)
 			             .maxSpeed(maxSpeed)
 			             .acceleration(acceleration)
 			             .deceleration(deceleration)
@@ -144,9 +142,7 @@ public class CarAddon extends CarManager implements FileInitializer {
 			             .build();
 
 			register(key, car);
-			if (permission != null && !permission.isEmpty()) {
-				permissionRegistrar.accept(permission);
-			}
+			permissionRegistrar.accept(car.getPermission());
 			loaded.add(key);
 		}
 

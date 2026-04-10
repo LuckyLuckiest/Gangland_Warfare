@@ -15,6 +15,9 @@
 # Each entry defines a custom armor piece that integrates with the damage pipeline.
 # Items are identified in-game by a hidden NBT tag embedded when built via API.
 #
+# Permission nodes are derived automatically as "gangland.wearables.<key>"
+# (e.g. police_vest → gangland.wearables.police_vest).
+#
 # Fields:
 #   Material            - Bukkit material name; must be an armor type
 #   Custom_Model_Data   - optional resource-pack model id (0 = no override)
@@ -35,7 +38,6 @@
 # BLAST_PROTECTION) are also respected automatically - they do not need to be listed here.
 
 police_vest:
-   Permission: "gangland.wearables.police_vest"
    Material: IRON_CHESTPLATE
    Custom_Model_Data: 0
    Name: "&7Police Vest"
@@ -49,7 +51,6 @@ police_vest:
       BULLETPROOF: 1
 
 police_helmet:
-   Permission: "gangland.wearables.police_helmet"
    Material: IRON_HELMET
    Name: "&7Police Helmet"
    Base_Damage_Reduction: 0.07
@@ -61,7 +62,6 @@ police_helmet:
       TOUGHENED: 1
 
 gang_jacket:
-   Permission: "gangland.wearables.gang_jacket"
    Material: LEATHER_CHESTPLATE
    Name: "&6Gang Jacket"
    Base_Damage_Reduction: 0.05
@@ -73,7 +73,6 @@ gang_jacket:
       REACTIVE: 1
 
 heavy_vest:
-   Permission: "gangland.wearables.heavy_vest"
    Material: DIAMOND_CHESTPLATE
    Name: "&bHeavy Tactical Vest"
    Base_Damage_Reduction: 0.15
@@ -88,7 +87,6 @@ heavy_vest:
       LIGHTWEIGHT: 1
 
 jetpack:
-   Permission: "gangland.wearables.jetpack"
    Material: IRON_CHESTPLATE
    Name: "&b&lJetpack"
    Base_Damage_Reduction: 0.05

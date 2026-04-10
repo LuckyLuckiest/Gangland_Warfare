@@ -44,7 +44,6 @@ public class Wearable {
 	public static final String NBT_TRAIT_PREFIX = "wt_";
 	public static final String NBT_BASE_REDUCE  = "wr_base";
 
-	private final String                      permission;
 	private final Material                    material;
 	private final int                         customModelData;
 	private final String                      name;
@@ -210,6 +209,16 @@ public class Wearable {
 		if (name.startsWith("DIAMOND_")) return 0.13;
 		if (name.startsWith("NETHERITE_")) return 0.15;
 		return 0.03; // TURTLE_HELMET or unknown
+	}
+
+	/**
+	 * Returns the permission node for this wearable, derived from its registry key.
+	 *
+	 * @return {@code "gangland.wearables.<wearableKey>"}, or {@code null} for temporary wearables
+	 */
+	public String getPermission() {
+		if (temporary || wearableKey == null) return null;
+		return "gangland.wearables." + wearableKey;
 	}
 
 	/**

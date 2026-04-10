@@ -12,9 +12,11 @@
 #  \                                                        /  #
 #   +------------------------------------------------------+   #
 
+# Permission nodes are derived automatically as "gangland.uniqueitem.<key>"
+# (e.g. phone → gangland.uniqueitem.phone).
+#
 # A unique item tag is added based on this key, which in this case is 'phone'.
 phone:
-   Permission: "gangland.uniqueitem.phone"
    # The material type of this unique item.
    Material: COMPASS
    # Optional resource-pack model id (0 = no override).
@@ -46,7 +48,6 @@ phone:
 
 # Lockpick for opening rare tier chests
 lockpick:
-   Permission: "gangland.uniqueitem.lockpick"
    Material: TRIPWIRE_HOOK
    Name: "&7&lLockpick"
    Lore:
@@ -66,7 +67,6 @@ lockpick:
 
 # Key for epic tier chests
 epic_key:
-   Permission: "gangland.uniqueitem.epic_key"
    Material: GOLD_NUGGET
    Name: "&5&lEpic Key"
    Lore:
@@ -85,7 +85,6 @@ epic_key:
 
 # Key for legendary tier chests
 legendary_key:
-   Permission: "gangland.uniqueitem.legendary_key"
    Material: GOLDEN_APPLE
    Name: "&6&lLegendary Key"
    Lore:
@@ -104,7 +103,6 @@ legendary_key:
 
 # Fuel can for vehicles and gadgets
 gasoline:
-   Permission: "gangland.uniqueitem.gasoline"
    Material: GLASS_BOTTLE
    Name: "&6&lFuel Can"
    Lore:
