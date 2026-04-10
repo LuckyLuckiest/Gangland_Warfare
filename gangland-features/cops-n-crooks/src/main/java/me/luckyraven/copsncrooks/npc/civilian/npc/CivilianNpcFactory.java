@@ -18,6 +18,8 @@ import me.luckyraven.weapon.dto.AmmunitionData;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -123,7 +125,11 @@ public class CivilianNpcFactory {
 		if (!(entity instanceof LivingEntity living)) return;
 
 		double total = baseHealth + bonus;
-		living.setMaxHealth(total);
+
+		AttributeInstance maxHealth = living.getAttribute(Attribute.MAX_HEALTH);
+		if (maxHealth != null) {
+			maxHealth.setBaseValue(total);
+		}
 		living.setHealth(total);
 	}
 
@@ -132,6 +138,8 @@ public class CivilianNpcFactory {
 	 */
 	@Nullable
 	private Weapon resolveGanglandWeapon(CivilianTypeConfig typeConfig) {
+		if (weaponService == null) return null;
+
 		List<String> pool = typeConfig.weaponNamePool();
 		if (pool.isEmpty()) return null;
 
