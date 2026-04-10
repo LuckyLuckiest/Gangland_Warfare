@@ -353,12 +353,23 @@ public class WeaponRaytracer {
 		// --- Default damage application (LivingEntity only) ---
 		if (hit instanceof LivingEntity living) {
 			living.setNoDamageTicks(0);
+			living.setInvulnerable(false);
+
+			double healthBefore = living.getHealth();
 
 			RAYTRACE_DAMAGE_IN_PROGRESS.set(Boolean.TRUE);
 			try {
 				living.damage(event.getDamage(), shooter);
 			} finally {
 				RAYTRACE_DAMAGE_IN_PROGRESS.set(Boolean.FALSE);
+			}
+
+			// If health didn't decrease, the damage was blocked (e.g. Citizens spawn protection).
+			// Skip all post-damage effects — the hit didn't land.
+			boolean damageBlocked = living.isValid() && !living.isDead()
+			                        && living.getHealth() >= healthBefore;
+			if (damageBlocked) {
+				return;
 			}
 
 			if (weapon instanceof GunWeapon gun) {

@@ -64,23 +64,23 @@ public abstract class AbstractNpc {
 	protected NpcDifficulty difficulty;
 	// ── State ────────────────────────────────────────────────────────────────
 	@Getter
-	protected boolean markedForRemoval;
+	protected boolean       markedForRemoval;
 	@Getter
 	@Setter
-	protected int     despawnTicks;
-	protected int     attackCooldown;
+	protected int           despawnTicks;
+	protected int           attackCooldown;
 	/**
 	 * Last target {@link #attack}/{@link #attackEntity} engaged — used to detect a fresh acquisition for
 	 * reaction-time.
 	 */
 	private   LivingEntity  previousAttackTarget;
 	// ── Navigation state ─────────────────────────────────────────────────────
-	private Location lastNavigationTarget;
-	private Location lastProgressLocation;
-	private int      navigationThrottleTicks;
-	private int      stuckSampleTicks;
-	private int      consecutiveStuckChecks;
-	private boolean  navigationHopeless;
+	private   Location      lastNavigationTarget;
+	private   Location      lastProgressLocation;
+	private   int           navigationThrottleTicks;
+	private   int           stuckSampleTicks;
+	private   int           consecutiveStuckChecks;
+	private   boolean       navigationHopeless;
 
 	protected AbstractNpc(NPC npc, Location spawnLocation, NpcNavigationConfig navConfig, NpcDifficulty difficulty) {
 		this.npc           = npc;
@@ -163,7 +163,10 @@ public abstract class AbstractNpc {
 	 * Returns whether the NPC is currently spawned and alive.
 	 */
 	public boolean isValid() {
-		return npc.isSpawned() && npc.getEntity() != null && !npc.getEntity().isDead();
+		if (!npc.isSpawned() || npc.getEntity() == null || npc.getEntity().isDead()) return false;
+
+		ensureDamageable();
+		return true;
 	}
 
 	/**
@@ -194,8 +197,6 @@ public abstract class AbstractNpc {
 		destroy(null);
 	}
 
-	// ── Combat ───────────────────────────────────────────────────────────────
-
 	/**
 	 * Returns whether this NPC is currently using a ranged weapon.
 	 */
@@ -203,6 +204,8 @@ public abstract class AbstractNpc {
 		if (!canUseWeapons()) return false;
 		return heldWeapon != null || isHoldingVanillaRangedWeapon();
 	}
+
+	// ── Combat ───────────────────────────────────────────────────────────────
 
 	/**
 	 * Returns whether the NPC should hold position instead of closing distance (ranged hold check).
@@ -339,8 +342,6 @@ public abstract class AbstractNpc {
 		return distance >= rangedMinDistance && distance <= rangedMaxDistance;
 	}
 
-	// ── Navigation ───────────────────────────────────────────────────────────
-
 	/**
 	 * Navigates the NPC to the given location using Citizens pathfinding.
 	 */
@@ -354,6 +355,8 @@ public abstract class AbstractNpc {
 		stuckSampleTicks        = 0;
 		lastProgressLocation    = getEntity() != null ? getEntity().getLocation().clone() : null;
 	}
+
+	// ── Navigation ───────────────────────────────────────────────────────────
 
 	/**
 	 * Stops any current navigation.
@@ -469,8 +472,6 @@ public abstract class AbstractNpc {
 		return findBestRingApproachLocation(from, to, 1.5, Math.min(distance, 16.0), Math.min(distance * 0.5, 8.0));
 	}
 
-	// ── Tick helpers (called by subclass tick methods) ───────────────────────
-
 	/**
 	 * Scans a forward-biased cone of positions and returns the best walkable destination for wandering.
 	 * <p>
@@ -538,6 +539,8 @@ public abstract class AbstractNpc {
 		return null;
 	}
 
+	// ── Tick helpers (called by subclass tick methods) ───────────────────────
+
 	/**
 	 * Decrements the attack cooldown by one server tick. Called once per server tick (period = 0), so cooldown values
 	 * are always in server ticks regardless of the logical AI tick rate.
@@ -545,8 +548,6 @@ public abstract class AbstractNpc {
 	protected void decrementAttackCooldown() {
 		if (attackCooldown > 0) attackCooldown--;
 	}
-
-	// ── Private attack helpers ────────────────────────────────────────────────
 
 	/**
 	 * Updates navigation progress tracking for throttling and stuck detection.
@@ -598,6 +599,8 @@ public abstract class AbstractNpc {
 
 		stuckSampleTicks = 0;
 	}
+
+	// ── Private attack helpers ────────────────────────────────────────────────
 
 	protected void faceTarget(Player player) {
 		Entity entity = npc.getEntity();
@@ -761,6 +764,23 @@ public abstract class AbstractNpc {
 		Material  type     = mainHand.getType();
 
 		return type == Material.BOW || type == Material.CROSSBOW;
+	}
+
+	/**
+	 * Strips any protection that Citizens or Minecraft may have (re-)applied to this NPC's entity. Called every tick
+	 * via {@link #isValid()} so the entity can never stay invulnerable for more than one tick.
+	 */
+	private void ensureDamageable() {
+		if (npc.isProtected()) {
+			npc.setProtected(false);
+		}
+
+		Entity entity = npc.getEntity();
+		if (entity == null) return;
+
+		if (entity.isInvulnerable()) {
+			entity.setInvulnerable(false);
+		}
 	}
 
 	/**
