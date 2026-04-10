@@ -12,8 +12,10 @@ import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.Ammunition;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
+import me.luckyraven.weapon.types.WeaponType;
 import org.bukkit.inventory.ItemStack;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.UUID;
@@ -42,13 +44,21 @@ public abstract class BaseTradeSign implements Sign {
 	}
 
 	protected ItemStack getWeaponItem(String weaponName) {
-		return weaponService.getWeapons()
-		                    .values()
+		Weapon template = weaponService.getWeapons()
+		                               .values()
 				.stream()
 				.filter(w -> w.getName().equalsIgnoreCase(weaponName))
 				.findFirst()
-				.map(template -> template.copyWithUUID(UUID.randomUUID()).buildItem())
 				.orElse(null);
+		if (template == null) return null;
+
+		UUID uuid;
+		if (template.getCategory() == WeaponType.THROWABLE) {
+			uuid = UUID.nameUUIDFromBytes(("throwable:" + template.getName()).getBytes(StandardCharsets.UTF_8));
+		} else {
+			uuid = UUID.randomUUID();
+		}
+		return template.copyWithUUID(uuid).buildItem();
 	}
 
 	protected ItemStack getAmmoItem(String ammoKey) {
