@@ -67,7 +67,7 @@ public class ReturningBehavior implements CopBehavior {
 				return;
 			}
 
-			double distance = entity.getLocation().distance(selectedStation);
+			double distance = Math.sqrt(horizontalDistanceSquared(entity.getLocation(), selectedStation));
 
 			if (distance <= stationArrivalDistance) {
 				tryDespawn(cop);
@@ -94,6 +94,16 @@ public class ReturningBehavior implements CopBehavior {
 		cop.stopNavigation();
 		cop.setDespawnTicks(0);
 		selectedStation = null;
+	}
+
+	/**
+	 * Returns the squared horizontal (XZ-plane) distance between two locations, ignoring the Y axis. Useful for arrival
+	 * checks where minor vertical offsets (carpet, slabs) should not affect distance comparisons.
+	 */
+	private double horizontalDistanceSquared(Location a, Location b) {
+		double dx = a.getX() - b.getX();
+		double dz = a.getZ() - b.getZ();
+		return dx * dx + dz * dz;
 	}
 
 	/**
@@ -141,7 +151,7 @@ public class ReturningBehavior implements CopBehavior {
 
 		return stations.stream()
 				.filter(loc -> loc.getWorld() != null && loc.getWorld().equals(copLoc.getWorld()))
-				.min(Comparator.comparingDouble(loc -> loc.distanceSquared(copLoc)))
+				.min(Comparator.comparingDouble(loc -> horizontalDistanceSquared(loc, copLoc)))
 				.orElse(cop.getSpawnLocation());
 	}
 }
