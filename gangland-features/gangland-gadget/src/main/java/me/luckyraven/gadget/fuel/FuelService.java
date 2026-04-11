@@ -1,6 +1,7 @@
 package me.luckyraven.gadget.fuel;
 
 import me.luckyraven.item.fuel.Fuel;
+import me.luckyraven.item.fuel.FuelContract;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -22,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * listeners. The interface name collides with this class's simple name, so the {@code implements} clause uses the
  * fully-qualified form.
  */
-public class FuelService implements me.luckyraven.item.fuel.FuelService {
+public class FuelService implements FuelContract {
 
 	private final Map<String, Fuel> fuelRegistry = new ConcurrentHashMap<>();
 

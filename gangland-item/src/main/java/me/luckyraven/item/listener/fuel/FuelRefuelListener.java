@@ -2,7 +2,7 @@ package me.luckyraven.item.listener.fuel;
 
 import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.item.fuel.FuelBar;
-import me.luckyraven.item.fuel.FuelService;
+import me.luckyraven.item.fuel.FuelContract;
 import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
@@ -22,13 +22,13 @@ import org.bukkit.inventory.ItemStack;
  * coal), or clicks a fuel item with the material on cursor in an inventory.
  */
 @ListenerHandler
-@AutowireTarget({FuelService.class})
+@AutowireTarget({FuelContract.class})
 public class FuelRefuelListener implements Listener {
 
-	private final FuelService fuelService;
+	private final FuelContract fuelContract;
 
-	public FuelRefuelListener(FuelService fuelService) {
-		this.fuelService = fuelService;
+	public FuelRefuelListener(FuelContract fuelContract) {
+		this.fuelContract = fuelContract;
 	}
 
 	/**
@@ -123,7 +123,7 @@ public class FuelRefuelListener implements Listener {
 	 * @return the updated fuel ItemStack, or {@code null} if refueling did not occur
 	 */
 	private ItemStack tryRefuel(Player player, ItemStack materialItem, ItemStack fuelItem, String fuelKey) {
-		Fuel fuel = fuelService.getFuel(fuelKey);
+		Fuel fuel = fuelContract.getFuel(fuelKey);
 		if (fuel == null) return null;
 
 		Material expectedMaterial = fuel.getFuelMaterial().get();
@@ -182,7 +182,7 @@ public class FuelRefuelListener implements Listener {
 	 * @return the updated fuel ItemStack, or {@code null} if refueling did not occur
 	 */
 	private ItemStack tryRefuelInInventory(Player player, ItemStack materialItem, ItemStack fuelItem, String fuelKey) {
-		Fuel fuel = fuelService.getFuel(fuelKey);
+		Fuel fuel = fuelContract.getFuel(fuelKey);
 		if (fuel == null) return null;
 
 		Material expectedMaterial = fuel.getFuelMaterial().get();

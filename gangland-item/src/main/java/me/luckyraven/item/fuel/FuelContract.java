@@ -12,7 +12,7 @@ import java.util.UUID;
  * <p>The concrete service in gangland-gadget {@code implements} this interface so a single instance satisfies both
  * the in-module callers and the listener side.
  */
-public interface FuelService {
+public interface FuelContract {
 
 	/**
 	 * Returns the fuel definition for the given key, or {@code null} if not registered.

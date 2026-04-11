@@ -3,7 +3,7 @@ package me.luckyraven.item.listener.fuel;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.item.fuel.FuelBar;
-import me.luckyraven.item.fuel.FuelService;
+import me.luckyraven.item.fuel.FuelContract;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ActionBarManager;
@@ -28,13 +28,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @ListenerHandler
 @RequiredArgsConstructor
-@AutowireTarget({FuelService.class, JavaPlugin.class})
+@AutowireTarget({FuelContract.class, JavaPlugin.class})
 public class FuelHoldDisplayListener implements Listener {
 
 	private static final long DISPLAY_INTERVAL_TICKS = 10L;
 
-	private final FuelService fuelService;
-	private final JavaPlugin  plugin;
+	private final FuelContract fuelContract;
+	private final JavaPlugin   plugin;
 
 	private final Map<UUID, BukkitTask> displayTasks = new ConcurrentHashMap<>();
 
@@ -80,7 +80,7 @@ public class FuelHoldDisplayListener implements Listener {
 	public void onQuit(PlayerQuitEvent event) {
 		UUID id = event.getPlayer().getUniqueId();
 		stopDisplay(event.getPlayer());
-		fuelService.clearCache(id);
+		fuelContract.clearCache(id);
 	}
 
 	private void startDisplay(Player player) {
