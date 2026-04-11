@@ -92,7 +92,7 @@ public final class RemoveAccountListener implements Listener {
 		}
 
 		// add to offline user manager - copy in-memory data to avoid a redundant DB round-trip
-		User<OfflinePlayer> offlineUser = new User<>(gangland, player);
+		User<OfflinePlayer> offlineUser = offlineUserManager.create(player);
 
 		offlineUser.setKills(user.getKills());
 		offlineUser.setDeaths(user.getDeaths());

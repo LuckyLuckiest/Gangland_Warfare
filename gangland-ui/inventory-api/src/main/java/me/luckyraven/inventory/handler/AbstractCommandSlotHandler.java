@@ -22,8 +22,9 @@ public abstract class AbstractCommandSlotHandler implements SlotEventHandler {
 
 	@Override
 	public Slot handle(SlotContext ctx, InventoryOpener opener) {
-		ItemBuilder item = SlotItemFactory.create(ctx.item(), ctx.itemName(), ctx.data(), ctx.lore(), ctx.enchanted());
-		Slot        slot = new Slot(ctx.slotLoc(), true, ctx.draggable(), item);
+		ItemBuilder item = SlotItemFactory.create(ctx.itemResolver(), ctx.item(), ctx.itemName(), ctx.data(),
+		                                          ctx.lore(), ctx.enchanted());
+		Slot slot = new Slot(ctx.slotLoc(), true, ctx.draggable(), item);
 
 		ConfigurationSection configurationSection = ctx.eventSection();
 

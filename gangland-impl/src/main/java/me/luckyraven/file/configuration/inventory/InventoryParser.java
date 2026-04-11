@@ -1,6 +1,5 @@
 package me.luckyraven.file.configuration.inventory;
 
-import me.luckyraven.Gangland;
 import me.luckyraven.inventory.InventoryData;
 import me.luckyraven.inventory.InventoryOpener;
 import me.luckyraven.inventory.handler.SlotContext;
@@ -13,22 +12,24 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryEvent;
 import org.bukkit.event.player.PlayerEvent;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
- * Package-private parsing helpers extracted from {@link InventoryAddon} to keep it slim.
+ * Package-private parsing helpers used by {@link InventoryRuntimeContext} during inventory registration.
  */
 final class InventoryParser {
 
 	private InventoryParser() { }
 
-	static void configureSlots(Gangland gangland, int realSize, String slotsStr, FileConfiguration config,
-	                           List<Slot> slots) {
+	static void configureSlots(InventoryRuntimeContext runtimeContext, int realSize, String slotsStr,
+	                           FileConfiguration config, List<Slot> slots) {
 		if (!slotsStr.endsWith(".")) slotsStr += ".";
 
 		for (int i = 0; i < realSize; ++i) {
@@ -53,12 +54,12 @@ final class InventoryParser {
 			var  conditionSection = section.getConfigurationSection("Condition");
 			Slot slot;
 			if (conditionSection != null) {
-				var conditionalData = ConditionalSlotParser.parse(conditionSection, item, itemName, data, lore,
-				                                                  enchanted, draggable);
+				var conditionalData = ConditionalSlotParser.parse(runtimeContext.itemResolver(), conditionSection, item,
+				                                                  itemName, data, lore, enchanted, draggable);
 				slot = new Slot(i, true, draggable, null);
 				slot.setConditionalData(conditionalData);
 			} else {
-				slot = processEventItems(gangland, "Slots", config, i, item, itemName, data, lore, enchanted,
+				slot = processEventItems(runtimeContext, "Slots", config, i, item, itemName, data, lore, enchanted,
 				                         draggable);
 			}
 
@@ -66,8 +67,8 @@ final class InventoryParser {
 		}
 	}
 
-	static void configureMultiInventory(Gangland gangland, FileConfiguration config, ConfigurationSection information,
-	                                    InventoryData inventoryData) {
+	static void configureMultiInventory(InventoryRuntimeContext runtimeContext, FileConfiguration config,
+	                                    ConfigurationSection information, InventoryData inventoryData) {
 		String itemSource = information.getString("Multi.Item_Source");
 		int    perPage    = information.getInt("Multi.Per_Page", 28);
 
@@ -96,9 +97,9 @@ final class InventoryParser {
 				int          customModelData = section.getInt("Custom_Model_Data", 0);
 				if (customModelData > 0) data.put("customModelData", customModelData);
 
-				staticItems.put(slotIndex,
-				                processEventItems(gangland, "Static_Items", config, slotIndex, item, itemName, data,
-				                                  lore, enchanted, draggable));
+				Slot staticItem = processEventItems(runtimeContext, "Static_Items", config, slotIndex, item, itemName,
+				                                    data, lore, enchanted, draggable);
+				staticItems.put(slotIndex, staticItem);
 			}
 		}
 
@@ -138,46 +139,51 @@ final class InventoryParser {
 		return null;
 	}
 
-	private static Slot processEventItems(Gangland gangland, String basePath, FileConfiguration config, int slotLoc,
-	                                      String item, String itemName, Map<String, Object> data, List<String> lore,
-	                                      boolean enchanted, boolean draggable) {
+	private static Slot processEventItems(InventoryRuntimeContext runtimeContext, String basePath,
+	                                      FileConfiguration config, int slotLoc, String item, String itemName,
+	                                      Map<String, Object> data, List<String> lore, boolean enchanted,
+	                                      boolean draggable) {
 		String slotsBase = basePath + "." + slotLoc + ".";
 
 		var rightClickSection = config.getConfigurationSection(slotsBase + "OnRightClick");
 
-		InventoryOpener opener = (p, invName) -> InventoryAddon.openInventoryForPlayer(gangland, p, invName);
+		InventoryOpener             opener          = runtimeContext::openInventoryForPlayer;
+		InventoryDefinitionStore    definitionStore = runtimeContext.definitionStore();
+		Function<String, ItemStack> itemResolver    = runtimeContext.itemResolver();
 
-		for (Map.Entry<String, Class<? extends InventoryEvent>> entry : InventoryAddon.inventoryEvents.entrySet()) {
+		for (Map.Entry<String, Class<? extends InventoryEvent>> entry : definitionStore.inventoryEvents().entrySet()) {
 			var eventSection = config.getConfigurationSection(slotsBase + entry.getKey());
 			if (eventSection == null) continue;
 
-			SlotEventHandler handler = InventoryAddon.slotHandlers.get(entry.getValue());
+			SlotEventHandler handler = definitionStore.slotHandlers().get(entry.getValue());
 			if (handler == null) continue;
 
 			return handler.handle(
 					new SlotContext(eventSection, rightClickSection, slotLoc, item, itemName, data, lore, enchanted,
-					                draggable), opener);
+					                draggable, itemResolver), opener);
 		}
 
-		for (Map.Entry<String, Class<? extends PlayerEvent>> entry : InventoryAddon.playerEvents.entrySet()) {
+		for (Map.Entry<String, Class<? extends PlayerEvent>> entry : definitionStore.playerEvents().entrySet()) {
 			var eventSection = config.getConfigurationSection(slotsBase + entry.getKey());
 			if (eventSection == null) continue;
 
-			SlotEventHandler handler = InventoryAddon.slotHandlers.get(entry.getValue());
+			SlotEventHandler handler = definitionStore.slotHandlers().get(entry.getValue());
 			if (handler == null) continue;
 
 			return handler.handle(
 					new SlotContext(eventSection, rightClickSection, slotLoc, item, itemName, data, lore, enchanted,
-					                draggable), opener);
+					                draggable, itemResolver), opener);
 		}
 
 		if (rightClickSection != null) {
-			return InventoryAddon.slotHandlers.get(InventoryClickEvent.class)
-			                                  .handle(new SlotContext(null, rightClickSection, slotLoc, item, itemName,
-			                                                          data, lore, enchanted, draggable), opener);
+			return definitionStore.slotHandlers()
+			                      .get(InventoryClickEvent.class)
+			                      .handle(new SlotContext(null, rightClickSection, slotLoc, item, itemName, data, lore,
+			                                              enchanted, draggable, itemResolver), opener);
 		}
 
-		return new Slot(slotLoc, false, draggable, SlotItemFactory.create(item, itemName, data, lore, enchanted));
+		return new Slot(slotLoc, false, draggable,
+		                SlotItemFactory.create(itemResolver, item, itemName, data, lore, enchanted));
 	}
 
 	private static void parseAction(String value, List<Action> into) {

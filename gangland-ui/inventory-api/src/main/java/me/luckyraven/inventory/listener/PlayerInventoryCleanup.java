@@ -10,9 +10,15 @@ import org.bukkit.event.player.PlayerQuitEvent;
 @ListenerHandler
 public class PlayerInventoryCleanup implements Listener {
 
+	private final InventoryRegistry inventoryRegistry;
+
+	public PlayerInventoryCleanup(InventoryRegistry inventoryRegistry) {
+		this.inventoryRegistry = inventoryRegistry;
+	}
+
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onPlayerQuit(PlayerQuitEvent event) {
-		InventoryRegistry.getInstance().clear(event.getPlayer().getUniqueId());
+		inventoryRegistry.clear(event.getPlayer().getUniqueId());
 	}
 
 }

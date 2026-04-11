@@ -1,6 +1,8 @@
 package me.luckyraven.database.repositories.player;
 
+import me.luckyraven.Gangland;
 import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserFactory;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
@@ -31,6 +33,11 @@ public class UserRepository extends AbstractRepository<User<? extends OfflinePla
 	protected Collection<User<? extends OfflinePlayer>> doLoadAll() throws SQLException {
 		Map<UUID, User<? extends OfflinePlayer>> users = new HashMap<>();
 
+		// UserRepository is instantiated reflectively by RepositoryRegistry with a fixed (JavaPlugin, DatabaseHandler)
+		// signature, so UserFactory cannot be constructor-injected. By the time doLoadAll runs (DATABASE phase, after
+		// KERNEL where UserFactory was built), the bean is in the container.
+		UserFactory userFactory = ((Gangland) getPlugin()).getContext().get(UserFactory.class);
+
 		List<Object[]> data = userTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
@@ -46,7 +53,7 @@ public class UserRepository extends AbstractRepository<User<? extends OfflinePla
 			int    wanted     = (int) result[v];
 
 			OfflinePlayer       offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-			User<OfflinePlayer> user          = new User<>(getPlugin(), offlinePlayer);
+			User<OfflinePlayer> user          = userFactory.create(offlinePlayer);
 
 			// Set user data
 			user.setKills(kills);

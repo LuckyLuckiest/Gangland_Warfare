@@ -3,7 +3,8 @@ package me.luckyraven.listener.inventory;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.file.configuration.inventory.InventoryAddon;
+import me.luckyraven.file.configuration.inventory.InventoryDefinitionStore;
+import me.luckyraven.file.configuration.inventory.InventoryRuntimeContext;
 import me.luckyraven.inventory.InventoryBuilder;
 import me.luckyraven.inventory.InventoryOpener;
 import me.luckyraven.inventory.OpenInventory;
@@ -23,16 +24,22 @@ import java.util.stream.IntStream;
 @ListenerHandler
 public class InventoryOpenByCommandListener implements Listener {
 
-	private final Gangland           gangland;
-	private final PlaceholderService placeholderService;
-	private final ConditionEvaluator conditionEvaluator;
+	private final Gangland                 gangland;
+	private final PlaceholderService       placeholderService;
+	private final ConditionEvaluator       conditionEvaluator;
+	private final InventoryDefinitionStore definitionStore;
+	private final InventoryRuntimeContext  runtimeContext;
 
 	public InventoryOpenByCommandListener(Gangland gangland,
 	                                      PlaceholderService placeholderService,
-	                                      ConditionEvaluator conditionEvaluator) {
+	                                      ConditionEvaluator conditionEvaluator,
+	                                      InventoryDefinitionStore definitionStore,
+	                                      InventoryRuntimeContext runtimeContext) {
 		this.gangland           = gangland;
 		this.placeholderService = placeholderService;
 		this.conditionEvaluator = conditionEvaluator;
+		this.definitionStore    = definitionStore;
+		this.runtimeContext     = runtimeContext;
 	}
 
 	@EventHandler
@@ -42,10 +49,10 @@ public class InventoryOpenByCommandListener implements Listener {
 		Player   player  = event.getPlayer();
 
 		// this event runs before the event
-		Set<String> inventoryKeys = InventoryAddon.getInventoryKeys();
+		Set<String> inventoryKeys = definitionStore.getInventoryKeys();
 
 		for (String inventoryKey : inventoryKeys) {
-			InventoryBuilder builder = InventoryAddon.getInventory(inventoryKey);
+			InventoryBuilder builder = definitionStore.getInventory(inventoryKey);
 			if (builder == null) continue;
 
 			List<OpenInventory> openInventories = builder.inventoryData().getOpenInventories();
@@ -84,7 +91,7 @@ public class InventoryOpenByCommandListener implements Listener {
 				Fill line = new Fill(Settings.getInventoryLineName(), Settings.getInventoryLineItem());
 
 				// Create the opener callback
-				InventoryOpener opener = (p, invName) -> InventoryAddon.openInventoryForPlayer(gangland, p, invName);
+				InventoryOpener opener = runtimeContext::openInventoryForPlayer;
 
 				var inventoryHandler = builder.createInventory(gangland, placeholderService, player, fill, line,
 				                                               conditionEvaluator, opener);

@@ -13,10 +13,14 @@ import org.bukkit.configuration.ConfigurationSection;
  */
 public class ClickSlotHandler implements SlotEventHandler {
 
+	private static String stripSlash(String command) {
+		return command.startsWith("/") ? command.substring(1) : command;
+	}
+
 	@Override
 	public Slot handle(SlotContext ctx, InventoryOpener opener) {
-		ItemBuilder item = SlotItemFactory.create(ctx.item(), ctx.itemName(), ctx.data(), ctx.lore(),
-												  ctx.enchanted());
+		ItemBuilder item = SlotItemFactory.create(ctx.itemResolver(), ctx.item(), ctx.itemName(), ctx.data(),
+		                                          ctx.lore(), ctx.enchanted());
 
 		// Right-click-only: no left-click event section was found in the YAML
 		if (ctx.eventSection() == null) {
@@ -34,21 +38,18 @@ public class ClickSlotHandler implements SlotEventHandler {
 		return slot;
 	}
 
-	// region Builders
-
 	private Slot buildRightClickOnly(SlotContext ctx, ItemBuilder item, InventoryOpener opener) {
 		Slot slot = new Slot(ctx.slotLoc(), true, ctx.draggable(), item);
 
 		// Empty left-click so the slot is still registered as clickable
 		slot.setClickable((player, inv, builder) -> { });
-		applyRightClick(slot, ctx.rightClickSection(), opener);
+
+		if (ctx.rightClickSection() != null) {
+			applyRightClick(slot, ctx.rightClickSection(), opener);
+		}
 
 		return slot;
 	}
-
-	// endregion
-
-	// region Action helpers
 
 	private void applyLeftClick(Slot slot, ConfigurationSection section, InventoryOpener opener) {
 		String command    = section.getString("Command");
@@ -85,11 +86,4 @@ public class ClickSlotHandler implements SlotEventHandler {
 			}
 		});
 	}
-
-	private static String stripSlash(String command) {
-		return command.startsWith("/") ? command.substring(1) : command;
-	}
-
-	// endregion
-
 }

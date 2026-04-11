@@ -7,17 +7,15 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Per-player open-inventory tracker. Constructed once as a bean by the host plugin and threaded into the listeners, the
+ * user factory, and the {@link InventoryHandler} static init seam.
+ */
 public class InventoryRegistry {
-
-	private static final InventoryRegistry INSTANCE = new InventoryRegistry();
 
 	private final Map<UUID, Set<InventoryHandler>> playerInventories = new ConcurrentHashMap<>();
 
-	private InventoryRegistry() { }
-
-	public static InventoryRegistry getInstance() {
-		return INSTANCE;
-	}
+	public InventoryRegistry() { }
 
 	public void registerInventory(UUID uuid, InventoryHandler inventoryHandler) {
 		playerInventories.computeIfAbsent(uuid, k -> ConcurrentHashMap.newKeySet()).add(inventoryHandler);

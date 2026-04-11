@@ -1,10 +1,12 @@
 package me.luckyraven.inventory.handler;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Carries all per-slot data needed to build a {@link me.luckyraven.inventory.part.Slot} from a YAML configuration
@@ -19,5 +21,6 @@ public record SlotContext(
 		Map<String, Object> data,
 		List<String> lore,
 		boolean enchanted,
-		boolean draggable) {
+		boolean draggable,
+		@Nullable Function<String, ItemStack> itemResolver) {
 }

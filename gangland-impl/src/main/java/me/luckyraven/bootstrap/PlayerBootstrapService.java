@@ -91,7 +91,7 @@ public final class PlayerBootstrapService implements BeanLifecycle {
 				continue;
 			}
 
-			var newUser = new User<>(gangland, player);
+			var newUser = userManager.create(player);
 
 			// add join-time unique items
 			for (var uniqueItem : uniqueItems.values()) {
@@ -148,7 +148,7 @@ public final class PlayerBootstrapService implements BeanLifecycle {
 					continue;
 				}
 
-				User<OfflinePlayer> offlineUser = new User<>(gangland, offlinePlayer);
+				User<OfflinePlayer> offlineUser = offlineUserManager.create(offlinePlayer);
 				offlineUserManager.initializeUserData(offlineUser, userTable, bankTable);
 				offlineUserManager.add(offlineUser);
 			}

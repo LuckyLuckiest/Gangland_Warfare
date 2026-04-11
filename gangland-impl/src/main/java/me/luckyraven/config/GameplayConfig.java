@@ -8,10 +8,12 @@ import me.luckyraven.compatibility.recoil.RecoilCompatibility;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.GanglandMoneyDepositService;
+import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.file.configuration.inventory.InventoryAddon;
+import me.luckyraven.file.configuration.inventory.InventoryDefinitionStore;
 import me.luckyraven.file.configuration.inventory.InventoryLoader;
+import me.luckyraven.file.configuration.inventory.InventoryRuntimeContext;
 import me.luckyraven.file.configuration.inventory.itemsource.GangItemSourceProvider;
 import me.luckyraven.file.configuration.lootchest.GanglandLootChestMessages;
 import me.luckyraven.file.configuration.lootchest.LootChestSettings;
@@ -24,6 +26,8 @@ import me.luckyraven.gadget.repair.anvil.RepairAnvilGui;
 import me.luckyraven.gadget.repair.config.RepairLoader;
 import me.luckyraven.gadget.wearable.WearableAddon;
 import me.luckyraven.hologram.HologramService;
+import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
+import me.luckyraven.inventory.multi.ItemSourceProvider;
 import me.luckyraven.item.ItemParser;
 import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
@@ -34,6 +38,7 @@ import me.luckyraven.item.money.MoneyDepositService;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.lootchest.LootChestService;
 import me.luckyraven.lootchest.config.LootChestLoader;
+import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.sign.SignManager;
@@ -94,28 +99,41 @@ public class GameplayConfig {
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
-	// Scoreboard
+	// Inventory runtime + loader
 	// ---------------------------------------------------------------------------------------------------------------
 
 	/**
-	 * Wires CONFIG-phase beans into the static-state {@link InventoryAddon}. The {@link UserManager} and the
-	 * {@link GangItemSourceProvider} both depend on managers that don't exist until CONFIG, so they're set here (after
-	 * FileConfig already wired the FILE-phase placeholder + permission-manager links).
+	 * Bridges FILE-phase {@link InventoryDefinitionStore} (pure data maps) and the CONFIG-phase services that
+	 * registration + open-inventory logic needs (user manager, item source provider, condition evaluator, …). Owns the
+	 * {@code registerInventory} and {@code openInventoryForPlayer} methods that used to live as statics on
+	 * {@code InventoryAddon}.
 	 */
-	@SuppressWarnings("unchecked")
-	@PostConstruct
-	public void wireInventoryAddonUser() {
-		UserManager<Player> userManager = (UserManager<Player>) context.getContainer()
-		                                                               .getInstance("online", UserManager.class);
-		GangManager gangManager = context.get(GangManager.class);
-		// STRUCTURAL NECESSITY: InventoryAddon is all-static — these CONFIG-phase deps couldn't be wired in
-		// FileConfig (FILE phase). Called once during CONFIG phase.
-		if (userManager != null) {
-			InventoryAddon.setUserManager(userManager);
-		}
-		if (userManager != null && gangManager != null) {
-			InventoryAddon.setItemSourceProvider(new GangItemSourceProvider(userManager, gangManager));
-		}
+	@Bean
+	public InventoryRuntimeContext inventoryRuntimeContext(InventoryDefinitionStore definitionStore,
+	                                                       BooleanExpressionEvaluator conditionEvaluator,
+	                                                       PlaceholderService placeholderService,
+	                                                       PermissionManager permissionManager,
+	                                                       @Qualifier("online") UserManager<Player> userManager,
+	                                                       GangManager gangManager,
+	                                                       ItemParser itemParser) {
+		ItemSourceProvider itemSourceProvider = new GangItemSourceProvider(userManager, gangManager);
+		return new InventoryRuntimeContext(gangland, definitionStore, itemSourceProvider, conditionEvaluator,
+		                                   userManager, permissionManager, placeholderService, itemParser);
+	}
+
+	/**
+	 * {@link InventoryLoader} can't initialize during the FILE phase because its load callback parses prefixed item
+	 * refs (weapon:awp, wearable:police_vest, …) via {@link ItemParserManager}, which is a CONFIG-phase bean. The
+	 * {@link #initializeInventoryLoader()} {@code @PostConstruct} below runs the actual {@code initialize()} once every
+	 * other CONFIG bean is built.
+	 */
+	@Bean
+	public InventoryLoader inventoryLoader(FileManager fileManager, InventoryRuntimeContext inventoryRuntimeContext) {
+		InventoryLoader loader = new InventoryLoader(gangland, fileManager, inventoryRuntimeContext);
+		loader.addExpectedFile(new FileHandler(gangland, "gang_info", "inventory", ".yml"));
+		loader.addExpectedFile(new FileHandler(gangland, "phone", "inventory", ".yml"));
+		loader.addExpectedFile(new FileHandler(gangland, "phone_gang", "inventory", ".yml"));
+		return loader;
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
@@ -259,8 +277,8 @@ public class GameplayConfig {
 	}
 
 	@Bean
-	public UniqueItemInteractionService uniqueItemInteractionService() {
-		return new GanglandUniqueItemInteractionService(gangland);
+	public UniqueItemInteractionService uniqueItemInteractionService(InventoryRuntimeContext inventoryRuntimeContext) {
+		return new GanglandUniqueItemInteractionService(inventoryRuntimeContext);
 	}
 
 	@Bean
@@ -323,11 +341,11 @@ public class GameplayConfig {
 	}
 
 	/**
-	 * {@link InventoryLoader} can't initialize during the FILE phase because its load callback parses prefixed item
-	 * refs (weapon:awp, wearable:police_vest, …) via {@link ItemParserManager}, which is a CONFIG-phase bean. By the
-	 * time this {@code @PostConstruct} runs, every bean is registered AND the per-bean hydrate hook has populated the
-	 * {@code ItemParserManager}, so the {@code SlotItemFactory} resolver lambda set up in
-	 * {@code FileConfig.inventoryLoader()} can dereference it.
+	 * {@link InventoryLoader} can't initialize during construction because its load callback parses prefixed item refs
+	 * (weapon:awp, wearable:police_vest, …) via {@link ItemParserManager}, which is also a CONFIG-phase bean. By the
+	 * time this {@code @PostConstruct} runs, every CONFIG bean is registered AND the per-bean hydrate hook has
+	 * populated the {@code ItemParserManager}, so the {@code SlotItemFactory} resolver lambda set up earlier in this
+	 * config can dereference it.
 	 */
 	@PostConstruct
 	public void initializeInventoryLoader() {

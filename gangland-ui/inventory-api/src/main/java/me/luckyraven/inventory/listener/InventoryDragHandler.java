@@ -14,13 +14,19 @@ import java.util.List;
 @ListenerHandler
 public class InventoryDragHandler implements Listener {
 
+	private final InventoryRegistry inventoryRegistry;
+
+	public InventoryDragHandler(InventoryRegistry inventoryRegistry) {
+		this.inventoryRegistry = inventoryRegistry;
+	}
+
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onInventoryDrag(InventoryDragEvent event) {
 		if (!(event.getWhoClicked() instanceof Player)) return;
 
 		var topInventory = event.getView().getTopInventory();
 
-		InventoryHandler inv = InventoryRegistry.getInstance().findByInventory(topInventory);
+		InventoryHandler inv = inventoryRegistry.findByInventory(topInventory);
 
 		if (inv == null) return;
 

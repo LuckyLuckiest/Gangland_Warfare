@@ -6,18 +6,18 @@ import me.luckyraven.persistence.FolderLoader;
 
 public class InventoryLoader extends FolderLoader {
 
-	private final Gangland    gangland;
-	private final FileManager fileManager;
+	private final FileManager             fileManager;
+	private final InventoryRuntimeContext runtimeContext;
 
-	public InventoryLoader(Gangland gangland, FileManager fileManager) {
+	public InventoryLoader(Gangland gangland, FileManager fileManager, InventoryRuntimeContext runtimeContext) {
 		super(gangland, "inventory", fileManager);
-		this.gangland    = gangland;
-		this.fileManager = fileManager;
+		this.fileManager    = fileManager;
+		this.runtimeContext = runtimeContext;
 	}
 
 	@Override
 	public void initialize() {
-		this.load(true, fileHandler -> InventoryAddon.registerInventory(gangland, fileHandler), fileManager);
+		this.load(true, runtimeContext::registerInventory, fileManager);
 	}
 
 }

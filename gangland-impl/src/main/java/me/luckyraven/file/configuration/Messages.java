@@ -1,7 +1,6 @@
 package me.luckyraven.file.configuration;
 
 import me.luckyraven.util.GanglandChatUtil;
-import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.util.List;
 
@@ -309,7 +308,7 @@ public enum Messages {
 	LOOT_CHEST_TIME_SECOND("Loot_Chest.Time_Units.Second", Type.NO_CHANGE),
 	;
 
-	private static YamlConfiguration message;
+	private static MessageProvider provider;
 
 	private final String path;
 	private final Type   type;
@@ -327,8 +326,13 @@ public enum Messages {
 		this.isList = isList;
 	}
 
-	public static void setMessageConfiguration(YamlConfiguration yamlConfiguration) {
-		message = yamlConfiguration;
+	/**
+	 * Single static seam wired once at startup by {@code LanguageLoader} / {@code FileConfig.languageLoader(...)}. The
+	 * provider is a proper bean, so other code paths that want typed access can inject {@link MessageProvider} directly
+	 * instead of going through the enum.
+	 */
+	public static void init(MessageProvider messageProvider) {
+		provider = messageProvider;
 	}
 
 	@Override
@@ -339,14 +343,14 @@ public enum Messages {
 	public String toString(Type type) {
 		String data;
 
-		if (isList) data = convertFromList(message.getStringList(path));
-		else data = message.getString(path);
+		if (isList) data = convertFromList(provider.getStringList(path));
+		else data = provider.getString(path);
 
 		return getValue(type, data);
 	}
 
 	public List<String> toStringList() {
-		List<String> list = message.getStringList(path);
+		List<String> list = provider.getStringList(path);
 
 		list.replaceAll(data -> getValue(type, data));
 

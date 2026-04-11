@@ -5,6 +5,7 @@ import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.file.configuration.YamlMessageProvider;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.UnhandledError;
@@ -41,7 +42,7 @@ public class LanguageLoader implements BeanLifecycle {
 	public void onInitialize(boolean firstLoad) {
 		if (firstLoad) return;
 		initialize();
-		Messages.setMessageConfiguration(message);
+		Messages.init(new YamlMessageProvider(message));
 		TimeMessages.initialize();
 	}
 

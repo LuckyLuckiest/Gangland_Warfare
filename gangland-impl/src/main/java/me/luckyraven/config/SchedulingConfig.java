@@ -50,8 +50,8 @@ public class SchedulingConfig {
 	                                                     MemberManager memberManager,
 	                                                     UniqueItemAddon uniqueItemAddon,
 	                                                     FileManager fileManager) {
-		return new PlayerBootstrapService(gangland, ganglandDatabase, userManager, offlineUserManager,
-		                                  memberManager, uniqueItemAddon, fileManager);
+		return new PlayerBootstrapService(gangland, ganglandDatabase, userManager, offlineUserManager, memberManager,
+		                                  uniqueItemAddon, fileManager);
 	}
 
 	@Bean

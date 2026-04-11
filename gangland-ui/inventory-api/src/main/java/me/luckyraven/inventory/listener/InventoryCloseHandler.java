@@ -12,11 +12,17 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 @ListenerHandler
 public class InventoryCloseHandler implements Listener {
 
+	private final InventoryRegistry inventoryRegistry;
+
+	public InventoryCloseHandler(InventoryRegistry inventoryRegistry) {
+		this.inventoryRegistry = inventoryRegistry;
+	}
+
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onInventoryClose(InventoryCloseEvent event) {
 		if (!(event.getPlayer() instanceof Player)) return;
 
-		InventoryHandler inv = InventoryRegistry.getInstance().findByInventory(event.getView().getTopInventory());
+		InventoryHandler inv = inventoryRegistry.findByInventory(event.getView().getTopInventory());
 
 		if (inv != null) {
 			inv.unregister();

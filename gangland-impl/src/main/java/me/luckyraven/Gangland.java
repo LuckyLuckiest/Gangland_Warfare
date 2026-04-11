@@ -16,7 +16,7 @@ import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.file.configuration.inventory.InventoryAddon;
+import me.luckyraven.file.configuration.inventory.InventoryDefinitionStore;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.util.UpdateChecker;
@@ -110,7 +110,8 @@ public final class Gangland extends JavaPlugin {
 		metrics.addCustomChart(new SingleLineChart("number_of_weapons", () -> context.get(WeaponAddon.class).size()));
 
 		// number of inventories loaded
-		metrics.addCustomChart(new SingleLineChart("number_of_inventories", InventoryAddon::size));
+		metrics.addCustomChart(new SingleLineChart("number_of_inventories",
+		                                           () -> context.get(InventoryDefinitionStore.class).size()));
 
 		// number of ranks
 		metrics.addCustomChart(new SingleLineChart("number_of_ranks", () -> context.get(RankManager.class).size()));

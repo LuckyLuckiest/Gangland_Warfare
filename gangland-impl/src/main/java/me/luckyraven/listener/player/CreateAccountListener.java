@@ -53,7 +53,7 @@ public final class CreateAccountListener implements Listener {
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		Player       player = event.getPlayer();
-		User<Player> user   = new User<>(gangland, player);
+		User<Player> user   = userManager.create(player);
 
 		UpdateChecker updateChecker = gangland.getUpdateChecker();
 

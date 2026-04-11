@@ -7,6 +7,7 @@ import me.luckyraven.copsncrooks.bounty.BountySettings;
 import me.luckyraven.copsncrooks.wanted.WantedSettings;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.member.MemberManager;
+import me.luckyraven.data.account.user.UserFactory;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.plugin.PluginManager;
@@ -49,16 +50,18 @@ public class DataConfig {
 	public UserManager<Player> userManager(GanglandDatabase database,
 	                                       MemberManager memberManager,
 	                                       BountySettings bountySettings,
-	                                       WantedSettings wantedSettings) {
-		return new UserManager<>(gangland, database, memberManager, bountySettings, wantedSettings);
+	                                       WantedSettings wantedSettings,
+	                                       UserFactory userFactory) {
+		return new UserManager<>(gangland, database, memberManager, bountySettings, wantedSettings, userFactory);
 	}
 
 	@Bean(name = "offline", isGeneric = true)
 	public UserManager<OfflinePlayer> offlineUserManager(GanglandDatabase database,
 	                                                     MemberManager memberManager,
 	                                                     BountySettings bountySettings,
-	                                                     WantedSettings wantedSettings) {
-		return new UserManager<>(gangland, database, memberManager, bountySettings, wantedSettings);
+	                                                     WantedSettings wantedSettings,
+	                                                     UserFactory userFactory) {
+		return new UserManager<>(gangland, database, memberManager, bountySettings, wantedSettings, userFactory);
 	}
 
 	@Bean

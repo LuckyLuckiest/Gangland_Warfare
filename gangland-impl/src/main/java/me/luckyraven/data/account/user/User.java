@@ -38,9 +38,6 @@ import java.util.UUID;
 @Setter
 public class User<T extends OfflinePlayer> implements BountyContext, WantedContext {
 
-	@Setter
-	private static Placeholder placeholder;
-
 	private final T                     user;
 	private final UUID                  uuid;
 	private final Bounty                bounty;
@@ -48,6 +45,8 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 	private final Wanted                wanted;
 	private final EconomyHandler        economy;
 	private final Set<InventoryHandler> inventories;
+	private final Placeholder           placeholder;
+	private final InventoryRegistry     inventoryRegistry;
 
 	@Nullable
 	private Bank bank;
@@ -56,19 +55,20 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 	private PermissionAttachment permissionAttachment;
 
 	/**
-	 * Instantiates a new Database.
-	 *
-	 * @param user the user
+	 * Instantiates a new User. Prefer constructing through {@link UserFactory} so the {@link Placeholder} and
+	 * {@link InventoryRegistry} dependencies come from the bean container.
 	 */
-	public User(JavaPlugin plugin, T user) {
-		this.user        = user;
-		this.uuid        = user.getUniqueId();
-		this.bounty      = new Bounty(Settings.getBountyEachKillValue(), Settings.getBountyTimerMultiple());
-		this.level       = new Level();
-		this.wanted      = new Wanted(plugin, Settings.getWantedLevelIncrement(),
-		                              Settings.getWantedMaximumLevel());
-		this.economy     = new EconomyHandler(this);
-		this.inventories = new HashSet<>();
+	public User(JavaPlugin plugin, T user, Placeholder placeholder, InventoryRegistry inventoryRegistry) {
+		this.user              = user;
+		this.uuid              = user.getUniqueId();
+		this.bounty            = new Bounty(Settings.getBountyEachKillValue(), Settings.getBountyTimerMultiple());
+		this.level             = new Level();
+		this.wanted            = new Wanted(plugin, Settings.getWantedLevelIncrement(),
+		                                    Settings.getWantedMaximumLevel());
+		this.economy           = new EconomyHandler(this);
+		this.inventories       = new HashSet<>();
+		this.placeholder       = placeholder;
+		this.inventoryRegistry = inventoryRegistry;
 
 		this.wanted.setOwner(user.getPlayer());
 
@@ -126,8 +126,8 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 	public void sendMessage(String text) {
 		if (!(user instanceof Player player)) return;
 
-		String placeholder = User.placeholder.convert(player, text);
-		String message     = GanglandChatUtil.color(placeholder);
+		String resolved = placeholder.convert(player, text);
+		String message  = GanglandChatUtil.color(resolved);
 
 		player.sendMessage(message);
 	}
@@ -149,7 +149,7 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 		inventories.add(inventoryHandler);
 
 		// register with the global registry
-		InventoryRegistry.getInstance().registerInventory(uuid, inventoryHandler);
+		inventoryRegistry.registerInventory(uuid, inventoryHandler);
 	}
 
 	/**
@@ -161,7 +161,7 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 		inventories.remove(inventoryHandler);
 
 		// unregister from the global registry
-		InventoryRegistry.getInstance().unregisterInventory(uuid, inventoryHandler);
+		inventoryRegistry.unregisterInventory(uuid, inventoryHandler);
 	}
 
 	/**
@@ -199,7 +199,7 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 		inventories.clear();
 
 		// clear from the global registry
-		InventoryRegistry.getInstance().clear(uuid);
+		inventoryRegistry.clear(uuid);
 	}
 
 	/**

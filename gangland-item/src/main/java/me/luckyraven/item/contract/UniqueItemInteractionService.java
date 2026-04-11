@@ -5,10 +5,10 @@ import org.bukkit.event.block.Action;
 
 /**
  * Contract that gangland-item listeners use to drive the inventory-side reaction to a unique-item right-click without
- * importing {@code InventoryAddon} (which lives in gangland-impl).
+ * importing the inventory subsystem from gangland-impl.
  *
- * <p>The implementation in gangland-impl wraps {@code InventoryAddon.getUniqueItemHandler} +
- * {@code InventoryAddon.openInventoryForPlayer} along with the permission check that previously lived inline in
+ * <p>The implementation in gangland-impl wraps the {@code InventoryRuntimeContext}'s unique-item lookup and
+ * {@code openInventoryForPlayer} along with the permission check that previously lived inline in
  * {@code UniqueItemInteract}.
  */
 public interface UniqueItemInteractionService {

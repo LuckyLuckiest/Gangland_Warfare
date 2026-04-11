@@ -12,18 +12,24 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 @ListenerHandler
 public class InventoryClickHandler implements Listener {
 
+	private final InventoryRegistry inventoryRegistry;
+
+	public InventoryClickHandler(InventoryRegistry inventoryRegistry) {
+		this.inventoryRegistry = inventoryRegistry;
+	}
+
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onInventoryClick(InventoryClickEvent event) {
 		var clickedInventory = event.getClickedInventory();
 		var player           = (Player) event.getWhoClicked();
 		var topInventory     = event.getView().getTopInventory();
 
-		InventoryHandler inv = InventoryRegistry.getInstance().findByInventory(topInventory);
+		InventoryHandler inv = inventoryRegistry.findByInventory(topInventory);
 
 		int rawSlot = event.getRawSlot();
 
 		boolean checkInventoryStatus = inv != null && clickedInventory != null &&
-									   clickedInventory.equals(inv.getInventory());
+		                               clickedInventory.equals(inv.getInventory());
 
 		if (!checkInventoryStatus) return;
 

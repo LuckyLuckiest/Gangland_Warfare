@@ -45,19 +45,30 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 	private final MemberManager    memberManager;
 	private final BountySettings   bountySettings;
 	private final WantedSettings   wantedSettings;
+	private final UserFactory      userFactory;
 	private final Map<T, User<T>>  users;
 
 	public UserManager(Gangland gangland,
 	                   GanglandDatabase database,
 	                   MemberManager memberManager,
 	                   BountySettings bountySettings,
-	                   WantedSettings wantedSettings) {
+	                   WantedSettings wantedSettings,
+	                   UserFactory userFactory) {
 		this.gangland       = gangland;
 		this.database       = database;
 		this.memberManager  = memberManager;
 		this.bountySettings = bountySettings;
 		this.wantedSettings = wantedSettings;
+		this.userFactory    = userFactory;
 		this.users          = new HashMap<>();
+	}
+
+	/**
+	 * Constructs a new {@link User} for the given player with all dependencies wired by {@link UserFactory}. Callers
+	 * that need to also cache the user should follow up with {@link #add(User)}.
+	 */
+	public User<T> create(T player) {
+		return userFactory.create(player);
 	}
 
 	public void initialize() {

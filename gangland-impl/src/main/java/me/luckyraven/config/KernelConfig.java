@@ -6,12 +6,14 @@ import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.compatibility.CompatibilitySetup;
 import me.luckyraven.compatibility.CompatibilityWorker;
 import me.luckyraven.compatibility.VersionSetup;
-import me.luckyraven.data.account.user.User;
+import me.luckyraven.data.account.user.UserFactory;
 import me.luckyraven.data.permission.PermissionHandler;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.permission.PermissionWorker;
 import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.database.GanglandDatabaseSettings;
+import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.service.InventoryRegistry;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.database.DatabaseManager;
@@ -61,10 +63,28 @@ public class KernelConfig {
 
 	@Bean
 	public PlaceholderService placeholderService() {
-		PlaceholderService service = new PlaceholderService(gangland);
-		// STRUCTURAL NECESSITY: User is a runtime entity, not a bean — static field is the only injection point.
-		User.setPlaceholder(service);
-		return service;
+		return new PlaceholderService(gangland);
+	}
+
+	/**
+	 * Per-player open-inventory tracker. Constructed once and threaded into the {@link UserFactory}, the four UI
+	 * listeners, and the {@link InventoryHandler} static seam (the last static seam left after Phase 2 — same
+	 * lightweight pattern as {@code Messages.init(...)}).
+	 */
+	@Bean
+	public InventoryRegistry inventoryRegistry() {
+		InventoryRegistry registry = new InventoryRegistry();
+		InventoryHandler.setRegistry(registry);
+		return registry;
+	}
+
+	/**
+	 * Builds {@link me.luckyraven.data.account.user.User} instances with their {@link PlaceholderService} and
+	 * {@link InventoryRegistry} dependencies wired in. Replaces the static {@code User.setPlaceholder(...)} field.
+	 */
+	@Bean
+	public UserFactory userFactory(PlaceholderService placeholderService, InventoryRegistry inventoryRegistry) {
+		return new UserFactory(gangland, placeholderService, inventoryRegistry);
 	}
 
 	/**

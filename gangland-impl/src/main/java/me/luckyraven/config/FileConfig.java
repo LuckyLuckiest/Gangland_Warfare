@@ -2,7 +2,6 @@ package me.luckyraven.config;
 
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
-import me.luckyraven.bootstrap.GanglandContext;
 import me.luckyraven.copsncrooks.bounty.BountySettings;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianSettings;
 import me.luckyraven.copsncrooks.npc.police.config.CopSettings;
@@ -10,13 +9,9 @@ import me.luckyraven.copsncrooks.wanted.WantedSettings;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.file.LanguageLoader;
-import me.luckyraven.file.configuration.GadgetPhysicsConfigImpl;
-import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.file.configuration.MoneyAddonInitializer;
-import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.file.configuration.*;
 import me.luckyraven.file.configuration.copsncrooks.*;
-import me.luckyraven.file.configuration.inventory.InventoryAddon;
-import me.luckyraven.file.configuration.inventory.InventoryLoader;
+import me.luckyraven.file.configuration.inventory.InventoryDefinitionStore;
 import me.luckyraven.file.configuration.weapon.GanglandBlockRegenerationSettings;
 import me.luckyraven.file.configuration.weapon.WeaponLoader;
 import me.luckyraven.gadget.car.config.CarAddon;
@@ -24,9 +19,6 @@ import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.gadget.wearable.WearableAddon;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
-import me.luckyraven.inventory.handler.SlotItemFactory;
-import me.luckyraven.item.ItemParser;
-import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.persistence.FileHandler;
@@ -95,8 +87,8 @@ public class FileConfig {
 	public LanguageLoader languageLoader(FileManager fileManager, Settings settings) {
 		LanguageLoader loader = new LanguageLoader(gangland, fileManager);
 		loader.initialize();
-		// STRUCTURAL NECESSITY: Messages is a static config holder, not a bean — set once during FILE phase.
-		Messages.setMessageConfiguration(loader.getMessage());
+		// Single static seam: the MessageProvider bean is published into the Messages enum once at startup.
+		Messages.init(new YamlMessageProvider(loader.getMessage()));
 		TimeMessages.initialize();
 		return loader;
 	}
@@ -251,39 +243,17 @@ public class FileConfig {
 
 	@Bean
 	public BooleanExpressionEvaluator conditionEvaluator(PlaceholderService placeholderService) {
-		BooleanExpressionEvaluator evaluator = new BooleanExpressionEvaluator(placeholderService);
-		// STRUCTURAL NECESSITY: InventoryAddon is all-static — converting to instance-based requires refactoring
-		// every caller across the codebase. These 3 static setters are called once during FILE phase.
-		InventoryAddon.setConditionEvaluator(evaluator);
-		return evaluator;
+		return new BooleanExpressionEvaluator(placeholderService);
 	}
 
 	/**
-	 * {@link InventoryLoader} is special: its {@code initialize()} requires the global {@link ItemParser} to exist
-	 * because slot YAML can reference prefixed item refs (weapon:awp, wearable:police_vest, …). The CONFIG phase builds
-	 * {@link ItemParserManager}, and the LIFECYCLE pass invokes {@code inventoryLoader.initialize()} after the parser
-	 * is wired. Until then we just construct it and pre-register the inventory file handlers.
+	 * Pure-data half of the former {@code InventoryAddon}. No external dependencies — populates its five lookup maps in
+	 * its own constructor. The runtime services half ({@code InventoryRuntimeContext}) lives in the CONFIG phase
+	 * because it needs CONFIG-phase beans like the user manager and item source provider.
 	 */
 	@Bean
-	public InventoryLoader inventoryLoader(FileManager fileManager,
-	                                       BooleanExpressionEvaluator evaluator,
-	                                       GanglandContext context,
-	                                       PermissionManager permissionManager,
-	                                       PlaceholderService placeholderService) {
-		// STRUCTURAL NECESSITY: InventoryAddon is all-static — same as conditionEvaluator above.
-		InventoryAddon.setPermissionManager(permissionManager);
-		InventoryAddon.setPlaceholderService(placeholderService);
-		// STRUCTURAL NECESSITY: SlotItemFactory is in inventory-api which cannot depend on gangland-item.
-		// Deferred lambda bridges the cross-module boundary.
-		SlotItemFactory.setItemResolver(slot -> {
-			ItemParserManager mgr = context.get(ItemParserManager.class);
-			return mgr.getParser().parse(slot);
-		});
-		InventoryLoader loader = new InventoryLoader(gangland, fileManager);
-		loader.addExpectedFile(new FileHandler(gangland, "gang_info", "inventory", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "phone", "inventory", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "phone_gang", "inventory", ".yml"));
-		return loader;
+	public InventoryDefinitionStore inventoryDefinitionStore() {
+		return new InventoryDefinitionStore();
 	}
 
 	/**

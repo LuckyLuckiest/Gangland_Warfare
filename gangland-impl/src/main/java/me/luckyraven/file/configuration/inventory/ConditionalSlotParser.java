@@ -5,11 +5,13 @@ import me.luckyraven.inventory.condition.SlotCondition;
 import me.luckyraven.inventory.handler.SlotItemFactory;
 import me.luckyraven.util.ItemBuilder;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Parses conditional slot data (True/False branches with nested conditions) from YAML.
@@ -18,7 +20,8 @@ final class ConditionalSlotParser {
 
 	private ConditionalSlotParser() { }
 
-	static ConditionalSlotData parse(ConfigurationSection conditionSection, String defaultItem, String defaultName,
+	static ConditionalSlotData parse(@Nullable Function<String, ItemStack> itemResolver,
+	                                 ConfigurationSection conditionSection, String defaultItem, String defaultName,
 	                                 Map<String, Object> defaultData, List<String> defaultLore,
 	                                 boolean defaultEnchanted, boolean defaultDraggable) {
 		String valueExpression = conditionSection.getString("Value");
@@ -34,20 +37,21 @@ final class ConditionalSlotParser {
 		var falseSection = conditionSection.getConfigurationSection("False");
 		if (falseSection == null) falseSection = conditionSection.getConfigurationSection("false");
 
-		var trueData = parseBranchData(trueSection, defaultItem, defaultName, defaultData, defaultLore,
+		var trueData = parseBranchData(itemResolver, trueSection, defaultItem, defaultName, defaultData, defaultLore,
 		                               defaultEnchanted, defaultDraggable);
-		var falseData = parseBranchData(falseSection, defaultItem, defaultName, defaultData, defaultLore,
+		var falseData = parseBranchData(itemResolver, falseSection, defaultItem, defaultName, defaultData, defaultLore,
 		                                defaultEnchanted, defaultDraggable);
 
 		return new ConditionalSlotData(condition, trueData, falseData);
 	}
 
-	static ConditionalSlotData.BranchData parseBranchData(@Nullable ConfigurationSection branchSection,
+	static ConditionalSlotData.BranchData parseBranchData(@Nullable Function<String, ItemStack> itemResolver,
+	                                                      @Nullable ConfigurationSection branchSection,
 	                                                      String defaultItem, String defaultName,
 	                                                      Map<String, Object> defaultData, List<String> defaultLore,
 	                                                      boolean defaultEnchanted, boolean defaultDraggable) {
 		if (branchSection == null) {
-			ItemBuilder item = SlotItemFactory.create(defaultItem, defaultName, defaultData, defaultLore,
+			ItemBuilder item = SlotItemFactory.create(itemResolver, defaultItem, defaultName, defaultData, defaultLore,
 			                                          defaultEnchanted);
 			return new ConditionalSlotData.BranchData(item, defaultName, defaultLore, false, defaultDraggable, null,
 			                                          null, null);
@@ -71,12 +75,12 @@ final class ConditionalSlotParser {
 		int    customModelData = branchSection.getInt("Custom_Model_Data", defaultCmdValue);
 		if (customModelData > 0) itemData.put("customModelData", customModelData);
 
-		ItemBuilder itemBuilder = SlotItemFactory.create(item, name, itemData, lore, enchanted);
+		ItemBuilder itemBuilder = SlotItemFactory.create(itemResolver, item, name, itemData, lore, enchanted);
 
 		ConditionalSlotData nestedData      = null;
 		var                 nestedCondition = branchSection.getConfigurationSection("Condition");
 		if (nestedCondition != null) {
-			nestedData = parse(nestedCondition, item, name, itemData, lore, enchanted, draggable);
+			nestedData = parse(itemResolver, nestedCondition, item, name, itemData, lore, enchanted, draggable);
 		}
 
 		var     clickAction      = parseClickAction(branchSection.getConfigurationSection("OnClick"));

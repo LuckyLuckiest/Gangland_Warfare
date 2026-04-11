@@ -3,6 +3,7 @@ package me.luckyraven.inventory;
 import com.cryptomorin.xseries.XEnchantment;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
+import lombok.Setter;
 import me.luckyraven.inventory.service.InventoryRegistry;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.Placeholder;
@@ -34,6 +35,17 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 	public static final int MAX_SLOTS = 54;
 
 	private static final Map<NamespacedKey, InventoryHandler> SPECIAL_INVENTORIES = new HashMap<>();
+
+	/**
+	 * Single static seam set once at startup by the host plugin's KERNEL bean. Mirrors the {@code Messages.init(...)}
+	 * pattern: every {@code InventoryHandler} instance shares one global registry, but the registry is now a proper
+	 * bean instead of a {@code getInstance()} singleton — so listeners, factories, and the user class can constructor-
+	 * inject it directly. Threading the registry through every {@code InventoryHandler} constructor + the
+	 * {@code InventoryBuilder.createInventory(...)} cascade would touch 20+ files; this seam keeps the surface change
+	 * small while still removing the singleton.
+	 */
+	@Setter
+	private static @Nullable InventoryRegistry registry;
 
 	private final @Getter int  size;
 	private final @Getter UUID owner;
@@ -75,7 +87,7 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 		this(title, size, namespacedKey, player != null ? player.getUniqueId() : null);
 
 		if (player != null) {
-			InventoryRegistry.getInstance().registerInventory(player.getUniqueId(), this);
+			registry.registerInventory(player.getUniqueId(), this);
 		}
 	}
 
@@ -112,13 +124,13 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 		title        = new NamespacedKey(plugin, titleRefactor(name));
 
 		if (ownerUUID != null) {
-			InventoryRegistry.getInstance().registerInventory(ownerUUID, this);
+			registry.registerInventory(ownerUUID, this);
 		}
 	}
 
 	public void unregister() {
 		if (owner != null) {
-			InventoryRegistry.getInstance().unregisterInventory(owner, this);
+			registry.unregisterInventory(owner, this);
 		}
 	}
 
@@ -146,18 +158,18 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 			}
 
 			setItem(i, resolvedType, displayName, lore, enchanted, inventoryHandler.draggableSlots.contains(i),
-					inventoryHandler.clickableSlots.get(i));
+			        inventoryHandler.clickableSlots.get(i));
 		}
 	}
 
 	public void setItem(int slot, Material material, @Nullable String displayName, @Nullable List<String> lore,
-						boolean enchanted, boolean draggable) {
+	                    boolean enchanted, boolean draggable) {
 		setItem(slot, material, displayName, lore, enchanted, draggable, null);
 	}
 
 	public void setItem(int slot, Material material, @Nullable String displayName, @Nullable List<String> lore,
-						boolean enchanted, boolean draggable,
-						TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
+	                    boolean enchanted, boolean draggable,
+	                    TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
 		ItemBuilder item = new ItemBuilder(material).setDisplayName(displayName).setLore(lore);
 
 		if (enchanted) {
@@ -168,7 +180,7 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 	}
 
 	public void setItem(int slot, ItemBuilder itemBuilder, boolean draggable,
-						TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
+	                    TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
 		setItem(slot, itemBuilder.build(), draggable);
 
 		if (clickable != null) {
@@ -178,8 +190,8 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 	}
 
 	public void setItem(int slot, ItemBuilder itemBuilder, boolean draggable,
-						TriConsumer<Player, InventoryHandler, ItemBuilder> leftClick,
-						TriConsumer<Player, InventoryHandler, ItemBuilder> rightClick) {
+	                    TriConsumer<Player, InventoryHandler, ItemBuilder> leftClick,
+	                    TriConsumer<Player, InventoryHandler, ItemBuilder> rightClick) {
 		setItem(slot, itemBuilder.build(), draggable);
 
 		if (leftClick != null) {
@@ -208,7 +220,7 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 	}
 
 	public void setItem(int slot, ItemStack itemStack, boolean draggable,
-						TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
+	                    TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
 		setItem(slot, new ItemBuilder(itemStack), draggable, clickable);
 	}
 
@@ -222,7 +234,7 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 
 	public void open(Player player) {
 		if (owner != null) {
-			InventoryRegistry.getInstance().registerInventory(owner, this);
+			registry.registerInventory(owner, this);
 		}
 		player.openInventory(inventory);
 	}

@@ -185,7 +185,7 @@ class GangKickCommand extends SubArgument {
 			if (offlinePlayer.isOnline()) {
 				targetUser = userManager.getUser(offlinePlayer.getPlayer());
 			} else {
-				targetUser = new User<>(gangland, offlinePlayer);
+				targetUser = offlineUserManager.create(offlinePlayer);
 
 				List<Table<?>> tables = ganglandDatabase.getTables();
 
