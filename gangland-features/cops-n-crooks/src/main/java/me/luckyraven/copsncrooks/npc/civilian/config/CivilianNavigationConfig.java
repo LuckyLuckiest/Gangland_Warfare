@@ -1,6 +1,6 @@
 package me.luckyraven.copsncrooks.npc.civilian.config;
 
-import me.luckyraven.copsncrooks.entity.npc.NpcNavigationConfig;
+import me.luckyraven.copsncrooks.npc.NpcNavigationConfig;
 
 /**
  * Navigation configuration for civilian NPCs, backed by the shared {@code NPC_Navigation} block in {@code settings.yml}

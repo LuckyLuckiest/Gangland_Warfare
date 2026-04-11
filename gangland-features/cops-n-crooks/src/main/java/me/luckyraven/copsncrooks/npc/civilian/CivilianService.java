@@ -2,12 +2,12 @@ package me.luckyraven.copsncrooks.npc.civilian;
 
 import lombok.CustomLog;
 import lombok.Getter;
-import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.npc.civilian.config.*;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpcFactory;
 import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
 import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawner;
+import me.luckyraven.copsncrooks.npc.entity.EntityMarkManager;
 import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.Bukkit;

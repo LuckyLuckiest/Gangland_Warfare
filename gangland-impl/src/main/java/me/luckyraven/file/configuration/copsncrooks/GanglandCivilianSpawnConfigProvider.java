@@ -1,6 +1,6 @@
 package me.luckyraven.file.configuration.copsncrooks;
 
-import me.luckyraven.copsncrooks.entity.SpawnConfigProvider;
+import me.luckyraven.copsncrooks.npc.entity.SpawnConfigProvider;
 import me.luckyraven.file.configuration.Settings;
 
 /**

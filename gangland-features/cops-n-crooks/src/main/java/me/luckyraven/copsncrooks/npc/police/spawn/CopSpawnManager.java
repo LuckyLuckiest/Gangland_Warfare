@@ -1,8 +1,8 @@
 package me.luckyraven.copsncrooks.npc.police.spawn;
 
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
-import me.luckyraven.copsncrooks.entity.EntityMarkManager;
-import me.luckyraven.copsncrooks.entity.EntitySpawner;
+import me.luckyraven.copsncrooks.npc.entity.EntityMarkManager;
+import me.luckyraven.copsncrooks.npc.entity.EntitySpawner;
 import me.luckyraven.copsncrooks.npc.police.config.CopConfigProvider;
 import me.luckyraven.copsncrooks.npc.police.config.CopLoader;
 import me.luckyraven.copsncrooks.npc.police.npc.CopNpc;

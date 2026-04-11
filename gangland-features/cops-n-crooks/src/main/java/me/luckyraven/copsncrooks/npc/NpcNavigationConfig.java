@@ -1,4 +1,4 @@
-package me.luckyraven.copsncrooks.entity.npc;
+package me.luckyraven.copsncrooks.npc;
 
 /**
  * Provides navigation and pathfinding configuration values shared by all gangland NPC types.

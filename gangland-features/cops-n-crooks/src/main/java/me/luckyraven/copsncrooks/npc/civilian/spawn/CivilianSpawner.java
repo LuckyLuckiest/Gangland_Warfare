@@ -1,7 +1,7 @@
 package me.luckyraven.copsncrooks.npc.civilian.spawn;
 
 import lombok.Getter;
-import me.luckyraven.copsncrooks.entity.EntitySpawnerPoint;
+import me.luckyraven.copsncrooks.npc.entity.EntitySpawnerPoint;
 import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
 

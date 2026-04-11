@@ -1,6 +1,6 @@
 package me.luckyraven.copsncrooks.npc.police.config;
 
-import me.luckyraven.copsncrooks.entity.npc.NpcDifficulty;
+import me.luckyraven.copsncrooks.npc.NpcDifficulty;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;

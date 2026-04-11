@@ -1,8 +1,6 @@
 package me.luckyraven.copsncrooks.npc.civilian.spawn;
 
 import lombok.CustomLog;
-import me.luckyraven.copsncrooks.entity.EntitySpawner;
-import me.luckyraven.copsncrooks.entity.SpawnConfigProvider;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianNpcRegistry;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianTypeConfig;
@@ -10,6 +8,8 @@ import me.luckyraven.copsncrooks.npc.civilian.config.CiviliansConfig;
 import me.luckyraven.copsncrooks.npc.civilian.config.CiviliansLoader;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpcFactory;
+import me.luckyraven.copsncrooks.npc.entity.EntitySpawner;
+import me.luckyraven.copsncrooks.npc.entity.SpawnConfigProvider;
 import me.luckyraven.persistence.repository.IRepository;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;

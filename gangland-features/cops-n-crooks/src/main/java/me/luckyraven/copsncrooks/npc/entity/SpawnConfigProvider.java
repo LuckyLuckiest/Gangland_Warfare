@@ -1,4 +1,4 @@
-package me.luckyraven.copsncrooks.entity;
+package me.luckyraven.copsncrooks.npc.entity;
 
 /**
  * Provides spawn-location configuration values shared by all {@link EntitySpawner} subtypes.

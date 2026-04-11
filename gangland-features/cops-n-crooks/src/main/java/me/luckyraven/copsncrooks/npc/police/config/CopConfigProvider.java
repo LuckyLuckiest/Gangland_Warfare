@@ -1,7 +1,7 @@
 package me.luckyraven.copsncrooks.npc.police.config;
 
-import me.luckyraven.copsncrooks.entity.SpawnConfigProvider;
-import me.luckyraven.copsncrooks.entity.npc.NpcNavigationConfig;
+import me.luckyraven.copsncrooks.npc.NpcNavigationConfig;
+import me.luckyraven.copsncrooks.npc.entity.SpawnConfigProvider;
 
 import java.util.Map;
 

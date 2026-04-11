@@ -2,7 +2,7 @@ package me.luckyraven.copsncrooks.events.npc;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.copsncrooks.entity.npc.AbstractNpc;
+import me.luckyraven.copsncrooks.npc.AbstractNpc;
 import org.bukkit.event.Event;
 
 /**

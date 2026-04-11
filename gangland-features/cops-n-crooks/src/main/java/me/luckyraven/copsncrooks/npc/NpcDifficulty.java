@@ -1,4 +1,4 @@
-package me.luckyraven.copsncrooks.entity.npc;
+package me.luckyraven.copsncrooks.npc;
 
 import lombok.Getter;
 

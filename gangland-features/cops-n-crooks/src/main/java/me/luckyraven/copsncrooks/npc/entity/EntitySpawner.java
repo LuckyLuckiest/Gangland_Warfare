@@ -1,4 +1,4 @@
-package me.luckyraven.copsncrooks.entity;
+package me.luckyraven.copsncrooks.npc.entity;
 
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.autowire.bean.BeanLifecycle;
@@ -26,11 +26,11 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public abstract class EntitySpawner<S extends EntitySpawnerPoint> implements BeanLifecycle {
 
-	public int ID = 0;
-
 	protected final SpawnConfigProvider config;
 	protected final IRepository<S>      repository;
 	protected final Map<Integer, S>     spawners;
+
+	public int ID = 0;
 
 	protected EntitySpawner(SpawnConfigProvider config, IRepository<S> repository) {
 		this.config     = config;
@@ -114,11 +114,10 @@ public abstract class EntitySpawner<S extends EntitySpawnerPoint> implements Bea
 			double distance = player.getLocation().distance(location);
 			if (distance > config.getVisibilityCheckDistance()) continue;
 
-			Location playerLoc = player.getLocation();
-			double   playerYaw = Math.toRadians(playerLoc.getYaw());
-			double toLocAngle = Math.atan2(location.getZ() - playerLoc.getZ(),
-			                               location.getX() - playerLoc.getX());
-			double angleDiff = Math.abs(normalizeAngle(toLocAngle - playerYaw));
+			Location playerLoc  = player.getLocation();
+			double   playerYaw  = Math.toRadians(playerLoc.getYaw());
+			double   toLocAngle = Math.atan2(location.getZ() - playerLoc.getZ(), location.getX() - playerLoc.getX());
+			double   angleDiff  = Math.abs(normalizeAngle(toLocAngle - playerYaw));
 
 			if (angleDiff < Math.PI / 3) return true;
 		}
@@ -215,8 +214,8 @@ public abstract class EntitySpawner<S extends EntitySpawnerPoint> implements Bea
 	}
 
 	@Nullable
-	private Location trySingleSpawnAttempt(Player player, double minDist, double maxDist,
-	                                       boolean requireBehind, boolean playerOutdoor) {
+	private Location trySingleSpawnAttempt(Player player, double minDist, double maxDist, boolean requireBehind,
+	                                       boolean playerOutdoor) {
 		Location          playerLoc = player.getLocation();
 		World             world     = player.getWorld();
 		ThreadLocalRandom random    = ThreadLocalRandom.current();
@@ -232,8 +231,7 @@ public abstract class EntitySpawner<S extends EntitySpawnerPoint> implements Bea
 
 		if (!world.isChunkLoaded(chunkX, chunkZ)) return null;
 
-		Location spawnLoc = findGroundNearY(world, x, z,
-		                                    playerLoc.getBlockY() + config.getSpawnYOffset());
+		Location spawnLoc = findGroundNearY(world, x, z, playerLoc.getBlockY() + config.getSpawnYOffset());
 		if (spawnLoc == null) return null;
 		if (requireBehind && !isSpawnBehindPlayer(spawnLoc, player)) return null;
 		if (isOutdoor(spawnLoc) != playerOutdoor) return null;
@@ -276,8 +274,7 @@ public abstract class EntitySpawner<S extends EntitySpawnerPoint> implements Bea
 		if (!ground.getType().isSolid()) return false;
 		if (!feet.isEmpty() || !head.isEmpty() || !aboveHead.isEmpty()) return false;
 
-		return hasEnoughHorizontalClearance(world, x, y + 1, z) &&
-		       hasEnoughHorizontalClearance(world, x, y + 2, z);
+		return hasEnoughHorizontalClearance(world, x, y + 1, z) && hasEnoughHorizontalClearance(world, x, y + 2, z);
 	}
 
 	private boolean hasEnoughHorizontalClearance(World world, int x, int y, int z) {
@@ -294,11 +291,10 @@ public abstract class EntitySpawner<S extends EntitySpawnerPoint> implements Bea
 	}
 
 	private boolean isSpawnBehindPlayer(Location spawnLoc, Player player) {
-		Location playerLoc = player.getLocation();
-		double   playerYaw = Math.toRadians(playerLoc.getYaw());
-		double toSpawnAngle = Math.atan2(spawnLoc.getZ() - playerLoc.getZ(),
-		                                 spawnLoc.getX() - playerLoc.getX());
-		double angleDiff = Math.abs(normalizeAngle(toSpawnAngle - playerYaw));
+		Location playerLoc    = player.getLocation();
+		double   playerYaw    = Math.toRadians(playerLoc.getYaw());
+		double   toSpawnAngle = Math.atan2(spawnLoc.getZ() - playerLoc.getZ(), spawnLoc.getX() - playerLoc.getX());
+		double   angleDiff    = Math.abs(normalizeAngle(toSpawnAngle - playerYaw));
 		return angleDiff > Math.PI / 2;
 	}
 }

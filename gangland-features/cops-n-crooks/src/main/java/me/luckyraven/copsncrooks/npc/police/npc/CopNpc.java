@@ -3,7 +3,7 @@ package me.luckyraven.copsncrooks.npc.police.npc;
 import lombok.CustomLog;
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.copsncrooks.entity.npc.AbstractNpc;
+import me.luckyraven.copsncrooks.npc.AbstractNpc;
 import me.luckyraven.copsncrooks.npc.police.config.CopConfigProvider;
 import me.luckyraven.copsncrooks.npc.police.config.CopTierConfig;
 import me.luckyraven.copsncrooks.npc.police.state.CopBehavior;

@@ -1,7 +1,5 @@
 package me.luckyraven.copsncrooks.npc.civilian.npc;
 
-import me.luckyraven.copsncrooks.entity.EntityMark;
-import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianState;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianGroupConfig;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianNavigationConfig;
@@ -9,6 +7,8 @@ import me.luckyraven.copsncrooks.npc.civilian.config.CivilianSettings;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianTypeConfig;
 import me.luckyraven.copsncrooks.npc.civilian.state.CivilianBehavior;
 import me.luckyraven.copsncrooks.npc.civilian.state.CivilianBehaviorFactory;
+import me.luckyraven.copsncrooks.npc.entity.EntityMark;
+import me.luckyraven.copsncrooks.npc.entity.EntityMarkManager;
 import me.luckyraven.item.ItemParser;
 import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.util.utilities.ChatUtil;

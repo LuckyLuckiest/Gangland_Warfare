@@ -3,7 +3,7 @@ package me.luckyraven.copsncrooks.npc.civilian.config;
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
 import lombok.Getter;
-import me.luckyraven.copsncrooks.entity.npc.NpcDifficulty;
+import me.luckyraven.copsncrooks.npc.NpcDifficulty;
 import me.luckyraven.item.ItemParser;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;

@@ -1,7 +1,7 @@
 package me.luckyraven.copsncrooks.npc.police.npc;
 
-import me.luckyraven.copsncrooks.entity.EntityMark;
-import me.luckyraven.copsncrooks.entity.EntityMarkManager;
+import me.luckyraven.copsncrooks.npc.entity.EntityMark;
+import me.luckyraven.copsncrooks.npc.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.npc.police.config.CopConfigProvider;
 import me.luckyraven.copsncrooks.npc.police.config.CopTierConfig;
 import me.luckyraven.copsncrooks.npc.police.state.CopBehavior;

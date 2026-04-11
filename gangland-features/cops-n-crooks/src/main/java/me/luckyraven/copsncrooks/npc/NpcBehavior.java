@@ -1,4 +1,4 @@
-package me.luckyraven.copsncrooks.entity.npc;
+package me.luckyraven.copsncrooks.npc;
 
 /**
  * Generic contract for a single NPC AI state behavior.

@@ -1,9 +1,9 @@
-package me.luckyraven.copsncrooks.entity.npc;
+package me.luckyraven.copsncrooks.npc;
 
 import lombok.CustomLog;
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.copsncrooks.entity.EntityMarkManager;
+import me.luckyraven.copsncrooks.npc.entity.EntityMarkManager;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.downed.DownedPlayerRegistry;

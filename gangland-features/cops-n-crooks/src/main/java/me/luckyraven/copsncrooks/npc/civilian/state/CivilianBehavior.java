@@ -1,6 +1,6 @@
 package me.luckyraven.copsncrooks.npc.civilian.state;
 
-import me.luckyraven.copsncrooks.entity.npc.NpcBehavior;
+import me.luckyraven.copsncrooks.npc.NpcBehavior;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 
 /**

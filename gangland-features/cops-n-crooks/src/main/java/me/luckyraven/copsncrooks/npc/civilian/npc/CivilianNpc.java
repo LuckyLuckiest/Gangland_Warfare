@@ -4,7 +4,7 @@ import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.copsncrooks.entity.npc.AbstractNpc;
+import me.luckyraven.copsncrooks.npc.AbstractNpc;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianGroup;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianState;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianNavigationConfig;

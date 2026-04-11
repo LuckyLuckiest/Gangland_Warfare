@@ -1,7 +1,7 @@
 package me.luckyraven.copsncrooks.npc.police;
 
 import lombok.Getter;
-import me.luckyraven.copsncrooks.entity.EntityMarkManager;
+import me.luckyraven.copsncrooks.npc.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.npc.police.npc.CopNpc;
 import me.luckyraven.copsncrooks.npc.police.state.CopBehaviorFactory;
 import me.luckyraven.copsncrooks.npc.police.state.CuffLockRegistry;

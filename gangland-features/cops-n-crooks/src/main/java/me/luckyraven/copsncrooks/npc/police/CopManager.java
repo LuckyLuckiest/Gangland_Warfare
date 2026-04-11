@@ -2,9 +2,9 @@ package me.luckyraven.copsncrooks.npc.police;
 
 import lombok.Getter;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
-import me.luckyraven.copsncrooks.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianNpcRegistry;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
+import me.luckyraven.copsncrooks.npc.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.npc.police.config.CopConfigProvider;
 import me.luckyraven.copsncrooks.npc.police.config.CopLoader;
 import me.luckyraven.copsncrooks.npc.police.npc.CopNpc;

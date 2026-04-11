@@ -1,6 +1,6 @@
 package me.luckyraven.copsncrooks.npc.civilian.config;
 
-import me.luckyraven.copsncrooks.entity.npc.NpcDifficulty;
+import me.luckyraven.copsncrooks.npc.NpcDifficulty;
 
 /**
  * Per-type AI behavior configuration for a civilian NPC.

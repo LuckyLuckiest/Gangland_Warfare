@@ -1,6 +1,6 @@
 package me.luckyraven.copsncrooks.npc.civilian.config;
 
-import me.luckyraven.copsncrooks.entity.npc.NpcNavigationConfig;
+import me.luckyraven.copsncrooks.npc.NpcNavigationConfig;
 
 /**
  * Contract for civilian-specific runtime settings.

@@ -1,8 +1,8 @@
 package me.luckyraven.copsncrooks.listener;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.copsncrooks.entity.EntityMark;
-import me.luckyraven.copsncrooks.entity.EntityMarkManager;
+import me.luckyraven.copsncrooks.npc.entity.EntityMark;
+import me.luckyraven.copsncrooks.npc.entity.EntityMarkManager;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
