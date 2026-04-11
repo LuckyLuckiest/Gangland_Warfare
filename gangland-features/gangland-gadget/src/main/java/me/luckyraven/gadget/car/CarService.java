@@ -99,6 +99,8 @@ public class CarService implements BeanLifecycle {
 		this.pdcPlacer      = new NamespacedKey(plugin, "car_placer");
 		this.pdcExhaustSide = new NamespacedKey(plugin, "car_exhaust_side");
 		this.pdcDbId        = new NamespacedKey(plugin, "car_db_id");
+
+		parkedCarRepository.setDataSupplier(() -> new ArrayList<>(parkedCarRecords.values()));
 	}
 
 	// ------------------------------------------------------------------

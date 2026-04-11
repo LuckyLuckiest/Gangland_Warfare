@@ -44,7 +44,6 @@ import me.luckyraven.util.autowire.bean.Bean;
 import me.luckyraven.util.autowire.bean.Configuration;
 import me.luckyraven.weapon.WeaponManager;
 
-import java.util.ArrayList;
 
 /**
  * CONFIG-phase wiring for cops-n-crooks (NPCs, jails, detainment) plus the gadget services (car, jetpack, fuel) and the
@@ -218,9 +217,6 @@ public class CopsAndGadgetsConfig {
 		IRepository<ParkedCar> parkedCarRepository = repositoryRegistry.getRepository(ParkedCar.class);
 		CarService carService = new CarService(carAddon, new VehicleRegistry(), gangland, parkedCarRepository,
 		                                       fuelService, gadgetPhysicsConfig);
-		// STRUCTURAL NECESSITY: self-referential — lambda captures carService which doesn't exist until its
-		// own constructor returns. Cannot be constructor-injected.
-		parkedCarRepository.setDataSupplier(() -> new ArrayList<>(carService.getParkedCarRecords().values()));
 		carService.reloadParkedVehicles();
 		return carService;
 	}
