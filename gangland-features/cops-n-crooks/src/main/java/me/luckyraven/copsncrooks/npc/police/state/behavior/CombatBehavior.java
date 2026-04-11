@@ -48,13 +48,16 @@ public class CombatBehavior implements CopBehavior {
 			}
 		}
 
-		// Ranged cops hold their firing position; melee cops close in
+		// Ranged cops hold their firing position; melee cops close in.
+		// pauseNavigation (not stopNavigation) preserves stuck counters so a LOS-lost
+		// flicker can still escalate to isNavigationHopeless() and trigger a re-path
+		// around obstacles — matches CivilianCombatBehavior.
 		if (cop.shouldHoldPursuitPosition(target)) {
-			cop.stopNavigation();
+			cop.pauseNavigation();
 		} else if (cop.isNavigationHopeless()) {
 			cop.navigateTo(cop.resolveHopelessFallbackLocation(target));
 		} else {
-			cop.navigateTo(target.getLocation());
+			cop.navigateTo(cop.resolvePursuitLocation(target));
 		}
 	}
 

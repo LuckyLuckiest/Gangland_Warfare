@@ -14,6 +14,8 @@ import me.luckyraven.weapon.events.projectile.WeaponShootEvent;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;
 import me.luckyraven.weapon.raytrace.WeaponShooting;
 import me.luckyraven.weapon.types.gun.GunWeapon;
+import net.citizensnpcs.api.ai.NavigatorParameters;
+import net.citizensnpcs.api.ai.PathfinderType;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -39,50 +41,70 @@ import java.util.concurrent.ThreadLocalRandom;
 @CustomLog
 public abstract class AbstractNpc {
 
+	/**
+	 * Minimum squared-distance the target must move before an in-flight navigation is torn down and re-paths. Keeps
+	 * Citizens from being told to re-target the same (possibly unreachable) spot every few ticks — that re-issue is
+	 * what produces the visible "wiggle between blocks" glitch.
+	 */
+	private static final double        TARGET_MOVED_THRESHOLD_SQ      = 2.25;
+	private static final long          LATERAL_COMMITMENT_MS          = 1000L;
+	private static final int           LATERAL_EXPLORATION_DIRECTIONS = 8;
 	// ── Core ─────────────────────────────────────────────────────────────────
 	@Getter
-	protected final NPC        npc;
+	protected final      NPC           npc;
 	@Getter
-	protected final Location   spawnLocation;
-	protected final int        aiTickRate;
+	protected final      Location      spawnLocation;
+	protected final      int           aiTickRate;
 	// ── Navigation config (read once from NpcNavigationConfig) ──────────────
-	private final   int        navigationRecalculationTicks;
-	private final   int        stuckCheckIntervalTicks;
-	private final   int        maxStuckChecks;
-	private final   int        maxHopelessStuckChecks;
-	private final   double     hopelessCloseThreshold;
-	private final   double     minProgressDistanceSquared;
-	private final   double     rangedMinDistance;
-	private final   double     rangedMaxDistance;
-	private final   double     minRepathAfterLossTicks;
+	private final        int           navigationRecalculationTicks;
+	private final        int           stuckCheckIntervalTicks;
+	private final        int           maxStuckChecks;
+	private final        int           maxHopelessStuckChecks;
+	private final        double        hopelessCloseThreshold;
+	private final        double        minProgressDistanceSquared;
+	private final        double        rangedMinDistance;
+	private final        double        rangedMaxDistance;
 	// ── Weapon ───────────────────────────────────────────────────────────────
 	@Getter
-	protected       Weapon     heldWeapon;
-	protected       boolean    reloading;
-	protected       JavaPlugin plugin;
-
+	protected            Weapon        heldWeapon;
+	protected            boolean       reloading;
+	protected            JavaPlugin    plugin;
 	// ── Difficulty ───────────────────────────────────────────────────────────
 	@Getter
-	protected NpcDifficulty difficulty;
+	protected            NpcDifficulty difficulty;
 	// ── State ────────────────────────────────────────────────────────────────
 	@Getter
-	protected boolean       markedForRemoval;
+	protected            boolean       markedForRemoval;
 	@Getter
 	@Setter
-	protected int           despawnTicks;
-	protected int           attackCooldown;
+	protected            int           despawnTicks;
+	protected            int           attackCooldown;
 	/**
 	 * Last target {@link #attack}/{@link #attackEntity} engaged — used to detect a fresh acquisition for
 	 * reaction-time.
 	 */
-	private   LivingEntity  previousAttackTarget;
+	private              LivingEntity  previousAttackTarget;
 	// ── Navigation state ─────────────────────────────────────────────────────
-	private   Location      lastNavigationTarget;
-	private   Location      lastProgressLocation;
-	private   int           navigationThrottleTicks;
-	private   int           stuckSampleTicks;
-	private   int           consecutiveStuckChecks;
-	private   boolean       navigationHopeless;
+	private              Location      lastNavigationTarget;
+	private              Location      lastProgressLocation;
+	private              int           navigationThrottleTicks;
+	private              int           stuckSampleTicks;
+	private              int           consecutiveStuckChecks;
+	private              boolean       navigationHopeless;
+	/**
+	 * Counter used by {@link #resolveLateralExploration} to alternate sides across commitment windows so the NPC probes
+	 * both the left and the right walk-around directions over time instead of always aiming at the same failing angle.
+	 */
+	private              int           lateralExplorationSide;
+	/**
+	 * Cached lateral walk-around target returned by {@link #resolveLateralExploration}. Once computed, the same spot is
+	 * returned on every subsequent call within the commitment window so the NPC actually has time to walk toward it.
+	 * Cleared by {@link #updateNavigationProgress} the moment real progress is detected, and by
+	 * {@link #resetNavigationTracking} on state transitions. Timeout is tracked in
+	 * {@link #committedLateralExpiresAtMs}.
+	 */
+	private              Location      committedLateralSpot;
+	private              long          committedLateralExpiresAtMs;
 
 	protected AbstractNpc(NPC npc, Location spawnLocation, NpcNavigationConfig navConfig, NpcDifficulty difficulty) {
 		this.npc           = npc;
@@ -103,7 +125,6 @@ public abstract class AbstractNpc {
 		this.rangedMaxDistance = navConfig.getRangedMaxDistance();
 
 		this.navigationThrottleTicks = this.navigationRecalculationTicks;
-		this.minRepathAfterLossTicks = navConfig.getMinRepathAfterLossTicks();
 
 		this.attackCooldown         = 0;
 		this.markedForRemoval       = false;
@@ -111,6 +132,8 @@ public abstract class AbstractNpc {
 		this.reloading              = false;
 		this.stuckSampleTicks       = 0;
 		this.consecutiveStuckChecks = 0;
+
+		configurePathfinder();
 	}
 
 	// ── Abstract contract ────────────────────────────────────────────────────
@@ -360,22 +383,61 @@ public abstract class AbstractNpc {
 		if (!isValid() || location == null) return;
 		if (!shouldRecalculateNavigation(location)) return;
 
+		boolean targetMoved = lastNavigationTarget == null
+		                      || lastNavigationTarget.getWorld() == null
+		                      || !lastNavigationTarget.getWorld().equals(location.getWorld())
+		                      || lastNavigationTarget.distanceSquared(location) >= TARGET_MOVED_THRESHOLD_SQ;
+
 		npc.getNavigator().setTarget(location);
 		lastNavigationTarget    = location.clone();
 		navigationThrottleTicks = 0;
-		stuckSampleTicks        = 0;
-		lastProgressLocation    = getEntity() != null ? getEntity().getLocation().clone() : null;
+
+		if (targetMoved) {
+			// Fresh destination — reset progress tracking so stuck detection starts
+			// counting from here.
+			//
+			// We deliberately do NOT clear navigationHopeless or committedLateralSpot
+			// here. The hopeless-fallback branch needs a stable commitment: issuing
+			// its lateral target must not flip hopeless back to false, otherwise the
+			// next tick's pursuit branch immediately overwrites the lateral setTarget
+			// and Citizens never gets to walk toward the walk-around spot. Only
+			// updateNavigationProgress clears the hopeless flag, and only when real
+			// physical movement toward a new position is observed.
+			stuckSampleTicks       = 0;
+			consecutiveStuckChecks = 0;
+			lastProgressLocation   = getEntity() != null ? getEntity().getLocation().clone() : null;
+		}
+		// Else: preserve stuck counters so updateNavigationProgress can still
+		// escalate to isNavigationHopeless() across re-paths against the same point.
 	}
 
-	// ── Navigation ───────────────────────────────────────────────────────────
-
 	/**
-	 * Stops any current navigation.
+	 * Stops any current navigation and clears our tracking. Use when transitioning out of a behavior state — the next
+	 * state should start with a clean slate.
 	 */
 	public void stopNavigation() {
 		if (!isValid()) return;
 		npc.getNavigator().cancelNavigation();
 		resetNavigationTracking();
+	}
+
+	// ── Navigation ───────────────────────────────────────────────────────────
+
+	/**
+	 * Cancels the Citizens navigator's current path without resetting our tracking state. Use this from per-tick "hold
+	 * firing position" branches: the NPC stops walking, but {@link #lastNavigationTarget} and the stuck counters stay
+	 * populated so subsequent {@link #navigateTo} calls respect throttling and can still escalate to
+	 * {@link #isNavigationHopeless()} when the target is genuinely unreachable.
+	 * <p>
+	 * Calling the hard-reset {@link #stopNavigation()} from a tick-level handler whose "hold" condition flickers
+	 * tick-to-tick (e.g. line-of-sight blinking through a gap mid-transit) causes the NPC to lose all accumulated stuck
+	 * state, which prevents re-paths from ever firing and strands the NPC at the first obstacle.
+	 */
+	public void pauseNavigation() {
+		if (!isValid()) return;
+		if (npc.getNavigator().isNavigating()) {
+			npc.getNavigator().cancelNavigation();
+		}
 	}
 
 	/**
@@ -430,6 +492,11 @@ public abstract class AbstractNpc {
 		if (from.getWorld() == null || !from.getWorld().equals(to.getWorld())) return null;
 
 		if (from.distanceSquared(to) <= hopelessCloseThreshold * hopelessCloseThreshold) {
+			// Close to the target but path-locked (wall between us) — re-aiming at
+			// the target just retries the same failing path. Move laterally instead
+			// so Citizens can compute a fresh path from a new starting position.
+			Location lateral = resolveLateralExploration(from, to);
+			if (lateral != null) return lateral;
 			Location safe = normalizeToStandableLocation(to);
 			return safe != null ? safe : to;
 		}
@@ -469,6 +536,11 @@ public abstract class AbstractNpc {
 		if (from.getWorld() == null || !from.getWorld().equals(to.getWorld())) return null;
 
 		if (from.distanceSquared(to) <= hopelessCloseThreshold * hopelessCloseThreshold) {
+			// See resolveHopelessFallbackLocation(Player) — same rationale. Lateral
+			// exploration breaks the close-range stuck loop by picking a perpendicular
+			// step instead of re-aiming at a target the NPC provably can't reach.
+			Location lateral = resolveLateralExploration(from, to);
+			if (lateral != null) return lateral;
 			Location safe = normalizeToStandableLocation(to);
 			return safe != null ? safe : to;
 		}
@@ -550,8 +622,6 @@ public abstract class AbstractNpc {
 		return null;
 	}
 
-	// ── Tick helpers (called by subclass tick methods) ───────────────────────
-
 	/**
 	 * Decrements the attack cooldown by one server tick. Called once per server tick (period = 0), so cooldown values
 	 * are always in server ticks regardless of the logical AI tick rate.
@@ -603,15 +673,19 @@ public abstract class AbstractNpc {
 		if (progress < minProgressDistanceSquared) {
 			consecutiveStuckChecks++;
 		} else {
+			// Real movement detected — the current hopeless commitment (if any) has
+			// served its purpose of getting the NPC to a new position, so drop it
+			// and let the regular pursuit branch take over from the fresh location.
 			consecutiveStuckChecks = 0;
 			navigationHopeless     = false;
+			committedLateralSpot   = null;
 			lastProgressLocation   = currentLocation.clone();
 		}
 
 		stuckSampleTicks = 0;
 	}
 
-	// ── Private attack helpers ────────────────────────────────────────────────
+	// ── Tick helpers (called by subclass tick methods) ───────────────────────
 
 	protected void faceTarget(Player player) {
 		Entity entity = npc.getEntity();
@@ -634,6 +708,8 @@ public abstract class AbstractNpc {
 		Location rotated = entity.getLocation().setDirection(direction);
 		entity.teleport(rotated);
 	}
+
+	// ── Private attack helpers ────────────────────────────────────────────────
 
 	protected void performGanglandWeaponAttack() {
 		if (!(heldWeapon instanceof GunWeapon gun)) return;
@@ -760,6 +836,108 @@ public abstract class AbstractNpc {
 		Material  type     = mainHand.getType();
 
 		return type == Material.BOW || type == Material.CROSSBOW;
+	}
+
+	/**
+	 * Picks a standable location offset from {@code from} in one of {@value #LATERAL_EXPLORATION_DIRECTIONS} angular
+	 * directions around the NPC-to-target line. Used when the NPC is close to its target but path-locked by an obstacle
+	 * between them — navigating to an off-axis point breaks the stuck loop by forcing the NPC into a new position from
+	 * which Citizens can compute a different path to the real target next tick.
+	 * <p>
+	 * Caches its result in {@link #committedLateralSpot} for {@value #LATERAL_COMMITMENT_MS} ms so that back-to-back
+	 * calls from the same hopeless-fallback tick loop return the same spot, and the NPC actually has time to walk
+	 * toward it before a new direction is probed. When the commitment window expires {@link #lateralExplorationSide}
+	 * advances so the next call starts from a different angle — cycling through all 8 directions means a U-shape that
+	 * blocks the first few candidates will still eventually have at least one walkable escape spot found.
+	 * <p>
+	 * Each call tries all 8 directions (starting from {@code lateralExplorationSide}) at radii 5, 7 and 9 blocks. The
+	 * first standable, far-enough candidate wins.
+	 */
+	private Location resolveLateralExploration(Location from, Location to) {
+		long now = System.currentTimeMillis();
+
+		if (committedLateralSpot != null
+		    && now < committedLateralExpiresAtMs
+		    && committedLateralSpot.getWorld() != null
+		    && committedLateralSpot.getWorld().equals(from.getWorld())) {
+			return committedLateralSpot;
+		}
+
+		// Commitment expired or never computed — rotate to the next angular
+		// direction before picking a new candidate so repeated failures eventually
+		// probe every direction around the NPC-target line, not just two flanks.
+		if (committedLateralSpot != null) {
+			lateralExplorationSide++;
+		}
+
+		Vector toTarget = to.toVector().subtract(from.toVector()).setY(0);
+		if (toTarget.lengthSquared() < 1e-4) {
+			committedLateralSpot = null;
+			return null;
+		}
+		toTarget.normalize();
+
+		// Iterate every direction (45° increments) starting from the current side,
+		// trying a few radii each. We give the currently committed direction first
+		// dibs, but if it has no standable spots we immediately fall through to the
+		// other directions in the same call — much better than waiting another full
+		// commitment cycle just to find out the current side is completely blocked.
+		double[] radii = {5.0, 7.0, 9.0};
+		int      start = Math.floorMod(lateralExplorationSide, LATERAL_EXPLORATION_DIRECTIONS);
+
+		for (int offset = 0; offset < LATERAL_EXPLORATION_DIRECTIONS; offset++) {
+			int    sideIndex = Math.floorMod(start + offset, LATERAL_EXPLORATION_DIRECTIONS);
+			double angleRad  = Math.toRadians(90.0 + (360.0 / LATERAL_EXPLORATION_DIRECTIONS) * sideIndex);
+			double cos       = Math.cos(angleRad);
+			double sin       = Math.sin(angleRad);
+
+			// Rotate the toTarget vector by (90° + sideIndex * 45°) around Y.
+			Vector rotated = new Vector(
+					toTarget.getX() * cos - toTarget.getZ() * sin,
+					0,
+					toTarget.getX() * sin + toTarget.getZ() * cos);
+
+			for (double radius : radii) {
+				Location candidate = from.clone().add(rotated.clone().multiply(radius));
+				Location safe      = normalizeToStandableLocation(candidate);
+				if (safe != null && safe.distanceSquared(from) >= 9.0) {
+					committedLateralSpot        = safe;
+					committedLateralExpiresAtMs = now + LATERAL_COMMITMENT_MS;
+					lateralExplorationSide      = sideIndex;
+					return safe;
+				}
+			}
+		}
+
+		committedLateralSpot = null;
+		return null;
+	}
+
+	/**
+	 * Configures this NPC's Citizens navigator with the defaults the gangland AI relies on.
+	 * <p>
+	 * <b>range(64)</b> — Citizens' default pathfinding search budget is ~25 blocks. That is
+	 * enough for short direct approaches but too small to find a walk-around route for 2- or 3-block obstacles when the
+	 * target is a few blocks behind cover; the pathfinder truncates at the foot of the wall, reports an idle navigator,
+	 * and our stuck detector then parks the NPC there. Raising the range to 64 blocks gives it enough budget to explore
+	 * a route around the obstacle before it gives up.
+	 * <p>
+	 * <b>useNewPathfinder(false)</b> — when Citizens' "new pathfinder" flag is on (the modern
+	 * default), Citizens delegates to the mob entity's own Mojang {@code PathNavigation} for
+	 * {@link org.bukkit.entity.Mob}-type NPCs. That native pathfinder has its own hardcoded search budget (~24 blocks
+	 * in modern Minecraft) that ignores our {@code range} setting, so civilians spawned as {@code EntityType.ZOMBIE} /
+	 * {@code VILLAGER} / etc. can't find walk-around routes longer than a handful of blocks. Cops avoid this because
+	 * they spawn as {@code EntityType.PLAYER}, which Citizens always routes through its own A* pathfinder regardless of
+	 * this flag. Forcing {@code useNewPathfinder(false)} here makes mob-type civilians fall through to the same
+	 * Citizens A* path cops use, so they finally obey the {@code range(64)} setting and can navigate around the U-shape
+	 * walls the user was seeing them get stuck against.
+	 * <p>
+	 */
+	private void configurePathfinder() {
+		if (npc == null) return;
+		NavigatorParameters params = npc.getNavigator().getDefaultParameters();
+		params.range(64f);
+		params.pathfinderType(PathfinderType.MINECRAFT);
 	}
 
 	/**
@@ -929,18 +1107,28 @@ public abstract class AbstractNpc {
 	private boolean shouldRecalculateNavigation(Location target) {
 		if (target == null) return false;
 
-		if (navigationThrottleTicks < navigationRecalculationTicks) {
-			return lastNavigationTarget != null && !npc.getNavigator().isNavigating() &&
-			       navigationThrottleTicks >= minRepathAfterLossTicks;
-		}
-
-		if (lastNavigationTarget == null || lastNavigationTarget.getWorld() == null || target.getWorld() == null) {
+		// First navigation, or previous target is in a different/unloaded world —
+		// unconditionally accept.
+		if (lastNavigationTarget == null
+		    || lastNavigationTarget.getWorld() == null
+		    || target.getWorld() == null
+		    || !lastNavigationTarget.getWorld().equals(target.getWorld())) {
 			return true;
 		}
 
-		if (!lastNavigationTarget.getWorld().equals(target.getWorld())) return true;
+		boolean targetMoved = lastNavigationTarget.distanceSquared(target) >= TARGET_MOVED_THRESHOLD_SQ;
 
-		return isNavigationStuck() || lastNavigationTarget.distanceSquared(target) >= 2.25;
+		// Respect the throttle window unless the target genuinely moved. Re-pathing
+		// against an idle navigator is what produces the "glitch" — Citizens completes
+		// its path to the closest reachable point, goes idle, and we keep resetting
+		// setTarget for the same destination, which also resets stuck detection so
+		// isNavigationHopeless() never fires.
+		if (navigationThrottleTicks < navigationRecalculationTicks) {
+			return targetMoved;
+		}
+
+		// Throttle window elapsed — re-path if the target moved or the NPC is stuck.
+		return targetMoved || isNavigationStuck();
 	}
 
 	private void resetNavigationTracking() {
@@ -949,6 +1137,8 @@ public abstract class AbstractNpc {
 		navigationThrottleTicks = navigationRecalculationTicks;
 		stuckSampleTicks        = 0;
 		consecutiveStuckChecks  = 0;
+		navigationHopeless      = false;
+		committedLateralSpot    = null;
 	}
 
 	private Location findLastReachableGroundBeforeGap(Location from, Location to, double maxDistance) {

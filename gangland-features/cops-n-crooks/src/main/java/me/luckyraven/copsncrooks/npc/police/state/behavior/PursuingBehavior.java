@@ -5,7 +5,6 @@ import me.luckyraven.copsncrooks.npc.police.npc.CopNpc;
 import me.luckyraven.copsncrooks.npc.police.state.CopBehavior;
 import me.luckyraven.copsncrooks.npc.police.state.CopState;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -73,8 +72,7 @@ public class PursuingBehavior implements CopBehavior {
 			return;
 		}
 
-		Location pursuitTarget = cop.resolvePursuitLocation(target);
-		cop.navigateTo(pursuitTarget);
+		cop.navigateTo(cop.resolvePursuitLocation(target));
 	}
 
 	@Override

@@ -47,8 +47,10 @@ public class CivilianCombatBehavior implements CivilianBehavior {
 			return;
 		}
 
-		// Navigate unless we should hold a ranged firing position
-		if (!npc.shouldHoldPursuitPosition(target)) {
+		boolean hold = npc.shouldHoldPursuitPosition(target);
+		boolean los  = npc.hasLineOfSight(target);
+
+		if (!hold) {
 			Location pursuitLoc = npc.isNavigationHopeless() ?
 			                      npc.resolveHopelessFallbackLocation(target) :
 			                      npc.resolvePursuitLocation(target);
@@ -61,11 +63,20 @@ public class CivilianCombatBehavior implements CivilianBehavior {
 				return;
 			}
 		} else {
-			npc.stopNavigation();
+			// Pause instead of stopNavigation: preserves the stuck counters so a
+			// subsequent LOS-lost tick can trigger isNavigationHopeless() and re-path
+			// around obstacles. stopNavigation's hard reset would wipe that state and
+			// leave the civilian permanently stuck at the first wall corner.
+			npc.pauseNavigation();
 		}
 
-		// Attack when close enough and cooldown elapsed
-		if (distance <= attackRange && npc.canAttack()) {
+		// Attack only when we actually have line of sight. Without this gate a civilian
+		// whose target ducks behind a wall keeps calling attack() every tick, which routes
+		// through faceTarget() → entity.teleport(sameLoc, newDirection). That teleport
+		// cancels Citizens' ongoing navigation, so the civilian stops walking and sits
+		// rotating in place instead of flanking around the wall. Matches the LOS gate
+		// cops use in PursuingBehavior / CombatBehavior for the same reason.
+		if (distance <= attackRange && npc.canAttack() && los) {
 			if (target instanceof Player player) {
 				npc.attack(player);
 			} else {
