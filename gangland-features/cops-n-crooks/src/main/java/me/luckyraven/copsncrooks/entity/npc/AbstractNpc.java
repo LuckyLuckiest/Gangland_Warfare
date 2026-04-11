@@ -251,6 +251,12 @@ public abstract class AbstractNpc {
 			return;
 		}
 
+		// Melee fallback still needs a clear line of sight — without this, an NPC that holds
+		// a ranged weapon but fails the LOS checks above (wall between it and the target)
+		// would fall through to performMeleeAttack and leak knockback onto the player through
+		// the wall even though no damage lands.
+		if (!hasLineOfSight(player)) return;
+
 		performMeleeAttack(player);
 	}
 
@@ -272,6 +278,9 @@ public abstract class AbstractNpc {
 			performGanglandWeaponAttack();
 			return;
 		}
+
+		// Melee fallback still needs a clear line of sight — see attack(Player) for rationale.
+		if (!hasLineOfSight(target)) return;
 
 		performMeleeAttackOnEntity(target);
 	}
@@ -682,16 +691,21 @@ public abstract class AbstractNpc {
 		LivingEntity entity = getEntity();
 		if (entity == null) return;
 
+		double healthBefore = player.getHealth();
 		player.damage(getAttackDamage() * difficulty.getMeleeDamageMultiplier(), entity);
 		attackCooldown = scaleCooldown(5);
 
-		Vector knockback = player.getLocation()
-		                         .toVector()
-		                         .subtract(entity.getLocation().toVector())
-		                         .normalize()
-		                         .multiply(0.3)
-		                         .setY(0.1);
-		player.setVelocity(player.getVelocity().add(knockback));
+		// Only apply knockback if the hit actually landed — otherwise an absorbed/cancelled
+		// damage event would still leave an unexplained velocity push on the target.
+		if (player.isDead() || player.getHealth() < healthBefore) {
+			Vector knockback = player.getLocation()
+			                         .toVector()
+			                         .subtract(entity.getLocation().toVector())
+			                         .normalize()
+			                         .multiply(0.3)
+			                         .setY(0.1);
+			player.setVelocity(player.getVelocity().add(knockback));
+		}
 	}
 
 	protected void performMeleeAttackOnEntity(LivingEntity target) {
@@ -700,16 +714,20 @@ public abstract class AbstractNpc {
 		LivingEntity entity = getEntity();
 		if (entity == null) return;
 
+		double healthBefore = target.getHealth();
 		target.damage(getAttackDamage() * difficulty.getMeleeDamageMultiplier(), entity);
 		attackCooldown = scaleCooldown(5);
 
-		Vector knockback = target.getLocation()
-		                         .toVector()
-		                         .subtract(entity.getLocation().toVector())
-		                         .normalize()
-		                         .multiply(0.3)
-		                         .setY(0.1);
-		target.setVelocity(target.getVelocity().add(knockback));
+		// Only apply knockback if the hit actually landed — see performMeleeAttack for rationale.
+		if (target.isDead() || target.getHealth() < healthBefore) {
+			Vector knockback = target.getLocation()
+			                         .toVector()
+			                         .subtract(entity.getLocation().toVector())
+			                         .normalize()
+			                         .multiply(0.3)
+			                         .setY(0.1);
+			target.setVelocity(target.getVelocity().add(knockback));
+		}
 	}
 
 	protected void refreshHeldItem() {
