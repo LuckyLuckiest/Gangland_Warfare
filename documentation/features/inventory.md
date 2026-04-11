@@ -419,7 +419,7 @@ InventoryBuilder builder = new InventoryBuilder(data, "gangland.inv.mymenu");
 
 Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 Fill line = new Fill(Settings.getInventoryLineName(), Settings.getInventoryLineItem());
-InventoryOpener opener = (p, name) -> InventoryAddon.openInventoryForPlayer(gangland, p, name);
+InventoryOpener opener = inventoryRuntimeContext::openInventoryForPlayer;
 
 InventoryHandler handler = builder.createInventory(plugin, placeholder, player, fill, line, evaluator, opener);
 handler.open(player);

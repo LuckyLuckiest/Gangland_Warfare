@@ -35,7 +35,7 @@ import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.gadget.jetpack.JetpackService;
 import me.luckyraven.gadget.wearable.WearableAddon;
-import me.luckyraven.item.ItemParserManager;
+import me.luckyraven.item.ItemParser;
 import me.luckyraven.item.money.MoneyDropClassifier;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.repository.IRepository;
@@ -51,7 +51,7 @@ import me.luckyraven.weapon.WeaponManager;
  *
  * <p>Highlights:
  * <ul>
- *     <li>{@link #civiliansLoader(ItemParserManager, CivilianSettings, FileManager)}
+ *     <li>{@link #civiliansLoader(ItemParser, CivilianSettings, FileManager)}
  *     binds + registers + loads in one go because the entity-mark manager downstream reads {@code getLoadedConfig()}
  *     immediately.</li>
  *     <li>{@link CopService} and {@link CivilianService} use no-arg constructors and a separate {@code initialize}
@@ -76,10 +76,10 @@ public class CopsAndGadgetsConfig {
 	// ---------------------------------------------------------------------------------------------------------------
 
 	@Bean
-	public CiviliansLoader civiliansLoader(ItemParserManager itemParserManager,
+	public CiviliansLoader civiliansLoader(ItemParser itemParser,
 	                                       CivilianSettings civilianSettings,
 	                                       FileManager fileManager) {
-		CiviliansLoader loader = new CiviliansLoader(gangland, itemParserManager.getParser(), civilianSettings,
+		CiviliansLoader loader = new CiviliansLoader(gangland, itemParser, civilianSettings,
 		                                             false, null, fileManager);
 		fileManager.registerInitializer(loader);
 		fileManager.initializeAll();
@@ -128,10 +128,10 @@ public class CopsAndGadgetsConfig {
 	// ---------------------------------------------------------------------------------------------------------------
 
 	@Bean
-	public CopLoader copLoader(ItemParserManager itemParserManager,
+	public CopLoader copLoader(ItemParser itemParser,
 	                           CopSettings copSettings,
 	                           FileManager fileManager) {
-		CopLoader loader = new CopLoader(gangland, itemParserManager.getParser(), copSettings,
+		CopLoader loader = new CopLoader(gangland, itemParser, copSettings,
 		                                 false, null, fileManager);
 		fileManager.registerInitializer(loader);
 		fileManager.initializeAll();
@@ -150,10 +150,10 @@ public class CopsAndGadgetsConfig {
 
 	@Bean
 	public CivilianNpcFactory civilianNpcFactory(EntityMarkManager entityMarkManager,
-	                                             ItemParserManager itemParserManager,
+	                                             ItemParser itemParser,
 	                                             WeaponManager weaponManager,
 	                                             CivilianSettings civilianSettings) {
-		return new CivilianNpcFactory(gangland, entityMarkManager, itemParserManager.getParser(), weaponManager,
+		return new CivilianNpcFactory(gangland, entityMarkManager, itemParser, weaponManager,
 		                              civilianSettings);
 	}
 

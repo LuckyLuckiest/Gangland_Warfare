@@ -101,7 +101,7 @@ the shared `DependencyContainer`.
 | `DatabaseConfig`       | DATABASE | GanglandDatabase, RepositoryRegistry                                     |
 | `DataConfig`           | CONFIG   | UserManager (online/offline), RankManager, GangManager, MemberManager,   |
 |                        |          | WaypointManager, PluginManager                                           |
-| `GameplayConfig`       | CONFIG   | WeaponManager, SignManager, ItemParserManager, LootChestManager,         |
+| `GameplayConfig`       | CONFIG   | WeaponManager, SignManager, ItemParser, LootChestManager,                |
 |                        |          | HologramService, RepairService, MoneyDepositService, BlockDamageManager  |
 | `SchedulingConfig`     | CONFIG   | PeriodicalUpdates, PlayerBootstrapService, ScoreboardLifecycleService    |
 | `WiringConfig`         | CONFIG   | ListenerManager, CommandManager, GanglandPlaceholder                     |

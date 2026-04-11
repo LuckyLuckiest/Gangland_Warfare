@@ -28,12 +28,14 @@ import me.luckyraven.gadget.wearable.WearableAddon;
 import me.luckyraven.hologram.HologramService;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
 import me.luckyraven.inventory.multi.ItemSourceProvider;
+import me.luckyraven.item.ItemConverterRegistry;
 import me.luckyraven.item.ItemParser;
-import me.luckyraven.item.ItemParserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.contract.*;
+import me.luckyraven.item.converter.*;
 import me.luckyraven.item.listener.money.MoneyProximityPickupTask;
 import me.luckyraven.item.money.MoneyAddon;
+import me.luckyraven.item.money.MoneyConverter;
 import me.luckyraven.item.money.MoneyDepositService;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.lootchest.LootChestService;
@@ -77,8 +79,8 @@ import org.bukkit.plugin.ServicePriority;
  *     <li>Sign system: registries → {@link SignFormatterService} → {@link SignInteraction} → {@link SignManager}
  *     and {@link BulkActionManager}.</li>
  *     <li>Money + items: {@link MoneyDepositService} (must precede the parser; {@code MoneyConverter} resolves the
- *     currency symbol via the contract on instantiation), then {@link ItemParserManager}, which the loot chest +
- *     cops-n-crooks beans transitively consume.</li>
+ *     currency symbol via the contract on instantiation), then the converter beans → {@link ItemConverterRegistry}
+ *     → {@link ItemParser}, which the loot chest + cops-n-crooks beans transitively consume.</li>
  *     <li>Loot chest: {@link HologramService} → {@link LootChestManager} → {@link LootChestLoader}.</li>
  *     <li>Repair: {@link RepairLoader}, {@link RepairManager}, {@link RepairAnvilGui} → {@link GanglandRepairService}.
  * </li>
@@ -123,7 +125,7 @@ public class GameplayConfig {
 
 	/**
 	 * {@link InventoryLoader} can't initialize during the FILE phase because its load callback parses prefixed item
-	 * refs (weapon:awp, wearable:police_vest, …) via {@link ItemParserManager}, which is a CONFIG-phase bean. The
+	 * refs (weapon:awp, wearable:police_vest, …) via {@link ItemParser}, which is a CONFIG-phase bean. The
 	 * {@link #initializeInventoryLoader()} {@code @PostConstruct} below runs the actual {@code initialize()} once every
 	 * other CONFIG bean is built.
 	 */
@@ -255,20 +257,62 @@ public class GameplayConfig {
 	}
 
 	@Bean
-	public ItemParserManager itemParserManager(WeaponManager weaponManager,
-	                                           AmmunitionManager ammunitionManager,
-	                                           WearableAddon wearableAddon,
-	                                           CarAddon carAddon,
-	                                           MoneyAddon moneyAddon,
-	                                           MoneyDepositService moneyDepositService,
-	                                           UniqueItemAddon uniqueItemAddon) {
-		return new ItemParserManager(weaponManager, ammunitionManager, wearableAddon, carAddon, moneyAddon,
-		                             moneyDepositService, uniqueItemAddon);
+	public MaterialConverter materialConverter() {
+		return new MaterialConverter();
 	}
 
 	@Bean
-	public ItemParser itemParser(ItemParserManager itemParserManager) {
-		return itemParserManager.getParser();
+	public WeaponConverter weaponConverter(WeaponService weaponService) {
+		return new WeaponConverter(weaponService);
+	}
+
+	@Bean
+	public AmmunitionConverter ammunitionConverter(AmmunitionManager ammunitionManager) {
+		return new AmmunitionConverter(ammunitionManager);
+	}
+
+	@Bean
+	public WearableConverter wearableConverter(WearableService wearableService) {
+		return new WearableConverter(wearableService);
+	}
+
+	@Bean
+	public CarConverter carConverter(CarAddon carAddon) {
+		return new CarConverter(carAddon);
+	}
+
+	@Bean
+	public UniqueConverter uniqueConverter(UniqueItemAddon uniqueItemAddon) {
+		return new UniqueConverter(uniqueItemAddon);
+	}
+
+	@Bean
+	public MoneyConverter moneyConverter(MoneyAddon moneyAddon, MoneyDepositService moneyDepositService) {
+		return new MoneyConverter(moneyAddon, moneyDepositService);
+	}
+
+	@Bean
+	public ItemConverterRegistry itemConverterRegistry(MaterialConverter materialConverter,
+	                                                   WeaponConverter weaponConverter,
+	                                                   AmmunitionConverter ammunitionConverter,
+	                                                   WearableConverter wearableConverter,
+	                                                   CarConverter carConverter,
+	                                                   UniqueConverter uniqueConverter,
+	                                                   MoneyConverter moneyConverter) {
+		ItemConverterRegistry registry = new ItemConverterRegistry();
+		registry.register("material", materialConverter);
+		registry.register("weapon", weaponConverter);
+		registry.register(new String[]{"ammunition", "ammo"}, ammunitionConverter);
+		registry.register("wearable", wearableConverter);
+		registry.register("car", carConverter);
+		registry.register("unique", uniqueConverter);
+		registry.register(new String[]{"money", "cash"}, moneyConverter);
+		return registry;
+	}
+
+	@Bean
+	public ItemParser itemParser(ItemConverterRegistry itemConverterRegistry) {
+		return new ItemParser(itemConverterRegistry);
 	}
 
 	@Bean
@@ -298,9 +342,9 @@ public class GameplayConfig {
 	@Bean
 	public LootChestManager lootChestManager(HologramService hologramService,
 	                                         RepositoryRegistry repositoryRegistry,
-	                                         ItemParserManager itemParserManager) {
+	                                         ItemParser itemParser) {
 		return new LootChestManager(gangland, Gangland.FULL_PREFIX, hologramService, repositoryRegistry,
-		                            itemParserManager.getParser(), new GanglandLootChestMessages());
+		                            itemParser, new GanglandLootChestMessages());
 	}
 
 	@Bean
@@ -342,10 +386,10 @@ public class GameplayConfig {
 
 	/**
 	 * {@link InventoryLoader} can't initialize during construction because its load callback parses prefixed item refs
-	 * (weapon:awp, wearable:police_vest, …) via {@link ItemParserManager}, which is also a CONFIG-phase bean. By the
-	 * time this {@code @PostConstruct} runs, every CONFIG bean is registered AND the per-bean hydrate hook has
-	 * populated the {@code ItemParserManager}, so the {@code SlotItemFactory} resolver lambda set up earlier in this
-	 * config can dereference it.
+	 * (weapon:awp, wearable:police_vest, …) via {@link ItemParser}, which is also a CONFIG-phase bean. By the time this
+	 * {@code @PostConstruct} runs, every CONFIG bean is registered AND the per-bean hydrate hook has populated the
+	 * {@code ItemConverterRegistry}, so the {@code SlotItemFactory} resolver lambda set up earlier in this config can
+	 * dereference it.
 	 */
 	@PostConstruct
 	public void initializeInventoryLoader() {

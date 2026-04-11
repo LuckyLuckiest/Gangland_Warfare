@@ -202,27 +202,28 @@ Self-contained gameplay features.
 
 Configuration loading and contract implementations.
 
-| Class                                                                | Description                                                                                   |
-|----------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
-| `FileInitializer.java`                                               | Bootstraps all YAML configuration files on plugin startup.                                    |
-| `LanguageLoader.java`                                                | Loads localized message files (`message_en.yml`, `message_es.yml`).                           |
-| `configuration/Settings.java`                                        | Static accessor for `settings.yml` values (database type, auto-save interval, economy, etc.). |
-| `configuration/Messages.java`                                        | Static accessor for localized message strings.                                                |
-| `configuration/GadgetPhysicsConfigImpl.java`                         | Implements `GadgetPhysicsConfig` for the gadget module.                                       |
-| `configuration/copsncrooks/GanglandBountySettings.java`              | Implements `BountySettings` contract.                                                         |
-| `configuration/copsncrooks/GanglandCivilianSettings.java`            | Implements `CivilianSettings` contract.                                                       |
-| `configuration/copsncrooks/GanglandCivilianSpawnConfigProvider.java` | Implements `SpawnConfigProvider` for civilian spawners.                                       |
-| `configuration/copsncrooks/GanglandCopSettings.java`                 | Implements `CopSettings` contract.                                                            |
-| `configuration/copsncrooks/GanglandWantedSettings.java`              | Implements `WantedSettings` contract.                                                         |
-| `configuration/inventory/ConditionalSlotParser.java`                 | Parses conditional slot definitions from inventory YAML.                                      |
-| `configuration/inventory/InventoryAddon.java`                        | Configuration addon for inventory YAML loading.                                               |
-| `configuration/inventory/InventoryLoader.java`                       | Loads inventory layout definitions from YAML files.                                           |
-| `configuration/inventory/InventoryParser.java`                       | Parses inventory YAML into `InventoryHandler` instances.                                      |
-| `configuration/inventory/itemsource/GangItemSourceProvider.java`     | Provides gang-specific items for paginated inventory GUIs.                                    |
-| `configuration/lootchest/GanglandLootChestMessages.java`             | Implements `LootChestMessagesProvider` contract.                                              |
-| `configuration/lootchest/LootChestSettings.java`                     | Implements `LootChestSettingsProvider` contract.                                              |
-| `configuration/weapon/GanglandRepairMessages.java`                   | Implements `RepairMessages` contract.                                                         |
-| `configuration/weapon/WeaponLoader.java`                             | Loads weapon definitions from per-weapon YAML files in `weapon/`.                             |
+| Class                                                                | Description                                                                                     |
+|----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|
+| `FileInitializer.java`                                               | Bootstraps all YAML configuration files on plugin startup.                                      |
+| `LanguageLoader.java`                                                | Loads localized message files (`message_en.yml`, `message_es.yml`).                             |
+| `configuration/Settings.java`                                        | Static accessor for `settings.yml` values (database type, auto-save interval, economy, etc.).   |
+| `configuration/Messages.java`                                        | Static accessor for localized message strings.                                                  |
+| `configuration/GadgetPhysicsConfigImpl.java`                         | Implements `GadgetPhysicsConfig` for the gadget module.                                         |
+| `configuration/copsncrooks/GanglandBountySettings.java`              | Implements `BountySettings` contract.                                                           |
+| `configuration/copsncrooks/GanglandCivilianSettings.java`            | Implements `CivilianSettings` contract.                                                         |
+| `configuration/copsncrooks/GanglandCivilianSpawnConfigProvider.java` | Implements `SpawnConfigProvider` for civilian spawners.                                         |
+| `configuration/copsncrooks/GanglandCopSettings.java`                 | Implements `CopSettings` contract.                                                              |
+| `configuration/copsncrooks/GanglandWantedSettings.java`              | Implements `WantedSettings` contract.                                                           |
+| `configuration/inventory/ConditionalSlotParser.java`                 | Parses conditional slot definitions from inventory YAML.                                        |
+| `configuration/inventory/InventoryDefinitionStore.java`              | Pure-data half of the former `InventoryAddon`: holds inventory and unique-item lookup maps.     |
+| `configuration/inventory/InventoryRuntimeContext.java`               | Runtime half of the former `InventoryAddon`: service refs, registration + open-inventory logic. |
+| `configuration/inventory/InventoryLoader.java`                       | Loads inventory layout definitions from YAML files.                                             |
+| `configuration/inventory/InventoryParser.java`                       | Parses inventory YAML into `InventoryHandler` instances.                                        |
+| `configuration/inventory/itemsource/GangItemSourceProvider.java`     | Provides gang-specific items for paginated inventory GUIs.                                      |
+| `configuration/lootchest/GanglandLootChestMessages.java`             | Implements `LootChestMessagesProvider` contract.                                                |
+| `configuration/lootchest/LootChestSettings.java`                     | Implements `LootChestSettingsProvider` contract.                                                |
+| `configuration/weapon/GanglandRepairMessages.java`                   | Implements `RepairMessages` contract.                                                           |
+| `configuration/weapon/WeaponLoader.java`                             | Loads weapon definitions from per-weapon YAML files in `weapon/`.                               |
 
 ### Package: `item/`
 
@@ -231,7 +232,8 @@ Item conversion and parsing implementations.
 | Class                                | Description                                                          |
 |--------------------------------------|----------------------------------------------------------------------|
 | `ItemAttributes.java`                | Constants for custom item NBT attribute keys.                        |
-| `ItemParserManager.java`             | Registers all `ItemConverter` implementations and manages parsing.   |
+| `ItemConverterRegistry.java`         | Holds all `ItemConverter` implementations keyed by type string.      |
+| `ItemParser.java`                    | Parses item strings (e.g. `weapon:awp{attr=val}`) via the registry.  |
 | `configuration/UniqueItemAddon.java` | Loads unique item definitions from `unique_items.yml`.               |
 | `converter/AmmunitionConverter.java` | Converts `"ammo:ak47"` format strings to ammunition `ItemStack`.     |
 | `converter/CarConverter.java`        | Converts `"car:sports_car"` format strings to car spawn items.       |
@@ -1117,19 +1119,19 @@ Conditional slot visibility system.
 
 Slot event handler interfaces and implementations.
 
-| Class                             | Description                                                                         |
-|-----------------------------------|-------------------------------------------------------------------------------------|
-| `SlotEventHandler.java`           | Base interface for slot event handlers.                                             |
-| `SlotContext.java`                | Context object passed to slot handlers (player, slot, click type, inventory state). |
-| `SlotItemFactory.java`            | Functional interface for dynamic item generation per slot.                          |
-| `ClickSlotHandler.java`           | Handler for inventory click events on a specific slot.                              |
-| `CloseSlotHandler.java`           | Handler for inventory close events.                                                 |
-| `DropSlotHandler.java`            | Handler for item drop events from a slot.                                           |
-| `SwapHandSlotHandler.java`        | Handler for off-hand swap events.                                                   |
-| `JoinSlotHandler.java`            | Handler for player join events (loads persistent inventory state).                  |
-| `QuitSlotHandler.java`            | Handler for player quit events (saves inventory state).                             |
-| `PlayerInteractSlotHandler.java`  | Handler for player interact events while holding an inventory item.                 |
-| `AbstractCommandSlotHandler.java` | Base handler that executes a command when a slot is clicked.                        |
+| Class                             | Description                                                                                                                                 |
+|-----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| `SlotEventHandler.java`           | Base interface for slot event handlers.                                                                                                     |
+| `SlotContext.java`                | Context object passed to slot handlers (player, slot, click type, inventory state).                                                         |
+| `SlotItemFactory.java`            | Static utility that builds `ItemBuilder` from raw YAML slot values; optional `itemResolver` handles prefixed item refs (e.g. `weapon:awp`). |
+| `ClickSlotHandler.java`           | Handler for inventory click events on a specific slot.                                                                                      |
+| `CloseSlotHandler.java`           | Handler for inventory close events.                                                                                                         |
+| `DropSlotHandler.java`            | Handler for item drop events from a slot.                                                                                                   |
+| `SwapHandSlotHandler.java`        | Handler for off-hand swap events.                                                                                                           |
+| `JoinSlotHandler.java`            | Handler for player join events (loads persistent inventory state).                                                                          |
+| `QuitSlotHandler.java`            | Handler for player quit events (saves inventory state).                                                                                     |
+| `PlayerInteractSlotHandler.java`  | Handler for player interact events while holding an inventory item.                                                                         |
+| `AbstractCommandSlotHandler.java` | Base handler that executes a command when a slot is clicked.                                                                                |
 
 ### Subpackage: `listener/`
 
