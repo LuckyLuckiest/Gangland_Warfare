@@ -19,7 +19,7 @@ public class WantedExecutor extends Executor {
 	private final WantedSettings settings;
 
 	public WantedExecutor(JavaPlugin plugin, WantedEvent event, WantedContext context,
-						  WantedSettings settings) {
+	                      WantedSettings settings) {
 		super(plugin, "wanted");
 
 		this.event    = event;
@@ -63,11 +63,16 @@ public class WantedExecutor extends Executor {
 			moneyTaken = context.withdraw(moneyTaken);
 		}
 
+		// Compute the post-decrement level up-front: Wanted.setLevel reschedules to the
+		// primary thread when called off-thread (this executor runs async), so reading
+		// wanted.getLevel() right after decrementLevel() would return the stale value.
+		int newLevel = Math.max(0, wanted.getLevel() - 1);
+
 		wanted.decrementLevel();
 
 		String message = settings.getWantedDecreasedMessageTemplate()
-								 .replace("%level%", String.valueOf(wanted.getLevel()))
-								 .replace("%stars%", wanted.getLevelStars());
+		                         .replace("%level%", String.valueOf(newLevel))
+		                         .replace("%stars%", Wanted.buildStars(newLevel, wanted.getMaxLevel()));
 
 		context.sendMessage(message);
 

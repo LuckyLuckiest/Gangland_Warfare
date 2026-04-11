@@ -40,6 +40,14 @@ public class Wanted {
 		this.wanted     = false;
 	}
 
+	public static String buildStars(int level, int maxLevel) {
+		int cappedMax = Math.max(0, maxLevel);
+		int filled    = Math.clamp(level, 0, cappedMax);
+		int empty     = cappedMax - filled;
+
+		return "★".repeat(filled) + "☆".repeat(empty);
+	}
+
 	public RepeatingTimer createTimer(long seconds, Consumer<RepeatingTimer> timer) {
 		stopTimer();
 
@@ -50,7 +58,7 @@ public class Wanted {
 
 	public void setLevel(int level) {
 		int oldLevel = this.level;
-		int newLevel = Math.max(0, Math.min(level, maxLevel));
+		int newLevel = Math.clamp(level, 0, maxLevel);
 
 		// Fire change event if owner is set
 		if (owner != null && oldLevel != newLevel) {
@@ -90,11 +98,7 @@ public class Wanted {
 	}
 
 	public String getLevelStars() {
-		StringBuilder builder = new StringBuilder(maxLevel);
-
-		builder.append("★".repeat(level)).append("☆".repeat(Math.max(0, maxLevel - builder.length())));
-
-		return builder.toString();
+		return buildStars(level, maxLevel);
 	}
 
 	public void reset() {
