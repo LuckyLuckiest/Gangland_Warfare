@@ -225,7 +225,6 @@ public class FileConfig {
 		loader.addExpectedFile(new FileHandler(gangland, "knife", "weapon", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "flamethrower", "weapon", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "syringe_gun", "weapon", ".yml"));
-		loader.initialize();
 		return loader;
 	}
 

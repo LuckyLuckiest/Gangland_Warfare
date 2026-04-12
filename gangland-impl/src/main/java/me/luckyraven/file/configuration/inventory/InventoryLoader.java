@@ -20,4 +20,9 @@ public class InventoryLoader extends FolderLoader {
 		this.load(true, runtimeContext::registerInventory, fileManager);
 	}
 
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		if (firstLoad) return;
+		initialize();
+	}
 }

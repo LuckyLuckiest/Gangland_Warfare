@@ -2,6 +2,7 @@ package me.luckyraven.persistence;
 
 import lombok.CustomLog;
 import me.luckyraven.util.UnhandledError;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @CustomLog
-public abstract class FolderLoader extends FileLoader<FileHandler> {
+public abstract class FolderLoader extends FileLoader<FileHandler> implements BeanLifecycle {
 
 	private final JavaPlugin plugin;
 
@@ -53,6 +54,11 @@ public abstract class FolderLoader extends FileLoader<FileHandler> {
 	@Override
 	public void clear() {
 		folderFiles.clear();
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		initialize();
 	}
 
 	/**
