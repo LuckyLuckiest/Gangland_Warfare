@@ -9,10 +9,7 @@ import me.luckyraven.weapon.dto.ThrowableData;
 import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
 import me.luckyraven.weapon.projectile.ProjectileState;
 import me.luckyraven.weapon.util.PotionEffectParser;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
@@ -60,14 +57,16 @@ public class ThrowableAction {
 	public void activate(Player player) {
 		ThrowableData data = weapon.getThrowableData();
 
-		decrementHeldStack(player);
+		if (player.getGameMode() != GameMode.CREATIVE) {
+			decrementHeldStack(player);
+		}
 
 		World    world  = player.getWorld();
 		Location eyeLoc = player.getEyeLocation();
 
-		ItemStack visual = data.getDisplayItem() != null
-		                   ? data.getDisplayItem().clone()
-		                   : new ItemStack(weapon.getMaterial());
+		ItemStack visual = data.getDisplayItem() != null ?
+		                   data.getDisplayItem().clone() :
+		                   new ItemStack(weapon.getMaterial());
 		Item grenade = world.dropItem(eyeLoc, visual);
 		grenade.setPickupDelay(Integer.MAX_VALUE);
 
@@ -110,13 +109,13 @@ public class ThrowableAction {
 			// velocity has time to register and doesn't trigger a false wall-hit.
 			Vector curVel   = grenade.getVelocity();
 			double curLenSq = curVel.lengthSquared();
-			boolean hitSurface = tickCount[0] > 1 && !onGround && curLenSq < 0.005 && prevVelocityLenSq[0] > 0.01
-			                     && bounceCooldown[0] == 0;
+			boolean hitSurface = tickCount[0] > 1 && !onGround && curLenSq < 0.005 && prevVelocityLenSq[0] > 0.01 &&
+			                     bounceCooldown[0] == 0;
 			// For sticky grenades: also catch angled wall hits where the reflected velocity is
 			// reduced but not near-zero. If velocity magnitude squared drops to < 40 % of the
 			// previous tick's value, a collision absorbed kinetic energy → stick immediately.
-			boolean stickyCollision = data.isSticky() && tickCount[0] > 2 && bounceCooldown[0] == 0
-			                          && prevVelocityLenSq[0] > 0.05 && curLenSq < prevVelocityLenSq[0] * 0.40;
+			boolean stickyCollision = data.isSticky() && tickCount[0] > 2 && bounceCooldown[0] == 0 &&
+			                          prevVelocityLenSq[0] > 0.05 && curLenSq < prevVelocityLenSq[0] * 0.40;
 			prevVelocityLenSq[0] = curLenSq;
 
 			if (justLanded || hitSurface || stickyCollision) {
@@ -218,8 +217,9 @@ public class ThrowableAction {
 			// explosions through the same hook as gun shots. The legacy {@code target.damage(...)}
 			// call below still drives the existing EntityDamageByEntityEvent path for cops-n-crooks
 			// listeners that haven't been migrated.
-			WeaponRaytraceImpactEvent impactEvent = new WeaponRaytraceImpactEvent(
-					weapon, player, target, null, null, target.getLocation(), totalDmg, explosionState);
+			WeaponRaytraceImpactEvent impactEvent = new WeaponRaytraceImpactEvent(weapon, player, target, null, null,
+			                                                                      target.getLocation(), totalDmg,
+			                                                                      explosionState);
 			Bukkit.getPluginManager().callEvent(impactEvent);
 			if (impactEvent.isCancelled()) continue;
 
