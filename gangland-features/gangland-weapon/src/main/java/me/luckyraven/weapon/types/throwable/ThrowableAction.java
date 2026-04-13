@@ -21,7 +21,6 @@ import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class ThrowableAction {
 
@@ -294,16 +293,18 @@ public class ThrowableAction {
 	}
 
 	/**
-	 * Stun (flashbang) detonation: no damage, no explosion. Applies the configured potion effects to every living
-	 * entity within {@code explosionRadius}, including the thrower, and renders a single particle burst.
+	 * Stun (flashbang) detonation: no damage, no explosion. Renders a convincing flash-bang burst (bright white dust,
+	 * explosion emitter, sparks, smoke) and plays a high-pitched bang sound, then applies the configured potion effects
+	 * to every living entity within {@code explosionRadius}, including the thrower.
 	 */
 	private void detonateStun(Location center, ThrowableData data, World world) {
-		ParticleUtil.spawnExplosionBurst(center);
+		double radius = data.getExplosionRadius();
+		ParticleUtil.spawnFlashbangBurst(center, radius);
+		world.playSound(center, Sound.ENTITY_GENERIC_EXPLODE, 2.0f, 1.8f);
 
 		List<PotionEffect> effects = PotionEffectParser.parseList(data.getEffects());
 		if (effects.isEmpty()) return;
 
-		double radius   = data.getExplosionRadius();
 		double radiusSq = radius * radius;
 
 		for (Entity nearby : world.getNearbyEntities(center, radius, radius, radius)) {
@@ -325,8 +326,8 @@ public class ThrowableAction {
 		double radiusSq = radius * radius;
 		int    duration = data.getCloudDuration();
 
-		// initial visual pulse so the player gets immediate feedback
-		ParticleUtil.spawnAreaPulse(center, radius);
+		// initial detonation burst — sudden outward smoke expansion
+		ParticleUtil.spawnSmokeCloudBurst(center, radius);
 
 		int[] elapsed = {0};
 		RepeatingTimer cloud = new RepeatingTimer(plugin, 1L, time -> {
@@ -336,14 +337,9 @@ public class ThrowableAction {
 			}
 			elapsed[0]++;
 
-			// emit a few smoke trails per tick at random offsets within the cloud volume
-			Random rng = ThreadLocalRandom.current();
-			for (int i = 0; i < 4; i++) {
-				double dx = (rng.nextDouble() * 2 - 1) * radius;
-				double dy = (rng.nextDouble() * 2 - 1) * (radius * 0.6);
-				double dz = (rng.nextDouble() * 2 - 1) * radius;
-				ParticleUtil.spawnSmokeTrail(center.clone().add(dx, dy, dz));
-			}
+			// dense smoke cloud that fades naturally toward expiration
+			double intensity = 1.0 - ((double) elapsed[0] / duration);
+			ParticleUtil.spawnDenseSmokeCloud(center, radius, intensity);
 
 			// refresh effects on entities inside the cloud every 10 ticks
 			if (elapsed[0] % 10 != 0 || effects.isEmpty()) return;

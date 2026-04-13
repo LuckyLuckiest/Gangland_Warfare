@@ -2,10 +2,7 @@ package me.luckyraven.util.utilities;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.particles.XParticle;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Particle;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -324,6 +321,161 @@ public class ParticleUtil {
 		if (rightNozzle) {
 			world.spawnParticle(smoke, vehicleLocation.clone().add(behindX - rightX, 0.3, behindZ - rightZ), 2, 0.05,
 			                    0.05, 0.05, 0.008, null);
+		}
+	}
+
+	/**
+	 * Spawns a convincing flashbang detonation burst: a large central explosion, bright white radiating dust, trailing
+	 * end-rod sparks, and a lingering smoke puff. Designed to visually sell a stun grenade going off.
+	 */
+	public static void spawnFlashbangBurst(Location center, double radius) {
+		World world = center.getWorld();
+		if (world == null) return;
+
+		// Central bang — large explosion visual
+		Particle explosionEmitter = XParticle.EXPLOSION_EMITTER.get();
+		if (explosionEmitter != null) {
+			world.spawnParticle(explosionEmitter, center, 1, 0, 0, 0, 0, null);
+		} else {
+			Particle explosion = XParticle.EXPLOSION.get();
+			if (explosion != null) {
+				world.spawnParticle(explosion, center, 3, 0.2, 0.2, 0.2, 0, null);
+			}
+		}
+
+		// Bright white dust sphere radiating outward
+		Particle dust = XParticle.DUST.get();
+		if (dust != null) {
+			Particle.DustOptions whiteFlash = new Particle.DustOptions(Color.WHITE, 3.5F);
+			ThreadLocalRandom    rng        = ThreadLocalRandom.current();
+			for (int i = 0; i < 40; i++) {
+				double theta = rng.nextDouble() * Math.PI;
+				double phi   = rng.nextDouble() * 2 * Math.PI;
+				double r     = rng.nextDouble() * radius;
+				double x     = r * Math.sin(theta) * Math.cos(phi);
+				double y     = r * Math.sin(theta) * Math.sin(phi);
+				double z     = r * Math.cos(theta);
+				world.spawnParticle(dust, center.clone().add(x, y + 0.5, z), 1, whiteFlash);
+			}
+		}
+
+		// Bright white trailing sparks
+		Particle endRod = XParticle.END_ROD.get();
+		if (endRod != null) {
+			world.spawnParticle(endRod, center, 25, 0.8, 0.8, 0.8, 0.15, null);
+		}
+
+		// Aftermath smoke puff
+		Particle smoke = XParticle.SMOKE.get();
+		if (smoke == null) smoke = Particle.SMOKE;
+		world.spawnParticle(smoke, center, 15, 0.5, 0.5, 0.5, 0.05, null);
+	}
+
+	/**
+	 * Spawns one tick's worth of a dense, lingering smoke cloud. Uses tall signal-smoke columns for far-away
+	 * visibility, large smoke for volume, and cloud particles for white fog opacity. Call every tick from a
+	 * {@code RepeatingTimer}.
+	 *
+	 * @param center cloud center
+	 * @param radius cloud radius in blocks
+	 * @param intensity 0.0-1.0, allows ramping down near end of cloud lifetime
+	 */
+	public static void spawnDenseSmokeCloud(Location center, double radius, double intensity) {
+		World world = center.getWorld();
+		if (world == null) return;
+
+		ThreadLocalRandom rng   = ThreadLocalRandom.current();
+		int               count = Math.max(2, (int) (5 * intensity));
+
+		// Tall lingering columns — visible from far away, rise high
+		Particle signalSmoke = XParticle.CAMPFIRE_SIGNAL_SMOKE.get();
+		if (signalSmoke != null) {
+			for (int i = 0; i < count; i++) {
+				double dx = (rng.nextDouble() * 2 - 1) * radius * 0.7;
+				double dz = (rng.nextDouble() * 2 - 1) * radius * 0.7;
+				world.spawnParticle(signalSmoke, center.clone().add(dx, 0.2, dz),
+				                    1, 0.15, 0.1, 0.15, 0.01, null);
+			}
+		}
+
+		// Large smoke — thick dark volume fill
+		Particle largeSmoke = XParticle.LARGE_SMOKE.get();
+		if (largeSmoke != null) {
+			for (int i = 0; i < count; i++) {
+				double dx = (rng.nextDouble() * 2 - 1) * radius;
+				double dy = (rng.nextDouble() * 2 - 1) * radius * 0.4;
+				double dz = (rng.nextDouble() * 2 - 1) * radius;
+				world.spawnParticle(largeSmoke, center.clone().add(dx, dy + 0.6, dz),
+				                    1, 0.08, 0.06, 0.08, 0.005, null);
+			}
+		}
+
+		// Regular smoke — scattered through the volume for density
+		Particle smoke = XParticle.SMOKE.get();
+		if (smoke == null) smoke = Particle.SMOKE;
+		for (int i = 0; i < count * 2; i++) {
+			double dx = (rng.nextDouble() * 2 - 1) * radius;
+			double dy = (rng.nextDouble() * 2 - 1) * radius * 0.5;
+			double dz = (rng.nextDouble() * 2 - 1) * radius;
+			world.spawnParticle(smoke, center.clone().add(dx, dy + 0.4, dz),
+			                    1, 0.05, 0.05, 0.05, 0.008, null);
+		}
+
+		// White fog — cloud particles for thick opacity in the core
+		Particle cloud = XParticle.CLOUD.get();
+		if (cloud != null) {
+			for (int i = 0; i < count; i++) {
+				double dx = (rng.nextDouble() * 2 - 1) * radius * 0.6;
+				double dy = rng.nextDouble() * radius * 0.35;
+				double dz = (rng.nextDouble() * 2 - 1) * radius * 0.6;
+				world.spawnParticle(cloud, center.clone().add(dx, dy + 0.3, dz),
+				                    1, 0.06, 0.04, 0.06, 0.003, null);
+			}
+		}
+
+		// Campfire cosy smoke — low-lying wispy fill between the columns
+		Particle cosySmoke = XParticle.CAMPFIRE_COSY_SMOKE.get();
+		if (cosySmoke != null) {
+			for (int i = 0; i < count; i++) {
+				double dx = (rng.nextDouble() * 2 - 1) * radius * 0.8;
+				double dz = (rng.nextDouble() * 2 - 1) * radius * 0.8;
+				world.spawnParticle(cosySmoke, center.clone().add(dx, 0.3, dz),
+				                    1, 0.1, 0.05, 0.1, 0.008, null);
+			}
+		}
+	}
+
+	/**
+	 * Spawns the initial burst when a smoke grenade detonates — a sudden outward expansion of smoke before the
+	 * lingering cloud settles in. Called once at detonation, not per-tick.
+	 */
+	public static void spawnSmokeCloudBurst(Location center, double radius) {
+		World world = center.getWorld();
+		if (world == null) return;
+
+		// Large smoke — main burst expanding outward
+		Particle largeSmoke = XParticle.LARGE_SMOKE.get();
+		if (largeSmoke == null) {
+			largeSmoke = XParticle.SMOKE.get();
+			if (largeSmoke == null) largeSmoke = Particle.SMOKE;
+		}
+		world.spawnParticle(largeSmoke, center, 40, radius * 0.5, radius * 0.3, radius * 0.5, 0.1, null);
+
+		// Regular smoke — mixed in for density
+		Particle smoke = XParticle.SMOKE.get();
+		if (smoke == null) smoke = Particle.SMOKE;
+		world.spawnParticle(smoke, center, 25, radius * 0.6, radius * 0.4, radius * 0.6, 0.06, null);
+
+		// Cloud fog — white opacity in the core
+		Particle cloud = XParticle.CLOUD.get();
+		if (cloud != null) {
+			world.spawnParticle(cloud, center, 25, radius * 0.4, radius * 0.2, radius * 0.4, 0.06, null);
+		}
+
+		// Signal smoke columns — tall plumes rising from the burst
+		Particle signalSmoke = XParticle.CAMPFIRE_SIGNAL_SMOKE.get();
+		if (signalSmoke != null) {
+			world.spawnParticle(signalSmoke, center, 8, radius * 0.3, 0.1, radius * 0.3, 0.02, null);
 		}
 	}
 
