@@ -63,7 +63,7 @@ Language: en
 Resource_Pack:
    Enable: true
    # This is the direct download url link.
-   URL: "https://drive.google.com/uc?export=download&id=1ynhOxjyvQn9QhIQ8y_Lf-iU97FQwMj-x"
+   URL: "https://drive.google.com/uc?export=download&id=1sbc77c4B7E1t3uwx5f1_KgAFasJOpD8y"
    # Kicks the player if they didn't accept the resource pack
    Kick: false
 
