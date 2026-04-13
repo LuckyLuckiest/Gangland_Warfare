@@ -202,7 +202,11 @@ public class ThrowableAction {
 		}
 
 		world.createExplosion(center.getX(), center.getY(), center.getZ(), (float) data.getExplosionRadius(),
-		                      data.getFireTicks() > 0, false, player);
+		                      false, false, player);
+
+		if (data.getFireTicks() > 0) {
+			placeTempFire(center, data.getExplosionRadius(), data.getFireTicks(), world);
+		}
 
 		// Clean up entries not consumed by CarDamageListener (e.g. entity out of actual blast range)
 		plugin.getServer()
@@ -248,6 +252,44 @@ public class ThrowableAction {
 			} else {
 				player.setVelocity(player.getVelocity().add(new Vector(0, 2.0, 0)));
 			}
+		}
+	}
+
+	/**
+	 * Scatters short-lived {@link Material#FIRE} blocks in a sphere of {@code radius} around {@code center}. Each fire
+	 * block is placed only on top of solid blocks (in an air space) and is automatically removed after
+	 * {@code fireTicks} ticks so underlying blocks are never consumed.
+	 */
+	private void placeTempFire(Location center, double radius, int fireTicks, World world) {
+		int                          r        = (int) Math.ceil(radius);
+		double                       radiusSq = radius * radius;
+		List<org.bukkit.block.Block> placed   = new ArrayList<>();
+
+		for (int x = -r; x <= r; x++) {
+			for (int y = -r; y <= r; y++) {
+				for (int z = -r; z <= r; z++) {
+					if (x * x + y * y + z * z > radiusSq) continue;
+					org.bukkit.block.Block candidate = world.getBlockAt(
+							center.getBlockX() + x,
+							center.getBlockY() + y,
+							center.getBlockZ() + z);
+					if (candidate.getType() != Material.AIR) continue;
+					org.bukkit.block.Block below = candidate.getRelative(org.bukkit.block.BlockFace.DOWN);
+					if (!below.getType().isSolid()) continue;
+					candidate.setType(Material.FIRE);
+					placed.add(candidate);
+				}
+			}
+		}
+
+		if (!placed.isEmpty()) {
+			plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+				for (org.bukkit.block.Block b : placed) {
+					if (b.getType() == Material.FIRE) {
+						b.setType(Material.AIR);
+					}
+				}
+			}, fireTicks);
 		}
 	}
 

@@ -10,10 +10,15 @@ import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
 import me.luckyraven.weapon.raytrace.RaytraceRequest;
 import me.luckyraven.weapon.raytrace.WeaponMuzzle;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;
+import me.luckyraven.weapon.util.EmptyMagSoundGate;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 import java.util.Set;
@@ -29,13 +34,15 @@ public class IncendiaryAction {
 	 */
 	public static final Set<UUID> pendingDamage = ConcurrentHashMap.newKeySet();
 
+	private final JavaPlugin          plugin;
 	private final WeaponService       weaponService;
 	private final IncendiaryWeapon    weapon;
 	private final RecoilCompatibility recoilCompatibility;
 	private final WeaponRaytracer     raytracer;
 
-	public IncendiaryAction(WeaponService weaponService, IncendiaryWeapon weapon,
+	public IncendiaryAction(JavaPlugin plugin, WeaponService weaponService, IncendiaryWeapon weapon,
 	                        RecoilCompatibility recoilCompatibility, WeaponRaytracer raytracer) {
+		this.plugin              = plugin;
 		this.weaponService       = weaponService;
 		this.weapon              = weapon;
 		this.recoilCompatibility = recoilCompatibility;
@@ -49,12 +56,18 @@ public class IncendiaryAction {
 	 * mode use this to break the loop when the magazine empties.
 	 */
 	public boolean fireOnce(Player player) {
-		if (weapon.isBroken()) return false;
+		if (weapon.isBroken()) {
+			EmptyMagSoundGate.play(plugin, player, weapon);
+			return false;
+		}
 
 		IncendiaryData data       = weapon.getIncendiaryData();
 		boolean        tracksAmmo = weapon.getAmmunitionData() != null;
 
-		if (tracksAmmo && weapon.isMagazineEmpty()) return false;
+		if (tracksAmmo && weapon.isMagazineEmpty()) {
+			EmptyMagSoundGate.play(plugin, player, weapon);
+			return false;
+		}
 
 		// shoot sound
 		SoundConfiguration.playSounds(player, weapon.getSoundData().getShotCustom(),
@@ -153,6 +166,19 @@ public class IncendiaryAction {
 	private void applyIncendiaryImpact(WeaponRaytraceImpactEvent event, IncendiaryData data, double flatBonus) {
 		Entity hit = event.getHitEntity();
 		if (hit == null) {
+			Block     hitBlock = event.getHitBlock();
+			BlockFace face     = event.getHitBlockFace();
+			if (hitBlock != null && face != null) {
+				Block fireBlock = hitBlock.getRelative(face);
+				if (fireBlock.getType() == Material.AIR) {
+					fireBlock.setType(Material.FIRE);
+					plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+						if (fireBlock.getType() == Material.FIRE) {
+							fireBlock.setType(Material.AIR);
+						}
+					}, data.getFireDuration());
+				}
+			}
 			return;
 		}
 
@@ -166,7 +192,6 @@ public class IncendiaryAction {
 			target.setNoDamageTicks(0);
 			pendingDamage.add(target.getUniqueId());
 			target.damage(attributed, event.getShooter());
-			return;
 		}
 
 		// Non-living entity (vehicle, etc.). The unified WeaponRaytraceImpactEvent has already
