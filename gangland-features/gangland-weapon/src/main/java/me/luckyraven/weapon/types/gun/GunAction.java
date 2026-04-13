@@ -5,10 +5,10 @@ import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.weapon.WeaponService;
-import me.luckyraven.weapon.dto.SoundData;
 import me.luckyraven.weapon.events.projectile.WeaponShootEvent;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;
 import me.luckyraven.weapon.raytrace.WeaponShooting;
+import me.luckyraven.weapon.util.EmptyMagSoundGate;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -39,10 +39,8 @@ public class GunAction {
 		}
 
 		// check the durability of the weapon
-		SoundData soundData = weapon.getSoundData();
 		if (weapon.isBroken()) {
-			SoundConfiguration.playSounds(shooter, soundData.getEmptyMagCustom(), soundData.getEmptyMagDefault());
-
+			EmptyMagSoundGate.play(plugin, shooter, weapon);
 			ActionBarManager.send(shooter, "&cBroken");
 			return;
 		}
@@ -52,8 +50,8 @@ public class GunAction {
 
 		// no shot fired
 		if (!consumed) {
-			// empty magazine sound
-			SoundConfiguration.playSounds(shooter, soundData.getEmptyMagCustom(), soundData.getEmptyMagDefault());
+			// empty magazine sound — gated so burst/auto modes play it only once per press cycle
+			EmptyMagSoundGate.play(plugin, shooter, weapon);
 			return;
 		}
 

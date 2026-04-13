@@ -24,6 +24,7 @@ import me.luckyraven.weapon.types.melee.MeleeAction;
 import me.luckyraven.weapon.types.melee.MeleeWeapon;
 import me.luckyraven.weapon.types.throwable.ThrowableAction;
 import me.luckyraven.weapon.types.throwable.ThrowableWeapon;
+import me.luckyraven.weapon.util.EmptyMagSoundGate;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -371,7 +372,7 @@ public class WeaponInteract implements Listener {
 			case IncendiaryWeapon incendiary -> {
 				if (!rightClick) break;
 
-				IncendiaryAction action = new IncendiaryAction(weaponService, incendiary, recoilCompatibility,
+				IncendiaryAction action = new IncendiaryAction(plugin, weaponService, incendiary, recoilCompatibility,
 				                                               raytracer);
 
 				SelectiveFire mode = incendiary.getCurrentSelectiveFire();
@@ -477,6 +478,8 @@ public class WeaponInteract implements Listener {
 	private void handleIncendiaryAuto(IncendiaryWeapon weapon, IncendiaryAction action, Player player) {
 		UUID weaponUuid = weapon.getUuid();
 
+		EmptyMagSoundGate.refresh(weaponUuid);
+
 		AtomicReference<WeaponData> existing = continuousFire.get(weaponUuid);
 		if (existing != null) {
 			// already running — just refresh the held flag so the watchdog doesn't kill it
@@ -530,6 +533,7 @@ public class WeaponInteract implements Listener {
 		if (held != null) {
 			// already in hold state — refresh the flag so the watchdog knows RMB is still down
 			held.get().shooting = true;
+			EmptyMagSoundGate.refresh(weaponUuid);
 			return true;
 		}
 
@@ -655,6 +659,7 @@ public class WeaponInteract implements Listener {
 
 			if (weaponData != null) {
 				weaponData.get().shooting = true;
+				EmptyMagSoundGate.refresh(weaponUuid);
 			}
 		}
 	}
@@ -679,7 +684,6 @@ public class WeaponInteract implements Listener {
 	}
 
 	private void shootInterval(Player player, GunWeapon weapon) {
-
 		GunAction gunAction = new GunAction(plugin, weaponService, weapon, recoilCompatibility, raytracer);
 
 		// shoot the weapon

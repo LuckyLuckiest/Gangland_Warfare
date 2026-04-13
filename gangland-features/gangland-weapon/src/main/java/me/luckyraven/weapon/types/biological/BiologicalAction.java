@@ -8,6 +8,7 @@ import me.luckyraven.util.utilities.ParticleUtil;
 import me.luckyraven.weapon.dto.BiologicalData;
 import me.luckyraven.weapon.raytrace.RaytraceRequest;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;
+import me.luckyraven.weapon.util.EmptyMagSoundGate;
 import me.luckyraven.weapon.util.PotionEffectParser;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -56,7 +57,10 @@ public class BiologicalAction {
 		UUID weaponUuid = weapon.getUuid();
 
 		if (activeTasks.containsKey(weaponUuid)) return false;
-		if (weapon.getAmmunitionData() != null && weapon.isMagazineEmpty()) return false;
+		if (weapon.getAmmunitionData() != null && weapon.isMagazineEmpty()) {
+			EmptyMagSoundGate.play(plugin, player, weapon);
+			return false;
+		}
 
 		BiologicalData data = weapon.getBiologicalData();
 
