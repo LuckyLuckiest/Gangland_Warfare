@@ -80,11 +80,10 @@ public class GunAction {
 
 		weapon.updateWeapon(shooter, heldWeapon, shooter.getInventory().getHeldItemSlot());
 
-		// apply recoil
-		weapon.getRecoil().applyRecoil(recoilCompatibility, shooter);
-
-		// apply push
-		weapon.applyPush(shooter);
+		if (weapon.getRecoilData() != null) {
+			weapon.getRecoil().applyRecoil(recoilCompatibility, shooter);
+			weapon.applyPush(shooter);
+		}
 
 		// shooting sound — echo broadcasts to all players near the shooter's location
 		SoundConfiguration.playSoundsAtLocation(shooter.getLocation(), weapon.getSoundData().getShotCustom(),

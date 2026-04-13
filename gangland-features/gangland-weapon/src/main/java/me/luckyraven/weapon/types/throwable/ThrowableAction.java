@@ -75,7 +75,11 @@ public class ThrowableAction {
 
 		SoundConfiguration.playSounds(player, weapon.getSoundData().getShotCustom(),
 		                              weapon.getSoundData().getShotDefault());
-		weapon.getRecoil().applyRecoil(recoilCompatibility, player);
+
+		if (weapon.getRecoilData() != null) {
+			weapon.getRecoil().applyRecoil(recoilCompatibility, player);
+			weapon.applyPush(player);
+		}
 
 		boolean[] wasOnGround       = {false};
 		boolean[] stuck             = {false};

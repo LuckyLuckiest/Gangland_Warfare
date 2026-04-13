@@ -45,8 +45,8 @@ public class IncendiaryAction {
 	/**
 	 * Fires one cone burst forward — used by both SINGLE (one press → one cone) and AUTO (driven by a
 	 * {@link me.luckyraven.util.timer.RepeatingTimer} in {@link me.luckyraven.weapon.listener.WeaponInteract}). Returns
-	 * {@code true} if the burst was actually fired, {@code false} if blocked by ammo/durability state — callers in
-	 * AUTO mode use this to break the loop when the magazine empties.
+	 * {@code true} if the burst was actually fired, {@code false} if blocked by ammo/durability state — callers in AUTO
+	 * mode use this to break the loop when the magazine empties.
 	 */
 	public boolean fireOnce(Player player) {
 		if (weapon.isBroken()) return false;
@@ -88,8 +88,10 @@ public class IncendiaryAction {
 		weapon.updateWeapon(player, heldWeapon, slot);
 
 		// recoil and push per tick
-		weapon.getRecoil().applyRecoil(recoilCompatibility, player);
-		weapon.applyPush(player);
+		if (weapon.getRecoilData() != null) {
+			weapon.getRecoil().applyRecoil(recoilCompatibility, player);
+			weapon.applyPush(player);
+		}
 
 		// fire spray
 		Location eye    = player.getEyeLocation();

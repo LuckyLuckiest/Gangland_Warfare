@@ -54,7 +54,8 @@ public class WeaponAddon {
 
 		/* information section */
 		ConfigurationSection informationSection = config.getConfigurationSection("Information");
-		if (informationSection == null) throw new InvalidConfigurationException("Information section not found");
+		if (informationSection == null)
+			throw new InvalidConfigurationException("Information section not found for '" + fileName + "'");
 
 		String displayName = informationSection.getString("Name");
 
@@ -86,8 +87,8 @@ public class WeaponAddon {
 		List<String> deathMessages = config.getStringList("Death_Messages");
 		if (deathMessages.isEmpty()) deathMessages = null;
 
-		WeaponBaseData base = new WeaponBaseData(fileName, displayName, category, material, customModelData,
-		                                         durability, lore, dropHologram, deathMessages);
+		WeaponBaseData base = new WeaponBaseData(fileName, displayName, category, material, customModelData, durability,
+		                                         lore, dropHologram, deathMessages);
 
 		/* dispatch to type-specific parser */
 		ConfigurationSection shootSection = resolveShootSection(config);
@@ -380,8 +381,8 @@ public class WeaponAddon {
 		if (section == null) return null;
 		String sound = section.getString("Sound");
 		if (sound == null) return null;
-		float volume = (float) section.getDouble("Volume");
-		float pitch  = (float) section.getDouble("Pitch");
+		float volume = (float) section.getDouble("Volume", 1D);
+		float pitch  = (float) section.getDouble("Pitch", 1D);
 		return new SoundConfiguration(type, sound, volume, pitch);
 	}
 
