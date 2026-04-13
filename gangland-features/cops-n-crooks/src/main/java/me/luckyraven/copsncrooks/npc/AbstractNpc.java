@@ -19,6 +19,8 @@ import net.citizensnpcs.api.ai.PathfinderType;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Bisected;
+import org.bukkit.block.data.Openable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -27,6 +29,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -49,6 +53,11 @@ public abstract class AbstractNpc {
 	private static final double        TARGET_MOVED_THRESHOLD_SQ      = 2.25;
 	private static final long          LATERAL_COMMITMENT_MS          = 1000L;
 	private static final int           LATERAL_EXPLORATION_DIRECTIONS = 8;
+	private static final double        HEIGHT_CLIMB_THRESHOLD         = 1.5;
+	private static final int           MAX_LADDER_CLIMB_TICKS         = 100;
+	private static final double        NAV_PLAN_REPLAN_SQ             = 9.0;  // replan when target moves 3+ blocks
+	private static final double        NAV_STEP_ARRIVE_SQ             = 3.0;  // step complete within ~1.7 blocks
+	private static final int           NAV_PLAN_STUCK_LIMIT           = 80;   // force replan after ~4 s on one step
 	// ── Core ─────────────────────────────────────────────────────────────────
 	@Getter
 	protected final      NPC           npc;
@@ -64,6 +73,8 @@ public abstract class AbstractNpc {
 	private final        double        minProgressDistanceSquared;
 	private final        double        rangedMinDistance;
 	private final        double        rangedMaxDistance;
+	// ── NavPlan ──────────────────────────────────────────────────────────────
+	private final        List<NavStep> navPlan                        = new ArrayList<>();
 	// ── Weapon ───────────────────────────────────────────────────────────────
 	@Getter
 	protected            Weapon        heldWeapon;
@@ -105,6 +116,15 @@ public abstract class AbstractNpc {
 	 */
 	private              Location      committedLateralSpot;
 	private              long          committedLateralExpiresAtMs;
+	// ── Ladder climbing ──────────────────────────────────────────────────────
+	private              boolean       ladderClimbActive;
+	private              int           ladderClimbDestY;
+	private              Block         ladderClimbBlock;
+	private              int           ladderClimbTickCount;
+	private              boolean       ladderClimbDescending;
+	private              int           navPlanStep                    = 0;
+	private              Location      navPlanTarget                  = null;
+	private              int           navPlanStuckTicks              = 0;
 
 	protected AbstractNpc(NPC npc, Location spawnLocation, NpcNavigationConfig navConfig, NpcDifficulty difficulty) {
 		this.npc           = npc;
@@ -377,38 +397,132 @@ public abstract class AbstractNpc {
 	}
 
 	/**
-	 * Navigates the NPC to the given location using Citizens pathfinding.
+	 * Navigates the NPC toward the given destination using a proactive {@link NavStep} plan. On each call the plan is
+	 * consulted: if the destination changed significantly or no plan exists, a fresh plan is built by scanning the path
+	 * for closed doors and ladder columns. Citizens is then handed only the current step's waypoint, keeping path
+	 * segments short and always passable.
 	 */
-	public void navigateTo(Location location) {
-		if (!isValid() || location == null) return;
-		if (!shouldRecalculateNavigation(location)) return;
+	public void navigateTo(Location destination) {
+		if (!isValid() || destination == null) return;
+		if (ladderClimbActive) {
+			// Keep navPlanTarget fresh so a full replan doesn't fire the instant the climb
+			// ends — the player may have moved several blocks during the climb, and we don't
+			// want the stale navPlanTarget to trigger an immediate replan + re-climb loop.
+			navPlanTarget = destination.clone();
+			return;
+		}
 
-		boolean targetMoved = lastNavigationTarget == null
-		                      || lastNavigationTarget.getWorld() == null
-		                      || !lastNavigationTarget.getWorld().equals(location.getWorld())
-		                      || lastNavigationTarget.distanceSquared(location) >= TARGET_MOVED_THRESHOLD_SQ;
+		LivingEntity entity = getEntity();
+		if (entity == null) return;
 
-		npc.getNavigator().setTarget(location);
-		lastNavigationTarget    = location.clone();
-		navigationThrottleTicks = 0;
+		// ── Replan check ─────────────────────────────────────────────────────
+		boolean replan = navPlanTarget == null || navPlan.isEmpty() || navPlanTarget.getWorld() == null ||
+		                 !navPlanTarget.getWorld().equals(destination.getWorld()) ||
+		                 navPlanTarget.distanceSquared(destination) >= NAV_PLAN_REPLAN_SQ;
 
-		if (targetMoved) {
-			// Fresh destination — reset progress tracking so stuck detection starts
-			// counting from here.
-			//
-			// We deliberately do NOT clear navigationHopeless or committedLateralSpot
-			// here. The hopeless-fallback branch needs a stable commitment: issuing
-			// its lateral target must not flip hopeless back to false, otherwise the
-			// next tick's pursuit branch immediately overwrites the lateral setTarget
-			// and Citizens never gets to walk toward the walk-around spot. Only
-			// updateNavigationProgress clears the hopeless flag, and only when real
-			// physical movement toward a new position is observed.
+		if (replan) {
+			navPlan.clear();
+			navPlanStep       = 0;
+			navPlanStuckTicks = 0;
+			navPlanTarget     = destination.clone();
+			navPlan.addAll(buildNavPlan(destination));
+
+			// Pre-open every door in the plan NOW so Citizens sees open doorways when
+			// it computes its initial path on the first setTarget call below.
+			for (NavStep s : navPlan) {
+				if (s.obstacle == NavObstacle.OPEN_DOOR) {
+					executeObstacleAction(s);
+				}
+			}
+
 			stuckSampleTicks       = 0;
 			consecutiveStuckChecks = 0;
-			lastProgressLocation   = getEntity() != null ? getEntity().getLocation().clone() : null;
+			lastProgressLocation   = entity.getLocation().clone();
 		}
-		// Else: preserve stuck counters so updateNavigationProgress can still
-		// escalate to isNavigationHopeless() across re-paths against the same point.
+
+		// ── Live destination tracking ────────────────────────────────────────
+		// Keep the final step's waypoint current so the NPC tracks a moving
+		// target between full replans. Only the NONE destination step is
+		// updated — obstacle steps are structural and don't move.
+		if (!navPlan.isEmpty()) {
+			NavStep lastStep = navPlan.get(navPlan.size() - 1);
+			if (lastStep.obstacle == NavObstacle.NONE) {
+				Location freshDest = normalizeToStandableLocation(destination);
+				if (freshDest != null) {
+					lastStep.waypoint = freshDest;
+				}
+			}
+		}
+
+		// ── Plan exhausted ───────────────────────────────────────────────────
+		if (navPlanStep >= navPlan.size()) {
+			navPlanTarget = null;
+			return;
+		}
+
+		NavStep step = navPlan.get(navPlanStep);
+
+		// ── Arrival check — advance when close enough to current waypoint ────
+		if (step.waypoint != null && step.waypoint.getWorld() != null &&
+		    step.waypoint.getWorld().equals(entity.getLocation().getWorld())) {
+
+			double arrivalDistSq;
+			if (step.obstacle == NavObstacle.CLIMB_LADDER) {
+				// XZ-only distance — Y differences at ladder bases cause false negatives with 3D checks
+				double adx = entity.getLocation().getX() - step.waypoint.getX();
+				double adz = entity.getLocation().getZ() - step.waypoint.getZ();
+				arrivalDistSq = adx * adx + adz * adz;
+			} else {
+				arrivalDistSq = entity.getLocation().distanceSquared(step.waypoint);
+			}
+
+			if (arrivalDistSq <= NAV_STEP_ARRIVE_SQ) {
+				if (step.obstacle == NavObstacle.CLIMB_LADDER) {
+					activateLadderClimb(step.obstacleBlock, step.descending);
+					return;
+				}
+
+				navPlanStep++;
+				navPlanStuckTicks      = 0;
+				consecutiveStuckChecks = 0;
+				navigationHopeless     = false;
+				lastProgressLocation   = entity.getLocation().clone();
+
+				if (navPlanStep >= navPlan.size()) {
+					navPlanTarget = null;
+					return;
+				}
+				step = navPlan.get(navPlanStep);
+			}
+		}
+
+		// ── Hand Citizens the current step's waypoint (throttled) ────────────
+		if (step.waypoint != null && shouldRecalculateNavigation(step.waypoint)) {
+			npc.getNavigator().setTarget(step.waypoint);
+			lastNavigationTarget    = step.waypoint.clone();
+			navigationThrottleTicks = 0;
+
+			if (replan) {
+				stuckSampleTicks       = 0;
+				consecutiveStuckChecks = 0;
+				lastProgressLocation   = entity.getLocation().clone();
+			}
+
+			// If Citizens could not begin navigating (sync path-fail), fast-track
+			// stuck detection so the NavPlan stuck limit fires sooner.
+			if (!npc.getNavigator().isNavigating()) {
+				consecutiveStuckChecks = Math.max(consecutiveStuckChecks, maxStuckChecks - 1);
+			}
+		}
+
+		// ── Orient NPC toward waypoint ───────────────────────────────────────
+		if (step.waypoint != null) {
+			Vector navDir = step.waypoint.toVector().subtract(entity.getLocation().toVector()).setY(0);
+			if (navDir.lengthSquared() > 0.01) {
+				float navYaw = (float) Math.toDegrees(Math.atan2(-navDir.getX(), navDir.getZ()));
+				entity.setRotation(navYaw, 0f);
+			}
+		}
 	}
 
 	/**
@@ -417,6 +531,10 @@ public abstract class AbstractNpc {
 	 */
 	public void stopNavigation() {
 		if (!isValid()) return;
+		// During an active ladder climb, don't reset navigation — the climb takes priority.
+		// Resetting mid-climb re-enables gravity and the NPC falls, entering an infinite
+		// climb→fall→reclimb loop. The climb will complete on its own and advance the NavPlan.
+		if (ladderClimbActive) return;
 		npc.getNavigator().cancelNavigation();
 		resetNavigationTracking();
 	}
@@ -451,6 +569,7 @@ public abstract class AbstractNpc {
 	 * Returns whether the navigation target appears permanently unreachable.
 	 */
 	public boolean isNavigationHopeless() {
+		if (!navPlan.isEmpty()) return false;
 		if (!navigationHopeless && consecutiveStuckChecks >= maxHopelessStuckChecks) {
 			navigationHopeless = true;
 		}
@@ -474,6 +593,7 @@ public abstract class AbstractNpc {
 		}
 
 		Location safePlayerSpot = normalizeToStandableLocation(playerLocation);
+
 		return safePlayerSpot != null ? safePlayerSpot : playerLocation;
 	}
 
@@ -490,6 +610,21 @@ public abstract class AbstractNpc {
 		Location to   = player.getLocation();
 
 		if (from.getWorld() == null || !from.getWorld().equals(to.getWorld())) return null;
+
+		// When path is hopeless and the player is elevated, approach the base of their
+		// column before doing lateral exploration — lateral moves take the NPC sideways
+		// away from the structure, while the base approach keeps it underneath.
+		double heightDelta = to.getY() - from.getY();
+		if (heightDelta > HEIGHT_CLIMB_THRESHOLD) {
+			Location base = findBaseApproachBelowTarget(to);
+			if (base != null && base.distanceSquared(from) > 4.0) return base;
+			// At column base — seek a nearby climbable ladder before doing lateral exploration,
+			// which would move the NPC sideways away from the structure entirely.
+			Location ladderBase = findNearestLadderBase(from, to, 15);
+			if (ladderBase != null) return ladderBase;
+			// No ladder nearby — hold at the column base and suppress lateral exploration.
+			if (base != null) return base;
+		}
 
 		if (from.distanceSquared(to) <= hopelessCloseThreshold * hopelessCloseThreshold) {
 			// Close to the target but path-locked (wall between us) — re-aiming at
@@ -516,8 +651,10 @@ public abstract class AbstractNpc {
 	 */
 	public Location resolvePursuitLocation(LivingEntity target) {
 		if (!isValid() || target == null) return null;
+
 		Location targetLocation = target.getLocation().clone();
-		Location safe           = normalizeToStandableLocation(targetLocation);
+
+		Location safe = normalizeToStandableLocation(targetLocation);
 		return safe != null ? safe : targetLocation;
 	}
 
@@ -534,6 +671,15 @@ public abstract class AbstractNpc {
 		Location to   = target.getLocation();
 
 		if (from.getWorld() == null || !from.getWorld().equals(to.getWorld())) return null;
+
+		double heightDelta = to.getY() - from.getY();
+		if (heightDelta > HEIGHT_CLIMB_THRESHOLD) {
+			Location base = findBaseApproachBelowTarget(to);
+			if (base != null && base.distanceSquared(from) > 4.0) return base;
+			Location ladderBase = findNearestLadderBase(from, to, 15);
+			if (ladderBase != null) return ladderBase;
+			if (base != null) return base;
+		}
 
 		if (from.distanceSquared(to) <= hopelessCloseThreshold * hopelessCloseThreshold) {
 			// See resolveHopelessFallbackLocation(Player) — same rationale. Lateral
@@ -639,8 +785,24 @@ public abstract class AbstractNpc {
 		LivingEntity entity = getEntity();
 
 		if (entity == null) {
-			resetNavigationTracking();
+			// Entity temporarily null (e.g. Citizens skin respawn) — skip this tick entirely.
+			// Don't reset navigation; the plan and climb state will resume when the entity returns.
 			return;
+		}
+
+		if (ladderClimbActive) {
+			tickLadderClimb();
+			return;
+		}
+
+		// NavPlan step-level stuck detection — force a full replan when the NPC
+		// spends too long on a single step without advancing to the next waypoint.
+		if (!navPlan.isEmpty()) {
+			navPlanStuckTicks++;
+			if (navPlanStuckTicks >= NAV_PLAN_STUCK_LIMIT) {
+				navPlanTarget     = null;
+				navPlanStuckTicks = 0;
+			}
 		}
 
 		if (lastNavigationTarget == null) {
@@ -856,10 +1018,8 @@ public abstract class AbstractNpc {
 	private Location resolveLateralExploration(Location from, Location to) {
 		long now = System.currentTimeMillis();
 
-		if (committedLateralSpot != null
-		    && now < committedLateralExpiresAtMs
-		    && committedLateralSpot.getWorld() != null
-		    && committedLateralSpot.getWorld().equals(from.getWorld())) {
+		if (committedLateralSpot != null && now < committedLateralExpiresAtMs &&
+		    committedLateralSpot.getWorld() != null && committedLateralSpot.getWorld().equals(from.getWorld())) {
 			return committedLateralSpot;
 		}
 
@@ -892,10 +1052,8 @@ public abstract class AbstractNpc {
 			double sin       = Math.sin(angleRad);
 
 			// Rotate the toTarget vector by (90° + sideIndex * 45°) around Y.
-			Vector rotated = new Vector(
-					toTarget.getX() * cos - toTarget.getZ() * sin,
-					0,
-					toTarget.getX() * sin + toTarget.getZ() * cos);
+			Vector rotated = new Vector(toTarget.getX() * cos - toTarget.getZ() * sin, 0,
+			                            toTarget.getX() * sin + toTarget.getZ() * cos);
 
 			for (double radius : radii) {
 				Location candidate = from.clone().add(rotated.clone().multiply(radius));
@@ -1109,10 +1267,8 @@ public abstract class AbstractNpc {
 
 		// First navigation, or previous target is in a different/unloaded world —
 		// unconditionally accept.
-		if (lastNavigationTarget == null
-		    || lastNavigationTarget.getWorld() == null
-		    || target.getWorld() == null
-		    || !lastNavigationTarget.getWorld().equals(target.getWorld())) {
+		if (lastNavigationTarget == null || lastNavigationTarget.getWorld() == null || target.getWorld() == null ||
+		    !lastNavigationTarget.getWorld().equals(target.getWorld())) {
 			return true;
 		}
 
@@ -1139,6 +1295,24 @@ public abstract class AbstractNpc {
 		consecutiveStuckChecks  = 0;
 		navigationHopeless      = false;
 		committedLateralSpot    = null;
+
+		// Re-enable gravity if we were mid-climb before clearing the climb state
+		if (ladderClimbActive) {
+			LivingEntity entity = getEntity();
+			if (entity != null) {
+				entity.setGravity(true);
+			}
+		}
+
+		ladderClimbActive    = false;
+		ladderClimbBlock     = null;
+		ladderClimbTickCount = 0;
+
+		// Preserve the NavPlan across resets so the NPC can resume where it left off
+		// after a temporary stop (behavior transition, target flicker). The plan is only
+		// fully cleared on an explicit replan inside navigateTo() when the destination
+		// changes significantly.
+		navPlanStuckTicks = 0;
 	}
 
 	private Location findLastReachableGroundBeforeGap(Location from, Location to, double maxDistance) {
@@ -1323,5 +1497,474 @@ public abstract class AbstractNpc {
 		Material supportType = below.getType();
 		return supportType != Material.LAVA && supportType != Material.WATER && supportType != Material.CACTUS &&
 		       supportType != Material.MAGMA_BLOCK;
+	}
+
+	/**
+	 * Finds a standable ground-level location at the same X/Z as {@code target} but near the calling NPC's current Y
+	 * level. Used when the target is significantly elevated — navigating here instead moves the NPC to the base of the
+	 * column/structure the target is perched on, keeping it close rather than wandering sideways.
+	 */
+	private Location findBaseApproachBelowTarget(Location target) {
+		if (target == null || target.getWorld() == null) return null;
+
+		LivingEntity entity = getEntity();
+		if (entity == null) return null;
+
+		World world = target.getWorld();
+		int   baseX = target.getBlockX();
+		int   baseZ = target.getBlockZ();
+		int   npcY  = entity.getLocation().getBlockY();
+
+		// Search in an expanding ring around the target's XZ at approximately NPC Y level.
+		// Radius 0 = directly below the target; expanding rings find open ground when the
+		// target is perched on a solid structure (e.g. tower) whose column is all-solid.
+		for (int radius = 0; radius <= 4; radius++) {
+			for (int dx = -radius; dx <= radius; dx++) {
+				for (int dz = -radius; dz <= radius; dz++) {
+					if (Math.abs(dx) != radius && Math.abs(dz) != radius) continue; // shell only
+					Location probe     = new Location(world, baseX + dx + 0.5, npcY, baseZ + dz + 0.5);
+					Location standable = normalizeToStandableLocation(probe);
+					if (standable != null) return standable;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Scans the corridor between the NPC and the target for ladder columns, searching a rectangular area centred on the
+	 * midpoint with a Y range that covers both the NPC's and the target's elevations. Used to guide NPCs toward a
+	 * climbable route when the target is elevated and no direct Citizens path exists. Returns the closest result (by
+	 * squared distance from {@code from}) among all XZ cells in the search area.
+	 *
+	 * @param from the NPC's current location — used for proximity sorting and midpoint calculation
+	 * @param to the elevated target location — used for midpoint calculation and Y-scan range
+	 * @param searchRadius XZ search radius in blocks (measured from the midpoint)
+	 *
+	 * @return a standable location at the base of the nearest ladder column, or {@code null} if none found
+	 */
+	private Location findNearestLadderBase(Location from, Location to, int searchRadius) {
+		if (to == null || to.getWorld() == null) return null;
+
+		World world   = to.getWorld();
+		int   npcY    = from != null ? from.getBlockY() : to.getBlockY();
+		int   targetY = to.getBlockY();
+
+		// Centre search on the midpoint between NPC and destination so ladders anywhere
+		// in the corridor are found — not just those near the destination.
+		int centerX = from != null ? (from.getBlockX() + to.getBlockX()) / 2 : to.getBlockX();
+		int centerZ = from != null ? (from.getBlockZ() + to.getBlockZ()) / 2 : to.getBlockZ();
+
+		// Symmetric Y range covering both NPC and target elevations
+		int minScanY = Math.max(world.getMinHeight(), Math.min(npcY, targetY) - 2);
+		int maxScanY = Math.min(world.getMaxHeight() - 1, Math.max(npcY, targetY) + 2);
+
+		Location nearest     = null;
+		double   nearestDist = Double.MAX_VALUE;
+
+		for (int dx = -searchRadius; dx <= searchRadius; dx++) {
+			for (int dz = -searchRadius; dz <= searchRadius; dz++) {
+				for (int y = minScanY; y <= maxScanY; y++) {
+					if (world.getBlockAt(centerX + dx, y, centerZ + dz).getType() != Material.LADDER) continue;
+
+					// Find the lowest rung of this ladder column
+					int bottomY = y;
+					while (bottomY > minScanY &&
+					       world.getBlockAt(centerX + dx, bottomY - 1, centerZ + dz).getType() == Material.LADDER) {
+						bottomY--;
+					}
+
+					// Raw position at the bottom rung — no normalizeToStandableLocation here
+					// because wall-mounted ladders often have no solid ground in their own
+					// XZ column. The approach waypoint (built in buildNavPlan) handles
+					// placing the NPC on solid ground nearby.
+					Location base = new Location(world, centerX + dx + 0.5, bottomY, centerZ + dz + 0.5);
+
+					double dist = from != null ? from.distanceSquared(base) : 0;
+					if (dist < nearestDist) {
+						nearestDist = dist;
+						nearest     = base;
+					}
+
+					break; // Only consider the bottom of each XZ column's ladder
+				}
+			}
+		}
+
+		return nearest;
+	}
+
+	/**
+	 * Drives one tick of manual ladder climbing. Teleports the NPC along the ladder column each tick for deterministic,
+	 * physics-independent climbing (both ascending and descending). Exits climb mode once the NPC reaches the
+	 * destination Y or a safety timeout fires, then advances the NavPlan so the next step begins.
+	 */
+	private void tickLadderClimb() {
+		LivingEntity entity = getEntity();
+		if (entity == null) {
+			// Entity temporarily null (e.g. Citizens skin respawn) — skip this tick
+			// but keep the climb active so it resumes when the entity returns.
+			return;
+		}
+		if (entity.isDead()) {
+			ladderClimbActive = false;
+			ladderClimbBlock  = null;
+			return;
+		}
+
+		ladderClimbTickCount++;
+		if (ladderClimbTickCount >= MAX_LADDER_CLIMB_TICKS) {
+			endLadderClimb(entity, true);
+			return;
+		}
+
+		double currentY = entity.getLocation().getY();
+		boolean arrived = ladderClimbDescending
+		                  ? currentY <= ladderClimbDestY
+		                  : currentY >= ladderClimbDestY;
+
+		if (arrived) {
+			endLadderClimb(entity, false);
+			return;
+		}
+
+		// Teleport-based climb — deterministic movement with gravity disabled.
+		// This method is called every aiTickRate server ticks (default 10), so each step
+		// must cover enough distance to produce visible progress per call.
+		Location cur       = entity.getLocation();
+		double   remaining = Math.abs(ladderClimbDestY - cur.getY());
+		double   stepY     = Math.min(1.0, remaining);
+		double   targetX   = ladderClimbBlock != null ? ladderClimbBlock.getX() + 0.5 : cur.getX();
+		double   targetZ   = ladderClimbBlock != null ? ladderClimbBlock.getZ() + 0.5 : cur.getZ();
+		double   targetY   = ladderClimbDescending ? cur.getY() - stepY : cur.getY() + stepY;
+
+		Location dest = new Location(cur.getWorld(), targetX, targetY, targetZ, cur.getYaw(), cur.getPitch());
+		entity.teleport(dest);
+	}
+
+	/**
+	 * Ends ladder climbing — re-enables gravity, clears climb state, and optionally advances the NavPlan.
+	 *
+	 * @param entity the climbing entity
+	 * @param timedOut true if the climb ended due to timeout (forces replan), false on normal completion
+	 */
+	private void endLadderClimb(LivingEntity entity, boolean timedOut) {
+		// Before re-enabling gravity, move the NPC off the ladder column onto solid ground.
+		// For ascending: onto the platform at the top. For descending: onto the ground at the base.
+		// Without this the NPC falls back through the passable ladder blocks.
+		if (!timedOut && ladderClimbBlock != null) {
+			Location exitLoc = findStandableAtLadderExit(entity, ladderClimbBlock, ladderClimbDestY);
+			if (exitLoc != null) {
+				entity.teleport(exitLoc);
+			}
+		}
+
+		ladderClimbActive = false;
+		ladderClimbBlock  = null;
+		entity.setGravity(true);
+
+		// Force a full replan on the next navigateTo call. After a climb the NPC is at a
+		// different Y level — doors and obstacles along the remaining path may differ from
+		// what was scanned at the original elevation (e.g. descending a ladder then walking
+		// through a ground-level door to reach spawn).
+		navPlanTarget          = null;
+		consecutiveStuckChecks = 0;
+		stuckSampleTicks       = 0;
+		lastProgressLocation   = entity.getLocation().clone();
+		lastNavigationTarget   = null;
+	}
+
+	/**
+	 * Finds a standable location at the exit of a ladder climb. For ascending, checks neighbours at the top Y. For
+	 * descending, checks neighbours at the bottom Y. The NPC is teleported here so it steps off the ladder onto solid
+	 * ground instead of falling back through the passable ladder blocks.
+	 *
+	 * @param entity the climbing entity (used for yaw/pitch)
+	 * @param ladder the ladder block
+	 * @param exitY the Y level to exit at (destY from the climb)
+	 */
+	private Location findStandableAtLadderExit(LivingEntity entity, Block ladder, int exitY) {
+		World world = ladder.getWorld();
+		int   lx    = ladder.getX();
+		int   lz    = ladder.getZ();
+
+		int standY = exitY;
+
+		int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+		for (int[] d : dirs) {
+			int nx = lx + d[0];
+			int nz = lz + d[1];
+
+			Block below = world.getBlockAt(nx, standY - 1, nz);
+			Block feet  = world.getBlockAt(nx, standY, nz);
+			Block head  = world.getBlockAt(nx, standY + 1, nz);
+
+			if (below.getType().isSolid() && feet.isPassable() && head.isPassable()) {
+				return new Location(world, nx + 0.5, standY, nz + 0.5,
+				                    entity.getLocation().getYaw(), entity.getLocation().getPitch());
+			}
+		}
+
+		// Fallback: try the ladder column itself
+		return normalizeToStandableLocation(
+				new Location(world, lx + 0.5, standY, lz + 0.5));
+	}
+
+	// ── NavPlan — proactive path planning ────────────────────────────────────
+
+	/**
+	 * Scans the path from the NPC to {@code destination} and builds an ordered list of {@link NavStep} entries. The
+	 * scan walks the horizontal XZ path at the NPC's floor Y (not the destination's Y) so that doors — which are always
+	 * at ground level — are detected regardless of elevation difference. After the horizontal scan, if the destination
+	 * is significantly elevated, a radial search for a climbable ladder column is performed.
+	 *
+	 * @param destination the final navigation target
+	 *
+	 * @return an ordered list of steps; always contains at least the destination step
+	 */
+	private List<NavStep> buildNavPlan(Location destination) {
+		List<NavStep> steps = new ArrayList<>();
+
+		LivingEntity entity = getEntity();
+		if (entity == null) {
+			steps.add(new NavStep(destination, NavObstacle.NONE, null));
+			return steps;
+		}
+
+		Location from  = entity.getLocation();
+		World    world = from.getWorld();
+		if (world == null || destination.getWorld() == null || !world.equals(destination.getWorld())) {
+			steps.add(new NavStep(destination, NavObstacle.NONE, null));
+			return steps;
+		}
+
+		Location destStandable = normalizeToStandableLocation(destination);
+		if (destStandable == null) destStandable = destination;
+
+		// ── Phase 1: horizontal door scan at NPC floor Y ──────────────────
+		Block  foundDoor  = null;
+		Vector horizontal = new Vector(destination.getX() - from.getX(), 0, destination.getZ() - from.getZ());
+		if (horizontal.lengthSquared() > 0.0001) {
+			double scanDist = Math.min(horizontal.length(), 30.0);
+			horizontal.normalize();
+			int fromY = from.getBlockY();
+
+			outer:
+			for (double d = 0.5; d <= scanDist; d += 0.5) {
+				int x = (int) Math.floor(from.getX() + horizontal.getX() * d);
+				int z = (int) Math.floor(from.getZ() + horizontal.getZ() * d);
+				for (int yOff = 0; yOff <= 1; yOff++) {
+					Block block = world.getBlockAt(x, fromY + yOff, z);
+					if (!Tag.DOORS.isTagged(block.getType())) continue;
+					org.bukkit.block.data.BlockData raw = block.getBlockData();
+					if (!(raw instanceof Bisected b) || b.getHalf() != Bisected.Half.BOTTOM) continue;
+					if (raw instanceof Openable o && o.isOpen()) continue;
+					foundDoor = block;
+					break outer;
+				}
+			}
+		}
+
+		// ── Phase 2: elevation — find ladder if significant height difference ─
+		Block    ladderBlock      = null;
+		Location ladderApproach   = null;
+		boolean  ladderDescending = false;
+		double   heightDelta      = destination.getY() - from.getY();
+		if (Math.abs(heightDelta) > HEIGHT_CLIMB_THRESHOLD) {
+			ladderDescending = heightDelta < 0;
+			// Dynamic radius — covers the full NPC↔destination corridor
+			double xzDist = Math.sqrt(Math.pow(destination.getX() - from.getX(), 2) +
+			                          Math.pow(destination.getZ() - from.getZ(), 2));
+			int ladderSearchRadius = Math.min(30, Math.max(15, (int) Math.ceil(xzDist / 2) + 5));
+
+			Location ladderBase = findNearestLadderBase(from, destination, ladderSearchRadius);
+
+			if (ladderBase != null) {
+				ladderBlock = findLadderBlockAtBase(ladderBase);
+
+				if (ladderBlock != null) {
+					// For ascending: approach waypoint 1 block toward NPC from ladder, at NPC ground level.
+					// For descending: approach waypoint 1 block toward NPC from ladder, at ladder TOP level.
+					// Citizens paths to this solid-ground waypoint; the climb activates on arrival.
+					double ladderX = ladderBlock.getX() + 0.5;
+					double ladderZ = ladderBlock.getZ() + 0.5;
+					double dirX    = from.getX() - ladderX;
+					double dirZ    = from.getZ() - ladderZ;
+					double dirLen  = Math.sqrt(dirX * dirX + dirZ * dirZ);
+
+					if (dirLen > 0.01) {
+						// For descending, find the top of the ladder column so we can place the
+						// approach waypoint at the correct Y level
+						int approachY = from.getBlockY() + 1;
+						if (ladderDescending) {
+							int topY = ladderBlock.getY();
+							for (int y = ladderBlock.getY() + 1; y <= ladderBlock.getY() + 32; y++) {
+								if (world.getBlockAt(ladderBlock.getX(), y, ladderBlock.getZ()).getType() ==
+								    Material.LADDER) {
+									topY = y;
+								} else {
+									break;
+								}
+							}
+							approachY = topY + 1;
+						}
+
+						Location rawApproach = new Location(world,
+						                                    ladderX + dirX / dirLen,
+						                                    approachY,
+						                                    ladderZ + dirZ / dirLen);
+						Location standable = normalizeToStandableLocation(rawApproach);
+						ladderApproach = standable != null ? standable : ladderBase;
+					} else {
+						ladderApproach = ladderBase;
+					}
+
+				}
+			}
+		}
+
+		// ── Phase 3: build step list ──────────────────────────────────────
+		if (foundDoor != null) {
+			// OPEN_DOOR waypoint = ladder approach if a ladder follows, or destination
+			Location doorWaypoint = ladderApproach != null ? ladderApproach : destStandable;
+			steps.add(new NavStep(doorWaypoint, NavObstacle.OPEN_DOOR, foundDoor));
+		}
+
+		if (ladderApproach != null) {
+			steps.add(new NavStep(ladderApproach, NavObstacle.CLIMB_LADDER, ladderBlock, ladderDescending));
+		}
+
+		steps.add(new NavStep(destStandable, NavObstacle.NONE, null));
+		return steps;
+	}
+
+	/**
+	 * Finds a {@link Material#LADDER} block at or immediately adjacent to {@code base}. Checks the base column first,
+	 * then the 4 cardinal neighbours at foot level and one block above.
+	 */
+	private Block findLadderBlockAtBase(Location base) {
+		if (base == null || base.getWorld() == null) return null;
+		World world = base.getWorld();
+		int   bx    = base.getBlockX();
+		int   by    = base.getBlockY();
+		int   bz    = base.getBlockZ();
+
+		for (int yOff = 0; yOff <= 2; yOff++) {
+			Block b = world.getBlockAt(bx, by + yOff, bz);
+			if (b.getType() == Material.LADDER) return b;
+		}
+
+		int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+		for (int[] d : dirs) {
+			for (int yOff = 0; yOff <= 1; yOff++) {
+				Block b = world.getBlockAt(bx + d[0], by + yOff, bz + d[1]);
+				if (b.getType() == Material.LADDER) return b;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Executes the obstacle pre-action for the given {@link NavStep}. Currently handles {@link NavObstacle#OPEN_DOOR}:
+	 * opens the door block and schedules it to close after 2 seconds.
+	 */
+	private void executeObstacleAction(NavStep step) {
+		if (step.obstacle != NavObstacle.OPEN_DOOR) return;
+		if (plugin == null || step.obstacleBlock == null) return;
+
+		Block                           door = step.obstacleBlock;
+		org.bukkit.block.data.BlockData raw  = door.getBlockData();
+		if (!(raw instanceof Openable openable) || openable.isOpen()) return;
+
+		boolean isIron     = door.getType() == Material.IRON_DOOR;
+		Sound   closeSound = isIron ? Sound.BLOCK_IRON_DOOR_CLOSE : Sound.BLOCK_WOODEN_DOOR_CLOSE;
+		openable.setOpen(true);
+		door.setBlockData(openable);
+		door.getWorld()
+		    .playSound(door.getLocation(), isIron ? Sound.BLOCK_IRON_DOOR_OPEN : Sound.BLOCK_WOODEN_DOOR_OPEN, 1f, 1f);
+
+		Bukkit.getScheduler().runTaskLater(plugin, () -> {
+			org.bukkit.block.data.BlockData current = door.getBlockData();
+			if (current instanceof Openable toClose && toClose.isOpen()) {
+				toClose.setOpen(false);
+				door.setBlockData(toClose);
+				door.getWorld().playSound(door.getLocation(), closeSound, 1f, 1f);
+			}
+		}, 40L);
+	}
+
+	/**
+	 * Activates manual ladder-climb mode for the given ladder block. Scans the column to find the extent, then cancels
+	 * Citizens navigation so the climb is driven entirely by {@link #tickLadderClimb()}.
+	 *
+	 * @param ladder the ladder block to climb
+	 * @param descending true to climb down, false to climb up
+	 */
+	private void activateLadderClimb(Block ladder, boolean descending) {
+		if (ladder == null || ladderClimbActive) return;
+
+		World world = ladder.getWorld();
+		if (world == null) return;
+
+		int topY = ladder.getY();
+		for (int y = ladder.getY() + 1; y <= ladder.getY() + 32; y++) {
+			if (world.getBlockAt(ladder.getX(), y, ladder.getZ()).getType() == Material.LADDER) {
+				topY = y;
+			} else {
+				break;
+			}
+		}
+
+		int bottomY = ladder.getY();
+		for (int y = ladder.getY() - 1; y >= ladder.getY() - 32; y--) {
+			if (world.getBlockAt(ladder.getX(), y, ladder.getZ()).getType() == Material.LADDER) {
+				bottomY = y;
+			} else {
+				break;
+			}
+		}
+
+		ladderClimbBlock      = ladder;
+		ladderClimbDescending = descending;
+		ladderClimbDestY      = descending ? bottomY : topY + 1;
+		ladderClimbTickCount  = 0;
+		ladderClimbActive     = true;
+		npc.getNavigator().cancelNavigation();
+
+		// Disable gravity so the teleport-based climb isn't undone by physics between
+		// AI ticks (which fire every aiTickRate server ticks, not every tick).
+		LivingEntity climbEntity = getEntity();
+		if (climbEntity != null) {
+			climbEntity.setGravity(false);
+		}
+
+	}
+
+	// ── NavPlan inner types ──────────────────────────────────────────────────
+
+	private enum NavObstacle {
+		NONE,
+		OPEN_DOOR,
+		CLIMB_LADDER
+	}
+
+	private static final class NavStep {
+
+		final NavObstacle obstacle;
+		final Block       obstacleBlock;
+		final boolean     descending;    // only meaningful for CLIMB_LADDER
+		Location waypoint;               // mutable — live destination tracking updates the final NONE step
+
+		NavStep(Location waypoint, NavObstacle obstacle, Block obstacleBlock) {
+			this(waypoint, obstacle, obstacleBlock, false);
+		}
+
+		NavStep(Location waypoint, NavObstacle obstacle, Block obstacleBlock, boolean descending) {
+			this.waypoint      = waypoint;
+			this.obstacle      = obstacle;
+			this.obstacleBlock = obstacleBlock;
+			this.descending    = descending;
+		}
 	}
 }

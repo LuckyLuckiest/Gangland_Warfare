@@ -144,7 +144,12 @@ public abstract class EntitySpawner<S extends EntitySpawnerPoint> implements Bea
 			World    world = loc.getWorld();
 			if (world == null || !world.equals(playerLoc.getWorld())) continue;
 
-			double distSq = loc.distanceSquared(playerLoc);
+			// Use XZ-only distance so that spawners directly below or above the player
+			// (e.g. at street level while the player is on a rooftop) are still preferred
+			// over more distant ground-level spawners.
+			double dx     = loc.getX() - playerLoc.getX();
+			double dz     = loc.getZ() - playerLoc.getZ();
+			double distSq = dx * dx + dz * dz;
 			if (distSq >= closestDistSq) continue;
 
 			closestDistSq = distSq;

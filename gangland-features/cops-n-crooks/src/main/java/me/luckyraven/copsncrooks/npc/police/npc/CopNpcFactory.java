@@ -97,6 +97,9 @@ public class CopNpcFactory {
 		Map<CopState, CopBehavior> behaviors = behaviorFactory.createBehaviors();
 
 		CopNpc copNpc = new CopNpc(npc, tierConfig, behaviors, spawnLocation, configProvider);
+		// Always wire the plugin even when no weapon is assigned — navigation features
+		// (door interaction, Bukkit scheduler callbacks) need it regardless of loadout.
+		copNpc.setHeldWeapon(null, plugin);
 
 		// Resolve and assign a gangland weapon when the tier supports it
 		if (tierConfig.canUseWeapons()) {
