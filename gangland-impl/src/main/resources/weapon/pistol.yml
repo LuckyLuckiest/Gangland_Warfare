@@ -5,7 +5,7 @@
 Information:
    Name: "&fPistol&r"
    Category: gun
-   Material: WOODEN_HOE
+   Material: WOODEN_SHOVEL
    Durability:
       Base: 100
       Change:
@@ -38,6 +38,7 @@ Shoot:
       Cooldown: 0.3
       Distance: 30
       Particle: true
+      Gravity: 0.15
 
    Weapon_Consumed:
       Consume_On_Shot: 0
@@ -66,19 +67,33 @@ Shoot:
          Sound: BLOCK_PISTON_EXTEND
          Volume: 1.0
          Pitch: 2.0
+      Custom_Sound:
+         Sound: sound.gta.pistol_shoot
+         Volume: 1
+         Pitch: 1
       Empty_Default_Sound:
          Sound: BLOCK_NOTE_BLOCK_HAT
          Volume: 1.0
          Pitch: 1.0
+      Empty_Custom_Sound:
+         Sound: sound.gta.empty_mag6
       Flyby_Range: 2.5
       Flyby_Default_Sound:
          Sound: ENTITY_ARROW_SHOOT
          Volume: 0.5
          Pitch: 2.0
+      Flyby_Custom_Sound:
+         Sound: sound.gta.bullet_fly_by
+         Volume: 3
+         Pitch: 1.0
       Impact_Default_Sound:
          Sound: BLOCK_STONE_HIT
          Volume: 0.8
          Pitch: 1.5
+      Impact_Custom_Sound:
+         Sound: sound.gta.bullet_fly_by
+         Volume: 3.0
+         Pitch: 1.0
 
 Ammunition:
    Capacity: 12
@@ -98,6 +113,19 @@ Reload:
          Sound: BLOCK_IRON_DOOR_CLOSE
          Volume: 0.8
          Pitch: 1.5
+      Custom_Sound:
+         Start:
+            Sound: sound.gta.pistol_reload_start
+            Volume: 1
+            Pitch: 1
+         Mid:
+            Sound: sound.gta.pistol_reload_end
+            Volume: 1
+            Pitch: 1
+         End:
+            Sound: sound.gta.pistol_pull_pre_first_shot
+            Volume: 1
+            Pitch: 1
 
    Action_Bar:
       Reloading: "&cReloading...&r"
@@ -111,6 +139,10 @@ Scope:
    Sound:
       Default_Sound:
          Sound: ITEM_SPYGLASS_USE
+         Volume: 1
+         Pitch: 1
+      Custom_Sound:
+         Sound: sound.gta.scope
          Volume: 1
          Pitch: 1
 

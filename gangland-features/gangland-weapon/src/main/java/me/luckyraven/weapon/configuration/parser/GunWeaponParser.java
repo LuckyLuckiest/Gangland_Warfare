@@ -64,6 +64,7 @@ public class GunWeaponParser {
 		int     projectileCooldown = projectileSection.getInt("Cooldown");
 		int     projectileDistance = projectileSection.getInt("Distance");
 		boolean projectileParticle = projectileSection.getBoolean("Particle");
+		double  projectileGravity  = projectileSection.getDouble("Gravity", 0.0);
 
 		ConfigurationSection weaponConsumedSection = Objects.requireNonNull(
 				shootSection.getConfigurationSection("Weapon_Consumed"));
@@ -84,6 +85,7 @@ public class GunWeaponParser {
 		                                              .cooldown(projectileCooldown)
 		                                              .distance(projectileDistance)
 		                                              .particle(projectileParticle)
+		                                              .gravity(projectileGravity)
 		                                              .build();
 
 		GunWeapon gun = new GunWeapon(null, base.fileName(), base.displayName(), base.category(),

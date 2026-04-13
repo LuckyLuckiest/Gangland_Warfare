@@ -41,6 +41,7 @@ Shoot:
       Cooldown: 1
       Distance: 10
       Particle: true
+      Gravity: 0.08
 
    Weapon_Consumed:
       Consume_On_Shot: 0
@@ -73,13 +74,13 @@ Shoot:
       Custom_Sound:
          Sound: sound.gta.steyr_aug_shoot
          Volume: 1
-         Pitch: 2.2
+         Pitch: 1.5
       Empty_Default_Sound:
          Sound: ENTITY_BLAZE_BURN
          Volume: 1
          Pitch: 1
       Empty_Custom_Sound:
-         Sound: sound.gta.m4_empty
+         Sound: sound.gta.empty_mag11
          Volume: 1
          Pitch: 1
       Flyby_Range: 3.0
@@ -88,7 +89,7 @@ Shoot:
          Volume: 0.6
          Pitch: 2.0
       Flyby_Custom_Sound:
-         Sound: sound.gta.bullet_flyby
+         Sound: sound.gta.bullet_fly_by
          Volume: 0.8
          Pitch: 1.0
       Impact_Default_Sound:
@@ -96,7 +97,7 @@ Shoot:
          Volume: 1.0
          Pitch: 1.5
       Impact_Custom_Sound:
-         Sound: sound.gta.bullet_impact
+         Sound: sound.gta.bullet_fly_by
          Volume: 1.0
          Pitch: 1.0
 
@@ -143,14 +144,18 @@ Scope:
 
    Sound:
       Default_Sound:
-         Sound: ENTITY_GENERIC_EXPLODE
+         Sound: ITEM_SPYGLASS_USE
          Volume: 1
-         Pitch: 3
+         Pitch: 0.8
       Custom_Sound:
-         Sound: sound.gta.steyr_aug_scope
+         Sound: sound.gta.scope
          Volume: 1
          Pitch: 1
 
 Modifiers:
+   Flat_Damage: 1.0
    Break_Blocks:
-      - GLASS-3
+      - GLASS-2
+      - ICE-4
+   Penetration: 3-3-0.2
+   Armor_Piercing: 0.5

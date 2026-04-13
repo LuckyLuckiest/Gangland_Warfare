@@ -3,7 +3,7 @@
 # +-----------------+ #
 
 Information:
-   Name: "&8Minigun&r"
+   Name: "&7Minigun&r"
    Category: gun
    Material: IRON_HORSE_ARMOR
    Durability:
@@ -37,6 +37,7 @@ Shoot:
       Cooldown: 0.05
       Distance: 40
       Particle: true
+      Gravity: 0.1
 
    Weapon_Consumed:
       Consume_On_Shot: 0
@@ -65,21 +66,37 @@ Shoot:
    Sound:
       Default_Sound:
          Sound: ENTITY_GENERIC_EXPLODE
-         Volume: 1.4
-         Pitch: 2.0
+         Volume: 1.3
+         Pitch: 2.2
+      Custom_Sound:
+         Sound: sound.gta.minigun_shoot
+         Volume: 1
+         Pitch: 1.2
       Empty_Default_Sound:
          Sound: ENTITY_BLAZE_BURN
-         Volume: 1.0
-         Pitch: 0.8
+         Volume: 1
+         Pitch: 1
+      Empty_Custom_Sound:
+         Sound: sound.gta.empty_mag3
+         Volume: 1
+         Pitch: 1
       Flyby_Range: 3.0
       Flyby_Default_Sound:
          Sound: ENTITY_ARROW_SHOOT
          Volume: 0.6
          Pitch: 2.0
+      Flyby_Custom_Sound:
+         Sound: sound.gta.bullet_fly_by
+         Volume: 0.8
+         Pitch: 1.0
       Impact_Default_Sound:
          Sound: BLOCK_STONE_HIT
          Volume: 1.0
          Pitch: 1.8
+      Impact_Custom_Sound:
+         Sound: sound.gta.bullet_fly_by
+         Volume: 1.0
+         Pitch: 1.0
 
 Ammunition:
    Capacity: 200
@@ -99,6 +116,19 @@ Reload:
          Sound: BLOCK_ANVIL_LAND
          Volume: 1.0
          Pitch: 0.6
+      Custom_Sound:
+         Start:
+            Sound: sound.gta.reload_start
+            Volume: 2
+            Pitch: 1
+         Mid:
+            Sound: sound.gta.reload_mid
+            Volume: 2
+            Pitch: 1
+         End:
+            Sound: sound.gta.reload_end
+            Volume: 2
+            Pitch: 1
 
    Action_Bar:
       Reloading: "&cSwapping drum...&r"
@@ -112,8 +142,9 @@ Scope:
 Modifiers:
    Flat_Damage: 0.0
    Break_Blocks:
-      - GLASS-1
-      - ICE-2
+      - GLASS-9-CRACK_ONLY
+      - ICE-9-RESTORE
+      - STONE-9-DESTROY
    Tracer: FF0000-true-0.6
    Ricochet:
       - 3-STONE,COBBLESTONE,IRON_BLOCK-0.8

@@ -33,10 +33,11 @@ Shoot:
             Chance: 2
             Amount: 2
       Consumed_Amount: 1
-      Per_Shot: 8
-      Cooldown: 1.0
+      Per_Shot: 2
+      Cooldown: 3
       Distance: 18
       Particle: true
+      Gravity: 0.2
 
    Weapon_Consumed:
       Consume_On_Shot: 0
@@ -67,18 +68,34 @@ Shoot:
          Sound: ENTITY_GENERIC_EXPLODE
          Volume: 1.4
          Pitch: 1.0
+      Custom_Sound:
+         Sound: sound.gta.double_barreled_shotgun_shoot
+         Volume: 1
+         Pitch: 1.5
       Empty_Default_Sound:
          Sound: BLOCK_NOTE_BLOCK_HAT
          Volume: 1.0
          Pitch: 0.8
+      Empty_Custom_Sound:
+         Sound: sound.gta.empty_mag2
+         Volume: 1
+         Pitch: 1
       Flyby_Range: 2.5
       Flyby_Default_Sound:
          Sound: ENTITY_ARROW_SHOOT
          Volume: 0.6
          Pitch: 1.4
+      Flyby_Custom_Sound:
+         Sound: sound.gta.bullet_fly_by
+         Volume: 0.8
+         Pitch: 1.0
       Impact_Default_Sound:
          Sound: BLOCK_STONE_HIT
          Volume: 0.9
+         Pitch: 1.0
+      Impact_Custom_Sound:
+         Sound: sound.gta.bullet_fly_by
+         Volume: 1.0
          Pitch: 1.0
 
 Ammunition:
@@ -88,7 +105,7 @@ Ammunition:
    Restore: 2
 
 Reload:
-   Cooldown: 4
+   Cooldown: 1
 
    Sound:
       Default_Sound_Before:

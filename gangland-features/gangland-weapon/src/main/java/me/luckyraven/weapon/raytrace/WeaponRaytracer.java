@@ -50,6 +50,19 @@ import java.util.Random;
 public class WeaponRaytracer {
 
 	/**
+	 * Length of each straight-line segment used to approximate the parabolic drop arc beyond the effective range.
+	 * Smaller values produce a smoother curve but require more raytrace calls per shot. 3 blocks gives sub-pixel arc
+	 * error even at high gravity values while keeping raytrace call count low (20 calls for a 60-block drop phase).
+	 */
+	private static final double GRAVITY_STEP   = 3.0;
+	/**
+	 * Maximum distance (blocks) a bullet can travel in the gravity drop phase beyond its configured effective range.
+	 * Acts as a safety cap to prevent runaway raytrace loops for bullets that never hit geometry (e.g. fired straight
+	 * up).
+	 */
+	private static final double MAX_DROP_RANGE = 200.0;
+
+	/**
 	 * Set while {@link #handleEntityImpact} is inside a {@code LivingEntity#damage} call. Listeners that handle
 	 * {@code EntityDamageByEntityEvent} for weapon-system reactions (cops-n-crooks NPC AI) check this flag and skip —
 	 * they receive the canonical signal via {@link WeaponRaytraceImpactEvent} instead, so they would otherwise
@@ -165,6 +178,12 @@ public class WeaponRaytracer {
 			// loop until advanceRay reports stop
 		}
 
+		// If the ray exhausted its effective range without a terminal hit and gravity is configured,
+		// continue the bullet beyond the effective range with a parabolic drop until it lands.
+		if (request.getGravity() > 0 && ctx.getRemaining() <= 0) {
+			extendWithGravity(ctx);
+		}
+
 		flushTracer(ctx);
 	}
 
@@ -185,6 +204,61 @@ public class WeaponRaytracer {
 
 		while (advanceRay(ctx, ctx.getRemaining())) {
 			// loop until advanceRay reports stop
+		}
+	}
+
+	/**
+	 * Continues a bullet beyond its effective range with a parabolic gravity arc. Called when the straight-line hitscan
+	 * phase exhausted its distance budget without a terminal hit. The bullet maintains its horizontal direction but
+	 * curves downward according to the kinematic equation:
+	 * <pre>
+	 *   y(s) = startY + dirY * s − 0.5 * gravity * (s / speed)²
+	 * </pre>
+	 * where {@code s} is the distance traveled beyond the effective range and {@code speed} is the projectile speed
+	 * from the weapon config. Faster bullets drop less because gravity has less "time" to act. The extension continues
+	 * until the ray hits a block or entity, or the {@link #MAX_DROP_RANGE} safety cap is reached.
+	 */
+	private void extendWithGravity(RaytraceContext ctx) {
+		RaytraceRequest request = ctx.getRequest();
+		double          gravity = request.getGravity();
+		double          speed   = Math.max(0.1, request.getProjectileSpeed());
+		Vector          dir     = ctx.getCurrentDir().clone().normalize();
+
+		// Start from the last known position — the endpoint of the straight-line phase.
+		List<Location> segments = ctx.getTracerSegments();
+		Location startPos = segments.isEmpty()
+		                    ? ctx.getCurrentOrigin().clone()
+		                    : segments.get(segments.size() - 1).clone();
+
+		double   traveled = 0;
+		Location current  = startPos.clone();
+
+		while (traveled < MAX_DROP_RANGE) {
+			double step         = Math.min(GRAVITY_STEP, MAX_DROP_RANGE - traveled);
+			double nextTraveled = traveled + step;
+
+			// Parabolic arc: horizontal displacement continues at the same rate while
+			// vertical position drops quadratically with distance.
+			double tNext = nextTraveled / speed;
+			Location next = startPos.clone().add(
+					dir.getX() * nextTraveled,
+					dir.getY() * nextTraveled - 0.5 * gravity * tNext * tNext,
+					dir.getZ() * nextTraveled
+			);
+
+			// Reset iteration counter so each segment gets a full budget — without this,
+			// iterations accumulate across segments and hit the cap prematurely.
+			ctx.setIterations(0);
+			advanceSegment(ctx, current, next);
+
+			// advanceSegment sets remaining = segment.length + 0.01, then advanceRay
+			// zeros it on miss but leaves it positive on a terminal hit.
+			if (ctx.getRemaining() > 0.02) {
+				break;
+			}
+
+			current  = next;
+			traveled = nextTraveled;
 		}
 	}
 

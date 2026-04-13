@@ -16,12 +16,14 @@ public class ProjectileData {
 	private final int            cooldown;
 	private final int            distance;
 	private final boolean        particle;
+	@Builder.Default
+	private final double         gravity = 0.0;
 
 	@Override
 	public String toString() {
 		return String.format(
-				"ProjectileData{speed=%.2f,type=%s,damage=%.2f,consumed=%d,perShot=%d,cooldown=%d,distance=%d,particle=%b}",
-				speed, type, damage, consumed, perShot, cooldown, distance, particle);
+				"ProjectileData{speed=%.2f,type=%s,damage=%.2f,consumed=%d,perShot=%d,cooldown=%d,distance=%d,particle=%b,gravity=%.4f}",
+				speed, type, damage, consumed, perShot, cooldown, distance, particle, gravity);
 	}
 
 }

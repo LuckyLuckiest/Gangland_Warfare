@@ -5,7 +5,7 @@
 Information:
    Name: "&7Revolver&r"
    Category: gun
-   Material: STONE_HOE
+   Material: IRON_SHOVEL
    Durability:
       Base: 100
       Change:
@@ -37,6 +37,7 @@ Shoot:
       Cooldown: 0.8
       Distance: 40
       Particle: true
+      Gravity: 0.12
 
    Weapon_Consumed:
       Consume_On_Shot: 0
@@ -65,28 +66,44 @@ Shoot:
          Sound: ENTITY_GENERIC_EXPLODE
          Volume: 1.2
          Pitch: 1.6
+      Custom_Sound:
+         Sound: sound.gta.pistol_shoot
+         Volume: 1
+         Pitch: 1.5
       Empty_Default_Sound:
          Sound: BLOCK_NOTE_BLOCK_HAT
          Volume: 1.0
          Pitch: 0.8
+      Empty_Custom_Sound:
+         Sound: sound.gta.empty_mag9
+         Volume: 1
+         Pitch: 1.5
       Flyby_Range: 3.0
       Flyby_Default_Sound:
          Sound: ENTITY_ARROW_SHOOT
          Volume: 0.7
          Pitch: 1.6
+      Flyby_Custom_Sound:
+         Sound: sound.gta.bullet_fly_by
+         Volume: 0.8
+         Pitch: 1.0
       Impact_Default_Sound:
          Sound: BLOCK_ANVIL_HIT
          Volume: 0.9
          Pitch: 1.4
+      Impact_Custom_Sound:
+         Sound: sound.gta.bullet_fly_by
+         Volume: 1.0
+         Pitch: 1.0
 
 Ammunition:
    Capacity: 6
    Ammo_Type: "9mm"
    Consume: 1
-   Restore: 6
+   Restore: 1
 
 Reload:
-   Cooldown: 4
+   Cooldown: 1
 
    Sound:
       Default_Sound_Before:
@@ -97,6 +114,19 @@ Reload:
          Sound: BLOCK_LEVER_CLICK
          Volume: 1.0
          Pitch: 0.7
+      Custom_Sound:
+         Start:
+            Sound: sound.gta.ak47_reload_start
+            Volume: 1
+            Pitch: 3
+         Mid:
+            Sound: sound.gta.reload_end
+            Volume: 1
+            Pitch: 1
+         End:
+            Sound: sound.gta.empty_mag12
+            Volume: 1
+            Pitch: 1
 
    Action_Bar:
       Reloading: "&cSwinging cylinder...&r"

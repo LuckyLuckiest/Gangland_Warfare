@@ -63,6 +63,8 @@ public final class WeaponShooting {
 			                                         .direction(pelletDir)
 			                                         .maxDistance(distance)
 			                                         .baseDamage(baseDamage)
+			                                         .gravity(projectileData.getGravity())
+			                                         .projectileSpeed(projectileData.getSpeed())
 			                                         .build();
 
 			raytracer.fireInstant(request);

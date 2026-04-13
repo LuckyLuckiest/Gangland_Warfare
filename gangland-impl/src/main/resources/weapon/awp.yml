@@ -6,8 +6,6 @@ Information:
    Name: "&bAWP&r"
    Category: gun
    Material: NETHERITE_HOE
-   # Optional resource-pack model id (0 = no override).
-   Custom_Model_Data: 0
    Durability:
       Base: 100
       Change:
@@ -39,6 +37,7 @@ Shoot:
       Cooldown: 1.8
       Distance: 120
       Particle: true
+      Gravity: 0.08
 
    Weapon_Consumed:
       Consume_On_Shot: 0
@@ -67,19 +66,35 @@ Shoot:
          Sound: ENTITY_GENERIC_EXPLODE
          Volume: 1.5
          Pitch: 0.8
+      Custom_Sound:
+         Sound: sound.gta.awp_shoot
+         Volume: 10
+         Pitch: 0.9
       Empty_Default_Sound:
          Sound: BLOCK_NOTE_BLOCK_HAT
          Volume: 1.0
          Pitch: 0.6
+      Empty_Custom_Sound:
+         Sound: sound.gta.empty_mag5
+         Volume: 1.0
+         Pitch: 1.0
       Flyby_Range: 4.0
       Flyby_Default_Sound:
          Sound: ENTITY_ARROW_SHOOT
          Volume: 1.0
          Pitch: 0.8
+      Flyby_Custom_Sound:
+         Sound: sound.gta.bullet_fly_by
+         Volume: 0.8
+         Pitch: 1.0
       Impact_Default_Sound:
          Sound: BLOCK_ANVIL_LAND
          Volume: 1.0
          Pitch: 1.4
+      Impact_Custom_Sound:
+         Sound: sound.gta.bullet_fly_by
+         Volume: 1.0
+         Pitch: 1.0
 
 Ammunition:
    Capacity: 5
@@ -99,6 +114,19 @@ Reload:
          Sound: BLOCK_IRON_TRAPDOOR_CLOSE
          Volume: 1.0
          Pitch: 0.8
+      Custom_Sound:
+         Start:
+            Sound: sound.gta.sniper_reload_start
+            Volume: 1
+            Pitch: 1
+         Mid:
+            Sound: sound.gta.sniper_reload_mid
+            Volume: 1
+            Pitch: 1
+         End:
+            Sound: sound.gta.sniper_reload_end
+            Volume: 1
+            Pitch: 1
 
    Action_Bar:
       Reloading: "&cReloading...&r"
@@ -114,6 +142,10 @@ Scope:
          Sound: ITEM_SPYGLASS_USE
          Volume: 1
          Pitch: 0.8
+      Custom_Sound:
+         Sound: sound.gta.scope
+         Volume: 3
+         Pitch: 1
 
 Modifiers:
    Flat_Damage: 5.0

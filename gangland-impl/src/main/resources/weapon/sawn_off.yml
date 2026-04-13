@@ -1,11 +1,11 @@
-# +-----------------+ #
-# |    Sawn-Off     | #
-# +-----------------+ #
+# +-----------------------+ #
+# |   Sawn-Off Shotgun    | #
+# +-----------------------+ #
 
 Information:
    Name: "&8Sawn-Off Shotgun&r"
    Category: gun
-   Material: GOLDEN_PICKAXE
+   Material: DIAMOND_AXE
    Durability:
       Base: 100
       Change:
@@ -24,6 +24,7 @@ Shoot:
    Projectile:
       Speed: 4
       Type: SPREAD
+
       Damage:
          Base: 4
          Explosion_Damage: 0
@@ -37,6 +38,7 @@ Shoot:
       Cooldown: 0.3
       Distance: 12
       Particle: true
+      Gravity: 0.2
 
    Weapon_Consumed:
       Consume_On_Shot: 0
@@ -65,17 +67,33 @@ Shoot:
          Sound: ENTITY_GENERIC_EXPLODE
          Volume: 1.5
          Pitch: 0.9
+      Custom_Sound:
+         Sound: sound.gta.sawed_off_shotgun_shoot
+         Volume: 1
+         Pitch: 1
       Empty_Default_Sound:
          Sound: BLOCK_NOTE_BLOCK_HAT
          Volume: 1.0
          Pitch: 0.7
+      Empty_Custom_Sound:
+         Sound: sound.gta.empty_mag2
+         Volume: 1
+         Pitch: 1
       Flyby_Range: 2.0
       Flyby_Default_Sound:
          Sound: ENTITY_ARROW_SHOOT
          Volume: 0.6
          Pitch: 1.2
+      Flyby_Custom_Sound:
+         Sound: sound.gta.bullet_fly_by
+         Volume: 0.8
+         Pitch: 1.0
       Impact_Default_Sound:
          Sound: BLOCK_STONE_HIT
+         Volume: 1.0
+         Pitch: 1.5
+      Impact_Custom_Sound:
+         Sound: sound.gta.bullet_fly_by
          Volume: 1.0
          Pitch: 1.0
 
@@ -97,6 +115,19 @@ Reload:
          Sound: BLOCK_WOODEN_DOOR_CLOSE
          Volume: 1.0
          Pitch: 0.9
+      Custom_Sound:
+         Start:
+            Sound: sound.gta.double_barreled_shotgun_reload_start
+            Volume: 1
+            Pitch: 1
+         Mid:
+            Sound: sound.gta.double_barreled_shotgun_reload_mid
+            Volume: 1
+            Pitch: 1
+         End:
+            Sound: sound.gta.double_barreled_shotgun_reload_end
+            Volume: 1
+            Pitch: 1
 
    Action_Bar:
       Reloading: "&cBreaking action...&r"

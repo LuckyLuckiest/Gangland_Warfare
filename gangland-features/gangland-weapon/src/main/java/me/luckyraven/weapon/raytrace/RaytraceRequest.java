@@ -34,6 +34,8 @@ public class RaytraceRequest {
 	private final int                                 maxIterations;
 	private final Predicate<Entity>                   entityFilter;
 	private final Consumer<WeaponRaytraceImpactEvent> impactHandler;
+	private final double                              gravity;
+	private final double                              projectileSpeed;
 
 	private RaytraceRequest(Builder b) {
 		this.shooter         = b.shooter;
@@ -46,6 +48,8 @@ public class RaytraceRequest {
 		this.maxIterations   = b.maxIterations;
 		this.entityFilter    = b.entityFilter;
 		this.impactHandler   = b.impactHandler;
+		this.gravity         = b.gravity;
+		this.projectileSpeed = b.projectileSpeed;
 	}
 
 	public static Builder builder() {
@@ -64,6 +68,8 @@ public class RaytraceRequest {
 		private int                                 maxIterations   = 8;
 		private Predicate<Entity>                   entityFilter    = e -> true;
 		private Consumer<WeaponRaytraceImpactEvent> impactHandler;
+		private double                              gravity         = 0.0;
+		private double                              projectileSpeed = 1.0;
 
 		public Builder shooter(LivingEntity shooter) {
 			this.shooter = shooter;
@@ -112,6 +118,16 @@ public class RaytraceRequest {
 
 		public Builder impactHandler(@Nullable Consumer<WeaponRaytraceImpactEvent> impactHandler) {
 			this.impactHandler = impactHandler;
+			return this;
+		}
+
+		public Builder gravity(double gravity) {
+			this.gravity = gravity;
+			return this;
+		}
+
+		public Builder projectileSpeed(double projectileSpeed) {
+			this.projectileSpeed = projectileSpeed;
 			return this;
 		}
 

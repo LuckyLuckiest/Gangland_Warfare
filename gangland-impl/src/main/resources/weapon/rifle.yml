@@ -85,6 +85,9 @@ Shoot:
       Distance: 10
       # A particle trail of the projectile
       Particle: true
+      # Gravitational drop beyond effective range — higher = heavier drop, 0 = no drop.
+      # Drop formula: 0.5 * gravity * (distance_beyond_range / speed)^2
+      Gravity: 0.1
 
    # The weapon consumption
    Weapon_Consumed:
@@ -135,9 +138,9 @@ Shoot:
          Pitch: 2.2
       # Overrides the default shoot sound if available
       Custom_Sound:
-         Sound: sound.gta.m4_shoot
-         Volume: 1
-         Pitch: 2.2
+         Sound: sound.gta.bullet_generic_shoot
+         Volume: 1.4
+         Pitch: 1.2
       # When the weapon magazine is empty, it would use the sound set
       Empty_Default_Sound:
          Sound: ENTITY_BLAZE_BURN
@@ -145,8 +148,8 @@ Shoot:
          Pitch: 1
       # Overrides the default empty sound if available
       Empty_Custom_Sound:
-         Sound: sound.gta.m4_empty
-         Volume: 1
+         Sound: sound.gta.empty_mag1
+         Volume: 1.2
          Pitch: 1
       # How close (in blocks) a bullet must pass for the flyby whoosh to play
       Flyby_Range: 3.0
@@ -157,7 +160,7 @@ Shoot:
          Pitch: 2.0
       # Overrides the default flyby sound if available
       Flyby_Custom_Sound:
-         Sound: sound.gta.bullet_flyby
+         Sound: sound.gta.bullet_fly_by
          Volume: 0.8
          Pitch: 1.0
       # Impact sound when the bullet strikes a target
@@ -167,7 +170,7 @@ Shoot:
          Pitch: 1.5
       # Overrides the default impact sound if available
       Impact_Custom_Sound:
-         Sound: sound.gta.bullet_impact
+         Sound: sound.gta.bullet_fly_by
          Volume: 1.0
          Pitch: 1.0
 
@@ -247,7 +250,8 @@ Scope:
 Modifiers:
    # Flat damage - adds additional damage after wearable reduction
    Flat_Damage: 0.0
-   # Block breaking - MATERIAL-hitsRequired
+   # Format: MATERIAL_OR_GROUP-HITS_REQUIRED[-MODE]
+   # Modes: RESTORE (break + regen, default), CRACK_ONLY (never break, regen from max crack), DESTROY (break, no regen)
    Break_Blocks:
       - GLASS-3
       - ICE-5

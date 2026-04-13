@@ -39,6 +39,7 @@ Shoot:
       Cooldown: 0.1
       Distance: 25
       Particle: true
+      Gravity: 0.12
 
    Weapon_Consumed:
       Consume_On_Shot: 0
