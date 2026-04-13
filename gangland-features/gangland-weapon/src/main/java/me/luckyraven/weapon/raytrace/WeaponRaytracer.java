@@ -222,6 +222,19 @@ public class WeaponRaytracer {
 				     && !(e instanceof ItemFrame || e instanceof ArmorStand)
 				     && request.getEntityFilter().test(e));
 
+		// Discard hits on entities that are behind or exactly beside the ray origin — these are
+		// caught only because hitboxExpansion inflates the detection sphere at the start point.
+		if (entityHit != null) {
+			Entity candidate = entityHit.getHitEntity();
+			if (candidate != null) {
+				Vector toCandidate = candidate.getLocation().toVector()
+				                              .subtract(ctx.getCurrentOrigin().toVector());
+				if (toCandidate.dot(ctx.getCurrentDir()) <= 0) {
+					entityHit = null;
+				}
+			}
+		}
+
 		double blockDist = blockHit != null ?
 		                   blockHit.getHitPosition().distance(ctx.getCurrentOrigin().toVector()) :
 		                   Double.POSITIVE_INFINITY;
