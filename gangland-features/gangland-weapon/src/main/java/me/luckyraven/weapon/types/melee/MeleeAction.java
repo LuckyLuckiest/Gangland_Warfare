@@ -60,7 +60,9 @@ public class MeleeAction {
 		long cooldownMs = data.getCooldown() * 50L;
 
 		Long lastSwing = cooldowns.get(weaponUuid);
-		if (lastSwing != null && now - lastSwing < cooldownMs) return false;
+		if (lastSwing != null && now - lastSwing < cooldownMs) {
+			return false;
+		}
 		cooldowns.put(weaponUuid, now);
 
 		Vector lookDir = player.getEyeLocation().getDirection().normalize();
@@ -120,7 +122,11 @@ public class MeleeAction {
 		// swing sound and recoil always apply on swing
 		SoundConfiguration.playSounds(player, weapon.getSoundData().getShotCustom(),
 		                              weapon.getSoundData().getShotDefault());
-		weapon.getRecoil().applyRecoil(recoilCompatibility, player);
+
+		if (weapon.getRecoilData() != null) {
+			weapon.getRecoil().applyRecoil(recoilCompatibility, player);
+			weapon.applyPush(player);
+		}
 
 		return hit;
 	}

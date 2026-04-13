@@ -40,7 +40,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -60,6 +59,16 @@ public class WeaponInteract implements Listener {
 	 * deadlines for the press lock map (Spigot has no portable {@code Server#getCurrentTick}).
 	 */
 	private static final long MILLIS_PER_TICK = 50L;
+
+	/**
+	 * Dedup window for the two events Spigot delivers when a player left-clicks an entity with a melee weapon: the
+	 * USE_ENTITY/ATTACK packet fires {@link EntityDamageByEntityEvent} and the companion swing-arm packet fires
+	 * {@link PlayerInteractEvent} with {@code LEFT_CLICK_AIR}. Both reach this listener and would otherwise both call
+	 * {@link MeleeAction#activate(Player)}, doubling the damage and the resulting kill credit. 150ms (≈3 ticks) is
+	 * comfortably wider than the worst-case packet-delivery split between the two events while staying tight enough not
+	 * to throttle real follow-up swings, which are gated by the configured weapon cooldown anyway.
+	 */
+	private static final long MELEE_DEDUP_WINDOW_MS = 150L;
 
 	private final JavaPlugin          plugin;
 	private final WeaponService       weaponService;
@@ -99,7 +108,14 @@ public class WeaponInteract implements Listener {
 	private final Map<UUID, FullAutoTask>                autoTasks;
 	private final Map<UUID, RepeatingTimer>              activeTasks;
 	private final Map<UUID, Long>                        meleeCooldowns;
-	private final Set<UUID>                              activeMeleeSwings;
+	/**
+	 * Per-weapon timestamp of the last melee swing that was actually fired, in milliseconds. Used to dedup the
+	 * companion {@link PlayerInteractEvent}/{@link EntityDamageByEntityEvent} pair Spigot delivers for a single
+	 * left-click on an entity — the two events can land in the same tick or in adjacent ticks depending on packet
+	 * order, so a tick-based dedup window is unreliable. Anything within {@link #MELEE_DEDUP_WINDOW_MS} of the last
+	 * recorded swing is treated as the second half of the same click and dropped.
+	 */
+	private final Map<UUID, Long>                        lastMeleeSwingMs;
 
 	public WeaponInteract(JavaPlugin plugin, WeaponService weaponService, RecoilCompatibility recoilCompatibility,
 	                      WeaponRaytracer raytracer) {
@@ -114,7 +130,7 @@ public class WeaponInteract implements Listener {
 		this.autoTasks           = new ConcurrentHashMap<>();
 		this.activeTasks         = new ConcurrentHashMap<>();
 		this.meleeCooldowns      = new ConcurrentHashMap<>();
-		this.activeMeleeSwings   = ConcurrentHashMap.newKeySet();
+		this.lastMeleeSwingMs    = new ConcurrentHashMap<>();
 	}
 
 	@EventHandler
@@ -229,16 +245,25 @@ public class WeaponInteract implements Listener {
 	public void onEntityDamage(EntityDamageByEntityEvent event) {
 		if (!(event.getDamager() instanceof Player player)) return;
 
+		// Drain the per-action pendingDamage sets first, regardless of which guard returns below.
+		// MeleeAction adds its target UUID before calling target.damage(...) inside the raytracer's
+		// impactHandler; the inner re-fired event then short-circuits at the raytracer flag check
+		// without ever reaching a removal call below, leaving the UUID stranded in the static set
+		// and consuming the next legitimate hit on that entity. Removing here ensures the sets
+		// always drain in lock-step with the inner event they were added for.
+		UUID    targetUuid         = event.getEntity().getUniqueId();
+		boolean wasMeleeRefire     = MeleeAction.pendingDamage.remove(targetUuid);
+		boolean wasThrowableRefire = ThrowableAction.pendingDamage.remove(targetUuid);
+		boolean wasIncendRefire    = IncendiaryAction.pendingDamage.remove(targetUuid);
+
 		// Allow damage that was applied programmatically by the unified raytracer (gun hitscan,
 		// stepped slow projectiles, etc.). Without this guard the raytracer's living.damage(...)
 		// call would be cancelled below as if it were a vanilla fist punch with a gun in hand.
 		if (WeaponRaytracer.isRaytraceDamageInProgress()) return;
 
-		// allow damage that was applied programmatically by MeleeAction or ThrowableAction itself
-		UUID targetUuid = event.getEntity().getUniqueId();
-		if (MeleeAction.pendingDamage.remove(targetUuid)) return;
-		if (ThrowableAction.pendingDamage.remove(targetUuid)) return;
-		if (IncendiaryAction.pendingDamage.remove(targetUuid)) return;
+		// Same allowance for damage applied programmatically by MeleeAction / ThrowableAction /
+		// IncendiaryAction themselves outside the raytracer flag window.
+		if (wasMeleeRefire || wasThrowableRefire || wasIncendRefire) return;
 
 		ItemStack item = player.getInventory().getItemInMainHand();
 		if (!weaponService.isWeapon(item)) return;
@@ -247,14 +272,12 @@ public class WeaponInteract implements Listener {
 		// When the player clicks on an entity the client sends an attack-entity packet, which
 		// fires EntityDamageByEntityEvent but does NOT always fire PlayerInteractEvent.
 		// Running MeleeAction here ensures damage is applied regardless of which events arrive.
-		// The MeleeAction cooldown (ms-based) prevents double-damage if PlayerInteractEvent
-		// also fires in the same tick.
+		// tryClaimMeleeSwing prevents double-damage when the companion PlayerInteractEvent also
+		// fires for the same click (see MELEE_DEDUP_WINDOW_MS).
 		Weapon weapon = weaponService.validateAndGetWeapon(player, item);
 		if (weapon instanceof MeleeWeapon melee) {
 			event.setCancelled(true);
-			UUID wUuid = melee.getUuid();
-			if (activeMeleeSwings.add(wUuid)) {
-				plugin.getServer().getScheduler().runTaskLater(plugin, () -> activeMeleeSwings.remove(wUuid), 1L);
+			if (tryClaimMeleeSwing(melee.getUuid())) {
 				boolean hit = new MeleeAction(melee, recoilCompatibility, raytracer, meleeCooldowns).activate(player);
 				if (hit) melee.applyOnHitDurability(player, player.getInventory().getHeldItemSlot());
 			}
@@ -285,6 +308,9 @@ public class WeaponInteract implements Listener {
 		pressLockUntilTick.remove(weaponUuid);
 		pressHoldState.remove(weaponUuid);
 
+		// drop the melee dedup timestamp so swapping weapons doesn't carry stale gating across selections
+		lastMeleeSwingMs.remove(weaponUuid);
+
 		if (weapon instanceof GunWeapon) {
 			// cancel any active auto fire
 			FullAutoTask autoTask = autoTasks.get(weaponUuid);
@@ -304,6 +330,22 @@ public class WeaponInteract implements Listener {
 		continuousFire.remove(weaponUuid);
 	}
 
+	/**
+	 * Records that a melee swing for {@code weaponUuid} is being processed and reports whether the caller should
+	 * actually fire it. Returns {@code false} if a swing for this weapon was already claimed within the
+	 * {@link #MELEE_DEDUP_WINDOW_MS} window — that is the second half of the same left-click being delivered via the
+	 * companion {@link PlayerInteractEvent}/{@link EntityDamageByEntityEvent}, and we must not fire it twice.
+	 */
+	private boolean tryClaimMeleeSwing(UUID weaponUuid) {
+		long now  = System.currentTimeMillis();
+		Long last = lastMeleeSwingMs.get(weaponUuid);
+		if (last != null && now - last < MELEE_DEDUP_WINDOW_MS) {
+			return false;
+		}
+		lastMeleeSwingMs.put(weaponUuid, now);
+		return true;
+	}
+
 	private void handleNonGunInteract(PlayerInteractEvent event, Player player, Weapon weapon, boolean leftClick,
 	                                  boolean rightClick) {
 		event.setUseInteractedBlock(Event.Result.DENY);
@@ -319,11 +361,7 @@ public class WeaponInteract implements Listener {
 			}
 			case MeleeWeapon melee -> {
 				if (leftClick) {
-					UUID wUuid = melee.getUuid();
-					if (activeMeleeSwings.add(wUuid)) {
-						plugin.getServer()
-						      .getScheduler()
-						      .runTaskLater(plugin, () -> activeMeleeSwings.remove(wUuid), 1L);
+					if (tryClaimMeleeSwing(melee.getUuid())) {
 						boolean hit = new MeleeAction(melee, recoilCompatibility, raytracer, meleeCooldowns).activate(
 								player);
 						if (hit) melee.applyOnHitDurability(player, player.getInventory().getHeldItemSlot());

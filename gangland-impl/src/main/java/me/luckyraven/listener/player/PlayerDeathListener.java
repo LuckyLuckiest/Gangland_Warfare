@@ -62,12 +62,11 @@ public class PlayerDeathListener implements Listener {
 
 		Long lastDeath = recentDeaths.get(uuid);
 		if (lastDeath != null && now - lastDeath < DEATH_DEDUP_WINDOW_MS) {
-			// Only suppress if the downed handler already broadcast; otherwise show the message
-			if (downedBroadcasted.remove(uuid)) {
-				event.setDeathMessage(null);
-			} else {
-				changeDeathMessage(event, player);
-			}
+			// Always suppress: either the downed handler already broadcast, or the FRESH path
+			// already ran for this death (e.g. duplicate PlayerDeathEvent from vanilla Player.attack
+			// re-checking HP<=0 after MeleeAction's target.damage() killed the entity).
+			downedBroadcasted.remove(uuid);
+			event.setDeathMessage(null);
 			return;
 		}
 		recentDeaths.put(uuid, now);
