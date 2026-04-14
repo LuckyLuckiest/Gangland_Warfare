@@ -23,7 +23,7 @@ When a player wearing a wearable takes damage, the following order applies:
 2. **Base damage reduction** from the wearable is applied — a flat percentage of the remaining damage is absorbed.
 3. Each **trait** on the wearable applies its own reduction to what's left.
 4. **Flat damage** from the weapon (if any) is added back on top after all reductions. See
-   the [Weapons guide](../features/weapons.md#modifiers).
+   the [Weapons guide](./weapons.md#modifiers).
 
 Traits from multiple pieces stack. If you wear both a vest with `REINFORCED 2` and a helmet with `REINFORCED 1`, the
 total effect is `REINFORCED 3`.

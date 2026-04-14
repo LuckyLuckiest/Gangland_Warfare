@@ -1,6 +1,6 @@
 # Cops N Crooks
 
-[← Changelog](./CHANGELOG.md) | [Back to Index](../README.md) | [Next: Jail & Detainment →](./jail-detainment.md)
+[← Changelog](../v0.7.3-DEV/CHANGELOG.md) | [Back to Index](../README.md) | [Next: Jail & Detainment →](./jail-detainment.md)
 
 ---
 
@@ -260,4 +260,4 @@ List<CopSpawner> spawners = spawnerManager.getSpawners();
 
 ---
 
-[← Changelog](./CHANGELOG.md) | [Back to Index](../README.md) | [Next: Jail & Detainment →](./jail-detainment.md)
+[← Changelog](../v0.7.3-DEV/CHANGELOG.md) | [Back to Index](../README.md) | [Next: Jail & Detainment →](./jail-detainment.md)
