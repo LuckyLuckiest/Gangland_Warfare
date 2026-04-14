@@ -153,7 +153,7 @@ A new NPC class that shares the cop AI base — wander, flee, trade, or fight.
 - **Hostile civilians** return fire using weapons from their pool
 - **Trader civilians** open a custom inventory on right-click for sell/buy
   interactions
-- Combat difficulty profiles — EASY / NORMAL / HARD / DEADLY — scale aim,
+- Combat difficulty profiles — `EASY` / `NORMAL` / `HARD` / `DEADLY` — scale aim,
   reaction time, and fire rate
 - Groups bind spawn points to a type with population caps, activation
   radius, and despawn radius — civilians appear when players walk in range
@@ -216,7 +216,8 @@ Custom armor pieces with specialized damage reduction.
 
 - Wearables sit on top of vanilla armor and plug into Gangland's full damage pipeline
 - Configurable base damage reduction percentage per piece
-- Seven protective traits: REINFORCED, BULLETPROOF, PADDED, TOUGHENED, FIRE_RESISTANT, REACTIVE, and LIGHTWEIGHT
+- Seven protective traits: `REINFORCED`, `BULLETPROOF`, `PADDED`, `TOUGHENED`, `FIRE_RESISTANT`, `REACTIVE`, and
+  `LIGHTWEIGHT`
 - Traits from multiple pieces stack for combined protection
 - Durability depletes as damage is absorbed and can be repaired
 - Four built-in pieces: Police Vest, Police Helmet, Gang Jacket, and Heavy Vest
@@ -376,18 +377,12 @@ On startup, the plugin automatically contacts the SpigotMC API (`api.spigotmc.or
 newer version of the plugin is available. This is a read-only request — no player data or server data is sent. Operators
 with the appropriate permission are notified in-game if an update is found.
 
-> ⚠️ A configuration toggle for this exists in `settings.yml`, but it is not yet respected by the plugin — the update
-> checker currently runs regardless of that setting. **This will be fixed in an upcoming update.**
-
 ### 🎨 Automatic Resource Pack Push
 
 If the resource pack feature is enabled in `settings.yml`, the plugin automatically sends a resource pack download
 prompt to every player when they join the server. Players are directed to a URL configured by the server administrator.
-Players may accept or decline the prompt; declining does not prevent them from playing unless the server admin has
-enabled the kick-on-decline option.
-
-> ⚠️ The resource pack URL and the enable/disable toggle are fully controlled by the server administrator in
-`settings.yml`. Proper configuration opt-out controls will be improved in an upcoming update.
+> Players may accept or decline the prompt; declining does not prevent them from playing unless the server admin has
+> enabled the kick-on-decline option.
 
 ---
 
