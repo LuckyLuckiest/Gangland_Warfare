@@ -6,7 +6,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Minecraft-1.21%2B-brightgreen?style=flat-square" alt="Minecraft">
   <img src="https://img.shields.io/badge/Java-21-orange?style=flat-square" alt="Java">
-  <img src="https://img.shields.io/badge/Version-0.7.3--DEV-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Fraw.githubusercontent.com%2FLuckyLuckiest%2FGangland_Warfare%2Fmaster%2Fpom.xml&query=%2F%2F*%5Blocal-name()%3D%27revision%27%5D&label=Version&prefix=v&style=flat-square&color=blue" alt="Version">
   <img src="https://img.shields.io/badge/Build-Maven-red?style=flat-square" alt="Build">
 </p>
 
@@ -128,22 +128,22 @@ All commands use the `/glw` dispatcher (alias: `/gangland`).
 
 Full documentation is available in the [`documentation/`](./documentation/) folder.
 
-| Guide                                                              | Description                                       |
-|--------------------------------------------------------------------|---------------------------------------------------|
-| [Cops N Crooks](./documentation/v0.7.3-DEV/cops-n-crooks.md)       | NPC AI, spawning, tiers, and configuration        |
-| [Jail & Detainment](./documentation/v0.7.3-DEV/jail-detainment.md) | Handcuffing, jailing, and the detainment API      |
-| [Wearables](./documentation/v0.7.3-DEV/wearables.md)               | Traits, damage pipeline, and configuration        |
-| [Repair System](./documentation/v0.7.3-DEV/repair.md)              | Materials, restore values, and configuration      |
-| [Weapons](./documentation/features/weapons.md)                     | Fire modes, ammo, damage modifiers, and commands  |
-| [Wanted & Bounty](./documentation/features/wanted-bounty.md)       | Star scaling, decay, and bounty multipliers       |
-| [Trade Signs](./documentation/features/trade-signs.md)             | Sign format and setup                             |
-| [Gangs](./documentation/features/gangs.md)                         | Creation, ranks, bank, and alliances              |
-| [Economy](./documentation/features/economy.md)                     | Balances, bank, death penalty, and admin commands |
-| [Waypoints](./documentation/features/waypoints.md)                 | Types, teleportation, and safe zones              |
-| [Loot Chests](./documentation/features/loot_chests.md)             | Tiers, keys, and loot table configuration         |
-| [Levels](./documentation/features/levels.md)                       | XP formula and skill upgrades                     |
-| [Ranks](./documentation/features/ranks.md)                         | Hierarchy, inheritance, and permission management |
-| [Database & Setup](./documentation/features/database.md)           | MySQL/SQLite, auto-save, and setup checklist      |
+| Guide                                                            | Description                                       |
+|------------------------------------------------------------------|---------------------------------------------------|
+| [Cops N Crooks](./documentation/features/cops-n-crooks.md)       | NPC AI, spawning, tiers, and configuration        |
+| [Jail & Detainment](./documentation/features/jail-detainment.md) | Handcuffing, jailing, and the detainment API      |
+| [Wearables](./documentation/features/wearables.md)               | Traits, damage pipeline, and configuration        |
+| [Repair System](./documentation/features/repair.md)              | Materials, restore values, and configuration      |
+| [Weapons](./documentation/features/weapons.md)                   | Fire modes, ammo, damage modifiers, and commands  |
+| [Wanted & Bounty](./documentation/features/wanted-bounty.md)     | Star scaling, decay, and bounty multipliers       |
+| [Trade Signs](./documentation/features/trade-signs.md)           | Sign format and setup                             |
+| [Gangs](./documentation/features/gangs.md)                       | Creation, ranks, bank, and alliances              |
+| [Economy](./documentation/features/economy.md)                   | Balances, bank, death penalty, and admin commands |
+| [Waypoints](./documentation/features/waypoints.md)               | Types, teleportation, and safe zones              |
+| [Loot Chests](./documentation/features/loot_chests.md)           | Tiers, keys, and loot table configuration         |
+| [Levels](./documentation/features/levels.md)                     | XP formula and skill upgrades                     |
+| [Ranks](./documentation/features/ranks.md)                       | Hierarchy, inheritance, and permission management |
+| [Database & Setup](./documentation/features/database.md)         | MySQL/SQLite, auto-save, and setup checklist      |
 
 ---
 
