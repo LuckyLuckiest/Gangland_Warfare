@@ -32,12 +32,12 @@ sections — or regenerate them by bumping `Config_Version`.
 
 **New files shipped in this version:**
 
-| File                | Purpose                                                                |
-|---------------------|------------------------------------------------------------------------|
-| `entity_marker.yml` | Civilian NPC types and spawn groups (friendly, hostile, trader).       |
-| `cars.yml`          | Drivable vehicle catalogue (materials, speed, acceleration, fuel).     |
-| `money.yml`         | Cash pickup variations and per-source drop rules.                      |
-| `weapon/*.yml`      | New melee, incendiary, biological and throwable weapon configurations. |
+| File            | Purpose                                                                |
+|-----------------|------------------------------------------------------------------------|
+| `civilians.yml` | Civilian NPC types and spawn groups (friendly, hostile, trader).       |
+| `cars.yml`      | Drivable vehicle catalogue (materials, speed, acceleration, fuel).     |
+| `money.yml`     | Cash pickup variations and per-source drop rules.                      |
+| `weapon/*.yml`  | New melee, incendiary, biological and throwable weapon configurations. |
 
 **New sections added to `settings.yml`:** `NPC_Navigation`, `Civilians`,
 `Money_Drop`, `Gadgets` (with `Jetpack` and `Car` subsections), and
@@ -55,7 +55,7 @@ the weapons section below for the before/after shape.
 
 Civilians are a new NPC class that share the cop AI base — they wander, flee,
 trade, or return fire depending on their type. Types and spawn groups live in
-a new `entity_marker.yml` file, and spawning is proximity-driven from
+a new `civilians.yml` file, and spawning is proximity-driven from
 registered spawner points.
 
 - Each type picks a Bukkit entity, health, wearables, weapon pool, item pool,
@@ -74,7 +74,7 @@ registered spawner points.
 - New commands under `/glw civilian …` for manual spawn, despawn, and group
   control.
 
-**New file — `entity_marker.yml` shape:**
+**New file — `civilians.yml` shape:**
 
 ```yaml
 Types:

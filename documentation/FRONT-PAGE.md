@@ -146,7 +146,7 @@ with civilians.
 
 A new NPC class that shares the cop AI base — wander, flee, trade, or fight.
 
-- Civilian types are defined in `entity_marker.yml` with per-type entity,
+- Civilian types are defined in `civilians.yml` with per-type entity,
   health, wearables, item pool, weapon pool, drops, and AI profile
 - **Friendly civilians** wander and flee from danger; attacking them
   increments your wanted level

@@ -20,7 +20,7 @@ Upgrading from 0.7.3? You'll need to merge in new files and new [ICODE]settings.
 
 [TABLE]
 [TR][TH]File[/TH][TH]Purpose[/TH][/TR]
-[TR][TD][ICODE]entity_marker.yml[/ICODE][/TD][TD]Civilian NPC types and spawn groups (friendly, hostile, trader).[/TD][/TR]
+[TR][TD][ICODE]civilians.yml[/ICODE][/TD][TD]Civilian NPC types and spawn groups (friendly, hostile, trader).[/TD][/TR]
 [TR][TD][ICODE]cars.yml[/ICODE][/TD][TD]Drivable vehicle catalogue (materials, speed, acceleration, fuel).[/TD][/TR]
 [TR][TD][ICODE]money.yml[/ICODE][/TD][TD]Cash pickup variations and per-source drop rules.[/TD][/TR]
 [TR][TD][ICODE]weapon/*.yml[/ICODE][/TD][TD]New melee, incendiary, biological and throwable weapon configurations.[/TD][/TR]
@@ -36,7 +36,7 @@ Upgrading from 0.7.3? You'll need to merge in new files and new [ICODE]settings.
 
 [SIZE=5][B]Civilian NPCs[/B][/SIZE]
 
-Civilians are a new NPC class that share the cop AI base — they wander, flee, trade, or return fire depending on their type. Types and spawn groups live in a new [ICODE]entity_marker.yml[/ICODE] file, and spawning is proximity-driven from registered spawner points.
+Civilians are a new NPC class that share the cop AI base — they wander, flee, trade, or return fire depending on their type. Types and spawn groups live in a new [ICODE]civilians.yml[/ICODE] file, and spawning is proximity-driven from registered spawner points.
 
 [LIST]
 [*]Each type picks a Bukkit entity, health, wearables, weapon pool, item pool, drops, and an optional trader inventory.
@@ -48,7 +48,7 @@ Civilians are a new NPC class that share the cop AI base — they wander, flee, 
 [*]New commands under [ICODE]/glw civilian …[/ICODE] for manual spawn, despawn, and group control.
 [/LIST]
 
-[B]New file — [ICODE]entity_marker.yml[/ICODE] shape:[/B]
+[B]New file — [ICODE]civilians.yml[/ICODE] shape:[/B]
 
 [CODE=yaml]
 Types:
