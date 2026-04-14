@@ -1,7 +1,8 @@
 # 🏙️ Gangland Warfare
 
 > **Turn your server into a living crime world.**
-> Build gangs, fight rivals, use advanced weapons, earn money, place bounties, and rise to the top of the underworld.
+> Build gangs, fight rivals, wield a full arsenal of firearms, blades, and explosives, drive the streets,
+> and outrun (or become) the law.
 
 ---
 
@@ -17,6 +18,8 @@ Players don't just fight — they:
 - 🎯 Hunt players with bounties and wanted levels
 - 📈 Progress through levels, ranks, and loot
 - 🚔 Survive police pursuit or don a badge and become the law
+- 🚶 Share the streets with civilians — trade with them, rob them, or answer for it
+- 🚗 Drive cars, fly jetpacks, and refuel at the pump
 
 ---
 
@@ -24,20 +27,38 @@ Players don't just fight — they:
 
 ### 1. 🔫 Advanced Weapon System
 
-A fully custom weapon engine entirely separate from vanilla combat.
+A fully custom weapon engine entirely separate from vanilla combat, now with
+**five weapon categories**.
 
-- Configurable weapons via individual YAML files — each with its own stats, sounds, and behavior
+- **Five weapon categories** — guns, melee, incendiary, biological, and
+  throwable — each with its own action class, YAML schema, and physics
+- Configurable weapons via individual YAML files — each with its own stats,
+  sounds, and behavior
 - Multiple fire modes: single, burst, and full-auto with per-shot cooldowns
-- Ammo types and reload mechanics — weapons go dry, magazines must be restocked
+- Ammo types and reload mechanics — weapons go dry, magazines must be
+  restocked
 - Weapon durability that depletes with use and can be repaired with materials
 - Projectile types: bullet, flare, rocket, and spread (shotgun-style)
+- **Bullet gravity** — shots drop over distance, rewarding range compensation
 - Headshot and critical hit system with configurable chances and bonus damage
 - Bullet penetration through blocks and multiple entities with damage falloff
-- Ricochet off configurable surface materials
+- Ricochet off configurable surface materials — bounces along the block normal
 - Accuracy spread that increases as you fire and resets over time
 - Recoil patterns that push the camera per shot
 - Bullet flyby and impact sounds heard by nearby players
-- Weapon modifiers: armor piercing, flat damage, block breaking, and bullet tracers
+- Weapon modifiers: armor piercing, flat damage, block breaking, and bullet
+  tracers
+- **Block regeneration** — broken blocks can restore, uncrack, or stay
+  destroyed per weapon (`RESTORE`, `CRACK_ONLY`, `DESTROY`)
+- **Melee weapons** — knives, machetes, and crowbars with range, knockback,
+  and per-hit cooldowns
+- **Incendiary weapons** — flamethrower-style cone fire spray that ignites
+  everything in its arc
+- **Biological weapons** — hold-to-charge syringe guns that apply potion
+  effects on impact
+- **Throwables** — grenades, molotovs, flashbangs, smoke grenades, and
+  tomahawks, with bounce physics, fuse timers, blast radius, and stackable
+  UUIDs
 - In-world holograms for dropped weapons
 - 🎵 Resource pack integration for custom sounds
 
@@ -60,15 +81,23 @@ Gangs are the social backbone of the plugin.
 
 ### 3. 💵 Economy & Banking
 
-Every player has two separate money pools.
+Every player has two separate money pools, plus a dedicated cash-drop system.
 
 - Personal cash balance — spent on gang creation, teleportation, bounties, and more
 - Personal bank account — higher capacity vault that requires a one-time creation fee
 - 💀 Death penalty: lose a configurable percentage of your carried cash (money in the bank is safe)
 - Configurable death penalty formula — supports custom expressions and command-based execution
+- **Cash pickup items** — drops are now real items players loot, with
+  small / medium / large stack variations configured in `money.yml`
+- **Per-source drop rules** — `Player_Kill`, `Civilian_Kill`, `Cop_Kill`,
+  and more each pick a variation, amount range, and drop chance
+- Custom pickup sound per variation with name validation
+- Master switch: `Money_Drop.Enabled` in `settings.yml` disables the whole
+  system without editing `money.yml`
 - Mob kills reward small random cash amounts
 - Vault integration support for cross-plugin compatibility
-- Admin economy commands to deposit, withdraw, set, or reset balances for individual players or all online players
+- Admin economy commands to deposit, withdraw, set, or reset balances for
+  individual players or all online players
 
 ---
 
@@ -79,41 +108,94 @@ A risk-vs-reward layer on top of all PvP.
 - Kill combos accumulate wanted stars — up to ⭐⭐⭐⭐⭐ with escalating consequences
 - Each star tier spawns more cops and drains money from the player at an increasing rate
 - Stars decay over time, with higher-star players waiting longer between each reduction
+- Attacking a non-hostile civilian now also increments the wanted level
 - Dying immediately clears all wanted stars
 - 💰 Bounties can be placed by players spending their own money or set by admins
 - Kill bounties multiply over time for players on sustained hot streaks
 - Configurable caps on maximum bounty per player
+- `/glw wanted clear <player>` — admin command to reset stars without killing
 
 ---
 
 ### 5. 🚓 Cops N Crooks
 
-Fully AI-driven police NPCs powered by Citizens.
+Fully AI-driven police NPCs powered by Citizens, sharing a unified NPC base
+with civilians.
 
 - Officers spawn in the world when a player accumulates wanted stars
-- Five cop tiers — Officer, Sergeant, Lieutenant, SWAT, and Military — each with higher stats and better equipment
+- Five cop tiers — Officer, Sergeant, Lieutenant, SWAT, and Military — each
+  with higher stats and better equipment
 - 🤖 AI state machine: Pursuit → Combat → Cuffing
-- Cops navigate toward the player, recalculating paths to avoid getting stuck
-- Lower-tier cops attempt to cuff and arrest; higher-tier cops skip cuffing and go lethal
+- Cops navigate via the shared `NPC_Navigation` tuning, so path-finding fixes
+  land on cops and civilians in lock-step
+- Lower-tier cops attempt to cuff and arrest; higher-tier cops skip cuffing
+  and go lethal
 - When one cop enters combat range, all nearby cops in the group are alerted
+- Cops fall back to targeting their most recent attacker when no wanted
+  target is in range
+- 3D-aware despawn — cops no longer vanish when you climb a tower or dig a pit
 - Configurable cop weapon pools — vanilla items or custom Gangland weapons
-- Spawner placement system with intelligent fallback for areas without placed spawners
+- Spawner placement system with intelligent fallback for areas without
+  placed spawners
 - Cop count scales with wanted level via a configurable formula
+- `CopDeathEvent` fires for other listeners to react to fallen officers
 
 ---
 
-### 6. 🔒 Jail & Detainment
+### 6. 🚶 Civilians
+
+A new NPC class that shares the cop AI base — wander, flee, trade, or fight.
+
+- Civilian types are defined in `entity_marker.yml` with per-type entity,
+  health, wearables, item pool, weapon pool, drops, and AI profile
+- **Friendly civilians** wander and flee from danger; attacking them
+  increments your wanted level
+- **Hostile civilians** return fire using weapons from their pool
+- **Trader civilians** open a custom inventory on right-click for sell/buy
+  interactions
+- Combat difficulty profiles — EASY / NORMAL / HARD / DEADLY — scale aim,
+  reaction time, and fire rate
+- Groups bind spawn points to a type with population caps, activation
+  radius, and despawn radius — civilians appear when players walk in range
+  and disappear when the area empties
+- Shared navigation tuning with cops via `NPC_Navigation` in `settings.yml`
+- `/glw civilian …` commands for manual spawn, despawn, and group control
+
+---
+
+### 7. 🔒 Jail & Detainment
 
 The outcome of a successful arrest.
 
 - Cops that successfully cuff a player initiate the detainment sequence
 - Jailed players are held at a configured jail location for a set duration
 - Admins can handcuff, jail, and release players manually
+- Players cuffed at logout are auto-routed to jail on rejoin
+- Jail creation uses a radius check to prevent stacking duplicate jails
 - Detainment integrates with the wanted system — clearing stars on arrest
 
 ---
 
-### 7. 📦 Loot Chests & Rewards
+### 8. 🛻 Gadgets — Cars & Jetpacks
+
+A dedicated gadget module for drivable vehicles and deployable equipment.
+
+- **Cars** — drivable vehicles defined in `cars.yml` with per-vehicle max
+  speed, acceleration, and fuel capacity
+- Every parked car is saved to the database (position, fuel, exhaust side)
+  and rehydrated on boot — curb-side parking survives restarts
+- Wobble animation on idle cars, shift-safe interactions, and dedicated
+  `refuel` / `defuel` commands
+- **Jetpacks** — off-hand-equipped flight gadget with ramped thrust, fuel-
+  per-tick gliding, particle exhaust, and sound effects
+- Empty jetpacks trigger a timed refuel session instead of silently cutting
+  out mid-air
+- **Shared fuel component** — cars and jetpacks use the same `FuelContract`,
+  so refuel items and UX are consistent across gadgets
+
+---
+
+### 9. 📦 Loot Chests & Rewards
 
 Randomized reward containers placed anywhere in the world.
 
@@ -128,7 +210,7 @@ Randomized reward containers placed anywhere in the world.
 
 ---
 
-### 8. 🛡️ Wearables
+### 10. 🛡️ Wearables
 
 Custom armor pieces with specialized damage reduction.
 
@@ -142,7 +224,7 @@ Custom armor pieces with specialized damage reduction.
 
 ---
 
-### 9. 🔧 Repair System
+### 11. 🔧 Repair System
 
 Weapons and wearables degrade with use and can be restored.
 
@@ -154,7 +236,7 @@ Weapons and wearables degrade with use and can be restored.
 
 ---
 
-### 10. 📊 Player Leveling
+### 12. 📊 Player Leveling
 
 An XP-based progression system that gates access to higher rewards.
 
@@ -166,7 +248,7 @@ An XP-based progression system that gates access to higher rewards.
 
 ---
 
-### 11. 🗺️ Waypoints & Teleportation
+### 13. 🗺️ Waypoints & Teleportation
 
 Named teleport destinations placed by admins.
 
@@ -176,21 +258,23 @@ Named teleport destinations placed by admins.
 - Gang waypoints are restricted to members of a specific gang
 - Permission nodes auto-generated per waypoint for fine-grained access control
 - Teleport cancels if the player moves or takes damage during the wait timer
+- Chat output includes hover and click events to teleport directly
 
 ---
 
-### 12. 🪧 Trade Signs
+### 14. 🪧 Trade Signs
 
 In-world buy and sell signs for weapons and ammunition.
 
 - Place signs that let players buy or sell weapons and ammo at fixed prices
 - Two sign types: weapon signs and ammo signs
-- No additional plugin required — works entirely within Gangland Warfare
+- Throwables bought from signs stack with looted ones via shared UUIDs
+- No additional plugin is required — works entirely within Gangland Warfare
 - Configurable item, price, and quantity per sign
 
 ---
 
-### 13. 📋 Scoreboard
+### 15. 📋 Scoreboard
 
 Live stat display for players.
 
@@ -200,7 +284,7 @@ Live stat display for players.
 
 ---
 
-### 14. 🎒 Unique Items
+### 16. 🎒 Unique Items
 
 Special items with controlled inventory behavior.
 
@@ -211,16 +295,23 @@ Special items with controlled inventory behavior.
 
 ---
 
-### 15. 🖥️ Server Infrastructure
+### 17. 🖥️ Server Infrastructure
 
 Backend features for operators and developers.
 
 - MySQL and SQLite support via HikariCP — selected in `settings.yml`
+- **Beans-based bootstrap** — phased dependency-injection pipeline
+  (KERNEL → FILE → DATABASE → CONFIG → LIFECYCLE → LISTENER → COMMAND) with
+  auto-registered `@Bean`, `@ListenerHandler`, and `@CommandHandler` classes
+- **Reload regeneration** — missing config sections are rewritten on
+  `/glw reload`; a missing file is recreated from the jar with an init retry
+- Batched database queries to reduce individual query overhead
 - Automatic periodic data saving and cache cleanup
 - 🌐 Multi-language message support
 - Resource pack auto-loading on join
 - Custom scoreboard via FastBoard
-- 🧰 Public developer API with events for weapons, cops, bounty, and more
+- 🧰 Public developer API with events for weapons, cops, civilians, bounty,
+  and more
 - Permission list available at runtime: `/glw debug perms`
 
 ---
@@ -232,7 +323,7 @@ The following systems are actively in development:
 - 🔐 Safe Cracking Minigame and Advanced Chest Mechanics
 - ⚔️ Gang Attacks and Turf Wars
 - 🏆 Challenges and Competitive Events
-- 🚗 Vehicle System
+- 🏍️ More Vehicle Types (motorcycles, boats, aircraft)
 - 🏠 Purchasable Houses and Properties
 - 🤝 Dealer NPCs and Auction House
 - 📜 Quest and Mission System
@@ -245,8 +336,9 @@ The following systems are actively in development:
 |-------------------|------------------------------------------------------------|
 | Minecraft version | 1.20+ (tested; earlier versions are partially implemented) |
 | Java              | Java 21 or newer                                           |
+| Server platform   | **Spigot** (Paper-only APIs are not used)                  |
 | Required plugins  | NBTAPI, Citizens                                           |
-| Optional plugins  | PlaceholderAPI, Vault                                      |
+| Optional plugins  | PlaceholderAPI, Vault, ViaVersion                          |
 
 ---
 
@@ -303,7 +395,8 @@ enabled the kick-on-decline option.
 
 - 🐛 Bug reports: open an issue on the GitHub repository
 - 🔄 Configuration changes take effect with `/glw reload` or a server restart
-- 📖 Full documentation is available in the [documentation index](./README.md)
+- 📖 Full documentation is available in
+  the [github page](https://github.com/LuckyLuckiest/Gangland_Warfare/tree/master/documentation)
 
 > ⚠️ This plugin is actively under development. Bugs are expected. Please report them rather than leaving a low rating —
 > every report helps. Don't forget to leave a ⭐⭐⭐⭐⭐ rating if you enjoy it!

@@ -1,0 +1,482 @@
+[SIZE=7][B]🌆 The Streets Got Louder — v0.7.4-DEV Changelog[/B][/SIZE]
+
+[QUOTE]Civilians walk the block, cars idle at the curb, and the first grenade in plugin history just bounced off a wall. Welcome to [B]Part 2 of Cops N Crooks[/B].[/QUOTE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Overview[/B][/SIZE]
+
+Three big shifts land in this version. [B]Civilians[/B] join the streets as their own NPC class (friendly, hostile, or traders). The [B]weapon system quadruples[/B] from one category (guns) to five (guns, melee, incendiary, biological, throwable), each with its own schema and physics. And [B]gadgets[/B] — cars and jetpacks — ship as a new module with persistent fuel, database-backed parking, and shared refueling.
+
+Under the hood, the plugin was also rewired onto a beans-based bootstrap, so every manager now auto-initializes in phased order without a hand-written [ICODE]Initializer[/ICODE].
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]📄 Configuration Changes[/B][/SIZE]
+
+Upgrading from 0.7.3? You'll need to merge in new files and new [ICODE]settings.yml[/ICODE] sections — or regenerate them by bumping [ICODE]Config_Version[/ICODE].
+
+[B]New files shipped in this version:[/B]
+
+[TABLE]
+[TR][TH]File[/TH][TH]Purpose[/TH][/TR]
+[TR][TD][ICODE]entity_marker.yml[/ICODE][/TD][TD]Civilian NPC types and spawn groups (friendly, hostile, trader).[/TD][/TR]
+[TR][TD][ICODE]cars.yml[/ICODE][/TD][TD]Drivable vehicle catalogue (materials, speed, acceleration, fuel).[/TD][/TR]
+[TR][TD][ICODE]money.yml[/ICODE][/TD][TD]Cash pickup variations and per-source drop rules.[/TD][/TR]
+[TR][TD][ICODE]weapon/*.yml[/ICODE][/TD][TD]New melee, incendiary, biological and throwable weapon configurations.[/TD][/TR]
+[/TABLE]
+
+[B]New sections added to [ICODE]settings.yml[/ICODE]:[/B] [ICODE]NPC_Navigation[/ICODE], [ICODE]Civilians[/ICODE], [ICODE]Money_Drop[/ICODE], [ICODE]Gadgets[/ICODE] (with [ICODE]Jetpack[/ICODE] and [ICODE]Car[/ICODE] subsections), and [ICODE]Block_Regeneration[/ICODE]. The [ICODE]Cops[/ICODE] section was also expanded with new tuning keys (spawn phases, cuff cooldown, return-to-station, starting ammo).
+
+[B]Required field added to every weapon file:[/B] [ICODE]Information.Category[/ICODE]. See the weapons section below for the before/after shape.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]✨ Features[/B][/SIZE]
+
+[SIZE=5][B]Civilian NPCs[/B][/SIZE]
+
+Civilians are a new NPC class that share the cop AI base — they wander, flee, trade, or return fire depending on their type. Types and spawn groups live in a new [ICODE]entity_marker.yml[/ICODE] file, and spawning is proximity-driven from registered spawner points.
+
+[LIST]
+[*]Each type picks a Bukkit entity, health, wearables, weapon pool, item pool, drops, and an optional trader inventory.
+[*]Hostile civilians fight back with weapons from their pool; non-hostile ones flee at their configured speed.
+[*]Attacking a non-hostile civilian now [B]increments your wanted level[/B] — the same system cops use.
+[*]Trader civilians open a custom inventory on right-click using the shared [ICODE]InventoryHandler[/ICODE] framework.
+[*]Groups bind spawn locations to a type, with a population cap and activation radius. Civilians spawn when a player walks into range and despawn when everyone leaves.
+[*]Navigation is shared with cops via the new [ICODE]NPC_Navigation[/ICODE] block in [ICODE]settings.yml[/ICODE].
+[*]New commands under [ICODE]/glw civilian …[/ICODE] for manual spawn, despawn, and group control.
+[/LIST]
+
+[B]New file — [ICODE]entity_marker.yml[/ICODE] shape:[/B]
+
+[CODE=yaml]
+Types:
+   friendly_villager:
+      Entity_Type: VILLAGER
+      Health: 20
+      Hostile: false
+      Wearables:
+         head: ""
+         chest: ""
+         legs: ""
+         feet: ""
+      Item_Pool:
+         - material:BREAD
+      Drops:
+         Items:
+            - material:EMERALD
+         Experience: 5
+      Inventory: trader_default      # omit for non-trader types
+      AI:
+         Wander_Range: 12
+         Flee_Speed: 1.3
+         Combat:
+            Difficulty: NORMAL        # EASY | NORMAL | HARD | DEADLY
+
+Groups:
+   downtown:
+      Type: friendly_villager
+      Max: 6
+      Proximity: 64
+      Spawns:
+         - world,120.5,64,-40.5
+[/CODE]
+
+[B]Add to [ICODE]settings.yml[/ICODE]:[/B]
+
+[CODE=yaml]
+Civilians:
+   Behaviour:
+      Enabled: true
+      AI_Tick_Rate: 20
+   Spawner_Proximity:
+      Activation_Radius: 60.0
+      Despawn_Radius: 80.0
+      Max_Npcs_Per_Spawner: 5
+      Check_Interval: 100
+      Default_Type_Id: ""
+[/CODE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]Smarter Cops[/B][/SIZE]
+
+Cops now run on the shared NPC base with civilians, so every navigation fix lands on them too. This cycle also brought dedicated cop polish.
+
+[LIST]
+[*]Targeting falls back to the most recent attacker when no wanted target is in line of sight, so cops stop standing still while you plink them from cover.
+[*]Despawn now uses 3D distance — climbing a tower no longer makes cops evaporate.
+[*]Reload handling during NPC combat is smoother; downed players are also blocked from reloading.
+[*]Jail creation uses a 5-block radius check instead of exact-coordinate matching, so you no longer accidentally stack two jails in the same cell.
+[*][ICODE]CopDeathEvent[/ICODE] fires on every cop death and is available to other listeners.
+[*][ICODE]Cops[/ICODE] section in [ICODE]settings.yml[/ICODE] gained phased spawn controls, cuff cooldown, return-to-station distance, and starting magazine count.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]Weapon System — Four New Categories[/B][/SIZE]
+
+0.7.3 shipped one weapon category. 0.7.4 adds [B]melee, incendiary, biological, and throwable[/B] — each with its own parser, action class, and YAML schema. Every weapon file now declares a [ICODE]Category:[/ICODE] field that picks the action class, and the schema under [ICODE]Shoot:[/ICODE] / [ICODE]Attack:[/ICODE] / [ICODE]Throw:[/ICODE] varies by type.
+
+[LIST]
+[*][B]Melee[/B] ([ICODE]knife[/ICODE], [ICODE]machete[/ICODE], [ICODE]crowbar[/ICODE]) — sweep-range attacks with [ICODE]Attack:[/ICODE] block: damage, range, cooldown, knockback, per-hit cooldowns, and melee-specific damage handling on non-living entities.
+[*][B]Incendiary[/B] ([ICODE]flamethrower[/ICODE]) — cone-shaped fire spray with [ICODE]Cone_Angle[/ICODE], [ICODE]Fire_Duration[/ICODE], and per-tick fuel [ICODE]Consume_Rate[/ICODE]. Ignites entities in the cone and applies block fire where configured.
+[*][B]Biological[/B] ([ICODE]syringe_gun[/ICODE]) — hold-to-charge / release-to-fire single shots on a new [ICODE]pathogen_vial[/ICODE] ammo type. Applies potion effects on impact.
+[*][B]Throwable[/B] ([ICODE]grenade[/ICODE], [ICODE]molotov[/ICODE], [ICODE]flashbang[/ICODE], [ICODE]smoke_grenade[/ICODE], [ICODE]tomahawk[/ICODE]) — thrown items with physics, bounce, fuse timer, and blast radius. Identical throwables stack via shared UUIDs so sign-bought grenades merge with looted ones.
+[*]Push-on-hit is now supported by [B]every[/B] weapon type, not just guns.
+[*]A unified raytracer runs the same hit-detection loop across all five categories. Ricochet, block-break, and tracers now work uniformly regardless of weapon type.
+[*][ICODE]WeaponEntityDamageEvent[/ICODE] fires for non-projectile hits on non-living entities (cars, armor stands, blocks) — handy for feature modules that want to react to melee or grenade damage without intercepting the projectile lifecycle.
+[/LIST]
+
+[B]Required schema change — every weapon file now needs [ICODE]Category:[/ICODE]:[/B]
+
+[CODE=yaml]
+# BEFORE (0.7.3 — category was implicit: always gun)
+Information:
+   Name: "&7Pistol"
+   Material: IRON_HORSE_ARMOR
+
+# AFTER (0.7.4 — required field)
+Information:
+   Name: "&7Pistol"
+   Material: IRON_HORSE_ARMOR
+   Category: gun        # gun | melee | incendiary | biological | throwable
+[/CODE]
+
+[B]Melee example — [ICODE]knife.yml[/ICODE]:[/B]
+
+[CODE=yaml]
+Information:
+   Name: "&7Combat Knife"
+   Category: melee
+   Material: IRON_SWORD
+Attack:
+   Damage: 6.0
+   Range: 2.5
+   Cooldown: 8
+   Knockback: 0.4
+   Selective_Fire: single
+[/CODE]
+
+[B]Incendiary example — [ICODE]flamethrower.yml[/ICODE]:[/B]
+
+[CODE=yaml]
+Information:
+   Name: "&6Flamethrower"
+   Category: incendiary
+   Material: BLAZE_ROD
+Shoot:
+   Selective_Fire: auto
+   Rate: 2
+   Range: 5.0
+   Cone_Angle: 30.0
+   Fire_Duration: 60
+   Consume_Rate: 4
+Ammunition:
+   Ammo_Type: fuel_canister
+   Capacity: 200
+[/CODE]
+
+[B]Throwable example — [ICODE]grenade.yml[/ICODE]:[/B]
+
+[CODE=yaml]
+Information:
+   Name: "&cFrag Grenade"
+   Category: throwable
+   Material: LIME_DYE
+Throw:
+   Type: EXPLOSIVE
+   Fuse_Time: 60
+   Explosion_Radius: 4.0
+   Explosion_Damage: 10
+   Bounces: true
+   Max_Bounces: 5
+   Sticky: false
+   Entity_Type: SNOWBALL
+[/CODE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]Bullet Physics & Projectiles[/B][/SIZE]
+
+Bullets drop now. A new gravity system pulls shots down over distance, so zeroed-in rifles actually need range compensation.
+
+[LIST]
+[*]Projectile gravity is applied per-tick in the unified raytracer.
+[*]Block ricochet bounces along the block normal instead of dying on contact, enabling skip-shots off walls and floors.
+[*]Throwable particle trails were redone and stop cleanly on detonation — no more leftover smoke puffs after the blast.
+[*]Stacking throwable UUIDs were unified, so grenades bought from signs merge with ones you loot.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]Gadgets — Cars[/B][/SIZE]
+
+Cars move out of prototype territory into a proper [ICODE]gangland-gadget[/ICODE] module. Every parked car is now saved to the database, so your curb-side ride survives a restart.
+
+[LIST]
+[*]New [ICODE]cars.yml[/ICODE] catalogs every vehicle with its item, custom model data, lore, and per-vehicle vehicle-physics block (max speed, acceleration, max fuel, exhaust side).
+[*]Parked-car persistence — position, fuel level, and exhaust side go into a dedicated SQL table and reload on boot.
+[*]The minecart carrier got a wobble animation so idle cars no longer look like frozen blocks.
+[*]Shift + right-click is now ignored on car interactions so the car pickup hotkey stops colliding with boarding.
+[*]Car items are no longer droppable — you can't accidentally toss your vehicle.
+[*]New commands: [ICODE]refuel[/ICODE] and [ICODE]defuel[/ICODE].
+[/LIST]
+
+[B]New file — [ICODE]cars.yml[/ICODE] shape:[/B]
+
+[CODE=yaml]
+sports_car:
+   Material: MINECART
+   Display_Name: "&bSports Car"
+   Custom_Model_Data: 4001
+   Lore:
+      - "&7Fast. Fragile. Red."
+   Vehicle:
+      Max_Speed: 0.95
+      Acceleration: 0.05
+      Max_Fuel: 200
+[/CODE]
+
+[B]Add to [ICODE]settings.yml[/ICODE]:[/B]
+
+[CODE=yaml]
+Gadgets:
+   Car:
+      Reverse_Speed_Ratio: 0.5
+      Hard_Brake_Multiplier: 3.0
+      Fuel_Consume_Per_Tick: 1
+[/CODE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]Gadgets — Jetpack[/B][/SIZE]
+
+The jetpack is new in 0.7.4. It's a gadget that burns fuel per-tick while gliding and triggers a reload session when empty, so you can't tap-spam it like a free jump.
+
+[LIST]
+[*]Activates via off-hand equip, with thrust that ramps from 10% to 100% over a configurable tick window.
+[*]Gliding consumes fuel per-tick (not per activation), so short hops cost almost nothing and long flights drain smoothly.
+[*]Thrust defaults were retuned; the "bouncing at apex" oscillation bug is gone.
+[*]Particle exhaust and sound effects were overhauled.
+[*]Refueling runs through the shared fuel component — same UX as cars.
+[*]Reload sessions — an empty jetpack prompts a timed refuel cycle instead of silently cutting out mid-air.
+[/LIST]
+
+[B]Add to [ICODE]settings.yml[/ICODE]:[/B]
+
+[CODE=yaml]
+Gadgets:
+   Jetpack:
+      Thrust_Ramp_Ticks: 20
+      Descent_Accel: 0.022
+      Max_Descent_Speed: -0.5
+      Horiz_Influence: 0.03
+      Max_Horiz_Speed: 0.25
+[/CODE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]Shared Fuel Component[/B][/SIZE]
+
+Cars and the jetpack both used to carry their own fuel code. They now share a single [ICODE]FuelContract[/ICODE] component, so fuel levels persist uniformly and a third fuel-burning gadget becomes a drop-in. Jetpack and car refuel flows use the same underlying item and sound handling.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]Money System[/B][/SIZE]
+
+Cash is now a proper pickup item with a dedicated [ICODE]money.yml[/ICODE] registry. Kills, drops, and manual placements all route through one set of rules that server owners can tune per-source.
+
+[LIST]
+[*]Variations — small, medium, large stacks can use different materials and display names.
+[*]Per-source rules — [ICODE]Player_Kill[/ICODE], [ICODE]Civilian_Kill[/ICODE], [ICODE]Cop_Kill[/ICODE], etc. each pick a variation, amount range, and drop chance.
+[*]Custom pickup sound per variation, with name validation — invalid sound names fall back to a safe default instead of throwing.
+[*]Master switch: [ICODE]Money_Drop.Enabled[/ICODE] in [ICODE]settings.yml[/ICODE] disables the entire system without editing [ICODE]money.yml[/ICODE].
+[*]New commands: money give / set / reset, grouped under the new command category packages.
+[/LIST]
+
+[B]Add to [ICODE]settings.yml[/ICODE]:[/B]
+
+[CODE=yaml]
+Money_Drop:
+   Enabled: true
+[/CODE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]Wanted & Command Expansion[/B][/SIZE]
+
+[LIST]
+[*][ICODE]/glw wanted clear <player>[/ICODE] — reset a player's wanted level without killing them.
+[*]Sub-commands were grouped into category packages ([ICODE]money[/ICODE], [ICODE]wanted[/ICODE], [ICODE]jail[/ICODE], [ICODE]civilian[/ICODE]), so [ICODE]commands.json[/ICODE] stays tidy and new entries slot in cleanly.
+[*]Info commands were fixed — they were previously hiding half their output.
+[*]Optional tab completions were added across several commands.
+[*]Waypoint commands now include hover + click events on their message output, so you can jump to a waypoint from chat.
+[*]Jail commands expanded with tab values and proximity-based duplicate prevention on [ICODE]jail create[/ICODE].
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]NPC Navigation — Shared Tuning[/B][/SIZE]
+
+Cops and civilians now pathfind with identical tuning. A single [ICODE]NPC_Navigation[/ICODE] block in [ICODE]settings.yml[/ICODE] controls tick-rate, path recalculation, stuck detection, and ranged stand-off distances — so a tune for one NPC is a tune for all of them.
+
+[B]Add to [ICODE]settings.yml[/ICODE]:[/B]
+
+[CODE=yaml]
+NPC_Navigation:
+   Recalculation_Ticks: 10
+   Stuck_Check_Interval: 5
+   Max_Stuck_Checks: 3
+   Max_Hopeless_Stuck_Checks: 6
+   Hopeless_Close_Threshold: 8.0
+   Min_Progress_Distance: 0.75
+   Ranged_Min_Distance: 7.0
+   Ranged_Max_Distance: 12.0
+   Min_Repath_After_Loss_Ticks: 2
+[/CODE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]File Safety — Reload & Regeneration[/B][/SIZE]
+
+Startup and [ICODE]/glw reload[/ICODE] are much harder to break now. Missing keys get rewritten in place, and a missing file is recreated from the jar with a retry on the init step instead of silently failing.
+
+[LIST]
+[*]Init-time checkup scans each file for required keys and fills in missing ones before the loader runs.
+[*]Reload regeneration — if you accidentally delete a section, [ICODE]/glw reload[/ICODE] rewrites it.
+[*]Expected-folder check prevents duplicate folder creation on first boot.
+[*]Settings load order was fixed so database and file beans always see a valid [ICODE]Settings[/ICODE] before spinning up.
+[*]Block regeneration tuning got its own [ICODE]Block_Regeneration[/ICODE] block for weapon-broken block restore/crack-reverse timings.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]Block Regeneration[/B][/SIZE]
+
+The weapon [ICODE]Break_Blocks[/ICODE] modifier now restores or uncracks blocks over time. Per-weapon mode is set on the weapon itself ([ICODE]RESTORE[/ICODE], [ICODE]CRACK_ONLY[/ICODE], [ICODE]DESTROY[/ICODE]); the timing lives in [ICODE]settings.yml[/ICODE].
+
+[B]Add to [ICODE]settings.yml[/ICODE]:[/B]
+
+[CODE=yaml]
+Block_Regeneration:
+   Restore_Delay_Ticks: 100
+   Regeneration_Delay_Ticks: 100
+   Regeneration_Step_Ticks: 4
+[/CODE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=5][B]Internal — Beans System Overhaul[/B][/SIZE]
+
+The old [ICODE]Initializer[/ICODE] + manual dependency wiring is gone. Every manager, service, and listener is now a [ICODE]@Bean[/ICODE] in a phased graph and implements [ICODE]BeanLifecycle[/ICODE] for reload and shutdown hooks.
+
+[LIST]
+[*]Phase ordering — [B]KERNEL → FILE → DATABASE → CONFIG → LIFECYCLE → LISTENER → COMMAND[/B] — each phase topologically sorts [ICODE]@Bean[/ICODE] methods by their parameter dependencies.
+[*]Constructor-injected listeners and commands via [ICODE]@ListenerHandler[/ICODE] and [ICODE]@CommandHandler[/ICODE]. No more manual [ICODE]register()[/ICODE] calls.
+[*]Statics decoupled — [ICODE]PlaceholderService[/ICODE], [ICODE]CarService[/ICODE], and several others no longer reach into static state; static setters were replaced with beans.
+[*]Database operations send in batches to reduce individual query count.
+[*]Full developer documentation pass: architecture, module map, DI, commands, weapons, cops-n-crooks, civilians, gadgets, UI framework, persistence, configuration, version compatibility.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]🐛 Bug Fixes[/B][/SIZE]
+
+[SIZE=5][B]Weapons & Combat[/B][/SIZE]
+
+[LIST]
+[*][B]Weapon hit target[/B] — hitscan weapons occasionally missed the final entity in a ray because the raytracer stopped short of its bounding box.
+[*][B]Multiple projectiles registering zero hits[/B] — volley weapons like shotgun pellets and minigun bursts were dropping hits when two projectiles overlapped in the same tick.
+[*][B]Incendiary weapon damage[/B] — player death from fire spray was double-counting in edge cases and applying the penalty twice.
+[*][B]Selective fire burst count[/B] — burst mode sometimes fired one shot too many because the tick counter advanced early.
+[*][B]Reload cancel on jump[/B] — vertical movement was interrupting reloads; only horizontal movement should cancel them.
+[*][B]Scope-jump exploit[/B] — players could jump while scoped to keep the stability bonus. Now scope-sprint/jump is blocked.
+[*][B]Durability over max[/B] — repair kits could push a weapon's durability above its configured maximum.
+[*][B]First-tick shot delay[/B] — shots fired on the exact frame you equipped a weapon were being swallowed by a tick-skip guard.
+[*][B]No-durability items treated as broken[/B] — weapons configured without a durability component were being flagged as destroyed.
+[*][B]Grenade UUID stacking[/B] — throwables bought from signs now merge with looted stacks instead of sitting in separate slots.
+[*][B]Duplicate player death events[/B] — firing on a target that died the same tick was running the death handler twice.
+[*][B]Weapon data persistence[/B] — reload ammo, selective-fire mode, and durability weren't being saved on shutdown, so they reset on restart.
+[/LIST]
+
+[SIZE=5][B]NPCs[/B][/SIZE]
+
+[LIST]
+[*][B]Cop targeting attacker[/B] — with no wanted target in range, cops idled instead of turning on whoever shot them.
+[*][B]Cop despawn in 3D[/B] — the distance check was 2D only, so cops vanished when you climbed a tower or dug a pit.
+[*][B]NPC pushback through walls[/B] — shove force was applying even when a solid block sat between the NPC and the target.
+[*][B]Civilian navigation[/B] — flee paths sometimes picked points behind the threat, making civilians run toward the danger.
+[*][B]NPC portal events[/B] — attempt to block NPCs from teleporting through portals on world-hop. (See the Ambiguous list for caveat.)
+[*][B]Wanted level decrement[/B] — [ICODE]WantedExecutor[/ICODE] wasn't reducing the level on its timer.
+[*][B]Jail spawn proximity[/B] — jail creation required exact coordinates, letting you stack multiple jails in the same block.
+[*][B]Detainment jail ID handling[/B] — cuffed players rejoining were resolved against the wrong jail key.
+[*][B]Jail throw command[/B] — [ICODE]/glw jail throw[/ICODE] was throwing the sender rather than the target argument.
+[*][B]Session completion callout[/B] — arrest/release session end wasn't firing its completion message.
+[/LIST]
+
+[SIZE=5][B]Gadgets[/B][/SIZE]
+
+[LIST]
+[*][B]Car load on startup[/B] — parked cars weren't rehydrating from the database on boot.
+[*][B]Car respawn on restart[/B] — session cleanup ran [I]after[/I] save, so the last position was lost between restarts.
+[*][B]Jetpack upward thrust[/B] — thrust applied twice in the first activation tick, producing a jolt.
+[*][B]Jetpack gliding oscillation[/B] — altitude bounced because fuel drain toggled state mid-frame.
+[*][B]Jetpack activation[/B] — refused to fire when fuel was exactly 0 instead of gracefully falling through.
+[*][B]Jetpack edge cases[/B] — assorted null / equip-slot races patched.
+[*][B]Max fuel display on refuel[/B] — action bar showed the old cap after swapping to a bigger tank.
+[/LIST]
+
+[SIZE=5][B]Items & UI[/B][/SIZE]
+
+[LIST]
+[*][B]Money item interaction[/B] — right-clicking cash in an inventory slot was eating the stack without crediting the player.
+[*][B]Pickup sound handling[/B] — custom sounds from [ICODE]money.yml[/ICODE] were throwing on slightly malformed names; they now validate and fall back.
+[*][B]Multi-inventory navigation[/B] — next/previous page buttons on paginated inventories were skipping a page.
+[*][B]Full-inventory item picker[/B] — a new task routes picked-up items to the correct slots when the inventory is full.
+[*][B]FullAutoTask class reference[/B] — a leftover reference from a rename NPE'd on the first auto-fire after [ICODE]/glw reload[/ICODE].
+[*][B]Async PlayerItemInitEvent[/B] — listeners were running off-thread while touching the Bukkit API; now dispatched on the main thread.
+[/LIST]
+
+[SIZE=5][B]System & Reliability[/B][/SIZE]
+
+[LIST]
+[*][B]File reload skipping files[/B] — some files weren't registered with the reload pipeline and silently ignored [ICODE]/glw reload[/ICODE].
+[*][B]WeaponLoader / InventoryLoader caches[/B] — neither was refreshing on [ICODE]/glw reload[/ICODE]; they do now.
+[*][B]Max health set[/B] — [ICODE]setMaxHealth[/ICODE] used the attribute's current value instead of its base, so modifiers stacked incorrectly.
+[*][B]Multiple entity drops[/B] — a single death fired the drop listener twice in some death paths.
+[*][B]Settings load order[/B] — file beans were reading [ICODE]Settings[/ICODE] before the parse had finished; bootstrap order now guarantees it.
+[*][B]Plugin download via commands[/B] — in-game update download command was failing to resolve the remote URL.
+[*][B]Batch DB queries[/B] — repositories now send reads in batches to cut individual query count sharply.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]⚠️ Possibly Fixes / Ambiguous Changes[/B][/SIZE]
+
+Commits whose message didn't clearly label them as either a feature or a fix. Flagged here so server owners can watch for behavior changes.
+
+[LIST]
+[*][B]"Removed some unnecessary settings"[/B] — unnamed [ICODE]settings.yml[/ICODE] keys were deleted. If you upgrade by merging your old [ICODE]settings.yml[/ICODE] in, diff it against the new default first so you don't carry dead keys forward.
+[*][B]"Fixed visibility"[/B] — commit message doesn't specify what kind of visibility. Could be a Java access modifier, an inventory visibility flag, or an NPC/hologram being hidden from the wrong players.
+[*][B]"Tried to deny NPC portal events"[/B] — the word [I]tried[/I] suggests this didn't fully land. NPCs may still teleport between worlds via portals in some conditions.
+[*][B]"Broke the cyclic approach by removing self-referential lambda capture"[/B] — latent fix. No user-facing symptom was recorded, but a self-referential lambda capture usually means a memory leak or infinite-recursion risk on reload.
+[*][B]"Decoupled the placeholder service"[/B] — may silently fix cases where a plugin reload left ghost placeholders registered.
+[*][B]"Added block regeneration"[/B] — block-break-and-heal behavior shipped mid-cycle and its mode is set per-weapon; if your existing weapon YAMLs don't specify a [ICODE]Break_Blocks[/ICODE] mode, double-check the default matches what you want.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Requirements[/B][/SIZE]
+
+No new hard dependencies compared to v0.7.3-DEV.
+
+[TABLE]
+[TR][TH]Requirement[/TH][TH]Details[/TH][/TR]
+[TR][TD]Minecraft version[/TD][TD]1.20+ (1.21.x recommended)[/TD][/TR]
+[TR][TD]Java[/TD][TD]Java 21 or newer[/TD][/TR]
+[TR][TD]Required plugins[/TD][TD]NBTAPI, Citizens[/TD][/TR]
+[TR][TD]Optional plugins[/TD][TD]PlaceholderAPI, Vault, ViaVersion[/TD][/TR]
+[TR][TD]Server platform[/TD][TD][B]Spigot[/B] (not Paper — Paper-only APIs aren't used)[/TD][/TR]
+[/TABLE]
