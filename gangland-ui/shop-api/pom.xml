@@ -6,14 +6,14 @@
 
     <parent>
         <groupId>me.luckyraven</groupId>
-        <artifactId>gangland-features</artifactId>
+        <artifactId>gangland-ui</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>cops-n-crooks</artifactId>
+    <artifactId>shop-api</artifactId>
 
-    <name>Cops N Crooks</name>
+    <name>Shop API</name>
 
     <dependencies>
         <!-- Spigot Build -->
@@ -24,49 +24,40 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Local dependencies -->
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-item</artifactId>
+            <artifactId>gangland-core</artifactId>
             <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>version-impl</artifactId>
-            <version>${project.parent.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>plugin-persistence</artifactId>
             <version>${project.parent.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-weapon</artifactId>
-            <version>${project.parent.version}</version>
+            <artifactId>plugin-common</artifactId>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>inventory-api</artifactId>
             <version>${project.parent.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>shop-api</artifactId>
+            <artifactId>gangland-item</artifactId>
             <version>${project.parent.version}</version>
-        </dependency>
-
-        <!-- Citizens dependency -->
-        <dependency>
-            <groupId>net.citizensnpcs</groupId>
-            <artifactId>citizens-main</artifactId>
             <scope>provided</scope>
         </dependency>
 
-        <!-- XSeries dependency -->
         <dependency>
             <groupId>com.github.cryptomorin</groupId>
             <artifactId>XSeries</artifactId>
+            <version>${xseries.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

@@ -1,0 +1,363 @@
+package me.luckyraven.shop.view;
+
+import com.cryptomorin.xseries.XMaterial;
+import lombok.RequiredArgsConstructor;
+import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.shop.config.ShopUiSettings;
+import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.configuration.SoundConfiguration;
+import me.luckyraven.util.utilities.ChatUtil;
+import net.wesjd.anvilgui.AnvilGUI;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
+
+@RequiredArgsConstructor
+public final class PriceEditorView {
+
+	private static final int   SLOT_INFO        = 4;
+	private static final int   SLOT_ITEM        = 22;
+	private static final int   SLOT_PRICE_ANVIL = 31;
+	private static final int   SLOT_MODE_DOWN   = 38;
+	private static final int   SLOT_MODE_ANVIL  = 40;
+	private static final int   SLOT_MODE_UP     = 42;
+	private static final int   SLOT_SAVE        = 48;
+	private static final int   SLOT_CANCEL      = 50;
+	private static final int[] GREEN_SLOTS      = {18, 19, 20, 21};
+	private static final int[] RED_SLOTS        = {23, 24, 25, 26};
+	private static final int   MAX_MODE_CYCLE   = 10;
+	private static final int   INVENTORY_SIZE   = 54;
+
+	private static final SoundConfiguration SOUND_ADD         = vanilla("UI_BUTTON_CLICK", 1.5f);
+	private static final SoundConfiguration SOUND_SUB         = vanilla("UI_BUTTON_CLICK", 0.8f);
+	private static final SoundConfiguration SOUND_MODE_UP     = vanilla("BLOCK_NOTE_BLOCK_HAT", 1.5f);
+	private static final SoundConfiguration SOUND_MODE_DOWN   = vanilla("BLOCK_NOTE_BLOCK_HAT", 0.8f);
+	private static final SoundConfiguration SOUND_ANVIL_PRICE = vanilla("BLOCK_ANVIL_USE", 1.2f);
+	private static final SoundConfiguration SOUND_ANVIL_MODE  = vanilla("BLOCK_ANVIL_USE", 1.0f);
+	private static final SoundConfiguration SOUND_SAVE        = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
+	private static final SoundConfiguration SOUND_CANCEL      = vanilla("ENTITY_VILLAGER_NO", 1.0f);
+	private final JavaPlugin     plugin;
+	private final ShopUiSettings settings;
+	private final Map<Player, PriceEditorSession> active = new WeakHashMap<>();
+
+	private static SoundConfiguration vanilla(String name, float pitch) {
+		return new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, name, 0.6f, pitch);
+	}
+
+	public void open(Player admin, ShopAdminView.Session parentSession, int editedSlot,
+	                 ItemStack item, double originalPrice, Runnable reopenCallback) {
+		PriceEditorSession session = new PriceEditorSession(parentSession, editedSlot,
+		                                                    item.clone(), originalPrice, reopenCallback);
+		session.handler = new InventoryHandler(plugin,
+		                                       "&8Price Editor — Slot " + editedSlot,
+		                                       INVENTORY_SIZE, admin);
+
+		fillGlass(session);
+		renderAll(session);
+
+		active.put(admin, session);
+		Bukkit.getPluginManager().registerEvents(new SessionListener(admin, session), plugin);
+		session.handler.open(admin);
+	}
+
+	public void reopenAfterAnvil(Player admin) {
+		PriceEditorSession session = active.get(admin);
+		if (session == null) return;
+
+		session.expectingSubview = false;
+		renderAll(session);
+		session.handler.open(admin);
+	}
+
+	// ── Rendering ────────────────────────────────────────────────────────
+
+	private void fillGlass(PriceEditorSession session) {
+		ItemStack pane = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
+		if (pane == null) pane = new ItemStack(Material.STONE);
+		ItemBuilder filler = new ItemBuilder(pane).setDisplayName(" ");
+
+		for (int slot = 0; slot < INVENTORY_SIZE; slot++) {
+			session.handler.setItem(slot, filler, false, (p, inv, b) -> { });
+		}
+	}
+
+	private void renderAll(PriceEditorSession session) {
+		renderInfo(session);
+		renderItemPreview(session);
+		renderAdjustmentButtons(session);
+		renderCustomPriceButton(session);
+		renderModeRow(session);
+		renderSaveCancel(session);
+	}
+
+	private void renderInfo(PriceEditorSession session) {
+		ItemBuilder info = new ItemBuilder(material(XMaterial.PAPER, Material.PAPER))
+				.setDisplayName("&eSetting price for slot &f" + session.editedSlot)
+				.setLore(
+						"&7Original price: &6$" + format(session.originalPrice),
+						"&7Staged price: &6$" + format(session.stagedPrice),
+						" ",
+						"&8Use the green/red buttons to adjust,",
+						"&8or click the yellow block for a custom value.");
+		session.handler.setItem(SLOT_INFO, info, false, (p, inv, b) -> { });
+	}
+
+	private void renderItemPreview(PriceEditorSession session) {
+		ItemBuilder preview = new ItemBuilder(session.item.clone()).setLore(
+				"&7Staged price: &6$" + format(session.stagedPrice),
+				"&7Current multiplier: &b" + session.mode);
+		session.handler.setItem(SLOT_ITEM, preview, false, (p, inv, b) -> { });
+	}
+
+	private void renderAdjustmentButtons(PriceEditorSession session) {
+		for (int i = 0; i < GREEN_SLOTS.length; i++) {
+			int step = (i + 1) * session.mode;
+
+			ItemBuilder green = new ItemBuilder(material(XMaterial.LIME_CONCRETE, Material.GREEN_WOOL))
+					.setDisplayName("&a+ $" + format(step))
+					.setLore("&7Adds &a" + (i + 1) + " &7× &b" + session.mode);
+			final int delta = step;
+			session.handler.setItem(GREEN_SLOTS[i], green, false, (p, inv, b) -> {
+				SOUND_ADD.playSound(p);
+				adjustPrice(session, +delta);
+			});
+
+			ItemBuilder red = new ItemBuilder(material(XMaterial.RED_CONCRETE, Material.RED_WOOL))
+					.setDisplayName("&c- $" + format(step))
+					.setLore("&7Subtracts &c" + (i + 1) + " &7× &b" + session.mode);
+			session.handler.setItem(RED_SLOTS[i], red, false, (p, inv, b) -> {
+				SOUND_SUB.playSound(p);
+				adjustPrice(session, -delta);
+			});
+		}
+	}
+
+	private void renderCustomPriceButton(PriceEditorSession session) {
+		ItemBuilder button = new ItemBuilder(material(XMaterial.YELLOW_CONCRETE, Material.GOLD_BLOCK))
+				.setDisplayName("&eCustom price: &6$" + format(session.stagedPrice))
+				.setLore("&7Click to type an exact price.");
+		session.handler.setItem(SLOT_PRICE_ANVIL, button, false, (p, inv, b) -> {
+			SOUND_ANVIL_PRICE.playSound(p);
+			openPriceAnvil(p, session);
+		});
+	}
+
+	private void renderModeRow(PriceEditorSession session) {
+		ItemBuilder down = new ItemBuilder(material(XMaterial.BLUE_CONCRETE, Material.LAPIS_BLOCK))
+				.setDisplayName("&9◄ Previous multiplier")
+				.setLore("&7Wraps through 1 to " + MAX_MODE_CYCLE + ".");
+		session.handler.setItem(SLOT_MODE_DOWN, down, false, (p, inv, b) -> {
+			SOUND_MODE_DOWN.playSound(p);
+			cycleMode(session, false);
+		});
+
+		ItemBuilder middle = new ItemBuilder(material(XMaterial.MAGENTA_CONCRETE, Material.PURPUR_BLOCK))
+				.setDisplayName("&dCurrent multiplier: &b" + session.mode)
+				.setLore("&7Click to type a custom multiplier.",
+				         "&8Max: " + format(settings.getMaxModeMultiplier()));
+		session.handler.setItem(SLOT_MODE_ANVIL, middle, false, (p, inv, b) -> {
+			SOUND_ANVIL_MODE.playSound(p);
+			openModeAnvil(p, session);
+		});
+
+		ItemBuilder up = new ItemBuilder(material(XMaterial.BLUE_CONCRETE, Material.LAPIS_BLOCK))
+				.setDisplayName("&9Next multiplier ►")
+				.setLore("&7Wraps through 1 to " + MAX_MODE_CYCLE + ".");
+		session.handler.setItem(SLOT_MODE_UP, up, false, (p, inv, b) -> {
+			SOUND_MODE_UP.playSound(p);
+			cycleMode(session, true);
+		});
+	}
+
+	private void renderSaveCancel(PriceEditorSession session) {
+		ItemBuilder save = new ItemBuilder(material(XMaterial.LIME_WOOL, Material.GREEN_WOOL))
+				.setDisplayName("&aSAVE price")
+				.setLore("&7Write &6$" + format(session.stagedPrice) + " &7to the shop.");
+		session.handler.setItem(SLOT_SAVE, save, false, (p, inv, b) -> {
+			SOUND_SAVE.playSound(p);
+			save(p, session);
+		});
+
+		ItemBuilder cancel = new ItemBuilder(material(XMaterial.RED_WOOL, Material.RED_WOOL))
+				.setDisplayName("&cCANCEL")
+				.setLore("&7Discard changes and return.");
+		session.handler.setItem(SLOT_CANCEL, cancel, false, (p, inv, b) -> {
+			SOUND_CANCEL.playSound(p);
+			cancel(p);
+		});
+	}
+
+	// ── Actions ──────────────────────────────────────────────────────────
+
+	private void adjustPrice(PriceEditorSession session, double delta) {
+		session.stagedPrice = Math.max(0D, session.stagedPrice + delta);
+		renderInfo(session);
+		renderItemPreview(session);
+		renderCustomPriceButton(session);
+		renderSaveCancel(session);
+	}
+
+	private void cycleMode(PriceEditorSession session, boolean forward) {
+		int current = session.mode;
+		int capped  = Math.min(current, MAX_MODE_CYCLE);
+		int next;
+		if (forward) next = (capped % MAX_MODE_CYCLE) + 1;
+		else next = ((capped - 2 + MAX_MODE_CYCLE) % MAX_MODE_CYCLE) + 1;
+		session.mode = next;
+
+		renderAdjustmentButtons(session);
+		renderModeRow(session);
+		renderItemPreview(session);
+	}
+
+	private void save(Player admin, PriceEditorSession session) {
+		session.parentSession.updatePrice(session.editedSlot, session.stagedPrice);
+		session.committed = true;
+		admin.closeInventory();
+	}
+
+	private void cancel(Player admin) {
+		admin.closeInventory();
+	}
+
+	private void openPriceAnvil(Player admin, PriceEditorSession session) {
+		session.expectingSubview = true;
+
+		new AnvilGUI.Builder()
+				.plugin(plugin)
+				.title("Set Price")
+				.itemLeft(material(XMaterial.PAPER, Material.PAPER))
+				.text(String.valueOf(format(session.stagedPrice)))
+				.onClick((slot, state) -> {
+					if (slot != AnvilGUI.Slot.OUTPUT) return Collections.emptyList();
+
+					String raw = state.getText() == null ? "" : state.getText().trim();
+					try {
+						double value = Double.parseDouble(raw);
+						if (value < 0) {
+							admin.sendMessage(ChatUtil.color("&cPrice cannot be negative."));
+							return Collections.emptyList();
+						}
+						session.stagedPrice = value;
+						return List.of(AnvilGUI.ResponseAction.close());
+					} catch (NumberFormatException e) {
+						admin.sendMessage(ChatUtil.color("&cInvalid number: " + raw));
+						return Collections.emptyList();
+					}
+				})
+				.onClose(state -> Bukkit.getScheduler().runTask(plugin, () -> reopenAfterAnvil(admin)))
+				.open(admin);
+	}
+
+	private void openModeAnvil(Player admin, PriceEditorSession session) {
+		session.expectingSubview = true;
+
+		int cap = Math.max(1, settings.getMaxModeMultiplier());
+
+		new AnvilGUI.Builder()
+				.plugin(plugin)
+				.title("Set Multiplier")
+				.itemLeft(material(XMaterial.PAPER, Material.PAPER))
+				.text(String.valueOf(session.mode))
+				.onClick((slot, state) -> {
+					if (slot != AnvilGUI.Slot.OUTPUT) return Collections.emptyList();
+
+					String raw = state.getText() == null ? "" : state.getText().trim();
+					try {
+						int value = Integer.parseInt(raw);
+						if (value < 1) {
+							admin.sendMessage(ChatUtil.color("&cMultiplier must be at least 1."));
+							return Collections.emptyList();
+						}
+						session.mode = Math.min(value, cap);
+						if (value > cap) {
+							admin.sendMessage(ChatUtil.color(
+									"&eMultiplier capped at &f" + cap + " &e(settings Max_Mode_Multiplier)."));
+						}
+						return List.of(AnvilGUI.ResponseAction.close());
+					} catch (NumberFormatException e) {
+						admin.sendMessage(ChatUtil.color("&cInvalid integer: " + raw));
+						return Collections.emptyList();
+					}
+				})
+				.onClose(state -> Bukkit.getScheduler().runTask(plugin, () -> reopenAfterAnvil(admin)))
+				.open(admin);
+	}
+
+	// ── Helpers ──────────────────────────────────────────────────────────
+
+	private ItemStack material(XMaterial preferred, Material fallback) {
+		ItemStack stack = preferred.parseItem();
+		return stack != null ? stack : new ItemStack(fallback);
+	}
+
+	private String format(double value) {
+		if (value == Math.floor(value) && !Double.isInfinite(value)) return String.valueOf((long) value);
+		return String.format("%.2f", value);
+	}
+
+	// ── Session ──────────────────────────────────────────────────────────
+
+	public static final class PriceEditorSession {
+		final ShopAdminView.Session parentSession;
+		final int                   editedSlot;
+		final ItemStack             item;
+		final double                originalPrice;
+		final Runnable              reopenCallback;
+
+		InventoryHandler handler;
+		double           stagedPrice;
+		int              mode             = 1;
+		boolean          expectingSubview = false;
+		boolean          committed        = false;
+
+		PriceEditorSession(ShopAdminView.Session parentSession, int editedSlot, ItemStack item,
+		                   double originalPrice, Runnable reopenCallback) {
+			this.parentSession  = parentSession;
+			this.editedSlot     = editedSlot;
+			this.item           = item;
+			this.originalPrice  = originalPrice;
+			this.stagedPrice    = originalPrice;
+			this.reopenCallback = reopenCallback;
+		}
+	}
+
+	// ── Close listener ───────────────────────────────────────────────────
+
+	private final class SessionListener implements Listener {
+		private final Player             admin;
+		private final PriceEditorSession session;
+
+		SessionListener(Player admin, PriceEditorSession session) {
+			this.admin   = admin;
+			this.session = session;
+		}
+
+		@EventHandler
+		public void onClose(InventoryCloseEvent event) {
+			if (event.getPlayer() != admin) return;
+			if (event.getInventory() != session.handler.getInventory()) return;
+
+			if (session.expectingSubview) return;
+
+			active.remove(admin);
+			HandlerList.unregisterAll(this);
+
+			if (session.reopenCallback != null) {
+				Bukkit.getScheduler().runTask(plugin, session.reopenCallback);
+			}
+		}
+	}
+
+}
