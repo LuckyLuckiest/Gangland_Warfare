@@ -306,6 +306,32 @@ public enum Messages {
 	LOOT_CHEST_TIME_HOUR("Loot_Chest.Time_Units.Hour", Type.NO_CHANGE),
 	LOOT_CHEST_TIME_MINUTE("Loot_Chest.Time_Units.Minute", Type.NO_CHANGE),
 	LOOT_CHEST_TIME_SECOND("Loot_Chest.Time_Units.Second", Type.NO_CHANGE),
+
+	// shop framework (reusable across any shop integration)
+	SHOP_PURCHASE_SUCCESS("Commands.Shop.Purchase.Success", Type.COMMAND),
+	SHOP_PURCHASE_INSUFFICIENT_FUNDS("Errors.Shop.Purchase.Insufficient_Funds", Type.ERROR),
+	SHOP_PURCHASE_ECONOMY_ERROR("Errors.Shop.Purchase.Economy_Error", Type.ERROR),
+	SHOP_PURCHASE_INVENTORY_FULL("Errors.Shop.Purchase.Inventory_Full", Type.ERROR),
+	SHOP_BARTER_SUCCESS("Commands.Shop.Barter.Success", Type.COMMAND),
+	SHOP_BARTER_MISSING_ITEMS("Errors.Shop.Barter.Missing_Items", Type.ERROR),
+	SHOP_BARTER_NOT_ALLOWED("Errors.Shop.Barter.Not_Allowed", Type.ERROR),
+	SHOP_NOT_DEFINED("Errors.Shop.Not_Defined", Type.ERROR),
+	SHOP_SAVED("Commands.Shop.Saved", Type.COMMAND),
+	SHOP_ADMIN_ENTRY_ADDED("Commands.Shop.Admin.Entry_Added", Type.COMMAND),
+	SHOP_ADMIN_ENTRY_REMOVED("Commands.Shop.Admin.Entry_Removed", Type.COMMAND),
+
+	// trader (trader NPC feature)
+	TRADER_TIP_SUCCESS("Commands.Trader.Tip.Success", Type.COMMAND),
+	TRADER_TIP_INSUFFICIENT_FUNDS("Errors.Trader.Tip.Insufficient_Funds", Type.ERROR),
+	TRADER_TRAIT_INVALID("Errors.Trader.Trait.Invalid", Type.ERROR),
+	TRADER_SHOP_MISSING("Errors.Trader.Shop.Missing", Type.ERROR),
+	TRADER_TRAIT_MISSING("Errors.Trader.Trait.Missing", Type.ERROR),
+	TRADER_BARGAIN_ACCEPTED("Commands.Trader.Bargain.Accepted", Type.COMMAND),
+	TRADER_BARGAIN_COUNTER_OFFER("Commands.Trader.Bargain.Counter_Offer", Type.COMMAND),
+	TRADER_BARGAIN_REJECTED("Errors.Trader.Bargain.Rejected", Type.ERROR),
+	TRADER_BARGAIN_HARD_REJECTED("Errors.Trader.Bargain.Hard_Rejected", Type.ERROR),
+	TRADER_BARGAIN_ALREADY_BELOW("Errors.Trader.Bargain.Already_Below", Type.ERROR),
+	TRADER_ANGERED("Information.Trader.Anger.Angered", Type.INFORMATION),
 	;
 
 	private static MessageProvider provider;

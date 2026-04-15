@@ -239,6 +239,21 @@ Commands:
       Teleportation:
          Sent: "You have been sent to &b%location%&7."
          Timer: "Teleporting in &b%timer%&7."
+   Shop:
+      Purchase:
+         Success: "&aPurchased &f%item% &afor &6%money_symbol%%price%&a."
+      Barter:
+         Success: "&bBartered for &f%item%&b."
+      Saved: "&aShop &f'%shop%' &asaved."
+      Admin:
+         Entry_Added: "&aAdded &f%material% &aas entry &f#%index% &aon page &f%page%&a."
+         Entry_Removed: "&eRemoved entry at index &f%index%&e."
+   Trader:
+      Tip:
+         Success: "&6Tipped &e%money_symbol%%amount%&6 — trader's mood improves."
+      Bargain:
+         Accepted: "&a✔ Deal! New price: &6%money_symbol%%price%&a."
+         Counter_Offer: "&eCounter-offer: &6%money_symbol%%price%&e."
 
 Errors:
    Prefix: "&4Error&7: "
@@ -292,6 +307,27 @@ Errors:
          Not_Found: "This location &c%location%&7 is not found!"
       World:
          Not_Found: "This world &8(&c%world%&8) is not found!"
+   Shop:
+      Purchase:
+         Insufficient_Funds: "&cNot enough funds — you need &6%money_symbol%%price%&c."
+         Economy_Error: "&cPurchase failed (economy error): &f%detail%"
+         Inventory_Full: "&cYour inventory is full."
+      Barter:
+         Missing_Items: "&cYou need &f%amount%× %material% &cto barter this."
+         Not_Allowed: "&cThis item doesn't accept barter."
+      Not_Defined: "&cShop &f'%shop%' &cis not defined."
+   Trader:
+      Tip:
+         Insufficient_Funds: "&cNot enough funds to tip &6%money_symbol%%amount%&c."
+      Trait:
+         Invalid: "&cThis trader has no valid trait configured."
+         Missing: "&cTrait &f'%trait%' &cdoes not exist. Available: &f%available%"
+      Shop:
+         Missing: "&cShop &f'%shop%' &cdoes not exist. Create it first with &e/glw shop create&c."
+      Bargain:
+         Rejected: "&cThe trader rejects your offer."
+         Hard_Rejected: "&4&l\"Get out of my sight!\""
+         Already_Below: "&cYou've already negotiated below that price."
 
 Information:
    Prefix: "&8&l[&7Information&8&l]&7 "
@@ -299,6 +335,9 @@ Information:
       Request_Already_Sent: "Gang alliance to that gang is already sent!"
       Already_Allied: "Already allied with that gang."
       Kicked: "You have been kicked from the gang!"
+   Trader:
+      Anger:
+         Angered: "&c%trader%&r&c glares at you with rage."
 
 Kits:
    Received: "You have received &b%kit% &7kit."

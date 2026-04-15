@@ -173,6 +173,13 @@ public class Settings implements FileInitializer {
 	private static @Getter int blockRegenerationDelayTicks;
 	private static @Getter int blockRegenerationStepTicks;
 
+	// trader configuration
+	private static @Getter int    traderRespawnCooldownSeconds;
+	private static @Getter int    traderHeadTrackRadius;
+	private static @Getter double traderMoodDecayPerSecondFloor;
+	private static @Getter String traderFallbackTraitId;
+	private static @Getter int    traderMaxModeMultiplier;
+
 	// loot chest configuration
 	private static @Getter long   lootChestCountdownTimer;
 	private static @Getter String lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
@@ -553,6 +560,16 @@ public class Settings implements FileInitializer {
 		blockRestoreDelayTicks      = blockRegeneration.getInt("Restore_Delay_Ticks", 100);
 		blockRegenerationDelayTicks = blockRegeneration.getInt("Regeneration_Delay_Ticks", 100);
 		blockRegenerationStepTicks  = blockRegeneration.getInt("Regeneration_Step_Ticks", 4);
+
+		// trader
+		var trader = settings.getConfigurationSection("Trader");
+		Objects.requireNonNull(trader);
+
+		traderRespawnCooldownSeconds  = trader.getInt("Respawn_Cooldown", 60);
+		traderHeadTrackRadius         = trader.getInt("Head_Track_Radius", 8);
+		traderMoodDecayPerSecondFloor = trader.getDouble("Mood_Decay_Per_Second", 0.002);
+		traderFallbackTraitId         = trader.getString("Fallback_Trait_Id", "easygoing");
+		traderMaxModeMultiplier       = trader.getInt("Max_Mode_Multiplier", 1_000_000);
 
 		addEachFieldReflection();
 		convertToPlaceholder();

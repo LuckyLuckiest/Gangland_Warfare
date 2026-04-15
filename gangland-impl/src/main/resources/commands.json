@@ -722,5 +722,57 @@
 	"civilian_spawner_teleport": {
 		"usage": "/glw civilian spawner teleport <id>",
 		"description": "Teleports the player to the civilian spawner with the specified id."
+	},
+	"shop": {
+		"usage": "/glw shop",
+		"description": "Shows shop admin help page."
+	},
+	"shop_help": {
+		"usage": "/glw shop help <page>",
+		"description": "Shows the specified page in shop menu."
+	},
+	"shop_create": {
+		"usage": "/glw shop create <key>",
+		"description": "Creates a new shop YAML keyed by <key> (filename becomes the shop key)."
+	},
+	"shop_edit": {
+		"usage": "/glw shop edit <key>",
+		"description": "Opens the admin view for a shop; drag items in, L-click to set price, R-click to remove."
+	},
+	"shop_list": {
+		"usage": "/glw shop list",
+		"description": "Lists every defined shop key with its buy/sell entry counts."
+	},
+	"shop_title": {
+		"usage": "/glw shop title <key>",
+		"description": "Opens an anvil GUI to edit the shop's inventory display name; supports &-color codes and spaces."
+	},
+	"trader": {
+		"usage": "/glw trader",
+		"description": "Shows trader admin help page."
+	},
+	"trader_help": {
+		"usage": "/glw trader help <page>",
+		"description": "Shows the specified page in trader menu."
+	},
+	"trader_create": {
+		"usage": "/glw trader create <shopKey> <traitId> [displayName]",
+		"description": "Spawns a stationary trader NPC at your location bound to <shopKey> with personality <traitId>."
+	},
+	"trader_edit_shop": {
+		"usage": "/glw trader edit shop <shopKey>",
+		"description": "Retargets the trader in your crosshair to a different shop."
+	},
+	"trader_edit_trait": {
+		"usage": "/glw trader edit trait <traitId>",
+		"description": "Changes the trait of the trader in your crosshair."
+	},
+	"trader_edit_name": {
+		"usage": "/glw trader edit name",
+		"description": "Opens an anvil GUI to rename the trader in your crosshair; supports spaces."
+	},
+	"trader_remove": {
+		"usage": "/glw trader remove",
+		"description": "Removes the trader NPC in your crosshair (within 5 blocks)."
 	}
 }

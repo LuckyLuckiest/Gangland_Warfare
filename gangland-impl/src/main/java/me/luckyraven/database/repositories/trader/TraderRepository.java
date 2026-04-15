@@ -1,0 +1,79 @@
+package me.luckyraven.database.repositories.trader;
+
+import me.luckyraven.copsncrooks.npc.trader.TraderData;
+import me.luckyraven.database.tables.trader.TraderTable;
+import me.luckyraven.persistence.database.Database;
+import me.luckyraven.persistence.database.DatabaseHandler;
+import me.luckyraven.persistence.database.component.Table;
+import me.luckyraven.persistence.repository.AbstractRepository;
+import me.luckyraven.persistence.repository.Repository;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Consumer;
+
+@Repository(TraderData.class)
+public class TraderRepository extends AbstractRepository<TraderData> {
+
+	private final TraderTable table;
+
+	public TraderRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
+		super(plugin, databaseHandler);
+
+		this.table = new TraderTable();
+	}
+
+	@Override
+	protected Collection<TraderData> doLoadAll() throws SQLException {
+		List<TraderData> list = new ArrayList<>();
+		List<Object[]>   data = table.selectAllTableQuery(getDatabase());
+
+		for (Object[] row : data) {
+			int v = 0;
+
+			UUID   id          = UUID.fromString(String.valueOf(row[v++]));
+			String shopKey     = String.valueOf(row[v++]);
+			String worldName   = String.valueOf(row[v++]);
+			double x           = ((Number) row[v++]).doubleValue();
+			double y           = ((Number) row[v++]).doubleValue();
+			double z           = ((Number) row[v++]).doubleValue();
+			double yaw         = ((Number) row[v++]).doubleValue();
+			double pitch       = ((Number) row[v++]).doubleValue();
+			Object rawName     = row[v++];
+			String displayName = rawName == null ? null : String.valueOf(rawName);
+			String traitId     = String.valueOf(row[v]);
+
+			World    world    = Bukkit.getWorld(worldName);
+			Location location = new Location(world, x, y, z, (float) yaw, (float) pitch);
+
+			list.add(new TraderData(id, shopKey, location, displayName, traitId));
+		}
+
+		return list;
+	}
+
+	@Override
+	protected <E> Consumer<E> processSave() {
+		return null;
+	}
+
+	@Override
+	protected Table<TraderData> getTable() {
+		return table;
+	}
+
+	@Override
+	protected void doDelete(TraderData data) throws SQLException {
+		Database t = getDatabase().table(table.getName());
+		t.delete("id", data.getId().toString(), Types.VARCHAR);
+	}
+
+}

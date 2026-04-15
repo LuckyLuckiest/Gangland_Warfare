@@ -1,0 +1,138 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     / ________/      \_____   _____/      / __ \         | #
+# |    | /                     | |           / /  \ \        | #
+# |    | |  _______            | |          / /____\ \       | #
+# |    | |  \_____ \           | |         / ________ \      | #
+# |    | \_______/ ||          | |        / /        \ \     | #
+# |     \__________/           |_|       /_/          \_\    | #
+# |                                                          | #
+# |                  File: trader_traits.yml                 | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+#
+# Trader personality catalogue.
+#
+# Each top-level key is a trait id; the full field set (defined in the
+# TraderTraitProfile record) is required for the trait to load.
+#
+# - Mood_Per_*   deltas are applied to the per-trader per-player mood
+#                (range [-1.0 .. +1.0]). Negative = trader gets angrier.
+# - Max_Anger_Multiplier   cap price multiplier at mood = -1
+# - Min_Friend_Discount    cap price multiplier at mood = +1 (e.g. 0.9 = 10% off)
+# - Bargain_Min_Ratio      lowest acceptable offer as a fraction of the asking price
+# - Sell_Price_Ratio       fraction of ask the trader pays when BUYING from the player
+# - Max_Health             the trader's max health in half-hearts (20 = 10 hearts, vanilla default)
+# - Invulnerable           if true, trader cannot be killed; anger cues still fire on hit
+#
+# Add as many custom traits as you want — just define all fields under
+# a new top-level id and reference it with `/glw trader create <shop> <id>`.
+
+easygoing:
+   Display_Name: "Easygoing"
+   Anger_Hit_Threshold: 5
+   Mood_Per_Hit: -0.12
+   Mood_Per_Tip_Currency: 0.0008
+   Mood_Per_Purchase: 0.03
+   Mood_Per_Rejection: -0.02
+   Mood_Decay_Per_Second: 0.003
+   Max_Anger_Multiplier: 1.3
+   Min_Friend_Discount: 0.92
+   Bargain_Min_Ratio: 0.65
+   Bargain_Max_Rounds: 3
+   Allows_Bargaining: true
+   Allows_Barter: true
+   Sell_Price_Ratio: 0.55
+   Max_Health: 20.0
+   Invulnerable: false
+
+hotheaded:
+   Display_Name: "Hotheaded"
+   Anger_Hit_Threshold: 1
+   Mood_Per_Hit: -0.5
+   Mood_Per_Tip_Currency: 0.0002
+   Mood_Per_Purchase: 0.01
+   Mood_Per_Rejection: -0.1
+   Mood_Decay_Per_Second: 0.0008
+   Max_Anger_Multiplier: 2.0
+   Min_Friend_Discount: 0.98
+   Bargain_Min_Ratio: 0.9
+   Bargain_Max_Rounds: 1
+   Allows_Bargaining: true
+   Allows_Barter: false
+   Sell_Price_Ratio: 0.4
+   Max_Health: 24.0
+   Invulnerable: false
+
+stubborn:
+   Display_Name: "Stubborn"
+   Anger_Hit_Threshold: 3
+   Mood_Per_Hit: -0.2
+   Mood_Per_Tip_Currency: 0.0003
+   Mood_Per_Purchase: 0.01
+   Mood_Per_Rejection: -0.05
+   Mood_Decay_Per_Second: 0.002
+   Max_Anger_Multiplier: 1.5
+   Min_Friend_Discount: 1.0
+   Bargain_Min_Ratio: 1.0
+   Bargain_Max_Rounds: 0
+   Allows_Bargaining: false
+   Allows_Barter: false
+   Sell_Price_Ratio: 0.5
+   Max_Health: 40.0
+   Invulnerable: false
+
+generous:
+   Display_Name: "Generous"
+   Anger_Hit_Threshold: 4
+   Mood_Per_Hit: -0.15
+   Mood_Per_Tip_Currency: 0.002
+   Mood_Per_Purchase: 0.05
+   Mood_Per_Rejection: -0.01
+   Mood_Decay_Per_Second: 0.0025
+   Max_Anger_Multiplier: 1.2
+   Min_Friend_Discount: 0.8
+   Bargain_Min_Ratio: 0.55
+   Bargain_Max_Rounds: 4
+   Allows_Bargaining: true
+   Allows_Barter: true
+   Sell_Price_Ratio: 0.7
+   Max_Health: 16.0
+   Invulnerable: false
+
+shrewd:
+   Display_Name: "Shrewd"
+   Anger_Hit_Threshold: 2
+   Mood_Per_Hit: -0.25
+   Mood_Per_Tip_Currency: 0.0001
+   Mood_Per_Purchase: 0.02
+   Mood_Per_Rejection: -0.03
+   Mood_Decay_Per_Second: 0.002
+   Max_Anger_Multiplier: 1.4
+   Min_Friend_Discount: 0.95
+   Bargain_Min_Ratio: 0.8
+   Bargain_Max_Rounds: 5
+   Allows_Bargaining: true
+   Allows_Barter: true
+   Sell_Price_Ratio: 0.45
+   Max_Health: 20.0
+   Invulnerable: true
+
+timid:
+   Display_Name: "Timid"
+   Anger_Hit_Threshold: 1
+   Mood_Per_Hit: -0.4
+   Mood_Per_Tip_Currency: 0.003
+   Mood_Per_Purchase: 0.04
+   Mood_Per_Rejection: -0.08
+   Mood_Decay_Per_Second: 0.004
+   Max_Anger_Multiplier: 1.6
+   Min_Friend_Discount: 0.88
+   Bargain_Min_Ratio: 0.7
+   Bargain_Max_Rounds: 2
+   Allows_Bargaining: true
+   Allows_Barter: true
+   Sell_Price_Ratio: 0.5
+   Max_Health: 10.0
+   Invulnerable: false

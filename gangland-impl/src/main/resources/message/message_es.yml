@@ -239,6 +239,21 @@ Commands:
       Teleportation:
          Sent: "Has sido enviado a &b%location%&7."
          Timer: "Teletransportando en &b%timer%&7."
+   Shop:
+      Purchase:
+         Success: "&aCompraste &f%item% &apor &6%money_symbol%%price%&a."
+      Barter:
+         Success: "&bIntercambiado por &f%item%&b."
+      Saved: "&aTienda &f'%shop%' &aguardada."
+      Admin:
+         Entry_Added: "&aAgregado &f%material% &acomo entrada &f#%index% &aen la página &f%page%&a."
+         Entry_Removed: "&eEntrada eliminada en el índice &f%index%&e."
+   Trader:
+      Tip:
+         Success: "&6Propina de &e%money_symbol%%amount%&6 — el humor del comerciante mejora."
+      Bargain:
+         Accepted: "&a✔ ¡Trato! Nuevo precio: &6%money_symbol%%price%&a."
+         Counter_Offer: "&eContraoferta: &6%money_symbol%%price%&e."
 
 Errors:
    Prefix: "&4Error&7: "
@@ -292,6 +307,27 @@ Errors:
          Not_Found: "¡Esta ubicación &c%location%&7 no fue encontrada!"
       World:
          Not_Found: "¡Este mundo &8(&c%world%&8) no fue encontrado!"
+   Shop:
+      Purchase:
+         Insufficient_Funds: "&cFondos insuficientes — necesitas &6%money_symbol%%price%&c."
+         Economy_Error: "&cCompra fallida (error de economía): &f%detail%"
+         Inventory_Full: "&cTu inventario está lleno."
+      Barter:
+         Missing_Items: "&cNecesitas &f%amount%× %material% &cpara intercambiar esto."
+         Not_Allowed: "&cEste objeto no acepta intercambio."
+      Not_Defined: "&cTienda &f'%shop%' &cno está definida."
+   Trader:
+      Tip:
+         Insufficient_Funds: "&cFondos insuficientes para dar propina de &6%money_symbol%%amount%&c."
+      Trait:
+         Invalid: "&cEste comerciante no tiene un rasgo válido configurado."
+         Missing: "&cEl rasgo &f'%trait%' &cno existe. Disponibles: &f%available%"
+      Shop:
+         Missing: "&cLa tienda &f'%shop%' &cno existe. Créala primero con &e/glw shop create&c."
+      Bargain:
+         Rejected: "&cEl comerciante rechaza tu oferta."
+         Hard_Rejected: "&4&l\"¡Fuera de mi vista!\""
+         Already_Below: "&cYa has negociado por debajo de ese precio."
 
 Information:
    Prefix: "&8&l[&7Información&8&l]&7 "
@@ -299,6 +335,9 @@ Information:
       Request_Already_Sent: "¡La solicitud de alianza a esa banda ya fue enviada!"
       Already_Allied: "Ya estás aliado con esa banda."
       Kicked: "¡Has sido expulsado de la banda!"
+   Trader:
+      Anger:
+         Angered: "&c%trader%&r&c te mira con furia."
 
 Kits:
    Received: "Has recibido el kit &b%kit%&7."

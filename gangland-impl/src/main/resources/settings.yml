@@ -63,7 +63,7 @@ Language: en
 Resource_Pack:
    Enable: true
    # This is the direct download url link.
-   URL: "https://drive.google.com/uc?export=download&id=1sbc77c4B7E1t3uwx5f1_KgAFasJOpD8y"
+   URL: "https://drive.google.com/uc?export=download&id=1uu61eecMNUVPU4sdwqNBx2AolyaUwqSX"
    # Kicks the player if they didn't accept the resource pack
    Kick: false
 
@@ -535,9 +535,9 @@ Gadgets:
       # Fuel units consumed per tick while the car is moving.
       Fuel_Consume_Per_Tick: 1
 
-# +-------------------------+ #
-# | Block Regeneration      | #
-# +-------------------------+ #
+# +--------------------+ #
+# | Block Regeneration | #
+# +--------------------+ #
 
 # Tuning for the weapon Break_Blocks modifier. Controls how blocks broken/cracked by gunfire
 # return to their original state. Per-weapon mode (RESTORE / CRACK_ONLY / DESTROY) is configured
@@ -549,3 +549,20 @@ Block_Regeneration:
    Regeneration_Delay_Ticks: 100
    # Ticks between each crack-stage decrement during reverse-decay.
    Regeneration_Step_Ticks: 4
+
+# +--------+ #
+# | Trader | #
+# +--------+ #
+
+# General trader NPC knobs. Trait-specific numbers live in plugin/trader_traits.yml.
+Trader:
+   # Seconds between a trader being killed and respawning at the same location.
+   Respawn_Cooldown: 60
+   # Blocks within which a trader will head-track the nearest player.
+   Head_Track_Radius: 8
+   # Global floor for mood decay per second when a trait omits its own value.
+   Mood_Decay_Per_Second: 0.002
+   # Trait id substituted at load time if a stored trait is missing from trader_traits.yml.
+   Fallback_Trait_Id: "easygoing"
+   # Upper cap on the multiplier used by the shop price-editor's +/- buttons (via the custom-mode anvil).
+   Max_Mode_Multiplier: 1000000
