@@ -9,10 +9,13 @@ import me.luckyraven.scoreboard.Scoreboard;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.driver.DriverHandler;
 import me.luckyraven.util.autowire.bean.BeanLifecycle;
+import me.luckyraven.util.autowire.bean.BeanPostInitialize;
 import org.bukkit.entity.Player;
 
 /**
- * Creates scoreboards for all online players as part of the {@link BeanLifecycle}. Scoreboard <i>destruction</i> is
+ * Creates scoreboards for all online players. Runs as a {@link BeanPostInitialize} bean because it depends on
+ * {@link PlayerBootstrapService} having populated the user manager, and that bean has itself been moved to post-init
+ * to avoid racing against {@link BeanLifecycle#onInitialize(boolean)} on reload. Scoreboard <i>destruction</i> is
  * already handled by {@link UserManager#onPreClear()}, which stops and nulls every user's scoreboard before data is
  * cleared.
  *
@@ -20,7 +23,7 @@ import org.bukkit.entity.Player;
  * loaded into the user manager before scoreboards can be created for them.
  */
 @CustomLog
-public final class ScoreboardLifecycleService implements BeanLifecycle {
+public final class ScoreboardLifecycleService implements BeanPostInitialize {
 
 	private final Gangland            gangland;
 	private final ScoreboardManager   scoreboardManager;
@@ -43,7 +46,7 @@ public final class ScoreboardLifecycleService implements BeanLifecycle {
 	 * Creates and starts scoreboards for all online players if the scoreboard feature is enabled.
 	 */
 	@Override
-	public void onInitialize(boolean firstLoad) {
+	public void onPostInitialize(boolean firstLoad) {
 		if (!Settings.isScoreboardEnabled()) {
 			return;
 		}

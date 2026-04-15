@@ -202,6 +202,7 @@ public class BeanFactory {
 
 		runPostConstruct(configInstances);
 		runPostConstruct(allRegisteredBeans);
+		runPostInitialize(true);
 
 		log.info("Bean wiring complete: {} configs, {} beans across {} phases",
 		         configInstances.size(), allRegisteredBeans.size(), Phase.values().length);
@@ -234,6 +235,8 @@ public class BeanFactory {
 		for (BeanLifecycle bean : forward) {
 			bean.onInitialize(false);
 		}
+
+		runPostInitialize(false);
 
 		log.info("Lifecycle reload complete: {} bean(s)", forward.size());
 	}
@@ -542,6 +545,35 @@ public class BeanFactory {
 	private void runLifecycleInitialize(boolean firstLoad) {
 		for (BeanLifecycle bean : filterLifecycleBeans()) {
 			bean.onInitialize(firstLoad);
+		}
+	}
+
+	/**
+	 * Calls {@link BeanPostInitialize#onPostInitialize(boolean)} on every registered bean implementing that interface,
+	 * in forward topological order. Runs <b>after</b> every {@link BeanLifecycle#onInitialize(boolean)} call for the
+	 * current pass has completed, so post-init beans see a fully-initialized bean graph even for lifecycle beans they
+	 * don't declare a constructor dependency on.
+	 *
+	 * <p>Example: {@code PlayerBootstrapService} restores wanted levels and fires {@code WantedStartEvent}; that event
+	 * drives {@code CopManager.onWantedStart} → {@code startSpawnTask}, which reads {@code CopConfigProvider}. Without
+	 * this post-init phase, the event could fire before {@code CopManager.onInitialize(false)} had re-wired
+	 * {@code configProvider}, producing an NPE on reload.
+	 */
+	private void runPostInitialize(boolean firstLoad) {
+		Set<Object> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+		int         count   = 0;
+		for (Object bean : allRegisteredBeans) {
+			if (!(bean instanceof BeanPostInitialize post)) {
+				continue;
+			}
+			if (!visited.add(bean)) {
+				continue;
+			}
+			post.onPostInitialize(firstLoad);
+			count++;
+		}
+		if (count > 0) {
+			log.info("Post-initialize complete: {} bean(s)", count);
 		}
 	}
 

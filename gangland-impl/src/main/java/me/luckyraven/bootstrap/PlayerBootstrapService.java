@@ -17,7 +17,7 @@ import me.luckyraven.item.unique.UniqueItemUtil;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
-import me.luckyraven.util.autowire.bean.BeanLifecycle;
+import me.luckyraven.util.autowire.bean.BeanPostInitialize;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -26,15 +26,18 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Populates the user managers with online and offline players from the database. Runs as a {@link BeanLifecycle} bean
- * so it participates in both first-load and reload cycles, replacing the manual
- * {@code ReloadPlugin.loadOnlinePlayers()} call from {@code Gangland.onEnable()}.
+ * Populates the user managers with online and offline players from the database. Runs as a
+ * {@link BeanPostInitialize} bean so it participates in both first-load and reload cycles <b>after</b> every
+ * {@code BeanLifecycle.onInitialize(...)} call has completed — this is critical on reload because loading online
+ * players fires {@code WantedStartEvent}, which drives {@code CopManager.startSpawnTask}, which reads a
+ * lifecycle-wired {@code CopConfigProvider}. Running in post-init guarantees every lifecycle bean is fully re-wired
+ * before any events fire from here.
  *
  * <p>Depends on {@link FileManager} (unused at runtime) solely to force topological ordering: files must be reloaded
  * before players can be loaded, because the addon data (unique items, etc.) is read during user initialization.
  */
 @CustomLog
-public final class PlayerBootstrapService implements BeanLifecycle {
+public final class PlayerBootstrapService implements BeanPostInitialize {
 
 	private final Gangland                   gangland;
 	private final GanglandDatabase           ganglandDatabase;
@@ -69,7 +72,7 @@ public final class PlayerBootstrapService implements BeanLifecycle {
 	 * the database.
 	 */
 	@Override
-	public void onInitialize(boolean firstLoad) {
+	public void onPostInitialize(boolean firstLoad) {
 		List<Table<?>> tables      = ganglandDatabase.getTables();
 		UserTable      userTable   = TableLookup.find(UserTable.class, tables);
 		BankTable      bankTable   = TableLookup.find(BankTable.class, tables);
