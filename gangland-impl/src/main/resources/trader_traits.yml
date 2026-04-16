@@ -28,7 +28,7 @@
 #                             (1.0 = item barter-value matches its admin price; >1 = trader is generous,
 #                             <1 = trader undervalues incoming barter). Defaults to Sell_Price_Ratio if absent.
 # - Max_Health                the trader's max health in half-hearts (20 = 10 hearts, vanilla default)
-# - Invulnerable              if true, trader cannot be killed; anger cues still fire on hit
+# - Invulnerable              if false, trader can be killed; anger cues still fire on hit
 # - Refunds_Trade_In_Overpay  if true, trader will refund overpaid trade-ins
 #
 # Add as many custom traits as you want — just define all fields under
