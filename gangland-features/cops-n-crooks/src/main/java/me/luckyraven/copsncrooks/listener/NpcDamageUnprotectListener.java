@@ -3,6 +3,7 @@ package me.luckyraven.copsncrooks.listener;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.npc.entity.EntityMark;
 import me.luckyraven.copsncrooks.npc.entity.EntityMarkManager;
+import me.luckyraven.copsncrooks.npc.trader.TraderNpc;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
@@ -56,6 +57,11 @@ public class NpcDamageUnprotectListener implements Listener {
 			return;
 		}
 
+		// Traders opt out of strip-protection: the Invulnerable trait needs the Citizens/Bukkit flags to stay set.
+		if (isTrader(npc)) {
+			return;
+		}
+
 		stripProtection(npc);
 
 		new BukkitRunnable() {
@@ -90,6 +96,9 @@ public class NpcDamageUnprotectListener implements Listener {
 		}
 
 		NPC npc = CitizensAPI.getNPCRegistry().getNPC(entity);
+		if (isTrader(npc)) {
+			return;
+		}
 		if (npc != null && npc.isProtected()) {
 			npc.setProtected(false);
 		}
@@ -122,6 +131,9 @@ public class NpcDamageUnprotectListener implements Listener {
 		}
 
 		NPC npc = CitizensAPI.getNPCRegistry().getNPC(entity);
+		if (isTrader(npc)) {
+			return;
+		}
 		if (npc != null) {
 			npc.setProtected(false);
 		}
@@ -131,6 +143,10 @@ public class NpcDamageUnprotectListener implements Listener {
 		if (entity instanceof LivingEntity living) {
 			living.setNoDamageTicks(0);
 		}
+	}
+
+	private boolean isTrader(NPC npc) {
+		return npc != null && npc.data().has(TraderNpc.METADATA_TRADER_ID);
 	}
 
 	private void stripProtection(NPC npc) {
