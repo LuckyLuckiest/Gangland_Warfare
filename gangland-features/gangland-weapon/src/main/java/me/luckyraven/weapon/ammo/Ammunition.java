@@ -18,6 +18,13 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @Getter
 public class Ammunition implements Comparable<Ammunition> {
+
+	/**
+	 * Canonical NBT tag stamped on every built ammunition ItemStack. Shared with predicates/serializers so no call site
+	 * has to hardcode {@code NBT_KEY}.
+	 */
+	public static final String NBT_KEY = "ammo";
+
 	private final String       name;
 	private final String       displayName;
 	private final Material     material;
@@ -43,7 +50,7 @@ public class Ammunition implements Comparable<Ammunition> {
 	public static boolean isAmmunition(ItemStack item) {
 		if (item == null || item.getType().equals(Material.AIR) || item.getAmount() == 0) return false;
 
-		return new ItemBuilder(item).hasNBTTag("ammo");
+		return new ItemBuilder(item).hasNBTTag(NBT_KEY);
 	}
 
 	public static Ammunition getHeldAmmunition(AmmunitionManager ammunitionManager, ItemStack itemHeld) {
@@ -51,7 +58,7 @@ public class Ammunition implements Comparable<Ammunition> {
 		if (!isAmmunition(itemHeld)) return null;
 
 		ItemBuilder itemBuilder    = new ItemBuilder(itemHeld);
-		String      ammunitionName = itemBuilder.getStringTagData("ammo");
+		String      ammunitionName = itemBuilder.getStringTagData(NBT_KEY);
 
 		return ammunitionManager.getAmmunition(ammunitionName);
 	}
@@ -93,7 +100,7 @@ public class Ammunition implements Comparable<Ammunition> {
 			builder.setCustomModelData(customModelData);
 		}
 
-		builder.addTag("ammo", name);
+		builder.addTag(NBT_KEY, name);
 
 		return builder.build();
 	}

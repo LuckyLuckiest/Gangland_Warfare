@@ -17,6 +17,7 @@ public record TraderTraitProfile(
 		double barterPriceRatio,
 		double maxHealth,
 		boolean invulnerable,
-		boolean refundsTradeInOverpay
+		boolean refundsTradeInOverpay,
+		boolean marketLinked
 ) {
 }

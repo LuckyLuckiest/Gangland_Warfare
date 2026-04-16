@@ -57,7 +57,7 @@ public abstract class WeaponService implements Comparator<Weapon> {
 	public String getHeldWeaponName(ItemStack item) {
 		if (item == null || item.getType().equals(Material.AIR) || item.getAmount() == 0) return null;
 
-		return new ItemBuilder(item).getStringTagData("weapon");
+		return new ItemBuilder(item).getStringTagData(Weapon.getTagProperName(WeaponTag.WEAPON));
 	}
 
 	public boolean isWeapon(ItemStack item) {

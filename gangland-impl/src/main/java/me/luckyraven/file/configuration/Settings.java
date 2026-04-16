@@ -3,6 +3,7 @@ package me.luckyraven.file.configuration;
 import lombok.CustomLog;
 import lombok.Getter;
 import me.luckyraven.exception.PluginException;
+import me.luckyraven.market.contract.MarketSettingsContract;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileInitializer;
 import me.luckyraven.persistence.FileManager;
@@ -162,7 +163,14 @@ public class Settings implements FileInitializer {
 	private static @Getter List<String> lootChestRewardCommands;
 	// money drop (cash items dropped by mobs / cops / civilians / players on death)
 	private static @Getter boolean      moneyDropEnabled;
-	private final          FileHandler  fileHandler;
+	// market configuration
+	private static @Getter boolean      marketEnabled;
+	private static @Getter int          marketTickIntervalMinutes, marketHistoryRetentionDays;
+	private static @Getter String marketSnapshotTime, marketIndexWeighting;
+	private static @Getter double marketElasticityDefault, marketVolatilityDefault, marketReversionRate;
+	private static @Getter double marketMinFloorMultiplier, marketMaxCeilingMultiplier;
+	private static @Getter Map<String, MarketSettingsContract.ItemOverride> marketPerItemOverrides = Map.of();
+	private final          FileHandler                                      fileHandler;
 
 	public Settings(FileManager fileManager) {
 		try {
@@ -559,6 +567,48 @@ public class Settings implements FileInitializer {
 		}
 
 		traderBargainCooldownSeconds = trader.getInt("Bargain_Cooldown_Seconds", 300);
+
+		// market
+		var market = settings.getConfigurationSection("Market");
+		if (market == null) {
+			marketEnabled              = true;
+			marketTickIntervalMinutes  = 15;
+			marketSnapshotTime         = "00:00";
+			marketHistoryRetentionDays = 30;
+			marketElasticityDefault    = 0.05;
+			marketVolatilityDefault    = 0.02;
+			marketReversionRate        = 0.01;
+			marketMinFloorMultiplier   = 0.25;
+			marketMaxCeilingMultiplier = 4.0;
+			marketIndexWeighting       = "Equal";
+			marketPerItemOverrides     = Map.of();
+		} else {
+			marketEnabled              = market.getBoolean("Enabled", true);
+			marketTickIntervalMinutes  = market.getInt("Tick_Interval_Minutes", 15);
+			marketSnapshotTime         = market.getString("Snapshot_Time", "00:00");
+			marketHistoryRetentionDays = market.getInt("History_Retention_Days", 30);
+			marketElasticityDefault    = market.getDouble("Elasticity_Default", 0.05);
+			marketVolatilityDefault    = market.getDouble("Volatility_Default", 0.02);
+			marketReversionRate        = market.getDouble("Reversion_Rate", 0.01);
+			marketMinFloorMultiplier   = market.getDouble("Min_Floor_Multiplier", 0.25);
+			marketMaxCeilingMultiplier = market.getDouble("Max_Ceiling_Multiplier", 4.0);
+			marketIndexWeighting       = market.getString("Index_Weighting", "Equal");
+
+			Map<String, MarketSettingsContract.ItemOverride> overrides = new LinkedHashMap<>();
+			var perItem = market.getConfigurationSection(
+					"Per_Item_Overrides");
+			if (perItem != null) {
+				for (String itemId : perItem.getKeys(false)) {
+					var item = perItem.getConfigurationSection(itemId);
+					if (item == null) continue;
+					Double base = item.contains("Base_Price") ? item.getDouble("Base_Price") : null;
+					Double el   = item.contains("Elasticity") ? item.getDouble("Elasticity") : null;
+					Double vol  = item.contains("Volatility") ? item.getDouble("Volatility") : null;
+					overrides.put(itemId.toLowerCase(), new MarketSettingsContract.ItemOverride(base, el, vol));
+				}
+			}
+			marketPerItemOverrides = overrides;
+		}
 
 		addEachFieldReflection();
 		convertToPlaceholder();

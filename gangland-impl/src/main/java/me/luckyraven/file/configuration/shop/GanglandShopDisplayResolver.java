@@ -6,6 +6,7 @@ import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
+import me.luckyraven.weapon.WeaponTag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -18,15 +19,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 @RequiredArgsConstructor
 public final class GanglandShopDisplayResolver implements ShopDisplayResolver {
 
-	private static final String WEAPON_NBT_KEY = "weapon";
-
 	private final WeaponService weaponService;
 
 	@Override
 	public String cleanDisplayName(ItemStack item) {
 		if (item == null) return "item";
 
-		String weaponName = new ItemBuilder(item).getStringTagData(WEAPON_NBT_KEY);
+		String weaponName = new ItemBuilder(item).getStringTagData(Weapon.getTagProperName(WeaponTag.WEAPON));
 		if (weaponName != null && !weaponName.isEmpty()) {
 			Weapon weapon = weaponService.getWeapon(weaponName);
 			if (weapon != null && weapon.getDisplayName() != null && !weapon.getDisplayName().isBlank()) {

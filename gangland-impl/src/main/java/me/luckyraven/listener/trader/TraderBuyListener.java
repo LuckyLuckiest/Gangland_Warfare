@@ -7,8 +7,12 @@ import me.luckyraven.copsncrooks.npc.trader.mood.MoodService;
 import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitDefinition;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.item.ItemSerializerRegistry;
 import me.luckyraven.market.bank.EconomyException;
 import me.luckyraven.market.bank.EconomyHandler;
+import me.luckyraven.market.ledger.TransactionContext;
+import me.luckyraven.market.ledger.TransactionDirection;
+import me.luckyraven.market.ledger.TransactionLedger;
 import me.luckyraven.shop.message.ShopDisplayResolver;
 import me.luckyraven.shop.message.ShopMessageContract;
 import me.luckyraven.shop.transaction.PaymentException;
@@ -21,30 +25,37 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
 
 @CustomLog
 @ListenerHandler
 public class TraderBuyListener implements Listener {
 
-	private final UserManager<Player> userManager;
-	private final TraderManager       traderManager;
-	private final MoodService         moodService;
-	private final ShopPurchaseService purchaseService;
-	private final ShopMessageContract messages;
-	private final ShopDisplayResolver displayResolver;
+	private final UserManager<Player>    userManager;
+	private final TraderManager          traderManager;
+	private final MoodService            moodService;
+	private final ShopPurchaseService    purchaseService;
+	private final ShopMessageContract    messages;
+	private final ShopDisplayResolver    displayResolver;
+	private final TransactionLedger      transactionLedger;
+	private final ItemSerializerRegistry itemSerializerRegistry;
 
 	public TraderBuyListener(@Qualifier("online") UserManager<Player> userManager,
 	                         TraderManager traderManager,
 	                         MoodService moodService,
 	                         ShopPurchaseService purchaseService,
 	                         ShopMessageContract messages,
-	                         ShopDisplayResolver displayResolver) {
-		this.userManager     = userManager;
-		this.traderManager   = traderManager;
-		this.moodService     = moodService;
-		this.purchaseService = purchaseService;
-		this.messages        = messages;
-		this.displayResolver = displayResolver;
+	                         ShopDisplayResolver displayResolver,
+	                         TransactionLedger transactionLedger,
+	                         ItemSerializerRegistry itemSerializerRegistry) {
+		this.userManager            = userManager;
+		this.traderManager          = traderManager;
+		this.moodService            = moodService;
+		this.purchaseService        = purchaseService;
+		this.messages               = messages;
+		this.displayResolver        = displayResolver;
+		this.transactionLedger      = transactionLedger;
+		this.itemSerializerRegistry = itemSerializerRegistry;
 	}
 
 	@EventHandler(priority = EventPriority.NORMAL)
@@ -69,6 +80,23 @@ public class TraderBuyListener implements Listener {
 				if (trait != null) {
 					moodService.recordPurchase(event.getTrader().getData().getId(),
 					                           player.getUniqueId(), trait.profile());
+				}
+				// Record against the bundle the player bought, not against result.delivery(): the delivery stack can
+				// be a leftover (when most of the purchase merged into an existing inventory stack) which would give
+				// a smaller-than-real quantity and a correspondingly inflated unit price. The entry on the event is
+				// the authoritative "what was purchased" record.
+				boolean   marketLinked = trait == null || trait.profile().marketLinked();
+				ItemStack bundle       = event.getEntry().getItem();
+				int       qty          = Math.max(1, bundle.getAmount());
+				String    itemId       = itemSerializerRegistry.serialize(bundle);
+				if (itemId != null) {
+					transactionLedger.append(new TransactionContext(player.getUniqueId(),
+					                                                event.getTrader().getData().getId(),
+					                                                itemId,
+					                                                qty,
+					                                                result.pricePaid() / qty,
+					                                                TransactionDirection.BUY,
+					                                                marketLinked));
 				}
 				player.sendMessage(messages.purchaseSuccess(displayResolver.cleanDisplayName(result.delivery()),
 				                                            result.pricePaid()));

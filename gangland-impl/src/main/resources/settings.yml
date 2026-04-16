@@ -583,3 +583,51 @@ Trader:
    # cooldown one round returns, after 2/bargainMaxRounds two rounds return, etc. Counts separately
    # per (trader, player, item type).
    Bargain_Cooldown_Seconds: 300
+
+# +--------+ #
+# | Market | #
+# +--------+ #
+
+# Global economic model. Market-linked traders read the live per-item price from here,
+# apply their per-trait multipliers on top, and every transaction is appended to the
+# ledger. The price engine consumes the last `History_Retention_Days` of ledger data to
+# move prices via supply/demand, scripted shocks, volatility noise, and mean reversion.
+# Scripted shock definitions live in plugin/market_events.yml. Black-market traders
+# ignore this system entirely (see `Market_Linked` in trader_traits.yml).
+Market:
+   # Master switch for the entire market system. Disabling this leaves traders on their
+   # pre-market pricing (SellCategory base price * trait ratio * mood) with no ledger.
+   Enabled: false
+   # How often the price engine recomputes. Runs async, so this can be aggressive
+   # without impacting main-thread tick rate.
+   Tick_Interval_Minutes: 15
+   # Daily snapshot fires at this server-local time (HH:mm, 24h).
+   Snapshot_Time: "00:00"
+   # Snapshots older than this are pruned every day. The transaction ledger is retained
+   # forever regardless — this only governs the OHLC history table. The price engine
+   # also only looks at the last N days of ledger data for supply/demand math.
+   History_Retention_Days: 30
+   # Supply vs demand elasticity. Higher = prices react faster to net volume.
+   Elasticity_Default: 0.05
+   # Random-walk standard deviation applied each tick (gaussian).
+   Volatility_Default: 0.02
+   # Per-tick pull toward base price. 0 = none, 1 = instant reset.
+   Reversion_Rate: 0.01
+   # Hard floor and ceiling as a multiplier of the base price.
+   Min_Floor_Multiplier: 0.25
+   Max_Ceiling_Multiplier: 4.0
+   # Index weighting used by %gangland_market_index%. One of:
+   #   Equal       — every item contributes the same weight
+   #   Volume      — items with more recent transaction volume weigh more
+   #   Market_Cap  — price * volume
+   Index_Weighting: Equal
+   # Optional per-item overrides. Anything not listed uses the defaults above and
+   # seeds its base price from whatever SellCategory first trades it.
+   Per_Item_Overrides:
+      diamond:
+         Base_Price: 120.0
+         Elasticity: 0.08
+         Volatility: 0.05
+      emerald:
+         Base_Price: 80.0
+         Elasticity: 0.06

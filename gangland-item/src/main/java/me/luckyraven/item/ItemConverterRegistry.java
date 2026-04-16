@@ -24,6 +24,20 @@ public class ItemConverterRegistry {
 	}
 
 	/**
+	 * Register under a canonical {@link ItemKind}. Preferred over the raw-string overload — keeps every converter
+	 * registration coupled to the enum so renaming a label auto-propagates.
+	 */
+	public void register(ItemKind kind, ItemConverter converter) {
+		register(kind.label(), converter);
+	}
+
+	public void register(ItemKind[] kinds, ItemConverter converter) {
+		for (ItemKind kind : kinds) {
+			register(kind, converter);
+		}
+	}
+
+	/**
 	 * Gets a converter for a specific type.
 	 *
 	 * @param type The type identifier

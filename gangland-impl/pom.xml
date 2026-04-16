@@ -98,6 +98,11 @@
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-market</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
             <artifactId>gangland-gadget</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>

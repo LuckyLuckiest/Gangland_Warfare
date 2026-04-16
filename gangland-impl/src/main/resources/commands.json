@@ -3,6 +3,50 @@
 		"usage": "/glw help",
 		"description": "Shows main help page."
 	},
+	"market": {
+		"usage": "/glw market",
+		"description": "Shows the market help page."
+	},
+	"market_price": {
+		"usage": "/glw market price <item>",
+		"description": "Shows the live market price and 24h change for the item."
+	},
+	"market_index": {
+		"usage": "/glw market index",
+		"description": "Shows the aggregate market index across all tracked items."
+	},
+	"market_shock": {
+		"usage": "/glw market shock <name>",
+		"description": "Fires a named shock template from market_events.yml."
+	},
+	"market_override": {
+		"usage": "/glw market override <item> <price>",
+		"description": "Pins an item's price (engine becomes a no-op for it)."
+	},
+	"market_unoverride": {
+		"usage": "/glw market unoverride <item>",
+		"description": "Clears the admin price override for the item."
+	},
+	"market_freeze": {
+		"usage": "/glw market freeze <item>",
+		"description": "Toggles the freeze flag (frozen items ignore engine ticks)."
+	},
+	"market_overview": {
+		"usage": "/glw market overview",
+		"description": "Opens the paginated market overview GUI."
+	},
+	"market_history": {
+		"usage": "/glw market history <item>",
+		"description": "Opens a 30-day chart for the item."
+	},
+	"market_ledger": {
+		"usage": "/glw market ledger",
+		"description": "Opens the admin ledger GUI (paginated transaction log)."
+	},
+	"market_snapshot": {
+		"usage": "/glw market snapshot",
+		"description": "Rolls a daily OHLC snapshot on demand (admin)."
+	},
 	"general_page": {
 		"usage": "/glw help <page>",
 		"description": "Shows the specified page in general menu."

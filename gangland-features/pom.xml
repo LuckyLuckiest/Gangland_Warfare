@@ -20,6 +20,7 @@
         <module>gangland-weapon</module>
         <module>gangland-gadget</module>
         <module>cops-n-crooks</module>
+        <module>gangland-market</module>
     </modules>
 
 </project>

@@ -1,0 +1,88 @@
+package me.luckyraven.market.bank;
+
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+import net.milkbowl.vault.economy.Economy;
+import org.bukkit.OfflinePlayer;
+import org.jetbrains.annotations.Nullable;
+
+@Getter
+@Setter
+public class EconomyHandler {
+
+	@Getter
+	@Setter
+	private static Economy vaultEconomy;
+
+	@Getter(AccessLevel.NONE)
+	private final boolean useUser;
+
+	@Nullable
+	private EconomyOwner user;
+	private double       balance;
+
+	/**
+	 * Instantiates a new Economy.
+	 */
+	public EconomyHandler(@Nullable EconomyOwner user) {
+		this(0D, user, user != null);
+	}
+
+	/**
+	 * Instantiates a new Economy handler.
+	 *
+	 * @param balance the balance
+	 */
+	public EconomyHandler(double balance, @Nullable EconomyOwner user, boolean useUser) {
+		this.balance = balance;
+		this.user    = user;
+		this.useUser = useUser;
+	}
+
+	/**
+	 * Gets the user balance.
+	 *
+	 * @return the balance
+	 */
+	public double getBalance() {
+		if (useUserInfo() && vaultEconomy != null) return vaultEconomy.getBalance(user.getUser());
+		return balance;
+	}
+
+	public void setBalance(double amount) {
+		this.balance = amount;
+
+		if (!(useUserInfo() && vaultEconomy != null)) return;
+
+		OfflinePlayer offlinePlayer = user.getUser();
+
+		vaultEconomy.withdrawPlayer(offlinePlayer, vaultEconomy.getBalance(offlinePlayer));
+		vaultEconomy.depositPlayer(offlinePlayer, amount);
+	}
+
+	/**
+	 * Deposits the set amount into the user's account.
+	 *
+	 * @param amount the amount deposited
+	 */
+	public void deposit(double amount) {
+		setBalance(balance + amount);
+	}
+
+	/**
+	 * Withdraws the set amount from the user's account.
+	 *
+	 * @param amount the amount withdrawn
+	 */
+	public void withdraw(double amount) throws EconomyException {
+		if (amount > getBalance()) throw new EconomyException("Amount exceeding balance");
+
+		setBalance(balance - amount);
+	}
+
+	private boolean useUserInfo() {
+		return user != null && useUser;
+	}
+
+}

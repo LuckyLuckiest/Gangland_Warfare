@@ -5,6 +5,7 @@ import me.luckyraven.item.ItemRefresher;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
+import me.luckyraven.weapon.WeaponTag;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -17,21 +18,19 @@ import org.jetbrains.annotations.Nullable;
 @RequiredArgsConstructor
 public class WeaponRefresher implements ItemRefresher {
 
-	private static final String WEAPON_NBT_KEY = "weapon";
-
 	private final WeaponService weaponService;
 
 	@Override
 	public boolean canRefresh(ItemStack source) {
 		if (source == null) return false;
-		String name = new ItemBuilder(source).getStringTagData(WEAPON_NBT_KEY);
+		String name = new ItemBuilder(source).getStringTagData(Weapon.getTagProperName(WeaponTag.WEAPON));
 		return name != null && !name.isEmpty();
 	}
 
 	@Override
 	@Nullable
 	public ItemStack refresh(ItemStack source, @Nullable Player context) {
-		String name = new ItemBuilder(source).getStringTagData(WEAPON_NBT_KEY);
+		String name = new ItemBuilder(source).getStringTagData(Weapon.getTagProperName(WeaponTag.WEAPON));
 		if (name == null || name.isEmpty()) return null;
 
 		Weapon weapon = weaponService.getWeapon(name);

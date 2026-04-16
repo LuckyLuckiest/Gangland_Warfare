@@ -126,6 +126,7 @@ public class KernelConfig {
 		fm.addFile(new FileHandler(gangland, "wearables", ".yml"), true);
 		fm.addFile(new FileHandler(gangland, "cars", ".yml"), true);
 		fm.addFile(new FileHandler(gangland, "money", ".yml"), true);
+		fm.addFile(new FileHandler(gangland, "market_events", ".yml"), true);
 		return fm;
 	}
 

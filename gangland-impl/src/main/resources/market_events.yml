@@ -1,0 +1,27 @@
+# Scripted market shocks.
+#
+# Each top-level entry defines a named event. Events multiply the price of
+# either a single item (`Target: Item:<id>`) or every item tracked by a
+# SellCategory (`Target: Category:<id>`) for a finite window.
+#
+# `Auto_Trigger: true` fires on the cron schedule. `Auto_Trigger: false`
+# only fires when an admin runs `/glw market shock <Name>`.
+
+Heist_Loot_Dump:
+   Target: Category:Firearms
+   Multiplier: 0.7
+   Duration_Minutes: 120
+   Auto_Trigger: false
+
+Summer_Tourism:
+   Target: Item:emerald
+   Multiplier: 1.4
+   Duration_Minutes: 1440
+   Auto_Trigger: true
+   Schedule_Cron: "0 0 * * 6"
+
+Diamond_Rush:
+   Target: Item:diamond
+   Multiplier: 1.8
+   Duration_Minutes: 60
+   Auto_Trigger: false
