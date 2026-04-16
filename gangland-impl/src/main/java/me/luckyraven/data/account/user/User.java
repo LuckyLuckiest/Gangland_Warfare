@@ -6,15 +6,16 @@ import me.luckyraven.copsncrooks.bounty.Bounty;
 import me.luckyraven.copsncrooks.bounty.BountyContext;
 import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.copsncrooks.wanted.WantedContext;
-import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.Level;
-import me.luckyraven.data.economy.EconomyException;
-import me.luckyraven.data.economy.EconomyHandler;
 import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.service.InventoryRegistry;
+import me.luckyraven.market.bank.Bank;
+import me.luckyraven.market.bank.EconomyException;
+import me.luckyraven.market.bank.EconomyHandler;
+import me.luckyraven.market.bank.EconomyOwner;
 import me.luckyraven.scoreboard.Scoreboard;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.Placeholder;
@@ -36,7 +37,7 @@ import java.util.UUID;
  */
 @Getter
 @Setter
-public class User<T extends OfflinePlayer> implements BountyContext, WantedContext {
+public class User<T extends OfflinePlayer> implements BountyContext, WantedContext, EconomyOwner {
 
 	private final T                     user;
 	private final UUID                  uuid;

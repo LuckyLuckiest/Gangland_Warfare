@@ -1,8 +1,8 @@
 package me.luckyraven.database.repositories.player;
 
-import me.luckyraven.data.account.Bank;
 import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.UserTable;
+import me.luckyraven.market.bank.Bank;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.component.Table;

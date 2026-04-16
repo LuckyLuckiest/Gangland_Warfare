@@ -1,7 +1,7 @@
 package me.luckyraven.database.tables.player;
 
-import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.user.User;
+import me.luckyraven.market.bank.Bank;
 import me.luckyraven.persistence.database.component.Attribute;
 import me.luckyraven.persistence.database.component.Table;
 import org.bukkit.OfflinePlayer;
@@ -36,11 +36,11 @@ public class BankTable extends Table<Bank> {
 	@Override
 	public Map<String, Object> searchCriteria(Bank data) {
 		return createSearchCriteria("uuid = ?", new Object[]{data.getUuid().toString()}, new int[]{Types.CHAR},
-									new int[]{0});
+		                            new int[]{0});
 	}
 
 	public Map<String, Object> searchCriteria(User<? extends OfflinePlayer> user) {
 		return createSearchCriteria("uuid = ?", new Object[]{user.getUuid().toString()}, new int[]{Types.CHAR},
-									new int[]{0});
+		                            new int[]{0});
 	}
 }

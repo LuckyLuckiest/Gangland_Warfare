@@ -1,7 +1,6 @@
 package me.luckyraven.data.placeholder.worker;
 
 import me.luckyraven.copsncrooks.wanted.Wanted;
-import me.luckyraven.data.account.Bank;
 import me.luckyraven.data.account.Level;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
@@ -13,6 +12,7 @@ import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.unique.UniqueItem;
+import me.luckyraven.market.bank.Bank;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.placeholder.PlaceholderHandler;
 import me.luckyraven.util.placeholder.effect.ConditionalFlashWrapper;

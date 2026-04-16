@@ -4,12 +4,12 @@ import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.data.economy.EconomyException;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.multi.MultiInventory;
 import me.luckyraven.inventory.part.ButtonTags;
 import me.luckyraven.inventory.part.Fill;
+import me.luckyraven.market.bank.EconomyException;
 import me.luckyraven.sign.model.ParsedSign;
 import me.luckyraven.sign.type.BountySign;
 import me.luckyraven.util.ItemBuilder;
@@ -116,10 +116,10 @@ public class BountyAspect implements SignAspect {
 		Fill   fill  = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 
 		ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
-											   Settings.getNextPage());
+		                                       Settings.getNextPage());
 
 		MultiInventory multiInventory = dynamicMultiInventory(plugin, player, heads, title, false, false, fill,
-															  buttonTags, null);
+		                                                      buttonTags, null);
 
 		if (multiInventory == null) return;
 
@@ -141,7 +141,7 @@ public class BountyAspect implements SignAspect {
 		List<String> lore = new ArrayList<>();
 
 		lore.add(String.format("&7&lBounty: &a%s&e%s", Settings.getMoneySymbol(),
-							   Settings.formatDouble(user.getBounty().getAmount())));
+		                       Settings.formatDouble(user.getBounty().getAmount())));
 		lore.add("&7&lStatus: " + status);
 
 		headBuilder.setLore(lore);
