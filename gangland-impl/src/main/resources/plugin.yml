@@ -16,6 +16,8 @@ commands:
    glw:
       description: Gangland warfare main command.
       permission: gangland.command.main
+      aliases:
+         - gangland
 
 permissions:
    gangland.command.main:
