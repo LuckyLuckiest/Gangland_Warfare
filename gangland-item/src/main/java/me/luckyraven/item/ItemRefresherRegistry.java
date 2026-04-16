@@ -38,4 +38,21 @@ public class ItemRefresherRegistry {
 		return source.clone();
 	}
 
+	/**
+	 * Rebuilds display fields from config while preserving runtime state (durability, ammo, uses, enchants). Used by
+	 * sell / trade-in flows where the item is flowing from the player to the trader and must not be reset.
+	 */
+	public ItemStack decorate(ItemStack source, @Nullable Player context) {
+		if (source == null || source.getType().isAir()) return source;
+
+		for (ItemRefresher refresher : refreshers) {
+			if (!refresher.canRefresh(source)) continue;
+
+			ItemStack rebuilt = refresher.decorate(source, context);
+			if (rebuilt != null) return rebuilt;
+		}
+
+		return source.clone();
+	}
+
 }
