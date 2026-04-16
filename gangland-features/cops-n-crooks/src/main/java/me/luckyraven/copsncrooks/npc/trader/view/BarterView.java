@@ -35,7 +35,7 @@ import java.util.function.Consumer;
  * Drop-zone view for the trader barter flow. The player drops items from any of the shop's
  * {@link me.luckyraven.shop.BarterCategory barter categories}; their combined value (via
  * {@link CategoryBarterValuator}) must meet or exceed the negotiated asking price for the swap to confirm. <strong>No
- * economy money is involved at any point</strong>. Mirrors the structure of {@link TradeInView}.
+ * economy money is involved at any point</strong>.
  */
 @RequiredArgsConstructor
 public final class BarterView implements BeanLifecycle {
@@ -188,7 +188,7 @@ public final class BarterView implements BeanLifecycle {
 		renderClear(session);
 		renderConfirm(session);
 
-		// Same dropzone preservation trick as TradeInView — keep slots empty during background fill.
+		// Dropzone preservation trick — keep slots empty during background fill.
 		ItemStack[] preservedDropzone = new ItemStack[session.dropzoneSlots.length];
 		for (int i = 0; i < session.dropzoneSlots.length; i++) {
 			preservedDropzone[i] = session.handler.getInventory().getItem(session.dropzoneSlots[i]);

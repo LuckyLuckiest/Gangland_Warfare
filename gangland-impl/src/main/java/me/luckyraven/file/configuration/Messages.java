@@ -325,11 +325,6 @@ public enum Messages {
 	SHOP_SELL_SUCCESS("Commands.Shop.Sell.Success", Type.COMMAND),
 	SHOP_SELL_NOTHING_VALUED("Errors.Shop.Sell.Nothing_Valued", Type.ERROR),
 	SHOP_SELL_ECONOMY_ERROR("Errors.Shop.Sell.Economy_Error", Type.ERROR),
-	SHOP_TRADEIN_SUCCESS("Commands.Shop.Trade_In.Success", Type.COMMAND),
-	SHOP_TRADEIN_INSUFFICIENT_FUNDS("Errors.Shop.Trade_In.Insufficient_Funds", Type.ERROR),
-	SHOP_TRADEIN_INVENTORY_FULL("Errors.Shop.Trade_In.Inventory_Full", Type.ERROR),
-	SHOP_TRADEIN_ECONOMY_ERROR("Errors.Shop.Trade_In.Economy_Error", Type.ERROR),
-	SHOP_TRADEIN_REFUND("Commands.Shop.Trade_In.Refund", Type.COMMAND),
 
 	// trader (trader NPC feature)
 	TRADER_TIP_SUCCESS("Commands.Trader.Tip.Success", Type.COMMAND),
@@ -343,7 +338,6 @@ public enum Messages {
 	TRADER_BARGAIN_HARD_REJECTED("Errors.Trader.Bargain.Hard_Rejected", Type.ERROR),
 	TRADER_BARGAIN_ALREADY_BELOW("Errors.Trader.Bargain.Already_Below", Type.ERROR),
 	TRADER_ANGERED("Information.Trader.Anger.Angered", Type.INFORMATION),
-	TRADER_TRADEIN_NOT_CONFIGURED("Errors.Trader.Trade_In.Not_Configured", Type.ERROR),
 	TRADER_SELL_PROPOSE_PRICE_ACCEPTED("Commands.Trader.Sell.Propose_Price.Accepted", Type.COMMAND),
 	TRADER_SELL_PROPOSE_PRICE_ANGERED("Errors.Trader.Sell.Propose_Price.Angered", Type.ERROR),
 	TRADER_SELL_PROPOSE_PRICE_INVALID("Errors.Trader.Sell.Propose_Price.Invalid", Type.ERROR),

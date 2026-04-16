@@ -12,7 +12,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 
 /**
- * Singleton click / drag / close listener for the barter view. Mirrors {@link TradeInSessionListener}; delegates to
+ * Singleton click / drag / close listener for the barter view. Delegates to
  * {@link BarterView} which owns the per-player session map.
  */
 @ListenerHandler

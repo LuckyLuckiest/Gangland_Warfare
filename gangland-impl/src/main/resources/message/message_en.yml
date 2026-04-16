@@ -246,9 +246,6 @@ Commands:
          Success: "&bBartered for &f%item%&b."
       Sell:
          Success: "&aSold &f%count% item(s) &afor &6%money_symbol%%total%&a."
-      Trade_In:
-         Success: "&aTrade-in accepted — paid &6%money_symbol%%owed% &aand &6%money_symbol%%credit% &ain items."
-         Refund: "&aTrader refunds you &6%money_symbol%%amount% &afor the over-valued items."
       Saved: "&aShop &f'%shop%' &asaved."
       Admin:
          Entry_Added: "&aAdded &f%material% &aas entry &f#%index% &aon page &f%page%&a."
@@ -329,10 +326,6 @@ Errors:
       Sell:
          Nothing_Valued: "&cNothing in your offer has a valuation."
          Economy_Error: "&cSell failed (economy error): &f%detail%"
-      Trade_In:
-         Insufficient_Funds: "&cNot enough funds — you still owe &6%money_symbol%%owed%&c."
-         Inventory_Full: "&cYour inventory is full; can't complete the trade-in."
-         Economy_Error: "&cTrade-in failed (economy error): &f%detail%"
       Not_Defined: "&cShop &f'%shop%' &cis not defined."
    Trader:
       Tip:
@@ -347,8 +340,6 @@ Errors:
          Hard_Rejected: "&4&l\"Get out of my sight!\""
          Already_Below: "&cYou've already negotiated below that price."
          On_Cooldown: "&cThe trader won't bargain that item again for &e%seconds%s&c."
-      Trade_In:
-         Not_Configured: "&cThis trader has no trade-in categories set up."
       Sell:
          Propose_Price:
             Invalid: "&cInvalid price — enter a positive number."

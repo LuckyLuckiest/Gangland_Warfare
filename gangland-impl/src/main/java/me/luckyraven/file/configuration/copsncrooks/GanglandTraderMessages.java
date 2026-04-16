@@ -66,11 +66,6 @@ public final class GanglandTraderMessages implements TraderMessageContract {
 	}
 
 	@Override
-	public String tradeInNotConfigured() {
-		return Messages.TRADER_TRADEIN_NOT_CONFIGURED.toString();
-	}
-
-	@Override
 	public String sellProposePriceAccepted(double price) {
 		return Messages.TRADER_SELL_PROPOSE_PRICE_ACCEPTED.toString()
 		                                                  .replace("%money_symbol%", Settings.getMoneySymbol())

@@ -75,7 +75,6 @@ public class TraderBuyListener implements Listener {
 			}
 			case INSUFFICIENT_FUNDS -> {
 				event.setCancelled(true);
-				event.setOfferTradeIn(true);
 				String msg = messages.purchaseInsufficientFunds(price);
 				event.setReason(msg);
 				player.sendMessage(msg);

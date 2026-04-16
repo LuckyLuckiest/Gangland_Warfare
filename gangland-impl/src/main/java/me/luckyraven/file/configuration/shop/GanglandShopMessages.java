@@ -96,39 +96,6 @@ public final class GanglandShopMessages implements ShopMessageContract {
 	}
 
 	@Override
-	public String tradeInSuccess(double credit, double owed) {
-		return Messages.SHOP_TRADEIN_SUCCESS.toString()
-		                                    .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                    .replace("%credit%", Settings.formatDouble(credit))
-		                                    .replace("%owed%", Settings.formatDouble(owed));
-	}
-
-	@Override
-	public String tradeInInsufficientFunds(double owed) {
-		return Messages.SHOP_TRADEIN_INSUFFICIENT_FUNDS.toString()
-		                                               .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                               .replace("%owed%", Settings.formatDouble(owed));
-	}
-
-	@Override
-	public String tradeInInventoryFull() {
-		return Messages.SHOP_TRADEIN_INVENTORY_FULL.toString();
-	}
-
-	@Override
-	public String tradeInEconomyError(String detail) {
-		return Messages.SHOP_TRADEIN_ECONOMY_ERROR.toString()
-		                                          .replace("%detail%", detail == null ? "" : detail);
-	}
-
-	@Override
-	public String tradeInRefund(double amount) {
-		return Messages.SHOP_TRADEIN_REFUND.toString()
-		                                   .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                   .replace("%amount%", Settings.formatDouble(amount));
-	}
-
-	@Override
 	public String shopAdminCategoryCreated(String id) {
 		return Messages.SHOP_ADMIN_CATEGORY_CREATED.toString().replace("%id%", id);
 	}

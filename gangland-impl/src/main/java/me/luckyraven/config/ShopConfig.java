@@ -32,7 +32,6 @@ import me.luckyraven.shop.message.ShopMessageContract;
 import me.luckyraven.shop.transaction.ShopBarterService;
 import me.luckyraven.shop.transaction.ShopPurchaseService;
 import me.luckyraven.shop.transaction.ShopSellService;
-import me.luckyraven.shop.transaction.ShopTradeInService;
 import me.luckyraven.shop.valuation.CategoryBarterValuator;
 import me.luckyraven.shop.valuation.CategorySellValuator;
 import me.luckyraven.shop.valuation.SellValuator;
@@ -90,7 +89,7 @@ public class ShopConfig {
 		return new GanglandShopDisplayResolver(weaponService);
 	}
 
-	// ── Purchase / barter / sell / trade-in services ─────────────────────
+	// ── Purchase / barter / sell services ────────────────────────────────
 
 	@Bean
 	public ShopPurchaseService shopPurchaseService(ItemRefresherRegistry refresherRegistry) {
@@ -105,11 +104,6 @@ public class ShopConfig {
 	@Bean
 	public ShopSellService shopSellService() {
 		return new ShopSellService();
-	}
-
-	@Bean
-	public ShopTradeInService shopTradeInService(ItemRefresherRegistry refresherRegistry) {
-		return new ShopTradeInService(refresherRegistry);
 	}
 
 	@Bean
@@ -191,23 +185,13 @@ public class ShopConfig {
 	}
 
 	@Bean
-	public TradeInView tradeInView(MoodService moodService, SellValuator sellValuator,
-	                               ItemRefresherRegistry refresherRegistry,
-	                               ShopDisplayResolver displayResolver,
-	                               TraderSettings traderSettings) {
-		return new TradeInView(gangland, moodService, sellValuator, refresherRegistry, displayResolver,
-		                       traderSettings);
-	}
-
-	@Bean
 	public NegotiationView negotiationView(MoodService moodService, BargainView bargainView,
 	                                       TipView tipView, BarterView barterView,
-	                                       TradeInView tradeInView,
 	                                       TraderSettings traderSettings, TraderMessageContract traderMessages,
 	                                       ShopDisplayResolver displayResolver) {
 		NegotiationView view = new NegotiationView(gangland, moodService, traderSettings, traderMessages,
 		                                           displayResolver);
-		view.setSubViews(bargainView, tipView, barterView, tradeInView);
+		view.setSubViews(bargainView, tipView, barterView);
 		return view;
 	}
 

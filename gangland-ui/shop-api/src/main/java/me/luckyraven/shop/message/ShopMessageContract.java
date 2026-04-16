@@ -35,16 +35,6 @@ public interface ShopMessageContract {
 
 	String sellEconomyError(String detail);
 
-	String tradeInSuccess(double credit, double owed);
-
-	String tradeInInsufficientFunds(double owed);
-
-	String tradeInInventoryFull();
-
-	String tradeInEconomyError(String detail);
-
-	String tradeInRefund(double amount);
-
 	String shopAdminCategoryCreated(String id);
 
 	String shopAdminCategoryRemoved(String id);

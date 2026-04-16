@@ -29,7 +29,6 @@
 #                             <1 = trader undervalues incoming barter). Defaults to Sell_Price_Ratio if absent.
 # - Max_Health                the trader's max health in half-hearts (20 = 10 hearts, vanilla default)
 # - Invulnerable              if false, trader can be killed; anger cues still fire on hit
-# - Refunds_Trade_In_Overpay  if true, trader will refund overpaid trade-ins
 #
 # Add as many custom traits as you want — just define all fields under
 # a new top-level id and reference it with `/glw trader create <shop> <id>`.
@@ -51,8 +50,6 @@ easygoing:
    Sell_Price_Ratio: 0.55
    Barter_Price_Ratio: 1.0
    Max_Health: 20.0
-   Invulnerable: false
-   Refunds_Trade_In_Overpay: true
 
 hotheaded:
    Display_Name: "Hotheaded"
@@ -71,7 +68,6 @@ hotheaded:
    Sell_Price_Ratio: 0.4
    Barter_Price_Ratio: 0.4
    Max_Health: 24.0
-   Invulnerable: false
 
 stubborn:
    Display_Name: "Stubborn"
@@ -109,8 +105,6 @@ generous:
    Sell_Price_Ratio: 0.7
    Barter_Price_Ratio: 1.1
    Max_Health: 16.0
-   Invulnerable: false
-   Refunds_Trade_In_Overpay: true
 
 shrewd:
    Display_Name: "Shrewd"
@@ -129,7 +123,6 @@ shrewd:
    Sell_Price_Ratio: 0.45
    Barter_Price_Ratio: 0.7
    Max_Health: 20.0
-   Invulnerable: true
 
 timid:
    Display_Name: "Timid"
@@ -148,4 +141,3 @@ timid:
    Sell_Price_Ratio: 0.5
    Barter_Price_Ratio: 0.9
    Max_Health: 10.0
-   Invulnerable: false

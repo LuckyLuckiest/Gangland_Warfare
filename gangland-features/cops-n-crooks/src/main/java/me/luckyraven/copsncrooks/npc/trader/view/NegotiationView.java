@@ -33,14 +33,13 @@ import java.util.WeakHashMap;
 @RequiredArgsConstructor
 public final class NegotiationView implements BeanLifecycle {
 
-	private static final int SIZE          = 54;
-	private static final int SLOT_ITEM     = 22;
-	private static final int SLOT_BUY      = 38;
-	private static final int SLOT_BARGAIN  = 40;
-	private static final int SLOT_TIP      = 42;
-	private static final int SLOT_TRADE_IN = 46;
-	private static final int SLOT_CANCEL   = 49;
-	private static final int SLOT_BARTER   = 52;
+	private static final int SIZE         = 54;
+	private static final int SLOT_ITEM    = 22;
+	private static final int SLOT_BUY     = 38;
+	private static final int SLOT_BARGAIN = 40;
+	private static final int SLOT_TIP     = 42;
+	private static final int SLOT_CANCEL  = 49;
+	private static final int SLOT_BARTER  = 52;
 
 	private static final SoundConfiguration              SOUND_BUY      = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
 	private static final SoundConfiguration              SOUND_OPEN_SUB = vanilla("UI_BUTTON_CLICK", 1.2f);
@@ -55,7 +54,6 @@ public final class NegotiationView implements BeanLifecycle {
 	private              BargainView                     bargainView;
 	private              TipView                         tipView;
 	private              BarterView                      barterView;
-	private              TradeInView                     tradeInView;
 
 	private static SoundConfiguration vanilla(String name, float pitch) {
 		return new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, name, 0.6f, pitch);
@@ -76,12 +74,10 @@ public final class NegotiationView implements BeanLifecycle {
 		}
 	}
 
-	public void setSubViews(BargainView bargainView, TipView tipView, BarterView barterView,
-	                        TradeInView tradeInView) {
+	public void setSubViews(BargainView bargainView, TipView tipView, BarterView barterView) {
 		this.bargainView = bargainView;
 		this.tipView     = tipView;
 		this.barterView  = barterView;
-		this.tradeInView = tradeInView;
 	}
 
 	public void open(Player viewer, TraderNpc trader, ShopDefinition definition, ShopItemEntry entry,
@@ -191,10 +187,6 @@ public final class NegotiationView implements BeanLifecycle {
 			session.handler.setItem(SLOT_BARTER, barter, false, (p, inv, b) -> onBarter(p, session));
 		}
 
-		ItemBuilder tradeIn = new ItemBuilder(material(XMaterial.CHEST, Material.CHEST));
-		tradeIn.setDisplayName("&dTRADE-IN").setLore("&7Offset the price with items you already own.");
-		session.handler.setItem(SLOT_TRADE_IN, tradeIn, false, (p, inv, b) -> onTradeIn(p, session));
-
 		ItemBuilder cancel = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER));
 		cancel.setDisplayName("&cCANCEL").setLore("&7Return to the shop.");
 		session.handler.setItem(SLOT_CANCEL, cancel, false, (p, inv, b) -> onCancel(p, session));
@@ -209,9 +201,6 @@ public final class NegotiationView implements BeanLifecycle {
 
 		// The buy listener owns user-facing messaging (success and failure both go through the contract).
 		if (event.isCancelled()) {
-			if (event.isOfferTradeIn()) {
-				onTradeIn(viewer, session);
-			}
 			return;
 		}
 
@@ -239,17 +228,6 @@ public final class NegotiationView implements BeanLifecycle {
 		if (barterView == null) return;
 		session.pendingSubview = true;
 		barterView.open(viewer, session, session.definition, currentPrice(session), this::reopenAfterSubview);
-	}
-
-	private void onTradeIn(Player viewer, NegotiationSession session) {
-		SOUND_OPEN_SUB.playSound(viewer);
-		if (tradeInView == null) return;
-		if (session.definition.getSellCategories().isEmpty()) {
-			viewer.sendMessage(messages.tradeInNotConfigured());
-			return;
-		}
-		session.pendingSubview = true;
-		tradeInView.open(viewer, session, session.definition, currentPrice(session), this::reopenAfterSubview);
 	}
 
 	// ── Helpers ──────────────────────────────────────────────────────────
