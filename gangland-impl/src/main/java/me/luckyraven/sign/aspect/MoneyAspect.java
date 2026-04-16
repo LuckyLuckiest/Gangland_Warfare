@@ -3,10 +3,10 @@ package me.luckyraven.sign.aspect;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.economy.bank.EconomyException;
+import me.luckyraven.economy.bank.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.market.bank.EconomyException;
-import me.luckyraven.market.bank.EconomyHandler;
 import me.luckyraven.sign.model.ParsedSign;
 import org.bukkit.entity.Player;
 

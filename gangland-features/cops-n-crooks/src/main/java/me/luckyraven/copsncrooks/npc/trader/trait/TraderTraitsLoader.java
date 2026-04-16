@@ -66,8 +66,7 @@ public final class TraderTraitsLoader {
 					barterPriceRatio,
 					s.getDouble("Max_Health", 20.0D),
 					s.getBoolean("Invulnerable", true),
-					s.getBoolean("Refunds_Trade_In_Overpay", false),
-					s.getBoolean("Market_Linked", true)
+					s.getBoolean("Refunds_Trade_In_Overpay", false)
 			);
 
 			String displayName = s.getString("Display_Name", id);

@@ -6,7 +6,7 @@ import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.market.bank.Bank;
+import me.luckyraven.economy.bank.Bank;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.listener.ListenerHandler;

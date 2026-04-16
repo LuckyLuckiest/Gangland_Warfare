@@ -9,12 +9,10 @@ import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.placeholder.PlaceholderService;
+import me.luckyraven.economy.bank.Bank;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.unique.UniqueItem;
-import me.luckyraven.market.bank.Bank;
-import me.luckyraven.market.contract.MarketPriceContract;
-import me.luckyraven.market.registry.MarketItemState;
 import me.luckyraven.util.color.ColorUtil;
 import me.luckyraven.util.placeholder.PlaceholderHandler;
 import me.luckyraven.util.placeholder.effect.ConditionalFlashWrapper;
@@ -34,7 +32,6 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 	private final UniqueItemAddon     uniqueItemAddon;
-	private final MarketPriceContract marketPrice;
 
 	public GanglandPlaceholder(String prefix,
 	                           Replacer.Closure closure,
@@ -42,14 +39,12 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	                           MemberManager memberManager,
 	                           GangManager gangManager,
 	                           UniqueItemAddon uniqueItemAddon,
-	                           MarketPriceContract marketPrice,
 	                           PlaceholderService placeholderService) {
 		super(prefix, closure);
 		this.userManager     = userManager;
 		this.memberManager   = memberManager;
 		this.gangManager     = gangManager;
 		this.uniqueItemAddon = uniqueItemAddon;
-		this.marketPrice     = marketPrice;
 		placeholderService.register(this);
 	}
 
@@ -102,44 +97,10 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (param.contains("unique-item_")) value = getUniqueItem(param);
 		if (value != null) return value;
 
-		if (param.contains("market_")) value = getMarket(param);
-		if (value != null) return value;
-
 		value = getSetting(param);
 		if (value == null) return "NA";
 
 		return value;
-	}
-
-	@Nullable
-	private String getMarket(String parameter) {
-		String marketStr = "market_";
-
-		if (parameter.equals(marketStr + "index")) {
-			return String.format("%.3f", marketPrice.index());
-		}
-
-		String priceKey = marketStr + "price_";
-		if (parameter.startsWith(priceKey)) {
-			String          itemId = parameter.substring(priceKey.length());
-			MarketItemState state  = marketPrice.find(itemId).orElse(null);
-			if (state == null) return null;
-			return Settings.formatDouble(state.effectivePrice());
-		}
-
-		String change24Key = marketStr + "change_24h_";
-		if (parameter.startsWith(change24Key)) {
-			String itemId = parameter.substring(change24Key.length());
-			return String.format("%+.2f%%", marketPrice.percentageChange(itemId, 1) * 100D);
-		}
-
-		String change7Key = marketStr + "change_7d_";
-		if (parameter.startsWith(change7Key)) {
-			String itemId = parameter.substring(change7Key.length());
-			return String.format("%+.2f%%", marketPrice.percentageChange(itemId, 7) * 100D);
-		}
-
-		return null;
 	}
 
 	@Nullable

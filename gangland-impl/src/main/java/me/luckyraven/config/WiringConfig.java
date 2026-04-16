@@ -12,7 +12,6 @@ import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointTeleport;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
-import me.luckyraven.market.contract.MarketPriceContract;
 import me.luckyraven.util.autowire.DependencyContainer;
 import me.luckyraven.util.autowire.bean.Bean;
 import me.luckyraven.util.autowire.bean.Configuration;
@@ -58,10 +57,9 @@ public class WiringConfig {
 	                                               MemberManager memberManager,
 	                                               GangManager gangManager,
 	                                               UniqueItemAddon uniqueItemAddon,
-	                                               MarketPriceContract marketPrice,
 	                                               PlaceholderService placeholderService) {
 		return new GanglandPlaceholder(Gangland.FULL_PREFIX, Replacer.Closure.PERCENT,
 		                               userManager, memberManager, gangManager,
-		                               uniqueItemAddon, marketPrice, placeholderService);
+		                               uniqueItemAddon, placeholderService);
 	}
 }

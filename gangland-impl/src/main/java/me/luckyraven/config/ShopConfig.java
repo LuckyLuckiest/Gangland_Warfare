@@ -20,9 +20,6 @@ import me.luckyraven.file.configuration.shop.GanglandShopDisplayResolver;
 import me.luckyraven.file.configuration.shop.GanglandShopMessages;
 import me.luckyraven.file.configuration.shop.TraderSettingsImpl;
 import me.luckyraven.item.ItemRefresherRegistry;
-import me.luckyraven.item.ItemSerializerRegistry;
-import me.luckyraven.market.MarketAwareSellValuator;
-import me.luckyraven.market.contract.MarketPriceContract;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.repository.IRepository;
@@ -37,6 +34,7 @@ import me.luckyraven.shop.transaction.ShopPurchaseService;
 import me.luckyraven.shop.transaction.ShopSellService;
 import me.luckyraven.shop.transaction.ShopTradeInService;
 import me.luckyraven.shop.valuation.CategoryBarterValuator;
+import me.luckyraven.shop.valuation.CategorySellValuator;
 import me.luckyraven.shop.valuation.SellValuator;
 import me.luckyraven.shop.view.BarterCategoryItemsAdminView;
 import me.luckyraven.shop.view.PriceEditorView;
@@ -115,8 +113,8 @@ public class ShopConfig {
 	}
 
 	@Bean
-	public SellValuator sellValuator(MarketPriceContract market, ItemSerializerRegistry itemSerializerRegistry) {
-		return new MarketAwareSellValuator(market, itemSerializerRegistry);
+	public SellValuator sellValuator() {
+		return new CategorySellValuator();
 	}
 
 	@Bean

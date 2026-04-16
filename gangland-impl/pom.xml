@@ -98,7 +98,7 @@
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-market</artifactId>
+            <artifactId>gangland-economy</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
