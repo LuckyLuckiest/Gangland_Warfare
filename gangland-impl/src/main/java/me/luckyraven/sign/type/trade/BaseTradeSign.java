@@ -86,8 +86,8 @@ public abstract class BaseTradeSign implements Sign {
 		return (player, a, b) -> {
 			if (a.getType() != b.getType()) return false;
 			if (!Ammunition.isAmmunition(a) || !Ammunition.isAmmunition(b)) return a.isSimilar(b);
-			Ammunition ammo1 = ammunitionManager.getAmmunition(new ItemBuilder(a).getStringTagData("ammo"));
-			Ammunition ammo2 = ammunitionManager.getAmmunition(new ItemBuilder(b).getStringTagData("ammo"));
+			Ammunition ammo1 = ammunitionManager.getAmmunition(new ItemBuilder(a).getStringTagData(Ammunition.NBT_KEY));
+			Ammunition ammo2 = ammunitionManager.getAmmunition(new ItemBuilder(b).getStringTagData(Ammunition.NBT_KEY));
 			return ammo1 != null && ammo2 != null && ammo1.compareTo(ammo2) == 0;
 		};
 	}

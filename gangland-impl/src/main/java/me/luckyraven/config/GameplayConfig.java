@@ -30,17 +30,11 @@ import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
 import me.luckyraven.inventory.multi.ItemSourceProvider;
 import me.luckyraven.item.ItemConverterRegistry;
 import me.luckyraven.item.ItemParser;
-import me.luckyraven.item.ItemRefresherRegistry;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.contract.*;
-import me.luckyraven.item.converter.*;
 import me.luckyraven.item.listener.money.MoneyProximityPickupTask;
 import me.luckyraven.item.money.MoneyAddon;
-import me.luckyraven.item.money.MoneyConverter;
 import me.luckyraven.item.money.MoneyDepositService;
-import me.luckyraven.item.refresher.UniqueItemRefresher;
-import me.luckyraven.item.refresher.WeaponRefresher;
-import me.luckyraven.item.refresher.WearableRefresher;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.lootchest.LootChestService;
 import me.luckyraven.lootchest.config.LootChestLoader;
@@ -260,88 +254,7 @@ public class GameplayConfig {
 		return task;
 	}
 
-	@Bean
-	public MaterialConverter materialConverter() {
-		return new MaterialConverter();
-	}
-
-	@Bean
-	public WeaponConverter weaponConverter(WeaponService weaponService) {
-		return new WeaponConverter(weaponService);
-	}
-
-	@Bean
-	public AmmunitionConverter ammunitionConverter(AmmunitionManager ammunitionManager) {
-		return new AmmunitionConverter(ammunitionManager);
-	}
-
-	@Bean
-	public WearableConverter wearableConverter(WearableService wearableService) {
-		return new WearableConverter(wearableService);
-	}
-
-	@Bean
-	public CarConverter carConverter(CarAddon carAddon) {
-		return new CarConverter(carAddon);
-	}
-
-	@Bean
-	public UniqueConverter uniqueConverter(UniqueItemAddon uniqueItemAddon) {
-		return new UniqueConverter(uniqueItemAddon);
-	}
-
-	@Bean
-	public MoneyConverter moneyConverter(MoneyAddon moneyAddon, MoneyDepositService moneyDepositService) {
-		return new MoneyConverter(moneyAddon, moneyDepositService);
-	}
-
-	@Bean
-	public ItemConverterRegistry itemConverterRegistry(MaterialConverter materialConverter,
-	                                                   WeaponConverter weaponConverter,
-	                                                   AmmunitionConverter ammunitionConverter,
-	                                                   WearableConverter wearableConverter,
-	                                                   CarConverter carConverter,
-	                                                   UniqueConverter uniqueConverter,
-	                                                   MoneyConverter moneyConverter) {
-		ItemConverterRegistry registry = new ItemConverterRegistry();
-		registry.register("material", materialConverter);
-		registry.register("weapon", weaponConverter);
-		registry.register(new String[]{"ammunition", "ammo"}, ammunitionConverter);
-		registry.register("wearable", wearableConverter);
-		registry.register("car", carConverter);
-		registry.register("unique", uniqueConverter);
-		registry.register(new String[]{"money", "cash"}, moneyConverter);
-		return registry;
-	}
-
-	@Bean
-	public ItemParser itemParser(ItemConverterRegistry itemConverterRegistry) {
-		return new ItemParser(itemConverterRegistry);
-	}
-
-	@Bean
-	public WeaponRefresher weaponRefresher(WeaponService weaponService) {
-		return new WeaponRefresher(weaponService);
-	}
-
-	@Bean
-	public WearableRefresher wearableRefresher(WearableService wearableService) {
-		return new WearableRefresher(wearableService);
-	}
-
-	@Bean
-	public UniqueItemRefresher uniqueItemRefresher(UniqueItemAddon uniqueItemAddon) {
-		return new UniqueItemRefresher(uniqueItemAddon);
-	}
-
-	@Bean
-	public ItemRefresherRegistry itemRefresherRegistry(WeaponRefresher weaponRefresher,
-	                                                   WearableRefresher wearableRefresher,
-	                                                   UniqueItemRefresher uniqueItemRefresher) {
-		ItemRefresherRegistry registry = new ItemRefresherRegistry();
-		registry.register(weaponRefresher, wearableRefresher, uniqueItemRefresher);
-		return registry;
-	}
+	// Item framework (converters, serializers, refreshers, parsers + registries) lives in ItemConfig.
 
 	@Bean
 	public UniqueItemRegistry uniqueItemRegistry(UniqueItemAddon uniqueItemAddon) {
