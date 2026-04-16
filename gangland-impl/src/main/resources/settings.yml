@@ -566,3 +566,20 @@ Trader:
    Fallback_Trait_Id: "easygoing"
    # Upper cap on the multiplier used by the shop price-editor's +/- buttons (via the custom-mode anvil).
    Max_Mode_Multiplier: 1000000
+   # Player sell flow. Traders evaluate items dropped into the SellView against admin-defined
+   # Sell_Categories in each shop file; a friendly trader pays closer to the listed base price,
+   # while an angry one pays less. Bargain multipliers are the rungs shown on the SellBargainView.
+   Sell:
+      Max_Offer_Slots: 14
+      Mood_Per_Sale: 0.02
+      Bargain_Multipliers:
+         - 1.1
+         - 1.25
+         - 1.4
+         - 1.6
+         - 2.0
+   # Per-item bargain budget regeneration. After the player spends all bargain rounds on an item,
+   # they must wait for rounds to regenerate. Regeneration is linear: after 1/bargainMaxRounds of the
+   # cooldown one round returns, after 2/bargainMaxRounds two rounds return, etc. Counts separately
+   # per (trader, player, item type).
+   Bargain_Cooldown_Seconds: 300

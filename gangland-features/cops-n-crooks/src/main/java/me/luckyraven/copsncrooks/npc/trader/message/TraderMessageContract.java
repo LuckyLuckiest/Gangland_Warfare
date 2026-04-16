@@ -27,4 +27,14 @@ public interface TraderMessageContract {
 
 	String angered(String traderName);
 
+	String tradeInNotConfigured();
+
+	String sellProposePriceAngered();
+
+	String sellProposePriceInvalid();
+
+	String sellProposePriceAccepted(double price);
+
+	String bargainOnCooldown(long secondsRemaining);
+
 }

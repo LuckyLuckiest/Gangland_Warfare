@@ -8,6 +8,7 @@ import me.luckyraven.copsncrooks.npc.trader.TraderData;
 import me.luckyraven.copsncrooks.npc.trader.TraderManager;
 import me.luckyraven.copsncrooks.npc.trader.config.TraderSettings;
 import me.luckyraven.copsncrooks.npc.trader.message.TraderMessageContract;
+import me.luckyraven.copsncrooks.npc.trader.mood.BargainCooldownService;
 import me.luckyraven.copsncrooks.npc.trader.mood.MoodService;
 import me.luckyraven.copsncrooks.npc.trader.respawn.TraderRespawnService;
 import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitRegistry;
@@ -30,7 +31,12 @@ import me.luckyraven.shop.message.ShopDisplayResolver;
 import me.luckyraven.shop.message.ShopMessageContract;
 import me.luckyraven.shop.transaction.ShopBarterService;
 import me.luckyraven.shop.transaction.ShopPurchaseService;
+import me.luckyraven.shop.transaction.ShopSellService;
+import me.luckyraven.shop.transaction.ShopTradeInService;
+import me.luckyraven.shop.valuation.CategorySellValuator;
+import me.luckyraven.shop.valuation.SellValuator;
 import me.luckyraven.shop.view.PriceEditorView;
+import me.luckyraven.shop.view.SellCategoryItemsAdminView;
 import me.luckyraven.shop.view.ShopAdminView;
 import me.luckyraven.util.autowire.bean.Bean;
 import me.luckyraven.util.autowire.bean.Configuration;
@@ -82,7 +88,7 @@ public class ShopConfig {
 		return new GanglandShopDisplayResolver(weaponService);
 	}
 
-	// ── Purchase / barter services (reusable across any shop integration) ─
+	// ── Purchase / barter / sell / trade-in services ─────────────────────
 
 	@Bean
 	public ShopPurchaseService shopPurchaseService(ItemRefresherRegistry refresherRegistry) {
@@ -92,6 +98,21 @@ public class ShopConfig {
 	@Bean
 	public ShopBarterService shopBarterService(ItemRefresherRegistry refresherRegistry) {
 		return new ShopBarterService(refresherRegistry);
+	}
+
+	@Bean
+	public ShopSellService shopSellService() {
+		return new ShopSellService();
+	}
+
+	@Bean
+	public ShopTradeInService shopTradeInService(ItemRefresherRegistry refresherRegistry) {
+		return new ShopTradeInService(refresherRegistry);
+	}
+
+	@Bean
+	public SellValuator sellValuator() {
+		return new CategorySellValuator();
 	}
 
 	// ── Traits (loaded from plugin/trader_traits.yml) ────────────────────
@@ -107,7 +128,7 @@ public class ShopConfig {
 
 		try {
 			FileHandler handler = new FileHandler(gangland, "trader_traits", "", "yml");
-			handler.create(true); // create from jar resource if present
+			handler.create(true);
 			if (!fileManager.contains("trader_traits")) fileManager.addFile(handler, true);
 			loader.load(handler);
 		} catch (IOException e) {
@@ -136,9 +157,16 @@ public class ShopConfig {
 	// ── Views ────────────────────────────────────────────────────────────
 
 	@Bean
-	public BargainView bargainView(MoodService moodService, TraderMessageContract traderMessages,
+	public BargainCooldownService bargainCooldownService(TraderSettings traderSettings) {
+		return new BargainCooldownService(traderSettings);
+	}
+
+	@Bean
+	public BargainView bargainView(MoodService moodService, BargainCooldownService cooldownService,
+	                               TraderMessageContract traderMessages,
 	                               TraderSettings traderSettings, ShopDisplayResolver displayResolver) {
-		return new BargainView(gangland, moodService, traderMessages, traderSettings, displayResolver);
+		return new BargainView(gangland, moodService, cooldownService, traderMessages, traderSettings,
+		                       displayResolver);
 	}
 
 	@Bean
@@ -152,11 +180,42 @@ public class ShopConfig {
 	}
 
 	@Bean
+	public TradeInView tradeInView(MoodService moodService, SellValuator sellValuator,
+	                               ItemRefresherRegistry refresherRegistry,
+	                               ShopDisplayResolver displayResolver,
+	                               TraderSettings traderSettings) {
+		return new TradeInView(gangland, moodService, sellValuator, refresherRegistry, displayResolver,
+		                       traderSettings);
+	}
+
+	@Bean
 	public NegotiationView negotiationView(MoodService moodService, BargainView bargainView,
 	                                       TipView tipView, BarterConfirmView barterView,
-	                                       TraderSettings traderSettings, ShopDisplayResolver displayResolver) {
-		NegotiationView view = new NegotiationView(gangland, moodService, traderSettings, displayResolver);
-		view.setSubViews(bargainView, tipView, barterView);
+	                                       TradeInView tradeInView,
+	                                       TraderSettings traderSettings, TraderMessageContract traderMessages,
+	                                       ShopDisplayResolver displayResolver) {
+		NegotiationView view = new NegotiationView(gangland, moodService, traderSettings, traderMessages,
+		                                           displayResolver);
+		view.setSubViews(bargainView, tipView, barterView, tradeInView);
+		return view;
+	}
+
+	@Bean
+	public SellBargainView sellBargainView(MoodService moodService, BargainCooldownService cooldownService,
+	                                       TraderMessageContract traderMessages,
+	                                       TraderSettings traderSettings) {
+		return new SellBargainView(gangland, moodService, cooldownService, traderMessages, traderSettings);
+	}
+
+	@Bean
+	public TraderSellView traderSellView(MoodService moodService, SellValuator sellValuator,
+	                                     ItemRefresherRegistry refresherRegistry,
+	                                     TraderSettings traderSettings, TraderMessageContract traderMessages,
+	                                     ShopDisplayResolver displayResolver,
+	                                     SellBargainView sellBargainView) {
+		TraderSellView view = new TraderSellView(gangland, moodService, sellValuator, refresherRegistry,
+		                                         traderSettings, traderMessages, displayResolver);
+		view.setBargainView(sellBargainView);
 		return view;
 	}
 
@@ -167,16 +226,36 @@ public class ShopConfig {
 	}
 
 	@Bean
+	public TraderModeSelectView traderModeSelectView(TraderSettings traderSettings,
+	                                                 TraderShopView traderShopView,
+	                                                 TraderSellView traderSellView) {
+		TraderModeSelectView view = new TraderModeSelectView(gangland, traderSettings);
+		view.setSubViews(traderShopView, traderSellView);
+		traderShopView.setModeSelectView(view);
+		traderSellView.setModeSelectView(view);
+		return view;
+	}
+
+	@Bean
 	public PriceEditorView priceEditorView(TraderSettings traderSettings) {
 		return new PriceEditorView(gangland, traderSettings);
 	}
 
 	@Bean
-	public ShopAdminView shopAdminView(PriceEditorView priceEditorView, ItemRefresherRegistry refresherRegistry,
+	public SellCategoryItemsAdminView sellCategoryItemsAdminView(PriceEditorView priceEditorView,
+	                                                             ItemRefresherRegistry refresherRegistry,
+	                                                             ShopDisplayResolver displayResolver) {
+		return new SellCategoryItemsAdminView(gangland, priceEditorView, refresherRegistry, displayResolver);
+	}
+
+	@Bean
+	public ShopAdminView shopAdminView(PriceEditorView priceEditorView,
+	                                   SellCategoryItemsAdminView categoryItemsView,
+	                                   ItemRefresherRegistry refresherRegistry,
 	                                   ShopMessageContract shopMessages, TraderSettings traderSettings,
 	                                   ShopDisplayResolver displayResolver) {
-		return new ShopAdminView(gangland, priceEditorView, refresherRegistry, shopMessages, traderSettings,
-		                         displayResolver);
+		return new ShopAdminView(gangland, priceEditorView, categoryItemsView, refresherRegistry, shopMessages,
+		                         traderSettings, displayResolver);
 	}
 
 	// ── Trader NPC lifecycle ─────────────────────────────────────────────
@@ -196,10 +275,10 @@ public class ShopConfig {
 
 	@Bean
 	public ShopViewOpener shopViewOpener(TraderManager traderManager, ShopRegistry shopRegistry,
-	                                     TraderShopView playerView, ShopAdminView adminView,
+	                                     TraderModeSelectView modeSelectView, ShopAdminView adminView,
 	                                     ShopMessageContract shopMessages,
 	                                     TraderMessageContract traderMessages) {
-		return new ShopViewOpenerImpl(traderManager, shopRegistry, playerView, adminView,
+		return new ShopViewOpenerImpl(traderManager, shopRegistry, modeSelectView, adminView,
 		                              shopMessages, traderMessages);
 	}
 

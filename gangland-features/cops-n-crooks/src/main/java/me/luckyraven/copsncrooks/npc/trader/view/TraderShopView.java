@@ -1,6 +1,7 @@
 package me.luckyraven.copsncrooks.npc.trader.view;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import me.luckyraven.copsncrooks.npc.trader.TraderNpc;
 import me.luckyraven.copsncrooks.npc.trader.config.TraderSettings;
 import me.luckyraven.copsncrooks.npc.trader.mood.MoodService;
@@ -13,6 +14,7 @@ import me.luckyraven.shop.ShopItemEntry;
 import me.luckyraven.shop.message.ShopDisplayResolver;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.configuration.SoundConfiguration;
+import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -21,6 +23,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Trader-specific browser view. Applies mood-based price multipliers, routes clicks into {@link NegotiationView}. Moved
@@ -41,30 +44,31 @@ public final class TraderShopView {
 	private static final int SLOT_PREV      = 48;
 	private static final int SLOT_PAGE_INFO = 49;
 	private static final int SLOT_NEXT      = 50;
+	private static final int SLOT_BACK      = 45;
 
-	private static final SoundConfiguration SOUND_PAGE = new SoundConfiguration(
-			SoundConfiguration.SoundType.VANILLA, "UI_BUTTON_CLICK", 0.6f, 1.2f);
+	private static final SoundConfiguration SOUND_PAGE = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	                                                                            "UI_BUTTON_CLICK", 0.6f, 1.2f);
 
-	private final JavaPlugin          plugin;
-	private final MoodService         moodService;
-	private final NegotiationView     negotiationView;
-	private final TraderSettings      settings;
-	private final ShopDisplayResolver displayResolver;
+	private final JavaPlugin           plugin;
+	private final MoodService          moodService;
+	private final NegotiationView      negotiationView;
+	private final TraderSettings       settings;
+	private final ShopDisplayResolver  displayResolver;
+	@Setter
+	private       TraderModeSelectView modeSelectView;
 
 	public void open(Player viewer, TraderNpc trader, ShopDefinition def, TraderTraitDefinition trait) {
 		openPage(viewer, trader, def, trait, 0);
 	}
 
-	private void openPage(Player viewer, TraderNpc trader, ShopDefinition def,
-	                      TraderTraitDefinition trait, int page) {
-		String title = def.getTitle() + " — " + trait.displayName();
+	private void openPage(Player viewer, TraderNpc trader, ShopDefinition def, TraderTraitDefinition trait, int page) {
+		String title = def.getTitle() + "&r &8&l[&b&l" + trait.displayName() + "&8&l]";
 
 		InventoryHandler handler = new InventoryHandler(plugin, title, INVENTORY_SIZE, viewer);
 
-		List<ShopItemEntry> entries = def.getBuyEntries();
-		int totalPages = Math.max(1,
-		                          (int) Math.ceil(entries.size() / (double) ENTRIES_PER_PAGE));
-		int currentPage = Math.max(0, Math.min(page, totalPages - 1));
+		List<ShopItemEntry> entries     = def.getBuyEntries();
+		int                 totalPages  = Math.max(1, (int) Math.ceil(entries.size() / (double) ENTRIES_PER_PAGE));
+		int                 currentPage = Math.clamp(page, 0, totalPages - 1);
 
 		double multiplier = moodService.priceMultiplier(trader.getData().getId(), viewer.getUniqueId(),
 		                                                trait.profile());
@@ -75,15 +79,16 @@ public final class TraderShopView {
 			if (entryIndex >= entries.size()) break;
 
 			ShopItemEntry entry      = entries.get(entryIndex);
-			double        finalPrice = entry.hasPrice() ? entry.getPrice() * multiplier : 0D;
+			double        finalPrice = entry.hasPrice() ? Objects.requireNonNull(entry.getPrice()) * multiplier : 0D;
 			ItemBuilder   display    = buildDisplay(entry, finalPrice);
 			int           slot       = INTERIOR_SLOTS[i];
 
 			handler.setItem(slot, display, false, (clicker, inv, builder) -> {
 				clicker.closeInventory();
-				Bukkit.getScheduler().runTask(plugin, () ->
-						negotiationView.open(clicker, trader, entry, trait,
-						                     () -> openPage(clicker, trader, def, trait, currentPage)));
+				Bukkit.getScheduler()
+				      .runTask(plugin, () -> negotiationView.open(clicker, trader, def, entry, trait,
+				                                                  () -> openPage(clicker, trader, def, trait,
+				                                                                 currentPage)));
 			});
 		}
 
@@ -94,28 +99,33 @@ public final class TraderShopView {
 		handler.open(viewer);
 	}
 
-	private void renderNavigation(Player viewer, TraderNpc trader, ShopDefinition def,
-	                              TraderTraitDefinition trait, InventoryHandler handler,
-	                              int currentPage, int totalPages) {
+	private void renderNavigation(Player viewer, TraderNpc trader, ShopDefinition def, TraderTraitDefinition trait,
+	                              InventoryHandler handler, int currentPage, int totalPages) {
+		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&eBack to menu");
+		handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> {
+			viewer.closeInventory();
+			if (modeSelectView != null) {
+				Bukkit.getScheduler().runTask(plugin, () -> modeSelectView.open(viewer, trader, def, trait));
+			}
+		});
+
 		if (currentPage > 0) {
-			ItemBuilder prev = new ItemBuilder(Material.ARROW)
-					.setDisplayName("&e◄ Previous page")
-					.setLore("&7Go to page " + currentPage + ".");
+			ItemBuilder prev = new ItemBuilder(Material.ARROW).setDisplayName("&e◄ Previous page")
+			                                                  .setLore("&7Go to page " + currentPage + ".");
 			handler.setItem(SLOT_PREV, prev, false, (p, inv, b) -> {
 				SOUND_PAGE.playSound(viewer);
 				openPage(viewer, trader, def, trait, currentPage - 1);
 			});
 		}
 
-		ItemBuilder info = new ItemBuilder(Material.PAPER)
-				.setDisplayName("&bPage &f" + (currentPage + 1) + "&7/&f" + totalPages)
-				.setLore("&7" + def.getBuyEntries().size() + " item(s) total.");
+		ItemBuilder info = new ItemBuilder(Material.PAPER);
+		info.setDisplayName("&bPage &f" + (currentPage + 1) + "&7/&f" + totalPages)
+		    .setLore("&7" + def.getBuyEntries().size() + " item(s) total.");
 		handler.setItem(SLOT_PAGE_INFO, info, false, (p, inv, b) -> { });
 
 		if (currentPage < totalPages - 1) {
-			ItemBuilder next = new ItemBuilder(Material.ARROW)
-					.setDisplayName("&eNext page ►")
-					.setLore("&7Go to page " + (currentPage + 2) + ".");
+			ItemBuilder next = new ItemBuilder(Material.ARROW);
+			next.setDisplayName("&eNext page ►").setLore("&7Go to page " + (currentPage + 2) + ".");
 			handler.setItem(SLOT_NEXT, next, false, (p, inv, b) -> {
 				SOUND_PAGE.playSound(viewer);
 				openPage(viewer, trader, def, trait, currentPage + 1);
@@ -128,26 +138,21 @@ public final class TraderShopView {
 		ItemBuilder builder = new ItemBuilder(copy);
 		builder.setDisplayName(displayResolver.cleanDisplayName(copy));
 
-		List<String> existingLore = copy.getItemMeta() != null && copy.getItemMeta().getLore() != null
-		                            ? new ArrayList<>(copy.getItemMeta().getLore())
-		                            : new ArrayList<>();
+		List<String> existingLore = copy.getItemMeta() != null && copy.getItemMeta().getLore() != null ?
+		                            new ArrayList<>(copy.getItemMeta().getLore()) :
+		                            new ArrayList<>();
 
 		if (entry.hasPrice()) {
-			existingLore.add("&7Price: &6$" + formatPrice(finalPrice));
+			existingLore.add("&7Price: &6$" + NumberUtil.valueFormat(finalPrice));
 		}
 		if (entry.hasBarter()) {
-			existingLore.add("&7Barter: &b" + entry.getTradeFor().getType().name()
-			                 + " &7×&b" + entry.getTradeFor().getAmount());
+			ItemStack tradeFor = entry.getTradeFor();
+			existingLore.add("&7Barter: &b" + tradeFor.getType().name() + " &7×&b" + tradeFor.getAmount());
 		}
 		existingLore.add("&8▸ Click to buy");
 
 		builder.setLore(existingLore);
 		return builder;
-	}
-
-	private String formatPrice(double price) {
-		if (price == Math.floor(price)) return String.valueOf((long) price);
-		return String.format("%.2f", price);
 	}
 
 }

@@ -65,4 +65,32 @@ public final class GanglandTraderMessages implements TraderMessageContract {
 		return Messages.TRADER_ANGERED.toString().replace("%trader%", name);
 	}
 
+	@Override
+	public String tradeInNotConfigured() {
+		return Messages.TRADER_TRADEIN_NOT_CONFIGURED.toString();
+	}
+
+	@Override
+	public String sellProposePriceAccepted(double price) {
+		return Messages.TRADER_SELL_PROPOSE_PRICE_ACCEPTED.toString()
+		                                                  .replace("%money_symbol%", Settings.getMoneySymbol())
+		                                                  .replace("%price%", Settings.formatDouble(price));
+	}
+
+	@Override
+	public String sellProposePriceAngered() {
+		return Messages.TRADER_SELL_PROPOSE_PRICE_ANGERED.toString();
+	}
+
+	@Override
+	public String sellProposePriceInvalid() {
+		return Messages.TRADER_SELL_PROPOSE_PRICE_INVALID.toString();
+	}
+
+	@Override
+	public String bargainOnCooldown(long secondsRemaining) {
+		return Messages.TRADER_BARGAIN_ON_COOLDOWN.toString()
+		                                          .replace("%seconds%", String.valueOf(secondsRemaining));
+	}
+
 }

@@ -17,14 +17,16 @@
 # Each top-level key is a trait id; the full field set (defined in the
 # TraderTraitProfile record) is required for the trait to load.
 #
-# - Mood_Per_*   deltas are applied to the per-trader per-player mood
-#                (range [-1.0 .. +1.0]). Negative = trader gets angrier.
-# - Max_Anger_Multiplier   cap price multiplier at mood = -1
-# - Min_Friend_Discount    cap price multiplier at mood = +1 (e.g. 0.9 = 10% off)
-# - Bargain_Min_Ratio      lowest acceptable offer as a fraction of the asking price
-# - Sell_Price_Ratio       fraction of ask the trader pays when BUYING from the player
-# - Max_Health             the trader's max health in half-hearts (20 = 10 hearts, vanilla default)
-# - Invulnerable           if true, trader cannot be killed; anger cues still fire on hit
+# - Mood_Per_*                deltas are applied to the per-trader per-player mood
+#                             (range [-1.0 .. +1.0]). Negative = trader gets angrier.
+# - Max_Anger_Multiplier      cap price multiplier at mood = -1
+# - Min_Friend_Discount       cap price multiplier at mood = +1 (e.g. 0.9 = 10% off)
+# - Bargain_Min_Ratio         lowest acceptable offer as a fraction of the asking price
+# - Bargain_Max_Ratio         highest acceptable offer as a fraction of the asking price
+# - Sell_Price_Ratio          fraction of ask the trader pays when BUYING from the player
+# - Max_Health                the trader's max health in half-hearts (20 = 10 hearts, vanilla default)
+# - Invulnerable              if true, trader cannot be killed; anger cues still fire on hit
+# - Refunds_Trade_In_Overpay  if true, trader will refund overpaid trade-ins
 #
 # Add as many custom traits as you want — just define all fields under
 # a new top-level id and reference it with `/glw trader create <shop> <id>`.
@@ -46,6 +48,7 @@ easygoing:
    Sell_Price_Ratio: 0.55
    Max_Health: 20.0
    Invulnerable: false
+   Refunds_Trade_In_Overpay: true
 
 hotheaded:
    Display_Name: "Hotheaded"
@@ -100,6 +103,7 @@ generous:
    Sell_Price_Ratio: 0.7
    Max_Health: 16.0
    Invulnerable: false
+   Refunds_Trade_In_Overpay: true
 
 shrewd:
    Display_Name: "Shrewd"

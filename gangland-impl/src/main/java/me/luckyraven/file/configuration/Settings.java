@@ -25,171 +25,144 @@ public class Settings implements FileInitializer {
 	private static final @Getter Map<String, Object> settingsMap         = new LinkedHashMap<>();
 	private static final @Getter Map<String, Object> settingsPlaceholder = new LinkedHashMap<>();
 
-	private static FileConfiguration settings;
-
-	private final FileHandler fileHandler;
-
+	private static         FileConfiguration settings;
 	// update configuration
-	private static @Getter boolean updaterEnabled, notifyPrivilegedPlayers, updaterAutoUpdate;
-
+	private static @Getter boolean           updaterEnabled, notifyPrivilegedPlayers, updaterAutoUpdate;
 	// language picked
-	private static @Getter String languagePicked;
-
+	private static @Getter String  languagePicked;
 	// resource pack
 	private static @Getter boolean resourcePackEnabled;
 	private static @Getter String  resourcePackUrl;
 	private static @Getter boolean resourcePackKick;
-
 	// database configuration
-	private static @Getter String databaseType;
-	private static @Getter String mysqlHost, mysqlUsername, mysqlPassword;
+	private static @Getter String  databaseType;
+	private static @Getter String  mysqlHost, mysqlUsername, mysqlPassword;
 	private static @Getter int     mysqlPort;
 	private static @Getter boolean sqliteBackup, sqliteFailedMysql, autoSave, autoSaveDebug;
 	private static @Getter int    autoSaveTime;
 	private static @Getter double cleanUpTime;
-
 	// inventory configuration
 	private static @Getter String inventoryFillItem, inventoryFillName, inventoryLineItem, inventoryLineName, nextPage,
 			previousPage, homePage;
-
 	// economy
 	private static @Getter String moneySymbol, balanceFormat;
-
 	// user configuration
 	private static @Getter double userInitialBalance, userMaxBalance;
 	private static @Getter double bankInitialBalance, bankCreateFee, bankMaxBalance;
-
 	// user levels
 	private static @Getter int userMaxLevel, userLevelBaseAmount;
 	private static @Getter String userLevelFormula;
 	private static @Getter int    userSkillUpgrade;
 	private static @Getter double userSkillCost, userSkillExponential;
-
 	// user death
 	private static @Getter boolean deathEnabled, deathMoneyCommandEnabled, deathLoseMoney;
 	private static @Getter List<String> deathMoneyCommandExecutables;
 	private static @Getter String       deathLoseMoneyFormula;
 	private static @Getter double       deathThreshold;
-
 	// respawn
-	private static @Getter boolean respawnEnabled;
-	private static @Getter int     respawnDelay;
-	private static @Getter boolean respawnScreenEnabled;
-	private static @Getter String  respawnScreenTitle, respawnScreenSubtitle;
+	private static @Getter boolean      respawnEnabled;
+	private static @Getter int          respawnDelay;
+	private static @Getter boolean      respawnScreenEnabled;
+	private static @Getter String       respawnScreenTitle, respawnScreenSubtitle;
 	private static @Getter boolean respawnGameModeAllowFly;
 	private static @Getter String  respawnGameMode;
 	private static @Getter double  respawnHealthAmount;
 	private static @Getter int     respawnHungerAmount;
 	private static @Getter boolean respawnTeleportEnabled;
 	private static @Getter String  respawnTeleportWaypoint;
-
 	// bounty configuration
-	private static @Getter double bountyEachKillValue, bountyMaxKill;
+	private static @Getter double  bountyEachKillValue, bountyMaxKill;
 	private static @Getter boolean bountyTimerEnabled;
 	private static @Getter double  bountyTimerMultiple, bountyTimerMax;
-	private static @Getter int bountyTimeInterval;
-
+	private static @Getter int    bountyTimeInterval;
 	// wanted configuration
 	private static @Getter double wantedTakeMoneyAmount, wantedTakeMoneyMultiplier, wantedTimerMultiplierAmount;
 	private static @Getter boolean wantedEnabled, wantedTimerEnabled, wantedTimerMultiplierEnabled,
 			wantedKillComboEnabled;
 	private static @Getter int wantedTimerTime, wantedLevelIncrement, wantedMaximumLevel, wantedKillComboResetAfter;
 	private static @Getter List<Integer> wantedKillCounter;
-
 	// gang configuration
-	private static @Getter boolean gangEnabled, gangNameDuplicates;
+	private static @Getter boolean       gangEnabled, gangNameDuplicates;
 	private static @Getter String gangRankHead, gangRankTail, gangDisplayNameChar;
 	private static @Getter double gangInitialBalance, gangCreateFee, gangMaxBalance, gangContributionRate;
-
 	// scoreboard configuration
 	private static @Getter boolean scoreboardEnabled;
 	private static @Getter String  scoreboardDriver;
-
 	// civilian AI configuration
 	private static @Getter boolean civilianAiEnabled;
 	private static @Getter int     civilianAiTickRate;
-
 	// civilian spawner proximity configuration
-	private static @Getter double civilianSpawnerActivationRadius;
-	private static @Getter double civilianSpawnerDespawnRadius;
-	private static @Getter int    civilianSpawnerMaxNpcs;
-	private static @Getter int    civilianSpawnerCheckInterval;
-	private static @Getter String civilianSpawnerDefaultTypeId;
-
+	private static @Getter double  civilianSpawnerActivationRadius;
+	private static @Getter double  civilianSpawnerDespawnRadius;
+	private static @Getter int     civilianSpawnerMaxNpcs;
+	private static @Getter int     civilianSpawnerCheckInterval;
+	private static @Getter String  civilianSpawnerDefaultTypeId;
 	// civilian spawn configuration
-	private static @Getter double civilianSpawnMinDistance, civilianSpawnMaxDistance, civilianSpawnPhase1MinDistance;
+	private static @Getter double  civilianSpawnMinDistance, civilianSpawnMaxDistance, civilianSpawnPhase1MinDistance;
 	private static @Getter double civilianSpawnRadiusShrinkStep, civilianSpawnSpawnerPreferenceRadius,
 			civilianSpawnVisibilityCheckDistance;
 	private static @Getter int civilianSpawnVerticalSearchRange, civilianSpawnYOffset,
 			civilianSpawnMinOpenHorizontalSides;
 	private static @Getter int civilianSpawnPhase1Attempts, civilianSpawnPhase2Attempts;
-
 	// shared NPC navigation configuration
 	private static @Getter int npcNavRecalculationTicks, npcNavStuckCheckInterval, npcNavMaxStuckChecks,
 			npcNavMaxHopelessStuckChecks, npcNavMinRepathAfterLossTicks;
 	private static @Getter double npcNavHopelessCloseThreshold, npcNavMinProgressDistance, npcNavRangedMinDistance,
 			npcNavRangedMaxDistance;
-
 	// cop core configuration
 	private static @Getter int copMaxPerPlayer, copAiTickRate, copSpawnCheckRate, copMaxCuffAttempts,
 			copCuffCooldownTicks, copAttackCooldownTicks;
 	private static @Getter double copCuffRadius, copAlertRange, copCombatRange;
-
 	// cop count configuration
 	private static @Getter boolean copCountFormulaEnabled;
 	private static @Getter String  copCountFormula;
 	private static @Getter int     copCountBase, copCountPerLevel, copCountMax;
-
 	// cop spawn configuration
 	private static @Getter double copSpawnMinDistance, copSpawnMaxDistance, copSpawnPhase1MinDistance;
 	private static @Getter double copSpawnRadiusShrinkStep, copSpawnSpawnerPreferenceRadius,
 			copSpawnVisibilityCheckDistance;
 	private static @Getter int copSpawnVerticalSearchRange, copSpawnYOffset, copSpawnMinOpenHorizontalSides;
 	private static @Getter int copSpawnPhase1Attempts, copSpawnPhase2Attempts;
-
 	// cop return / despawn configuration
-	private static @Getter int    copReturnMaxTicks;
-	private static @Getter double copReturnStationArrivalDistance;
-
+	private static @Getter int          copReturnMaxTicks;
+	private static @Getter double       copReturnStationArrivalDistance;
 	// cop misc configuration
-	private static @Getter int copStartingAmmoMagazines;
-
-	private static @Getter int jailMaxCapacity;
-
+	private static @Getter int          copStartingAmmoMagazines;
+	private static @Getter int          jailMaxCapacity;
 	// gadget - jetpack
-	private static @Getter int    gadgetJetpackThrustRampTicks;
-	private static @Getter double gadgetJetpackDescentAccel;
-	private static @Getter double gadgetJetpackMaxDescentSpeed;
-	private static @Getter double gadgetJetpackHorizInfluence;
-	private static @Getter double gadgetJetpackMaxHorizSpeed;
-
+	private static @Getter int          gadgetJetpackThrustRampTicks;
+	private static @Getter double       gadgetJetpackDescentAccel;
+	private static @Getter double       gadgetJetpackMaxDescentSpeed;
+	private static @Getter double       gadgetJetpackHorizInfluence;
+	private static @Getter double       gadgetJetpackMaxHorizSpeed;
 	// gadget - car
-	private static @Getter double gadgetCarReverseSpeedRatio;
-	private static @Getter double gadgetCarHardBrakeMultiplier;
-	private static @Getter int    gadgetCarFuelConsumePerTick;
-
+	private static @Getter double       gadgetCarReverseSpeedRatio;
+	private static @Getter double       gadgetCarHardBrakeMultiplier;
+	private static @Getter int          gadgetCarFuelConsumePerTick;
 	// block regeneration (weapon Break_Blocks modifier tuning)
-	private static @Getter int blockRestoreDelayTicks;
-	private static @Getter int blockRegenerationDelayTicks;
-	private static @Getter int blockRegenerationStepTicks;
-
+	private static @Getter int          blockRestoreDelayTicks;
+	private static @Getter int          blockRegenerationDelayTicks;
+	private static @Getter int          blockRegenerationStepTicks;
 	// trader configuration
-	private static @Getter int    traderRespawnCooldownSeconds;
-	private static @Getter int    traderHeadTrackRadius;
-	private static @Getter double traderMoodDecayPerSecondFloor;
-	private static @Getter String traderFallbackTraitId;
-	private static @Getter int    traderMaxModeMultiplier;
-
+	private static @Getter int          traderRespawnCooldownSeconds;
+	private static @Getter int          traderHeadTrackRadius;
+	private static @Getter double       traderMoodDecayPerSecondFloor;
+	private static @Getter String       traderFallbackTraitId;
+	private static @Getter int          traderMaxModeMultiplier;
+	private static @Getter int          traderSellMaxOfferSlots;
+	private static @Getter double       traderMoodPerSale;
+	private static @Getter List<Double> traderSellBargainMultipliers;
+	private static @Getter int          traderBargainCooldownSeconds;
 	// loot chest configuration
-	private static @Getter long   lootChestCountdownTimer;
-	private static @Getter String lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
+	private static @Getter long         lootChestCountdownTimer;
+	private static @Getter String       lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
 	private static @Getter List<String> lootChestAllowedBlocks;
 	private static @Getter double       lootChestRewardMoneyMinimum, lootChestRewardMoneyMaximum,
 			lootChestRewardExperienceMinimum, lootChestRewardExperienceMaximum;
 	private static @Getter List<String> lootChestRewardCommands;
-
 	// money drop (cash items dropped by mobs / cops / civilians / players on death)
-	private static @Getter boolean moneyDropEnabled;
+	private static @Getter boolean      moneyDropEnabled;
+	private final          FileHandler  fileHandler;
 
 	public Settings(FileManager fileManager) {
 		try {
@@ -203,11 +176,6 @@ public class Settings implements FileInitializer {
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
-	}
-
-	@Override
-	public FileHandler getFileHandler() {
-		return fileHandler;
 	}
 
 	public static String formatDouble(double value) {
@@ -229,6 +197,11 @@ public class Settings implements FileInitializer {
 	private static String format(double value) {
 		if (settings.getBoolean("Balance_Format.Enable")) return String.format(balanceFormat, value);
 		return String.valueOf(value);
+	}
+
+	@Override
+	public FileHandler getFileHandler() {
+		return fileHandler;
 	}
 
 	@Override
@@ -570,6 +543,22 @@ public class Settings implements FileInitializer {
 		traderMoodDecayPerSecondFloor = trader.getDouble("Mood_Decay_Per_Second", 0.002);
 		traderFallbackTraitId         = trader.getString("Fallback_Trait_Id", "easygoing");
 		traderMaxModeMultiplier       = trader.getInt("Max_Mode_Multiplier", 1_000_000);
+
+		var traderSell = trader.getConfigurationSection("Sell");
+		if (traderSell != null) {
+			traderSellMaxOfferSlots      = traderSell.getInt("Max_Offer_Slots", 14);
+			traderMoodPerSale            = traderSell.getDouble("Mood_Per_Sale", 0.02);
+			traderSellBargainMultipliers = traderSell.getDoubleList("Bargain_Multipliers");
+		} else {
+			traderSellMaxOfferSlots      = 14;
+			traderMoodPerSale            = 0.02;
+			traderSellBargainMultipliers = List.of();
+		}
+		if (traderSellBargainMultipliers.isEmpty()) {
+			traderSellBargainMultipliers = List.of(1.1, 1.25, 1.4, 1.6, 2.0);
+		}
+
+		traderBargainCooldownSeconds = trader.getInt("Bargain_Cooldown_Seconds", 300);
 
 		addEachFieldReflection();
 		convertToPlaceholder();

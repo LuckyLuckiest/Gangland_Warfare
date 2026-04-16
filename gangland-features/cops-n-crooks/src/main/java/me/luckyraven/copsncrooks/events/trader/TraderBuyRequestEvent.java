@@ -21,6 +21,8 @@ public class TraderBuyRequestEvent extends TraderEvent implements Cancellable {
 	private boolean cancelled;
 	@Setter
 	private String  reason;
+	@Setter
+	private boolean offerTradeIn;
 
 	public TraderBuyRequestEvent(Player player, TraderNpc trader, ShopItemEntry entry, double finalPrice) {
 		super(player, trader);

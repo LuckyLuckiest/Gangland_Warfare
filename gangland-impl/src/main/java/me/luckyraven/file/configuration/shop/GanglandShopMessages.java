@@ -71,4 +71,65 @@ public final class GanglandShopMessages implements ShopMessageContract {
 		return Messages.SHOP_ADMIN_ENTRY_REMOVED.toString().replace("%index%", String.valueOf(index));
 	}
 
+	@Override
+	public String sellSuccess(double totalPaid, int itemCount) {
+		return Messages.SHOP_SELL_SUCCESS.toString()
+		                                 .replace("%money_symbol%", Settings.getMoneySymbol())
+		                                 .replace("%total%", Settings.formatDouble(totalPaid))
+		                                 .replace("%count%", String.valueOf(itemCount));
+	}
+
+	@Override
+	public String sellNothingValued() {
+		return Messages.SHOP_SELL_NOTHING_VALUED.toString();
+	}
+
+	@Override
+	public String sellEconomyError(String detail) {
+		return Messages.SHOP_SELL_ECONOMY_ERROR.toString().replace("%detail%", detail == null ? "" : detail);
+	}
+
+	@Override
+	public String tradeInSuccess(double credit, double owed) {
+		return Messages.SHOP_TRADEIN_SUCCESS.toString()
+		                                    .replace("%money_symbol%", Settings.getMoneySymbol())
+		                                    .replace("%credit%", Settings.formatDouble(credit))
+		                                    .replace("%owed%", Settings.formatDouble(owed));
+	}
+
+	@Override
+	public String tradeInInsufficientFunds(double owed) {
+		return Messages.SHOP_TRADEIN_INSUFFICIENT_FUNDS.toString()
+		                                               .replace("%money_symbol%", Settings.getMoneySymbol())
+		                                               .replace("%owed%", Settings.formatDouble(owed));
+	}
+
+	@Override
+	public String tradeInInventoryFull() {
+		return Messages.SHOP_TRADEIN_INVENTORY_FULL.toString();
+	}
+
+	@Override
+	public String tradeInEconomyError(String detail) {
+		return Messages.SHOP_TRADEIN_ECONOMY_ERROR.toString()
+		                                          .replace("%detail%", detail == null ? "" : detail);
+	}
+
+	@Override
+	public String tradeInRefund(double amount) {
+		return Messages.SHOP_TRADEIN_REFUND.toString()
+		                                   .replace("%money_symbol%", Settings.getMoneySymbol())
+		                                   .replace("%amount%", Settings.formatDouble(amount));
+	}
+
+	@Override
+	public String shopAdminCategoryCreated(String id) {
+		return Messages.SHOP_ADMIN_CATEGORY_CREATED.toString().replace("%id%", id);
+	}
+
+	@Override
+	public String shopAdminCategoryRemoved(String id) {
+		return Messages.SHOP_ADMIN_CATEGORY_REMOVED.toString().replace("%id%", id);
+	}
+
 }

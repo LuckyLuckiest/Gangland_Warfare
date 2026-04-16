@@ -3,6 +3,8 @@ package me.luckyraven.file.configuration.shop;
 import me.luckyraven.copsncrooks.npc.trader.config.TraderSettings;
 import me.luckyraven.file.configuration.Settings;
 
+import java.util.List;
+
 public class TraderSettingsImpl implements TraderSettings {
 
 	@Override
@@ -38,6 +40,26 @@ public class TraderSettingsImpl implements TraderSettings {
 	@Override
 	public String getInventoryFillItem() {
 		return Settings.getInventoryFillItem();
+	}
+
+	@Override
+	public int getSellMaxOfferSlots() {
+		return Settings.getTraderSellMaxOfferSlots();
+	}
+
+	@Override
+	public double getMoodPerSale() {
+		return Settings.getTraderMoodPerSale();
+	}
+
+	@Override
+	public List<Double> getSellBargainMultipliers() {
+		return Settings.getTraderSellBargainMultipliers();
+	}
+
+	@Override
+	public int getBargainCooldownSeconds() {
+		return Settings.getTraderBargainCooldownSeconds();
 	}
 
 }

@@ -10,4 +10,6 @@ public interface PaymentHandler {
 
 	void withdraw(double amount) throws PaymentException;
 
+	void deposit(double amount) throws PaymentException;
+
 }
