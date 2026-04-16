@@ -2,10 +2,7 @@ package me.luckyraven.shop.io;
 
 import lombok.CustomLog;
 import me.luckyraven.persistence.FileHandler;
-import me.luckyraven.shop.EntryKind;
-import me.luckyraven.shop.SellCategory;
-import me.luckyraven.shop.ShopDefinition;
-import me.luckyraven.shop.ShopItemEntry;
+import me.luckyraven.shop.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 
@@ -26,7 +23,8 @@ public final class ShopYamlWriter {
 		cfg.set("size", definition.getSize());
 		cfg.set("buy-entries", serializeEntries(definition.getBuyEntries()));
 		cfg.set("sell-entries", serializeEntries(definition.getSellEntries()));
-		cfg.set("sell-categories", serializeCategories(definition.getSellCategories()));
+		cfg.set("sell-categories", serializeSellCategories(definition.getSellCategories()));
+		cfg.set("barter-categories", serializeBarterCategories(definition.getBarterCategories()));
 
 		fileHandler.save();
 	}
@@ -37,12 +35,19 @@ public final class ShopYamlWriter {
 		List<ShopItemEntry> sell = kind == EntryKind.SELL ? newEntries : existing.getSellEntries();
 
 		return new ShopDefinition(existing.getKey(), existing.getTitle(), existing.getSize(), buy, sell,
-		                          existing.getSellCategories());
+		                          existing.getSellCategories(), existing.getBarterCategories());
 	}
 
 	public ShopDefinition copyReplacingSellCategories(ShopDefinition existing, List<SellCategory> newCategories) {
 		return new ShopDefinition(existing.getKey(), existing.getTitle(), existing.getSize(),
-		                          existing.getBuyEntries(), existing.getSellEntries(), newCategories);
+		                          existing.getBuyEntries(), existing.getSellEntries(),
+		                          newCategories, existing.getBarterCategories());
+	}
+
+	public ShopDefinition copyReplacingBarterCategories(ShopDefinition existing, List<BarterCategory> newCategories) {
+		return new ShopDefinition(existing.getKey(), existing.getTitle(), existing.getSize(),
+		                          existing.getBuyEntries(), existing.getSellEntries(),
+		                          existing.getSellCategories(), newCategories);
 	}
 
 	private void clearRoot(FileConfiguration cfg) {
@@ -62,9 +67,6 @@ public final class ShopYamlWriter {
 			if (entry.hasPrice()) {
 				map.put("price", entry.getPrice());
 			}
-			if (entry.hasBarter()) {
-				map.put("trade-for", entry.getTradeFor());
-			}
 
 			out.add(map);
 		}
@@ -72,10 +74,28 @@ public final class ShopYamlWriter {
 		return out;
 	}
 
-	private List<Map<String, Object>> serializeCategories(List<SellCategory> categories) {
+	private List<Map<String, Object>> serializeSellCategories(List<SellCategory> categories) {
 		List<Map<String, Object>> out = new ArrayList<>(categories.size());
 
 		for (SellCategory category : categories) {
+			Map<String, Object> map = new LinkedHashMap<>();
+			map.put("id", category.getId());
+			map.put("display-name", category.getDisplayName());
+			map.put("base-price", category.getBasePrice());
+
+			List<ItemStack> items = new ArrayList<>(category.getItems());
+			map.put("items", items);
+
+			out.add(map);
+		}
+
+		return out;
+	}
+
+	private List<Map<String, Object>> serializeBarterCategories(List<BarterCategory> categories) {
+		List<Map<String, Object>> out = new ArrayList<>(categories.size());
+
+		for (BarterCategory category : categories) {
 			Map<String, Object> map = new LinkedHashMap<>();
 			map.put("id", category.getId());
 			map.put("display-name", category.getDisplayName());

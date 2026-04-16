@@ -313,8 +313,9 @@ Errors:
          Economy_Error: "&cCompra fallida (error de economía): &f%detail%"
          Inventory_Full: "&cTu inventario está lleno."
       Barter:
-         Missing_Items: "&cNecesitas &f%amount%× %material% &cpara intercambiar esto."
-         Not_Allowed: "&cEste objeto no acepta intercambio."
+         Missing_Items: "&cYa no tienes todos los objetos que ofreciste."
+         Insufficient_Value: "&cTu oferta (&6%money_symbol%%offered%&c) está por debajo del valor pedido por el comerciante de &6%money_symbol%%asking%&c."
+         Not_Allowed: "&cEste comerciante no acepta intercambios."
       Not_Defined: "&cTienda &f'%shop%' &cno está definida."
    Trader:
       Tip:

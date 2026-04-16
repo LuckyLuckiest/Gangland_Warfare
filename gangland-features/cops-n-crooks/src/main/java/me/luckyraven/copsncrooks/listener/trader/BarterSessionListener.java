@@ -1,7 +1,7 @@
 package me.luckyraven.copsncrooks.listener.trader;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.copsncrooks.npc.trader.view.SellView;
+import me.luckyraven.copsncrooks.npc.trader.view.BarterView;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,22 +12,22 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 
 /**
- * Singleton click / drag / close listener for the player-facing sell view. Delegates to {@link SellView} which owns the
- * per-player session map.
+ * Singleton click / drag / close listener for the barter view. Mirrors {@link TradeInSessionListener}; delegates to
+ * {@link BarterView} which owns the per-player session map.
  */
 @ListenerHandler
 @RequiredArgsConstructor
-public final class TraderSellSessionListener implements Listener {
+public final class BarterSessionListener implements Listener {
 
-	private final SellView sellView;
+	private final BarterView barterView;
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onClick(InventoryClickEvent event) {
 		if (!(event.getWhoClicked() instanceof Player viewer)) return;
 
-		SellView.ClickOutcome outcome = sellView.handleClick(viewer, event.getInventory(),
-		                                                     event.getClickedInventory(), event.getSlot(),
-		                                                     event.getAction(), event.getCurrentItem());
+		BarterView.ClickOutcome outcome = barterView.handleClick(viewer, event.getInventory(),
+		                                                         event.getClickedInventory(), event.getSlot(),
+		                                                         event.getAction(), event.getCurrentItem());
 		if (outcome.cancel()) {
 			event.setCancelled(true);
 		}
@@ -39,7 +39,7 @@ public final class TraderSellSessionListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onDrag(InventoryDragEvent event) {
 		if (!(event.getWhoClicked() instanceof Player viewer)) return;
-		if (sellView.handleDrag(viewer, event.getInventory(), event.getRawSlots())) {
+		if (barterView.handleDrag(viewer, event.getInventory(), event.getRawSlots())) {
 			event.setCancelled(true);
 		}
 	}
@@ -47,7 +47,7 @@ public final class TraderSellSessionListener implements Listener {
 	@EventHandler
 	public void onClose(InventoryCloseEvent event) {
 		if (!(event.getPlayer() instanceof Player viewer)) return;
-		sellView.handleClose(viewer, event.getInventory());
+		barterView.handleClose(viewer, event.getInventory());
 	}
 
 }

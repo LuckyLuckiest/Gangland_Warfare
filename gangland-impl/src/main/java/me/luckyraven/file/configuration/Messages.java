@@ -314,6 +314,7 @@ public enum Messages {
 	SHOP_PURCHASE_INVENTORY_FULL("Errors.Shop.Purchase.Inventory_Full", Type.ERROR),
 	SHOP_BARTER_SUCCESS("Commands.Shop.Barter.Success", Type.COMMAND),
 	SHOP_BARTER_MISSING_ITEMS("Errors.Shop.Barter.Missing_Items", Type.ERROR),
+	SHOP_BARTER_INSUFFICIENT_VALUE("Errors.Shop.Barter.Insufficient_Value", Type.ERROR),
 	SHOP_BARTER_NOT_ALLOWED("Errors.Shop.Barter.Not_Allowed", Type.ERROR),
 	SHOP_NOT_DEFINED("Errors.Shop.Not_Defined", Type.ERROR),
 	SHOP_SAVED("Commands.Shop.Saved", Type.COMMAND),

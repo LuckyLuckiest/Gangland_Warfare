@@ -58,7 +58,7 @@ public final class SellBargainView implements BeanLifecycle {
 		}
 	}
 
-	public void open(Player viewer, TraderSellView.Session parent, Consumer<Player> onClose) {
+	public void open(Player viewer, SellView.Session parent, Consumer<Player> onClose) {
 		State state = new State(parent, onClose);
 		state.handler = new InventoryHandler(plugin, "&8Bargain - ask for more", SIZE, viewer);
 
@@ -115,7 +115,7 @@ public final class SellBargainView implements BeanLifecycle {
 	private void submitOffer(Player viewer, State state, double multiplier) {
 		SOUND_OFFER.playSound(viewer);
 
-		TraderSellView.Session parent = state.parent;
+		SellView.Session parent = state.parent;
 
 		// Per-item cooldown uses the first dropped item's material as a representative key — keeps per-session
 		// state keyed by the offering's primary material so rapid re-bargaining on the same item is rate-limited.
@@ -169,7 +169,7 @@ public final class SellBargainView implements BeanLifecycle {
 		return stack != null ? stack : new ItemStack(fallback);
 	}
 
-	private Material representativeMaterial(TraderSellView.Session parent) {
+	private Material representativeMaterial(SellView.Session parent) {
 		for (int slot : parent.dropzoneSlots) {
 			ItemStack stack = parent.handler.getInventory().getItem(slot);
 			if (stack != null && stack.getType() != Material.AIR) {
@@ -180,11 +180,11 @@ public final class SellBargainView implements BeanLifecycle {
 	}
 
 	private static final class State {
-		final TraderSellView.Session parent;
-		final Consumer<Player>       onClose;
+		final SellView.Session parent;
+		final Consumer<Player> onClose;
 		InventoryHandler handler;
 
-		State(TraderSellView.Session parent, Consumer<Player> onClose) {
+		State(SellView.Session parent, Consumer<Player> onClose) {
 			this.parent  = parent;
 			this.onClose = onClose;
 		}

@@ -24,6 +24,9 @@
 # - Bargain_Min_Ratio         lowest acceptable offer as a fraction of the asking price
 # - Bargain_Max_Ratio         highest acceptable offer as a fraction of the asking price
 # - Sell_Price_Ratio          fraction of ask the trader pays when BUYING from the player
+# - Barter_Price_Ratio        fraction credited per item when the player offers it as BARTER
+#                             (1.0 = item barter-value matches its admin price; >1 = trader is generous,
+#                             <1 = trader undervalues incoming barter). Defaults to Sell_Price_Ratio if absent.
 # - Max_Health                the trader's max health in half-hearts (20 = 10 hearts, vanilla default)
 # - Invulnerable              if true, trader cannot be killed; anger cues still fire on hit
 # - Refunds_Trade_In_Overpay  if true, trader will refund overpaid trade-ins
@@ -46,6 +49,7 @@ easygoing:
    Allows_Bargaining: true
    Allows_Barter: true
    Sell_Price_Ratio: 0.55
+   Barter_Price_Ratio: 1.0
    Max_Health: 20.0
    Invulnerable: false
    Refunds_Trade_In_Overpay: true
@@ -65,6 +69,7 @@ hotheaded:
    Allows_Bargaining: true
    Allows_Barter: false
    Sell_Price_Ratio: 0.4
+   Barter_Price_Ratio: 0.4
    Max_Health: 24.0
    Invulnerable: false
 
@@ -83,6 +88,7 @@ stubborn:
    Allows_Bargaining: false
    Allows_Barter: false
    Sell_Price_Ratio: 0.5
+   Barter_Price_Ratio: 0.5
    Max_Health: 40.0
    Invulnerable: false
 
@@ -101,6 +107,7 @@ generous:
    Allows_Bargaining: true
    Allows_Barter: true
    Sell_Price_Ratio: 0.7
+   Barter_Price_Ratio: 1.1
    Max_Health: 16.0
    Invulnerable: false
    Refunds_Trade_In_Overpay: true
@@ -120,6 +127,7 @@ shrewd:
    Allows_Bargaining: true
    Allows_Barter: true
    Sell_Price_Ratio: 0.45
+   Barter_Price_Ratio: 0.7
    Max_Health: 20.0
    Invulnerable: true
 
@@ -138,5 +146,6 @@ timid:
    Allows_Bargaining: true
    Allows_Barter: true
    Sell_Price_Ratio: 0.5
+   Barter_Price_Ratio: 0.9
    Max_Health: 10.0
    Invulnerable: false

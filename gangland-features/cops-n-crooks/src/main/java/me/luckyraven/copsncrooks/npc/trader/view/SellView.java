@@ -35,7 +35,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.*;
 
 @RequiredArgsConstructor
-public final class TraderSellView implements BeanLifecycle {
+public final class SellView implements BeanLifecycle {
 
 	private static final int SIZE         = 54;
 	private static final int SLOT_OFFER   = 26;
@@ -66,7 +66,7 @@ public final class TraderSellView implements BeanLifecycle {
 	private final ShopDisplayResolver   displayResolver;
 	private final Map<Player, Session>  active = new WeakHashMap<>();
 	@Setter
-	private       TraderModeSelectView  modeSelectView;
+	private       ModeSelectView        modeSelectView;
 	@Setter
 	private       SellBargainView       bargainView;
 

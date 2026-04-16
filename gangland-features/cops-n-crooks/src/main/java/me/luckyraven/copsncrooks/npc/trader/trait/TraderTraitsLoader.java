@@ -46,6 +46,9 @@ public final class TraderTraitsLoader {
 
 	private TraderTraitDefinition parseDefinition(String id, ConfigurationSection s) {
 		try {
+			double sellPriceRatio   = s.getDouble("Sell_Price_Ratio");
+			double barterPriceRatio = s.getDouble("Barter_Price_Ratio", sellPriceRatio);
+
 			TraderTraitProfile profile = new TraderTraitProfile(
 					s.getInt("Anger_Hit_Threshold"),
 					s.getDouble("Mood_Per_Hit"),
@@ -59,7 +62,8 @@ public final class TraderTraitsLoader {
 					s.getInt("Bargain_Max_Rounds"),
 					s.getBoolean("Allows_Bargaining"),
 					s.getBoolean("Allows_Barter"),
-					s.getDouble("Sell_Price_Ratio"),
+					sellPriceRatio,
+					barterPriceRatio,
 					s.getDouble("Max_Health", 20.0D),
 					s.getBoolean("Invulnerable", false),
 					s.getBoolean("Refunds_Trade_In_Overpay", false)

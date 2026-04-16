@@ -6,10 +6,7 @@ import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
 import me.luckyraven.item.ItemRefresherRegistry;
-import me.luckyraven.shop.EntryKind;
-import me.luckyraven.shop.SellCategory;
-import me.luckyraven.shop.ShopDefinition;
-import me.luckyraven.shop.ShopItemEntry;
+import me.luckyraven.shop.*;
 import me.luckyraven.shop.config.ShopUiSettings;
 import me.luckyraven.shop.event.ShopEditedEvent;
 import me.luckyraven.shop.message.ShopDisplayResolver;
@@ -46,6 +43,7 @@ public final class ShopAdminView {
 
 	private static final int SLOT_TAB_BUY      = 45;
 	private static final int SLOT_ADD_CATEGORY = 46;
+	private static final int SLOT_TAB_BARTER   = 47;
 	private static final int SLOT_PREV         = 48;
 	private static final int SLOT_PAGE_INFO    = 49;
 	private static final int SLOT_NEXT         = 50;
@@ -56,13 +54,14 @@ public final class ShopAdminView {
 	private static final SoundConfiguration SOUND_TAB  = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
 	                                                                            "UI_BUTTON_CLICK", 0.6f, 1.5f);
 
-	private final JavaPlugin                 plugin;
-	private final PriceEditorView            priceEditorView;
-	private final SellCategoryItemsAdminView categoryItemsView;
-	private final ItemRefresherRegistry      refresherRegistry;
-	private final ShopMessageContract        messages;
-	private final ShopUiSettings             uiSettings;
-	private final ShopDisplayResolver        displayResolver;
+	private final JavaPlugin                   plugin;
+	private final PriceEditorView              priceEditorView;
+	private final SellCategoryItemsAdminView   categoryItemsView;
+	private final BarterCategoryItemsAdminView barterItemsView;
+	private final ItemRefresherRegistry        refresherRegistry;
+	private final ShopMessageContract          messages;
+	private final ShopUiSettings               uiSettings;
+	private final ShopDisplayResolver          displayResolver;
 
 	private final Map<Player, Session> active = new WeakHashMap<>();
 
@@ -70,10 +69,11 @@ public final class ShopAdminView {
 		String           title   = "&8Admin: &f" + def.getTitle();
 		InventoryHandler handler = new InventoryHandler(plugin, title, INVENTORY_SIZE, admin);
 
-		List<ShopItemEntry> buyEntries     = new ArrayList<>(def.getBuyEntries());
-		List<SellCategory>  sellCategories = deepCopy(def.getSellCategories());
+		List<ShopItemEntry>  buyEntries       = new ArrayList<>(def.getBuyEntries());
+		List<SellCategory>   sellCategories   = deepCopy(def.getSellCategories());
+		List<BarterCategory> barterCategories = deepCopyBarter(def.getBarterCategories());
 
-		Session session = new Session(def, handler, buyEntries, sellCategories, refresherRegistry);
+		Session session = new Session(def, handler, buyEntries, sellCategories, barterCategories, refresherRegistry);
 		active.put(admin, session);
 
 		render(admin, session);
@@ -150,8 +150,8 @@ public final class ShopAdminView {
 	private void appendEntryAndNavigate(Player admin, Session session, ItemStack source) {
 		ItemStack refreshed = refresherRegistry.refresh(source, null);
 		int       newIndex  = session.buyEntries.size();
-		ShopItemEntry entry = new ShopItemEntry(newIndex, EntryKind.BUY, refreshed.clone(), DEFAULT_NEW_ENTRY_PRICE,
-		                                        null);
+		ShopItemEntry entry = new ShopItemEntry(newIndex, EntryKind.BUY, refreshed.clone(),
+		                                        DEFAULT_NEW_ENTRY_PRICE);
 
 		session.appendEntry(entry);
 		session.currentPage = newIndex / ENTRIES_PER_PAGE;
@@ -177,10 +177,10 @@ public final class ShopAdminView {
 			session.handler.getInventory().setItem(i, null);
 		}
 
-		if (session.currentKind == EntryKind.BUY) {
-			renderBuyList(admin, session);
-		} else {
-			renderSellList(admin, session);
+		switch (session.currentKind) {
+			case BUY -> renderBuyList(admin, session);
+			case SELL -> renderSellList(admin, session);
+			case BARTER -> renderBarterList(admin, session);
 		}
 
 		renderTabs(admin, session);
@@ -226,6 +226,24 @@ public final class ShopAdminView {
 		}
 	}
 
+	private void renderBarterList(Player admin, Session session) {
+		int base = session.currentPage * ENTRIES_PER_PAGE;
+		for (int i = 0; i < ENTRIES_PER_PAGE; i++) {
+			int categoryIndex = base + i;
+			int slot          = INTERIOR_SLOTS[i];
+
+			if (categoryIndex >= session.barterCategories.size()) {
+				continue;
+			}
+
+			BarterCategory category   = session.barterCategories.get(categoryIndex);
+			final int      finalIndex = categoryIndex;
+			session.handler.setItem(slot, buildBarterCategoryDisplay(category), false,
+			                        (player, inv, b) -> onBarterCategoryLeftClick(admin, finalIndex),
+			                        (player, inv, b) -> onBarterCategoryRightClick(admin, finalIndex));
+		}
+	}
+
 	private void renderTabs(Player admin, Session session) {
 		boolean     buyActive = session.currentKind == EntryKind.BUY;
 		ItemBuilder buyTab    = new ItemBuilder(material(XMaterial.EMERALD, Material.EMERALD));
@@ -241,10 +259,23 @@ public final class ShopAdminView {
 		session.handler.setItem(SLOT_TAB_SELL, sellTab, false,
 		                        (p, inv, b) -> switchTab(admin, session, EntryKind.SELL));
 
+		boolean     barterActive = session.currentKind == EntryKind.BARTER;
+		ItemBuilder barterTab    = new ItemBuilder(material(XMaterial.DIAMOND, Material.DIAMOND));
+		barterTab.setDisplayName(barterActive ? "&b&l» BARTER categories «" : "&bBARTER categories")
+		         .setLore("&7Item groups players can offer as", "&7pure-swap payment for buy entries.",
+		                  barterActive ? "&e(active)" : "&8(click to switch)");
+		session.handler.setItem(SLOT_TAB_BARTER, barterTab, false,
+		                        (p, inv, b) -> switchTab(admin, session, EntryKind.BARTER));
+
 		if (session.currentKind == EntryKind.SELL) {
 			ItemBuilder add = new ItemBuilder(material(XMaterial.LIME_CONCRETE, Material.GREEN_WOOL));
 			add.setDisplayName("&a+ Add category").setLore("&7Click to create a new sell category.");
 			session.handler.setItem(SLOT_ADD_CATEGORY, add, false, (p, inv, b) -> openAddCategoryAnvil(admin, session));
+		} else if (session.currentKind == EntryKind.BARTER) {
+			ItemBuilder add = new ItemBuilder(material(XMaterial.LIME_CONCRETE, Material.GREEN_WOOL));
+			add.setDisplayName("&a+ Add category").setLore("&7Click to create a new barter category.");
+			session.handler.setItem(SLOT_ADD_CATEGORY, add, false,
+			                        (p, inv, b) -> openAddBarterCategoryAnvil(admin, session));
 		}
 	}
 
@@ -258,9 +289,11 @@ public final class ShopAdminView {
 			session.handler.setItem(SLOT_PREV, prev, false, (p, inv, b) -> changePage(admin, session, current - 1));
 		}
 
-		int entryCount = session.currentKind == EntryKind.BUY ?
-		                 session.buyEntries.size() :
-		                 session.sellCategories.size();
+		int entryCount = switch (session.currentKind) {
+			case BUY -> session.buyEntries.size();
+			case SELL -> session.sellCategories.size();
+			case BARTER -> session.barterCategories.size();
+		};
 
 		ItemBuilder info = new ItemBuilder(Material.PAPER);
 		info.setDisplayName("&bPage &f" + (current + 1) + "&7/&f" + totalPages)
@@ -276,7 +309,11 @@ public final class ShopAdminView {
 	}
 
 	private boolean isLastPageFull(Session session) {
-		int count = session.currentKind == EntryKind.BUY ? session.buyEntries.size() : session.sellCategories.size();
+		int count = switch (session.currentKind) {
+			case BUY -> session.buyEntries.size();
+			case SELL -> session.sellCategories.size();
+			case BARTER -> session.barterCategories.size();
+		};
 		return count > 0 && count % ENTRIES_PER_PAGE == 0;
 	}
 
@@ -386,6 +423,94 @@ public final class ShopAdminView {
 		admin.sendMessage(messages.shopAdminCategoryRemoved(removed.getId()));
 	}
 
+	private void onBarterCategoryLeftClick(Player admin, int categoryIndex) {
+		Session session = active.get(admin);
+		if (session == null || session.currentKind != EntryKind.BARTER) {
+			return;
+		}
+		if (categoryIndex < 0 || categoryIndex >= session.barterCategories.size()) {
+			return;
+		}
+
+		BarterCategory category = session.barterCategories.get(categoryIndex);
+		session.pendingSubview = true;
+
+		Runnable reopen = () -> {
+			session.pendingSubview = false;
+			render(admin, session);
+			session.handler.open(admin);
+		};
+
+		barterItemsView.open(admin, category, reopen);
+	}
+
+	private void onBarterCategoryRightClick(Player admin, int categoryIndex) {
+		Session s = active.get(admin);
+		if (s == null || s.currentKind != EntryKind.BARTER) {
+			return;
+		}
+		if (categoryIndex < 0 || categoryIndex >= s.barterCategories.size()) {
+			return;
+		}
+
+		BarterCategory removed = s.barterCategories.remove(categoryIndex);
+		int            maxPage = s.totalPages() - 1;
+		if (s.currentPage > maxPage) {
+			s.currentPage = Math.max(0, maxPage);
+		}
+
+		render(admin, s);
+		admin.sendMessage(messages.shopAdminCategoryRemoved(removed.getId()));
+	}
+
+	private void openAddBarterCategoryAnvil(Player admin, Session session) {
+		session.pendingSubview = true;
+
+		AnvilGUI.Builder builder = new AnvilGUI.Builder();
+		builder.plugin(plugin)
+		       .title("New barter category id")
+		       .itemLeft(material(XMaterial.PAPER, Material.PAPER))
+		       .text("category_id")
+		       .onClick((slot, state) -> {
+				   if (slot != AnvilGUI.Slot.OUTPUT) {
+					   return Collections.emptyList();
+				   }
+
+				   String raw = state.getText() == null ? "" : state.getText().trim();
+				   if (raw.isEmpty()) {
+					   admin.sendMessage(ChatUtil.color("&cCategory id cannot be empty."));
+					   return Collections.emptyList();
+				   }
+
+				   String id = raw.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]", "_");
+				   if (session.original.getBarterCategoryById(id) != null || hasBarterCategoryInSession(session, id)) {
+					   admin.sendMessage(ChatUtil.color("&cBarter category '" + id + "' already exists."));
+					   return Collections.emptyList();
+				   }
+
+				   session.barterCategories.add(BarterCategory.empty(id));
+				   session.currentPage = (session.barterCategories.size() - 1) / ENTRIES_PER_PAGE;
+				   admin.sendMessage(messages.shopAdminCategoryCreated(id));
+
+				   return List.of(AnvilGUI.ResponseAction.close());
+			   })
+		       .onClose(state -> Bukkit.getScheduler().runTask(plugin, () -> {
+				   session.pendingSubview = false;
+				   render(admin, session);
+				   session.handler.open(admin);
+			   }))
+		       .open(admin);
+	}
+
+	private boolean hasBarterCategoryInSession(Session session, String id) {
+		for (BarterCategory category : session.barterCategories) {
+			if (category.getId().equalsIgnoreCase(id)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private void openAddCategoryAnvil(Player admin, Session session) {
 		session.pendingSubview = true;
 
@@ -446,9 +571,6 @@ public final class ShopAdminView {
 		if (entry.hasPrice()) {
 			lore.add("&7Price: &6$" + NumberUtil.valueFormat(entry.getPrice()));
 		}
-		if (entry.hasBarter()) {
-			lore.add("&7Trade-for: &b" + entry.getTradeFor().getType().name());
-		}
 		lore.add("&aL-click &7set price  &cR-click &7remove");
 
 		builder.setLore(lore);
@@ -487,6 +609,33 @@ public final class ShopAdminView {
 		return copy;
 	}
 
+	private List<BarterCategory> deepCopyBarter(List<BarterCategory> source) {
+		List<BarterCategory> copy = new ArrayList<>(source.size());
+		for (BarterCategory category : source) {
+			copy.add(new BarterCategory(category.getId(), category.getDisplayName(), category.getBasePrice(),
+			                            category.getItems()));
+		}
+		return copy;
+	}
+
+	private ItemBuilder buildBarterCategoryDisplay(BarterCategory category) {
+		ItemStack icon = category.getItems().isEmpty() ?
+		                 material(XMaterial.DIAMOND, Material.DIAMOND) :
+		                 category.getItems().getFirst().clone();
+
+		ItemBuilder builder = new ItemBuilder(icon);
+		builder.setDisplayName("&b" + category.getDisplayName());
+
+		List<String> lore = new ArrayList<>();
+		lore.add("&7ID: &f" + category.getId());
+		lore.add("&7Base value: &6$" + NumberUtil.valueFormat(category.getBasePrice()));
+		lore.add("&7Items: &f" + category.getItems().size());
+		lore.add("&aL-click &7edit items + value  &cR-click &7remove");
+
+		builder.setLore(lore);
+		return builder;
+	}
+
 	// ── Session ──────────────────────────────────────────────────────────
 
 	public static final class Session {
@@ -494,6 +643,7 @@ public final class ShopAdminView {
 		private final InventoryHandler      handler;
 		private final List<ShopItemEntry>   buyEntries;
 		private final List<SellCategory>    sellCategories;
+		private final List<BarterCategory>  barterCategories;
 		private final ItemRefresherRegistry refresherRegistry;
 
 		public int       currentPage    = 0;
@@ -501,16 +651,22 @@ public final class ShopAdminView {
 		public EntryKind currentKind    = EntryKind.BUY;
 
 		public Session(ShopDefinition original, InventoryHandler handler, List<ShopItemEntry> buyEntries,
-		               List<SellCategory> sellCategories, ItemRefresherRegistry refresherRegistry) {
+		               List<SellCategory> sellCategories, List<BarterCategory> barterCategories,
+		               ItemRefresherRegistry refresherRegistry) {
 			this.original          = original;
 			this.handler           = handler;
 			this.buyEntries        = buyEntries;
 			this.sellCategories    = sellCategories;
+			this.barterCategories  = barterCategories;
 			this.refresherRegistry = refresherRegistry;
 		}
 
 		public int totalPages() {
-			int count = currentKind == EntryKind.BUY ? buyEntries.size() : sellCategories.size();
+			int count = switch (currentKind) {
+				case BUY -> buyEntries.size();
+				case SELL -> sellCategories.size();
+				case BARTER -> barterCategories.size();
+			};
 			if (count == 0) {
 				return 1;
 			}
@@ -522,8 +678,7 @@ public final class ShopAdminView {
 				return;
 			}
 			ShopItemEntry existing = buyEntries.get(entryIndex);
-			buyEntries.set(entryIndex, new ShopItemEntry(entryIndex, existing.getKind(), existing.getItem(), newPrice,
-			                                             existing.getTradeFor()));
+			buyEntries.set(entryIndex, new ShopItemEntry(entryIndex, existing.getKind(), existing.getItem(), newPrice));
 		}
 
 		public void appendEntry(ShopItemEntry entry) {
@@ -547,15 +702,14 @@ public final class ShopAdminView {
 			for (int i = 0; i < buyEntries.size(); i++) {
 				ShopItemEntry source = buyEntries.get(i);
 				Double        price  = source.getPrice();
-				ItemStack     barter = source.getTradeFor();
 				ItemStack     raw    = refresherRegistry.refresh(source.getItem(), null);
-				if (price == null && barter == null) {
+				if (price == null) {
 					price = DEFAULT_NEW_ENTRY_PRICE;
 				}
-				out.add(new ShopItemEntry(i, EntryKind.BUY, raw, price, barter));
+				out.add(new ShopItemEntry(i, EntryKind.BUY, raw, price));
 			}
 			return new ShopDefinition(original.getKey(), original.getTitle(), original.getSize(), out,
-			                          original.getSellEntries(), sellCategories);
+			                          original.getSellEntries(), sellCategories, barterCategories);
 		}
 	}
 

@@ -17,7 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 @RequiredArgsConstructor
-public final class TraderModeSelectView {
+public final class ModeSelectView {
 
 	private static final int SIZE       = 27;
 	private static final int SLOT_INFO  = 4;
@@ -30,10 +30,10 @@ public final class TraderModeSelectView {
 
 	private final JavaPlugin     plugin;
 	private final TraderSettings settings;
-	private       TraderShopView shopView;
-	private       TraderSellView sellView;
+	private       ShopView       shopView;
+	private       SellView       sellView;
 
-	public void setSubViews(TraderShopView shopView, TraderSellView sellView) {
+	public void setSubViews(ShopView shopView, SellView sellView) {
 		this.shopView = shopView;
 		this.sellView = sellView;
 	}

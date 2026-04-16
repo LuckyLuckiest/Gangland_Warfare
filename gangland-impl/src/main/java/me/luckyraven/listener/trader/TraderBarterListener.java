@@ -5,7 +5,6 @@ import me.luckyraven.copsncrooks.events.trader.TraderBarterEvent;
 import me.luckyraven.copsncrooks.npc.trader.TraderManager;
 import me.luckyraven.copsncrooks.npc.trader.mood.MoodService;
 import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitDefinition;
-import me.luckyraven.shop.ShopItemEntry;
 import me.luckyraven.shop.message.ShopDisplayResolver;
 import me.luckyraven.shop.message.ShopMessageContract;
 import me.luckyraven.shop.transaction.BarterResult;
@@ -15,7 +14,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.inventory.ItemStack;
 
 @CustomLog
 @ListenerHandler
@@ -43,9 +41,9 @@ public class TraderBarterListener implements Listener {
 	public void onBarter(TraderBarterEvent event) {
 		if (event.isCancelled()) return;
 
-		Player        player = event.getPlayer();
-		ShopItemEntry entry  = event.getEntry();
-		BarterResult  result = barterService.barter(player, entry);
+		Player player = event.getPlayer();
+		BarterResult result = barterService.barter(player, event.getEntry(), event.getAskingValue(),
+		                                           event.getOfferedValue(), event.getOffered());
 
 		switch (result.outcome()) {
 			case SUCCESS -> {
@@ -62,10 +60,15 @@ public class TraderBarterListener implements Listener {
 				event.setReason(msg);
 				player.sendMessage(msg);
 			}
+			case INSUFFICIENT_VALUE -> {
+				event.setCancelled(true);
+				String msg = messages.barterInsufficientValue(result.askingValue(), result.offeredValue());
+				event.setReason(msg);
+				player.sendMessage(msg);
+			}
 			case MISSING_ITEMS -> {
 				event.setCancelled(true);
-				ItemStack cost = entry.getTradeFor();
-				String    msg  = messages.barterMissingItems(cost.getAmount(), cost.getType().name());
+				String msg = messages.barterMissingItems();
 				event.setReason(msg);
 				player.sendMessage(msg);
 			}

@@ -37,10 +37,16 @@ public final class GanglandShopMessages implements ShopMessageContract {
 	}
 
 	@Override
-	public String barterMissingItems(int amount, String material) {
-		return Messages.SHOP_BARTER_MISSING_ITEMS.toString()
-		                                         .replace("%amount%", String.valueOf(amount))
-		                                         .replace("%material%", material);
+	public String barterMissingItems() {
+		return Messages.SHOP_BARTER_MISSING_ITEMS.toString();
+	}
+
+	@Override
+	public String barterInsufficientValue(double askingValue, double offeredValue) {
+		return Messages.SHOP_BARTER_INSUFFICIENT_VALUE.toString()
+		                                              .replace("%money_symbol%", Settings.getMoneySymbol())
+		                                              .replace("%asking%", Settings.formatDouble(askingValue))
+		                                              .replace("%offered%", Settings.formatDouble(offeredValue));
 	}
 
 	@Override

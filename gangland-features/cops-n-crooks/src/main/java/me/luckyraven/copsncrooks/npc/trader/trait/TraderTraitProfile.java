@@ -14,6 +14,7 @@ public record TraderTraitProfile(
 		boolean allowsBargaining,
 		boolean allowsBarter,
 		double sellPriceRatio,
+		double barterPriceRatio,
 		double maxHealth,
 		boolean invulnerable,
 		boolean refundsTradeInOverpay

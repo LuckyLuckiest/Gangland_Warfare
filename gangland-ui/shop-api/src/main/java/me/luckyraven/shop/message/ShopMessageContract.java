@@ -15,7 +15,9 @@ public interface ShopMessageContract {
 
 	String barterSuccess(String displayName);
 
-	String barterMissingItems(int amount, String material);
+	String barterMissingItems();
+
+	String barterInsufficientValue(double askingValue, double offeredValue);
 
 	String barterNotAllowed();
 

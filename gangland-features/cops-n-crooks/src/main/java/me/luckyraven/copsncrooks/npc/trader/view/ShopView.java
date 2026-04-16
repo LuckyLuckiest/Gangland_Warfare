@@ -30,7 +30,7 @@ import java.util.Objects;
  * from gangland-impl's shop package per the feedback that all trader NPC code lives in cops-n-crooks.
  */
 @RequiredArgsConstructor
-public final class TraderShopView {
+public final class ShopView {
 
 	private static final int   INVENTORY_SIZE   = 54;
 	private static final int[] INTERIOR_SLOTS   = {
@@ -49,13 +49,13 @@ public final class TraderShopView {
 	private static final SoundConfiguration SOUND_PAGE = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
 	                                                                            "UI_BUTTON_CLICK", 0.6f, 1.2f);
 
-	private final JavaPlugin           plugin;
-	private final MoodService          moodService;
-	private final NegotiationView      negotiationView;
-	private final TraderSettings       settings;
-	private final ShopDisplayResolver  displayResolver;
+	private final JavaPlugin          plugin;
+	private final MoodService         moodService;
+	private final NegotiationView     negotiationView;
+	private final TraderSettings      settings;
+	private final ShopDisplayResolver displayResolver;
 	@Setter
-	private       TraderModeSelectView modeSelectView;
+	private       ModeSelectView      modeSelectView;
 
 	public void open(Player viewer, TraderNpc trader, ShopDefinition def, TraderTraitDefinition trait) {
 		openPage(viewer, trader, def, trait, 0);
@@ -144,10 +144,6 @@ public final class TraderShopView {
 
 		if (entry.hasPrice()) {
 			existingLore.add("&7Price: &6$" + NumberUtil.valueFormat(finalPrice));
-		}
-		if (entry.hasBarter()) {
-			ItemStack tradeFor = entry.getTradeFor();
-			existingLore.add("&7Barter: &b" + tradeFor.getType().name() + " &7×&b" + tradeFor.getAmount());
 		}
 		existingLore.add("&8▸ Click to buy");
 

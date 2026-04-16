@@ -38,9 +38,9 @@ public final class NegotiationView implements BeanLifecycle {
 	private static final int SLOT_BUY      = 38;
 	private static final int SLOT_BARGAIN  = 40;
 	private static final int SLOT_TIP      = 42;
-	private static final int SLOT_BARTER   = 44;
 	private static final int SLOT_TRADE_IN = 46;
 	private static final int SLOT_CANCEL   = 49;
+	private static final int SLOT_BARTER   = 52;
 
 	private static final SoundConfiguration              SOUND_BUY      = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
 	private static final SoundConfiguration              SOUND_OPEN_SUB = vanilla("UI_BUTTON_CLICK", 1.2f);
@@ -54,7 +54,7 @@ public final class NegotiationView implements BeanLifecycle {
 	// Set-after-construction to avoid a cyclic bean dependency with the sub-views.
 	private              BargainView                     bargainView;
 	private              TipView                         tipView;
-	private              BarterConfirmView               barterView;
+	private              BarterView                      barterView;
 	private              TradeInView                     tradeInView;
 
 	private static SoundConfiguration vanilla(String name, float pitch) {
@@ -76,7 +76,7 @@ public final class NegotiationView implements BeanLifecycle {
 		}
 	}
 
-	public void setSubViews(BargainView bargainView, TipView tipView, BarterConfirmView barterView,
+	public void setSubViews(BargainView bargainView, TipView tipView, BarterView barterView,
 	                        TradeInView tradeInView) {
 		this.bargainView = bargainView;
 		this.tipView     = tipView;
@@ -163,6 +163,7 @@ public final class NegotiationView implements BeanLifecycle {
 		       .setLore("&7Asking: &6$" + NumberUtil.valueFormat(price), "&7Trait: &d" + session.trait.displayName(),
 		                "&7Mood: " + moodLabel(session.moodMultiplier));
 		session.handler.setItem(SLOT_ITEM, preview, false, (p, inv, b) -> { });
+		InventoryUtil.aroundSlot(session.handler, SLOT_ITEM, moodRingMaterial(session.moodMultiplier));
 
 		ItemBuilder buy = new ItemBuilder(material(XMaterial.EMERALD_BLOCK, Material.EMERALD_BLOCK));
 		buy.setDisplayName("&a&lBUY").setLore("&7Pay &6$" + NumberUtil.valueFormat(price) + " &7and receive the item.");
@@ -180,13 +181,13 @@ public final class NegotiationView implements BeanLifecycle {
 		tip.setDisplayName("&6TIP").setLore("&7Raise trader's mood for a better future price.");
 		session.handler.setItem(SLOT_TIP, tip, false, (p, inv, b) -> onTip(p, session));
 
-		boolean canBarter = entry.hasBarter() && session.trait.profile().allowsBarter();
+		boolean canBarter = !session.definition.getBarterCategories().isEmpty()
+		                    && session.trait.profile().allowsBarter();
 		if (canBarter) {
 			ItemBuilder barter = new ItemBuilder(material(XMaterial.EMERALD, Material.EMERALD));
 			barter.setDisplayName("&bBARTER")
-			      .setLore(
-						  "&7Trade &b" + entry.getTradeFor().getType().name() + " ×" + entry.getTradeFor().getAmount() +
-					      " &7for this item.");
+			      .setLore("&7Swap items of equal value for this item.",
+			               "&7No money changes hands.");
 			session.handler.setItem(SLOT_BARTER, barter, false, (p, inv, b) -> onBarter(p, session));
 		}
 
@@ -237,7 +238,7 @@ public final class NegotiationView implements BeanLifecycle {
 		SOUND_OPEN_SUB.playSound(viewer);
 		if (barterView == null) return;
 		session.pendingSubview = true;
-		barterView.open(viewer, session, this::reopenAfterSubview);
+		barterView.open(viewer, session, session.definition, currentPrice(session), this::reopenAfterSubview);
 	}
 
 	private void onTradeIn(Player viewer, NegotiationSession session) {
@@ -272,11 +273,19 @@ public final class NegotiationView implements BeanLifecycle {
 		return "&cHostile";
 	}
 
+	private Material moodRingMaterial(double multiplier) {
+		if (multiplier <= 0.95) return Material.LIME_STAINED_GLASS_PANE;
+		if (multiplier < 1.05) return Material.WHITE_STAINED_GLASS_PANE;
+		if (multiplier < 1.25) return Material.YELLOW_STAINED_GLASS_PANE;
+		return Material.RED_STAINED_GLASS_PANE;
+	}
+
 	// ── Close handler (invoked by the singleton NegotiationSessionListener) ──
 
 	public static final class NegotiationSession {
 		@Getter
 		final TraderNpc             trader;
+		@Getter
 		final ShopDefinition        definition;
 		@Getter
 		final ShopItemEntry         entry;

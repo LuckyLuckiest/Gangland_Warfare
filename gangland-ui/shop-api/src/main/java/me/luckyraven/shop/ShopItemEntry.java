@@ -14,16 +14,10 @@ public final class ShopItemEntry {
 	private final ItemStack item;
 
 	@Nullable
-	private final Double    price;
-	@Nullable
-	private final ItemStack tradeFor;
+	private final Double price;
 
 	public boolean hasPrice() {
 		return price != null;
-	}
-
-	public boolean hasBarter() {
-		return tradeFor != null;
 	}
 
 }

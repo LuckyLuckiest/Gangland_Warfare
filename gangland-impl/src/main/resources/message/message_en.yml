@@ -323,8 +323,9 @@ Errors:
          Economy_Error: "&cPurchase failed (economy error): &f%detail%"
          Inventory_Full: "&cYour inventory is full."
       Barter:
-         Missing_Items: "&cYou need &f%amount%× %material% &cto barter this."
-         Not_Allowed: "&cThis item doesn't accept barter."
+         Missing_Items: "&cYou no longer have all the items you offered."
+         Insufficient_Value: "&cYour offer (&6%money_symbol%%offered%&c) is below the trader's asking value of &6%money_symbol%%asking%&c."
+         Not_Allowed: "&cThis trader doesn't accept barter."
       Sell:
          Nothing_Valued: "&cNothing in your offer has a valuation."
          Economy_Error: "&cSell failed (economy error): &f%detail%"
