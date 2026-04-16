@@ -4,7 +4,7 @@ import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.npc.trader.message.TraderMessageContract;
 import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitDefinition;
-import me.luckyraven.copsncrooks.npc.trader.view.TraderShopView;
+import me.luckyraven.copsncrooks.npc.trader.view.TraderModeSelectView;
 import me.luckyraven.shop.ShopDefinition;
 import me.luckyraven.shop.ShopRegistry;
 import me.luckyraven.shop.message.ShopMessageContract;
@@ -19,7 +19,7 @@ public class ShopViewOpenerImpl implements ShopViewOpener {
 
 	private final TraderManager         traderManager;
 	private final ShopRegistry          shopRegistry;
-	private final TraderShopView        playerView;
+	private final TraderModeSelectView  modeSelectView;
 	private final ShopAdminView         adminView;
 	private final ShopMessageContract   shopMessages;
 	private final TraderMessageContract traderMessages;
@@ -43,7 +43,7 @@ public class ShopViewOpenerImpl implements ShopViewOpener {
 			return;
 		}
 
-		playerView.open(player, trader, def, trait);
+		modeSelectView.open(player, trader, def, trait);
 	}
 
 	public void openAdminView(Player admin, String shopKey) {

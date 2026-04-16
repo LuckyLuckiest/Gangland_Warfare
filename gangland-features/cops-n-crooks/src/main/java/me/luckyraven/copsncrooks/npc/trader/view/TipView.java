@@ -27,11 +27,11 @@ import java.util.function.Consumer;
 public final class TipView {
 
 	private static final int      SIZE    = 27;
-	private static final double[] AMOUNTS = {10D, 50D, 100D, 500D};
-	private static final int[]    SLOTS   = {11, 12, 14, 15};
+	private static final double[] AMOUNTS = {10D, 50D, 75D, 100D, 500D};
+	private static final int[]    SLOTS   = {11, 12, 13, 14, 15};
 
-	private static final SoundConfiguration SOUND_TIP = new SoundConfiguration(
-			SoundConfiguration.SoundType.VANILLA, "BLOCK_NOTE_BLOCK_CHIME", 0.6f, 1.5f);
+	private static final SoundConfiguration SOUND_TIP = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	                                                                           "BLOCK_NOTE_BLOCK_CHIME", 0.6f, 1.5f);
 
 	private final JavaPlugin         plugin;
 	private final TraderSettings     settings;
@@ -41,22 +41,19 @@ public final class TipView {
 		State state = new State(parent, onClose);
 		state.handler = new InventoryHandler(plugin, "&8Tip the Trader", SIZE, viewer);
 
-		ItemBuilder info = new ItemBuilder(material(XMaterial.GOLD_NUGGET, Material.GOLD_NUGGET))
-				.setDisplayName("&6Pick a tip amount")
-				.setLore("&7Tipping raises the trader's mood toward you,",
-				         "&7reducing future asking prices.");
+		ItemBuilder info = new ItemBuilder(material(XMaterial.GOLD_NUGGET, Material.GOLD_NUGGET));
+		info.setDisplayName("&6Pick a tip amount")
+		    .setLore("&7Tipping raises the trader's mood toward you,", "&7reducing future asking prices.");
 		state.handler.setItem(4, info, false, (p, inv, b) -> { });
 
 		for (int i = 0; i < AMOUNTS.length; i++) {
-			double amount = AMOUNTS[i];
-			ItemBuilder button = new ItemBuilder(material(XMaterial.GOLD_INGOT, Material.GOLD_INGOT))
-					.setDisplayName("&6Tip &e$" + format(amount));
-			state.handler.setItem(SLOTS[i], button, false,
-			                      (p, inv, b) -> submitTip(p, state, amount));
+			double      amount = AMOUNTS[i];
+			ItemBuilder button = new ItemBuilder(material(XMaterial.GOLD_INGOT, Material.GOLD_INGOT));
+			button.setDisplayName("&6Tip &e$" + format(amount));
+			state.handler.setItem(SLOTS[i], button, false, (p, inv, b) -> submitTip(p, state, amount));
 		}
 
-		ItemBuilder cancel = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER))
-				.setDisplayName("&cBack");
+		ItemBuilder cancel = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER)).setDisplayName("&cBack");
 		state.handler.setItem(22, cancel, false, (p, inv, b) -> viewer.closeInventory());
 
 		InventoryUtil.fillInventory(state.handler,

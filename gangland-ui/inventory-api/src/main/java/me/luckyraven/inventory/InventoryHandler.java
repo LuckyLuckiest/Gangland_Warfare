@@ -1,15 +1,11 @@
 package me.luckyraven.inventory;
 
 import com.cryptomorin.xseries.XEnchantment;
-import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.inventory.service.InventoryRegistry;
 import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.Placeholder;
 import me.luckyraven.util.TriConsumer;
-import me.luckyraven.util.color.ColorUtil;
-import me.luckyraven.util.color.MaterialType;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -19,7 +15,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,8 +24,6 @@ import java.util.*;
 import static me.luckyraven.inventory.util.InventoryUtil.titleRefactor;
 
 public class InventoryHandler implements Listener, Comparable<InventoryHandler> {
-
-	// region Constants and Static State
 
 	public static final int MAX_SLOTS = 54;
 
@@ -86,7 +79,7 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 	public InventoryHandler(String title, int size, Player player, NamespacedKey namespacedKey) {
 		this(title, size, namespacedKey, player != null ? player.getUniqueId() : null);
 
-		if (player != null) {
+		if (player != null && registry != null) {
 			registry.registerInventory(player.getUniqueId(), this);
 		}
 	}
@@ -123,42 +116,14 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 		displayTitle = name;
 		title        = new NamespacedKey(plugin, titleRefactor(name));
 
-		if (ownerUUID != null) {
+		if (ownerUUID != null && registry != null) {
 			registry.registerInventory(ownerUUID, this);
 		}
 	}
 
 	public void unregister() {
-		if (owner != null) {
+		if (owner != null && registry != null) {
 			registry.unregisterInventory(owner, this);
-		}
-	}
-
-	public void copyContent(Placeholder placeholder, InventoryHandler inventoryHandler, Player player) {
-		Preconditions.checkArgument(inventoryHandler.getSize() == size, "Inventory sizes not equal.");
-
-		for (int i = 0; i < size; i++) {
-			ItemStack item = inventoryHandler.getInventory().getItem(i);
-			if (item == null) continue;
-
-			Material resolvedType = resolveMaterialWithColor(placeholder, player, item);
-			ItemMeta meta         = item.getItemMeta();
-
-			String       displayName = null;
-			List<String> lore        = null;
-			boolean      enchanted   = false;
-
-			if (meta != null) {
-				displayName = applyPlaceholders(placeholder, meta.getDisplayName(), player);
-				lore        = meta.getLore();
-				if (lore != null) lore = lore.stream()
-						.map(line -> applyPlaceholders(placeholder, line, player))
-						.toList();
-				enchanted = meta.hasEnchants();
-			}
-
-			setItem(i, resolvedType, displayName, lore, enchanted, inventoryHandler.draggableSlots.contains(i),
-			        inventoryHandler.clickableSlots.get(i));
 		}
 	}
 
@@ -233,7 +198,7 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 	}
 
 	public void open(Player player) {
-		if (owner != null) {
+		if (owner != null && registry != null) {
 			registry.registerInventory(owner, this);
 		}
 		player.openInventory(inventory);
@@ -263,28 +228,5 @@ public class InventoryHandler implements Listener, Comparable<InventoryHandler> 
 	public int compareTo(@NotNull InventoryHandler handler) {
 		if (this.title.equals(handler.title)) return 0;
 		return this.title.toString().compareTo(handler.title.toString());
-	}
-
-	private String applyPlaceholders(Placeholder placeholder, @Nullable String text, Player player) {
-		if (text == null) return null;
-		return placeholder.convert(player, text);
-	}
-
-	private Material resolveMaterialWithColor(Placeholder placeholder, Player player, ItemStack item) {
-		Material    type        = item.getType();
-		ItemBuilder itemBuilder = new ItemBuilder(item);
-		String      dataTag     = "color";
-		if (itemBuilder.hasNBTTag(dataTag)) {
-			String       value    = placeholder.convert(player, itemBuilder.getStringTagData(dataTag));
-			MaterialType material = MaterialType.WOOL;
-			for (MaterialType materialType : MaterialType.values()) {
-				if (type.name().contains(materialType.name())) {
-					material = materialType;
-					break;
-				}
-			}
-			type = ColorUtil.getMaterialByColor(value, material.name());
-		}
-		return type;
 	}
 }

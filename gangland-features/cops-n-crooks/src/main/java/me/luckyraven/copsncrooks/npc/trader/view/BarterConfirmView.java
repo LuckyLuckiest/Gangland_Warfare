@@ -47,7 +47,7 @@ public final class BarterConfirmView {
 
 	public void open(Player viewer, NegotiationView.NegotiationSession parent, Consumer<Player> onClose) {
 		State state = new State(parent, onClose);
-		state.handler = new InventoryHandler(plugin, "&8Barter", SIZE, viewer);
+		state.handler = new InventoryHandler(plugin, "&8&lBarter", SIZE, viewer);
 
 		ItemStack traderStack = parent.getEntry().getItem().clone();
 		ItemBuilder traderItem = new ItemBuilder(traderStack)

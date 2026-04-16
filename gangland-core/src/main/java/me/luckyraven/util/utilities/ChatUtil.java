@@ -1,15 +1,9 @@
 package me.luckyraven.util.utilities;
 
-import com.cryptomorin.xseries.messages.ActionBar;
 import com.google.common.base.Preconditions;
 import me.luckyraven.util.datastructure.SpellChecker;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,7 +20,7 @@ public class ChatUtil {
 	}
 
 	public static String color(final String message, final Replacement replacement1,
-							   final Replacement... replacements) {
+	                           final Replacement... replacements) {
 		Objects.requireNonNull(message);
 		String value = message.replace("%n%", "\n");
 
@@ -42,10 +36,6 @@ public class ChatUtil {
 
 	public static String[] color(String... messages) {
 		return Arrays.stream(messages).map(ChatUtil::color).toArray(String[]::new);
-	}
-
-	public static void consoleColor(String message) {
-		Bukkit.getConsoleSender().sendMessage(color(message));
 	}
 
 	public static String plural(int amount) {
@@ -71,37 +61,8 @@ public class ChatUtil {
 		return String.valueOf(Character.toChars(Integer.parseInt(position, 16)));
 	}
 
-	public static void startUpMessage(JavaPlugin plugin) {
-		PluginDescriptionFile pdf = plugin.getDescription();
-		consoleColor(getPrefix(pdf));
-		consoleColor("\t&8Author&7: " + pdf.getAuthors());
-		consoleColor("\t&8Version&7: &5(&6" + pdf.getVersion() + "&5)");
-		consoleColor(getPrefix(pdf));
-	}
-
-	public static String getPrefix(PluginDescriptionFile pdf) {
-		return color("&8-[\t&6" + pdf.getName() + "\t&8]-");
-	}
-
-	public static String getFilePrefix(PluginDescriptionFile pdf) {
-		return color("&8-[\t&6" + pdf.getName() + " &cFiles\t&8]-");
-	}
-
 	public static String removeSymbol(String message) {
 		return message.replaceAll("[^a-zA-Z\\d\\s]*", "");
-	}
-
-	public static void sendActionBar(Player player, String message) {
-		ActionBar.clearActionBar(player);
-		ActionBar.sendActionBar(player, color(message));
-	}
-
-	public static void sendActionBar(JavaPlugin plugin, Player player, String message, long duration) {
-		ActionBar.clearActionBar(player);
-
-		BaseComponent baseComponent = TextComponent.fromLegacy(color(message));
-
-		ActionBar.sendActionBar(plugin, player, baseComponent, duration);
 	}
 
 	public static void sendTitle(Player player, String title, String subtitle) {
@@ -124,7 +85,7 @@ public class ChatUtil {
 	 * @return the whole suggested command
 	 */
 	public static String generateCommandSuggestion(String word, Set<String> dictionary, String command,
-												   @Nullable String[] args) {
+	                                               @Nullable String[] args) {
 		// generate suggestions
 		SpellChecker checker = new SpellChecker(word, dictionary);
 
