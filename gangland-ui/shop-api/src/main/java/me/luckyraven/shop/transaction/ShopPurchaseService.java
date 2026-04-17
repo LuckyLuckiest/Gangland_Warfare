@@ -18,21 +18,41 @@ public final class ShopPurchaseService {
 	private final ItemRefresherRegistry refresherRegistry;
 
 	public PurchaseResult purchase(Player player, PaymentHandler payment, ShopItemEntry entry, double finalPrice) {
-		if (payment.getBalance() < finalPrice) {
+		return purchase(player, payment, entry, finalPrice, 1);
+	}
+
+	/**
+	 * Purchase {@code copies} of the {@link ShopItemEntry}'s templated item. Each copy is refreshed independently so
+	 * stateful items (unique UUIDs, ammo loads, etc.) stay correct. The template's own stack amount is preserved per
+	 * copy — so a 32-item template with {@code copies=5} delivers five stacks of 32 (160 items total) and debits
+	 * {@code finalTotal} once.
+	 */
+	public PurchaseResult purchase(Player player, PaymentHandler payment, ShopItemEntry entry, double finalTotal,
+	                               int copies) {
+		if (copies < 1) {
+			copies = 1;
+		}
+		if (payment.getBalance() < finalTotal) {
 			return PurchaseResult.of(PurchaseOutcome.INSUFFICIENT_FUNDS);
 		}
 
 		try {
-			payment.withdraw(finalPrice);
+			payment.withdraw(finalTotal);
 		} catch (PaymentException e) {
 			return PurchaseResult.economyError(e.getMessage());
 		}
 
-		ItemStack delivery = refresherRegistry.refresh(entry.getItem(), player);
-		player.getInventory().addItem(delivery).values()
-		      .forEach(leftover -> player.getWorld().dropItemNaturally(player.getLocation(), leftover));
+		ItemStack firstDelivery = null;
+		for (int i = 0; i < copies; i++) {
+			ItemStack delivery = refresherRegistry.refresh(entry.getItem(), player);
+			if (firstDelivery == null) {
+				firstDelivery = delivery;
+			}
+			player.getInventory().addItem(delivery).values()
+			      .forEach(leftover -> player.getWorld().dropItemNaturally(player.getLocation(), leftover));
+		}
 
-		return PurchaseResult.success(delivery, finalPrice);
+		return PurchaseResult.success(firstDelivery, finalTotal);
 	}
 
 }

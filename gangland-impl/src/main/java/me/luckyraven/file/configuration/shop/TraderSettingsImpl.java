@@ -3,8 +3,6 @@ package me.luckyraven.file.configuration.shop;
 import me.luckyraven.copsncrooks.npc.trader.config.TraderSettings;
 import me.luckyraven.file.configuration.Settings;
 
-import java.util.List;
-
 public class TraderSettingsImpl implements TraderSettings {
 
 	@Override
@@ -15,11 +13,6 @@ public class TraderSettingsImpl implements TraderSettings {
 	@Override
 	public int getHeadTrackRadius() {
 		return Settings.getTraderHeadTrackRadius();
-	}
-
-	@Override
-	public double getMoodDecayPerSecondFloor() {
-		return Settings.getTraderMoodDecayPerSecondFloor();
 	}
 
 	@Override
@@ -53,13 +46,8 @@ public class TraderSettingsImpl implements TraderSettings {
 	}
 
 	@Override
-	public List<Double> getSellBargainMultipliers() {
-		return Settings.getTraderSellBargainMultipliers();
-	}
-
-	@Override
-	public int getBargainCooldownSeconds() {
-		return Settings.getTraderBargainCooldownSeconds();
+	public double getTipAmount() {
+		return Settings.getTraderTipAmount();
 	}
 
 }

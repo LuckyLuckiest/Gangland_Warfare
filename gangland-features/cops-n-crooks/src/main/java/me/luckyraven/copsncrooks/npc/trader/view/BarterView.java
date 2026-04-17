@@ -41,17 +41,22 @@ import java.util.function.Consumer;
 public final class BarterView implements BeanLifecycle {
 
 	private static final int SIZE         = 54;
-	private static final int SLOT_PINNED  = 4;
-	private static final int SLOT_OFFER   = 26;
+	private static final int SLOT_TRAIT   = 7;
+	private static final int SLOT_ASKING  = 16;
+	private static final int SLOT_OFFER   = 25;
+	private static final int SLOT_MOOD    = 34;
 	private static final int SLOT_BACK    = 45;
-	private static final int SLOT_CLEAR   = 48;
-	private static final int SLOT_CONFIRM = 50;
-	private static final int SLOT_CANCEL  = 53;
+	private static final int SLOT_CLEAR   = 51;
+	private static final int SLOT_CONFIRM = 52;
 
-	private static final int[] ALL_DROPZONE_SLOTS = {18, 19, 20, 21, 22, 23, 24, 27, 28, 29, 30, 31, 32, 33};
+	private static final int[] ALL_DROPZONE_SLOTS = {
+			10, 11, 12, 13, 14,
+			19, 20, 21, 22, 23,
+			28, 29, 30, 31, 32,
+			37, 38, 39, 40, 41
+	};
 
 	private static final SoundConfiguration SOUND_CONFIRM = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
-	private static final SoundConfiguration SOUND_CANCEL  = vanilla("ENTITY_VILLAGER_NO", 1.0f);
 	private static final SoundConfiguration SOUND_CLICK   = vanilla("UI_BUTTON_CLICK", 1.0f);
 
 	private final JavaPlugin             plugin;
@@ -174,17 +179,19 @@ public final class BarterView implements BeanLifecycle {
 	}
 
 	private void renderChrome(Session session) {
-		session.handler.getInventory().setItem(SLOT_PINNED, null);
+		session.handler.getInventory().setItem(SLOT_TRAIT, null);
+		session.handler.getInventory().setItem(SLOT_ASKING, null);
 		session.handler.getInventory().setItem(SLOT_OFFER, null);
+		session.handler.getInventory().setItem(SLOT_MOOD, null);
 		session.handler.getInventory().setItem(SLOT_BACK, null);
-		session.handler.getInventory().setItem(SLOT_CANCEL, null);
 		session.handler.getInventory().setItem(SLOT_CLEAR, null);
 		session.handler.getInventory().setItem(SLOT_CONFIRM, null);
 
-		renderPinned(session);
+		renderTrait(session);
+		renderAsking(session);
 		renderOffer(session);
+		renderMood(session);
 		renderBack(session);
-		renderCancel(session);
 		renderClear(session);
 		renderConfirm(session);
 
@@ -203,16 +210,34 @@ public final class BarterView implements BeanLifecycle {
 		}
 	}
 
-	private void renderPinned(Session session) {
+	private void renderTrait(Session session) {
+		ItemBuilder trait = new ItemBuilder(material(XMaterial.DIAMOND, Material.DIAMOND));
+		trait.setDisplayName("&d&lTrait: &d" + session.parent.getTrait().displayName())
+		     .setLore("&7This trader's bargaining style.",
+		              " ",
+		              "&8Drop items on the left to make an offer.");
+		session.handler.setItem(SLOT_TRAIT, trait, false, (p, inv, b) -> { });
+	}
+
+	private void renderAsking(Session session) {
 		ItemStack   decorated = refresherRegistry.decorate(session.entry.getItem(), session.viewer);
-		ItemBuilder pinned    = new ItemBuilder(decorated.clone());
-		pinned.setDisplayName(displayResolver.cleanDisplayName(decorated))
-		      .setLore("&7Asking value: &6$" + NumberUtil.valueFormat(session.askingValue),
-		               "&7Trait: &d" + session.parent.getTrait().displayName(),
-		               "&7Mood: " + moodLabel(session.barterMoodMultiplier),
+		ItemBuilder asking    = new ItemBuilder(decorated.clone());
+		asking.setDisplayName("&6&lAsking for &f" + displayResolver.cleanDisplayName(decorated))
+		      .setLore("&7Value required:",
+		               "&6$" + NumberUtil.valueFormat(session.askingValue),
 		               " ",
-		               "&8Drop barter items below to swap.");
-		session.handler.setItem(SLOT_PINNED, pinned, false, (p, inv, b) -> { });
+		               "&8Meet or exceed this to swap.");
+		session.handler.setItem(SLOT_ASKING, asking, false, (p, inv, b) -> { });
+	}
+
+	private void renderMood(Session session) {
+		ItemBuilder mood = new ItemBuilder(material(XMaterial.NETHER_STAR, Material.NETHER_STAR));
+		mood.setDisplayName("&b&lMood: " + moodLabel(session.barterMoodMultiplier))
+		    .setLore("&7Barter multiplier:",
+		             "&e" + String.format("%.2fx", session.barterMoodMultiplier),
+		             " ",
+		             "&8Friendlier traders value your goods higher.");
+		session.handler.setItem(SLOT_MOOD, mood, false, (p, inv, b) -> { });
 	}
 
 	private void renderOffer(Session session) {
@@ -264,14 +289,9 @@ public final class BarterView implements BeanLifecycle {
 	}
 
 	private void renderBack(Session session) {
-		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&eBack to negotiation");
+		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&eBack to negotiation")
+		                                                  .setLore("&7Return your items and go back.");
 		session.handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> onBack(p, session));
-	}
-
-	private void renderCancel(Session session) {
-		ItemBuilder cancel = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER));
-		cancel.setDisplayName("&cCancel").setLore("&7Return items and leave.");
-		session.handler.setItem(SLOT_CANCEL, cancel, false, (p, inv, b) -> onCancel(p, session));
 	}
 
 	private void renderClear(Session session) {
@@ -333,12 +353,6 @@ public final class BarterView implements BeanLifecycle {
 
 	private void onBack(Player viewer, Session session) {
 		SOUND_CLICK.playSound(viewer);
-		session.returnToNegotiation = true;
-		viewer.closeInventory();
-	}
-
-	private void onCancel(Player viewer, Session session) {
-		SOUND_CANCEL.playSound(viewer);
 		session.returnToNegotiation = true;
 		viewer.closeInventory();
 	}

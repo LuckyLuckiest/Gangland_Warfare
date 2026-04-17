@@ -7,14 +7,16 @@ import me.luckyraven.copsncrooks.npc.trader.ShopViewOpenerImpl;
 import me.luckyraven.copsncrooks.npc.trader.TraderData;
 import me.luckyraven.copsncrooks.npc.trader.TraderManager;
 import me.luckyraven.copsncrooks.npc.trader.config.TraderSettings;
+import me.luckyraven.copsncrooks.npc.trader.economy.TraderEconomyContract;
 import me.luckyraven.copsncrooks.npc.trader.message.TraderMessageContract;
-import me.luckyraven.copsncrooks.npc.trader.mood.BargainCooldownService;
 import me.luckyraven.copsncrooks.npc.trader.mood.MoodService;
 import me.luckyraven.copsncrooks.npc.trader.respawn.TraderRespawnService;
 import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitRegistry;
 import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitsLoader;
 import me.luckyraven.copsncrooks.npc.trader.view.*;
+import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.file.configuration.copsncrooks.GanglandTraderEconomy;
 import me.luckyraven.file.configuration.copsncrooks.GanglandTraderMessages;
 import me.luckyraven.file.configuration.shop.GanglandShopDisplayResolver;
 import me.luckyraven.file.configuration.shop.GanglandShopMessages;
@@ -35,13 +37,12 @@ import me.luckyraven.shop.transaction.ShopSellService;
 import me.luckyraven.shop.valuation.CategoryBarterValuator;
 import me.luckyraven.shop.valuation.CategorySellValuator;
 import me.luckyraven.shop.valuation.SellValuator;
-import me.luckyraven.shop.view.BarterCategoryItemsAdminView;
-import me.luckyraven.shop.view.PriceEditorView;
-import me.luckyraven.shop.view.SellCategoryItemsAdminView;
-import me.luckyraven.shop.view.ShopAdminView;
+import me.luckyraven.shop.view.*;
 import me.luckyraven.util.autowire.bean.Bean;
 import me.luckyraven.util.autowire.bean.Configuration;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.weapon.WeaponService;
+import org.bukkit.entity.Player;
 
 import java.io.IOException;
 
@@ -158,21 +159,8 @@ public class ShopConfig {
 	// ── Views ────────────────────────────────────────────────────────────
 
 	@Bean
-	public BargainCooldownService bargainCooldownService(TraderSettings traderSettings) {
-		return new BargainCooldownService(traderSettings);
-	}
-
-	@Bean
-	public BargainView bargainView(MoodService moodService, BargainCooldownService cooldownService,
-	                               TraderMessageContract traderMessages,
-	                               TraderSettings traderSettings, ShopDisplayResolver displayResolver) {
-		return new BargainView(gangland, moodService, cooldownService, traderMessages, traderSettings,
-		                       displayResolver);
-	}
-
-	@Bean
-	public TipView tipView(TraderSettings traderSettings) {
-		return new TipView(gangland, traderSettings);
+	public TraderEconomyContract traderEconomyContract(@Qualifier("online") UserManager<Player> userManager) {
+		return new GanglandTraderEconomy(userManager);
 	}
 
 	@Bean
@@ -185,33 +173,26 @@ public class ShopConfig {
 	}
 
 	@Bean
-	public NegotiationView negotiationView(MoodService moodService, BargainView bargainView,
-	                                       TipView tipView, BarterView barterView,
-	                                       TraderSettings traderSettings, TraderMessageContract traderMessages,
-	                                       ShopDisplayResolver displayResolver) {
-		NegotiationView view = new NegotiationView(gangland, moodService, traderSettings, traderMessages,
-		                                           displayResolver);
-		view.setSubViews(bargainView, tipView, barterView);
-		return view;
+	public QuantitySelectorView quantitySelectorView() {
+		return new QuantitySelectorView(gangland);
 	}
 
 	@Bean
-	public SellBargainView sellBargainView(MoodService moodService, BargainCooldownService cooldownService,
-	                                       TraderMessageContract traderMessages,
-	                                       TraderSettings traderSettings) {
-		return new SellBargainView(gangland, moodService, cooldownService, traderMessages, traderSettings);
+	public NegotiationView negotiationView(MoodService moodService, BarterView barterView,
+	                                       QuantitySelectorView quantitySelectorView,
+	                                       TraderSettings traderSettings, TraderMessageContract traderMessages,
+	                                       TraderEconomyContract economy, ShopDisplayResolver displayResolver) {
+		return new NegotiationView(gangland, moodService, traderSettings, traderMessages,
+		                           economy, displayResolver, barterView, quantitySelectorView);
 	}
 
 	@Bean
 	public SellView traderSellView(MoodService moodService, SellValuator sellValuator,
 	                               ItemRefresherRegistry refresherRegistry,
-	                               TraderSettings traderSettings, TraderMessageContract traderMessages,
-	                               ShopDisplayResolver displayResolver,
-	                               SellBargainView sellBargainView) {
-		SellView view = new SellView(gangland, moodService, sellValuator, refresherRegistry,
-		                             traderSettings, traderMessages, displayResolver);
-		view.setBargainView(sellBargainView);
-		return view;
+	                               TraderSettings traderSettings,
+	                               ShopDisplayResolver displayResolver) {
+		return new SellView(gangland, moodService, sellValuator, refresherRegistry,
+		                    traderSettings, displayResolver);
 	}
 
 	@Bean

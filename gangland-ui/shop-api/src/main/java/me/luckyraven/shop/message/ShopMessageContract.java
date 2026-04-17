@@ -9,6 +9,8 @@ public interface ShopMessageContract {
 
 	String purchaseSuccess(String displayName, double pricePaid);
 
+	String purchaseStackSuccess(String displayName, int quantity, double totalPaid);
+
 	String purchaseInsufficientFunds(double price);
 
 	String purchaseEconomyError(String detail);

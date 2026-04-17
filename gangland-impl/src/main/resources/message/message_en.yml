@@ -242,6 +242,7 @@ Commands:
    Shop:
       Purchase:
          Success: "&aPurchased &f%item% &afor &6%money_symbol%%price%&a."
+         Stack_Success: "&aPurchased &f%quantity%x %item% &afor &6%money_symbol%%total%&a."
       Barter:
          Success: "&bBartered for &f%item%&b."
       Sell:
@@ -255,12 +256,6 @@ Commands:
    Trader:
       Tip:
          Success: "&6Tipped &e%money_symbol%%amount%&6 — trader's mood improves."
-      Bargain:
-         Accepted: "&a✔ Deal! New price: &6%money_symbol%%price%&a."
-         Counter_Offer: "&eCounter-offer: &6%money_symbol%%price%&e."
-      Sell:
-         Propose_Price:
-            Accepted: "&aYou propose &6%money_symbol%%price%&a as a starting point."
 
 Errors:
    Prefix: "&4Error&7: "
@@ -335,15 +330,6 @@ Errors:
          Missing: "&cTrait &f'%trait%' &cdoes not exist. Available: &f%available%"
       Shop:
          Missing: "&cShop &f'%shop%' &cdoes not exist. Create it first with &e/glw shop create&c."
-      Bargain:
-         Rejected: "&cThe trader rejects your offer."
-         Hard_Rejected: "&4&l\"Get out of my sight!\""
-         Already_Below: "&cYou've already negotiated below that price."
-         On_Cooldown: "&cThe trader won't bargain that item again for &e%seconds%s&c."
-      Sell:
-         Propose_Price:
-            Invalid: "&cInvalid price — enter a positive number."
-            Angered: "&4&l\"Don't insult me with that price!\""
 
 Information:
    Prefix: "&8&l[&7Information&8&l]&7 "
@@ -351,9 +337,6 @@ Information:
       Request_Already_Sent: "Gang alliance to that gang is already sent!"
       Already_Allied: "Already allied with that gang."
       Kicked: "You have been kicked from the gang!"
-   Trader:
-      Anger:
-         Angered: "&c%trader%&r&c glares at you with rage."
 
 Kits:
    Received: "You have received &b%kit% &7kit."

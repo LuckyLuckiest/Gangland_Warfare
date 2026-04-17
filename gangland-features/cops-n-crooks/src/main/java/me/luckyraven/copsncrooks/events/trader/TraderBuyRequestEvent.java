@@ -16,6 +16,7 @@ public class TraderBuyRequestEvent extends TraderEvent implements Cancellable {
 
 	private final ShopItemEntry entry;
 	private final double        finalPrice;
+	private final int           quantity;
 
 	@Setter
 	private boolean cancelled;
@@ -23,9 +24,15 @@ public class TraderBuyRequestEvent extends TraderEvent implements Cancellable {
 	private String  reason;
 
 	public TraderBuyRequestEvent(Player player, TraderNpc trader, ShopItemEntry entry, double finalPrice) {
+		this(player, trader, entry, finalPrice, 1);
+	}
+
+	public TraderBuyRequestEvent(Player player, TraderNpc trader, ShopItemEntry entry, double finalPrice,
+	                             int quantity) {
 		super(player, trader);
 		this.entry      = entry;
 		this.finalPrice = finalPrice;
+		this.quantity   = Math.max(1, quantity);
 	}
 
 	public static HandlerList getHandlerList() {

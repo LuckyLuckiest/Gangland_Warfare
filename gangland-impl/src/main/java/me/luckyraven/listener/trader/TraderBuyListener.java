@@ -60,8 +60,9 @@ public class TraderBuyListener implements Listener {
 		}
 
 		double         price   = event.getFinalPrice();
+		int            copies  = event.getQuantity();
 		PaymentHandler payment = adapt(user.getEconomy());
-		PurchaseResult result  = purchaseService.purchase(player, payment, event.getEntry(), price);
+		PurchaseResult result  = purchaseService.purchase(player, payment, event.getEntry(), price, copies);
 
 		switch (result.outcome()) {
 			case SUCCESS -> {
@@ -70,8 +71,13 @@ public class TraderBuyListener implements Listener {
 					moodService.recordPurchase(event.getTrader().getData().getId(),
 					                           player.getUniqueId(), trait.profile());
 				}
-				player.sendMessage(messages.purchaseSuccess(displayResolver.cleanDisplayName(result.delivery()),
-				                                            result.pricePaid()));
+				String name         = displayResolver.cleanDisplayName(result.delivery());
+				int    itemsPerCopy = Math.max(1, event.getEntry().getItem().getAmount());
+				int    totalItems   = itemsPerCopy * copies;
+				String msg = copies > 1 ?
+				             messages.purchaseStackSuccess(name, totalItems, result.pricePaid()) :
+				             messages.purchaseSuccess(name, result.pricePaid());
+				player.sendMessage(msg);
 			}
 			case INSUFFICIENT_FUNDS -> {
 				event.setCancelled(true);

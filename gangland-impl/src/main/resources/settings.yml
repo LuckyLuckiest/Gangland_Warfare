@@ -560,26 +560,14 @@ Trader:
    Respawn_Cooldown: 60
    # Blocks within which a trader will head-track the nearest player.
    Head_Track_Radius: 8
-   # Global floor for mood decay per second when a trait omits its own value.
-   Mood_Decay_Per_Second: 0.002
    # Trait id substituted at load time if a stored trait is missing from trader_traits.yml.
    Fallback_Trait_Id: "easygoing"
    # Upper cap on the multiplier used by the shop price-editor's +/- buttons (via the custom-mode anvil).
    Max_Mode_Multiplier: 1000000
    # Player sell flow. Traders evaluate items dropped into the SellView against admin-defined
-   # Sell_Categories in each shop file; a friendly trader pays closer to the listed base price,
-   # while an angry one pays less. Bargain multipliers are the rungs shown on the SellBargainView.
+   # Sell_Categories in each shop file; a friendly trader pays closer to the listed base price.
    Sell:
-      Max_Offer_Slots: 14
+      Max_Offer_Slots: 20
       Mood_Per_Sale: 0.02
-      Bargain_Multipliers:
-         - 1.1
-         - 1.25
-         - 1.4
-         - 1.6
-         - 2.0
-   # Per-item bargain budget regeneration. After the player spends all bargain rounds on an item,
-   # they must wait for rounds to regenerate. Regeneration is linear: after 1/bargainMaxRounds of the
-   # cooldown one round returns, after 2/bargainMaxRounds two rounds return, etc. Counts separately
-   # per (trader, player, item type).
-   Bargain_Cooldown_Seconds: 300
+   # Flat tip amount paid (in currency) when the player clicks the Tip button on the NegotiationView.
+   Tip_Amount: 100.0

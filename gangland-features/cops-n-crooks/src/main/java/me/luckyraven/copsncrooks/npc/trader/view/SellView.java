@@ -7,8 +7,6 @@ import lombok.Setter;
 import me.luckyraven.copsncrooks.events.trader.TraderSellRequestEvent;
 import me.luckyraven.copsncrooks.npc.trader.TraderNpc;
 import me.luckyraven.copsncrooks.npc.trader.config.TraderSettings;
-import me.luckyraven.copsncrooks.npc.trader.message.TraderMessageContract;
-import me.luckyraven.copsncrooks.npc.trader.mood.BargainResult;
 import me.luckyraven.copsncrooks.npc.trader.mood.MoodService;
 import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitDefinition;
 import me.luckyraven.inventory.InventoryHandler;
@@ -22,9 +20,7 @@ import me.luckyraven.shop.valuation.SellValuator;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.utilities.ChatUtil;
 import me.luckyraven.util.utilities.NumberUtil;
-import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -32,43 +28,41 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 @RequiredArgsConstructor
 public final class SellView implements BeanLifecycle {
 
 	private static final int SIZE         = 54;
-	private static final int SLOT_OFFER   = 26;
-	private static final int SLOT_BARGAIN = 35;
+	private static final int SLOT_TRAIT   = 7;
+	private static final int SLOT_OFFER   = 25;
+	private static final int SLOT_MOOD    = 34;
 	private static final int SLOT_BACK    = 45;
-	private static final int SLOT_PROPOSE = 46;
-	private static final int SLOT_CLEAR   = 48;
-	private static final int SLOT_CONFIRM = 50;
-	private static final int SLOT_CANCEL  = 53;
+	private static final int SLOT_CLEAR   = 51;
+	private static final int SLOT_CONFIRM = 52;
 
-	private static final int[] ALL_DROPZONE_SLOTS = {18, 19, 20, 21, 22, 23, 24, 27, 28, 29, 30, 31, 32, 33};
-
-	// Defence in depth: even if some future code path seeds session.playerProposedPrice directly, recomputeOffer
-	// will never let offeredTotal exceed baseOffer × this cap. MoodService.evaluateProposedSellPrice already
-	// enforces the trader's profit margin — this cap guards against anyone bypassing the evaluator.
-	private static final double PROPOSE_HARD_CAP = 1.0D;
+	private static final int[] ALL_DROPZONE_SLOTS = {
+			10, 11, 12, 13, 14,
+			19, 20, 21, 22, 23,
+			28, 29, 30, 31, 32,
+			37, 38, 39, 40, 41
+	};
 
 	private static final SoundConfiguration SOUND_CONFIRM = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
 	private static final SoundConfiguration SOUND_CANCEL  = vanilla("ENTITY_VILLAGER_NO", 1.0f);
-	private static final SoundConfiguration SOUND_CLICK   = vanilla("UI_BUTTON_CLICK", 1.0f);
 
 	private final JavaPlugin            plugin;
 	private final MoodService           moodService;
 	private final SellValuator          valuator;
 	private final ItemRefresherRegistry refresherRegistry;
 	private final TraderSettings        settings;
-	private final TraderMessageContract messages;
 	private final ShopDisplayResolver   displayResolver;
 	private final Map<Player, Session>  active = new WeakHashMap<>();
 	@Setter
 	private       ModeSelectView        modeSelectView;
-	@Setter
-	private       SellBargainView       bargainView;
 
 	private static SoundConfiguration vanilla(String name, float pitch) {
 		return new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, name, 0.6f, pitch);
@@ -102,23 +96,6 @@ public final class SellView implements BeanLifecycle {
 		renderChrome(session);
 
 		handler.open(viewer);
-	}
-
-	public void reopenAfterSubview(Player viewer) {
-		Session session = active.get(viewer);
-		if (session == null) {
-			return;
-		}
-		session.pendingSubview = false;
-		if (session.traderAngry) {
-			// Trader hard-rejected the propose/bargain — return items, drop the session, don't reopen.
-			session.returnToModeSelect = false;
-			returnItemsToPlayer(viewer, session);
-			active.remove(viewer);
-			return;
-		}
-		renderChrome(session);
-		session.handler.open(viewer);
 	}
 
 	public Session getSession(Player viewer) {
@@ -172,12 +149,8 @@ public final class SellView implements BeanLifecycle {
 			}
 		}
 
-		session.baseOffer = total;
-		// Clamp the player-proposed price to a hard ceiling so no code path can push offeredTotal above fair value.
-		double fairCeiling    = total * PROPOSE_HARD_CAP;
-		double cappedProposed = Math.min(session.playerProposedPrice, fairCeiling);
-		double floor          = Math.max(total, session.bargainOverride);
-		session.offeredTotal = Math.max(floor, cappedProposed);
+		session.baseOffer    = total;
+		session.offeredTotal = total;
 		session.breakdown    = breakdown;
 	}
 
@@ -257,19 +230,17 @@ public final class SellView implements BeanLifecycle {
 	}
 
 	private void renderChrome(Session session) {
+		session.handler.getInventory().setItem(SLOT_TRAIT, null);
 		session.handler.getInventory().setItem(SLOT_OFFER, null);
-		session.handler.getInventory().setItem(SLOT_BARGAIN, null);
+		session.handler.getInventory().setItem(SLOT_MOOD, null);
 		session.handler.getInventory().setItem(SLOT_BACK, null);
-		session.handler.getInventory().setItem(SLOT_CANCEL, null);
-		session.handler.getInventory().setItem(SLOT_PROPOSE, null);
 		session.handler.getInventory().setItem(SLOT_CLEAR, null);
 		session.handler.getInventory().setItem(SLOT_CONFIRM, null);
 
+		renderTrait(session);
 		renderOffer(session);
-		renderBargain(session);
+		renderMood(session);
 		renderBack(session);
-		renderCancel(session);
-		renderPropose(session);
 		renderClear(session);
 		renderConfirm(session);
 
@@ -290,6 +261,31 @@ public final class SellView implements BeanLifecycle {
 		}
 	}
 
+	private void renderTrait(Session session) {
+		ItemBuilder trait = new ItemBuilder(material(XMaterial.DIAMOND, Material.DIAMOND));
+		trait.setDisplayName("&d&lTrait: &d" + session.trait.displayName())
+		     .setLore("&7This trader's valuation style.",
+		              " ",
+		              "&8Drop items on the left to get an offer.");
+		session.handler.setItem(SLOT_TRAIT, trait, false, (p, inv, b) -> { });
+	}
+
+	private void renderMood(Session session) {
+		double      mood = 2.0 - session.sellMoodMultiplier;
+		ItemBuilder pane = new ItemBuilder(material(XMaterial.NETHER_STAR, Material.NETHER_STAR));
+		pane.setDisplayName("&b&lMood: " + moodLabel(mood))
+		    .setLore("&7Sell multiplier:",
+		             "&e" + String.format("%.2fx", session.sellMoodMultiplier),
+		             " ",
+		             "&8Friendlier traders pay closer to base price.");
+		session.handler.setItem(SLOT_MOOD, pane, false, (p, inv, b) -> { });
+	}
+
+	private String moodLabel(double multiplier) {
+		if (multiplier <= 0.95) return "&aFriendly";
+		return "&fNeutral";
+	}
+
 	private void renderOffer(Session session) {
 		recomputeOffer(session);
 
@@ -307,51 +303,22 @@ public final class SellView implements BeanLifecycle {
 				lore.add("&8…and " + (session.breakdown.size() - shown) + " more");
 			}
 		}
-		lore.add(" ");
-		lore.add("&7Bargain rounds: &f" + session.bargainRoundsUsed + "&7/&f" +
-		         session.trait.profile().bargainMaxRounds());
 		offer.setLore(lore);
 		session.handler.setItem(SLOT_OFFER, offer, false, (p, inv, b) -> { });
 	}
 
-	private void renderBargain(Session session) {
-		if (!session.trait.profile().allowsBargaining()) {
-			return;
-		}
-		ItemBuilder bargain = new ItemBuilder(material(XMaterial.BOOK, Material.BOOK));
-		bargain.setDisplayName("&eBARGAIN")
-		       .setLore("&7Ask for a higher offer.",
-		                "&8Rounds: " + session.bargainRoundsUsed + "/" + session.trait.profile().bargainMaxRounds());
-		session.handler.setItem(SLOT_BARGAIN, bargain, false, (p, inv, b) -> onBargain(p, session));
-	}
-
 	private void renderBack(Session session) {
-		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&eBack to menu");
+		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&eBack to menu")
+		                                                  .setLore("&7Return your items and go back.");
 		session.handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> onBack(p, session));
 	}
 
 	// ── Actions ──────────────────────────────────────────────────────────
 
-	private void renderCancel(Session session) {
-		ItemBuilder cancel = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER));
-		cancel.setDisplayName("&cCancel").setLore("&7Return items and leave.");
-		session.handler.setItem(SLOT_CANCEL, cancel, false, (p, inv, b) -> onCancel(p, session));
-	}
-
 	private void renderClear(Session session) {
 		ItemBuilder clear = new ItemBuilder(material(XMaterial.HOPPER, Material.HOPPER));
 		clear.setDisplayName("&eClear offer").setLore("&7Return all offered items to your inventory.");
 		session.handler.setItem(SLOT_CLEAR, clear, false, (p, inv, b) -> onClear(p, session));
-	}
-
-	private void renderPropose(Session session) {
-		ItemBuilder propose = new ItemBuilder(material(XMaterial.NAME_TAG, Material.NAME_TAG));
-		propose.setDisplayName("&ePropose price")
-		       .setLore("&7Type your own asking price.", session.playerProposedPrice > 0 ?
-		                                                 "&7Current proposal: &6$" +
-		                                                 NumberUtil.valueFormat(session.playerProposedPrice) :
-		                                                 "&8No proposal set.");
-		session.handler.setItem(SLOT_PROPOSE, propose, false, (p, inv, b) -> onPropose(p, session));
 	}
 
 	private void renderConfirm(Session session) {
@@ -366,127 +333,46 @@ public final class SellView implements BeanLifecycle {
 		session.handler.setItem(SLOT_CONFIRM, confirm, false, (p, inv, b) -> onConfirm(p, session));
 	}
 
-	private void onBargain(Player viewer, Session session) {
-		if (bargainView == null) {
-			return;
-		}
-		if (session.baseOffer <= 0) {
-			viewer.sendMessage(ChatUtil.color("&cNothing to bargain."));
-			return;
-		}
-		if (session.bargainRoundsUsed >= session.trait.profile().bargainMaxRounds()) {
-			return;
-		}
-		SOUND_CLICK.playSound(viewer);
-		session.pendingSubview = true;
-		bargainView.open(viewer, session, this::reopenAfterSubview);
-	}
-
 	private void onBack(Player viewer, Session session) {
-		SOUND_CLICK.playSound(viewer);
-		session.returnToModeSelect = true;
-		viewer.closeInventory();
-	}
-
-	private void onCancel(Player viewer, Session session) {
 		SOUND_CANCEL.playSound(viewer);
-		session.returnToModeSelect = false;
+		session.returnToModeSelect = true;
 		viewer.closeInventory();
 	}
 
 	private void onClear(Player viewer, Session session) {
 		returnItemsToPlayer(viewer, session);
-		session.playerProposedPrice = 0.0;
-		session.bargainOverride     = 0.0;
 		recomputeOffer(session);
 		renderChrome(session);
 	}
 
 	// ── Helpers ──────────────────────────────────────────────────────────
 
-	private void onPropose(Player viewer, Session session) {
-		SOUND_CLICK.playSound(viewer);
-		session.pendingSubview = true;
-
-		double initial     = session.playerProposedPrice > 0 ? session.playerProposedPrice : session.baseOffer;
-		String initialText = initial > 0 ? String.valueOf((long) initial) : "";
-
-		AnvilGUI.Builder builder = new AnvilGUI.Builder();
-		builder.plugin(plugin)
-		       .title("Propose your price")
-		       .itemLeft(material(XMaterial.NAME_TAG, Material.NAME_TAG))
-		       .text(initialText)
-		       .onClick((slot, state) -> {
-				   if (slot != AnvilGUI.Slot.OUTPUT) {
-					   return Collections.emptyList();
-				   }
-				   String raw = state.getText() == null ? "" : state.getText().trim();
-				   double value;
-				   try {
-					   value = Double.parseDouble(raw);
-				   } catch (NumberFormatException e) {
-					   viewer.sendMessage(messages.sellProposePriceInvalid());
-					   return Collections.emptyList();
-				   }
-				   if (value <= 0 || Double.isNaN(value) || Double.isInfinite(value)) {
-					   viewer.sendMessage(messages.sellProposePriceInvalid());
-					   return Collections.emptyList();
-				   }
-
-				   // Evaluate against the trader's fair-value estimate (today = local valuator; future = market
-				   // service). No bargain round is consumed. If nothing is in the drop-zone yet the evaluator
-				   // returns REJECTED, which falls through to the normal reject branch — no "invalid number" yell.
-				   double fairValue = session.baseOffer;
-				   BargainResult result = moodService.evaluateProposedSellPrice(session.trader.getData().getId(),
-			                                                                    viewer.getUniqueId(),
-			                                                                    session.trait.profile(), value,
-			                                                                    fairValue);
-
-				   switch (result.outcome()) {
-					   case ACCEPTED -> {
-						   session.playerProposedPrice = result.resolvedPrice();
-						   viewer.sendMessage(messages.sellProposePriceAccepted(result.resolvedPrice()));
-					   }
-					   case COUNTER_OFFER -> {
-						   session.playerProposedPrice = result.resolvedPrice();
-						   viewer.sendMessage(messages.bargainCounterOffer(result.resolvedPrice()));
-					   }
-					   case REJECTED -> {
-						   session.playerProposedPrice = 0.0;
-						   viewer.sendMessage(messages.bargainRejected());
-					   }
-					   case HARD_REJECTED -> {
-						   session.playerProposedPrice = 0.0;
-					       session.traderAngry         = true;
-						   viewer.sendMessage(messages.sellProposePriceAngered());
-					   }
-				   }
-				   return List.of(AnvilGUI.ResponseAction.close());
-			   })
-		       .onClose(state -> Bukkit.getScheduler().runTask(plugin, () -> {
-				   session.pendingSubview = false;
-				   if (session.traderAngry) {
-					   // Trader hard-rejected — return items, don't reopen the sell view.
-					   session.returnToModeSelect = false;
-					   returnItemsToPlayer(viewer, session);
-					   active.remove(viewer);
-					   return;
-				   }
-				   recomputeOffer(session);
-				   renderChrome(session);
-				   session.handler.open(viewer);
-			   }))
-		       .open(viewer);
-	}
-
 	private void onConfirm(Player viewer, Session session) {
 		if (session.offeredTotal <= 0) {
 			return;
 		}
 
-		List<ItemStack> offered = collectOfferedItems(session);
+		// Walk the dropzone once, collecting only items the valuator accepted. No-offer items stay in their slots so the
+		// return pass below hands them back to the player instead of silently consuming them on confirm.
+		List<ItemStack> soldItems = new ArrayList<>();
+		List<Integer>   soldSlots = new ArrayList<>();
+		for (int slot : session.dropzoneSlots) {
+			ItemStack rawStack = session.handler.getInventory().getItem(slot);
+			if (rawStack == null || rawStack.getType() == Material.AIR) {
+				continue;
+			}
+			ItemStack decorated = refresherRegistry.decorate(rawStack, session.viewer);
+			ItemValuation valuation = valuator.value(session.definition, decorated,
+			                                         session.trait.profile().sellPriceRatio(),
+			                                         session.sellMoodMultiplier);
+			if (!valuation.hasValue()) {
+				continue;
+			}
+			soldItems.add(rawStack.clone());
+			soldSlots.add(slot);
+		}
 
-		TraderSellRequestEvent event = new TraderSellRequestEvent(viewer, session.trader, offered,
+		TraderSellRequestEvent event = new TraderSellRequestEvent(viewer, session.trader, soldItems,
 		                                                          session.offeredTotal);
 		Bukkit.getPluginManager().callEvent(event);
 
@@ -496,25 +382,15 @@ public final class SellView implements BeanLifecycle {
 
 		SOUND_CONFIRM.playSound(viewer);
 		session.committed = true;
-		// Clear dropzone slots without returning items — they're consumed by the sale.
-		for (int slot : session.dropzoneSlots) {
+		for (int slot : soldSlots) {
 			session.handler.getInventory().setItem(slot, null);
 		}
+		// committed=true skips the handleClose return pass, so hand back the no-offer leftovers explicitly.
+		returnItemsToPlayer(viewer, session);
 		viewer.closeInventory();
 	}
 
 	// ── Session ──────────────────────────────────────────────────────────
-
-	private List<ItemStack> collectOfferedItems(Session session) {
-		List<ItemStack> items = new ArrayList<>();
-		for (int slot : session.dropzoneSlots) {
-			ItemStack stack = session.handler.getInventory().getItem(slot);
-			if (stack != null && stack.getType() != Material.AIR) {
-				items.add(stack.clone());
-			}
-		}
-		return items;
-	}
 
 	// ── Event bridges (invoked by the singleton TraderSellSessionListener) ──
 
@@ -570,7 +446,6 @@ public final class SellView implements BeanLifecycle {
 	private void scheduleRecompute(Player viewer, Session session) {
 		Bukkit.getScheduler().runTask(plugin, () -> {
 			if (active.get(viewer) != session) return;
-			session.bargainOverride = 0.0;
 			recomputeOffer(session);
 			renderOffer(session);
 			renderConfirm(session);
@@ -589,22 +464,13 @@ public final class SellView implements BeanLifecycle {
 		final double                sellMoodMultiplier;
 
 		@Getter
-		double baseOffer           = 0.0;
-		@Setter
-		double bargainOverride     = 0.0;
-		@Setter
-		@Getter
-		double playerProposedPrice = 0.0;
-		double offeredTotal = 0.0;
-		@Getter
-		int bargainRoundsUsed = 0;
-		List<String> breakdown = new ArrayList<>();
+		double baseOffer = 0.0;
+		double       offeredTotal = 0.0;
+		List<String> breakdown    = new ArrayList<>();
 
 		boolean pendingSubview     = false;
 		boolean committed          = false;
 		boolean returnToModeSelect = true;
-		// Set by a HARD_REJECTED bargain/propose — makes the next close skip the mode-select re-open and return items.
-		boolean traderAngry        = false;
 
 		Session(Player viewer, TraderNpc trader, ShopDefinition definition, TraderTraitDefinition trait,
 		        InventoryHandler handler, int[] dropzoneSlots, double sellMoodMultiplier) {
@@ -616,11 +482,6 @@ public final class SellView implements BeanLifecycle {
 			this.dropzoneSlots      = dropzoneSlots;
 			this.sellMoodMultiplier = sellMoodMultiplier;
 		}
-
-		public void incrementBargainRound() {
-			bargainRoundsUsed++;
-		}
-
 	}
 
 	/**

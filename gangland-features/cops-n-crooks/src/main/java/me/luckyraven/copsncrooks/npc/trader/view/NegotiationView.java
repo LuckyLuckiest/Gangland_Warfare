@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.events.trader.TraderBuyRequestEvent;
 import me.luckyraven.copsncrooks.npc.trader.TraderNpc;
 import me.luckyraven.copsncrooks.npc.trader.config.TraderSettings;
+import me.luckyraven.copsncrooks.npc.trader.economy.TraderEconomyContract;
 import me.luckyraven.copsncrooks.npc.trader.message.TraderMessageContract;
 import me.luckyraven.copsncrooks.npc.trader.mood.MoodService;
 import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitDefinition;
@@ -15,6 +16,7 @@ import me.luckyraven.inventory.util.InventoryUtil;
 import me.luckyraven.shop.ShopDefinition;
 import me.luckyraven.shop.ShopItemEntry;
 import me.luckyraven.shop.message.ShopDisplayResolver;
+import me.luckyraven.shop.view.QuantitySelectorView;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.util.configuration.SoundConfiguration;
@@ -22,6 +24,7 @@ import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -33,27 +36,30 @@ import java.util.WeakHashMap;
 @RequiredArgsConstructor
 public final class NegotiationView implements BeanLifecycle {
 
-	private static final int SIZE         = 54;
-	private static final int SLOT_ITEM    = 22;
-	private static final int SLOT_BUY     = 38;
-	private static final int SLOT_BARGAIN = 40;
-	private static final int SLOT_TIP     = 42;
-	private static final int SLOT_CANCEL  = 49;
-	private static final int SLOT_BARTER  = 52;
+	private static final int   SIZE            = 54;
+	private static final int   SLOT_ITEM       = 22;
+	private static final int   SLOT_BUY        = 38;
+	private static final int   SLOT_BARTER     = 40;
+	private static final int   SLOT_TIP        = 42;
+	private static final int   SLOT_BUY_AMOUNT = 47;
+	private static final int   SLOT_CANCEL     = 49;
+	private static final int[] SLOT_MOOD_RING  = {12, 13, 14, 21, 23, 30, 31, 32};
 
-	private static final SoundConfiguration              SOUND_BUY      = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
-	private static final SoundConfiguration              SOUND_OPEN_SUB = vanilla("UI_BUTTON_CLICK", 1.2f);
-	private static final SoundConfiguration              SOUND_CANCEL   = vanilla("ENTITY_VILLAGER_NO", 1.0f);
-	private final        JavaPlugin                      plugin;
-	private final        MoodService                     moodService;
-	private final        TraderSettings                  settings;
-	private final        TraderMessageContract           messages;
-	private final        ShopDisplayResolver             displayResolver;
-	private final        Map<Player, NegotiationSession> active         = new WeakHashMap<>();
-	// Set-after-construction to avoid a cyclic bean dependency with the sub-views.
-	private              BargainView                     bargainView;
-	private              TipView                         tipView;
-	private              BarterView                      barterView;
+	private static final SoundConfiguration SOUND_BUY      = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
+	private static final SoundConfiguration SOUND_OPEN_SUB = vanilla("UI_BUTTON_CLICK", 1.2f);
+	private static final SoundConfiguration SOUND_TIP      = vanilla("BLOCK_NOTE_BLOCK_CHIME", 1.5f);
+	private static final SoundConfiguration SOUND_CANCEL   = vanilla("ENTITY_VILLAGER_NO", 1.0f);
+
+	private final JavaPlugin            plugin;
+	private final MoodService           moodService;
+	private final TraderSettings        settings;
+	private final TraderMessageContract messages;
+	private final TraderEconomyContract economy;
+	private final ShopDisplayResolver   displayResolver;
+	private final BarterView            barterView;
+	private final QuantitySelectorView  quantitySelectorView;
+
+	private final Map<Player, NegotiationSession> active = new WeakHashMap<>();
 
 	private static SoundConfiguration vanilla(String name, float pitch) {
 		return new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, name, 0.6f, pitch);
@@ -72,12 +78,6 @@ public final class NegotiationView implements BeanLifecycle {
 			} catch (Exception ignored) {
 			}
 		}
-	}
-
-	public void setSubViews(BargainView bargainView, TipView tipView, BarterView barterView) {
-		this.bargainView = bargainView;
-		this.tipView     = tipView;
-		this.barterView  = barterView;
 	}
 
 	public void open(Player viewer, TraderNpc trader, ShopDefinition definition, ShopItemEntry entry,
@@ -109,32 +109,17 @@ public final class NegotiationView implements BeanLifecycle {
 	}
 
 	public double currentPrice(NegotiationSession session) {
-		return session.stagedPrice * session.moodMultiplier;
-	}
-
-	public void applyBargainPrice(Player viewer, double newStagedPrice) {
-		NegotiationSession session = active.get(viewer);
-		if (session == null) return;
-		double floor   = session.basePrice * 0.4;
-		double ceiling = session.basePrice;
-		session.stagedPrice = Math.clamp(ceiling, floor, newStagedPrice);
-	}
-
-	public void applyMoodBump(Player viewer) {
-		NegotiationSession session = active.get(viewer);
-		if (session == null) return;
-		session.moodMultiplier = moodService.priceMultiplier(session.trader.getData().getId(), viewer.getUniqueId(),
-		                                                     session.trait.profile());
+		return session.basePrice * session.moodMultiplier;
 	}
 
 	// ── Rendering ────────────────────────────────────────────────────────
 
 	/**
 	 * Invoked from {@code NegotiationSessionListener} when a Bukkit inventory-close event fires. Skips if a sub-view is
-	 * pending (so opening bargain/tip/barter doesn't kill the negotiation session). Otherwise drops the session and
-	 * runs the "back to shop" callback.
+	 * pending (so opening barter doesn't kill the negotiation session). Otherwise drops the session and runs the "back
+	 * to shop" callback.
 	 */
-	public void handleClose(Player viewer, org.bukkit.inventory.Inventory inventory) {
+	public void handleClose(Player viewer, Inventory inventory) {
 		NegotiationSession session = active.get(viewer);
 		if (session == null) return;
 		if (session.handler.getInventory() != inventory) return;
@@ -159,35 +144,44 @@ public final class NegotiationView implements BeanLifecycle {
 		       .setLore("&7Asking: &6$" + NumberUtil.valueFormat(price), "&7Trait: &d" + session.trait.displayName(),
 		                "&7Mood: " + moodLabel(session.moodMultiplier));
 		session.handler.setItem(SLOT_ITEM, preview, false, (p, inv, b) -> { });
+		// Clear the 8 slots around the preview before recolouring — InventoryUtil.aroundSlot skips any non-null slot,
+		// so leftover panes from a previous render would otherwise freeze the ring at the old mood colour.
+		for (int ring : SLOT_MOOD_RING) {
+			session.handler.getInventory().setItem(ring, null);
+		}
 		InventoryUtil.aroundSlot(session.handler, SLOT_ITEM, moodRingMaterial(session.moodMultiplier));
 
-		ItemBuilder buy = new ItemBuilder(material(XMaterial.EMERALD_BLOCK, Material.EMERALD_BLOCK));
-		buy.setDisplayName("&a&lBUY").setLore("&7Pay &6$" + NumberUtil.valueFormat(price) + " &7and receive the item.");
+		int         templateAmount = Math.max(1, entry.getItem().getAmount());
+		ItemBuilder buy            = new ItemBuilder(material(XMaterial.EMERALD_BLOCK, Material.EMERALD_BLOCK));
+		buy.setDisplayName("&a&lBUY").setLore("&7Pay &6$" + NumberUtil.valueFormat(price) + " &7and receive &f" +
+		                                      templateAmount + " &7items.");
 		session.handler.setItem(SLOT_BUY, buy, false, (p, inv, b) -> onBuy(p, session));
 
-		if (session.trait.profile().allowsBargaining()) {
-			ItemBuilder bargain = new ItemBuilder(material(XMaterial.BOOK, Material.BOOK));
-			bargain.setDisplayName("&eBARGAIN")
-			       .setLore("&7Offer a lower price.", "&8Rounds used: " + session.bargainRoundsUsed + "/" +
-			                                          session.trait.profile().bargainMaxRounds());
-			session.handler.setItem(SLOT_BARGAIN, bargain, false, (p, inv, b) -> onBargain(p, session));
+		if (entry.getItem().getMaxStackSize() > 1) {
+			int         itemsPerCopy = Math.max(1, entry.getItem().getAmount());
+			ItemBuilder bulk         = new ItemBuilder(material(XMaterial.CHEST, Material.CHEST));
+			bulk.setDisplayName("&a&lBUY AMOUNT")
+			    .setLore("&7Choose how many copies to buy.",
+			             "&7Per copy: &f" + itemsPerCopy + " items &7for &6$" + NumberUtil.valueFormat(price) + "&7.");
+			session.handler.setItem(SLOT_BUY_AMOUNT, bulk, false, (p, inv, b) -> onBuyAmount(p, session));
 		}
 
-		ItemBuilder tip = new ItemBuilder(material(XMaterial.GOLD_NUGGET, Material.GOLD_NUGGET));
-		tip.setDisplayName("&6TIP").setLore("&7Raise trader's mood for a better future price.");
-		session.handler.setItem(SLOT_TIP, tip, false, (p, inv, b) -> onTip(p, session));
+		double      tipAmount = settings.getTipAmount();
+		ItemBuilder tip       = new ItemBuilder(material(XMaterial.GOLD_NUGGET, Material.GOLD_NUGGET));
+		tip.setDisplayName("&6TIP &e$" + NumberUtil.valueFormat(tipAmount))
+		   .setLore("&7Raise trader's mood for a better future price.");
+		session.handler.setItem(SLOT_TIP, tip, false, (p, inv, b) -> onTip(p, session, tipAmount));
 
-		boolean canBarter = !session.definition.getBarterCategories().isEmpty()
-		                    && session.trait.profile().allowsBarter();
+		boolean canBarter = !session.definition.getBarterCategories().isEmpty() &&
+		                    session.trait.profile().allowsBarter();
 		if (canBarter) {
 			ItemBuilder barter = new ItemBuilder(material(XMaterial.EMERALD, Material.EMERALD));
 			barter.setDisplayName("&bBARTER")
-			      .setLore("&7Swap items of equal value for this item.",
-			               "&7No money changes hands.");
+			      .setLore("&7Swap items of equal value for this item.", "&7No money changes hands.");
 			session.handler.setItem(SLOT_BARTER, barter, false, (p, inv, b) -> onBarter(p, session));
 		}
 
-		ItemBuilder cancel = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER));
+		ItemBuilder cancel = new ItemBuilder(material(XMaterial.ARROW, Material.ARROW));
 		cancel.setDisplayName("&cCANCEL").setLore("&7Return to the shop.");
 		session.handler.setItem(SLOT_CANCEL, cancel, false, (p, inv, b) -> onCancel(p, session));
 	}
@@ -209,18 +203,21 @@ public final class NegotiationView implements BeanLifecycle {
 		viewer.closeInventory();
 	}
 
-	private void onBargain(Player viewer, NegotiationSession session) {
-		SOUND_OPEN_SUB.playSound(viewer);
-		if (bargainView == null) return;
-		session.pendingSubview = true;
-		bargainView.open(viewer, session, this::reopenAfterSubview);
-	}
-
-	private void onTip(Player viewer, NegotiationSession session) {
-		SOUND_OPEN_SUB.playSound(viewer);
-		if (tipView == null) return;
-		session.pendingSubview = true;
-		tipView.open(viewer, session, this::reopenAfterSubview);
+	private void onTip(Player viewer, NegotiationSession session, double amount) {
+		TraderEconomyContract.TipResult result = economy.tryTip(viewer, amount);
+		switch (result) {
+			case SUCCESS -> {
+				SOUND_TIP.playSound(viewer);
+				moodService.recordTip(session.trader.getData().getId(), viewer.getUniqueId(), amount,
+				                      session.trait.profile());
+				viewer.sendMessage(messages.tipSuccess(amount));
+				session.moodMultiplier = moodService.priceMultiplier(session.trader.getData().getId(),
+				                                                     viewer.getUniqueId(), session.trait.profile());
+				render(session);
+			}
+			case INSUFFICIENT_FUNDS -> viewer.sendMessage(messages.tipInsufficientFunds(amount));
+			case ECONOMY_ERROR -> SOUND_CANCEL.playSound(viewer);
+		}
 	}
 
 	private void onBarter(Player viewer, NegotiationSession session) {
@@ -228,6 +225,36 @@ public final class NegotiationView implements BeanLifecycle {
 		if (barterView == null) return;
 		session.pendingSubview = true;
 		barterView.open(viewer, session, session.definition, currentPrice(session), this::reopenAfterSubview);
+	}
+
+	private void onBuyAmount(Player viewer, NegotiationSession session) {
+		SOUND_OPEN_SUB.playSound(viewer);
+		if (quantitySelectorView == null) return;
+		if (session.entry.getItem().getMaxStackSize() <= 1) return;
+
+		double unitPrice = currentPrice(session);
+		int    maxCopies = 999;
+
+		session.pendingSubview = true;
+		String title = "&8Buy Amount&r &8&l[&b&l" + session.trait.displayName() + "&8&l]";
+		quantitySelectorView.open(viewer, title, session.entry.getItem(), unitPrice, 1, maxCopies,
+		                          copies -> onBuyAmountConfirmed(viewer, session, copies),
+		                          () -> reopenAfterSubview(viewer));
+	}
+
+	private void onBuyAmountConfirmed(Player viewer, NegotiationSession session, int copies) {
+		SOUND_BUY.playSound(viewer);
+		double total = currentPrice(session) * copies;
+
+		TraderBuyRequestEvent event = new TraderBuyRequestEvent(viewer, session.trader, session.entry, total, copies);
+		Bukkit.getPluginManager().callEvent(event);
+
+		if (event.isCancelled()) {
+			return;
+		}
+
+		active.remove(viewer);
+		session.returnHome = false;
 	}
 
 	// ── Helpers ──────────────────────────────────────────────────────────
@@ -246,16 +273,12 @@ public final class NegotiationView implements BeanLifecycle {
 
 	private String moodLabel(double multiplier) {
 		if (multiplier <= 0.95) return "&aFriendly";
-		if (multiplier < 1.05) return "&fNeutral";
-		if (multiplier < 1.25) return "&eWary";
-		return "&cHostile";
+		return "&fNeutral";
 	}
 
 	private Material moodRingMaterial(double multiplier) {
 		if (multiplier <= 0.95) return Material.LIME_STAINED_GLASS_PANE;
-		if (multiplier < 1.05) return Material.WHITE_STAINED_GLASS_PANE;
-		if (multiplier < 1.25) return Material.YELLOW_STAINED_GLASS_PANE;
-		return Material.RED_STAINED_GLASS_PANE;
+		return Material.WHITE_STAINED_GLASS_PANE;
 	}
 
 	// ── Close handler (invoked by the singleton NegotiationSessionListener) ──
@@ -273,13 +296,9 @@ public final class NegotiationView implements BeanLifecycle {
 		@Getter
 		final double                basePrice;
 		InventoryHandler handler;
-		@Getter
-		double stagedPrice;
-		double moodMultiplier;
-		@Getter
-		int bargainRoundsUsed = 0;
-		boolean pendingSubview = false;
-		boolean returnHome     = true;
+		double           moodMultiplier;
+		boolean          pendingSubview = false;
+		boolean          returnHome     = true;
 
 		NegotiationSession(TraderNpc trader, ShopDefinition definition, ShopItemEntry entry,
 		                   TraderTraitDefinition trait, Runnable backToShopView, double basePrice,
@@ -290,12 +309,7 @@ public final class NegotiationView implements BeanLifecycle {
 			this.trait          = trait;
 			this.backToShopView = backToShopView;
 			this.basePrice      = basePrice;
-			this.stagedPrice    = basePrice;
 			this.moodMultiplier = moodMultiplier;
-		}
-
-		public void incrementBargainRound() {
-			bargainRoundsUsed++;
 		}
 	}
 

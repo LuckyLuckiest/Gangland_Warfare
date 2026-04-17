@@ -19,6 +19,15 @@ public final class GanglandShopMessages implements ShopMessageContract {
 	}
 
 	@Override
+	public String purchaseStackSuccess(String displayName, int quantity, double totalPaid) {
+		return Messages.SHOP_PURCHASE_STACK_SUCCESS.toString()
+		                                           .replace("%item%", displayName)
+		                                           .replace("%quantity%", String.valueOf(quantity))
+		                                           .replace("%money_symbol%", Settings.getMoneySymbol())
+		                                           .replace("%total%", Settings.formatDouble(totalPaid));
+	}
+
+	@Override
 	public String purchaseInsufficientFunds(double price) {
 		return Messages.SHOP_PURCHASE_INSUFFICIENT_FUNDS.toString()
 		                                                .replace("%money_symbol%", Settings.getMoneySymbol())

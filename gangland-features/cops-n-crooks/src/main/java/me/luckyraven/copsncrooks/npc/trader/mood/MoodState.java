@@ -7,12 +7,6 @@ import lombok.Setter;
 @Setter
 public final class MoodState {
 
-	private double mood;
-	private long   lastUpdateMs;
-
-	public MoodState(long nowMs) {
-		this.mood         = 0D;
-		this.lastUpdateMs = nowMs;
-	}
+	private double mood = 0D;
 
 }

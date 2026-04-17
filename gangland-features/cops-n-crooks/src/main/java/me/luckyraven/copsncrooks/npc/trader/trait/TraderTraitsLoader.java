@@ -50,17 +50,9 @@ public final class TraderTraitsLoader {
 			double barterPriceRatio = s.getDouble("Barter_Price_Ratio", sellPriceRatio);
 
 			TraderTraitProfile profile = new TraderTraitProfile(
-					s.getInt("Anger_Hit_Threshold"),
-					s.getDouble("Mood_Per_Hit"),
 					s.getDouble("Mood_Per_Tip_Currency"),
 					s.getDouble("Mood_Per_Purchase"),
-					s.getDouble("Mood_Per_Rejection"),
-					s.getDouble("Mood_Decay_Per_Second"),
-					s.getDouble("Max_Anger_Multiplier"),
 					s.getDouble("Min_Friend_Discount"),
-					s.getDouble("Bargain_Min_Ratio"),
-					s.getInt("Bargain_Max_Rounds"),
-					s.getBoolean("Allows_Bargaining"),
 					s.getBoolean("Allows_Barter"),
 					sellPriceRatio,
 					barterPriceRatio,

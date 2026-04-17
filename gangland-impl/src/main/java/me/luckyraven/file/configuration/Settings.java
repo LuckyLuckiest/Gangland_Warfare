@@ -124,45 +124,43 @@ public class Settings implements FileInitializer {
 	private static @Getter int copSpawnVerticalSearchRange, copSpawnYOffset, copSpawnMinOpenHorizontalSides;
 	private static @Getter int copSpawnPhase1Attempts, copSpawnPhase2Attempts;
 	// cop return / despawn configuration
-	private static @Getter int          copReturnMaxTicks;
-	private static @Getter double       copReturnStationArrivalDistance;
+	private static @Getter int    copReturnMaxTicks;
+	private static @Getter double copReturnStationArrivalDistance;
 	// cop misc configuration
-	private static @Getter int          copStartingAmmoMagazines;
-	private static @Getter int          jailMaxCapacity;
+	private static @Getter int    copStartingAmmoMagazines;
+	private static @Getter int    jailMaxCapacity;
 	// gadget - jetpack
-	private static @Getter int          gadgetJetpackThrustRampTicks;
-	private static @Getter double       gadgetJetpackDescentAccel;
-	private static @Getter double       gadgetJetpackMaxDescentSpeed;
-	private static @Getter double       gadgetJetpackHorizInfluence;
-	private static @Getter double       gadgetJetpackMaxHorizSpeed;
+	private static @Getter int    gadgetJetpackThrustRampTicks;
+	private static @Getter double gadgetJetpackDescentAccel;
+	private static @Getter double gadgetJetpackMaxDescentSpeed;
+	private static @Getter double gadgetJetpackHorizInfluence;
+	private static @Getter double gadgetJetpackMaxHorizSpeed;
 	// gadget - car
-	private static @Getter double       gadgetCarReverseSpeedRatio;
-	private static @Getter double       gadgetCarHardBrakeMultiplier;
-	private static @Getter int          gadgetCarFuelConsumePerTick;
+	private static @Getter double gadgetCarReverseSpeedRatio;
+	private static @Getter double gadgetCarHardBrakeMultiplier;
+	private static @Getter int    gadgetCarFuelConsumePerTick;
 	// block regeneration (weapon Break_Blocks modifier tuning)
-	private static @Getter int          blockRestoreDelayTicks;
-	private static @Getter int          blockRegenerationDelayTicks;
-	private static @Getter int          blockRegenerationStepTicks;
+	private static @Getter int    blockRestoreDelayTicks;
+	private static @Getter int    blockRegenerationDelayTicks;
+	private static @Getter int    blockRegenerationStepTicks;
 	// trader configuration
-	private static @Getter int          traderRespawnCooldownSeconds;
-	private static @Getter int          traderHeadTrackRadius;
-	private static @Getter double       traderMoodDecayPerSecondFloor;
-	private static @Getter String       traderFallbackTraitId;
-	private static @Getter int          traderMaxModeMultiplier;
-	private static @Getter int          traderSellMaxOfferSlots;
-	private static @Getter double       traderMoodPerSale;
-	private static @Getter List<Double> traderSellBargainMultipliers;
-	private static @Getter int          traderBargainCooldownSeconds;
+	private static @Getter int    traderRespawnCooldownSeconds;
+	private static @Getter int    traderHeadTrackRadius;
+	private static @Getter String traderFallbackTraitId;
+	private static @Getter int    traderMaxModeMultiplier;
+	private static @Getter int    traderSellMaxOfferSlots;
+	private static @Getter double traderMoodPerSale;
+	private static @Getter double traderTipAmount;
 	// loot chest configuration
-	private static @Getter long         lootChestCountdownTimer;
-	private static @Getter String       lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
+	private static @Getter long   lootChestCountdownTimer;
+	private static @Getter String lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
 	private static @Getter List<String> lootChestAllowedBlocks;
 	private static @Getter double       lootChestRewardMoneyMinimum, lootChestRewardMoneyMaximum,
 			lootChestRewardExperienceMinimum, lootChestRewardExperienceMaximum;
 	private static @Getter List<String> lootChestRewardCommands;
 	// money drop (cash items dropped by mobs / cops / civilians / players on death)
 	private static @Getter boolean      moneyDropEnabled;
-	private final          FileHandler                                      fileHandler;
+	private final          FileHandler  fileHandler;
 
 	public Settings(FileManager fileManager) {
 		try {
@@ -538,27 +536,21 @@ public class Settings implements FileInitializer {
 		var trader = settings.getConfigurationSection("Trader");
 		Objects.requireNonNull(trader);
 
-		traderRespawnCooldownSeconds  = trader.getInt("Respawn_Cooldown", 60);
-		traderHeadTrackRadius         = trader.getInt("Head_Track_Radius", 8);
-		traderMoodDecayPerSecondFloor = trader.getDouble("Mood_Decay_Per_Second", 0.002);
-		traderFallbackTraitId         = trader.getString("Fallback_Trait_Id", "easygoing");
-		traderMaxModeMultiplier       = trader.getInt("Max_Mode_Multiplier", 1_000_000);
+		traderRespawnCooldownSeconds = trader.getInt("Respawn_Cooldown", 60);
+		traderHeadTrackRadius        = trader.getInt("Head_Track_Radius", 8);
+		traderFallbackTraitId        = trader.getString("Fallback_Trait_Id", "easygoing");
+		traderMaxModeMultiplier      = trader.getInt("Max_Mode_Multiplier", 1_000_000);
 
 		var traderSell = trader.getConfigurationSection("Sell");
 		if (traderSell != null) {
-			traderSellMaxOfferSlots      = traderSell.getInt("Max_Offer_Slots", 14);
-			traderMoodPerSale            = traderSell.getDouble("Mood_Per_Sale", 0.02);
-			traderSellBargainMultipliers = traderSell.getDoubleList("Bargain_Multipliers");
+			traderSellMaxOfferSlots = traderSell.getInt("Max_Offer_Slots", 20);
+			traderMoodPerSale       = traderSell.getDouble("Mood_Per_Sale", 0.02);
 		} else {
-			traderSellMaxOfferSlots      = 14;
-			traderMoodPerSale            = 0.02;
-			traderSellBargainMultipliers = List.of();
-		}
-		if (traderSellBargainMultipliers.isEmpty()) {
-			traderSellBargainMultipliers = List.of(1.1, 1.25, 1.4, 1.6, 2.0);
+			traderSellMaxOfferSlots = 20;
+			traderMoodPerSale       = 0.02;
 		}
 
-		traderBargainCooldownSeconds = trader.getInt("Bargain_Cooldown_Seconds", 300);
+		traderTipAmount = trader.getDouble("Tip_Amount", 100.0);
 
 		addEachFieldReflection();
 		convertToPlaceholder();

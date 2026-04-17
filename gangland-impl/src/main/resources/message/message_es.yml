@@ -242,6 +242,7 @@ Commands:
    Shop:
       Purchase:
          Success: "&aCompraste &f%item% &apor &6%money_symbol%%price%&a."
+         Stack_Success: "&aCompraste &f%quantity%x %item% &apor &6%money_symbol%%total%&a."
       Barter:
          Success: "&bIntercambiado por &f%item%&b."
       Saved: "&aTienda &f'%shop%' &aguardada."
@@ -251,9 +252,6 @@ Commands:
    Trader:
       Tip:
          Success: "&6Propina de &e%money_symbol%%amount%&6 — el humor del comerciante mejora."
-      Bargain:
-         Accepted: "&a✔ ¡Trato! Nuevo precio: &6%money_symbol%%price%&a."
-         Counter_Offer: "&eContraoferta: &6%money_symbol%%price%&e."
 
 Errors:
    Prefix: "&4Error&7: "
@@ -325,10 +323,6 @@ Errors:
          Missing: "&cEl rasgo &f'%trait%' &cno existe. Disponibles: &f%available%"
       Shop:
          Missing: "&cLa tienda &f'%shop%' &cno existe. Créala primero con &e/glw shop create&c."
-      Bargain:
-         Rejected: "&cEl comerciante rechaza tu oferta."
-         Hard_Rejected: "&4&l\"¡Fuera de mi vista!\""
-         Already_Below: "&cYa has negociado por debajo de ese precio."
 
 Information:
    Prefix: "&8&l[&7Información&8&l]&7 "
@@ -336,9 +330,6 @@ Information:
       Request_Already_Sent: "¡La solicitud de alianza a esa banda ya fue enviada!"
       Already_Allied: "Ya estás aliado con esa banda."
       Kicked: "¡Has sido expulsado de la banda!"
-   Trader:
-      Anger:
-         Angered: "&c%trader%&r&c te mira con furia."
 
 Kits:
    Received: "Has recibido el kit &b%kit%&7."

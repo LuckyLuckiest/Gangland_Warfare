@@ -309,6 +309,7 @@ public enum Messages {
 
 	// shop framework (reusable across any shop integration)
 	SHOP_PURCHASE_SUCCESS("Commands.Shop.Purchase.Success", Type.COMMAND),
+	SHOP_PURCHASE_STACK_SUCCESS("Commands.Shop.Purchase.Stack_Success", Type.COMMAND),
 	SHOP_PURCHASE_INSUFFICIENT_FUNDS("Errors.Shop.Purchase.Insufficient_Funds", Type.ERROR),
 	SHOP_PURCHASE_ECONOMY_ERROR("Errors.Shop.Purchase.Economy_Error", Type.ERROR),
 	SHOP_PURCHASE_INVENTORY_FULL("Errors.Shop.Purchase.Inventory_Full", Type.ERROR),
@@ -332,16 +333,6 @@ public enum Messages {
 	TRADER_TRAIT_INVALID("Errors.Trader.Trait.Invalid", Type.ERROR),
 	TRADER_SHOP_MISSING("Errors.Trader.Shop.Missing", Type.ERROR),
 	TRADER_TRAIT_MISSING("Errors.Trader.Trait.Missing", Type.ERROR),
-	TRADER_BARGAIN_ACCEPTED("Commands.Trader.Bargain.Accepted", Type.COMMAND),
-	TRADER_BARGAIN_COUNTER_OFFER("Commands.Trader.Bargain.Counter_Offer", Type.COMMAND),
-	TRADER_BARGAIN_REJECTED("Errors.Trader.Bargain.Rejected", Type.ERROR),
-	TRADER_BARGAIN_HARD_REJECTED("Errors.Trader.Bargain.Hard_Rejected", Type.ERROR),
-	TRADER_BARGAIN_ALREADY_BELOW("Errors.Trader.Bargain.Already_Below", Type.ERROR),
-	TRADER_ANGERED("Information.Trader.Anger.Angered", Type.INFORMATION),
-	TRADER_SELL_PROPOSE_PRICE_ACCEPTED("Commands.Trader.Sell.Propose_Price.Accepted", Type.COMMAND),
-	TRADER_SELL_PROPOSE_PRICE_ANGERED("Errors.Trader.Sell.Propose_Price.Angered", Type.ERROR),
-	TRADER_SELL_PROPOSE_PRICE_INVALID("Errors.Trader.Sell.Propose_Price.Invalid", Type.ERROR),
-	TRADER_BARGAIN_ON_COOLDOWN("Errors.Trader.Bargain.On_Cooldown", Type.ERROR),
 	;
 
 	private static MessageProvider provider;

@@ -140,23 +140,29 @@ public final class PriceEditorView {
 
 	private void renderAdjustmentButtons(PriceEditorSession session) {
 		for (int i = 0; i < GREEN_SLOTS.length; i++) {
-			int step = (i + 1) * session.mode;
+			int greenMagnitude = i + 1;
+			int greenStep      = greenMagnitude * session.mode;
 
 			ItemBuilder green = new ItemBuilder(material(XMaterial.LIME_CONCRETE, Material.GREEN_WOOL));
-			green.setDisplayName("&a+ $" + NumberUtil.valueFormat(step))
-			     .setLore("&7Adds &a" + (i + 1) + " &7× &b" + session.mode);
-			final int delta = step;
+			green.setDisplayName("&a+ $" + NumberUtil.valueFormat(greenStep))
+			     .setLore("&7Adds &a" + greenMagnitude + " &7× &b" + session.mode);
+			final int greenDelta = greenStep;
 			session.handler.setItem(GREEN_SLOTS[i], green, false, (p, inv, b) -> {
 				SOUND_ADD.playSound(p);
-				adjustPrice(session, +delta);
+				adjustPrice(session, +greenDelta);
 			});
 
+			// Mirror the green row around the preview: largest step nearest the item, smallest at the edge.
+			int redMagnitude = RED_SLOTS.length - i;
+			int redStep      = redMagnitude * session.mode;
+
 			ItemBuilder red = new ItemBuilder(material(XMaterial.RED_CONCRETE, Material.RED_WOOL));
-			red.setDisplayName("&c- $" + NumberUtil.valueFormat(step))
-			   .setLore("&7Subtracts &c" + (i + 1) + " &7× &b" + session.mode);
+			red.setDisplayName("&c- $" + NumberUtil.valueFormat(redStep))
+			   .setLore("&7Subtracts &c" + redMagnitude + " &7× &b" + session.mode);
+			final int redDelta = redStep;
 			session.handler.setItem(RED_SLOTS[i], red, false, (p, inv, b) -> {
 				SOUND_SUB.playSound(p);
-				adjustPrice(session, -delta);
+				adjustPrice(session, -redDelta);
 			});
 		}
 	}

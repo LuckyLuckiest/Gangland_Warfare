@@ -3,7 +3,6 @@ package me.luckyraven.file.configuration.copsncrooks;
 import me.luckyraven.copsncrooks.npc.trader.message.TraderMessageContract;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.utilities.ChatUtil;
 
 /**
  * Default {@link TraderMessageContract} implementation. Routes every call through a {@link Messages} enum key and
@@ -28,64 +27,6 @@ public final class GanglandTraderMessages implements TraderMessageContract {
 	@Override
 	public String traitInvalid() {
 		return Messages.TRADER_TRAIT_INVALID.toString();
-	}
-
-	@Override
-	public String bargainAccepted(double resolvedPrice) {
-		return Messages.TRADER_BARGAIN_ACCEPTED.toString()
-		                                       .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                       .replace("%price%", Settings.formatDouble(resolvedPrice));
-	}
-
-	@Override
-	public String bargainCounterOffer(double resolvedPrice) {
-		return Messages.TRADER_BARGAIN_COUNTER_OFFER.toString()
-		                                            .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                            .replace("%price%", Settings.formatDouble(resolvedPrice));
-	}
-
-	@Override
-	public String bargainRejected() {
-		return Messages.TRADER_BARGAIN_REJECTED.toString();
-	}
-
-	@Override
-	public String bargainHardRejected() {
-		return Messages.TRADER_BARGAIN_HARD_REJECTED.toString();
-	}
-
-	@Override
-	public String bargainAlreadyBelow() {
-		return Messages.TRADER_BARGAIN_ALREADY_BELOW.toString();
-	}
-
-	@Override
-	public String angered(String traderName) {
-		String name = ChatUtil.color(traderName != null ? traderName : "Trader");
-		return Messages.TRADER_ANGERED.toString().replace("%trader%", name);
-	}
-
-	@Override
-	public String sellProposePriceAccepted(double price) {
-		return Messages.TRADER_SELL_PROPOSE_PRICE_ACCEPTED.toString()
-		                                                  .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                                  .replace("%price%", Settings.formatDouble(price));
-	}
-
-	@Override
-	public String sellProposePriceAngered() {
-		return Messages.TRADER_SELL_PROPOSE_PRICE_ANGERED.toString();
-	}
-
-	@Override
-	public String sellProposePriceInvalid() {
-		return Messages.TRADER_SELL_PROPOSE_PRICE_INVALID.toString();
-	}
-
-	@Override
-	public String bargainOnCooldown(long secondsRemaining) {
-		return Messages.TRADER_BARGAIN_ON_COOLDOWN.toString()
-		                                          .replace("%seconds%", String.valueOf(secondsRemaining));
 	}
 
 }
