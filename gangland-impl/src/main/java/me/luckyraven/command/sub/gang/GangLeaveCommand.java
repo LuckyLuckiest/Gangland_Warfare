@@ -109,6 +109,14 @@ class GangLeaveCommand extends SubArgument {
 			}
 
 			Gang gang = gangManager.getGang(user.getGangId());
+			if (gang == null) {
+				user.resetGang();
+				member.resetGang();
+				member.setContribution(0D);
+				member.setRank(null);
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				return;
+			}
 
 			// need to check if they were the owner or not
 			// if it was the owner, then they need to transfer the rank

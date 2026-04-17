@@ -1,7 +1,10 @@
 package me.luckyraven.database.repositories.gang;
 
+import lombok.CustomLog;
+import lombok.Setter;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangAlliance;
+import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.database.tables.gang.GangAllianceTable;
 import me.luckyraven.database.tables.gang.GangTable;
 import me.luckyraven.persistence.database.DatabaseHandler;
@@ -18,10 +21,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
+@CustomLog
+@Setter
 @Repository(GangAlliance.class)
 public class GangAllianceRepository extends AbstractRepository<GangAlliance> {
 
 	private final GangAllianceTable gangAllianceTable;
+
+	private GangManager gangManager;
 
 	public GangAllianceRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
 		super(plugin, databaseHandler);
@@ -54,11 +61,21 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> {
 			int  allieId = (int) result[1];
 			long since   = (long) result[2];
 
-			Gang gang = new Gang(gangId);
-			Gang ally = new Gang(allieId);
+			Gang gang = gangManager.getGang(gangId);
+			Gang ally = gangManager.getGang(allieId);
 
-			GangAlliance gangAlliance = new GangAlliance(gang, ally, since);
-			alliances.add(gangAlliance);
+			// Orphan: one or both ends reference a gang that no longer exists. Drop the row.
+			if (gang == null || ally == null) {
+				log.warn("Orphan alliance row gang_id={} ally_id={}; deleting.", gangId, allieId);
+				QueryBuilder.on(getDatabase(), gangAllianceTable.getName())
+				            .delete()
+				            .where("gang_id", gangId)
+				            .where("ally_id", allieId)
+				            .execute();
+				continue;
+			}
+
+			alliances.add(new GangAlliance(gang, ally, since));
 		}
 
 		return alliances;

@@ -87,7 +87,7 @@ public final class GangCommand extends Command {
 	@Override
 	protected void initializeArguments() {
 		Argument create = new GangCreateCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
-		                                        memberManager, gangManager, rankManager);
+		                                        memberManager, gangManager, rankManager, ganglandDatabase);
 		Argument delete = new GangDeleteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                        memberManager, gangManager, rankManager, ganglandDatabase);
 		GangInviteCommand addUser = new GangInviteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,

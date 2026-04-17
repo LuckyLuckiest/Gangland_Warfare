@@ -101,10 +101,20 @@ public final class CreateAccountListener implements Listener {
 				return;
 			}
 
+			// UserDataInitEvent is declared async (downstream listeners like LoadUniqueItem
+			// hop back to main thread themselves), so fire it here in the async context.
 			UserDataInitEvent userDataInitEvent = new UserDataInitEvent(true, user);
 			Bukkit.getPluginManager().callEvent(userDataInitEvent);
 
-			userManager.initializeUserPermission(user, finalMember);
+			// PermissionAttachment / player.updateCommands() inside initializeUserPermission
+			// must run on the main thread.
+			Bukkit.getScheduler().runTask(gangland, () -> {
+				if (!player.isOnline()) {
+					return;
+				}
+
+				userManager.initializeUserPermission(user, finalMember);
+			});
 		});
 	}
 

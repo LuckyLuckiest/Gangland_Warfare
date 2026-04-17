@@ -12,9 +12,11 @@ import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.RankManager;
+import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.economy.bank.EconomyException;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.TriConsumer;
@@ -38,18 +40,20 @@ class GangCreateCommand extends SubArgument {
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
+	private final GanglandDatabase    ganglandDatabase;
 
 	protected GangCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
 	                            UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                            RankManager rankManager) {
+	                            RankManager rankManager, GanglandDatabase ganglandDatabase) {
 		super(gangland, "create", tree, parent);
 
-		this.gangland      = gangland;
-		this.tree          = tree;
-		this.userManager   = userManager;
-		this.memberManager = memberManager;
-		this.gangManager   = gangManager;
-		this.rankManager   = rankManager;
+		this.gangland         = gangland;
+		this.tree             = tree;
+		this.userManager      = userManager;
+		this.memberManager    = memberManager;
+		this.gangManager      = gangManager;
+		this.rankManager      = rankManager;
+		this.ganglandDatabase = ganglandDatabase;
 
 		gangCreate();
 	}
@@ -103,7 +107,7 @@ class GangCreateCommand extends SubArgument {
 
 			int id = Gang.generateId();
 
-			while (gangManager.getGang(id) == null) {
+			while (gangManager.getGang(id) != null) {
 				id = Gang.generateId();
 			}
 
@@ -115,6 +119,12 @@ class GangCreateCommand extends SubArgument {
 			gang.getEconomy().setBalance(Settings.getGangInitialBalance());
 
 			gangManager.add(gang);
+
+			// Persist immediately so a reload before the next auto-save doesn't desync gang/member rows
+			IRepository<Gang>   gangRepository   = ganglandDatabase.getRepositoryRegistry().getRepository(Gang.class);
+			IRepository<Member> memberRepository = ganglandDatabase.getRepositoryRegistry().getRepository(Member.class);
+			gangRepository.save(gang);
+			memberRepository.save(member);
 
 			user.sendMessage(Messages.GANG_CREATED.toString().replace("%gang%", gang.getDisplayNameString()));
 

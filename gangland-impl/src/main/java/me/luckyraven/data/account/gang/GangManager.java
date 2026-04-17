@@ -2,6 +2,7 @@ package me.luckyraven.data.account.gang;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.repositories.gang.GangAllianceRepository;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.autowire.bean.BeanLifecycle;
 
@@ -22,7 +23,6 @@ public class GangManager implements BeanLifecycle {
 	}
 
 	public void initialize() {
-		// get the information from the repositories
 		IRepository<Gang> gangRepository = database.getRepositoryRegistry().getRepository(Gang.class);
 		IRepository<GangAlliance> gangAllianceRepository = database.getRepositoryRegistry()
 		                                                           .getRepository(GangAlliance.class);
@@ -32,23 +32,14 @@ public class GangManager implements BeanLifecycle {
 
 		gangs.putAll(gangLookup);
 
-		// get the gang alliances and fix them to the each proper gang
-		Collection<GangAlliance> gangAlliances = gangAllianceRepository.loadAll();
+		// Inject this manager so the alliance repo can resolve real Gang refs and drop orphan rows
+		if (gangAllianceRepository instanceof GangAllianceRepository concrete) {
+			concrete.setGangManager(this);
+		}
 
-		// iterate over each gang and verify it with each gang alliance
-		for (Gang gang : gangs.values()) {
-			List<GangAlliance> alliances = gangAlliances.stream()
-					.filter(alliance -> alliance.gang().getId() == gang.getId())
-					.map(alliance -> {
-						// find the ally gang
-						Gang allyGang = gangs.get(alliance.ally().getId());
-
-						// build a new gang alliance
-						return new GangAlliance(gang, allyGang, alliance.since());
-					})
-					.toList();
-
-			gang.addAllAllies(alliances);
+		// Alliances come back with live Gang references — just attach each to its owning side
+		for (GangAlliance alliance : gangAllianceRepository.loadAll()) {
+			alliance.gang().addAlly(alliance);
 		}
 
 		// Set data suppliers so repositoryRegistry.saveAll() can persist gangs and alliances

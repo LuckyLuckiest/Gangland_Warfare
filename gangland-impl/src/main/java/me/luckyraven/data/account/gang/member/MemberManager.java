@@ -1,19 +1,21 @@
 package me.luckyraven.data.account.gang.member;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.database.TableLookup;
+import me.luckyraven.database.repositories.player.MemberRepository;
 import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.autowire.bean.BeanLifecycle;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class MemberManager implements BeanLifecycle {
 
@@ -34,42 +36,17 @@ public class MemberManager implements BeanLifecycle {
 		this.members     = new HashMap<>();
 	}
 
-	public void initialize(MemberTable memberTable) {
-		DatabaseHelper helper = new DatabaseHelper(gangland, database);
-
-		helper.runQueries(db -> {
-			List<Object[]> rowsData = memberTable.selectAllTableQuery(db);
-
-			for (Object[] result : rowsData) {
-				int    v            = 0;
-				UUID   uuid         = UUID.fromString(String.valueOf(result[v++]));
-				int    gangId       = (int) result[v++];
-				double contribution = (double) result[v++];
-				int    rankId       = (int) result[v++];
-				long   joinedGang   = (long) result[v];
-
-				Rank   rank   = rankManager.get(rankId);
-				Member member = new Member(uuid);
-
-				if (rank == null) {
-					// convert the rank to the initial rank (head)
-					rank = rankManager.getRankTree().getRoot().getData();
-				}
-
-				member.setGangId(gangId);
-				member.setContribution(contribution);
-				member.setRank(rank);
-				member.setGangJoinDateLong(joinedGang);
-
-				members.put(uuid, member);
-
-				Gang gang = gangManager.getGang(gangId);
-				if (gang != null) gang.addMember(member);
-			}
-		});
-
-		// Set data supplier so repositoryRegistry.saveAll() can persist members
+	public void initialize() {
 		IRepository<Member> memberRepository = database.getRepositoryRegistry().getRepository(Member.class);
+
+		if (memberRepository instanceof MemberRepository concrete) {
+			concrete.setRankManager(rankManager);
+			concrete.setGangManager(gangManager);
+		}
+
+		for (Member member : memberRepository.loadAll()) {
+			members.put(member.getUuid(), member);
+		}
 
 		memberRepository.setDataSupplier(members::values);
 	}
@@ -128,8 +105,7 @@ public class MemberManager implements BeanLifecycle {
 
 	@Override
 	public void onInitialize(boolean firstLoad) {
-		MemberTable memberTable = TableLookup.find(MemberTable.class, database.getTables());
-		initialize(memberTable);
+		initialize();
 	}
 
 	public boolean contains(Member member) {

@@ -103,9 +103,17 @@ class GangDeleteCommand extends SubArgument {
 
 			if (confirmDelete.isLocked(sender)) return;
 
-			user.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"gang", "delete"}));
-
 			Gang gang = gangManager.getGang(user.getGangId());
+			if (gang == null) {
+				user.resetGang();
+				member.resetGang();
+				member.setContribution(0D);
+				member.setRank(null);
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			user.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"gang", "delete"}));
 			deleteGangName.put(user, new AtomicReference<>(gang.getName()));
 
 			confirmDelete.lock(sender, s -> {
@@ -155,6 +163,14 @@ class GangDeleteCommand extends SubArgument {
 			}
 
 			Gang gang = gangManager.getGang(user.getGangId());
+			if (gang == null) {
+				user.resetGang();
+				member.resetGang();
+				member.setContribution(0D);
+				member.setRank(null);
+				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				return;
+			}
 
 			// need to get all the users, even if they are not online,
 			// the periodical updates should take care of all the data save
@@ -184,12 +200,12 @@ class GangDeleteCommand extends SubArgument {
 				Player currentPlayer = gangUser.getUser();
 				Member mem           = memberManager.getMember(currentPlayer.getUniqueId());
 
-				gang.removeMember(gangUser, mem);
-
-				// distribute the balance according to the contribution
+				// Capture contribution before removeMember zeros it
 				double freq    = mem.getContribution();
 				double balance = gang.getEconomy().getBalance();
 				double amount  = Math.round(total) == 0 ? 0 : freq / total * balance;
+
+				gang.removeMember(gangUser, mem);
 
 				gang.getEconomy().withdraw(amount);
 				gangUser.getEconomy().deposit(amount);
@@ -206,24 +222,24 @@ class GangDeleteCommand extends SubArgument {
 			}
 
 			// Update offline members: query MemberTable for all gang members, distribute balance,
-			// then reset their gang_id in both the DB and in-memory member objects
+			// then reset their gang_id in both the DB and (if cached) in-memory member objects.
+			// The SQL reset must run even when the Member isn't cached in MemberManager.
 			helper.runQueriesAsync(database -> {
 				String memberTableName = memberTable.getName();
 				String userTableName   = userTable.getName();
 
 				List<Object[]> gangMemberRows = QueryBuilder.on(database, memberTableName)
-				                                            .select("*")
+				                                            .select("uuid", "contribution")
 				                                            .where("gang_id", gang.getId())
 				                                            .executeAll();
 
 				for (Object[] row : gangMemberRows) {
 					UUID uuid = UUID.fromString(String.valueOf(row[0]));
 
-					// Skip online members – already handled above; auto-save will persist their changes
+					// Skip online members – already handled synchronously above
 					if (onlineUuids.contains(uuid)) continue;
 
-					Member mem = memberManager.getMember(uuid);
-					if (mem == null) continue;
+					double freq = (double) row[1];
 
 					// Fetch the offline member's current balance from the user table
 					Object[] userRow = QueryBuilder.on(database, userTableName)
@@ -233,7 +249,6 @@ class GangDeleteCommand extends SubArgument {
 					if (userRow.length == 0) continue;
 
 					double dbBalance = (double) userRow[0];
-					double freq      = mem.getContribution();
 					double gangBal   = gang.getEconomy().getBalance();
 					double amount    = Math.round(total) == 0 ? 0 : freq / total * gangBal;
 
@@ -246,17 +261,22 @@ class GangDeleteCommand extends SubArgument {
 					            .where("uuid", uuid.toString())
 					            .execute();
 
-					// Reset member's gang_id in DB
+					// Always reset member row in DB — parity with Gang#removeMember(Member)
 					QueryBuilder.on(database, memberTableName)
 					            .update()
 					            .set("gang_id", -1)
+					            .set("contribution", 0D)
+					            .set("rank_id", -1)
 					            .where("uuid", uuid.toString())
 					            .execute();
 
-					// Reset in-memory member state
-					mem.resetGang();
-					mem.setContribution(0D);
-					mem.setRank(null);
+					// If the Member happens to be cached, keep memory in sync with the DB
+					Member mem = memberManager.getMember(uuid);
+					if (mem != null) {
+						mem.resetGang();
+						mem.setContribution(0D);
+						mem.setRank(null);
+					}
 				}
 			});
 
@@ -273,6 +293,13 @@ class GangDeleteCommand extends SubArgument {
 			gangRepository.delete(gang);
 			if (gangAllianceRepository instanceof GangAllianceRepository allianceRepo) {
 				allianceRepo.deleteAllForGang(gang);
+			}
+
+			// Drop stale in-memory alliance refs on surviving allied gangs — without this,
+			// `ally.isAlly(deletedGang)` / `getAllyListString()` keep returning true until restart.
+			for (GangAlliance alliance : gang.getAllies()) {
+				Gang allyGang = gangManager.getGang(alliance.ally().getId());
+				if (allyGang != null) allyGang.removeAlly(gang);
 			}
 
 			gangManager.remove(gang);

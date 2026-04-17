@@ -1,5 +1,6 @@
 package me.luckyraven.database.repositories.player;
 
+import lombok.CustomLog;
 import lombok.Setter;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
@@ -12,6 +13,7 @@ import me.luckyraven.database.tables.rank.RankTable;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.component.Table;
+import me.luckyraven.persistence.database.query.QueryBuilder;
 import me.luckyraven.persistence.repository.AbstractRepository;
 import me.luckyraven.persistence.repository.Repository;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -24,6 +26,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+@CustomLog
 @Setter
 @Repository(Member.class)
 public class MemberRepository extends AbstractRepository<Member> {
@@ -68,9 +71,27 @@ public class MemberRepository extends AbstractRepository<Member> {
 			member.setRank(rank);
 			member.setGangJoinDateLong(joinedGang);
 
+			Gang gang = gangManager.getGang(gangId);
+
+			// Self-heal: stale gang_id points at a gang that no longer exists.
+			// Reset the member's gang link in memory and persist -1 to the table immediately.
+			if (gangId != -1 && gang == null) {
+				log.warn("Member {} referenced deleted gang {}; clearing gang link.", uuid, gangId);
+				member.setGangId(-1);
+				member.setContribution(0D);
+				member.setRank(null);
+
+				QueryBuilder.on(getDatabase(), memberTable.getName())
+				            .update()
+				            .set("gang_id", -1)
+				            .set("contribution", 0D)
+				            .set("rank_id", -1)
+				            .where("uuid", uuid.toString())
+				            .execute();
+			}
+
 			members.add(member);
 
-			Gang gang = gangManager.getGang(gangId);
 			if (gang != null) gang.addMember(member);
 		}
 

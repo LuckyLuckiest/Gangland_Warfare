@@ -98,12 +98,9 @@ public class Gang {
 		member.setGangId(this.getId());
 		member.setRank(rank);
 
-		List<Member> group        = getMembers();
-		boolean      memberExists = group.contains(member);
+		if (members.contains(member)) return;
 
-		if (memberExists) return;
-
-		group.add(member);
+		members.add(member);
 	}
 
 	public void addMember(User<? extends OfflinePlayer> user, Member member, Rank rank) {
@@ -120,7 +117,7 @@ public class Gang {
 	}
 
 	public void removeMember(User<? extends OfflinePlayer> user, Member member) {
-		if (!getMembers().contains(member)) return;
+		if (!members.contains(member)) return;
 
 		user.flushPermissions(null);
 		user.resetGang();
@@ -128,12 +125,12 @@ public class Gang {
 	}
 
 	public void removeMember(Member member) {
-		if (!getMembers().contains(member)) return;
+		if (!members.contains(member)) return;
 
 		member.resetGang();
 		member.setContribution(0D);
 		member.setRank(null);
-		getMembers().remove(member);
+		members.remove(member);
 	}
 
 	public List<User<Player>> getOnlineMembers(UserManager<Player> userManager) {
