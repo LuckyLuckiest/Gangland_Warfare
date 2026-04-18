@@ -106,14 +106,14 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 		// online users
 		Collection<User<Player>> onlineUsers = userManager.getUsers().values();
 		Collection<Bank> onlineBanks = userManager.getUsers().values()
-				.stream().map(User::getBank).toList();
+				.stream().filter(User::hasBank).map(User::getBank).toList();
 		updateAllData(userTable, onlineUsers);
 		updateAllData(bankTable, onlineBanks);
 
 		// offline users
 		Collection<User<OfflinePlayer>> offlineUsers = offlineUserManager.getUsers().values();
 		Collection<Bank> offlineBanks = offlineUserManager.getUsers().values()
-				.stream().map(User::getBank).toList();
+				.stream().filter(User::hasBank).map(User::getBank).toList();
 		updateAllData(userTable, offlineUsers);
 		updateAllData(bankTable, offlineBanks);
 		offlineUserManager.clear();
