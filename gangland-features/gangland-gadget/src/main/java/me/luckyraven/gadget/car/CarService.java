@@ -11,6 +11,7 @@ import me.luckyraven.gadget.car.vehicle.entity.VehicleEntity;
 import me.luckyraven.gadget.car.vehicle.packet.VehicleInputInterceptor;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
+import me.luckyraven.gadget.packet.PlayerInputInterceptor;
 import me.luckyraven.item.fuel.FuelKey;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.ItemBuilder;
@@ -217,7 +218,7 @@ public class CarService implements BeanLifecycle {
 
 		entity.mount(player);
 
-		Channel channel = VehicleInputInterceptor.getChannel(player);
+		Channel channel = PlayerInputInterceptor.getChannel(player);
 		if (channel != null) {
 			channel.pipeline()
 			       .addBefore("packet_handler", VehicleInputInterceptor.HANDLER_NAME,
@@ -663,7 +664,7 @@ public class CarService implements BeanLifecycle {
 	}
 
 	private void removeInputHandler(Player player) {
-		Channel channel = VehicleInputInterceptor.getChannel(player);
+		Channel channel = PlayerInputInterceptor.getChannel(player);
 		if (channel != null && channel.pipeline().get(VehicleInputInterceptor.HANDLER_NAME) != null) {
 			channel.pipeline().remove(VehicleInputInterceptor.HANDLER_NAME);
 		}

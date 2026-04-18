@@ -1,10 +1,10 @@
 package me.luckyraven.gadget.jetpack;
 
 import io.netty.channel.Channel;
-import me.luckyraven.gadget.car.vehicle.packet.VehicleInputInterceptor;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.gadget.jetpack.packet.JetpackInputInterceptor;
+import me.luckyraven.gadget.packet.PlayerInputInterceptor;
 import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.weapon.wearable.WearableService;
@@ -54,7 +54,7 @@ public class JetpackService implements BeanLifecycle {
 		// We do NOT call setFlying(true) — flight is driven entirely by velocity in JetpackTask.
 		player.setAllowFlight(true);
 
-		Channel channel = VehicleInputInterceptor.getChannel(player);
+		Channel channel = PlayerInputInterceptor.getChannel(player);
 		if (channel != null) {
 			channel.pipeline()
 			       .addBefore("packet_handler", JetpackInputInterceptor.HANDLER_NAME,
@@ -77,7 +77,7 @@ public class JetpackService implements BeanLifecycle {
 			player.setFlying(false);
 			player.setAllowFlight(false);
 
-			Channel channel = VehicleInputInterceptor.getChannel(player);
+			Channel channel = PlayerInputInterceptor.getChannel(player);
 			if (channel != null && channel.pipeline().get(JetpackInputInterceptor.HANDLER_NAME) != null) {
 				channel.pipeline().remove(JetpackInputInterceptor.HANDLER_NAME);
 			}
@@ -154,7 +154,7 @@ public class JetpackService implements BeanLifecycle {
 				player.setFlying(false);
 				player.setAllowFlight(false);
 
-				Channel channel = VehicleInputInterceptor.getChannel(player);
+				Channel channel = PlayerInputInterceptor.getChannel(player);
 				if (channel != null && channel.pipeline().get(JetpackInputInterceptor.HANDLER_NAME) != null) {
 					channel.pipeline().remove(JetpackInputInterceptor.HANDLER_NAME);
 				}
