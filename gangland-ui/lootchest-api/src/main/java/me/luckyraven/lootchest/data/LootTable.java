@@ -37,12 +37,8 @@ public class LootTable {
 	 * @return list of generated ItemStacks
 	 */
 	public List<ItemStack> generateLoot(String tierId, ItemParser parser) {
-		// Filter items by tier requirement
-		List<LootItemReference> availableItems = filterByTier(tierId);
-		if (availableItems.isEmpty()) return Collections.emptyList();
-
-		// Apply rarity filter - items might not spawn based on their rarity
-		List<LootItemReference> spawnableItems = filterByRarity(availableItems);
+		// Apply drop-chance filter - items might not spawn based on their rarity roll
+		List<LootItemReference> spawnableItems = filterByRarity(itemReferences);
 		if (spawnableItems.isEmpty()) return Collections.emptyList();
 
 		int itemCount = random.nextInt(minItems, maxItems + 1);
@@ -78,21 +74,6 @@ public class LootTable {
 		}
 
 		return result;
-	}
-
-	/**
-	 * Filters items based on tier requirements
-	 */
-	private List<LootItemReference> filterByTier(String tierId) {
-		return itemReferences.stream().filter(item -> {
-			if (item.getTierRequirement() == null) return true;
-			if (allowedTiers.isEmpty()) return true;
-
-			int currentTierIndex  = allowedTiers.indexOf(tierId);
-			int requiredTierIndex = allowedTiers.indexOf(item.getTierRequirement());
-
-			return currentTierIndex >= requiredTierIndex;
-		}).toList();
 	}
 
 	/**

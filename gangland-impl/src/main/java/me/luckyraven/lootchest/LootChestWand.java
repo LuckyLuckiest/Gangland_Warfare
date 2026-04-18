@@ -493,7 +493,7 @@ public class LootChestWand {
 			ItemStack clone = resolved.clone();
 			// Mirror the roll clamp used by LootTable#createItemFromReference so the preview
 			// shows the realistic maximum stack rather than a confusing value > maxStackSize.
-			int rolled = Math.max(1, Math.min(entry.getMaxAmount(), clone.getMaxStackSize()));
+			int rolled = Math.clamp(entry.getMaxAmount(), 1, clone.getMaxStackSize());
 			clone.setAmount(rolled);
 			builder = new ItemBuilder(clone);
 		} else {
@@ -505,13 +505,9 @@ public class LootChestWand {
 
 		List<String> lore = new ArrayList<>();
 		lore.add("&7Item: &f" + entry.getItemString());
-		lore.add("&7Rarity: " + rarity.getColorPrefix() + rarity.name());
+		lore.add("&7Drop Chance: " + rarity.getColorPrefix() + rarity.name());
 		lore.add("&7Amount: &f" + entry.getMinAmount() + " &7- &f" + entry.getMaxAmount());
 		lore.add("&7Weight: &f" + entry.getWeight());
-
-		if (entry.getTierRequirement() != null && !entry.getTierRequirement().isEmpty()) {
-			lore.add("&7Tier Requirement: &b" + entry.getTierRequirement());
-		}
 
 		if (resolved == null) {
 			lore.add("");

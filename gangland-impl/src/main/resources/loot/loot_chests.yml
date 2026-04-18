@@ -14,10 +14,15 @@
 
 # The loot tables to generate the required items in.
 #
+# Mental model (just two ideas):
+#   - A CHEST TIER (see tiers.yml) decides what opens the chest and which tables it can draw from (Allowed_Tiers).
+#   - An item's DROP_CHANCE decides how often a roll lands on that item:
+#       COMMON 1.0 · UNCOMMON 0.7 · RARE 0.4 · EPIC 0.15 · LEGENDARY 0.05 (base; per-table Rarity_Overrides may adjust).
+#
 # Each entry under "Items" must specify an "Item" string parsed by the global ItemParser.
-# Format: "<type>:<id>{attr=value,...}" — e.g. "weapon:ak47", "ammo:9mm{name=&6Gold Bullets}",
-# "material:diamond". Stack-size is rolled by Min_Amount/Max_Amount and applied after parsing
-# (clamped to the item's max stack size, so weapons/uniques always end up as 1).
+# Format: "<type>:<id>{attr=value,...}" — e.g. "weapon:ak47", "ammo:9mm{name=&6Gold Bullets}", "material:golden_apple".
+# Stack-size is rolled by Min_Amount/Max_Amount and applied after parsing (clamped to the item's max stack size, so
+# weapons/uniques always end up as 1).
 Loot_Tables:
    # Street-level loot (common items)
    street_loot:
@@ -28,36 +33,32 @@ Loot_Tables:
          - "common"
          - "uncommon"
 
-      # Optional: Override rarity chances for this table
-      # Rarity_Overrides:
-      #   rare: 0.2  # Make rare items even rarer in street loot
-
       Items:
          9mm_ammo:
             Item: "ammo:9mm"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 5
             Max_Amount: 20
             Weight: 10.0
 
          slugs_ammo:
             Item: "ammo:slugs"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 3
             Max_Amount: 10
             Weight: 6.0
 
          pistol_weapon:
             Item: "weapon:pistol"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 2.0
 
          lockpick_item:
             Item: "unique:lockpick"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 1.5
 
-   # Military-grade loot (better items)
+   # Military-grade loot (better items) — rare/epic chests only. Legendary trophies live in military_vault.
    military_loot:
       Display_Name: "&2Military Loot"
       Min_Items: 3
@@ -65,58 +66,82 @@ Loot_Tables:
       Allowed_Tiers:
          - "rare"
          - "epic"
-         - "legendary"
 
-      # Increase epic/legendary spawn rates for military loot
       Rarity_Overrides:
          epic: 0.25
-         legendary: 0.10
 
       Items:
          assault_rifle:
             Item: "weapon:rifle"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 3.0
 
          sniper_rifle:
             Item: "weapon:awp"
-            Rarity: EPIC
+            Drop_Chance: EPIC
             Weight: 1.5
-            Tier_Requirement: "epic"  # Only spawns in epic+ tier chests
 
          556_ammo:
             Item: "ammo:5,56"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 20
             Max_Amount: 60
             Weight: 8.0
 
          762_ammo:
             Item: "ammo:7,62"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 15
             Max_Amount: 45
             Weight: 7.0
 
          50_bmg_ammo:
             Item: "ammo:50_bmg"
-            Rarity: RARE
+            Drop_Chance: RARE
             Min_Amount: 5
             Max_Amount: 15
             Weight: 3.0
-            Tier_Requirement: "epic"
 
          epic_key:
             Item: "unique:epic_key"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 1.0
-            Tier_Requirement: "rare"
 
+   # Military Vault — legendary-only trophy sibling of military_loot.
+   military_vault:
+      Display_Name: "&2Military Vault"
+      Min_Items: 2
+      Max_Items: 4
+      Allowed_Tiers:
+         - "legendary"
+
+      Rarity_Overrides:
+         legendary: 0.12
+
+      Items:
          legendary_weapon:
             Item: "weapon:golden_ak47"
-            Rarity: LEGENDARY
+            Drop_Chance: LEGENDARY
+            Weight: 1.0
+
+         762_bulk:
+            Item: "ammo:7,62"
+            Drop_Chance: UNCOMMON
+            Min_Amount: 30
+            Max_Amount: 60
+            Weight: 5.0
+
+         50_bmg_bulk:
+            Item: "ammo:50_bmg"
+            Drop_Chance: RARE
+            Min_Amount: 10
+            Max_Amount: 20
+            Weight: 3.0
+
+         legendary_key:
+            Item: "unique:legendary_key"
+            Drop_Chance: LEGENDARY
             Weight: 0.5
-            Tier_Requirement: "legendary"
 
    # Supply cache (mixed items)
    supply_cache:
@@ -131,81 +156,78 @@ Loot_Tables:
       Items:
          9mm_ammo:
             Item: "ammo:9mm"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 10
             Max_Amount: 30
             Weight: 10.0
 
          762_ammo:
             Item: "ammo:7,62"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 10
             Max_Amount: 25
             Weight: 7.0
 
          slugs_ammo:
             Item: "ammo:slugs"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 5
             Max_Amount: 15
             Weight: 6.0
 
          flare_ammo:
             Item: "ammo:flare"
-            Rarity: RARE
+            Drop_Chance: RARE
             Min_Amount: 2
             Max_Amount: 5
             Weight: 3.0
 
          rocket_ammo:
             Item: "ammo:rocket"
-            Rarity: EPIC
+            Drop_Chance: EPIC
             Min_Amount: 1
             Max_Amount: 3
             Weight: 1.0
-            Tier_Requirement: "rare"
 
          smg_weapon:
             Item: "weapon:mp5"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Weight: 3.0
 
          shotgun_weapon:
             Item: "weapon:shotgun"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 2.0
-            Tier_Requirement: "uncommon"
 
          lockpick_item:
             Item: "unique:lockpick"
-            Rarity: RARE
+            Drop_Chance: RARE
             Min_Amount: 1
             Max_Amount: 2
             Weight: 0.8
 
          epic_key:
             Item: "unique:epic_key"
-            Rarity: EPIC
+            Drop_Chance: EPIC
             Weight: 0.3
-            Tier_Requirement: "rare"
 
          bread_food:
             Item: "material:bread"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 3
             Max_Amount: 6
             Weight: 5.0
 
          cooked_beef_food:
             Item: "material:cooked_beef"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 2
             Max_Amount: 4
             Weight: 4.0
 
          baked_potato_food:
             Item: "material:baked_potato"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 2
             Max_Amount: 5
             Weight: 4.0
@@ -222,62 +244,61 @@ Loot_Tables:
       Items:
          knife_weapon:
             Item: "weapon:knife"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Weight: 9.0
 
          crowbar_weapon:
             Item: "weapon:crowbar"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Weight: 8.0
 
          machete_weapon:
             Item: "weapon:machete"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Weight: 5.0
 
          tomahawk_weapon:
             Item: "weapon:tomahawk"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Weight: 4.0
 
          molotov_weapon:
             Item: "weapon:molotov"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 1.5
-            Tier_Requirement: "uncommon"
 
          gasoline_item:
             Item: "unique:gasoline"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 1
             Max_Amount: 2
             Weight: 3.0
 
          gang_beanie_wearable:
             Item: "wearable:gang_beanie"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Weight: 3.0
 
          gang_sneakers_wearable:
             Item: "wearable:gang_sneakers"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Weight: 3.0
 
          gang_pants_wearable:
             Item: "wearable:gang_pants"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 1.5
 
          rotten_flesh_food:
             Item: "material:rotten_flesh"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 2
             Max_Amount: 5
             Weight: 7.0
 
          bread_food:
             Item: "material:bread"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 1
             Max_Amount: 4
             Weight: 5.0
@@ -295,57 +316,55 @@ Loot_Tables:
       Items:
          pistol_weapon:
             Item: "weapon:pistol"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Weight: 8.0
 
          revolver_weapon:
             Item: "weapon:revolver"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Weight: 5.0
 
          sawn_off_weapon:
             Item: "weapon:sawn_off"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 2.5
-            Tier_Requirement: "uncommon"
 
          9mm_ammo:
             Item: "ammo:9mm"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 8
             Max_Amount: 24
             Weight: 9.0
 
          slugs_ammo:
             Item: "ammo:slugs"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 4
             Max_Amount: 12
             Weight: 6.0
 
          lockpick_item:
             Item: "unique:lockpick"
-            Rarity: RARE
+            Drop_Chance: RARE
             Min_Amount: 1
             Max_Amount: 2
             Weight: 1.5
 
          gang_jacket_wearable:
             Item: "wearable:gang_jacket"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 2.0
-            Tier_Requirement: "uncommon"
 
          bread_food:
             Item: "material:bread"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 2
             Max_Amount: 5
             Weight: 5.0
 
          cooked_beef_food:
             Item: "material:cooked_beef"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 1
             Max_Amount: 3
             Weight: 3.0
@@ -363,86 +382,83 @@ Loot_Tables:
       Items:
          pistol_weapon:
             Item: "weapon:pistol"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Weight: 7.0
 
          mp5_weapon:
             Item: "weapon:mp5"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Weight: 5.0
 
          shotgun_weapon:
             Item: "weapon:shotgun"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 3.0
 
          flashbang_weapon:
             Item: "weapon:flashbang"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 2.0
 
          smoke_grenade_weapon:
             Item: "weapon:smoke_grenade"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Weight: 3.0
 
          9mm_ammo:
             Item: "ammo:9mm"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 15
             Max_Amount: 30
             Weight: 8.0
 
          slugs_ammo:
             Item: "ammo:slugs"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 5
             Max_Amount: 15
             Weight: 6.0
 
          epic_key:
             Item: "unique:epic_key"
-            Rarity: EPIC
+            Drop_Chance: EPIC
             Weight: 0.5
-            Tier_Requirement: "epic"
 
          police_helmet_wearable:
             Item: "wearable:police_helmet"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Weight: 4.0
 
          police_boots_wearable:
             Item: "wearable:police_boots"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Weight: 4.0
 
          police_leggings_wearable:
             Item: "wearable:police_leggings"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 2.5
-            Tier_Requirement: "uncommon"
 
          police_vest_wearable:
             Item: "wearable:police_vest"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 2.0
-            Tier_Requirement: "rare"
 
          cookie_food:
             Item: "material:cookie"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 3
             Max_Amount: 8
             Weight: 6.0
 
          pumpkin_pie_food:
             Item: "material:pumpkin_pie"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 1
             Max_Amount: 3
             Weight: 3.0
 
-   # Demolition Cache — construction sites and siege stashes; explosives theme.
+   # Demolition Cache — construction sites and siege stashes; explosives theme. Legendary trophy in demolition_vault.
    demolition_cache:
       Display_Name: "&cDemolition Cache"
       Min_Items: 3
@@ -450,52 +466,72 @@ Loot_Tables:
       Allowed_Tiers:
          - "rare"
          - "epic"
-         - "legendary"
 
       Rarity_Overrides:
          epic: 0.22
-         legendary: 0.08
 
       Items:
          grenade_weapon:
             Item: "weapon:grenade"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 5.0
 
          tomahawk_weapon:
             Item: "weapon:tomahawk"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Weight: 4.0
-
-         rocket_launcher_weapon:
-            Item: "weapon:rocket_launcher"
-            Rarity: LEGENDARY
-            Weight: 0.5
-            Tier_Requirement: "legendary"
-
-         rocket_ammo:
-            Item: "ammo:rocket"
-            Rarity: EPIC
-            Min_Amount: 1
-            Max_Amount: 4
-            Weight: 2.0
-            Tier_Requirement: "rare"
 
          flare_ammo:
             Item: "ammo:flare"
-            Rarity: RARE
+            Drop_Chance: RARE
             Min_Amount: 2
             Max_Amount: 6
             Weight: 3.0
 
          gasoline_item:
             Item: "unique:gasoline"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 1
             Max_Amount: 3
             Weight: 3.0
 
-   # Pyromaniac's Trunk — arsonist hideout; guarantees fuel alongside a flamethrower roll.
+   # Demolition Vault — legendary-only sibling; the rocket launcher lives here.
+   demolition_vault:
+      Display_Name: "&cDemolition Vault"
+      Min_Items: 2
+      Max_Items: 4
+      Allowed_Tiers:
+         - "legendary"
+
+      Rarity_Overrides:
+         legendary: 0.15
+
+      Items:
+         rocket_launcher_weapon:
+            Item: "weapon:rocket_launcher"
+            Drop_Chance: LEGENDARY
+            Weight: 0.8
+
+         rocket_ammo:
+            Item: "ammo:rocket"
+            Drop_Chance: EPIC
+            Min_Amount: 2
+            Max_Amount: 5
+            Weight: 2.0
+
+         grenade_weapon:
+            Item: "weapon:grenade"
+            Drop_Chance: RARE
+            Weight: 2.0
+
+         gasoline_item:
+            Item: "unique:gasoline"
+            Drop_Chance: UNCOMMON
+            Min_Amount: 2
+            Max_Amount: 4
+            Weight: 3.0
+
+   # Pyromaniac's Trunk — arsonist hideout; legendary flamethrower lives in pyromaniac_vault.
    pyromaniac_trunk:
       Display_Name: "&6Pyromaniac's Trunk"
       Min_Items: 2
@@ -503,41 +539,69 @@ Loot_Tables:
       Allowed_Tiers:
          - "rare"
          - "epic"
-         - "legendary"
 
       Items:
          molotov_weapon:
             Item: "weapon:molotov"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Weight: 6.0
-
-         flamethrower_weapon:
-            Item: "weapon:flamethrower"
-            Rarity: LEGENDARY
-            Weight: 0.8
-            Tier_Requirement: "legendary"
 
          fuel_canister_ammo:
             Item: "ammo:fuel_canister"
-            Rarity: RARE
+            Drop_Chance: RARE
             Min_Amount: 2
             Max_Amount: 6
             Weight: 4.0
-            Tier_Requirement: "rare"
 
          gasoline_item:
             Item: "unique:gasoline"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 1
             Max_Amount: 3
             Weight: 5.0
 
          flare_ammo:
             Item: "ammo:flare"
-            Rarity: RARE
+            Drop_Chance: RARE
             Min_Amount: 1
             Max_Amount: 4
             Weight: 2.0
+
+   # Pyromaniac's Vault — legendary-only; flamethrower + bulk fuel.
+   pyromaniac_vault:
+      Display_Name: "&6Pyromaniac's Vault"
+      Min_Items: 2
+      Max_Items: 4
+      Allowed_Tiers:
+         - "legendary"
+
+      Rarity_Overrides:
+         legendary: 0.15
+
+      Items:
+         flamethrower_weapon:
+            Item: "weapon:flamethrower"
+            Drop_Chance: LEGENDARY
+            Weight: 1.0
+
+         fuel_canister_ammo:
+            Item: "ammo:fuel_canister"
+            Drop_Chance: RARE
+            Min_Amount: 4
+            Max_Amount: 8
+            Weight: 6.0
+
+         gasoline_item:
+            Item: "unique:gasoline"
+            Drop_Chance: UNCOMMON
+            Min_Amount: 2
+            Max_Amount: 4
+            Weight: 4.0
+
+         molotov_weapon:
+            Item: "weapon:molotov"
+            Drop_Chance: UNCOMMON
+            Weight: 3.0
 
    # Biohazard Lab — research facility; one exotic plus utility grenades.
    biohazard_lab:
@@ -551,28 +615,27 @@ Loot_Tables:
       Items:
          syringe_gun_weapon:
             Item: "weapon:syringe_gun"
-            Rarity: EPIC
+            Drop_Chance: EPIC
             Weight: 1.5
-            Tier_Requirement: "epic"
 
          smoke_grenade_weapon:
             Item: "weapon:smoke_grenade"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Weight: 4.0
 
          flashbang_weapon:
             Item: "weapon:flashbang"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 2.0
 
          knife_weapon:
             Item: "weapon:knife"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Weight: 5.0
 
          lockpick_item:
             Item: "unique:lockpick"
-            Rarity: RARE
+            Drop_Chance: RARE
             Min_Amount: 1
             Max_Amount: 2
             Weight: 2.0
@@ -589,83 +652,76 @@ Loot_Tables:
       Items:
          rifle_weapon:
             Item: "weapon:rifle"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 4.0
 
          steyr_aug_weapon:
             Item: "weapon:steyr_aug"
-            Rarity: EPIC
+            Drop_Chance: EPIC
             Weight: 2.0
-            Tier_Requirement: "epic"
 
          mp5_weapon:
             Item: "weapon:mp5"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Weight: 4.0
 
          grenade_weapon:
             Item: "weapon:grenade"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 3.0
 
          556_ammo:
             Item: "ammo:5,56"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 15
             Max_Amount: 45
             Weight: 8.0
 
          762_ammo:
             Item: "ammo:7,62"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 15
             Max_Amount: 45
             Weight: 7.0
 
          epic_key:
             Item: "unique:epic_key"
-            Rarity: EPIC
+            Drop_Chance: EPIC
             Weight: 0.6
-            Tier_Requirement: "epic"
 
          tactical_helmet_wearable:
             Item: "wearable:tactical_helmet"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 2.5
-            Tier_Requirement: "rare"
 
          tactical_leggings_wearable:
             Item: "wearable:tactical_leggings"
-            Rarity: EPIC
+            Drop_Chance: EPIC
             Weight: 1.5
-            Tier_Requirement: "epic"
 
          tactical_boots_wearable:
             Item: "wearable:tactical_boots"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 2.5
-            Tier_Requirement: "rare"
 
          heavy_vest_wearable:
             Item: "wearable:heavy_vest"
-            Rarity: EPIC
+            Drop_Chance: EPIC
             Weight: 1.2
-            Tier_Requirement: "epic"
 
          cooked_beef_food:
             Item: "material:cooked_beef"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 2
             Max_Amount: 5
             Weight: 4.0
 
          golden_carrot_food:
             Item: "material:golden_carrot"
-            Rarity: RARE
+            Drop_Chance: RARE
             Min_Amount: 1
             Max_Amount: 3
             Weight: 1.5
-            Tier_Requirement: "rare"
 
    # Sniper's Nest — rooftop hide; precision kit plus backup sidearm.
    sniper_nest:
@@ -679,92 +735,107 @@ Loot_Tables:
       Items:
          awp_weapon:
             Item: "weapon:awp"
-            Rarity: EPIC
+            Drop_Chance: EPIC
             Weight: 2.0
-            Tier_Requirement: "epic"
 
          revolver_weapon:
             Item: "weapon:revolver"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Weight: 4.0
 
          knife_weapon:
             Item: "weapon:knife"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Weight: 5.0
 
          50_bmg_ammo:
             Item: "ammo:50_bmg"
-            Rarity: RARE
+            Drop_Chance: RARE
             Min_Amount: 4
             Max_Amount: 12
             Weight: 5.0
-            Tier_Requirement: "rare"
 
          flare_ammo:
             Item: "ammo:flare"
-            Rarity: RARE
+            Drop_Chance: RARE
             Min_Amount: 1
             Max_Amount: 3
             Weight: 2.0
 
-   # Kingpin's Vault — boss-room trophy chest; primary source of legendary_key.
+   # Kingpin's Vault — epic-tier trophy room. Legendary loot sits in kingpin_throne.
    kingpin_vault:
       Display_Name: "&6Kingpin's Vault"
       Min_Items: 3
       Max_Items: 5
       Allowed_Tiers:
          - "epic"
-         - "legendary"
 
       Rarity_Overrides:
          epic: 0.30
-         legendary: 0.12
 
       Items:
-         golden_ak47_weapon:
-            Item: "weapon:golden_ak47"
-            Rarity: LEGENDARY
-            Weight: 1.0
-            Tier_Requirement: "legendary"
-
          steyr_aug_weapon:
             Item: "weapon:steyr_aug"
-            Rarity: EPIC
+            Drop_Chance: EPIC
             Weight: 2.5
-            Tier_Requirement: "epic"
 
          revolver_weapon:
             Item: "weapon:revolver"
-            Rarity: RARE
+            Drop_Chance: RARE
             Weight: 3.0
 
          762_ammo:
             Item: "ammo:7,62"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 20
             Max_Amount: 50
             Weight: 6.0
 
-         legendary_key:
-            Item: "unique:legendary_key"
-            Rarity: LEGENDARY
-            Weight: 0.5
-            Tier_Requirement: "legendary"
-
          epic_key:
             Item: "unique:epic_key"
-            Rarity: EPIC
+            Drop_Chance: EPIC
             Weight: 1.0
-            Tier_Requirement: "epic"
 
          golden_apple_food:
             Item: "material:golden_apple"
-            Rarity: EPIC
+            Drop_Chance: EPIC
             Min_Amount: 1
             Max_Amount: 2
             Weight: 1.5
-            Tier_Requirement: "epic"
+
+   # Kingpin's Throne — legendary-only sibling; golden AK + legendary key.
+   kingpin_throne:
+      Display_Name: "&6Kingpin's Throne"
+      Min_Items: 2
+      Max_Items: 4
+      Allowed_Tiers:
+         - "legendary"
+
+      Rarity_Overrides:
+         legendary: 0.15
+
+      Items:
+         golden_ak47_weapon:
+            Item: "weapon:golden_ak47"
+            Drop_Chance: LEGENDARY
+            Weight: 1.0
+
+         legendary_key:
+            Item: "unique:legendary_key"
+            Drop_Chance: LEGENDARY
+            Weight: 0.6
+
+         steyr_aug_weapon:
+            Item: "weapon:steyr_aug"
+            Drop_Chance: EPIC
+            Weight: 2.0
+
+         762_ammo:
+            Item: "ammo:7,62"
+            Drop_Chance: UNCOMMON
+            Min_Amount: 30
+            Max_Amount: 60
+            Weight: 5.0
 
    # Forbidden Relic — once-per-map end-game trophy; exotics only.
    forbidden_relic:
@@ -780,50 +851,44 @@ Loot_Tables:
       Items:
          ray_gun_weapon:
             Item: "weapon:ray_gun"
-            Rarity: LEGENDARY
+            Drop_Chance: LEGENDARY
             Weight: 0.8
-            Tier_Requirement: "legendary"
 
          minigun_weapon:
             Item: "weapon:minigun"
-            Rarity: LEGENDARY
+            Drop_Chance: LEGENDARY
             Weight: 0.6
-            Tier_Requirement: "legendary"
 
          rocket_launcher_weapon:
             Item: "weapon:rocket_launcher"
-            Rarity: LEGENDARY
+            Drop_Chance: LEGENDARY
             Weight: 0.5
-            Tier_Requirement: "legendary"
 
          rocket_ammo:
             Item: "ammo:rocket"
-            Rarity: EPIC
+            Drop_Chance: EPIC
             Min_Amount: 2
             Max_Amount: 5
             Weight: 2.0
-            Tier_Requirement: "epic"
 
          762_ammo:
             Item: "ammo:7,62"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 30
             Max_Amount: 60
             Weight: 4.0
 
          legendary_key:
             Item: "unique:legendary_key"
-            Rarity: LEGENDARY
+            Drop_Chance: LEGENDARY
             Weight: 0.4
-            Tier_Requirement: "legendary"
 
          enchanted_golden_apple_food:
             Item: "material:enchanted_golden_apple"
-            Rarity: LEGENDARY
+            Drop_Chance: LEGENDARY
             Min_Amount: 1
             Max_Amount: 1
             Weight: 0.6
-            Tier_Requirement: "legendary"
 
    # Pantry Raid — food-only cache: corner store, safehouse kitchen, ration drop.
    pantry_raid:
@@ -839,114 +904,112 @@ Loot_Tables:
       Items:
          bread_food:
             Item: "material:bread"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 4
             Max_Amount: 12
             Weight: 10.0
 
          apple_food:
             Item: "material:apple"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 3
             Max_Amount: 8
             Weight: 9.0
 
          cookie_food:
             Item: "material:cookie"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 4
             Max_Amount: 10
             Weight: 8.0
 
          carrot_food:
             Item: "material:carrot"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 3
             Max_Amount: 6
             Weight: 7.0
 
          potato_food:
             Item: "material:potato"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 3
             Max_Amount: 6
             Weight: 7.0
 
          rotten_flesh_food:
             Item: "material:rotten_flesh"
-            Rarity: COMMON
+            Drop_Chance: COMMON
             Min_Amount: 2
             Max_Amount: 6
             Weight: 6.0
 
          baked_potato_food:
             Item: "material:baked_potato"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 2
             Max_Amount: 6
             Weight: 6.0
 
          cooked_beef_food:
             Item: "material:cooked_beef"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 2
             Max_Amount: 5
             Weight: 5.0
 
          cooked_chicken_food:
             Item: "material:cooked_chicken"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 2
             Max_Amount: 5
             Weight: 5.0
 
          cooked_porkchop_food:
             Item: "material:cooked_porkchop"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 2
             Max_Amount: 5
             Weight: 5.0
 
          pumpkin_pie_food:
             Item: "material:pumpkin_pie"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 1
             Max_Amount: 3
             Weight: 4.0
 
          mushroom_stew_food:
             Item: "material:mushroom_stew"
-            Rarity: UNCOMMON
+            Drop_Chance: UNCOMMON
             Min_Amount: 1
             Max_Amount: 2
             Weight: 3.0
 
          honey_bottle_food:
             Item: "material:honey_bottle"
-            Rarity: RARE
+            Drop_Chance: RARE
             Min_Amount: 1
             Max_Amount: 2
             Weight: 2.5
 
          cake_food:
             Item: "material:cake"
-            Rarity: RARE
+            Drop_Chance: RARE
             Min_Amount: 1
             Max_Amount: 1
             Weight: 2.0
 
          golden_carrot_food:
             Item: "material:golden_carrot"
-            Rarity: EPIC
+            Drop_Chance: EPIC
             Min_Amount: 1
             Max_Amount: 3
             Weight: 1.5
-            Tier_Requirement: "rare"
 
          golden_apple_food:
             Item: "material:golden_apple"
-            Rarity: EPIC
+            Drop_Chance: EPIC
             Min_Amount: 1
             Max_Amount: 2
             Weight: 1.0
-            Tier_Requirement: "epic"

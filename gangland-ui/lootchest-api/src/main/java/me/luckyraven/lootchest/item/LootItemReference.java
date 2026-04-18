@@ -20,7 +20,6 @@ public class LootItemReference {
 	private final int    maxAmount;
 	private final double weight;
 	private final Rarity rarity;
-	private final String tierRequirement;
 
 	/**
 	 * Gets the effective weight considering rarity

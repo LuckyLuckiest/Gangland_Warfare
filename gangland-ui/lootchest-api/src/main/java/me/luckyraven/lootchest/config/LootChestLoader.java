@@ -209,8 +209,8 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 				continue;
 			}
 
-			// Rarity affects spawn chance
-			String                   rarityStr = itemSection.getString("Rarity", "COMMON");
+			// Drop_Chance scales how often the roll lands on this item
+			String                   rarityStr = itemSection.getString("Drop_Chance", "COMMON");
 			LootItemReference.Rarity rarity;
 			try {
 				rarity = LootItemReference.Rarity.valueOf(rarityStr.toUpperCase());
@@ -218,10 +218,9 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 				rarity = LootItemReference.Rarity.COMMON;
 			}
 
-			int    minAmount       = itemSection.getInt("Min_Amount", 1);
-			int    maxAmount       = itemSection.getInt("Max_Amount", minAmount);
-			double weight          = itemSection.getDouble("Weight", 1.0);
-			String tierRequirement = itemSection.getString("Tier_Requirement");
+			int    minAmount = itemSection.getInt("Min_Amount", 1);
+			int    maxAmount = itemSection.getInt("Max_Amount", minAmount);
+			double weight    = itemSection.getDouble("Weight", 1.0);
 
 			LootItemReference lootItem = LootItemReference.builder()
 			                                              .id(itemId)
@@ -230,7 +229,6 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 			                                              .minAmount(minAmount)
 			                                              .maxAmount(maxAmount)
 			                                              .weight(weight)
-			                                              .tierRequirement(tierRequirement)
 			                                              .build();
 
 			items.add(lootItem);
