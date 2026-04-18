@@ -176,9 +176,11 @@ Loot_Tables:
             Weight: 2.0
             Tier_Requirement: "uncommon"
 
-         rare_key:
-            Item: "unique:rare_key"
+         lockpick_item:
+            Item: "unique:lockpick"
             Rarity: RARE
+            Min_Amount: 1
+            Max_Amount: 2
             Weight: 0.8
 
          epic_key:
@@ -186,3 +188,765 @@ Loot_Tables:
             Rarity: EPIC
             Weight: 0.3
             Tier_Requirement: "rare"
+
+         bread_food:
+            Item: "material:bread"
+            Rarity: COMMON
+            Min_Amount: 3
+            Max_Amount: 6
+            Weight: 5.0
+
+         cooked_beef_food:
+            Item: "material:cooked_beef"
+            Rarity: UNCOMMON
+            Min_Amount: 2
+            Max_Amount: 4
+            Weight: 4.0
+
+         baked_potato_food:
+            Item: "material:baked_potato"
+            Rarity: COMMON
+            Min_Amount: 2
+            Max_Amount: 5
+            Weight: 4.0
+
+   # Gang Dumpster — low-level improvised melee; first-chest flavour for new-player areas.
+   gang_dumpster:
+      Display_Name: "&7Gang Dumpster"
+      Min_Items: 2
+      Max_Items: 4
+      Allowed_Tiers:
+         - "common"
+         - "uncommon"
+
+      Items:
+         knife_weapon:
+            Item: "weapon:knife"
+            Rarity: COMMON
+            Weight: 9.0
+
+         crowbar_weapon:
+            Item: "weapon:crowbar"
+            Rarity: COMMON
+            Weight: 8.0
+
+         machete_weapon:
+            Item: "weapon:machete"
+            Rarity: UNCOMMON
+            Weight: 5.0
+
+         tomahawk_weapon:
+            Item: "weapon:tomahawk"
+            Rarity: UNCOMMON
+            Weight: 4.0
+
+         molotov_weapon:
+            Item: "weapon:molotov"
+            Rarity: RARE
+            Weight: 1.5
+            Tier_Requirement: "uncommon"
+
+         gasoline_item:
+            Item: "unique:gasoline"
+            Rarity: UNCOMMON
+            Min_Amount: 1
+            Max_Amount: 2
+            Weight: 3.0
+
+         gang_beanie_wearable:
+            Item: "wearable:gang_beanie"
+            Rarity: UNCOMMON
+            Weight: 3.0
+
+         gang_sneakers_wearable:
+            Item: "wearable:gang_sneakers"
+            Rarity: UNCOMMON
+            Weight: 3.0
+
+         gang_pants_wearable:
+            Item: "wearable:gang_pants"
+            Rarity: RARE
+            Weight: 1.5
+
+         rotten_flesh_food:
+            Item: "material:rotten_flesh"
+            Rarity: COMMON
+            Min_Amount: 2
+            Max_Amount: 5
+            Weight: 7.0
+
+         bread_food:
+            Item: "material:bread"
+            Rarity: COMMON
+            Min_Amount: 1
+            Max_Amount: 4
+            Weight: 5.0
+
+   # Mobster Stash — classic gangster sidearms for speakeasy floors and safehouses.
+   mobster_stash:
+      Display_Name: "&eMobster Stash"
+      Min_Items: 3
+      Max_Items: 5
+      Allowed_Tiers:
+         - "common"
+         - "uncommon"
+         - "rare"
+
+      Items:
+         pistol_weapon:
+            Item: "weapon:pistol"
+            Rarity: COMMON
+            Weight: 8.0
+
+         revolver_weapon:
+            Item: "weapon:revolver"
+            Rarity: UNCOMMON
+            Weight: 5.0
+
+         sawn_off_weapon:
+            Item: "weapon:sawn_off"
+            Rarity: RARE
+            Weight: 2.5
+            Tier_Requirement: "uncommon"
+
+         9mm_ammo:
+            Item: "ammo:9mm"
+            Rarity: COMMON
+            Min_Amount: 8
+            Max_Amount: 24
+            Weight: 9.0
+
+         slugs_ammo:
+            Item: "ammo:slugs"
+            Rarity: UNCOMMON
+            Min_Amount: 4
+            Max_Amount: 12
+            Weight: 6.0
+
+         lockpick_item:
+            Item: "unique:lockpick"
+            Rarity: RARE
+            Min_Amount: 1
+            Max_Amount: 2
+            Weight: 1.5
+
+         gang_jacket_wearable:
+            Item: "wearable:gang_jacket"
+            Rarity: RARE
+            Weight: 2.0
+            Tier_Requirement: "uncommon"
+
+         bread_food:
+            Item: "material:bread"
+            Rarity: COMMON
+            Min_Amount: 2
+            Max_Amount: 5
+            Weight: 5.0
+
+         cooked_beef_food:
+            Item: "material:cooked_beef"
+            Rarity: UNCOMMON
+            Min_Amount: 1
+            Max_Amount: 3
+            Weight: 3.0
+
+   # Police Armory — precinct lockers: non-lethals and service weapons.
+   police_armory:
+      Display_Name: "&9Police Armory"
+      Min_Items: 3
+      Max_Items: 6
+      Allowed_Tiers:
+         - "uncommon"
+         - "rare"
+         - "epic"
+
+      Items:
+         pistol_weapon:
+            Item: "weapon:pistol"
+            Rarity: COMMON
+            Weight: 7.0
+
+         mp5_weapon:
+            Item: "weapon:mp5"
+            Rarity: UNCOMMON
+            Weight: 5.0
+
+         shotgun_weapon:
+            Item: "weapon:shotgun"
+            Rarity: RARE
+            Weight: 3.0
+
+         flashbang_weapon:
+            Item: "weapon:flashbang"
+            Rarity: RARE
+            Weight: 2.0
+
+         smoke_grenade_weapon:
+            Item: "weapon:smoke_grenade"
+            Rarity: UNCOMMON
+            Weight: 3.0
+
+         9mm_ammo:
+            Item: "ammo:9mm"
+            Rarity: COMMON
+            Min_Amount: 15
+            Max_Amount: 30
+            Weight: 8.0
+
+         slugs_ammo:
+            Item: "ammo:slugs"
+            Rarity: UNCOMMON
+            Min_Amount: 5
+            Max_Amount: 15
+            Weight: 6.0
+
+         epic_key:
+            Item: "unique:epic_key"
+            Rarity: EPIC
+            Weight: 0.5
+            Tier_Requirement: "epic"
+
+         police_helmet_wearable:
+            Item: "wearable:police_helmet"
+            Rarity: UNCOMMON
+            Weight: 4.0
+
+         police_boots_wearable:
+            Item: "wearable:police_boots"
+            Rarity: UNCOMMON
+            Weight: 4.0
+
+         police_leggings_wearable:
+            Item: "wearable:police_leggings"
+            Rarity: RARE
+            Weight: 2.5
+            Tier_Requirement: "uncommon"
+
+         police_vest_wearable:
+            Item: "wearable:police_vest"
+            Rarity: RARE
+            Weight: 2.0
+            Tier_Requirement: "rare"
+
+         cookie_food:
+            Item: "material:cookie"
+            Rarity: COMMON
+            Min_Amount: 3
+            Max_Amount: 8
+            Weight: 6.0
+
+         pumpkin_pie_food:
+            Item: "material:pumpkin_pie"
+            Rarity: UNCOMMON
+            Min_Amount: 1
+            Max_Amount: 3
+            Weight: 3.0
+
+   # Demolition Cache — construction sites and siege stashes; explosives theme.
+   demolition_cache:
+      Display_Name: "&cDemolition Cache"
+      Min_Items: 3
+      Max_Items: 5
+      Allowed_Tiers:
+         - "rare"
+         - "epic"
+         - "legendary"
+
+      Rarity_Overrides:
+         epic: 0.22
+         legendary: 0.08
+
+      Items:
+         grenade_weapon:
+            Item: "weapon:grenade"
+            Rarity: RARE
+            Weight: 5.0
+
+         tomahawk_weapon:
+            Item: "weapon:tomahawk"
+            Rarity: UNCOMMON
+            Weight: 4.0
+
+         rocket_launcher_weapon:
+            Item: "weapon:rocket_launcher"
+            Rarity: LEGENDARY
+            Weight: 0.5
+            Tier_Requirement: "legendary"
+
+         rocket_ammo:
+            Item: "ammo:rocket"
+            Rarity: EPIC
+            Min_Amount: 1
+            Max_Amount: 4
+            Weight: 2.0
+            Tier_Requirement: "rare"
+
+         flare_ammo:
+            Item: "ammo:flare"
+            Rarity: RARE
+            Min_Amount: 2
+            Max_Amount: 6
+            Weight: 3.0
+
+         gasoline_item:
+            Item: "unique:gasoline"
+            Rarity: UNCOMMON
+            Min_Amount: 1
+            Max_Amount: 3
+            Weight: 3.0
+
+   # Pyromaniac's Trunk — arsonist hideout; guarantees fuel alongside a flamethrower roll.
+   pyromaniac_trunk:
+      Display_Name: "&6Pyromaniac's Trunk"
+      Min_Items: 2
+      Max_Items: 4
+      Allowed_Tiers:
+         - "rare"
+         - "epic"
+         - "legendary"
+
+      Items:
+         molotov_weapon:
+            Item: "weapon:molotov"
+            Rarity: UNCOMMON
+            Weight: 6.0
+
+         flamethrower_weapon:
+            Item: "weapon:flamethrower"
+            Rarity: LEGENDARY
+            Weight: 0.8
+            Tier_Requirement: "legendary"
+
+         fuel_canister_ammo:
+            Item: "ammo:fuel_canister"
+            Rarity: RARE
+            Min_Amount: 2
+            Max_Amount: 6
+            Weight: 4.0
+            Tier_Requirement: "rare"
+
+         gasoline_item:
+            Item: "unique:gasoline"
+            Rarity: UNCOMMON
+            Min_Amount: 1
+            Max_Amount: 3
+            Weight: 5.0
+
+         flare_ammo:
+            Item: "ammo:flare"
+            Rarity: RARE
+            Min_Amount: 1
+            Max_Amount: 4
+            Weight: 2.0
+
+   # Biohazard Lab — research facility; one exotic plus utility grenades.
+   biohazard_lab:
+      Display_Name: "&2Biohazard Lab"
+      Min_Items: 2
+      Max_Items: 4
+      Allowed_Tiers:
+         - "rare"
+         - "epic"
+
+      Items:
+         syringe_gun_weapon:
+            Item: "weapon:syringe_gun"
+            Rarity: EPIC
+            Weight: 1.5
+            Tier_Requirement: "epic"
+
+         smoke_grenade_weapon:
+            Item: "weapon:smoke_grenade"
+            Rarity: UNCOMMON
+            Weight: 4.0
+
+         flashbang_weapon:
+            Item: "weapon:flashbang"
+            Rarity: RARE
+            Weight: 2.0
+
+         knife_weapon:
+            Item: "weapon:knife"
+            Rarity: COMMON
+            Weight: 5.0
+
+         lockpick_item:
+            Item: "unique:lockpick"
+            Rarity: RARE
+            Min_Amount: 1
+            Max_Amount: 2
+            Weight: 2.0
+
+   # Mercenary Locker — PMC / contractor kit; mid-to-high assault loadout.
+   mercenary_locker:
+      Display_Name: "&aMercenary Locker"
+      Min_Items: 3
+      Max_Items: 6
+      Allowed_Tiers:
+         - "rare"
+         - "epic"
+
+      Items:
+         rifle_weapon:
+            Item: "weapon:rifle"
+            Rarity: RARE
+            Weight: 4.0
+
+         steyr_aug_weapon:
+            Item: "weapon:steyr_aug"
+            Rarity: EPIC
+            Weight: 2.0
+            Tier_Requirement: "epic"
+
+         mp5_weapon:
+            Item: "weapon:mp5"
+            Rarity: UNCOMMON
+            Weight: 4.0
+
+         grenade_weapon:
+            Item: "weapon:grenade"
+            Rarity: RARE
+            Weight: 3.0
+
+         556_ammo:
+            Item: "ammo:5,56"
+            Rarity: COMMON
+            Min_Amount: 15
+            Max_Amount: 45
+            Weight: 8.0
+
+         762_ammo:
+            Item: "ammo:7,62"
+            Rarity: COMMON
+            Min_Amount: 15
+            Max_Amount: 45
+            Weight: 7.0
+
+         epic_key:
+            Item: "unique:epic_key"
+            Rarity: EPIC
+            Weight: 0.6
+            Tier_Requirement: "epic"
+
+         tactical_helmet_wearable:
+            Item: "wearable:tactical_helmet"
+            Rarity: RARE
+            Weight: 2.5
+            Tier_Requirement: "rare"
+
+         tactical_leggings_wearable:
+            Item: "wearable:tactical_leggings"
+            Rarity: EPIC
+            Weight: 1.5
+            Tier_Requirement: "epic"
+
+         tactical_boots_wearable:
+            Item: "wearable:tactical_boots"
+            Rarity: RARE
+            Weight: 2.5
+            Tier_Requirement: "rare"
+
+         heavy_vest_wearable:
+            Item: "wearable:heavy_vest"
+            Rarity: EPIC
+            Weight: 1.2
+            Tier_Requirement: "epic"
+
+         cooked_beef_food:
+            Item: "material:cooked_beef"
+            Rarity: COMMON
+            Min_Amount: 2
+            Max_Amount: 5
+            Weight: 4.0
+
+         golden_carrot_food:
+            Item: "material:golden_carrot"
+            Rarity: RARE
+            Min_Amount: 1
+            Max_Amount: 3
+            Weight: 1.5
+            Tier_Requirement: "rare"
+
+   # Sniper's Nest — rooftop hide; precision kit plus backup sidearm.
+   sniper_nest:
+      Display_Name: "&3Sniper's Nest"
+      Min_Items: 2
+      Max_Items: 4
+      Allowed_Tiers:
+         - "rare"
+         - "epic"
+
+      Items:
+         awp_weapon:
+            Item: "weapon:awp"
+            Rarity: EPIC
+            Weight: 2.0
+            Tier_Requirement: "epic"
+
+         revolver_weapon:
+            Item: "weapon:revolver"
+            Rarity: UNCOMMON
+            Weight: 4.0
+
+         knife_weapon:
+            Item: "weapon:knife"
+            Rarity: COMMON
+            Weight: 5.0
+
+         50_bmg_ammo:
+            Item: "ammo:50_bmg"
+            Rarity: RARE
+            Min_Amount: 4
+            Max_Amount: 12
+            Weight: 5.0
+            Tier_Requirement: "rare"
+
+         flare_ammo:
+            Item: "ammo:flare"
+            Rarity: RARE
+            Min_Amount: 1
+            Max_Amount: 3
+            Weight: 2.0
+
+   # Kingpin's Vault — boss-room trophy chest; primary source of legendary_key.
+   kingpin_vault:
+      Display_Name: "&6Kingpin's Vault"
+      Min_Items: 3
+      Max_Items: 5
+      Allowed_Tiers:
+         - "epic"
+         - "legendary"
+
+      Rarity_Overrides:
+         epic: 0.30
+         legendary: 0.12
+
+      Items:
+         golden_ak47_weapon:
+            Item: "weapon:golden_ak47"
+            Rarity: LEGENDARY
+            Weight: 1.0
+            Tier_Requirement: "legendary"
+
+         steyr_aug_weapon:
+            Item: "weapon:steyr_aug"
+            Rarity: EPIC
+            Weight: 2.5
+            Tier_Requirement: "epic"
+
+         revolver_weapon:
+            Item: "weapon:revolver"
+            Rarity: RARE
+            Weight: 3.0
+
+         762_ammo:
+            Item: "ammo:7,62"
+            Rarity: UNCOMMON
+            Min_Amount: 20
+            Max_Amount: 50
+            Weight: 6.0
+
+         legendary_key:
+            Item: "unique:legendary_key"
+            Rarity: LEGENDARY
+            Weight: 0.5
+            Tier_Requirement: "legendary"
+
+         epic_key:
+            Item: "unique:epic_key"
+            Rarity: EPIC
+            Weight: 1.0
+            Tier_Requirement: "epic"
+
+         golden_apple_food:
+            Item: "material:golden_apple"
+            Rarity: EPIC
+            Min_Amount: 1
+            Max_Amount: 2
+            Weight: 1.5
+            Tier_Requirement: "epic"
+
+   # Forbidden Relic — once-per-map end-game trophy; exotics only.
+   forbidden_relic:
+      Display_Name: "&dForbidden Relic"
+      Min_Items: 1
+      Max_Items: 3
+      Allowed_Tiers:
+         - "legendary"
+
+      Rarity_Overrides:
+         legendary: 0.15
+
+      Items:
+         ray_gun_weapon:
+            Item: "weapon:ray_gun"
+            Rarity: LEGENDARY
+            Weight: 0.8
+            Tier_Requirement: "legendary"
+
+         minigun_weapon:
+            Item: "weapon:minigun"
+            Rarity: LEGENDARY
+            Weight: 0.6
+            Tier_Requirement: "legendary"
+
+         rocket_launcher_weapon:
+            Item: "weapon:rocket_launcher"
+            Rarity: LEGENDARY
+            Weight: 0.5
+            Tier_Requirement: "legendary"
+
+         rocket_ammo:
+            Item: "ammo:rocket"
+            Rarity: EPIC
+            Min_Amount: 2
+            Max_Amount: 5
+            Weight: 2.0
+            Tier_Requirement: "epic"
+
+         762_ammo:
+            Item: "ammo:7,62"
+            Rarity: UNCOMMON
+            Min_Amount: 30
+            Max_Amount: 60
+            Weight: 4.0
+
+         legendary_key:
+            Item: "unique:legendary_key"
+            Rarity: LEGENDARY
+            Weight: 0.4
+            Tier_Requirement: "legendary"
+
+         enchanted_golden_apple_food:
+            Item: "material:enchanted_golden_apple"
+            Rarity: LEGENDARY
+            Min_Amount: 1
+            Max_Amount: 1
+            Weight: 0.6
+            Tier_Requirement: "legendary"
+
+   # Pantry Raid — food-only cache: corner store, safehouse kitchen, ration drop.
+   pantry_raid:
+      Display_Name: "&6Pantry Raid"
+      Min_Items: 3
+      Max_Items: 6
+      Allowed_Tiers:
+         - "common"
+         - "uncommon"
+         - "rare"
+         - "epic"
+
+      Items:
+         bread_food:
+            Item: "material:bread"
+            Rarity: COMMON
+            Min_Amount: 4
+            Max_Amount: 12
+            Weight: 10.0
+
+         apple_food:
+            Item: "material:apple"
+            Rarity: COMMON
+            Min_Amount: 3
+            Max_Amount: 8
+            Weight: 9.0
+
+         cookie_food:
+            Item: "material:cookie"
+            Rarity: COMMON
+            Min_Amount: 4
+            Max_Amount: 10
+            Weight: 8.0
+
+         carrot_food:
+            Item: "material:carrot"
+            Rarity: COMMON
+            Min_Amount: 3
+            Max_Amount: 6
+            Weight: 7.0
+
+         potato_food:
+            Item: "material:potato"
+            Rarity: COMMON
+            Min_Amount: 3
+            Max_Amount: 6
+            Weight: 7.0
+
+         rotten_flesh_food:
+            Item: "material:rotten_flesh"
+            Rarity: COMMON
+            Min_Amount: 2
+            Max_Amount: 6
+            Weight: 6.0
+
+         baked_potato_food:
+            Item: "material:baked_potato"
+            Rarity: UNCOMMON
+            Min_Amount: 2
+            Max_Amount: 6
+            Weight: 6.0
+
+         cooked_beef_food:
+            Item: "material:cooked_beef"
+            Rarity: UNCOMMON
+            Min_Amount: 2
+            Max_Amount: 5
+            Weight: 5.0
+
+         cooked_chicken_food:
+            Item: "material:cooked_chicken"
+            Rarity: UNCOMMON
+            Min_Amount: 2
+            Max_Amount: 5
+            Weight: 5.0
+
+         cooked_porkchop_food:
+            Item: "material:cooked_porkchop"
+            Rarity: UNCOMMON
+            Min_Amount: 2
+            Max_Amount: 5
+            Weight: 5.0
+
+         pumpkin_pie_food:
+            Item: "material:pumpkin_pie"
+            Rarity: UNCOMMON
+            Min_Amount: 1
+            Max_Amount: 3
+            Weight: 4.0
+
+         mushroom_stew_food:
+            Item: "material:mushroom_stew"
+            Rarity: UNCOMMON
+            Min_Amount: 1
+            Max_Amount: 2
+            Weight: 3.0
+
+         honey_bottle_food:
+            Item: "material:honey_bottle"
+            Rarity: RARE
+            Min_Amount: 1
+            Max_Amount: 2
+            Weight: 2.5
+
+         cake_food:
+            Item: "material:cake"
+            Rarity: RARE
+            Min_Amount: 1
+            Max_Amount: 1
+            Weight: 2.0
+
+         golden_carrot_food:
+            Item: "material:golden_carrot"
+            Rarity: EPIC
+            Min_Amount: 1
+            Max_Amount: 3
+            Weight: 1.5
+            Tier_Requirement: "rare"
+
+         golden_apple_food:
+            Item: "material:golden_apple"
+            Rarity: EPIC
+            Min_Amount: 1
+            Max_Amount: 2
+            Weight: 1.0
+            Tier_Requirement: "epic"

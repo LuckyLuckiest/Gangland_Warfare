@@ -86,6 +86,99 @@ heavy_vest:
       TOUGHENED: 1
       LIGHTWEIGHT: 1
 
+police_leggings:
+   Material: IRON_LEGGINGS
+   Name: "&7Police Leggings"
+   Base_Damage_Reduction: 0.08
+   Leather_Color: ""
+   Lore:
+      - "&8Duty-issue reinforced trousers"
+      - "&7Knee and thigh plates sewn in"
+   Traits:
+      REINFORCED: 1
+      TOUGHENED: 1
+
+police_boots:
+   Material: IRON_BOOTS
+   Name: "&7Police Boots"
+   Base_Damage_Reduction: 0.05
+   Leather_Color: ""
+   Lore:
+      - "&8Steel-toed patrol boots"
+   Traits:
+      REINFORCED: 1
+      LIGHTWEIGHT: 1
+
+gang_beanie:
+   Material: LEATHER_HELMET
+   Name: "&6Gang Beanie"
+   Base_Damage_Reduction: 0.03
+   Leather_Color: "#1A1A1A"
+   Lore:
+      - "&8Pulled down low over the eyes"
+      - "&7Keeps your face off the cameras"
+   Traits:
+      REACTIVE: 1
+      LIGHTWEIGHT: 1
+
+gang_pants:
+   Material: LEATHER_LEGGINGS
+   Name: "&6Gang Pants"
+   Base_Damage_Reduction: 0.04
+   Leather_Color: "#2B2B2B"
+   Lore:
+      - "&8Baggy denim with hidden pockets"
+   Traits:
+      LIGHTWEIGHT: 1
+
+gang_sneakers:
+   Material: LEATHER_BOOTS
+   Name: "&6Gang Sneakers"
+   Base_Damage_Reduction: 0.02
+   Leather_Color: "#EEEEEE"
+   Lore:
+      - "&8Beat-up trainers"
+      - "&7Built for running, not fighting"
+   Traits:
+      LIGHTWEIGHT: 2
+
+tactical_helmet:
+   Material: DIAMOND_HELMET
+   Name: "&bTactical Helmet"
+   Base_Damage_Reduction: 0.10
+   Leather_Color: ""
+   Lore:
+      - "&bCeramic-composite combat helmet"
+      - "&7Rated against pistol rounds"
+   Traits:
+      REINFORCED: 2
+      BULLETPROOF: 1
+      TOUGHENED: 1
+
+tactical_leggings:
+   Material: DIAMOND_LEGGINGS
+   Name: "&bTactical Leggings"
+   Base_Damage_Reduction: 0.12
+   Leather_Color: ""
+   Lore:
+      - "&bReinforced combat trousers"
+      - "&7Thigh plates and padded knees"
+   Traits:
+      REINFORCED: 2
+      PADDED: 1
+      TOUGHENED: 1
+
+tactical_boots:
+   Material: DIAMOND_BOOTS
+   Name: "&bTactical Boots"
+   Base_Damage_Reduction: 0.08
+   Leather_Color: ""
+   Lore:
+      - "&bHigh-speed assault boots"
+   Traits:
+      REINFORCED: 1
+      LIGHTWEIGHT: 1
+
 jetpack:
    Material: IRON_CHESTPLATE
    Name: "&b&lJetpack"

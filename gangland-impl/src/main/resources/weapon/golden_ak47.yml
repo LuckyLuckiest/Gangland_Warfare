@@ -15,6 +15,7 @@ Information:
       - "&eA gilded 7.62 rifle that screams 'try me'.&r"
       - "&7Heavy hitter. Iconic kick.&r"
    Drop_Hologram: true
+   Custom_Model_Data: 0
 
 Shoot:
    Selective_Fire: auto
@@ -35,8 +36,8 @@ Shoot:
             Chance: 5
             Amount: 5
       Consumed_Amount: 1
-      Per_Shot: 4
-      Cooldown: 1
+      Per_Shot: 3
+      Cooldown: 2
       Distance: 50
       Particle: true
       Gravity: 0.1
