@@ -336,6 +336,33 @@ public enum Messages {
 	TRADER_TRAIT_INVALID("Errors.Trader.Trait.Invalid", Type.ERROR),
 	TRADER_SHOP_MISSING("Errors.Trader.Shop.Missing", Type.ERROR),
 	TRADER_TRAIT_MISSING("Errors.Trader.Trait.Missing", Type.ERROR),
+
+	// detainment (cops-n-crooks cuff → jail → release flow)
+	DETAINMENT_HANDCUFFED_TITLE("Cops_N_Crooks.Detainment.Handcuffed.Title", Type.OTHER),
+	DETAINMENT_HANDCUFFED_SUBTITLE("Cops_N_Crooks.Detainment.Handcuffed.Subtitle", Type.OTHER),
+	DETAINMENT_HANDCUFFED_ACTION_BAR("Cops_N_Crooks.Detainment.Handcuffed.Action_Bar", Type.OTHER),
+	DETAINMENT_JAILED_TITLE("Cops_N_Crooks.Detainment.Jailed.Title", Type.OTHER),
+	DETAINMENT_JAILED_SUBTITLE("Cops_N_Crooks.Detainment.Jailed.Subtitle", Type.OTHER),
+	DETAINMENT_JAILED_ACTION_BAR("Cops_N_Crooks.Detainment.Jailed.Action_Bar", Type.OTHER),
+	DETAINMENT_RELEASED_TITLE("Cops_N_Crooks.Detainment.Released.Title", Type.OTHER),
+	DETAINMENT_RELEASED_SUBTITLE("Cops_N_Crooks.Detainment.Released.Subtitle", Type.OTHER),
+	DETAINMENT_CUFFING_TITLE("Cops_N_Crooks.Detainment.Cuffing.Title", Type.OTHER),
+	DETAINMENT_CUFFING_SUBTITLE("Cops_N_Crooks.Detainment.Cuffing.Subtitle", Type.OTHER),
+	DETAINMENT_CUFFED_TITLE("Cops_N_Crooks.Detainment.Cuffed.Title", Type.OTHER),
+	DETAINMENT_CUFFED_SUBTITLE("Cops_N_Crooks.Detainment.Cuffed.Subtitle", Type.OTHER),
+	DETAINMENT_HANDCUFFED_TICK("Cops_N_Crooks.Detainment.Restraint_Tick.Handcuffed", Type.OTHER),
+	DETAINMENT_JAILED_TICK("Cops_N_Crooks.Detainment.Restraint_Tick.Jailed", Type.OTHER),
+
+	// gadgets - car
+	CAR_NO_PERMISSION("Gadgets.Car.No_Permission", Type.ERROR),
+	CAR_ALREADY_DRIVING("Gadgets.Car.Already_Driving", Type.ERROR),
+	CAR_FUEL_CAN_EMPTY("Gadgets.Car.Refuel.Fuel_Can_Empty", Type.OTHER),
+	CAR_FUEL_TANK_FULL("Gadgets.Car.Refuel.Tank_Full", Type.OTHER),
+	CAR_REFUEL_FAILED("Gadgets.Car.Refuel.Failed", Type.OTHER),
+
+	// death (respawn prompt)
+	DEATH_RESPAWN_WASTED_PREFIX("Death.Respawn.Wasted_Prefix", Type.OTHER),
+	DEATH_RESPAWN_BUTTON("Death.Respawn.Click_Button", Type.OTHER),
 	;
 
 	private static MessageProvider provider;

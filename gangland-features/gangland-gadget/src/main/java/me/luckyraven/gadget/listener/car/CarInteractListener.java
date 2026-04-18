@@ -4,13 +4,13 @@ import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarKey;
 import me.luckyraven.gadget.car.CarService;
 import me.luckyraven.gadget.car.ExhaustSide;
+import me.luckyraven.gadget.car.message.CarMessageContract;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.item.fuel.FuelKey;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
-import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -28,13 +28,15 @@ import org.bukkit.inventory.ItemStack;
  * entity to mount it (see {@link CarEntityInteractListener}).
  */
 @ListenerHandler
-@AutowireTarget({CarService.class})
+@AutowireTarget({CarService.class, CarMessageContract.class})
 public class CarInteractListener implements Listener {
 
-	private final CarService carService;
+	private final CarService         carService;
+	private final CarMessageContract messages;
 
-	public CarInteractListener(CarService carService) {
+	public CarInteractListener(CarService carService, CarMessageContract messages) {
 		this.carService = carService;
+		this.messages   = messages;
 	}
 
 	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
@@ -55,7 +57,7 @@ public class CarInteractListener implements Listener {
 
 		// Permission check
 		if (!player.hasPermission(car.getPermission())) {
-			player.sendMessage(ChatUtil.color("&cYou do not have permission to use this car."));
+			player.sendMessage(messages.noPermission());
 			return;
 		}
 

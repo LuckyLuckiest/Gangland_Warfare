@@ -7,9 +7,9 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.teleportation.IllegalTeleportException;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.gadget.jetpack.JetpackService;
-import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.downed.DownedPlayerRegistry;
@@ -272,8 +272,8 @@ public class CustomPlayerDeathListener implements Listener {
 	}
 
 	private void sendRespawnButton(Player player) {
-		TextComponent prefix = new TextComponent(GanglandChatUtil.color("&8[&cWASTED&8] "));
-		TextComponent button = new TextComponent(GanglandChatUtil.color("&7[&aClick to respawn instantly&7]"));
+		TextComponent prefix = new TextComponent(Messages.DEATH_RESPAWN_WASTED_PREFIX.toString());
+		TextComponent button = new TextComponent(Messages.DEATH_RESPAWN_BUTTON.toString());
 		button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/" + Gangland.SHORT_PREFIX + " respawn"));
 		prefix.addExtra(button);
 		player.spigot().sendMessage(prefix);

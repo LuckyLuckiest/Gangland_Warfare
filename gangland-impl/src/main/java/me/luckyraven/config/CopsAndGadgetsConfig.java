@@ -6,6 +6,7 @@ import me.luckyraven.copsncrooks.combo.KillCombo;
 import me.luckyraven.copsncrooks.detainment.DetainedPlayer;
 import me.luckyraven.copsncrooks.detainment.DetainmentRegistry;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
+import me.luckyraven.copsncrooks.detainment.message.DetainmentMessageContract;
 import me.luckyraven.copsncrooks.jail.Jail;
 import me.luckyraven.copsncrooks.jail.JailRegistry;
 import me.luckyraven.copsncrooks.jail.JailService;
@@ -27,9 +28,12 @@ import me.luckyraven.copsncrooks.npc.police.targeting.WantedTargetingManager;
 import me.luckyraven.data.economy.GanglandMoneyDropClassifier;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.copsncrooks.GanglandCivilianSpawnConfigProvider;
+import me.luckyraven.file.configuration.copsncrooks.GanglandDetainmentMessages;
+import me.luckyraven.file.configuration.gadget.GanglandCarMessages;
 import me.luckyraven.gadget.car.CarService;
 import me.luckyraven.gadget.car.ParkedCar;
 import me.luckyraven.gadget.car.config.CarAddon;
+import me.luckyraven.gadget.car.message.CarMessageContract;
 import me.luckyraven.gadget.car.vehicle.VehicleRegistry;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
@@ -118,9 +122,20 @@ public class CopsAndGadgetsConfig {
 	}
 
 	@Bean
-	public DetainmentService detainmentService(DetainmentRegistry detainmentRegistry, JailService jailService) {
+	public DetainmentMessageContract detainmentMessageContract() {
+		return new GanglandDetainmentMessages();
+	}
+
+	@Bean
+	public CarMessageContract carMessageContract() {
+		return new GanglandCarMessages();
+	}
+
+	@Bean
+	public DetainmentService detainmentService(DetainmentRegistry detainmentRegistry, JailService jailService,
+	                                           DetainmentMessageContract detainmentMessages) {
 		return new DetainmentService(gangland, detainmentRegistry, jailService,
-		                             jailService.getJailRegistry(), Gangland.FULL_PREFIX);
+		                             jailService.getJailRegistry(), detainmentMessages, Gangland.FULL_PREFIX);
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------

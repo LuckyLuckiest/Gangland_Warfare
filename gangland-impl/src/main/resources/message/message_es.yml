@@ -374,6 +374,9 @@ Death:
    Weapon:
       - "%killer% mató a %victim% con mucho vigor usando %item%."
       - "%victim% fue asesinado por %killer% usando %item%."
+   Respawn:
+      Wasted_Prefix: "&8[&cMUERTO&8] "
+      Click_Button: "&7[&aClic para reaparecer&7]"
 
 Level:
    Stats:
@@ -404,6 +407,39 @@ Signs:
       Confirm_Request: 'Acción masiva: &f%quantity%x %content% &7por &a%money_symbol%%price% &7- Shift-click la señal de nuevo en &f%time%s &7para confirmar.'
       Expired: '&cTu confirmación masiva para &f%content% &cha expirado.'
       Cancelled: '&cConfirmación masiva para &f%content% &ccancelada.'
+
+Cops_N_Crooks:
+   Detainment:
+      Handcuffed:
+         Title: "&cEsposado"
+         Subtitle: "&7Estás inmovilizado"
+         Action_Bar: "&cEstás esposado"
+      Jailed:
+         Title: "&4Encarcelado"
+         Subtitle: "&7Has sido trasladado a la cárcel"
+         Action_Bar: "&4Estás encarcelado"
+      Released:
+         Title: "&aLiberado"
+         Subtitle: "&7Ya no estás inmovilizado"
+      Cuffing:
+         Title: "&cEsposando"
+         # %seconds% es el tiempo restante en segundos.
+         Subtitle: "&7Inmovilizando en &b%seconds%s"
+      Cuffed:
+         Title: "&aEsposado"
+         Subtitle: "&7Estás inmovilizado"
+      Restraint_Tick:
+         Handcuffed: "&cEsposado &8- &7No puedes interactuar"
+         Jailed: "&4Encarcelado &8- &7No puedes interactuar"
+
+Gadgets:
+   Car:
+      No_Permission: "&cNo tienes permiso para usar este coche."
+      Already_Driving: "&cYa estás conduciendo un vehículo."
+      Refuel:
+         Fuel_Can_Empty: "&c¡El bidón de combustible está vacío!"
+         Tank_Full: "&c¡El tanque del coche ya está lleno!"
+         Failed: "&c¡No se pudo repostar el coche!"
 
 Loot_Chest:
    Cracking_Started: "&e¡Forzando el cofre... ¡Completa el minijuego!"

@@ -2,6 +2,7 @@ package me.luckyraven.copsncrooks.listener.police;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
+import me.luckyraven.copsncrooks.detainment.message.DetainmentMessageContract;
 import me.luckyraven.copsncrooks.events.police.CuffedEvent;
 import me.luckyraven.copsncrooks.events.police.DuringCuffingEvent;
 import me.luckyraven.util.downed.DownedPlayerRegistry;
@@ -18,8 +19,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class CuffingListener implements Listener {
 
-	private final Map<Player, Long> currentCuffCooldown = new ConcurrentHashMap<>();
-	private final DetainmentService detainmentService;
+	private final Map<Player, Long>         currentCuffCooldown = new ConcurrentHashMap<>();
+	private final DetainmentService         detainmentService;
+	private final DetainmentMessageContract messages;
 
 	@EventHandler
 	public void onPlayerCuffing(DuringCuffingEvent event) {
@@ -37,7 +39,7 @@ public class CuffingListener implements Listener {
 		    computeInSeconds(currentCuffCooldown.get(target)) != secondsRemaining) {
 			currentCuffCooldown.put(target, current);
 
-			ChatUtil.sendTitle(target, "&cCuffing", "&7Restraining in &b" + secondsRemaining + "s");
+			ChatUtil.sendTitle(target, messages.cuffingTitle(), messages.cuffingSubtitle(secondsRemaining));
 		}
 	}
 
@@ -51,7 +53,7 @@ public class CuffingListener implements Listener {
 		currentCuffCooldown.remove(target);
 		detainmentService.handcuff(target);
 
-		ChatUtil.sendTitle(target, "&aCuffed", "&7You are restrained");
+		ChatUtil.sendTitle(target, messages.cuffedTitle(), messages.cuffedSubtitle());
 	}
 
 	private long computeInSeconds(Long currentCuffCooldown) {

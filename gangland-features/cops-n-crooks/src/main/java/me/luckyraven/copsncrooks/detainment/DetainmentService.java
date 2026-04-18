@@ -2,6 +2,7 @@ package me.luckyraven.copsncrooks.detainment;
 
 import com.cryptomorin.xseries.XPotion;
 import lombok.Getter;
+import me.luckyraven.copsncrooks.detainment.message.DetainmentMessageContract;
 import me.luckyraven.copsncrooks.jail.JailRegistry;
 import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.util.downed.DownedPlayerRegistry;
@@ -19,20 +20,22 @@ import java.util.UUID;
 
 public class DetainmentService {
 
-	private final JavaPlugin         plugin;
-	private final DetainmentRegistry detainmentRegistry;
-	private final JailService        jailService;
-	private final JailRegistry       jailRegistry;
+	private final JavaPlugin                plugin;
+	private final DetainmentRegistry        detainmentRegistry;
+	private final JailService               jailService;
+	private final JailRegistry              jailRegistry;
+	private final DetainmentMessageContract messages;
 
 	@Getter
 	private final String commandBypassPermission;
 
 	public DetainmentService(JavaPlugin plugin, DetainmentRegistry detainmentRegistry, JailService jailService,
-	                         JailRegistry jailRegistry, String prefix) {
+	                         JailRegistry jailRegistry, DetainmentMessageContract messages, String prefix) {
 		this.plugin                  = plugin;
 		this.detainmentRegistry      = detainmentRegistry;
 		this.jailService             = jailService;
 		this.jailRegistry            = jailRegistry;
+		this.messages                = messages;
 		this.commandBypassPermission = prefix + ".detainment.bypass.command";
 	}
 
@@ -64,8 +67,8 @@ public class DetainmentService {
 	public void handcuff(Player player) {
 		setState(player, DetainmentState.HANDCUFFED);
 		applyVisuals(player, true);
-		ChatUtil.sendTitle(player, "&cHandcuffed", "&7You are restrained");
-		ActionBarManager.send(plugin, player, "&cYou are handcuffed", 40L);
+		ChatUtil.sendTitle(player, messages.handcuffedTitle(), messages.handcuffedSubtitle());
+		ActionBarManager.send(plugin, player, messages.handcuffedActionBar(), 40L);
 	}
 
 	public void jail(Player player, int jailId) {
@@ -73,15 +76,15 @@ public class DetainmentService {
 		setState(player, DetainmentState.JAILED);
 		applyVisuals(player, true);
 		teleportToJail(player);
-		ChatUtil.sendTitle(player, "&4Jailed", "&7You have been transported to jail");
-		ActionBarManager.send(plugin, player, "&4You are jailed", 40L);
+		ChatUtil.sendTitle(player, messages.jailedTitle(), messages.jailedSubtitle());
+		ActionBarManager.send(plugin, player, messages.jailedActionBar(), 40L);
 	}
 
 	public void release(Player player) {
 		jailRegistry.releasePlayer(player.getUniqueId());
 		setState(player, DetainmentState.NORMAL);
 		clearVisuals(player);
-		ChatUtil.sendTitle(player, "&aReleased", "&7You are no longer restrained");
+		ChatUtil.sendTitle(player, messages.releasedTitle(), messages.releasedSubtitle());
 	}
 
 	public void setState(Player player, DetainmentState state) {
@@ -136,11 +139,11 @@ public class DetainmentService {
 		applyVisuals(player, false);
 
 		if (state == DetainmentState.HANDCUFFED) {
-			ActionBarManager.send(plugin, player, "&cHandcuffed &8- &7You cannot interact", 25L);
+			ActionBarManager.send(plugin, player, messages.handcuffedRestraintTick(), 25L);
 			return;
 		}
 
-		ActionBarManager.send(plugin, player, "&4Jailed &8- &7You cannot interact", 25L);
+		ActionBarManager.send(plugin, player, messages.jailedRestraintTick(), 25L);
 	}
 
 	private void teleportToJail(Player player) {

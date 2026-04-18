@@ -2,13 +2,13 @@ package me.luckyraven.gadget.listener.car;
 
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarService;
+import me.luckyraven.gadget.car.message.CarMessageContract;
 import me.luckyraven.gadget.car.vehicle.ParkedVehicle;
 import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.item.fuel.FuelBar;
 import me.luckyraven.util.autowire.AutowireTarget;
 import me.luckyraven.util.listener.ListenerHandler;
 import me.luckyraven.util.utilities.ActionBarManager;
-import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -26,13 +26,15 @@ import java.util.UUID;
  * intentionally ignored — pickup is handled by shift + left-click via {@link CarDamageListener}.
  */
 @ListenerHandler
-@AutowireTarget({CarService.class})
+@AutowireTarget({CarService.class, CarMessageContract.class})
 public class CarEntityInteractListener implements Listener {
 
-	private final CarService carService;
+	private final CarService         carService;
+	private final CarMessageContract messages;
 
-	public CarEntityInteractListener(CarService carService) {
+	public CarEntityInteractListener(CarService carService, CarMessageContract messages) {
 		this.carService = carService;
+		this.messages   = messages;
 	}
 
 	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
@@ -61,7 +63,7 @@ public class CarEntityInteractListener implements Listener {
 				if (car.isFuelEnabled() && heldFuelKey != null && heldFuelKey.equals(car.getFuelKey())) {
 					int canFuel = Fuel.getCurrentFuel(heldItem);
 					if (canFuel <= 0) {
-						ActionBarManager.send(player, "&cFuel can is empty!");
+						ActionBarManager.send(player, messages.fuelCanEmpty());
 						return;
 					}
 
@@ -70,13 +72,13 @@ public class CarEntityInteractListener implements Listener {
 					int spaceInCar     = maxCarFuel - currentCarFuel;
 
 					if (spaceInCar <= 0) {
-						ActionBarManager.send(player, "&cCar fuel is already full!");
+						ActionBarManager.send(player, messages.fuelTankFull());
 						return;
 					}
 
 					int toTransfer = Math.min(canFuel, spaceInCar);
 					if (!carService.refuelParkedCar(entityUUID, toTransfer)) {
-						ActionBarManager.send(player, "&cCould not refuel the car!");
+						ActionBarManager.send(player, messages.refuelFailed());
 						return;
 					}
 
@@ -92,7 +94,7 @@ public class CarEntityInteractListener implements Listener {
 		}
 
 		if (carService.getVehicleRegistry().isPlayerDriving(player.getUniqueId())) {
-			player.sendMessage(ChatUtil.color("&cYou are already driving a vehicle."));
+			player.sendMessage(messages.alreadyDriving());
 			return;
 		}
 		carService.mountCar(player, entityUUID);

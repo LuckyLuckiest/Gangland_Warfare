@@ -381,6 +381,9 @@ Death:
    Weapon:
       - "%killer% killed %victim% vigorously using %item%."
       - "%victim% was killed by %killer% using %item%."
+   Respawn:
+      Wasted_Prefix: "&8[&cWASTED&8] "
+      Click_Button: "&7[&aClick to respawn instantly&7]"
 
 Level:
    Stats:
@@ -411,6 +414,39 @@ Signs:
       Confirm_Request: 'Bulk action: &f%quantity%x %content% &7for &a%money_symbol%%price% &7- Shift-click the sign again within &f%time%s &7to confirm.'
       Expired: '&cYour bulk confirmation for &f%content% &chas expired.'
       Cancelled: '&cBulk confirmation for &f%content% &cwas cancelled.'
+
+Cops_N_Crooks:
+   Detainment:
+      Handcuffed:
+         Title: "&cHandcuffed"
+         Subtitle: "&7You are restrained"
+         Action_Bar: "&cYou are handcuffed"
+      Jailed:
+         Title: "&4Jailed"
+         Subtitle: "&7You have been transported to jail"
+         Action_Bar: "&4You are jailed"
+      Released:
+         Title: "&aReleased"
+         Subtitle: "&7You are no longer restrained"
+      Cuffing:
+         Title: "&cCuffing"
+         # %seconds% is the remaining countdown in whole seconds.
+         Subtitle: "&7Restraining in &b%seconds%s"
+      Cuffed:
+         Title: "&aCuffed"
+         Subtitle: "&7You are restrained"
+      Restraint_Tick:
+         Handcuffed: "&cHandcuffed &8- &7You cannot interact"
+         Jailed: "&4Jailed &8- &7You cannot interact"
+
+Gadgets:
+   Car:
+      No_Permission: "&cYou do not have permission to use this car."
+      Already_Driving: "&cYou are already driving a vehicle."
+      Refuel:
+         Fuel_Can_Empty: "&cFuel can is empty!"
+         Tank_Full: "&cCar fuel is already full!"
+         Failed: "&cCould not refuel the car!"
 
 Loot_Chest:
    Cracking_Started: "&eCracking the chest... Complete the minigame!"
