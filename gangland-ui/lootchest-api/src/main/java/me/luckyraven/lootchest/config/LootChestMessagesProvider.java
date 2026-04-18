@@ -1,5 +1,6 @@
 package me.luckyraven.lootchest.config;
 
+import me.luckyraven.lootchest.data.LootTier;
 import me.luckyraven.util.utilities.messages.TimeMessagesProvider;
 
 /**
@@ -62,19 +63,42 @@ public interface LootChestMessagesProvider {
 	String getAlreadyLooted();
 
 	/**
-	 * First hologram line shown while the chest is on cooldown (e.g. "§c§lON COOLDOWN").
+	 * First hologram line shown while the chest is on cooldown (e.g. "&c&lON COOLDOWN").
 	 */
 	String getHologramCooldownStatus();
 
 	/**
-	 * First hologram line shown when the chest is available (e.g. "§a§lAVAILABLE").
+	 * First hologram line shown when the chest is available (e.g. "&a&lAVAILABLE").
 	 */
 	String getHologramAvailableStatus();
 
 	/**
-	 * Second hologram line shown when the chest is available (e.g. "§7Right-click to open").
+	 * Second hologram line shown when the chest is available (e.g. "&7Right-click to open").
 	 */
 	String getHologramAvailableHint();
+
+	/**
+	 * First hologram line for a tiered chest — typically the tier's display name (e.g. "&9Rare").
+	 */
+	String getHologramTierLabel(LootTier tier);
+
+	/**
+	 * Hologram line for a locked chest that requires an item ({@code LOCKPICK} / {@code KEY}).
+	 *
+	 * @param itemDisplay the tier's {@link LootTier#unlockItemDisplay()}, already colour-coded
+	 */
+	String getHologramLockedRequires(String itemDisplay);
+
+	/**
+	 * Hologram line for a chest locked behind a permission.
+	 */
+	String getHologramLockedPermission();
+
+	/**
+	 * Hologram line shown on a {@code LOCKPICK} / {@code KEY} chest after a player has consumed the unlock item for the
+	 * current cycle (subsequent openers don't need to burn another one).
+	 */
+	String getHologramUnlocked();
 
 	/**
 	 * Time-unit label provider used when formatting the cooldown countdown in chat.

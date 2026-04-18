@@ -88,6 +88,9 @@ public abstract class LootChestService {
 		this.itemParser       = itemParser;
 		this.messagesProvider = messagesProvider;
 
+		// Let the cooldown manager resolve unlock-icon ItemStacks for locked tiers.
+		// Null itemParser → icons are skipped silently.
+
 		this.registeredChests       = new ConcurrentHashMap<>();
 		this.chestsByLocation       = new ConcurrentHashMap<>();
 		this.activeSessions         = new ConcurrentHashMap<>();
@@ -110,6 +113,7 @@ public abstract class LootChestService {
 		// Initialize hologram and cooldown services
 		this.hologramService = hologramService;
 		this.cooldownManager = new ChestCooldownManager(plugin, hologramService);
+		this.cooldownManager.setItemParser(itemParser);
 
 		if (messagesProvider != null) {
 			this.cooldownManager.setMessagesProvider(messagesProvider);
@@ -242,7 +246,7 @@ public abstract class LootChestService {
 		// Check tier requirements
 		LootTier tier = chestData.getTier();
 		if (tier != null) {
-			OpenResult unlockResult = checkUnlockRequirement(player, tier);
+			OpenResult unlockResult = checkUnlockRequirement(player, tier, chestData);
 			if (unlockResult != OpenResult.SUCCESS) {
 				return unlockResult;
 			}
@@ -313,10 +317,9 @@ public abstract class LootChestService {
 		// Always fire close event and play closing sound, regardless of whether items were taken
 		sessionCompleteHandler.handle(session);
 
-		// Only start cooldown if player actually took an item AND cooldown not already started
-		if (!session.hasItemBeenTaken()) return;
-
-		// Only start cooldown if not already on cooldown
+		// Start the cooldown whenever the session closes — the chest refreshes on every close,
+		// whether or not the player actually took any items. No-op if another viewer already
+		// started the cooldown via their own close.
 		if (chestData.isOnCooldown()) return;
 
 		long cooldownTime = chestData.getRespawnTime();
@@ -521,6 +524,29 @@ public abstract class LootChestService {
 	 * Opens the chest directly without cracking minigame
 	 */
 	private OpenResult openChestDirectly(Player player, LootChestData chestData, LootTable lootTable, LootTier tier) {
+		// Consume the tier's unlock item (lockpick / key) on the *first* successful open of the cycle.
+		// Subsequent openers during the same cycle see isUnlocked() == true and skip this block.
+		// PERMISSION tiers never consume and never flip the flag — every player keeps re-checking.
+		if (tier != null && !chestData.isUnlocked()) {
+			switch (tier.unlockRequirement()) {
+				case LOCKPICK -> {
+					String itemId = tier.unlockItemId() != null ? tier.unlockItemId() : "lockpick";
+					consumeRequiredItem(player, itemId);
+					chestData.setUnlocked(true);
+					cooldownManager.showAvailableHologram(chestData);
+				}
+				case KEY -> {
+					String itemId = tier.unlockItemId() != null ? tier.unlockItemId() : "key_" + tier.id();
+					consumeRequiredItem(player, itemId);
+					chestData.setUnlocked(true);
+					cooldownManager.showAvailableHologram(chestData);
+				}
+				default -> {
+					// NONE / PERMISSION: nothing to consume
+				}
+			}
+		}
+
 		UUID chestId = chestData.getId();
 
 		// Check if there's already a shared inventory for this chest
@@ -567,7 +593,15 @@ public abstract class LootChestService {
 		return OpenResult.SUCCESS;
 	}
 
-	private OpenResult checkUnlockRequirement(Player player, LootTier tier) {
+	private OpenResult checkUnlockRequirement(Player player, LootTier tier, LootChestData chestData) {
+		// Consumable tiers stay unlocked for the rest of the cycle once any player burns the item.
+		// The flag is cleared in LootChestData#respawn, so each new cycle re-locks.
+		if (chestData.isUnlocked()
+		    && (tier.unlockRequirement() == LootTier.UnlockRequirement.LOCKPICK
+		        || tier.unlockRequirement() == LootTier.UnlockRequirement.KEY)) {
+			return OpenResult.SUCCESS;
+		}
+
 		return switch (tier.unlockRequirement()) {
 			case NONE -> OpenResult.SUCCESS;
 			case LOCKPICK -> {
@@ -600,6 +634,31 @@ public abstract class LootChestService {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Removes one unit of the unlock item (matched by the {@code loot_key} NBT tag) from the player's inventory. Caller
+	 * must have already verified the item is present — failure to match here is silently ignored.
+	 */
+	private void consumeRequiredItem(Player player, String itemKey) {
+		ItemStack[] contents = player.getInventory().getContents();
+
+		for (int slot = 0; slot < contents.length; slot++) {
+			ItemStack item = contents[slot];
+			if (item == null) continue;
+
+			ItemBuilder builder = new ItemBuilder(item);
+
+			if (!(builder.hasNBTTag("loot_key") && itemKey.equals(builder.getStringTagData("loot_key")))) continue;
+
+			int amount = item.getAmount();
+			if (amount <= 1) {
+				player.getInventory().setItem(slot, null);
+			} else {
+				item.setAmount(amount - 1);
+			}
+			return;
+		}
 	}
 
 	private Location normalizeLocation(Location location) {

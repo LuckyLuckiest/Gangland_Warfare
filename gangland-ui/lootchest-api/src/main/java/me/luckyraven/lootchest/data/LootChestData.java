@@ -46,6 +46,12 @@ public class LootChestData {
 	@Builder.Default
 	private long    crackingTimeSeconds = 0;
 
+	// Set to true once a player has consumed the tier's unlock item in the
+	// current cycle; cleared on respawn() so every cooldown cycle re-locks.
+	@Setter
+	@Builder.Default
+	private boolean unlocked = false;
+
 	public void markAsLooted() {
 		this.isLooted   = true;
 		this.lastOpened = System.currentTimeMillis();
@@ -128,6 +134,7 @@ public class LootChestData {
 		this.cooldownEndTime    = 0;
 		this.currentInventory   = null;
 		this.currentSlotMapping = null;
+		this.unlocked           = false;
 	}
 
 	/**

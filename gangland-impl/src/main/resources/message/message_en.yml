@@ -428,6 +428,10 @@ Loot_Chest:
       Cooldown_Status: "§c§lON COOLDOWN"
       Available_Status: "§a§lAVAILABLE"
       Available_Hint: "§7Right-click to open"
+      # Lock-state lines. %item% is substituted with the tier's Unlock_Item_Display.
+      Locked_Requires: "§c🔒 Requires §e%item%"
+      Locked_Permission: "§c🔒 Permission Only"
+      Unlocked: "§a🔓 Unlocked"
    Time_Units:
       Year: "y"
       Week: "w"

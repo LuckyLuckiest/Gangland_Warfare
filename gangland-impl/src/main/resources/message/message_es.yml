@@ -420,6 +420,9 @@ Loot_Chest:
       Cooldown_Status: "§c§lEN RECARGA"
       Available_Status: "§a§lDISPONIBLE"
       Available_Hint: "§7Clic derecho para abrir"
+      Locked_Requires: "§c🔒 Requiere §e%item%"
+      Locked_Permission: "§c🔒 Solo con permiso"
+      Unlocked: "§a🔓 Desbloqueado"
    Time_Units:
       Year: "a"
       Week: "sem"

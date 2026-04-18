@@ -46,15 +46,23 @@ Tiers:
       Level: 10
       Unlock_Requirement: LOCKPICK
       Unlock_Item: "lockpick"
+      # Player-facing label used on the "Requires X" hologram line.
+      Unlock_Item_Display: "&eLockpick"
+      # ItemParser string used for the floating icon above locked chests.
+      Floating_Item_Icon: "unique:lockpick"
 
    epic:
       Display_Name: "&5Epic"
       Level: 15
       Unlock_Requirement: KEY
       Unlock_Item: "epic_key"
+      Unlock_Item_Display: "&5Epic Key"
+      Floating_Item_Icon: "unique:epic_key"
 
    legendary:
       Display_Name: "&6Legendary"
       Level: 25
       Unlock_Requirement: PERMISSION
       Unlock_Item: "legendary_key"
+      Unlock_Item_Display: "&6Legendary Key"
+      Floating_Item_Icon: "unique:legendary_key"

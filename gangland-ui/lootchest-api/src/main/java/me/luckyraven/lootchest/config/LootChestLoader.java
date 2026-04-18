@@ -125,10 +125,12 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 			ConfigurationSection tierSection = tiersSection.getConfigurationSection(tierId);
 			if (tierSection == null) continue;
 
-			String displayName    = tierSection.getString("Display_Name", tierId);
-			int    tierLevel      = tierSection.getInt("Level", level++);
-			String requirementStr = tierSection.getString("Unlock_Requirement", "NONE");
-			String unlockItemId   = tierSection.getString("Unlock_Item");
+			String displayName       = tierSection.getString("Display_Name", tierId);
+			int    tierLevel         = tierSection.getInt("Level", level++);
+			String requirementStr    = tierSection.getString("Unlock_Requirement", "NONE");
+			String unlockItemId      = tierSection.getString("Unlock_Item");
+			String unlockItemDisplay = tierSection.getString("Unlock_Item_Display");
+			String floatingItemIcon  = tierSection.getString("Floating_Item_Icon");
 
 			LootTier.UnlockRequirement requirement;
 			try {
@@ -137,7 +139,8 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 				requirement = LootTier.UnlockRequirement.NONE;
 			}
 
-			LootTier tier = new LootTier(tierId, displayName, tierLevel, requirement, unlockItemId);
+			LootTier tier = new LootTier(tierId, displayName, tierLevel, requirement, unlockItemId,
+			                             unlockItemDisplay, floatingItemIcon);
 			tiers.put(tierId, tier);
 		}
 

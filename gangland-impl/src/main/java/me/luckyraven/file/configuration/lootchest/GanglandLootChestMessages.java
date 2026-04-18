@@ -2,6 +2,7 @@ package me.luckyraven.file.configuration.lootchest;
 
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.lootchest.config.LootChestMessagesProvider;
+import me.luckyraven.lootchest.data.LootTier;
 import me.luckyraven.util.utilities.messages.TimeMessagesProvider;
 
 /**
@@ -75,6 +76,26 @@ public class GanglandLootChestMessages implements LootChestMessagesProvider {
 	@Override
 	public String getHologramAvailableHint() {
 		return Messages.LOOT_CHEST_HOLOGRAM_HINT.toString();
+	}
+
+	@Override
+	public String getHologramTierLabel(LootTier tier) {
+		return tier.displayName();
+	}
+
+	@Override
+	public String getHologramLockedRequires(String itemDisplay) {
+		return Messages.LOOT_CHEST_HOLOGRAM_LOCKED_REQUIRES.toString().replace("%item%", itemDisplay);
+	}
+
+	@Override
+	public String getHologramLockedPermission() {
+		return Messages.LOOT_CHEST_HOLOGRAM_LOCKED_PERMISSION.toString();
+	}
+
+	@Override
+	public String getHologramUnlocked() {
+		return Messages.LOOT_CHEST_HOLOGRAM_UNLOCKED.toString();
 	}
 
 	@Override
