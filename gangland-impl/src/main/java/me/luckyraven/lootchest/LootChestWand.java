@@ -6,10 +6,13 @@ import me.luckyraven.Gangland;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
+import me.luckyraven.item.ItemParser;
 import me.luckyraven.lootchest.data.LootChestData;
 import me.luckyraven.lootchest.data.LootTable;
 import me.luckyraven.lootchest.data.LootTier;
+import me.luckyraven.lootchest.item.LootItemReference;
 import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.util.utilities.ChatUtil;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Location;
@@ -22,6 +25,23 @@ import java.util.*;
 import static me.luckyraven.lootchest.LootChestWandTag.*;
 
 public class LootChestWand {
+
+	private static final int   PREVIEW_SIZE             = 54;
+	private static final int[] PREVIEW_INTERIOR_SLOTS   = {
+			10, 11, 12, 13, 14, 15, 16,
+			19, 20, 21, 22, 23, 24, 25,
+			28, 29, 30, 31, 32, 33, 34,
+			37, 38, 39, 40, 41, 42, 43
+	};
+	private static final int   PREVIEW_ENTRIES_PER_PAGE = PREVIEW_INTERIOR_SLOTS.length;
+
+	private static final int PREVIEW_SLOT_BACK      = 45;
+	private static final int PREVIEW_SLOT_PREV      = 48;
+	private static final int PREVIEW_SLOT_PAGE_INFO = 49;
+	private static final int PREVIEW_SLOT_NEXT      = 50;
+
+	private static final SoundConfiguration PREVIEW_PAGE_SOUND = new SoundConfiguration(
+			SoundConfiguration.SoundType.VANILLA, "UI_BUTTON_CLICK", 0.6f, 1.2f);
 
 	private final Gangland         gangland;
 	private final LootChestManager lootChestManager;
@@ -218,17 +238,21 @@ public class LootChestWand {
 		for (LootTable table : lootTables) {
 			var lore = List.of("&7ID: &f" + table.getId(), "&7Items: &f" + table.getItemReferences().size(),
 			                   "&7Min Items: &f" + table.getMinItems(), "&7Max Items: &f" + table.getMaxItems(), "",
-			                   "&aClick to select");
+			                   "&aLeft-click to select", "&bRight-click to preview contents");
 			var item = new ItemBuilder(Material.PAPER).setDisplayName("&e" + table.getDisplayName())
 			                                          .setLore(lore)
 			                                          .build();
 
 			String tableId = table.getId();
-			inventory.setItem(slot++, new ItemBuilder(item), false, (p, inv, builder) -> {
-				setWandNBT(p, LOOT_TABLE_ID.toString(), tableId);
-				p.sendMessage(ChatUtil.color("&aSelected loot table: &e" + tableId));
-				openConfigInventory(p, fill);
-			});
+			inventory.setItem(slot++, new ItemBuilder(item), false,
+			                  (p, inv, builder) -> {
+								  setWandNBT(p, LOOT_TABLE_ID.toString(), tableId);
+								  p.sendMessage(ChatUtil.color("&aSelected loot table: &e" + tableId));
+								  openConfigInventory(p, fill);
+							  },
+			                  (p, inv, builder) -> {
+								  openLootTablePreview(p, tableId, fill, 0);
+							  });
 
 			if (slot >= size - 9) break;
 		}
@@ -390,6 +414,113 @@ public class LootChestWand {
 
 		// Update the item in the player's hand
 		player.getInventory().setItemInMainHand(builder.build());
+	}
+
+	private void openLootTablePreview(Player player, String tableId, Fill fill, int page) {
+		LootTable table = lootChestManager.getLootTable(tableId).orElse(null);
+		if (table == null) {
+			player.sendMessage(ChatUtil.color("&cLoot table '&e" + tableId + "&c' no longer exists."));
+			openLootTableSelection(player, fill);
+			return;
+		}
+
+		List<LootItemReference> entries = table.getItemReferences();
+		int totalPages = Math.max(1, (int) Math.ceil(
+				entries.size() / (double) PREVIEW_ENTRIES_PER_PAGE));
+		int currentPage = Math.clamp(page, 0, totalPages - 1);
+
+		String           title     = "&6&lPreview: &e" + table.getDisplayName();
+		InventoryHandler inventory = new InventoryHandler(gangland, title, PREVIEW_SIZE, player);
+
+		ItemParser parser = lootChestManager.getItemParser();
+
+		int base = currentPage * PREVIEW_ENTRIES_PER_PAGE;
+		for (int i = 0; i < PREVIEW_ENTRIES_PER_PAGE; i++) {
+			int entryIndex = base + i;
+			if (entryIndex >= entries.size()) break;
+
+			LootItemReference entry   = entries.get(entryIndex);
+			ItemBuilder       display = buildPreviewDisplay(entry, parser);
+
+			inventory.setItem(PREVIEW_INTERIOR_SLOTS[i], display, false, (p, inv, b) -> {
+			});
+		}
+
+		renderPreviewNavigation(player, fill, tableId, table, inventory, currentPage, totalPages);
+
+		InventoryUtil.createBoarder(inventory, fill);
+
+		player.openInventory(inventory.getInventory());
+	}
+
+	private void renderPreviewNavigation(Player player, Fill fill, String tableId, LootTable table,
+	                                     InventoryHandler inventory, int currentPage, int totalPages) {
+		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&eBack to loot tables");
+		inventory.setItem(PREVIEW_SLOT_BACK, back, false, (p, inv, b) -> {
+			openLootTableSelection(p, fill);
+		});
+
+		if (currentPage > 0) {
+			ItemBuilder prev = new ItemBuilder(Material.ARROW).setDisplayName("&e◄ Previous page")
+			                                                  .setLore("&7Go to page " + currentPage + ".");
+			inventory.setItem(PREVIEW_SLOT_PREV, prev, false, (p, inv, b) -> {
+				PREVIEW_PAGE_SOUND.playSound(p);
+				openLootTablePreview(p, tableId, fill, currentPage - 1);
+			});
+		}
+
+		ItemBuilder info = new ItemBuilder(Material.PAPER)
+				.setDisplayName("&bPage &f" + (currentPage + 1) + "&7/&f" + totalPages)
+				.setLore("&7" + table.getItemReferences().size() + " item(s) total.");
+		inventory.setItem(PREVIEW_SLOT_PAGE_INFO, info, false, (p, inv, b) -> {
+		});
+
+		if (currentPage < totalPages - 1) {
+			ItemBuilder next = new ItemBuilder(Material.ARROW).setDisplayName("&eNext page ►")
+			                                                  .setLore("&7Go to page " + (currentPage + 2) + ".");
+			inventory.setItem(PREVIEW_SLOT_NEXT, next, false, (p, inv, b) -> {
+				PREVIEW_PAGE_SOUND.playSound(p);
+				openLootTablePreview(p, tableId, fill, currentPage + 1);
+			});
+		}
+	}
+
+	private ItemBuilder buildPreviewDisplay(LootItemReference entry, ItemParser parser) {
+		ItemStack resolved = parser == null ? null : parser.parse(entry.getItemString());
+
+		ItemBuilder builder;
+		if (resolved != null) {
+			ItemStack clone = resolved.clone();
+			// Mirror the roll clamp used by LootTable#createItemFromReference so the preview
+			// shows the realistic maximum stack rather than a confusing value > maxStackSize.
+			int rolled = Math.max(1, Math.min(entry.getMaxAmount(), clone.getMaxStackSize()));
+			clone.setAmount(rolled);
+			builder = new ItemBuilder(clone);
+		} else {
+			builder = new ItemBuilder(Material.BARRIER);
+		}
+
+		LootItemReference.Rarity rarity = entry.getRarity();
+		builder.setDisplayName(rarity.getColorPrefix() + "&l" + entry.getId());
+
+		List<String> lore = new ArrayList<>();
+		lore.add("&7Item: &f" + entry.getItemString());
+		lore.add("&7Rarity: " + rarity.getColorPrefix() + rarity.name());
+		lore.add("&7Amount: &f" + entry.getMinAmount() + " &7- &f" + entry.getMaxAmount());
+		lore.add("&7Weight: &f" + entry.getWeight());
+
+		if (entry.getTierRequirement() != null && !entry.getTierRequirement().isEmpty()) {
+			lore.add("&7Tier Requirement: &b" + entry.getTierRequirement());
+		}
+
+		if (resolved == null) {
+			lore.add("");
+			lore.add("&cItem string did not resolve.");
+		}
+
+		builder.setLore(lore);
+
+		return builder;
 	}
 
 	private void setWandNBT(Player player, String key, Object value) {

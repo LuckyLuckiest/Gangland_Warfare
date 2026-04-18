@@ -21,6 +21,8 @@ public class LootChestManager extends LootChestService implements BeanLifecycle 
 	private final Gangland           gangland;
 	private final RepositoryRegistry repositoryRegistry;
 
+	private CountdownTimer pendingStartupTimer;
+
 	public LootChestManager(Gangland gangland, String prefix, HologramService hologramService,
 	                        RepositoryRegistry repositoryRegistry,
 	                        ItemParser itemParser,
@@ -39,12 +41,16 @@ public class LootChestManager extends LootChestService implements BeanLifecycle 
 		} else {
 			// in seconds
 			int timeToWait = 5;
-			CountdownTimer waitForWorld = new CountdownTimer(gangland, timeToWait, null, null, timer -> {
+			// Held on the instance so onClear() can cancel it if a reload lands
+			// before the world-load grace period expires, otherwise the timer would
+			// re-register every chest on top of the reload's fresh state.
+			pendingStartupTimer = new CountdownTimer(gangland, timeToWait, null, null, timer -> {
+				pendingStartupTimer = null;
 				registerLootChests(repository);
 			});
 
 			// waits for the world to load to spawn the holograms
-			waitForWorld.start(false);
+			pendingStartupTimer.start(false);
 		}
 
 		repository.setDataSupplier(this::getAllChests);
@@ -57,6 +63,11 @@ public class LootChestManager extends LootChestService implements BeanLifecycle 
 	 */
 	@Override
 	public void onClear() {
+		if (pendingStartupTimer != null) {
+			pendingStartupTimer.stop();
+			pendingStartupTimer = null;
+		}
+
 		cancelSessions();
 		clearChests();
 	}
