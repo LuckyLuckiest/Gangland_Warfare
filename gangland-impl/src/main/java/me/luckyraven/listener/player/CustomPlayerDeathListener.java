@@ -21,9 +21,7 @@ import me.luckyraven.util.utilities.TimeUtil;
 import net.citizensnpcs.api.CitizensAPI;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -37,6 +35,8 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -163,6 +163,10 @@ public class CustomPlayerDeathListener implements Listener {
 	private void enterDownedState(Player player) {
 		if (!player.isOnline()) return;
 
+		// Vanilla PlayerDeathEvent never fires in this path (damage was cancelled), so Bukkit never spills
+		// event.getDrops(). Mirror the vanilla drop behaviour here unless keepInventory overrides it.
+		dropInventoryIfAllowed(player);
+
 		if (jetpackService != null) jetpackService.deactivate(player);
 
 		UUID uuid = player.getUniqueId();
@@ -269,6 +273,23 @@ public class CustomPlayerDeathListener implements Listener {
 		if (task != null) task.cancel();
 		DownedPlayerRegistry.remove(uuid);
 		savedGameModes.remove(uuid);
+	}
+
+	private void dropInventoryIfAllowed(Player player) {
+		World world = player.getWorld();
+		if (Boolean.TRUE.equals(world.getGameRuleValue(GameRule.KEEP_INVENTORY))) return;
+
+		Location        loc = player.getLocation();
+		PlayerInventory inv = player.getInventory();
+
+		// PlayerInventory.getContents() returns all 41 slots — main (0-35), armor (36-39), off-hand (40) —
+		// so one pass drops everything exactly once. inv.clear() then wipes all of those slots.
+		for (ItemStack stack : inv.getContents()) {
+			if (stack == null || stack.getType().isAir()) continue;
+			world.dropItemNaturally(loc, stack);
+		}
+
+		inv.clear();
 	}
 
 	private void sendRespawnButton(Player player) {
