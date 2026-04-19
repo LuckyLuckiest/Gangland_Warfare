@@ -102,7 +102,7 @@ the shared `DependencyContainer`.
 | `DataConfig`           | CONFIG   | UserManager (online/offline), RankManager, GangManager, MemberManager,   |
 |                        |          | WaypointManager, PluginManager                                           |
 | `GameplayConfig`       | CONFIG   | WeaponManager, SignManager, ItemParser, LootChestManager,                |
-|                        |          | HologramService, RepairService, MoneyDepositService, BlockDamageManager  |
+|                        |          | HologramService, MoneyDepositService, BlockDamageManager                 |
 | `SchedulingConfig`     | CONFIG   | PeriodicalUpdates, PlayerBootstrapService, ScoreboardLifecycleService    |
 | `WiringConfig`         | CONFIG   | ListenerManager, CommandManager, GanglandPlaceholder                     |
 | `CopsAndGadgetsConfig` | CONFIG   | CopService, CivilianService, JailService, DetainmentService,             |
@@ -167,7 +167,6 @@ The plugin fires custom events for game-specific actions:
 | NPC        | CopDeathEvent, CivilianDeathEvent, NpcEvent                         |
 | Bounty     | BountyEvent, KillComboEvent                                         |
 | Detainment | CuffedEvent, DuringCuffingEvent                                     |
-| Repair     | RepairStartEvent, RepairCompleteEvent                               |
 | Loot Chest | CrackingStartEvent, CrackingTickEvent, CrackingSuccessEvent,        |
 |            | CrackingFailedEvent, CooldownTickEvent, CooldownCompleteEvent       |
 

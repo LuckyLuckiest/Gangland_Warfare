@@ -10,7 +10,6 @@ Information:
       Base: 300
       Change:
          On_Shot: 1
-         On_Repair: 60
    Lore:
       - "&7A heavy iron pry bar.&r"
       - "&7Slow, but it sends people flying.&r"

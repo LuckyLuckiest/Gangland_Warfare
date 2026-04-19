@@ -1,6 +1,6 @@
 # Wearables
 
-[← Jail & Detainment](./jail-detainment.md) | [Back to Index](../README.md) | [Next: Repair System →](./repair.md)
+[← Jail & Detainment](./jail-detainment.md) | [Back to Index](../README.md)
 
 ---
 
@@ -84,14 +84,6 @@ Trait levels cannot exceed their defined maximum. Setting `REINFORCED: 10` silen
 
 ---
 
-## Repairing Wearables
-
-Wearables have durability that depletes as damage is absorbed. They can be repaired using materials configured in
-`repair.yml`. The **Cleaning Kit** is the only built-in repair material that works on both weapons and wearables. See
-the [Repair System guide](./repair.md).
-
----
-
 ## API
 
 ```java
@@ -119,4 +111,4 @@ public void onDamage(EntityDamageByEntityEvent event) {
 
 ---
 
-[← Jail & Detainment](./jail-detainment.md) | [Back to Index](../README.md) | [Next: Repair System →](./repair.md)
+[← Jail & Detainment](./jail-detainment.md) | [Back to Index](../README.md)

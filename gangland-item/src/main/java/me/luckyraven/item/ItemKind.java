@@ -17,7 +17,6 @@ public enum ItemKind {
 	WEARABLE("wearable"),
 	CAR("car"),
 	MONEY("money"),
-	REPAIR("repair"),
 	MATERIAL("material");
 
 	private final String label;

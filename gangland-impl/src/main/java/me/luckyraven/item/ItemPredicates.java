@@ -1,7 +1,6 @@
 package me.luckyraven.item;
 
 import me.luckyraven.gadget.car.CarKey;
-import me.luckyraven.gadget.repair.RepairKeys;
 import me.luckyraven.item.money.MoneyItemUtil;
 import me.luckyraven.item.unique.UniqueItemKeys;
 import me.luckyraven.item.wearable.Wearable;
@@ -20,8 +19,8 @@ import java.util.function.Predicate;
  * registration picks it up automatically.
  *
  * <p>This class lives in {@code gangland-impl} because the predicates depend on constants from the feature modules
- * ({@code CarKey}, {@code RepairKeys}, …) that {@code gangland-item} cannot see. The matching {@link ItemKind} enum
- * stays in {@code gangland-item} because it holds nothing but labels.
+ * ({@code CarKey}, …) that {@code gangland-item} cannot see. The matching {@link ItemKind} enum stays in
+ * {@code gangland-item} because it holds nothing but labels.
  */
 public final class ItemPredicates {
 
@@ -32,7 +31,6 @@ public final class ItemPredicates {
 	public static final Predicate<ItemStack> WEARABLE   = stack -> hasTag(stack, Wearable.NBT_KEY);
 	public static final Predicate<ItemStack> CAR        = stack -> hasTag(stack, CarKey.CAR_ID.getKey());
 	public static final Predicate<ItemStack> MONEY      = stack -> hasTag(stack, MoneyItemUtil.MARKER_TAG);
-	public static final Predicate<ItemStack> REPAIR     = stack -> hasTag(stack, RepairKeys.REPAIR_MATERIAL_ID);
 
 	/**
 	 * Trivial catch-all for the material fallback — matches any non-air stack.

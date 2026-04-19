@@ -10,7 +10,6 @@ Information:
       Base: 100
       Change:
          On_Shot: 0
-         On_Repair: 0
    Lore:
       - "&7Pump-action 12-gauge.&r"
       - "&7Devastating up close, useless at range.&r"

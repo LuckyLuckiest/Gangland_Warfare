@@ -370,12 +370,6 @@ Weapons:
    Ammo_Bought: "You just bought &8(&b%ammo%&ex%amount_1%&8)&7 for &a%money_symbol%%amount_2%&7."
    Ammo_Sold: "You just sold &8(&b%ammo%&ex%amount_1%&8)&7 for &a%money_symbol%%amount_2%&7."
    Not_Enough_Ammo: "You don't have enough ammo to sell!"
-   Repair:
-      Already_Full: "This item is already fully repaired."
-      Complete: "Repaired %restored% condition. (%current%/%max%)"
-      Incompatible_Material: "This repair material is not compatible with this item type."
-      Cancelled: "Repair was cancelled."
-      No_Material: "No repair material found in your inventory."
 
 Death:
    Weapon:

@@ -75,10 +75,8 @@ public class WeaponAddon {
 		short                durability              = (short) durabilitySection.getInt("Base");
 		ConfigurationSection durabilityChangeSection = durabilitySection.getConfigurationSection("Change");
 		short                onShotDurability        = 0;
-		short                onRepairDurability      = 0;
 		if (durabilityChangeSection != null) {
-			onShotDurability   = (short) durabilityChangeSection.getInt("On_Shot");
-			onRepairDurability = (short) durabilityChangeSection.getInt("On_Repair");
+			onShotDurability = (short) durabilityChangeSection.getInt("On_Shot");
 		}
 
 		List<String> lore         = informationSection.getStringList("Lore");
@@ -105,7 +103,6 @@ public class WeaponAddon {
 		weapon.setDurabilityData(new DurabilityData());
 		weapon.setSoundData(new SoundData());
 		weapon.getDurabilityData().setOnShot(onShotDurability);
-		weapon.getDurabilityData().setOnRepair(onRepairDurability);
 		applyShootSounds(shootSection, weapon);
 		applyReloadSoundsAndActionBar(config, weapon);
 		applyOptionalShootConfig(shootSection, weapon);

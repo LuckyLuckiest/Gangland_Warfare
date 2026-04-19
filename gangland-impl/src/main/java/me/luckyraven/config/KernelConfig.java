@@ -122,7 +122,6 @@ public class KernelConfig {
 		fm.addFile(new FileHandler(gangland, "tiers", "loot", ".yml"), true);
 		fm.addFile(new FileHandler(gangland, "cops", ".yml"), true);
 		fm.addFile(new FileHandler(gangland, "civilians", ".yml"), true);
-		fm.addFile(new FileHandler(gangland, "repair", ".yml"), true);
 		fm.addFile(new FileHandler(gangland, "wearables", ".yml"), true);
 		fm.addFile(new FileHandler(gangland, "cars", ".yml"), true);
 		fm.addFile(new FileHandler(gangland, "money", ".yml"), true);

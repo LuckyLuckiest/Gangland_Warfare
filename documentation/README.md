@@ -11,7 +11,7 @@
 | Version                                 | Status  | Changelog                                 |
 |-----------------------------------------|---------|-------------------------------------------|
 | [v0.7.4-DEV](./v0.7.4-DEV/CHANGELOG.md) | Current | Smarter NPC AI, bug fixes, developer docs |
-| [v0.7.3-DEV](./v0.7.3-DEV/CHANGELOG.md) | Stable  | Cops N Crooks, Wearables, Repair          |
+| [v0.7.3-DEV](./v0.7.3-DEV/CHANGELOG.md) | Stable  | Cops N Crooks, Wearables                  |
 
 ---
 
@@ -37,7 +37,6 @@ Guides for features that are part of the base plugin and not tied to a specific 
 | 14 | [Cops N Crooks](./features/cops-n-crooks.md)       | Police NPC AI, spawning, pursuit, and arrest                     |
 | 15 | [Jail & Detainment](./features/jail-detainment.md) | Handcuffing, jailing, and player restraint                       |
 | 16 | [Wearables](./features/wearables.md)               | Custom armor pieces, traits, and damage reduction                |
-| 17 | [Repair System](./features/repair.md)              | Repairing weapons and wearables with materials                   |
 
 ---
 
@@ -54,9 +53,9 @@ In-depth technical documentation for developers working on the codebase.
 | 5  | [Command System](./developer/commands.md)                   | Argument tree, dispatch, tab completion, adding commands     |
 | 6  | [Weapon System](./developer/weapons.md)                     | Projectiles, modifiers, reload, damage pipeline              |
 | 7  | [Cops N Crooks](./developer/cops-n-crooks.md)               | NPC AI, spawning, wanted system, bounty tracking             |
-| 8  | [Gadget System](./developer/gadgets.md)                     | Cars, jetpacks, fuel, repair, physics                        |
+| 8  | [Gadget System](./developer/gadgets.md)                     | Cars, jetpacks, fuel, physics                                |
 | 9  | [Civilian NPCs](./developer/civilians.md)                   | Behaviors, spawning, trader interaction                      |
-| 10 | [Item System](./developer/items.md)                         | Parsing, unique items, fuel, wearables, repair               |
+| 10 | [Item System](./developer/items.md)                         | Parsing, unique items, fuel, wearables                       |
 | 11 | [UI Framework](./developer/ui-framework.md)                 | Inventory, scoreboard, signs, loot chests, holograms         |
 | 12 | [Version Compatibility](./developer/compatibility.md)       | NMS adapters, version detection, recoil                      |
 | 13 | [Configuration Reference](./developer/configuration.md)     | All YAML files, settings, formulas, defaults                 |
@@ -73,7 +72,6 @@ In-depth technical documentation for developers working on the codebase.
 | Required dependencies          | [v0.7.3-DEV Changelog → New Requirements](./v0.7.3-DEV/CHANGELOG.md#new-requirements)   |
 | Cop configuration (`cops.yml`) | [Cops N Crooks → Configuration](./features/cops-n-crooks.md#configuration)              |
 | Wearable traits                | [Wearables → Traits](./features/wearables.md#traits)                                    |
-| Repair materials               | [Repair System → Built-in Materials](./features/repair.md#built-in-repair-materials)    |
 | Trade sign setup               | [Trade Signs → Setting Up a Sign](./features/trade-signs.md#setting-up-a-sign)          |
 | Loot chest tiers               | [Loot Chests → Tiers](./features/loot_chests.md#tiers)                                  |
 | Economy admin commands         | [Economy → Admin Commands](./features/economy.md#admin-economy-commands)                |

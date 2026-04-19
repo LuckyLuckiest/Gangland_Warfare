@@ -11,7 +11,6 @@ import me.luckyraven.exception.PluginException;
 public class DurabilityData implements Cloneable {
 
 	private short onShot;
-	private short onRepair;
 	private int   consumeOnTime;
 
 	@Override

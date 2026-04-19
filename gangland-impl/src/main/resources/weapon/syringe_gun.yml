@@ -6,7 +6,6 @@ Information:
       Base: 100
       Change:
          On_Shot: 0
-         On_Repair: 25
    Lore:
       - "&7Hold right-click to charge."
       - "&7Release to fire a single shot."

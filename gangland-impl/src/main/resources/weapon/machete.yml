@@ -10,7 +10,6 @@ Information:
       Base: 200
       Change:
          On_Shot: 1
-         On_Repair: 50
    Lore:
       - "&7A long, heavy blade.&r"
       - "&7Range: &e3 blocks"

@@ -22,9 +22,9 @@ codebase. It covers architecture, module internals, design patterns, and impleme
 | 5  | [Command System](./commands.md)                | Argument tree, command dispatch, tab completion, adding commands  |
 | 6  | [Weapon System](./weapons.md)                  | Projectiles, modifiers, reload, spread, recoil, damage pipeline   |
 | 7  | [Cops N Crooks](./cops-n-crooks.md)            | NPC AI state machines, spawning, wanted system, bounty tracking   |
-| 8  | [Gadget System](./gadgets.md)                  | Cars, jetpacks, fuel, repair, physics                             |
+| 8  | [Gadget System](./gadgets.md)                  | Cars, jetpacks, fuel, physics                                     |
 | 9  | [Civilian NPCs](./civilians.md)                | Behavior states, spawning, trader interaction, navigation         |
-| 10 | [Item System](./items.md)                      | Item parsing, unique items, fuel, wearables, repair interface     |
+| 10 | [Item System](./items.md)                      | Item parsing, unique items, fuel, wearables                       |
 | 11 | [UI Framework](./ui-framework.md)              | Inventory, scoreboard, signs, loot chests, holograms              |
 | 12 | [Version Compatibility](./compatibility.md)    | NMS adapters, version detection, recoil implementation            |
 | 13 | [Configuration Reference](./configuration.md)  | All YAML files, settings, formulas, defaults                      |
@@ -61,7 +61,7 @@ gangland_warfare/
 ├── gangland-features/
 │   ├── cops-n-crooks/          Police NPCs, civilians, wanted/bounty, jail
 │   ├── gangland-weapon/        Weapon engine, projectiles, modifiers
-│   ╰── gangland-gadget/        Cars, jetpacks, fuel, repair
+│   ╰── gangland-gadget/        Cars, jetpacks, fuel
 ├── gangland-ui/
 │   ├── inventory-api/          Custom inventory framework
 │   ├── scoreboard-api/         FastBoard scoreboard

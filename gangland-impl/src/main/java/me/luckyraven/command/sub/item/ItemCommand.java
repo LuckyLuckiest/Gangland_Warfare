@@ -4,11 +4,9 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.sub.item.money.ItemMoneyCommand;
-import me.luckyraven.command.sub.item.repair.ItemRepairCommand;
 import me.luckyraven.command.sub.item.unique.ItemUniqueCommand;
 import me.luckyraven.command.sub.item.wearable.ItemWearableCommand;
 import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.gadget.repair.RepairManager;
 import me.luckyraven.gadget.wearable.WearableAddon;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.money.MoneyAddon;
@@ -28,7 +26,6 @@ public final class ItemCommand extends Command {
 	private final UserManager<Player> userManager;
 	private final MoneyAddon          moneyAddon;
 	private final MoneyDepositService moneyDepositService;
-	private final RepairManager       repairManager;
 	private final UniqueItemAddon     uniqueItemAddon;
 	private final WearableAddon       wearableAddon;
 
@@ -36,7 +33,6 @@ public final class ItemCommand extends Command {
 	                   @Qualifier("online") UserManager<Player> userManager,
 	                   MoneyAddon moneyAddon,
 	                   MoneyDepositService moneyDepositService,
-	                   RepairManager repairManager,
 	                   UniqueItemAddon uniqueItemAddon,
 	                   WearableAddon wearableAddon) {
 		super(gangland, "item", true);
@@ -44,7 +40,6 @@ public final class ItemCommand extends Command {
 		this.userManager         = userManager;
 		this.moneyAddon          = moneyAddon;
 		this.moneyDepositService = moneyDepositService;
-		this.repairManager       = repairManager;
 		this.uniqueItemAddon     = uniqueItemAddon;
 		this.wearableAddon       = wearableAddon;
 
@@ -65,8 +60,6 @@ public final class ItemCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument repair = new ItemRepairCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
-		                                        repairManager);
 		Argument wearable = new ItemWearableCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                            wearableAddon);
 		Argument unique = new ItemUniqueCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
@@ -76,7 +69,6 @@ public final class ItemCommand extends Command {
 
 		List<Argument> arguments = new ArrayList<>();
 
-		arguments.add(repair);
 		arguments.add(wearable);
 		arguments.add(unique);
 		arguments.add(money);

@@ -10,7 +10,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Rebuilds a unique item (phone, repair kit, one-off gadget, etc.) into a factory-fresh copy. For consumable-style
+ * Rebuilds a unique item (phone, one-off gadget, etc.) into a factory-fresh copy. For consumable-style
  * unique items this restores any internal "uses remaining" counters stored in their build-time NBT.
  */
 @RequiredArgsConstructor

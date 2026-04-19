@@ -222,7 +222,6 @@ Configuration loading and contract implementations.
 | `configuration/inventory/itemsource/GangItemSourceProvider.java`     | Provides gang-specific items for paginated inventory GUIs.                                      |
 | `configuration/lootchest/GanglandLootChestMessages.java`             | Implements `LootChestMessagesProvider` contract.                                                |
 | `configuration/lootchest/LootChestSettings.java`                     | Implements `LootChestSettingsProvider` contract.                                                |
-| `configuration/weapon/GanglandRepairMessages.java`                   | Implements `RepairMessages` contract.                                                           |
 | `configuration/weapon/WeaponLoader.java`                             | Loads weapon definitions from per-weapon YAML files in `weapon/`.                               |
 
 ### Package: `item/`
@@ -309,7 +308,6 @@ Concrete sign type implementations for the sign-api framework.
 | `scoreboard.yml`         | Scoreboard layout and line definitions with placeholders.                                                                        |
 | `unique_items.yml`       | Unique item definitions (phone, tools, etc.) with slot, permission, and behavior.                                                |
 | `wearables.yml`          | Wearable armor definitions (material, traits, damage reduction, leather color).                                                  |
-| `repair.yml`             | Repair material definitions and costs.                                                                                           |
 | `weapon/*.yml`           | Per-weapon-type YAML files: `rifle.yml`, `knife.yml`, `grenade.yml`, `flamethrower.yml`, `syringe_gun.yml`.                      |
 | `loot/loot_chests.yml`   | Loot chest definitions (location, tier, cooldown).                                                                               |
 | `loot/tiers.yml`         | Loot tier definitions (rarity weights, item pools).                                                                              |
@@ -522,15 +520,6 @@ Wearable armor with special traits.
 |----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `Wearable.java`      | Wearable armor data model (`@Builder`). Properties: name, material, armor slot, damage reduction percentage, `WearableTrait` set, leather color, jetpack flag, fuel reference.                                 |
 | `WearableTrait.java` | Enum of armor enhancement types: `REINFORCED` (extra durability), `BULLETPROOF` (reduced projectile damage), `FIREPROOF` (fire resistance), `EXPLOSIVE_RESISTANT`, `PADDED` (fall damage reduction), and more. |
-
-### Subpackage: `repair/`
-
-Repair system interfaces.
-
-| Class                 | Description                                                                                                             |
-|-----------------------|-------------------------------------------------------------------------------------------------------------------------|
-| `Repairable.java`     | Interface for items that can be repaired. Defines `getMaxDurability()`, `getCurrentDurability()`, and `repair(amount)`. |
-| `RepairableType.java` | Enum of repairable item categories: `WEAPON`, `WEARABLE`.                                                               |
 
 ---
 
@@ -966,7 +955,7 @@ Custom weapon events (10 total).
 
 ## gangland-features/gangland-gadget
 
-**Purpose:** Vehicle system (cars), jetpacks, fuel management, repair system, and wearable equipment mechanics.
+**Purpose:** Vehicle system (cars), jetpacks, fuel management, and wearable equipment mechanics.
 
 **Java Files:** 47 | **Package:** `me.luckyraven.gadget.*`
 
@@ -1025,27 +1014,6 @@ Jetpack flight system.
 |----------------------------|-------------------------------------------------------------------------------------------------------------------------|
 | `GadgetPhysicsConfig.java` | Interface contract for physics parameters (acceleration, max speed, friction, gravity). Implemented by `gangland-impl`. |
 
-### Subpackage: `repair/`
-
-Item repair system.
-
-| Class                                  | Description                                                                                                               |
-|----------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| `RepairManager.java`                   | Core repair logic. Validates repair materials, calculates restoration amount (flat + percentage), and applies durability. |
-| `RepairKeys.java`                      | NBT tag constants for repair-related data.                                                                                |
-| `RepairMessages.java`                  | Interface contract for repair feedback messages.                                                                          |
-| `anvil/RepairAnvilGui.java`            | Anvil-based GUI for repairing items with materials.                                                                       |
-| `config/RepairConfig.java`             | Top-level repair configuration container.                                                                                 |
-| `config/RepairConfigProvider.java`     | Interface for providing repair configuration.                                                                             |
-| `config/RepairLoader.java`             | Loads repair configuration from YAML.                                                                                     |
-| `config/RepairMaterialData.java`       | Material cost definition (material type, quantity, restoration amount).                                                   |
-| `config/YamlRepairConfigProvider.java` | YAML-based repair config implementation.                                                                                  |
-| `material/RepairMaterial.java`         | Repair material data model.                                                                                               |
-| `material/RepairMaterialManager.java`  | Registry of valid repair materials and their restoration values.                                                          |
-| `events/RepairEvent.java`              | Base repair event.                                                                                                        |
-| `events/RepairStartEvent.java`         | Fired when a repair begins.                                                                                               |
-| `events/RepairCompleteEvent.java`      | Fired when a repair completes.                                                                                            |
-
 ### Subpackage: `wearable/`
 
 | Class                | Description                                    |
@@ -1061,7 +1029,6 @@ Event listeners (11 total).
 | `car/`      | `CarInteractListener`, `CarEntityInteractListener`, `CarDamageListener`, `CarDismountListener` | Right-click to enter, entity collision, vehicle damage processing, dismount handling. |
 | `fuel/`     | `FuelHoldDisplayListener`, `FuelRefuelListener`                                                | Fuel bar display when holding fuel item, refueling on right-click.                    |
 | `jetpack/`  | `JetpackActivateListener`, `JetpackEquipListener`, `JetpackFallDamageListener`                 | Jetpack activation on jump, equip detection, fall damage cancellation while active.   |
-| `repair/`   | `RepairListener`                                                                               | Anvil interaction for repair processing.                                              |
 | `wearable/` | `WearableEquipListener`                                                                        | Wearable armor equip/unequip and trait activation.                                    |
 
 ---
@@ -1501,7 +1468,7 @@ gangland-build (shade assembly)
 | `plugin-common`       | 2          | 2        | Logger, exceptions                                                      |
 | `cops-n-crooks`       | 91         | 20       | NPC cops/civilians, wanted, bounty, jails                               |
 | `gangland-weapon`     | 83         | 17       | Weapons, projectiles, modifiers, reload                                 |
-| `gangland-gadget`     | 47         | 14       | Vehicles, jetpacks, fuel, repair                                        |
+| `gangland-gadget`     | 47         | 14       | Vehicles, jetpacks, fuel                                                |
 | `scoreboard-api`      | 8          | 3        | FastBoard scoreboards                                                   |
 | `inventory-api`       | 37         | 8        | Custom GUI framework                                                    |
 | `sign-api`            | 28         | 8        | Sign interaction framework                                              |

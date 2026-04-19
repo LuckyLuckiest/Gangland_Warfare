@@ -10,7 +10,6 @@ Information:
       Base: 1
       Change:
          On_Shot: 0
-         On_Repair: 0
    Lore:
       - "&7A bottle of fuel and a rag.&r"
       - "&7Light it. Throw it. Run.&r"

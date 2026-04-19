@@ -10,7 +10,6 @@ Information:
       Base: 100
       Change:
          On_Shot: 0
-         On_Repair: 0
    Lore:
       - "&7.50 BMG bolt-action sniper rifle.&r"
       - "&7One shot. One kill. Don't miss.&r"

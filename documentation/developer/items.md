@@ -226,33 +226,6 @@ Traits from multiple wearable pieces **stack** for combined protection.
 
 ---
 
-## Repair Interface
-
-The `Repairable` interface provides the contract for items that can be repaired.
-
-```java
-public interface Repairable {
-    String getRepairableId();
-    int getCurrentRepairDurability();
-    void setCurrentRepairDurability(int durability);
-    int getMaxRepairDurability();
-    RepairableType getRepairableType();
-    ItemStack buildItem();
-    boolean isFullyRepaired();
-    boolean canBeRepaired();
-}
-```
-
-### RepairableType (Enum)
-
-Categorizes repairable items for material compatibility:
-
-- `WEAPON` -- weapon items only
-- `WEARABLE` -- wearable armor only
-- `BOTH` -- either type
-
----
-
 ## ItemBuilder (gangland-core)
 
 Fluent builder for creating ItemStacks with NBT support.

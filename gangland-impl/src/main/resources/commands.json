@@ -615,22 +615,6 @@
 		"usage": "/glw item help <page>",
 		"description": "Shows the specified page in item menu."
 	},
-	"item_repair": {
-		"usage": "/glw item repair",
-		"description": "Shows repair item help."
-	},
-	"item_repair_give": {
-		"usage": "/glw item repair give <name> <amount>",
-		"description": "Gives the specified repair item."
-	},
-	"item_repair_info": {
-		"usage": "/glw item repair info <name>",
-		"description": "Shows information about the specified repair item."
-	},
-	"item_repair_list": {
-		"usage": "/glw item repair list",
-		"description": "Shows all registered repair items."
-	},
 	"item_unique": {
 		"usage": "/glw item unique",
 		"description": "Shows unique item help."

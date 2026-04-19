@@ -13,7 +13,7 @@ import java.util.Map;
  * Rebuilds an existing {@link ItemStack} into a factory-fresh copy.
  * <p>
  * Implementations inspect the item (typically via NBT tags) to decide whether they own it and, if so, construct a new
- * instance with default state (full ammo, full durability, full repairs, etc.). Used by the shop/trader subsystem so
+ * instance with default state (full ammo, full durability, etc.). Used by the shop/trader subsystem so
  * that every purchase or delivery produces a clean copy regardless of what the admin originally placed.
  */
 public interface ItemRefresher {

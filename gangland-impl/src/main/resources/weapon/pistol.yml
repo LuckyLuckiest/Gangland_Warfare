@@ -10,7 +10,6 @@ Information:
       Base: 100
       Change:
          On_Shot: 0
-         On_Repair: 0
    Lore:
       - "&7A reliable 9mm sidearm.&r"
       - "&7Last resort when your primary runs dry.&r"

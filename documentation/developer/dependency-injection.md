@@ -275,9 +275,9 @@ Add a method to the appropriate `@Configuration` class. Declare dependencies as 
 public class GameplayConfig {
 
 	@Bean
-	public RepairManager repairManager(WeaponManager weaponManager,
-	                                   GanglandDatabase database) {
-		return new RepairManager(weaponManager, database);
+	public WaypointManager waypointManager(WeaponManager weaponManager,
+	                                       GanglandDatabase database) {
+		return new WaypointManager(weaponManager, database);
 	}
 }
 ```
@@ -287,21 +287,21 @@ public class GameplayConfig {
 If your bean holds mutable state that needs reload/shutdown management:
 
 ```java
-public class RepairManager implements BeanLifecycle {
+public class WaypointManager implements BeanLifecycle {
 
 	@Override
 	public void onInitialize(boolean firstLoad) {
-		// Load repair stations from config
+		// Load waypoints from config
 	}
 
 	@Override
 	public void onClear() {
-		// Clear cached repair stations
+		// Clear cached waypoints
 	}
 
 	@Override
 	public void onShutdown() {
-		// Cancel any active repair timers
+		// Cancel any active waypoint timers
 	}
 }
 ```
@@ -313,9 +313,9 @@ Other `@Bean` methods, listeners, and commands can now receive it as a construct
 ```java
 
 @ListenerHandler
-public class RepairListener implements Listener {
-	public RepairListener(RepairManager repairManager) {
-		this.repairManager = repairManager;
+public class WaypointListener implements Listener {
+	public WaypointListener(WaypointManager waypointManager) {
+		this.waypointManager = waypointManager;
 	}
 }
 ```

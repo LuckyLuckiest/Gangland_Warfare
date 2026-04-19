@@ -10,7 +10,6 @@ Information:
       Base: 100
       Change:
          On_Shot: 0
-         On_Repair: 0
    Lore:
       - "&7Compact 9mm SMG with a blistering rate of fire.&r"
       - "&7Excellent up close, mediocre at range.&r"

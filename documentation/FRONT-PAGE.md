@@ -37,7 +37,7 @@ A fully custom weapon engine entirely separate from vanilla combat, now with
 - Multiple fire modes: single, burst, and full-auto with per-shot cooldowns
 - Ammo types and reload mechanics — weapons go dry, magazines must be
   restocked
-- Weapon durability that depletes with use and can be repaired with materials
+- Weapon durability that depletes with use
 - Projectile types: bullet, flare, rocket, and spread (shotgun-style)
 - **Bullet gravity** — shots drop over distance, rewarding range compensation
 - Headshot and critical hit system with configurable chances and bonus damage
@@ -203,7 +203,7 @@ Randomized reward containers placed anywhere in the world.
 - ⏳ A countdown timer ticks down before the chest becomes openable
 - Five rarity tiers: Common, Uncommon, Rare, Epic, and Legendary
 - Higher tiers require lockpicks or keys to access
-- Loot tables contain weapons, ammo, repair materials, unique items, money, and XP
+- Loot tables contain weapons, ammo, unique items, money, and XP
 - Three built-in loot tables: Street Loot, Military Loot, and Supply Cache
 - Rewards also include a configurable random money and XP amount
 - Level gating — certain tiers require a minimum player level to access
@@ -219,25 +219,13 @@ Custom armor pieces with specialized damage reduction.
 - Seven protective traits: `REINFORCED`, `BULLETPROOF`, `PADDED`, `TOUGHENED`, `FIRE_RESISTANT`, `REACTIVE`, and
   `LIGHTWEIGHT`
 - Traits from multiple pieces stack for combined protection
-- Durability depletes as damage is absorbed and can be repaired
+- Durability depletes as damage is absorbed
 - Four built-in pieces: Police Vest, Police Helmet, Gang Jacket, and Heavy Vest
 - Fully configurable via `wearables.yml` — add, modify, or remove pieces freely
 
 ---
 
-### 11. 🔧 Repair System
-
-Weapons and wearables degrade with use and can be restored.
-
-- Consumable repair materials with a limited number of uses each
-- Flat or percentage-based durability restoration per material
-- Materials can be restricted to weapons only, wearables only, or both
-- Four built-in materials: Cleaning Kit, Mechanical Part, Weapon Repair Kit, and Field Kit
-- Custom model data support for resource pack integration
-
----
-
-### 12. 📊 Player Leveling
+### 11. 📊 Player Leveling
 
 An XP-based progression system that gates access to higher rewards.
 
@@ -249,7 +237,7 @@ An XP-based progression system that gates access to higher rewards.
 
 ---
 
-### 13. 🗺️ Waypoints & Teleportation
+### 12. 🗺️ Waypoints & Teleportation
 
 Named teleport destinations placed by admins.
 
@@ -263,7 +251,7 @@ Named teleport destinations placed by admins.
 
 ---
 
-### 14. 🪧 Trade Signs
+### 13. 🪧 Trade Signs
 
 In-world buy and sell signs for weapons and ammunition.
 
@@ -275,7 +263,7 @@ In-world buy and sell signs for weapons and ammunition.
 
 ---
 
-### 15. 📋 Scoreboard
+### 14. 📋 Scoreboard
 
 Live stat display for players.
 
@@ -285,7 +273,7 @@ Live stat display for players.
 
 ---
 
-### 16. 🎒 Unique Items
+### 15. 🎒 Unique Items
 
 Special items with controlled inventory behavior.
 
@@ -296,7 +284,7 @@ Special items with controlled inventory behavior.
 
 ---
 
-### 17. 🖥️ Server Infrastructure
+### 16. 🖥️ Server Infrastructure
 
 Backend features for operators and developers.
 

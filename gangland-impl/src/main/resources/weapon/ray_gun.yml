@@ -10,7 +10,6 @@ Information:
       Base: 100
       Change:
          On_Shot: 0
-         On_Repair: 25
    Lore:
       - "&dExperimental energy weapon.&r"
       - "&7Hold right-click to charge.&r"

@@ -30,7 +30,6 @@ Information:
       Base: 100                     # Starting durability of the weapon
       Change:
          On_Shot: 0                  # Durability lost per shot fired
-         On_Repair: 0                # Durability lost per repair action (usually 0)
    Lore:
       - "&7Description line 1"      # Item lore lines (supports & color codes)
    Drop_Hologram: true             # Whether a hologram appears when the weapon is on the ground

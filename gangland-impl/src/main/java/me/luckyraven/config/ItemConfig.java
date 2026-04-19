@@ -1,7 +1,6 @@
 package me.luckyraven.config;
 
 import me.luckyraven.gadget.car.config.CarAddon;
-import me.luckyraven.gadget.repair.RepairManager;
 import me.luckyraven.item.*;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.converter.*;
@@ -68,16 +67,10 @@ public class ItemConfig {
 	}
 
 	@Bean
-	public RepairConverter repairConverter(RepairManager repairManager) {
-		return new RepairConverter(repairManager);
-	}
-
-	@Bean
 	public ItemConverterRegistry itemConverterRegistry(MaterialConverter materialConverter,
 	                                                   WeaponConverter weaponConverter,
 	                                                   AmmunitionConverter ammunitionConverter,
 	                                                   WearableConverter wearableConverter,
-	                                                   RepairConverter repairConverter,
 	                                                   CarConverter carConverter,
 	                                                   UniqueConverter uniqueConverter,
 	                                                   MoneyConverter moneyConverter) {
@@ -89,7 +82,6 @@ public class ItemConfig {
 		registry.register("ammo", ammunitionConverter);
 
 		registry.register(ItemKind.WEARABLE, wearableConverter);
-		registry.register(ItemKind.REPAIR, repairConverter);
 		registry.register(ItemKind.CAR, carConverter);
 		registry.register(ItemKind.UNIQUE, uniqueConverter);
 
@@ -141,18 +133,12 @@ public class ItemConfig {
 	}
 
 	@Bean
-	public RepairItemSerializer repairItemSerializer() {
-		return new RepairItemSerializer();
-	}
-
-	@Bean
 	public ItemSerializerRegistry itemSerializerRegistry(UniqueItemSerializer uniqueItemSerializer,
 	                                                     WeaponItemSerializer weaponItemSerializer,
 	                                                     AmmunitionItemSerializer ammunitionItemSerializer,
 	                                                     WearableItemSerializer wearableItemSerializer,
 	                                                     CarItemSerializer carItemSerializer,
 	                                                     MoneyItemSerializer moneyItemSerializer,
-	                                                     RepairItemSerializer repairItemSerializer,
 	                                                     MaterialItemSerializer materialItemSerializer) {
 		ItemSerializerRegistry registry = new ItemSerializerRegistry();
 		// Registration order is priority order: the first predicate that matches wins. Unique goes first because
@@ -164,7 +150,6 @@ public class ItemConfig {
 		registry.register(ItemPredicates.WEARABLE, wearableItemSerializer);
 		registry.register(ItemPredicates.CAR, carItemSerializer);
 		registry.register(ItemPredicates.MONEY, moneyItemSerializer);
-		registry.register(ItemPredicates.REPAIR, repairItemSerializer);
 		registry.register(ItemPredicates.MATERIAL, materialItemSerializer);
 		return registry;
 	}

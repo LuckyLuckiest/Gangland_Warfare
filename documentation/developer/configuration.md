@@ -24,7 +24,6 @@ file is renamed with a `-old` suffix and a fresh default is generated.
 | `unique_items.yml` | Unique item definitions                      |
 | `ammunition.yml`   | Ammunition type definitions                  |
 | `scoreboard.yml`   | Scoreboard layout and lines                  |
-| `repair.yml`       | Repair material definitions                  |
 | `plugin.yml`       | Spigot plugin metadata (not user-editable)   |
 
 ---
@@ -510,32 +509,6 @@ ammunition:
     material: GOLD_NUGGET
     name: "&6Shotgun Shell"
     stack_amount: 8
-```
-
----
-
-## repair.yml
-
-Repair material definitions.
-
-```yaml
-materials:
-  cleaning_kit:
-    material: PAPER
-    name: "&aCleaning Kit"
-    custom_model_data: 2001
-    uses: 5
-    restore_flat: 10
-    restore_percent: 0.0
-    compatible: BOTH
-  weapon_repair_kit:
-    material: PAPER
-    name: "&eWeapon Repair Kit"
-    custom_model_data: 2002
-    uses: 3
-    restore_flat: 0
-    restore_percent: 0.25
-    compatible: WEAPON
 ```
 
 ---

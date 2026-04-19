@@ -10,7 +10,6 @@ Information:
       Base: 100
       Change:
          On_Shot: 0
-         On_Repair: 0
    Lore:
       - "&7The Steyr Aug is a 5.56×45mm NATO, intermediate catridge,&r"
       - "&7designed in the 1960s by Steyr-Daimler-Puch.&r"

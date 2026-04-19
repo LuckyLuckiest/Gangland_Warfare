@@ -9,17 +9,16 @@ provides three major subsystems:
 |-------------|---------|-----------------------------------------------|
 | **Car**     | 15      | Drivable vehicles with WASD physics           |
 | **Jetpack** | 5       | Velocity-based flight with thrust ramp        |
-| **Repair**  | 9       | Durability restoration for weapons/wearables  |
 | **Fuel**    | 1       | Shared fuel registry and consumption API      |
-| **Other**   | 17      | Listeners (11), config, wearable addon, enums |
+| **Other**   | 17      | Listeners (10), config, wearable addon, enums |
 
-**Total: 47 classes** across 4 packages.
+**Total: 38 classes** across 3 packages.
 
 ### Module Dependencies
 
 ```
 gangland-gadget
-    depends on ──> gangland-item      (Fuel, Wearable, Repairable data models)
+    depends on ──> gangland-item      (Fuel, Wearable data models)
     depends on ──> gangland-weapon    (WeaponService, projectile damage lookup)
     depends on ──> gangland-core      (ItemBuilder, ActionBarManager, ParticleUtil)
     depends on ──> plugin-common      (custom logging)
@@ -831,241 +830,6 @@ Used by `VehicleMovementTask`, `JetpackTask`, `FuelHoldDisplayListener`, and
 
 ---
 
-## Repair System (9 classes)
-
-The repair system restores durability to weapons and wearables using consumable repair materials.
-
-### Architecture Diagram
-
-```
-╭────────────────╮     ╭────────────────╮     ╭───────────────────╮
-│ RepairListener │────>│ RepairAnvilGui │────>│ RepairManager     │
-│ (anvil hijack) │     │ (GUI handler)  │     │ (applies repair)  │
-╰────────────────╯     ╰────────────────╯     ╰─────────┬─────────╯
-                                                        │
-                                              ╭─────────┴─────────╮
-                                              │                   │
-                                    ╭─────────v──────╮  ╭─────────v─────────╮
-                                    │RepairMaterial  │  │ RepairMaterialMgr │
-                                    │Manager (lookup)│  │ (registry)        │
-                                    ╰────────────────╯  ╰───────────────────╯
-                                              │
-                                    ╭─────────v─────────╮
-                                    │ RepairMaterialData│  (config values)
-                                    ╰───────────────────╯
-
-Config loading:
-╭─────────────╮     ╭───────────────────╮     ╭─────────────╮
-│ RepairLoader│────>│YamlRepairConfig   │────>│ RepairConfig│
-│ (FileLoader)│     │Provider (parser)  │     │ (data bag)  │
-╰─────────────╯     ╰───────────────────╯     ╰─────────────╯
-```
-
-### RepairManager (core API)
-
-**File:** `me.luckyraven.gadget.repair.RepairManager` -- 92 lines
-
-| Method                                            | Description                                       |
-|---------------------------------------------------|---------------------------------------------------|
-| `load(RepairConfig)`                              | Delegates to `RepairMaterialManager.load()`       |
-| `setMessages(RepairMessages)`                     | Sets the message provider (impl in gangland-impl) |
-| `applyRepair(Player, Repairable, RepairMaterial)` | Full repair flow (see below)                      |
-
-#### Repair Flow
-
-```
-1. Check: is item already fully repaired?
-   YES -> send "already fully repaired" message, return false
-
-2. Check: is material compatible with the repairable's type?
-   NO -> send "incompatible material" message, return false
-
-3. Fire RepairStartEvent (Cancellable)
-   CANCELLED -> send "repair cancelled" message, return false
-
-4. Calculate restore amount:
-   fromFlat    = material.restoreAmount
-   fromPercent = (int)(maxDurability * material.restorePercent / 100.0)
-   restored    = max(fromFlat, fromPercent)
-
-5. Apply: newDurability = min(max, current + restored)
-
-6. Fire RepairCompleteEvent (with actualGain)
-
-7. Play repair sound (vanilla and/or custom)
-
-8. Send "repair complete" message with gain and new/max values
-```
-
-### RepairMaterial
-
-**File:** `me.luckyraven.gadget.repair.material.RepairMaterial`
-
-Wrapper around `RepairMaterialData` providing item building and static utilities:
-
-| Static Method                 | Description                                                                                         |
-|-------------------------------|-----------------------------------------------------------------------------------------------------|
-| `isRepairMaterial(ItemStack)` | Checks for the repair material NBT tag                                                              |
-| `getMaterialId(ItemStack)`    | Reads the material ID from NBT                                                                      |
-| `getCurrentUses(ItemStack)`   | Reads remaining uses from NBT                                                                       |
-| `hasUsesLeft(ItemStack)`      | `getCurrentUses() > 0`                                                                              |
-| `consumeUse(ItemStack)`       | Decrements uses; returns null if exhausted. Updates display name and lore to show `[uses/maxUses]`. |
-
-| Instance Method                    | Description                           |
-|------------------------------------|---------------------------------------|
-| `getId()`                          | Material config ID                    |
-| `isCompatibleWith(RepairableType)` | Checks compatibility                  |
-| `buildItem()`                      | Creates ItemStack with max uses       |
-| `buildItem(int currentUses)`       | Creates ItemStack with specified uses |
-
-**NBT keys (RepairKeys):**
-
-```java
-public static final String REPAIR_MATERIAL_ID = "gangland_repair_material_id";
-public static final String REPAIR_MATERIAL_USES = "gangland_repair_material_uses";
-public static final String REPAIR_MATERIAL_MAX_USES = "gangland_repair_material_max_uses";
-```
-
-### RepairMaterialData (config values)
-
-**File:** `me.luckyraven.gadget.repair.config.RepairMaterialData`
-
-`@Builder` data object holding parsed YAML values:
-
-| Field                | Type                   | Description                           |
-|----------------------|------------------------|---------------------------------------|
-| `id`                 | String                 | Config key                            |
-| `displayName`        | String                 | Colored display name                  |
-| `material`           | Material               | Bukkit material type                  |
-| `maxUses`            | int                    | Uses per item before consumed         |
-| `restoreAmount`      | int                    | Flat durability restored per use      |
-| `restorePercent`     | double                 | Percentage of max durability restored |
-| `repairDefaultSound` | SoundConfiguration     | Vanilla sound on repair (nullable)    |
-| `repairCustomSound`  | SoundConfiguration     | Custom sound on repair (nullable)     |
-| `lore`               | List\<String\>         | Item lore lines                       |
-| `customModelData`    | int                    | Custom model data                     |
-| `compatibleTypes`    | List\<RepairableType\> | Which repairable types this works on  |
-
-### RepairMaterialManager (registry)
-
-**File:** `me.luckyraven.gadget.repair.material.RepairMaterialManager`
-
-| Method                   | Description                              |
-|--------------------------|------------------------------------------|
-| `load(RepairConfig)`     | Populates from config data               |
-| `getMaterial(String id)` | Lookup by ID                             |
-| `getMaterial(ItemStack)` | Lookup by reading NBT from item          |
-| `getAllMaterials()`      | Returns copy of all registered materials |
-
-### RepairAnvilGui
-
-**File:** `me.luckyraven.gadget.repair.anvil.RepairAnvilGui`
-
-Uses the `AnvilGUI` library to present a repair interface when a player opens an anvil while holding
-a weapon. The weapon goes in the left slot; clicking the output slot triggers repair.
-
-**Flow:**
-
-1. Player opens vanilla anvil while holding a weapon -> `RepairListener` cancels the event.
-2. Next tick: `RepairAnvilGui.open()` is called.
-3. GUI auto-detects a repair material in the player's inventory.
-4. On output slot click: applies repair via `RepairManager`, consumes one use from the material,
-   updates the weapon item in the player's hand.
-
-### RepairMessages (interface)
-
-Contract for localized repair messages. Implementation lives in `gangland-impl`.
-
-```java
-public interface RepairMessages {
-	String getAlreadyFullyRepaired();
-
-	String getRepairComplete(int restored, int current, int max);
-
-	String getIncompatibleMaterial();
-
-	String getRepairCancelled();
-
-	String getNoMaterialAvailable();
-}
-```
-
-### Repairable Interface (gangland-item module)
-
-```java
-public interface Repairable {
-	String getRepairableId();
-
-	int getCurrentRepairDurability();
-
-	void setCurrentRepairDurability(int durability);
-
-	int getMaxRepairDurability();
-
-	RepairableType getRepairableType();
-
-	ItemStack buildItem();
-
-	boolean isFullyRepaired();    // current >= max
-
-	boolean canBeRepaired();      // current < max
-}
-```
-
-Implemented by `Weapon` (and potentially other item types).
-
-### Config Loading
-
-**RepairLoader** extends `FileLoader<RepairConfig>`:
-
-1. Loads `repair.yml` via `FileManager`.
-2. Passes it to `YamlRepairConfigProvider` which parses each material section.
-3. Creates a `RepairConfig` data bag.
-4. `RepairManager.load()` populates `RepairMaterialManager`.
-
-**YAML structure (repair.yml):**
-
-```yaml
-Repair_Materials:
-   basic_kit:
-      Display_Name: "&aBasic Repair Kit"
-      Material: "PAPER"
-      Custom_Model_Data: 50
-      Uses: 3
-      Restore_Amount: 50
-      Restore_Percent: 0.0
-      Compatible_Types:
-         - WEAPON
-      Lore:
-         - "&7Restores 50 durability"
-      Sound:
-         Default_Sound:
-            Sound: "BLOCK_ANVIL_USE"
-            Volume: 1.0
-            Pitch: 1.0
-   advanced_kit:
-      Display_Name: "&6Advanced Repair Kit"
-      Material: "PAPER"
-      Custom_Model_Data: 51
-      Uses: 1
-      Restore_Amount: 0
-      Restore_Percent: 50.0
-      Compatible_Types:
-         - WEAPON
-         - WEARABLE
-      Lore:
-         - "&7Restores 50% of max durability"
-```
-
-### Events
-
-| Event                 | Parent        | Cancellable | Extra Fields                                             |
-|-----------------------|---------------|-------------|----------------------------------------------------------|
-| `RepairEvent`         | `Event`       | --          | `player`, `repairable`, `repairMaterial` (abstract base) |
-| `RepairStartEvent`    | `RepairEvent` | Yes         | --                                                       |
-| `RepairCompleteEvent` | `RepairEvent` | No          | `restoredDurability`                                     |
-
----
 
 ## Wearable System
 
@@ -1143,12 +907,6 @@ jetpack_mk1:
 |---------------------------|-----------------------|-------------------------------------------------------------------------------------------|
 | **WearableEquipListener** | `InventoryClickEvent` | Blocks equipping wearables the player lacks permission for (drag to slot or shift-click). |
 
-### Repair Listener
-
-| Listener           | Events Handled               | Purpose                                                                              |
-|--------------------|------------------------------|--------------------------------------------------------------------------------------|
-| **RepairListener** | `InventoryOpenEvent` (ANVIL) | Hijacks vanilla anvil opening when holding a weapon. Opens `RepairAnvilGui` instead. |
-
 ---
 
 ## Cross-Module Integration Points
@@ -1157,7 +915,6 @@ jetpack_mk1:
 
 - `Fuel` -- NBT read/write helpers, `FuelBar` renderer, `FuelKey` constants
 - `Wearable` -- jetpack wearable data model, `WearableTrait` enum
-- `Repairable` -- interface for repairable items, `RepairableType` enum
 
 ### gangland-gadget -> gangland-weapon
 
@@ -1165,7 +922,6 @@ jetpack_mk1:
 - `ProjectileDamageListener.getDamageForProjectile()` -- reads weapon projectile damage
 - `ThrowableAction.pendingVehicleExplosionDamage` -- grenade explosion damage for vehicles
 - `WeaponEntityDamageEvent` -- custom damage event for incendiary/biological weapons
-- `Weapon` -- implements `Repairable`, used in `RepairListener`
 
 ### gangland-gadget -> gangland-core
 
@@ -1184,7 +940,6 @@ jetpack_mk1:
 ### gangland-gadget -> gangland-impl (contract interfaces)
 
 - `GadgetPhysicsConfig` -- physics constants from `settings.yml`
-- `RepairMessages` -- localized repair messages
 
 These follow the project convention: feature modules define the interface, `gangland-impl` provides
 the implementation. Feature modules never import `Settings` or `Messages` directly.

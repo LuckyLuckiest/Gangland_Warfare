@@ -18,12 +18,7 @@ import me.luckyraven.file.configuration.inventory.itemsource.GangItemSourceProvi
 import me.luckyraven.file.configuration.lootchest.GanglandLootChestMessages;
 import me.luckyraven.file.configuration.lootchest.LootChestSettings;
 import me.luckyraven.file.configuration.weapon.GanglandBlockRegenerationSettings;
-import me.luckyraven.file.configuration.weapon.GanglandRepairMessages;
 import me.luckyraven.gadget.car.config.CarAddon;
-import me.luckyraven.gadget.repair.GanglandRepairService;
-import me.luckyraven.gadget.repair.RepairManager;
-import me.luckyraven.gadget.repair.anvil.RepairAnvilGui;
-import me.luckyraven.gadget.repair.config.RepairLoader;
 import me.luckyraven.gadget.wearable.WearableAddon;
 import me.luckyraven.hologram.HologramService;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
@@ -31,7 +26,10 @@ import me.luckyraven.inventory.multi.ItemSourceProvider;
 import me.luckyraven.item.ItemConverterRegistry;
 import me.luckyraven.item.ItemParser;
 import me.luckyraven.item.configuration.UniqueItemAddon;
-import me.luckyraven.item.contract.*;
+import me.luckyraven.item.contract.GanglandUniqueItemInteractionService;
+import me.luckyraven.item.contract.UniqueItemInteractionService;
+import me.luckyraven.item.contract.UniqueItemRegistry;
+import me.luckyraven.item.contract.WearableEquipService;
 import me.luckyraven.item.listener.money.MoneyProximityPickupTask;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyDepositService;
@@ -67,8 +65,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.ServicePriority;
 
 /**
- * CONFIG-phase wiring for the gameplay-side managers: weapons, signs, items, inventory, hologram, loot chest, repair,
- * money. Every bean here can constructor-inject any FILE-phase or DATABASE-phase bean by type.
+ * CONFIG-phase wiring for the gameplay-side managers: weapons, signs, items, inventory, hologram, loot chest, money.
+ * Every bean here can constructor-inject any FILE-phase or DATABASE-phase bean by type.
  *
  * <p>The structural ordering inside the topo sort:
  * <ol>
@@ -80,8 +78,6 @@ import org.bukkit.plugin.ServicePriority;
  *     currency symbol via the contract on instantiation), then the converter beans → {@link ItemConverterRegistry}
  *     → {@link ItemParser}, which the loot chest + cops-n-crooks beans transitively consume.</li>
  *     <li>Loot chest: {@link HologramService} → {@link LootChestManager} → {@link LootChestLoader}.</li>
- *     <li>Repair: {@link RepairLoader}, {@link RepairManager}, {@link RepairAnvilGui} → {@link GanglandRepairService}.
- * </li>
  * </ol>
  *
  * <p>Tiny bridge / contract beans live here too because they're trivial wrappers over the managers they bind to.
@@ -300,29 +296,6 @@ public class GameplayConfig {
 		fileManager.registerInitializer(loader);
 		fileManager.initializeAll();
 		return loader;
-	}
-
-	// ---------------------------------------------------------------------------------------------------------------
-	// Repair
-	// ---------------------------------------------------------------------------------------------------------------
-
-	@Bean
-	public RepairManager repairManager(PlaceholderService placeholderService, FileManager fileManager) {
-		RepairManager repairManager = new RepairManager(placeholderService, new GanglandRepairMessages());
-		RepairLoader  repairLoader  = new RepairLoader(gangland, false, repairManager::load, fileManager);
-		fileManager.registerInitializer(repairLoader);
-		fileManager.initializeAll();
-		return repairManager;
-	}
-
-	@Bean
-	public RepairAnvilGui repairAnvilGui(RepairManager repairManager) {
-		return new RepairAnvilGui(gangland, repairManager);
-	}
-
-	@Bean
-	public RepairService repairService(WeaponManager weaponManager, RepairAnvilGui repairAnvilGui) {
-		return new GanglandRepairService(gangland, weaponManager, repairAnvilGui);
 	}
 
 	/**

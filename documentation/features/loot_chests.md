@@ -48,7 +48,6 @@ Loot tables are configured in `loot_chests.yml`. Item categories that can appear
 
 - **AMMO** — Any configured ammo type from `ammunition.yml`.
 - **WEAPON** — Any configured weapon.
-- **REPAIR** — Repair materials from `repair.yml`.
 - **UNIQUE** — Keys, lockpicks, and other unique items.
 
 ---

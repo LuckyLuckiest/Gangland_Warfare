@@ -5,8 +5,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.exception.PluginException;
-import me.luckyraven.item.repair.Repairable;
-import me.luckyraven.item.repair.RepairableType;
 import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.Placeholder;
 import me.luckyraven.weapon.dto.*;
@@ -32,7 +30,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Getter
 @Setter
-public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon> {
+public abstract class Weapon implements Cloneable, Comparable<Weapon> {
 
 	private final String                 name;
 	private final String                 displayName;
@@ -196,7 +194,6 @@ public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon
 	}
 
 	@NotNull
-	@Override
 	public ItemStack buildItem() {
 		return buildItem(null);
 	}
@@ -322,35 +319,6 @@ public abstract class Weapon implements Repairable, Cloneable, Comparable<Weapon
 	@Override
 	public String toString() {
 		return String.format("Weapon{uuid='%s',name='%s',category='%s',material='%s'}", uuid, name, category, material);
-	}
-
-	// --- Repairable ---
-
-	@NotNull
-	@Override
-	public String getRepairableId() {
-		return name;
-	}
-
-	@Override
-	public int getCurrentRepairDurability() {
-		return currentDurability;
-	}
-
-	@Override
-	public void setCurrentRepairDurability(int durability) {
-		setCurrentDurability((short) durability);
-	}
-
-	@Override
-	public int getMaxRepairDurability() {
-		return durability;
-	}
-
-	@NotNull
-	@Override
-	public RepairableType getRepairableType() {
-		return RepairableType.WEAPON;
 	}
 
 	public void applyPush(Player player) {

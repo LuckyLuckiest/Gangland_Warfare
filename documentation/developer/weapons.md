@@ -100,8 +100,7 @@ programmatically through the weapon pipeline.
 
 **Path:** `me.luckyraven.weapon.Weapon`
 
-The base data class for all weapons. Extends no Bukkit class; implements `Repairable`,
-`Cloneable`, and `Comparable<Weapon>`.
+The base data class for all weapons. Extends no Bukkit class; implements `Cloneable` and `Comparable<Weapon>`.
 
 **Key fields:**
 
@@ -121,7 +120,7 @@ The base data class for all weapons. Extends no Bukkit class; implements `Repair
 
 | DTO                   | Purpose                                                     |
 |-----------------------|-------------------------------------------------------------|
-| `DurabilityData`      | On-shot loss, on-repair gain, consume-on-time               |
+| `DurabilityData`      | On-shot loss, consume-on-time                               |
 | `SoundData`           | Shot, empty-mag, reload, scope, flyby, impact               |
 | `ReloadActionBarData` | Messages shown during reload ("Reloading...", "Opening...") |
 | `ModifiersData`       | All modifier instances (piercing, penetration, etc.)        |
@@ -1198,7 +1197,6 @@ Information:
       Base: 500
       Change:
          On_Shot: 1
-         On_Repair: 10
    Lore:
       - "&7A reliable assault rifle"
    Drop_Hologram: true
@@ -1747,7 +1745,6 @@ The weapon durability is mapped to the item's visual durability bar for display.
 | Field           | Type    | Description                                           |
 |-----------------|---------|-------------------------------------------------------|
 | `onShot`        | `short` | Durability lost per shot                              |
-| `onRepair`      | `short` | Durability restored per repair                        |
 | `consumeOnTime` | `int`   | Ticks after shot before weapon is consumed (-1=never) |
 
 **Mapping formula (weapon durability -> item damage bar):**
@@ -1769,17 +1766,3 @@ while supporting arbitrary weapon durability values.
 
 - Guns: play empty-mag sound, show "Broken" on action bar, cannot shoot
 - General: `isBroken()` returns true, checked before activation
-
-**Repair integration:** Weapons implement the `Repairable` interface from `gangland-item`:
-
-```java
-String getRepairableId()           // weapon name
-
-int getCurrentRepairDurability() // currentDurability
-
-void setCurrentRepairDurability() // updates currentDurability
-
-int getMaxRepairDurability()    // max durability
-
-RepairableType getRepairableType() // WEAPON
-```

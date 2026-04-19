@@ -251,13 +251,6 @@ public enum Messages {
 	AMMO_SOLD("Weapons.Ammo_Sold", Type.PREFIX),
 	NOT_ENOUGH_AMMO("Weapons.Not_Enough_Ammo", Type.PREFIX),
 
-	// weapons - repair
-	REPAIR_ALREADY_FULL("Weapons.Repair.Already_Full", Type.ERROR),
-	REPAIR_COMPLETE("Weapons.Repair.Complete", Type.PREFIX),
-	REPAIR_INCOMPATIBLE_MATERIAL("Weapons.Repair.Incompatible_Material", Type.ERROR),
-	REPAIR_CANCELLED("Weapons.Repair.Cancelled", Type.ERROR),
-	REPAIR_NO_MATERIAL("Weapons.Repair.No_Material", Type.ERROR),
-
 	// death
 	DEAD_USING_WEAPON("Death.Weapon", Type.OTHER, true),
 

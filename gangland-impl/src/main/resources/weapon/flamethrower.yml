@@ -6,7 +6,6 @@ Information:
       Base: 500
       Change:
          On_Shot: 0
-         On_Repair: 100
    Lore:
       - "&7Sprays continuous fire."
       - "&7Hold right-click to spray."
