@@ -19,12 +19,12 @@ public final class ShopYamlWriter {
 
 		clearRoot(cfg);
 
-		cfg.set("title", definition.getTitle());
-		cfg.set("size", definition.getSize());
-		cfg.set("buy-entries", serializeEntries(definition.getBuyEntries()));
-		cfg.set("sell-entries", serializeEntries(definition.getSellEntries()));
-		cfg.set("sell-categories", serializeSellCategories(definition.getSellCategories()));
-		cfg.set("barter-categories", serializeBarterCategories(definition.getBarterCategories()));
+		cfg.set("Title", definition.getTitle());
+		cfg.set("Size", definition.getSize());
+		cfg.set("Buy_Entries", serializeEntries(definition.getBuyEntries()));
+		cfg.set("Sell_Entries", serializeEntries(definition.getSellEntries()));
+		cfg.set("Sell_Categories", serializeSellCategories(definition.getSellCategories()));
+		cfg.set("Barter_Categories", serializeBarterCategories(definition.getBarterCategories()));
 
 		fileHandler.save();
 	}
@@ -61,11 +61,11 @@ public final class ShopYamlWriter {
 
 		for (ShopItemEntry entry : entries) {
 			Map<String, Object> map = new LinkedHashMap<>();
-			map.put("slot", entry.getSlot());
-			map.put("item", entry.getItem());
+			map.put("Slot", entry.getSlot());
+			map.put("Item", entry.getItem());
 
 			if (entry.hasPrice()) {
-				map.put("price", entry.getPrice());
+				map.put("Price", entry.getPrice());
 			}
 
 			out.add(map);
@@ -79,12 +79,12 @@ public final class ShopYamlWriter {
 
 		for (SellCategory category : categories) {
 			Map<String, Object> map = new LinkedHashMap<>();
-			map.put("id", category.getId());
-			map.put("display-name", category.getDisplayName());
-			map.put("base-price", category.getBasePrice());
+			map.put("Id", category.getId());
+			map.put("Display_Name", category.getDisplayName());
+			map.put("Base_Price", category.getBasePrice());
 
 			List<ItemStack> items = new ArrayList<>(category.getItems());
-			map.put("items", items);
+			map.put("Items", items);
 
 			out.add(map);
 		}
@@ -97,12 +97,12 @@ public final class ShopYamlWriter {
 
 		for (BarterCategory category : categories) {
 			Map<String, Object> map = new LinkedHashMap<>();
-			map.put("id", category.getId());
-			map.put("display-name", category.getDisplayName());
-			map.put("base-price", category.getBasePrice());
+			map.put("Id", category.getId());
+			map.put("Display_Name", category.getDisplayName());
+			map.put("Base_Price", category.getBasePrice());
 
 			List<ItemStack> items = new ArrayList<>(category.getItems());
-			map.put("items", items);
+			map.put("Items", items);
 
 			out.add(map);
 		}

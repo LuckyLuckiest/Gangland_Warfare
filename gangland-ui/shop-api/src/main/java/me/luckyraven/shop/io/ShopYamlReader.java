@@ -17,21 +17,21 @@ import java.util.Map;
 @CustomLog
 public final class ShopYamlReader {
 
-	private static final String KEY_TITLE             = "title";
-	private static final String KEY_SIZE              = "size";
-	private static final String KEY_BUY_ENTRIES       = "buy-entries";
-	private static final String KEY_SELL_ENTRIES      = "sell-entries";
-	private static final String KEY_SELL_CATEGORIES   = "sell-categories";
-	private static final String KEY_BARTER_CATEGORIES = "barter-categories";
+	private static final String KEY_TITLE             = "Title";
+	private static final String KEY_SIZE              = "Size";
+	private static final String KEY_BUY_ENTRIES       = "Buy_Entries";
+	private static final String KEY_SELL_ENTRIES      = "Sell_Entries";
+	private static final String KEY_SELL_CATEGORIES   = "Sell_Categories";
+	private static final String KEY_BARTER_CATEGORIES = "Barter_Categories";
 
-	private static final String ENTRY_SLOT  = "slot";
-	private static final String ENTRY_ITEM  = "item";
-	private static final String ENTRY_PRICE = "price";
+	private static final String ENTRY_SLOT  = "Slot";
+	private static final String ENTRY_ITEM  = "Item";
+	private static final String ENTRY_PRICE = "Price";
 
-	private static final String CATEGORY_ID           = "id";
-	private static final String CATEGORY_DISPLAY_NAME = "display-name";
-	private static final String CATEGORY_BASE_PRICE   = "base-price";
-	private static final String CATEGORY_ITEMS        = "items";
+	private static final String CATEGORY_ID           = "Id";
+	private static final String CATEGORY_DISPLAY_NAME = "Display_Name";
+	private static final String CATEGORY_BASE_PRICE   = "Base_Price";
+	private static final String CATEGORY_ITEMS        = "Items";
 
 	private static final int    DEFAULT_SIZE  = 54;
 	private static final String DEFAULT_TITLE = "Trader";
@@ -46,7 +46,7 @@ public final class ShopYamlReader {
 
 		// Entries and categories are read off the raw FileConfiguration below (the NodeReader positional layer cannot
 		// rebuild Bukkit-serialized ItemStacks from their mapping form). Touch the keys here so the unknown-key sweep
-		// still knows they are legitimate root keys.
+		// still recognises them as legitimate root keys.
 		root.get(KEY_BUY_ENTRIES);
 		root.get(KEY_SELL_ENTRIES);
 		root.get(KEY_SELL_CATEGORIES);
@@ -57,10 +57,6 @@ public final class ShopYamlReader {
 			size = DEFAULT_SIZE;
 		}
 
-		// Entries carry Bukkit-serialized ItemStacks that require the FileConfiguration path for deserialization;
-		// the NodeReader positional layer cannot rebuild an ItemStack from its serialization map. Keep cfg for
-		// those reads — the admin-facing value of located errors on `slot` or `price` is small since entries are
-		// written primarily by ShopYamlWriter, not hand-edited.
 		List<ShopItemEntry>  buyEntries       = readEntries(key, cfg, KEY_BUY_ENTRIES, EntryKind.BUY);
 		List<ShopItemEntry>  sellEntries      = readEntries(key, cfg, KEY_SELL_ENTRIES, EntryKind.SELL);
 		List<SellCategory>   sellCategories   = readSellCategories(key, cfg);
@@ -257,8 +253,8 @@ public final class ShopYamlReader {
 		return buildEntry(key, path, index, kind, slot, item, price);
 	}
 
-	private ShopItemEntry buildEntry(String key, String path, int index, EntryKind kind,
-	                                 int slot, ItemStack item, Double price) {
+	private ShopItemEntry buildEntry(String key, String path, int index, EntryKind kind, int slot, ItemStack item,
+	                                 Double price) {
 		if (item == null) {
 			log.warn("Shop '{}' {}[{}] has no item; skipping", key, path, index);
 			return null;
