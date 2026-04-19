@@ -3,6 +3,12 @@ package me.luckyraven.gadget.car.vehicle.entity;
 import me.luckyraven.gadget.car.Car;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.Bisected;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.type.Slab;
+import org.bukkit.block.data.type.TrapDoor;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
@@ -70,9 +76,14 @@ public class MinecartVehicle implements VehicleEntity {
 		double dx      = -Math.sin(radians) * speed;
 		double dz      = Math.cos(radians) * speed;
 
+		double y = minecart.getVelocity().getY();
+		if (Math.abs(speed) > 0.001 && canStepUp(dx, dz)) {
+			y = 0.42;
+		}
+
 		// Always set velocity to override minecart physics drag each tick.
 		// Negative speed naturally produces reverse movement along the same yaw axis.
-		minecart.setVelocity(new Vector(dx, minecart.getVelocity().getY(), dz));
+		minecart.setVelocity(new Vector(dx, y, dz));
 	}
 
 	@Override
@@ -130,5 +141,63 @@ public class MinecartVehicle implements VehicleEntity {
 				ticks++;
 			}
 		}.runTaskTimer(plugin, 0L, 1L);
+	}
+
+	/**
+	 * Probes the block in the cart's travel direction and returns {@code true} when its top surface sits above the
+	 * cart's current Y by a climbable margin (≤ 0.5 blocks) with passable clearance above. Handles slabs, closed
+	 * trapdoors, and full blocks — so the cart can also step from a slab up onto an adjacent full block.
+	 */
+	private boolean canStepUp(double dx, double dz) {
+		BlockFace face = faceFor(dx, dz);
+		if (face == null) return false;
+
+		// Already rising from an earlier bump — skip, otherwise the cart stacks Y velocity and flies / bobs.
+		if (minecart.getVelocity().getY() > 0.05) return false;
+
+		Block  probe = minecart.getLocation().getBlock().getRelative(face);
+		Double topY  = stepTopY(probe);
+		if (topY == null) return false;
+
+		// Obstacle's top must be above the cart by a climbable margin — rules out "cart already at that height"
+		// (bobbing) and "obstacle too tall" (climbing full blocks from flat ground).
+		double diff = topY - minecart.getLocation().getY();
+		if (diff <= 0.05 || diff > 0.6) return false;
+
+		return !probe.getRelative(BlockFace.UP).getType().isSolid();
+	}
+
+	/**
+	 * Returns the block's top-surface Y for step-up purposes, or {@code null} if the block is passable /
+	 * non-climbable.
+	 */
+	private Double stepTopY(Block block) {
+		BlockData data = block.getBlockData();
+		if (data instanceof Slab slab) {
+			return switch (slab.getType()) {
+				case BOTTOM -> block.getY() + 0.5;
+				case TOP, DOUBLE -> block.getY() + 1.0;
+			};
+		}
+		if (data instanceof TrapDoor trapDoor) {
+			if (trapDoor.isOpen()) return null;
+			return block.getY() + (trapDoor.getHalf() == Bisected.Half.BOTTOM ? 0.1875 : 1.0);
+		}
+		if (block.getType().isSolid()) {
+			return (double) block.getY() + 1.0;
+		}
+		return null;
+	}
+
+	/**
+	 * Picks the cardinal face matching the dominant axis of travel. Returns {@code null} when motion is effectively
+	 * zero so callers skip the probe.
+	 */
+	private BlockFace faceFor(double dx, double dz) {
+		if (Math.abs(dx) < 1e-4 && Math.abs(dz) < 1e-4) return null;
+		if (Math.abs(dx) >= Math.abs(dz)) {
+			return dx > 0 ? BlockFace.EAST : BlockFace.WEST;
+		}
+		return dz > 0 ? BlockFace.SOUTH : BlockFace.NORTH;
 	}
 }
