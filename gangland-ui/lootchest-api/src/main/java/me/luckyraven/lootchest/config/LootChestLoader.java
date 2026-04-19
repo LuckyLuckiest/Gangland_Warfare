@@ -10,8 +10,10 @@ import me.luckyraven.lootchest.item.LootItemReference;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileLoader;
 import me.luckyraven.persistence.FileManager;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
+import me.luckyraven.persistence.config.ConfigReport;
+import me.luckyraven.persistence.config.FileHandlerReader;
+import me.luckyraven.persistence.config.MappingNode;
+import me.luckyraven.persistence.config.NodeReader;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
@@ -54,35 +56,33 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 
 	@Override
 	protected void loadData(Consumer<LootChestConfig> consumer, FileManager fileManager) {
-		FileConfiguration lootChestsConfig;
-		FileConfiguration tiersConfig;
+		FileHandler lootChestsHandler;
+		FileHandler tiersHandler;
 
 		try {
-			// Load loot_chests.yml
-			String lootChestsFileName = "loot_chests";
-			fileManager.checkFileLoaded(lootChestsFileName);
-			FileHandler lootChestsHandler = Objects.requireNonNull(fileManager.getFile(lootChestsFileName));
-			lootChestsConfig = lootChestsHandler.getFileConfiguration();
+			String lootChests = "loot_chests";
+			fileManager.checkFileLoaded(lootChests);
+			lootChestsHandler = Objects.requireNonNull(fileManager.getFile(lootChests));
 
-			// Load tiers.yml
-			String tiersFileName = "tiers";
-			fileManager.checkFileLoaded(tiersFileName);
-			FileHandler tiersHandler = Objects.requireNonNull(fileManager.getFile(tiersFileName));
-			tiersConfig = tiersHandler.getFileConfiguration();
+			String tiers = "tiers";
+			fileManager.checkFileLoaded(tiers);
+			tiersHandler = Objects.requireNonNull(fileManager.getFile(tiers));
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
 
-		// Load tiers from tiers.yml
-		Map<String, LootTier> tiers = loadTiers(tiersConfig);
+		ConfigReport report = new ConfigReport();
 
-		// Load global rarity settings from tiers.yml
-		Map<LootItemReference.Rarity, Double> globalRarityChances = loadGlobalRaritySettings(tiersConfig);
+		NodeReader lootChestsReader = FileHandlerReader.read(lootChestsHandler, report);
+		NodeReader tiersReader      = FileHandlerReader.read(tiersHandler, report);
 
-		// Load loot tables from loot_chests.yml
-		Map<String, LootTable> lootTables = loadLootTables(lootChestsConfig, globalRarityChances);
+		Map<String, LootTier>                 tiers               = loadTiers(tiersReader, report);
+		Map<LootItemReference.Rarity, Double> globalRarityChances = loadGlobalRaritySettings(tiersReader);
+		Map<String, LootTable> lootTables = loadLootTables(lootChestsReader, globalRarityChances,
+		                                                   report);
 
-		// Build config using settings from SettingAddon via the provider
+		if (!report.isEmpty()) report.log(log);
+
 		loadedConfig = LootChestConfig.fromProvider(settingsProvider, tiers, lootTables, globalRarityChances);
 
 		manager.setConfig(loadedConfig);
@@ -94,74 +94,84 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 		}
 	}
 
-	private Map<LootItemReference.Rarity, Double> loadGlobalRaritySettings(FileConfiguration config) {
+	private Map<LootItemReference.Rarity, Double> loadGlobalRaritySettings(NodeReader tiersReader) {
 		Map<LootItemReference.Rarity, Double> rarityChances = new EnumMap<>(LootItemReference.Rarity.class);
 
-		ConfigurationSection raritySection = config.getConfigurationSection("Rarity");
-		if (raritySection != null) {
-			for (LootItemReference.Rarity rarity : LootItemReference.Rarity.values()) {
-				String key = rarity.name().toLowerCase();
-				if (raritySection.contains(key)) {
-					rarityChances.put(rarity, raritySection.getDouble(key));
-				}
+		MappingNode raritySection = tiersReader.get("Rarity").asMapping().required().orNull();
+		if (raritySection == null) return rarityChances;
+
+		NodeReader rarityReader = NodeReader.of(raritySection, tiersReader.report());
+
+		for (LootItemReference.Rarity rarity : LootItemReference.Rarity.values()) {
+			String key = rarity.name().toLowerCase();
+			if (rarityReader.has(key)) {
+				rarityChances.put(rarity, rarityReader.get(key).asDouble().orDefault(0.0));
 			}
 		}
 
 		return rarityChances;
 	}
 
-	private Map<String, LootTier> loadTiers(FileConfiguration config) {
-		Map<String, LootTier> tiers        = new LinkedHashMap<>();
-		ConfigurationSection  tiersSection = config.getConfigurationSection("Tiers");
+	private Map<String, LootTier> loadTiers(NodeReader tiersReader, ConfigReport report) {
+		Map<String, LootTier> tiers = new LinkedHashMap<>();
 
+		MappingNode tiersSection = tiersReader.get("Tiers").asMapping().required().orNull();
 		if (tiersSection == null) {
 			LootTier defaultTier = new LootTier("default", "&7Common", 1, LootTier.UnlockRequirement.NONE);
 			tiers.put("default", defaultTier);
 			return tiers;
 		}
 
-		int level = 1;
-		for (String tierId : tiersSection.getKeys(false)) {
-			ConfigurationSection tierSection = tiersSection.getConfigurationSection(tierId);
+		NodeReader tiersMap = NodeReader.of(tiersSection, report);
+
+		for (String tierId : tiersMap.keys()) {
+			MappingNode tierSection = tiersMap.get(tierId).asMapping().required().orNull();
 			if (tierSection == null) continue;
 
-			String displayName       = tierSection.getString("Display_Name", tierId);
-			int    tierLevel         = tierSection.getInt("Level", level++);
-			String requirementStr    = tierSection.getString("Unlock_Requirement", "NONE");
-			String unlockItemId      = tierSection.getString("Unlock_Item");
-			String unlockItemDisplay = tierSection.getString("Unlock_Item_Display");
-			String floatingItemIcon  = tierSection.getString("Floating_Item_Icon");
+			NodeReader tier = NodeReader.of(tierSection, report);
+
+			String displayName       = tier.get("Display_Name").asString().required().orDefault(tierId);
+			int    tierLevel         = tier.get("Level").asInt().orDefault(0);
+			String requirementStr    = tier.get("Unlock_Requirement").asString().orDefault("NONE");
+			String unlockItemId      = tier.get("Unlock_Item").asString().orNull();
+			String unlockItemDisplay = tier.get("Unlock_Item_Display").asString().orNull();
+			String floatingItemIcon  = tier.get("Floating_Item_Icon").asString().orNull();
 
 			LootTier.UnlockRequirement requirement;
 			try {
-				requirement = LootTier.UnlockRequirement.valueOf(requirementStr.toUpperCase());
+				requirement = LootTier.UnlockRequirement.valueOf(requirementStr.toUpperCase(Locale.ROOT));
 			} catch (IllegalArgumentException e) {
 				requirement = LootTier.UnlockRequirement.NONE;
 			}
 
-			LootTier tier = new LootTier(tierId, displayName, tierLevel, requirement, unlockItemId,
-			                             unlockItemDisplay, floatingItemIcon);
-			tiers.put(tierId, tier);
+			LootTier tierObj = new LootTier(tierId, displayName, tierLevel, requirement, unlockItemId,
+			                                unlockItemDisplay, floatingItemIcon);
+			tiers.put(tierId, tierObj);
 		}
 
 		return tiers;
 	}
 
-	private Map<String, LootTable> loadLootTables(FileConfiguration config,
-	                                              Map<LootItemReference.Rarity, Double> globalRarities) {
-		Map<String, LootTable> lootTables    = new HashMap<>();
-		ConfigurationSection   tablesSection = config.getConfigurationSection("Loot_Tables");
+	private Map<String, LootTable> loadLootTables(NodeReader lootChestsReader,
+	                                              Map<LootItemReference.Rarity, Double> globalRarities,
+	                                              ConfigReport report) {
+		Map<String, LootTable> lootTables = new HashMap<>();
 
+		MappingNode tablesSection = lootChestsReader.get("Loot_Tables").asMapping().required().orNull();
 		if (tablesSection == null) return lootTables;
 
-		for (String tableId : tablesSection.getKeys(false)) {
-			ConfigurationSection tableSection = tablesSection.getConfigurationSection(tableId);
+		NodeReader tables = NodeReader.of(tablesSection, report);
+
+		for (String tableId : tables.keys()) {
+			MappingNode tableSection = tables.get(tableId).asMapping().required().orNull();
 			if (tableSection == null) continue;
 
-			String       displayName  = tableSection.getString("Display_Name", tableId);
-			int          minItems     = tableSection.getInt("Min_Items", 1);
-			int          maxItems     = tableSection.getInt("Max_Items", 5);
-			List<String> allowedTiers = tableSection.getStringList("Allowed_Tiers");
+			NodeReader table = NodeReader.of(tableSection, report);
+
+			String       displayName  = table.get("Display_Name").asString().orDefault(tableId);
+			int          minItems     = table.get("Min_Items").asInt().orDefault(1);
+			int          maxItems     = table.get("Max_Items").asInt().orDefault(5);
+			List<String> allowedTiers = table.get("Allowed_Tiers").asList().ofStrings().orEmpty();
 
 			if (minItems < 1) {
 				log.warn("Loot table '{}' has Min_Items={} — clamping to 1 so chests never spawn empty",
@@ -175,11 +185,9 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 				maxItems = minItems;
 			}
 
-			// Load rarity overrides for this table
-			Map<LootItemReference.Rarity, Double> rarityOverrides = loadTableRarityOverrides(tableSection,
-			                                                                                 globalRarities);
+			Map<LootItemReference.Rarity, Double> rarityOverrides = loadTableRarityOverrides(table, globalRarities);
 
-			List<LootItemReference> items = loadLootItemReferences(tableSection.getConfigurationSection("Items"));
+			List<LootItemReference> items = loadLootItemReferences(table.get("Items").asMapping().orNull(), report);
 
 			LootTable lootTable = new LootTable(tableId, displayName, items, minItems, maxItems, allowedTiers,
 			                                    rarityOverrides);
@@ -196,53 +204,54 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 		return lootTables;
 	}
 
-	private Map<LootItemReference.Rarity, Double> loadTableRarityOverrides(ConfigurationSection tableSection,
+	private Map<LootItemReference.Rarity, Double> loadTableRarityOverrides(NodeReader tableReader,
 	                                                                       Map<LootItemReference.Rarity, Double> globalRarities) {
-
 		Map<LootItemReference.Rarity, Double> overrides = new EnumMap<>(LootItemReference.Rarity.class);
 		overrides.putAll(globalRarities);
 
-		ConfigurationSection raritySection = tableSection.getConfigurationSection("Rarity_Overrides");
-		if (raritySection != null) {
-			for (LootItemReference.Rarity rarity : LootItemReference.Rarity.values()) {
-				String key = rarity.name().toLowerCase();
-				if (raritySection.contains(key)) {
-					overrides.put(rarity, raritySection.getDouble(key));
-				}
+		MappingNode raritySection = tableReader.get("Rarity_Overrides").asMapping().orNull();
+		if (raritySection == null) return overrides;
+
+		NodeReader rarityReader = NodeReader.of(raritySection, tableReader.report());
+
+		for (LootItemReference.Rarity rarity : LootItemReference.Rarity.values()) {
+			String key = rarity.name().toLowerCase();
+			if (rarityReader.has(key)) {
+				overrides.put(rarity, rarityReader.get(key).asDouble().orDefault(0.0));
 			}
 		}
 
 		return overrides;
 	}
 
-	private List<LootItemReference> loadLootItemReferences(ConfigurationSection itemsSection) {
+	private List<LootItemReference> loadLootItemReferences(MappingNode itemsSection, ConfigReport report) {
 		List<LootItemReference> items = new ArrayList<>();
 
 		if (itemsSection == null) return items;
 
-		for (String itemId : itemsSection.getKeys(false)) {
-			ConfigurationSection itemSection = itemsSection.getConfigurationSection(itemId);
+		NodeReader itemsReader = NodeReader.of(itemsSection, report);
+
+		for (String itemId : itemsReader.keys()) {
+			MappingNode itemSection = itemsReader.get(itemId).asMapping().orNull();
 			if (itemSection == null) continue;
 
-			// Item string parsed by the global ItemParser (e.g. "weapon:ak47", "ammo:9mm{name=&6Gold Bullets}")
-			String itemString = itemSection.getString("Item");
-			if (itemString == null || itemString.isBlank()) {
-				log.warn("Loot entry '{}' has no 'Item' string — skipping", itemId);
-				continue;
-			}
+			NodeReader item = NodeReader.of(itemSection, report);
 
-			// Drop_Chance scales how often the roll lands on this item
-			String                   rarityStr = itemSection.getString("Drop_Chance", "COMMON");
+			String itemString = item.get("Item").asString().required().orNull();
+			if (itemString == null || itemString.isBlank()) continue;
+
+			String rarityStr = item.get("Drop_Chance").asString().orDefault("COMMON");
+
 			LootItemReference.Rarity rarity;
 			try {
-				rarity = LootItemReference.Rarity.valueOf(rarityStr.toUpperCase());
+				rarity = LootItemReference.Rarity.valueOf(rarityStr.toUpperCase(Locale.ROOT));
 			} catch (IllegalArgumentException e) {
 				rarity = LootItemReference.Rarity.COMMON;
 			}
 
-			int    minAmount = itemSection.getInt("Min_Amount", 1);
-			int    maxAmount = itemSection.getInt("Max_Amount", minAmount);
-			double weight    = itemSection.getDouble("Weight", 1.0);
+			int    minAmount = item.get("Min_Amount").asInt().min(0).orDefault(1);
+			int    maxAmount = item.get("Max_Amount").asInt().min(0).orDefault(minAmount);
+			double weight    = item.get("Weight").asDouble().min(0).orDefault(1.0);
 
 			LootItemReference lootItem = LootItemReference.builder()
 			                                              .id(itemId)

@@ -1,5 +1,6 @@
 package me.luckyraven.file.configuration.inventory;
 
+import lombok.CustomLog;
 import me.luckyraven.Gangland;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
@@ -16,16 +17,17 @@ import me.luckyraven.inventory.part.Slot;
 import me.luckyraven.inventory.unique.UniqueItemHandler;
 import me.luckyraven.item.ItemParser;
 import me.luckyraven.persistence.FileHandler;
+import me.luckyraven.persistence.config.*;
 import me.luckyraven.util.Pair;
 import me.luckyraven.util.Placeholder;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 
 /**
@@ -34,6 +36,7 @@ import java.util.function.Function;
  * {@link ItemSourceProvider}) are CONFIG-phase beans. Reads/writes the {@link InventoryDefinitionStore} that was
  * constructed in FILE phase.
  */
+@CustomLog
 public class InventoryRuntimeContext {
 
 	private final Gangland                 gangland;
@@ -76,33 +79,55 @@ public class InventoryRuntimeContext {
 	}
 
 	public void registerInventory(FileHandler fileHandler) {
-		var config   = fileHandler.getFileConfiguration();
-		var fileName = fileHandler.getName().toLowerCase();
+		FileConfiguration config   = fileHandler.getFileConfiguration();
+		String            fileName = fileHandler.getName().toLowerCase();
 
-		if (config.getString("Config_Version") != null) return;
+		ConfigReport report = new ConfigReport();
+		NodeReader   root   = FileHandlerReader.read(fileHandler, report);
 
-		var informationSection = config.getConfigurationSection("Information");
-		Objects.requireNonNull(informationSection);
+		if (root.get("Config_Version").asString().orNull() != null) return;
 
-		String name = informationSection.getString("Name");
+		MappingNode informationSection = root.get("Information").asMapping().required().orNull();
+		if (informationSection == null) {
+			if (!report.isEmpty()) report.log(log);
+			return;
+		}
+
+		NodeReader information = NodeReader.of(informationSection, report);
+
+		String name = information.get("Name").asString().orNull();
 		if (name == null || name.isEmpty()) name = fileName;
 
-		String displayName = Objects.requireNonNull(informationSection.getString("Display_Name"));
-		int    size        = informationSection.getInt("Size");
-		String permission  = informationSection.getString("Permission");
-		String type        = Objects.requireNonNull(informationSection.getString("Type"));
+		String displayName = information.get("Display_Name").asString().required().orDefault(name);
+		int    size        = information.get("Size").asInt().min(9).required().orDefault(27);
+		String permission  = information.get("Permission").asString().orNull();
+		String type        = information.get("Type").asString().required().orDefault("single-inventory");
 
-		String tempOpenCommand = informationSection.getString("Open.Command");
+		MappingNode openSection = information.get("Open").asMapping().orNull();
+		NodeReader  open        = openSection != null ? NodeReader.of(openSection, report) : null;
+
+		String tempOpenCommand = open == null ? null : open.get("Command").asString().orNull();
 		String openCommand     = null;
 		if (tempOpenCommand != null) {
 			openCommand = (tempOpenCommand.startsWith("/") ? tempOpenCommand : "/" + tempOpenCommand).strip();
 		}
 
-		String openEvent      = informationSection.getString("Open.Event");
-		String openPermission = informationSection.getString("Open.Permission");
+		// Open.Event may be a scalar (event name) OR a mapping (structured event spec consumed by
+		// registerUniqueItemHandler below). Only pick up the scalar form here; leave mapping shapes to the section
+		// reader so we don't flag a spurious config.type.
+		String openEvent = null;
+		if (open != null) {
+			ConfigNode eventNode = open.mapping().get("Event");
+			if (eventNode instanceof ScalarNode scalar) openEvent = scalar.value();
+		}
+
+		String openPermission = open == null ? null : open.get("Permission").asString().orNull();
 
 		if (permission != null) permissionManager.addPermission(permission);
 
+		// InventoryParser reads deeply-nested Slot sub-sections and passes ConfigurationSection into external
+		// SlotEventHandler implementations; keeping it on the Bukkit path avoids a ripple through every handler.
+		// Positional errors for the top-level Information/Configuration sections still surface via `report`.
 		List<Slot> slots        = new ArrayList<>();
 		var        slotsSection = config.getConfigurationSection("Slots");
 		if (slotsSection != null) {
@@ -110,19 +135,34 @@ public class InventoryRuntimeContext {
 			                               slots);
 		}
 
-		var configSection = Objects.requireNonNull(
-				informationSection.getConfigurationSection("Configuration"));
-		boolean       fill       = configSection.getBoolean("Fill");
-		boolean       border     = configSection.getBoolean("Border");
-		List<Integer> vertical   = configSection.getIntegerList("Line.Vertical");
-		List<Integer> horizontal = configSection.getIntegerList("Line.Horizontal");
+		MappingNode   configSection = information.get("Configuration").asMapping().required().orNull();
+		boolean       fill          = false;
+		boolean       border        = false;
+		List<Integer> vertical      = List.of();
+		List<Integer> horizontal    = List.of();
+
+		if (configSection != null) {
+			NodeReader configuration = NodeReader.of(configSection, report);
+			fill   = configuration.get("Fill").asBool().orDefault(false);
+			border = configuration.get("Border").asBool().orDefault(false);
+
+			MappingNode lineSection = configuration.get("Line").asMapping().orNull();
+			if (lineSection != null) {
+				NodeReader line = NodeReader.of(lineSection, report);
+				vertical   = line.get("Vertical").asList().ofInts().orEmpty();
+				horizontal = line.get("Horizontal").asList().ofInts().orEmpty();
+			}
+		}
 
 		List<Pair<State, String>> states = new ArrayList<>();
 		if (openCommand != null) states.add(new Pair<>(State.COMMAND, openCommand));
 
-		if (openEvent != null) {
+		// Legacy non-positional path retained for registerUniqueItemHandler — it still drills into nested sections via
+		// ConfigurationSection. Upstream errors on Information/Open.Event have already been recorded in `report`.
+		ConfigurationSection informationSectionLegacy = config.getConfigurationSection("Information");
+		if (openEvent != null && informationSectionLegacy != null) {
 			states.add(new Pair<>(State.EVENT, openEvent));
-			registerUniqueItemHandler(name, informationSection, openPermission);
+			registerUniqueItemHandler(name, informationSectionLegacy, openPermission);
 		}
 
 		InventoryData inventoryData = new InventoryData(name, displayName, type, size);
@@ -133,13 +173,15 @@ public class InventoryRuntimeContext {
 		inventoryData.setFill(fill);
 		inventoryData.setBorder(border);
 
-		if (type.equalsIgnoreCase("multi-inventory")) {
-			InventoryParser.configureMultiInventory(this, config, informationSection, inventoryData);
+		if (type.equalsIgnoreCase("multi-inventory") && informationSectionLegacy != null) {
+			InventoryParser.configureMultiInventory(this, config, informationSectionLegacy, inventoryData);
 		}
 
 		for (Pair<State, String> state : states) {
 			inventoryData.addOpenInventory(new OpenInventory(state.first(), state.second(), openPermission));
 		}
+
+		if (!report.isEmpty()) report.log(log);
 
 		definitionStore.inventories().put(name, new InventoryBuilder(inventoryData, permission));
 	}

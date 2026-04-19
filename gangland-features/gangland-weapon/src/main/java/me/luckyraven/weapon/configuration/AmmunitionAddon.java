@@ -12,6 +12,7 @@ import me.luckyraven.weapon.ammo.Ammunition;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -35,7 +36,7 @@ public class AmmunitionAddon implements FileInitializer {
 	@Nullable
 	private final Placeholder       placeholder;
 
-	public AmmunitionAddon(FileManager fileManager, AmmunitionManager ammunitionManager,
+	public AmmunitionAddon(FileManager fileManager, @NotNull AmmunitionManager ammunitionManager,
 	                       @Nullable Placeholder placeholder) {
 		this.placeholder = placeholder;
 
@@ -58,9 +59,6 @@ public class AmmunitionAddon implements FileInitializer {
 
 	@Override
 	public void initialize() {
-		Objects.requireNonNull(ammunitionManager,
-		                       "AmmunitionAddon.setAmmunitionManager() must be called before initialize()");
-
 		registerAmmunition(ammunitionManager, fileHandler.getFileConfiguration());
 	}
 

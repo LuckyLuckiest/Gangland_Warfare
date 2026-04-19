@@ -5,9 +5,10 @@ import lombok.CustomLog;
 import lombok.Getter;
 import me.luckyraven.copsncrooks.npc.NpcDifficulty;
 import me.luckyraven.item.ItemParser;
+import me.luckyraven.persistence.config.ConfigReport;
+import me.luckyraven.persistence.config.MappingNode;
+import me.luckyraven.persistence.config.NodeReader;
 import org.bukkit.Material;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -27,61 +28,59 @@ public class YamlCiviliansConfigProvider {
 
 	private final CiviliansConfig config;
 
-	public YamlCiviliansConfigProvider(FileConfiguration yaml, boolean aiEnabled, int aiTickRate,
+	public YamlCiviliansConfigProvider(NodeReader reader, ConfigReport report,
+	                                   boolean aiEnabled, int aiTickRate,
 	                                   @Nullable ItemParser itemParser) {
-		List<String> defaultCivilian = loadDefaultEntities(yaml, "Default_Entities.Civilian");
-		List<String> defaultPolice   = loadDefaultEntities(yaml, "Default_Entities.Police");
+		List<String> defaultCivilian = loadDefaultEntities(reader, "Civilian");
+		List<String> defaultPolice   = loadDefaultEntities(reader, "Police");
 
-		Map<String, CivilianTypeConfig>  types  = loadTypes(yaml, itemParser, aiEnabled);
-		Map<String, CivilianGroupConfig> groups = loadGroups(yaml);
+		Map<String, CivilianTypeConfig>  types  = loadTypes(reader, report, itemParser);
+		Map<String, CivilianGroupConfig> groups = loadGroups(reader, report);
 
 		this.config = new CiviliansConfig(defaultCivilian, defaultPolice, types, groups, aiEnabled, aiTickRate);
 	}
 
 	// ── Loaders ───────────────────────────────────────────────────────────────
 
-	private List<String> loadDefaultEntities(FileConfiguration yaml, String path) {
-		return yaml.getStringList(path);
+	private List<String> loadDefaultEntities(NodeReader reader, String key) {
+		MappingNode defaults = reader.get("Default_Entities").asMapping().orNull();
+		if (defaults == null) return new ArrayList<>();
+
+		return NodeReader.of(defaults, reader.report()).get(key).asList().ofStrings().orEmpty();
 	}
 
-	private Map<String, CivilianTypeConfig> loadTypes(FileConfiguration yaml,
-	                                                  @Nullable ItemParser itemParser,
-	                                                  boolean globalAiEnabled) {
+	private Map<String, CivilianTypeConfig> loadTypes(NodeReader reader, ConfigReport report,
+	                                                  @Nullable ItemParser itemParser) {
 		Map<String, CivilianTypeConfig> result = new LinkedHashMap<>();
 
-		ConfigurationSection typesSection = yaml.getConfigurationSection("Types");
+		MappingNode typesSection = reader.get("Types").asMapping().orNull();
 		if (typesSection == null) return result;
 
-		for (String typeId : typesSection.getKeys(false)) {
-			ConfigurationSection section = typesSection.getConfigurationSection(typeId);
-			if (section == null) continue;
+		NodeReader types = NodeReader.of(typesSection, report);
 
-			String     displayName = section.getString("Display_Name", "&7" + typeId);
-			EntityType entityType  = parseEntityType(section.getString("Entity_Type", "VILLAGER"));
-			double     health      = section.getDouble("Health", 20.0);
-			boolean    hostile     = section.getBoolean("Hostile", false);
+		for (String typeId : types.keys()) {
+			MappingNode typeNode = types.get(typeId).asMapping().required().orNull();
+			if (typeNode == null) continue;
 
-			// Wearables
-			ConfigurationSection wearSection = section.getConfigurationSection("Wearables");
-			CivilianWearableConfig wearables = wearSection == null
-			                                   ? new CivilianWearableConfig("", "", "", "")
-			                                   : new CivilianWearableConfig(
-					wearSection.getString("Helmet", ""),
-					wearSection.getString("Chestplate", ""),
-					wearSection.getString("Leggings", ""),
-					wearSection.getString("Boots", ""));
+			NodeReader type = NodeReader.of(typeNode, report);
 
-			// Item pool (general items given on spawn)
-			List<String> itemPool = section.getStringList("Item_Pool");
+			String displayName = type.get("Display_Name").asString().orDefault("&7" + typeId);
+			EntityType entityType = parseEntityType(
+					type.get("Entity_Type").asString().required().orDefault("VILLAGER"));
+			double  health  = type.get("Health").asDouble().min(0).orDefault(20.0);
+			boolean hostile = type.get("Hostile").asBool().orDefault(false);
 
-			// Weapon pool (same parsing as cop weapon pool)
+			CivilianWearableConfig wearables = parseWearables(type, report);
+
+			List<String> itemPool = type.get("Item_Pool").asList().ofStrings().orEmpty();
+
 			List<String>    weaponNamePool = new ArrayList<>();
 			List<ItemStack> weaponPool     = new ArrayList<>();
 
-			for (String entry : section.getStringList("Weapon_Pool")) {
+			for (String entry : type.get("Weapon_Pool").asList().ofStrings().orEmpty()) {
 				if (entry == null || entry.isBlank()) continue;
 
-				if (entry.toLowerCase().startsWith("weapon:")) {
+				if (entry.toLowerCase(Locale.ROOT).startsWith("weapon:")) {
 					weaponNamePool.add(entry.substring("weapon:".length()).trim());
 				} else {
 					weaponNamePool.add(entry);
@@ -90,21 +89,11 @@ public class YamlCiviliansConfigProvider {
 				}
 			}
 
-			// Drops
-			ConfigurationSection dropsSection = section.getConfigurationSection("Drops");
-			CivilianDropConfig drops = dropsSection == null
-			                           ? new CivilianDropConfig(Collections.emptyList(), 0)
-			                           : new CivilianDropConfig(
-					dropsSection.getStringList("Items"),
-					dropsSection.getDouble("Experience", 0));
+			CivilianDropConfig drops = parseDrops(type, report);
 
-			// AI behavior
-			ConfigurationSection     aiSection = section.getConfigurationSection("AI");
-			CivilianAIBehaviorConfig ai        = parseAI(aiSection, typeId);
+			CivilianAIBehaviorConfig ai = parseAI(type.get("AI").asMapping().orNull(), report, typeId);
 
-			// Inventory (optional — trader type)
-			CivilianInventoryConfig inventory = parseInventory(section.getConfigurationSection("Inventory"),
-			                                                   itemParser);
+			CivilianInventoryConfig inventory = parseInventory(type.get("Inventory").asMapping().orNull(), report);
 
 			result.put(typeId, new CivilianTypeConfig(typeId, displayName, entityType, health, hostile,
 			                                          wearables, itemPool, weaponNamePool, weaponPool,
@@ -114,28 +103,34 @@ public class YamlCiviliansConfigProvider {
 		return result;
 	}
 
-	private Map<String, CivilianGroupConfig> loadGroups(FileConfiguration yaml) {
+	private Map<String, CivilianGroupConfig> loadGroups(NodeReader reader, ConfigReport report) {
 		Map<String, CivilianGroupConfig> result = new LinkedHashMap<>();
 
-		ConfigurationSection groupsSection = yaml.getConfigurationSection("Groups");
+		MappingNode groupsSection = reader.get("Groups").asMapping().orNull();
 		if (groupsSection == null) return result;
 
-		for (String groupId : groupsSection.getKeys(false)) {
-			ConfigurationSection section = groupsSection.getConfigurationSection(groupId);
-			if (section == null) continue;
+		NodeReader groups = NodeReader.of(groupsSection, report);
 
-			String  displayName       = section.getString("Display_Name", "&7" + groupId);
-			boolean hostile           = section.getBoolean("Hostile", false);
-			double  healthBonus       = section.getDouble("Health_Bonus", 0.0);
-			double  speedBonus        = section.getDouble("Speed_Bonus", 0.0);
-			double  stayTogetherRange = section.getDouble("Stay_Together_Range", 20.0);
+		for (String groupId : groups.keys()) {
+			MappingNode groupNode = groups.get(groupId).asMapping().required().orNull();
+			if (groupNode == null) continue;
+
+			NodeReader group = NodeReader.of(groupNode, report);
+
+			String  displayName       = group.get("Display_Name").asString().orDefault("&7" + groupId);
+			boolean hostile           = group.get("Hostile").asBool().orDefault(false);
+			double  healthBonus       = group.get("Health_Bonus").asDouble().orDefault(0.0);
+			double  speedBonus        = group.get("Speed_Bonus").asDouble().orDefault(0.0);
+			double  stayTogetherRange = group.get("Stay_Together_Range").asDouble().min(0).orDefault(20.0);
 
 			Map<String, Integer> members = new LinkedHashMap<>();
 
-			ConfigurationSection membersSection = section.getConfigurationSection("Members");
+			MappingNode membersSection = group.get("Members").asMapping().orNull();
 			if (membersSection != null) {
-				for (String typeId : membersSection.getKeys(false)) {
-					members.put(typeId, membersSection.getInt(typeId, 1));
+				NodeReader membersReader = NodeReader.of(membersSection, report);
+
+				for (String typeId : membersReader.keys()) {
+					members.put(typeId, membersReader.get(typeId).asInt().min(0).orDefault(1));
 				}
 			}
 
@@ -148,32 +143,87 @@ public class YamlCiviliansConfigProvider {
 
 	// ── Parse helpers ─────────────────────────────────────────────────────────
 
-	private CivilianAIBehaviorConfig parseAI(@Nullable ConfigurationSection ai, String typeId) {
-		if (ai == null) {
+	private CivilianWearableConfig parseWearables(NodeReader typeReader, ConfigReport report) {
+		MappingNode wearSection = typeReader.get("Wearables").asMapping().orNull();
+		if (wearSection == null) return new CivilianWearableConfig("", "", "", "");
+
+		NodeReader wear = NodeReader.of(wearSection, report);
+
+		return new CivilianWearableConfig(
+				wear.get("Helmet").asString().orDefault(""),
+				wear.get("Chestplate").asString().orDefault(""),
+				wear.get("Leggings").asString().orDefault(""),
+				wear.get("Boots").asString().orDefault(""));
+	}
+
+	private CivilianDropConfig parseDrops(NodeReader typeReader, ConfigReport report) {
+		MappingNode dropsSection = typeReader.get("Drops").asMapping().orNull();
+		if (dropsSection == null) return new CivilianDropConfig(Collections.emptyList(), 0);
+
+		NodeReader drops = NodeReader.of(dropsSection, report);
+
+		return new CivilianDropConfig(
+				drops.get("Items").asList().ofStrings().orEmpty(),
+				drops.get("Experience").asDouble().min(0).orDefault(0.0));
+	}
+
+	private CivilianAIBehaviorConfig parseAI(@Nullable MappingNode aiSection, ConfigReport report, String typeId) {
+		if (aiSection == null) {
 			return new CivilianAIBehaviorConfig(false, 0, false, 0, false, 0.0, 0.0, 0, NpcDifficulty.NORMAL);
 		}
 
-		boolean wanderEnabled = ai.getBoolean("Wander.Enabled", false);
-		int     wanderRange   = ai.getInt("Wander.Range", 15);
+		NodeReader ai = NodeReader.of(aiSection, report);
 
-		boolean fleeEnabled = ai.getBoolean("Flee_On_Damage.Enabled", false);
-		int     fleeRange   = ai.getInt("Flee_On_Damage.Flee_Range", 15);
+		boolean wanderEnabled = dottedBool(ai, "Wander", "Enabled", report, false);
+		int     wanderRange   = dottedInt(ai, "Wander", "Range", report, 15);
 
-		boolean combatEnabled       = ai.getBoolean("Combat.Enabled", false);
-		double  attackDamage        = ai.getDouble("Combat.Attack_Damage", 2.0);
-		double  attackRange         = ai.getDouble("Combat.Attack_Range", 10.0);
-		int     attackIntervalTicks = ai.getInt("Combat.Attack_Interval_Ticks", 20);
+		boolean fleeEnabled = dottedBool(ai, "Flee_On_Damage", "Enabled", report, false);
+		int     fleeRange   = dottedInt(ai, "Flee_On_Damage", "Flee_Range", report, 15);
 
-		NpcDifficulty difficulty = parseDifficulty(ai.getString("Combat.Difficulty"), "civilian type '" + typeId + "'");
+		MappingNode combatSection = ai.get("Combat").asMapping().orNull();
+		NodeReader  combat        = combatSection != null ? NodeReader.of(combatSection, report) : null;
+
+		boolean combatEnabled = combat != null && combat.get("Enabled").asBool().orDefault(false);
+
+		double attackDamage;
+		double attackRange;
+		int    attackIntervalTicks;
+
+		if (combat == null) {
+			attackDamage        = 2.0;
+			attackRange         = 10.0;
+			attackIntervalTicks = 20;
+		} else if (combatEnabled) {
+			// Combat is on, so these fields must be sensibly set — surface missing/bad values with locations.
+			attackDamage        = combat.get("Attack_Damage").asDouble().min(0).required().orDefault(2.0);
+			attackRange         = combat.get("Attack_Range").asDouble().min(0).required().orDefault(10.0);
+			attackIntervalTicks = combat.get("Attack_Interval_Ticks").asInt().min(1).required().orDefault(20);
+		} else {
+			// Combat is off — values are inert; don't fire range errors on placeholder zeros.
+			attackDamage        = combat.get("Attack_Damage").asDouble().orDefault(2.0);
+			attackRange         = combat.get("Attack_Range").asDouble().orDefault(10.0);
+			attackIntervalTicks = combat.get("Attack_Interval_Ticks").asInt().orDefault(20);
+		}
+
+		NpcDifficulty difficulty = parseDifficulty(combat == null ? null : combat.get("Difficulty").asString().orNull(),
+		                                           "civilian type '" + typeId + "'");
 
 		return new CivilianAIBehaviorConfig(wanderEnabled, wanderRange, fleeEnabled, fleeRange,
 		                                    combatEnabled, attackDamage, attackRange, attackIntervalTicks, difficulty);
 	}
 
-	/**
-	 * Parses a difficulty key from YAML, defaulting to {@link NpcDifficulty#NORMAL} when the value is missing or
-	 * unrecognised. Logs a single warning per invalid value so config typos surface during startup.
-	 */
+	private boolean dottedBool(NodeReader parent, String section, String key, ConfigReport report, boolean def) {
+		MappingNode s = parent.get(section).asMapping().orNull();
+		if (s == null) return def;
+		return NodeReader.of(s, report).get(key).asBool().orDefault(def);
+	}
+
+	private int dottedInt(NodeReader parent, String section, String key, ConfigReport report, int def) {
+		MappingNode s = parent.get(section).asMapping().orNull();
+		if (s == null) return def;
+		return NodeReader.of(s, report).get(key).asInt().orDefault(def);
+	}
+
 	private NpcDifficulty parseDifficulty(@Nullable String raw, String contextLabel) {
 		if (raw == null || raw.isBlank()) return NpcDifficulty.NORMAL;
 		try {
@@ -185,21 +235,24 @@ public class YamlCiviliansConfigProvider {
 	}
 
 	@Nullable
-	private CivilianInventoryConfig parseInventory(@Nullable ConfigurationSection inv,
-	                                               @Nullable ItemParser itemParser) {
-		if (inv == null) return null;
+	private CivilianInventoryConfig parseInventory(@Nullable MappingNode invSection, ConfigReport report) {
+		if (invSection == null) return null;
 
-		String title = inv.getString("Title", "&8Inventory");
-		int    size  = inv.getInt("Size", 27);
+		NodeReader inv = NodeReader.of(invSection, report);
+
+		String title = inv.get("Title").asString().orDefault("&8Inventory");
+		int    size  = inv.get("Size").asInt().min(9).orDefault(27);
 
 		Map<Integer, String> slotItems = new LinkedHashMap<>();
 
-		ConfigurationSection itemsSection = inv.getConfigurationSection("Items");
+		MappingNode itemsSection = inv.get("Items").asMapping().orNull();
 		if (itemsSection != null) {
-			for (String slotKey : itemsSection.getKeys(false)) {
+			NodeReader items = NodeReader.of(itemsSection, report);
+
+			for (String slotKey : items.keys()) {
 				try {
 					int    slot  = Integer.parseInt(slotKey);
-					String entry = itemsSection.getString(slotKey, "");
+					String entry = items.get(slotKey).asString().orDefault("");
 					if (!entry.isBlank()) slotItems.put(slot, entry);
 				} catch (NumberFormatException ignored) { }
 			}
@@ -210,7 +263,7 @@ public class YamlCiviliansConfigProvider {
 
 	private EntityType parseEntityType(String name) {
 		try {
-			return EntityType.valueOf(name.toUpperCase());
+			return EntityType.valueOf(name.toUpperCase(Locale.ROOT));
 		} catch (IllegalArgumentException e) {
 			return EntityType.VILLAGER;
 		}
@@ -223,7 +276,7 @@ public class YamlCiviliansConfigProvider {
 		if (itemParser != null) return itemParser.parse(entry);
 
 		try {
-			Optional<XMaterial> xMat = XMaterial.matchXMaterial(entry.toUpperCase());
+			Optional<XMaterial> xMat = XMaterial.matchXMaterial(entry.toUpperCase(Locale.ROOT));
 			if (xMat.isPresent()) {
 				Material mat = xMat.get().get();
 				if (mat != null) return new ItemStack(mat);

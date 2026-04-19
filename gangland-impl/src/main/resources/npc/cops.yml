@@ -104,7 +104,7 @@ Cops:
             Leggings: "IRON_LEGGINGS"
             Boots: "IRON_BOOTS"
       5:
-         Display_Name: "§4Military"
+         Display_Name: "&4Military"
          Health: 60.0
          Damage: 7.0
          Speed: 1.4

@@ -6,18 +6,18 @@ import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileInitializer;
 import me.luckyraven.persistence.FileManager;
+import me.luckyraven.persistence.config.ConfigReport;
+import me.luckyraven.persistence.config.FileHandlerReader;
+import me.luckyraven.persistence.config.MappingNode;
+import me.luckyraven.persistence.config.NodeReader;
 import me.luckyraven.util.utilities.NumberUtil;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @CustomLog
 public class Settings implements FileInitializer {
@@ -197,6 +197,52 @@ public class Settings implements FileInitializer {
 		return String.valueOf(value);
 	}
 
+	/**
+	 * Descend into {@code key} if it exists as a mapping. Returns {@code null} when absent — the scalar helpers below
+	 * handle null readers by returning the default.
+	 */
+	private static NodeReader section(NodeReader parent, String key, ConfigReport report) {
+		if (parent == null) return null;
+		MappingNode child = parent.get(key).asMapping().orNull();
+		if (child == null) return null;
+		return NodeReader.of(child, report);
+	}
+
+	private static String str(NodeReader parent, String key, String def) {
+		if (parent == null) return def;
+		return parent.get(key).asString().orDefault(def);
+	}
+
+	private static int intVal(NodeReader parent, String key, int def) {
+		if (parent == null) return def;
+		return parent.get(key).asInt().orDefault(def);
+	}
+
+	private static double dbl(NodeReader parent, String key, double def) {
+		if (parent == null) return def;
+		return parent.get(key).asDouble().orDefault(def);
+	}
+
+	private static boolean bool(NodeReader parent, String key, boolean def) {
+		if (parent == null) return def;
+		return parent.get(key).asBool().orDefault(def);
+	}
+
+	// ── Section / scalar helpers ───────────────────────────────────────────────
+	// Settings uses Bukkit's dotted-path convention heavily, but NodeReader only does literal key lookups.
+	// These helpers walk a single step into a sub-mapping and return a reader pinned to it, producing a
+	// wrapper that is safe to invoke with default fallbacks even when the section is absent.
+
+	private static List<String> strList(NodeReader parent, String key) {
+		if (parent == null) return Collections.emptyList();
+		return parent.get(key).asList().ofStrings().orEmpty();
+	}
+
+	private static List<Integer> intList(NodeReader parent, String key) {
+		if (parent == null) return Collections.emptyList();
+		return parent.get(key).asList().ofInts().orEmpty();
+	}
+
 	@Override
 	public FileHandler getFileHandler() {
 		return fileHandler;
@@ -208,349 +254,310 @@ public class Settings implements FileInitializer {
 	}
 
 	private void init() {
-		// update configuration
-		var updateChecker = settings.getConfigurationSection("Update_Checker");
-		Objects.requireNonNull(updateChecker);
+		ConfigReport report = new ConfigReport();
+		NodeReader   root   = FileHandlerReader.read(fileHandler, report);
 
-		updaterEnabled          = updateChecker.getBoolean("Enable", true);
-		notifyPrivilegedPlayers = updateChecker.getBoolean("Notify_Privileged_Players", false);
-		updaterAutoUpdate       = updateChecker.getBoolean("Auto_Update", true);
+		// update configuration
+		NodeReader updateChecker = section(root, "Update_Checker", report);
+		updaterEnabled          = bool(updateChecker, "Enable", true);
+		notifyPrivilegedPlayers = bool(updateChecker, "Notify_Privileged_Players", false);
+		updaterAutoUpdate       = bool(updateChecker, "Auto_Update", true);
 
 		// language picked
-		languagePicked = settings.getString("Language", "en");
+		languagePicked = str(root, "Language", "en");
 
 		// resource pack
-		var resourcePack = settings.getConfigurationSection("Resource_Pack");
-		Objects.requireNonNull(resourcePack);
-
-		resourcePackEnabled = resourcePack.getBoolean("Enable", true);
-		resourcePackUrl     = resourcePack.getString("URL", "");
-		resourcePackKick    = resourcePack.getBoolean("Kick", false);
+		NodeReader resourcePack = section(root, "Resource_Pack", report);
+		resourcePackEnabled = bool(resourcePack, "Enable", true);
+		resourcePackUrl     = str(resourcePack, "URL", "");
+		resourcePackKick    = bool(resourcePack, "Kick", false);
 
 		// database
-		var database = settings.getConfigurationSection("Database");
-		Objects.requireNonNull(database);
+		NodeReader database        = section(root, "Database", report);
+		NodeReader mysql           = section(database, "MySQL", report);
+		NodeReader sqlite          = section(database, "SQLite", report);
+		NodeReader autoSaveSection = section(database, "Auto_Save", report);
+		NodeReader cleanUp         = section(database, "Clean_Up", report);
 
-		databaseType      = database.getString("Type", "sqlite");
-		mysqlHost         = database.getString("MySQL.Host", "localhost");
-		mysqlUsername     = database.getString("MySQL.Username", "root");
-		mysqlPassword     = database.getString("MySQL.Password", "");
-		mysqlPort         = database.getInt("MySQL.Port", 3306);
-		sqliteBackup      = database.getBoolean("SQLite.Backup", true);
-		sqliteFailedMysql = database.getBoolean("SQLite.Failed_MySQL", true);
-		autoSave          = database.getBoolean("Auto_Save.Enable", true);
-		autoSaveDebug     = database.getBoolean("Auto_Save.Debug", true);
-		autoSaveTime      = database.getInt("Auto_Save.Time", 10);
-		cleanUpTime       = database.getDouble("Clean_Up.Time", 30);
+		databaseType      = str(database, "Type", "sqlite");
+		mysqlHost         = str(mysql, "Host", "localhost");
+		mysqlUsername     = str(mysql, "Username", "root");
+		mysqlPassword     = str(mysql, "Password", "");
+		mysqlPort         = intVal(mysql, "Port", 3306);
+		sqliteBackup      = bool(sqlite, "Backup", true);
+		sqliteFailedMysql = bool(sqlite, "Failed_MySQL", true);
+		autoSave          = bool(autoSaveSection, "Enable", true);
+		autoSaveDebug     = bool(autoSaveSection, "Debug", true);
+		autoSaveTime      = intVal(autoSaveSection, "Time", 10);
+		cleanUpTime       = dbl(cleanUp, "Time", 30);
 
 		// inventory
-		var inventory = settings.getConfigurationSection("Inventory");
-		Objects.requireNonNull(inventory);
+		NodeReader inventory      = section(root, "Inventory", report);
+		NodeReader inventoryFill  = section(inventory, "Fill", report);
+		NodeReader inventoryLine  = section(inventory, "Line", report);
+		NodeReader multiInventory = section(inventory, "Multi_Inventory", report);
 
-		inventoryFillItem = inventory.getString("Fill.Item", "BLACK_STAINED_GLASS_PANE");
-		inventoryFillName = inventory.getString("Fill.Name", " ");
-		inventoryLineItem = inventory.getString("Line.Item", "WHITE_STAINED_GLASS_PANE");
-		inventoryLineName = inventory.getString("Line.Name", " ");
+		inventoryFillItem = str(inventoryFill, "Item", "BLACK_STAINED_GLASS_PANE");
+		inventoryFillName = str(inventoryFill, "Name", " ");
+		inventoryLineItem = str(inventoryLine, "Item", "WHITE_STAINED_GLASS_PANE");
+		inventoryLineName = str(inventoryLine, "Name", " ");
 
-		var multiInventory = inventory.getConfigurationSection("Multi_Inventory");
-		Objects.requireNonNull(multiInventory);
-
-		nextPage     = multiInventory.getString("Next_Page",
-		                                        "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTYzMzlmZjJlNTM0MmJhMThiZGM0OGE5OWNjYTY1ZDEyM2NlNzgxZDg3ODI3MmY5ZDk2NGVhZDNiOGFkMzcwIn19fQ==");
-		previousPage = multiInventory.getString("Previous_Page",
-		                                        "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=");
-		homePage     = multiInventory.getString("Home_Page",
-		                                        "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=");
+		nextPage     = str(multiInventory, "Next_Page",
+		                   "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOTYzMzlmZjJlNTM0MmJhMThiZGM0OGE5OWNjYTY1ZDEyM2NlNzgxZDg3ODI3MmY5ZDk2NGVhZDNiOGFkMzcwIn19fQ==");
+		previousPage = str(multiInventory, "Previous_Page",
+		                   "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=");
+		homePage     = str(multiInventory, "Home_Page",
+		                   "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjg0ZjU5NzEzMWJiZTI1ZGMwNThhZjg4OGNiMjk4MzFmNzk1OTliYzY3Yzk1YzgwMjkyNWNlNGFmYmEzMzJmYyJ9fX0=");
 
 		// economy
-		moneySymbol   = settings.getString("Money_Symbol", "$").substring(0, 1);
-		balanceFormat = settings.getString("Balance_Format.Format", "%,.2f");
+		moneySymbol = str(root, "Money_Symbol", "$").substring(0, 1);
+		NodeReader balanceFormatSection = section(root, "Balance_Format", report);
+		balanceFormat = str(balanceFormatSection, "Format", "%,.2f");
 
 		// user
-		var user = settings.getConfigurationSection("User");
-		Objects.requireNonNull(user);
+		NodeReader user    = section(root, "User", report);
+		NodeReader account = section(user, "Account", report);
+		NodeReader bank    = section(user, "Bank", report);
+		NodeReader level   = section(user, "Level", report);
+		NodeReader skill   = section(level, "Skill", report);
 
-		userInitialBalance = user.getDouble("Account.Initial_Balance", 0);
-		userMaxBalance     = user.getDouble("Account.Maximum_Balance", 10_000_000);
-		bankInitialBalance = user.getDouble("Bank.Initial_Balance", 0);
-		bankCreateFee      = user.getDouble("Bank.Create_Cost", 5_000);
-		bankMaxBalance     = user.getDouble("Bank.Maximum_Balance", 1_000_000_000);
-		// user levels
-		userMaxLevel         = user.getInt("Level.Maximum_Level", 100);
-		userLevelBaseAmount  = user.getInt("Level.Base_Amount", 1_000);
-		userLevelFormula     = user.getString("Level.Formula", "base * level ^ 1.5");
-		userSkillUpgrade     = user.getInt("Level.Skill.Upgrade", 1);
-		userSkillCost        = user.getDouble("Level.Skill.Cost", 500);
-		userSkillExponential = user.getDouble("Level.Skill.Exponential", 1.8);
+		userInitialBalance   = dbl(account, "Initial_Balance", 0);
+		userMaxBalance       = dbl(account, "Maximum_Balance", 10_000_000);
+		bankInitialBalance   = dbl(bank, "Initial_Balance", 0);
+		bankCreateFee        = dbl(bank, "Create_Cost", 5_000);
+		bankMaxBalance       = dbl(bank, "Maximum_Balance", 1_000_000_000);
+		userMaxLevel         = intVal(level, "Maximum_Level", 100);
+		userLevelBaseAmount  = intVal(level, "Base_Amount", 1_000);
+		userLevelFormula     = str(level, "Formula", "base * level ^ 1.5");
+		userSkillUpgrade     = intVal(skill, "Upgrade", 1);
+		userSkillCost        = dbl(skill, "Cost", 500);
+		userSkillExponential = dbl(skill, "Exponential", 1.8);
+
 		// user death
-		deathEnabled                 = user.getBoolean("Death.Enable", true);
-		deathMoneyCommandEnabled     = user.getBoolean("Death.Money.Command.Enable", false);
-		deathMoneyCommandExecutables = user.getStringList("Death.Money.Command.Executable");
-		deathLoseMoney               = user.getBoolean("Death.Money.Lose_Money", true);
-		deathLoseMoneyFormula        = user.getString("Death.Money.Formula", "balance * 0.15");
-		deathThreshold               = user.getDouble("Death.Money.Threshold", 1_000);
+		NodeReader death      = section(user, "Death", report);
+		NodeReader deathMoney = section(death, "Money", report);
+		NodeReader deathCmd   = section(deathMoney, "Command", report);
+
+		deathEnabled                 = bool(death, "Enable", true);
+		deathMoneyCommandEnabled     = bool(deathCmd, "Enable", false);
+		deathMoneyCommandExecutables = strList(deathCmd, "Executable");
+		deathLoseMoney               = bool(deathMoney, "Lose_Money", true);
+		deathLoseMoneyFormula        = str(deathMoney, "Formula", "balance * 0.15");
+		deathThreshold               = dbl(deathMoney, "Threshold", 1_000);
 
 		// respawn
-		var respawn = user.getConfigurationSection("Death.Respawn");
-		Objects.requireNonNull(respawn);
+		NodeReader respawn  = section(death, "Respawn", report);
+		NodeReader screen   = section(respawn, "Screen", report);
+		NodeReader gameMode = section(respawn, "GameMode", report);
+		NodeReader teleport = section(respawn, "Teleport", report);
 
-		respawnEnabled          = respawn.getBoolean("Enable", false);
-		respawnDelay            = respawn.getInt("Delay", 10);
-		respawnScreenEnabled    = respawn.getBoolean("Screen.Enable", true);
-		respawnScreenTitle      = respawn.getString("Screen.Title", "&cWASTED");
-		respawnScreenSubtitle   = respawn.getString("Screen.Subtitle", "&7Respawning after &a%time% &7seconds");
-		respawnGameMode         = respawn.getString("GameMode.Change_To", "spectator");
-		respawnGameModeAllowFly = respawn.getBoolean("GameMode.Allow_Fly", true);
-
-		respawnHealthAmount = respawn.getDouble("Health", 20);
-		respawnHungerAmount = respawn.getInt("Hunger", 20);
-
-		respawnTeleportEnabled  = respawn.getBoolean("Teleport.Enable", false);
-		respawnTeleportWaypoint = respawn.getString("Teleport.Waypoint", "spawn");
+		respawnEnabled          = bool(respawn, "Enable", false);
+		respawnDelay            = intVal(respawn, "Delay", 10);
+		respawnScreenEnabled    = bool(screen, "Enable", true);
+		respawnScreenTitle      = str(screen, "Title", "&cWASTED");
+		respawnScreenSubtitle   = str(screen, "Subtitle", "&7Respawning after &a%time% &7seconds");
+		respawnGameMode         = str(gameMode, "Change_To", "spectator");
+		respawnGameModeAllowFly = bool(gameMode, "Allow_Fly", true);
+		respawnHealthAmount     = dbl(respawn, "Health", 20);
+		respawnHungerAmount     = intVal(respawn, "Hunger", 20);
+		respawnTeleportEnabled  = bool(teleport, "Enable", false);
+		respawnTeleportWaypoint = str(teleport, "Waypoint", "spawn");
 
 		// bounty
-		var bounty = settings.getConfigurationSection("Bounty");
-		Objects.requireNonNull(bounty);
+		NodeReader bounty      = section(root, "Bounty", report);
+		NodeReader bountyKill  = section(bounty, "Kill", report);
+		NodeReader bountyTimer = section(bounty, "Repeating_Timer", report);
 
-		bountyEachKillValue = bounty.getDouble("Kill.Each", 5);
-		bountyMaxKill       = bounty.getDouble("Kill.Maximum", 50_000);
-		bountyTimerEnabled  = bounty.getBoolean("Repeating_Timer.Enable", true);
-		bountyTimerMultiple = bounty.getDouble("Repeating_Timer.Multiple", 2);
-		bountyTimeInterval  = bounty.getInt("Repeating_Timer.Time", 300);
-		bountyTimerMax      = bounty.getDouble("Repeating_Timer.Maximum", 20_000);
+		bountyEachKillValue = dbl(bountyKill, "Each", 5);
+		bountyMaxKill       = dbl(bountyKill, "Maximum", 50_000);
+		bountyTimerEnabled  = bool(bountyTimer, "Enable", true);
+		bountyTimerMultiple = dbl(bountyTimer, "Multiple", 2);
+		bountyTimeInterval  = intVal(bountyTimer, "Time", 300);
+		bountyTimerMax      = dbl(bountyTimer, "Maximum", 20_000);
 
 		// wanted
-		var wanted = settings.getConfigurationSection("Wanted");
-		Objects.requireNonNull(wanted);
+		NodeReader wanted             = section(root, "Wanted", report);
+		NodeReader wantedTakeMoney    = section(wanted, "Take_Money", report);
+		NodeReader wantedTimer        = section(wanted, "Repeating_Timer", report);
+		NodeReader wantedMultiplier   = section(wantedTimer, "Multiplier", report);
+		NodeReader wantedLevel        = section(wanted, "Level", report);
+		NodeReader wantedKillComboSec = section(wanted, "Kill_Combo", report);
 
-		wantedEnabled = wanted.getBoolean("Enable", true);
-
-		var wantedTakeMoney = wanted.getConfigurationSection("Take_Money");
-		Objects.requireNonNull(wantedTakeMoney);
-
-		wantedTakeMoneyAmount     = wantedTakeMoney.getDouble("Amount", 50);
-		wantedTakeMoneyMultiplier = wantedTakeMoney.getDouble("Multiplier", 5);
-
-		var wantedTimer = wanted.getConfigurationSection("Repeating_Timer");
-		Objects.requireNonNull(wantedTimer);
-
-		wantedTimerEnabled           = wantedTimer.getBoolean("Enable", true);
-		wantedTimerTime              = wantedTimer.getInt("Time", 120);
-		wantedTimerMultiplierEnabled = wantedTimer.getBoolean("Multiplier.Enable", true);
-		wantedTimerMultiplierAmount  = wantedTimer.getDouble("Multiplier.Amount", 1.1);
-
-		var wantedLevel = wanted.getConfigurationSection("Level");
-		Objects.requireNonNull(wantedLevel);
-
-		wantedLevelIncrement = wantedLevel.getInt("Increment", 1);
-		wantedMaximumLevel   = wantedLevel.getInt("Maximum", 5);
-
-		var wantedKillCombo = wanted.getConfigurationSection("Kill_Combo");
-		Objects.requireNonNull(wantedKillCombo);
-
-		wantedKillComboEnabled    = wantedKillCombo.getBoolean("Enable", true);
-		wantedKillComboResetAfter = wantedKillCombo.getInt("Reset_After", 10);
-		wantedKillCounter         = wantedKillCombo.getIntegerList("Kill_Counter");
+		wantedEnabled                = bool(wanted, "Enable", true);
+		wantedTakeMoneyAmount        = dbl(wantedTakeMoney, "Amount", 50);
+		wantedTakeMoneyMultiplier    = dbl(wantedTakeMoney, "Multiplier", 5);
+		wantedTimerEnabled           = bool(wantedTimer, "Enable", true);
+		wantedTimerTime              = intVal(wantedTimer, "Time", 120);
+		wantedTimerMultiplierEnabled = bool(wantedMultiplier, "Enable", true);
+		wantedTimerMultiplierAmount  = dbl(wantedMultiplier, "Amount", 1.1);
+		wantedLevelIncrement         = intVal(wantedLevel, "Increment", 1);
+		wantedMaximumLevel           = intVal(wantedLevel, "Maximum", 5);
+		wantedKillComboEnabled       = bool(wantedKillComboSec, "Enable", true);
+		wantedKillComboResetAfter    = intVal(wantedKillComboSec, "Reset_After", 10);
+		wantedKillCounter            = intList(wantedKillComboSec, "Kill_Counter");
 
 		// gang
-		gangEnabled          = settings.getBoolean("Gang.Enable", true);
-		gangNameDuplicates   = settings.getBoolean("Gang.Name_Duplicates", false);
-		gangRankHead         = settings.getString("Gang.Rank.Head", "member");
-		gangRankTail         = settings.getString("Gang.Rank.Tail", "owner");
-		gangDisplayNameChar  = settings.getString("Gang.Display_Name_Char", "*").substring(0, 1);
-		gangInitialBalance   = settings.getDouble("Gang.Account.Initial_Balance", 0);
-		gangCreateFee        = settings.getDouble("Gang.Account.Create_Cost", 100_000);
-		gangMaxBalance       = settings.getDouble("Gang.Account.Maximum_Balance", 100_000_000_000.0);
-		gangContributionRate = settings.getDouble("Gang.Account.Contribution_Rate", 1_000);
+		NodeReader gang        = section(root, "Gang", report);
+		NodeReader gangRank    = section(gang, "Rank", report);
+		NodeReader gangAccount = section(gang, "Account", report);
+
+		gangEnabled          = bool(gang, "Enable", true);
+		gangNameDuplicates   = bool(gang, "Name_Duplicates", false);
+		gangRankHead         = str(gangRank, "Head", "member");
+		gangRankTail         = str(gangRank, "Tail", "owner");
+		gangDisplayNameChar  = str(gang, "Display_Name_Char", "*").substring(0, 1);
+		gangInitialBalance   = dbl(gangAccount, "Initial_Balance", 0);
+		gangCreateFee        = dbl(gangAccount, "Create_Cost", 100_000);
+		gangMaxBalance       = dbl(gangAccount, "Maximum_Balance", 100_000_000_000.0);
+		gangContributionRate = dbl(gangAccount, "Contribution_Rate", 1_000);
 
 		// scoreboard
-		scoreboardEnabled = settings.getBoolean("Scoreboard.Enable", true);
-		scoreboardDriver  = settings.getString("Scoreboard.Driver", "Driver_V3");
+		NodeReader scoreboard = section(root, "Scoreboard", report);
+		scoreboardEnabled = bool(scoreboard, "Enable", true);
+		scoreboardDriver  = str(scoreboard, "Driver", "Driver_V3");
 
 		// civilian
-		ConfigurationSection civilian = settings.getConfigurationSection("Civilians");
-		Objects.requireNonNull(civilian);
+		NodeReader civilian                 = section(root, "Civilians", report);
+		NodeReader civilianBehaviour        = section(civilian, "Behaviour", report);
+		NodeReader civilianSpawnerProximity = section(civilian, "Spawner_Proximity", report);
+		NodeReader civiliansSpawn           = section(civilian, "Spawn", report);
 
-		// civilian AI
-		var civilianBehaviour = civilian.getConfigurationSection("Behaviour");
-		Objects.requireNonNull(civilianBehaviour);
+		civilianAiEnabled  = bool(civilianBehaviour, "Enabled", true);
+		civilianAiTickRate = intVal(civilianBehaviour, "AI_Tick_Rate", 20);
 
-		civilianAiEnabled  = civilianBehaviour.getBoolean("Enabled", true);
-		civilianAiTickRate = civilianBehaviour.getInt("AI_Tick_Rate", 20);
+		civilianSpawnerActivationRadius = dbl(civilianSpawnerProximity, "Activation_Radius", 60.0);
+		civilianSpawnerDespawnRadius    = dbl(civilianSpawnerProximity, "Despawn_Radius", 80.0);
+		civilianSpawnerMaxNpcs          = intVal(civilianSpawnerProximity, "Max_Npcs_Per_Spawner", 5);
+		civilianSpawnerCheckInterval    = intVal(civilianSpawnerProximity, "Check_Interval", 100);
+		civilianSpawnerDefaultTypeId    = str(civilianSpawnerProximity, "Default_Type_Id", "");
 
-		// civilian spawner proximity
-		var civilianSpawnerProximity = civilian.getConfigurationSection("Spawner_Proximity");
-		Objects.requireNonNull(civilianSpawnerProximity);
-
-		civilianSpawnerActivationRadius = civilianSpawnerProximity.getDouble("Activation_Radius", 60.0);
-		civilianSpawnerDespawnRadius    = civilianSpawnerProximity.getDouble("Despawn_Radius", 80.0);
-		civilianSpawnerMaxNpcs          = civilianSpawnerProximity.getInt("Max_Npcs_Per_Spawner", 5);
-		civilianSpawnerCheckInterval    = civilianSpawnerProximity.getInt("Check_Interval", 100);
-		civilianSpawnerDefaultTypeId    = civilianSpawnerProximity.getString("Default_Type_Id", "");
-
-		// cop spawn
-		var civiliansSpawn = civilian.getConfigurationSection("Spawn");
-		Objects.requireNonNull(civiliansSpawn);
-
-		civilianSpawnMinDistance             = civiliansSpawn.getDouble("Min_Distance", 10.0);
-		civilianSpawnMaxDistance             = civiliansSpawn.getDouble("Max_Distance", 50.0);
-		civilianSpawnPhase1MinDistance       = civiliansSpawn.getDouble("Phase1_Min_Distance", 30.0);
-		civilianSpawnRadiusShrinkStep        = civiliansSpawn.getDouble("Radius_Shrink_Step", 5.0);
-		civilianSpawnVerticalSearchRange     = civiliansSpawn.getInt("Vertical_Search_Range", 10);
-		civilianSpawnYOffset                 = civiliansSpawn.getInt("Y_Offset", 0);
-		civilianSpawnMinOpenHorizontalSides  = civiliansSpawn.getInt("Min_Open_Sides", 2);
-		civilianSpawnSpawnerPreferenceRadius = civiliansSpawn.getDouble("Spawner_Preference_Radius", 80.0);
-		civilianSpawnVisibilityCheckDistance = civiliansSpawn.getDouble("Visibility_Check_Distance", 48.0);
-		civilianSpawnPhase1Attempts          = civiliansSpawn.getInt("Phase1_Attempts", 20);
-		civilianSpawnPhase2Attempts          = civiliansSpawn.getInt("Phase2_Attempts", 15);
+		civilianSpawnMinDistance             = dbl(civiliansSpawn, "Min_Distance", 10.0);
+		civilianSpawnMaxDistance             = dbl(civiliansSpawn, "Max_Distance", 50.0);
+		civilianSpawnPhase1MinDistance       = dbl(civiliansSpawn, "Phase1_Min_Distance", 30.0);
+		civilianSpawnRadiusShrinkStep        = dbl(civiliansSpawn, "Radius_Shrink_Step", 5.0);
+		civilianSpawnVerticalSearchRange     = intVal(civiliansSpawn, "Vertical_Search_Range", 10);
+		civilianSpawnYOffset                 = intVal(civiliansSpawn, "Y_Offset", 0);
+		civilianSpawnMinOpenHorizontalSides  = intVal(civiliansSpawn, "Min_Open_Sides", 2);
+		civilianSpawnSpawnerPreferenceRadius = dbl(civiliansSpawn, "Spawner_Preference_Radius", 80.0);
+		civilianSpawnVisibilityCheckDistance = dbl(civiliansSpawn, "Visibility_Check_Distance", 48.0);
+		civilianSpawnPhase1Attempts          = intVal(civiliansSpawn, "Phase1_Attempts", 20);
+		civilianSpawnPhase2Attempts          = intVal(civiliansSpawn, "Phase2_Attempts", 15);
 
 		// shared NPC navigation
-		var npcNav = settings.getConfigurationSection("NPC_Navigation");
-		Objects.requireNonNull(npcNav);
-
-		npcNavRecalculationTicks      = npcNav.getInt("Recalculation_Ticks", 10);
-		npcNavStuckCheckInterval      = npcNav.getInt("Stuck_Check_Interval", 5);
-		npcNavMaxStuckChecks          = npcNav.getInt("Max_Stuck_Checks", 3);
-		npcNavMaxHopelessStuckChecks  = npcNav.getInt("Max_Hopeless_Stuck_Checks", 6);
-		npcNavMinRepathAfterLossTicks = npcNav.getInt("Min_Repath_After_Loss_Ticks", 2);
-		npcNavHopelessCloseThreshold  = npcNav.getDouble("Hopeless_Close_Threshold", 8.0);
-		npcNavMinProgressDistance     = npcNav.getDouble("Min_Progress_Distance", 0.75);
-		npcNavRangedMinDistance       = npcNav.getDouble("Ranged_Min_Distance", 7.0);
-		npcNavRangedMaxDistance       = npcNav.getDouble("Ranged_Max_Distance", 12.0);
+		NodeReader npcNav = section(root, "NPC_Navigation", report);
+		npcNavRecalculationTicks      = intVal(npcNav, "Recalculation_Ticks", 10);
+		npcNavStuckCheckInterval      = intVal(npcNav, "Stuck_Check_Interval", 5);
+		npcNavMaxStuckChecks          = intVal(npcNav, "Max_Stuck_Checks", 3);
+		npcNavMaxHopelessStuckChecks  = intVal(npcNav, "Max_Hopeless_Stuck_Checks", 6);
+		npcNavMinRepathAfterLossTicks = intVal(npcNav, "Min_Repath_After_Loss_Ticks", 2);
+		npcNavHopelessCloseThreshold  = dbl(npcNav, "Hopeless_Close_Threshold", 8.0);
+		npcNavMinProgressDistance     = dbl(npcNav, "Min_Progress_Distance", 0.75);
+		npcNavRangedMinDistance       = dbl(npcNav, "Ranged_Min_Distance", 7.0);
+		npcNavRangedMaxDistance       = dbl(npcNav, "Ranged_Max_Distance", 12.0);
 
 		// cop core
-		var cop = settings.getConfigurationSection("Cops");
-		Objects.requireNonNull(cop);
+		NodeReader cop         = section(root, "Cops", report);
+		NodeReader copBehavior = section(cop, "Behaviour", report);
+		NodeReader copsCount   = section(cop, "Count", report);
+		NodeReader copsSpawn   = section(cop, "Spawn", report);
+		NodeReader copsReturn  = section(cop, "Return", report);
 
-		var copBehavior = cop.getConfigurationSection("Behaviour");
-		Objects.requireNonNull(copBehavior);
+		copMaxPerPlayer        = intVal(copBehavior, "Max_Per_Player", 8);
+		copAiTickRate          = intVal(copBehavior, "AI_Tick_Rate", 10);
+		copSpawnCheckRate      = intVal(copBehavior, "Spawn_Check_Rate", 40);
+		copCuffRadius          = dbl(copBehavior, "Cuff_Radius", 3.0);
+		copMaxCuffAttempts     = intVal(copBehavior, "Max_Cuff_Attempts", 3);
+		copCuffCooldownTicks   = intVal(copBehavior, "Cuff_Cooldown_Ticks", 100);
+		copAlertRange          = dbl(copBehavior, "Alert_Range", 40.0);
+		copCombatRange         = dbl(copBehavior, "Combat_Range", 4.0);
+		copAttackCooldownTicks = intVal(copBehavior, "Attack_Cooldown_Ticks", 20);
 
-		copMaxPerPlayer        = copBehavior.getInt("Max_Per_Player", 8);
-		copAiTickRate          = copBehavior.getInt("AI_Tick_Rate", 10);
-		copSpawnCheckRate      = copBehavior.getInt("Spawn_Check_Rate", 40);
-		copCuffRadius          = copBehavior.getDouble("Cuff_Radius", 3.0);
-		copMaxCuffAttempts     = copBehavior.getInt("Max_Cuff_Attempts", 3);
-		copCuffCooldownTicks   = copBehavior.getInt("Cuff_Cooldown_Ticks", 100);
-		copAlertRange          = copBehavior.getDouble("Alert_Range", 40.0);
-		copCombatRange         = copBehavior.getDouble("Combat_Range", 4.0);
-		copAttackCooldownTicks = copBehavior.getInt("Attack_Cooldown_Ticks", 20);
+		copCountFormulaEnabled = bool(copsCount, "Formula_Enabled", false);
+		copCountFormula        = str(copsCount, "Formula", "base + (level - 1) * perLevel");
+		copCountBase           = intVal(copsCount, "Base", 2);
+		copCountPerLevel       = intVal(copsCount, "Per_Level", 1);
+		copCountMax            = intVal(copsCount, "Max", 8);
 
-		// cop count
-		var copsCount = cop.getConfigurationSection("Count");
-		Objects.requireNonNull(copsCount);
+		copSpawnMinDistance             = dbl(copsSpawn, "Min_Distance", 10.0);
+		copSpawnMaxDistance             = dbl(copsSpawn, "Max_Distance", 50.0);
+		copSpawnPhase1MinDistance       = dbl(copsSpawn, "Phase1_Min_Distance", 30.0);
+		copSpawnRadiusShrinkStep        = dbl(copsSpawn, "Radius_Shrink_Step", 5.0);
+		copSpawnVerticalSearchRange     = intVal(copsSpawn, "Vertical_Search_Range", 10);
+		copSpawnYOffset                 = intVal(copsSpawn, "Y_Offset", 0);
+		copSpawnMinOpenHorizontalSides  = intVal(copsSpawn, "Min_Open_Sides", 2);
+		copSpawnSpawnerPreferenceRadius = dbl(copsSpawn, "Spawner_Preference_Radius", 80.0);
+		copSpawnVisibilityCheckDistance = dbl(copsSpawn, "Visibility_Check_Distance", 48.0);
+		copSpawnPhase1Attempts          = intVal(copsSpawn, "Phase1_Attempts", 20);
+		copSpawnPhase2Attempts          = intVal(copsSpawn, "Phase2_Attempts", 15);
 
-		copCountFormulaEnabled = copsCount.getBoolean("Formula_Enabled", false);
-		copCountFormula        = copsCount.getString("Formula", "base + (level - 1) * perLevel");
-		copCountBase           = copsCount.getInt("Base", 2);
-		copCountPerLevel       = copsCount.getInt("Per_Level", 1);
-		copCountMax            = copsCount.getInt("Max", 8);
+		copReturnMaxTicks               = intVal(copsReturn, "Max_Ticks", 600);
+		copReturnStationArrivalDistance = dbl(copsReturn, "Station_Arrival_Distance", 3.0);
 
-		// cop spawn
-		var copsSpawn = cop.getConfigurationSection("Spawn");
-		Objects.requireNonNull(copsSpawn);
-
-		copSpawnMinDistance             = copsSpawn.getDouble("Min_Distance", 10.0);
-		copSpawnMaxDistance             = copsSpawn.getDouble("Max_Distance", 50.0);
-		copSpawnPhase1MinDistance       = copsSpawn.getDouble("Phase1_Min_Distance", 30.0);
-		copSpawnRadiusShrinkStep        = copsSpawn.getDouble("Radius_Shrink_Step", 5.0);
-		copSpawnVerticalSearchRange     = copsSpawn.getInt("Vertical_Search_Range", 10);
-		copSpawnYOffset                 = copsSpawn.getInt("Y_Offset", 0);
-		copSpawnMinOpenHorizontalSides  = copsSpawn.getInt("Min_Open_Sides", 2);
-		copSpawnSpawnerPreferenceRadius = copsSpawn.getDouble("Spawner_Preference_Radius", 80.0);
-		copSpawnVisibilityCheckDistance = copsSpawn.getDouble("Visibility_Check_Distance", 48.0);
-		copSpawnPhase1Attempts          = copsSpawn.getInt("Phase1_Attempts", 20);
-		copSpawnPhase2Attempts          = copsSpawn.getInt("Phase2_Attempts", 15);
-
-		// cop return / despawn
-		var copsReturn = cop.getConfigurationSection("Return");
-		Objects.requireNonNull(copsReturn);
-
-		copReturnMaxTicks               = copsReturn.getInt("Max_Ticks", 600);
-		copReturnStationArrivalDistance = copsReturn.getDouble("Station_Arrival_Distance", 3.0);
-
-		// cop misc
-		copStartingAmmoMagazines = cop.getInt("Starting_Ammo_Magazines", 3);
+		copStartingAmmoMagazines = intVal(cop, "Starting_Ammo_Magazines", 3);
 
 		// detainment
-		var detainment = settings.getConfigurationSection("Detainment");
-		Objects.requireNonNull(detainment);
-
-		// jail
-		var jail = detainment.getConfigurationSection("Jail");
-		Objects.requireNonNull(jail);
-
-		jailMaxCapacity = jail.getInt("Max_Capacity", 10);
+		NodeReader detainment = section(root, "Detainment", report);
+		NodeReader jail       = section(detainment, "Jail", report);
+		jailMaxCapacity = intVal(jail, "Max_Capacity", 10);
 
 		// loot chest
-		var lootChest = settings.getConfigurationSection("Loot_Chest");
-		Objects.requireNonNull(lootChest);
+		NodeReader lootChest        = section(root, "Loot_Chest", report);
+		NodeReader lootChestSound   = section(lootChest, "Sound", report);
+		NodeReader lootChestRewards = section(lootChest, "Rewards", report);
+		NodeReader lootRewardMoney  = section(lootChestRewards, "Money", report);
+		NodeReader lootRewardExp    = section(lootChestRewards, "Experience", report);
 
-		lootChestCountdownTimer = lootChest.getLong("Countdown_Timer", 300);
-		lootChestOpeningSound   = lootChest.getString("Sound.Opening", "BLOCK_CHEST_OPEN");
-		lootChestLockedSound    = lootChest.getString("Sound.Locked", "BLOCK_CHEST_LOCKED");
-		lootChestClosingSound   = lootChest.getString("Sound.Closing", "BLOCK_CHEST_CLOSE");
-		lootChestAllowedBlocks  = lootChest.getStringList("Allowed_Blocks");
+		lootChestCountdownTimer = intVal(lootChest, "Countdown_Timer", 300);
+		lootChestOpeningSound   = str(lootChestSound, "Opening", "BLOCK_CHEST_OPEN");
+		lootChestLockedSound    = str(lootChestSound, "Locked", "BLOCK_CHEST_LOCKED");
+		lootChestClosingSound   = str(lootChestSound, "Closing", "BLOCK_CHEST_CLOSE");
+		lootChestAllowedBlocks  = strList(lootChest, "Allowed_Blocks");
 
-		var lootChestRewards = lootChest.getConfigurationSection("Rewards");
-		Objects.requireNonNull(lootChestRewards);
+		lootChestRewardMoneyMinimum      = dbl(lootRewardMoney, "Minimum", 10);
+		lootChestRewardMoneyMaximum      = dbl(lootRewardMoney, "Maximum", 1_000);
+		lootChestRewardExperienceMinimum = dbl(lootRewardExp, "Minimum", 5);
+		lootChestRewardExperienceMaximum = dbl(lootRewardExp, "Maximum", 100);
+		lootChestRewardCommands          = strList(lootChestRewards, "Commands");
 
-		lootChestRewardMoneyMinimum      = lootChestRewards.getDouble("Money.Minimum", 10);
-		lootChestRewardMoneyMaximum      = lootChestRewards.getDouble("Money.Maximum", 1_000);
-		lootChestRewardExperienceMinimum = lootChestRewards.getDouble("Experience.Minimum", 5);
-		lootChestRewardExperienceMaximum = lootChestRewards.getDouble("Experience.Maximum", 100);
-		lootChestRewardCommands          = lootChestRewards.getStringList("Commands");
-
-		// money drop (cash items)
-		var moneyDrop = settings.getConfigurationSection("Money_Drop");
-		moneyDropEnabled = moneyDrop == null || moneyDrop.getBoolean("Enabled", true);
+		// money drop — optional section; defaults true when missing
+		MappingNode moneyDropNode = root.get("Money_Drop").asMapping().orNull();
+		moneyDropEnabled = moneyDropNode == null ||
+		                   NodeReader.of(moneyDropNode, report).get("Enabled").asBool().orDefault(true);
 
 		// gadgets
-		var gadgets = settings.getConfigurationSection("Gadgets");
-		Objects.requireNonNull(gadgets);
+		NodeReader gadgets       = section(root, "Gadgets", report);
+		NodeReader gadgetJetpack = section(gadgets, "Jetpack", report);
+		NodeReader gadgetCar     = section(gadgets, "Car", report);
 
-		var gadgetsJetpack = gadgets.getConfigurationSection("Jetpack");
-		Objects.requireNonNull(gadgetsJetpack);
+		gadgetJetpackThrustRampTicks = intVal(gadgetJetpack, "Thrust_Ramp_Ticks", 20);
+		gadgetJetpackDescentAccel    = dbl(gadgetJetpack, "Descent_Accel", 0.022);
+		gadgetJetpackMaxDescentSpeed = dbl(gadgetJetpack, "Max_Descent_Speed", -0.5);
+		gadgetJetpackHorizInfluence  = dbl(gadgetJetpack, "Horiz_Influence", 0.03);
+		gadgetJetpackMaxHorizSpeed   = dbl(gadgetJetpack, "Max_Horiz_Speed", 0.25);
 
-		gadgetJetpackThrustRampTicks = gadgetsJetpack.getInt("Thrust_Ramp_Ticks", 20);
-		gadgetJetpackDescentAccel    = gadgetsJetpack.getDouble("Descent_Accel", 0.022);
-		gadgetJetpackMaxDescentSpeed = gadgetsJetpack.getDouble("Max_Descent_Speed", -0.5);
-		gadgetJetpackHorizInfluence  = gadgetsJetpack.getDouble("Horiz_Influence", 0.03);
-		gadgetJetpackMaxHorizSpeed   = gadgetsJetpack.getDouble("Max_Horiz_Speed", 0.25);
-
-		var gadgetsCar = gadgets.getConfigurationSection("Car");
-		Objects.requireNonNull(gadgetsCar);
-
-		gadgetCarReverseSpeedRatio   = gadgetsCar.getDouble("Reverse_Speed_Ratio", 0.5);
-		gadgetCarHardBrakeMultiplier = gadgetsCar.getDouble("Hard_Brake_Multiplier", 3.0);
-		gadgetCarFuelConsumePerTick  = gadgetsCar.getInt("Fuel_Consume_Per_Tick", 1);
+		gadgetCarReverseSpeedRatio   = dbl(gadgetCar, "Reverse_Speed_Ratio", 0.5);
+		gadgetCarHardBrakeMultiplier = dbl(gadgetCar, "Hard_Brake_Multiplier", 3.0);
+		gadgetCarFuelConsumePerTick  = intVal(gadgetCar, "Fuel_Consume_Per_Tick", 1);
 
 		// block regeneration
-		var blockRegeneration = settings.getConfigurationSection("Block_Regeneration");
-		Objects.requireNonNull(blockRegeneration);
-
-		blockRestoreDelayTicks      = blockRegeneration.getInt("Restore_Delay_Ticks", 100);
-		blockRegenerationDelayTicks = blockRegeneration.getInt("Regeneration_Delay_Ticks", 100);
-		blockRegenerationStepTicks  = blockRegeneration.getInt("Regeneration_Step_Ticks", 4);
+		NodeReader blockRegeneration = section(root, "Block_Regeneration", report);
+		blockRestoreDelayTicks      = intVal(blockRegeneration, "Restore_Delay_Ticks", 100);
+		blockRegenerationDelayTicks = intVal(blockRegeneration, "Regeneration_Delay_Ticks", 100);
+		blockRegenerationStepTicks  = intVal(blockRegeneration, "Regeneration_Step_Ticks", 4);
 
 		// trader
-		var trader = settings.getConfigurationSection("Trader");
-		Objects.requireNonNull(trader);
+		NodeReader trader     = section(root, "Trader", report);
+		NodeReader traderSell = section(trader, "Sell", report);
 
-		traderRespawnCooldownSeconds = trader.getInt("Respawn_Cooldown", 60);
-		traderHeadTrackRadius        = trader.getInt("Head_Track_Radius", 8);
-		traderFallbackTraitId        = trader.getString("Fallback_Trait_Id", "easygoing");
-		traderMaxModeMultiplier      = trader.getInt("Max_Mode_Multiplier", 1_000_000);
+		traderRespawnCooldownSeconds = intVal(trader, "Respawn_Cooldown", 60);
+		traderHeadTrackRadius        = intVal(trader, "Head_Track_Radius", 8);
+		traderFallbackTraitId        = str(trader, "Fallback_Trait_Id", "easygoing");
+		traderMaxModeMultiplier      = intVal(trader, "Max_Mode_Multiplier", 1_000_000);
+		traderSellMaxOfferSlots      = intVal(traderSell, "Max_Offer_Slots", 20);
+		traderMoodPerSale            = dbl(traderSell, "Mood_Per_Sale", 0.02);
+		traderTipAmount              = dbl(trader, "Tip_Amount", 100.0);
 
-		var traderSell = trader.getConfigurationSection("Sell");
-		if (traderSell != null) {
-			traderSellMaxOfferSlots = traderSell.getInt("Max_Offer_Slots", 20);
-			traderMoodPerSale       = traderSell.getDouble("Mood_Per_Sale", 0.02);
-		} else {
-			traderSellMaxOfferSlots = 20;
-			traderMoodPerSale       = 0.02;
-		}
-
-		traderTipAmount = trader.getDouble("Tip_Amount", 100.0);
+		if (!report.isEmpty()) report.log(log);
 
 		addEachFieldReflection();
 		convertToPlaceholder();

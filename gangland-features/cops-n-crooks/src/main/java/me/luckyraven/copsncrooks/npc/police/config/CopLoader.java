@@ -8,7 +8,9 @@ import me.luckyraven.item.ItemParser;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileLoader;
 import me.luckyraven.persistence.FileManager;
-import org.bukkit.configuration.file.FileConfiguration;
+import me.luckyraven.persistence.config.ConfigReport;
+import me.luckyraven.persistence.config.FileHandlerReader;
+import me.luckyraven.persistence.config.NodeReader;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
@@ -49,19 +51,23 @@ public class CopLoader extends FileLoader<CopConfig> {
 
 	@Override
 	protected void loadData(Consumer<CopConfig> consumer, FileManager fileManager) {
-		FileConfiguration copsConfig;
+		FileHandler copsHandler;
 
 		try {
 			String copsFileName = "cops";
 			fileManager.checkFileLoaded(copsFileName);
-			FileHandler copsHandler = Objects.requireNonNull(fileManager.getFile(copsFileName));
-			copsConfig = copsHandler.getFileConfiguration();
+			copsHandler = Objects.requireNonNull(fileManager.getFile(copsFileName));
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
 
-		loadedProvider = new YamlCopConfigProvider(copsConfig, copSettings, itemParser);
+		ConfigReport report = new ConfigReport();
+		NodeReader   reader = FileHandlerReader.read(copsHandler, report);
+
+		loadedProvider = new YamlCopConfigProvider(reader, report, copSettings, itemParser);
 		loadedConfig   = CopConfig.fromProvider(loadedProvider);
+
+		if (!report.isEmpty()) report.log(log);
 
 		log.info("Loaded cop config with {} tiers", loadedConfig.getTiers().size());
 

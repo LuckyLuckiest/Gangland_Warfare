@@ -21,17 +21,16 @@ Shoot:
    Cone_Angle: 30.0
    Fire_Duration: 60
    # Fuel units consumed per fire tick
-   Consume_Rate: 4
-   Recoil:
-      Amount: 0.0
-      Push: 0.08
-      Power_Up: 0.0
-      Pattern: []
+   Consume_Rate: 1
    Sound:
       Default_Sound:
          Sound: BLOCK_FIRE_AMBIENT
          Volume: 0.8
-         Pitch: 1.0/c
+         Pitch: 1.0
+      Custom_Sound:
+         Sound: sound.gta.flamethrower_shoot
+         Volume: 1
+         Pitch: 1
 
 Ammunition:
    Ammo_Type: fuel_canister

@@ -8,7 +8,9 @@ import me.luckyraven.item.ItemParser;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileLoader;
 import me.luckyraven.persistence.FileManager;
-import org.bukkit.configuration.file.FileConfiguration;
+import me.luckyraven.persistence.config.ConfigReport;
+import me.luckyraven.persistence.config.FileHandlerReader;
+import me.luckyraven.persistence.config.NodeReader;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,10 +29,8 @@ public class CiviliansLoader extends FileLoader<CiviliansConfig> {
 
 	private CiviliansConfig loadedConfig;
 
-	public CiviliansLoader(JavaPlugin plugin, @Nullable ItemParser itemParser,
-	                       CivilianSettings civilianSettings,
-	                       boolean disable, @Nullable Consumer<CiviliansConfig> consumer,
-	                       FileManager fileManager) {
+	public CiviliansLoader(JavaPlugin plugin, @Nullable ItemParser itemParser, CivilianSettings civilianSettings,
+	                       boolean disable, @Nullable Consumer<CiviliansConfig> consumer, FileManager fileManager) {
 		super(plugin, disable, consumer, fileManager);
 		this.itemParser       = itemParser;
 		this.civilianSettings = civilianSettings;
@@ -48,13 +48,12 @@ public class CiviliansLoader extends FileLoader<CiviliansConfig> {
 
 	@Override
 	protected void loadData(Consumer<CiviliansConfig> consumer, FileManager fileManager) {
-		FileConfiguration yaml;
+		FileHandler handler;
 
 		try {
 			String fileName = "civilians";
 			fileManager.checkFileLoaded(fileName);
-			FileHandler handler = Objects.requireNonNull(fileManager.getFile(fileName));
-			yaml = handler.getFileConfiguration();
+			handler = Objects.requireNonNull(fileManager.getFile(fileName));
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
@@ -62,12 +61,17 @@ public class CiviliansLoader extends FileLoader<CiviliansConfig> {
 		boolean aiEnabled  = civilianSettings.isCivilianAiEnabled();
 		int     aiTickRate = civilianSettings.getCivilianAiTickRate();
 
-		YamlCiviliansConfigProvider provider = new YamlCiviliansConfigProvider(yaml, aiEnabled, aiTickRate,
+		ConfigReport report = new ConfigReport();
+		NodeReader   reader = FileHandlerReader.read(handler, report);
+
+		YamlCiviliansConfigProvider provider = new YamlCiviliansConfigProvider(reader, report, aiEnabled, aiTickRate,
 		                                                                       itemParser);
 		loadedConfig = provider.getConfig();
 
-		log.info("Loaded civilians config with {} types and {} groups",
-		         loadedConfig.types().size(), loadedConfig.groups().size());
+		if (!report.isEmpty()) report.log(log);
+
+		log.info("Loaded civilians config with {} types and {} groups", loadedConfig.types().size(),
+		         loadedConfig.groups().size());
 
 		if (consumer != null) {
 			consumer.accept(loadedConfig);

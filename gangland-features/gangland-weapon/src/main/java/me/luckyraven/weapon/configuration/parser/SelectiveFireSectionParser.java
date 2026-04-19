@@ -1,8 +1,10 @@
 package me.luckyraven.weapon.configuration.parser;
 
+import me.luckyraven.persistence.config.ConfigReport;
+import me.luckyraven.persistence.config.NodeReader;
 import me.luckyraven.weapon.SelectiveFire;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -31,21 +33,24 @@ public final class SelectiveFireSectionParser {
 	}
 
 	/**
-	 * Parses the {@code Selective_Fire} and {@code Allowed_Modes} keys from the given shoot section. Returns
-	 * {@code null} if neither key is present (caller treats this as "weapon has no selective fire").
+	 * Parses the {@code Selective_Fire} and {@code Allowed_Modes} keys from the given shoot reader. Returns
+	 * {@code null} if the {@code Selective_Fire} key is absent (caller treats this as "weapon has no selective fire").
 	 */
-	public static ParsedSelectiveFire parse(ConfigurationSection shootSection, String fileName)
+	@Nullable
+	public static ParsedSelectiveFire parse(@Nullable NodeReader shoot, ConfigReport report, String fileName)
 			throws InvalidConfigurationException {
-		if (shootSection == null) return null;
+		if (shoot == null) return null;
 
-		String currentString = shootSection.getString("Selective_Fire");
+		String currentString = shoot.get("Selective_Fire").asString().orNull();
 		if (currentString == null) return null;
 
 		SelectiveFire current = SelectiveFire.getType(currentString);
 
 		Set<SelectiveFire> allowed;
-		if (shootSection.isList("Allowed_Modes")) {
-			List<String> rawList = shootSection.getStringList("Allowed_Modes");
+
+		List<String> rawList = shoot.get("Allowed_Modes").asList().ofStrings().orNull();
+
+		if (rawList != null) {
 			allowed = EnumSet.noneOf(SelectiveFire.class);
 			for (String raw : rawList) {
 				allowed.add(SelectiveFire.getType(raw));

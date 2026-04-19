@@ -47,6 +47,32 @@ public final class NodeReader {
 		return parent + "." + key;
 	}
 
+	/**
+	 * Strips digit-grouping underscores from a numeric YAML scalar so {@code "10_000_000"} parses the same way Bukkit's
+	 * {@code YamlConfiguration.getInt/getDouble} used to accept it. Leaves leading signs and exponents intact; never
+	 * merges non-digit characters across underscores (so a typo like {@code 1_a0} still fails).
+	 */
+	private static String normalizeNumeric(String raw) {
+		String trimmed = raw.trim();
+
+		if (trimmed.indexOf('_') < 0) return trimmed;
+
+		StringBuilder builder = new StringBuilder(trimmed.length());
+
+		for (int i = 0; i < trimmed.length(); i++) {
+			char c = trimmed.charAt(i);
+
+			if (c == '_' && i > 0 && i < trimmed.length() - 1 && Character.isDigit(trimmed.charAt(i - 1)) &&
+			    Character.isDigit(trimmed.charAt(i + 1))) {
+				continue;
+			}
+
+			builder.append(c);
+		}
+
+		return builder.toString();
+	}
+
 	private static void recordIfMissing(State state, SourceLocation loc, String path, String typeName,
 	                                    ConfigReport report) {
 		if (state == State.MISSING) {
@@ -185,11 +211,11 @@ public final class NodeReader {
 
 			if (node instanceof ScalarNode scalar) {
 				try {
-					return new IntAccess(Integer.parseInt(scalar.value().trim()), State.VALID,
-					                     path, scalar.location(), report);
+					return new IntAccess(Integer.parseInt(normalizeNumeric(scalar.value())), State.VALID, path,
+					                     scalar.location(), report);
 				} catch (NumberFormatException e) {
-					report.add(Severity.ERROR, scalar.location(), path,
-					           "expected int, got \"" + scalar.value() + "\"", "config.int");
+					report.add(Severity.ERROR, scalar.location(), path, "expected int, got \"" + scalar.value() + "\"",
+					           "config.int");
 					return new IntAccess(0, State.INVALID, path, scalar.location(), report);
 				}
 			}
@@ -210,8 +236,8 @@ public final class NodeReader {
 
 			if (node instanceof ScalarNode scalar) {
 				try {
-					return new DoubleAccess(Double.parseDouble(scalar.value().trim()), State.VALID,
-					                        path, scalar.location(), report);
+					return new DoubleAccess(Double.parseDouble(normalizeNumeric(scalar.value())), State.VALID, path,
+					                        scalar.location(), report);
 				} catch (NumberFormatException e) {
 					report.add(Severity.ERROR, scalar.location(), path,
 					           "expected number, got \"" + scalar.value() + "\"", "config.double");
@@ -244,8 +270,8 @@ public final class NodeReader {
 					return new BoolAccess(false, State.VALID, path, scalar.location(), report);
 				}
 
-				report.add(Severity.ERROR, scalar.location(), path,
-				           "expected boolean, got \"" + scalar.value() + "\"", "config.bool");
+				report.add(Severity.ERROR, scalar.location(), path, "expected boolean, got \"" + scalar.value() + "\"",
+				           "config.bool");
 				return new BoolAccess(false, State.INVALID, path, scalar.location(), report);
 			}
 
@@ -398,8 +424,7 @@ public final class NodeReader {
 
 		public IntAccess min(int min) {
 			if (state == State.VALID && value < min) {
-				report.add(Severity.ERROR, loc, path,
-				           "value " + value + " below minimum " + min, "config.range");
+				report.add(Severity.ERROR, loc, path, "value " + value + " below minimum " + min, "config.range");
 				state = State.INVALID;
 			}
 			return this;
@@ -407,8 +432,7 @@ public final class NodeReader {
 
 		public IntAccess max(int max) {
 			if (state == State.VALID && value > max) {
-				report.add(Severity.ERROR, loc, path,
-				           "value " + value + " above maximum " + max, "config.range");
+				report.add(Severity.ERROR, loc, path, "value " + value + " above maximum " + max, "config.range");
 				state = State.INVALID;
 			}
 			return this;
@@ -450,8 +474,7 @@ public final class NodeReader {
 
 		public DoubleAccess min(double min) {
 			if (state == State.VALID && value < min) {
-				report.add(Severity.ERROR, loc, path,
-				           "value " + value + " below minimum " + min, "config.range");
+				report.add(Severity.ERROR, loc, path, "value " + value + " below minimum " + min, "config.range");
 				state = State.INVALID;
 			}
 			return this;
@@ -459,8 +482,7 @@ public final class NodeReader {
 
 		public DoubleAccess max(double max) {
 			if (state == State.VALID && value > max) {
-				report.add(Severity.ERROR, loc, path,
-				           "value " + value + " above maximum " + max, "config.range");
+				report.add(Severity.ERROR, loc, path, "value " + value + " above maximum " + max, "config.range");
 				state = State.INVALID;
 			}
 			return this;
@@ -587,7 +609,7 @@ public final class NodeReader {
 		public TypedListAccess<Integer> ofInts() {
 			return collect("int", (ScalarNode s) -> {
 				try {
-					return Integer.parseInt(s.value().trim());
+					return Integer.parseInt(normalizeNumeric(s.value()));
 				} catch (NumberFormatException e) {
 					return null;
 				}
@@ -597,7 +619,7 @@ public final class NodeReader {
 		public TypedListAccess<Double> ofDoubles() {
 			return collect("number", (ScalarNode s) -> {
 				try {
-					return Double.parseDouble(s.value().trim());
+					return Double.parseDouble(normalizeNumeric(s.value()));
 				} catch (NumberFormatException e) {
 					return null;
 				}

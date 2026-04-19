@@ -1,14 +1,14 @@
 package me.luckyraven.weapon.configuration.parser;
 
+import me.luckyraven.persistence.config.ConfigReport;
+import me.luckyraven.persistence.config.NodeReader;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.configuration.parser.AmmunitionSectionParser.ParsedAmmo;
 import me.luckyraven.weapon.dto.AmmunitionData;
 import me.luckyraven.weapon.dto.MeleeData;
 import me.luckyraven.weapon.dto.ReloadData;
 import me.luckyraven.weapon.types.melee.MeleeWeapon;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
 
 /**
  * Parses the {@code Attack:} / {@code Shoot:} section of a MELEE weapon YAML and constructs a {@link MeleeWeapon}.
@@ -21,18 +21,19 @@ public class MeleeWeaponParser {
 		this.ammoParser = new AmmunitionSectionParser(ammunitionManager);
 	}
 
-	public MeleeWeapon parse(FileConfiguration config, ConfigurationSection shootSection,
-	                         WeaponBaseData base) throws InvalidConfigurationException {
-		if (shootSection == null)
+	public MeleeWeapon parse(NodeReader root, NodeReader shoot, ConfigReport report, WeaponBaseData base)
+			throws InvalidConfigurationException {
+		if (shoot == null) {
 			throw new InvalidConfigurationException("Attack/Shoot section not found for melee weapon");
+		}
 
-		double damage    = shootSection.getDouble("Damage", 4.0);
-		double range     = shootSection.getDouble("Range", 2.5);
-		int    cooldown  = shootSection.getInt("Cooldown", 10);
-		double knockback = shootSection.getDouble("Knockback", 0.5);
+		double damage    = shoot.get("Damage").asDouble().min(0).required().orDefault(4.0);
+		double range     = shoot.get("Range").asDouble().min(0).required().orDefault(2.5);
+		int    cooldown  = shoot.get("Cooldown").asInt().min(0).orDefault(10);
+		double knockback = shoot.get("Knockback").asDouble().orDefault(0.5);
 
 		MeleeData      meleeData      = new MeleeData(damage, range, cooldown, knockback);
-		ParsedAmmo     parsed         = ammoParser.parse(config);
+		ParsedAmmo     parsed         = ammoParser.parse(root, report);
 		ReloadData     reloadData     = parsed != null ? parsed.reload() : null;
 		AmmunitionData ammunitionData = parsed != null ? parsed.ammo() : null;
 

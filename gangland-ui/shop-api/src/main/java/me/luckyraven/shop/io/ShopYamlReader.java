@@ -2,6 +2,9 @@ package me.luckyraven.shop.io;
 
 import lombok.CustomLog;
 import me.luckyraven.persistence.FileHandler;
+import me.luckyraven.persistence.config.ConfigReport;
+import me.luckyraven.persistence.config.FileHandlerReader;
+import me.luckyraven.persistence.config.NodeReader;
 import me.luckyraven.shop.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -34,20 +37,28 @@ public final class ShopYamlReader {
 	private static final String DEFAULT_TITLE = "Trader";
 
 	public ShopDefinition parse(String key, FileHandler fileHandler) {
-		FileConfiguration cfg = fileHandler.getFileConfiguration();
+		FileConfiguration cfg    = fileHandler.getFileConfiguration();
+		ConfigReport      report = new ConfigReport();
+		NodeReader        root   = FileHandlerReader.read(fileHandler, report);
 
-		String title = cfg.getString(KEY_TITLE, DEFAULT_TITLE);
-		int    size  = cfg.getInt(KEY_SIZE, DEFAULT_SIZE);
+		String title = root.get(KEY_TITLE).asString().orDefault(DEFAULT_TITLE);
+		int    size  = root.get(KEY_SIZE).asInt().orDefault(DEFAULT_SIZE);
 
 		if (size <= 0 || size > 54 || size % 9 != 0) {
 			log.warn("Shop '{}' has invalid size {}; falling back to {}", key, size, DEFAULT_SIZE);
 			size = DEFAULT_SIZE;
 		}
 
+		// Entries carry Bukkit-serialized ItemStacks that require the FileConfiguration path for deserialization;
+		// the NodeReader positional layer cannot rebuild an ItemStack from its serialization map. Keep cfg for
+		// those reads — the admin-facing value of located errors on `slot` or `price` is small since entries are
+		// written primarily by ShopYamlWriter, not hand-edited.
 		List<ShopItemEntry>  buyEntries       = readEntries(key, cfg, KEY_BUY_ENTRIES, EntryKind.BUY);
 		List<ShopItemEntry>  sellEntries      = readEntries(key, cfg, KEY_SELL_ENTRIES, EntryKind.SELL);
 		List<SellCategory>   sellCategories   = readSellCategories(key, cfg);
 		List<BarterCategory> barterCategories = readBarterCategories(key, cfg);
+
+		if (!report.isEmpty()) report.log(log);
 
 		return new ShopDefinition(key, title, size, buyEntries, sellEntries, sellCategories, barterCategories);
 	}

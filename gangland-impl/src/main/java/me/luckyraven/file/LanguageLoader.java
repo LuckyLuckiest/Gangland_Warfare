@@ -7,6 +7,8 @@ import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.YamlMessageProvider;
 import me.luckyraven.persistence.FileManager;
+import me.luckyraven.persistence.config.ConfigParser;
+import me.luckyraven.persistence.config.ConfigReport;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.UnhandledError;
 import me.luckyraven.util.autowire.bean.BeanLifecycle;
@@ -14,8 +16,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -49,6 +50,7 @@ public class LanguageLoader implements BeanLifecycle {
 	public void initialize() {
 		try {
 			message = loadMessage(fileManager);
+			reportSyntaxErrors();
 		} catch (IOException | InvalidConfigurationException exception) {
 			log.warn("{}: {}", UnhandledError.FILE_LOADER_ERROR, exception.getMessage());
 
@@ -109,6 +111,34 @@ public class LanguageLoader implements BeanLifecycle {
 		String fileLoc = Path.of("message", "message_" + lang + ".yml").toString();
 
 		return manager.loadFromResources(fileLoc);
+	}
+
+	/**
+	 * Positional pass over the same message file. Bukkit's {@code YamlConfiguration.load} already threw on structural
+	 * problems by the time we get here; this pass picks up softer YAML-lint findings (duplicate keys, etc.) with
+	 * {@code message_<lang>.yml:L:C} locations so translators know where to look.
+	 */
+	private void reportSyntaxErrors() {
+		String lang     = Settings.getLanguagePicked();
+		String fileLoc  = Path.of("message", "message_" + lang + ".yml").toString();
+		File   diskFile = new File(gangland.getDataFolder().getAbsolutePath(), fileLoc);
+
+		try (InputStream inputStream = diskFile.exists()
+		                               ? new FileInputStream(diskFile)
+		                               : gangland.getResource(fileLoc.replace(File.separator, "/"))) {
+
+			if (inputStream == null) return;
+
+			ConfigReport report = new ConfigReport();
+
+			try (InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+				new ConfigParser().parse(diskFile.toPath(), reader, report);
+			}
+
+			if (!report.isEmpty()) report.log(log);
+		} catch (IOException ignored) {
+			// Primary load succeeded; a secondary IO failure here is non-fatal.
+		}
 	}
 
 }

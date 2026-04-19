@@ -1,5 +1,7 @@
 package me.luckyraven.weapon.configuration.parser;
 
+import me.luckyraven.persistence.config.ConfigReport;
+import me.luckyraven.persistence.config.NodeReader;
 import me.luckyraven.weapon.SelectiveFire;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.configuration.parser.AmmunitionSectionParser.ParsedAmmo;
@@ -7,9 +9,7 @@ import me.luckyraven.weapon.dto.AmmunitionData;
 import me.luckyraven.weapon.dto.IncendiaryData;
 import me.luckyraven.weapon.dto.ReloadData;
 import me.luckyraven.weapon.types.incendiary.IncendiaryWeapon;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.EnumSet;
 
@@ -24,19 +24,20 @@ public class IncendiaryWeaponParser {
 		this.ammoParser = new AmmunitionSectionParser(ammunitionManager);
 	}
 
-	public IncendiaryWeapon parse(FileConfiguration config, ConfigurationSection shootSection,
-	                              WeaponBaseData base) throws InvalidConfigurationException {
-		if (shootSection == null)
+	public IncendiaryWeapon parse(NodeReader root, NodeReader shoot, ConfigReport report, WeaponBaseData base)
+			throws InvalidConfigurationException {
+		if (shoot == null) {
 			throw new InvalidConfigurationException("Shoot section not found for incendiary weapon");
+		}
 
-		double coneAngle    = shootSection.getDouble("Cone_Angle", 30.0);
-		double range        = shootSection.getDouble("Range", 5.0);
-		int    tickRate     = shootSection.getInt("Rate", 2);
-		int    fireDuration = shootSection.getInt("Fire_Duration", 60);
-		int    consumeRate  = shootSection.getInt("Consume_Rate", 1);
+		double coneAngle    = shoot.get("Cone_Angle").asDouble().min(0).orDefault(30.0);
+		double range        = shoot.get("Range").asDouble().min(0).orDefault(5.0);
+		int    tickRate     = shoot.get("Rate").asInt().min(1).orDefault(2);
+		int    fireDuration = shoot.get("Fire_Duration").asInt().min(0).orDefault(60);
+		int    consumeRate  = shoot.get("Consume_Rate").asInt().min(0).orDefault(1);
 
 		IncendiaryData incendiaryData = new IncendiaryData(coneAngle, range, fireDuration, tickRate, consumeRate);
-		ParsedAmmo     parsed         = ammoParser.parse(config);
+		ParsedAmmo     parsed         = ammoParser.parse(root, report);
 		ReloadData     reloadData     = parsed != null ? parsed.reload() : null;
 		AmmunitionData ammunitionData = parsed != null ? parsed.ammo() : null;
 
@@ -45,10 +46,8 @@ public class IncendiaryWeaponParser {
 		                                               base.lore(), base.dropHologram(), base.deathMessages(),
 		                                               incendiaryData, reloadData, ammunitionData);
 
-		// Selective fire is optional for incendiary — defaults to AUTO + [auto] when absent so existing yml that
-		// predates the selective-fire integration keeps the old "spray on right-click" behaviour.
-		SelectiveFireSectionParser.ParsedSelectiveFire parsedSelectiveFire = SelectiveFireSectionParser.parse(
-				shootSection, base.fileName());
+		SelectiveFireSectionParser.ParsedSelectiveFire parsedSelectiveFire =
+				SelectiveFireSectionParser.parse(shoot, report, base.fileName());
 		if (parsedSelectiveFire != null) {
 			weapon.setCurrentSelectiveFire(parsedSelectiveFire.current());
 			weapon.setAllowedSelectiveFires(parsedSelectiveFire.allowed());

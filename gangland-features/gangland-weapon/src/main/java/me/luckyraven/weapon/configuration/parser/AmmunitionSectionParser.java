@@ -1,12 +1,13 @@
 package me.luckyraven.weapon.configuration.parser;
 
+import me.luckyraven.persistence.config.ConfigReport;
+import me.luckyraven.persistence.config.MappingNode;
+import me.luckyraven.persistence.config.NodeReader;
 import me.luckyraven.weapon.ammo.Ammunition;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.dto.AmmunitionData;
 import me.luckyraven.weapon.dto.ReloadData;
 import me.luckyraven.weapon.reload.ReloadType;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -23,31 +24,37 @@ public class AmmunitionSectionParser {
 	}
 
 	@Nullable
-	public ParsedAmmo parse(FileConfiguration config) {
-		ConfigurationSection ammoSection = config.getConfigurationSection("Ammunition");
+	public ParsedAmmo parse(NodeReader root, ConfigReport report) {
+		MappingNode ammoSection = root.get("Ammunition").asMapping().orNull();
 		if (ammoSection == null) return null;
 
-		String     ammoTypeString = ammoSection.getString("Ammo_Type");
+		NodeReader ammo = NodeReader.of(ammoSection, report);
+
+		String     ammoTypeString = ammo.get("Ammo_Type").asString().required().orNull();
 		Ammunition ammoType       = ammoTypeString != null ? ammunitionManager.getAmmunition(ammoTypeString) : null;
 		if (ammoType == null) return null;
 
-		int capacity = ammoSection.getInt("Capacity", 0);
-		int consume  = ammoSection.getInt("Consume", 1);
-		int restore  = ammoSection.getInt("Restore", capacity);
+		int capacity = ammo.get("Capacity").asInt().min(0).orDefault(0);
+		int consume  = ammo.get("Consume").asInt().min(0).orDefault(1);
+		int restore  = ammo.get("Restore").asInt().min(0).orDefault(capacity);
 
 		int        cooldown   = 0;
 		ReloadType reloadType = ReloadType.getType("instant");
 
-		ConfigurationSection reloadSection = config.getConfigurationSection("Reload");
+		MappingNode reloadSection = root.get("Reload").asMapping().orNull();
 		if (reloadSection != null) {
-			cooldown = reloadSection.getInt("Cooldown", 0);
+			NodeReader reload = NodeReader.of(reloadSection, report);
 
-			String typeStr    = reloadSection.getString("Type", "instant");
+			cooldown = reload.get("Cooldown").asInt().min(0).orDefault(0);
+
+			String typeStr    = reload.get("Type").asString().orDefault("instant");
 			int    typeAmount = 1;
 			if (typeStr.contains("-")) {
 				String[] parts = typeStr.split("-");
-				typeStr    = parts[0];
-				typeAmount = Integer.parseInt(parts[1]);
+				typeStr = parts[0];
+				try {
+					typeAmount = Integer.parseInt(parts[1]);
+				} catch (NumberFormatException ignored) { }
 			}
 			reloadType = ReloadType.getType(typeStr);
 			reloadType.setAmount(typeAmount);

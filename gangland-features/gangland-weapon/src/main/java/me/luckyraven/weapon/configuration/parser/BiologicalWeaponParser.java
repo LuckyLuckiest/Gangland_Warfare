@@ -1,5 +1,7 @@
 package me.luckyraven.weapon.configuration.parser;
 
+import me.luckyraven.persistence.config.ConfigReport;
+import me.luckyraven.persistence.config.NodeReader;
 import me.luckyraven.weapon.SelectiveFire;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.configuration.parser.AmmunitionSectionParser.ParsedAmmo;
@@ -7,9 +9,7 @@ import me.luckyraven.weapon.dto.AmmunitionData;
 import me.luckyraven.weapon.dto.BiologicalData;
 import me.luckyraven.weapon.dto.ReloadData;
 import me.luckyraven.weapon.types.biological.BiologicalWeapon;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -25,20 +25,21 @@ public class BiologicalWeaponParser {
 		this.ammoParser = new AmmunitionSectionParser(ammunitionManager);
 	}
 
-	public BiologicalWeapon parse(FileConfiguration config, ConfigurationSection shootSection,
-	                              WeaponBaseData base) throws InvalidConfigurationException {
-		if (shootSection == null)
+	public BiologicalWeapon parse(NodeReader root, NodeReader shoot, ConfigReport report, WeaponBaseData base)
+			throws InvalidConfigurationException {
+		if (shoot == null) {
 			throw new InvalidConfigurationException("Shoot section not found for biological weapon");
+		}
 
-		int          chargeTimePerLevel = shootSection.getInt("Charge_Time_Per_Level", 20);
-		int          maxChargeLevel     = shootSection.getInt("Max_Charge_Level", 3);
-		double       range              = shootSection.getDouble("Range", 30.0);
-		double       baseDamage         = shootSection.getDouble("Base_Damage", 4.0);
-		List<String> effectsPerLevel    = shootSection.getStringList("Effects_Per_Level");
+		int          chargeTimePerLevel = shoot.get("Charge_Time_Per_Level").asInt().min(1).orDefault(20);
+		int          maxChargeLevel     = shoot.get("Max_Charge_Level").asInt().min(1).orDefault(3);
+		double       range              = shoot.get("Range").asDouble().min(0).orDefault(30.0);
+		double       baseDamage         = shoot.get("Base_Damage").asDouble().min(0).orDefault(4.0);
+		List<String> effectsPerLevel    = shoot.get("Effects_Per_Level").asList().ofStrings().orEmpty();
 
 		BiologicalData biologicalData = new BiologicalData(chargeTimePerLevel, maxChargeLevel, effectsPerLevel,
 		                                                   range, baseDamage);
-		ParsedAmmo     parsed         = ammoParser.parse(config);
+		ParsedAmmo     parsed         = ammoParser.parse(root, report);
 		ReloadData     reloadData     = parsed != null ? parsed.reload() : null;
 		AmmunitionData ammunitionData = parsed != null ? parsed.ammo() : null;
 
@@ -47,10 +48,8 @@ public class BiologicalWeaponParser {
 		                                               base.lore(), base.dropHologram(), base.deathMessages(),
 		                                               biologicalData, reloadData, ammunitionData);
 
-		// Selective fire is optional for biological. The actual mechanic is the same regardless of mode (charge then
-		// release), but the field is set so the listener doesn't NPE on Shift-F. Default = SINGLE locked.
-		SelectiveFireSectionParser.ParsedSelectiveFire parsedSelectiveFire = SelectiveFireSectionParser.parse(
-				shootSection, base.fileName());
+		SelectiveFireSectionParser.ParsedSelectiveFire parsedSelectiveFire =
+				SelectiveFireSectionParser.parse(shoot, report, base.fileName());
 		if (parsedSelectiveFire != null) {
 			weapon.setCurrentSelectiveFire(parsedSelectiveFire.current());
 			weapon.setAllowedSelectiveFires(parsedSelectiveFire.allowed());

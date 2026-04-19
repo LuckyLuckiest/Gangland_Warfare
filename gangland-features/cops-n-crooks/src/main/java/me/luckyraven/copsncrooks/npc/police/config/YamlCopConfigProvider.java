@@ -4,16 +4,17 @@ import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
 import me.luckyraven.copsncrooks.npc.NpcDifficulty;
 import me.luckyraven.item.ItemParser;
+import me.luckyraven.persistence.config.ConfigReport;
+import me.luckyraven.persistence.config.MappingNode;
+import me.luckyraven.persistence.config.NodeReader;
 import org.bukkit.Material;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 /**
- * Reads cop configuration from a YAML {@link FileConfiguration}.
+ * Reads cop configuration from a positional {@link NodeReader}.
  * <p>
  * Armor and weapon-pool entries are resolved through the shared {@link ItemParser} so that custom item syntax
  * ({@code weapon:rifle}, {@code LEATHER_HELMET\{color=blue\}}, etc.) is supported in addition to plain vanilla material
@@ -68,13 +69,15 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final int startingAmmoMagazines;
 
 	/**
-	 * @param copsConfig the {@code cops.yml} configuration
-	 * @param copSettings cop-count-per-wanted-level provider (may be {@code null}; linear defaults are used)
-	 * @param itemParser item parser for weapon pool and armor entries (may be {@code null}; falls back to plain
-	 * 		Material parsing)
+	 * Primary positional-config constructor.
+	 *
+	 * @param copsReader positional reader over the cops.yml root mapping
+	 * @param report issue collector drained by the enclosing loader
+	 * @param copSettings cop-count-per-wanted-level provider (may be {@code null})
+	 * @param itemParser item parser for weapon pool and armor entries (may be {@code null})
 	 */
-	public YamlCopConfigProvider(FileConfiguration copsConfig, @Nullable CopSettings copSettings,
-	                             @Nullable ItemParser itemParser) {
+	public YamlCopConfigProvider(NodeReader copsReader, ConfigReport report,
+	                             @Nullable CopSettings copSettings, @Nullable ItemParser itemParser) {
 		this.tiers              = new LinkedHashMap<>();
 		this.copsPerWantedLevel = new LinkedHashMap<>();
 
@@ -88,7 +91,6 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.combatRange         = copSettings != null ? copSettings.getCombatRange() : 4.0;
 		this.attackCooldownTicks = copSettings != null ? copSettings.getAttackCooldownTicks() : 20;
 
-		// Spawn settings — sourced from settings.yml via CopSettings (falls back to sensible defaults)
 		this.minSpawnDistance        = copSettings != null ? copSettings.getMinSpawnDistance() : 10.0;
 		this.maxSpawnDistance        = copSettings != null ? copSettings.getMaxSpawnDistance() : 50.0;
 		this.phase1MinDistance       = copSettings != null ? copSettings.getPhase1MinDistance() : 30.0;
@@ -101,7 +103,6 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.spawnPhase1Attempts     = copSettings != null ? copSettings.getSpawnPhase1Attempts() : 20;
 		this.spawnPhase2Attempts     = copSettings != null ? copSettings.getSpawnPhase2Attempts() : 15;
 
-		// Navigation settings — sourced from settings.yml via CopSettings
 		this.navigationRecalculationTicks = copSettings != null ? copSettings.getNavigationRecalculationTicks() : 10;
 		this.stuckCheckIntervalTicks      = copSettings != null ? copSettings.getStuckCheckIntervalTicks() : 5;
 		this.maxStuckChecks               = copSettings != null ? copSettings.getMaxStuckChecks() : 3;
@@ -112,14 +113,12 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.rangedMaxDistance            = copSettings != null ? copSettings.getRangedMaxDistance() : 12.0;
 		this.minRepathAfterLossTicks      = copSettings != null ? copSettings.getMinRepathAfterLossTicks() : 2;
 
-		// Return / despawn settings — sourced from settings.yml via CopSettings
 		this.maxReturnTicks         = copSettings != null ? copSettings.getMaxReturnTicks() : 600;
 		this.stationArrivalDistance = copSettings != null ? copSettings.getStationArrivalDistance() : 3.0;
 
-		// Misc — sourced from settings.yml via CopSettings
 		this.startingAmmoMagazines = copSettings != null ? copSettings.getStartingAmmoMagazines() : 3;
 
-		loadTiers(copsConfig, itemParser);
+		loadTiers(copsReader, report, itemParser);
 		buildCopsPerWantedLevel(copSettings);
 	}
 
@@ -300,70 +299,71 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		return startingAmmoMagazines;
 	}
 
-	/**
-	 * Parses all tier sections from {@code cops.yml}.
-	 * <p>
-	 * Weapon-pool entries are routed through {@code itemParser} when available:
-	 * <ul>
-	 *   <li>{@code weapon:rifle} → weapon name {@code rifle} added to {@code weaponNamePool}; no ItemStack
-	 *       needed because the gangland weapon system builds its own item.</li>
-	 *   <li>{@code IRON_SWORD}, {@code LEATHER_HELMET\{color=blue\}}, etc. → parsed to an {@link ItemStack} and
-	 *       added to {@code weaponPool} for vanilla equipping; the raw entry is also kept in
-	 *       {@code weaponNamePool} so {@code WeaponService} can attempt a gangland lookup (it returns
-	 *       {@code null} for plain materials, which is handled gracefully).</li>
-	 * </ul>
-	 * Armor slots use the same parser path and therefore also accept custom item syntax.
-	 */
-	private void loadTiers(FileConfiguration config, @Nullable ItemParser itemParser) {
-		String head = "Cops.";
+	private void loadTiers(NodeReader copsReader, ConfigReport report, @Nullable ItemParser itemParser) {
+		MappingNode copsSection = copsReader.get("Cops").asMapping().required().orNull();
+		if (copsSection == null) return;
 
-		ConfigurationSection tiersSection = config.getConfigurationSection(head + "Tiers");
+		NodeReader cops = NodeReader.of(copsSection, report);
+
+		MappingNode tiersSection = cops.get("Tiers").asMapping().required().orNull();
 		if (tiersSection == null) return;
 
-		for (String key : tiersSection.getKeys(false)) {
-			ConfigurationSection section = tiersSection.getConfigurationSection(key);
-			if (section == null) continue;
+		NodeReader tiersReader = NodeReader.of(tiersSection, report);
 
-			int tierNum = Integer.parseInt(key);
+		for (String key : tiersReader.keys()) {
+			MappingNode tierNode = tiersReader.get(key).asMapping().required().orNull();
+			if (tierNode == null) continue;
+
+			int tierNum;
+			try {
+				tierNum = Integer.parseInt(key);
+			} catch (NumberFormatException e) {
+				log.warn("Cop tier key '{}' is not an integer — skipping", key);
+				continue;
+			}
+
+			NodeReader tier = NodeReader.of(tierNode, report);
 
 			List<String>    weaponNamePool = new ArrayList<>();
 			List<ItemStack> weaponPool     = new ArrayList<>();
 
-			for (String entry : section.getStringList("Weapon_Pool")) {
+			for (String entry : tier.get("Weapon_Pool").asList().ofStrings().orEmpty()) {
 				if (entry == null || entry.isBlank()) continue;
 
-				if (entry.toLowerCase().startsWith("weapon:")) {
-					// Gangland weapon - only the ID after the prefix is needed for WeaponService lookup
-					String weaponId = entry.substring("weapon:".length()).trim();
-					weaponNamePool.add(weaponId);
+				if (entry.toLowerCase(Locale.ROOT).startsWith("weapon:")) {
+					weaponNamePool.add(entry.substring("weapon:".length()).trim());
 				} else {
-					// Vanilla material (or ItemParser-extended syntax)
 					weaponNamePool.add(entry);
 					ItemStack parsed = parseItem(entry, itemParser);
 					if (parsed != null) weaponPool.add(parsed);
 				}
 			}
 
-			var tierConfig = new CopTierConfig(tierNum, section.getString("Display_Name", "&9Police"),
-			                                   section.getDouble("Health", 20.0), section.getDouble("Damage", 2.0),
-			                                   section.getDouble("Speed", 1.0),
-			                                   section.getDouble("Cuff_Radius", cuffRadius),
-			                                   section.getBoolean("Can_Use_Weapons", false),
-			                                   section.getBoolean("Skip_Cuffing", false), weaponNamePool, weaponPool,
-			                                   parseItem(section.getString("Wearables.Helmet"), itemParser),
-			                                   parseItem(section.getString("Wearables.Chestplate"), itemParser),
-			                                   parseItem(section.getString("Wearables.Leggings"), itemParser),
-			                                   parseItem(section.getString("Wearables.Boots"), itemParser),
-			                                   parseDifficulty(section.getString("Difficulty"), "tier " + tierNum));
+			String difficultyStr = tier.get("Difficulty").asString().orNull();
+
+			MappingNode wearSection = tier.get("Wearables").asMapping().orNull();
+			NodeReader  wear        = wearSection != null ? NodeReader.of(wearSection, report) : null;
+
+			CopTierConfig tierConfig = new CopTierConfig(
+					tierNum,
+					tier.get("Display_Name").asString().required().orDefault("&9Police"),
+					tier.get("Health").asDouble().min(0).required().orDefault(20.0),
+					tier.get("Damage").asDouble().min(0).required().orDefault(2.0),
+					tier.get("Speed").asDouble().min(0).orDefault(1.0),
+					tier.get("Cuff_Radius").asDouble().min(0).orDefault(cuffRadius),
+					tier.get("Can_Use_Weapons").asBool().orDefault(false),
+					tier.get("Skip_Cuffing").asBool().orDefault(false),
+					weaponNamePool, weaponPool,
+					parseItem(wear == null ? null : wear.get("Helmet").asString().orNull(), itemParser),
+					parseItem(wear == null ? null : wear.get("Chestplate").asString().orNull(), itemParser),
+					parseItem(wear == null ? null : wear.get("Leggings").asString().orNull(), itemParser),
+					parseItem(wear == null ? null : wear.get("Boots").asString().orNull(), itemParser),
+					parseDifficulty(difficultyStr, "tier " + tierNum));
 
 			tiers.put(tierNum, tierConfig);
 		}
 	}
 
-	/**
-	 * Parses a difficulty key from YAML, defaulting to {@link NpcDifficulty#NORMAL} when the value is missing or
-	 * unrecognised. Logs a single warning per invalid value so config typos surface during startup.
-	 */
 	private NpcDifficulty parseDifficulty(@Nullable String raw, String contextLabel) {
 		if (raw == null || raw.isBlank()) return NpcDifficulty.NORMAL;
 		try {
@@ -374,12 +374,6 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		}
 	}
 
-	/**
-	 * Builds the cops-per-wanted-level map by delegating to {@link CopSettings}.
-	 * <p>
-	 * When {@code copCountSettings} is {@code null} (e.g. in unit tests without a DI context), a sensible linear
-	 * fallback is used: {@code min(1 + level, maxCopsPerPlayer)} for levels 1–5.
-	 */
 	private void buildCopsPerWantedLevel(@Nullable CopSettings copSettings) {
 		if (copSettings == null) {
 			for (int level = 1; level <= 5; level++) {
@@ -393,20 +387,14 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		}
 	}
 
-	/**
-	 * Parses a single item string. Delegates to {@link ItemParser} when available, otherwise falls back to a plain
-	 * {@link Material#valueOf} lookup.
-	 */
 	@Nullable
 	private ItemStack parseItem(@Nullable String entry, @Nullable ItemParser itemParser) {
 		if (entry == null || entry.isBlank()) return null;
 
-		if (itemParser != null) {
-			return itemParser.parse(entry);
-		}
+		if (itemParser != null) return itemParser.parse(entry);
 
 		try {
-			Optional<XMaterial> xMaterial = XMaterial.matchXMaterial(entry.toUpperCase());
+			Optional<XMaterial> xMaterial = XMaterial.matchXMaterial(entry.toUpperCase(Locale.ROOT));
 			if (xMaterial.isPresent()) {
 				Material mat = xMaterial.get().get();
 				if (mat != null) return new ItemStack(mat);
@@ -417,4 +405,5 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 			return null;
 		}
 	}
+
 }
