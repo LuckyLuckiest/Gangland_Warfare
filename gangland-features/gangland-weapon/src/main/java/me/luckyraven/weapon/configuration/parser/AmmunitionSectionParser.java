@@ -3,6 +3,7 @@ package me.luckyraven.weapon.configuration.parser;
 import me.luckyraven.persistence.config.ConfigReport;
 import me.luckyraven.persistence.config.MappingNode;
 import me.luckyraven.persistence.config.NodeReader;
+import me.luckyraven.persistence.config.Severity;
 import me.luckyraven.weapon.ammo.Ammunition;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.dto.AmmunitionData;
@@ -30,13 +31,13 @@ public class AmmunitionSectionParser {
 
 		NodeReader ammo = NodeReader.of(ammoSection, report);
 
-		String     ammoTypeString = ammo.get("Ammo_Type").asString().required().orNull();
-		Ammunition ammoType       = ammoTypeString != null ? ammunitionManager.getAmmunition(ammoTypeString) : null;
-		if (ammoType == null) return null;
-
-		int capacity = ammo.get("Capacity").asInt().min(0).orDefault(0);
-		int consume  = ammo.get("Consume").asInt().min(0).orDefault(1);
-		int restore  = ammo.get("Restore").asInt().min(0).orDefault(capacity);
+		// Read all admin-facing ammo/reload keys unconditionally, BEFORE deciding whether the ammo type resolves.
+		// Bailing early on an unregistered ammo type would leave these keys untouched and surface them as spurious
+		// unknown-key warnings, even though the admin is authoring a coherent config.
+		String ammoTypeString = ammo.get("Ammo_Type").asString().required().orNull();
+		int    capacity       = ammo.get("Capacity").asInt().min(0).orDefault(0);
+		int    consume        = ammo.get("Consume").asInt().min(0).orDefault(1);
+		int    restore        = ammo.get("Restore").asInt().min(0).orDefault(capacity);
 
 		int        cooldown   = 0;
 		ReloadType reloadType = ReloadType.getType("instant");
@@ -58,6 +59,15 @@ public class AmmunitionSectionParser {
 			}
 			reloadType = ReloadType.getType(typeStr);
 			reloadType.setAmount(typeAmount);
+		}
+
+		Ammunition ammoType = ammoTypeString != null ? ammunitionManager.getAmmunition(ammoTypeString) : null;
+		if (ammoType == null) {
+			if (ammoTypeString != null) {
+				report.add(Severity.ERROR, ammoSection.location(), "Ammunition.Ammo_Type",
+				           "unknown ammo type '" + ammoTypeString + "'", "ammo.unknown_type");
+			}
+			return null;
 		}
 
 		AmmunitionData ammunitionData = new AmmunitionData(ammoType, capacity, consume, restore);

@@ -218,7 +218,6 @@ User:
 # | Bounty Config | #
 # +---------------+ #
 Bounty:
-   Enable: true
    Kill:
       # Each kill committed will be added on the total bounty amount.
       Each: 5
@@ -388,9 +387,6 @@ Money_Symbol: '$'
 Balance_Format:
    Enable: true
    Format: "%,.2f"
-Killing_Mob:
-   Minimum: 0
-   Maximum: 20
 
 # +----------------+ #
 # | NPC Navigation | #

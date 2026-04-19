@@ -132,7 +132,6 @@ Wanted:
          - 20                  # 20 kills → 5 stars
 
 Bounty:
-   Enable: true
    Kill:
       Each: 5                 # Money added to the player's bounty per kill they commit
       Maximum: 50_000         # Hard cap on a player's total kill-accrued bounty

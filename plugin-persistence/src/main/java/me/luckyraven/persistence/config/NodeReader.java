@@ -2,10 +2,7 @@ package me.luckyraven.persistence.config;
 
 import me.luckyraven.persistence.config.dsl.StringDslParser;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * Fluent, positional accessor over a {@link MappingNode}.
@@ -25,6 +22,7 @@ public final class NodeReader {
 
 	private final MappingNode  mapping;
 	private final ConfigReport report;
+	private final Set<String>  touchedKeys = new HashSet<>();
 
 	private NodeReader(MappingNode mapping, ConfigReport report) {
 		this.mapping = mapping;
@@ -35,10 +33,12 @@ public final class NodeReader {
 	 * @param mapping the mapping to read from.
 	 * @param report issue collector.
 	 *
-	 * @return a reader bound to {@code mapping}.
+	 * @return a reader bound to {@code mapping}, self-registered with {@code report} for the unknown-key sweep.
 	 */
 	public static NodeReader of(MappingNode mapping, ConfigReport report) {
-		return new NodeReader(mapping, report);
+		NodeReader reader = new NodeReader(mapping, report);
+		report.registerReader(reader);
+		return reader;
 	}
 
 	private static String joinPath(String parent, String key) {
@@ -106,10 +106,13 @@ public final class NodeReader {
 	}
 
 	/**
-	 * @return every defined key in iteration order.
+	 * @return every defined key in iteration order. Calling this implies the loader intends to consume every key in the
+	 * 		mapping, so the unknown-key sweep treats them all as touched.
 	 */
 	public Iterable<String> keys() {
-		return mapping.entries().keySet();
+		Set<String> keySet = mapping.entries().keySet();
+		touchedKeys.addAll(keySet);
+		return keySet;
 	}
 
 	/**
@@ -121,12 +124,18 @@ public final class NodeReader {
 	 * @return a chainable accessor.
 	 */
 	public NodeAccess get(String key) {
+		touchedKeys.add(key);
+
 		String     path  = joinPath(mapping.path(), key);
 		ConfigNode child = mapping.get(key);
 
 		SourceLocation locationForMissing = mapping.location();
 
 		return new NodeAccess(child, path, locationForMissing, report);
+	}
+
+	Set<String> touchedKeys() {
+		return touchedKeys;
 	}
 
 	/**

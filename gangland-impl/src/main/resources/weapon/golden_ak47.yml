@@ -141,14 +141,15 @@ Reload:
 Scope:
    Level: 2
 
-   Default_Sound:
-      Sound: ITEM_SPYGLASS_USE
-      Volume: 1
-      Pitch: 0.8
-   Custom_Sound:
-      Sound: sound.gta.scope
-      Volume: 1
-      Pitch: 1
+   Sound:
+      Default_Sound:
+         Sound: ITEM_SPYGLASS_USE
+         Volume: 1
+         Pitch: 0.8
+      Custom_Sound:
+         Sound: sound.gta.scope
+         Volume: 1
+         Pitch: 1
 
 Modifiers:
    Flat_Damage: 1.0

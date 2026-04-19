@@ -3,16 +3,21 @@ package me.luckyraven.item.dsl;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.item.ItemConverter;
 import me.luckyraven.item.ItemConverterRegistry;
+import me.luckyraven.item.ItemParser;
 import me.luckyraven.persistence.config.ConfigReport;
 import me.luckyraven.persistence.config.Severity;
+import me.luckyraven.persistence.config.SpellCheckerSuggest;
 import me.luckyraven.persistence.config.dsl.BracketedAttrsParser;
 import me.luckyraven.persistence.config.dsl.DslValue;
 import me.luckyraven.persistence.config.dsl.StringDslParser;
+import me.luckyraven.persistence.config.dsl.TrackingStringMap;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Bridges the positional {@link BracketedAttrsParser} to the existing {@link ItemConverter} registry. Loaders migrated
@@ -48,6 +53,27 @@ public final class ItemDslAdapter {
 	}
 
 	/**
+	 * Emit a {@code dsl.unknown_attr} WARNING for every top-level attribute the converter never read. Nested
+	 * {@link DslValue} attribute maps are not tracked in v1 — converters receive them as raw strings and re-parse
+	 * themselves, so detection would require converter-side cooperation.
+	 */
+	private static void reportUnknownAttributes(DslValue value, Set<String> touched, ConfigReport report) {
+		for (Map.Entry<String, DslValue> entry : value.attrs().entrySet()) {
+			String key = entry.getKey();
+
+			if (touched.contains(key)) continue;
+
+			String suggestion = SpellCheckerSuggest.best(key, touched, 2);
+
+			String msg = suggestion == null
+			             ? "unknown attribute '" + key + "'"
+			             : "unknown attribute '" + key + "' (did you mean '" + suggestion + "'?)";
+
+			report.add(Severity.WARNING, entry.getValue().at(), "", msg, "dsl.unknown_attr");
+		}
+	}
+
+	/**
 	 * Resolve a parsed DSL value into an {@link ItemStack}.
 	 *
 	 * @param value the parsed DSL tree; typically produced by {@code reader.get("Item").asDsl(...)}.
@@ -80,9 +106,12 @@ public final class ItemDslAdapter {
 			return null;
 		}
 
-		Map<String, String> attrs = flattenAttributes(value);
+		Set<String>         touched = new HashSet<>();
+		Map<String, String> attrs   = new TrackingStringMap(flattenAttributes(value), touched);
 
 		ItemStack stack = converter.convert(type, modifier, attrs);
+
+		reportUnknownAttributes(value, touched, report);
 
 		if (stack == null) {
 			report.add(Severity.ERROR, value.at(), "",

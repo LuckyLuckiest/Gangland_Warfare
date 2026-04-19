@@ -178,6 +178,143 @@ class NodeReaderTest {
 						   .anyMatch(i -> i.path().equals("smiley.Cost") && i.code().equals("config.int")));
 	}
 
+	@Test
+	@DisplayName("unknown key — produces WARNING with did-you-mean suggestion")
+	void unknownKey_warnsWithSuggestion() {
+		loadYaml("""
+						 Maximum_Balance: 100
+						 Maximun_Balance: 200
+						 """);
+
+		NodeReader reader = NodeReader.of(root, report);
+		reader.get("Maximum_Balance").asInt().orDefault(0);
+
+		ConfigIssue issue = report.issues()
+				.stream()
+				.filter(i -> i.code().equals("config.unknown_key"))
+				.findFirst()
+				.orElseThrow();
+
+		assertEquals(Severity.WARNING, issue.severity());
+		assertTrue(issue.message().contains("'Maximun_Balance'"));
+		assertTrue(issue.message().contains("did you mean 'Maximum_Balance'?"),
+		           "expected did-you-mean suggestion, got: " + issue.message());
+	}
+
+	@Test
+	@DisplayName("Config_Version — never flagged even when no loader reads it")
+	void configVersion_isGloballyExempt() {
+		loadYaml("""
+						 Config_Version: 3
+						 Some_Key: value
+						 """);
+
+		NodeReader reader = NodeReader.of(root, report);
+		reader.get("Some_Key").asString().orDefault("");
+
+		assertTrue(report.issues()
+						   .stream()
+						   .noneMatch(
+								   i -> i.code().equals("config.unknown_key") && i.path().endsWith("Config_Version")));
+	}
+
+	@Test
+	@DisplayName("unknown key — no close match drops 'did you mean' clause")
+	void unknownKey_noCloseMatch_noSuggestion() {
+		loadYaml("""
+						 Maximum_Balance: 100
+						 Xylophone:       oops
+						 """);
+
+		NodeReader reader = NodeReader.of(root, report);
+		reader.get("Maximum_Balance").asInt().orDefault(0);
+
+		ConfigIssue issue = report.issues()
+				.stream()
+				.filter(i -> i.code().equals("config.unknown_key") && i.message().contains("'Xylophone'"))
+				.findFirst()
+				.orElseThrow();
+
+		assertFalse(issue.message().contains("did you mean"),
+		            "distance > 2 should suppress did-you-mean, got: " + issue.message());
+	}
+
+	@Test
+	@DisplayName("unknown key in nested mapping — reports with child's dotted path")
+	void unknownKey_nestedMapping_childPath() {
+		loadYaml("""
+						 Database:
+						   MySQL:
+						     Host:  localhost
+						     Hoost: typo
+						 """);
+
+		NodeReader  root     = NodeReader.of(this.root, report);
+		MappingNode database = root.get("Database").asMapping().required().orNull();
+		NodeReader  dbReader = NodeReader.of(database, report);
+		MappingNode mysql    = dbReader.get("MySQL").asMapping().required().orNull();
+		NodeReader  mysqlR   = NodeReader.of(mysql, report);
+
+		mysqlR.get("Host").asString().orDefault("");
+
+		ConfigIssue issue = report.issues()
+				.stream()
+				.filter(i -> i.code().equals("config.unknown_key") && i.message().contains("'Hoost'"))
+				.findFirst()
+				.orElseThrow();
+
+		assertEquals("Database.MySQL.Hoost", issue.path());
+		assertTrue(issue.message().contains("did you mean 'Host'?"),
+		           "expected did-you-mean 'Host', got: " + issue.message());
+	}
+
+	@Test
+	@DisplayName("multiple readers over same mapping — touched sets union, no false positives")
+	void multipleReaders_sameMapping_touchedSetsUnion() {
+		loadYaml("""
+						 Reload:
+						   Cooldown:   20
+						   Type:       instant
+						   Sound:      noise
+						   Action_Bar: msg
+						 """);
+
+		NodeReader  rootReader = NodeReader.of(root, report);
+		MappingNode reload     = rootReader.get("Reload").asMapping().required().orNull();
+
+		NodeReader readerA = NodeReader.of(reload, report);
+		readerA.get("Cooldown").asInt().orDefault(0);
+		readerA.get("Type").asString().orDefault("");
+
+		NodeReader readerB = NodeReader.of(reload, report);
+		readerB.get("Sound").asString().orDefault("");
+		readerB.get("Action_Bar").asString().orDefault("");
+
+		assertTrue(report.issues()
+						   .stream()
+						   .noneMatch(i -> i.code().equals("config.unknown_key")),
+		           "every Reload key is read by one of the two readers, so no unknown_key should fire");
+	}
+
+	@Test
+	@DisplayName("keys() — marks every key as touched, no unknown warnings")
+	void keys_marksAllTouched() {
+		loadYaml("""
+						 alpha: 1
+						 beta:  2
+						 gamma: 3
+						 """);
+
+		NodeReader reader = NodeReader.of(root, report);
+		for (String ignored : reader.keys()) {
+			// iterate
+		}
+
+		assertTrue(report.issues()
+						   .stream()
+						   .noneMatch(i -> i.code().equals("config.unknown_key")));
+	}
+
 	private void loadYaml(String yaml) {
 		report = new ConfigReport();
 		ConfigDocument doc = new ConfigParser().parse(FIXTURE, new StringReader(yaml), report);

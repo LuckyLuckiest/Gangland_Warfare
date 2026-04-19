@@ -207,15 +207,16 @@ public class WeaponAddon {
 		MappingNode spreadChangeSection = spread.get("Change").asMapping().orNull();
 		if (spreadChangeSection == null) return;
 
-		weapon.getSpreadData().setChangeBase(spread.get("Base").asDouble().orDefault(0.0));
+		NodeReader change = NodeReader.of(spreadChangeSection, report);
+		weapon.getSpreadData().setChangeBase(change.get("Base").asDouble().orDefault(0.0));
 
-		NodeReader  change       = NodeReader.of(spreadChangeSection, report);
 		MappingNode boundSection = change.get("Bounds").asMapping().orNull();
 		if (boundSection == null) return;
 
-		weapon.getSpreadData().setResetOnBound(spread.get("Reset_On_Bound").asBool().orDefault(false));
-		weapon.getSpreadData().setBoundMinimum(spread.get("Min").asDouble().orDefault(0.0));
-		weapon.getSpreadData().setBoundMaximum(spread.get("Max").asDouble().orDefault(0.0));
+		NodeReader bounds = NodeReader.of(boundSection, report);
+		weapon.getSpreadData().setResetOnBound(bounds.get("Reset_On_Bound").asBool().orDefault(false));
+		weapon.getSpreadData().setBoundMinimum(bounds.get("Min").asDouble().orDefault(0.0));
+		weapon.getSpreadData().setBoundMaximum(bounds.get("Max").asDouble().orDefault(0.0));
 	}
 
 	private void applyScope(NodeReader root, Weapon weapon, ConfigReport report) {

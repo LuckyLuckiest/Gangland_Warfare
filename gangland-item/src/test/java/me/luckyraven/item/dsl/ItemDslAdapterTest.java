@@ -2,6 +2,7 @@ package me.luckyraven.item.dsl;
 
 import me.luckyraven.item.ItemConverter;
 import me.luckyraven.item.ItemConverterRegistry;
+import me.luckyraven.persistence.config.ConfigIssue;
 import me.luckyraven.persistence.config.ConfigReport;
 import me.luckyraven.persistence.config.SourceLocation;
 import me.luckyraven.persistence.config.dsl.BracketedAttrsParser;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -141,20 +143,143 @@ class ItemDslAdapterTest {
 						   .stream().anyMatch(i -> i.code().equals("dsl.syntax")));
 	}
 
+	@Test
+	@DisplayName("apply — attribute the converter never reads records dsl.unknown_attr with suggestion")
+	void apply_unknownAttribute_recordsWithSuggestion() {
+		converter.readBehavior = attrs -> attrs.get("name");
+
+		DslValue value = new DslValue("weapon:ak47",
+		                              Map.of("name", DslValue.leaf("Gold", AT_5_3),
+		                                     "namee", DslValue.leaf("Ghost", AT_5_3)),
+		                              "weapon:ak47[name=Gold,namee=Ghost]", AT_5_3);
+
+		ConfigReport report = new ConfigReport();
+		adapter.apply(value, report);
+
+		ConfigIssue issue = report.issues()
+				.stream()
+				.filter(i -> i.code().equals("dsl.unknown_attr"))
+				.findFirst()
+				.orElseThrow();
+
+		assertTrue(issue.message().contains("'namee'"));
+		assertTrue(issue.message().contains("did you mean 'name'?"),
+		           "expected did-you-mean suggestion, got: " + issue.message());
+	}
+
+	@Test
+	@DisplayName("apply — converter that reads nothing flags every supplied attribute")
+	void apply_converterReadsNothing_flagsAll() {
+		converter.readBehavior = attrs -> { };
+
+		DslValue value = new DslValue("weapon:ak47",
+		                              Map.of("name", DslValue.leaf("Gold", AT_5_3),
+		                                     "tier", DslValue.leaf("Epic", AT_5_3)),
+		                              "weapon:ak47[name=Gold,tier=Epic]", AT_5_3);
+
+		ConfigReport report = new ConfigReport();
+		adapter.apply(value, report);
+
+		long unknownCount = report.issues()
+				.stream()
+				.filter(i -> i.code().equals("dsl.unknown_attr"))
+				.count();
+
+		assertEquals(2, unknownCount);
+	}
+
+	@Test
+	@DisplayName("apply — converter iterating entrySet produces no unknown_attr warnings")
+	void apply_converterIteratesEntrySet_noFalsePositives() {
+		converter.readBehavior = attrs -> {
+			for (var ignored : attrs.entrySet()) {
+				// iteration counts as reading every key
+			}
+		};
+
+		DslValue value = new DslValue("weapon:ak47",
+		                              Map.of("name", DslValue.leaf("Gold", AT_5_3),
+		                                     "tier", DslValue.leaf("Epic", AT_5_3)),
+		                              "weapon:ak47[name=Gold,tier=Epic]", AT_5_3);
+
+		ConfigReport report = new ConfigReport();
+		adapter.apply(value, report);
+
+		assertTrue(report.issues()
+						   .stream()
+						   .noneMatch(i -> i.code().equals("dsl.unknown_attr")));
+	}
+
+	@Test
+	@DisplayName("apply — unknown attribute with no close match drops 'did you mean' clause")
+	void apply_unknownAttribute_noCloseMatch_noSuggestion() {
+		converter.readBehavior = attrs -> attrs.get("name");
+
+		DslValue value = new DslValue("weapon:ak47",
+		                              Map.of("name", DslValue.leaf("Gold", AT_5_3),
+		                                     "xylophone", DslValue.leaf("?", AT_5_3)),
+		                              "weapon:ak47[name=Gold,xylophone=?]", AT_5_3);
+
+		ConfigReport report = new ConfigReport();
+		adapter.apply(value, report);
+
+		ConfigIssue issue = report.issues()
+				.stream()
+				.filter(i -> i.code().equals("dsl.unknown_attr"))
+				.findFirst()
+				.orElseThrow();
+
+		assertTrue(issue.message().contains("'xylophone'"));
+		assertFalse(issue.message().contains("did you mean"),
+		            "distance > 2 should suppress did-you-mean, got: " + issue.message());
+	}
+
+	@Test
+	@DisplayName("apply — converter returning null still emits unknown_attr warnings")
+	void apply_converterReturnsNull_stillEmitsUnknownAttrs() {
+		converter.returnNull   = true;
+		converter.readBehavior = attrs -> { };
+
+		DslValue value = new DslValue("weapon:broken",
+		                              Map.of("extra", DslValue.leaf("ignored", AT_5_3)),
+		                              "weapon:broken[extra=ignored]", AT_5_3);
+
+		ConfigReport report = new ConfigReport();
+		adapter.apply(value, report);
+
+		assertTrue(report.issues()
+						   .stream()
+						   .anyMatch(i -> i.code().equals("dsl.unknown_attr")));
+		assertTrue(report.issues()
+						   .stream()
+						   .anyMatch(i -> i.code().equals("item.conversion_failed")));
+	}
+
 	// -------------------------------------------------------------- helpers
 
 	private static final class RecordingConverter implements ItemConverter {
 
-		String              lastType;
-		String              lastModifier;
-		Map<String, String> lastAttrs;
-		boolean             returnNull;
+		String                        lastType;
+		String                        lastModifier;
+		Map<String, String>           lastAttrs;
+		boolean                       returnNull;
+		Consumer<Map<String, String>> readBehavior;
 
 		@Override
 		public ItemStack convert(String type, String modifier, Map<String, String> attributes) {
 			this.lastType     = type;
 			this.lastModifier = modifier;
 			this.lastAttrs    = attributes;
+
+			if (readBehavior != null) {
+				readBehavior.accept(attributes);
+			} else {
+				// Default behavior mirrors a converter that consumes every supplied attribute — matches the legacy
+				// contract where tests predating unknown-attr detection didn't care about read tracking.
+				for (String key : attributes.keySet()) {
+					attributes.get(key);
+				}
+			}
 
 			if (returnNull) return null;
 

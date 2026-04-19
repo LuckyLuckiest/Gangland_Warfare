@@ -149,10 +149,6 @@ User:
          Hunger:
             Enable: true
             Amount: 20            # Hunger restored on respawn
-
-Killing_Mob:
-   Minimum: 0                     # Minimum cash reward for killing a mob
-   Maximum: 20                    # Maximum cash reward for killing a mob
 ```
 
 ---

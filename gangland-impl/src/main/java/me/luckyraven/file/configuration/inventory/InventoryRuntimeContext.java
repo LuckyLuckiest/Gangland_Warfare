@@ -113,21 +113,27 @@ public class InventoryRuntimeContext {
 		}
 
 		// Open.Event may be a scalar (event name) OR a mapping (structured event spec consumed by
-		// registerUniqueItemHandler below). Only pick up the scalar form here; leave mapping shapes to the section
-		// reader so we don't flag a spurious config.type.
+		// registerUniqueItemHandler below). Route through NodeReader.get() so the key is marked touched either way —
+		// we still only pull out the scalar form here; mapping shapes are later drilled via the Bukkit API.
 		String openEvent = null;
 		if (open != null) {
-			ConfigNode eventNode = open.mapping().get("Event");
+			ConfigNode eventNode = open.get("Event").node();
 			if (eventNode instanceof ScalarNode scalar) openEvent = scalar.value();
 		}
 
 		String openPermission = open == null ? null : open.get("Permission").asString().orNull();
+
+		// Open.Type is an admin-facing hint for inventory event state; consumed via the legacy Bukkit path further
+		// below. Touching it here suppresses a spurious unknown_key sweep warning.
+		if (open != null) open.get("Type");
 
 		if (permission != null) permissionManager.addPermission(permission);
 
 		// InventoryParser reads deeply-nested Slot sub-sections and passes ConfigurationSection into external
 		// SlotEventHandler implementations; keeping it on the Bukkit path avoids a ripple through every handler.
 		// Positional errors for the top-level Information/Configuration sections still surface via `report`.
+		// Touch "Slots" on the root reader so the unknown-key sweep knows it's consumed (via the Bukkit path below).
+		root.get("Slots");
 		List<Slot> slots        = new ArrayList<>();
 		var        slotsSection = config.getConfigurationSection("Slots");
 		if (slotsSection != null) {

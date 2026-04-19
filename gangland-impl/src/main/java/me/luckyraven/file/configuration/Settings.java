@@ -11,7 +11,6 @@ import me.luckyraven.persistence.config.FileHandlerReader;
 import me.luckyraven.persistence.config.MappingNode;
 import me.luckyraven.persistence.config.NodeReader;
 import me.luckyraven.util.utilities.NumberUtil;
-import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -25,9 +24,8 @@ public class Settings implements FileInitializer {
 	private static final @Getter Map<String, Object> settingsMap         = new LinkedHashMap<>();
 	private static final @Getter Map<String, Object> settingsPlaceholder = new LinkedHashMap<>();
 
-	private static         FileConfiguration settings;
 	// update configuration
-	private static @Getter boolean           updaterEnabled, notifyPrivilegedPlayers, updaterAutoUpdate;
+	private static @Getter boolean updaterEnabled, notifyPrivilegedPlayers, updaterAutoUpdate;
 	// language picked
 	private static @Getter String  languagePicked;
 	// resource pack
@@ -46,14 +44,16 @@ public class Settings implements FileInitializer {
 			previousPage, homePage;
 	// economy
 	private static @Getter String moneySymbol, balanceFormat;
+	private static @Getter boolean balanceFormatEnabled;
 	// user configuration
-	private static @Getter double userInitialBalance, userMaxBalance;
+	private static @Getter double  userInitialBalance, userMaxBalance;
 	private static @Getter double bankInitialBalance, bankCreateFee, bankMaxBalance;
 	// user levels
 	private static @Getter int userMaxLevel, userLevelBaseAmount;
-	private static @Getter String userLevelFormula;
-	private static @Getter int    userSkillUpgrade;
-	private static @Getter double userSkillCost, userSkillExponential;
+	private static @Getter String  userLevelFormula;
+	private static @Getter int     userSkillUpgrade;
+	private static @Getter double  userSkillCost;
+	private static @Getter String  userSkillFormula;
 	// user death
 	private static @Getter boolean deathEnabled, deathMoneyCommandEnabled, deathLoseMoney;
 	private static @Getter List<String> deathMoneyCommandExecutables;
@@ -169,8 +169,6 @@ public class Settings implements FileInitializer {
 			fileManager.checkFileLoaded(fileName);
 
 			this.fileHandler = Objects.requireNonNull(fileManager.getFile(fileName));
-
-			settings = fileHandler.getFileConfiguration();
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
@@ -193,7 +191,7 @@ public class Settings implements FileInitializer {
 	}
 
 	private static String format(double value) {
-		if (settings.getBoolean("Balance_Format.Enable")) return String.format(balanceFormat, value);
+		if (balanceFormatEnabled) return String.format(balanceFormat, value);
 		return String.valueOf(value);
 	}
 
@@ -261,7 +259,7 @@ public class Settings implements FileInitializer {
 		NodeReader updateChecker = section(root, "Update_Checker", report);
 		updaterEnabled          = bool(updateChecker, "Enable", true);
 		notifyPrivilegedPlayers = bool(updateChecker, "Notify_Privileged_Players", false);
-		updaterAutoUpdate       = bool(updateChecker, "Auto_Update", true);
+		updaterAutoUpdate       = bool(updateChecker, "Auto_Download", true);
 
 		// language picked
 		languagePicked = str(root, "Language", "en");
@@ -312,7 +310,8 @@ public class Settings implements FileInitializer {
 		// economy
 		moneySymbol = str(root, "Money_Symbol", "$").substring(0, 1);
 		NodeReader balanceFormatSection = section(root, "Balance_Format", report);
-		balanceFormat = str(balanceFormatSection, "Format", "%,.2f");
+		balanceFormatEnabled = bool(balanceFormatSection, "Enable", true);
+		balanceFormat        = str(balanceFormatSection, "Format", "%,.2f");
 
 		// user
 		NodeReader user    = section(root, "User", report);
@@ -321,17 +320,17 @@ public class Settings implements FileInitializer {
 		NodeReader level   = section(user, "Level", report);
 		NodeReader skill   = section(level, "Skill", report);
 
-		userInitialBalance   = dbl(account, "Initial_Balance", 0);
-		userMaxBalance       = dbl(account, "Maximum_Balance", 10_000_000);
-		bankInitialBalance   = dbl(bank, "Initial_Balance", 0);
-		bankCreateFee        = dbl(bank, "Create_Cost", 5_000);
-		bankMaxBalance       = dbl(bank, "Maximum_Balance", 1_000_000_000);
-		userMaxLevel         = intVal(level, "Maximum_Level", 100);
-		userLevelBaseAmount  = intVal(level, "Base_Amount", 1_000);
-		userLevelFormula     = str(level, "Formula", "base * level ^ 1.5");
-		userSkillUpgrade     = intVal(skill, "Upgrade", 1);
-		userSkillCost        = dbl(skill, "Cost", 500);
-		userSkillExponential = dbl(skill, "Exponential", 1.8);
+		userInitialBalance  = dbl(account, "Initial_Balance", 0);
+		userMaxBalance      = dbl(account, "Maximum_Balance", 10_000_000);
+		bankInitialBalance  = dbl(bank, "Initial_Balance", 0);
+		bankCreateFee       = dbl(bank, "Create_Cost", 5_000);
+		bankMaxBalance      = dbl(bank, "Maximum_Balance", 1_000_000_000);
+		userMaxLevel        = intVal(level, "Maximum_Level", 100);
+		userLevelBaseAmount = intVal(level, "Base_Amount", 1_000);
+		userLevelFormula    = str(level, "Formula", "base * level ^ 1.5");
+		userSkillUpgrade    = intVal(skill, "Upgrade", 1);
+		userSkillCost       = dbl(skill, "Cost", 500);
+		userSkillFormula    = str(skill, "Formula", "base * level ^ 1.8");
 
 		// user death
 		NodeReader death      = section(user, "Death", report);

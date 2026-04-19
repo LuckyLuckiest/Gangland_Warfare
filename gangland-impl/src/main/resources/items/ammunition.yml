@@ -71,3 +71,9 @@ fuel_canister:
    Name: "&6Fuel Canister&r"
    Lore:
       - "&7A canister of flammable fuel used to reload the flamethrower."
+pathogen_vial:
+   Material: "GLASS_BOTTLE"
+   Name: "&aPathogen Vial&r"
+   Lore:
+      - "&7A sealed vial containing a concentrated pathogen."
+      - "&7Loaded into biological weapons like the syringe gun."

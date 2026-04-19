@@ -165,7 +165,6 @@ User:
 
 ```yaml
 Bounty:
-  Enable: true
   Kill:
     Each: 5                      # Bounty added per kill
     Maximum: 50_000
@@ -274,9 +273,6 @@ Money_Symbol: '$'
 Balance_Format:
   Enable: true
   Format: "%,.2f"
-Killing_Mob:
-  Minimum: 0
-  Maximum: 20
 ```
 
 ### NPC Navigation
