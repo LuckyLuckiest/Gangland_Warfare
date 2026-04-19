@@ -135,7 +135,7 @@ class WaypointDeleteCommand extends SubArgument {
 			deleteWaypointId.put(sender, verifiedId);
 
 			// notify the player to confirm the waypoint
-			sender.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"waypoint", "create"}));
+			sender.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"waypoint", "delete"}));
 
 			confirm.lock(sender, s -> {
 				CountdownTimer timer = new CountdownTimer(gangland, 60, null, null, time -> {
