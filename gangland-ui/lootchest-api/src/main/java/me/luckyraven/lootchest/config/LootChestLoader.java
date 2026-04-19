@@ -163,6 +163,18 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 			int          maxItems     = tableSection.getInt("Max_Items", 5);
 			List<String> allowedTiers = tableSection.getStringList("Allowed_Tiers");
 
+			if (minItems < 1) {
+				log.warn("Loot table '{}' has Min_Items={} — clamping to 1 so chests never spawn empty",
+				         tableId, minItems);
+				minItems = 1;
+			}
+
+			if (maxItems < minItems) {
+				log.warn("Loot table '{}' has Max_Items={} < Min_Items={} — clamping Max_Items to Min_Items",
+				         tableId, maxItems, minItems);
+				maxItems = minItems;
+			}
+
 			// Load rarity overrides for this table
 			Map<LootItemReference.Rarity, Double> rarityOverrides = loadTableRarityOverrides(tableSection,
 			                                                                                 globalRarities);
@@ -171,6 +183,13 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 
 			LootTable lootTable = new LootTable(tableId, displayName, items, minItems, maxItems, allowedTiers,
 			                                    rarityOverrides);
+
+			String problem = lootTable.validate();
+			if (problem != null) {
+				log.warn("Loot table '{}' is invalid: {} — skipping registration", tableId, problem);
+				continue;
+			}
+
 			lootTables.put(tableId, lootTable);
 		}
 

@@ -1,5 +1,6 @@
 package me.luckyraven.lootchest.data;
 
+import lombok.CustomLog;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.item.ItemParser;
@@ -13,6 +14,7 @@ import java.util.*;
  * ItemStacks are produced by delegating to the global {@link ItemParser} — this module never parses items itself.
  */
 @Getter
+@CustomLog
 @RequiredArgsConstructor
 public class LootTable {
 
@@ -37,9 +39,15 @@ public class LootTable {
 	 * @return list of generated ItemStacks
 	 */
 	public List<ItemStack> generateLoot(String tierId, ItemParser parser) {
-		// Apply drop-chance filter - items might not spawn based on their rarity roll
+		// Defensive: empty tables should have been rejected by LootChestLoader. If one slips through,
+		// there is nothing to roll against — return empty rather than looping forever.
+		if (itemReferences.isEmpty()) return Collections.emptyList();
+
+		// Apply drop-chance filter - items might not spawn based on their rarity roll.
+		// If every item fails its rarity roll, fall back to the full entry list so the chest still
+		// produces loot (guaranteed ≥1 item contract).
 		List<LootItemReference> spawnableItems = filterByRarity(itemReferences);
-		if (spawnableItems.isEmpty()) return Collections.emptyList();
+		if (spawnableItems.isEmpty()) spawnableItems = itemReferences;
 
 		int itemCount = random.nextInt(minItems, maxItems + 1);
 
@@ -73,7 +81,56 @@ public class LootTable {
 			}
 		}
 
+		// Safety-guard exhaustion (all picks collided with non-stackable dedup, or parser kept returning null)
+		// can leave result empty. Force one guaranteed pick against the full entry list.
+		if (result.isEmpty()) {
+			ItemStack guaranteed = pickGuaranteedItem(parser);
+			if (guaranteed != null) {
+				result.add(guaranteed);
+			} else {
+				log.warn("Loot table '{}' produced zero items — every entry failed to parse", id);
+			}
+		}
+
 		return result;
+	}
+
+	/**
+	 * Returns a human-readable problem description if this table cannot produce loot, or null if it is valid. Called by
+	 * the loader at startup so broken tables can be logged and skipped.
+	 */
+	public String validate() {
+		if (itemReferences == null || itemReferences.isEmpty()) {
+			return "has no items defined under 'Items'";
+		}
+
+		if (minItems < 1) {
+			return "Min_Items must be >= 1 (was " + minItems + ")";
+		}
+
+		if (maxItems < minItems) {
+			return "Max_Items (" + maxItems + ") must be >= Min_Items (" + minItems + ")";
+		}
+
+		return null;
+	}
+
+	/**
+	 * Final fallback when weighted selection yields nothing. Walks the full entry list in weight order, returning the
+	 * first one the parser can resolve. Returns null only if every Item: string is broken.
+	 */
+	private ItemStack pickGuaranteedItem(ItemParser parser) {
+		double totalWeight = itemReferences.stream().mapToDouble(LootItemReference::getEffectiveWeight).sum();
+
+		for (int attempt = 0; attempt < itemReferences.size(); attempt++) {
+			LootItemReference selected = selectWeightedRandom(itemReferences, totalWeight);
+			if (selected == null) continue;
+
+			ItemStack item = createItemFromReference(selected, parser);
+			if (item != null) return item;
+		}
+
+		return null;
 	}
 
 	/**
