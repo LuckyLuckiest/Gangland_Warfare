@@ -132,8 +132,19 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 	 * Updates the plugin information.
 	 */
 	public void forceUpdate() {
+		forceUpdate(null);
+	}
+
+	/**
+	 * Same as {@link #forceUpdate()} but invokes {@code onComplete} after every async repository save has finished. The
+	 * callback may fire on an async thread — hop back to the main thread via the Bukkit scheduler if the work needs to
+	 * touch Bukkit state.
+	 *
+	 * @param onComplete called once all saves are done, or {@code null} for fire-and-forget
+	 */
+	public void forceUpdate(Runnable onComplete) {
 		log.info("Force update...");
-		task();
+		task(onComplete);
 	}
 
 	/**
@@ -201,6 +212,10 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 	}
 
 	private void task() {
+		task(null);
+	}
+
+	private void task(Runnable onComplete) {
 		long    start    = System.currentTimeMillis();
 		boolean logDebug = Settings.isAutoSaveDebug();
 
@@ -225,14 +240,16 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 		if (logDebug) log.info("Saving...");
 		try {
 			updatingDatabase(() -> {
-				if (!logDebug) return;
-
-				log.info("Data save complete");
-				processTime(start);
+				if (logDebug) {
+					log.info("Data save complete");
+					processTime(start);
+				}
+				if (onComplete != null) onComplete.run();
 			});
 		} catch (Throwable throwable) {
 			log.error("There was an issue saving the data...");
 			if (logDebug) processTime(start);
+			if (onComplete != null) onComplete.run();
 		}
 	}
 

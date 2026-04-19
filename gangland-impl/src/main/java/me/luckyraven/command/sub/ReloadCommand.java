@@ -9,6 +9,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.command.CommandHandler;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
@@ -88,13 +89,24 @@ public final class ReloadCommand extends Command {
 
 		GanglandChatUtil.sendToOperators(permission, reloading);
 
+		PeriodicalUpdates updates = forceUpdate
+		                            ? getGangland().getContext().get(PeriodicalUpdates.class)
+		                            : null;
+
+		if (updates == null) {
+			runReloadBody(permission, runnable);
+			return;
+		}
+
+		// Wait for every async repository upsert to finish before wiping caches and reloading. Otherwise
+		// loadAll() in the reload pass can race the pending writes, repopulate caches from stale DB state,
+		// and the next auto-save tick then overwrites the fresh DB rows with that stale cache.
+		updates.forceUpdate(
+				() -> Bukkit.getScheduler().runTask(getGangland(), () -> runReloadBody(permission, runnable)));
+	}
+
+	private void runReloadBody(String permission, Runnable runnable) {
 		try {
-			if (forceUpdate) {
-				PeriodicalUpdates updates = getGangland().getContext().get(PeriodicalUpdates.class);
-				if (updates != null) {
-					updates.forceUpdate();
-				}
-			}
 			runnable.run();
 
 			String reloadComplete = "&aReload has been completed.";
