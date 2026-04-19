@@ -187,6 +187,36 @@ public class ParticleUtil {
 	}
 
 	/**
+	 * Spawns a dome of rising flames across {@code radius} around {@code center} — layered on top of an explosion burst
+	 * to signal a fire-tick throwable (molotov etc.). A lava-drop accent at the epicentre reads as the ignition
+	 * source.
+	 */
+	public static void spawnFireBurst(Location center, double radius) {
+		World world = center.getWorld();
+		if (world == null) return;
+
+		Particle flame = XParticle.FLAME.get();
+		if (flame == null) flame = Particle.FLAME;
+		Particle lava = XParticle.LAVA.get();
+		if (lava == null) lava = Particle.LAVA;
+
+		ThreadLocalRandom rng    = ThreadLocalRandom.current();
+		int               points = Math.max(40, (int) (radius * 18));
+
+		for (int i = 0; i < points; i++) {
+			double r     = Math.sqrt(rng.nextDouble()) * radius;
+			double theta = rng.nextDouble() * 2 * Math.PI;
+			double x     = center.getX() + Math.cos(theta) * r;
+			double z     = center.getZ() + Math.sin(theta) * r;
+			double y     = center.getY() + rng.nextDouble() * 0.3;
+
+			world.spawnParticle(flame, new Location(world, x, y, z), 1, 0.05, 0.05, 0.05, 0.08, null);
+		}
+
+		world.spawnParticle(lava, center, Math.max(4, (int) radius * 2), 0.2, 0.1, 0.2, 0, null);
+	}
+
+	/**
 	 * Spawns two flame trails from behind the player's back, simulating jetpack exhaust. Trails originate from slightly
 	 * behind and below the player's shoulders, offset left and right.
 	 */

@@ -180,6 +180,9 @@ public class ThrowableAction {
 		}
 
 		ParticleUtil.spawnExplosionBurst(center);
+		if (data.getFireTicks() > 0) {
+			ParticleUtil.spawnFireBurst(center, data.getExplosionRadius());
+		}
 
 		double flatBonus = weapon.getModifiersData().hasFlatDamage() ?
 		                   weapon.getModifiersData().getFlatDamage().bonus() :
