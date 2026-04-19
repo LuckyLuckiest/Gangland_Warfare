@@ -46,6 +46,9 @@ public abstract class AbstractNpc {
 	@Getter
 	@Setter
 	protected       int                   despawnTicks;
+	@Getter
+	@Setter
+	protected       int                   pursuitTicks;
 	protected       int                   attackCooldown;
 
 	protected AbstractNpc(NPC npc, Location spawnLocation, NpcNavigationConfig navConfig, NpcDifficulty difficulty) {
@@ -60,6 +63,7 @@ public abstract class AbstractNpc {
 		this.attackCooldown   = 0;
 		this.markedForRemoval = false;
 		this.despawnTicks     = 0;
+		this.pursuitTicks     = 0;
 		this.reloading        = false;
 	}
 

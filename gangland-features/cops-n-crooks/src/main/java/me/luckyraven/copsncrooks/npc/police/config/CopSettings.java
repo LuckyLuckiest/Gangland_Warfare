@@ -109,6 +109,16 @@ public interface CopSettings {
 
 	int getMinRepathAfterLossTicks();
 
+	/**
+	 * Horizontal distance (blocks) from the target beyond which a pursuing cop gives up and returns.
+	 */
+	double getPursuitMaxDistance();
+
+	/**
+	 * Maximum AI ticks a cop spends in the PURSUING state before giving up and returning.
+	 */
+	int getPursuitMaxTicks();
+
 	int getMaxReturnTicks();
 
 	double getStationArrivalDistance();

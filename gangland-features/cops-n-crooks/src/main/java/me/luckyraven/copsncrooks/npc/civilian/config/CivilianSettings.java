@@ -38,6 +38,16 @@ public interface CivilianSettings extends NpcNavigationConfig {
 	int getCivilianSpawnerMaxNpcs();
 
 	/**
+	 * Radius (blocks) beyond which a wandering civilian is biased back toward its spawner.
+	 */
+	double getCivilianSpawnerSoftLeashRadius();
+
+	/**
+	 * Radius (blocks) beyond which a wandering civilian is despawned individually so its spawn slot frees up.
+	 */
+	double getCivilianSpawnerHardLeashRadius();
+
+	/**
 	 * Ticks between each spawner proximity check cycle.
 	 */
 	int getCivilianSpawnerCheckInterval();

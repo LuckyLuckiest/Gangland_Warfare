@@ -61,6 +61,10 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final double rangedMaxDistance;
 	private final int    minRepathAfterLossTicks;
 
+	// Pursuit leash settings
+	private final double pursuitMaxDistance;
+	private final int    pursuitMaxTicks;
+
 	// Return / despawn settings
 	private final int    maxReturnTicks;
 	private final double stationArrivalDistance;
@@ -112,6 +116,9 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.rangedMinDistance            = copSettings != null ? copSettings.getRangedMinDistance() : 7.0;
 		this.rangedMaxDistance            = copSettings != null ? copSettings.getRangedMaxDistance() : 12.0;
 		this.minRepathAfterLossTicks      = copSettings != null ? copSettings.getMinRepathAfterLossTicks() : 2;
+
+		this.pursuitMaxDistance = copSettings != null ? copSettings.getPursuitMaxDistance() : 80.0;
+		this.pursuitMaxTicks    = copSettings != null ? copSettings.getPursuitMaxTicks() : 120;
 
 		this.maxReturnTicks         = copSettings != null ? copSettings.getMaxReturnTicks() : 600;
 		this.stationArrivalDistance = copSettings != null ? copSettings.getStationArrivalDistance() : 3.0;
@@ -282,6 +289,16 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public int getMinRepathAfterLossTicks() {
 		return minRepathAfterLossTicks;
+	}
+
+	@Override
+	public double getPursuitMaxDistance() {
+		return pursuitMaxDistance;
+	}
+
+	@Override
+	public int getPursuitMaxTicks() {
+		return pursuitMaxTicks;
 	}
 
 	@Override

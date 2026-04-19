@@ -44,7 +44,10 @@ public class CopBehaviorFactory {
 		int cuffAiTicks = Math.max(1, configProvider.getCuffCooldownTicks() / aiTickRate);
 
 		behaviors.put(CopState.IDLE, new IdleBehavior(configProvider.getAlertRange()));
-		behaviors.put(CopState.PURSUING, new PursuingBehavior(configProvider.getCuffRadius(), detainmentService));
+		behaviors.put(CopState.PURSUING, new PursuingBehavior(configProvider.getCuffRadius(),
+		                                                      configProvider.getPursuitMaxDistance(),
+		                                                      configProvider.getPursuitMaxTicks(),
+		                                                      detainmentService));
 		behaviors.put(CopState.CUFFING,
 		              new CuffingBehavior(configProvider.getCuffRadius(), configProvider.getMaxCuffAttempts(),
 		                                  cuffAiTicks, aiTickRate, cuffLockRegistry, detainmentService));

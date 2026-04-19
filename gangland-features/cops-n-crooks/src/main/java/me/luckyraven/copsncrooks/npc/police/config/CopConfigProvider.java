@@ -202,6 +202,16 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	int getMinRepathAfterLossTicks();
 
 	/**
+	 * Horizontal distance (blocks) from the target beyond which a pursuing cop gives up and returns.
+	 */
+	double getPursuitMaxDistance();
+
+	/**
+	 * Maximum AI ticks a cop spends in the PURSUING state before giving up and returning.
+	 */
+	int getPursuitMaxTicks();
+
+	/**
 	 * Maximum AI ticks a cop waits at the station before being force-despawned.
 	 */
 	int getMaxReturnTicks();

@@ -15,13 +15,19 @@ import java.util.Map;
  */
 public class CivilianBehaviorFactory {
 
+	private final double softLeashRadius;
+
+	public CivilianBehaviorFactory(double softLeashRadius) {
+		this.softLeashRadius = softLeashRadius;
+	}
+
 	/**
 	 * Returns a new {@link EnumMap} mapping every {@link CivilianState} to a behavior instance.
 	 */
 	public Map<CivilianState, CivilianBehavior> createBehaviors() {
 		Map<CivilianState, CivilianBehavior> map = new EnumMap<>(CivilianState.class);
 		map.put(CivilianState.IDLE, new CivilianIdleBehavior());
-		map.put(CivilianState.WANDERING, new CivilianWanderBehavior());
+		map.put(CivilianState.WANDERING, new CivilianWanderBehavior(softLeashRadius));
 		map.put(CivilianState.FLEEING, new CivilianFleeBehavior());
 		map.put(CivilianState.COMBAT, new CivilianCombatBehavior());
 		return map;

@@ -16,11 +16,16 @@ import java.util.UUID;
 public class PursuingBehavior implements CopBehavior {
 
 	private final double            cuffRadius;
+	private final double            maxPursuitDistance;
+	private final int               maxPursuitTicks;
 	private final DetainmentService detainmentService;
 
-	public PursuingBehavior(double cuffRadius, DetainmentService detainmentService) {
-		this.cuffRadius        = cuffRadius;
-		this.detainmentService = detainmentService;
+	public PursuingBehavior(double cuffRadius, double maxPursuitDistance, int maxPursuitTicks,
+	                        DetainmentService detainmentService) {
+		this.cuffRadius         = cuffRadius;
+		this.maxPursuitDistance = maxPursuitDistance;
+		this.maxPursuitTicks    = maxPursuitTicks;
+		this.detainmentService  = detainmentService;
 	}
 
 	@Override
@@ -31,14 +36,27 @@ public class PursuingBehavior implements CopBehavior {
 			return;
 		}
 
+		// Give up if we've been pursuing too long — stuck/unreachable cops must free the spawn cap
+		cop.setPursuitTicks(cop.getPursuitTicks() + 1);
+		if (cop.getPursuitTicks() >= maxPursuitTicks) {
+			cop.transitionTo(CopState.RETURNING);
+			return;
+		}
+
+		double distance = cop.distanceTo(target);
+
+		// Hard distance leash — target outran us or teleported beyond our reach
+		if (distance > maxPursuitDistance) {
+			cop.transitionTo(CopState.RETURNING);
+			return;
+		}
+
 		// Restrained check and cuffing only apply to players
 		if (target instanceof Player player) {
 			if (detainmentService.isRestrained(player)) {
 				cop.transitionTo(CopState.RETURNING);
 				return;
 			}
-
-			double distance = cop.distanceTo(player);
 
 			if (distance <= cuffRadius && cop.hasLineOfSight(player)) {
 				if (cop.getTierConfig().skipCuffing() || cop.isCombatForced()) {
@@ -55,7 +73,6 @@ public class PursuingBehavior implements CopBehavior {
 			}
 		} else {
 			// Entity target (hostile civilian NPC): go straight to COMBAT once in cuff range
-			double distance = cop.distanceTo(target);
 			if (distance <= cuffRadius && cop.hasLineOfSight(target)) {
 				cop.transitionTo(CopState.COMBAT);
 				return;
@@ -66,9 +83,9 @@ public class PursuingBehavior implements CopBehavior {
 			}
 		}
 
-		// When pathfinding has repeatedly failed, scan toward the target to find the closest reachable edge
+		// Pathfinding has permanently given up — return instead of flailing toward unreachable fallbacks
 		if (cop.isNavigationHopeless()) {
-			cop.navigateTo(cop.resolveHopelessFallbackLocation(target));
+			cop.transitionTo(CopState.RETURNING);
 			return;
 		}
 
@@ -77,11 +94,13 @@ public class PursuingBehavior implements CopBehavior {
 
 	@Override
 	public void onEnter(CopNpc cop) {
+		cop.setPursuitTicks(0);
 	}
 
 	@Override
 	public void onExit(CopNpc cop) {
 		cop.stopNavigation();
+		cop.setPursuitTicks(0);
 	}
 
 	private LivingEntity resolveTarget(CopNpc cop) {

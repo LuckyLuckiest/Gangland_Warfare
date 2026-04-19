@@ -95,6 +95,8 @@ public class Settings implements FileInitializer {
 	private static @Getter double  civilianSpawnerActivationRadius;
 	private static @Getter double  civilianSpawnerDespawnRadius;
 	private static @Getter int     civilianSpawnerMaxNpcs;
+	private static @Getter double  civilianSpawnerSoftLeashRadius;
+	private static @Getter double  civilianSpawnerHardLeashRadius;
 	private static @Getter int     civilianSpawnerCheckInterval;
 	private static @Getter String  civilianSpawnerDefaultTypeId;
 	// civilian spawn configuration
@@ -123,6 +125,9 @@ public class Settings implements FileInitializer {
 			copSpawnVisibilityCheckDistance;
 	private static @Getter int copSpawnVerticalSearchRange, copSpawnYOffset, copSpawnMinOpenHorizontalSides;
 	private static @Getter int copSpawnPhase1Attempts, copSpawnPhase2Attempts;
+	// cop pursuit leash configuration
+	private static @Getter double copPursuitMaxDistance;
+	private static @Getter int    copPursuitMaxTicks;
 	// cop return / despawn configuration
 	private static @Getter int    copReturnMaxTicks;
 	private static @Getter double copReturnStationArrivalDistance;
@@ -427,6 +432,8 @@ public class Settings implements FileInitializer {
 		civilianSpawnerActivationRadius = dbl(civilianSpawnerProximity, "Activation_Radius", 60.0);
 		civilianSpawnerDespawnRadius    = dbl(civilianSpawnerProximity, "Despawn_Radius", 80.0);
 		civilianSpawnerMaxNpcs          = intVal(civilianSpawnerProximity, "Max_Npcs_Per_Spawner", 5);
+		civilianSpawnerSoftLeashRadius  = dbl(civilianSpawnerProximity, "Npc_Soft_Leash_Radius", 30.0);
+		civilianSpawnerHardLeashRadius  = dbl(civilianSpawnerProximity, "Npc_Hard_Leash_Radius", 50.0);
 		civilianSpawnerCheckInterval    = intVal(civilianSpawnerProximity, "Check_Interval", 100);
 		civilianSpawnerDefaultTypeId    = str(civilianSpawnerProximity, "Default_Type_Id", "");
 
@@ -459,6 +466,7 @@ public class Settings implements FileInitializer {
 		NodeReader copBehavior = section(cop, "Behaviour", report);
 		NodeReader copsCount   = section(cop, "Count", report);
 		NodeReader copsSpawn   = section(cop, "Spawn", report);
+		NodeReader copsPursuit = section(cop, "Pursuit", report);
 		NodeReader copsReturn  = section(cop, "Return", report);
 
 		copMaxPerPlayer        = intVal(copBehavior, "Max_Per_Player", 8);
@@ -488,6 +496,9 @@ public class Settings implements FileInitializer {
 		copSpawnVisibilityCheckDistance = dbl(copsSpawn, "Visibility_Check_Distance", 48.0);
 		copSpawnPhase1Attempts          = intVal(copsSpawn, "Phase1_Attempts", 20);
 		copSpawnPhase2Attempts          = intVal(copsSpawn, "Phase2_Attempts", 15);
+
+		copPursuitMaxDistance = dbl(copsPursuit, "Max_Distance", 80.0);
+		copPursuitMaxTicks    = intVal(copsPursuit, "Max_Ticks", 120);
 
 		copReturnMaxTicks               = intVal(copsReturn, "Max_Ticks", 600);
 		copReturnStationArrivalDistance = dbl(copsReturn, "Station_Arrival_Distance", 3.0);

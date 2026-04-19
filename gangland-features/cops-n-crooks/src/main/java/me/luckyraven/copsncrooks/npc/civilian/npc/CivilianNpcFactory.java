@@ -41,13 +41,13 @@ public class CivilianNpcFactory implements BeanLifecycle {
 
 	private static final int STARTING_AMMO_MAGAZINES = 3;
 
-	private final           JavaPlugin              plugin;
-	private final           EntityMarkManager       entityMarkManager;
-	private final @Nullable ItemParser              itemParser;
-	private final @Nullable WeaponService           weaponService;
-	private final           CivilianSettings        civilianSettings;
-	private final           CivilianBehaviorFactory behaviorFactory;
+	private final           JavaPlugin        plugin;
+	private final           EntityMarkManager entityMarkManager;
+	private final @Nullable ItemParser        itemParser;
+	private final @Nullable WeaponService     weaponService;
+	private final           CivilianSettings  civilianSettings;
 
+	private CivilianBehaviorFactory  behaviorFactory;
 	private CivilianNavigationConfig navConfig;
 
 	public CivilianNpcFactory(JavaPlugin plugin, EntityMarkManager entityMarkManager,
@@ -58,14 +58,15 @@ public class CivilianNpcFactory implements BeanLifecycle {
 		this.itemParser        = itemParser;
 		this.weaponService     = weaponService;
 		this.civilianSettings  = civilianSettings;
-		this.behaviorFactory   = new CivilianBehaviorFactory();
+		this.behaviorFactory   = new CivilianBehaviorFactory(civilianSettings.getCivilianSpawnerSoftLeashRadius());
 		this.navConfig         = CivilianNavigationConfig.from(civilianSettings);
 	}
 
 	@Override
 	public void onInitialize(boolean firstLoad) {
 		if (firstLoad) return;
-		this.navConfig = CivilianNavigationConfig.from(civilianSettings);
+		this.navConfig       = CivilianNavigationConfig.from(civilianSettings);
+		this.behaviorFactory = new CivilianBehaviorFactory(civilianSettings.getCivilianSpawnerSoftLeashRadius());
 	}
 
 	/**

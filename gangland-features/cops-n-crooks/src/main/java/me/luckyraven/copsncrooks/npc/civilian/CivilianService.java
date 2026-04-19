@@ -198,12 +198,16 @@ public class CivilianService implements BeanLifecycle {
 
 		double activationRadiusSq = Math.pow(settings.getCivilianSpawnerActivationRadius(), 2);
 		double despawnRadiusSq    = Math.pow(settings.getCivilianSpawnerDespawnRadius(), 2);
+		double hardLeashSq        = Math.pow(settings.getCivilianSpawnerHardLeashRadius(), 2);
 		int    maxNpcs            = settings.getCivilianSpawnerMaxNpcs();
 		String defaultTypeId      = settings.getCivilianSpawnerDefaultTypeId();
 
 		for (CivilianSpawner spawner : spawnManager.getSpawners()) {
 			Location spawnerLoc = spawner.getLocation();
 			if (spawnerLoc.getWorld() == null) continue;
+
+			// Hard leash — mark any NPC that wandered past the leash for removal so its cap slot frees.
+			markStrayNpcsForRemoval(spawner.getId(), spawnerLoc, hardLeashSq);
 
 			boolean anyWithinActivation = false;
 			boolean anyWithinDespawn    = false;
@@ -253,6 +257,29 @@ public class CivilianService implements BeanLifecycle {
 				}
 			} else if (!anyWithinDespawn) {
 				despawnFromSpawner(spawner.getId());
+			}
+		}
+	}
+
+	/**
+	 * Marks any civilian whose distance from {@code spawnerLoc} exceeds the hard-leash radius for removal, so the
+	 * per-spawner cap frees up and a replacement can spawn.
+	 */
+	private void markStrayNpcsForRemoval(int spawnerId, Location spawnerLoc, double hardLeashSq) {
+		Integer id = spawnerId;
+
+		for (CivilianNpc npc : registry.getActiveNpcs()) {
+			if (!id.equals(npc.getSpawnerId())) continue;
+			if (npc.isMarkedForRemoval() || !npc.isValid()) continue;
+
+			Location npcLoc = npc.getEntity().getLocation();
+			if (!Objects.requireNonNull(npcLoc.getWorld()).equals(spawnerLoc.getWorld())) {
+				npc.markForRemoval();
+				continue;
+			}
+
+			if (npcLoc.distanceSquared(spawnerLoc) > hardLeashSq) {
+				npc.markForRemoval();
 			}
 		}
 	}

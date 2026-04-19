@@ -45,6 +45,10 @@ public class CopConfig {
 	private final double rangedMinDistance;
 	private final double rangedMaxDistance;
 
+	// Pursuit leash settings
+	private final double pursuitMaxDistance;
+	private final int    pursuitMaxTicks;
+
 	// Return / despawn settings
 	private final int    maxReturnTicks;
 	private final double stationArrivalDistance;
@@ -85,6 +89,8 @@ public class CopConfig {
 		                .minProgressDistance(provider.getMinProgressDistance())
 		                .rangedMinDistance(provider.getRangedMinDistance())
 		                .rangedMaxDistance(provider.getRangedMaxDistance())
+		                .pursuitMaxDistance(provider.getPursuitMaxDistance())
+		                .pursuitMaxTicks(provider.getPursuitMaxTicks())
 		                .maxReturnTicks(provider.getMaxReturnTicks())
 		                .stationArrivalDistance(provider.getStationArrivalDistance())
 		                .startingAmmoMagazines(provider.getStartingAmmoMagazines())

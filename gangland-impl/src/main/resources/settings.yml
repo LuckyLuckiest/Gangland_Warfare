@@ -333,6 +333,15 @@ Cops:
       # Number of attempts per shrink step in phase-2 of spawn location selection.
       Phase2_Attempts: 15
 
+   # Controls when a pursuing cop gives up chasing its target and transitions to RETURNING.
+   # Acts as a final-fallback leash so stuck/unreachable cops don't occupy the per-player cap forever.
+   Pursuit:
+      # Horizontal distance from the target (blocks) beyond which the pursuing cop gives up.
+      Max_Distance: 80.0
+      # Maximum AI ticks a cop spends in PURSUING before giving up.
+      # Default 120 = ~60 s at AI_Tick_Rate: 10 (10 game ticks per AI tick, 20 TPS).
+      Max_Ticks: 120
+
    # Controls how a cop returns to its station and despawns after the target is detained.
    Return:
       # Maximum AI ticks the cop waits before being force-despawned. (600 = ~30 s at default AI tick rate)
@@ -460,6 +469,12 @@ Civilians:
       Despawn_Radius: 80.0
       # Maximum number of civilians that can be alive at once per spawner.
       Max_Npcs_Per_Spawner: 5
+      # Distance (blocks) beyond which a wandering civilian is biased back toward its spawner.
+      # Keeps NPCs from drifting off the map without forcing an abrupt despawn.
+      Npc_Soft_Leash_Radius: 30.0
+      # Distance (blocks) beyond which a wandering civilian is despawned individually, freeing the
+      # Max_Npcs_Per_Spawner slot so a replacement can spawn. Should be < Despawn_Radius.
+      Npc_Hard_Leash_Radius: 50.0
       # Ticks between each proximity check cycle. 100 ticks = 5 seconds at 20 TPS.
       Check_Interval: 100
       # Default civilian type ID to use when a spawner has no pinned type.

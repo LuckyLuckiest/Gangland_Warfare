@@ -186,6 +186,16 @@ public class GanglandCopSettings implements CopSettings {
 	}
 
 	@Override
+	public double getPursuitMaxDistance() {
+		return Settings.getCopPursuitMaxDistance();
+	}
+
+	@Override
+	public int getPursuitMaxTicks() {
+		return Settings.getCopPursuitMaxTicks();
+	}
+
+	@Override
 	public int getMaxReturnTicks() {
 		return Settings.getCopReturnMaxTicks();
 	}

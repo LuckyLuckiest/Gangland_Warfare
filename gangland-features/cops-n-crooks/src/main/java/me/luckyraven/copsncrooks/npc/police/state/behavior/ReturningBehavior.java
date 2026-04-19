@@ -107,28 +107,10 @@ public class ReturningBehavior implements CopBehavior {
 	}
 
 	/**
-	 * Attempts to despawn the cop. Waits if another player is watching, but forces despawn after an extended timeout.
+	 * Despawns the cop unconditionally. Pursuit has either reached the station, timed out, or the pursuit leash has
+	 * given up — spawn-cap recovery takes priority over keeping the cop around for bystanders.
 	 */
 	private void tryDespawn(CopNpc cop) {
-		if (!cop.isValid()) {
-			cop.markForRemoval();
-			return;
-		}
-
-		LivingEntity entity = cop.getEntity();
-
-		if (entity == null) return;
-
-		Location copLocation = entity.getLocation();
-
-		Player excludePlayer = cop.getTargetPlayerId() != null ? Bukkit.getPlayer(cop.getTargetPlayerId()) : null;
-
-		if (spawnManager.isVisibleToOtherPlayers(copLocation, excludePlayer)) {
-			if (cop.getDespawnTicks() < maxReturnTicks * 2) {
-				return;
-			}
-		}
-
 		cop.markForRemoval();
 	}
 

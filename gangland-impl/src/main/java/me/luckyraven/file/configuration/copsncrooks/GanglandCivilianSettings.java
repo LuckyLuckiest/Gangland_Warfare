@@ -91,6 +91,16 @@ public class GanglandCivilianSettings implements CivilianSettings {
 	}
 
 	@Override
+	public double getCivilianSpawnerSoftLeashRadius() {
+		return Settings.getCivilianSpawnerSoftLeashRadius();
+	}
+
+	@Override
+	public double getCivilianSpawnerHardLeashRadius() {
+		return Settings.getCivilianSpawnerHardLeashRadius();
+	}
+
+	@Override
 	public int getCivilianSpawnerCheckInterval() {
 		return Settings.getCivilianSpawnerCheckInterval();
 	}

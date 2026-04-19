@@ -5,8 +5,10 @@ import me.luckyraven.copsncrooks.npc.civilian.CivilianState;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.civilian.state.CivilianBehavior;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -27,10 +29,16 @@ public class CivilianWanderBehavior implements CivilianBehavior {
 	private static final int MAX_LOOK_TICKS         = 20;
 	private static final int LOOK_RADIUS            = 10;
 
+	private final double softLeashRadiusSq;
+
 	private int stuckCount;
 	private int arrivalCheckTicks;
 	private int redirectCountdown;
 	private int lookCountdown;
+
+	public CivilianWanderBehavior(double softLeashRadius) {
+		this.softLeashRadiusSq = softLeashRadius * softLeashRadius;
+	}
 
 	@Override
 	public void onEnter(CivilianNpc npc) {
@@ -93,6 +101,23 @@ public class CivilianWanderBehavior implements CivilianBehavior {
 			if (center != null) {
 				npc.navigateTo(center);
 				return;
+			}
+		}
+
+		// Soft leash — bias wander back toward the spawner when the NPC has drifted too far.
+		// Hard leash (CivilianService) will despawn anyone who still escapes.
+		Location spawn = npc.getSpawnLocation();
+		if (spawn != null) {
+			World spawnWorld = spawn.getWorld();
+			if (spawnWorld != null && npc.isValid()) {
+				Location here  = npc.getEntity().getLocation();
+				World    world = here.getWorld();
+
+				if (Objects.requireNonNull(world).equals(spawnWorld) &&
+				    here.distanceSquared(spawn) > softLeashRadiusSq) {
+					npc.navigateTo(spawn);
+					return;
+				}
 			}
 		}
 
