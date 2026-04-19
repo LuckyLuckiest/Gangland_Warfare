@@ -3,6 +3,9 @@ package me.luckyraven.persistence;
 import lombok.CustomLog;
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.persistence.config.ConfigDocument;
+import me.luckyraven.persistence.config.ConfigParser;
+import me.luckyraven.persistence.config.ConfigReport;
 import me.luckyraven.util.UnhandledError;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -35,13 +38,18 @@ public class FileHandler {
 	private boolean           loaded;
 
 	@Getter
+	private ConfigDocument parsedDocument;
+	@Getter
+	private ConfigReport   parseReport;
+
+	@Getter
 	@Setter
 	private String configVersion;
 
 	public FileHandler(JavaPlugin plugin, File file) throws IOException {
 		this(plugin, file.getName().substring(0, file.getName().lastIndexOf(".")),
-			 file.getParentFile().getPath().substring(file.getParentFile().getPath().lastIndexOf("\\") + 1),
-			 file.getName().substring(file.getName().lastIndexOf(".")));
+		     file.getParentFile().getPath().substring(file.getParentFile().getPath().lastIndexOf("\\") + 1),
+		     file.getName().substring(file.getName().lastIndexOf(".")));
 		this.file = file;
 
 		registerYamlFile();
@@ -99,7 +107,7 @@ public class FileHandler {
 		log.info("{}{} is an old build or corrupted, creating a new one", name, fileType);
 
 		try (FileInputStream inputStream = new FileInputStream(file);
-			 InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+		     InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
 			fileConfiguration.load(reader);
 			loaded = true;
 		} catch (IOException | InvalidConfigurationException ignored) {
@@ -182,7 +190,7 @@ public class FileHandler {
 		fileConfiguration = new YamlConfiguration();
 
 		try (FileInputStream inputStream = new FileInputStream(file);
-			 InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+		     InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
 			fileConfiguration.load(reader);
 			loaded = true;
 
@@ -190,13 +198,26 @@ public class FileHandler {
 		} catch (InvalidConfigurationException exception) {
 			loaded = false;
 		}
+
+		parsePositional();
+	}
+
+	private void parsePositional() throws IOException {
+		parseReport = new ConfigReport();
+
+		try (FileInputStream inputStream = new FileInputStream(file);
+		     InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+			parsedDocument = new ConfigParser().parse(file.toPath(), reader, parseReport);
+		}
+
+		if (!parseReport.isEmpty()) parseReport.log(log);
 	}
 
 	private boolean validateConfigVersion() throws IOException {
 		String configVersion = fileConfiguration.getString("Config_Version");
 
 		if (configVersion != null &&
-			!Objects.equals(fileConfiguration.getString("Config_Version"), this.configVersion)) {
+		    !Objects.equals(fileConfiguration.getString("Config_Version"), this.configVersion)) {
 			createNewFile();
 			return true;
 		}
@@ -214,6 +235,8 @@ public class FileHandler {
 		} catch (InvalidConfigurationException exception) {
 			throw new IOException("Failed to parse YAML file " + name + ": " + exception.getMessage(), exception);
 		}
+
+		parsePositional();
 	}
 
 }
