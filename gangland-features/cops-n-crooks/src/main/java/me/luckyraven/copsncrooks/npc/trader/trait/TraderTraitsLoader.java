@@ -4,16 +4,18 @@ import lombok.CustomLog;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
 @CustomLog
-public final class TraderTraitsLoader {
+public final class TraderTraitsLoader implements BeanLifecycle {
 
 	private final FileHandler         fileHandler;
 	private final TraderTraitRegistry registry;
@@ -30,6 +32,16 @@ public final class TraderTraitsLoader {
 		} catch (IOException e) {
 			throw new PluginException(e);
 		}
+	}
+
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		load();
+	}
+
+	@Override
+	public void onClear() {
+		registry.replaceAll(Collections.emptyMap());
 	}
 
 	public void load() {

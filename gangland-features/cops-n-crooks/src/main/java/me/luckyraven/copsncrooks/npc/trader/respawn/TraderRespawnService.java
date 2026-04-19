@@ -4,6 +4,7 @@ import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.npc.trader.TraderData;
 import me.luckyraven.copsncrooks.npc.trader.config.TraderSettings;
+import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -14,7 +15,7 @@ import java.util.function.Consumer;
 
 @CustomLog
 @RequiredArgsConstructor
-public final class TraderRespawnService {
+public final class TraderRespawnService implements BeanLifecycle {
 
 	private final JavaPlugin     plugin;
 	private final TraderSettings settings;
@@ -42,6 +43,11 @@ public final class TraderRespawnService {
 
 	public void cancelAll() {
 		pending.clear();
+	}
+
+	@Override
+	public void onClear() {
+		cancelAll();
 	}
 
 }

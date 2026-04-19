@@ -123,9 +123,7 @@ public class ShopConfig {
 
 	@Bean
 	public TraderTraitsLoader traderTraitsLoader(TraderTraitRegistry registry, FileManager fileManager) {
-		TraderTraitsLoader loader = new TraderTraitsLoader(registry, fileManager);
-		loader.load();
-		return loader;
+		return new TraderTraitsLoader(registry, fileManager);
 	}
 
 	// ── Shop registry (per-shop YAML via FolderLoader) ───────────────────
