@@ -17,6 +17,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -84,9 +85,9 @@ public class LootChestListener implements Listener {
 
 			// Sync inventory state immediately after the click is processed
 			manager.getPlugin()
-				   .getServer()
-				   .getScheduler()
-				   .runTask(manager.getPlugin(), session::syncInventoryToChestData);
+			       .getServer()
+			       .getScheduler()
+			       .runTask(manager.getPlugin(), session::syncInventoryToChestData);
 		});
 	}
 
@@ -106,6 +107,13 @@ public class LootChestListener implements Listener {
 		manager.cancelSession(event.getPlayer());
 	}
 
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+	public void onChestIconPickup(EntityPickupItemEvent event) {
+		if (!manager.getCooldownManager().isChestIcon(event.getItem())) return;
+
+		event.setCancelled(true);
+	}
+
 	private void handleOpenResult(Player player, LootChestService.OpenResult result, LootChestData chestData) {
 		LootChestMessagesProvider msg = manager.getMessagesProvider();
 
@@ -115,8 +123,8 @@ public class LootChestListener implements Listener {
 			}
 			case CRACKING_STARTED -> {
 				player.sendMessage(msg != null ?
-								   msg.getCrackingStarted() :
-								   ChatUtil.color("&eCracking the chest... Complete the minigame!"));
+				                   msg.getCrackingStarted() :
+				                   ChatUtil.color("&eCracking the chest... Complete the minigame!"));
 			}
 			case ALREADY_IN_SESSION -> {
 				player.sendMessage(
@@ -127,14 +135,14 @@ public class LootChestListener implements Listener {
 				TimeMessagesProvider timeUnits     = msg != null ? msg.getTimeMessages() : new DefaultTimeMessages();
 				String               formattedTime = TimeUtil.formatTime(remaining, true, timeUnits);
 				player.sendMessage(msg != null ?
-								   msg.getOnCooldown(formattedTime) :
-								   ChatUtil.color("&cThis chest is empty and on cooldown! &7(" + formattedTime + ")"));
+				                   msg.getOnCooldown(formattedTime) :
+				                   ChatUtil.color("&cThis chest is empty and on cooldown! &7(" + formattedTime + ")"));
 			}
 			case REQUIRES_LOCKPICK -> {
 				playLockedSound(player);
 				player.sendMessage(msg != null ?
-								   msg.getRequiresLockpick() :
-								   ChatUtil.color("&cYou need a lockpick to open this chest!"));
+				                   msg.getRequiresLockpick() :
+				                   ChatUtil.color("&cYou need a lockpick to open this chest!"));
 			}
 			case REQUIRES_KEY -> {
 				playLockedSound(player);
@@ -144,21 +152,21 @@ public class LootChestListener implements Listener {
 			case NO_PERMISSION -> {
 				playLockedSound(player);
 				player.sendMessage(msg != null ?
-								   msg.getNoPermission() :
-								   ChatUtil.color("&cYou don't have permission to open this chest!"));
+				                   msg.getNoPermission() :
+				                   ChatUtil.color("&cYou don't have permission to open this chest!"));
 			}
 			case INVALID_LOOT_TABLE -> {
 				player.sendMessage(msg != null ?
-								   msg.getInvalidLootTable() :
-								   ChatUtil.color("&cThis chest has an invalid loot table!"));
+				                   msg.getInvalidLootTable() :
+				                   ChatUtil.color("&cThis chest has an invalid loot table!"));
 			}
 			case INVALID_CHEST -> {
 				player.sendMessage(msg != null ? msg.getInvalidChest() : ChatUtil.color("&cThis chest is invalid!"));
 			}
 			case NO_ITEM_PARSER -> {
 				player.sendMessage(msg != null ?
-								   msg.getNoItemProvider() :
-								   ChatUtil.color("&cLoot system is not configured properly!"));
+				                   msg.getNoItemProvider() :
+				                   ChatUtil.color("&cLoot system is not configured properly!"));
 			}
 			case ALREADY_LOOTED -> {
 				player.sendMessage(

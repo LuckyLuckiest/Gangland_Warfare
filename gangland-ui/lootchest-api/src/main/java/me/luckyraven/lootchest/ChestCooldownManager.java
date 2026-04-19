@@ -10,13 +10,11 @@ import me.luckyraven.lootchest.data.LootTier;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.EntityType;
-import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.entity.Item;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.EulerAngle;
+import org.bukkit.util.Vector;
 
 import java.util.Map;
 import java.util.UUID;
@@ -30,18 +28,17 @@ import java.util.function.Consumer;
  */
 public class ChestCooldownManager {
 
-	// Spawn point for the small+marker armor stand that holds the icon. The helmet
-	// renders ~0.85 blocks above the stand's feet, so this places the floating icon
-	// just above the top face of the chest block — beneath the hologram text lines.
-	private static final double ICON_STAND_Y        = 0.3;
-	private static final long   ICON_ROTATION_TICKS = 2L;
-	private static final double ICON_ROTATION_STEP  = Math.PI / 16;
+	// Spawn offset for the floating icon above the chest. The icon is a gravity-less
+	// dropped Item entity whose visual centre sits ~0.2 above its spawn y, so this
+	// places it just above the top face of the chest block — beneath the hologram
+	// text lines. The client renders its bob/spin naturally.
+	private static final double ICON_Y_OFFSET = 0.95;
 
 	private final JavaPlugin            plugin;
 	private final HologramService       hologramService;
 	private final Map<UUID, BukkitTask> cooldownTasks;
 	private final Map<UUID, Hologram>   chestHolograms;
-	private final Map<UUID, ArmorStand> chestIcons;
+	private final Map<UUID, Item>       chestIcons;
 
 	@Setter
 	private BiConsumer<LootChestData, Long> onCooldownTick;
@@ -56,9 +53,6 @@ public class ChestCooldownManager {
 
 	@Setter
 	private double hologramYOffset = 1.5;
-
-	private BukkitTask iconRotationTask;
-	private double     iconYaw;
 
 	public ChestCooldownManager(JavaPlugin plugin, HologramService hologramService) {
 		this.plugin          = plugin;
@@ -194,9 +188,17 @@ public class ChestCooldownManager {
 		chestHolograms.values().forEach(Hologram::despawn);
 		chestHolograms.clear();
 
-		chestIcons.values().forEach(ArmorStand::remove);
+		chestIcons.values().forEach(Item::remove);
 		chestIcons.clear();
-		stopIconRotationTask();
+	}
+
+	/**
+	 * Returns {@code true} if the given item entity is currently tracked as a loot-chest floating icon. Used by
+	 * listeners to block mob pickup (Spigot has no {@code setCanMobPickup}).
+	 */
+	public boolean isChestIcon(Item item) {
+		if (item == null) return false;
+		return chestIcons.containsValue(item);
 	}
 
 	private String[] buildAvailableHologramLines(LootChestData chestData, LootTier tier) {
@@ -270,71 +272,25 @@ public class ChestCooldownManager {
 		World    world = base.getWorld();
 		if (world == null) return;
 
-		Location   iconLocation = base.clone().add(0.5, ICON_STAND_Y, 0.5);
-		ArmorStand stand        = (ArmorStand) world.spawnEntity(iconLocation, EntityType.ARMOR_STAND);
+		Location iconLocation = base.clone().add(0.5, ICON_Y_OFFSET, 0.5);
+		Item     item         = world.dropItem(iconLocation, icon);
 
-		stand.setVisible(false);
-		stand.setGravity(false);
-		stand.setMarker(true);
-		stand.setInvulnerable(true);
-		stand.setSmall(true);
-		stand.setSilent(true);
-		stand.setPersistent(false);
-		stand.setArms(false);
-		stand.setBasePlate(false);
+		item.setGravity(false);
+		item.setVelocity(new Vector(0, 0, 0));
+		item.setPickupDelay(Integer.MAX_VALUE);
+		item.setInvulnerable(true);
+		item.setSilent(true);
+		item.setPersistent(false);
+		item.setUnlimitedLifetime(true);
 
-		if (stand.getEquipment() != null) {
-			stand.getEquipment().setHelmet(icon);
-		}
-
-		for (EquipmentSlot slot : EquipmentSlot.values()) {
-			stand.addEquipmentLock(slot, ArmorStand.LockType.ADDING_OR_CHANGING);
-			stand.addEquipmentLock(slot, ArmorStand.LockType.REMOVING_OR_CHANGING);
-		}
-
-		chestIcons.put(chestData.getId(), stand);
-		startIconRotationTask();
+		chestIcons.put(chestData.getId(), item);
 	}
 
 	private void removeChestIcon(UUID chestId) {
-		ArmorStand stand = chestIcons.remove(chestId);
-		if (stand != null && !stand.isDead()) {
-			stand.remove();
+		Item item = chestIcons.remove(chestId);
+		if (item != null && !item.isDead()) {
+			item.remove();
 		}
-
-		if (chestIcons.isEmpty()) {
-			stopIconRotationTask();
-		}
-	}
-
-	private void startIconRotationTask() {
-		if (iconRotationTask != null) return;
-
-		iconRotationTask = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
-			if (chestIcons.isEmpty()) {
-				stopIconRotationTask();
-				return;
-			}
-
-			iconYaw += ICON_ROTATION_STEP;
-			if (iconYaw > Math.PI * 2) {
-				iconYaw -= Math.PI * 2;
-			}
-
-			EulerAngle pose = new EulerAngle(0, iconYaw, 0);
-
-			for (ArmorStand stand : chestIcons.values()) {
-				if (stand == null || stand.isDead()) continue;
-				stand.setHeadPose(pose);
-			}
-		}, ICON_ROTATION_TICKS, ICON_ROTATION_TICKS);
-	}
-
-	private void stopIconRotationTask() {
-		if (iconRotationTask == null) return;
-
-		iconRotationTask.cancel();
-		iconRotationTask = null;
 	}
 
 	private String humaniseUnlockId(String id) {
