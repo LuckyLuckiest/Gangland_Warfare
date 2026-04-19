@@ -88,7 +88,7 @@ public class FileConfig {
 		LanguageLoader loader = new LanguageLoader(gangland, fileManager);
 		loader.initialize();
 		// Single static seam: the MessageProvider bean is published into the Messages enum once at startup.
-		Messages.init(new YamlMessageProvider(loader.getMessage()));
+		Messages.init(new YamlMessageProvider(loader.getMessage(), loader.getJarMessage()));
 		TimeMessages.initialize();
 		return loader;
 	}

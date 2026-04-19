@@ -1,7 +1,9 @@
 package me.luckyraven.file.configuration;
 
 import me.luckyraven.util.GanglandChatUtil;
+import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public enum Messages {
@@ -13,8 +15,6 @@ public enum Messages {
 	ERROR_PREFIX("Errors.Prefix", Type.OTHER),
 
 	// date
-	DATE("Normal.Format.Date", Type.OTHER),
-	TIME("Normal.Format.Time", Type.OTHER),
 	SECOND("Time_Unit.Second", Type.OTHER),
 	MINUTE("Time_Unit.Minute", Type.OTHER),
 	HOUR("Time_Unit.Hour", Type.OTHER),
@@ -208,10 +208,6 @@ public enum Messages {
 	CANNOT_BE_NULL("Errors.Cannot_Null", Type.ERROR),
 	MUST_BE_NUMBERS("Errors.Must_Be_Numbers", Type.ERROR),
 	DONT_USE_SYMBOL("Errors.Dont_Use_Symbol", Type.ERROR),
-
-	// information - drops
-	DROPS_CLEARED("Information.Drops_Cleared", Type.INFORMATION),
-	DROPS_TIMER("Information.Drops_Timer", Type.INFORMATION),
 
 	// information - gang
 	GANG_ALLIANCE_ALREADY_SENT("Information.Gang.Request_Already_Sent", Type.INFORMATION),
@@ -508,6 +504,21 @@ public enum Messages {
 		provider = messageProvider;
 	}
 
+	/**
+	 * Walks every declared enum entry and returns the paths that are absent from {@code yaml}. Call after loading the
+	 * language file so the admin sees exactly which keys the plugin expected but didn't find (e.g. a typo that renamed
+	 * {@code Normal.Prefix} to {@code Normal.prefix}).
+	 */
+	public static List<String> findMissingPaths(YamlConfiguration yaml) {
+		List<String> missing = new ArrayList<>();
+
+		for (Messages entry : values()) {
+			if (!yaml.contains(entry.path)) missing.add(entry.path);
+		}
+
+		return missing;
+	}
+
 	@Override
 	public String toString() {
 		return toString(type);
@@ -518,6 +529,8 @@ public enum Messages {
 
 		if (isList) data = convertFromList(provider.getStringList(path));
 		else data = provider.getString(path);
+
+		if (data == null) return "<missing: " + path + ">";
 
 		return getValue(type, data);
 	}

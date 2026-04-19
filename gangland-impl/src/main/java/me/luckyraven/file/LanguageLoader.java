@@ -6,9 +6,8 @@ import me.luckyraven.Gangland;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.YamlMessageProvider;
+import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
-import me.luckyraven.persistence.config.ConfigParser;
-import me.luckyraven.persistence.config.ConfigReport;
 import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.UnhandledError;
 import me.luckyraven.util.autowire.bean.BeanLifecycle;
@@ -16,12 +15,16 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -33,6 +36,7 @@ public class LanguageLoader implements BeanLifecycle {
 	private final FileManager fileManager;
 
 	private @Getter YamlConfiguration message;
+	private @Getter YamlConfiguration jarMessage;
 
 	public LanguageLoader(Gangland gangland, FileManager fileManager) {
 		this.gangland    = gangland;
@@ -43,14 +47,15 @@ public class LanguageLoader implements BeanLifecycle {
 	public void onInitialize(boolean firstLoad) {
 		if (firstLoad) return;
 		initialize();
-		Messages.init(new YamlMessageProvider(message));
+		Messages.init(new YamlMessageProvider(message, jarMessage));
 		TimeMessages.initialize();
 	}
 
 	public void initialize() {
 		try {
-			message = loadMessage(fileManager);
-			reportSyntaxErrors();
+			jarMessage = loadJarResource();
+			message    = loadMessage();
+			validateMessageKeys();
 		} catch (IOException | InvalidConfigurationException exception) {
 			log.warn("{}: {}", UnhandledError.FILE_LOADER_ERROR, exception.getMessage());
 
@@ -106,39 +111,82 @@ public class LanguageLoader implements BeanLifecycle {
 		return files;
 	}
 
-	private YamlConfiguration loadMessage(FileManager manager) throws IOException, InvalidConfigurationException {
-		String lang    = Settings.getLanguagePicked();
-		String fileLoc = Path.of("message", "message_" + lang + ".yml").toString();
+	/**
+	 * Disk-present files are routed through the standard {@link FileHandler} pipeline so {@code Config_Version}
+	 * mismatches regenerate (old file moved to {@code -old}, fresh copy extracted from jar) and the
+	 * {@link me.luckyraven.persistence.config.ConfigParser} positional lint runs. Disk-absent files load from the
+	 * bundled jar resource in memory only — no disk copy — so admins never end up with a surprise file they didn't
+	 * create.
+	 */
+	private YamlConfiguration loadMessage() throws IOException, InvalidConfigurationException {
+		String lang     = Settings.getLanguagePicked();
+		String fileName = "message_" + lang;
+		String relPath  = Path.of("message", fileName + ".yml").toString();
+		File   diskFile = new File(gangland.getDataFolder().getAbsolutePath(), relPath);
 
-		return manager.loadFromResources(fileLoc);
+		if (diskFile.exists()) {
+			YamlConfiguration fromDisk = tryLoadFromDisk(fileName);
+			if (fromDisk != null) return fromDisk;
+			log.warn("{}: message_{}.yml on disk could not be loaded — falling back to jar resource.",
+			         UnhandledError.FILE_LOADER_ERROR, lang);
+		}
+
+		return fileManager.loadFromResources(relPath);
 	}
 
 	/**
-	 * Positional pass over the same message file. Bukkit's {@code YamlConfiguration.load} already threw on structural
-	 * problems by the time we get here; this pass picks up softer YAML-lint findings (duplicate keys, etc.) with
-	 * {@code message_<lang>.yml:L:C} locations so translators know where to look.
+	 * Pure jar-resource read, used as the per-key fallback for {@link YamlMessageProvider}. When the admin's on-disk
+	 * file is missing a key (typo, accidental deletion, stale file an older plugin version wrote) the provider falls
+	 * through to this copy so the plugin still emits the default string instead of {@code null}.
 	 */
-	private void reportSyntaxErrors() {
-		String lang     = Settings.getLanguagePicked();
-		String fileLoc  = Path.of("message", "message_" + lang + ".yml").toString();
-		File   diskFile = new File(gangland.getDataFolder().getAbsolutePath(), fileLoc);
+	private YamlConfiguration loadJarResource() throws IOException, InvalidConfigurationException {
+		String lang    = Settings.getLanguagePicked();
+		String jarPath = "message/message_" + lang + ".yml";
 
-		try (InputStream inputStream = diskFile.exists()
-		                               ? new FileInputStream(diskFile)
-		                               : gangland.getResource(fileLoc.replace(File.separator, "/"))) {
+		try (InputStream in = gangland.getResource(jarPath)) {
+			if (in == null) return null;
 
-			if (inputStream == null) return;
+			YamlConfiguration yaml = new YamlConfiguration();
+			yaml.load(new InputStreamReader(in, StandardCharsets.UTF_8));
+			return yaml;
+		}
+	}
 
-			ConfigReport report = new ConfigReport();
+	/**
+	 * Attempts the managed {@link FileHandler} pipeline. Returns {@code null} on any failure so {@link #loadMessage()}
+	 * can fall back to the jar-in-memory load instead of disabling the plugin.
+	 */
+	private YamlConfiguration tryLoadFromDisk(String fileName) {
+		try {
+			FileHandler handler = fileManager.getFile(fileName);
 
-			try (InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
-				new ConfigParser().parse(diskFile.toPath(), reader, report);
+			if (handler == null) {
+				handler = new FileHandler(gangland, fileName, "message", ".yml");
+				fileManager.addFile(handler, true);
+			} else {
+				handler.reloadData();
 			}
 
-			if (!report.isEmpty()) report.log(log);
-		} catch (IOException ignored) {
-			// Primary load succeeded; a secondary IO failure here is non-fatal.
+			if (handler.isLoaded() && handler.getFileConfiguration() instanceof YamlConfiguration yaml) return yaml;
+		} catch (IOException exception) {
+			log.warn("FileHandler error for {}.yml: {}", fileName, exception.getMessage());
 		}
+
+		return null;
+	}
+
+	/**
+	 * Logs every {@link Messages} enum entry whose path is absent from the loaded configuration so admins see a
+	 * concrete list of expected keys their file is missing. Structural lint (duplicate keys, malformed YAML) is handled
+	 * by {@link FileHandler#getParseReport()} for disk-present files.
+	 */
+	private void validateMessageKeys() {
+		List<String> missing = Messages.findMissingPaths(message);
+
+		if (missing.isEmpty()) return;
+
+		log.warn("message_{}.yml is missing {} declared key(s):", Settings.getLanguagePicked(), missing.size());
+		for (String key : missing) log.warn("  - {}", key);
 	}
 
 }
