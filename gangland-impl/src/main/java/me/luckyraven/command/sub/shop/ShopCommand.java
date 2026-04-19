@@ -43,6 +43,8 @@ public class ShopCommand extends Command {
 		                                                 shopRegistry, adminView));
 		getArgument().addSubArgument(new ShopListCommand(getGangland(), getArgumentTree(), getArgument(),
 		                                                 shopRegistry));
+		getArgument().addSubArgument(new ShopRemoveCommand(getGangland(), getArgumentTree(), getArgument(),
+		                                                   shopRegistry));
 		getArgument().addSubArgument(new ShopTitleCommand(getGangland(), getArgumentTree(), getArgument(),
 		                                                  shopRegistry));
 	}

@@ -727,6 +727,10 @@
 		"usage": "/glw shop list",
 		"description": "Lists every defined shop key with its buy/sell entry counts."
 	},
+	"shop_remove": {
+		"usage": "/glw shop remove <key>",
+		"description": "Deletes the shop and its YAML file from disk."
+	},
 	"shop_title": {
 		"usage": "/glw shop title <key>",
 		"description": "Opens an anvil GUI to edit the shop's inventory display name; supports &-color codes and spaces."
