@@ -576,14 +576,13 @@ Loot_Chest:
    No_Item_Provider: "Loot system is not configured properly!"
    Already_Looted: "This chest has already been looted!"
    Hologram:
-      # Use § colour codes; these are written directly to hologram lines
-      Cooldown_Status: "§c§lON COOLDOWN"
-      Available_Status: "§a§lAVAILABLE"
-      Available_Hint: "§7Right-click to open"
+      Cooldown_Status: "&c&lON COOLDOWN"
+      Available_Status: "&a&lAVAILABLE"
+      Available_Hint: "&7Right-click to open"
       # Lock-state lines. %item% is substituted with the tier's Unlock_Item_Display.
-      Locked_Requires: "§c🔒 Requires §e%item%"
-      Locked_Permission: "§c🔒 Permission Only"
-      Unlocked: "§a🔓 Unlocked"
+      Locked_Requires: "&c🔒 Requires &e%item%"
+      Locked_Permission: "&c🔒 Permission Only"
+      Unlocked: "&a🔓 Unlocked"
    Time_Units:
       Year: "y"
       Week: "w"

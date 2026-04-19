@@ -287,13 +287,13 @@ public enum Messages {
 	LOOT_CHEST_NO_ITEM_PROVIDER("Loot_Chest.No_Item_Provider", Type.ERROR),
 	LOOT_CHEST_ALREADY_LOOTED("Loot_Chest.Already_Looted", Type.ERROR),
 
-	// loot chests - hologram text (NO_CHANGE keeps raw § codes; use § in the yml)
-	LOOT_CHEST_HOLOGRAM_COOLDOWN("Loot_Chest.Hologram.Cooldown_Status", Type.NO_CHANGE),
-	LOOT_CHEST_HOLOGRAM_AVAILABLE("Loot_Chest.Hologram.Available_Status", Type.NO_CHANGE),
-	LOOT_CHEST_HOLOGRAM_HINT("Loot_Chest.Hologram.Available_Hint", Type.NO_CHANGE),
-	LOOT_CHEST_HOLOGRAM_LOCKED_REQUIRES("Loot_Chest.Hologram.Locked_Requires", Type.NO_CHANGE),
-	LOOT_CHEST_HOLOGRAM_LOCKED_PERMISSION("Loot_Chest.Hologram.Locked_Permission", Type.NO_CHANGE),
-	LOOT_CHEST_HOLOGRAM_UNLOCKED("Loot_Chest.Hologram.Unlocked", Type.NO_CHANGE),
+	// loot chests - hologram text
+	LOOT_CHEST_HOLOGRAM_COOLDOWN("Loot_Chest.Hologram.Cooldown_Status", Type.OTHER),
+	LOOT_CHEST_HOLOGRAM_AVAILABLE("Loot_Chest.Hologram.Available_Status", Type.OTHER),
+	LOOT_CHEST_HOLOGRAM_HINT("Loot_Chest.Hologram.Available_Hint", Type.OTHER),
+	LOOT_CHEST_HOLOGRAM_LOCKED_REQUIRES("Loot_Chest.Hologram.Locked_Requires", Type.OTHER),
+	LOOT_CHEST_HOLOGRAM_LOCKED_PERMISSION("Loot_Chest.Hologram.Locked_Permission", Type.OTHER),
+	LOOT_CHEST_HOLOGRAM_UNLOCKED("Loot_Chest.Hologram.Unlocked", Type.OTHER),
 
 	// loot chests - time units for cooldown countdown
 	LOOT_CHEST_TIME_YEAR("Loot_Chest.Time_Units.Year", Type.NO_CHANGE),

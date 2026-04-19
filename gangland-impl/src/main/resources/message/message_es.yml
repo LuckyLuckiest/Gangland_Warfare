@@ -569,12 +569,12 @@ Loot_Chest:
    No_Item_Provider: "¡El sistema de botín no está configurado correctamente!"
    Already_Looted: "¡Este cofre ya ha sido saqueado!"
    Hologram:
-      Cooldown_Status: "§c§lEN RECARGA"
-      Available_Status: "§a§lDISPONIBLE"
-      Available_Hint: "§7Clic derecho para abrir"
-      Locked_Requires: "§c🔒 Requiere §e%item%"
-      Locked_Permission: "§c🔒 Solo con permiso"
-      Unlocked: "§a🔓 Desbloqueado"
+      Cooldown_Status: "&c&lEN RECARGA"
+      Available_Status: "&a&lDISPONIBLE"
+      Available_Hint: "&7Clic derecho para abrir"
+      Locked_Requires: "&c🔒 Requiere &e%item%"
+      Locked_Permission: "&c🔒 Solo con permiso"
+      Unlocked: "&a🔓 Desbloqueado"
    Time_Units:
       Year: "a"
       Week: "sem"
