@@ -3,6 +3,7 @@ package me.luckyraven.command.sub.item.unique;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.unique.UniqueItem;
 import me.luckyraven.util.GanglandChatUtil;
@@ -28,7 +29,7 @@ class ItemUniqueListCommand extends SubArgument {
 		return (argument, sender, args) -> {
 			Map<String, UniqueItem> uniqueItems = uniqueItemAddon.getUniqueItems();
 
-			sender.sendMessage(GanglandChatUtil.commandMessage("List of unique items"));
+			sender.sendMessage(Messages.ITEM_UNIQUE_LIST_HEADER.toString());
 
 			Iterator<Map.Entry<String, UniqueItem>> iterator = uniqueItems.entrySet().iterator();
 			StringBuilder                           builder  = new StringBuilder();

@@ -5,6 +5,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.unique.UniqueItem;
 import me.luckyraven.item.unique.UniqueItemUtil;
@@ -41,7 +42,7 @@ class ItemUniqueInfoCommand extends SubArgument {
 			ItemStack itemStack = player.getInventory().getItemInMainHand();
 
 			if (!UniqueItemUtil.isUniqueItem(itemStack)) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Not a unique item!"));
+				user.sendMessage(Messages.ITEM_UNIQUE_NOT_UNIQUE.toString());
 				return;
 			}
 
@@ -49,7 +50,7 @@ class ItemUniqueInfoCommand extends SubArgument {
 			UniqueItem uniqueItem = uniqueItemAddon.getUniqueItem(key);
 
 			if (uniqueItem == null) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Unique item not registered: &c" + key));
+				user.sendMessage(Messages.ITEM_UNIQUE_NOT_REGISTERED.toString().replace("%key%", key));
 				return;
 			}
 

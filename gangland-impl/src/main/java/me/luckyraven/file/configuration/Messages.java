@@ -356,6 +356,129 @@ public enum Messages {
 	// death (respawn prompt)
 	DEATH_RESPAWN_WASTED_PREFIX("Death.Respawn.Wasted_Prefix", Type.OTHER),
 	DEATH_RESPAWN_BUTTON("Death.Respawn.Click_Button", Type.OTHER),
+
+	// commands - update
+	UPDATE_AVAILABLE("Commands.Update.Available", Type.COMMAND),
+	UPDATE_LATEST("Commands.Update.Latest", Type.COMMAND),
+	UPDATE_ALREADY_LATEST("Commands.Update.Already_Latest", Type.COMMAND),
+	UPDATE_DOWNLOADING("Commands.Update.Downloading", Type.COMMAND),
+	UPDATE_DOWNLOAD_SUCCESS("Commands.Update.Success", Type.COMMAND),
+	UPDATE_DOWNLOAD_FAILED("Commands.Update.Failed", Type.COMMAND),
+
+	// commands - fuel
+	FUEL_CAPACITY_INCREASED("Commands.Fuel.Capacity_Increased", Type.COMMAND),
+	FUEL_CAPACITY_DECREASED("Commands.Fuel.Capacity_Decreased", Type.COMMAND),
+	FUEL_REFUELED_FULL("Commands.Fuel.Refueled_Full", Type.COMMAND),
+	FUEL_REFUELED_AMOUNT("Commands.Fuel.Refueled_Amount", Type.COMMAND),
+	FUEL_DEFUELED_FULL("Commands.Fuel.Defueled_Full", Type.COMMAND),
+	FUEL_DEFUELED_AMOUNT("Commands.Fuel.Defueled_Amount", Type.COMMAND),
+	FUEL_NO_CAPACITY("Fuel.No_Capacity", Type.PREFIX),
+	FUEL_AMOUNT_INVALID("Fuel.Amount_Invalid", Type.PREFIX),
+
+	// commands - cuff
+	CUFF_HANDCUFFED("Commands.Cuff.Handcuffed", Type.COMMAND),
+	CUFF_RELEASED("Commands.Cuff.Released", Type.COMMAND),
+	CUFF_ALREADY_CUFFED("Errors.Cuff.Already_Cuffed", Type.ERROR),
+	CUFF_NOT_CUFFED("Errors.Cuff.Not_Cuffed", Type.ERROR),
+
+	// commands - jail
+	JAIL_THROWN("Commands.Jail.Thrown", Type.COMMAND),
+	JAIL_CREATED("Commands.Jail.Created", Type.COMMAND),
+	JAIL_REMOVED("Commands.Jail.Removed", Type.COMMAND),
+	JAIL_RELEASED("Commands.Jail.Released", Type.COMMAND),
+	JAIL_TELEPORTED("Commands.Jail.Teleported", Type.COMMAND),
+	JAIL_LIST_HEADER("Jail.List_Header", Type.PREFIX),
+	JAIL_NO_EMPTY("Errors.Jail.No_Empty", Type.ERROR),
+	JAIL_ALREADY_JAILED("Errors.Jail.Already_Jailed", Type.ERROR),
+	JAIL_NOT_JAILED("Errors.Jail.Not_Jailed", Type.ERROR),
+	JAIL_EXISTS_NEARBY("Errors.Jail.Exists_Nearby", Type.ERROR),
+
+	// commands - cops
+	COP_LIST_NONE("Commands.Cop.No_Chased", Type.COMMAND),
+	COP_TARGET_NOT_CHASED("Commands.Cop.Target_Not_Chased", Type.COMMAND),
+	COP_SPAWNER_SET("Commands.Cop.Spawner.Set", Type.COMMAND),
+	COP_SPAWNER_REMOVED("Commands.Cop.Spawner.Removed", Type.COMMAND),
+	COP_SPAWNER_TELEPORTED("Commands.Cop.Spawner.Teleported", Type.COMMAND),
+	COP_SPAWNER_LIST_HEADER("Cop.Spawner_List_Header", Type.PREFIX),
+
+	// commands - car
+	CAR_GAVE("Commands.Car.Gave", Type.COMMAND),
+	CAR_LIST_HEADER("Commands.Car.List_Header", Type.COMMAND),
+	CAR_INVALID("Gadgets.Car.Invalid", Type.PREFIX),
+	CAR_NOT_A_CAR("Gadgets.Car.Not_A_Car", Type.PREFIX),
+	CAR_NOT_REGISTERED("Gadgets.Car.Not_Registered", Type.PREFIX),
+
+	// commands - civilians
+	CIVILIAN_LIST_EMPTY("Commands.Civilian.List_Empty", Type.COMMAND),
+	CIVILIAN_GROUPS_EMPTY("Commands.Civilian.Groups_Empty", Type.COMMAND),
+	CIVILIAN_SPAWNED("Commands.Civilian.Spawned", Type.COMMAND),
+	CIVILIAN_GROUP_SPAWNED("Commands.Civilian.Group_Spawned", Type.COMMAND),
+	CIVILIAN_GROUP_UNKNOWN("Commands.Civilian.Group_Unknown", Type.COMMAND),
+	CIVILIAN_TYPE_UNKNOWN("Commands.Civilian.Type_Unknown", Type.COMMAND),
+	CIVILIAN_SPAWNER_REMOVED("Commands.Civilian.Spawner_Removed", Type.COMMAND),
+	CIVILIAN_SPAWNER_TELEPORTED("Commands.Civilian.Spawner_Teleported", Type.COMMAND),
+	CIVILIAN_SPAWN_FAILED("Commands.Civilian.Spawn_Failed", Type.COMMAND),
+	CIVILIAN_SPAWNER_TYPE_SET("Commands.Civilian.Spawner_Type_Set", Type.COMMAND),
+	CIVILIAN_SPAWNER_GROUP_SET("Commands.Civilian.Spawner_Group_Set", Type.COMMAND),
+	CIVILIAN_SPAWNER_LIST_HEADER("Civilian.Spawner_List_Header", Type.PREFIX),
+
+	// commands - shop (admin)
+	SHOP_REMOVED("Commands.Shop.Removed", Type.COMMAND),
+	SHOP_LIST_EMPTY("Commands.Shop.List_Empty", Type.COMMAND),
+	SHOP_CREATED("Commands.Shop.Created", Type.COMMAND),
+	SHOP_TITLE_SET("Commands.Shop.Title_Set", Type.COMMAND),
+	SHOP_ALREADY_EXISTS("Errors.Shop.Already_Exists", Type.ERROR),
+	SHOP_CREATE_FAILED("Errors.Shop.Create_Failed", Type.ERROR),
+	SHOP_REMOVE_UNTRACKED("Errors.Shop.Untracked", Type.ERROR),
+	SHOP_REMOVE_FAILED("Errors.Shop.Remove_Failed", Type.ERROR),
+	SHOP_ONLY_PLAYERS("Errors.Shop.Only_Players", Type.ERROR),
+	SHOP_TITLE_EMPTY("Errors.Shop.Title_Empty", Type.ERROR),
+	SHOP_KEY_INVALID("Errors.Shop.Key_Invalid", Type.ERROR),
+
+	// commands - trader (admin)
+	TRADER_REMOVED("Commands.Trader.Removed", Type.COMMAND),
+	TRADER_RENAMED("Commands.Trader.Renamed", Type.COMMAND),
+	TRADER_SHOP_CHANGED("Commands.Trader.Shop_Changed", Type.COMMAND),
+	TRADER_TRAIT_CHANGED("Commands.Trader.Trait_Changed", Type.COMMAND),
+	TRADER_NAME_EMPTY("Errors.Trader.Name_Empty", Type.ERROR),
+	TRADER_LOOK_AT("Errors.Trader.Look_At", Type.ERROR),
+	TRADER_NOT_A_TRADER("Errors.Trader.Not_Trader", Type.ERROR),
+
+	// commands - items (unique / wearable)
+	ITEM_UNIQUE_GAVE("Commands.Item.Unique.Gave", Type.COMMAND),
+	ITEM_UNIQUE_LIST_HEADER("Commands.Item.Unique.List_Header", Type.COMMAND),
+	ITEM_UNIQUE_INVALID("Item.Unique.Invalid", Type.PREFIX),
+	ITEM_UNIQUE_NOT_REGISTERED("Item.Unique.Not_Registered", Type.PREFIX),
+	ITEM_UNIQUE_NOT_UNIQUE("Item.Unique.Not_Unique", Type.PREFIX),
+	ITEM_WEARABLE_GAVE("Commands.Item.Wearable.Gave", Type.COMMAND),
+	ITEM_WEARABLE_LIST_HEADER("Commands.Item.Wearable.List_Header", Type.COMMAND),
+	ITEM_WEARABLE_INVALID("Item.Wearable.Invalid", Type.PREFIX),
+	ITEM_WEARABLE_NOT_REGISTERED("Item.Wearable.Not_Registered", Type.PREFIX),
+	ITEM_WEARABLE_NOT_WEARABLE("Item.Wearable.Not_Wearable", Type.PREFIX),
+
+	// commands - weapons (list headers)
+	WEAPON_LIST_HEADER("Commands.Weapons.Weapon.List_Header", Type.COMMAND),
+	AMMO_LIST_HEADER("Commands.Weapons.Ammo.List_Header", Type.COMMAND),
+
+	// commands - waypoint (extras)
+	WAYPOINT_LIST_HEADER("Waypoint.List_Header", Type.PREFIX),
+	WAYPOINT_DELETED("Commands.Waypoint.Deleted", Type.COMMAND),
+	WAYPOINT_TYPE_INVALID_HEADER("Errors.Waypoint.Invalid_Type_Header", Type.ERROR),
+
+	// commands - loot chest (admin)
+	LOOT_CHEST_MUST_LOOK_AT_BLOCK("Errors.Loot_Chest.Must_Look_At_Block", Type.ERROR),
+	LOOT_CHEST_NO_CHEST_AT_LOCATION("Errors.Loot_Chest.No_Chest_At_Location", Type.ERROR),
+	LOOT_CHEST_REQUIRES_WAND("Errors.Loot_Chest.Requires_Wand", Type.ERROR),
+	LOOT_CHEST_REMOVED("Commands.Loot_Chest.Removed", Type.COMMAND),
+
+	// commands - wanted / balance
+	WANTED_STATUS_HEADER("Commands.Wanted.Status_Header", Type.COMMAND),
+	BALANCE_REGISTERED_ONLY("Information.Balance.Registered_Only", Type.INFORMATION),
+
+	// errors - argument framework
+	ARGUMENT_NOT_IMPLEMENTED("Errors.Argument.Not_Implemented", Type.ERROR),
+	ARGUMENT_CONFIRM_REQUIRED("Errors.Argument.Confirm_Required", Type.ERROR),
+	ARGUMENT_CONFIRM_HINT("Information.Argument.Confirm_Hint", Type.INFORMATION),
 	;
 
 	private static MessageProvider provider;

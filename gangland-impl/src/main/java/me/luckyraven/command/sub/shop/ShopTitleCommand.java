@@ -45,14 +45,14 @@ class ShopTitleCommand extends SubArgument {
 	private void registerArguments() {
 		Argument keyArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			if (!(sender instanceof Player player)) {
-				sender.sendMessage(GanglandChatUtil.commandMessage("&cOnly players can run this command."));
+				sender.sendMessage(Messages.SHOP_ONLY_PLAYERS.toString());
 				return;
 			}
 
 			String         raw = args[2].toLowerCase();
 			ShopDefinition def = shopRegistry.get(raw);
 			if (def == null) {
-				player.sendMessage(GanglandChatUtil.commandMessage("&cShop '" + raw + "' does not exist."));
+				player.sendMessage(Messages.SHOP_NOT_DEFINED.toString().replace("%shop%", raw));
 				return;
 			}
 
@@ -73,13 +73,14 @@ class ShopTitleCommand extends SubArgument {
 
 					String text = state.getText() == null ? "" : state.getText();
 					if (text.isBlank()) {
-						admin.sendMessage(GanglandChatUtil.commandMessage("&cTitle cannot be empty."));
+						admin.sendMessage(Messages.SHOP_TITLE_EMPTY.toString());
 						return Collections.emptyList();
 					}
 
 					shopRegistry.save(def.withTitle(text));
-					admin.sendMessage(GanglandChatUtil.commandMessage(
-							"&aShop '&f" + def.getKey() + "&a' title set to: " + text));
+					admin.sendMessage(Messages.SHOP_TITLE_SET.toString()
+					                                         .replace("%shop%", def.getKey())
+					                                         .replace("%title%", text));
 					return List.of(AnvilGUI.ResponseAction.close());
 				})
 				.open(admin);

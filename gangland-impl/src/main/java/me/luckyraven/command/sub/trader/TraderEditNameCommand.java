@@ -5,7 +5,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.copsncrooks.npc.trader.TraderManager;
 import me.luckyraven.copsncrooks.npc.trader.TraderNpc;
-import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import net.wesjd.anvilgui.AnvilGUI;
@@ -38,7 +38,8 @@ class TraderEditNameCommand extends SubArgument {
 
 			TraderNpc trader = traderManager.findTargetedTrader(player, TARGET_RANGE);
 			if (trader == null) {
-				player.sendMessage(GanglandChatUtil.commandMessage("&cLook at a trader within 5 blocks."));
+				player.sendMessage(Messages.TRADER_LOOK_AT.toString()
+				                                          .replace("%range%", String.valueOf((int) TARGET_RANGE)));
 				return;
 			}
 
@@ -59,13 +60,12 @@ class TraderEditNameCommand extends SubArgument {
 
 					String text = state.getText() == null ? "" : state.getText();
 					if (text.isBlank()) {
-						admin.sendMessage(GanglandChatUtil.commandMessage("&cName cannot be empty."));
+						admin.sendMessage(Messages.TRADER_NAME_EMPTY.toString());
 						return Collections.emptyList();
 					}
 
 					if (traderManager.rename(trader.getData().getId(), text)) {
-						admin.sendMessage(GanglandChatUtil.commandMessage(
-								"&aTrader renamed to &f" + text + "&a."));
+						admin.sendMessage(Messages.TRADER_RENAMED.toString().replace("%name%", text));
 					}
 					return List.of(AnvilGUI.ResponseAction.close());
 				})

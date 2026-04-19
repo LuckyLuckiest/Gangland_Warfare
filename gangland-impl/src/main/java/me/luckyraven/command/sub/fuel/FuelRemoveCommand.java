@@ -49,7 +49,7 @@ class FuelRemoveCommand extends SubArgument {
 			ItemStack held = player.getInventory().getItemInMainHand();
 
 			if (!Fuel.hasFuelCapacity(held)) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Held item has no fuel capacity!"));
+				user.sendMessage(Messages.FUEL_NO_CAPACITY.toString());
 				return;
 			}
 
@@ -58,12 +58,12 @@ class FuelRemoveCommand extends SubArgument {
 			try {
 				decrease = Integer.parseInt(args[2]);
 			} catch (NumberFormatException exception) {
-				user.sendMessage(GanglandChatUtil.commandMessage(Messages.MUST_BE_NUMBERS.toString()));
+				user.sendMessage(Messages.MUST_BE_NUMBERS.toString());
 				return;
 			}
 
 			if (decrease <= 0) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Amount must be greater than zero."));
+				user.sendMessage(Messages.FUEL_AMOUNT_INVALID.toString());
 				return;
 			}
 
@@ -72,8 +72,9 @@ class FuelRemoveCommand extends SubArgument {
 			ItemStack updated    = Fuel.setMaxFuel(held, newMax);
 			player.getInventory().setItemInMainHand(updated);
 
-			user.sendMessage(GanglandChatUtil.commandMessage(
-					"Max fuel capacity decreased by &b" + decrease + "&7. New max: &b" + newMax + "&7."));
+			user.sendMessage(Messages.FUEL_CAPACITY_DECREASED.toString()
+			                                                 .replace("%amount%", String.valueOf(decrease))
+			                                                 .replace("%new_max%", String.valueOf(newMax)));
 		}, sender -> List.of("<amount>"));
 
 		this.addSubArgument(amount);

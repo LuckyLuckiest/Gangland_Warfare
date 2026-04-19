@@ -95,9 +95,11 @@ Commands:
       Ammo:
          Received: "You received &8(&7%amount%&8) &e%ammo% &7ammunition."
          Gave: "You gave &8(&7%amount%&8) &e%ammo% &7ammunition to &3%player%&7."
+         List_Header: "List of ammunition"
       Weapon:
          Received: "You received &8(&7%amount%&8) &e%weapon% &7weapon."
          Gave: "You gave a &8(&7%amount%&8) &e%weapon% &7weapon to &3%player%&7."
+         List_Header: "List of weapons"
    Item:
       Money:
          Gave: "Gave &b%name% &7x&b%amount%&7."
@@ -105,8 +107,15 @@ Commands:
          Not_Held: "&cYou are not holding a money item."
          Not_Registered: "&cMoney item not registered &3%name%&c."
          List_Header: "List of money items"
+      Unique:
+         Gave: "Gave &b%name% &7x&b%amount%&7."
+         List_Header: "List of unique items"
+      Wearable:
+         Gave: "Gave &b%name% &7x&b%amount%&7."
+         List_Header: "List of wearables"
    Wanted:
       Cleared_Other: "Cleared wanted level of &b%player%&7."
+      Status_Header: "Wanted Status:"
    Economy:
       Balance:
          Player: "Your balance is: &b%money_symbol%%balance%"
@@ -239,6 +248,7 @@ Commands:
       Teleportation:
          Sent: "You have been sent to &b%location%&7."
          Timer: "Teleporting in &b%timer%&7."
+      Deleted: "Removed the waypoint!"
    Shop:
       Purchase:
          Success: "&aPurchased &f%item% &afor &6%money_symbol%%price%&a."
@@ -253,9 +263,64 @@ Commands:
          Entry_Removed: "&eRemoved entry at index &f%index%&e."
          Category_Created: "&aCreated sell category &f%id%&a."
          Category_Removed: "&eRemoved sell category &f%id%&e."
+      Removed: "&aRemoved shop &f'%shop%'&a."
+      List_Empty: "&7No shops defined yet."
+      Created: "&aCreated shop '&f%shop%&a'. Use &e/glw shop edit %shop% &ato add items."
+      Title_Set: "&aShop '&f%shop%&a' title set to: %title%"
    Trader:
       Tip:
          Success: "&6Tipped &e%money_symbol%%amount%&6 — trader's mood improves."
+      Removed: "&aTrader removed."
+      Renamed: "&aTrader renamed to &f%name%&a."
+      Shop_Changed: "&aTrader's shop changed to &f%shop%&a."
+      Trait_Changed: "&aTrader's trait changed to &f%trait%&a."
+   Update:
+      Available: "There is a new update, please type:%n%&7/%short_prefix% update download"
+      Latest: "You are running the latest version."
+      Already_Latest: "You are already running the latest version."
+      Downloading: "Downloading the latest version..."
+      Success: "Download successful!"
+      Failed: "Download failed!"
+   Fuel:
+      Capacity_Increased: "Max fuel capacity increased by &b%amount%&7. New max: &b%new_max%&7."
+      Capacity_Decreased: "Max fuel capacity decreased by &b%amount%&7. New max: &b%new_max%&7."
+      Refueled_Full: "Item fully refueled to &b%max%&7."
+      Refueled_Amount: "Added &b%added%&7 fuel. Current: &b%current%&7/&b%max%&7."
+      Defueled_Full: "Item fully defueled."
+      Defueled_Amount: "Removed &b%removed%&7 fuel. Current: &b%current%&7/&b%max%&7."
+   Cuff:
+      Handcuffed: "&aHandcuffed &e%target%&a."
+      Released: "&aReleased &e%target%&a from handcuffs."
+   Jail:
+      Thrown: "&aThrown &e%target%&a to jail."
+      Created: "&aJail &e%id%&a created at your location."
+      Removed: "&aJail &e%id%&a removed."
+      Released: "&aReleased &e%target%&a from jail."
+      Teleported: "Teleported to jail &e(&b%id%&e)&7."
+   Cop:
+      No_Chased: "No players are being chased by cops."
+      Target_Not_Chased: "&7Player &e%target%&7 is not being chased by cops."
+      Spawner:
+         Set: "&aCop spawner set at your location."
+         Removed: "&aCop spawner &e%id%&a removed."
+         Teleported: "Teleported to cop spawner &e(&b%id%&e)&7."
+   Car:
+      Gave: "Gave &b%name% &7x&b%amount%&7."
+      List_Header: "List of cars"
+   Civilian:
+      List_Empty: "No civilians are currently active."
+      Groups_Empty: "No civilian groups are currently active."
+      Spawned: "&aCivilian &e%type%&a spawned near you."
+      Group_Spawned: "&aCivilian group &e%group%&a spawned at your location."
+      Group_Unknown: "&cUnknown group &e%group%&c."
+      Type_Unknown: "&cUnknown type &e%type%&c."
+      Spawner_Removed: "&aCivilian spawner &e%id%&a removed."
+      Spawner_Teleported: "Teleported to civilian spawner &e(&b%id%&e)&7."
+      Spawn_Failed: "&cFailed to spawn civilian. Check that type &e%type%&c is valid and a location was found."
+      Spawner_Type_Set: "&aCivilian spawner &e%type%&a set at your location."
+      Spawner_Group_Set: "&aGroup spawner &e%group%&a set at your location."
+   Loot_Chest:
+      Removed: "&aLoot chest removed successfully!"
 
 Errors:
    Prefix: "&4Error&7: "
@@ -301,6 +366,7 @@ Errors:
       Invalid: "Invalid waypoint."
       Not_Selected: "No selected waypoint found."
       Teleport_Issue: "Unable to teleport to &b%location%&7."
+      Invalid_Type_Header: "Invalid Waypoint Type. Select from the list:"
    Cannot_Null: "Can not be &cnull&7!"
    Must_Be_Numbers: "&a%command% &7must be numbers."
    Dont_Use_Symbol: "Please don't use symbol."
@@ -322,6 +388,13 @@ Errors:
          Nothing_Valued: "&cNothing in your offer has a valuation."
          Economy_Error: "&cSell failed (economy error): &f%detail%"
       Not_Defined: "&cShop &f'%shop%' &cis not defined."
+      Already_Exists: "&cShop &f'%shop%' &calready exists."
+      Create_Failed: "&cFailed to create: %detail%"
+      Untracked: "&cShop &f'%shop%' &cwas not tracked on disk."
+      Remove_Failed: "&cFailed to remove: %detail%"
+      Only_Players: "&cOnly players can run this command."
+      Title_Empty: "&cTitle cannot be empty."
+      Key_Invalid: "&cKey must be lowercase alphanumeric / underscore only."
    Trader:
       Tip:
          Insufficient_Funds: "&cNot enough funds to tip &6%money_symbol%%amount%&c."
@@ -330,6 +403,24 @@ Errors:
          Missing: "&cTrait &f'%trait%' &cdoes not exist. Available: &f%available%"
       Shop:
          Missing: "&cShop &f'%shop%' &cdoes not exist. Create it first with &e/glw shop create&c."
+      Name_Empty: "&cName cannot be empty."
+      Look_At: "&cLook at a trader within %range% blocks."
+      Not_Trader: "&cThat entity is not a trader."
+   Cuff:
+      Already_Cuffed: "This player is already cuffed!"
+      Not_Cuffed: "This player is not handcuffed!"
+   Jail:
+      No_Empty: "No empty jail found!"
+      Already_Jailed: "Player is already jailed!"
+      Not_Jailed: "&cPlayer &e%target%&c is not jailed."
+      Exists_Nearby: "A jail already exists within %blocks% blocks of this location!"
+   Loot_Chest:
+      Must_Look_At_Block: "&cYou must be looking at a block within 5 blocks!"
+      No_Chest_At_Location: "&cNo loot chest found at that location!"
+      Requires_Wand: "You must be holding a Loot Chest Wand to edit settings!"
+   Argument:
+      Not_Implemented: "Not implemented method!"
+      Confirm_Required: "Need to execute the initial statement to use this argument."
 
 Information:
    Prefix: "&8&l[&7Information&8&l]&7 "
@@ -337,6 +428,10 @@ Information:
       Request_Already_Sent: "Gang alliance to that gang is already sent!"
       Already_Allied: "Already allied with that gang."
       Kicked: "You have been kicked from the gang!"
+   Balance:
+      Registered_Only: "Balance are for registered users"
+   Argument:
+      Confirm_Hint: "To confirm the command re-type it again."
 
 Kits:
    Received: "You have received &b%kit% &7kit."
@@ -398,6 +493,7 @@ Level:
 Waypoint:
    Cooldown: "&7You are on a cooldown. Wait &b%timer&7."
    Cancelled_Teleport: "&7You moved, cancelled teleportation!"
+   List_Header: "Waypoints:"
 
 Signs:
    Created: 'Sign created successfully!'
@@ -441,6 +537,32 @@ Gadgets:
          Fuel_Can_Empty: "&cFuel can is empty!"
          Tank_Full: "&cCar fuel is already full!"
          Failed: "&cCould not refuel the car!"
+      Invalid: "Invalid car: &c%car%"
+      Not_A_Car: "Not a car item!"
+      Not_Registered: "Car not registered: &c%id%"
+
+Fuel:
+   No_Capacity: "Held item has no fuel capacity!"
+   Amount_Invalid: "Amount must be greater than zero."
+
+Jail:
+   List_Header: "Jails:"
+
+Cop:
+   Spawner_List_Header: "Cop spawners:"
+
+Civilian:
+   Spawner_List_Header: "Civilian spawners:"
+
+Item:
+   Unique:
+      Invalid: "Invalid unique item: &c%name%"
+      Not_Registered: "Unique item not registered: &c%key%"
+      Not_Unique: "Not a unique item!"
+   Wearable:
+      Invalid: "Invalid wearable: &c%name%"
+      Not_Registered: "Wearable not registered: &c%key%"
+      Not_Wearable: "Not a registered wearable!"
 
 Loot_Chest:
    Cracking_Started: "&eCracking the chest... Complete the minigame!"

@@ -52,7 +52,7 @@ class JailRemoveCommand extends SubArgument {
 
 			jailService.removeJail(id);
 
-			sender.sendMessage(GanglandChatUtil.commandMessage("&aJail &e" + id + "&a removed."));
+			sender.sendMessage(Messages.JAIL_REMOVED.toString().replace("%id%", String.valueOf(id)));
 		}, sender -> {
 			return jailRegistry.getCells()
 					.stream().map(jail -> String.valueOf(jail.getId())).toList();

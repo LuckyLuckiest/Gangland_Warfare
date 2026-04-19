@@ -48,7 +48,7 @@ class CopListCommand extends SubArgument {
 					.toList();
 
 			if (targetedPlayers.isEmpty()) {
-				sender.sendMessage(GanglandChatUtil.commandMessage("No players are being chased by cops."));
+				sender.sendMessage(Messages.COP_LIST_NONE.toString());
 				return;
 			}
 
@@ -71,9 +71,8 @@ class CopListCommand extends SubArgument {
 			List<CopNpc> cops = copManager.getCopsForPlayer(target.getUniqueId());
 
 			if (cops.isEmpty()) {
-				String message = GanglandChatUtil.commandMessage(
-						"&7Player &e" + target.getName() + "&7 is not being chased by cops.");
-				sender.sendMessage(message);
+				sender.sendMessage(Messages.COP_TARGET_NOT_CHASED.toString()
+				                                                 .replace("%target%", target.getName()));
 				return;
 			}
 

@@ -3,6 +3,7 @@ package me.luckyraven.command.sub.item.wearable;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.gadget.wearable.WearableAddon;
 import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.util.GanglandChatUtil;
@@ -28,7 +29,7 @@ class ItemWearableListCommand extends SubArgument {
 		return (argument, sender, args) -> {
 			Map<String, Wearable> wearables = wearableAddon.getWearables();
 
-			sender.sendMessage(GanglandChatUtil.commandMessage("List of wearables"));
+			sender.sendMessage(Messages.ITEM_WEARABLE_LIST_HEADER.toString());
 
 			Iterator<Map.Entry<String, Wearable>> iterator = wearables.entrySet().iterator();
 			StringBuilder                         builder  = new StringBuilder();

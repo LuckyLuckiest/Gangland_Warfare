@@ -41,22 +41,21 @@ class ShopCreateCommand extends SubArgument {
 			String raw = args[2].toLowerCase();
 
 			if (!raw.matches("[a-z0-9_]+")) {
-				sender.sendMessage(GanglandChatUtil.commandMessage(
-						"&cKey must be lowercase alphanumeric / underscore only."));
+				sender.sendMessage(Messages.SHOP_KEY_INVALID.toString());
 				return;
 			}
 
 			if (shopRegistry.exists(raw)) {
-				sender.sendMessage(GanglandChatUtil.commandMessage("&cShop '" + raw + "' already exists."));
+				sender.sendMessage(Messages.SHOP_ALREADY_EXISTS.toString().replace("%shop%", raw));
 				return;
 			}
 
 			try {
 				shopRegistry.createEmpty(raw);
-				sender.sendMessage(GanglandChatUtil.commandMessage(
-						"&aCreated shop '&f" + raw + "&a'. Use &e/glw shop edit " + raw + " &ato add items."));
+				sender.sendMessage(Messages.SHOP_CREATED.toString().replace("%shop%", raw));
 			} catch (IOException e) {
-				sender.sendMessage(GanglandChatUtil.commandMessage("&cFailed to create: " + e.getMessage()));
+				sender.sendMessage(Messages.SHOP_CREATE_FAILED.toString()
+				                                              .replace("%detail%", String.valueOf(e.getMessage())));
 			}
 		}, sender -> List.of("<key>"));
 

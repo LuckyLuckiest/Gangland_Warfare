@@ -50,14 +50,13 @@ class JailReleaseCommand extends SubArgument {
 			}
 
 			if (!detainmentService.isJailed(target)) {
-				sender.sendMessage(
-						GanglandChatUtil.commandMessage("&cPlayer &e" + target.getName() + "&c is not jailed."));
+				sender.sendMessage(Messages.JAIL_NOT_JAILED.toString().replace("%target%", target.getName()));
 				return;
 			}
 
 			detainmentService.release(target);
 
-			sender.sendMessage(GanglandChatUtil.commandMessage("&aReleased &e" + target.getName() + "&a from jail."));
+			sender.sendMessage(Messages.JAIL_RELEASED.toString().replace("%target%", target.getName()));
 		}, sender -> {
 			Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
 

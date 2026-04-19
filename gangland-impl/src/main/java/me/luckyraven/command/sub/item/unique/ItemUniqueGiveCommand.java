@@ -57,9 +57,11 @@ class ItemUniqueGiveCommand extends SubArgument {
 			boolean gave     = giveUniqueItem(player, itemName, 1);
 
 			if (gave) {
-				user.sendMessage(GanglandChatUtil.commandMessage("Gave &b" + itemName + " &7x&b1&7."));
+				user.sendMessage(Messages.ITEM_UNIQUE_GAVE.toString()
+				                                          .replace("%name%", itemName)
+				                                          .replace("%amount%", "1"));
 			} else {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid unique item: &c" + itemName));
+				user.sendMessage(Messages.ITEM_UNIQUE_INVALID.toString().replace("%name%", itemName));
 			}
 		}, sender -> {
 			return uniqueItemAddon.getUniqueItems().keySet()
@@ -78,17 +80,18 @@ class ItemUniqueGiveCommand extends SubArgument {
 			try {
 				itemAmount = Integer.parseInt(args[4]);
 			} catch (NumberFormatException exception) {
-				user.sendMessage(GanglandChatUtil.commandMessage(Messages.MUST_BE_NUMBERS.toString()));
+				user.sendMessage(Messages.MUST_BE_NUMBERS.toString());
 				return;
 			}
 
 			boolean gave = giveUniqueItem(player, itemName, itemAmount);
 
 			if (gave) {
-				user.sendMessage(GanglandChatUtil.commandMessage(
-						"Gave &b" + itemName + " &7x&b" + itemAmount + "&7."));
+				user.sendMessage(Messages.ITEM_UNIQUE_GAVE.toString()
+				                                          .replace("%name%", itemName)
+				                                          .replace("%amount%", String.valueOf(itemAmount)));
 			} else {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid unique item: &c" + itemName));
+				user.sendMessage(Messages.ITEM_UNIQUE_INVALID.toString().replace("%name%", itemName));
 			}
 		}, sender -> List.of("<amount>"));
 

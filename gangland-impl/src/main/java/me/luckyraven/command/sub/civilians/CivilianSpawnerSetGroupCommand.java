@@ -51,14 +51,13 @@ class CivilianSpawnerSetGroupCommand extends SubArgument {
 			String groupId = args[3];
 
 			if (!civilianService.getCiviliansConfig().groups().containsKey(groupId)) {
-				sender.sendMessage(GanglandChatUtil.commandMessage("&cUnknown group &e" + groupId + "&c."));
+				sender.sendMessage(Messages.CIVILIAN_GROUP_UNKNOWN.toString().replace("%group%", groupId));
 				return;
 			}
 
 			civilianSpawnManager.setGroupSpawnerLocation(player.getLocation(), groupId);
 
-			sender.sendMessage(GanglandChatUtil.commandMessage(
-					"&aGroup spawner &e" + groupId + "&a set at your location."));
+			sender.sendMessage(Messages.CIVILIAN_SPAWNER_GROUP_SET.toString().replace("%group%", groupId));
 		}, sender -> new ArrayList<>(civilianService.getCiviliansConfig().groups().keySet()));
 
 		this.addSubArgument(groupArg);

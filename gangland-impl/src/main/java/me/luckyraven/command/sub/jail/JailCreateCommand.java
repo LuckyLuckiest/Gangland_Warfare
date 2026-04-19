@@ -8,7 +8,6 @@ import me.luckyraven.copsncrooks.jail.JailRegistry;
 import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.Location;
@@ -53,15 +52,15 @@ class JailCreateCommand extends SubArgument {
 					});
 
 			if (checkForJail) {
-				sender.sendMessage(GanglandChatUtil.errorMessage(
-						"A jail already exists within " + blocks + " blocks of this location!"));
+				sender.sendMessage(Messages.JAIL_EXISTS_NEARBY.toString()
+				                                              .replace("%blocks%", String.valueOf(blocks)));
 				return;
 			}
 
 			Jail jail = jailService.setJailLocation(location, Settings.getJailMaxCapacity());
 
-			sender.sendMessage(
-					GanglandChatUtil.commandMessage("&aJail &e" + jail.getId() + "&a created at your location."));
+			sender.sendMessage(Messages.JAIL_CREATED.toString()
+			                                        .replace("%id%", String.valueOf(jail.getId())));
 		};
 	}
 }

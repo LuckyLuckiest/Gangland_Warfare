@@ -48,19 +48,19 @@ class TraderEditShopCommand extends SubArgument {
 
 			String key = args[3].toLowerCase();
 			if (!shopRegistry.exists(key)) {
-				player.sendMessage(GanglandChatUtil.commandMessage("&cShop '" + key + "' does not exist."));
+				player.sendMessage(Messages.TRADER_SHOP_MISSING.toString().replace("%shop%", key));
 				return;
 			}
 
 			TraderNpc trader = traderManager.findTargetedTrader(player, TARGET_RANGE);
 			if (trader == null) {
-				player.sendMessage(GanglandChatUtil.commandMessage("&cLook at a trader within 5 blocks."));
+				player.sendMessage(Messages.TRADER_LOOK_AT.toString()
+				                                          .replace("%range%", String.valueOf((int) TARGET_RANGE)));
 				return;
 			}
 
 			if (traderManager.retargetShop(trader.getData().getId(), key)) {
-				player.sendMessage(GanglandChatUtil.commandMessage(
-						"&aTrader's shop changed to &f" + key + "&a."));
+				player.sendMessage(Messages.TRADER_SHOP_CHANGED.toString().replace("%shop%", key));
 			}
 		}, sender -> new ArrayList<>(shopRegistry.keys()));
 

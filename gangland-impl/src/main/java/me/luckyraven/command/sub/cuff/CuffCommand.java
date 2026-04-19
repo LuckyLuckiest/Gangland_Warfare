@@ -61,13 +61,13 @@ public final class CuffCommand extends Command {
 			}
 
 			if (detainmentService.isHandcuffed(target)) {
-				sender.sendMessage(GanglandChatUtil.errorMessage("This player is already cuffed!"));
+				sender.sendMessage(Messages.CUFF_ALREADY_CUFFED.toString());
 				return;
 			}
 
 			detainmentService.handcuff(target);
 
-			sender.sendMessage(GanglandChatUtil.commandMessage("&aHandcuffed &e" + target.getName() + "&a."));
+			sender.sendMessage(Messages.CUFF_HANDCUFFED.toString().replace("%target%", target.getName()));
 		}, sender -> Bukkit.getOnlinePlayers()
 				.stream().filter(player -> !detainmentService.isHandcuffed(player)).map(Player::getName).toList());
 	}

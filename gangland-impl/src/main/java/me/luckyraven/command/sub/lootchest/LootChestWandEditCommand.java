@@ -3,11 +3,11 @@ package me.luckyraven.command.sub.lootchest;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.lootchest.LootChestWand;
-import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -35,8 +35,7 @@ class LootChestWandEditCommand extends SubArgument {
 			ItemStack heldItem = player.getInventory().getItemInMainHand();
 
 			if (!LootChestWand.isLootChestWand(heldItem)) {
-				player.sendMessage(
-						GanglandChatUtil.commandMessage("You must be holding a Loot Chest Wand to edit settings!"));
+				player.sendMessage(Messages.LOOT_CHEST_REQUIRES_WAND.toString());
 				return;
 			}
 

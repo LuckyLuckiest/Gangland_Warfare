@@ -48,21 +48,22 @@ class TraderEditTraitCommand extends SubArgument {
 
 			String traitId = args[3].toLowerCase();
 			if (!traitRegistry.exists(traitId)) {
-				player.sendMessage(GanglandChatUtil.commandMessage(
-						"&cTrait '" + traitId + "' does not exist. Available: &f"
-						+ String.join(", ", traitRegistry.ids())));
+				player.sendMessage(Messages.TRADER_TRAIT_MISSING.toString()
+				                                                .replace("%trait%", traitId)
+				                                                .replace("%available%",
+				                                                         String.join(", ", traitRegistry.ids())));
 				return;
 			}
 
 			TraderNpc trader = traderManager.findTargetedTrader(player, TARGET_RANGE);
 			if (trader == null) {
-				player.sendMessage(GanglandChatUtil.commandMessage("&cLook at a trader within 5 blocks."));
+				player.sendMessage(Messages.TRADER_LOOK_AT.toString()
+				                                          .replace("%range%", String.valueOf((int) TARGET_RANGE)));
 				return;
 			}
 
 			if (traderManager.retargetTrait(trader.getData().getId(), traitId)) {
-				player.sendMessage(GanglandChatUtil.commandMessage(
-						"&aTrader's trait changed to &f" + traitId + "&a."));
+				player.sendMessage(Messages.TRADER_TRAIT_CHANGED.toString().replace("%trait%", traitId));
 			}
 		}, sender -> new ArrayList<>(traitRegistry.ids()));
 

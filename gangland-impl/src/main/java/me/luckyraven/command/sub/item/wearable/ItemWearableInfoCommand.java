@@ -5,6 +5,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.gadget.wearable.WearableAddon;
 import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.item.wearable.WearableTrait;
@@ -44,7 +45,7 @@ class ItemWearableInfoCommand extends SubArgument {
 			ItemStack itemStack = player.getInventory().getItemInMainHand();
 
 			if (!Wearable.isRegisteredWearable(itemStack)) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Not a registered wearable!"));
+				user.sendMessage(Messages.ITEM_WEARABLE_NOT_WEARABLE.toString());
 				return;
 			}
 
@@ -55,7 +56,7 @@ class ItemWearableInfoCommand extends SubArgument {
 			Wearable wearable = wearableAddon.getWearable(key);
 
 			if (wearable == null) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Wearable not registered: &c" + key));
+				user.sendMessage(Messages.ITEM_WEARABLE_NOT_REGISTERED.toString().replace("%key%", key));
 				return;
 			}
 

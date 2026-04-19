@@ -61,8 +61,7 @@ class CivilianSpawnerTeleportCommand extends SubArgument {
 			}
 
 			player.teleport(location);
-			sender.sendMessage(
-					GanglandChatUtil.commandMessage("Teleported to civilian spawner &e(&b" + id + "&e)&7."));
+			sender.sendMessage(Messages.CIVILIAN_SPAWNER_TELEPORTED.toString().replace("%id%", String.valueOf(id)));
 		}, sender -> civilianSpawnManager.getSpawnerIds()
 				.stream().map(String::valueOf).toList());
 

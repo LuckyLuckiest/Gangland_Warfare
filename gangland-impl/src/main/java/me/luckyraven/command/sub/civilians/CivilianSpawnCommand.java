@@ -53,13 +53,11 @@ class CivilianSpawnCommand extends SubArgument {
 			CivilianNpc npc    = civilianSpawnManager.spawnNearLocation(player, typeId);
 
 			if (npc == null) {
-				sender.sendMessage(GanglandChatUtil.commandMessage(
-						"&cFailed to spawn civilian. Check that type &e" + typeId +
-						"&c is valid and a location was found."));
+				sender.sendMessage(Messages.CIVILIAN_SPAWN_FAILED.toString().replace("%type%", typeId));
 				return;
 			}
 
-			sender.sendMessage(GanglandChatUtil.commandMessage("&aCivilian &e" + typeId + "&a spawned near you."));
+			sender.sendMessage(Messages.CIVILIAN_SPAWNED.toString().replace("%type%", typeId));
 		}, sender -> new ArrayList<>(civilianService.getCiviliansConfig().types().keySet()));
 
 		this.addSubArgument(typeArg);

@@ -55,7 +55,7 @@ class CivilianSpawnerRemoveCommand extends SubArgument {
 
 			civilianSpawnManager.removeSpawner(id);
 
-			sender.sendMessage(GanglandChatUtil.commandMessage("&aCivilian spawner &e" + id + "&a removed."));
+			sender.sendMessage(Messages.CIVILIAN_SPAWNER_REMOVED.toString().replace("%id%", String.valueOf(id)));
 		}, sender -> civilianSpawnManager.getSpawnerIds()
 				.stream().map(String::valueOf).toList());
 

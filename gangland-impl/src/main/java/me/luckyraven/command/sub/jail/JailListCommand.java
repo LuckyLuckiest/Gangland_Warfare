@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.copsncrooks.jail.JailRegistry;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -27,7 +28,7 @@ class JailListCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(GanglandChatUtil.prefixMessage("Jails:"));
+			sender.sendMessage(Messages.JAIL_LIST_HEADER.toString());
 			jailRegistry.getCells().forEach(jail -> {
 				Location location = jail.getLocation();
 				int      x        = location.getBlockX();

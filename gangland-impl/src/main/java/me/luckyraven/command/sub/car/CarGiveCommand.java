@@ -56,9 +56,11 @@ class CarGiveCommand extends SubArgument {
 			boolean gave    = giveCarItem(player, carName, 1);
 
 			if (gave) {
-				user.sendMessage(GanglandChatUtil.commandMessage("Gave &b" + carName + " &7x&b1&7."));
+				user.sendMessage(Messages.CAR_GAVE.toString()
+				                                  .replace("%name%", carName)
+				                                  .replace("%amount%", "1"));
 			} else {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid car: &c" + carName));
+				user.sendMessage(Messages.CAR_INVALID.toString().replace("%car%", carName));
 			}
 		}, sender -> carAddon.getCars().keySet()
 				.stream().toList());
@@ -75,17 +77,18 @@ class CarGiveCommand extends SubArgument {
 			try {
 				carAmount = Integer.parseInt(args[3]);
 			} catch (NumberFormatException exception) {
-				user.sendMessage(GanglandChatUtil.commandMessage(Messages.MUST_BE_NUMBERS.toString()));
+				user.sendMessage(Messages.MUST_BE_NUMBERS.toString());
 				return;
 			}
 
 			boolean gave = giveCarItem(player, carName, carAmount);
 
 			if (gave) {
-				user.sendMessage(GanglandChatUtil.commandMessage(
-						"Gave &b" + carName + " &7x&b" + carAmount + "&7."));
+				user.sendMessage(Messages.CAR_GAVE.toString()
+				                                  .replace("%name%", carName)
+				                                  .replace("%amount%", String.valueOf(carAmount)));
 			} else {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Invalid car: &c" + carName));
+				user.sendMessage(Messages.CAR_INVALID.toString().replace("%car%", carName));
 			}
 		}, sender -> List.of("<amount>"));
 

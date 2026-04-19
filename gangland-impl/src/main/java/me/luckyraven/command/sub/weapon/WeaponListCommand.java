@@ -3,6 +3,7 @@ package me.luckyraven.command.sub.weapon;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -28,7 +29,7 @@ class WeaponListCommand extends SubArgument {
 		return (argument, sender, args) -> {
 			Set<String> weapons = weaponAddon.getWeaponKeys();
 
-			sender.sendMessage(GanglandChatUtil.commandMessage("List of weapons"));
+			sender.sendMessage(Messages.WEAPON_LIST_HEADER.toString());
 
 			Iterator<String> iterator = weapons.iterator();
 			StringBuilder    builder  = new StringBuilder();

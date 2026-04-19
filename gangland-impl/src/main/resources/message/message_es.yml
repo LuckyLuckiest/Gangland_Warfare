@@ -95,9 +95,11 @@ Commands:
       Ammo:
          Received: "Recibiste &8(&7%amount%&8) &e%ammo% &7munición."
          Gave: "Le diste &8(&7%amount%&8) &e%ammo% &7munición a &3%player%&7."
+         List_Header: "Lista de munición"
       Weapon:
          Received: "Recibiste &8(&7%amount%&8) &e%weapon% &7arma."
          Gave: "Le diste &8(&7%amount%&8) &e%weapon% &7arma a &3%player%&7."
+         List_Header: "Lista de armas"
    Item:
       Money:
          Gave: "Diste &b%name% &7x&b%amount%&7."
@@ -105,8 +107,15 @@ Commands:
          Not_Held: "&cNo estás sosteniendo un artículo de dinero."
          Not_Registered: "&cArtículo de dinero no registrado &3%name%&c."
          List_Header: "Lista de artículos de dinero"
+      Unique:
+         Gave: "Diste &b%name% &7x&b%amount%&7."
+         List_Header: "Lista de objetos únicos"
+      Wearable:
+         Gave: "Diste &b%name% &7x&b%amount%&7."
+         List_Header: "Lista de objetos vestibles"
    Wanted:
       Cleared_Other: "Nivel de búsqueda eliminado de &b%player%&7."
+      Status_Header: "Estado de búsqueda:"
    Economy:
       Balance:
          Player: "Tu saldo es: &b%money_symbol%%balance%"
@@ -239,6 +248,7 @@ Commands:
       Teleportation:
          Sent: "Has sido enviado a &b%location%&7."
          Timer: "Teletransportando en &b%timer%&7."
+      Deleted: "¡Punto de referencia eliminado!"
    Shop:
       Purchase:
          Success: "&aCompraste &f%item% &apor &6%money_symbol%%price%&a."
@@ -249,9 +259,64 @@ Commands:
       Admin:
          Entry_Added: "&aAgregado &f%material% &acomo entrada &f#%index% &aen la página &f%page%&a."
          Entry_Removed: "&eEntrada eliminada en el índice &f%index%&e."
+      Removed: "&aTienda &f'%shop%' &aeliminada."
+      List_Empty: "&7Aún no hay tiendas definidas."
+      Created: "&aTienda '&f%shop%&a' creada. Usa &e/glw shop edit %shop% &apara agregar objetos."
+      Title_Set: "&aTítulo de la tienda '&f%shop%&a' establecido en: %title%"
    Trader:
       Tip:
          Success: "&6Propina de &e%money_symbol%%amount%&6 — el humor del comerciante mejora."
+      Removed: "&aComerciante eliminado."
+      Renamed: "&aComerciante renombrado a &f%name%&a."
+      Shop_Changed: "&aLa tienda del comerciante se cambió a &f%shop%&a."
+      Trait_Changed: "&aEl rasgo del comerciante se cambió a &f%trait%&a."
+   Update:
+      Available: "Hay una nueva actualización, por favor escribe:%n%&7/%short_prefix% update download"
+      Latest: "Estás ejecutando la última versión."
+      Already_Latest: "Ya estás ejecutando la última versión."
+      Downloading: "Descargando la última versión..."
+      Success: "¡Descarga exitosa!"
+      Failed: "¡Descarga fallida!"
+   Fuel:
+      Capacity_Increased: "Capacidad máxima de combustible aumentada en &b%amount%&7. Nuevo máximo: &b%new_max%&7."
+      Capacity_Decreased: "Capacidad máxima de combustible reducida en &b%amount%&7. Nuevo máximo: &b%new_max%&7."
+      Refueled_Full: "Objeto reabastecido totalmente a &b%max%&7."
+      Refueled_Amount: "Añadido &b%added%&7 de combustible. Actual: &b%current%&7/&b%max%&7."
+      Defueled_Full: "Objeto totalmente vaciado de combustible."
+      Defueled_Amount: "Eliminado &b%removed%&7 de combustible. Actual: &b%current%&7/&b%max%&7."
+   Cuff:
+      Handcuffed: "&aEsposaste a &e%target%&a."
+      Released: "&aLiberaste a &e%target%&a de las esposas."
+   Jail:
+      Thrown: "&aEnviaste a &e%target%&a a la cárcel."
+      Created: "&aCárcel &e%id%&a creada en tu ubicación."
+      Removed: "&aCárcel &e%id%&a eliminada."
+      Released: "&aLiberaste a &e%target%&a de la cárcel."
+      Teleported: "Teletransportado a la cárcel &e(&b%id%&e)&7."
+   Cop:
+      No_Chased: "Ningún jugador está siendo perseguido por la policía."
+      Target_Not_Chased: "&7El jugador &e%target%&7 no está siendo perseguido por la policía."
+      Spawner:
+         Set: "&aGenerador de policía colocado en tu ubicación."
+         Removed: "&aGenerador de policía &e%id%&a eliminado."
+         Teleported: "Teletransportado al generador de policía &e(&b%id%&e)&7."
+   Car:
+      Gave: "Diste &b%name% &7x&b%amount%&7."
+      List_Header: "Lista de coches"
+   Civilian:
+      List_Empty: "No hay civiles activos actualmente."
+      Groups_Empty: "No hay grupos de civiles activos actualmente."
+      Spawned: "&aCivil &e%type%&a generado cerca de ti."
+      Group_Spawned: "&aGrupo de civiles &e%group%&a generado en tu ubicación."
+      Group_Unknown: "&cGrupo desconocido &e%group%&c."
+      Type_Unknown: "&cTipo desconocido &e%type%&c."
+      Spawner_Removed: "&aGenerador de civiles &e%id%&a eliminado."
+      Spawner_Teleported: "Teletransportado al generador de civiles &e(&b%id%&e)&7."
+      Spawn_Failed: "&cError al generar civil. Verifica que el tipo &e%type%&c sea válido y se encontró una ubicación."
+      Spawner_Type_Set: "&aGenerador de civiles &e%type%&a colocado en tu ubicación."
+      Spawner_Group_Set: "&aGenerador de grupo &e%group%&a colocado en tu ubicación."
+   Loot_Chest:
+      Removed: "&a¡Cofre de botín eliminado exitosamente!"
 
 Errors:
    Prefix: "&4Error&7: "
@@ -297,6 +362,7 @@ Errors:
       Invalid: "Punto de referencia inválido."
       Not_Selected: "No se encontró un punto de referencia seleccionado."
       Teleport_Issue: "No se puede teletransportar a &b%location%&7."
+      Invalid_Type_Header: "Tipo de punto de referencia inválido. Selecciona de la lista:"
    Cannot_Null: "¡No puede ser &cnulo&7!"
    Must_Be_Numbers: "&a%command% &7debe ser números."
    Dont_Use_Symbol: "Por favor no uses símbolos."
@@ -315,6 +381,13 @@ Errors:
          Insufficient_Value: "&cTu oferta (&6%money_symbol%%offered%&c) está por debajo del valor pedido por el comerciante de &6%money_symbol%%asking%&c."
          Not_Allowed: "&cEste comerciante no acepta intercambios."
       Not_Defined: "&cTienda &f'%shop%' &cno está definida."
+      Already_Exists: "&cLa tienda &f'%shop%' &cya existe."
+      Create_Failed: "&cError al crear: %detail%"
+      Untracked: "&cLa tienda &f'%shop%' &cno estaba registrada en disco."
+      Remove_Failed: "&cError al eliminar: %detail%"
+      Only_Players: "&cSolo los jugadores pueden ejecutar este comando."
+      Title_Empty: "&cEl título no puede estar vacío."
+      Key_Invalid: "&cLa clave debe contener solo letras minúsculas, números o guiones bajos."
    Trader:
       Tip:
          Insufficient_Funds: "&cFondos insuficientes para dar propina de &6%money_symbol%%amount%&c."
@@ -323,6 +396,24 @@ Errors:
          Missing: "&cEl rasgo &f'%trait%' &cno existe. Disponibles: &f%available%"
       Shop:
          Missing: "&cLa tienda &f'%shop%' &cno existe. Créala primero con &e/glw shop create&c."
+      Name_Empty: "&cEl nombre no puede estar vacío."
+      Look_At: "&cMira a un comerciante dentro de %range% bloques."
+      Not_Trader: "&cEsa entidad no es un comerciante."
+   Cuff:
+      Already_Cuffed: "¡Este jugador ya está esposado!"
+      Not_Cuffed: "¡Este jugador no está esposado!"
+   Jail:
+      No_Empty: "¡No se encontró una cárcel vacía!"
+      Already_Jailed: "¡El jugador ya está encarcelado!"
+      Not_Jailed: "&cEl jugador &e%target%&c no está encarcelado."
+      Exists_Nearby: "¡Ya existe una cárcel dentro de %blocks% bloques de esta ubicación!"
+   Loot_Chest:
+      Must_Look_At_Block: "&c¡Debes estar mirando un bloque a menos de 5 bloques de distancia!"
+      No_Chest_At_Location: "&c¡No se encontró un cofre de botín en esa ubicación!"
+      Requires_Wand: "¡Debes estar sosteniendo una Varita de Cofre de Botín para editar la configuración!"
+   Argument:
+      Not_Implemented: "¡Método no implementado!"
+      Confirm_Required: "Necesitas ejecutar la instrucción inicial para usar este argumento."
 
 Information:
    Prefix: "&8&l[&7Información&8&l]&7 "
@@ -330,6 +421,10 @@ Information:
       Request_Already_Sent: "¡La solicitud de alianza a esa banda ya fue enviada!"
       Already_Allied: "Ya estás aliado con esa banda."
       Kicked: "¡Has sido expulsado de la banda!"
+   Balance:
+      Registered_Only: "El saldo es solo para usuarios registrados"
+   Argument:
+      Confirm_Hint: "Para confirmar el comando, vuelve a escribirlo."
 
 Kits:
    Received: "Has recibido el kit &b%kit%&7."
@@ -391,6 +486,7 @@ Level:
 Waypoint:
    Cooldown: "&7Estás en enfriamiento. Espera &b%timer&7."
    Cancelled_Teleport: "&7Te moviste, ¡teletransportación cancelada!"
+   List_Header: "Puntos de referencia:"
 
 Signs:
    Created: '¡Señal creada con éxito!'
@@ -434,6 +530,32 @@ Gadgets:
          Fuel_Can_Empty: "&c¡El bidón de combustible está vacío!"
          Tank_Full: "&c¡El tanque del coche ya está lleno!"
          Failed: "&c¡No se pudo repostar el coche!"
+      Invalid: "Coche inválido: &c%car%"
+      Not_A_Car: "¡No es un objeto coche!"
+      Not_Registered: "Coche no registrado: &c%id%"
+
+Fuel:
+   No_Capacity: "¡El objeto sostenido no tiene capacidad de combustible!"
+   Amount_Invalid: "La cantidad debe ser mayor que cero."
+
+Jail:
+   List_Header: "Cárceles:"
+
+Cop:
+   Spawner_List_Header: "Generadores de policía:"
+
+Civilian:
+   Spawner_List_Header: "Generadores de civiles:"
+
+Item:
+   Unique:
+      Invalid: "Objeto único inválido: &c%name%"
+      Not_Registered: "Objeto único no registrado: &c%key%"
+      Not_Unique: "¡No es un objeto único!"
+   Wearable:
+      Invalid: "Objeto vestible inválido: &c%name%"
+      Not_Registered: "Objeto vestible no registrado: &c%key%"
+      Not_Wearable: "¡No es un objeto vestible registrado!"
 
 Loot_Chest:
    Cracking_Started: "&e¡Forzando el cofre... ¡Completa el minijuego!"

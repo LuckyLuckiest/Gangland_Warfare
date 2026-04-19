@@ -5,6 +5,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.item.fuel.FuelBar;
 import me.luckyraven.util.GanglandChatUtil;
@@ -38,7 +39,7 @@ class FuelInfoCommand extends SubArgument {
 			ItemStack held = player.getInventory().getItemInMainHand();
 
 			if (!Fuel.hasFuelCapacity(held)) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Held item has no fuel capacity!"));
+				user.sendMessage(Messages.FUEL_NO_CAPACITY.toString());
 				return;
 			}
 

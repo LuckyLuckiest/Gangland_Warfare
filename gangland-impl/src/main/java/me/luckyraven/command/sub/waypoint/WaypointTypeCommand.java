@@ -74,7 +74,7 @@ class WaypointTypeCommand extends SubArgument {
 					if (i < waypointTypes.length - 1) builder.append(", ");
 				}
 
-				user.sendMessage(GanglandChatUtil.errorMessage("Invalid Waypoint Type. Select from the list:"),
+				user.sendMessage(Messages.WAYPOINT_TYPE_INVALID_HEADER.toString(),
 				                 GanglandChatUtil.color("&7" + builder));
 
 				type = waypoint.getType();

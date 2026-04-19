@@ -62,7 +62,7 @@ public final class BalanceCommand extends Command {
 			user.sendMessage(GanglandChatUtil.color(
 					"&a" + Settings.getMoneySymbol() + Settings.formatDouble(user.getEconomy().getBalance())));
 		} else {
-			commandSender.sendMessage(GanglandChatUtil.informationMessage("Balance are for registered users"));
+			commandSender.sendMessage(Messages.BALANCE_REGISTERED_ONLY.toString());
 		}
 	}
 

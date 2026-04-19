@@ -41,20 +41,20 @@ class ShopRemoveCommand extends SubArgument {
 			String raw = args[2].toLowerCase();
 
 			if (!shopRegistry.exists(raw)) {
-				sender.sendMessage(GanglandChatUtil.commandMessage("&cShop '" + raw + "' does not exist."));
+				sender.sendMessage(Messages.SHOP_NOT_DEFINED.toString().replace("%shop%", raw));
 				return;
 			}
 
 			try {
 				boolean removed = shopRegistry.delete(raw);
 				if (removed) {
-					sender.sendMessage(GanglandChatUtil.commandMessage("&aRemoved shop '&f" + raw + "&a'."));
+					sender.sendMessage(Messages.SHOP_REMOVED.toString().replace("%shop%", raw));
 				} else {
-					sender.sendMessage(GanglandChatUtil.commandMessage(
-							"&cShop '" + raw + "' was not tracked on disk."));
+					sender.sendMessage(Messages.SHOP_REMOVE_UNTRACKED.toString().replace("%shop%", raw));
 				}
 			} catch (IOException e) {
-				sender.sendMessage(GanglandChatUtil.commandMessage("&cFailed to remove: " + e.getMessage()));
+				sender.sendMessage(Messages.SHOP_REMOVE_FAILED.toString()
+				                                              .replace("%detail%", String.valueOf(e.getMessage())));
 			}
 		}, sender -> new ArrayList<>(shopRegistry.keys()));
 

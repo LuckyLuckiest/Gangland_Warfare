@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -27,7 +28,7 @@ class CivilianSpawnerListCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, strings) -> {
-			sender.sendMessage(GanglandChatUtil.prefixMessage("Civilian spawners:"));
+			sender.sendMessage(Messages.CIVILIAN_SPAWNER_LIST_HEADER.toString());
 			civilianSpawnManager.getSpawners().forEach(spawner -> {
 				Location location = spawner.getLocation();
 				int      x        = location.getBlockX();

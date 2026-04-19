@@ -3,6 +3,7 @@ package me.luckyraven.command.sub.car;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.config.CarAddon;
 import me.luckyraven.util.GanglandChatUtil;
@@ -28,7 +29,7 @@ class CarListCommand extends SubArgument {
 		return (argument, sender, args) -> {
 			Map<String, Car> cars = carAddon.getCars();
 
-			sender.sendMessage(GanglandChatUtil.commandMessage("List of cars"));
+			sender.sendMessage(Messages.CAR_LIST_HEADER.toString());
 
 			Iterator<Map.Entry<String, Car>> iterator = cars.entrySet().iterator();
 			StringBuilder                    builder  = new StringBuilder();

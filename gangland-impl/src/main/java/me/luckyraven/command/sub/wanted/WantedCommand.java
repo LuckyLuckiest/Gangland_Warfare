@@ -5,6 +5,7 @@ import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.util.command.CommandHandler;
@@ -39,7 +40,7 @@ public final class WantedCommand extends Command {
 
 		if (user == null) return;
 
-		user.sendMessage(GanglandChatUtil.commandMessage("Wanted Status:"));
+		user.sendMessage(Messages.WANTED_STATUS_HEADER.toString());
 		user.sendMessage(GanglandChatUtil.color(user.getWanted().getLevelStars()));
 	}
 

@@ -5,7 +5,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.copsncrooks.npc.trader.TraderManager;
 import me.luckyraven.copsncrooks.npc.trader.TraderNpc;
-import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.Location;
@@ -17,6 +17,7 @@ import org.bukkit.util.Vector;
 
 class TraderRemoveCommand extends SubArgument {
 
+	private static final double MAX_TARGET_DISTANCE = 5D;
 	private final TraderManager traderManager;
 
 	protected TraderRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
@@ -25,8 +26,6 @@ class TraderRemoveCommand extends SubArgument {
 		this.traderManager = traderManager;
 	}
 
-	private static final double MAX_TARGET_DISTANCE = 5D;
-
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
@@ -34,20 +33,20 @@ class TraderRemoveCommand extends SubArgument {
 
 			Entity targeted = rayTraceEntity(player);
 			if (targeted == null) {
-				player.sendMessage(GanglandChatUtil.commandMessage(
-						"&cLook at a trader within 5 blocks."));
+				player.sendMessage(Messages.TRADER_LOOK_AT.toString()
+				                                          .replace("%range%",
+				                                                   String.valueOf((int) MAX_TARGET_DISTANCE)));
 				return;
 			}
 
 			TraderNpc trader = traderManager.getByEntity(targeted);
 			if (trader == null) {
-				player.sendMessage(GanglandChatUtil.commandMessage(
-						"&cThat entity is not a trader."));
+				player.sendMessage(Messages.TRADER_NOT_A_TRADER.toString());
 				return;
 			}
 
 			traderManager.remove(trader.getData().getId());
-			player.sendMessage(GanglandChatUtil.commandMessage("&aTrader removed."));
+			player.sendMessage(Messages.TRADER_REMOVED.toString());
 		};
 	}
 

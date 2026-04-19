@@ -4,7 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.DoubleArgument;
-import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.UpdateChecker;
 import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
@@ -35,12 +35,10 @@ public final class DownloadPluginCommand extends Command {
 		                                  .equalsIgnoreCase(getGangland().getDescription().getVersion());
 
 		if (newUpdate) {
-			String message = GanglandChatUtil.commandMessage(
-					"There is a new update, please type:\n&7/" + Gangland.SHORT_PREFIX + " update download");
-
-			commandSender.sendMessage(message);
+			commandSender.sendMessage(Messages.UPDATE_AVAILABLE.toString()
+			                                                   .replace("%short_prefix%", Gangland.SHORT_PREFIX));
 		} else {
-			commandSender.sendMessage(GanglandChatUtil.commandMessage("You are running the latest version."));
+			commandSender.sendMessage(Messages.UPDATE_LATEST.toString());
 		}
 	}
 
@@ -62,17 +60,17 @@ public final class DownloadPluginCommand extends Command {
 			boolean       newUpdate     = updateChecker.updateAvailable();
 
 			if (!newUpdate) {
-				sender.sendMessage(GanglandChatUtil.commandMessage("You are already running the latest version."));
+				sender.sendMessage(Messages.UPDATE_ALREADY_LATEST.toString());
 				return;
 			}
 
-			sender.sendMessage(GanglandChatUtil.commandMessage("Downloading the latest version..."));
+			sender.sendMessage(Messages.UPDATE_DOWNLOADING.toString());
 			boolean downloadSuccess = getGangland().getUpdateChecker().downloadLatestVersion();
 
 			if (downloadSuccess) {
-				sender.sendMessage(GanglandChatUtil.commandMessage("Download successful!"));
+				sender.sendMessage(Messages.UPDATE_DOWNLOAD_SUCCESS.toString());
 			} else {
-				sender.sendMessage(GanglandChatUtil.commandMessage("Download failed!"));
+				sender.sendMessage(Messages.UPDATE_DOWNLOAD_FAILED.toString());
 			}
 		}, getPermission() + ".download");
 	}

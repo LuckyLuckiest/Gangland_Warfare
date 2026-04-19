@@ -8,7 +8,6 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.item.fuel.Fuel;
-import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -44,7 +43,7 @@ class FuelRefuelCommand extends SubArgument {
 			ItemStack held = player.getInventory().getItemInMainHand();
 
 			if (!Fuel.hasFuelCapacity(held)) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Held item has no fuel capacity!"));
+				user.sendMessage(Messages.FUEL_NO_CAPACITY.toString());
 				return;
 			}
 
@@ -52,7 +51,8 @@ class FuelRefuelCommand extends SubArgument {
 			ItemStack updated = Fuel.writeFuelCurrent(held, maxFuel);
 			player.getInventory().setItemInMainHand(updated);
 
-			user.sendMessage(GanglandChatUtil.commandMessage("Item fully refueled to &b" + maxFuel + "&7."));
+			user.sendMessage(Messages.FUEL_REFUELED_FULL.toString()
+			                                            .replace("%max%", String.valueOf(maxFuel)));
 		};
 	}
 
@@ -66,7 +66,7 @@ class FuelRefuelCommand extends SubArgument {
 			ItemStack held = player.getInventory().getItemInMainHand();
 
 			if (!Fuel.hasFuelCapacity(held)) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Held item has no fuel capacity!"));
+				user.sendMessage(Messages.FUEL_NO_CAPACITY.toString());
 				return;
 			}
 
@@ -75,12 +75,12 @@ class FuelRefuelCommand extends SubArgument {
 			try {
 				refuelAmount = Integer.parseInt(args[2]);
 			} catch (NumberFormatException exception) {
-				user.sendMessage(GanglandChatUtil.commandMessage(Messages.MUST_BE_NUMBERS.toString()));
+				user.sendMessage(Messages.MUST_BE_NUMBERS.toString());
 				return;
 			}
 
 			if (refuelAmount <= 0) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Amount must be greater than zero."));
+				user.sendMessage(Messages.FUEL_AMOUNT_INVALID.toString());
 				return;
 			}
 
@@ -90,9 +90,10 @@ class FuelRefuelCommand extends SubArgument {
 			ItemStack updated    = Fuel.writeFuelCurrent(held, newCurrent);
 			player.getInventory().setItemInMainHand(updated);
 
-			user.sendMessage(GanglandChatUtil.commandMessage(
-					"Added &b" + (newCurrent - current) + "&7 fuel. Current: &b" + newCurrent + "&7/&b" + maxFuel +
-					"&7."));
+			user.sendMessage(Messages.FUEL_REFUELED_AMOUNT.toString()
+			                                              .replace("%added%", String.valueOf(newCurrent - current))
+			                                              .replace("%current%", String.valueOf(newCurrent))
+			                                              .replace("%max%", String.valueOf(maxFuel)));
 		}, sender -> List.of("<amount>"));
 
 		this.addSubArgument(amount);

@@ -186,7 +186,7 @@ public class Argument implements Cloneable {
 
 	public void executeArgument(CommandSender sender, String[] args) {
 		if (this.action != null) this.action.accept(this, sender, args);
-		else sender.sendMessage(GanglandChatUtil.errorMessage("Not implemented method!"));
+		else sender.sendMessage(Messages.ARGUMENT_NOT_IMPLEMENTED.toString());
 	}
 
 	@Override

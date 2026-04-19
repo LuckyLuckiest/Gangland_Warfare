@@ -3,6 +3,7 @@ package me.luckyraven.command.sub.shop;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.shop.ShopRegistry;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -22,7 +23,7 @@ class ShopListCommand extends SubArgument {
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
 			if (shopRegistry.keys().isEmpty()) {
-				sender.sendMessage(GanglandChatUtil.commandMessage("&7No shops defined yet."));
+				sender.sendMessage(Messages.SHOP_LIST_EMPTY.toString());
 				return;
 			}
 

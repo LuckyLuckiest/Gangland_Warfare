@@ -54,7 +54,7 @@ class CopSpawnerRemoveCommand extends SubArgument {
 
 			copSpawnManager.removeSpawner(id);
 
-			sender.sendMessage(GanglandChatUtil.commandMessage("&aCop spawner &e" + id + "&a removed."));
+			sender.sendMessage(Messages.COP_SPAWNER_REMOVED.toString().replace("%id%", String.valueOf(id)));
 		}, sender -> copSpawnManager.getSpawnerIds()
 				.stream().map(String::valueOf).toList());
 

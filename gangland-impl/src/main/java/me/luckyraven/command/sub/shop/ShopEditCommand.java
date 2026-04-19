@@ -48,7 +48,7 @@ class ShopEditCommand extends SubArgument {
 			String         raw = args[2].toLowerCase();
 			ShopDefinition def = shopRegistry.get(raw);
 			if (def == null) {
-				player.sendMessage(GanglandChatUtil.commandMessage("&cShop '" + raw + "' does not exist."));
+				player.sendMessage(Messages.SHOP_NOT_DEFINED.toString().replace("%shop%", raw));
 				return;
 			}
 

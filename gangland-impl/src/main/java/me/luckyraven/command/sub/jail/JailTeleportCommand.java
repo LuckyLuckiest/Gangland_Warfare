@@ -60,7 +60,7 @@ class JailTeleportCommand extends SubArgument {
 			}
 
 			player.teleport(location);
-			sender.sendMessage(GanglandChatUtil.commandMessage("Teleported to jail &e(&b" + id + "&e)&7."));
+			sender.sendMessage(Messages.JAIL_TELEPORTED.toString().replace("%id%", String.valueOf(id)));
 		}, sender -> {
 			return jailRegistry.getCells()
 					.stream().map(jail -> String.valueOf(jail.getId())).toList();

@@ -61,7 +61,7 @@ class CopSpawnerTeleportCommand extends SubArgument {
 			}
 
 			player.teleport(location);
-			sender.sendMessage(GanglandChatUtil.commandMessage("Teleported to cop spawner &e(&b" + id + "&e)&7."));
+			sender.sendMessage(Messages.COP_SPAWNER_TELEPORTED.toString().replace("%id%", String.valueOf(id)));
 		}, sender -> copSpawnManager.getSpawnerIds()
 				.stream().map(String::valueOf).toList());
 

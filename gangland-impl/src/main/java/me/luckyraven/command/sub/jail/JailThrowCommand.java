@@ -8,7 +8,6 @@ import me.luckyraven.copsncrooks.detainment.DetainmentRegistry;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.jail.Jail;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.Bukkit;
@@ -58,17 +57,17 @@ class JailThrowCommand extends SubArgument {
 			Jail jail = detainmentRegistry.findEmptyJail();
 
 			if (jail == null) {
-				sender.sendMessage(GanglandChatUtil.errorMessage("No empty jail found!"));
+				sender.sendMessage(Messages.JAIL_NO_EMPTY.toString());
 				return;
 			}
 
 			if (detainmentService.isJailed(target)) {
-				sender.sendMessage(GanglandChatUtil.errorMessage("Player is already jailed!"));
+				sender.sendMessage(Messages.JAIL_ALREADY_JAILED.toString());
 				return;
 			}
 
 			detainmentService.jail(target, jail.getId());
-			sender.sendMessage(GanglandChatUtil.commandMessage("&aThrown &e" + target.getName() + "&a to jail."));
+			sender.sendMessage(Messages.JAIL_THROWN.toString().replace("%target%", target.getName()));
 		}, sender -> {
 			Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
 

@@ -5,6 +5,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -28,7 +29,7 @@ class CivilianListCommand extends SubArgument {
 			Collection<CivilianNpc> npcs = civilianService.getActiveNpcs();
 
 			if (npcs.isEmpty()) {
-				sender.sendMessage(GanglandChatUtil.commandMessage("No civilians are currently active."));
+				sender.sendMessage(Messages.CIVILIAN_LIST_EMPTY.toString());
 				return;
 			}
 

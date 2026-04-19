@@ -65,7 +65,7 @@ public final class UncuffCommand extends Command {
 			}
 
 			if (!detainmentService.isHandcuffed(target)) {
-				sender.sendMessage(GanglandChatUtil.errorMessage("This player is not handcuffed!"));
+				sender.sendMessage(Messages.CUFF_NOT_CUFFED.toString());
 				return;
 			}
 
@@ -77,6 +77,6 @@ public final class UncuffCommand extends Command {
 	private void releasePlayer(CommandSender sender, Player target) {
 		detainmentService.release(target);
 
-		sender.sendMessage(GanglandChatUtil.commandMessage("&aReleased &e" + target.getName() + "&a from handcuffs."));
+		sender.sendMessage(Messages.CUFF_RELEASED.toString().replace("%target%", target.getName()));
 	}
 }

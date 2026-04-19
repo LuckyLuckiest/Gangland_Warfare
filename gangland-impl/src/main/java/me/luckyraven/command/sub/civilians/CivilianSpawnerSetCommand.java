@@ -51,14 +51,13 @@ class CivilianSpawnerSetCommand extends SubArgument {
 			String typeId = args[3];
 
 			if (!civilianService.getCiviliansConfig().types().containsKey(typeId)) {
-				sender.sendMessage(GanglandChatUtil.commandMessage("&cUnknown type &e" + typeId + "&c."));
+				sender.sendMessage(Messages.CIVILIAN_TYPE_UNKNOWN.toString().replace("%type%", typeId));
 				return;
 			}
 
 			civilianSpawnManager.setTypeSpawnerLocation(player.getLocation(), typeId);
 
-			sender.sendMessage(GanglandChatUtil.commandMessage(
-					"&aCivilian spawner &e" + typeId + "&a set at your location."));
+			sender.sendMessage(Messages.CIVILIAN_SPAWNER_TYPE_SET.toString().replace("%type%", typeId));
 		}, sender -> new ArrayList<>(civilianService.getCiviliansConfig().types().keySet()));
 
 		this.addSubArgument(typeArg);

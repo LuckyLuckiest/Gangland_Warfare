@@ -8,7 +8,6 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.item.fuel.Fuel;
-import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -44,14 +43,14 @@ class FuelDefuelCommand extends SubArgument {
 			ItemStack held = player.getInventory().getItemInMainHand();
 
 			if (!Fuel.hasFuelCapacity(held)) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Held item has no fuel capacity!"));
+				user.sendMessage(Messages.FUEL_NO_CAPACITY.toString());
 				return;
 			}
 
 			ItemStack updated = Fuel.writeFuelCurrent(held, 0);
 			player.getInventory().setItemInMainHand(updated);
 
-			user.sendMessage(GanglandChatUtil.commandMessage("Item fully defueled."));
+			user.sendMessage(Messages.FUEL_DEFUELED_FULL.toString());
 		};
 	}
 
@@ -65,7 +64,7 @@ class FuelDefuelCommand extends SubArgument {
 			ItemStack held = player.getInventory().getItemInMainHand();
 
 			if (!Fuel.hasFuelCapacity(held)) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Held item has no fuel capacity!"));
+				user.sendMessage(Messages.FUEL_NO_CAPACITY.toString());
 				return;
 			}
 
@@ -74,12 +73,12 @@ class FuelDefuelCommand extends SubArgument {
 			try {
 				defuelAmount = Integer.parseInt(args[2]);
 			} catch (NumberFormatException exception) {
-				user.sendMessage(GanglandChatUtil.commandMessage(Messages.MUST_BE_NUMBERS.toString()));
+				user.sendMessage(Messages.MUST_BE_NUMBERS.toString());
 				return;
 			}
 
 			if (defuelAmount <= 0) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Amount must be greater than zero."));
+				user.sendMessage(Messages.FUEL_AMOUNT_INVALID.toString());
 				return;
 			}
 
@@ -89,9 +88,10 @@ class FuelDefuelCommand extends SubArgument {
 			ItemStack updated    = Fuel.writeFuelCurrent(held, newCurrent);
 			player.getInventory().setItemInMainHand(updated);
 
-			user.sendMessage(GanglandChatUtil.commandMessage(
-					"Removed &b" + (current - newCurrent) + "&7 fuel. Current: &b" + newCurrent + "&7/&b" + maxFuel +
-					"&7."));
+			user.sendMessage(Messages.FUEL_DEFUELED_AMOUNT.toString()
+			                                              .replace("%removed%", String.valueOf(current - newCurrent))
+			                                              .replace("%current%", String.valueOf(newCurrent))
+			                                              .replace("%max%", String.valueOf(maxFuel)));
 		}, sender -> List.of("<amount>"));
 
 		this.addSubArgument(amount);

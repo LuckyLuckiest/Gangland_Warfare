@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.data.teleportation.WaypointManager;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -29,7 +30,7 @@ class WaypointListCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(GanglandChatUtil.prefixMessage("Waypoints:"));
+			sender.sendMessage(Messages.WAYPOINT_LIST_HEADER.toString());
 
 			waypointManager.getWaypoints()
 			               .entrySet()

@@ -2,7 +2,7 @@ package me.luckyraven.command.argument.types;
 
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ArgumentLock;
-import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -57,8 +57,7 @@ public class ConfirmArgument extends Argument {
 	@Override
 	public void executeArgument(CommandSender sender, String[] args) {
 		if (!lock.isLocked(sender)) {
-			sender.sendMessage(
-					GanglandChatUtil.errorMessage("Need to execute the initial statement to use this argument."));
+			sender.sendMessage(Messages.ARGUMENT_CONFIRM_REQUIRED.toString());
 			return;
 		}
 

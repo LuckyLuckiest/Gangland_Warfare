@@ -2,7 +2,7 @@ package me.luckyraven.command.argument.types;
 
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ArgumentLock;
-import me.luckyraven.util.GanglandChatUtil;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
@@ -34,7 +34,7 @@ public class DoubleArgument extends Argument {
 	@Override
 	public void executeArgument(CommandSender sender, String[] args) {
 		if (!lock.isLocked(sender)) {
-			sender.sendMessage(GanglandChatUtil.informationMessage("To confirm the command re-type it again."));
+			sender.sendMessage(Messages.ARGUMENT_CONFIRM_HINT.toString());
 			lock.lock(sender);
 			return;
 		}

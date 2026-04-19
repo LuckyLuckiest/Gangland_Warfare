@@ -5,6 +5,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.config.CarAddon;
 import me.luckyraven.util.GanglandChatUtil;
@@ -39,7 +40,7 @@ class CarInfoCommand extends SubArgument {
 			ItemStack itemStack = player.getInventory().getItemInMainHand();
 
 			if (!Car.isCarItem(itemStack)) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Not a car item!"));
+				user.sendMessage(Messages.CAR_NOT_A_CAR.toString());
 				return;
 			}
 
@@ -50,7 +51,7 @@ class CarInfoCommand extends SubArgument {
 			Car car = carAddon.getCar(carId);
 
 			if (car == null) {
-				user.sendMessage(GanglandChatUtil.prefixMessage("Car not registered: &c" + carId));
+				user.sendMessage(Messages.CAR_NOT_REGISTERED.toString().replace("%id%", carId));
 				return;
 			}
 
