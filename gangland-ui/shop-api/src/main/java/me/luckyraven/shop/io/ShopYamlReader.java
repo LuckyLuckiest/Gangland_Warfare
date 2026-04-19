@@ -44,6 +44,14 @@ public final class ShopYamlReader {
 		String title = root.get(KEY_TITLE).asString().orDefault(DEFAULT_TITLE);
 		int    size  = root.get(KEY_SIZE).asInt().orDefault(DEFAULT_SIZE);
 
+		// Entries and categories are read off the raw FileConfiguration below (the NodeReader positional layer cannot
+		// rebuild Bukkit-serialized ItemStacks from their mapping form). Touch the keys here so the unknown-key sweep
+		// still knows they are legitimate root keys.
+		root.get(KEY_BUY_ENTRIES);
+		root.get(KEY_SELL_ENTRIES);
+		root.get(KEY_SELL_CATEGORIES);
+		root.get(KEY_BARTER_CATEGORIES);
+
 		if (size <= 0 || size > 54 || size % 9 != 0) {
 			log.warn("Shop '{}' has invalid size {}; falling back to {}", key, size, DEFAULT_SIZE);
 			size = DEFAULT_SIZE;
