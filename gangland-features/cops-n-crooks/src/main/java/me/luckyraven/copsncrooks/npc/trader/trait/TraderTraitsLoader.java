@@ -1,21 +1,38 @@
 package me.luckyraven.copsncrooks.npc.trader.trait;
 
 import lombok.CustomLog;
-import lombok.RequiredArgsConstructor;
+import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.FileHandler;
+import me.luckyraven.persistence.FileManager;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @CustomLog
-@RequiredArgsConstructor
 public final class TraderTraitsLoader {
 
+	private final FileHandler         fileHandler;
 	private final TraderTraitRegistry registry;
 
-	public void load(FileHandler fileHandler) {
+	public TraderTraitsLoader(TraderTraitRegistry registry, FileManager fileManager) {
+		this.registry = registry;
+
+		try {
+			String fileName = "trader_traits";
+
+			fileManager.checkFileLoaded(fileName);
+
+			this.fileHandler = Objects.requireNonNull(fileManager.getFile(fileName));
+		} catch (IOException e) {
+			throw new PluginException(e);
+		}
+	}
+
+	public void load() {
 		FileConfiguration cfg = fileHandler.getFileConfiguration();
 		if (cfg == null) {
 			log.warn("Trader traits could not be loaded; trait registry left untouched");

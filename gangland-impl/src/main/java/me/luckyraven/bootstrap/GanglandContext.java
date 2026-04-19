@@ -165,8 +165,9 @@ public final class GanglandContext {
 		ListenerManager listenerManager = container.getInstance(ListenerManager.class);
 		if (listenerManager == null) {
 			throw new IllegalStateException(
-					"GanglandContext.bootstrap(): ListenerManager bean missing. "
-					+ "Add a @Bean method that produces ListenerManager to a CONFIG-phase @Configuration class.");
+					this.getClass().getSimpleName() + ".bootstrap(): " + ListenerManager.class.getSimpleName() +
+					" bean missing. Add a @Bean method that produces " + ListenerManager.class.getSimpleName() +
+					" to a CONFIG-phase @Configuration class.");
 		}
 		listenerManager.scanAndRegisterListeners(LISTENER_PACKAGE, gangland);
 		listenerManager.registerEvents();
@@ -177,8 +178,9 @@ public final class GanglandContext {
 		CommandManager commandManager = container.getInstance(CommandManager.class);
 		if (commandManager == null) {
 			throw new IllegalStateException(
-					"GanglandContext.bootstrap(): CommandManager bean missing. "
-					+ "Add a @Bean method that produces CommandManager to a CONFIG-phase @Configuration class.");
+					this.getClass().getSimpleName() + ".bootstrap(): " + CommandManager.class.getSimpleName() +
+					" bean missing. Add a @Bean method that produces " + CommandManager.class.getSimpleName() +
+					" to a CONFIG-phase @Configuration class.");
 		}
 		PluginCommand command = gangland.getCommand(Gangland.SHORT_PREFIX);
 		if (command == null) {

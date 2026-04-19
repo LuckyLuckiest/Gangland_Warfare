@@ -22,7 +22,6 @@ import me.luckyraven.file.configuration.shop.GanglandShopDisplayResolver;
 import me.luckyraven.file.configuration.shop.GanglandShopMessages;
 import me.luckyraven.file.configuration.shop.TraderSettingsImpl;
 import me.luckyraven.item.ItemRefresherRegistry;
-import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
@@ -43,8 +42,6 @@ import me.luckyraven.util.autowire.bean.Configuration;
 import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.weapon.WeaponService;
 import org.bukkit.entity.Player;
-
-import java.io.IOException;
 
 @CustomLog
 @Configuration
@@ -126,17 +123,8 @@ public class ShopConfig {
 
 	@Bean
 	public TraderTraitsLoader traderTraitsLoader(TraderTraitRegistry registry, FileManager fileManager) {
-		TraderTraitsLoader loader = new TraderTraitsLoader(registry);
-
-		try {
-			FileHandler handler = new FileHandler(gangland, "trader_traits", "", "yml");
-			handler.create(true);
-			if (!fileManager.contains("trader_traits")) fileManager.addFile(handler, true);
-			loader.load(handler);
-		} catch (IOException e) {
-			log.error("Failed to initialize trader_traits.yml: {}", e.getMessage(), e);
-		}
-
+		TraderTraitsLoader loader = new TraderTraitsLoader(registry, fileManager);
+		loader.load();
 		return loader;
 	}
 

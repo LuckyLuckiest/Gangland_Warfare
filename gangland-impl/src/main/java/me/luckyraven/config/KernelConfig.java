@@ -116,15 +116,19 @@ public class KernelConfig {
 		FileManager fm = new FileManager(gangland);
 		fm.addFile(new FileHandler(gangland, "settings", ".yml"), true);
 		fm.addFile(new FileHandler(gangland, "scoreboard", ".yml"), true);
-		fm.addFile(new FileHandler(gangland, "ammunition", ".yml"), true);
-		fm.addFile(new FileHandler(gangland, "unique_items", ".yml"), true);
-		fm.addFile(new FileHandler(gangland, "loot_chests", "loot", ".yml"), true);
-		fm.addFile(new FileHandler(gangland, "tiers", "loot", ".yml"), true);
-		fm.addFile(new FileHandler(gangland, "cops", ".yml"), true);
-		fm.addFile(new FileHandler(gangland, "civilians", ".yml"), true);
-		fm.addFile(new FileHandler(gangland, "wearables", ".yml"), true);
-		fm.addFile(new FileHandler(gangland, "cars", ".yml"), true);
-		fm.addFile(new FileHandler(gangland, "money", ".yml"), true);
+
+		fm.addFile(new FileHandler(gangland, "ammunition", "items", ".yml"), true);
+		fm.addFile(new FileHandler(gangland, "unique_items", "items", ".yml"), true);
+		fm.addFile(new FileHandler(gangland, "wearables", "items", ".yml"), true);
+		fm.addFile(new FileHandler(gangland, "cars", "items", ".yml"), true);
+		fm.addFile(new FileHandler(gangland, "money", "items", ".yml"), true);
+
+		fm.addFile(new FileHandler(gangland, "loot_chests", "lootchests", ".yml"), true);
+		fm.addFile(new FileHandler(gangland, "tiers", "lootchests", ".yml"), true);
+
+		fm.addFile(new FileHandler(gangland, "cops", "npc", ".yml"), true);
+		fm.addFile(new FileHandler(gangland, "civilians", "npc", ".yml"), true);
+		fm.addFile(new FileHandler(gangland, "trader_traits", "npc", ".yml"), true);
 		return fm;
 	}
 
