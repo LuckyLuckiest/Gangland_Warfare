@@ -1,0 +1,51 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     / ________/      \_____   _____/      / __ \         | #
+# |    | /                     | |           / /  \ \        | #
+# |    | |  _______            | |          / /____\ \       | #
+# |    | |  \_____ \           | |         / ________ \      | #
+# |    | \_______/ ||          | |        / /        \ \     | #
+# |     \__________/           |_|       /_/          \_\    | #
+# |                                                          | #
+# |                   File: bank_tiers.yml                   | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+#
+# Bank account tier ladder used by the Banker NPC.
+#
+# Players start at the lowest-ordered tier. Interacting with any Banker NPC offers a one-click upgrade to the
+# next tier; the upgrade cost is debited from the bank balance and the account's maximum-balance cap is raised
+# accordingly. Tiers are global — any Banker NPC offers the same ladder.
+#
+# Fields:
+# - Display_Name    human-readable tier label (supports &-color codes)
+# - Max_Balance     cap on the player's bank balance while at this tier
+# - Upgrade_Cost    bank-balance cost to upgrade INTO this tier (first tier should be 0)
+# - Order           ascending integer — lower = earlier in the ladder; must be unique
+#
+# Add, remove or re-price tiers freely; the loader re-reads the file on /glw reload.
+
+Basic:
+   Display_Name: "&7Basic Account"
+   Max_Balance: 100_000
+   Upgrade_Cost: 0
+   Order: 0
+
+Premium:
+   Display_Name: "&ePremium Account"
+   Max_Balance: 1_000_000
+   Upgrade_Cost: 50_000
+   Order: 1
+
+Elite:
+   Display_Name: "&6Elite Account"
+   Max_Balance: 10_000_000
+   Upgrade_Cost: 500_000
+   Order: 2
+
+Vault:
+   Display_Name: "&b&lVault Account"
+   Max_Balance: 100_000_000
+   Upgrade_Cost: 5_000_000
+   Order: 3

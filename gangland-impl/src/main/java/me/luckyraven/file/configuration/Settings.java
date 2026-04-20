@@ -48,8 +48,11 @@ public class Settings implements FileInitializer {
 	// user configuration
 	private static @Getter double  userInitialBalance, userMaxBalance;
 	private static @Getter double bankInitialBalance, bankCreateFee, bankMaxBalance;
+	private static @Getter double bankRenameFee, bankDeleteFee;
+	private static @Getter double bankDailyDepositLimit, bankDailyWithdrawLimit;
+	private static @Getter long bankResetPeriodSeconds;
 	// user levels
-	private static @Getter int userMaxLevel, userLevelBaseAmount;
+	private static @Getter int  userMaxLevel, userLevelBaseAmount;
 	private static @Getter String  userLevelFormula;
 	private static @Getter int     userSkillUpgrade;
 	private static @Getter double  userSkillCost;
@@ -126,64 +129,69 @@ public class Settings implements FileInitializer {
 	private static @Getter int copSpawnVerticalSearchRange, copSpawnYOffset, copSpawnMinOpenHorizontalSides;
 	private static @Getter int copSpawnPhase1Attempts, copSpawnPhase2Attempts;
 	// cop pursuit leash configuration
-	private static @Getter double copPursuitMaxDistance;
-	private static @Getter int    copPursuitMaxTicks;
+	private static @Getter double  copPursuitMaxDistance;
+	private static @Getter int     copPursuitMaxTicks;
 	// cop return / despawn configuration
-	private static @Getter int    copReturnMaxTicks;
-	private static @Getter double copReturnStationArrivalDistance;
+	private static @Getter int     copReturnMaxTicks;
+	private static @Getter double  copReturnStationArrivalDistance;
 	// cop misc configuration
-	private static @Getter int    copStartingAmmoMagazines;
-	private static @Getter int    jailMaxCapacity;
+	private static @Getter int     copStartingAmmoMagazines;
+	private static @Getter int     jailMaxCapacity;
 	// detainment transit / guard
-	private static @Getter int    detainmentTransitDelayTicks;
-	private static @Getter double detainmentGuardRadius;
+	private static @Getter int     detainmentTransitDelayTicks;
+	private static @Getter double  detainmentGuardRadius;
 	// detainment break-free minigame
-	private static @Getter int    detainmentBreakFreeTapsRequired;
-	private static @Getter int    detainmentBreakFreeResetWindowTicks;
+	private static @Getter int     detainmentBreakFreeTapsRequired;
+	private static @Getter int     detainmentBreakFreeResetWindowTicks;
 	// detainment handcuff bribe
-	private static @Getter double detainmentHandcuffBribeBaseCost;
-	private static @Getter double detainmentHandcuffBribePerLevel;
+	private static @Getter double  detainmentHandcuffBribeBaseCost;
+	private static @Getter double  detainmentHandcuffBribePerLevel;
 	// detainment bail
-	private static @Getter double detainmentBailBaseCost;
-	private static @Getter double detainmentBailPerLevel;
+	private static @Getter double  detainmentBailBaseCost;
+	private static @Getter double  detainmentBailPerLevel;
 	// detainment jail bribe
-	private static @Getter double detainmentJailBribeBaseCost;
-	private static @Getter double detainmentJailBribePerLevel;
-	private static @Getter double detainmentJailBribeSuccessChance;
-	private static @Getter int    detainmentJailBribeFailPenaltySeconds;
+	private static @Getter double  detainmentJailBribeBaseCost;
+	private static @Getter double  detainmentJailBribePerLevel;
+	private static @Getter double  detainmentJailBribeSuccessChance;
+	private static @Getter int     detainmentJailBribeFailPenaltySeconds;
 	// detainment sentence
-	private static @Getter int    detainmentSentenceBaseSeconds;
-	private static @Getter int    detainmentSentencePerWantedLevelSeconds;
+	private static @Getter int     detainmentSentenceBaseSeconds;
+	private static @Getter int     detainmentSentencePerWantedLevelSeconds;
 	// detainment fallback exit waypoint
-	private static @Getter String detainmentFallbackExitWaypoint;
+	private static @Getter String  detainmentFallbackExitWaypoint;
 	// detainment sounds (XSound names; built into SoundConfiguration at playback)
-	private static @Getter String detainmentBailSuccessSound;
-	private static @Getter String detainmentBribeSuccessSound;
-	private static @Getter String detainmentBribeFailSound;
-	private static @Getter String detainmentTransitCommitSound;
-	private static @Getter String detainmentSentenceCompleteSound;
+	private static @Getter String  detainmentBailSuccessSound;
+	private static @Getter String  detainmentBribeSuccessSound;
+	private static @Getter String  detainmentBribeFailSound;
+	private static @Getter String  detainmentTransitCommitSound;
+	private static @Getter String  detainmentSentenceCompleteSound;
 	// gadget - jetpack
-	private static @Getter int    gadgetJetpackThrustRampTicks;
-	private static @Getter double gadgetJetpackDescentAccel;
-	private static @Getter double gadgetJetpackMaxDescentSpeed;
-	private static @Getter double gadgetJetpackHorizInfluence;
-	private static @Getter double gadgetJetpackMaxHorizSpeed;
+	private static @Getter int     gadgetJetpackThrustRampTicks;
+	private static @Getter double  gadgetJetpackDescentAccel;
+	private static @Getter double  gadgetJetpackMaxDescentSpeed;
+	private static @Getter double  gadgetJetpackHorizInfluence;
+	private static @Getter double  gadgetJetpackMaxHorizSpeed;
 	// gadget - car
-	private static @Getter double gadgetCarReverseSpeedRatio;
-	private static @Getter double gadgetCarHardBrakeMultiplier;
-	private static @Getter int    gadgetCarFuelConsumePerTick;
+	private static @Getter double  gadgetCarReverseSpeedRatio;
+	private static @Getter double  gadgetCarHardBrakeMultiplier;
+	private static @Getter int     gadgetCarFuelConsumePerTick;
 	// block regeneration (weapon Break_Blocks modifier tuning)
-	private static @Getter int    blockRestoreDelayTicks;
-	private static @Getter int    blockRegenerationDelayTicks;
-	private static @Getter int    blockRegenerationStepTicks;
+	private static @Getter int     blockRestoreDelayTicks;
+	private static @Getter int     blockRegenerationDelayTicks;
+	private static @Getter int     blockRegenerationStepTicks;
 	// trader configuration
-	private static @Getter int    traderRespawnCooldownSeconds;
-	private static @Getter int    traderHeadTrackRadius;
-	private static @Getter String traderFallbackTraitId;
-	private static @Getter int    traderMaxModeMultiplier;
-	private static @Getter int    traderSellMaxOfferSlots;
-	private static @Getter double traderMoodPerSale;
-	private static @Getter double traderTipAmount;
+	private static @Getter int     traderRespawnCooldownSeconds;
+	private static @Getter int     traderHeadTrackRadius;
+	private static @Getter String  traderFallbackTraitId;
+	private static @Getter int     traderMaxModeMultiplier;
+	private static @Getter int     traderSellMaxOfferSlots;
+	private static @Getter double  traderMoodPerSale;
+	private static @Getter double  traderTipAmount;
+	// banker configuration
+	private static @Getter int     bankerHeadTrackRadius;
+	private static @Getter double  bankerMaxHealth;
+	private static         boolean bankerInvulnerable;
+	private static @Getter String  bankerFallbackTierId;
 	// loot chest configuration
 	private static @Getter long   lootChestCountdownTimer;
 	private static @Getter String lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
@@ -194,7 +202,6 @@ public class Settings implements FileInitializer {
 	// money drop (cash items dropped by mobs / cops / civilians / players on death)
 	private static @Getter boolean      moneyDropEnabled;
 	private final          FileHandler  fileHandler;
-
 	public Settings(FileManager fileManager) {
 		try {
 			String fileName = "settings";
@@ -205,6 +212,10 @@ public class Settings implements FileInitializer {
 		} catch (IOException exception) {
 			throw new PluginException(exception);
 		}
+	}
+
+	public static boolean isBankerInvulnerable() {
+		return bankerInvulnerable;
 	}
 
 	public static String formatDouble(double value) {
@@ -353,17 +364,22 @@ public class Settings implements FileInitializer {
 		NodeReader level   = section(user, "Level", report);
 		NodeReader skill   = section(level, "Skill", report);
 
-		userInitialBalance  = dbl(account, "Initial_Balance", 0);
-		userMaxBalance      = dbl(account, "Maximum_Balance", 10_000_000);
-		bankInitialBalance  = dbl(bank, "Initial_Balance", 0);
-		bankCreateFee       = dbl(bank, "Create_Cost", 5_000);
-		bankMaxBalance      = dbl(bank, "Maximum_Balance", 1_000_000_000);
-		userMaxLevel        = intVal(level, "Maximum_Level", 100);
-		userLevelBaseAmount = intVal(level, "Base_Amount", 1_000);
-		userLevelFormula    = str(level, "Formula", "base * level ^ 1.5");
-		userSkillUpgrade    = intVal(skill, "Upgrade", 1);
-		userSkillCost       = dbl(skill, "Cost", 500);
-		userSkillFormula    = str(skill, "Formula", "base * level ^ 1.8");
+		userInitialBalance     = dbl(account, "Initial_Balance", 0);
+		userMaxBalance         = dbl(account, "Maximum_Balance", 10_000_000);
+		bankInitialBalance     = dbl(bank, "Initial_Balance", 0);
+		bankCreateFee          = dbl(bank, "Create_Cost", 5_000);
+		bankMaxBalance         = dbl(bank, "Maximum_Balance", 1_000_000_000);
+		bankRenameFee          = dbl(bank, "Rename_Fee", 1_000);
+		bankDeleteFee          = dbl(bank, "Delete_Fee", 2_000);
+		bankDailyDepositLimit  = dbl(bank, "Daily_Deposit_Limit", 10_000);
+		bankDailyWithdrawLimit = dbl(bank, "Daily_Withdraw_Limit", 10_000);
+		bankResetPeriodSeconds = intVal(bank, "Reset_Period_Seconds", 86_400);
+		userMaxLevel           = intVal(level, "Maximum_Level", 100);
+		userLevelBaseAmount    = intVal(level, "Base_Amount", 1_000);
+		userLevelFormula       = str(level, "Formula", "base * level ^ 1.5");
+		userSkillUpgrade       = intVal(skill, "Upgrade", 1);
+		userSkillCost          = dbl(skill, "Cost", 500);
+		userSkillFormula       = str(skill, "Formula", "base * level ^ 1.8");
 
 		// user death
 		NodeReader death      = section(user, "Death", report);
@@ -630,6 +646,13 @@ public class Settings implements FileInitializer {
 		traderSellMaxOfferSlots      = intVal(traderSell, "Max_Offer_Slots", 20);
 		traderMoodPerSale            = dbl(traderSell, "Mood_Per_Sale", 0.02);
 		traderTipAmount              = dbl(trader, "Tip_Amount", 100.0);
+
+		// banker
+		NodeReader banker = section(root, "Banker", report);
+		bankerHeadTrackRadius = intVal(banker, "Head_Track_Radius", 8);
+		bankerMaxHealth       = dbl(banker, "Max_Health", 20.0);
+		bankerInvulnerable    = bool(banker, "Invulnerable", true);
+		bankerFallbackTierId  = str(banker, "Fallback_Tier_Id", "Basic");
 
 		if (!report.isEmpty()) report.log(log);
 

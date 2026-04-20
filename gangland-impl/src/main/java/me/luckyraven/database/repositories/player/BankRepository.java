@@ -12,6 +12,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -39,11 +41,29 @@ public class BankRepository extends AbstractRepository<Bank> {
 			int    v           = 0;
 			UUID   uuid        = UUID.fromString(String.valueOf(result[v++]));
 			String name        = String.valueOf(result[v++]);
-			double bankBalance = (double) result[v];
+			double bankBalance = ((Number) result[v++]).doubleValue();
 
-			// Create bank and link to user
+			Object rawTier        = result[v++];
+			String tierId         = rawTier == null ? null : String.valueOf(rawTier);
+			double depositedToday = result[v] == null ? 0D : ((Number) result[v]).doubleValue();
+			v++;
+			double withdrawnToday = result[v] == null ? 0D : ((Number) result[v]).doubleValue();
+			v++;
+			Object rawReset = result[v];
+
+			Instant resetAt = null;
+			if (rawReset != null) {
+				try {
+					resetAt = Instant.parse(String.valueOf(rawReset));
+				} catch (DateTimeParseException ignored) { }
+			}
+
 			Bank bank = new Bank(uuid, name);
 			bank.getEconomy().setBalance(bankBalance);
+			bank.setTierId(tierId);
+			bank.setDepositedToday(depositedToday);
+			bank.setWithdrawnToday(withdrawnToday);
+			bank.setCapResetAt(resetAt);
 
 			banks.add(bank);
 		}

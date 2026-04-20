@@ -6,10 +6,12 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.economy.bank.Bank;
 import me.luckyraven.economy.bank.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
@@ -17,6 +19,8 @@ import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.NavigableSet;
 
@@ -25,14 +29,16 @@ class BankDepositCommand extends SubArgument {
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
+	private final GanglandDatabase    ganglandDatabase;
 
 	protected BankDepositCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
-	                             UserManager<Player> userManager) {
+	                             UserManager<Player> userManager, GanglandDatabase ganglandDatabase) {
 		super(gangland, "deposit", tree, parent);
 
-		this.gangland    = gangland;
-		this.tree        = tree;
-		this.userManager = userManager;
+		this.gangland         = gangland;
+		this.tree             = tree;
+		this.userManager      = userManager;
+		this.ganglandDatabase = ganglandDatabase;
 
 		this.addSubArgument(bankDeposit());
 	}
@@ -87,10 +93,31 @@ class BankDepositCommand extends SubArgument {
 				return;
 			}
 
+			boolean bypass = player.hasPermission(BankCommand.BYPASS_CAP_PERMISSION);
+			if (!bypass) {
+				bank.resetIfStale(Instant.now(), Duration.ofSeconds(Settings.getBankResetPeriodSeconds()));
+
+				double limit = Settings.getBankDailyDepositLimit();
+				if (bank.getDepositedToday() + argAmount > limit) {
+					user.sendMessage(Messages.BANKER_DAILY_DEPOSIT_REACHED.toString()
+					                                                      .replace("%money_symbol%",
+					                                                               Settings.getMoneySymbol())
+					                                                      .replace("%limit%",
+					                                                               Settings.formatDouble(limit)));
+					return;
+				}
+			}
+
 			boolean processed = BankCommand.processMoney(user, bank, user.getEconomy().getBalance(), argAmount, inBank,
 			                                             user.getEconomy().getBalance() - argAmount);
 
 			if (!processed) return;
+
+			if (!bypass) bank.recordDeposit(argAmount);
+
+			// Persist counters + balance immediately so /glw reload can't roll them back to the last autosave.
+			IRepository<Bank> repo = ganglandDatabase.getRepositoryRegistry().getRepository(Bank.class);
+			repo.save(bank);
 
 			String string  = Messages.BANK_MONEY_DEPOSIT_PLAYER.toString();
 			String replace = string.replace("%amount%", Settings.formatDouble(argAmount));

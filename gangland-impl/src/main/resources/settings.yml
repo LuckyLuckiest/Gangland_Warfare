@@ -151,8 +151,21 @@ User:
       # When a player wants to create a bank account, they're required to pay a fee.
       # Set it to zero, and the requirement is lifted.
       Create_Cost: 5_000
+      # Charged (from cash) every time the player renames their account at a Banker NPC. 0 disables.
+      Rename_Fee: 1_000
+      # Deducted from the bank balance when the player closes the account at a Banker NPC. The remaining
+      # refund (bank balance - Delete_Fee + Create_Cost / 2) is returned to the player's cash. 0 disables.
+      Delete_Fee: 2_000
       # The maximum amount of money the player can have.
       Maximum_Balance: 1_000_000_000
+      # Maximum amount the player can deposit into their bank during one rolling window, enforced by the Banker NPC.
+      Daily_Deposit_Limit: 10_000
+      # Maximum amount the player can withdraw from their bank during one rolling window, enforced by the Banker NPC.
+      Daily_Withdraw_Limit: 10_000
+      # Length of the rolling window (seconds) after which the deposit / withdraw counters reset. Defaults to 24h.
+      # Measured from the player's first interaction within a window — not midnight — so splitting a transaction
+      # across midnight never counts against two separate windows.
+      Reset_Period_Seconds: 86_400
    # The user level config
    Level:
       # The maximum level the player can have.
@@ -634,3 +647,19 @@ Trader:
       Mood_Per_Sale: 0.02
    # Flat tip amount paid (in currency) when the player clicks the Tip button on the NegotiationView.
    Tip_Amount: 100.0
+
+# +--------+ #
+# | Banker | #
+# +--------+ #
+
+# General Banker NPC knobs. Account tier caps / upgrade costs live in plugin/npc/bank_tiers.yml; the per-day
+# deposit / withdraw limits are under User.Bank above.
+Banker:
+   # Blocks within which a banker will head-track the nearest player.
+   Head_Track_Radius: 8
+   # Max health in half-hearts (20 = 10 hearts). Only applied when Invulnerable is false.
+   Max_Health: 20.0
+   # If true the banker cannot be damaged. Leave enabled in production — damaged bankers have no respawn loop.
+   Invulnerable: true
+   # Tier id substituted when a player's bank has no stored tier id or references a missing tier.
+   Fallback_Tier_Id: "Basic"

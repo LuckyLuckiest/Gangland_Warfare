@@ -21,6 +21,13 @@ import java.util.Map;
 @CommandHandler
 public final class BankCommand extends Command {
 
+	/**
+	 * Holders of this permission bypass the daily deposit / withdraw caps on every bank path — chat commands (/glw bank
+	 * deposit / withdraw) and the Banker NPC GUI alike. Registered with the {@code PermissionManager} from
+	 * {@code BankerConfig} so it shows up in rank permission autocompletion.
+	 */
+	public static final String BYPASS_CAP_PERMISSION = "gangland.bank.bypass_cap";
+
 	private final UserManager<Player> userManager;
 	private final GanglandDatabase    ganglandDatabase;
 
@@ -83,11 +90,13 @@ public final class BankCommand extends Command {
 		BankDeleteCommand delete = new BankDeleteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                                 ganglandDatabase);
 		BankDepositCommand deposit = new BankDepositCommand(getGangland(), getArgumentTree(), getArgument(),
-		                                                    userManager);
+		                                                    userManager, ganglandDatabase);
 		BankWithdrawCommand withdraw = new BankWithdrawCommand(getGangland(), getArgumentTree(), getArgument(),
-		                                                       userManager);
+		                                                       userManager, ganglandDatabase);
 		BankBalanceCommand balance = new BankBalanceCommand(getGangland(), getArgumentTree(), getArgument(),
 		                                                    userManager);
+		BankResetCapCommand resetCap = new BankResetCapCommand(getGangland(), getArgumentTree(), getArgument(),
+		                                                       userManager, ganglandDatabase);
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
@@ -97,6 +106,7 @@ public final class BankCommand extends Command {
 		arguments.add(deposit);
 		arguments.add(withdraw);
 		arguments.add(balance);
+		arguments.add(resetCap);
 
 		getArgument().addAllSubArguments(arguments);
 	}

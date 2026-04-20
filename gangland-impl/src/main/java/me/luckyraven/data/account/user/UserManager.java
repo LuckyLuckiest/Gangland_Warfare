@@ -33,6 +33,8 @@ import org.bukkit.permissions.PermissionAttachment;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -129,13 +131,35 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 			boolean hasBank = bankData.length != 0;
 
 			if (hasBank) {
-				// create player data into database
+				// BankTable column order (see BankTable.java): uuid, name, balance, tier_id, deposited_today,
+				// withdrawn_today, cap_reset_at. Reads have to cover every column or the cap / tier / rolling
+				// counters get zeroed on every login — which ALSO happens on /glw reload because reload
+				// re-initializes online users through this same path.
 				String name        = String.valueOf(bankData[1]);
-				double bankBalance = (double) bankData[2];
+				double bankBalance = ((Number) bankData[2]).doubleValue();
+
+				Object rawTier = bankData.length > 3 ? bankData[3] : null;
+				String tierId  = rawTier == null ? null : String.valueOf(rawTier);
+
+				double depositedToday = bankData.length > 4 && bankData[4] != null
+				                        ? ((Number) bankData[4]).doubleValue() : 0D;
+				double withdrawnToday = bankData.length > 5 && bankData[5] != null
+				                        ? ((Number) bankData[5]).doubleValue() : 0D;
+
+				Object  rawReset   = bankData.length > 6 ? bankData[6] : null;
+				Instant capResetAt = null;
+				if (rawReset != null) {
+					try {
+						capResetAt = Instant.parse(String.valueOf(rawReset));
+					} catch (DateTimeParseException ignored) { }
+				}
 
 				Bank bank = new Bank(user.getUuid(), name);
-
 				bank.getEconomy().setBalance(bankBalance);
+				bank.setTierId(tierId);
+				bank.setDepositedToday(depositedToday);
+				bank.setWithdrawnToday(withdrawnToday);
+				bank.setCapResetAt(capResetAt);
 				user.setBank(bank);
 			}
 
