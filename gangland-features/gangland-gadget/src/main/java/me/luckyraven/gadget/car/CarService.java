@@ -263,10 +263,16 @@ public class CarService implements BeanLifecycle {
 		parkedVehicles.put(entityUUID, pv);
 		vehicleRegistry.unregister(entityUUID);
 
-		// Build updated record from current entity location and save
-		Entity entity = session.getEntity().getBukkitEntity();
-		if (entity != null && entity.getLocation().getWorld() != null) {
-			Location  loc      = entity.getLocation();
+		// Build updated record. Prefer the per-tick lastKnownLocation; fall back to live entity location.
+		Entity   entity  = session.getEntity().getBukkitEntity();
+		Location loc     = null;
+		Location tracked = session.getLastKnownLocation();
+		if (tracked != null && tracked.getWorld() != null) {
+			loc = tracked;
+		} else if (entity != null && entity.getLocation().getWorld() != null) {
+			loc = entity.getLocation();
+		}
+		if (loc != null) {
 			ParkedCar existing = parkedCarRecords.get(entityUUID);
 			String    dbId     = existing != null ? existing.getDbId() : UUID.randomUUID().toString();
 			ParkedCar record = new ParkedCar(dbId, session.getCar().getCarId(), loc.getWorld().getName(), loc.getX(),
@@ -275,6 +281,89 @@ public class CarService implements BeanLifecycle {
 			parkedCarRecords.put(entityUUID, record);
 			parkedCarRepository.save(record);
 		}
+
+		// Clear any leftover passenger. Critical for the disconnect path: when checkGuards parks the car because the
+		// driver went offline, the player is still mounted in saved entity data — without this eject they'd auto-mount
+		// the parked minecart on rejoin, then walk off and push it, leaving a duplicate when reloadParkedVehicles
+		// spawns a fresh car at the persisted location. A no-op when the player already dismounted normally.
+		if (entity != null && !entity.isDead()) {
+			entity.eject();
+		}
+	}
+
+	/**
+	 * Preserves the database record for a driven vehicle whose underlying entity has been force-removed (e.g. another
+	 * plugin killed the minecart, it fell into the void, or Minecraft itself despawned it while the player was
+	 * mounted). Unlike {@link #parkCar}, this does not re-insert a {@link ParkedVehicle} — the live entity is already
+	 * gone — it only updates the persisted record so {@link #reloadParkedVehicles} can respawn the car at the last
+	 * known location on the next enable.
+	 *
+	 * @param entityUUID UUID of the entity whose session should be force-parked
+	 * @param fallbackLoc location to use if the entity's own location is no longer available (typically the driver's
+	 * 		current location); may be {@code null}, in which case the existing DB record location is kept
+	 */
+	public void forcePark(UUID entityUUID, @Nullable Location fallbackLoc) {
+		VehicleSession session = vehicleRegistry.getByEntity(entityUUID);
+		if (session == null) return;
+
+		session.removeDisplays();
+		removeInputHandler(session.getDriver());
+
+		if (session.getTask() != null && !session.getTask().isCancelled()) {
+			session.getTask().cancel();
+		}
+
+		int  durability  = session.getCurrentDurability();
+		int  currentFuel = session.getCurrentFuel();
+		UUID placerUUID  = session.getDriverUUID();
+		int  maxFuel     = session.getMaxFuel();
+
+		vehicleRegistry.unregister(entityUUID);
+
+		Location resolved = null;
+		Location tracked  = session.getLastKnownLocation();
+		if (tracked != null && tracked.getWorld() != null) {
+			resolved = tracked;
+		} else {
+			Entity bukkitEntity = session.getEntity().getBukkitEntity();
+			if (bukkitEntity != null && bukkitEntity.isValid() && bukkitEntity.getLocation().getWorld() != null) {
+				resolved = bukkitEntity.getLocation();
+			} else if (fallbackLoc != null && fallbackLoc.getWorld() != null) {
+				resolved = fallbackLoc;
+			}
+		}
+
+		ParkedCar existing = parkedCarRecords.get(entityUUID);
+		String    dbId     = existing != null ? existing.getDbId() : UUID.randomUUID().toString();
+
+		String world;
+		double x, y, z;
+		float  yaw;
+		if (resolved != null) {
+			world = resolved.getWorld().getName();
+			x     = resolved.getX();
+			y     = resolved.getY();
+			z     = resolved.getZ();
+			yaw   = resolved.getYaw();
+		} else if (existing != null) {
+			world = existing.getWorld();
+			x     = existing.getX();
+			y     = existing.getY();
+			z     = existing.getZ();
+			yaw   = existing.getYaw();
+		} else {
+			return;
+		}
+
+		ParkedCar record = new ParkedCar(dbId, session.getCar().getCarId(), world, x, y, z, yaw, currentFuel, maxFuel,
+		                                 durability, placerUUID, session.getExhaustSide());
+		parkedCarRecords.put(entityUUID, record);
+		parkedCarRepository.save(record);
+
+		// Remove any orphaned remnant of the original entity. If !isAlive triggered because the chunk unloaded
+		// (entity invalid, not dead), the minecart still exists in world data and would re-appear when the chunk
+		// reloads — duplicating the freshly spawned car on next reloadParkedVehicles().
+		session.getEntity().despawn();
 	}
 
 	// ------------------------------------------------------------------
@@ -364,18 +453,34 @@ public class CarService implements BeanLifecycle {
 	 * server start.
 	 */
 	public void destroyAll() {
-		// Convert every active session into a parked entry; build/update its DB record
-		for (VehicleSession session : vehicleRegistry.getAllSessions()) {
+		// Snapshot the active sessions so the two passes below iterate the same set regardless of
+		// incidental mutation (e.g. a checkGuards tick mid-shutdown).
+		Collection<VehicleSession> activeSessions = new ArrayList<>(vehicleRegistry.getAllSessions());
+
+		// Pass 1 — dismount every driver and cancel their movement task. This must complete for ALL
+		// sessions before we start persisting records, otherwise a still-mounted driver in a later
+		// session leaks a RootVehicle NBT tag to their .dat (Minecraft serializes the mounted minecart
+		// into the player entity when saveAll fires later in the shutdown sequence), and the rogue
+		// minecart that NBT restores on rejoin duplicates the car reloadParkedVehicles spawns from the
+		// DB record.
+		for (VehicleSession session : activeSessions) {
 			session.removeDisplays();
 			removeInputHandler(session.getDriver());
 
 			VehicleMovementTask task = session.getTask();
-			if (task == null) return;
-
-			if (!task.isCancelled()) {
+			if (task != null && !task.isCancelled()) {
 				task.cancel();
 			}
 
+			Entity live = session.getEntity().getBukkitEntity();
+			if (live != null && !live.isDead()) {
+				live.eject();
+			}
+		}
+
+		// Pass 2 — now that every driver is unmounted, convert each session into a parked entry and
+		// build/update its DB record.
+		for (VehicleSession session : activeSessions) {
 			UUID entityUUID = session.getEntity().getEntityUUID();
 			if (entityUUID == null) continue;
 
@@ -387,9 +492,17 @@ public class CarService implements BeanLifecycle {
 			                                     session.getMaxFuel(), durability, session.getExhaustSide());
 			parkedVehicles.put(entityUUID, pv);
 
-			Entity entity = session.getEntity().getBukkitEntity();
-			if (entity != null && entity.getLocation().getWorld() != null) {
-				Location  loc      = entity.getLocation();
+			Location loc     = null;
+			Location tracked = session.getLastKnownLocation();
+			if (tracked != null && tracked.getWorld() != null) {
+				loc = tracked;
+			} else {
+				Entity entity = session.getEntity().getBukkitEntity();
+				if (entity != null && entity.getLocation().getWorld() != null) {
+					loc = entity.getLocation();
+				}
+			}
+			if (loc != null) {
 				ParkedCar existing = parkedCarRecords.get(entityUUID);
 				String    dbId     = existing != null ? existing.getDbId() : UUID.randomUUID().toString();
 				ParkedCar record = new ParkedCar(dbId, session.getCar().getCarId(), loc.getWorld().getName(),
@@ -397,13 +510,14 @@ public class CarService implements BeanLifecycle {
 				                                 session.getMaxFuel(), durability, placerUUID,
 				                                 session.getExhaustSide());
 				parkedCarRecords.put(entityUUID, record);
+				// Persist the driven-location record immediately. Relying on PeriodicalUpdates.forceUpdate() is
+				// unreliable here: whichever order the bean shutdown visits us in, parkedCarRecords.clear() below
+				// wipes the map, so a post-destroyAll forceUpdate would see no records, and a pre-destroyAll one
+				// would miss the just-converted session records. Saving inline mirrors how parkCar persists.
+				parkedCarRepository.save(record);
 			}
 		}
 		vehicleRegistry.clear();
-
-		// DB persistence is handled by PeriodicalUpdates.forceUpdate() which runs after
-		// destroyAll() completes. The data supplier returns parkedCarRecords.values(), so
-		// the force-save flushes all records (including the just-converted sessions).
 
 		for (ParkedVehicle parked : parkedVehicles.values()) {
 			parked.getEntity().despawn();

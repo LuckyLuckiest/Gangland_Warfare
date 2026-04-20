@@ -11,6 +11,7 @@ import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -43,6 +44,14 @@ public class VehicleSession {
 	private       VehicleMovementTask task;
 	private       int                 currentDurability;
 	private       int                 currentFuel;
+	/**
+	 * Last known location of the car entity, refreshed every tick by {@link VehicleMovementTask} while the entity is
+	 * alive. Used by {@code CarService#forcePark} to persist a driven car's location when the underlying entity is
+	 * force-despawned mid-drive — more reliable than {@code entity.getLocation()} (which may be stale on an invalid
+	 * entity) or {@code driver.getLocation()} (which is post-ejection, possibly several blocks off).
+	 */
+	@Setter
+	private       Location            lastKnownLocation;
 
 	// WASD input state — written by VehicleInputInterceptor (Netty IO thread), read by VehicleMovementTask (main thread)
 	private volatile boolean inputForward;

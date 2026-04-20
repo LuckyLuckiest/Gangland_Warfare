@@ -9,6 +9,7 @@ import me.luckyraven.gadget.car.vehicle.packet.VehicleInputInterceptor;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.item.fuel.FuelBar;
 import me.luckyraven.util.utilities.ParticleUtil;
+import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -75,7 +76,8 @@ public class VehicleMovementTask extends BukkitRunnable {
 	 */
 	private boolean checkGuards(VehicleEntity entity, Player driver) {
 		if (!entity.isAlive()) {
-			carService.destroyCar(entity.getEntityUUID(), false);
+			Location fallback = driver.isOnline() ? driver.getLocation() : null;
+			carService.forcePark(entity.getEntityUUID(), fallback);
 			cancel();
 			return true;
 		}
@@ -109,6 +111,11 @@ public class VehicleMovementTask extends BukkitRunnable {
 		}
 
 		if (car.isFuelEnabled()) session.consumeFuel(physicsConfig.getCarFuelConsumePerTick());
+
+		Location live = entity.getLocation();
+		if (live != null && live.getWorld() != null) {
+			session.setLastKnownLocation(live.clone());
+		}
 
 		session.updateDisplays(buildFuelDisplay(car));
 	}
@@ -168,6 +175,11 @@ public class VehicleMovementTask extends BukkitRunnable {
 			                             side == ExhaustSide.RIGHT || side == ExhaustSide.BOTH);
 
 			if (car.isFuelEnabled()) session.consumeFuel(physicsConfig.getCarFuelConsumePerTick());
+		}
+
+		Location live = entity.getLocation();
+		if (live != null && live.getWorld() != null) {
+			session.setLastKnownLocation(live.clone());
 		}
 
 		session.updateDisplays(buildFuelDisplay(car));
