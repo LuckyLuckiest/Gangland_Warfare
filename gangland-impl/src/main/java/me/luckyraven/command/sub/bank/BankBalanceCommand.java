@@ -40,7 +40,7 @@ class BankBalanceCommand extends SubArgument {
 			}
 
 			String string      = Messages.BANK_BALANCE_PLAYER.toString();
-			String replacement = Settings.formatDouble(bank.getEconomy().getBalance());
+			String replacement = Settings.formatAmount(bank.getEconomy().getAmount());
 			String replace     = string.replace("%balance%", replacement);
 
 			user.sendMessage(replace);

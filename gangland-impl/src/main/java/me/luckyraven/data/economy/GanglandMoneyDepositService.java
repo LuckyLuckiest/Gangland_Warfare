@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.placeholder.PlaceholderService;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyDepositService;
@@ -35,13 +36,19 @@ public class GanglandMoneyDepositService implements MoneyDepositService {
 	@Override
 	public void deposit(Player player, double amount, String variationId) {
 		if (player == null || amount <= 0) return;
+		deposit(player, Currency.of(amount), variationId);
+	}
+
+	@Override
+	public void deposit(Player player, java.math.BigDecimal amount, String variationId) {
+		if (player == null || amount == null || amount.signum() <= 0) return;
 
 		User<Player> user = userManager.getUser(player);
 		if (user == null) return;
 
-		user.getEconomy().deposit(amount);
+		user.getEconomy().depositAmount(Currency.of(amount));
 
-		String amountText = formatAmount(amount);
+		String amountText = formatAmount(amount.doubleValue());
 
 		String chatTemplate = moneyAddon.getPickupChatMessage();
 		if (chatTemplate != null && !chatTemplate.isEmpty()) {
@@ -68,6 +75,14 @@ public class GanglandMoneyDepositService implements MoneyDepositService {
 		User<Player> user = userManager.getUser(player);
 		if (user == null) return 0;
 		return user.getEconomy().getBalance();
+	}
+
+	@Override
+	public java.math.BigDecimal getBalanceAsAmount(Player player) {
+		if (player == null) return Currency.ZERO;
+		User<Player> user = userManager.getUser(player);
+		if (user == null) return Currency.ZERO;
+		return user.getEconomy().getAmount();
 	}
 
 	@Override

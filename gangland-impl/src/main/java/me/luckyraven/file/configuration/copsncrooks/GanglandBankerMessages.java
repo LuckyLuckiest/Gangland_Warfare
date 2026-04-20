@@ -4,16 +4,18 @@ import me.luckyraven.copsncrooks.npc.banker.message.BankerMessageContract;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 
+import java.math.BigDecimal;
+
 public final class GanglandBankerMessages implements BankerMessageContract {
 
 	@Override
-	public String depositSuccess(double amount) {
-		return fill(Messages.BANKER_DEPOSIT_SUCCESS.toString(), amount);
+	public String depositSuccess(BigDecimal amount) {
+		return fillAmount(Messages.BANKER_DEPOSIT_SUCCESS.toString(), amount);
 	}
 
 	@Override
-	public String withdrawSuccess(double amount) {
-		return fill(Messages.BANKER_WITHDRAW_SUCCESS.toString(), amount);
+	public String withdrawSuccess(BigDecimal amount) {
+		return fillAmount(Messages.BANKER_WITHDRAW_SUCCESS.toString(), amount);
 	}
 
 	@Override
@@ -22,34 +24,27 @@ public final class GanglandBankerMessages implements BankerMessageContract {
 	}
 
 	@Override
-	public String insufficientCash(double amount) {
-		return fill(Messages.BANKER_INSUFFICIENT_CASH.toString(), amount);
+	public String insufficientCash(BigDecimal amount) {
+		return fillAmount(Messages.BANKER_INSUFFICIENT_CASH.toString(), amount);
 	}
 
 	@Override
-	public String insufficientBankFunds(double amount) {
-		return fill(Messages.BANKER_INSUFFICIENT_BANK_FUNDS.toString(), amount);
+	public String insufficientBankFunds(BigDecimal amount) {
+		return fillAmount(Messages.BANKER_INSUFFICIENT_BANK_FUNDS.toString(), amount);
 	}
 
 	@Override
-	public String dailyDepositReached(double limit) {
+	public String dailyDepositReached(BigDecimal limit) {
 		return Messages.BANKER_DAILY_DEPOSIT_REACHED.toString()
 		                                            .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                            .replace("%limit%", Settings.formatDouble(limit));
+		                                            .replace("%limit%", Settings.formatAmount(limit));
 	}
 
 	@Override
-	public String dailyWithdrawReached(double limit) {
-		return Messages.BANKER_DAILY_WITHDRAW_REACHED.toString()
-		                                             .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                             .replace("%limit%", Settings.formatDouble(limit));
-	}
-
-	@Override
-	public String capExceeded(double cap) {
+	public String capExceeded(BigDecimal cap) {
 		return Messages.BANKER_CAP_EXCEEDED.toString()
 		                                   .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                   .replace("%cap%", Settings.formatDouble(cap));
+		                                   .replace("%cap%", Settings.formatAmount(cap));
 	}
 
 	@Override
@@ -63,10 +58,10 @@ public final class GanglandBankerMessages implements BankerMessageContract {
 	}
 
 	@Override
-	public String upgradeInsufficientFunds(double cost) {
+	public String upgradeInsufficientFunds(BigDecimal cost) {
 		return Messages.BANKER_UPGRADE_INSUFFICIENT_FUNDS.toString()
 		                                                 .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                                 .replace("%cost%", Settings.formatDouble(cost));
+		                                                 .replace("%cost%", Settings.formatAmount(cost));
 	}
 
 	@Override
@@ -85,23 +80,15 @@ public final class GanglandBankerMessages implements BankerMessageContract {
 	}
 
 	@Override
-	public String createCannotAfford(double fee) {
+	public String createCannotAfford(BigDecimal fee) {
 		return Messages.BANKER_CREATE_CANNOT_AFFORD.toString()
 		                                           .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                           .replace("%fee%", Settings.formatDouble(fee));
+		                                           .replace("%fee%", Settings.formatAmount(fee));
 	}
 
 	@Override
 	public String createNameEmpty() {
 		return Messages.BANKER_CREATE_NAME_EMPTY.toString();
-	}
-
-	@Override
-	public String deleteSuccess(String accountName, double refund) {
-		return Messages.BANKER_DELETE_SUCCESS.toString()
-		                                     .replace("%bank%", accountName)
-		                                     .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                     .replace("%refund%", Settings.formatDouble(refund));
 	}
 
 	@Override
@@ -112,10 +99,10 @@ public final class GanglandBankerMessages implements BankerMessageContract {
 	}
 
 	@Override
-	public String renameCannotAfford(double fee) {
+	public String renameCannotAfford(BigDecimal fee) {
 		return Messages.BANKER_RENAME_CANNOT_AFFORD.toString()
 		                                           .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                           .replace("%fee%", Settings.formatDouble(fee));
+		                                           .replace("%fee%", Settings.formatAmount(fee));
 	}
 
 	@Override
@@ -128,9 +115,34 @@ public final class GanglandBankerMessages implements BankerMessageContract {
 		return Messages.BANKER_RENAME_NAME_UNCHANGED.toString();
 	}
 
-	private static String fill(String template, double amount) {
+	@Override
+	public String weeklyLoanSuccess(BigDecimal amount) {
+		return fillAmount(Messages.BANKER_LOAN_WEEKLY_SUCCESS.toString(), amount);
+	}
+
+	@Override
+	public String monthlyLoanSuccess(BigDecimal amount) {
+		return fillAmount(Messages.BANKER_LOAN_MONTHLY_SUCCESS.toString(), amount);
+	}
+
+	@Override
+	public String loanOnCooldown(String remaining) {
+		return Messages.BANKER_LOAN_ON_COOLDOWN.toString().replace("%remaining%", remaining);
+	}
+
+	@Override
+	public String loanDisabled() {
+		return Messages.BANKER_LOAN_DISABLED.toString();
+	}
+
+	@Override
+	public String loanCapFull(BigDecimal amount) {
+		return fillAmount(Messages.BANKER_LOAN_CAP_FULL.toString(), amount);
+	}
+
+	private static String fillAmount(String template, BigDecimal amount) {
 		return template.replace("%money_symbol%", Settings.getMoneySymbol())
-		               .replace("%amount%", Settings.formatDouble(amount));
+		               .replace("%amount%", Settings.formatAmount(amount));
 	}
 
 }

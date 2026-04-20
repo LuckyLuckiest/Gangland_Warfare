@@ -3,6 +3,7 @@ package me.luckyraven.database.repositories.player;
 import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.economy.bank.Bank;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.component.Table;
@@ -10,6 +11,7 @@ import me.luckyraven.persistence.repository.AbstractRepository;
 import me.luckyraven.persistence.repository.Repository;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.Instant;
@@ -32,38 +34,51 @@ public class BankRepository extends AbstractRepository<Bank> {
 		this.bankTable = new BankTable(userTable);
 	}
 
+	private static Instant parseInstant(Object raw) {
+		if (raw == null) return null;
+		try {
+			return Instant.parse(String.valueOf(raw));
+		} catch (DateTimeParseException ignored) {
+			return null;
+		}
+	}
+
 	@Override
 	protected Collection<Bank> doLoadAll() throws SQLException {
 		List<Bank>     banks = new ArrayList<>();
 		List<Object[]> data  = bankTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
-			int    v           = 0;
-			UUID   uuid        = UUID.fromString(String.valueOf(result[v++]));
-			String name        = String.valueOf(result[v++]);
-			double bankBalance = ((Number) result[v++]).doubleValue();
+			int        v           = 0;
+			UUID       uuid        = UUID.fromString(String.valueOf(result[v++]));
+			String     name        = String.valueOf(result[v++]);
+			BigDecimal bankBalance = Currency.ofYaml(result[v++]);
 
 			Object rawTier        = result[v++];
 			String tierId         = rawTier == null ? null : String.valueOf(rawTier);
 			double depositedToday = result[v] == null ? 0D : ((Number) result[v]).doubleValue();
 			v++;
-			double withdrawnToday = result[v] == null ? 0D : ((Number) result[v]).doubleValue();
-			v++;
-			Object rawReset = result[v];
+			Object rawReset = result[v++];
 
-			Instant resetAt = null;
-			if (rawReset != null) {
-				try {
-					resetAt = Instant.parse(String.valueOf(rawReset));
-				} catch (DateTimeParseException ignored) { }
-			}
+			Instant resetAt = parseInstant(rawReset);
+
+			Object  rawInterest  = v < result.length ? result[v++] : null;
+			Instant lastInterest = parseInstant(rawInterest);
+
+			Object  rawWeekly = v < result.length ? result[v++] : null;
+			Instant weeklyAt  = parseInstant(rawWeekly);
+
+			Object  rawMonthly = v < result.length ? result[v] : null;
+			Instant monthlyAt  = parseInstant(rawMonthly);
 
 			Bank bank = new Bank(uuid, name);
-			bank.getEconomy().setBalance(bankBalance);
+			bank.getEconomy().setAmount(bankBalance);
 			bank.setTierId(tierId);
 			bank.setDepositedToday(depositedToday);
-			bank.setWithdrawnToday(withdrawnToday);
 			bank.setCapResetAt(resetAt);
+			bank.setLastInterestAt(lastInterest);
+			bank.setLastWeeklyLoanAt(weeklyAt);
+			bank.setLastMonthlyLoanAt(monthlyAt);
 
 			banks.add(bank);
 		}

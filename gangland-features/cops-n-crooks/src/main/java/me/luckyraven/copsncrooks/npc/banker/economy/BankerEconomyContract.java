@@ -4,10 +4,14 @@ import me.luckyraven.copsncrooks.npc.banker.tier.BankTier;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+
 /**
  * Thin contract letting banker views (which live in cops-n-crooks) delegate every money / account mutation to the host
  * module (gangland-impl) without importing {@code UserManager} / {@code EconomyHandler} / the Bank repository directly.
- * All methods are invoked from the Banker NPC's GUI views.
+ * All methods are invoked from the Banker NPC's GUI views. Currency-bearing parameters and record fields are
+ * {@link BigDecimal} — precision survives large tier caps and balances beyond {@code 2^53}.
  */
 public interface BankerEconomyContract {
 
@@ -17,11 +21,9 @@ public interface BankerEconomyContract {
 
 	RenameInfo renameInfo(Player player);
 
-	DeletionInfo deletionInfo(Player player);
+	Result tryDeposit(Player player, BigDecimal amount);
 
-	Result tryDeposit(Player player, double amount);
-
-	Result tryWithdraw(Player player, double amount);
+	Result tryWithdraw(Player player, BigDecimal amount);
 
 	Result tryUpgrade(Player player);
 
@@ -29,7 +31,11 @@ public interface BankerEconomyContract {
 
 	Result tryRenameAccount(Player player, String newName);
 
-	Result tryDeleteAccount(Player player);
+	ClaimInfo claimInfo(Player player);
+
+	Result tryClaimWeekly(Player player);
+
+	Result tryClaimMonthly(Player player);
 
 	enum Result {
 		SUCCESS,
@@ -42,28 +48,30 @@ public interface BankerEconomyContract {
 		INSUFFICIENT_CASH,
 		INSUFFICIENT_BANK_FUNDS,
 		DAILY_DEPOSIT_REACHED,
-		DAILY_WITHDRAW_REACHED,
 		CAP_EXCEEDED,
 		ALREADY_MAX_TIER,
 		TIER_MISSING,
+		LOAN_ON_COOLDOWN,
+		LOAN_DISABLED,
+		LOAN_CAP_FULL,
 		ECONOMY_ERROR
 	}
 
 	record BankerSnapshot(boolean hasBank,
-	                      double cashBalance,
-	                      double bankBalance,
-	                      double remainingDailyDeposit,
-	                      double remainingDailyWithdraw,
-	                      double dailyDepositLimit,
-	                      double dailyWithdrawLimit,
+	                      BigDecimal cashBalance,
+	                      BigDecimal bankBalance,
+	                      BigDecimal remainingDailyDeposit,
+	                      BigDecimal dailyDepositLimit,
+	                      double dailyInterestRate,
+	                      @Nullable Instant capResetAt,
 	                      @Nullable BankTier currentTier,
 	                      @Nullable BankTier nextTier) {
 	}
 
 	record CreationInfo(boolean hasAccount,
-	                    double cashBalance,
-	                    double fee,
-	                    double initialBalance,
+	                    BigDecimal cashBalance,
+	                    BigDecimal fee,
+	                    BigDecimal initialBalance,
 	                    boolean canAfford) {
 	}
 
@@ -73,22 +81,21 @@ public interface BankerEconomyContract {
 	 */
 	record RenameInfo(boolean hasAccount,
 	                  @Nullable String currentName,
-	                  double cashBalance,
-	                  double fee,
+	                  BigDecimal cashBalance,
+	                  BigDecimal fee,
 	                  boolean canAfford) {
 	}
 
 	/**
-	 * Pre-flight data for the close-account flow. {@code refund} is the net cash returned to the player
-	 * ({@code bankBalance + createFee / 2 - deleteFee}); if this goes negative the caller doesn't have enough bank
-	 * balance to cover the close and {@link Result#INSUFFICIENT_BANK_FUNDS} is returned from
-	 * {@link #tryDeleteAccount}.
+	 * Pre-flight data for the weekly / monthly loan grants. Amounts are the per-tier grant sizes; {@code readyAt}
+	 * instants are {@code null} when never claimed (immediately claimable) or a future instant when still on
+	 * cooldown. UI renders the countdown or "available" state directly from these fields.
 	 */
-	record DeletionInfo(boolean hasAccount,
-	                    @Nullable String accountName,
-	                    double bankBalance,
-	                    double deleteFee,
-	                    double refund) {
+	record ClaimInfo(boolean hasAccount,
+	                 BigDecimal weeklyAmount,
+	                 BigDecimal monthlyAmount,
+	                 @Nullable Instant weeklyReadyAt,
+	                 @Nullable Instant monthlyReadyAt) {
 	}
 
 }

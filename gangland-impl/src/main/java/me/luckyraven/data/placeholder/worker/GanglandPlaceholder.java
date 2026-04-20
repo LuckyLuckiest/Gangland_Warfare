@@ -1,5 +1,7 @@
 package me.luckyraven.data.placeholder.worker;
 
+import me.luckyraven.copsncrooks.npc.banker.tier.BankTier;
+import me.luckyraven.copsncrooks.npc.banker.tier.BankTierRegistry;
 import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.data.account.Level;
 import me.luckyraven.data.account.gang.Gang;
@@ -10,6 +12,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.economy.bank.Bank;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.unique.UniqueItem;
@@ -24,6 +27,8 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 
 public class GanglandPlaceholder extends PlaceholderHandler {
@@ -32,6 +37,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 	private final UniqueItemAddon     uniqueItemAddon;
+	private final BankTierRegistry    bankTierRegistry;
 
 	public GanglandPlaceholder(String prefix,
 	                           Replacer.Closure closure,
@@ -39,13 +45,44 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	                           MemberManager memberManager,
 	                           GangManager gangManager,
 	                           UniqueItemAddon uniqueItemAddon,
+	                           BankTierRegistry bankTierRegistry,
 	                           PlaceholderService placeholderService) {
 		super(prefix, closure);
-		this.userManager     = userManager;
-		this.memberManager   = memberManager;
-		this.gangManager     = gangManager;
-		this.uniqueItemAddon = uniqueItemAddon;
+		this.userManager      = userManager;
+		this.memberManager    = memberManager;
+		this.gangManager      = gangManager;
+		this.uniqueItemAddon  = uniqueItemAddon;
+		this.bankTierRegistry = bankTierRegistry;
 		placeholderService.register(this);
+	}
+
+	private static String formatUntil(@Nullable Instant target) {
+		if (target == null) return "available";
+		Duration remaining = Duration.between(Instant.now(), target);
+		if (remaining.isNegative() || remaining.isZero()) return "available";
+		return formatDuration(remaining);
+	}
+
+	private static String formatReadyIn(@Nullable Instant lastClaimAt, Duration window) {
+		if (lastClaimAt == null) return "available";
+		Instant readyAt = lastClaimAt.plus(window);
+		return formatUntil(readyAt);
+	}
+
+	private static String formatDuration(Duration duration) {
+		long totalSec = Math.max(0L, duration.getSeconds());
+		long days     = totalSec / 86_400L;
+		long hours    = (totalSec % 86_400L) / 3_600L;
+		long mins     = (totalSec % 3_600L) / 60L;
+		if (days > 0) return days + "d " + hours + "h";
+		if (hours > 0) return hours + "h " + mins + "m";
+		if (mins > 0) return mins + "m";
+		return "<1m";
+	}
+
+	private static String formatPercent(double pct) {
+		if (pct == Math.floor(pct)) return String.valueOf((long) pct);
+		return String.format("%.2f", pct);
 	}
 
 	@Override
@@ -189,7 +226,48 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (bank == null) return null;
 
 		if (parameter.equals(bankStr + "name")) return bank.getName();
-		if (parameter.equals(bankStr + "balance")) return NumberUtil.valueFormat(bank.getEconomy().getBalance());
+		if (parameter.equals(bankStr + "balance")) return NumberUtil.valueFormat(bank.getEconomy().getAmount());
+
+		BankTier tier = bankTierRegistry.get(bank.getTierId());
+		if (tier == null) tier = bankTierRegistry.first();
+
+		if (parameter.equals(bankStr + "tier")) return tier == null ? "" : tier.id();
+		if (parameter.equals(bankStr + "tier_display")) return tier == null ? "" : tier.displayName();
+		if (parameter.equals(bankStr + "tier_cap")) {
+			return NumberUtil.valueFormat(tier == null ? Currency.ZERO : tier.maxBalance());
+		}
+		if (parameter.equals(bankStr + "daily_deposit_limit")) {
+			return NumberUtil.valueFormat(tier == null ? Currency.ZERO : tier.dailyDepositLimit());
+		}
+		if (parameter.equals(bankStr + "deposited_today")) {
+			return NumberUtil.valueFormat(Currency.of(bank.getDepositedToday()));
+		}
+		if (parameter.equals(bankStr + "remaining_deposit")) {
+			java.math.BigDecimal limit = tier == null ? Currency.ZERO : tier.dailyDepositLimit();
+			if (limit.signum() <= 0) return "∞";
+			java.math.BigDecimal remaining = limit.subtract(Currency.of(bank.getDepositedToday()));
+			if (remaining.signum() < 0) remaining = Currency.ZERO;
+			return NumberUtil.valueFormat(remaining);
+		}
+		if (parameter.equals(bankStr + "next_reset")) {
+			return formatUntil(bank.getCapResetAt());
+		}
+		if (parameter.equals(bankStr + "interest_rate")) {
+			double rate = tier == null ? 0D : tier.interestRate();
+			return formatPercent(rate * 100D);
+		}
+		if (parameter.equals(bankStr + "weekly_amount")) {
+			return NumberUtil.valueFormat(tier == null ? Currency.ZERO : tier.weeklyLoanAmount());
+		}
+		if (parameter.equals(bankStr + "monthly_amount")) {
+			return NumberUtil.valueFormat(tier == null ? Currency.ZERO : tier.monthlyLoanAmount());
+		}
+		if (parameter.equals(bankStr + "weekly_ready_in")) {
+			return formatReadyIn(bank.getLastWeeklyLoanAt(), Duration.ofDays(7));
+		}
+		if (parameter.equals(bankStr + "monthly_ready_in")) {
+			return formatReadyIn(bank.getLastMonthlyLoanAt(), Duration.ofDays(30));
+		}
 
 		return null;
 	}

@@ -153,18 +153,11 @@ User:
       Create_Cost: 5_000
       # Charged (from cash) every time the player renames their account at a Banker NPC. 0 disables.
       Rename_Fee: 1_000
-      # Deducted from the bank balance when the player closes the account at a Banker NPC. The remaining
-      # refund (bank balance - Delete_Fee + Create_Cost / 2) is returned to the player's cash. 0 disables.
-      Delete_Fee: 2_000
-      # The maximum amount of money the player can have.
-      Maximum_Balance: 1_000_000_000
-      # Maximum amount the player can deposit into their bank during one rolling window, enforced by the Banker NPC.
-      Daily_Deposit_Limit: 10_000
-      # Maximum amount the player can withdraw from their bank during one rolling window, enforced by the Banker NPC.
-      Daily_Withdraw_Limit: 10_000
-      # Length of the rolling window (seconds) after which the deposit / withdraw counters reset. Defaults to 24h.
+      # Length of the rolling window (seconds) after which the deposit counter resets. Defaults to 24h.
       # Measured from the player's first interaction within a window — not midnight — so splitting a transaction
       # across midnight never counts against two separate windows.
+      # Maximum balance, daily deposit limit, interest rate, death-loss discount, and weekly / monthly loan
+      # amounts are all per-tier now — see plugin/npc/bank_tiers.yml.
       Reset_Period_Seconds: 86_400
    # The user level config
    Level:
@@ -652,8 +645,8 @@ Trader:
 # | Banker | #
 # +--------+ #
 
-# General Banker NPC knobs. Account tier caps / upgrade costs live in plugin/npc/bank_tiers.yml; the per-day
-# deposit / withdraw limits are under User.Bank above.
+# General Banker NPC knobs. Every per-tier knob (max balance, daily deposit limit, interest rate, death-loss
+# discount, weekly / monthly loans) lives in plugin/npc/bank_tiers.yml.
 Banker:
    # Blocks within which a banker will head-track the nearest player.
    Head_Track_Radius: 8

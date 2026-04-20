@@ -12,6 +12,8 @@ import java.util.UUID;
 @Setter
 public class Bank {
 
+	private static final double MILLIS_PER_DAY = 86_400_000D;
+
 	private final UUID           uuid;
 	private final EconomyHandler economy;
 
@@ -21,9 +23,16 @@ public class Bank {
 	private String tierId;
 
 	private double  depositedToday;
-	private double  withdrawnToday;
 	@Nullable
 	private Instant capResetAt;
+
+	@Nullable
+	private Instant lastInterestAt;
+
+	@Nullable
+	private Instant lastWeeklyLoanAt;
+	@Nullable
+	private Instant lastMonthlyLoanAt;
 
 	public Bank(UUID uuid, String name) {
 		this.uuid    = uuid;
@@ -32,31 +41,70 @@ public class Bank {
 	}
 
 	/**
-	 * Rolling-window reset. {@link #capResetAt} stores the <em>future</em> UTC instant at which the current cap window
-	 * will next roll over — i.e. if {@code capResetAt} is {@code null} or in the past, the deposit / withdraw counters
-	 * are zeroed and the reset is scheduled {@code window} from {@code now}. Callers must invoke this immediately
-	 * before reading or mutating the counters so cap enforcement uses fresh values.
+	 * Rolling-window reset. {@link #capResetAt} stores the <em>future</em> UTC instant at which the current deposit cap
+	 * window will next roll over — i.e. if {@code capResetAt} is {@code null} or in the past, the deposit counter is
+	 * zeroed and the reset is scheduled {@code window} from {@code now}. Callers must invoke this immediately before
+	 * reading or mutating the counter so cap enforcement uses fresh values.
 	 */
 	public void resetIfStale(Instant now, Duration window) {
 		if (capResetAt != null && now.isBefore(capResetAt)) return;
 
 		depositedToday = 0D;
-		withdrawnToday = 0D;
 		capResetAt     = now.plus(window);
+	}
+
+	/**
+	 * Accrues continuous interest since the last interaction. Interest equals
+	 * {@code balance * ratePerDay * elapsedDays}, credited to the bank via the economy handler. The post-credit balance
+	 * is clamped at {@code cap}, so at-cap accounts stop growing. Returns the actually accrued amount (after clamping)
+	 * so callers can display / log it.
+	 *
+	 * <p>First call (or first call after resetcap) just anchors {@link #lastInterestAt} without crediting —
+	 * there's no elapsed window to attribute interest to.
+	 */
+	public double accrueInterest(Instant now, double ratePerDay, double cap) {
+		if (lastInterestAt == null) {
+			lastInterestAt = now;
+			return 0D;
+		}
+		if (ratePerDay <= 0D) {
+			lastInterestAt = now;
+			return 0D;
+		}
+
+		long elapsedMs = Duration.between(lastInterestAt, now).toMillis();
+		if (elapsedMs <= 0) {
+			return 0D;
+		}
+
+		double elapsedDays = elapsedMs / MILLIS_PER_DAY;
+		double balance     = economy.getBalance();
+		double interest    = balance * ratePerDay * elapsedDays;
+
+		if (interest <= 0D) {
+			lastInterestAt = now;
+			return 0D;
+		}
+
+		double actual = interest;
+		if (cap > 0 && balance + interest > cap) {
+			actual = Math.max(0D, cap - balance);
+		}
+
+		if (actual > 0D) economy.deposit(actual);
+		lastInterestAt = now;
+		return actual;
 	}
 
 	public void recordDeposit(double amount) {
 		depositedToday += amount;
 	}
 
-	public void recordWithdraw(double amount) {
-		withdrawnToday += amount;
-	}
-
 	@Override
 	public String toString() {
-		return String.format("Bank{uuid=%s,name=%s,balance=%.2f,tier=%s,dep=%.2f,wd=%.2f,reset=%s}", uuid.toString(),
-		                     name, economy.getBalance(), tierId, depositedToday, withdrawnToday, capResetAt);
+		return String.format("Bank{uuid=%s,name=%s,balance=%.2f,tier=%s,dep=%.2f,reset=%s,lastInterest=%s}",
+		                     uuid.toString(), name, economy.getBalance(), tierId, depositedToday, capResetAt,
+		                     lastInterestAt);
 	}
 
 }

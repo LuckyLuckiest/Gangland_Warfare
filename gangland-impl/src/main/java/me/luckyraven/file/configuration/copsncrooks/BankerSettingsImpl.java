@@ -3,6 +3,8 @@ package me.luckyraven.file.configuration.copsncrooks;
 import me.luckyraven.copsncrooks.npc.banker.config.BankerSettings;
 import me.luckyraven.file.configuration.Settings;
 
+import java.math.BigDecimal;
+
 public class BankerSettingsImpl implements BankerSettings {
 
 	@Override
@@ -26,38 +28,23 @@ public class BankerSettingsImpl implements BankerSettings {
 	}
 
 	@Override
-	public double getDailyDepositLimit() {
-		return Settings.getBankDailyDepositLimit();
-	}
-
-	@Override
-	public double getDailyWithdrawLimit() {
-		return Settings.getBankDailyWithdrawLimit();
-	}
-
-	@Override
 	public long getResetPeriodSeconds() {
 		return Settings.getBankResetPeriodSeconds();
 	}
 
 	@Override
-	public double getCreateFee() {
+	public BigDecimal getCreateFee() {
 		return Settings.getBankCreateFee();
 	}
 
 	@Override
-	public double getInitialBalance() {
+	public BigDecimal getInitialBalance() {
 		return Settings.getBankInitialBalance();
 	}
 
 	@Override
-	public double getRenameFee() {
+	public BigDecimal getRenameFee() {
 		return Settings.getBankRenameFee();
-	}
-
-	@Override
-	public double getDeleteFee() {
-		return Settings.getBankDeleteFee();
 	}
 
 	@Override

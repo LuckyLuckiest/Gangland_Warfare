@@ -1,5 +1,7 @@
 package me.luckyraven.util.utilities;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NavigableSet;
@@ -7,7 +9,38 @@ import java.util.TreeSet;
 
 public final class NumberUtil {
 
-	private static final String[] SUFFIXES = {"", "K", "M", "B", "T", "P", "E", "Z", "Y"};
+	/**
+	 * Short-scale currency suffixes, step {@code 10^3} per entry. Extended beyond the old K-M-B-T-P-E-Z-Y table so
+	 * Vault-tier balances beyond 10^24 still format cleanly — {@code Dc} (decillion, 10^33) and {@code Un}
+	 * (undecillion, 10^36) are the common terminal points in incremental-game notation. Values above that fall back to
+	 * the last suffix and keep scaling numerically.
+	 */
+	private static final String[] SUFFIXES = {
+			"",   // 10^0
+			"K",  // 10^3   thousand
+			"M",  // 10^6   million
+			"B",  // 10^9   billion
+			"T",  // 10^12  trillion
+			"P",  // 10^15  quadrillion (peta)
+			"E",  // 10^18  quintillion (exa)
+			"Z",  // 10^21  sextillion  (zetta)
+			"Y",  // 10^24  septillion  (yotta)
+			"R",  // 10^27  octillion   (ronna)
+			"Q",  // 10^30  nonillion   (quetta)
+			"Dc", // 10^33  decillion
+			"Un", // 10^36  undecillion
+			"Du", // 10^39  duodecillion
+			"Td", // 10^42  tredecillion
+			"Qt", // 10^45  quattuordecillion
+			"Qd", // 10^48  quindecillion
+			"Sd", // 10^51  sexdecillion
+			"St", // 10^54  septendecillion
+			"Od", // 10^57  octodecillion
+			"Nd", // 10^60  novemdecillion
+			"Vg"  // 10^63  vigintillion
+	};
+
+	private static final BigDecimal THOUSAND = BigDecimal.valueOf(1000);
 
 	public static String formatDouble(String format, double value) {
 		return String.format(format, value).replaceAll("\\.?0*$", "");
@@ -27,6 +60,33 @@ public final class NumberUtil {
 		}
 
 		return formatDouble(format, modValue) + SUFFIXES[index];
+	}
+
+	/**
+	 * {@link BigDecimal} overload. Uses BigDecimal arithmetic so values beyond {@code 2^53} scale down without
+	 * {@code double} precision loss before formatting. Once under 1000, the mantissa is projected to {@code double} for
+	 * the final {@code String.format} pass — at that point the value is in the {@code [0, 999]} range where
+	 * {@code double} is exact.
+	 */
+	public static String valueFormat(BigDecimal value) {
+		return valueFormat("%,.2f", value);
+	}
+
+	public static String valueFormat(String format, BigDecimal value) {
+		if (value == null) return formatDouble(format, 0D) + SUFFIXES[0];
+
+		BigDecimal modValue = value;
+		boolean    negative = modValue.signum() < 0;
+		if (negative) modValue = modValue.negate();
+
+		int index = 0;
+		while (modValue.compareTo(THOUSAND) >= 0 && index < SUFFIXES.length - 1) {
+			modValue = modValue.divide(THOUSAND, 4, RoundingMode.HALF_UP);
+			++index;
+		}
+
+		String rendered = formatDouble(format, modValue.doubleValue()) + SUFFIXES[index];
+		return negative ? "-" + rendered : rendered;
 	}
 
 	public static NavigableSet<Double> getSetOfNumbers(double balance) {
@@ -54,14 +114,18 @@ public final class NumberUtil {
 	}
 
 	public static boolean isValueFormatted(String value) {
-		return value.toUpperCase().matches(".*[KMBTPEZY]$");
+		String upper = value.toUpperCase();
+		for (int i = SUFFIXES.length - 1; i >= 1; i--) {
+			if (upper.endsWith(SUFFIXES[i].toUpperCase())) return true;
+		}
+		return false;
 	}
 
 	public static double parseFormattedDouble(String input) {
 		input = input.toUpperCase().trim();
 
 		for (int i = SUFFIXES.length - 1; i >= 1; i--) {
-			String suffix = SUFFIXES[i];
+			String suffix = SUFFIXES[i].toUpperCase();
 
 			if (!input.endsWith(suffix)) continue;
 
@@ -77,6 +141,36 @@ public final class NumberUtil {
 		try {
 			return Double.parseDouble(input);
 		} catch (NumberFormatException exception) {
+			throw new IllegalArgumentException("Invalid number: " + input);
+		}
+	}
+
+	/**
+	 * {@link BigDecimal} parse counterpart to {@link #parseFormattedDouble(String)}. Supports suffixes up to
+	 * {@code 10^63} without precision loss.
+	 */
+	public static BigDecimal parseFormattedBigDecimal(String input) {
+		String upper = input.toUpperCase().trim();
+
+		for (int i = SUFFIXES.length - 1; i >= 1; i--) {
+			String suffix = SUFFIXES[i].toUpperCase();
+
+			if (!upper.endsWith(suffix)) continue;
+
+			String numberPart = upper.substring(0, upper.length() - suffix.length()).trim();
+
+			try {
+				BigDecimal mantissa   = new BigDecimal(numberPart);
+				BigDecimal multiplier = THOUSAND.pow(i);
+				return mantissa.multiply(multiplier);
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException("Invalid formatted number: " + input);
+			}
+		}
+
+		try {
+			return new BigDecimal(upper);
+		} catch (NumberFormatException e) {
 			throw new IllegalArgumentException("Invalid number: " + input);
 		}
 	}

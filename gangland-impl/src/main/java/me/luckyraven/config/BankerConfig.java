@@ -80,10 +80,8 @@ public class BankerConfig {
 	// ── Views (assembled in dependency order; cross-references wired via setters) ──
 
 	@Bean
-	public BankerAmountView bankerAmountView(BankerSettings settings,
-	                                         BankerEconomyContract economy,
-	                                         BankerMessageContract messages) {
-		return new BankerAmountView(gangland, settings, economy, messages);
+	public BankerAmountView bankerAmountView(BankerEconomyContract economy, BankerMessageContract messages) {
+		return new BankerAmountView(gangland, economy, messages);
 	}
 
 	@Bean
@@ -101,17 +99,17 @@ public class BankerConfig {
 	}
 
 	@Bean
-	public BankerDeleteAccountView bankerDeleteAccountView(BankerSettings settings,
-	                                                       BankerEconomyContract economy,
-	                                                       BankerMessageContract messages) {
-		return new BankerDeleteAccountView(gangland, settings, economy, messages);
-	}
-
-	@Bean
 	public BankerRenameAccountView bankerRenameAccountView(BankerSettings settings,
 	                                                       BankerEconomyContract economy,
 	                                                       BankerMessageContract messages) {
 		return new BankerRenameAccountView(gangland, settings, economy, messages);
+	}
+
+	@Bean
+	public BankerClaimView bankerClaimView(BankerSettings settings,
+	                                       BankerEconomyContract economy,
+	                                       BankerMessageContract messages) {
+		return new BankerClaimView(gangland, settings, economy, messages);
 	}
 
 	@Bean
@@ -121,15 +119,15 @@ public class BankerConfig {
 	                                     BankerAmountView amountView,
 	                                     BankerUpgradeView upgradeView,
 	                                     BankerCreateAccountView createView,
-	                                     BankerDeleteAccountView deleteView,
-	                                     BankerRenameAccountView renameView) {
+	                                     BankerRenameAccountView renameView,
+	                                     BankerClaimView claimView) {
 		BankerMenuView view = new BankerMenuView(gangland, settings, economy, messages);
-		view.setSubViews(amountView, upgradeView, createView, deleteView, renameView);
+		view.setSubViews(amountView, upgradeView, createView, renameView, claimView);
 		amountView.setMenuView(view);
 		upgradeView.setMenuView(view);
 		createView.setMenuView(view);
-		deleteView.setMenuView(view);
 		renameView.setMenuView(view);
+		claimView.setMenuView(view);
 		return view;
 	}
 

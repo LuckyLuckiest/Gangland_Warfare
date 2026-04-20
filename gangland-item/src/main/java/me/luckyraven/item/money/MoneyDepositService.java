@@ -3,6 +3,8 @@ package me.luckyraven.item.money;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
+
 /**
  * Contract used by gangland-item money listeners to credit a player's balance and notify them of the deposit.
  *
@@ -41,5 +43,22 @@ public interface MoneyDepositService {
 	 * settings-backed {@code %gangland_money_symbol%}.
 	 */
 	String resolvePlaceholders(@Nullable Player player, String text);
+
+	/**
+	 * BigDecimal overload for callers that aggregate stacks beyond {@code double} precision (shops, traders). Default
+	 * impl downcasts to the existing double path; impls that can preserve precision may override.
+	 */
+	default void deposit(Player player, BigDecimal amount, String variationId) {
+		if (amount == null) return;
+		deposit(player, amount.doubleValue(), variationId);
+	}
+
+	/**
+	 * BigDecimal projection of {@link #getBalance(Player)}. Default impl widens the double result; impls that back the
+	 * balance with {@link BigDecimal} storage should override to preserve precision.
+	 */
+	default BigDecimal getBalanceAsAmount(Player player) {
+		return BigDecimal.valueOf(getBalance(player));
+	}
 
 }

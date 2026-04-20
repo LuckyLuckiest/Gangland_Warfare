@@ -2,6 +2,7 @@ package me.luckyraven.database.tables.player;
 
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.economy.bank.Bank;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.persistence.database.component.Attribute;
 import me.luckyraven.persistence.database.component.Table;
 import org.bukkit.OfflinePlayer;
@@ -16,19 +17,23 @@ public class BankTable extends Table<Bank> {
 	public BankTable(UserTable userTable) {
 		super("bank");
 
-		Attribute<UUID>   uuid           = new Attribute<>("uuid", true, UUID.class);
-		Attribute<String> name           = new Attribute<>("name", false, String.class);
-		Attribute<Double> balance        = new Attribute<>("balance", false, Double.class);
-		Attribute<String> tierId         = new Attribute<>("tier_id", false, String.class);
-		Attribute<Double> depositedToday = new Attribute<>("deposited_today", false, Double.class);
-		Attribute<Double> withdrawnToday = new Attribute<>("withdrawn_today", false, Double.class);
-		Attribute<String> capResetAt     = new Attribute<>("cap_reset_at", false, String.class);
+		Attribute<UUID>   uuid            = new Attribute<>("uuid", true, UUID.class);
+		Attribute<String> name            = new Attribute<>("name", false, String.class);
+		Attribute<String> balance         = new Attribute<>("balance", false, String.class);
+		Attribute<String> tierId          = new Attribute<>("tier_id", false, String.class);
+		Attribute<Double> depositedToday  = new Attribute<>("deposited_today", false, Double.class);
+		Attribute<String> capResetAt      = new Attribute<>("cap_reset_at", false, String.class);
+		Attribute<String> lastInterestAt  = new Attribute<>("last_interest_at", false, String.class);
+		Attribute<String> lastWeeklyLoan  = new Attribute<>("last_weekly_loan_at", false, String.class);
+		Attribute<String> lastMonthlyLoan = new Attribute<>("last_monthly_loan_at", false, String.class);
 
-		balance.setDefaultValue(0D);
+		balance.setDefaultValue(Currency.ZERO.toPlainString());
 		depositedToday.setDefaultValue(0D);
-		withdrawnToday.setDefaultValue(0D);
 		tierId.setCanBeNull(true);
 		capResetAt.setCanBeNull(true);
+		lastInterestAt.setCanBeNull(true);
+		lastWeeklyLoan.setCanBeNull(true);
+		lastMonthlyLoan.setCanBeNull(true);
 
 		uuid.setForeignKey(userTable.get("uuid"), userTable);
 
@@ -37,21 +42,28 @@ public class BankTable extends Table<Bank> {
 		this.addAttribute(balance);
 		this.addAttribute(tierId);
 		this.addAttribute(depositedToday);
-		this.addAttribute(withdrawnToday);
 		this.addAttribute(capResetAt);
+		this.addAttribute(lastInterestAt);
+		this.addAttribute(lastWeeklyLoan);
+		this.addAttribute(lastMonthlyLoan);
 	}
 
 	@Override
 	public Object[] getData(Bank data) {
-		Instant reset = data.getCapResetAt();
+		Instant reset           = data.getCapResetAt();
+		Instant lastInterestAt  = data.getLastInterestAt();
+		Instant lastWeeklyLoan  = data.getLastWeeklyLoanAt();
+		Instant lastMonthlyLoan = data.getLastMonthlyLoanAt();
 		return new Object[]{
 				data.getUuid().toString(),
 				data.getName(),
-				data.getEconomy().getBalance(),
+				Currency.plainString(data.getEconomy().getAmount()),
 				data.getTierId(),
 				data.getDepositedToday(),
-				data.getWithdrawnToday(),
-				reset == null ? null : reset.toString()
+				reset == null ? null : reset.toString(),
+				lastInterestAt == null ? null : lastInterestAt.toString(),
+				lastWeeklyLoan == null ? null : lastWeeklyLoan.toString(),
+				lastMonthlyLoan == null ? null : lastMonthlyLoan.toString()
 		};
 	}
 

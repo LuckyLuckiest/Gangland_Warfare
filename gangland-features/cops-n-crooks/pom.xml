@@ -55,6 +55,11 @@
             <artifactId>shop-api</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-economy</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
 
         <!-- Citizens dependency -->
         <dependency>

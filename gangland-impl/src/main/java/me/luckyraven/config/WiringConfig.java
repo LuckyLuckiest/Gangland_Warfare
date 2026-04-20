@@ -57,9 +57,11 @@ public class WiringConfig {
 	                                               MemberManager memberManager,
 	                                               GangManager gangManager,
 	                                               UniqueItemAddon uniqueItemAddon,
+	                                               me.luckyraven.copsncrooks.npc.banker.tier.BankTierRegistry
+														   bankTierRegistry,
 	                                               PlaceholderService placeholderService) {
 		return new GanglandPlaceholder(Gangland.FULL_PREFIX, Replacer.Closure.PERCENT,
 		                               userManager, memberManager, gangManager,
-		                               uniqueItemAddon, placeholderService);
+		                               uniqueItemAddon, bankTierRegistry, placeholderService);
 	}
 }

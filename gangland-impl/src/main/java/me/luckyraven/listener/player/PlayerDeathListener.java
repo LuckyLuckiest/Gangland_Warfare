@@ -1,8 +1,11 @@
 package me.luckyraven.listener.player;
 
+import me.luckyraven.copsncrooks.npc.banker.tier.BankTier;
+import me.luckyraven.copsncrooks.npc.banker.tier.BankTierRegistry;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
+import me.luckyraven.economy.bank.Bank;
 import me.luckyraven.economy.bank.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
@@ -38,15 +41,18 @@ public class PlayerDeathListener implements Listener {
 	private final UserManager<Player> userManager;
 	private final WeaponManager       weaponManager;
 	private final GanglandPlaceholder placeholder;
+	private final BankTierRegistry    bankTierRegistry;
 	private final Map<UUID, Long>     recentDeaths      = new ConcurrentHashMap<>();
 	private final Set<UUID>           downedBroadcasted = ConcurrentHashMap.newKeySet();
 
 	public PlayerDeathListener(@Qualifier("online") UserManager<Player> userManager,
 	                           WeaponManager weaponManager,
-	                           GanglandPlaceholder placeholder) {
-		this.userManager   = userManager;
-		this.weaponManager = weaponManager;
-		this.placeholder   = placeholder;
+	                           GanglandPlaceholder placeholder,
+	                           BankTierRegistry bankTierRegistry) {
+		this.userManager      = userManager;
+		this.weaponManager    = weaponManager;
+		this.placeholder      = placeholder;
+		this.bankTierRegistry = bankTierRegistry;
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -137,6 +143,14 @@ public class PlayerDeathListener implements Listener {
 		// ignore it if there was no money to be deducted
 		if (deduct == 0) return;
 
+		// Bank-account insurance: having an account softens the loss by the tier's deathLossDiscount. Applied
+		// post-formula so admin-authored Death.Money.Formula expressions don't have to know about the bank.
+		double discount = bankInsuranceDiscount(user);
+		if (discount > 0) {
+			deduct *= Math.max(0D, 1D - discount);
+		}
+		if (deduct <= 0D) return;
+
 		if (Settings.isDeathLoseMoney()) {
 			type = "&c&l-";
 			economy.withdraw(deduct);
@@ -150,6 +164,14 @@ public class PlayerDeathListener implements Listener {
 		String message = "&3Death penalty: " + info;
 
 		user.sendMessage(ChatUtil.color(message));
+	}
+
+	private double bankInsuranceDiscount(User<Player> user) {
+		Bank bank = user.getBank();
+		if (bank == null) return 0D;
+		BankTier tier = bankTierRegistry.get(bank.getTierId());
+		if (tier == null) tier = bankTierRegistry.first();
+		return tier == null ? 0D : tier.deathLossDiscount();
 	}
 
 	private void changeDeathMessage(PlayerDeathEvent event, Player player) {

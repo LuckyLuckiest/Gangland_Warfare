@@ -4,10 +4,13 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
+import me.luckyraven.copsncrooks.npc.banker.tier.BankTier;
+import me.luckyraven.copsncrooks.npc.banker.tier.BankTierRegistry;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.economy.bank.Bank;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.economy.bank.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
@@ -19,6 +22,7 @@ import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -30,15 +34,18 @@ class BankDepositCommand extends SubArgument {
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final GanglandDatabase    ganglandDatabase;
+	private final BankTierRegistry    tierRegistry;
 
 	protected BankDepositCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
-	                             UserManager<Player> userManager, GanglandDatabase ganglandDatabase) {
+	                             UserManager<Player> userManager, GanglandDatabase ganglandDatabase,
+	                             BankTierRegistry tierRegistry) {
 		super(gangland, "deposit", tree, parent);
 
 		this.gangland         = gangland;
 		this.tree             = tree;
 		this.userManager      = userManager;
 		this.ganglandDatabase = ganglandDatabase;
+		this.tierRegistry     = tierRegistry;
 
 		this.addSubArgument(bankDeposit());
 	}
@@ -74,10 +81,10 @@ class BankDepositCommand extends SubArgument {
 				return;
 			}
 
-			double argAmount;
+			BigDecimal argAmount;
 
 			try {
-				argAmount = Double.parseDouble(args[2]);
+				argAmount = Currency.parse(args[2]);
 			} catch (NumberFormatException exception) {
 				String string  = Messages.MUST_BE_NUMBERS.toString();
 				String replace = string.replace("%command%", args[2]);
@@ -86,9 +93,12 @@ class BankDepositCommand extends SubArgument {
 				return;
 			}
 
-			double inBank = bank.getEconomy().getBalance() + argAmount;
+			BigDecimal cashBal = user.getEconomy().getAmount();
+			BigDecimal bankBal = bank.getEconomy().getAmount();
+			BigDecimal inBank  = bankBal.add(argAmount);
+			BankTier   tier    = resolveTier(bank);
 
-			if (inBank > Settings.getBankMaxBalance()) {
+			if (tier != null && inBank.compareTo(tier.maxBalance()) > 0) {
 				user.sendMessage(Messages.CANNOT_EXCEED_MAXIMUM.toString());
 				return;
 			}
@@ -97,30 +107,31 @@ class BankDepositCommand extends SubArgument {
 			if (!bypass) {
 				bank.resetIfStale(Instant.now(), Duration.ofSeconds(Settings.getBankResetPeriodSeconds()));
 
-				double limit = Settings.getBankDailyDepositLimit();
-				if (bank.getDepositedToday() + argAmount > limit) {
+				BigDecimal limit = tier == null ? Currency.ZERO : tier.dailyDepositLimit();
+				if (limit.signum() > 0
+				    && Currency.of(bank.getDepositedToday()).add(argAmount).compareTo(limit) > 0) {
 					user.sendMessage(Messages.BANKER_DAILY_DEPOSIT_REACHED.toString()
 					                                                      .replace("%money_symbol%",
 					                                                               Settings.getMoneySymbol())
 					                                                      .replace("%limit%",
-					                                                               Settings.formatDouble(limit)));
+					                                                               Settings.formatAmount(limit)));
 					return;
 				}
 			}
 
-			boolean processed = BankCommand.processMoney(user, bank, user.getEconomy().getBalance(), argAmount, inBank,
-			                                             user.getEconomy().getBalance() - argAmount);
+			boolean processed = BankCommand.processMoney(user, bank, cashBal, argAmount, inBank,
+			                                             cashBal.subtract(argAmount));
 
 			if (!processed) return;
 
-			if (!bypass) bank.recordDeposit(argAmount);
+			if (!bypass) bank.recordDeposit(argAmount.doubleValue());
 
 			// Persist counters + balance immediately so /glw reload can't roll them back to the last autosave.
 			IRepository<Bank> repo = ganglandDatabase.getRepositoryRegistry().getRepository(Bank.class);
 			repo.save(bank);
 
 			String string  = Messages.BANK_MONEY_DEPOSIT_PLAYER.toString();
-			String replace = string.replace("%amount%", Settings.formatDouble(argAmount));
+			String replace = string.replace("%amount%", Settings.formatAmount(argAmount));
 
 			user.getUser().sendMessage(replace);
 		}, sender -> {
@@ -143,6 +154,12 @@ class BankDepositCommand extends SubArgument {
 					.map(value -> value % 1 == 0 ? String.valueOf(value.longValue()) : String.format("%.2f", value))
 					.toList();
 		});
+	}
+
+	private BankTier resolveTier(Bank bank) {
+		BankTier tier = tierRegistry.get(bank.getTierId());
+		if (tier != null) return tier;
+		return tierRegistry.first();
 	}
 
 }

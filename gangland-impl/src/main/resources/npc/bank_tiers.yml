@@ -15,14 +15,21 @@
 # Bank account tier ladder used by the Banker NPC.
 #
 # Players start at the lowest-ordered tier. Interacting with any Banker NPC offers a one-click upgrade to the
-# next tier; the upgrade cost is debited from the bank balance and the account's maximum-balance cap is raised
-# accordingly. Tiers are global — any Banker NPC offers the same ladder.
+# next tier; the upgrade cost is debited from the bank balance and every tier-scoped knob below takes effect.
+# Tiers are global — every Banker NPC offers the same ladder.
 #
 # Fields:
-# - Display_Name    human-readable tier label (supports &-color codes)
-# - Max_Balance     cap on the player's bank balance while at this tier
-# - Upgrade_Cost    bank-balance cost to upgrade INTO this tier (first tier should be 0)
-# - Order           ascending integer — lower = earlier in the ladder; must be unique
+# - Display_Name          human-readable tier label (supports &-color codes)
+# - Max_Balance           cap on the player's bank balance while at this tier
+# - Upgrade_Cost          bank-balance cost to upgrade INTO this tier (first tier should be 0)
+# - Order                 ascending integer — lower = earlier in the ladder; must be unique
+# - Daily_Deposit_Limit   rolling-window deposit cap applied while the player is at this tier (0 = uncapped)
+# - Interest_Rate         fraction of bank balance credited per 24h, accrued continuously (0.015 = 1.5%/day,
+#                         0 = no interest). Clamps at Max_Balance.
+# - Death_Loss_Discount   fraction subtracted from the death-tax deduction for accounts at this tier
+#                         (0.5 = half the normal loss; 0 = full loss; range 0–1)
+# - Weekly_Loan_Amount    free currency deposited into the bank every 7 days (0 = disabled)
+# - Monthly_Loan_Amount   free currency deposited into the bank every 30 days (0 = disabled)
 #
 # Add, remove or re-price tiers freely; the loader re-reads the file on /glw reload.
 
@@ -31,21 +38,41 @@ Basic:
    Max_Balance: 100_000
    Upgrade_Cost: 0
    Order: 0
+   Daily_Deposit_Limit: 10_000
+   Interest_Rate: 0.0
+   Death_Loss_Discount: 0.10
+   Weekly_Loan_Amount: 500
+   Monthly_Loan_Amount: 2_000
 
 Premium:
    Display_Name: "&ePremium Account"
    Max_Balance: 1_000_000
    Upgrade_Cost: 50_000
    Order: 1
+   Daily_Deposit_Limit: 100_000
+   Interest_Rate: 0.0025
+   Death_Loss_Discount: 0.25
+   Weekly_Loan_Amount: 2_000
+   Monthly_Loan_Amount: 10_000
 
 Elite:
    Display_Name: "&6Elite Account"
    Max_Balance: 10_000_000
    Upgrade_Cost: 500_000
    Order: 2
+   Daily_Deposit_Limit: 1_000_000
+   Interest_Rate: 0.0075
+   Death_Loss_Discount: 0.50
+   Weekly_Loan_Amount: 10_000
+   Monthly_Loan_Amount: 50_000
 
 Vault:
    Display_Name: "&b&lVault Account"
    Max_Balance: 100_000_000
    Upgrade_Cost: 5_000_000
    Order: 3
+   Daily_Deposit_Limit: 10_000_000
+   Interest_Rate: 0.015
+   Death_Loss_Discount: 0.75
+   Weekly_Loan_Amount: 50_000
+   Monthly_Loan_Amount: 250_000

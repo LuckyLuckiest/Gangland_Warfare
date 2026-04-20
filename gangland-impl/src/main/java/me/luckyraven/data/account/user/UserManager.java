@@ -19,6 +19,7 @@ import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.economy.bank.Bank;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.events.user.UserBountyEvent;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
@@ -33,6 +34,7 @@ import org.bukkit.permissions.PermissionAttachment;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.Collections;
@@ -63,6 +65,15 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 		this.wantedSettings = wantedSettings;
 		this.userFactory    = userFactory;
 		this.users          = new HashMap<>();
+	}
+
+	private static Instant parseInstant(Object raw) {
+		if (raw == null) return null;
+		try {
+			return Instant.parse(String.valueOf(raw));
+		} catch (DateTimeParseException ignored) {
+			return null;
+		}
 	}
 
 	/**
@@ -132,34 +143,38 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 
 			if (hasBank) {
 				// BankTable column order (see BankTable.java): uuid, name, balance, tier_id, deposited_today,
-				// withdrawn_today, cap_reset_at. Reads have to cover every column or the cap / tier / rolling
-				// counters get zeroed on every login — which ALSO happens on /glw reload because reload
-				// re-initializes online users through this same path.
-				String name        = String.valueOf(bankData[1]);
-				double bankBalance = ((Number) bankData[2]).doubleValue();
+				// cap_reset_at, last_interest_at. Reads have to cover every column or the cap / tier / rolling
+				// counter / interest timestamp gets zeroed on every login — which ALSO happens on /glw reload
+				// because reload re-initializes online users through this same path.
+				String     name        = String.valueOf(bankData[1]);
+				BigDecimal bankBalance = Currency.ofYaml(bankData[2]);
 
 				Object rawTier = bankData.length > 3 ? bankData[3] : null;
 				String tierId  = rawTier == null ? null : String.valueOf(rawTier);
 
 				double depositedToday = bankData.length > 4 && bankData[4] != null
 				                        ? ((Number) bankData[4]).doubleValue() : 0D;
-				double withdrawnToday = bankData.length > 5 && bankData[5] != null
-				                        ? ((Number) bankData[5]).doubleValue() : 0D;
 
-				Object  rawReset   = bankData.length > 6 ? bankData[6] : null;
-				Instant capResetAt = null;
-				if (rawReset != null) {
-					try {
-						capResetAt = Instant.parse(String.valueOf(rawReset));
-					} catch (DateTimeParseException ignored) { }
-				}
+				Object  rawReset   = bankData.length > 5 ? bankData[5] : null;
+				Instant capResetAt = parseInstant(rawReset);
+
+				Object  rawInterest  = bankData.length > 6 ? bankData[6] : null;
+				Instant lastInterest = parseInstant(rawInterest);
+
+				Object  rawWeekly = bankData.length > 7 ? bankData[7] : null;
+				Instant weeklyAt  = parseInstant(rawWeekly);
+
+				Object  rawMonthly = bankData.length > 8 ? bankData[8] : null;
+				Instant monthlyAt  = parseInstant(rawMonthly);
 
 				Bank bank = new Bank(user.getUuid(), name);
-				bank.getEconomy().setBalance(bankBalance);
+				bank.getEconomy().setAmount(bankBalance);
 				bank.setTierId(tierId);
 				bank.setDepositedToday(depositedToday);
-				bank.setWithdrawnToday(withdrawnToday);
 				bank.setCapResetAt(capResetAt);
+				bank.setLastInterestAt(lastInterest);
+				bank.setLastWeeklyLoanAt(weeklyAt);
+				bank.setLastMonthlyLoanAt(monthlyAt);
 				user.setBank(bank);
 			}
 

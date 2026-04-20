@@ -2,6 +2,7 @@ package me.luckyraven.copsncrooks.npc.banker.view;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import me.luckyraven.copsncrooks.npc.banker.BankerNpc;
 import me.luckyraven.copsncrooks.npc.banker.config.BankerSettings;
 import me.luckyraven.copsncrooks.npc.banker.economy.BankerEconomyContract;
@@ -20,6 +21,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.math.BigDecimal;
+
 @RequiredArgsConstructor
 public final class BankerUpgradeView {
 
@@ -27,8 +30,8 @@ public final class BankerUpgradeView {
 	private static final int SLOT_CURRENT = 11;
 	private static final int SLOT_ARROW   = 13;
 	private static final int SLOT_NEXT    = 15;
-	private static final int SLOT_CONFIRM = 20;
-	private static final int SLOT_CANCEL  = 24;
+	private static final int SLOT_CANCEL  = 20;
+	private static final int SLOT_CONFIRM = 24;
 
 	private static final SoundConfiguration SOUND_CONFIRM = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
 	                                                                               "ENTITY_PLAYER_LEVELUP", 1.0f, 1.0f);
@@ -41,10 +44,12 @@ public final class BankerUpgradeView {
 	private final BankerSettings        settings;
 	private final BankerEconomyContract economy;
 	private final BankerMessageContract messages;
-	private       BankerMenuView        menuView;
 
-	public void setMenuView(BankerMenuView menuView) {
-		this.menuView = menuView;
+	@Setter
+	private BankerMenuView menuView;
+
+	private static String format(BigDecimal value) {
+		return NumberUtil.valueFormat(value);
 	}
 
 	public void open(Player viewer, BankerNpc banker) {
@@ -69,23 +74,23 @@ public final class BankerUpgradeView {
 		BankTier    current     = snap.currentTier();
 		ItemBuilder currentItem = new ItemBuilder(material(XMaterial.IRON_BLOCK, Material.IRON_BLOCK));
 		currentItem.setDisplayName("&7Current: " + (current != null ? current.displayName() : "&8None"))
-		           .setLore("&7Cap: &f$" + NumberUtil.valueFormat(current != null ? current.maxBalance() : 0),
-		                    "&7Balance: &f$" + NumberUtil.valueFormat(snap.bankBalance()));
+		           .setLore("&7Cap: &f$" + format(current != null ? current.maxBalance() : null),
+		                    "&7Balance: &f$" + format(snap.bankBalance()));
 		handler.setItem(SLOT_CURRENT, currentItem, false, (p, inv, b) -> { });
 
 		ItemBuilder arrow = new ItemBuilder(material(XMaterial.ARROW, Material.ARROW));
-		arrow.setDisplayName("&e→ Upgrade").setLore("&7Pay &6$" + NumberUtil.valueFormat(next.upgradeCost()));
+		arrow.setDisplayName("&e→ Upgrade").setLore("&7Pay &6$" + format(next.upgradeCost()));
 		handler.setItem(SLOT_ARROW, arrow, false, (p, inv, b) -> { });
 
 		ItemBuilder nextItem = new ItemBuilder(material(XMaterial.DIAMOND_BLOCK, Material.DIAMOND_BLOCK));
 		nextItem.setDisplayName("&aNext: " + next.displayName())
-		        .setLore("&7New cap: &f$" + NumberUtil.valueFormat(next.maxBalance()),
-		                 "&7Upgrade cost: &6$" + NumberUtil.valueFormat(next.upgradeCost()));
+		        .setLore("&7New cap: &f$" + format(next.maxBalance()),
+		                 "&7Upgrade cost: &6$" + format(next.upgradeCost()));
 		handler.setItem(SLOT_NEXT, nextItem, false, (p, inv, b) -> { });
 
 		ItemBuilder confirm = new ItemBuilder(material(XMaterial.LIME_WOOL, Material.GREEN_WOOL));
 		confirm.setDisplayName("&a&lCONFIRM UPGRADE")
-		       .setLore("&7Pay &6$" + NumberUtil.valueFormat(next.upgradeCost()) + " &7from your bank.");
+		       .setLore("&7Pay &6$" + format(next.upgradeCost()) + " &7from your bank.");
 		handler.setItem(SLOT_CONFIRM, confirm, false, (p, inv, b) -> performUpgrade(p, banker, next));
 
 		ItemBuilder cancel = new ItemBuilder(material(XMaterial.RED_WOOL, Material.RED_WOOL));

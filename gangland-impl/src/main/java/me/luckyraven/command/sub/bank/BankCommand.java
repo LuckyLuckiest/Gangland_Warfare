@@ -3,10 +3,12 @@ package me.luckyraven.command.sub.bank;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.copsncrooks.npc.banker.tier.BankTierRegistry;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.economy.bank.Bank;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.autowire.bean.Qualifier;
@@ -14,6 +16,7 @@ import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,14 +33,17 @@ public final class BankCommand extends Command {
 
 	private final UserManager<Player> userManager;
 	private final GanglandDatabase    ganglandDatabase;
+	private final BankTierRegistry    tierRegistry;
 
 	public BankCommand(Gangland gangland,
 	                   @Qualifier("online") UserManager<Player> userManager,
-	                   GanglandDatabase ganglandDatabase) {
+	                   GanglandDatabase ganglandDatabase,
+	                   BankTierRegistry tierRegistry) {
 		super(gangland, "bank", true);
 
 		this.userManager      = userManager;
 		this.ganglandDatabase = ganglandDatabase;
+		this.tierRegistry     = tierRegistry;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -48,17 +54,18 @@ public final class BankCommand extends Command {
 		getHelpInfo().addAll(list);
 	}
 
-	static boolean processMoney(User<Player> user, Bank bank, double check, double amount, double inBank,
-	                            double inAccount) {
-		if (check == 0D) {
+	static boolean processMoney(User<Player> user, Bank bank,
+	                            BigDecimal check, BigDecimal amount,
+	                            BigDecimal inBank, BigDecimal inAccount) {
+		if (check.signum() == 0) {
 			user.getUser().sendMessage(Messages.CANNOT_TAKE_LESS_THAN_ZERO.toString());
 			return false;
-		} else if (amount > check) {
+		} else if (amount.compareTo(check) > 0) {
 			user.getUser().sendMessage(Messages.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 			return false;
 		} else {
-			user.getEconomy().setBalance(inAccount);
-			bank.getEconomy().setBalance(inBank);
+			user.getEconomy().setAmount(Currency.of(inAccount));
+			bank.getEconomy().setAmount(Currency.of(inBank));
 		}
 
 		return true;
@@ -81,16 +88,14 @@ public final class BankCommand extends Command {
 		user.sendMessage(String.format("&6%s&7 bank information", player.getName()),
 		                 String.format("&7%s&8: &a%s", "Name", bank.getName()),
 		                 String.format("&7%s&8: &a%s%s", "Balance", Settings.getMoneySymbol(),
-		                               Settings.formatDouble(bank.getEconomy().getBalance())));
+		                               Settings.formatAmount(bank.getEconomy().getAmount())));
 	}
 
 	@Override
 	protected void initializeArguments() {
 		BankCreateCommand create = new BankCreateCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
-		BankDeleteCommand delete = new BankDeleteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
-		                                                 ganglandDatabase);
 		BankDepositCommand deposit = new BankDepositCommand(getGangland(), getArgumentTree(), getArgument(),
-		                                                    userManager, ganglandDatabase);
+		                                                    userManager, ganglandDatabase, tierRegistry);
 		BankWithdrawCommand withdraw = new BankWithdrawCommand(getGangland(), getArgumentTree(), getArgument(),
 		                                                       userManager, ganglandDatabase);
 		BankBalanceCommand balance = new BankBalanceCommand(getGangland(), getArgumentTree(), getArgument(),
@@ -102,7 +107,6 @@ public final class BankCommand extends Command {
 		List<Argument> arguments = new ArrayList<>();
 
 		arguments.add(create);
-		arguments.add(delete);
 		arguments.add(deposit);
 		arguments.add(withdraw);
 		arguments.add(balance);

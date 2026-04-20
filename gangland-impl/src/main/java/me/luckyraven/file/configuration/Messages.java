@@ -82,7 +82,6 @@ public enum Messages {
 	BANKER_INSUFFICIENT_CASH("Errors.Banker.Insufficient_Cash", Type.ERROR),
 	BANKER_INSUFFICIENT_BANK_FUNDS("Errors.Banker.Insufficient_Bank_Funds", Type.ERROR),
 	BANKER_DAILY_DEPOSIT_REACHED("Errors.Banker.Daily_Deposit_Reached", Type.ERROR),
-	BANKER_DAILY_WITHDRAW_REACHED("Errors.Banker.Daily_Withdraw_Reached", Type.ERROR),
 	BANKER_CAP_EXCEEDED("Errors.Banker.Cap_Exceeded", Type.ERROR),
 	BANKER_UPGRADE_MAX_TIER("Errors.Banker.Upgrade_Max_Tier", Type.ERROR),
 	BANKER_UPGRADE_INSUFFICIENT_FUNDS("Errors.Banker.Upgrade_Insufficient_Funds", Type.ERROR),
@@ -91,7 +90,6 @@ public enum Messages {
 	BANKER_LOOK_AT("Errors.Banker.Look_At", Type.ERROR),
 	BANKER_NOT_A_BANKER("Errors.Banker.Not_Banker", Type.ERROR),
 	BANKER_CREATE_SUCCESS("Commands.Banker.Create_Success", Type.COMMAND),
-	BANKER_DELETE_SUCCESS("Commands.Banker.Delete_Success", Type.COMMAND),
 	BANKER_RENAME_SUCCESS("Commands.Banker.Rename_Success", Type.COMMAND),
 	BANKER_CREATE_ALREADY_HAS_ACCOUNT("Errors.Banker.Already_Has_Account", Type.ERROR),
 	BANKER_CREATE_CANNOT_AFFORD("Errors.Banker.Cannot_Afford_Creation", Type.ERROR),
@@ -99,6 +97,11 @@ public enum Messages {
 	BANKER_RENAME_CANNOT_AFFORD("Errors.Banker.Rename_Cannot_Afford", Type.ERROR),
 	BANKER_RENAME_NAME_EMPTY("Errors.Banker.Rename_Name_Empty", Type.ERROR),
 	BANKER_RENAME_NAME_UNCHANGED("Errors.Banker.Rename_Name_Unchanged", Type.ERROR),
+	BANKER_LOAN_WEEKLY_SUCCESS("Commands.Banker.Loan_Weekly_Success", Type.COMMAND),
+	BANKER_LOAN_MONTHLY_SUCCESS("Commands.Banker.Loan_Monthly_Success", Type.COMMAND),
+	BANKER_LOAN_ON_COOLDOWN("Errors.Banker.Loan_On_Cooldown", Type.ERROR),
+	BANKER_LOAN_DISABLED("Errors.Banker.Loan_Disabled", Type.ERROR),
+	BANKER_LOAN_CAP_FULL("Errors.Banker.Loan_Cap_Full", Type.ERROR),
 
 	// commands - gang
 	GANG_CREATED("Commands.Gang.Create.Created_Gang", Type.COMMAND),

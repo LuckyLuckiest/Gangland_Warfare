@@ -8,6 +8,7 @@ import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.economy.bank.Bank;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.GanglandChatUtil;
@@ -19,6 +20,7 @@ import me.luckyraven.util.utilities.TimeUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -73,7 +75,8 @@ class BankCreateCommand extends SubArgument {
 				return;
 			}
 
-			if (user.getEconomy().getBalance() < Settings.getBankCreateFee()) {
+			BigDecimal fee = Currency.of(Settings.getBankCreateFee());
+			if (user.getEconomy().getAmount().compareTo(fee) < 0) {
 				user.sendMessage(Messages.CANNOT_CREATE_BANK.toString());
 				return;
 			}
@@ -82,8 +85,12 @@ class BankCreateCommand extends SubArgument {
 			bank.getEconomy().setUser(user);
 
 			// create the bank
-			user.getEconomy().withdraw(Settings.getBankCreateFee());
-			bank.getEconomy().setBalance(Settings.getBankInitialBalance());
+			try {
+				if (fee.signum() > 0) user.getEconomy().withdrawAmount(fee);
+			} catch (me.luckyraven.economy.bank.EconomyException ignored) {
+				// shouldn't happen — we just checked the balance. Fall through.
+			}
+			bank.getEconomy().setAmount(Currency.of(Settings.getBankInitialBalance()));
 
 			user.setBank(bank);
 
@@ -119,8 +126,9 @@ class BankCreateCommand extends SubArgument {
 			createBankName.put(user, new AtomicReference<>(args[2]));
 
 			// Need to notify the player and give access to confirm
-			String string  = Messages.BANK_CREATE_FEE.toString();
-			String replace = string.replace("%amount%", Settings.formatDouble(Settings.getBankCreateFee()));
+			String string = Messages.BANK_CREATE_FEE.toString();
+			String replace = string.replace("%amount%",
+			                                Settings.formatAmount(Currency.of(Settings.getBankCreateFee())));
 
 			user.sendMessage(replace);
 			user.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"bank", "create"}));

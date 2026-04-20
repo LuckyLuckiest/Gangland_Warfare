@@ -9,19 +9,24 @@ import me.luckyraven.copsncrooks.npc.banker.tier.BankTierRegistry;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.economy.bank.Bank;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.economy.bank.EconomyException;
 import me.luckyraven.economy.bank.EconomyHandler;
 import me.luckyraven.persistence.repository.IRepository;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 
 /**
  * Gangland-side implementation of {@link BankerEconomyContract}. Bridges the cops-n-crooks banker views to the real
- * {@link UserManager} + {@link Bank} entities + tier registry + Bank repository. Every mutation refreshes the Bank's
- * rolling-window counters through {@link Bank#resetIfStale} so cap enforcement uses fresh values.
+ * {@link UserManager} + {@link Bank} entities + tier registry + Bank repository. Every entry point routes through
+ * {@link #maintain(Bank)} first so the cap window is rolled and interest is accrued before any cap / balance check
+ * reads the counters. Currency math runs in {@link BigDecimal}; {@code double} surfaces only at the cash-side boundary
+ * (legacy {@link EconomyHandler} deposit / withdraw with a {@code double} argument, which internally widens back to
+ * BigDecimal).
  */
 @CustomLog
 public final class GanglandBankerEconomy implements BankerEconomyContract {
@@ -39,6 +44,16 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 		this.bankRepository = bankRepository;
 	}
 
+	/**
+	 * Returns the UTC instant at which the next claim becomes available. {@code null} means the caller has never
+	 * claimed and can do so immediately.
+	 */
+	@Nullable
+	private static Instant readyAt(@Nullable Instant lastClaimAt, Duration window) {
+		if (lastClaimAt == null) return null;
+		return lastClaimAt.plus(window);
+	}
+
 	@Override
 	public BankerSnapshot snapshot(Player player) {
 		User<Player> user = userManager.getUser(player);
@@ -49,28 +64,27 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 		Bank bank = user.getBank();
 		if (bank == null) {
 			return new BankerSnapshot(false,
-			                          user.getEconomy().getBalance(),
-			                          0, 0, 0,
-			                          settings.getDailyDepositLimit(),
-			                          settings.getDailyWithdrawLimit(),
-			                          null, null);
+			                          Currency.of(user.getEconomy().getBalance()),
+			                          Currency.ZERO, Currency.ZERO, Currency.ZERO, 0D,
+			                          null, null, null);
 		}
 
-		refreshWindow(bank);
-
-		BankTier current = resolveTier(bank);
+		BankTier current = maintain(bank);
 		BankTier next    = tierRegistry.next(current == null ? null : current.id());
 
-		double depositLimit  = settings.getDailyDepositLimit();
-		double withdrawLimit = settings.getDailyWithdrawLimit();
-		double remainingDep  = Math.max(0, depositLimit - bank.getDepositedToday());
-		double remainingWd   = Math.max(0, withdrawLimit - bank.getWithdrawnToday());
+		BigDecimal depositLimit = current == null ? Currency.ZERO : current.dailyDepositLimit();
+		BigDecimal remainingDep = depositLimit.signum() <= 0
+		                          ? BigDecimal.valueOf(Double.MAX_VALUE)
+		                          : depositLimit.subtract(Currency.of(bank.getDepositedToday())).max(Currency.ZERO);
+		double interestRate = current == null ? 0D : current.interestRate();
 
 		return new BankerSnapshot(true,
-		                          user.getEconomy().getBalance(),
-		                          bank.getEconomy().getBalance(),
-		                          remainingDep, remainingWd,
-		                          depositLimit, withdrawLimit,
+		                          Currency.of(user.getEconomy().getBalance()),
+		                          bank.getEconomy().getAmount(),
+		                          remainingDep,
+		                          depositLimit,
+		                          interestRate,
+		                          bank.getCapResetAt(),
 		                          current, next);
 	}
 
@@ -78,43 +92,34 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 	public CreationInfo creationInfo(Player player) {
 		User<Player> user = userManager.getUser(player);
 		if (user == null) {
-			return new CreationInfo(false, 0, settings.getCreateFee(), settings.getInitialBalance(), false);
+			return new CreationInfo(false, Currency.ZERO,
+			                        Currency.of(settings.getCreateFee()),
+			                        Currency.of(settings.getInitialBalance()),
+			                        false);
 		}
-		double  cash    = user.getEconomy().getBalance();
-		double  fee     = settings.getCreateFee();
-		double  initial = settings.getInitialBalance();
-		boolean has     = user.hasBank();
-		boolean afford  = cash >= fee;
+		BigDecimal cash    = Currency.of(user.getEconomy().getBalance());
+		BigDecimal fee     = Currency.of(settings.getCreateFee());
+		BigDecimal initial = Currency.of(settings.getInitialBalance());
+		boolean    has     = user.hasBank();
+		boolean    afford  = cash.compareTo(fee) >= 0;
 		return new CreationInfo(has, cash, fee, initial, afford);
 	}
 
 	@Override
 	public RenameInfo renameInfo(Player player) {
 		User<Player> user = userManager.getUser(player);
-		double       fee  = settings.getRenameFee();
+		BigDecimal   fee  = Currency.of(settings.getRenameFee());
 		if (user == null || !user.hasBank() || user.getBank() == null) {
-			return new RenameInfo(false, null, user == null ? 0 : user.getEconomy().getBalance(), fee, false);
+			BigDecimal cash = user == null ? Currency.ZERO : Currency.of(user.getEconomy().getBalance());
+			return new RenameInfo(false, null, cash, fee, false);
 		}
-		double cash = user.getEconomy().getBalance();
-		return new RenameInfo(true, user.getBank().getName(), cash, fee, cash >= fee);
+		BigDecimal cash = Currency.of(user.getEconomy().getBalance());
+		return new RenameInfo(true, user.getBank().getName(), cash, fee, cash.compareTo(fee) >= 0);
 	}
 
 	@Override
-	public DeletionInfo deletionInfo(Player player) {
-		User<Player> user = userManager.getUser(player);
-		if (user == null || !user.hasBank() || user.getBank() == null) {
-			return new DeletionInfo(false, null, 0, settings.getDeleteFee(), 0);
-		}
-		Bank   bank      = user.getBank();
-		double balance   = bank.getEconomy().getBalance();
-		double deleteFee = settings.getDeleteFee();
-		double refund    = balance + settings.getCreateFee() / 2D - deleteFee;
-		return new DeletionInfo(true, bank.getName(), balance, deleteFee, refund);
-	}
-
-	@Override
-	public Result tryDeposit(Player player, double amount) {
-		if (amount <= 0) return Result.ECONOMY_ERROR;
+	public Result tryDeposit(Player player, BigDecimal amount) {
+		if (amount == null || amount.signum() <= 0) return Result.ECONOMY_ERROR;
 
 		User<Player> user = userManager.getUser(player);
 		if (user == null) return Result.ECONOMY_ERROR;
@@ -122,36 +127,40 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 		Bank bank = user.getBank();
 		if (bank == null) return Result.NO_ACCOUNT;
 
-		refreshWindow(bank);
+		BankTier tier = maintain(bank);
 
-		if (user.getEconomy().getBalance() < amount) return Result.INSUFFICIENT_CASH;
+		BigDecimal normalised = Currency.of(amount);
+		BigDecimal cashBal    = Currency.of(user.getEconomy().getBalance());
+		if (cashBal.compareTo(normalised) < 0) return Result.INSUFFICIENT_CASH;
 
 		boolean bypass = player.hasPermission(BankCommand.BYPASS_CAP_PERMISSION);
 
-		double limit = settings.getDailyDepositLimit();
-		if (!bypass && bank.getDepositedToday() + amount > limit) return Result.DAILY_DEPOSIT_REACHED;
+		BigDecimal limit = tier == null ? Currency.ZERO : tier.dailyDepositLimit();
+		if (!bypass && limit.signum() > 0) {
+			BigDecimal projected = Currency.of(bank.getDepositedToday()).add(normalised);
+			if (projected.compareTo(limit) > 0) return Result.DAILY_DEPOSIT_REACHED;
+		}
 
-		BankTier tier = resolveTier(bank);
-		if (tier != null && bank.getEconomy().getBalance() + amount > tier.maxBalance()) {
+		if (tier != null && bank.getEconomy().getAmount().add(normalised).compareTo(tier.maxBalance()) > 0) {
 			return Result.CAP_EXCEEDED;
 		}
 
 		EconomyHandler cash = user.getEconomy();
 		try {
-			cash.withdraw(amount);
+			cash.withdrawAmount(normalised);
 		} catch (EconomyException e) {
 			log.warn("Deposit withdraw-from-cash failed for {}: {}", player.getName(), e.getMessage());
 			return Result.ECONOMY_ERROR;
 		}
-		bank.getEconomy().deposit(amount);
-		if (!bypass) bank.recordDeposit(amount);
+		bank.getEconomy().depositAmount(normalised);
+		if (!bypass) bank.recordDeposit(normalised.doubleValue());
 		bankRepository.save(bank);
 		return Result.SUCCESS;
 	}
 
 	@Override
-	public Result tryWithdraw(Player player, double amount) {
-		if (amount <= 0) return Result.ECONOMY_ERROR;
+	public Result tryWithdraw(Player player, BigDecimal amount) {
+		if (amount == null || amount.signum() <= 0) return Result.ECONOMY_ERROR;
 
 		User<Player> user = userManager.getUser(player);
 		if (user == null) return Result.ECONOMY_ERROR;
@@ -159,23 +168,18 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 		Bank bank = user.getBank();
 		if (bank == null) return Result.NO_ACCOUNT;
 
-		refreshWindow(bank);
+		maintain(bank);
 
-		if (bank.getEconomy().getBalance() < amount) return Result.INSUFFICIENT_BANK_FUNDS;
-
-		boolean bypass = player.hasPermission(BankCommand.BYPASS_CAP_PERMISSION);
-
-		double limit = settings.getDailyWithdrawLimit();
-		if (!bypass && bank.getWithdrawnToday() + amount > limit) return Result.DAILY_WITHDRAW_REACHED;
+		BigDecimal normalised = Currency.of(amount);
+		if (bank.getEconomy().getAmount().compareTo(normalised) < 0) return Result.INSUFFICIENT_BANK_FUNDS;
 
 		try {
-			bank.getEconomy().withdraw(amount);
+			bank.getEconomy().withdrawAmount(normalised);
 		} catch (EconomyException e) {
 			log.warn("Withdraw from bank failed for {}: {}", player.getName(), e.getMessage());
 			return Result.ECONOMY_ERROR;
 		}
-		user.getEconomy().deposit(amount);
-		if (!bypass) bank.recordWithdraw(amount);
+		user.getEconomy().depositAmount(normalised);
 		bankRepository.save(bank);
 		return Result.SUCCESS;
 	}
@@ -188,15 +192,16 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 		Bank bank = user.getBank();
 		if (bank == null) return Result.NO_ACCOUNT;
 
-		BankTier current = resolveTier(bank);
+		BankTier current = maintain(bank);
 		BankTier next    = tierRegistry.next(current == null ? null : current.id());
 		if (next == null) return Result.ALREADY_MAX_TIER;
 
-		if (bank.getEconomy().getBalance() < next.upgradeCost()) return Result.INSUFFICIENT_BANK_FUNDS;
+		BigDecimal cost = next.upgradeCost();
+		if (bank.getEconomy().getAmount().compareTo(cost) < 0) return Result.INSUFFICIENT_BANK_FUNDS;
 
-		if (next.upgradeCost() > 0) {
+		if (cost.signum() > 0) {
 			try {
-				bank.getEconomy().withdraw(next.upgradeCost());
+				bank.getEconomy().withdrawAmount(cost);
 			} catch (EconomyException e) {
 				log.warn("Upgrade cost withdraw failed for {}: {}", player.getName(), e.getMessage());
 				return Result.ECONOMY_ERROR;
@@ -216,22 +221,25 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 
 		if (user.hasBank()) return Result.ALREADY_HAS_ACCOUNT;
 
-		double fee = settings.getCreateFee();
-		if (user.getEconomy().getBalance() < fee) return Result.CANNOT_AFFORD_CREATION;
+		BigDecimal fee = Currency.of(settings.getCreateFee());
+		if (Currency.of(user.getEconomy().getBalance()).compareTo(fee) < 0) return Result.CANNOT_AFFORD_CREATION;
 
 		Bank bank = new Bank(user.getUser().getUniqueId(), accountName);
 		bank.getEconomy().setUser(user);
 
 		try {
-			if (fee > 0) user.getEconomy().withdraw(fee);
+			if (fee.signum() > 0) user.getEconomy().withdrawAmount(fee);
 		} catch (EconomyException e) {
 			log.warn("Account creation fee withdraw failed for {}: {}", player.getName(), e.getMessage());
 			return Result.ECONOMY_ERROR;
 		}
-		bank.getEconomy().setBalance(settings.getInitialBalance());
+		bank.getEconomy().setAmount(Currency.of(settings.getInitialBalance()));
 
 		BankTier first = tierRegistry.first();
 		if (first != null) bank.setTierId(first.id());
+
+		// Anchor the interest clock at creation so new accounts don't back-accrue from epoch 0.
+		bank.setLastInterestAt(Instant.now());
 
 		user.setBank(bank);
 		bankRepository.save(bank);
@@ -248,14 +256,16 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 		Bank bank = user.getBank();
 		if (bank == null) return Result.NO_ACCOUNT;
 
+		maintain(bank);
+
 		String trimmed = newName.trim();
 		if (trimmed.equals(bank.getName())) return Result.NAME_UNCHANGED;
 
-		double fee = settings.getRenameFee();
-		if (user.getEconomy().getBalance() < fee) return Result.CANNOT_AFFORD_RENAME;
+		BigDecimal fee = Currency.of(settings.getRenameFee());
+		if (Currency.of(user.getEconomy().getBalance()).compareTo(fee) < 0) return Result.CANNOT_AFFORD_RENAME;
 
 		try {
-			if (fee > 0) user.getEconomy().withdraw(fee);
+			if (fee.signum() > 0) user.getEconomy().withdrawAmount(fee);
 		} catch (EconomyException e) {
 			log.warn("Rename fee withdraw failed for {}: {}", player.getName(), e.getMessage());
 			return Result.ECONOMY_ERROR;
@@ -266,25 +276,77 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 	}
 
 	@Override
-	public Result tryDeleteAccount(Player player) {
+	public ClaimInfo claimInfo(Player player) {
+		User<Player> user = userManager.getUser(player);
+		if (user == null || !user.hasBank() || user.getBank() == null) {
+			return new ClaimInfo(false, Currency.ZERO, Currency.ZERO, null, null);
+		}
+		Bank       bank    = user.getBank();
+		BankTier   tier    = resolveTier(bank);
+		BigDecimal weekly  = tier == null ? Currency.ZERO : tier.weeklyLoanAmount();
+		BigDecimal monthly = tier == null ? Currency.ZERO : tier.monthlyLoanAmount();
+		Instant    wReady  = readyAt(bank.getLastWeeklyLoanAt(), Duration.ofDays(7));
+		Instant    mReady  = readyAt(bank.getLastMonthlyLoanAt(), Duration.ofDays(30));
+		return new ClaimInfo(true, weekly, monthly, wReady, mReady);
+	}
+
+	@Override
+	public Result tryClaimWeekly(Player player) {
+		return tryClaim(player, ClaimKind.WEEKLY);
+	}
+
+	@Override
+	public Result tryClaimMonthly(Player player) {
+		return tryClaim(player, ClaimKind.MONTHLY);
+	}
+
+	private Result tryClaim(Player player, ClaimKind kind) {
 		User<Player> user = userManager.getUser(player);
 		if (user == null) return Result.ECONOMY_ERROR;
 
 		Bank bank = user.getBank();
 		if (bank == null) return Result.NO_ACCOUNT;
 
-		double deleteFee = settings.getDeleteFee();
-		if (bank.getEconomy().getBalance() < deleteFee) return Result.INSUFFICIENT_BANK_FUNDS;
+		BankTier tier = maintain(bank);
+		if (tier == null) return Result.TIER_MISSING;
 
-		double refund = bank.getEconomy().getBalance() + settings.getCreateFee() / 2D - deleteFee;
-		if (refund > 0) user.getEconomy().deposit(refund);
-		user.setBank(null);
-		bankRepository.delete(bank);
+		BigDecimal amount = kind == ClaimKind.WEEKLY ? tier.weeklyLoanAmount() : tier.monthlyLoanAmount();
+		if (amount.signum() <= 0) return Result.LOAN_DISABLED;
+
+		Instant  lastClaim = kind == ClaimKind.WEEKLY ? bank.getLastWeeklyLoanAt() : bank.getLastMonthlyLoanAt();
+		Duration window    = kind == ClaimKind.WEEKLY ? Duration.ofDays(7) : Duration.ofDays(30);
+		Instant  now       = Instant.now();
+		if (lastClaim != null && now.isBefore(lastClaim.plus(window))) {
+			return Result.LOAN_ON_COOLDOWN;
+		}
+
+		// Grants deposit into the BANK balance, not cash. Refuse the claim if the account can't hold the full
+		// amount — cooldown stays untouched so the player can come back once they've made room.
+		if (bank.getEconomy().getAmount().add(amount).compareTo(tier.maxBalance()) > 0) {
+			return Result.LOAN_CAP_FULL;
+		}
+
+		bank.getEconomy().depositAmount(amount);
+		if (kind == ClaimKind.WEEKLY) bank.setLastWeeklyLoanAt(now);
+		else bank.setLastMonthlyLoanAt(now);
+		bankRepository.save(bank);
 		return Result.SUCCESS;
 	}
 
-	private void refreshWindow(Bank bank) {
+	/**
+	 * Rolls the deposit window and accrues interest for {@code bank} using the caller's current tier. Returns the
+	 * resolved {@link BankTier} so callers don't have to call {@link #resolveTier(Bank)} again. Safe to call every
+	 * interaction — both inner helpers are idempotent if the window hasn't expired / no elapsed time has passed.
+	 */
+	@Nullable
+	private BankTier maintain(Bank bank) {
 		bank.resetIfStale(Instant.now(), Duration.ofSeconds(settings.getResetPeriodSeconds()));
+
+		BankTier tier = resolveTier(bank);
+		if (tier != null) {
+			bank.accrueInterest(Instant.now(), tier.interestRate(), tier.maxBalance().doubleValue());
+		}
+		return tier;
 	}
 
 	@Nullable
@@ -297,10 +359,14 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 	}
 
 	private BankerSnapshot emptySnapshot() {
-		return new BankerSnapshot(false, 0, 0, 0, 0,
-		                          settings.getDailyDepositLimit(),
-		                          settings.getDailyWithdrawLimit(),
-		                          null, null);
+		return new BankerSnapshot(false,
+		                          Currency.ZERO, Currency.ZERO, Currency.ZERO, Currency.ZERO,
+		                          0D, null, null, null);
+	}
+
+	private enum ClaimKind {
+		WEEKLY,
+		MONTHLY
 	}
 
 }

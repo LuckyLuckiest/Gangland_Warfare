@@ -104,7 +104,6 @@ class BankResetCapCommand extends SubArgument {
 
 	private void resetCounters(Bank bank) {
 		bank.setDepositedToday(0D);
-		bank.setWithdrawnToday(0D);
 		bank.setCapResetAt(null);
 	}
 

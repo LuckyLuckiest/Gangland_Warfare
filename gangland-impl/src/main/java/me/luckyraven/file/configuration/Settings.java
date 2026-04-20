@@ -2,6 +2,7 @@ package me.luckyraven.file.configuration;
 
 import lombok.CustomLog;
 import lombok.Getter;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileInitializer;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
 import java.util.*;
 
 @CustomLog
@@ -47,12 +49,12 @@ public class Settings implements FileInitializer {
 	private static @Getter boolean balanceFormatEnabled;
 	// user configuration
 	private static @Getter double  userInitialBalance, userMaxBalance;
-	private static @Getter double bankInitialBalance, bankCreateFee, bankMaxBalance;
-	private static @Getter double bankRenameFee, bankDeleteFee;
-	private static @Getter double bankDailyDepositLimit, bankDailyWithdrawLimit;
-	private static @Getter long bankResetPeriodSeconds;
+	private static @Getter BigDecimal bankInitialBalance;
+	private static @Getter BigDecimal bankCreateFee;
+	private static @Getter BigDecimal bankRenameFee;
+	private static @Getter long       bankResetPeriodSeconds;
 	// user levels
-	private static @Getter int  userMaxLevel, userLevelBaseAmount;
+	private static @Getter int        userMaxLevel, userLevelBaseAmount;
 	private static @Getter String  userLevelFormula;
 	private static @Getter int     userSkillUpgrade;
 	private static @Getter double  userSkillCost;
@@ -190,11 +192,11 @@ public class Settings implements FileInitializer {
 	// banker configuration
 	private static @Getter int     bankerHeadTrackRadius;
 	private static @Getter double  bankerMaxHealth;
-	private static         boolean bankerInvulnerable;
+	private static @Getter boolean bankerInvulnerable;
 	private static @Getter String  bankerFallbackTierId;
 	// loot chest configuration
-	private static @Getter long   lootChestCountdownTimer;
-	private static @Getter String lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
+	private static @Getter long    lootChestCountdownTimer;
+	private static @Getter String  lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
 	private static @Getter List<String> lootChestAllowedBlocks;
 	private static @Getter double       lootChestRewardMoneyMinimum, lootChestRewardMoneyMaximum,
 			lootChestRewardExperienceMinimum, lootChestRewardExperienceMaximum;
@@ -202,6 +204,7 @@ public class Settings implements FileInitializer {
 	// money drop (cash items dropped by mobs / cops / civilians / players on death)
 	private static @Getter boolean      moneyDropEnabled;
 	private final          FileHandler  fileHandler;
+
 	public Settings(FileManager fileManager) {
 		try {
 			String fileName = "settings";
@@ -214,12 +217,18 @@ public class Settings implements FileInitializer {
 		}
 	}
 
-	public static boolean isBankerInvulnerable() {
-		return bankerInvulnerable;
-	}
-
 	public static String formatDouble(double value) {
 		return NumberUtil.formatDouble(format(value), value);
+	}
+
+	/**
+	 * BigDecimal-aware currency formatter. Delegates to {@link #formatDouble(double)} via {@code doubleValue()} so
+	 * existing formatter config (thousand separators, decimal places) applies unchanged; values beyond {@code 2^53}
+	 * lose precision in the rendered string but still round-trip through the DB via
+	 * {@link me.luckyraven.economy.bank.Currency#plainString(BigDecimal)}.
+	 */
+	public static String formatAmount(BigDecimal value) {
+		return NumberUtil.valueFormat(value);
 	}
 
 	public static Method getSetting(String methodName) {
@@ -263,6 +272,21 @@ public class Settings implements FileInitializer {
 	private static double dbl(NodeReader parent, String key, double def) {
 		if (parent == null) return def;
 		return parent.get(key).asDouble().orDefault(def);
+	}
+
+	/**
+	 * Currency-typed parser. Reads the YAML value as a string so literals bigger than {@code 2^53} round-trip without
+	 * {@code double} precision loss. Falls back to {@code def} (parsed as a plain-decimal string) if the key is missing
+	 * or malformed.
+	 */
+	private static BigDecimal money(NodeReader parent, String key, String def) {
+		if (parent == null) return Currency.parse(def);
+		String raw = parent.get(key).asString().orDefault(def);
+		try {
+			return Currency.parse(raw);
+		} catch (NumberFormatException e) {
+			return Currency.parse(def);
+		}
 	}
 
 	private static boolean bool(NodeReader parent, String key, boolean def) {
@@ -366,13 +390,9 @@ public class Settings implements FileInitializer {
 
 		userInitialBalance     = dbl(account, "Initial_Balance", 0);
 		userMaxBalance         = dbl(account, "Maximum_Balance", 10_000_000);
-		bankInitialBalance     = dbl(bank, "Initial_Balance", 0);
-		bankCreateFee          = dbl(bank, "Create_Cost", 5_000);
-		bankMaxBalance         = dbl(bank, "Maximum_Balance", 1_000_000_000);
-		bankRenameFee          = dbl(bank, "Rename_Fee", 1_000);
-		bankDeleteFee          = dbl(bank, "Delete_Fee", 2_000);
-		bankDailyDepositLimit  = dbl(bank, "Daily_Deposit_Limit", 10_000);
-		bankDailyWithdrawLimit = dbl(bank, "Daily_Withdraw_Limit", 10_000);
+		bankInitialBalance     = money(bank, "Initial_Balance", "0");
+		bankCreateFee          = money(bank, "Create_Cost", "5000");
+		bankRenameFee          = money(bank, "Rename_Fee", "1000");
 		bankResetPeriodSeconds = intVal(bank, "Reset_Period_Seconds", 86_400);
 		userMaxLevel           = intVal(level, "Maximum_Level", 100);
 		userLevelBaseAmount    = intVal(level, "Base_Amount", 1_000);

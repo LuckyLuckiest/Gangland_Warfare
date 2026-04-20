@@ -2,6 +2,7 @@ package me.luckyraven.copsncrooks.npc.banker.view;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import me.luckyraven.copsncrooks.npc.banker.BankerNpc;
 import me.luckyraven.copsncrooks.npc.banker.config.BankerSettings;
 import me.luckyraven.copsncrooks.npc.banker.economy.BankerEconomyContract;
@@ -30,11 +31,9 @@ public final class BankerRenameAccountView {
 	private final BankerSettings        settings;
 	private final BankerEconomyContract economy;
 	private final BankerMessageContract messages;
-	private       BankerMenuView        menuView;
 
-	public void setMenuView(BankerMenuView menuView) {
-		this.menuView = menuView;
-	}
+	@Setter
+	private BankerMenuView menuView;
 
 	public void open(Player viewer, BankerNpc banker) {
 		RenameInfo info = economy.renameInfo(viewer);
@@ -53,7 +52,7 @@ public final class BankerRenameAccountView {
 
 		new AnvilGUI.Builder()
 				.plugin(plugin)
-				.title("Rename (Fee: $" + (long) info.fee() + ")")
+				.title("Rename (Fee: $" + info.fee().toPlainString() + ")")
 				.itemLeft(material(XMaterial.NAME_TAG, Material.NAME_TAG))
 				.text(info.currentName() == null ? "" : info.currentName())
 				.onClick((slot, state) -> {

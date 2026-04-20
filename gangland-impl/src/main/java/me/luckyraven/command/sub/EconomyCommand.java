@@ -6,6 +6,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.economy.bank.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
@@ -17,6 +18,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -124,52 +126,49 @@ public final class EconomyCommand extends Command {
 	private void operations(CommandSender sender, String[] args, HashMap<String, Supplier<List<Player>>> specifiers,
 	                        String specifier, UserManager<Player> userManager) {
 		try {
-			double argAmount = Double.parseDouble(args[3]);
-			double value     = 0D;
-			String strValue  = "";
+			BigDecimal argAmount  = Currency.parse(args[3]);
+			BigDecimal maxBalance = Currency.of(Settings.getUserMaxBalance());
+			BigDecimal zero       = Currency.ZERO;
 
 			List<Player> players = specifiers.get(specifier).get();
 
 			if (players == null || players.isEmpty()) return;
 
 			for (Player player : players) {
-				User<Player> user         = userManager.getUser(player);
-				double       valueChanged = 0D;
-
+				User<Player> user = userManager.getUser(player);
 				if (user == null) return;
 
-				EconomyHandler economy = user.getEconomy();
+				EconomyHandler economy      = user.getEconomy();
+				BigDecimal     current      = economy.getAmount();
+				BigDecimal     newValue     = zero;
+				BigDecimal     valueChanged = zero;
+				String         strValue     = "";
+
 				switch (args[1].toLowerCase()) {
 					case "deposit", "add" -> {
-						if (economy.getBalance() + argAmount <= Settings.getUserMaxBalance()) valueChanged
-								= argAmount;
-
-						value    = Math.min(economy.getBalance() + argAmount,
-						                    Settings.getUserMaxBalance());
+						BigDecimal projected = current.add(argAmount);
+						if (projected.compareTo(maxBalance) <= 0) valueChanged = argAmount;
+						newValue = projected.min(maxBalance);
 						strValue = "deposit";
 					}
 					case "withdraw", "take" -> {
-						if (argAmount > economy.getBalance()) valueChanged = economy.getBalance();
-						else if (economy.getBalance() - argAmount > 0D) valueChanged = argAmount;
-
-						value    = Math.max(economy.getBalance() - argAmount, 0D);
+						if (argAmount.compareTo(current) > 0) valueChanged = current;
+						else if (current.subtract(argAmount).signum() > 0) valueChanged = argAmount;
+						newValue = current.subtract(argAmount).max(zero);
 						strValue = "withdraw";
 					}
 					case "set" -> {
-						value = Math.min(argAmount, Settings.getUserMaxBalance());
-
-						if (argAmount > Settings.getUserMaxBalance()) valueChanged
-								= Settings.getUserMaxBalance();
-						else valueChanged = value;
-
-						strValue = "set";
+						newValue     = argAmount.min(maxBalance);
+						valueChanged = argAmount.compareTo(maxBalance) > 0 ? maxBalance : newValue;
+						strValue     = "set";
 					}
 				}
+
 				user.getUser()
 				    .sendMessage(Messages.valueOf(strValue.toUpperCase() + "_MONEY_PLAYER")
 				                         .toString()
-				                         .replace("%amount%", Settings.formatDouble(valueChanged)));
-				economy.setBalance(value);
+				                         .replace("%amount%", Settings.formatAmount(valueChanged)));
+				economy.setAmount(newValue);
 			}
 		} catch (NumberFormatException exception) {
 			sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", args[3]));
@@ -221,7 +220,7 @@ public final class EconomyCommand extends Command {
 
 				if (user == null) continue;
 
-				user.getEconomy().setBalance(0D);
+				user.getEconomy().setAmount(Currency.ZERO);
 				user.getUser().sendMessage(Messages.RESET_MONEY_PLAYER.toString());
 			}
 		}, getPermission() + ".reset");

@@ -71,10 +71,6 @@
 		"usage": "/glw bank create <name>",
 		"description": "Creates a bank with the specified name."
 	},
-	"bank_delete": {
-		"usage": "/glw bank delete",
-		"description": "Deletes current bank."
-	},
 	"bank_deposit": {
 		"usage": "/glw bank deposit <amount>",
 		"description": "Deposits the amount value to the bank."
