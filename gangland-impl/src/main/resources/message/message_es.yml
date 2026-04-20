@@ -292,6 +292,8 @@ Commands:
       Created: "&aCárcel &e%id%&a creada en tu ubicación."
       Removed: "&aCárcel &e%id%&a eliminada."
       Released: "&aLiberaste a &e%target%&a de la cárcel."
+      Exit_Set: "&aUbicación de salida establecida para la cárcel &e%id%&a."
+      Exit_Set_Global: "&aSalida global de la cárcel establecida en tu ubicación actual."
       Teleported: "Teletransportado a la cárcel &e(&b%id%&e)&7."
    Cop:
       No_Chased: "Ningún jugador está siendo perseguido por la policía."
@@ -521,6 +523,72 @@ Cops_N_Crooks:
       Restraint_Tick:
          Handcuffed: "&cEsposado &8- &7No puedes interactuar"
          Jailed: "&4Encarcelado &8- &7No puedes interactuar"
+      Transit:
+         Starting_Action_Bar: "&cTraslado a la cárcel &8- &7%seconds%s restantes"
+         Committed_Title: "&4Traslado confirmado"
+         Committed_Subtitle: "&7Estás siendo llevado a la cárcel"
+      Handcuff_Bribe:
+         Gui_Title: "&8Soborna al oficial"
+         Button_Label: "&6&lSOBORNO &8- &e%cost%"
+         Button_Lore:
+            - "&7Ofrece dinero al oficial para que se vaya."
+            - "&7Coste: &e%cost%"
+            - "&7Tu saldo: &a%balance%"
+            - ""
+            - "&eHaz clic para pagar"
+         Success_Title: "&aSoborno aceptado"
+         Success_Subtitle: "&7El oficial se embolsa el dinero y se marcha"
+         Insufficient: "&cNo tienes dinero suficiente para sobornar al oficial."
+      Paperwork:
+         Item_Name: "&6&lPapeleo de Prisión"
+         Item_Lore:
+            - "&7Haz clic derecho para abrir"
+            - "&7el menú de papeleo."
+            - ""
+            - "&eFianza, Soborno o Cumplir."
+         Gui_Title: "&8Papeleo de Prisión"
+         Bail_Label: "&a&lPAGAR FIANZA &8- &e%cost%"
+         Bail_Lore:
+            - "&7Paga la fianza y sal ahora."
+            - "&7Coste: &e%cost%"
+            - "&7Tu saldo: &a%balance%"
+            - ""
+            - "&eHaz clic para pagar"
+         Bribe_Label: "&6&lSOBORNO JAILER &8- &e%cost%"
+         Bribe_Lore:
+            - "&7Intenta sobornar al carcelero."
+            - "&7Coste: &e%cost%"
+            - "&7Probabilidad: &b%chance%%"
+            - "&cSi falla pierdes el dinero y"
+            - "&cse extiende tu sentencia."
+            - ""
+            - "&eHaz clic para intentarlo"
+         Sentence_Label: "&e&lCUMPLIR SENTENCIA"
+         Sentence_Lore:
+            - "&7Espera y saldrás libre."
+            - "&7Restante: &b%seconds%s"
+            - ""
+            - "&eHaz clic para confirmar"
+         Info_Label: "&b&lINFO"
+         Info_Lore:
+            - "&7Nivel de búsqueda al arresto: &c%wanted%"
+            - "&7Sentencia restante: &b%seconds%s"
+            - "&7Tu saldo: &a%balance%"
+      Bail:
+         Success: "&aPagaste la fianza y fuiste liberado."
+         Insufficient: "&cNo tienes dinero suficiente para pagar la fianza."
+      Jail_Bribe:
+         Success: "&aEl carcelero miró para otro lado - eres libre."
+         Fail: "&cTu soborno fue rechazado. La sentencia se extiende &4%seconds%s&c."
+         Insufficient: "&cNo tienes dinero suficiente para sobornar al carcelero."
+      Sentence:
+         Tick_Action_Bar: "&eCumpliendo sentencia &8- &b%seconds%s"
+         Complete_Title: "&aSentencia cumplida"
+         Complete_Subtitle: "&7Ya eres libre"
+      Break_Free:
+         Progress_Action_Bar: "&eEscapar &8- &b%current%&8/&b%required% &7(pulsa &eAGACHARSE&7!)"
+         Success_Title: "&a¡Te has soltado!"
+         Success_Subtitle: "&7Te quitaste las esposas — ¡corre!"
 
 Gadgets:
    Car:

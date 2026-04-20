@@ -210,6 +210,11 @@ public class GanglandCopSettings implements CopSettings {
 		return Settings.getCopStartingAmmoMagazines();
 	}
 
+	@Override
+	public double getGuardRadius() {
+		return Settings.getDetainmentGuardRadius();
+	}
+
 	private Integer formulaCalculation(int level, String formula, int base, int perLevel, int max) {
 		try {
 			double result = new ExpressionBuilder(formula).variables("level", "base", "perLevel", "max")

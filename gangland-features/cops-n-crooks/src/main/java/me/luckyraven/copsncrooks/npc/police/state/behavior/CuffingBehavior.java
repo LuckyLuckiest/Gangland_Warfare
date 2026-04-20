@@ -105,7 +105,13 @@ public class CuffingBehavior implements CopBehavior {
 		if (success) {
 			var cuffedEvent = new CuffedEvent(cop, target, cuffRadius, maxAttempts);
 			Bukkit.getPluginManager().callEvent(cuffedEvent);
-			cop.transitionTo(CopState.RETURNING);
+			// Transfer cuff-lock ownership to the GUARDING state without releasing:
+			// clear claimedPlayer so onExit's releaseLock() is a no-op, then stash the
+			// target on the cop for GuardingBehavior to pick up.
+			UUID cuffedTargetId = claimedPlayer;
+			claimedPlayer = null;
+			cop.setGuardedPlayerId(cuffedTargetId);
+			cop.transitionTo(CopState.GUARDING);
 			return;
 		}
 

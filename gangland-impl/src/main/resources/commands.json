@@ -527,6 +527,10 @@
 		"usage": "/glw jail teleport <id>",
 		"description": "Teleports to the specified jail."
 	},
+	"jail_setexit": {
+		"usage": "/glw jail setexit [jailId]",
+		"description": "Without jailId: sets the GLOBAL release exit (used by every jail that has no specific exit). With jailId: sets the exit for that specific jail, overriding the global."
+	},
 	"cop_help": {
 		"usage": "/glw cop help <page>",
 		"description": "Shows the specified page in cop menu."

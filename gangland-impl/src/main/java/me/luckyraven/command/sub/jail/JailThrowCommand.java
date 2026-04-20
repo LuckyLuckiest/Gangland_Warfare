@@ -6,6 +6,7 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.copsncrooks.detainment.DetainmentRegistry;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
+import me.luckyraven.copsncrooks.detainment.intake.JailIntakeService;
 import me.luckyraven.copsncrooks.jail.Jail;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.TriConsumer;
@@ -22,16 +23,19 @@ class JailThrowCommand extends SubArgument {
 	private final Tree<Argument>     tree;
 	private final DetainmentService  detainmentService;
 	private final DetainmentRegistry detainmentRegistry;
+	private final JailIntakeService  jailIntakeService;
 
 	protected JailThrowCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
 	                           DetainmentService detainmentService,
-	                           DetainmentRegistry detainmentRegistry) {
+	                           DetainmentRegistry detainmentRegistry,
+	                           JailIntakeService jailIntakeService) {
 		super(gangland, "throw", tree, parent);
 
 		this.gangland           = gangland;
 		this.tree               = tree;
 		this.detainmentService  = detainmentService;
 		this.detainmentRegistry = detainmentRegistry;
+		this.jailIntakeService  = jailIntakeService;
 
 		throwPlayer();
 	}
@@ -66,7 +70,11 @@ class JailThrowCommand extends SubArgument {
 				return;
 			}
 
-			detainmentService.jail(target, jail.getId());
+			boolean admitted = jailIntakeService.admit(target);
+			if (!admitted) {
+				sender.sendMessage(Messages.JAIL_NO_EMPTY.toString());
+				return;
+			}
 			sender.sendMessage(Messages.JAIL_THROWN.toString().replace("%target%", target.getName()));
 		}, sender -> {
 			Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();

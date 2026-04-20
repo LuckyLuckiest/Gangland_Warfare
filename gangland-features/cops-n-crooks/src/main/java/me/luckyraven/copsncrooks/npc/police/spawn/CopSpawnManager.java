@@ -8,6 +8,7 @@ import me.luckyraven.copsncrooks.npc.police.config.CopLoader;
 import me.luckyraven.copsncrooks.npc.police.npc.CopNpc;
 import me.luckyraven.copsncrooks.npc.police.npc.CopNpcFactory;
 import me.luckyraven.copsncrooks.npc.police.state.CopBehaviorFactory;
+import me.luckyraven.copsncrooks.npc.police.state.CuffLockRegistry;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.weapon.WeaponService;
 import org.bukkit.Location;
@@ -22,19 +23,21 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	private final EntityMarkManager entityMarkManager;
 	private final WeaponService     weaponService;
 	private final DetainmentService detainmentService;
+	private final CuffLockRegistry  cuffLockRegistry;
 
 	private CopNpcFactory     copNpcFactory;
 	private CopConfigProvider configProvider;
 
 	public CopSpawnManager(JavaPlugin plugin, CopLoader copLoader, EntityMarkManager entityMarkManager,
 	                       WeaponService weaponService, IRepository<CopSpawner> repository,
-	                       DetainmentService detainmentService) {
+	                       DetainmentService detainmentService, CuffLockRegistry cuffLockRegistry) {
 		super(copLoader.getLoadedProvider(), repository);
 		this.plugin            = plugin;
 		this.copLoader         = copLoader;
 		this.entityMarkManager = entityMarkManager;
 		this.weaponService     = weaponService;
 		this.detainmentService = detainmentService;
+		this.cuffLockRegistry  = cuffLockRegistry;
 
 		rebuildFactories();
 	}
@@ -121,7 +124,8 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 		CopConfigProvider provider = copLoader.getLoadedProvider();
 		this.configProvider = provider;
 
-		CopBehaviorFactory behaviorFactory = new CopBehaviorFactory(provider, () -> this, detainmentService);
+		CopBehaviorFactory behaviorFactory = new CopBehaviorFactory(provider, () -> this, detainmentService,
+		                                                            cuffLockRegistry);
 		this.copNpcFactory = new CopNpcFactory(plugin, provider, behaviorFactory, entityMarkManager, weaponService);
 	}
 }

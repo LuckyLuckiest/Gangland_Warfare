@@ -7,6 +7,7 @@ public enum CopState {
 	IDLE,
 	PURSUING,
 	CUFFING,
+	GUARDING,
 	COMBAT,
 	RETURNING
 }

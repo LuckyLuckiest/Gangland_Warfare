@@ -44,6 +44,13 @@ public class CopNpc extends AbstractNpc {
 	@Getter
 	@Setter
 	private       boolean                    combatForced;
+	/**
+	 * Player this cop is actively guarding after a successful cuff. Carried across the CUFFING → GUARDING → RETURNING
+	 * transitions so the guarding behavior knows who to stay next to. {@code null} when not guarding.
+	 */
+	@Getter
+	@Setter
+	private       UUID                       guardedPlayerId;
 
 	public CopNpc(NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors,
 	              Location spawnLocation, CopConfigProvider configProvider) {

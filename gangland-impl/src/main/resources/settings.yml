@@ -359,6 +359,58 @@ Detainment:
    Jail:
       # The maximum capacity of jail inmates a jail can hold
       Max_Capacity: 10
+   # After a cop successfully handcuffs a player, the cop stays in GUARDING state
+   # next to the player. When the delay expires (or the player dies), the player
+   # is teleported to the nearest non-full jail, their inventory is seized, and
+   # they are given a Jail Paperwork item that opens the bail/bribe/sentence GUI.
+   Transit:
+      # Ticks between the cuff landing and the auto-teleport to jail. 400 = 20 seconds.
+      Delay_Ticks: 400
+      # Radius (blocks) the guarding cop tries to stay within the cuffed player.
+      Guard_Radius: 5.0
+   # While handcuffed, the player can spam the Sneak key to fill a break-free meter. If they reach the required
+   # number of taps before the reset window runs out the cuffs come off and they run free — wanted level stays, so
+   # cops will re-engage on the next AI tick.
+   Break_Free:
+      # Total sneak taps needed within the window to break out.
+      Taps_Required: 25
+      # Ticks of inactivity that reset the counter back to zero (20 ticks = 1 second).
+      Reset_Window_Ticks: 40
+   # While handcuffed, right-clicking the guarding cop opens a small GUI with a
+   # "Bribe" button. Cost is debited from the player's balance; no money item
+   # needs to be in hand. The money.yml variation closest to the cost is shown
+   # as the button icon.
+   Handcuff_Bribe:
+      Base_Cost: 500.0
+      Per_Wanted_Level: 250.0
+   # Once jailed, "Pay Bail" on the Jail Paperwork item releases the player
+   # immediately for this cost. Balance-based.
+   Bail:
+      Base_Cost: 2_500.0
+      Per_Wanted_Level: 1_000.0
+   # "Bribe Officer" on the Jail Paperwork item is cheaper than bail but rolls
+   # a chance. On failure the money is still consumed and the sentence timer is
+   # extended by Fail_Penalty_Seconds.
+   Jail_Bribe:
+      Base_Cost: 1_000.0
+      Per_Wanted_Level: 500.0
+      Success_Chance: 0.35
+      Fail_Penalty_Seconds: 60
+   # "Serve Sentence" closes the GUI and counts down. Sentence length is based
+   # on the player's wanted level at arrest time. Expires -> automatic release.
+   Sentence:
+      Base_Seconds: 180
+      Per_Wanted_Level_Seconds: 60
+   # Waypoint used when a jail has no explicit exit location configured via
+   # /glw jail setexit. Resolved through the existing Waypoint
+   Fallback_Exit_Waypoint: spawn
+   # Sound names played at key detainment moments.
+   Sounds:
+      Bail_Success: BLOCK_NOTE_BLOCK_PLING
+      Bribe_Success: ENTITY_VILLAGER_YES
+      Bribe_Fail: ENTITY_VILLAGER_NO
+      Transit_Commit: BLOCK_IRON_DOOR_CLOSE
+      Sentence_Complete: BLOCK_BELL_USE
 
 # +-------------+#
 # | Gang Config |#
@@ -491,16 +543,16 @@ Loot_Chest:
    Countdown_Timer: 300
    # The sounds when interacting with a loot chest.
    Sound:
-      Opening: "BLOCK_CHEST_OPEN"
-      Locked: "BLOCK_CHEST_LOCKED"
-      Closing: "BLOCK_CHEST_CLOSE"
+      Opening: BLOCK_CHEST_OPEN
+      Locked: BLOCK_CHEST_LOCKED
+      Closing: BLOCK_CHEST_CLOSE
    # The blocks that can be as loot chests.
    Allowed_Blocks:
-      - "CHEST"
-      - "TRAPPED_CHEST"
-      - "BARREL"
-      - "SHULKER_BOX"
-      - "ENDER_CHEST"
+      - CHEST
+      - TRAPPED_CHEST
+      - BARREL
+      - SHULKER_BOX
+      - ENDER_CHEST
    Rewards:
       # The amount of money to reward players for opening a loot chest.
       Money:

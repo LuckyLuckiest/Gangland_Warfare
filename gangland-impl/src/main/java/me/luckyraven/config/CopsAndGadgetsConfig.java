@@ -6,10 +6,23 @@ import me.luckyraven.copsncrooks.combo.KillCombo;
 import me.luckyraven.copsncrooks.detainment.DetainedPlayer;
 import me.luckyraven.copsncrooks.detainment.DetainmentRegistry;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
+import me.luckyraven.copsncrooks.detainment.bail.BailService;
+import me.luckyraven.copsncrooks.detainment.breakfree.BreakFreeService;
+import me.luckyraven.copsncrooks.detainment.bribe.BribeService;
+import me.luckyraven.copsncrooks.detainment.economy.DetainmentCostsContract;
+import me.luckyraven.copsncrooks.detainment.economy.DetainmentEconomyContract;
+import me.luckyraven.copsncrooks.detainment.intake.JailIntakeService;
+import me.luckyraven.copsncrooks.detainment.inventory.SeizedInventory;
+import me.luckyraven.copsncrooks.detainment.inventory.SeizedInventoryService;
 import me.luckyraven.copsncrooks.detainment.message.DetainmentMessageContract;
-import me.luckyraven.copsncrooks.jail.Jail;
-import me.luckyraven.copsncrooks.jail.JailRegistry;
-import me.luckyraven.copsncrooks.jail.JailService;
+import me.luckyraven.copsncrooks.detainment.paperwork.*;
+import me.luckyraven.copsncrooks.detainment.release.ReleaseExitContract;
+import me.luckyraven.copsncrooks.detainment.release.ReleasePipeline;
+import me.luckyraven.copsncrooks.detainment.sentence.SentenceService;
+import me.luckyraven.copsncrooks.detainment.sound.DetainmentSoundContract;
+import me.luckyraven.copsncrooks.detainment.transit.TransitService;
+import me.luckyraven.copsncrooks.detainment.wanted.WantedClearContract;
+import me.luckyraven.copsncrooks.jail.*;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianNpcRegistry;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianSettings;
@@ -24,8 +37,14 @@ import me.luckyraven.copsncrooks.npc.police.config.CopLoader;
 import me.luckyraven.copsncrooks.npc.police.config.CopSettings;
 import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
 import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawner;
+import me.luckyraven.copsncrooks.npc.police.state.CuffLockRegistry;
 import me.luckyraven.copsncrooks.npc.police.targeting.WantedTargetingManager;
+import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.data.detainment.*;
+import me.luckyraven.data.detainment.inventory.GanglandSeizedInventoryService;
 import me.luckyraven.data.economy.GanglandMoneyDropClassifier;
+import me.luckyraven.data.permission.PermissionManager;
+import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.copsncrooks.GanglandCivilianSpawnConfigProvider;
 import me.luckyraven.file.configuration.copsncrooks.GanglandDetainmentMessages;
@@ -40,13 +59,16 @@ import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.gadget.jetpack.JetpackService;
 import me.luckyraven.gadget.wearable.WearableAddon;
 import me.luckyraven.item.ItemParser;
+import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyDropClassifier;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.util.autowire.bean.Bean;
 import me.luckyraven.util.autowire.bean.Configuration;
+import me.luckyraven.util.autowire.bean.Qualifier;
 import me.luckyraven.weapon.WeaponManager;
+import org.bukkit.entity.Player;
 
 
 /**
@@ -133,9 +155,158 @@ public class CopsAndGadgetsConfig {
 
 	@Bean
 	public DetainmentService detainmentService(DetainmentRegistry detainmentRegistry, JailService jailService,
-	                                           DetainmentMessageContract detainmentMessages) {
-		return new DetainmentService(gangland, detainmentRegistry, jailService,
-		                             jailService.getJailRegistry(), detainmentMessages, Gangland.FULL_PREFIX);
+	                                           DetainmentMessageContract detainmentMessages,
+	                                           PermissionManager permissionManager) {
+		DetainmentService service = new DetainmentService(gangland, detainmentRegistry, jailService,
+		                                                  jailService.getJailRegistry(), detainmentMessages,
+		                                                  Gangland.FULL_PREFIX);
+		// Register the bypass permission so permission plugins (LuckPerms, etc.) can see it.
+		permissionManager.addPermission(service.getCommandBypassPermission());
+		return service;
+	}
+
+	// ---------------------------------------------------------------------------------------------------------------
+	// Detainment cuff → jail → bail/bribe/sentence feature wiring
+	// ---------------------------------------------------------------------------------------------------------------
+
+	@Bean
+	public CuffLockRegistry cuffLockRegistry() {
+		return new CuffLockRegistry();
+	}
+
+	@Bean
+	public JailExitRegistry jailExitRegistry() {
+		return new JailExitRegistry();
+	}
+
+	@Bean
+	public JailExitService jailExitService(JailExitRegistry jailExitRegistry, RepositoryRegistry repositoryRegistry) {
+		IRepository<JailExit> repository = repositoryRegistry.getRepository(JailExit.class);
+		return new JailExitService(jailExitRegistry, repository);
+	}
+
+	@Bean
+	public DetainmentCostsContract detainmentCostsContract() {
+		return new GanglandDetainmentCosts();
+	}
+
+	@Bean
+	public DetainmentSoundContract detainmentSoundContract() {
+		return new GanglandDetainmentSounds();
+	}
+
+	@Bean
+	public WantedClearContract wantedClearContract(@Qualifier("online") UserManager<Player> userManager) {
+		return new GanglandWantedClearContract(userManager);
+	}
+
+	@Bean
+	public DetainmentEconomyContract detainmentEconomyContract(@Qualifier("online") UserManager<Player> userManager) {
+		return new GanglandDetainmentEconomyContract(userManager);
+	}
+
+	@Bean
+	public ReleaseExitContract releaseExitContract(JailExitRegistry jailExitRegistry, WaypointManager waypointManager) {
+		return new GanglandReleaseExitContract(jailExitRegistry, waypointManager);
+	}
+
+	@Bean
+	public MoneyIconProvider moneyIconProvider(MoneyAddon moneyAddon) {
+		return new GanglandMoneyIconProvider(moneyAddon);
+	}
+
+	@Bean
+	public SeizedInventoryService seizedInventoryService(RepositoryRegistry repositoryRegistry) {
+		IRepository<SeizedInventory> repository = repositoryRegistry.getRepository(SeizedInventory.class);
+		return new GanglandSeizedInventoryService(repository);
+	}
+
+	@Bean
+	public PaperworkItemFactory paperworkItemFactory(DetainmentMessageContract detainmentMessages) {
+		return new PaperworkItem(gangland, detainmentMessages);
+	}
+
+	@Bean
+	public TransitService transitService(DetainmentService detainmentService, DetainmentRegistry detainmentRegistry,
+	                                     DetainmentCostsContract costs) {
+		return new TransitService(gangland, detainmentService, detainmentRegistry, costs);
+	}
+
+	@Bean
+	public ReleasePipeline releasePipeline(DetainmentService detainmentService, DetainmentRegistry detainmentRegistry,
+	                                       SeizedInventoryService seizedInventoryService,
+	                                       TransitService transitService,
+	                                       PaperworkItemFactory paperworkItemFactory,
+	                                       ReleaseExitContract releaseExitContract,
+	                                       KillCombo killCombo) {
+		return new ReleasePipeline(detainmentService, detainmentRegistry, seizedInventoryService, transitService,
+		                           paperworkItemFactory, releaseExitContract, killCombo);
+	}
+
+	@Bean
+	public JailIntakeService jailIntakeService(DetainmentService detainmentService,
+	                                           DetainmentRegistry detainmentRegistry,
+	                                           JailService jailService, JailRegistry jailRegistry,
+	                                           SeizedInventoryService seizedInventoryService,
+	                                           WantedClearContract wantedClearContract,
+	                                           PaperworkItemFactory paperworkItemFactory,
+	                                           DetainmentCostsContract costs,
+	                                           TransitService transitService,
+	                                           DetainmentSoundContract sounds) {
+		JailIntakeService intake = new JailIntakeService(detainmentService, detainmentRegistry, jailService,
+		                                                 jailRegistry, seizedInventoryService, wantedClearContract,
+		                                                 paperworkItemFactory, costs, sounds);
+		// Wire the transit→intake callback here to break the construction cycle
+		// (TransitService already exists as a bean; its onCommit is set lazily.)
+		transitService.setOnCommit(intake::admit);
+		return intake;
+	}
+
+	@Bean
+	public BribeService bribeService(DetainmentService detainmentService, DetainmentRegistry detainmentRegistry,
+	                                 DetainmentCostsContract costs, DetainmentEconomyContract economy,
+	                                 WantedClearContract wantedClearContract, ReleasePipeline releasePipeline,
+	                                 CuffLockRegistry cuffLockRegistry, DetainmentSoundContract sounds) {
+		return new BribeService(detainmentService, detainmentRegistry, costs, economy, wantedClearContract,
+		                        releasePipeline, cuffLockRegistry, sounds);
+	}
+
+	@Bean
+	public BailService bailService(DetainmentService detainmentService, DetainmentRegistry detainmentRegistry,
+	                               DetainmentCostsContract costs, DetainmentEconomyContract economy,
+	                               ReleasePipeline releasePipeline, DetainmentSoundContract sounds) {
+		return new BailService(detainmentService, detainmentRegistry, costs, economy, releasePipeline, sounds);
+	}
+
+	@Bean
+	public SentenceService sentenceService(DetainmentRegistry detainmentRegistry, DetainmentService detainmentService,
+	                                       ReleasePipeline releasePipeline, DetainmentMessageContract messages,
+	                                       DetainmentSoundContract sounds) {
+		return new SentenceService(gangland, detainmentRegistry, detainmentService, releasePipeline, messages, sounds);
+	}
+
+	@Bean
+	public BreakFreeService breakFreeService(DetainmentService detainmentService, DetainmentCostsContract costs,
+	                                         DetainmentMessageContract messages, ReleasePipeline releasePipeline,
+	                                         DetainmentSoundContract sounds) {
+		return new BreakFreeService(gangland, detainmentService, costs, messages, releasePipeline, sounds);
+	}
+
+	@Bean
+	public HandcuffBribeView handcuffBribeView(BribeService bribeService, DetainmentEconomyContract economy,
+	                                           MoneyIconProvider moneyIconProvider,
+	                                           DetainmentMessageContract messages) {
+		return new HandcuffBribeView(gangland, bribeService, economy, moneyIconProvider, messages);
+	}
+
+	@Bean
+	public PaperworkView paperworkView(DetainmentRegistry detainmentRegistry, DetainmentCostsContract costs,
+	                                   DetainmentEconomyContract economy, BailService bailService,
+	                                   BribeService bribeService, SentenceService sentenceService,
+	                                   MoneyIconProvider moneyIconProvider,
+	                                   DetainmentMessageContract messages) {
+		return new PaperworkView(gangland, detainmentRegistry, costs, economy, bailService, bribeService,
+		                         sentenceService, moneyIconProvider, messages);
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
@@ -177,9 +348,11 @@ public class CopsAndGadgetsConfig {
 	                                       EntityMarkManager entityMarkManager,
 	                                       WeaponManager weaponManager,
 	                                       RepositoryRegistry repositoryRegistry,
-	                                       DetainmentService detainmentService) {
+	                                       DetainmentService detainmentService,
+	                                       CuffLockRegistry cuffLockRegistry) {
 		IRepository<CopSpawner> repo = repositoryRegistry.getRepository(CopSpawner.class);
-		return new CopSpawnManager(gangland, copLoader, entityMarkManager, weaponManager, repo, detainmentService);
+		return new CopSpawnManager(gangland, copLoader, entityMarkManager, weaponManager, repo, detainmentService,
+		                           cuffLockRegistry);
 	}
 
 	@Bean

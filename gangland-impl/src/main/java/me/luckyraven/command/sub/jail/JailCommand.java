@@ -5,6 +5,9 @@ import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.copsncrooks.detainment.DetainmentRegistry;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
+import me.luckyraven.copsncrooks.detainment.intake.JailIntakeService;
+import me.luckyraven.copsncrooks.detainment.release.ReleasePipeline;
+import me.luckyraven.copsncrooks.jail.JailExitService;
 import me.luckyraven.copsncrooks.jail.JailRegistry;
 import me.luckyraven.copsncrooks.jail.JailService;
 import me.luckyraven.file.configuration.Messages;
@@ -23,18 +26,27 @@ public final class JailCommand extends Command {
 	private final JailRegistry       jailRegistry;
 	private final DetainmentService  detainmentService;
 	private final DetainmentRegistry detainmentRegistry;
+	private final JailIntakeService  jailIntakeService;
+	private final ReleasePipeline    releasePipeline;
+	private final JailExitService    jailExitService;
 
 	public JailCommand(Gangland gangland,
 	                   JailService jailService,
 	                   JailRegistry jailRegistry,
 	                   DetainmentService detainmentService,
-	                   DetainmentRegistry detainmentRegistry) {
+	                   DetainmentRegistry detainmentRegistry,
+	                   JailIntakeService jailIntakeService,
+	                   ReleasePipeline releasePipeline,
+	                   JailExitService jailExitService) {
 		super(gangland, "jail", false);
 
 		this.jailService        = jailService;
 		this.jailRegistry       = jailRegistry;
 		this.detainmentService  = detainmentService;
 		this.detainmentRegistry = detainmentRegistry;
+		this.jailIntakeService  = jailIntakeService;
+		this.releasePipeline    = releasePipeline;
+		this.jailExitService    = jailExitService;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -58,12 +70,14 @@ public final class JailCommand extends Command {
 		Argument removeArg = new JailRemoveCommand(getGangland(), getArgumentTree(), getArgument(), jailService,
 		                                           jailRegistry);
 		Argument playerArg = new JailThrowCommand(getGangland(), getArgumentTree(), getArgument(), detainmentService,
-		                                          detainmentRegistry);
+		                                          detainmentRegistry, jailIntakeService);
 		Argument releaseArg = new JailReleaseCommand(getGangland(), getArgumentTree(), getArgument(),
-		                                             detainmentService);
+		                                             detainmentService, releasePipeline);
 		Argument listArg     = new JailListCommand(getGangland(), getArgumentTree(), getArgument(), jailRegistry);
 		Argument infoArg     = new JailInfoCommand(getGangland(), getArgumentTree(), getArgument(), jailRegistry);
 		Argument teleportArg = new JailTeleportCommand(getGangland(), getArgumentTree(), getArgument(), jailRegistry);
+		Argument setExitArg = new JailSetExitCommand(getGangland(), getArgumentTree(), getArgument(), jailRegistry,
+		                                             jailExitService);
 
 		List<Argument> arguments = new ArrayList<>();
 
@@ -74,6 +88,7 @@ public final class JailCommand extends Command {
 		arguments.add(listArg);
 		arguments.add(infoArg);
 		arguments.add(teleportArg);
+		arguments.add(setExitArg);
 
 		getArgument().addAllSubArguments(arguments);
 	}

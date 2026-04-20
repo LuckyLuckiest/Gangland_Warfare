@@ -296,6 +296,8 @@ Commands:
       Created: "&aJail &e%id%&a created at your location."
       Removed: "&aJail &e%id%&a removed."
       Released: "&aReleased &e%target%&a from jail."
+      Exit_Set: "&aExit location set for jail &e%id%&a."
+      Exit_Set_Global: "&aGlobal jail exit set to your current location."
       Teleported: "Teleported to jail &e(&b%id%&e)&7."
    Cop:
       No_Chased: "No players are being chased by cops."
@@ -528,6 +530,77 @@ Cops_N_Crooks:
       Restraint_Tick:
          Handcuffed: "&cHandcuffed &8- &7You cannot interact"
          Jailed: "&4Jailed &8- &7You cannot interact"
+      Transit:
+         # %seconds% is the remaining countdown in whole seconds before the player is teleported to jail.
+         Starting_Action_Bar: "&cJail transit &8- &7%seconds%s remaining"
+         Committed_Title: "&4Transit committed"
+         Committed_Subtitle: "&7You are being transported to jail"
+      Handcuff_Bribe:
+         Gui_Title: "&8Bribe the officer"
+         # %cost% is the current bribe price given the player's wanted level.
+         Button_Label: "&6&lBRIBE &8- &e%cost%"
+         Button_Lore:
+            - "&7Offer the officer cash to walk away."
+            - "&7Cost: &e%cost%"
+            - "&7Your balance: &a%balance%"
+            - ""
+            - "&eClick to pay"
+         Success_Title: "&aBribe accepted"
+         Success_Subtitle: "&7The officer pockets the cash and leaves"
+         Insufficient: "&cYou do not have enough money to bribe the officer."
+      Paperwork:
+         Item_Name: "&6&lJail Paperwork"
+         Item_Lore:
+            - "&7Right-click to open"
+            - "&7the paperwork menu."
+            - ""
+            - "&eBail, Bribe, or Serve."
+         Gui_Title: "&8Jail Paperwork"
+         Bail_Label: "&a&lPAY BAIL &8- &e%cost%"
+         Bail_Lore:
+            - "&7Pay bail to walk out now."
+            - "&7Cost: &e%cost%"
+            - "&7Your balance: &a%balance%"
+            - ""
+            - "&eClick to pay"
+         Bribe_Label: "&6&lBRIBE OFFICER &8- &e%cost%"
+         Bribe_Lore:
+            - "&7Attempt to bribe the jailer."
+            - "&7Cost: &e%cost%"
+            - "&7Success chance: &b%chance%%"
+            - "&cOn failure you lose the money"
+            - "&cand your sentence is extended."
+            - ""
+            - "&eClick to attempt"
+         Sentence_Label: "&e&lSERVE SENTENCE"
+         Sentence_Lore:
+            - "&7Wait it out and walk free."
+            - "&7Remaining: &b%seconds%s"
+            - ""
+            - "&eClick to confirm"
+         Info_Label: "&b&lINFO"
+         Info_Lore:
+            - "&7Wanted at arrest: &c%wanted%"
+            - "&7Sentence remaining: &b%seconds%s"
+            - "&7Your balance: &a%balance%"
+      Bail:
+         Success: "&aYou paid bail and were released."
+         Insufficient: "&cYou do not have enough money to post bail."
+      Jail_Bribe:
+         Success: "&aThe jailer looked the other way - you are free."
+         # %seconds% is the number of extra seconds added to the sentence on failure.
+         Fail: "&cYour bribe was refused. Sentence extended by &4%seconds%s&c."
+         Insufficient: "&cYou do not have enough money to bribe the jailer."
+      Sentence:
+         # %seconds% is the remaining countdown in whole seconds.
+         Tick_Action_Bar: "&eServing sentence &8- &b%seconds%s"
+         Complete_Title: "&aSentence served"
+         Complete_Subtitle: "&7You are free to go"
+      Break_Free:
+         # %current% / %required% show the tap counter; tap Sneak rapidly while handcuffed to fill the meter.
+         Progress_Action_Bar: "&eBreak free &8- &b%current%&8/&b%required% &7(tap &eSNEAK&7!)"
+         Success_Title: "&aBroke free!"
+         Success_Subtitle: "&7You slipped the cuffs — run!"
 
 Gadgets:
    Car:

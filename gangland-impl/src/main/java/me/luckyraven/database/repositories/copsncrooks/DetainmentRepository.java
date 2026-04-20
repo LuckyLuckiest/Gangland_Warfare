@@ -48,10 +48,17 @@ public class DetainmentRepository extends AbstractRepository<DetainedPlayer> {
 			var     state     = DetainmentState.JAILED;
 
 			try {
-				state = DetainmentState.valueOf(String.valueOf(result[v]));
-			} catch (IllegalArgumentException ignored) { }
+				state = DetainmentState.valueOf(String.valueOf(result[v++]));
+			} catch (IllegalArgumentException ignored) { v++; }
 
-			detained.add(new DetainedPlayer(uuid, jailId, state));
+			Object  rawTransit  = v < result.length ? result[v++] : null;
+			Object  rawSentence = v < result.length ? result[v++] : null;
+			Object  rawWanted   = v < result.length ? result[v] : null;
+			Long    transitAt   = rawTransit == null ? null : ((Number) rawTransit).longValue();
+			Long    sentenceAt  = rawSentence == null ? null : ((Number) rawSentence).longValue();
+			Integer wantedLevel = rawWanted == null ? null : ((Number) rawWanted).intValue();
+
+			detained.add(new DetainedPlayer(uuid, jailId, state, transitAt, sentenceAt, wantedLevel));
 		}
 
 		return detained;

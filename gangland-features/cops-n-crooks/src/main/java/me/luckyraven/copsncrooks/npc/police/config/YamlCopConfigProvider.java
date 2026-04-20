@@ -70,7 +70,8 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final double stationArrivalDistance;
 
 	// Misc
-	private final int startingAmmoMagazines;
+	private final int    startingAmmoMagazines;
+	private final double guardRadius;
 
 	/**
 	 * Primary positional-config constructor.
@@ -124,6 +125,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.stationArrivalDistance = copSettings != null ? copSettings.getStationArrivalDistance() : 3.0;
 
 		this.startingAmmoMagazines = copSettings != null ? copSettings.getStartingAmmoMagazines() : 3;
+		this.guardRadius           = copSettings != null ? copSettings.getGuardRadius() : 5.0;
 
 		loadTiers(copsReader, report, itemParser);
 		buildCopsPerWantedLevel(copSettings);
@@ -314,6 +316,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public int getStartingAmmoMagazines() {
 		return startingAmmoMagazines;
+	}
+
+	@Override
+	public double getGuardRadius() {
+		return guardRadius;
 	}
 
 	private void loadTiers(NodeReader copsReader, ConfigReport report, @Nullable ItemParser itemParser) {

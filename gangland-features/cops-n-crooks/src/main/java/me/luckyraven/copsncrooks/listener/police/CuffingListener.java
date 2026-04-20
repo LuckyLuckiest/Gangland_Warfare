@@ -3,6 +3,7 @@ package me.luckyraven.copsncrooks.listener.police;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.detainment.message.DetainmentMessageContract;
+import me.luckyraven.copsncrooks.detainment.transit.TransitService;
 import me.luckyraven.copsncrooks.events.police.CuffedEvent;
 import me.luckyraven.copsncrooks.events.police.DuringCuffingEvent;
 import me.luckyraven.util.downed.DownedPlayerRegistry;
@@ -22,6 +23,7 @@ public class CuffingListener implements Listener {
 	private final Map<Player, Long>         currentCuffCooldown = new ConcurrentHashMap<>();
 	private final DetainmentService         detainmentService;
 	private final DetainmentMessageContract messages;
+	private final TransitService            transitService;
 
 	@EventHandler
 	public void onPlayerCuffing(DuringCuffingEvent event) {
@@ -52,6 +54,7 @@ public class CuffingListener implements Listener {
 
 		currentCuffCooldown.remove(target);
 		detainmentService.handcuff(target);
+		transitService.schedule(target);
 
 		ChatUtil.sendTitle(target, messages.cuffedTitle(), messages.cuffedSubtitle());
 	}

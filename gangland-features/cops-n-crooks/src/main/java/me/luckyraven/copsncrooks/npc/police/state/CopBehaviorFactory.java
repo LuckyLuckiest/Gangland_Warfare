@@ -1,5 +1,6 @@
 package me.luckyraven.copsncrooks.npc.police.state;
 
+import lombok.Getter;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
 import me.luckyraven.copsncrooks.npc.police.config.CopConfigProvider;
 import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
@@ -17,14 +18,15 @@ public class CopBehaviorFactory {
 	private final CopConfigProvider         configProvider;
 	private final Supplier<CopSpawnManager> spawnManagerSupplier;
 	private final DetainmentService         detainmentService;
+	@Getter
 	private final CuffLockRegistry          cuffLockRegistry;
 
 	public CopBehaviorFactory(CopConfigProvider configProvider, Supplier<CopSpawnManager> spawnManagerSupplier,
-	                          DetainmentService detainmentService) {
+	                          DetainmentService detainmentService, CuffLockRegistry cuffLockRegistry) {
 		this.configProvider       = configProvider;
 		this.spawnManagerSupplier = spawnManagerSupplier;
 		this.detainmentService    = detainmentService;
-		this.cuffLockRegistry     = new CuffLockRegistry();
+		this.cuffLockRegistry     = cuffLockRegistry;
 	}
 
 	/**
@@ -51,6 +53,8 @@ public class CopBehaviorFactory {
 		behaviors.put(CopState.CUFFING,
 		              new CuffingBehavior(configProvider.getCuffRadius(), configProvider.getMaxCuffAttempts(),
 		                                  cuffAiTicks, aiTickRate, cuffLockRegistry, detainmentService));
+		behaviors.put(CopState.GUARDING,
+		              new GuardingBehavior(configProvider.getGuardRadius(), cuffLockRegistry, detainmentService));
 		behaviors.put(CopState.COMBAT, new CombatBehavior(configProvider.getCombatRange(), detainmentService));
 		behaviors.put(CopState.RETURNING, new ReturningBehavior(spawnManagerSupplier.get(), detainmentService,
 		                                                        configProvider.getMaxReturnTicks(),

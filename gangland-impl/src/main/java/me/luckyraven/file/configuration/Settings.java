@@ -134,6 +134,34 @@ public class Settings implements FileInitializer {
 	// cop misc configuration
 	private static @Getter int    copStartingAmmoMagazines;
 	private static @Getter int    jailMaxCapacity;
+	// detainment transit / guard
+	private static @Getter int    detainmentTransitDelayTicks;
+	private static @Getter double detainmentGuardRadius;
+	// detainment break-free minigame
+	private static @Getter int    detainmentBreakFreeTapsRequired;
+	private static @Getter int    detainmentBreakFreeResetWindowTicks;
+	// detainment handcuff bribe
+	private static @Getter double detainmentHandcuffBribeBaseCost;
+	private static @Getter double detainmentHandcuffBribePerLevel;
+	// detainment bail
+	private static @Getter double detainmentBailBaseCost;
+	private static @Getter double detainmentBailPerLevel;
+	// detainment jail bribe
+	private static @Getter double detainmentJailBribeBaseCost;
+	private static @Getter double detainmentJailBribePerLevel;
+	private static @Getter double detainmentJailBribeSuccessChance;
+	private static @Getter int    detainmentJailBribeFailPenaltySeconds;
+	// detainment sentence
+	private static @Getter int    detainmentSentenceBaseSeconds;
+	private static @Getter int    detainmentSentencePerWantedLevelSeconds;
+	// detainment fallback exit waypoint
+	private static @Getter String detainmentFallbackExitWaypoint;
+	// detainment sounds (XSound names; built into SoundConfiguration at playback)
+	private static @Getter String detainmentBailSuccessSound;
+	private static @Getter String detainmentBribeSuccessSound;
+	private static @Getter String detainmentBribeFailSound;
+	private static @Getter String detainmentTransitCommitSound;
+	private static @Getter String detainmentSentenceCompleteSound;
 	// gadget - jetpack
 	private static @Getter int    gadgetJetpackThrustRampTicks;
 	private static @Getter double gadgetJetpackDescentAccel;
@@ -506,9 +534,45 @@ public class Settings implements FileInitializer {
 		copStartingAmmoMagazines = intVal(cop, "Starting_Ammo_Magazines", 3);
 
 		// detainment
-		NodeReader detainment = section(root, "Detainment", report);
-		NodeReader jail       = section(detainment, "Jail", report);
+		NodeReader detainment    = section(root, "Detainment", report);
+		NodeReader jail          = section(detainment, "Jail", report);
+		NodeReader transit       = section(detainment, "Transit", report);
+		NodeReader breakFree     = section(detainment, "Break_Free", report);
+		NodeReader handcuffBribe = section(detainment, "Handcuff_Bribe", report);
+		NodeReader detainBail    = section(detainment, "Bail", report);
+		NodeReader jailBribe     = section(detainment, "Jail_Bribe", report);
+		NodeReader sentence      = section(detainment, "Sentence", report);
+		NodeReader detainSounds  = section(detainment, "Sounds", report);
+
 		jailMaxCapacity = intVal(jail, "Max_Capacity", 10);
+
+		detainmentTransitDelayTicks = intVal(transit, "Delay_Ticks", 400);
+		detainmentGuardRadius       = dbl(transit, "Guard_Radius", 5.0);
+
+		detainmentBreakFreeTapsRequired     = intVal(breakFree, "Taps_Required", 25);
+		detainmentBreakFreeResetWindowTicks = intVal(breakFree, "Reset_Window_Ticks", 40);
+
+		detainmentHandcuffBribeBaseCost = dbl(handcuffBribe, "Base_Cost", 500.0);
+		detainmentHandcuffBribePerLevel = dbl(handcuffBribe, "Per_Wanted_Level", 250.0);
+
+		detainmentBailBaseCost = dbl(detainBail, "Base_Cost", 2_500.0);
+		detainmentBailPerLevel = dbl(detainBail, "Per_Wanted_Level", 1_000.0);
+
+		detainmentJailBribeBaseCost           = dbl(jailBribe, "Base_Cost", 1_000.0);
+		detainmentJailBribePerLevel           = dbl(jailBribe, "Per_Wanted_Level", 500.0);
+		detainmentJailBribeSuccessChance      = dbl(jailBribe, "Success_Chance", 0.35);
+		detainmentJailBribeFailPenaltySeconds = intVal(jailBribe, "Fail_Penalty_Seconds", 60);
+
+		detainmentSentenceBaseSeconds           = intVal(sentence, "Base_Seconds", 180);
+		detainmentSentencePerWantedLevelSeconds = intVal(sentence, "Per_Wanted_Level_Seconds", 60);
+
+		detainmentFallbackExitWaypoint = str(detainment, "Fallback_Exit_Waypoint", "spawn");
+
+		detainmentBailSuccessSound      = str(detainSounds, "Bail_Success", "BLOCK_NOTE_BLOCK_PLING");
+		detainmentBribeSuccessSound     = str(detainSounds, "Bribe_Success", "ENTITY_VILLAGER_YES");
+		detainmentBribeFailSound        = str(detainSounds, "Bribe_Fail", "ENTITY_VILLAGER_NO");
+		detainmentTransitCommitSound    = str(detainSounds, "Transit_Commit", "BLOCK_IRON_DOOR_CLOSE");
+		detainmentSentenceCompleteSound = str(detainSounds, "Sentence_Complete", "BLOCK_BELL_USE");
 
 		// loot chest
 		NodeReader lootChest        = section(root, "Loot_Chest", report);

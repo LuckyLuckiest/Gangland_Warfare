@@ -5,6 +5,8 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
+import me.luckyraven.copsncrooks.detainment.release.ReleasePipeline;
+import me.luckyraven.copsncrooks.detainment.release.ReleaseReason;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
@@ -20,14 +22,16 @@ class JailReleaseCommand extends SubArgument {
 	private final Gangland          gangland;
 	private final Tree<Argument>    tree;
 	private final DetainmentService detainmentService;
+	private final ReleasePipeline   releasePipeline;
 
 	protected JailReleaseCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
-	                             DetainmentService detainmentService) {
+	                             DetainmentService detainmentService, ReleasePipeline releasePipeline) {
 		super(gangland, "release", tree, parent);
 
 		this.gangland          = gangland;
 		this.tree              = tree;
 		this.detainmentService = detainmentService;
+		this.releasePipeline   = releasePipeline;
 
 		playerInfo();
 	}
@@ -54,7 +58,7 @@ class JailReleaseCommand extends SubArgument {
 				return;
 			}
 
-			detainmentService.release(target);
+			releasePipeline.release(target, ReleaseReason.ADMIN);
 
 			sender.sendMessage(Messages.JAIL_RELEASED.toString().replace("%target%", target.getName()));
 		}, sender -> {

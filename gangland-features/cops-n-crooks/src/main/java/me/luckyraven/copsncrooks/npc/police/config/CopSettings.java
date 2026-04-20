@@ -124,4 +124,11 @@ public interface CopSettings {
 	double getStationArrivalDistance();
 
 	int getStartingAmmoMagazines();
+
+	/**
+	 * Radius (blocks) the GUARDING cop tries to stay within from the cuffed player awaiting jail transit.
+	 */
+	default double getGuardRadius() {
+		return 5.0;
+	}
 }

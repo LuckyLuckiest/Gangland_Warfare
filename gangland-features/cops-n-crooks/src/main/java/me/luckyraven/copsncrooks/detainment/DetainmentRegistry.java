@@ -96,6 +96,15 @@ public class DetainmentRegistry implements BeanLifecycle {
 	}
 
 	/**
+	 * Persists a single {@link DetainedPlayer} row immediately. Used after mutating timer / snapshot fields outside of
+	 * {@link #setState} so a crash between mutations and the next auto-save doesn't lose the value.
+	 */
+	public void save(DetainedPlayer detainedPlayer) {
+		if (detainedPlayer == null) return;
+		detainmentRepository.save(detainedPlayer);
+	}
+
+	/**
 	 * Reloads detainment data from the database, clearing the current in-memory state first.
 	 */
 	public void reload() {
