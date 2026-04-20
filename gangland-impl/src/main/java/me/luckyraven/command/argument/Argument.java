@@ -8,6 +8,7 @@ import lombok.Setter;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
+import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
@@ -108,7 +109,7 @@ public class Argument implements Cloneable {
 	 */
 	public void addPermission(String permission) {
 		if (plugin instanceof Gangland gangland) {
-			gangland.getContext().get(me.luckyraven.data.permission.PermissionManager.class).addPermission(permission);
+			gangland.getContext().get(PermissionManager.class).addPermission(permission);
 			return;
 		}
 
