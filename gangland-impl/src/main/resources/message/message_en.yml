@@ -149,6 +149,9 @@ Commands:
          Player_Take: "&a%money_symbol%%amount% &7has been withdrawn from your bank account into your account."
          Target_Add: "&a%money_symbol%%amount% &7has been deposited from &6%target%'s&7 account to his bank account."
          Target_Take: "&a%money_symbol%%amount% &7has been withdrawn from &6%target%'s &7bank account."
+      Reset_Cap:
+         Player: "&aReset daily bank caps for &f%player%&a."
+         All: "&aReset daily bank caps for &f%count% &aaccount(s)."
    Gang:
       Create:
          Created_Gang: "Created a new gang &8[&a%gang%&8]&7."
@@ -274,6 +277,15 @@ Commands:
       Renamed: "&aTrader renamed to &f%name%&a."
       Shop_Changed: "&aTrader's shop changed to &f%shop%&a."
       Trait_Changed: "&aTrader's trait changed to &f%trait%&a."
+   Banker:
+      Deposit_Success: "&a%money_symbol%%amount% &7deposited into your bank."
+      Withdraw_Success: "&a%money_symbol%%amount% &7withdrawn from your bank."
+      Upgrade_Success: "&aBank upgraded to %tier%&a."
+      Create_Success: "&aOpened a new bank account &8[&a%bank%&8]&a."
+      Delete_Success: "&aClosed account &8[&f%bank%&8]&a. Refund: &a%money_symbol%%refund%&a."
+      Rename_Success: "&aRenamed account from &f%old%&a to &f%new%&a."
+      Removed: "&aBanker removed."
+      Renamed: "&aBanker renamed to &f%name%&a."
    Update:
       Available: "There is a new update, please type:%n%&7/%short_prefix% update download"
       Latest: "You are running the latest version."
@@ -408,6 +420,25 @@ Errors:
       Name_Empty: "&cName cannot be empty."
       Look_At: "&cLook at a trader within %range% blocks."
       Not_Trader: "&cThat entity is not a trader."
+   Banker:
+      No_Account: "&cYou don't have a bank account — right-click a banker to open one."
+      Already_Has_Account: "&cYou already have a bank account."
+      Cannot_Afford_Creation: "&cOpening an account costs &6%money_symbol%%fee%&c. Not enough cash."
+      Create_Name_Empty: "&cAccount name cannot be empty."
+      Rename_Cannot_Afford: "&cRenaming costs &6%money_symbol%%fee%&c. Not enough cash."
+      Rename_Name_Empty: "&cNew name cannot be empty."
+      Rename_Name_Unchanged: "&cThat's already your account name."
+      Insufficient_Cash: "&cNot enough cash to deposit &6%money_symbol%%amount%&c."
+      Insufficient_Bank_Funds: "&cNot enough bank funds to withdraw &6%money_symbol%%amount%&c."
+      Daily_Deposit_Reached: "&cDaily deposit limit reached (&f%money_symbol%%limit%&c)."
+      Daily_Withdraw_Reached: "&cDaily withdraw limit reached (&f%money_symbol%%limit%&c)."
+      Cap_Exceeded: "&cThat would exceed your tier cap of &f%money_symbol%%cap%&c. Upgrade your account to deposit more."
+      Upgrade_Max_Tier: "&eYour bank is already at the top tier."
+      Upgrade_Insufficient_Funds: "&cUpgrade costs &6%money_symbol%%cost%&c from your bank balance."
+      Tier_Missing: "&cBank tier configuration is missing — check plugin/npc/bank_tiers.yml."
+      Name_Empty: "&cName cannot be empty."
+      Look_At: "&cLook at a banker within %range% blocks."
+      Not_Banker: "&cThat entity is not a banker."
    Cuff:
       Already_Cuffed: "This player is already cuffed!"
       Not_Cuffed: "This player is not handcuffed!"

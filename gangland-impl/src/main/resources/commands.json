@@ -87,6 +87,10 @@
 		"usage": "/glw bank balance",
 		"description": "Shows bank balance."
 	},
+	"bank_resetcap": {
+		"usage": "/glw bank resetcap <player|all>",
+		"description": "Admin: resets the daily deposit / withdraw caps for one player, or every bank account when <all> is given."
+	},
 	"spawn": {
 		"usage": "/glw spawn",
 		"description": "Teleports to default spawn."
@@ -766,5 +770,25 @@
 	"trader_remove": {
 		"usage": "/glw trader remove",
 		"description": "Removes the trader NPC in your crosshair (within 5 blocks)."
+	},
+	"banker": {
+		"usage": "/glw banker",
+		"description": "Shows banker admin help page."
+	},
+	"banker_help": {
+		"usage": "/glw banker help <page>",
+		"description": "Shows the specified page in banker menu."
+	},
+	"banker_create": {
+		"usage": "/glw banker create [displayName]",
+		"description": "Spawns a stationary banker NPC at your location. Right-click it to open the bank GUI."
+	},
+	"banker_edit_name": {
+		"usage": "/glw banker edit name",
+		"description": "Opens an anvil GUI to rename the banker in your crosshair; supports spaces."
+	},
+	"banker_remove": {
+		"usage": "/glw banker remove",
+		"description": "Removes the banker NPC in your crosshair (within 5 blocks)."
 	}
 }
