@@ -1,13 +1,13 @@
 package me.luckyraven.lootchest;
 
 import lombok.Setter;
+import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.hologram.Hologram;
 import me.luckyraven.hologram.HologramService;
 import me.luckyraven.item.ItemParser;
 import me.luckyraven.lootchest.config.LootChestMessagesProvider;
 import me.luckyraven.lootchest.data.LootChestData;
 import me.luckyraven.lootchest.data.LootTier;
-import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Item;

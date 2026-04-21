@@ -2,11 +2,11 @@ package me.luckyraven.sign.service;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.sign.model.SignFormat;
 import me.luckyraven.sign.model.SignLineFormat;
 import me.luckyraven.sign.registry.SignFormatRegistry;
 import me.luckyraven.sign.validation.SignValidationException;
-import me.luckyraven.util.utilities.ChatUtil;
 
 import java.util.Optional;
 

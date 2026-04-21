@@ -11,6 +11,9 @@ import me.luckyraven.copsncrooks.npc.banker.message.BankerMessageContract;
 import me.luckyraven.copsncrooks.npc.banker.tier.BankTierRegistry;
 import me.luckyraven.copsncrooks.npc.banker.tier.BankTiersLoader;
 import me.luckyraven.copsncrooks.npc.banker.view.*;
+import me.luckyraven.core.autowire.bean.Bean;
+import me.luckyraven.core.autowire.bean.Configuration;
+import me.luckyraven.core.autowire.bean.Qualifier;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.economy.bank.Bank;
@@ -21,9 +24,6 @@ import me.luckyraven.file.configuration.copsncrooks.GanglandBankerMessages;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
-import me.luckyraven.util.autowire.bean.Bean;
-import me.luckyraven.util.autowire.bean.Configuration;
-import me.luckyraven.util.autowire.bean.Qualifier;
 import org.bukkit.entity.Player;
 
 /**

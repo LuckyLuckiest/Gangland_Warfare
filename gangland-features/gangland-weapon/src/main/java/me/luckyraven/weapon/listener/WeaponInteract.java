@@ -1,13 +1,13 @@
 package me.luckyraven.weapon.listener;
 
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
-import me.luckyraven.util.autowire.AutowireTarget;
-import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.downed.DownedPlayerRegistry;
-import me.luckyraven.util.listener.ListenerHandler;
-import me.luckyraven.util.timer.CountdownTimer;
-import me.luckyraven.util.timer.RepeatingTimer;
-import me.luckyraven.util.timer.SequenceTimer;
+import me.luckyraven.core.autowire.AutowireTarget;
+import me.luckyraven.core.configuration.SoundConfiguration;
+import me.luckyraven.core.downed.DownedPlayerRegistry;
+import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.timer.CountdownTimer;
+import me.luckyraven.core.timer.RepeatingTimer;
+import me.luckyraven.core.timer.SequenceTimer;
 import me.luckyraven.weapon.SelectiveFire;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;

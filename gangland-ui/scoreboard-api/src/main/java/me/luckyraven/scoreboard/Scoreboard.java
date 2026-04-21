@@ -1,8 +1,8 @@
 package me.luckyraven.scoreboard;
 
 import me.luckyraven.scoreboard.driver.DriverHandler;
-import me.luckyraven.util.placeholder.effect.FlashPlaceholderWrapper;
-import me.luckyraven.util.timer.RepeatingTimer;
+import me.luckyraven.core.placeholder.effect.FlashPlaceholderWrapper;
+import me.luckyraven.core.timer.RepeatingTimer;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Scoreboard {

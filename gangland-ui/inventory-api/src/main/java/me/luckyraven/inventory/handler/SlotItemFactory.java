@@ -2,8 +2,8 @@ package me.luckyraven.inventory.handler;
 
 import com.cryptomorin.xseries.XEnchantment;
 import com.cryptomorin.xseries.XMaterial;
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.color.MaterialType;
+import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.core.color.MaterialType;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;

@@ -4,11 +4,11 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.core.command.CommandHandler;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;

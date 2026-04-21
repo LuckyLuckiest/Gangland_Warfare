@@ -3,6 +3,12 @@ package me.luckyraven.config;
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandManager;
+import me.luckyraven.core.autowire.DependencyContainer;
+import me.luckyraven.core.autowire.bean.Bean;
+import me.luckyraven.core.autowire.bean.Configuration;
+import me.luckyraven.core.autowire.bean.Qualifier;
+import me.luckyraven.core.listener.ListenerPriority;
+import me.luckyraven.core.placeholder.replacer.Replacer;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.UserManager;
@@ -12,12 +18,6 @@ import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointTeleport;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
-import me.luckyraven.util.autowire.DependencyContainer;
-import me.luckyraven.util.autowire.bean.Bean;
-import me.luckyraven.util.autowire.bean.Configuration;
-import me.luckyraven.util.autowire.bean.Qualifier;
-import me.luckyraven.util.listener.ListenerPriority;
-import me.luckyraven.util.placeholder.replacer.Replacer;
 import org.bukkit.entity.Player;
 
 /**

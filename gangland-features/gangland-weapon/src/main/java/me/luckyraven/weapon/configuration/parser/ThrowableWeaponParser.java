@@ -1,10 +1,10 @@
 package me.luckyraven.weapon.configuration.parser;
 
 import com.cryptomorin.xseries.XMaterial;
+import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.persistence.config.ConfigReport;
 import me.luckyraven.persistence.config.MappingNode;
 import me.luckyraven.persistence.config.NodeReader;
-import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.configuration.parser.AmmunitionSectionParser.ParsedAmmo;
 import me.luckyraven.weapon.dto.AmmunitionData;

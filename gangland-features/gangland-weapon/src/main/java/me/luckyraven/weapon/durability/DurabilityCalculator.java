@@ -1,6 +1,6 @@
 package me.luckyraven.weapon.durability;
 
-import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.weapon.Weapon;
 
 public class DurabilityCalculator {

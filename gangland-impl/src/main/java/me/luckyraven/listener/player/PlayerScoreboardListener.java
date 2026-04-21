@@ -1,13 +1,13 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.listener.ListenerPriority;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.events.user.UserDataInitEvent;
 import me.luckyraven.scoreboard.Scoreboard;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.driver.DriverHandler;
-import me.luckyraven.util.listener.ListenerHandler;
-import me.luckyraven.util.listener.ListenerPriority;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

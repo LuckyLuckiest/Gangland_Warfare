@@ -2,6 +2,7 @@ package me.luckyraven.sign.type;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.Gangland;
+import me.luckyraven.core.color.Color;
 import me.luckyraven.gadget.car.CarManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.sign.SignType;
@@ -16,7 +17,6 @@ import me.luckyraven.sign.parser.ViewSignParser;
 import me.luckyraven.sign.registry.SignTypeDefinition;
 import me.luckyraven.sign.validation.SignValidator;
 import me.luckyraven.sign.validation.ViewSignValidator;
-import me.luckyraven.util.color.Color;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.wearable.WearableService;

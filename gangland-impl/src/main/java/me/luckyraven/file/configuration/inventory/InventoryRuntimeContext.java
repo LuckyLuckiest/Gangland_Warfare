@@ -2,6 +2,8 @@ package me.luckyraven.file.configuration.inventory;
 
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
+import me.luckyraven.core.Pair;
+import me.luckyraven.core.Placeholder;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.permission.PermissionManager;
@@ -18,8 +20,6 @@ import me.luckyraven.inventory.unique.UniqueItemHandler;
 import me.luckyraven.item.ItemParser;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.config.*;
-import me.luckyraven.util.Pair;
-import me.luckyraven.util.Placeholder;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;

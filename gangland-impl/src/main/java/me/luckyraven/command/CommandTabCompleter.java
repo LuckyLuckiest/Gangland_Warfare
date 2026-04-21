@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.ConfirmArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
-import me.luckyraven.util.datastructure.Tree;
+import me.luckyraven.core.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;

@@ -4,9 +4,9 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
+import me.luckyraven.core.TriConsumer;
+import me.luckyraven.core.datastructure.Tree;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.TriConsumer;
-import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 

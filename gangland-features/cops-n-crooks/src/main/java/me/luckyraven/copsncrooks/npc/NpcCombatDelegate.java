@@ -1,10 +1,10 @@
 package me.luckyraven.copsncrooks.npc;
 
 import lombok.CustomLog;
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.downed.DownedPlayerRegistry;
-import me.luckyraven.util.timer.SequenceTimer;
+import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.core.configuration.SoundConfiguration;
+import me.luckyraven.core.downed.DownedPlayerRegistry;
+import me.luckyraven.core.timer.SequenceTimer;
 import me.luckyraven.weapon.SelectiveFire;
 import me.luckyraven.weapon.events.projectile.WeaponShootEvent;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;

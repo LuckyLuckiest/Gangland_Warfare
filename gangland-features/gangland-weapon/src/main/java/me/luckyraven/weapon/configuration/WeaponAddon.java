@@ -2,13 +2,13 @@ package me.luckyraven.weapon.configuration;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
+import me.luckyraven.core.Placeholder;
+import me.luckyraven.core.configuration.SoundConfiguration;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.config.ConfigReport;
 import me.luckyraven.persistence.config.FileHandlerReader;
 import me.luckyraven.persistence.config.MappingNode;
 import me.luckyraven.persistence.config.NodeReader;
-import me.luckyraven.util.Placeholder;
-import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.weapon.SelectiveFire;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.ammo.AmmunitionManager;

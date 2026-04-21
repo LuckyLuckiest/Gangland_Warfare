@@ -1,11 +1,11 @@
 package me.luckyraven.item.listener.money;
 
+import me.luckyraven.core.autowire.AutowireTarget;
+import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyDepositService;
 import me.luckyraven.item.money.MoneyItem;
 import me.luckyraven.item.money.MoneyItemUtil;
-import me.luckyraven.util.autowire.AutowireTarget;
-import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

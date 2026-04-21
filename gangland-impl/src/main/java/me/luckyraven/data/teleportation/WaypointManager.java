@@ -1,6 +1,7 @@
 package me.luckyraven.data.teleportation;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.core.autowire.bean.BeanLifecycle;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.tables.gang.GangTable;
@@ -8,7 +9,6 @@ import me.luckyraven.database.tables.waypoint.WaypointTable;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.repository.IRepository;
-import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 

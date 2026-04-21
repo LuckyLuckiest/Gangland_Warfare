@@ -1,8 +1,8 @@
 package me.luckyraven.item.listener.money;
 
+import me.luckyraven.core.autowire.AutowireTarget;
+import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.item.money.*;
-import me.luckyraven.util.autowire.AutowireTarget;
-import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;

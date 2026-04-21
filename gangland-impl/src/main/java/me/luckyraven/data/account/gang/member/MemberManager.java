@@ -1,6 +1,7 @@
 package me.luckyraven.data.account.gang.member;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.core.autowire.bean.BeanLifecycle;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.permission.vault.VaultPermissionBridge;
 import me.luckyraven.data.rank.Rank;
@@ -11,7 +12,6 @@ import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.repository.IRepository;
-import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;

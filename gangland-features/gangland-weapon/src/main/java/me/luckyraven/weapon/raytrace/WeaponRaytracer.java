@@ -1,8 +1,8 @@
 package me.luckyraven.weapon.raytrace;
 
 import com.cryptomorin.xseries.particles.XParticle;
-import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.utilities.ParticleUtil;
+import me.luckyraven.core.configuration.SoundConfiguration;
+import me.luckyraven.core.utilities.ParticleUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.dto.DamageData;

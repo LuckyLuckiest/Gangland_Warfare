@@ -1,8 +1,8 @@
 package me.luckyraven.listener.bridge;
 
+import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.events.user.UserDataInitEvent;
 import me.luckyraven.item.event.PlayerItemInitEvent;
-import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

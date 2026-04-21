@@ -1,7 +1,7 @@
 package me.luckyraven.weapon.types.gun;
 
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
-import me.luckyraven.util.timer.Timer;
+import me.luckyraven.core.timer.Timer;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;
 import org.bukkit.entity.Player;

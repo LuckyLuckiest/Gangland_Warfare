@@ -1,9 +1,9 @@
 package me.luckyraven.item.serializer;
 
+import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.item.ItemKind;
 import me.luckyraven.item.ItemSerializer;
 import me.luckyraven.item.wearable.Wearable;
-import me.luckyraven.util.ItemBuilder;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 

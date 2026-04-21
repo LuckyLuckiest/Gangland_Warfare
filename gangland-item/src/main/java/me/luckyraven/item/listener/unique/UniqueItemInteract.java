@@ -1,12 +1,12 @@
 package me.luckyraven.item.listener.unique;
 
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.core.autowire.AutowireTarget;
+import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.item.contract.UniqueItemInteractionService;
 import me.luckyraven.item.contract.UniqueItemRegistry;
 import me.luckyraven.item.unique.UniqueItemUtil;
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.autowire.AutowireTarget;
-import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;

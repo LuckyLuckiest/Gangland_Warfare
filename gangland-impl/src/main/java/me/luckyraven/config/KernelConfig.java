@@ -6,6 +6,10 @@ import me.luckyraven.command.data.InformationManager;
 import me.luckyraven.compatibility.CompatibilitySetup;
 import me.luckyraven.compatibility.CompatibilityWorker;
 import me.luckyraven.compatibility.VersionSetup;
+import me.luckyraven.core.autowire.bean.Bean;
+import me.luckyraven.core.autowire.bean.BeanGraph;
+import me.luckyraven.core.autowire.bean.Configuration;
+import me.luckyraven.core.autowire.bean.Phase;
 import me.luckyraven.data.account.user.UserFactory;
 import me.luckyraven.data.permission.PermissionHandler;
 import me.luckyraven.data.permission.PermissionManager;
@@ -18,11 +22,6 @@ import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.persistence.database.DatabaseSettingsProvider;
-
-import me.luckyraven.util.autowire.bean.Bean;
-import me.luckyraven.util.autowire.bean.BeanGraph;
-import me.luckyraven.util.autowire.bean.Configuration;
-import me.luckyraven.util.autowire.bean.Phase;
 
 /**
  * KERNEL-phase configuration that produces every bootstrap-critical singleton the plugin needs before the FILE phase

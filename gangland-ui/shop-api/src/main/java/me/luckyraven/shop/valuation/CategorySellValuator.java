@@ -1,8 +1,8 @@
 package me.luckyraven.shop.valuation;
 
+import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.shop.SellCategory;
 import me.luckyraven.shop.ShopDefinition;
-import me.luckyraven.util.ItemBuilder;
 import org.bukkit.inventory.ItemStack;
 
 import java.math.BigDecimal;

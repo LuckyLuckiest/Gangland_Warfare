@@ -5,11 +5,11 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.copsncrooks.npc.trader.TraderManager;
 import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitRegistry;
+import me.luckyraven.core.TriConsumer;
+import me.luckyraven.core.datastructure.Tree;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.shop.ShopRegistry;
 import me.luckyraven.util.GanglandChatUtil;
-import me.luckyraven.util.TriConsumer;
-import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 
 class TraderEditCommand extends SubArgument {

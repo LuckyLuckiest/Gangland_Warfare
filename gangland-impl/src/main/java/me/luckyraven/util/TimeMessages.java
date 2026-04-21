@@ -1,7 +1,7 @@
 package me.luckyraven.util;
 
+import me.luckyraven.core.utilities.messages.TimeMessagesProvider;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.utilities.messages.TimeMessagesProvider;
 
 public final class TimeMessages implements TimeMessagesProvider {
 

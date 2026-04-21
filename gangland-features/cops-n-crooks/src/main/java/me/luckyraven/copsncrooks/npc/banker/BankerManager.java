@@ -2,8 +2,8 @@ package me.luckyraven.copsncrooks.npc.banker;
 
 import lombok.CustomLog;
 import me.luckyraven.copsncrooks.npc.banker.config.BankerSettings;
+import me.luckyraven.core.autowire.bean.BeanLifecycle;
 import me.luckyraven.persistence.repository.IRepository;
-import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Bukkit;

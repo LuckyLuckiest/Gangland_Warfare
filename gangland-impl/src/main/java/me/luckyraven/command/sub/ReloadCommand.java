@@ -6,9 +6,9 @@ import me.luckyraven.bootstrap.GanglandContext;
 import me.luckyraven.bootstrap.PeriodicalUpdates;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.core.command.CommandHandler;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.GanglandChatUtil;
-import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 

@@ -1,11 +1,11 @@
 package me.luckyraven.data.plugin;
 
 import lombok.CustomLog;
+import me.luckyraven.core.utilities.TimeUtil;
 import me.luckyraven.database.repositories.weapon.WeaponRepository;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.TimeMessages;
-import me.luckyraven.util.utilities.TimeUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponManager;
 
@@ -24,7 +24,7 @@ public final class PluginDataCleanupService {
 	private final WeaponManager       weaponManager;
 
 	public PluginDataCleanupService(PluginManager pluginManager, IRepository<Weapon> weaponRepository,
-									WeaponManager weaponManager) {
+	                                WeaponManager weaponManager) {
 		this.pluginManager    = pluginManager;
 		this.weaponRepository = weaponRepository;
 		this.weaponManager    = weaponManager;

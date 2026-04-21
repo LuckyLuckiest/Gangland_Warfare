@@ -2,8 +2,8 @@ package me.luckyraven.sign.model;
 
 import lombok.Builder;
 import lombok.Getter;
+import me.luckyraven.core.color.Color;
 import me.luckyraven.sign.validation.SignValidationException;
-import me.luckyraven.util.color.Color;
 
 import java.util.function.Function;
 
@@ -22,10 +22,10 @@ public class SignLineFormat {
 
 	public static SignLineFormat empty(int lineNumber) {
 		return SignLineFormat.builder()
-							 .lineNumber(lineNumber)
-							 .required(false)
-							 .contentType(LineContentType.EMPTY)
-							 .build();
+		                     .lineNumber(lineNumber)
+		                     .required(false)
+		                     .contentType(LineContentType.EMPTY)
+		                     .build();
 	}
 
 	public String format(String content, String moneySymbol) throws SignValidationException {

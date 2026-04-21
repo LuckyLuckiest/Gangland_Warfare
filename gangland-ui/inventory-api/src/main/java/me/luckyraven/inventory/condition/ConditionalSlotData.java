@@ -1,9 +1,9 @@
 package me.luckyraven.inventory.condition;
 
 import lombok.Getter;
+import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.InventoryOpener;
-import me.luckyraven.util.ItemBuilder;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
@@ -54,8 +54,8 @@ public class ConditionalSlotData {
 		private final ConditionalSlotData nestedCondition;
 
 		public BranchData(ItemBuilder item, String name, List<String> lore, boolean clickable, boolean draggable,
-						  @Nullable ClickAction clickAction, @Nullable ClickAction rightClickAction,
-						  @Nullable ConditionalSlotData nestedCondition) {
+		                  @Nullable ClickAction clickAction, @Nullable ClickAction rightClickAction,
+		                  @Nullable ConditionalSlotData nestedCondition) {
 			this.item             = item;
 			this.name             = name;
 			this.lore             = lore;

@@ -4,8 +4,8 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.core.timer.RepeatingTimer;
 import me.luckyraven.economy.bank.Currency;
-import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 

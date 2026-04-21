@@ -1,5 +1,7 @@
 package me.luckyraven.config;
 
+import me.luckyraven.core.autowire.bean.Bean;
+import me.luckyraven.core.autowire.bean.Configuration;
 import me.luckyraven.gadget.car.config.CarAddon;
 import me.luckyraven.item.*;
 import me.luckyraven.item.configuration.UniqueItemAddon;
@@ -11,8 +13,6 @@ import me.luckyraven.item.refresher.UniqueItemRefresher;
 import me.luckyraven.item.refresher.WeaponRefresher;
 import me.luckyraven.item.refresher.WearableRefresher;
 import me.luckyraven.item.serializer.*;
-import me.luckyraven.util.autowire.bean.Bean;
-import me.luckyraven.util.autowire.bean.Configuration;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.wearable.WearableService;

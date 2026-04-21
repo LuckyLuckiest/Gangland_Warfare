@@ -1,9 +1,9 @@
 package me.luckyraven.weapon.types.gun;
 
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.utilities.ActionBarManager;
+import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.core.configuration.SoundConfiguration;
+import me.luckyraven.core.utilities.ActionBarManager;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.events.projectile.WeaponShootEvent;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;

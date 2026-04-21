@@ -10,9 +10,9 @@ import me.luckyraven.copsncrooks.detainment.release.ReleasePipeline;
 import me.luckyraven.copsncrooks.jail.JailExitService;
 import me.luckyraven.copsncrooks.jail.JailRegistry;
 import me.luckyraven.copsncrooks.jail.JailService;
+import me.luckyraven.core.command.CommandHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
-import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;

@@ -15,7 +15,7 @@ import me.luckyraven.sign.registry.SignTypeDefinition;
 import me.luckyraven.sign.type.trade.BaseTradeSign;
 import me.luckyraven.sign.validation.SignValidator;
 import me.luckyraven.sign.validation.trade.ammo.AmmoSignValidator;
-import me.luckyraven.util.color.Color;
+import me.luckyraven.core.color.Color;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import org.bukkit.entity.Player;

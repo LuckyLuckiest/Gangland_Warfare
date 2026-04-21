@@ -1,10 +1,10 @@
 package me.luckyraven.sign.listener;
 
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.sign.service.SignInformation;
 import me.luckyraven.sign.service.SignInteractionService;
 import me.luckyraven.sign.validation.SignValidationException;
-import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

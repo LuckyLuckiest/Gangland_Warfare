@@ -2,6 +2,7 @@ package me.luckyraven.bootstrap;
 
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
+import me.luckyraven.core.autowire.bean.BeanPostInitialize;
 import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
@@ -17,7 +18,6 @@ import me.luckyraven.item.unique.UniqueItemUtil;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
-import me.luckyraven.util.autowire.bean.BeanPostInitialize;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;

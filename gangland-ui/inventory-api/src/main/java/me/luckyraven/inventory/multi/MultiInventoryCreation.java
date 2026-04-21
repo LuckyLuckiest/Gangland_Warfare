@@ -1,13 +1,13 @@
 package me.luckyraven.inventory.multi;
 
+import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.core.TriConsumer;
+import me.luckyraven.core.datastructure.LinkedList;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.part.ButtonTags;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.part.PageConfig;
 import me.luckyraven.inventory.util.InventoryUtil;
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.TriConsumer;
-import me.luckyraven.util.datastructure.LinkedList;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -23,9 +23,9 @@ public class MultiInventoryCreation {
 
 	@Nullable
 	public static MultiInventory dynamicMultiInventory(JavaPlugin plugin, Player player, List<ItemStack> items,
-													   String title, boolean staticItemsAllowed, boolean fixedSize,
-													   Fill fill, ButtonTags buttonTags,
-													   @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
+	                                                   String title, boolean staticItemsAllowed, boolean fixedSize,
+	                                                   Fill fill, ButtonTags buttonTags,
+	                                                   @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
 		if (staticItemsAllowed) {
 			if (staticItems == null || staticItems.size() <= 6) return null;
 		}
@@ -78,8 +78,8 @@ public class MultiInventoryCreation {
 			InventoryHandler nextInv    = node.getNext() == null ? null : node.getNext().getData();
 
 			addNavigationButtons(plugin, currentInv, nextInv, originalTitle, pageIndex, size, buttonTags,
-								 p -> multi.nextPage().open(p), p -> multi.previousPage().open(p),
-								 p -> multi.homePage().open(p));
+			                     p -> multi.nextPage().open(p), p -> multi.previousPage().open(p),
+			                     p -> multi.homePage().open(p));
 
 			pageIndex++;
 		}

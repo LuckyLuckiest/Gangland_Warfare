@@ -1,10 +1,10 @@
 package me.luckyraven.weapon.types.throwable;
 
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
-import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.timer.CountdownTimer;
-import me.luckyraven.util.timer.RepeatingTimer;
-import me.luckyraven.util.utilities.ParticleUtil;
+import me.luckyraven.core.configuration.SoundConfiguration;
+import me.luckyraven.core.timer.CountdownTimer;
+import me.luckyraven.core.timer.RepeatingTimer;
+import me.luckyraven.core.utilities.ParticleUtil;
 import me.luckyraven.weapon.dto.ThrowableData;
 import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
 import me.luckyraven.weapon.projectile.ProjectileState;

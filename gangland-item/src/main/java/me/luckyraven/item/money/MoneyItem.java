@@ -1,7 +1,7 @@
 package me.luckyraven.item.money;
 
 import lombok.Getter;
-import me.luckyraven.util.configuration.SoundConfiguration;
+import me.luckyraven.core.configuration.SoundConfiguration;
 import org.bukkit.Material;
 import org.jetbrains.annotations.Nullable;
 

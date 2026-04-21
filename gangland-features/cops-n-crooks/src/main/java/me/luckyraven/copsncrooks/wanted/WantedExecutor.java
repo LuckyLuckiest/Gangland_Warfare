@@ -1,9 +1,9 @@
 package me.luckyraven.copsncrooks.wanted;
 
 import me.luckyraven.copsncrooks.events.wanted.WantedEvent;
+import me.luckyraven.core.feature.Executor;
+import me.luckyraven.core.timer.Timer;
 import me.luckyraven.economy.bank.Currency;
-import me.luckyraven.util.feature.Executor;
-import me.luckyraven.util.timer.Timer;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 

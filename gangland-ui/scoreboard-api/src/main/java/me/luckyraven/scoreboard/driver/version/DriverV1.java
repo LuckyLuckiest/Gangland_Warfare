@@ -1,9 +1,9 @@
 package me.luckyraven.scoreboard.driver.version;
 
 import com.viaversion.viaversion.api.ViaAPI;
+import me.luckyraven.core.Placeholder;
 import me.luckyraven.scoreboard.driver.DriverHandler;
 import me.luckyraven.scoreboard.part.Line;
-import me.luckyraven.util.Placeholder;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -39,8 +39,8 @@ public class DriverV1 extends DriverHandler {
 				// update the lines in fastboard
 				if (lines.contains(getTitle())) getFastBoard().updateTitle(updateLine(getTitle()));
 				else lines.stream()
-						  .filter(line -> line != getTitle())
-						  .forEach(line -> getFastBoard().updateLine(line.getUsedIndex(), updateLine(line)));
+						.filter(line -> line != getTitle())
+						.forEach(line -> getFastBoard().updateLine(line.getUsedIndex(), updateLine(line)));
 			}
 
 			// increment the current interval value

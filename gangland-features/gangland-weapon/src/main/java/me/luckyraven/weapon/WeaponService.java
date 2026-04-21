@@ -1,7 +1,7 @@
 package me.luckyraven.weapon;
 
 import lombok.Getter;
-import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.weapon.configuration.WeaponAddon;
 import me.luckyraven.weapon.dto.AmmunitionData;
 import me.luckyraven.weapon.types.WeaponType;

@@ -1,7 +1,7 @@
 package me.luckyraven.inventory.condition;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.util.Placeholder;
+import me.luckyraven.core.Placeholder;
 import org.bukkit.entity.Player;
 
 @RequiredArgsConstructor

@@ -2,9 +2,9 @@ package me.luckyraven.data.account;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.core.datastructure.ScientificCalculator;
 import me.luckyraven.events.level.LevelUpEvent;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.datastructure.ScientificCalculator;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.Nullable;
 
@@ -100,8 +100,8 @@ public class Level {
 		variables.put("experience", experience);
 
 		String formula = this.formula == null || this.formula.isEmpty() ?
-						 Settings.getUserLevelFormula() :
-						 this.formula;
+		                 Settings.getUserLevelFormula() :
+		                 this.formula;
 
 		ScientificCalculator calculator = new ScientificCalculator(formula, variables);
 

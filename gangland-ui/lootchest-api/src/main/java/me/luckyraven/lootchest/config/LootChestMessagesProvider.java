@@ -1,7 +1,7 @@
 package me.luckyraven.lootchest.config;
 
+import me.luckyraven.core.utilities.messages.TimeMessagesProvider;
 import me.luckyraven.lootchest.data.LootTier;
-import me.luckyraven.util.utilities.messages.TimeMessagesProvider;
 
 /**
  * Provides all player-facing messages and hologram text used by the loot chest system.

@@ -4,9 +4,9 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.DoubleArgument;
+import me.luckyraven.core.command.CommandHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.UpdateChecker;
-import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 

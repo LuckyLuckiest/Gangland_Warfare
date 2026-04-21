@@ -1,8 +1,8 @@
 package me.luckyraven.listener;
 
+import me.luckyraven.core.autowire.DependencyContainer;
+import me.luckyraven.core.listener.ListenerService;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.autowire.DependencyContainer;
-import me.luckyraven.util.listener.ListenerService;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.lang.reflect.InvocationTargetException;
@@ -19,7 +19,7 @@ public class ListenerManager extends ListenerService {
 		Method method = Settings.getSetting(condition);
 
 		if (method != null && (method.getReturnType().getSimpleName().equalsIgnoreCase("boolean") ||
-							   method.getReturnType() == Boolean.class)) {
+		                       method.getReturnType() == Boolean.class)) {
 			return (boolean) method.invoke(null);
 		}
 

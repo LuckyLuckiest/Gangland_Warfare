@@ -1,6 +1,6 @@
 package datastructure;
 
-import me.luckyraven.util.datastructure.JsonFormatter;
+import me.luckyraven.core.datastructure.JsonFormatter;
 
 import java.util.Map;
 import java.util.TreeMap;

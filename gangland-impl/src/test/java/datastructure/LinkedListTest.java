@@ -1,6 +1,6 @@
 package datastructure;
 
-import me.luckyraven.util.datastructure.LinkedList;
+import me.luckyraven.core.datastructure.LinkedList;
 import org.junit.Test;
 
 public class LinkedListTest {

@@ -3,10 +3,10 @@ package me.luckyraven.command.sub;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.core.command.CommandHandler;
+import me.luckyraven.core.downed.DownedPlayerRegistry;
 import me.luckyraven.listener.player.CustomPlayerDeathListener;
 import me.luckyraven.util.GanglandChatUtil;
-import me.luckyraven.util.command.CommandHandler;
-import me.luckyraven.util.downed.DownedPlayerRegistry;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 

@@ -2,6 +2,7 @@ package me.luckyraven.sign.aspect;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.economy.bank.EconomyException;
@@ -12,7 +13,6 @@ import me.luckyraven.inventory.part.ButtonTags;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.sign.model.ParsedSign;
 import me.luckyraven.sign.type.BountySign;
-import me.luckyraven.util.ItemBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;

@@ -1,9 +1,9 @@
 package me.luckyraven.sign.validation;
 
+import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.type.WantedSign;
-import me.luckyraven.util.utilities.ChatUtil;
 
 public class WantedSignValidator extends AbstractSignValidator {
 

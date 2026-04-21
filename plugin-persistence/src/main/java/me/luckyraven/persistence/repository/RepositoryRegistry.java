@@ -1,9 +1,9 @@
 package me.luckyraven.persistence.repository;
 
 import lombok.CustomLog;
+import me.luckyraven.core.utilities.ReflectionUtil;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.component.Table;
-import me.luckyraven.util.utilities.ReflectionUtil;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.lang.reflect.Constructor;

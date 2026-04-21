@@ -1,7 +1,7 @@
 package me.luckyraven.inventory.handler;
 
+import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.inventory.InventoryHandler;
-import me.luckyraven.util.ItemBuilder;
 import org.bukkit.entity.Player;
 
 /**

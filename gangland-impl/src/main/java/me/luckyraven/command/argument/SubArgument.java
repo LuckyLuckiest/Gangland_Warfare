@@ -1,7 +1,7 @@
 package me.luckyraven.command.argument;
 
-import me.luckyraven.util.TriConsumer;
-import me.luckyraven.util.datastructure.Tree;
+import me.luckyraven.core.TriConsumer;
+import me.luckyraven.core.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -22,7 +22,7 @@ public abstract class SubArgument extends Argument {
 	}
 
 	protected SubArgument(JavaPlugin plugin, String[] arguments, Tree<Argument> tree, Argument parent,
-						  String subPermission) {
+	                      String subPermission) {
 		super(plugin, arguments, tree, null);
 		super.action = action();
 

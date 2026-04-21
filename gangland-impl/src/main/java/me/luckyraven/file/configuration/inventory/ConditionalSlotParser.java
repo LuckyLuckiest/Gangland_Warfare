@@ -1,9 +1,9 @@
 package me.luckyraven.file.configuration.inventory;
 
+import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.inventory.condition.ConditionalSlotData;
 import me.luckyraven.inventory.condition.SlotCondition;
 import me.luckyraven.inventory.handler.SlotItemFactory;
-import me.luckyraven.util.ItemBuilder;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;

@@ -3,7 +3,7 @@ package me.luckyraven.persistence.database.component;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.util.utilities.DatabaseUtil;
+import me.luckyraven.core.utilities.DatabaseUtil;
 
 import java.util.UUID;
 

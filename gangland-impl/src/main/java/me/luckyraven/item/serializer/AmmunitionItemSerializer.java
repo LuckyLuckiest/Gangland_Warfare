@@ -1,8 +1,8 @@
 package me.luckyraven.item.serializer;
 
+import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.item.ItemKind;
 import me.luckyraven.item.ItemSerializer;
-import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.weapon.ammo.Ammunition;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;

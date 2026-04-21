@@ -1,11 +1,11 @@
 package me.luckyraven.file.configuration;
 
+import me.luckyraven.core.autowire.bean.BeanLifecycle;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileInitializer;
 import me.luckyraven.persistence.FileManager;
-import me.luckyraven.util.autowire.bean.BeanLifecycle;
 
 import java.io.IOException;
 import java.util.Objects;

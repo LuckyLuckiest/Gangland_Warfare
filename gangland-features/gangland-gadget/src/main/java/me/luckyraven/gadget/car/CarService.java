@@ -2,6 +2,8 @@ package me.luckyraven.gadget.car;
 
 import io.netty.channel.Channel;
 import lombok.Getter;
+import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.core.autowire.bean.BeanLifecycle;
 import me.luckyraven.gadget.car.vehicle.ParkedVehicle;
 import me.luckyraven.gadget.car.vehicle.VehicleMovementTask;
 import me.luckyraven.gadget.car.vehicle.VehicleRegistry;
@@ -14,8 +16,6 @@ import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.gadget.packet.PlayerInputInterceptor;
 import me.luckyraven.item.fuel.FuelKey;
 import me.luckyraven.persistence.repository.IRepository;
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;

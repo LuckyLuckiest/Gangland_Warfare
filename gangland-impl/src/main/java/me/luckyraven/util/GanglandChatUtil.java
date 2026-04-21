@@ -1,9 +1,9 @@
 package me.luckyraven.util;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.utilities.ChatUtil;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 

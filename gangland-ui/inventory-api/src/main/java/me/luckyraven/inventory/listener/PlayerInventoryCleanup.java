@@ -1,7 +1,7 @@
 package me.luckyraven.inventory.listener;
 
+import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.inventory.service.InventoryRegistry;
-import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;

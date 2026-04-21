@@ -7,7 +7,7 @@ import lombok.Setter;
 import me.luckyraven.copsncrooks.events.wanted.WantedEndEvent;
 import me.luckyraven.copsncrooks.events.wanted.WantedLevelChangeEvent;
 import me.luckyraven.copsncrooks.events.wanted.WantedStartEvent;
-import me.luckyraven.util.timer.RepeatingTimer;
+import me.luckyraven.core.timer.RepeatingTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;

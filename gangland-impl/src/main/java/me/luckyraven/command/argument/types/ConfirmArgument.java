@@ -2,9 +2,9 @@ package me.luckyraven.command.argument.types;
 
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ArgumentLock;
+import me.luckyraven.core.TriConsumer;
+import me.luckyraven.core.datastructure.Tree;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.TriConsumer;
-import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -48,6 +48,7 @@ public class ConfirmArgument extends Argument {
 	 * Returns whether the given sender has an active 'confirm' session locked.
 	 *
 	 * @param sender the command sender to check
+	 *
 	 * @return true if the sender has a pending 'confirm'
 	 */
 	public boolean isLocked(CommandSender sender) {

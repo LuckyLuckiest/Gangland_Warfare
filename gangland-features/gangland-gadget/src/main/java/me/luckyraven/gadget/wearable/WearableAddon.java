@@ -2,15 +2,14 @@ package me.luckyraven.gadget.wearable;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
-
+import me.luckyraven.core.Placeholder;
+import me.luckyraven.core.configuration.SoundConfiguration;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.item.wearable.WearableTrait;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileInitializer;
 import me.luckyraven.persistence.FileManager;
-import me.luckyraven.util.Placeholder;
-import me.luckyraven.util.configuration.SoundConfiguration;
 import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.Color;
 import org.bukkit.Material;

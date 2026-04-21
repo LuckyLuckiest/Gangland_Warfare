@@ -1,7 +1,7 @@
 package me.luckyraven.data.account.user;
 
+import me.luckyraven.core.Placeholder;
 import me.luckyraven.inventory.service.InventoryRegistry;
-import me.luckyraven.util.Placeholder;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
 

@@ -1,10 +1,10 @@
 package me.luckyraven.item.listener.money;
 
+import me.luckyraven.core.downed.DownedPlayerRegistry;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyDepositService;
 import me.luckyraven.item.money.MoneyItem;
 import me.luckyraven.item.money.MoneyItemUtil;
-import me.luckyraven.util.downed.DownedPlayerRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Entity;

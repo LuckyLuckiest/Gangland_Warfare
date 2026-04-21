@@ -2,7 +2,7 @@ package me.luckyraven.data.placeholder;
 
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.luckyraven.Gangland;
-import me.luckyraven.util.Placeholder;
+import me.luckyraven.core.Placeholder;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;

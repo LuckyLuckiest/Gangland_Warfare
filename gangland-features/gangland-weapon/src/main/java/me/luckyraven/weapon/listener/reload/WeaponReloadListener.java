@@ -1,8 +1,8 @@
 package me.luckyraven.weapon.listener.reload;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.util.autowire.AutowireTarget;
-import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.core.autowire.AutowireTarget;
+import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.events.reload.WeaponReloadCompleteEvent;

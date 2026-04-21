@@ -1,8 +1,8 @@
 package me.luckyraven.data.detainment;
 
 import me.luckyraven.copsncrooks.detainment.sound.DetainmentSoundContract;
+import me.luckyraven.core.configuration.SoundConfiguration;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.configuration.SoundConfiguration;
 import org.bukkit.entity.Player;
 
 /**

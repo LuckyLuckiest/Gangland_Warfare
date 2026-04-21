@@ -2,13 +2,13 @@ package me.luckyraven.data.rank;
 
 import lombok.Getter;
 import me.luckyraven.Gangland;
+import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.datastructure.Tree;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
-import me.luckyraven.util.autowire.bean.BeanLifecycle;
-import me.luckyraven.util.datastructure.Tree;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;

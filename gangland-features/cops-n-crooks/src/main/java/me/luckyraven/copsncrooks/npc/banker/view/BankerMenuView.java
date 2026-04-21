@@ -9,12 +9,12 @@ import me.luckyraven.copsncrooks.npc.banker.economy.BankerEconomyContract.Banker
 import me.luckyraven.copsncrooks.npc.banker.economy.BankerEconomyContract.CreationInfo;
 import me.luckyraven.copsncrooks.npc.banker.message.BankerMessageContract;
 import me.luckyraven.copsncrooks.npc.banker.tier.BankTier;
+import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.core.configuration.SoundConfiguration;
+import me.luckyraven.core.utilities.NumberUtil;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;

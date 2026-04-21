@@ -1,10 +1,10 @@
 package me.luckyraven.item.listener.wearable;
 
+import me.luckyraven.core.autowire.AutowireTarget;
+import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.item.contract.WearableEquipService;
 import me.luckyraven.item.wearable.Wearable;
-import me.luckyraven.util.autowire.AutowireTarget;
-import me.luckyraven.util.listener.ListenerHandler;
-import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

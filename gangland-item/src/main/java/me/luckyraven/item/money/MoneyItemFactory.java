@@ -1,6 +1,6 @@
 package me.luckyraven.item.money;
 
-import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.core.ItemBuilder;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;

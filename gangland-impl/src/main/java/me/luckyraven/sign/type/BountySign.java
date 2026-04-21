@@ -1,6 +1,7 @@
 package me.luckyraven.sign.type;
 
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.core.color.Color;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.aspect.BountyAspect;
@@ -14,7 +15,6 @@ import me.luckyraven.sign.parser.SignParser;
 import me.luckyraven.sign.registry.SignTypeDefinition;
 import me.luckyraven.sign.validation.BountySignValidator;
 import me.luckyraven.sign.validation.SignValidator;
-import me.luckyraven.util.color.Color;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -43,11 +43,11 @@ public class BountySign implements Sign {
 		SignHandler      handler = new AspectBasedSignHandler(aspects);
 
 		var definition = SignTypeDefinition.builder()
-										   .signType(signType)
-										   .signValidator(validator)
-										   .signParser(parser)
-										   .handler(handler)
-										   .build();
+		                                   .signType(signType)
+		                                   .signValidator(validator)
+		                                   .signParser(parser)
+		                                   .handler(handler)
+		                                   .build();
 
 		definition.addAllAspects(aspects);
 
@@ -60,19 +60,19 @@ public class BountySign implements Sign {
 		var    builder   = SignFormat.builder().formatName(generated.toLowerCase()).signTypePrefix(signType.typed());
 
 		var line1 = SignLineFormat.builder()
-								  .lineNumber(0)
-								  .required(true)
-								  .contentType(SignLineFormat.LineContentType.TITLE)
-								  .formatter(s -> "&8[&c" + generated + "&8]")
-								  .build();
+		                          .lineNumber(0)
+		                          .required(true)
+		                          .contentType(SignLineFormat.LineContentType.TITLE)
+		                          .formatter(s -> "&8[&c" + generated + "&8]")
+		                          .build();
 
 		var line2 = SignLineFormat.builder()
-								  .lineNumber(1)
-								  .required(true)
-								  .defaultColor(Color.GRAY)
-								  .contentType(SignLineFormat.LineContentType.CUSTOM_TEXT)
-								  .formatter(s -> "&7" + s)
-								  .build();
+		                          .lineNumber(1)
+		                          .required(true)
+		                          .defaultColor(Color.GRAY)
+		                          .contentType(SignLineFormat.LineContentType.CUSTOM_TEXT)
+		                          .formatter(s -> "&7" + s)
+		                          .build();
 
 		return builder.lineFormats(List.of(line1, line2)).build();
 	}

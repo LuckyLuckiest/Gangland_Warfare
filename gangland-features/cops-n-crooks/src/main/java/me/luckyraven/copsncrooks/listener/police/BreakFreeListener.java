@@ -2,7 +2,7 @@ package me.luckyraven.copsncrooks.listener.police;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.detainment.breakfree.BreakFreeService;
-import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.core.listener.ListenerHandler;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerToggleSneakEvent;

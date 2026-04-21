@@ -7,7 +7,7 @@ import me.luckyraven.copsncrooks.detainment.paperwork.PaperworkItemFactory;
 import me.luckyraven.copsncrooks.detainment.paperwork.PaperworkView;
 import me.luckyraven.copsncrooks.detainment.transit.TransitService;
 import me.luckyraven.copsncrooks.jail.JailService;
-import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.weapon.events.projectile.WeaponShootEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

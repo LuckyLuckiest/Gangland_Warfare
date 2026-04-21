@@ -1,10 +1,10 @@
 package me.luckyraven.weapon.types.biological;
 
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
-import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.timer.RepeatingTimer;
-import me.luckyraven.util.utilities.ActionBarManager;
-import me.luckyraven.util.utilities.ParticleUtil;
+import me.luckyraven.core.configuration.SoundConfiguration;
+import me.luckyraven.core.timer.RepeatingTimer;
+import me.luckyraven.core.utilities.ActionBarManager;
+import me.luckyraven.core.utilities.ParticleUtil;
 import me.luckyraven.weapon.dto.BiologicalData;
 import me.luckyraven.weapon.raytrace.RaytraceRequest;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;

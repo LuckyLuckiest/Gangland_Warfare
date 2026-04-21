@@ -1,8 +1,8 @@
 package me.luckyraven.inventory.listener;
 
+import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.service.InventoryRegistry;
-import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

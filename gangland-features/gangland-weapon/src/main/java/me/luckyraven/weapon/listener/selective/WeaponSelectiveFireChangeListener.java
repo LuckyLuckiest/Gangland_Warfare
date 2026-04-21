@@ -1,10 +1,10 @@
 package me.luckyraven.weapon.listener.selective;
 
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.autowire.AutowireTarget;
-import me.luckyraven.util.listener.ListenerHandler;
-import me.luckyraven.util.utilities.ActionBarManager;
-import me.luckyraven.util.utilities.ChatUtil;
+import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.core.autowire.AutowireTarget;
+import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.utilities.ActionBarManager;
+import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.events.selective.WeaponChangeSelectiveFireEvent;

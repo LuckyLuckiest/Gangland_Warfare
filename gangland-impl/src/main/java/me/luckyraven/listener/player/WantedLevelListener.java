@@ -1,8 +1,8 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.copsncrooks.combo.KillCombo;
-import me.luckyraven.util.downed.PlayerDownedEvent;
-import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.core.downed.PlayerDownedEvent;
+import me.luckyraven.core.listener.ListenerHandler;
 import net.citizensnpcs.api.CitizensAPI;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

@@ -1,6 +1,7 @@
 package me.luckyraven.sign.listener;
 
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.sign.aspect.AspectResult;
 import me.luckyraven.sign.bulk.BulkActionManager;
 import me.luckyraven.sign.bulk.BulkActionPreview;
@@ -11,7 +12,6 @@ import me.luckyraven.sign.registry.SignTypeDefinition;
 import me.luckyraven.sign.service.SignInformation;
 import me.luckyraven.sign.service.SignInteractionService;
 import me.luckyraven.sign.validation.SignValidationException;
-import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;

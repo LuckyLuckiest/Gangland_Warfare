@@ -1,9 +1,10 @@
 package me.luckyraven.weapon.types.incendiary;
 
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.utilities.ParticleUtil;
+import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.core.configuration.SoundConfiguration;
+import me.luckyraven.core.timer.RepeatingTimer;
+import me.luckyraven.core.utilities.ParticleUtil;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.dto.IncendiaryData;
 import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
@@ -51,9 +52,9 @@ public class IncendiaryAction {
 
 	/**
 	 * Fires one cone burst forward — used by both SINGLE (one press → one cone) and AUTO (driven by a
-	 * {@link me.luckyraven.util.timer.RepeatingTimer} in {@link me.luckyraven.weapon.listener.WeaponInteract}). Returns
-	 * {@code true} if the burst was actually fired, {@code false} if blocked by ammo/durability state — callers in AUTO
-	 * mode use this to break the loop when the magazine empties.
+	 * {@link RepeatingTimer} in {@link me.luckyraven.weapon.listener.WeaponInteract}). Returns {@code true} if the
+	 * burst was actually fired, {@code false} if blocked by ammo/durability state — callers in AUTO mode use this to
+	 * break the loop when the magazine empties.
 	 */
 	public boolean fireOnce(Player player) {
 		if (weapon.isBroken()) {

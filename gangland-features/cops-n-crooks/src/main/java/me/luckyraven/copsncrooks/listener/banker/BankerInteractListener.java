@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.npc.banker.BankerManager;
 import me.luckyraven.copsncrooks.npc.banker.BankerNpc;
 import me.luckyraven.copsncrooks.npc.banker.view.BankerMenuView;
-import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.core.listener.ListenerHandler;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;

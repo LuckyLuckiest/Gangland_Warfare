@@ -4,14 +4,14 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
+import me.luckyraven.core.TriConsumer;
+import me.luckyraven.core.datastructure.Tree;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
-import me.luckyraven.util.TriConsumer;
-import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 
 class RankPermissionRemoveCommand extends SubArgument {

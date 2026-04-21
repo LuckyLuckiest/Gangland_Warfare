@@ -1,12 +1,12 @@
 package me.luckyraven.gadget.jetpack;
 
 import io.netty.channel.Channel;
+import me.luckyraven.core.autowire.bean.BeanLifecycle;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.gadget.jetpack.packet.JetpackInputInterceptor;
 import me.luckyraven.gadget.packet.PlayerInputInterceptor;
 import me.luckyraven.item.wearable.Wearable;
-import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;

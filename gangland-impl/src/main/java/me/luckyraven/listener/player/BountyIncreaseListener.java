@@ -1,6 +1,8 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.copsncrooks.events.bounty.BountyEvent;
+import me.luckyraven.core.autowire.bean.Qualifier;
+import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
@@ -8,8 +10,6 @@ import me.luckyraven.events.gang.GangBountyEvent;
 import me.luckyraven.events.user.UserBountyEvent;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.autowire.bean.Qualifier;
-import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

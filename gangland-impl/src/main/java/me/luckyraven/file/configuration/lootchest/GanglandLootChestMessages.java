@@ -1,9 +1,9 @@
 package me.luckyraven.file.configuration.lootchest;
 
+import me.luckyraven.core.utilities.messages.TimeMessagesProvider;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.lootchest.config.LootChestMessagesProvider;
 import me.luckyraven.lootchest.data.LootTier;
-import me.luckyraven.util.utilities.messages.TimeMessagesProvider;
 
 /**
  * {@link LootChestMessagesProvider} implementation backed by {@link Messages}.

@@ -1,6 +1,6 @@
 package me.luckyraven.persistence.database;
 
-import me.luckyraven.util.utilities.DatabaseUtil;
+import me.luckyraven.core.utilities.DatabaseUtil;
 
 import java.io.IOException;
 import java.sql.*;

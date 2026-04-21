@@ -2,6 +2,7 @@ package me.luckyraven.file.configuration;
 
 import lombok.CustomLog;
 import lombok.Getter;
+import me.luckyraven.core.utilities.NumberUtil;
 import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.FileHandler;
@@ -11,7 +12,6 @@ import me.luckyraven.persistence.config.ConfigReport;
 import me.luckyraven.persistence.config.FileHandlerReader;
 import me.luckyraven.persistence.config.MappingNode;
 import me.luckyraven.persistence.config.NodeReader;
-import me.luckyraven.util.utilities.NumberUtil;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -30,7 +30,7 @@ public class Settings implements FileInitializer {
 	private static @Getter boolean      debugEnabled;
 	private static @Getter List<String> debugModules;
 	// update configuration
-	private static @Getter boolean updaterEnabled, notifyPrivilegedPlayers, updaterAutoUpdate;
+	private static @Getter boolean      updaterEnabled, notifyPrivilegedPlayers, updaterAutoUpdate;
 	// language picked
 	private static @Getter String  languagePicked;
 	// resource pack

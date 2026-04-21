@@ -1,7 +1,7 @@
 package me.luckyraven.sign.validation;
 
+import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.sign.SignType;
-import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.ChatColor;
 
 public abstract class AbstractSignValidator implements SignValidator {

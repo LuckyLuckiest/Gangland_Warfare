@@ -1,7 +1,7 @@
 package me.luckyraven.weapon.util;
 
-import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.timer.RepeatingTimer;
+import me.luckyraven.core.configuration.SoundConfiguration;
+import me.luckyraven.core.timer.RepeatingTimer;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.dto.SoundData;
 import org.bukkit.entity.Player;

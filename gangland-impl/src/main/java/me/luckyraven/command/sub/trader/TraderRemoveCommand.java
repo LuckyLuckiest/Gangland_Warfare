@@ -5,9 +5,9 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.copsncrooks.npc.trader.TraderManager;
 import me.luckyraven.copsncrooks.npc.trader.TraderNpc;
+import me.luckyraven.core.TriConsumer;
+import me.luckyraven.core.datastructure.Tree;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.TriConsumer;
-import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -17,8 +17,8 @@ import org.bukkit.util.Vector;
 
 class TraderRemoveCommand extends SubArgument {
 
-	private static final double MAX_TARGET_DISTANCE = 5D;
-	private final TraderManager traderManager;
+	private static final double        MAX_TARGET_DISTANCE = 5D;
+	private final        TraderManager traderManager;
 
 	protected TraderRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
 	                              TraderManager traderManager) {

@@ -1,7 +1,7 @@
 package me.luckyraven.hologram;
 
 import lombok.Getter;
-import me.luckyraven.util.utilities.ChatUtil;
+import me.luckyraven.core.utilities.ChatUtil;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;

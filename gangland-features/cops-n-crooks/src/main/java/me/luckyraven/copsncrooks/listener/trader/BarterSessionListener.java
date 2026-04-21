@@ -2,7 +2,7 @@ package me.luckyraven.copsncrooks.listener.trader;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.npc.trader.view.BarterView;
-import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.core.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -12,8 +12,8 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 
 /**
- * Singleton click / drag / close listener for the barter view. Delegates to
- * {@link BarterView} which owns the per-player session map.
+ * Singleton click / drag / close listener for the barter view. Delegates to {@link BarterView} which owns the
+ * per-player session map.
  */
 @ListenerHandler
 @RequiredArgsConstructor

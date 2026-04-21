@@ -1,7 +1,7 @@
 package me.luckyraven.copsncrooks.combo;
 
 import lombok.Getter;
-import me.luckyraven.util.timer.CountdownTimer;
+import me.luckyraven.core.timer.CountdownTimer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -28,7 +28,7 @@ public class KillComboTracker {
 	private CountdownTimer timer;
 
 	public KillComboTracker(JavaPlugin plugin, Player player, Consumer<KillComboTracker> onReset,
-							int wantedKillComboResetAfter) {
+	                        int wantedKillComboResetAfter) {
 		this.plugin                    = plugin;
 		this.player                    = player;
 		this.onReset                   = onReset;

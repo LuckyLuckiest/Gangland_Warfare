@@ -1,8 +1,8 @@
 package me.luckyraven.scoreboard.part;
 
 import lombok.Getter;
-import me.luckyraven.util.Placeholder;
-import me.luckyraven.util.utilities.ChatUtil;
+import me.luckyraven.core.Placeholder;
+import me.luckyraven.core.utilities.ChatUtil;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;

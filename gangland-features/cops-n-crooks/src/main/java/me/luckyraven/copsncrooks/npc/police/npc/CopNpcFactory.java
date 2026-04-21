@@ -7,7 +7,7 @@ import me.luckyraven.copsncrooks.npc.police.config.CopTierConfig;
 import me.luckyraven.copsncrooks.npc.police.state.CopBehavior;
 import me.luckyraven.copsncrooks.npc.police.state.CopBehaviorFactory;
 import me.luckyraven.copsncrooks.npc.police.state.CopState;
-import me.luckyraven.util.utilities.ChatUtil;
+import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.Ammunition;

@@ -2,8 +2,8 @@ package me.luckyraven.weapon.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import me.luckyraven.core.configuration.SoundConfiguration;
 import me.luckyraven.exception.PluginException;
-import me.luckyraven.util.configuration.SoundConfiguration;
 
 @Data
 @NoArgsConstructor

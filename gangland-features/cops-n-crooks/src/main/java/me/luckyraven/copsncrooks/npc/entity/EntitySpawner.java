@@ -1,7 +1,7 @@
 package me.luckyraven.copsncrooks.npc.entity;
 
+import me.luckyraven.core.autowire.bean.BeanLifecycle;
 import me.luckyraven.persistence.repository.IRepository;
-import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;

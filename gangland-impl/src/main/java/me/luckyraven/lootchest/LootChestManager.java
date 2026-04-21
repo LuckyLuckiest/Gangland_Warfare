@@ -2,6 +2,8 @@ package me.luckyraven.lootchest;
 
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
+import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.timer.CountdownTimer;
 import me.luckyraven.database.repositories.lootchest.LootChestRepository;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.hologram.HologramService;
@@ -10,8 +12,6 @@ import me.luckyraven.lootchest.config.LootChestMessagesProvider;
 import me.luckyraven.lootchest.data.LootChestData;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
-import me.luckyraven.util.autowire.bean.BeanLifecycle;
-import me.luckyraven.util.timer.CountdownTimer;
 
 import java.util.Collection;
 

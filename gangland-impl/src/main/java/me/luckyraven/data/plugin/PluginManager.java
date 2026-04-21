@@ -1,11 +1,11 @@
 package me.luckyraven.data.plugin;
 
 import me.luckyraven.Gangland;
+import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.utilities.TimeUtil;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.repository.IRepository;
-import me.luckyraven.util.autowire.bean.BeanLifecycle;
-import me.luckyraven.util.utilities.TimeUtil;
 
 import java.time.Instant;
 import java.util.*;

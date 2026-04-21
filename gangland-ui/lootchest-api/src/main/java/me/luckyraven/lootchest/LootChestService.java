@@ -1,6 +1,8 @@
 package me.luckyraven.lootchest;
 
 import lombok.Getter;
+import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.core.configuration.SoundConfiguration;
 import me.luckyraven.hologram.HologramService;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.item.ItemParser;
@@ -20,8 +22,6 @@ import me.luckyraven.lootchest.handler.lootchest.ChestCooldownCompleteHandler;
 import me.luckyraven.lootchest.handler.lootchest.ChestCooldownTickHandler;
 import me.luckyraven.lootchest.handler.lootchest.SessionCompleteHandler;
 import me.luckyraven.lootchest.handler.lootchest.SessionStartHandler;
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.configuration.SoundConfiguration;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;

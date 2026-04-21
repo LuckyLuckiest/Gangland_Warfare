@@ -6,8 +6,8 @@ import me.luckyraven.command.CommandManager;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
 import me.luckyraven.command.data.InformationManager;
-import me.luckyraven.util.command.CommandHandler;
-import me.luckyraven.util.command.CommandPriority;
+import me.luckyraven.core.command.CommandHandler;
+import me.luckyraven.core.command.CommandPriority;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;

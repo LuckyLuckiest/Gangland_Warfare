@@ -1,8 +1,9 @@
 package me.luckyraven.scoreboard;
 
 import com.viaversion.viaversion.api.ViaAPI;
-
 import me.luckyraven.Gangland;
+import me.luckyraven.core.Placeholder;
+import me.luckyraven.core.utilities.ReflectionUtil;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.scoreboard.configuration.ScoreboardAddon;
 import me.luckyraven.scoreboard.driver.DriverHandler;
@@ -10,8 +11,6 @@ import me.luckyraven.scoreboard.driver.version.DriverV1;
 import me.luckyraven.scoreboard.driver.version.DriverV2;
 import me.luckyraven.scoreboard.driver.version.DriverV3;
 import me.luckyraven.scoreboard.part.Line;
-import me.luckyraven.util.Placeholder;
-import me.luckyraven.util.utilities.ReflectionUtil;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Modifier;

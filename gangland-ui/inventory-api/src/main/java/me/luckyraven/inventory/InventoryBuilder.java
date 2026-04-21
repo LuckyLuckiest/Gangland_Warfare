@@ -1,6 +1,11 @@
 package me.luckyraven.inventory;
 
 import com.cryptomorin.xseries.XEnchantment;
+import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.core.Placeholder;
+import me.luckyraven.core.TriConsumer;
+import me.luckyraven.core.color.ColorUtil;
+import me.luckyraven.core.color.MaterialType;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
 import me.luckyraven.inventory.condition.ConditionalSlotData;
 import me.luckyraven.inventory.multi.MultiInventory;
@@ -9,11 +14,6 @@ import me.luckyraven.inventory.part.ButtonTags;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.part.Slot;
 import me.luckyraven.inventory.util.InventoryUtil;
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.Placeholder;
-import me.luckyraven.util.TriConsumer;
-import me.luckyraven.util.color.ColorUtil;
-import me.luckyraven.util.color.MaterialType;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -29,7 +29,7 @@ import java.util.Map;
 public record InventoryBuilder(InventoryData inventoryData, String permission) {
 
 	public InventoryHandler createInventory(JavaPlugin plugin, Placeholder placeholder, Player player, Fill fill,
-											Fill line, ConditionEvaluator evaluator, InventoryOpener inventoryOpener) {
+	                                        Fill line, ConditionEvaluator evaluator, InventoryOpener inventoryOpener) {
 		// create a new instance
 		String     displayName = inventoryData.getDisplayName();
 		int        size        = inventoryData.getSize();
@@ -83,7 +83,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 
 			if (!item.getEnchantments().isEmpty()) {
 				newItem.addEnchantment(XEnchantment.UNBREAKING.get(), 1)
-					   .addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+				       .addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
 			}
 
 			// handle click actions, including anvil inventories
@@ -141,7 +141,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 	}
 
 	public MultiInventory createMultiInventory(JavaPlugin plugin, Placeholder placeholder, Player player,
-											   List<ItemStack> items, ButtonTags buttonTags, Fill fill) {
+	                                           List<ItemStack> items, ButtonTags buttonTags, Fill fill) {
 		if (!inventoryData.isMultiInventory()) {
 			throw new IllegalStateException("This inventory is not configured as a multi-inventory");
 		}
@@ -175,14 +175,14 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 		boolean staticItems = staticItemsMap != null && !staticItemsMap.isEmpty();
 
 		multiInventory = MultiInventoryCreation.dynamicMultiInventory(plugin, player, items, title, staticItems,
-																	  inventoryData.isBorder(), fill, buttonTags,
-																	  staticItemsMap);
+		                                                              inventoryData.isBorder(), fill, buttonTags,
+		                                                              staticItemsMap);
 
 		return multiInventory;
 	}
 
 	private void openAnvilInventory(JavaPlugin plugin, Placeholder placeholder, Player player,
-									ConditionalSlotData.AnvilAction anvilAction) {
+	                                ConditionalSlotData.AnvilAction anvilAction) {
 		String title          = placeholder.convert(player, anvilAction.title());
 		String text           = placeholder.convert(player, anvilAction.text());
 		String successCommand = anvilAction.successCommand();
@@ -243,7 +243,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 
 		if (!item.getEnchantments().isEmpty()) {
 			newItem.addEnchantment(XEnchantment.UNBREAKING.get(), 1)
-				   .addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+			       .addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
 		}
 
 		return newItem.build();

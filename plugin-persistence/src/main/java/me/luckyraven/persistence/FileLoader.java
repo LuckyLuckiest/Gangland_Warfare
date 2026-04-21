@@ -1,8 +1,8 @@
 package me.luckyraven.persistence;
 
 import lombok.CustomLog;
+import me.luckyraven.core.timer.SequenceTimer;
 import me.luckyraven.exception.PluginException;
-import me.luckyraven.util.timer.SequenceTimer;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;

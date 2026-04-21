@@ -1,7 +1,7 @@
 package me.luckyraven.hologram;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.core.listener.ListenerHandler;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

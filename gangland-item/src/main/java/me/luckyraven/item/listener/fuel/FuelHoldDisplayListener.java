@@ -1,12 +1,12 @@
 package me.luckyraven.item.listener.fuel;
 
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.core.autowire.AutowireTarget;
+import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.utilities.ActionBarManager;
 import me.luckyraven.item.fuel.Fuel;
 import me.luckyraven.item.fuel.FuelBar;
 import me.luckyraven.item.fuel.FuelContract;
-import me.luckyraven.util.autowire.AutowireTarget;
-import me.luckyraven.util.listener.ListenerHandler;
-import me.luckyraven.util.utilities.ActionBarManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

@@ -2,10 +2,10 @@ package me.luckyraven.inventory.util;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.google.common.base.Preconditions;
+import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.part.Fill;
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -58,7 +58,7 @@ public final class InventoryUtil {
 	public static void horizontalLine(InventoryHandler inventoryHandler, Fill line, int row, ItemStack... items) {
 		int rows = inventoryHandler.getSize() / 9;
 		Preconditions.checkArgument(row > 0 && row < rows + 1,
-									String.format("Rows need to be between 1 and %d inclusive", rows));
+		                            String.format("Rows need to be between 1 and %d inclusive", rows));
 
 		// always nine slots
 		int slot = (row - 1) * 9;
@@ -76,10 +76,10 @@ public final class InventoryUtil {
 	}
 
 	public static void horizontalLine(InventoryHandler inventoryHandler, Fill line, int row, Material material,
-									  boolean all) {
+	                                  boolean all) {
 		int rows = inventoryHandler.getSize() / 9;
 		Preconditions.checkArgument(row > 0 && row < rows + 1,
-									String.format("Rows need to be between 1 and %d inclusive", rows));
+		                            String.format("Rows need to be between 1 and %d inclusive", rows));
 		ItemBuilder itemBuilder = new ItemBuilder(material);
 		ItemStack   item        = itemBuilder.setDisplayName(line.name()).build();
 

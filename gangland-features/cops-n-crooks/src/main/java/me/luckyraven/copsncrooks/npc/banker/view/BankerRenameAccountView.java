@@ -8,7 +8,7 @@ import me.luckyraven.copsncrooks.npc.banker.config.BankerSettings;
 import me.luckyraven.copsncrooks.npc.banker.economy.BankerEconomyContract;
 import me.luckyraven.copsncrooks.npc.banker.economy.BankerEconomyContract.RenameInfo;
 import me.luckyraven.copsncrooks.npc.banker.message.BankerMessageContract;
-import me.luckyraven.util.configuration.SoundConfiguration;
+import me.luckyraven.core.configuration.SoundConfiguration;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;

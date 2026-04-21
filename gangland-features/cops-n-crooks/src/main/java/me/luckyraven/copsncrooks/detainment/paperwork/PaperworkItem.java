@@ -2,7 +2,7 @@ package me.luckyraven.copsncrooks.detainment.paperwork;
 
 import com.cryptomorin.xseries.XMaterial;
 import me.luckyraven.copsncrooks.detainment.message.DetainmentMessageContract;
-import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.core.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;

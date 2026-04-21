@@ -2,9 +2,9 @@ package me.luckyraven.weapon.reload;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import me.luckyraven.core.configuration.SoundConfiguration;
+import me.luckyraven.core.utilities.ActionBarManager;
 import me.luckyraven.exception.PluginException;
-import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.utilities.ActionBarManager;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.Ammunition;

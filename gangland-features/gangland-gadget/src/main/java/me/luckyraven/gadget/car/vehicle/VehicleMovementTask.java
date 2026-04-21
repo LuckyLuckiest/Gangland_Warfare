@@ -1,6 +1,7 @@
 package me.luckyraven.gadget.car.vehicle;
 
 import lombok.Getter;
+import me.luckyraven.core.utilities.ParticleUtil;
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarService;
 import me.luckyraven.gadget.car.ExhaustSide;
@@ -8,7 +9,6 @@ import me.luckyraven.gadget.car.vehicle.entity.VehicleEntity;
 import me.luckyraven.gadget.car.vehicle.packet.VehicleInputInterceptor;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.item.fuel.FuelBar;
-import me.luckyraven.util.utilities.ParticleUtil;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;

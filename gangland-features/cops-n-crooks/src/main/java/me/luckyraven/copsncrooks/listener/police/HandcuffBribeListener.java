@@ -6,7 +6,7 @@ import me.luckyraven.copsncrooks.detainment.paperwork.HandcuffBribeView;
 import me.luckyraven.copsncrooks.npc.police.CopManager;
 import me.luckyraven.copsncrooks.npc.police.npc.CopNpc;
 import me.luckyraven.copsncrooks.npc.police.state.CuffLockRegistry;
-import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.core.listener.ListenerHandler;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;

@@ -1,10 +1,10 @@
 package me.luckyraven.item;
 
+import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.gadget.car.CarKey;
 import me.luckyraven.item.money.MoneyItemUtil;
 import me.luckyraven.item.unique.UniqueItemKeys;
 import me.luckyraven.item.wearable.Wearable;
-import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponTag;
 import me.luckyraven.weapon.ammo.Ammunition;

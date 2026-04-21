@@ -1,8 +1,8 @@
 package me.luckyraven.item.refresher;
 
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.item.ItemRefresher;
-import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.WeaponTag;

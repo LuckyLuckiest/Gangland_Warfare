@@ -1,9 +1,9 @@
 package me.luckyraven.item.refresher;
 
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.item.ItemRefresher;
 import me.luckyraven.item.wearable.Wearable;
-import me.luckyraven.util.ItemBuilder;
 import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;

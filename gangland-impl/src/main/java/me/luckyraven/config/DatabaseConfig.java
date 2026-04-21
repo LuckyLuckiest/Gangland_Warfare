@@ -2,6 +2,9 @@ package me.luckyraven.config;
 
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
+import me.luckyraven.core.autowire.bean.Bean;
+import me.luckyraven.core.autowire.bean.Configuration;
+import me.luckyraven.core.autowire.bean.Phase;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.file.configuration.Settings;
@@ -9,9 +12,6 @@ import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.persistence.database.DatabaseSettingsProvider;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
-import me.luckyraven.util.autowire.bean.Bean;
-import me.luckyraven.util.autowire.bean.Configuration;
-import me.luckyraven.util.autowire.bean.Phase;
 
 /**
  * DATABASE-phase wiring. Produces the {@link GanglandDatabase} (driven by {@code Settings.getDatabaseType()}, hence the

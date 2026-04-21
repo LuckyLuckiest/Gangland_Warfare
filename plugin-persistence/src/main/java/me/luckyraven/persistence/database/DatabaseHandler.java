@@ -4,10 +4,10 @@ import lombok.AccessLevel;
 import lombok.CustomLog;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.core.UnhandledError;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.database.type.MySQL;
 import me.luckyraven.persistence.database.type.SQLite;
-import me.luckyraven.util.UnhandledError;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -85,8 +85,8 @@ public abstract class DatabaseHandler {
 				} catch (SQLException | IOException exception) {
 					this.database = null;
 					UnhandledError inst = exception instanceof SQLException ?
-										  UnhandledError.SQL_ERROR :
-										  UnhandledError.FILE_CREATE_ERROR;
+					                      UnhandledError.SQL_ERROR :
+					                      UnhandledError.FILE_CREATE_ERROR;
 
 					log.warn("{}: {}", inst, exception.getMessage());
 
@@ -115,8 +115,8 @@ public abstract class DatabaseHandler {
 
 	public String getSchemaName() {
 		return getSchema().lastIndexOf(File.separator) != -1 ?
-			   getSchema().substring(getSchema().lastIndexOf(File.separator) + 1) :
-			   getSchema();
+		       getSchema().substring(getSchema().lastIndexOf(File.separator) + 1) :
+		       getSchema();
 	}
 
 	private void useSQLite(String schema) {

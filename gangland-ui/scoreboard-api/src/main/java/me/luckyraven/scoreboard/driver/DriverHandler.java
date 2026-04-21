@@ -4,8 +4,8 @@ import com.viaversion.viaversion.api.ViaAPI;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import fr.mrmicky.fastboard.FastBoard;
 import lombok.Getter;
+import me.luckyraven.core.Placeholder;
 import me.luckyraven.scoreboard.part.Line;
-import me.luckyraven.util.Placeholder;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;

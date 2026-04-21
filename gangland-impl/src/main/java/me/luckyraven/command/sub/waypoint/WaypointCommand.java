@@ -3,6 +3,8 @@ package me.luckyraven.command.sub.waypoint;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.core.autowire.bean.Qualifier;
+import me.luckyraven.core.command.CommandHandler;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
@@ -11,8 +13,6 @@ import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.util.GanglandChatUtil;
-import me.luckyraven.util.autowire.bean.Qualifier;
-import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 

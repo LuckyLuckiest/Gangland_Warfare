@@ -1,6 +1,7 @@
 package me.luckyraven.file.configuration.inventory.itemsource;
 
 import com.cryptomorin.xseries.XMaterial;
+import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangAlliance;
 import me.luckyraven.data.account.gang.GangManager;
@@ -9,7 +10,6 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.inventory.multi.ItemSourceProvider;
-import me.luckyraven.util.ItemBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -87,7 +87,7 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 			List<String> data = new ArrayList<>();
 			data.add("&7ID:&e " + ally.getId());
 			data.add(String.format("&7Members:&a %d&7/&e%d", ally.getOnlineMembers(userManager).size(),
-								   ally.getMembers().size()));
+			                       ally.getMembers().size()));
 			data.add("&7Created:&e " + ally.getDateCreatedString());
 			data.add("");
 			data.add("&eClick to view details");

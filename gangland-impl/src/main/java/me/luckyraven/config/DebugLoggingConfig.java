@@ -1,10 +1,10 @@
 package me.luckyraven.config;
 
+import me.luckyraven.core.autowire.bean.Bean;
+import me.luckyraven.core.autowire.bean.Configuration;
+import me.luckyraven.core.autowire.bean.Phase;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.logging.DebugLoggingInitializer;
-import me.luckyraven.util.autowire.bean.Bean;
-import me.luckyraven.util.autowire.bean.Configuration;
-import me.luckyraven.util.autowire.bean.Phase;
 
 /**
  * Bean wiring for {@link DebugLoggingInitializer}. The {@code Settings} parameter is unused in the body; its only

@@ -1,8 +1,8 @@
 package me.luckyraven.command.argument.types;
 
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.util.TriConsumer;
-import me.luckyraven.util.datastructure.Tree;
+import me.luckyraven.core.TriConsumer;
+import me.luckyraven.core.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -23,38 +23,38 @@ public class OptionalArgument extends Argument {
 	}
 
 	public OptionalArgument(JavaPlugin plugin, Tree<Argument> tree,
-							TriConsumer<Argument, CommandSender, String[]> action) {
+	                        TriConsumer<Argument, CommandSender, String[]> action) {
 		this(plugin, tree, action, null);
 	}
 
 	public OptionalArgument(JavaPlugin plugin, Tree<Argument> tree,
-							TriConsumer<Argument, CommandSender, String[]> action,
-							Function<CommandSender, List<String>> customStrings) {
+	                        TriConsumer<Argument, CommandSender, String[]> action,
+	                        Function<CommandSender, List<String>> customStrings) {
 		this(plugin, tree, action, customStrings, null);
 	}
 
 	public OptionalArgument(JavaPlugin plugin, Tree<Argument> tree,
-							TriConsumer<Argument, CommandSender, String[]> action,
-							Function<CommandSender, List<String>> customStrings,
-							Function<CommandSender, Map<String, String>> displayToValue) {
+	                        TriConsumer<Argument, CommandSender, String[]> action,
+	                        Function<CommandSender, List<String>> customStrings,
+	                        Function<CommandSender, Map<String, String>> displayToValue) {
 		this(plugin, new String[0], tree, action, customStrings, displayToValue);
 	}
 
 	public OptionalArgument(JavaPlugin plugin, String[] possibleArguments, Tree<Argument> tree,
-							TriConsumer<Argument, CommandSender, String[]> action) {
+	                        TriConsumer<Argument, CommandSender, String[]> action) {
 		this(plugin, possibleArguments, tree, action, null);
 	}
 
 	public OptionalArgument(JavaPlugin plugin, String[] possibleArguments, Tree<Argument> tree,
-							TriConsumer<Argument, CommandSender, String[]> action,
-							Function<CommandSender, List<String>> customStrings) {
+	                        TriConsumer<Argument, CommandSender, String[]> action,
+	                        Function<CommandSender, List<String>> customStrings) {
 		this(plugin, possibleArguments, tree, action, customStrings, null);
 	}
 
 	public OptionalArgument(JavaPlugin plugin, String[] possibleArguments, Tree<Argument> tree,
-							TriConsumer<Argument, CommandSender, String[]> action,
-							Function<CommandSender, List<String>> customStrings,
-							Function<CommandSender, Map<String, String>> displayToValue) {
+	                        TriConsumer<Argument, CommandSender, String[]> action,
+	                        Function<CommandSender, List<String>> customStrings,
+	                        Function<CommandSender, Map<String, String>> displayToValue) {
 		super(plugin, argumentsWithOptional(possibleArguments), tree, action);
 
 		this.customStrings  = customStrings;

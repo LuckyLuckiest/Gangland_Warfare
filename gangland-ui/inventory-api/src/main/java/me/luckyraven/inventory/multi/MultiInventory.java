@@ -3,13 +3,13 @@ package me.luckyraven.inventory.multi;
 import com.google.common.base.Preconditions;
 import lombok.AccessLevel;
 import lombok.Getter;
+import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.core.TriConsumer;
+import me.luckyraven.core.datastructure.LinkedList;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.part.PageConfig;
 import me.luckyraven.inventory.util.InventoryUtil;
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.TriConsumer;
-import me.luckyraven.util.datastructure.LinkedList;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -43,8 +43,8 @@ public class MultiInventory extends InventoryHandler {
 	}
 
 	public void updateItems(JavaPlugin plugin, List<ItemStack> items, Player player, boolean staticItemsAllowed,
-							Fill fill,
-							@Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
+	                        Fill fill,
+	                        @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
 		if (inventories.isEmpty()) {
 			return; // No inventories to update
 		}
@@ -73,7 +73,7 @@ public class MultiInventory extends InventoryHandler {
 				inv = new InventoryHandler(firstPage.getDisplayTitle(), size, player, namespacedKey);
 
 				addItems(inv, items, startIndex, Math.min((i + 1) * cfg.perPage(), items.size()), staticItemsAllowed,
-						 fill, staticItems);
+				         fill, staticItems);
 				addPage(inv);
 			} else {
 				// If there's already an inventory for this page, update its items and title
@@ -150,7 +150,7 @@ public class MultiInventory extends InventoryHandler {
 	}
 
 	void addItems(InventoryHandler inv, List<ItemStack> items, int startIndex, int endIndex, boolean staticItemsAllowed,
-				  Fill line, @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
+	              Fill line, @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
 		if (staticItemsAllowed) {
 			Preconditions.checkNotNull(staticItems, "No static items set");
 			Preconditions.checkArgument(staticItems.size() <= 6, "Can't add more items than max rows");
@@ -173,7 +173,7 @@ public class MultiInventory extends InventoryHandler {
 	}
 
 	private void verticalLine(InventoryHandler inventoryHandler, int column, Fill line,
-							  Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
+	                          Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
 		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
 
 		// from 1-6

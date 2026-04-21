@@ -4,6 +4,8 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.copsncrooks.npc.banker.tier.BankTierRegistry;
+import me.luckyraven.core.autowire.bean.Qualifier;
+import me.luckyraven.core.command.CommandHandler;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.database.GanglandDatabase;
@@ -11,8 +13,6 @@ import me.luckyraven.economy.bank.Bank;
 import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.autowire.bean.Qualifier;
-import me.luckyraven.util.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 

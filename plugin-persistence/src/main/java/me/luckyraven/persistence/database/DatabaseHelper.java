@@ -2,7 +2,7 @@ package me.luckyraven.persistence.database;
 
 import lombok.CustomLog;
 import lombok.Getter;
-import me.luckyraven.util.UnhandledError;
+import me.luckyraven.core.UnhandledError;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -92,7 +92,7 @@ public class DatabaseHelper {
 			}
 		} catch (SQLException exception) {
 			log.warn("{}: Failed to rollback database connection, {}", UnhandledError.SQL_ERROR,
-					 exception.getMessage());
+			         exception.getMessage());
 		}
 	}
 

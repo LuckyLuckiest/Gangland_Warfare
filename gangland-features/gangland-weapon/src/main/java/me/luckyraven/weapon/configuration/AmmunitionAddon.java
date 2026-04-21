@@ -2,12 +2,11 @@ package me.luckyraven.weapon.configuration;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
-
+import me.luckyraven.core.Placeholder;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileInitializer;
 import me.luckyraven.persistence.FileManager;
-import me.luckyraven.util.Placeholder;
 import me.luckyraven.weapon.ammo.Ammunition;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import org.bukkit.configuration.ConfigurationSection;

@@ -1,15 +1,15 @@
 package me.luckyraven.gadget.jetpack;
 
+import me.luckyraven.core.configuration.SoundConfiguration;
+import me.luckyraven.core.utilities.ActionBarManager;
+import me.luckyraven.core.utilities.ChatUtil;
+import me.luckyraven.core.utilities.ParticleUtil;
+import me.luckyraven.core.utilities.PlayerUtil;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.item.fuel.FuelBar;
 import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.item.wearable.WearableTrait;
-import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.utilities.ActionBarManager;
-import me.luckyraven.util.utilities.ChatUtil;
-import me.luckyraven.util.utilities.ParticleUtil;
-import me.luckyraven.util.utilities.PlayerUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;

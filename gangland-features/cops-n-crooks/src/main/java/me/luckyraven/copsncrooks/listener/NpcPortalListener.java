@@ -3,7 +3,7 @@ package me.luckyraven.copsncrooks.listener;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.npc.entity.EntityMark;
 import me.luckyraven.copsncrooks.npc.entity.EntityMarkManager;
-import me.luckyraven.util.listener.ListenerHandler;
+import me.luckyraven.core.listener.ListenerHandler;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

@@ -2,11 +2,11 @@ package me.luckyraven.item.wearable;
 
 import lombok.Builder;
 import lombok.Getter;
+import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.core.Placeholder;
+import me.luckyraven.core.configuration.SoundConfiguration;
+import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.item.fuel.FuelKey;
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.Placeholder;
-import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;

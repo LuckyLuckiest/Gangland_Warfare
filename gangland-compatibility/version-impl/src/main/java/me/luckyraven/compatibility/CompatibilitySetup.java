@@ -1,7 +1,7 @@
 package me.luckyraven.compatibility;
 
 import lombok.CustomLog;
-import me.luckyraven.util.utilities.ReflectionUtil;
+import me.luckyraven.core.utilities.ReflectionUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;

@@ -2,10 +2,10 @@ package me.luckyraven.shop.handler;
 
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.shop.ShopRegistry;
 import me.luckyraven.shop.event.ShopEditedEvent;
 import me.luckyraven.shop.message.ShopMessageContract;
-import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 

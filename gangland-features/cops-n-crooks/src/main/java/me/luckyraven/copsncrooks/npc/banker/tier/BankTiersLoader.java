@@ -1,6 +1,7 @@
 package me.luckyraven.copsncrooks.npc.banker.tier;
 
 import lombok.CustomLog;
+import me.luckyraven.core.autowire.bean.BeanLifecycle;
 import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.FileHandler;
@@ -9,7 +10,6 @@ import me.luckyraven.persistence.config.ConfigReport;
 import me.luckyraven.persistence.config.FileHandlerReader;
 import me.luckyraven.persistence.config.MappingNode;
 import me.luckyraven.persistence.config.NodeReader;
-import me.luckyraven.util.autowire.bean.BeanLifecycle;
 
 import java.io.IOException;
 import java.math.BigDecimal;

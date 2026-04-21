@@ -2,14 +2,13 @@ package me.luckyraven.gadget.car.config;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
-
+import me.luckyraven.core.Placeholder;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarManager;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileInitializer;
 import me.luckyraven.persistence.FileManager;
-import me.luckyraven.util.Placeholder;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;

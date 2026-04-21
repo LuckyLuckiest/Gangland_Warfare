@@ -2,11 +2,11 @@ package me.luckyraven.shop.view;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.core.configuration.SoundConfiguration;
+import me.luckyraven.core.utilities.ChatUtil;
+import me.luckyraven.core.utilities.NumberUtil;
 import me.luckyraven.inventory.InventoryHandler;
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.utilities.ChatUtil;
-import me.luckyraven.util.utilities.NumberUtil;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;

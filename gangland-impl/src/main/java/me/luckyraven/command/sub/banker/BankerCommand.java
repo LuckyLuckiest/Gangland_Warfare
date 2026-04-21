@@ -4,7 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.copsncrooks.npc.banker.BankerManager;
-import me.luckyraven.util.command.CommandHandler;
+import me.luckyraven.core.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 
 import java.util.Map;

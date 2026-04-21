@@ -3,8 +3,8 @@ package me.luckyraven.copsncrooks.detainment;
 import lombok.Getter;
 import me.luckyraven.copsncrooks.jail.Jail;
 import me.luckyraven.copsncrooks.jail.JailRegistry;
+import me.luckyraven.core.autowire.bean.BeanLifecycle;
 import me.luckyraven.persistence.repository.IRepository;
-import me.luckyraven.util.autowire.bean.BeanLifecycle;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;

@@ -2,8 +2,8 @@ package me.luckyraven.util;
 
 import lombok.CustomLog;
 import lombok.Getter;
+import me.luckyraven.core.timer.RepeatingTimer;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;

@@ -1,6 +1,6 @@
 package me.luckyraven.persistence.config;
 
-import me.luckyraven.util.datastructure.SpellChecker;
+import me.luckyraven.core.datastructure.SpellChecker;
 
 import java.util.List;
 import java.util.Map;

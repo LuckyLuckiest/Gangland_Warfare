@@ -1,6 +1,8 @@
 package me.luckyraven.data.economy;
 
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.core.utilities.ActionBarManager;
+import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.placeholder.PlaceholderService;
@@ -8,8 +10,6 @@ import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyDepositService;
-import me.luckyraven.util.utilities.ActionBarManager;
-import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 

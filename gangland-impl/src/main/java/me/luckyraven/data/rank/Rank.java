@@ -2,7 +2,7 @@ package me.luckyraven.data.rank;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.util.datastructure.Tree;
+import me.luckyraven.core.datastructure.Tree;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;

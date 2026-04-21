@@ -1,8 +1,8 @@
 package me.luckyraven.weapon.types.melee;
 
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
-import me.luckyraven.util.configuration.SoundConfiguration;
-import me.luckyraven.util.utilities.ParticleUtil;
+import me.luckyraven.core.configuration.SoundConfiguration;
+import me.luckyraven.core.utilities.ParticleUtil;
 import me.luckyraven.weapon.dto.MeleeData;
 import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
 import me.luckyraven.weapon.modifiers.action.ArmorPiercingModifier;

@@ -4,7 +4,7 @@ import me.luckyraven.copsncrooks.npc.AbstractNpc;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianState;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.copsncrooks.npc.civilian.state.CivilianBehavior;
-import me.luckyraven.util.downed.DownedPlayerRegistry;
+import me.luckyraven.core.downed.DownedPlayerRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;

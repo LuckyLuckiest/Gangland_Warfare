@@ -2,8 +2,8 @@ package me.luckyraven.file.configuration.shop;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.shop.message.ShopDisplayResolver;
-import me.luckyraven.util.ItemBuilder;
-import me.luckyraven.util.utilities.ChatUtil;
+import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.WeaponTag;

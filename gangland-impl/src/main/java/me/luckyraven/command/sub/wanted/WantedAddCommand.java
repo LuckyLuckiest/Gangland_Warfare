@@ -5,11 +5,11 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.copsncrooks.wanted.Wanted;
+import me.luckyraven.core.TriConsumer;
+import me.luckyraven.core.datastructure.Tree;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
-import me.luckyraven.util.TriConsumer;
-import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -48,7 +48,7 @@ class WantedAddCommand extends SubArgument {
 
 			String increased = Messages.WANTED_INCREASED.toString();
 			String replace = increased.replace("%amount%", String.valueOf(amount))
-									  .replace("%stars%", wanted.getLevelStars());
+			                          .replace("%stars%", wanted.getLevelStars());
 
 			sender.sendMessage(replace);
 		};
@@ -75,13 +75,13 @@ class WantedAddCommand extends SubArgument {
 
 			int realAmount = amount;
 			if (wanted.getLevel() + realAmount > wanted.getMaxLevel()) realAmount = wanted.getMaxLevel() -
-																					wanted.getLevel();
+			                                                                        wanted.getLevel();
 			int value = Math.min(wanted.getMaxLevel(), wanted.getLevel() + amount);
 			wanted.setLevel(value);
 
 			String increased = Messages.WANTED_INCREASED.toString();
 			String replace = increased.replace("%amount%", String.valueOf(realAmount))
-									  .replace("%stars%", wanted.getLevelStars());
+			                          .replace("%stars%", wanted.getLevelStars());
 
 			sender.sendMessage(replace);
 		}, sender -> List.of("<amount>"));

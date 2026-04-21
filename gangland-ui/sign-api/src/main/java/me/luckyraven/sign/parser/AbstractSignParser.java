@@ -1,8 +1,8 @@
 package me.luckyraven.sign.parser;
 
+import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.validation.SignValidationException;
-import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.ChatColor;
 
 public abstract class AbstractSignParser implements SignParser {

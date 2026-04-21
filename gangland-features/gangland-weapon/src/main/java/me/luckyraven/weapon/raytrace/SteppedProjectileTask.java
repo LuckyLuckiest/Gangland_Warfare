@@ -1,7 +1,7 @@
 package me.luckyraven.weapon.raytrace;
 
 import com.cryptomorin.xseries.particles.XParticle;
-import me.luckyraven.util.timer.RepeatingTimer;
+import me.luckyraven.core.timer.RepeatingTimer;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;

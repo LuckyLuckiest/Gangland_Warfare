@@ -1,6 +1,6 @@
 package me.luckyraven.item.money;
 
-import me.luckyraven.util.ItemBuilder;
+import me.luckyraven.core.ItemBuilder;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
