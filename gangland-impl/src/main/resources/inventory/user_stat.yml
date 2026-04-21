@@ -5,7 +5,6 @@ Information:
    Configuration:
       Fill: true
       Border: true
-      Static_Items: false
    Permission: "gangland.inventory.users_stat"
    Multi:
       Item_Source: "gang_members"

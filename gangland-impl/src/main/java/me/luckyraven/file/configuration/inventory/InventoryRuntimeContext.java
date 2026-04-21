@@ -103,6 +103,11 @@ public class InventoryRuntimeContext {
 		String permission  = information.get("Permission").asString().orNull();
 		String type        = information.get("Type").asString().required().orDefault("single-inventory");
 
+		// Information.Multi is consumed via the legacy Bukkit path inside
+		// InventoryParser.configureMultiInventory (Multi.Item_Source / Multi.Per_Page).
+		// Touch it here so the unknown-key sweep knows it's consumed.
+		information.get("Multi");
+
 		MappingNode openSection = information.get("Open").asMapping().orNull();
 		NodeReader  open        = openSection != null ? NodeReader.of(openSection, report) : null;
 
@@ -134,6 +139,9 @@ public class InventoryRuntimeContext {
 		// Positional errors for the top-level Information/Configuration sections still surface via `report`.
 		// Touch "Slots" on the root reader so the unknown-key sweep knows it's consumed (via the Bukkit path below).
 		root.get("Slots");
+		// Static_Items is consumed via the legacy Bukkit path inside
+		// InventoryParser.configureMultiInventory. Touch here for the sweep.
+		root.get("Static_Items");
 		List<Slot> slots        = new ArrayList<>();
 		var        slotsSection = config.getConfigurationSection("Slots");
 		if (slotsSection != null) {
