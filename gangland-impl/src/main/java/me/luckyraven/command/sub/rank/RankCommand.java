@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.util.command.CommandHandler;
@@ -16,14 +17,17 @@ import java.util.Map;
 @CommandHandler
 public final class RankCommand extends Command {
 
-	private final RankManager      rankManager;
-	private final GanglandDatabase ganglandDatabase;
+	private final RankManager       rankManager;
+	private final GanglandDatabase  ganglandDatabase;
+	private final PermissionManager permissionManager;
 
-	public RankCommand(Gangland gangland, RankManager rankManager, GanglandDatabase ganglandDatabase) {
+	public RankCommand(Gangland gangland, RankManager rankManager, GanglandDatabase ganglandDatabase,
+	                   PermissionManager permissionManager) {
 		super(gangland, "rank", false);
 
-		this.rankManager      = rankManager;
-		this.ganglandDatabase = ganglandDatabase;
+		this.rankManager       = rankManager;
+		this.ganglandDatabase  = ganglandDatabase;
+		this.permissionManager = permissionManager;
 
 		List<CommandInformation> list = getCommands().entrySet()
 				.stream()
@@ -44,8 +48,9 @@ public final class RankCommand extends Command {
 		Argument create = new RankCreateCommand(getGangland(), getArgumentTree(), getArgument(), rankManager);
 		Argument delete = new RankDeleteCommand(getGangland(), getArgumentTree(), getArgument(), rankManager,
 		                                        ganglandDatabase);
-		Argument list         = new RankListCommand(getGangland(), getArgumentTree(), getArgument(), rankManager);
-		Argument permission   = new RankPermissionCommand(getGangland(), getArgumentTree(), getArgument(), rankManager);
+		Argument list = new RankListCommand(getGangland(), getArgumentTree(), getArgument(), rankManager);
+		Argument permission = new RankPermissionCommand(getGangland(), getArgumentTree(), getArgument(), rankManager,
+		                                                permissionManager);
 		Argument info         = new RankInfoCommand(getGangland(), getArgumentTree(), getArgument(), rankManager);
 		Argument parent       = new RankParentCommand(getGangland(), getArgumentTree(), getArgument(), rankManager);
 		Argument traverseTree = new RankTraverseCommand(getGangland(), getArgumentTree(), getArgument(), rankManager);

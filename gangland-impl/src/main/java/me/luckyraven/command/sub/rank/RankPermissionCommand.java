@@ -3,8 +3,7 @@ package me.luckyraven.command.sub.rank;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
-import me.luckyraven.command.argument.types.OptionalArgument;
-import me.luckyraven.data.rank.Rank;
+import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
@@ -12,23 +11,26 @@ import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 
+import java.util.ArrayList;
 import java.util.List;
 
 class RankPermissionCommand extends SubArgument {
 
-	private final Gangland       gangland;
-	private final Tree<Argument> tree;
-	private final RankManager    rankManager;
+	private final Gangland          gangland;
+	private final Tree<Argument>    tree;
+	private final RankManager       rankManager;
+	private final PermissionManager permissionManager;
 
-	protected RankPermissionCommand(Gangland gangland, Tree<Argument> tree, Argument parent, RankManager rankManager) {
+	protected RankPermissionCommand(Gangland gangland, Tree<Argument> tree, Argument parent, RankManager rankManager,
+	                                PermissionManager permissionManager) {
 		super(gangland, new String[]{"permission", "perm"}, tree, parent);
 
-		this.gangland = gangland;
-		this.tree     = tree;
+		this.gangland          = gangland;
+		this.tree              = tree;
+		this.rankManager       = rankManager;
+		this.permissionManager = permissionManager;
 
-		this.rankManager = rankManager;
-
-		rankPermission();
+		initializeArguments();
 	}
 
 	@Override
@@ -38,68 +40,14 @@ class RankPermissionCommand extends SubArgument {
 		};
 	}
 
-	private void rankPermission() {
-		Argument perm = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			// check if rank exists
-			Rank rank = rankManager.get(args[3]);
+	private void initializeArguments() {
+		Argument addArg    = new RankPermissionAddCommand(gangland, tree, this, rankManager, permissionManager);
+		Argument removeArg = new RankPermissionRemoveCommand(gangland, tree, this, rankManager, permissionManager);
 
-			if (rank == null) {
-				sender.sendMessage(Messages.INVALID_RANK.toString());
-				return;
-			}
+		List<Argument> arguments = new ArrayList<>();
+		arguments.add(addArg);
+		arguments.add(removeArg);
 
-			// get the list
-			String permString = args[4];
-			String message    = "";
-			switch (args[2].toLowerCase()) {
-				case "add" -> {
-					if (rank.contains(permString)) {
-						String string  = Messages.RANK_PERMISSION_EXISTS.toString();
-						String replace = string.replace("%rank%", rank.getName()).replace("%permission%", permString);
-
-						sender.sendMessage(replace);
-						return;
-					}
-
-					rankManager.addPermission(rank, permString);
-
-					String string = Messages.RANK_PERMISSION_ADD.toString();
-					message = string.replace("%rank%", rank.getName()).replace("%permission%", permString);
-				}
-				case "remove" -> {
-					if (!rank.contains(permString)) {
-						sender.sendMessage(Messages.INVALID_RANK_PERMISSION.toString());
-						return;
-					}
-
-					rankManager.removePermission(rank, permString);
-
-					String string = Messages.RANK_PERMISSION_REMOVE.toString();
-					message = string.replace("%rank%", rank.getName()).replace("%permission%", permString);
-				}
-			}
-
-			sender.sendMessage(message);
-		}, sender -> List.of("<permission>"));
-
-		Argument permName = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<permission>"));
-		}, sender -> List.of("<rank>"));
-
-		permName.addSubArgument(perm);
-
-		Argument addPerm = new Argument(gangland, "add", tree, (argument, sender, args) -> {
-			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
-		}, this.getPermission() + ".add");
-
-		Argument removePerm = new Argument(gangland, "remove", tree, (argument, sender, args) -> {
-			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
-		}, this.getPermission() + ".remove");
-
-		addPerm.addSubArgument(permName);
-		removePerm.addSubArgument(permName);
-
-		this.addSubArgument(addPerm);
-		this.addSubArgument(removePerm);
+		this.addAllSubArguments(arguments);
 	}
 }
