@@ -112,6 +112,8 @@ public enum Messages {
 	PLAYER_IN_GANG("Commands.Gang.Available.Player_In_Gang", Type.COMMAND),
 	TARGET_IN_GANG("Commands.Gang.Available.Target_In_Gang", Type.COMMAND),
 	GANG_BALANCE("Commands.Gang.Balance", Type.COMMAND),
+	GANG_MEMBERS_HEADER("Commands.Gang.Members.Header", Type.COMMAND),
+	GANG_MEMBERS_ENTRY("Commands.Gang.Members.Entry", Type.OTHER),
 	GANG_MONEY_DEPOSIT("Commands.Gang.Money.Add", Type.COMMAND),
 	GANG_MONEY_WITHDRAW("Commands.Gang.Money.Take", Type.COMMAND),
 	GANG_INVITE_PLAYER("Commands.Gang.Invite.Player", Type.COMMAND),
@@ -157,6 +159,9 @@ public enum Messages {
 	RANK_PERMISSION_EXISTS("Commands.Rank.Permission.Exists", Type.COMMAND),
 	RANK_VAULT_GROUP_SET("Commands.Rank.VaultGroup.Set", Type.COMMAND),
 	RANK_VAULT_GROUP_CLEARED("Commands.Rank.VaultGroup.Cleared", Type.COMMAND),
+	RANK_VAULT_GROUP_INVALID("Commands.Rank.VaultGroup.Invalid", Type.ERROR),
+	RANK_VAULT_GROUP_CURRENT("Commands.Rank.VaultGroup.Current", Type.COMMAND),
+	RANK_VAULT_GROUP_NONE("Commands.Rank.VaultGroup.None", Type.COMMAND),
 	VAULT_PERMISSION_NOT_AVAILABLE("Errors.Vault.Permission_Not_Available", Type.ERROR),
 
 	// commands - bounty

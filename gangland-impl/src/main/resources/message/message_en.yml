@@ -165,6 +165,9 @@ Commands:
          Player_In_Gang: "You already have a gang."
          Target_In_Gang: "&6%player%&7 already in a gang."
       Balance: "Gang balance is: &b%money_symbol%%balance%"
+      Members:
+         Header: "&6&l%gang%&r &7members &8(&e%count%&8):"
+         Entry: " &8- &b%player% &8[&a%rank%&8] &7%status%"
       Invite:
          Player: "You have invited &6%player%&7 to the gang."
          Target: "You were invited to join &8[&a%gang%&8]&7."
@@ -216,7 +219,7 @@ Commands:
          Primary: "All the ranks:"
          Secondary: "%ranks%"
       Info:
-         Primary: "&8[&a%rank%&8]&7 information%n%&7ID&8: &b%id%%n%&7Parent&8: &b%parent%"
+         Primary: "&8[&a%rank%&8]&7 information%n%&7ID&8: &b%id%%n%&7Parent&8: &b%parent%%n%&7Vault group&8: &b%vault_group%"
          Secondary: "&7Permissions&8:%n%&7%permissions%"
       Parent:
          Add: "Added &8[&e%parent%&8]&7 to &8[&a%rank%&8]&7."
@@ -224,6 +227,9 @@ Commands:
       VaultGroup:
          Set: "Linked &8[&a%rank%&8]&7 to Vault group &8[&e%group%&8]&7."
          Cleared: "Removed the Vault group link from &8[&a%rank%&8]&7."
+         Invalid: "&cNo Vault group named &8[&e%group%&c]&c exists."
+         Current: "&8[&a%rank%&8]&7 is linked to Vault group &8[&e%group%&8]&7."
+         None: "&8[&a%rank%&8]&7 is not linked to any Vault group."
    Bounty:
       Current: "Bounty &c%money_symbol%%bounty%"
       Bounty_Set: "You have a bounty on your head!"

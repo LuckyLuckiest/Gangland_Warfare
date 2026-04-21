@@ -199,6 +199,10 @@
 		"usage": "/glw gang balance",
 		"description": "Shows gang balance."
 	},
+	"gang_members": {
+		"usage": "/glw gang members",
+		"description": "Lists every gang member and their current rank."
+	},
 	"gang_change_name": {
 		"usage": "/glw gang name <name>",
 		"description": "Changes the current gang name."

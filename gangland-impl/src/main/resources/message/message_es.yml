@@ -162,6 +162,9 @@ Commands:
          Player_In_Gang: "Ya tienes una banda."
          Target_In_Gang: "&6%player%&7 ya está en una banda."
       Balance: "El saldo de la banda es: &b%money_symbol%%balance%"
+      Members:
+         Header: "&6&l%gang%&r &7miembros &8(&e%count%&8):"
+         Entry: " &8- &b%player% &8[&a%rank%&8] &7%status%"
       Invite:
          Player: "Has invitado a &6%player%&7 a la banda."
          Target: "Fuiste invitado a unirte a &8[&a%gang%&8]&7."
@@ -213,7 +216,7 @@ Commands:
          Primary: "Todos los rangos:"
          Secondary: "%ranks%"
       Info:
-         Primary: "&8[&a%rank%&8]&7 información%n%&7ID&8: &b%id%%n%&7Padre&8: &b%parent%"
+         Primary: "&8[&a%rank%&8]&7 información%n%&7ID&8: &b%id%%n%&7Padre&8: &b%parent%%n%&7Grupo de Vault&8: &b%vault_group%"
          Secondary: "&7Permisos&8:%n%&7%permissions%"
       Parent:
          Add: "Se añadió &8[&e%parent%&8]&7 a &8[&a%rank%&8]&7."
@@ -221,6 +224,9 @@ Commands:
       VaultGroup:
          Set: "Se vinculó &8[&a%rank%&8]&7 al grupo de Vault &8[&e%group%&8]&7."
          Cleared: "Se eliminó el vínculo de grupo de Vault de &8[&a%rank%&8]&7."
+         Invalid: "&cNo existe ningún grupo de Vault llamado &8[&e%group%&c]&c."
+         Current: "&8[&a%rank%&8]&7 está vinculado al grupo de Vault &8[&e%group%&8]&7."
+         None: "&8[&a%rank%&8]&7 no está vinculado a ningún grupo de Vault."
    Bounty:
       Current: "Recompensa &c%money_symbol%%bounty%"
       Bounty_Set: "¡Hay una recompensa sobre tu cabeza!"

@@ -113,6 +113,8 @@ public final class GangCommand extends Command {
 		                                            memberManager, gangManager);
 		Argument balance = new GangBalanceCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                          gangManager);
+		Argument members = new GangMembersCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                          gangManager);
 		Argument name = new GangRenameCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                      gangManager);
 		Argument description = new GangDescriptionCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
@@ -142,6 +144,7 @@ public final class GangCommand extends Command {
 		arguments.add(deposit);
 		arguments.add(withdraw);
 		arguments.add(balance);
+		arguments.add(members);
 
 		arguments.add(name);
 		arguments.add(description);
