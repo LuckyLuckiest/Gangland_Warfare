@@ -1,15 +1,15 @@
 package me.luckyraven.data.permission;
 
 import lombok.CustomLog;
+import lombok.Getter;
 
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @CustomLog
 public class PermissionManager {
 
+	@Getter
 	private final PermissionHandler permissionHandler;
 	private final Set<String>       permissions;
 
@@ -51,6 +51,62 @@ public class PermissionManager {
 
 	public int size() {
 		return permissions.size();
+	}
+
+	/**
+	 * Resolves a raw query — with or without the {@code gangland.} prefix — to its canonical form.
+	 */
+	public String resolve(String permission) {
+		return permissionHandler.permissionRefactor(permission);
+	}
+
+	/**
+	 * Returns every tracked permission whose canonical form starts with {@code gangland.<prefix>.} (or matches
+	 * {@code gangland.<prefix>} exactly).
+	 */
+	public List<String> findByPrefix(String prefix) {
+		String full   = permissionHandler.permissionRefactor(prefix);
+		String dotted = full + ".";
+
+		return permissions.stream()
+				.filter(p -> p.equals(full) || p.startsWith(dotted))
+				.sorted(String::compareTo)
+				.toList();
+	}
+
+	/**
+	 * Substring search across every tracked permission node. Case-insensitive.
+	 */
+	public List<String> search(String query) {
+		String needle = query.toLowerCase();
+
+		return permissions.stream()
+				.filter(p -> p.toLowerCase().contains(needle))
+				.sorted(String::compareTo)
+				.toList();
+	}
+
+	/**
+	 * Returns a sorted map of category prefix (the segment immediately after {@code gangland.}) to the count of tracked
+	 * nodes under it. Permissions that don't follow the {@code gangland.<category>...} shape are bucketed under their
+	 * first segment unchanged.
+	 */
+	public Map<String, Integer> getCategoryCounts() {
+		Map<String, Integer> counts = new TreeMap<>();
+
+		for (String permission : permissions) {
+			String category = extractCategory(permission);
+			counts.merge(category, 1, Integer::sum);
+		}
+
+		return new LinkedHashMap<>(counts);
+	}
+
+	private String extractCategory(String permission) {
+		String[] parts = permission.split("\\.");
+		if (parts.length >= 2 && parts[0].equalsIgnoreCase("gangland")) return parts[1];
+
+		return parts[0];
 	}
 
 }

@@ -786,5 +786,21 @@
 	"banker_remove": {
 		"usage": "/glw banker remove",
 		"description": "Removes the banker NPC in your crosshair (within 5 blocks)."
+	},
+	"permissions": {
+		"usage": "/glw permissions",
+		"description": "Shows an overview of every permission category registered by the plugin."
+	},
+	"permissions_search": {
+		"usage": "/glw permissions <query> [page]",
+		"description": "Lists permissions matching <query> (category prefix or substring), paginated."
+	},
+	"permissions_categories": {
+		"usage": "/glw permissions categories",
+		"description": "Lists every distinct permission category prefix with its node count."
+	},
+	"permissions_check": {
+		"usage": "/glw permissions check <permission>",
+		"description": "Checks whether a permission is registered with the plugin and Bukkit."
 	}
 }

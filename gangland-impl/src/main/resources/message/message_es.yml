@@ -317,6 +317,11 @@ Commands:
       Spawn_Failed: "&cError al generar civil. Verifica que el tipo &e%type%&c sea válido y se encontró una ubicación."
       Spawner_Type_Set: "&aGenerador de civiles &e%type%&a colocado en tu ubicación."
       Spawner_Group_Set: "&aGenerador de grupo &e%group%&a colocado en tu ubicación."
+   Permissions:
+      Overview_Header: "&7Permisos registrados: &b%total%&7 en &b%categories%&7 categorías. Usa &e/glw permissions <categoría>&7 para filtrar."
+      Overview_Category: "&7- &b%category% &8(&a%count%&8)"
+      Registered: "&aRegistrado &8» &b%permission%"
+      Drift: "&eDesincronizado &8» &b%permission% &7(Bukkit: &f%bukkit%&7, rastreado: &f%tracked%&7)"
    Loot_Chest:
       Removed: "&a¡Cofre de botín eliminado exitosamente!"
 
@@ -331,6 +336,9 @@ Errors:
       Warp: "&c¡No tienes permiso para teletransportarte a este warp!"
       Sign: "&c¡No tienes permiso para usar este letrero!"
       Other: "&c¡No tienes permiso para usar esto!"
+      Not_Found: "&cEl permiso &e%permission% &cno está registrado."
+      List_Empty: "&cNingún permiso coincide con &e%query%&c."
+      Page_Out_Of_Range: "&cLa página &e%page% &cestá fuera de rango &7(máx: &f%max%&7)."
    Player:
       Not_Player: "&c¡Necesitas ser un jugador para usar esto!"
       Player_Not_Found: "&6%player% &7no fue encontrado!"

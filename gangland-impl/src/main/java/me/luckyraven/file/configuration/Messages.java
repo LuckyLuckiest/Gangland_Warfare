@@ -544,6 +544,15 @@ public enum Messages {
 	ARGUMENT_NOT_IMPLEMENTED("Errors.Argument.Not_Implemented", Type.ERROR),
 	ARGUMENT_CONFIRM_REQUIRED("Errors.Argument.Confirm_Required", Type.ERROR),
 	ARGUMENT_CONFIRM_HINT("Information.Argument.Confirm_Hint", Type.INFORMATION),
+
+	// commands - permissions inspector
+	PERMISSION_OVERVIEW_HEADER("Commands.Permissions.Overview_Header", Type.COMMAND),
+	PERMISSION_OVERVIEW_CATEGORY("Commands.Permissions.Overview_Category", Type.COMMAND),
+	PERMISSION_REGISTERED("Commands.Permissions.Registered", Type.COMMAND),
+	PERMISSION_DRIFT("Commands.Permissions.Drift", Type.COMMAND),
+	PERMISSION_NOT_FOUND("Errors.Permissions.Not_Found", Type.ERROR),
+	PERMISSION_LIST_EMPTY("Errors.Permissions.List_Empty", Type.ERROR),
+	PERMISSION_PAGE_OUT_OF_RANGE("Errors.Permissions.Page_Out_Of_Range", Type.ERROR),
 	;
 
 	private static MessageProvider provider;

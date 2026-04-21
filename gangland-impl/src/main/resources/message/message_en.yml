@@ -334,6 +334,11 @@ Commands:
       Spawn_Failed: "&cFailed to spawn civilian. Check that type &e%type%&c is valid and a location was found."
       Spawner_Type_Set: "&aCivilian spawner &e%type%&a set at your location."
       Spawner_Group_Set: "&aGroup spawner &e%group%&a set at your location."
+   Permissions:
+      Overview_Header: "&7Tracked permissions: &b%total%&7 across &b%categories%&7 categories. Use &e/glw permissions <category>&7 to filter."
+      Overview_Category: "&7- &b%category% &8(&a%count%&8)"
+      Registered: "&aRegistered &8» &b%permission%"
+      Drift: "&eDrift &8» &b%permission% &7(Bukkit: &f%bukkit%&7, tracked: &f%tracked%&7)"
    Loot_Chest:
       Removed: "&aLoot chest removed successfully!"
 
@@ -348,6 +353,9 @@ Errors:
       Warp: "&cYou don't have permission to teleport to this warp!"
       Sign: "&cYou don't have permission to use this sign!"
       Other: "&cYou don't have permission to use this!"
+      Not_Found: "&cPermission &e%permission% &cis not registered."
+      List_Empty: "&cNo permissions matched &e%query%&c."
+      Page_Out_Of_Range: "&cPage &e%page% &cis out of range &7(max: &f%max%&7)."
    Player:
       Not_Player: "&cYou need to be a player to use this!"
       Player_Not_Found: "&6%player% &7is not found!"
