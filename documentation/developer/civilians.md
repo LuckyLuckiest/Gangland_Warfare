@@ -192,9 +192,9 @@ Uses the same `EntitySpawner` as cops, with a two-phase algorithm:
 
 ## Listeners
 
-| Listener                   | Events Handled       | Purpose                       |
-|----------------------------|----------------------|-------------------------------|
-| `CivilianDeathListener`    | `EntityDeathEvent`   | Drop handling, event dispatch |
+| Listener                | Events Handled     | Purpose                       |
+|-------------------------|--------------------|-------------------------------|
+| `CivilianDeathListener` | `EntityDeathEvent` | Drop handling, event dispatch |
 
 ---
 
@@ -216,5 +216,7 @@ Lower values = faster reactions but higher CPU cost.
 
 - **Wanted System:** Armed civilians may increment wanted level when attacked
 - **Weapon System:** Combat civilians use configured weapon pools
-- **Loot System:** Civilians can drop items on death (configurable per type)
+- **Loot System:** Civilians can drop items on death (configurable per type). Each entry may append `@<chance>` (
+  0.0–1.0) to roll independently per death — e.g. `"material:GOLD_INGOT@0.25"` drops ~25% of the time. Bare entries
+  always drop.
 - **Experience System:** Killing civilians may award experience

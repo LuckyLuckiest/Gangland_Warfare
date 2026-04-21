@@ -160,9 +160,34 @@ public class YamlCiviliansConfigProvider {
 
 		NodeReader drops = NodeReader.of(dropsSection, report);
 
+		List<CivilianDropConfig.DropEntry> entries = drops.get("Items").asList().ofStrings().orEmpty()
+				.stream()
+				.map(this::parseDropEntry)
+				.toList();
+
 		return new CivilianDropConfig(
-				drops.get("Items").asList().ofStrings().orEmpty(),
+				entries,
 				drops.get("Experience").asDouble().min(0).orDefault(0.0));
+	}
+
+	/**
+	 * Parses an optional trailing {@code @<chance>} suffix on a drop entry. {@code "material:BREAD@0.5"} → entry
+	 * {@code "material:BREAD"} with chance {@code 0.5}. Missing/malformed suffix defaults to chance {@code 1.0}.
+	 */
+	private CivilianDropConfig.DropEntry parseDropEntry(String raw) {
+		if (raw == null) return new CivilianDropConfig.DropEntry("", 1.0);
+
+		int at = raw.lastIndexOf('@');
+		if (at < 0) return new CivilianDropConfig.DropEntry(raw, 1.0);
+
+		String entry  = raw.substring(0, at);
+		String suffix = raw.substring(at + 1);
+		try {
+			double chance = Double.parseDouble(suffix);
+			return new CivilianDropConfig.DropEntry(entry, Math.clamp(chance, 0.0, 1.0));
+		} catch (NumberFormatException ignored) {
+			return new CivilianDropConfig.DropEntry(raw, 1.0);
+		}
 	}
 
 	private CivilianAIBehaviorConfig parseAI(@Nullable MappingNode aiSection, ConfigReport report, String typeId) {

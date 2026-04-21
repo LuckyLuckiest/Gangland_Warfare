@@ -18,6 +18,8 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 /**
  * Handles civilian NPC death: clears vanilla drops, applies configured item drops, fires {@link CivilianDeathEvent} (XP
  * reward is handled by the gangland-impl listener), and marks the NPC for removal.
@@ -49,9 +51,12 @@ public class CivilianDeathListener implements Listener {
 
 		CivilianDropConfig dropConfig = npc.getTypeConfig().drops();
 
-		// Resolve and add configured drops
-		for (String entry : dropConfig.itemEntries()) {
-			ItemStack item = resolveItem(entry);
+		// Roll each configured drop independently; entries without an explicit chance default to 1.0.
+		ThreadLocalRandom random = ThreadLocalRandom.current();
+		for (CivilianDropConfig.DropEntry drop : dropConfig.itemEntries()) {
+			if (drop.chance() < 1.0 && random.nextDouble() >= drop.chance()) continue;
+
+			ItemStack item = resolveItem(drop.entry());
 			if (item != null) {
 				event.getDrops().add(item);
 			}
