@@ -1,7 +1,5 @@
 package me.luckyraven.file.configuration.inventory.itemsource;
 
-import com.cryptomorin.xseries.XMaterial;
-import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangAlliance;
 import me.luckyraven.data.account.gang.GangManager;
@@ -9,14 +7,16 @@ import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
+import me.luckyraven.inventory.multi.ItemSourceEntry;
 import me.luckyraven.inventory.multi.ItemSourceProvider;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GangItemSourceProvider implements ItemSourceProvider {
 
@@ -29,7 +29,7 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 	}
 
 	@Override
-	public List<ItemStack> getItems(Player player, String source) {
+	public List<ItemSourceEntry> getEntries(Player player, String source) {
 		return switch (source.toLowerCase()) {
 			case "gang_members" -> getGangMembers(player);
 			case "gang_allies" -> getGangAllies(player);
@@ -37,7 +37,7 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 		};
 	}
 
-	private List<ItemStack> getGangMembers(Player player) {
+	private List<ItemSourceEntry> getGangMembers(Player player) {
 		User<Player> user = userManager.getUser(player);
 
 		if (user == null || !user.hasGang()) return new ArrayList<>();
@@ -45,34 +45,29 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 		Gang gang = gangManager.getGang(user.getGangId());
 		if (gang == null) return new ArrayList<>();
 
-		List<ItemStack> items = new ArrayList<>();
+		List<ItemSourceEntry> entries = new ArrayList<>();
 
 		for (Member member : gang.getMembers()) {
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
 			Rank          userRank      = member.getRank();
 			String        rank          = userRank != null ? userRank.getName() : "null";
+			String        onlineStatus  = offlinePlayer.isOnline() ? "&aOnline" : "&cOffline";
+			String        name          = offlinePlayer.getName() != null ? offlinePlayer.getName() : "";
 
-			String onlineStatus = offlinePlayer.isOnline() ? "&aOnline" : "&cOffline";
+			Map<String, String> placeholders = new LinkedHashMap<>();
+			placeholders.put("member_name", name);
+			placeholders.put("member_rank", rank);
+			placeholders.put("member_contribution", String.valueOf(member.getContribution()));
+			placeholders.put("member_join_date", member.getGangJoinDateString());
+			placeholders.put("member_online_status", onlineStatus);
 
-			List<String> data = new ArrayList<>();
-			data.add("&7Rank:&e " + rank);
-			data.add("&7Contribution:&e " + member.getContribution());
-			data.add("&7Joined:&e " + member.getGangJoinDateString());
-			data.add("");
-			data.add("&7Status: " + onlineStatus);
-
-			ItemBuilder itemBuilder = new ItemBuilder(XMaterial.PLAYER_HEAD.get()).setDisplayName(
-					"&b" + offlinePlayer.getName()).setLore(data);
-
-			itemBuilder.modifyNBT(nbt -> nbt.setString("SkullOwner", offlinePlayer.getName()));
-
-			items.add(itemBuilder.build());
+			entries.add(new ItemSourceEntry(placeholders));
 		}
 
-		return items;
+		return entries;
 	}
 
-	private List<ItemStack> getGangAllies(Player player) {
+	private List<ItemSourceEntry> getGangAllies(Player player) {
 		User<Player> user = userManager.getUser(player);
 
 		if (user == null || !user.hasGang()) return new ArrayList<>();
@@ -80,24 +75,23 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 		Gang gang = gangManager.getGang(user.getGangId());
 		if (gang == null) return new ArrayList<>();
 
-		List<ItemStack> items = new ArrayList<>();
+		List<ItemSourceEntry> entries = new ArrayList<>();
 
 		for (Gang ally : gang.getAllies()
 				.stream().map(GangAlliance::ally).toList()) {
-			List<String> data = new ArrayList<>();
-			data.add("&7ID:&e " + ally.getId());
-			data.add(String.format("&7Members:&a %d&7/&e%d", ally.getOnlineMembers(userManager).size(),
-			                       ally.getMembers().size()));
-			data.add("&7Created:&e " + ally.getDateCreatedString());
-			data.add("");
-			data.add("&eClick to view details");
+			int online = ally.getOnlineMembers(userManager).size();
+			int total  = ally.getMembers().size();
 
-			ItemBuilder itemBuilder = new ItemBuilder(XMaterial.REDSTONE.get()).setDisplayName(
-					"&b" + ally.getDisplayNameString()).setLore(data);
+			Map<String, String> placeholders = new LinkedHashMap<>();
+			placeholders.put("ally_id", String.valueOf(ally.getId()));
+			placeholders.put("ally_name", ally.getDisplayNameString());
+			placeholders.put("ally_online", String.valueOf(online));
+			placeholders.put("ally_total", String.valueOf(total));
+			placeholders.put("ally_created", ally.getDateCreatedString());
 
-			items.add(itemBuilder.build());
+			entries.add(new ItemSourceEntry(placeholders));
 		}
 
-		return items;
+		return entries;
 	}
 }

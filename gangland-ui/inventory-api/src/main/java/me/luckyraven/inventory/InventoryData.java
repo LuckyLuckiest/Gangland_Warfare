@@ -27,6 +27,14 @@ public class InventoryData {
 
 	private Map<Integer, Slot> staticItems;
 
+	/**
+	 * Optional per-entry template used by multi-inventories to render each {@code ItemSourceEntry} from the provider.
+	 * When null, the provider is responsible for producing fully-built ItemStacks; when set, the provider returns
+	 * placeholder data and the renderer substitutes it into this template.
+	 */
+	private Slot   itemTemplate;
+	private String itemTemplateCommand;
+
 	public void addOpenInventory(OpenInventory openInventory) {
 		openInventories.add(openInventory);
 	}

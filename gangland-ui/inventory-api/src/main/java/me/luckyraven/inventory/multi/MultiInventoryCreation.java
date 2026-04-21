@@ -22,7 +22,7 @@ import static me.luckyraven.inventory.util.InventoryUtil.titleRefactor;
 public class MultiInventoryCreation {
 
 	@Nullable
-	public static MultiInventory dynamicMultiInventory(JavaPlugin plugin, Player player, List<ItemStack> items,
+	public static MultiInventory dynamicMultiInventory(JavaPlugin plugin, Player player, List<ListEntry> items,
 	                                                   String title, boolean staticItemsAllowed, boolean fixedSize,
 	                                                   Fill fill, ButtonTags buttonTags,
 	                                                   @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {

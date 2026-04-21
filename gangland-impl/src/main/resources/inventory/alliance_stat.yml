@@ -5,13 +5,10 @@ Information:
    Configuration:
       Fill: true
       Border: true
-   Permission: "gangland.inventory.alliance_stat"
    Multi:
       Item_Source: "gang_allies"
       Per_Page: 28
-
-Static_Items:
-   0:
+   Item_Template:
       Item: REDSTONE
       Name: "&b%ally_name%"
       Lore:

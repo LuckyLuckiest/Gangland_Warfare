@@ -10,6 +10,7 @@ import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.multi.ListEntry;
 import me.luckyraven.inventory.multi.MultiInventory;
 import me.luckyraven.inventory.multi.MultiInventoryCreation;
 import me.luckyraven.inventory.part.ButtonTags;
@@ -87,7 +88,10 @@ public class Phone {
 			ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
 			                                       Settings.getNextPage());
 
-			MultiInventory multiInventory = MultiInventoryCreation.dynamicMultiInventory(gangland, player1, gangsItems,
+			List<ListEntry> gangsEntries = gangsItems.stream().map(ListEntry::of).toList();
+
+			MultiInventory multiInventory = MultiInventoryCreation.dynamicMultiInventory(gangland, player1,
+			                                                                             gangsEntries,
 			                                                                             title1, true, true, fill,
 			                                                                             buttonTags, staticItems);
 
@@ -104,12 +108,13 @@ public class Phone {
 						return Collections.emptyList();
 					}
 
-					List<ItemStack> items = gangsItems.stream()
+					List<ListEntry> items = gangsItems.stream()
 							.filter(itemStack -> Objects.requireNonNull(
 																itemStack.getItemMeta())
 							                            .getDisplayName()
 							                            .toLowerCase()
 							                            .contains(output.toLowerCase()))
+							.map(ListEntry::of)
 							.toList();
 
 					multiInventory.updateItems(gangland, items, stateSnapshot.getPlayer(), true, fill, staticItems);
@@ -128,7 +133,7 @@ public class Phone {
 
 			// need to update because when initialized the process was not done accordingly,
 			// this way should be changed since you update the items after initialization
-			multiInventory.updateItems(gangland, gangsItems, player1, true, fill, staticItems);
+			multiInventory.updateItems(gangland, gangsEntries, player1, true, fill, staticItems);
 
 			multiInventory.open(player1);
 		});

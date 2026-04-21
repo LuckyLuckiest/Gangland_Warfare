@@ -23,6 +23,7 @@ import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.multi.ListEntry;
 import me.luckyraven.inventory.multi.MultiInventory;
 import me.luckyraven.inventory.multi.MultiInventoryCreation;
 import me.luckyraven.inventory.part.ButtonTags;
@@ -241,8 +242,9 @@ public final class GangCommand extends Command {
 						items.add(itemBuilder.build());
 					}
 
-					String title1 = "&6&lGang Members";
-					MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getGangland(), player, items,
+					String          title1  = "&6&lGang Members";
+					List<ListEntry> entries = items.stream().map(ListEntry::of).toList();
+					MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getGangland(), player, entries,
 					                                                                    title1, false, false, fill,
 					                                                                    buttonTags, null);
 
@@ -281,9 +283,11 @@ public final class GangCommand extends Command {
 							items.add(itemBuilder.build());
 						}
 
-						String title1 = "&6&lGang Allies";
+						String          title1  = "&6&lGang Allies";
+						List<ListEntry> entries = items.stream().map(ListEntry::of).toList();
 						MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getGangland(), player,
-			                                                                                items, title1, false, false,
+			                                                                                entries, title1, false,
+			                                                                                false,
 			                                                                                fill, buttonTags, null);
 
 						if (multi == null) return;

@@ -8,6 +8,8 @@ import me.luckyraven.core.color.ColorUtil;
 import me.luckyraven.core.color.MaterialType;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
 import me.luckyraven.inventory.condition.ConditionalSlotData;
+import me.luckyraven.inventory.multi.ItemSourceEntry;
+import me.luckyraven.inventory.multi.ListEntry;
 import me.luckyraven.inventory.multi.MultiInventory;
 import me.luckyraven.inventory.multi.MultiInventoryCreation;
 import me.luckyraven.inventory.part.ButtonTags;
@@ -21,12 +23,18 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public record InventoryBuilder(InventoryData inventoryData, String permission) {
+
+	private static String substituteEntry(String template, Map<String, String> entry) {
+		if (template == null || template.isEmpty() || entry.isEmpty()) return template;
+		String result = template;
+		for (Map.Entry<String, String> e : entry.entrySet()) {
+			result = result.replace("%" + e.getKey() + "%", e.getValue());
+		}
+		return result;
+	}
 
 	public InventoryHandler createInventory(JavaPlugin plugin, Placeholder placeholder, Player player, Fill fill,
 	                                        Fill line, ConditionEvaluator evaluator, InventoryOpener inventoryOpener) {
@@ -141,7 +149,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 	}
 
 	public MultiInventory createMultiInventory(JavaPlugin plugin, Placeholder placeholder, Player player,
-	                                           List<ItemStack> items, ButtonTags buttonTags, Fill fill) {
+	                                           List<ItemSourceEntry> entries, ButtonTags buttonTags, Fill fill) {
 		if (!inventoryData.isMultiInventory()) {
 			throw new IllegalStateException("This inventory is not configured as a multi-inventory");
 		}
@@ -174,11 +182,84 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 
 		boolean staticItems = staticItemsMap != null && !staticItemsMap.isEmpty();
 
-		multiInventory = MultiInventoryCreation.dynamicMultiInventory(plugin, player, items, title, staticItems,
+		List<ListEntry> listEntries = renderListEntries(entries, placeholder, player);
+
+		multiInventory = MultiInventoryCreation.dynamicMultiInventory(plugin, player, listEntries, title, staticItems,
 		                                                              inventoryData.isBorder(), fill, buttonTags,
 		                                                              staticItemsMap);
 
 		return multiInventory;
+	}
+
+	private List<ListEntry> renderListEntries(List<ItemSourceEntry> entries, Placeholder placeholder, Player player) {
+		Slot   template        = inventoryData.getItemTemplate();
+		String commandTemplate = inventoryData.getItemTemplateCommand();
+
+		if (template == null || template.getItem() == null) return List.of();
+
+		List<ListEntry> out = new ArrayList<>(entries.size());
+		for (ItemSourceEntry entry : entries) {
+			out.add(renderListEntry(template, commandTemplate, entry.placeholders(), placeholder, player));
+		}
+		return out;
+	}
+
+	private ListEntry renderListEntry(Slot template, @org.jetbrains.annotations.Nullable String commandTemplate,
+	                                  Map<String, String> entry, Placeholder placeholder, Player player) {
+		ItemBuilder source = template.getItem();
+		Material    type   = source.getType();
+
+		String colorTag = "color";
+		if (source.hasNBTTag(colorTag)) {
+			String raw   = substituteEntry(source.getStringTagData(colorTag), entry);
+			String value = placeholder.convert(player, raw);
+
+			MaterialType material = MaterialType.WOOL;
+			for (MaterialType m : MaterialType.values()) {
+				if (!type.name().contains(m.name())) continue;
+				material = m;
+				break;
+			}
+
+			type = ColorUtil.getMaterialByColor(value, material.name());
+		}
+
+		ItemBuilder fresh = new ItemBuilder(type);
+
+		String headTag = "head";
+		String dataTag = "data";
+		if (source.hasNBTTag(headTag) || source.hasNBTTag(dataTag)) {
+			String raw = source.hasNBTTag(headTag) ?
+			             source.getStringTagData(headTag) :
+			             source.getStringTagData(dataTag);
+			String value = placeholder.convert(player, substituteEntry(raw, entry));
+			fresh.modifyNBT(nbt -> nbt.setString("SkullOwner", value));
+		}
+
+		String displayName = placeholder.convert(player, substituteEntry(source.getDisplayName(), entry));
+		fresh.setDisplayName(displayName);
+
+		List<String> lore = source.getLore()
+				.stream()
+				.map(s -> placeholder.convert(player, substituteEntry(s, entry)))
+				.toList();
+		fresh.setLore(lore);
+
+		if (!source.getEnchantments().isEmpty()) {
+			fresh.addEnchantment(XEnchantment.UNBREAKING.get(), 1)
+			     .addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+		}
+
+		ItemStack stack = fresh.build();
+
+		TriConsumer<Player, InventoryHandler, ItemBuilder> onClick = null;
+		if (commandTemplate != null && !commandTemplate.isEmpty()) {
+			String substituted = placeholder.convert(player, substituteEntry(commandTemplate, entry));
+			String cleaned     = substituted.startsWith("/") ? substituted.substring(1) : substituted;
+			onClick = (p, inv, builder) -> p.performCommand(cleaned);
+		}
+
+		return new ListEntry(stack, onClick);
 	}
 
 	private void openAnvilInventory(JavaPlugin plugin, Placeholder placeholder, Player player,

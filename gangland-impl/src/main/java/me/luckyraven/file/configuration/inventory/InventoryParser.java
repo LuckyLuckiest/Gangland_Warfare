@@ -76,6 +76,8 @@ final class InventoryParser {
 		inventoryData.setItemSource(itemSource);
 		inventoryData.setPerPage(perPage);
 
+		configureItemTemplate(runtimeContext, information, inventoryData);
+
 		Map<Integer, Slot> staticItems   = new HashMap<>();
 		var                staticSection = config.getConfigurationSection("Static_Items");
 
@@ -137,6 +139,40 @@ final class InventoryParser {
 		}
 		if (section.isString("Item")) return section.getString("Item");
 		return null;
+	}
+
+	/**
+	 * Parses {@code Information.Item_Template} — the per-entry template used to render each row produced by the
+	 * {@code ItemSourceProvider}. The template's Item / Name / Lore / Data carry placeholders that the renderer
+	 * substitutes per entry at open time. {@code OnClick.Command} is optional; its value is also a per-entry template.
+	 */
+	private static void configureItemTemplate(InventoryRuntimeContext runtimeContext, ConfigurationSection information,
+	                                          InventoryData inventoryData) {
+		ConfigurationSection templateSection = information.getConfigurationSection("Item_Template");
+		if (templateSection == null) return;
+
+		Map<String, Object> data = new HashMap<>();
+		String              item = getItemInfo(templateSection, data);
+		if (item == null) return;
+
+		String itemName = templateSection.getString("Name");
+		if (itemName == null && !item.contains(":")) itemName = item.toLowerCase().replace('_', ' ');
+		List<String> lore            = templateSection.getStringList("Lore");
+		boolean      enchanted       = templateSection.getBoolean("Enchanted");
+		int          customModelData = templateSection.getInt("Custom_Model_Data", 0);
+		if (customModelData > 0) data.put("customModelData", customModelData);
+
+		Function<String, ItemStack> itemResolver = runtimeContext.itemResolver();
+		Slot templateSlot = new Slot(0, false, false,
+		                             SlotItemFactory.create(itemResolver, item, itemName, data, lore, enchanted));
+
+		inventoryData.setItemTemplate(templateSlot);
+
+		ConfigurationSection onClickSection = templateSection.getConfigurationSection("OnClick");
+		if (onClickSection != null) {
+			String command = onClickSection.getString("Command");
+			if (command != null) inventoryData.setItemTemplateCommand(command);
+		}
 	}
 
 	private static Slot processEventItems(InventoryRuntimeContext runtimeContext, String basePath,

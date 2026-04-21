@@ -5,16 +5,14 @@ Information:
    Configuration:
       Fill: true
       Border: true
-   Permission: "gangland.inventory.users_stat"
    Multi:
       Item_Source: "gang_members"
       Per_Page: 28
-
-Static_Items:
-   0:
-      Item: PLAYER_HEAD
+   Item_Template:
+      Item:
+         Type: PLAYER_HEAD
+         Data: "%member_name%"
       Name: "&b%member_name%"
-      Data: "%member_name%"
       Lore:
          - "&7Rank:&e %member_rank%"
          - "&7Contribution:&e %member_contribution%"

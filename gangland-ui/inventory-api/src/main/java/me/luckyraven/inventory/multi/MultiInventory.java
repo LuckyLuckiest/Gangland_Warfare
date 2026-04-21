@@ -42,7 +42,7 @@ public class MultiInventory extends InventoryHandler {
 		this.inventories.add(this);
 	}
 
-	public void updateItems(JavaPlugin plugin, List<ItemStack> items, Player player, boolean staticItemsAllowed,
+	public void updateItems(JavaPlugin plugin, List<ListEntry> items, Player player, boolean staticItemsAllowed,
 	                        Fill fill,
 	                        @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
 		if (inventories.isEmpty()) {
@@ -149,7 +149,7 @@ public class MultiInventory extends InventoryHandler {
 		return inventories;
 	}
 
-	void addItems(InventoryHandler inv, List<ItemStack> items, int startIndex, int endIndex, boolean staticItemsAllowed,
+	void addItems(InventoryHandler inv, List<ListEntry> items, int startIndex, int endIndex, boolean staticItemsAllowed,
 	              Fill line, @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
 		if (staticItemsAllowed) {
 			Preconditions.checkNotNull(staticItems, "No static items set");
@@ -163,7 +163,13 @@ public class MultiInventory extends InventoryHandler {
 		if (staticItemsAllowed) verticalLine(inv, 1, line, staticItems);
 
 		for (int i = startIndex; i < endIndex && row % 6 != 0; i++) {
-			inv.setItem((row - 1) * 9 + (column - 1), items.get(i), false);
+			ListEntry entry = items.get(i);
+			int       slot  = (row - 1) * 9 + (column - 1);
+			if (entry.onClick() != null) {
+				inv.setItem(slot, entry.item(), false, entry.onClick());
+			} else {
+				inv.setItem(slot, entry.item(), false);
+			}
 
 			if (column % 8 == 0) {
 				column = 2;

@@ -8,6 +8,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.economy.bank.EconomyException;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.inventory.multi.ListEntry;
 import me.luckyraven.inventory.multi.MultiInventory;
 import me.luckyraven.inventory.part.ButtonTags;
 import me.luckyraven.inventory.part.Fill;
@@ -119,7 +120,9 @@ public class BountyAspect implements SignAspect {
 		ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
 		                                       Settings.getNextPage());
 
-		MultiInventory multiInventory = dynamicMultiInventory(plugin, player, heads, title, false, false, fill,
+		List<ListEntry> headEntries = heads.stream().map(ListEntry::of).toList();
+
+		MultiInventory multiInventory = dynamicMultiInventory(plugin, player, headEntries, title, false, false, fill,
 		                                                      buttonTags, null);
 
 		if (multiInventory == null) return;

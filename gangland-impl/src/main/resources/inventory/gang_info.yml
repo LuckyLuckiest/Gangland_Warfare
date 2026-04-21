@@ -37,7 +37,7 @@ Slots:
       Lore:
          - "&a%gangland_gang_online-members-size%&7/&e%gangland_gang_members-size%"
       OnClick:
-         Inventory: users_stat
+         Inventory: user_stat
    22:
       Item: BLAZE_ROD
       Name: "&bBounty"

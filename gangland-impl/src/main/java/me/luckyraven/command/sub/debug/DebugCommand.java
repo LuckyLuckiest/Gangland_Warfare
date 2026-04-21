@@ -30,6 +30,7 @@ import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.multi.ListEntry;
 import me.luckyraven.inventory.multi.MultiInventory;
 import me.luckyraven.inventory.multi.MultiInventoryCreation;
 import me.luckyraven.inventory.part.ButtonTags;
@@ -289,7 +290,10 @@ public final class DebugCommand extends Command {
 				ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
 				                                       Settings.getNextPage());
 
-				MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getGangland(), player, items, title,
+				List<ListEntry> entries = items.stream().map(ListEntry::of).toList();
+
+				MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getGangland(), player, entries,
+				                                                                    title,
 				                                                                    false, false, fill, buttonTags,
 				                                                                    null);
 

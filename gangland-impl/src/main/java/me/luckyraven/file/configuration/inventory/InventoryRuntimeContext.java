@@ -11,6 +11,7 @@ import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.*;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
+import me.luckyraven.inventory.multi.ItemSourceEntry;
 import me.luckyraven.inventory.multi.ItemSourceProvider;
 import me.luckyraven.inventory.multi.MultiInventory;
 import me.luckyraven.inventory.part.ButtonTags;
@@ -82,13 +83,19 @@ public class InventoryRuntimeContext {
 		FileConfiguration config   = fileHandler.getFileConfiguration();
 		String            fileName = fileHandler.getName().toLowerCase();
 
+		log.debug("Registering inventory file '{}'", fileName);
+
 		ConfigReport report = new ConfigReport();
 		NodeReader   root   = FileHandlerReader.read(fileHandler, report);
 
-		if (root.get("Config_Version").asString().orNull() != null) return;
+		if (root.get("Config_Version").asString().orNull() != null) {
+			log.warn("Skipping inventory file '{}' — it has a Config_Version key (treated as non-inventory)", fileName);
+			return;
+		}
 
 		MappingNode informationSection = root.get("Information").asMapping().required().orNull();
 		if (informationSection == null) {
+			log.warn("Skipping inventory file '{}' — missing or malformed 'Information' block", fileName);
 			if (!report.isEmpty()) report.log(log);
 			return;
 		}
@@ -103,10 +110,10 @@ public class InventoryRuntimeContext {
 		String permission  = information.get("Permission").asString().orNull();
 		String type        = information.get("Type").asString().required().orDefault("single-inventory");
 
-		// Information.Multi is consumed via the legacy Bukkit path inside
-		// InventoryParser.configureMultiInventory (Multi.Item_Source / Multi.Per_Page).
-		// Touch it here so the unknown-key sweep knows it's consumed.
+		// Information.Multi and Information.Item_Template are consumed via the legacy Bukkit path inside
+		// InventoryParser.configureMultiInventory / configureItemTemplate. Touch here for the unknown-key sweep.
 		information.get("Multi");
+		information.get("Item_Template");
 
 		MappingNode openSection = information.get("Open").asMapping().orNull();
 		NodeReader  open        = openSection != null ? NodeReader.of(openSection, report) : null;
@@ -198,11 +205,16 @@ public class InventoryRuntimeContext {
 		if (!report.isEmpty()) report.log(log);
 
 		definitionStore.inventories().put(name, new InventoryBuilder(inventoryData, permission));
+		log.debug("Registered inventory '{}' (type={}, multi={}, itemSource={})", name, type,
+		          inventoryData.isMultiInventory(), inventoryData.getItemSource());
 	}
 
 	public void openInventoryForPlayer(Player player, String inventoryName) {
 		User<Player> user = userManager.getUser(player);
-		if (user == null) return;
+		if (user == null) {
+			log.warn("Cannot open inventory '{}' — no User record for player {}", inventoryName, player.getName());
+			return;
+		}
 
 		InventoryHandler existing = user.getInventory(inventoryName);
 		if (existing != null) {
@@ -211,9 +223,17 @@ public class InventoryRuntimeContext {
 		}
 
 		InventoryBuilder invBuilder = definitionStore.inventories().get(inventoryName);
-		if (invBuilder == null) return;
+		if (invBuilder == null) {
+			log.warn("Cannot open inventory '{}' — not registered in the definition store (check YAML parse errors)",
+			         inventoryName);
+			return;
+		}
 
-		if (invBuilder.permission() != null && !player.hasPermission(invBuilder.permission())) return;
+		if (invBuilder.permission() != null && !player.hasPermission(invBuilder.permission())) {
+			log.warn("Player {} denied inventory '{}' — missing permission '{}'", player.getName(), inventoryName,
+			         invBuilder.permission());
+			return;
+		}
 
 		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 		Fill line = new Fill(Settings.getInventoryLineName(), Settings.getInventoryLineItem());
@@ -222,15 +242,19 @@ public class InventoryRuntimeContext {
 		Placeholder     placeholder = placeholderService;
 
 		if (invBuilder.inventoryData().isMultiInventory()) {
-			String          itemSource = invBuilder.inventoryData().getItemSource();
-			List<ItemStack> items      = itemSourceProvider.getItems(player, itemSource);
+			String                itemSource = invBuilder.inventoryData().getItemSource();
+			List<ItemSourceEntry> entries    = itemSourceProvider.getEntries(player, itemSource);
 			ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
 			                                       Settings.getNextPage());
-			MultiInventory multi = invBuilder.createMultiInventory(gangland, placeholder, player, items, buttonTags,
+			MultiInventory multi = invBuilder.createMultiInventory(gangland, placeholder, player, entries, buttonTags,
 			                                                       fill);
 			if (multi != null) {
 				multi.open(player);
 				user.addInventory(multi);
+			} else {
+				log.warn(
+						"Cannot open multi-inventory '{}' — createMultiInventory returned null (source='{}', entries={})",
+						inventoryName, itemSource, entries.size());
 			}
 		} else {
 			InventoryHandler handler = invBuilder.createInventory(gangland, placeholder, user.getUser(), fill, line,
