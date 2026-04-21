@@ -10,6 +10,7 @@ import me.luckyraven.core.bean.Configuration;
 import me.luckyraven.core.bean.PostConstruct;
 import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.GangSearchFilterStore;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.GanglandMoneyDepositService;
 import me.luckyraven.data.permission.PermissionManager;
@@ -105,14 +106,21 @@ public class GameplayConfig {
 	 * {@code InventoryAddon}.
 	 */
 	@Bean
+	public GangSearchFilterStore gangSearchFilterStore() {
+		return new GangSearchFilterStore();
+	}
+
+	@Bean
 	public InventoryRuntimeContext inventoryRuntimeContext(InventoryDefinitionStore definitionStore,
 	                                                       BooleanExpressionEvaluator conditionEvaluator,
 	                                                       PlaceholderService placeholderService,
 	                                                       PermissionManager permissionManager,
 	                                                       @Qualifier("online") UserManager<Player> userManager,
 	                                                       GangManager gangManager,
+	                                                       GangSearchFilterStore gangSearchFilterStore,
 	                                                       ItemParser itemParser) {
-		ItemSourceProvider itemSourceProvider = new GangItemSourceProvider(userManager, gangManager);
+		ItemSourceProvider itemSourceProvider = new GangItemSourceProvider(userManager, gangManager,
+		                                                                   gangSearchFilterStore);
 		return new InventoryRuntimeContext(gangland, definitionStore, itemSourceProvider, conditionEvaluator,
 		                                   userManager, permissionManager, placeholderService, itemParser);
 	}
@@ -126,9 +134,16 @@ public class GameplayConfig {
 	@Bean
 	public InventoryLoader inventoryLoader(FileManager fileManager, InventoryRuntimeContext inventoryRuntimeContext) {
 		InventoryLoader loader = new InventoryLoader(gangland, fileManager, inventoryRuntimeContext);
+
+		loader.addExpectedFile(new FileHandler(gangland, "alliance_stat", "inventory", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "gang_info", "inventory", ".yml"));
+		loader.addExpectedFile(new FileHandler(gangland, "gang_stat", "inventory", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "phone", "inventory", ".yml"));
+		loader.addExpectedFile(new FileHandler(gangland, "phone_banking", "inventory", ".yml"));
+		loader.addExpectedFile(new FileHandler(gangland, "phone_bounty", "inventory", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "phone_gang", "inventory", ".yml"));
+		loader.addExpectedFile(new FileHandler(gangland, "phone_gang_search", "inventory", ".yml"));
+		loader.addExpectedFile(new FileHandler(gangland, "user_stat", "inventory", ".yml"));
 		return loader;
 	}
 
@@ -197,8 +212,7 @@ public class GameplayConfig {
 	}
 
 	@Bean
-	public SignInteraction signInteraction(SignTypeRegistry signTypeRegistry,
-	                                       SignFormatterService signFormatterService,
+	public SignInteraction signInteraction(SignTypeRegistry signTypeRegistry, SignFormatterService signFormatterService,
 	                                       SignInformation signInformation) {
 		String prefix = Gangland.SHORT_PREFIX + "-";
 		return new SignInteraction(prefix, signTypeRegistry, signFormatterService, signInformation);
@@ -210,15 +224,12 @@ public class GameplayConfig {
 	}
 
 	@Bean
-	public SignManager signManager(SignTypeRegistry signTypeRegistry,
-	                               SignInteraction signInteraction,
-	                               WeaponManager weaponManager,
-	                               AmmunitionManager ammunitionManager,
+	public SignManager signManager(SignTypeRegistry signTypeRegistry, SignInteraction signInteraction,
+	                               WeaponManager weaponManager, AmmunitionManager ammunitionManager,
 	                               UniqueItemAddon uniqueItemAddon,
 	                               @Qualifier("online") UserManager<Player> userManager,
 	                               @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
-	                               WearableAddon wearableAddon,
-	                               CarAddon carAddon) {
+	                               WearableAddon wearableAddon, CarAddon carAddon) {
 		SignManager manager = new SignManager(gangland, Gangland.SHORT_PREFIX, signTypeRegistry, signInteraction,
 		                                      weaponManager, ammunitionManager, uniqueItemAddon, userManager,
 		                                      offlineUserManager, wearableAddon, carAddon);
@@ -237,8 +248,7 @@ public class GameplayConfig {
 
 	@Bean
 	public MoneyDepositService moneyDepositService(@Qualifier("online") UserManager<Player> userManager,
-	                                               MoneyAddon moneyAddon,
-	                                               PlaceholderService placeholderService) {
+	                                               MoneyAddon moneyAddon, PlaceholderService placeholderService) {
 		return new GanglandMoneyDepositService(userManager, moneyAddon, placeholderService);
 	}
 
@@ -277,11 +287,10 @@ public class GameplayConfig {
 	}
 
 	@Bean
-	public LootChestManager lootChestManager(HologramService hologramService,
-	                                         RepositoryRegistry repositoryRegistry,
+	public LootChestManager lootChestManager(HologramService hologramService, RepositoryRegistry repositoryRegistry,
 	                                         ItemParser itemParser) {
-		return new LootChestManager(gangland, Gangland.FULL_PREFIX, hologramService, repositoryRegistry,
-		                            itemParser, new GanglandLootChestMessages());
+		return new LootChestManager(gangland, Gangland.FULL_PREFIX, hologramService, repositoryRegistry, itemParser,
+		                            new GanglandLootChestMessages());
 	}
 
 	@Bean

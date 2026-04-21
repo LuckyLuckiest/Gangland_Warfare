@@ -13,6 +13,7 @@ import me.luckyraven.core.color.MaterialType;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangAlliance;
 import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.account.gang.GangSearchFilterStore;
 import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
@@ -22,6 +23,7 @@ import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.file.configuration.inventory.InventoryRuntimeContext;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.multi.ListEntry;
 import me.luckyraven.inventory.multi.MultiInventory;
@@ -51,6 +53,8 @@ public final class GangCommand extends Command {
 	private final MemberManager              memberManager;
 	private final RankManager                rankManager;
 	private final GanglandDatabase           ganglandDatabase;
+	private final GangSearchFilterStore      gangSearchFilterStore;
+	private final InventoryRuntimeContext    inventoryRuntimeContext;
 
 	public GangCommand(Gangland gangland,
 	                   @Qualifier("online") UserManager<Player> userManager,
@@ -58,15 +62,19 @@ public final class GangCommand extends Command {
 	                   GangManager gangManager,
 	                   MemberManager memberManager,
 	                   RankManager rankManager,
-	                   GanglandDatabase ganglandDatabase) {
+	                   GanglandDatabase ganglandDatabase,
+	                   GangSearchFilterStore gangSearchFilterStore,
+	                   InventoryRuntimeContext inventoryRuntimeContext) {
 		super(gangland, "gang", true);
 
-		this.userManager        = userManager;
-		this.offlineUserManager = offlineUserManager;
-		this.gangManager        = gangManager;
-		this.memberManager      = memberManager;
-		this.rankManager        = rankManager;
-		this.ganglandDatabase   = ganglandDatabase;
+		this.userManager             = userManager;
+		this.offlineUserManager      = offlineUserManager;
+		this.gangManager             = gangManager;
+		this.memberManager           = memberManager;
+		this.rankManager             = rankManager;
+		this.ganglandDatabase        = ganglandDatabase;
+		this.gangSearchFilterStore   = gangSearchFilterStore;
+		this.inventoryRuntimeContext = inventoryRuntimeContext;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -126,6 +134,8 @@ public final class GangCommand extends Command {
 		                                          gangManager);
 		Argument color = new GangColorCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                      gangManager);
+		Argument search = new GangSearchCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                        gangSearchFilterStore, inventoryRuntimeContext);
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
@@ -154,6 +164,8 @@ public final class GangCommand extends Command {
 
 		arguments.add(display);
 		arguments.add(color);
+
+		arguments.add(search);
 
 		getArgument().addAllSubArguments(arguments);
 	}
@@ -245,7 +257,7 @@ public final class GangCommand extends Command {
 					String          title1  = "&6&lGang Members";
 					List<ListEntry> entries = items.stream().map(ListEntry::of).toList();
 					MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getGangland(), player, entries,
-					                                                                    title1, false, false, fill,
+					                                                                    title1, false, 0, fill,
 					                                                                    buttonTags, null);
 
 					if (multi == null) return;
@@ -287,7 +299,7 @@ public final class GangCommand extends Command {
 						List<ListEntry> entries = items.stream().map(ListEntry::of).toList();
 						MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getGangland(), player,
 			                                                                                entries, title1, false,
-			                                                                                false,
+			                                                                                0,
 			                                                                                fill, buttonTags, null);
 
 						if (multi == null) return;
