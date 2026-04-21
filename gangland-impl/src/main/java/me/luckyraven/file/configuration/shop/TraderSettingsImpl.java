@@ -3,6 +3,8 @@ package me.luckyraven.file.configuration.shop;
 import me.luckyraven.copsncrooks.npc.trader.config.TraderSettings;
 import me.luckyraven.file.configuration.Settings;
 
+import java.math.BigDecimal;
+
 public class TraderSettingsImpl implements TraderSettings {
 
 	@Override
@@ -46,7 +48,7 @@ public class TraderSettingsImpl implements TraderSettings {
 	}
 
 	@Override
-	public double getTipAmount() {
+	public BigDecimal getTipAmount() {
 		return Settings.getTraderTipAmount();
 	}
 

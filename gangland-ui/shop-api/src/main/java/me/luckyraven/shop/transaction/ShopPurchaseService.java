@@ -6,6 +6,8 @@ import me.luckyraven.shop.ShopItemEntry;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.math.BigDecimal;
+
 /**
  * Reusable purchase mutation for any shop integration. Given a {@link PaymentHandler} adapter, the service checks the
  * balance, debits the account, produces a fresh copy of the sold item via {@link ItemRefresherRegistry}, and delivers
@@ -17,7 +19,7 @@ public final class ShopPurchaseService {
 
 	private final ItemRefresherRegistry refresherRegistry;
 
-	public PurchaseResult purchase(Player player, PaymentHandler payment, ShopItemEntry entry, double finalPrice) {
+	public PurchaseResult purchase(Player player, PaymentHandler payment, ShopItemEntry entry, BigDecimal finalPrice) {
 		return purchase(player, payment, entry, finalPrice, 1);
 	}
 
@@ -27,12 +29,12 @@ public final class ShopPurchaseService {
 	 * copy — so a 32-item template with {@code copies=5} delivers five stacks of 32 (160 items total) and debits
 	 * {@code finalTotal} once.
 	 */
-	public PurchaseResult purchase(Player player, PaymentHandler payment, ShopItemEntry entry, double finalTotal,
+	public PurchaseResult purchase(Player player, PaymentHandler payment, ShopItemEntry entry, BigDecimal finalTotal,
 	                               int copies) {
 		if (copies < 1) {
 			copies = 1;
 		}
-		if (payment.getBalance() < finalTotal) {
+		if (payment.getBalance().compareTo(finalTotal) < 0) {
 			return PurchaseResult.of(PurchaseOutcome.INSUFFICIENT_FUNDS);
 		}
 

@@ -10,6 +10,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,21 @@ public final class ShopYamlReader {
 
 	private static final int    DEFAULT_SIZE  = 54;
 	private static final String DEFAULT_TITLE = "Trader";
+
+	/**
+	 * Accepts either a Number (legacy shops on disk) or a String (arbitrary-precision). Returns {@code fallback} on
+	 * {@code null} / unparseable input so a malformed YAML price doesn't blow up the whole shop load.
+	 */
+	private static BigDecimal parsePrice(Object raw, BigDecimal fallback) {
+		if (raw == null) return fallback;
+		if (raw instanceof BigDecimal bd) return bd;
+		if (raw instanceof Number n) return BigDecimal.valueOf(n.doubleValue());
+		try {
+			return new BigDecimal(String.valueOf(raw).trim());
+		} catch (NumberFormatException ignored) {
+			return fallback;
+		}
+	}
 
 	public ShopDefinition parse(String key, FileHandler fileHandler) {
 		FileConfiguration cfg    = fileHandler.getFileConfiguration();
@@ -101,7 +117,7 @@ public final class ShopYamlReader {
 	private SellCategory parseSellCategoryFromSection(String key, int index, ConfigurationSection section) {
 		String          id          = section.getString(CATEGORY_ID);
 		String          displayName = section.getString(CATEGORY_DISPLAY_NAME, id);
-		double          basePrice   = section.getDouble(CATEGORY_BASE_PRICE, 0.0);
+		BigDecimal      basePrice   = parsePrice(section.get(CATEGORY_BASE_PRICE), BigDecimal.ZERO);
 		List<ItemStack> items       = readCategoryItems(section.getList(CATEGORY_ITEMS));
 
 		if (id == null || id.isBlank()) {
@@ -119,7 +135,7 @@ public final class ShopYamlReader {
 
 		String          id          = idVal == null ? null : idVal.toString();
 		String          displayName = nameVal == null ? id : nameVal.toString();
-		double          basePrice   = priceVal instanceof Number n ? n.doubleValue() : 0.0;
+		BigDecimal      basePrice   = parsePrice(priceVal, BigDecimal.ZERO);
 		List<ItemStack> items       = readCategoryItems(itemsVal instanceof List<?> rawItems ? rawItems : null);
 
 		if (id == null || id.isBlank()) {
@@ -163,7 +179,7 @@ public final class ShopYamlReader {
 	private BarterCategory parseBarterCategoryFromSection(String key, int index, ConfigurationSection section) {
 		String          id          = section.getString(CATEGORY_ID);
 		String          displayName = section.getString(CATEGORY_DISPLAY_NAME, id);
-		double          basePrice   = section.getDouble(CATEGORY_BASE_PRICE, 0.0);
+		BigDecimal      basePrice   = parsePrice(section.get(CATEGORY_BASE_PRICE), BigDecimal.ZERO);
 		List<ItemStack> items       = readCategoryItems(section.getList(CATEGORY_ITEMS));
 
 		if (id == null || id.isBlank()) {
@@ -181,7 +197,7 @@ public final class ShopYamlReader {
 
 		String          id          = idVal == null ? null : idVal.toString();
 		String          displayName = nameVal == null ? id : nameVal.toString();
-		double          basePrice   = priceVal instanceof Number n ? n.doubleValue() : 0.0;
+		BigDecimal      basePrice   = parsePrice(priceVal, BigDecimal.ZERO);
 		List<ItemStack> items       = readCategoryItems(itemsVal instanceof List<?> rawItems ? rawItems : null);
 
 		if (id == null || id.isBlank()) {
@@ -233,9 +249,9 @@ public final class ShopYamlReader {
 
 	private ShopItemEntry parseEntryFromSection(String key, String path, int index, EntryKind kind,
 	                                            ConfigurationSection section) {
-		int       slot  = section.getInt(ENTRY_SLOT, -1);
-		ItemStack item  = section.getItemStack(ENTRY_ITEM);
-		Double    price = section.contains(ENTRY_PRICE) ? section.getDouble(ENTRY_PRICE) : null;
+		int        slot  = section.getInt(ENTRY_SLOT, -1);
+		ItemStack  item  = section.getItemStack(ENTRY_ITEM);
+		BigDecimal price = section.contains(ENTRY_PRICE) ? parsePrice(section.get(ENTRY_PRICE), null) : null;
 
 		return buildEntry(key, path, index, kind, slot, item, price);
 	}
@@ -246,15 +262,15 @@ public final class ShopYamlReader {
 		Object itemVal  = map.get(ENTRY_ITEM);
 		Object priceVal = map.get(ENTRY_PRICE);
 
-		int       slot  = slotVal instanceof Number n ? n.intValue() : -1;
-		ItemStack item  = itemVal instanceof ItemStack is ? is : null;
-		Double    price = priceVal instanceof Number n ? n.doubleValue() : null;
+		int        slot  = slotVal instanceof Number n ? n.intValue() : -1;
+		ItemStack  item  = itemVal instanceof ItemStack is ? is : null;
+		BigDecimal price = priceVal == null ? null : parsePrice(priceVal, null);
 
 		return buildEntry(key, path, index, kind, slot, item, price);
 	}
 
 	private ShopItemEntry buildEntry(String key, String path, int index, EntryKind kind, int slot, ItemStack item,
-	                                 Double price) {
+	                                 BigDecimal price) {
 		if (item == null) {
 			log.warn("Shop '{}' {}[{}] has no item; skipping", key, path, index);
 			return null;

@@ -37,7 +37,7 @@ public class Bank {
 	public Bank(UUID uuid, String name) {
 		this.uuid    = uuid;
 		this.name    = name;
-		this.economy = new EconomyHandler(0D, null, false);
+		this.economy = new EconomyHandler(Currency.ZERO, null, false);
 	}
 
 	/**
@@ -78,7 +78,7 @@ public class Bank {
 		}
 
 		double elapsedDays = elapsedMs / MILLIS_PER_DAY;
-		double balance     = economy.getBalance();
+		double balance     = economy.getAmount().doubleValue();
 		double interest    = balance * ratePerDay * elapsedDays;
 
 		if (interest <= 0D) {
@@ -91,7 +91,7 @@ public class Bank {
 			actual = Math.max(0D, cap - balance);
 		}
 
-		if (actual > 0D) economy.deposit(actual);
+		if (actual > 0D) economy.depositAmount(Currency.of(actual));
 		lastInterestAt = now;
 		return actual;
 	}
@@ -102,9 +102,9 @@ public class Bank {
 
 	@Override
 	public String toString() {
-		return String.format("Bank{uuid=%s,name=%s,balance=%.2f,tier=%s,dep=%.2f,reset=%s,lastInterest=%s}",
-		                     uuid.toString(), name, economy.getBalance(), tierId, depositedToday, capResetAt,
-		                     lastInterestAt);
+		return String.format("Bank{uuid=%s,name=%s,balance=%s,tier=%s,dep=%.2f,reset=%s,lastInterest=%s}",
+		                     uuid.toString(), name, economy.getAmount().toPlainString(), tierId, depositedToday,
+		                     capResetAt, lastInterestAt);
 	}
 
 }

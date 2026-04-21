@@ -60,7 +60,7 @@ public class LootChestEarnGoodsListener implements Listener {
 		                               Settings.getLootChestRewardExperienceMaximum());
 
 		// deposit money
-		user.getEconomy().deposit(money);
+		user.getEconomy().depositAmount(me.luckyraven.economy.bank.Currency.of(money));
 
 		// add experience
 		Level level = user.getLevel();

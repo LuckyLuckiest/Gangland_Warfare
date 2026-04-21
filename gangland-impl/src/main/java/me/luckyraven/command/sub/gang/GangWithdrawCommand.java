@@ -10,6 +10,7 @@ import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.economy.bank.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
@@ -20,6 +21,7 @@ import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.NavigableSet;
 
@@ -77,25 +79,25 @@ class GangWithdrawCommand extends SubArgument {
 			}
 
 			try {
-				double argAmount = Double.parseDouble(args[2]);
-				Gang   gang      = gangManager.getGang(user.getGangId());
+				BigDecimal argAmount = Currency.parse(args[2]);
+				Gang       gang      = gangManager.getGang(user.getGangId());
 
 				double rate   = Settings.getGangContributionRate();
 				int    length = String.valueOf((int) rate).length() - 1;
 				double round  = Math.pow(10, length);
 
-				double contribution = Math.round(argAmount / rate * round) / round;
+				double contribution = Math.round(argAmount.doubleValue() / rate * round) / round;
 
 				List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
 
 
-				if (gang.getEconomy().getBalance() < argAmount) {
+				if (gang.getEconomy().getAmount().compareTo(argAmount) < 0) {
 					user.sendMessage(Messages.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 					return;
 				}
 
-				user.getEconomy().deposit(argAmount);
-				gang.getEconomy().withdraw(argAmount);
+				user.getEconomy().depositAmount(argAmount);
+				gang.getEconomy().withdrawAmount(argAmount);
 				// the user can get to negative value
 				member.decreaseContribution(contribution);
 				for (User<Player> gangUser : gangOnlineMembers) {
@@ -103,7 +105,7 @@ class GangWithdrawCommand extends SubArgument {
 					        .sendMessage(Messages.GANG_MONEY_WITHDRAW.toString()
 					                                                 .replace("%player%", player.getName())
 					                                                 .replace("%amount%",
-					                                                          Settings.formatDouble(argAmount)));
+					                                                          Settings.formatAmount(argAmount)));
 				}
 				user.sendMessage(GanglandChatUtil.color("&c-" + contribution));
 			} catch (NumberFormatException exception) {
@@ -117,7 +119,7 @@ class GangWithdrawCommand extends SubArgument {
 
 			Gang           gang    = gangManager.getGang(user.getGangId());
 			EconomyHandler economy = gang.getEconomy();
-			double         balance = economy.getBalance();
+			double         balance = economy.getAmount().doubleValue();
 
 			if (balance <= 0D) return List.of("<amount>");
 

@@ -18,6 +18,7 @@ import me.luckyraven.database.TableLookup;
 import me.luckyraven.database.repositories.gang.GangAllianceRepository;
 import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.database.tables.player.UserTable;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
@@ -32,6 +33,7 @@ import me.luckyraven.util.utilities.TimeUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -201,14 +203,15 @@ class GangDeleteCommand extends SubArgument {
 				Member mem           = memberManager.getMember(currentPlayer.getUniqueId());
 
 				// Capture contribution before removeMember zeros it
-				double freq    = mem.getContribution();
-				double balance = gang.getEconomy().getBalance();
-				double amount  = Math.round(total) == 0 ? 0 : freq / total * balance;
+				double     freq    = mem.getContribution();
+				BigDecimal balance = gang.getEconomy().getAmount();
+				BigDecimal amount = Math.round(total) == 0 ? Currency.ZERO
+				                                           : Currency.multiply(balance, freq / total);
 
 				gang.removeMember(gangUser, mem);
 
-				gang.getEconomy().withdraw(amount);
-				gangUser.getEconomy().deposit(amount);
+				gang.getEconomy().withdrawAmount(amount);
+				gangUser.getEconomy().depositAmount(amount);
 
 				// Persist the member reset (gang_id, contribution, rank cleared by removeMember)
 				memberRepository.save(mem);
@@ -217,7 +220,7 @@ class GangDeleteCommand extends SubArgument {
 				String kickedFromGang      = Messages.KICKED_FROM_GANG.toString();
 				String gangRemoved         = Messages.GANG_REMOVED.toString();
 				String gangRemovedReplace  = gangRemoved.replace("%gang%", deleteGangName.get(user).get());
-				String depositMoneyReplace = depositMoney.replace("%amount%", Settings.formatDouble(amount));
+				String depositMoneyReplace = depositMoney.replace("%amount%", Settings.formatAmount(amount));
 				gangUser.sendMessage(kickedFromGang, gangRemovedReplace, depositMoneyReplace);
 			}
 
@@ -248,16 +251,17 @@ class GangDeleteCommand extends SubArgument {
 					                               .executeOne();
 					if (userRow.length == 0) continue;
 
-					double dbBalance = (double) userRow[0];
-					double gangBal   = gang.getEconomy().getBalance();
-					double amount    = Math.round(total) == 0 ? 0 : freq / total * gangBal;
+					double     dbBalance = (double) userRow[0];
+					BigDecimal gangBal   = gang.getEconomy().getAmount();
+					BigDecimal amount = Math.round(total) == 0 ? Currency.ZERO
+					                                           : Currency.multiply(gangBal, freq / total);
 
-					gang.getEconomy().withdraw(amount);
+					gang.getEconomy().withdrawAmount(amount);
 
 					// Update offline user balance
 					QueryBuilder.on(database, userTableName)
 					            .update()
-					            .set("balance", dbBalance + amount)
+					            .set("balance", dbBalance + amount.doubleValue())
 					            .where("uuid", uuid.toString())
 					            .execute();
 
@@ -281,10 +285,11 @@ class GangDeleteCommand extends SubArgument {
 			});
 
 			// return quarter of the gang creation fees
-			double amount = Settings.getGangCreateFee() / 4;
+			BigDecimal amount = Settings.getGangCreateFee()
+			                            .divide(BigDecimal.valueOf(4), Currency.SCALE, Currency.ROUNDING_MODE);
 
-			user.getEconomy().deposit(amount);
-			user.sendMessage(depositMoney.replace("%amount%", Settings.formatDouble(amount)));
+			user.getEconomy().depositAmount(amount);
+			user.sendMessage(depositMoney.replace("%amount%", Settings.formatAmount(amount)));
 
 			var gangRepository         = ganglandDatabase.getRepositoryRegistry().getRepository(Gang.class);
 			var gangAllianceRepository = ganglandDatabase.getRepositoryRegistry().getRepository(GangAlliance.class);

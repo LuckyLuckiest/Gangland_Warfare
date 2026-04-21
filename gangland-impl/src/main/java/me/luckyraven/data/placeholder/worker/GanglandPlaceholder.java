@@ -27,6 +27,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -188,7 +189,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (user == null) return null;
 
 		// economy
-		if (parameter.equals(userStr + "balance")) return NumberUtil.valueFormat(user.getEconomy().getBalance());
+		if (parameter.equals(userStr + "balance")) return NumberUtil.valueFormat(user.getEconomy().getAmount());
 
 		// bounty
 		if (parameter.equals(userStr + "bounty")) return NumberUtil.valueFormat(user.getBounty().getAmount());
@@ -243,9 +244,9 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 			return NumberUtil.valueFormat(Currency.of(bank.getDepositedToday()));
 		}
 		if (parameter.equals(bankStr + "remaining_deposit")) {
-			java.math.BigDecimal limit = tier == null ? Currency.ZERO : tier.dailyDepositLimit();
+			BigDecimal limit = tier == null ? Currency.ZERO : tier.dailyDepositLimit();
 			if (limit.signum() <= 0) return "∞";
-			java.math.BigDecimal remaining = limit.subtract(Currency.of(bank.getDepositedToday()));
+			BigDecimal remaining = limit.subtract(Currency.of(bank.getDepositedToday()));
 			if (remaining.signum() < 0) remaining = Currency.ZERO;
 			return NumberUtil.valueFormat(remaining);
 		}
@@ -296,7 +297,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (parameter.equals(gangStr + "created")) return gang.getDateCreatedString();
 
 		// economy
-		if (parameter.equals(gangStr + "balance")) return NumberUtil.valueFormat(gang.getEconomy().getBalance());
+		if (parameter.equals(gangStr + "balance")) return NumberUtil.valueFormat(gang.getEconomy().getAmount());
 
 		// bounty
 		if (parameter.equals(gangStr + "bounty")) return NumberUtil.valueFormat(gang.getBounty().getAmount());

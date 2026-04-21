@@ -4,6 +4,8 @@ import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.shop.message.ShopMessageContract;
 
+import java.math.BigDecimal;
+
 /**
  * Default {@link ShopMessageContract} implementation. Routes every call through a {@link Messages} enum key and
  * substitutes placeholders; shop-api views/handlers never touch Messages directly.
@@ -11,27 +13,27 @@ import me.luckyraven.shop.message.ShopMessageContract;
 public final class GanglandShopMessages implements ShopMessageContract {
 
 	@Override
-	public String purchaseSuccess(String displayName, double pricePaid) {
+	public String purchaseSuccess(String displayName, BigDecimal pricePaid) {
 		return Messages.SHOP_PURCHASE_SUCCESS.toString()
 		                                     .replace("%item%", displayName)
 		                                     .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                     .replace("%price%", Settings.formatDouble(pricePaid));
+		                                     .replace("%price%", Settings.formatAmount(pricePaid));
 	}
 
 	@Override
-	public String purchaseStackSuccess(String displayName, int quantity, double totalPaid) {
+	public String purchaseStackSuccess(String displayName, int quantity, BigDecimal totalPaid) {
 		return Messages.SHOP_PURCHASE_STACK_SUCCESS.toString()
 		                                           .replace("%item%", displayName)
 		                                           .replace("%quantity%", String.valueOf(quantity))
 		                                           .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                           .replace("%total%", Settings.formatDouble(totalPaid));
+		                                           .replace("%total%", Settings.formatAmount(totalPaid));
 	}
 
 	@Override
-	public String purchaseInsufficientFunds(double price) {
+	public String purchaseInsufficientFunds(BigDecimal price) {
 		return Messages.SHOP_PURCHASE_INSUFFICIENT_FUNDS.toString()
 		                                                .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                                .replace("%price%", Settings.formatDouble(price));
+		                                                .replace("%price%", Settings.formatAmount(price));
 	}
 
 	@Override
@@ -51,11 +53,11 @@ public final class GanglandShopMessages implements ShopMessageContract {
 	}
 
 	@Override
-	public String barterInsufficientValue(double askingValue, double offeredValue) {
+	public String barterInsufficientValue(BigDecimal askingValue, BigDecimal offeredValue) {
 		return Messages.SHOP_BARTER_INSUFFICIENT_VALUE.toString()
 		                                              .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                              .replace("%asking%", Settings.formatDouble(askingValue))
-		                                              .replace("%offered%", Settings.formatDouble(offeredValue));
+		                                              .replace("%asking%", Settings.formatAmount(askingValue))
+		                                              .replace("%offered%", Settings.formatAmount(offeredValue));
 	}
 
 	@Override
@@ -87,10 +89,10 @@ public final class GanglandShopMessages implements ShopMessageContract {
 	}
 
 	@Override
-	public String sellSuccess(double totalPaid, int itemCount) {
+	public String sellSuccess(BigDecimal totalPaid, int itemCount) {
 		return Messages.SHOP_SELL_SUCCESS.toString()
 		                                 .replace("%money_symbol%", Settings.getMoneySymbol())
-		                                 .replace("%total%", Settings.formatDouble(totalPaid))
+		                                 .replace("%total%", Settings.formatAmount(totalPaid))
 		                                 .replace("%count%", String.valueOf(itemCount));
 	}
 

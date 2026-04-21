@@ -46,9 +46,10 @@ public class Settings implements FileInitializer {
 			previousPage, homePage;
 	// economy
 	private static @Getter String moneySymbol, balanceFormat;
-	private static @Getter boolean balanceFormatEnabled;
+	private static @Getter boolean    balanceFormatEnabled;
 	// user configuration
-	private static @Getter double  userInitialBalance, userMaxBalance;
+	private static @Getter BigDecimal userInitialBalance;
+	private static @Getter BigDecimal userMaxBalance;
 	private static @Getter BigDecimal bankInitialBalance;
 	private static @Getter BigDecimal bankCreateFee;
 	private static @Getter BigDecimal bankRenameFee;
@@ -69,19 +70,21 @@ public class Settings implements FileInitializer {
 	private static @Getter int          respawnDelay;
 	private static @Getter boolean      respawnScreenEnabled;
 	private static @Getter String       respawnScreenTitle, respawnScreenSubtitle;
-	private static @Getter boolean respawnGameModeAllowFly;
-	private static @Getter String  respawnGameMode;
-	private static @Getter double  respawnHealthAmount;
-	private static @Getter int     respawnHungerAmount;
-	private static @Getter boolean respawnTeleportEnabled;
-	private static @Getter String  respawnTeleportWaypoint;
+	private static @Getter boolean    respawnGameModeAllowFly;
+	private static @Getter String     respawnGameMode;
+	private static @Getter double     respawnHealthAmount;
+	private static @Getter int        respawnHungerAmount;
+	private static @Getter boolean    respawnTeleportEnabled;
+	private static @Getter String     respawnTeleportWaypoint;
 	// bounty configuration
-	private static @Getter double  bountyEachKillValue, bountyMaxKill;
-	private static @Getter boolean bountyTimerEnabled;
-	private static @Getter double  bountyTimerMultiple, bountyTimerMax;
-	private static @Getter int    bountyTimeInterval;
+	private static @Getter BigDecimal bountyEachKillValue;
+	private static @Getter BigDecimal bountyMaxKill;
+	private static @Getter boolean    bountyTimerEnabled;
+	private static @Getter double     bountyTimerMultiple, bountyTimerMax;
+	private static @Getter int        bountyTimeInterval;
 	// wanted configuration
-	private static @Getter double wantedTakeMoneyAmount, wantedTakeMoneyMultiplier, wantedTimerMultiplierAmount;
+	private static @Getter BigDecimal wantedTakeMoneyAmount;
+	private static @Getter double     wantedTakeMoneyMultiplier, wantedTimerMultiplierAmount;
 	private static @Getter boolean wantedEnabled, wantedTimerEnabled, wantedTimerMultiplierEnabled,
 			wantedKillComboEnabled;
 	private static @Getter int wantedTimerTime, wantedLevelIncrement, wantedMaximumLevel, wantedKillComboResetAfter;
@@ -89,23 +92,27 @@ public class Settings implements FileInitializer {
 	// gang configuration
 	private static @Getter boolean       gangEnabled, gangNameDuplicates;
 	private static @Getter String gangRankHead, gangRankTail, gangDisplayNameChar;
-	private static @Getter double gangInitialBalance, gangCreateFee, gangMaxBalance, gangContributionRate;
+	private static @Getter BigDecimal gangInitialBalance;
+	private static @Getter BigDecimal gangCreateFee;
+	private static @Getter BigDecimal gangMaxBalance;
+	private static @Getter double     gangContributionRate;
 	// scoreboard configuration
-	private static @Getter boolean scoreboardEnabled;
-	private static @Getter String  scoreboardDriver;
+	private static @Getter boolean    scoreboardEnabled;
+	private static @Getter String     scoreboardDriver;
 	// civilian AI configuration
-	private static @Getter boolean civilianAiEnabled;
-	private static @Getter int     civilianAiTickRate;
+	private static @Getter boolean    civilianAiEnabled;
+	private static @Getter int        civilianAiTickRate;
 	// civilian spawner proximity configuration
-	private static @Getter double  civilianSpawnerActivationRadius;
-	private static @Getter double  civilianSpawnerDespawnRadius;
-	private static @Getter int     civilianSpawnerMaxNpcs;
-	private static @Getter double  civilianSpawnerSoftLeashRadius;
-	private static @Getter double  civilianSpawnerHardLeashRadius;
-	private static @Getter int     civilianSpawnerCheckInterval;
-	private static @Getter String  civilianSpawnerDefaultTypeId;
+	private static @Getter double     civilianSpawnerActivationRadius;
+	private static @Getter double     civilianSpawnerDespawnRadius;
+	private static @Getter int        civilianSpawnerMaxNpcs;
+	private static @Getter double     civilianSpawnerSoftLeashRadius;
+	private static @Getter double     civilianSpawnerHardLeashRadius;
+	private static @Getter int        civilianSpawnerCheckInterval;
+	private static @Getter String     civilianSpawnerDefaultTypeId;
 	// civilian spawn configuration
-	private static @Getter double  civilianSpawnMinDistance, civilianSpawnMaxDistance, civilianSpawnPhase1MinDistance;
+	private static @Getter double     civilianSpawnMinDistance, civilianSpawnMaxDistance,
+			civilianSpawnPhase1MinDistance;
 	private static @Getter double civilianSpawnRadiusShrinkStep, civilianSpawnSpawnerPreferenceRadius,
 			civilianSpawnVisibilityCheckDistance;
 	private static @Getter int civilianSpawnVerticalSearchRange, civilianSpawnYOffset,
@@ -131,72 +138,72 @@ public class Settings implements FileInitializer {
 	private static @Getter int copSpawnVerticalSearchRange, copSpawnYOffset, copSpawnMinOpenHorizontalSides;
 	private static @Getter int copSpawnPhase1Attempts, copSpawnPhase2Attempts;
 	// cop pursuit leash configuration
-	private static @Getter double  copPursuitMaxDistance;
-	private static @Getter int     copPursuitMaxTicks;
+	private static @Getter double     copPursuitMaxDistance;
+	private static @Getter int        copPursuitMaxTicks;
 	// cop return / despawn configuration
-	private static @Getter int     copReturnMaxTicks;
-	private static @Getter double  copReturnStationArrivalDistance;
+	private static @Getter int        copReturnMaxTicks;
+	private static @Getter double     copReturnStationArrivalDistance;
 	// cop misc configuration
-	private static @Getter int     copStartingAmmoMagazines;
-	private static @Getter int     jailMaxCapacity;
+	private static @Getter int        copStartingAmmoMagazines;
+	private static @Getter int        jailMaxCapacity;
 	// detainment transit / guard
-	private static @Getter int     detainmentTransitDelayTicks;
-	private static @Getter double  detainmentGuardRadius;
+	private static @Getter int        detainmentTransitDelayTicks;
+	private static @Getter double     detainmentGuardRadius;
 	// detainment break-free minigame
-	private static @Getter int     detainmentBreakFreeTapsRequired;
-	private static @Getter int     detainmentBreakFreeResetWindowTicks;
+	private static @Getter int        detainmentBreakFreeTapsRequired;
+	private static @Getter int        detainmentBreakFreeResetWindowTicks;
 	// detainment handcuff bribe
-	private static @Getter double  detainmentHandcuffBribeBaseCost;
-	private static @Getter double  detainmentHandcuffBribePerLevel;
+	private static @Getter double     detainmentHandcuffBribeBaseCost;
+	private static @Getter double     detainmentHandcuffBribePerLevel;
 	// detainment bail
-	private static @Getter double  detainmentBailBaseCost;
-	private static @Getter double  detainmentBailPerLevel;
+	private static @Getter double     detainmentBailBaseCost;
+	private static @Getter double     detainmentBailPerLevel;
 	// detainment jail bribe
-	private static @Getter double  detainmentJailBribeBaseCost;
-	private static @Getter double  detainmentJailBribePerLevel;
-	private static @Getter double  detainmentJailBribeSuccessChance;
-	private static @Getter int     detainmentJailBribeFailPenaltySeconds;
+	private static @Getter double     detainmentJailBribeBaseCost;
+	private static @Getter double     detainmentJailBribePerLevel;
+	private static @Getter double     detainmentJailBribeSuccessChance;
+	private static @Getter int        detainmentJailBribeFailPenaltySeconds;
 	// detainment sentence
-	private static @Getter int     detainmentSentenceBaseSeconds;
-	private static @Getter int     detainmentSentencePerWantedLevelSeconds;
+	private static @Getter int        detainmentSentenceBaseSeconds;
+	private static @Getter int        detainmentSentencePerWantedLevelSeconds;
 	// detainment fallback exit waypoint
-	private static @Getter String  detainmentFallbackExitWaypoint;
+	private static @Getter String     detainmentFallbackExitWaypoint;
 	// detainment sounds (XSound names; built into SoundConfiguration at playback)
-	private static @Getter String  detainmentBailSuccessSound;
-	private static @Getter String  detainmentBribeSuccessSound;
-	private static @Getter String  detainmentBribeFailSound;
-	private static @Getter String  detainmentTransitCommitSound;
-	private static @Getter String  detainmentSentenceCompleteSound;
+	private static @Getter String     detainmentBailSuccessSound;
+	private static @Getter String     detainmentBribeSuccessSound;
+	private static @Getter String     detainmentBribeFailSound;
+	private static @Getter String     detainmentTransitCommitSound;
+	private static @Getter String     detainmentSentenceCompleteSound;
 	// gadget - jetpack
-	private static @Getter int     gadgetJetpackThrustRampTicks;
-	private static @Getter double  gadgetJetpackDescentAccel;
-	private static @Getter double  gadgetJetpackMaxDescentSpeed;
-	private static @Getter double  gadgetJetpackHorizInfluence;
-	private static @Getter double  gadgetJetpackMaxHorizSpeed;
+	private static @Getter int        gadgetJetpackThrustRampTicks;
+	private static @Getter double     gadgetJetpackDescentAccel;
+	private static @Getter double     gadgetJetpackMaxDescentSpeed;
+	private static @Getter double     gadgetJetpackHorizInfluence;
+	private static @Getter double     gadgetJetpackMaxHorizSpeed;
 	// gadget - car
-	private static @Getter double  gadgetCarReverseSpeedRatio;
-	private static @Getter double  gadgetCarHardBrakeMultiplier;
-	private static @Getter int     gadgetCarFuelConsumePerTick;
+	private static @Getter double     gadgetCarReverseSpeedRatio;
+	private static @Getter double     gadgetCarHardBrakeMultiplier;
+	private static @Getter int        gadgetCarFuelConsumePerTick;
 	// block regeneration (weapon Break_Blocks modifier tuning)
-	private static @Getter int     blockRestoreDelayTicks;
-	private static @Getter int     blockRegenerationDelayTicks;
-	private static @Getter int     blockRegenerationStepTicks;
+	private static @Getter int        blockRestoreDelayTicks;
+	private static @Getter int        blockRegenerationDelayTicks;
+	private static @Getter int        blockRegenerationStepTicks;
 	// trader configuration
-	private static @Getter int     traderRespawnCooldownSeconds;
-	private static @Getter int     traderHeadTrackRadius;
-	private static @Getter String  traderFallbackTraitId;
-	private static @Getter int     traderMaxModeMultiplier;
-	private static @Getter int     traderSellMaxOfferSlots;
-	private static @Getter double  traderMoodPerSale;
-	private static @Getter double  traderTipAmount;
+	private static @Getter int        traderRespawnCooldownSeconds;
+	private static @Getter int        traderHeadTrackRadius;
+	private static @Getter String     traderFallbackTraitId;
+	private static @Getter int        traderMaxModeMultiplier;
+	private static @Getter int        traderSellMaxOfferSlots;
+	private static @Getter double     traderMoodPerSale;
+	private static @Getter BigDecimal traderTipAmount;
 	// banker configuration
-	private static @Getter int     bankerHeadTrackRadius;
-	private static @Getter double  bankerMaxHealth;
-	private static @Getter boolean bankerInvulnerable;
-	private static @Getter String  bankerFallbackTierId;
+	private static @Getter int        bankerHeadTrackRadius;
+	private static @Getter double     bankerMaxHealth;
+	private static @Getter boolean    bankerInvulnerable;
+	private static @Getter String     bankerFallbackTierId;
 	// loot chest configuration
-	private static @Getter long    lootChestCountdownTimer;
-	private static @Getter String  lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
+	private static @Getter long       lootChestCountdownTimer;
+	private static @Getter String     lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
 	private static @Getter List<String> lootChestAllowedBlocks;
 	private static @Getter double       lootChestRewardMoneyMinimum, lootChestRewardMoneyMaximum,
 			lootChestRewardExperienceMinimum, lootChestRewardExperienceMaximum;
@@ -388,8 +395,8 @@ public class Settings implements FileInitializer {
 		NodeReader level   = section(user, "Level", report);
 		NodeReader skill   = section(level, "Skill", report);
 
-		userInitialBalance     = dbl(account, "Initial_Balance", 0);
-		userMaxBalance         = dbl(account, "Maximum_Balance", 10_000_000);
+		userInitialBalance     = money(account, "Initial_Balance", "0");
+		userMaxBalance         = money(account, "Maximum_Balance", "10000000");
 		bankInitialBalance     = money(bank, "Initial_Balance", "0");
 		bankCreateFee          = money(bank, "Create_Cost", "5000");
 		bankRenameFee          = money(bank, "Rename_Fee", "1000");
@@ -436,8 +443,8 @@ public class Settings implements FileInitializer {
 		NodeReader bountyKill  = section(bounty, "Kill", report);
 		NodeReader bountyTimer = section(bounty, "Repeating_Timer", report);
 
-		bountyEachKillValue = dbl(bountyKill, "Each", 5);
-		bountyMaxKill       = dbl(bountyKill, "Maximum", 50_000);
+		bountyEachKillValue = money(bountyKill, "Each", "5");
+		bountyMaxKill       = money(bountyKill, "Maximum", "50000");
 		bountyTimerEnabled  = bool(bountyTimer, "Enable", true);
 		bountyTimerMultiple = dbl(bountyTimer, "Multiple", 2);
 		bountyTimeInterval  = intVal(bountyTimer, "Time", 300);
@@ -452,7 +459,7 @@ public class Settings implements FileInitializer {
 		NodeReader wantedKillComboSec = section(wanted, "Kill_Combo", report);
 
 		wantedEnabled                = bool(wanted, "Enable", true);
-		wantedTakeMoneyAmount        = dbl(wantedTakeMoney, "Amount", 50);
+		wantedTakeMoneyAmount        = money(wantedTakeMoney, "Amount", "50");
 		wantedTakeMoneyMultiplier    = dbl(wantedTakeMoney, "Multiplier", 5);
 		wantedTimerEnabled           = bool(wantedTimer, "Enable", true);
 		wantedTimerTime              = intVal(wantedTimer, "Time", 120);
@@ -474,9 +481,9 @@ public class Settings implements FileInitializer {
 		gangRankHead         = str(gangRank, "Head", "member");
 		gangRankTail         = str(gangRank, "Tail", "owner");
 		gangDisplayNameChar  = str(gang, "Display_Name_Char", "*").substring(0, 1);
-		gangInitialBalance   = dbl(gangAccount, "Initial_Balance", 0);
-		gangCreateFee        = dbl(gangAccount, "Create_Cost", 100_000);
-		gangMaxBalance       = dbl(gangAccount, "Maximum_Balance", 100_000_000_000.0);
+		gangInitialBalance   = money(gangAccount, "Initial_Balance", "0");
+		gangCreateFee        = money(gangAccount, "Create_Cost", "100000");
+		gangMaxBalance       = money(gangAccount, "Maximum_Balance", "100000000000");
 		gangContributionRate = dbl(gangAccount, "Contribution_Rate", 1_000);
 
 		// scoreboard
@@ -665,7 +672,7 @@ public class Settings implements FileInitializer {
 		traderMaxModeMultiplier      = intVal(trader, "Max_Mode_Multiplier", 1_000_000);
 		traderSellMaxOfferSlots      = intVal(traderSell, "Max_Offer_Slots", 20);
 		traderMoodPerSale            = dbl(traderSell, "Mood_Per_Sale", 0.02);
-		traderTipAmount              = dbl(trader, "Tip_Amount", 100.0);
+		traderTipAmount              = money(trader, "Tip_Amount", "100");
 
 		// banker
 		NodeReader banker = section(root, "Banker", report);

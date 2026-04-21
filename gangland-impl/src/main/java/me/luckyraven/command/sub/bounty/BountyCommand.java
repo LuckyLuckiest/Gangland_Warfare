@@ -44,7 +44,7 @@ public final class BountyCommand extends Command {
 			if (user == null) return;
 
 			String string      = Messages.BOUNTY_CURRENT.toString();
-			String replacement = Settings.formatDouble(user.getBounty().getAmount());
+			String replacement = Settings.formatAmount(user.getBounty().getAmount());
 			String replace     = string.replace("%bounty%", replacement);
 
 			user.sendMessage(replace);

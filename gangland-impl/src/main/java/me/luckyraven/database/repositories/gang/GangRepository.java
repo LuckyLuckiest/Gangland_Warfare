@@ -2,6 +2,7 @@ package me.luckyraven.database.repositories.gang;
 
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.database.tables.gang.GangTable;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.component.Table;
@@ -51,10 +52,10 @@ public class GangRepository extends AbstractRepository<Gang> {
 			gang.setDisplayName(displayName);
 			gang.setColor(color);
 			gang.setDescription(description);
-			gang.getEconomy().setBalance(balance);
+			gang.getEconomy().setAmount(Currency.of(balance));
 			gang.getLevel().setLevelValue(level);
 			gang.getLevel().setExperience(experience);
-			gang.getBounty().setAmount(bounty);
+			gang.getBounty().setAmount(Currency.of(bounty));
 			gang.setCreated(created);
 
 			gangs.add(gang);

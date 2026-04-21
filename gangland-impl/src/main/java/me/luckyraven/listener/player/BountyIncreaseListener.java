@@ -54,7 +54,7 @@ public class BountyIncreaseListener implements Listener {
 
 	private String getBountyIncrementMessage(BountyEvent event) {
 		String string = Messages.BOUNTY_INCREMENT.toString();
-		String amount = Settings.formatDouble(event.getAmountApplied());
+		String amount = Settings.formatAmount(event.getAmountApplied());
 		return string.replace("%bounty%", amount);
 	}
 

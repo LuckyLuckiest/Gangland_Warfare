@@ -2,6 +2,7 @@ package me.luckyraven.copsncrooks.npc.trader.mood;
 
 import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitProfile;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -18,8 +19,8 @@ public final class MoodService {
 		return state.getMood();
 	}
 
-	public void recordTip(UUID traderId, UUID playerId, double amount, TraderTraitProfile trait) {
-		adjust(traderId, playerId, amount * trait.moodPerTipCurrency());
+	public void recordTip(UUID traderId, UUID playerId, BigDecimal amount, TraderTraitProfile trait) {
+		adjust(traderId, playerId, amount.doubleValue() * trait.moodPerTipCurrency());
 	}
 
 	public void recordPurchase(UUID traderId, UUID playerId, TraderTraitProfile trait) {

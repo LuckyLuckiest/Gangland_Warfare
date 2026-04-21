@@ -6,6 +6,8 @@ import me.luckyraven.data.account.gang.Gang;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
+import java.math.BigDecimal;
+
 @Getter
 public class GangBountyEvent extends BountyEvent {
 
@@ -13,7 +15,7 @@ public class GangBountyEvent extends BountyEvent {
 
 	private final Gang gang;
 
-	public GangBountyEvent(boolean async, Gang gang, double amountApplied) {
+	public GangBountyEvent(boolean async, Gang gang, BigDecimal amountApplied) {
 		super(async, gang.getBounty(), amountApplied);
 
 		this.gang = gang;

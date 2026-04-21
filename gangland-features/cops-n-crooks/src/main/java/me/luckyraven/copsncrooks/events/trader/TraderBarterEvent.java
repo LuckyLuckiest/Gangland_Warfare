@@ -10,6 +10,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
@@ -24,8 +25,8 @@ public class TraderBarterEvent extends TraderEvent implements Cancellable {
 	private static final HandlerList HANDLERS = new HandlerList();
 
 	private final ShopItemEntry   entry;
-	private final double          askingValue;
-	private final double          offeredValue;
+	private final BigDecimal      askingValue;
+	private final BigDecimal      offeredValue;
 	private final List<ItemStack> offered;
 
 	@Setter
@@ -33,8 +34,8 @@ public class TraderBarterEvent extends TraderEvent implements Cancellable {
 	@Setter
 	private String  reason;
 
-	public TraderBarterEvent(Player player, TraderNpc trader, ShopItemEntry entry, double askingValue,
-	                         double offeredValue, List<ItemStack> offered) {
+	public TraderBarterEvent(Player player, TraderNpc trader, ShopItemEntry entry, BigDecimal askingValue,
+	                         BigDecimal offeredValue, List<ItemStack> offered) {
 		super(player, trader);
 		this.entry        = entry;
 		this.askingValue  = askingValue;

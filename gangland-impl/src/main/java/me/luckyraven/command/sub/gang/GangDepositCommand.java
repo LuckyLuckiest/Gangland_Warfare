@@ -10,6 +10,7 @@ import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.economy.bank.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
@@ -20,6 +21,7 @@ import me.luckyraven.util.utilities.NumberUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.NavigableSet;
 
@@ -77,34 +79,35 @@ class GangDepositCommand extends SubArgument {
 			}
 
 			try {
-				double argAmount = Double.parseDouble(args[2]);
-				Gang   gang      = gangManager.getGang(user.getGangId());
+				BigDecimal argAmount = Currency.parse(args[2]);
+				Gang       gang      = gangManager.getGang(user.getGangId());
 
 				double rate   = Settings.getGangContributionRate();
 				int    length = String.valueOf((int) rate).length() - 1;
 				double round  = Math.pow(10, length);
 
-				double contribution = Math.round(argAmount / rate * round) / round;
+				double contribution = Math.round(argAmount.doubleValue() / rate * round) / round;
 
 				List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
 
-				if (user.getEconomy().getBalance() < argAmount) {
+				if (user.getEconomy().getAmount().compareTo(argAmount) < 0) {
 					user.sendMessage(Messages.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 					return;
-				} else if (gang.getEconomy().getBalance() + argAmount > Settings.getGangMaxBalance()) {
+				} else if (gang.getEconomy().getAmount().add(argAmount)
+				               .compareTo(Settings.getGangMaxBalance()) > 0) {
 					user.sendMessage(Messages.CANNOT_EXCEED_MAXIMUM.toString());
 					return;
 				}
 
-				user.getEconomy().withdraw(argAmount);
-				gang.getEconomy().deposit(argAmount);
+				user.getEconomy().withdrawAmount(argAmount);
+				gang.getEconomy().depositAmount(argAmount);
 				member.increaseContribution(contribution);
 				for (User<Player> gangUser : gangOnlineMembers) {
 					gangUser.getUser()
 					        .sendMessage(Messages.GANG_MONEY_DEPOSIT.toString()
 					                                                .replace("%player%", player.getName())
 					                                                .replace("%amount%",
-					                                                         Settings.formatDouble(argAmount)));
+					                                                         Settings.formatAmount(argAmount)));
 				}
 				user.sendMessage(GanglandChatUtil.color("&a+" + contribution));
 			} catch (NumberFormatException exception) {
@@ -117,7 +120,7 @@ class GangDepositCommand extends SubArgument {
 			if (user == null || !user.hasGang()) return null;
 
 			EconomyHandler economy = user.getEconomy();
-			double         balance = economy.getBalance();
+			double         balance = economy.getAmount().doubleValue();
 
 			if (balance <= 0D) return List.of("<amount>");
 

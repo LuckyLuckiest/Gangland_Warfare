@@ -8,6 +8,8 @@ import me.luckyraven.economy.bank.EconomyException;
 import me.luckyraven.economy.bank.EconomyHandler;
 import org.bukkit.entity.Player;
 
+import java.math.BigDecimal;
+
 @CustomLog
 public final class GanglandTraderEconomy implements TraderEconomyContract {
 
@@ -18,19 +20,19 @@ public final class GanglandTraderEconomy implements TraderEconomyContract {
 	}
 
 	@Override
-	public TipResult tryTip(Player player, double amount) {
+	public TipResult tryTip(Player player, BigDecimal amount) {
 		User<Player> user = userManager.getUser(player);
 		if (user == null) {
 			return TipResult.ECONOMY_ERROR;
 		}
 
 		EconomyHandler economy = user.getEconomy();
-		if (economy.getBalance() < amount) {
+		if (economy.getAmount().compareTo(amount) < 0) {
 			return TipResult.INSUFFICIENT_FUNDS;
 		}
 
 		try {
-			economy.withdraw(amount);
+			economy.withdrawAmount(amount);
 			return TipResult.SUCCESS;
 		} catch (EconomyException e) {
 			log.warn("Economy error during tip for {}: {}", player.getName(), e.getMessage());

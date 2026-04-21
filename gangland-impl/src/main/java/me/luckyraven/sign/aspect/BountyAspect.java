@@ -20,6 +20,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -48,10 +49,10 @@ public class BountyAspect implements SignAspect {
 				return AspectResult.success("Opened bounty view!");
 			}
 			case CLEAR -> {
-				double amount = user.getBounty().getAmount();
+				BigDecimal amount = user.getBounty().getAmount();
 
 				try {
-					user.getEconomy().withdraw(amount);
+					user.getEconomy().withdrawAmount(amount);
 				} catch (EconomyException exception) {
 					return AspectResult.failure(exception.getMessage());
 				}
@@ -60,7 +61,7 @@ public class BountyAspect implements SignAspect {
 
 				String withdrawn = Messages.WITHDRAW_MONEY_PLAYER.toString(Messages.Type.NO_CHANGE);
 
-				return AspectResult.success(withdrawn.replace("%amount%", Settings.formatDouble(amount)));
+				return AspectResult.success(withdrawn.replace("%amount%", Settings.formatAmount(amount)));
 			}
 			default -> {
 				return AspectResult.failure("Unknown bounty operation type");
@@ -141,7 +142,7 @@ public class BountyAspect implements SignAspect {
 		List<String> lore = new ArrayList<>();
 
 		lore.add(String.format("&7&lBounty: &a%s&e%s", Settings.getMoneySymbol(),
-		                       Settings.formatDouble(user.getBounty().getAmount())));
+		                       Settings.formatAmount(user.getBounty().getAmount())));
 		lore.add("&7&lStatus: " + status);
 
 		headBuilder.setLore(lore);

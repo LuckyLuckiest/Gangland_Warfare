@@ -1,8 +1,10 @@
 package me.luckyraven.shop.valuation;
 
-public record ItemValuation(double unitPrice, Source source, String categoryId) {
+import java.math.BigDecimal;
 
-	public static final ItemValuation UNKNOWN = new ItemValuation(0.0, Source.UNKNOWN, null);
+public record ItemValuation(BigDecimal unitPrice, Source source, String categoryId) {
+
+	public static final ItemValuation UNKNOWN = new ItemValuation(BigDecimal.ZERO, Source.UNKNOWN, null);
 
 	public enum Source {
 		CATEGORY,
@@ -10,7 +12,7 @@ public record ItemValuation(double unitPrice, Source source, String categoryId) 
 	}
 
 	public boolean hasValue() {
-		return source != Source.UNKNOWN && unitPrice > 0.0;
+		return source != Source.UNKNOWN && unitPrice.signum() > 0;
 	}
 
 }

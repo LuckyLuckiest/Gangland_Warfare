@@ -98,7 +98,7 @@ public final class RemoveAccountListener implements Listener {
 		offlineUser.setDeaths(user.getDeaths());
 		offlineUser.setMobKills(user.getMobKills());
 		offlineUser.setGangId(user.getGangId());
-		offlineUser.getEconomy().setBalance(user.getEconomy().getBalance());
+		offlineUser.getEconomy().setAmount(user.getEconomy().getAmount());
 		offlineUser.getWanted().setLevel(user.getWanted().getLevel());
 		offlineUser.getLevel().setLevelValue(user.getLevel().getLevelValue());
 		offlineUser.getLevel().setExperience(user.getLevel().getExperience());

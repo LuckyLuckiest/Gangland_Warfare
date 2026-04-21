@@ -4,10 +4,12 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.util.timer.RepeatingTimer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -17,19 +19,19 @@ public class Bounty {
 
 	@Getter(AccessLevel.NONE)
 	@Setter(AccessLevel.NONE)
-	private final Map<CommandSender, Double> userSetBounty;
+	private final Map<CommandSender, BigDecimal> userSetBounty;
 
 	@Setter(AccessLevel.NONE)
 	private RepeatingTimer repeatingTimer;
 
-	private double amount;
-	private double baseAmount;
-	private double levelMultiplier;
+	private BigDecimal amount;
+	private BigDecimal baseAmount;
+	private double     levelMultiplier;
 
-	public Bounty(double baseAmount, double levelMultiplier) {
-		this.amount          = 0D;
+	public Bounty(BigDecimal baseAmount, double levelMultiplier) {
+		this.amount          = Currency.ZERO;
 		this.userSetBounty   = new HashMap<>();
-		this.baseAmount      = baseAmount;
+		this.baseAmount      = Currency.of(baseAmount);
 		this.levelMultiplier = levelMultiplier;
 	}
 
@@ -42,11 +44,11 @@ public class Bounty {
 	}
 
 	public boolean hasBounty() {
-		return amount != 0D;
+		return amount.signum() != 0;
 	}
 
 	public void resetBounty() {
-		this.amount = 0D;
+		this.amount = Currency.ZERO;
 
 		stopTimer();
 
@@ -57,46 +59,42 @@ public class Bounty {
 		return userSetBounty.size();
 	}
 
-	public double getSetAmount(CommandSender sender) {
+	public BigDecimal getSetAmount(CommandSender sender) {
 		return userSetBounty.get(sender);
 	}
 
-	public void addBounty(CommandSender sender, double amount, int userLevel) {
-		double scaledAmount = calculateLevelScaledBounty(amount, userLevel);
+	public void addBounty(CommandSender sender, BigDecimal amount, int userLevel) {
+		BigDecimal scaledAmount = calculateLevelScaledBounty(amount, userLevel);
 
 		addBounty(sender, scaledAmount);
 	}
 
-	public void addBounty(CommandSender sender, double amount) {
-		if (userSetBounty.containsKey(sender)) {
-			Double value          = userSetBounty.get(sender);
-			double primitiveValue = value == null ? 0D : value;
+	public void addBounty(CommandSender sender, BigDecimal amount) {
+		BigDecimal normalised = Currency.of(amount);
 
-			userSetBounty.put(sender, primitiveValue + amount);
-		} else {
-			userSetBounty.put(sender, amount);
-		}
+		BigDecimal previous = userSetBounty.getOrDefault(sender, Currency.ZERO);
+		userSetBounty.put(sender, previous.add(normalised));
 
-		this.amount += amount;
+		this.amount = this.amount.add(normalised);
 	}
 
-	public double calculateLevelScaledBounty(double baseAmount, int userLevel) {
-		double levelAdjustment = userLevel * levelMultiplier / 10;
-		return baseAmount * (1 + levelAdjustment);
+	public BigDecimal calculateLevelScaledBounty(BigDecimal baseAmount, int userLevel) {
+		double factor = 1 + userLevel * levelMultiplier / 10.0;
+		return Currency.multiply(baseAmount, factor);
 	}
 
-	public double getAutoBountyIncrease(int userLevel, int wantedLevel) {
-		double baseBounty = baseAmount * wantedLevel;
+	public BigDecimal getAutoBountyIncrease(int userLevel, int wantedLevel) {
+		BigDecimal baseBounty = Currency.multiply(baseAmount, wantedLevel);
 
 		return calculateLevelScaledBounty(baseBounty, userLevel);
 	}
 
 	public void removeBounty(CommandSender sender) {
-		double amount = userSetBounty.get(sender);
+		BigDecimal removed = userSetBounty.remove(sender);
+		if (removed == null) return;
 
-		userSetBounty.remove(sender);
-
-		this.amount = Math.max(0D, this.amount - amount);
+		BigDecimal next = this.amount.subtract(removed);
+		this.amount = next.signum() < 0 ? Currency.ZERO : next;
 	}
 
 	public boolean containsBounty(CommandSender sender) {
@@ -112,7 +110,7 @@ public class Bounty {
 
 	@Override
 	public String toString() {
-		return String.format("Bounty{amount=%.2f}", amount);
+		return "Bounty{amount=" + amount.toPlainString() + "}";
 	}
 
 }

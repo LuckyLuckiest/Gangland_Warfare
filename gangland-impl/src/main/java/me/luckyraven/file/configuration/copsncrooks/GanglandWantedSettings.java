@@ -4,6 +4,8 @@ import me.luckyraven.copsncrooks.wanted.WantedSettings;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 
+import java.math.BigDecimal;
+
 /**
  * {@link WantedSettings} implementation backed by {@link Settings} and {@link Messages}.
  */
@@ -25,7 +27,7 @@ public class GanglandWantedSettings implements WantedSettings {
 	}
 
 	@Override
-	public double getTakeMoneyAmount() {
+	public BigDecimal getTakeMoneyAmount() {
 		return Settings.getWantedTakeMoneyAmount();
 	}
 
@@ -40,7 +42,7 @@ public class GanglandWantedSettings implements WantedSettings {
 	}
 
 	@Override
-	public String formatMoneyLoss(double amount) {
-		return "&c&l-" + Settings.getMoneySymbol() + Settings.formatDouble(amount);
+	public String formatMoneyLoss(BigDecimal amount) {
+		return "&c&l-" + Settings.getMoneySymbol() + Settings.formatAmount(amount);
 	}
 }

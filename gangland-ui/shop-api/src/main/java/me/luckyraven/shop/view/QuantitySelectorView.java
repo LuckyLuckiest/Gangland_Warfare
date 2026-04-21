@@ -15,6 +15,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +59,7 @@ public final class QuantitySelectorView {
 	 * Open a picker where {@code staged} means "number of copies to purchase". Each copy costs {@code unitPrice} and
 	 * delivers {@code previewItem.getAmount()} items (the template's baked-in stack size). Total = unitPrice × copies.
 	 */
-	public void open(Player viewer, String title, ItemStack previewItem, double unitPrice, int startCopies,
+	public void open(Player viewer, String title, ItemStack previewItem, BigDecimal unitPrice, int startCopies,
 	                 int maxCopies, IntConsumer onConfirm, Runnable onClose) {
 		int capped = Math.max(1, maxCopies);
 		int staged = Math.clamp(startCopies, 1, capped);
@@ -118,9 +119,9 @@ public final class QuantitySelectorView {
 	}
 
 	private void renderInfo(QuantitySession session) {
-		int    itemsPerCopy = Math.max(1, session.item.getAmount());
-		int    totalItems   = itemsPerCopy * session.stagedQty;
-		double totalCost    = session.unitPrice * session.stagedQty;
+		int        itemsPerCopy = Math.max(1, session.item.getAmount());
+		int        totalItems   = itemsPerCopy * session.stagedQty;
+		BigDecimal totalCost    = session.unitPrice.multiply(BigDecimal.valueOf(session.stagedQty));
 
 		ItemBuilder info = new ItemBuilder(material(XMaterial.PAPER, Material.PAPER));
 		info.setDisplayName("&eSelect how many to buy")
@@ -133,9 +134,9 @@ public final class QuantitySelectorView {
 	}
 
 	private void renderItemPreview(QuantitySession session) {
-		int    itemsPerCopy = Math.max(1, session.item.getAmount());
-		int    totalItems   = itemsPerCopy * session.stagedQty;
-		double totalCost    = session.unitPrice * session.stagedQty;
+		int        itemsPerCopy = Math.max(1, session.item.getAmount());
+		int        totalItems   = itemsPerCopy * session.stagedQty;
+		BigDecimal totalCost    = session.unitPrice.multiply(BigDecimal.valueOf(session.stagedQty));
 
 		ItemStack   preview = session.item.clone();
 		ItemBuilder builder = new ItemBuilder(preview);
@@ -212,9 +213,9 @@ public final class QuantitySelectorView {
 	}
 
 	private void renderConfirmCancel(QuantitySession session) {
-		int    itemsPerCopy = Math.max(1, session.item.getAmount());
-		int    totalItems   = itemsPerCopy * session.stagedQty;
-		double totalCost    = session.unitPrice * session.stagedQty;
+		int        itemsPerCopy = Math.max(1, session.item.getAmount());
+		int        totalItems   = itemsPerCopy * session.stagedQty;
+		BigDecimal totalCost    = session.unitPrice.multiply(BigDecimal.valueOf(session.stagedQty));
 
 		ItemBuilder confirm = new ItemBuilder(material(XMaterial.LIME_WOOL, Material.GREEN_WOOL));
 		confirm.setDisplayName("&a&lCONFIRM — &f" + session.stagedQty + " × " + itemsPerCopy + " &afor &6$" +
@@ -346,7 +347,7 @@ public final class QuantitySelectorView {
 
 	static final class QuantitySession {
 		final ItemStack   item;
-		final double      unitPrice;
+		final BigDecimal  unitPrice;
 		final int         maxQuantity;
 		final IntConsumer onConfirm;
 		final Runnable    onClose;
@@ -356,7 +357,7 @@ public final class QuantitySelectorView {
 		int              mode             = 1;
 		boolean          expectingSubview = false;
 
-		QuantitySession(ItemStack item, double unitPrice, int maxQuantity, int stagedQty, IntConsumer onConfirm,
+		QuantitySession(ItemStack item, BigDecimal unitPrice, int maxQuantity, int stagedQty, IntConsumer onConfirm,
 		                Runnable onClose) {
 			this.item        = item;
 			this.unitPrice   = unitPrice;

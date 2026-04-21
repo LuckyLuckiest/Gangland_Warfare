@@ -93,7 +93,7 @@ class GangCreateCommand extends SubArgument {
 			}
 
 			try {
-				user.getEconomy().withdraw(Settings.getGangCreateFee());
+				user.getEconomy().withdrawAmount(Settings.getGangCreateFee());
 			} catch (EconomyException exception) {
 				CountdownTimer timer = createGangTimer.get(sender);
 				if (timer != null) {
@@ -116,7 +116,7 @@ class GangCreateCommand extends SubArgument {
 			member.setGangJoinDateLong(Instant.now().toEpochMilli());
 			gang.addMember(user, member, rankManager.get(Settings.getGangRankTail()));
 			gang.setName(createGangName.get(user).get());
-			gang.getEconomy().setBalance(Settings.getGangInitialBalance());
+			gang.getEconomy().setAmount(Settings.getGangInitialBalance());
 
 			gangManager.add(gang);
 
@@ -164,7 +164,7 @@ class GangCreateCommand extends SubArgument {
 
 			// Need to notify the player and give access to confirm
 			String string  = Messages.GANG_CREATE_FEE.toString();
-			String replace = string.replace("%amount%", Settings.formatDouble(Settings.getGangCreateFee()));
+			String replace = string.replace("%amount%", Settings.formatAmount(Settings.getGangCreateFee()));
 
 			user.sendMessage(replace);
 			user.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"gang", "create"}));

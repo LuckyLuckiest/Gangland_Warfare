@@ -61,7 +61,7 @@ public final class CreateAccountListener implements Listener {
 			player.sendMessage(GanglandChatUtil.prefixMessage(updateChecker.getUpdateMessage()));
 		}
 
-		user.getEconomy().setBalance(Settings.getUserInitialBalance());
+		user.getEconomy().setAmount(Settings.getUserInitialBalance());
 
 		// Remove the player from the offline user manager
 		User<OfflinePlayer> offlineUser = offlineUserManager.getUser(player);

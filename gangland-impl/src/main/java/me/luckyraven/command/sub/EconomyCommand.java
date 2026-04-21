@@ -127,7 +127,7 @@ public final class EconomyCommand extends Command {
 	                        String specifier, UserManager<Player> userManager) {
 		try {
 			BigDecimal argAmount  = Currency.parse(args[3]);
-			BigDecimal maxBalance = Currency.of(Settings.getUserMaxBalance());
+			BigDecimal maxBalance = Settings.getUserMaxBalance();
 			BigDecimal zero       = Currency.ZERO;
 
 			List<Player> players = specifiers.get(specifier).get();

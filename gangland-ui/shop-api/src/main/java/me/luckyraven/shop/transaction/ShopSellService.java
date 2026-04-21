@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -14,8 +15,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public final class ShopSellService {
 
-	public SellResult sell(Player player, PaymentHandler payment, List<ItemStack> offeredItems, double offeredTotal) {
-		if (offeredItems == null || offeredItems.isEmpty() || offeredTotal <= 0.0) {
+	public SellResult sell(Player player, PaymentHandler payment, List<ItemStack> offeredItems,
+	                       BigDecimal offeredTotal) {
+		if (offeredItems == null || offeredItems.isEmpty() || offeredTotal == null || offeredTotal.signum() <= 0) {
 			return SellResult.of(SellOutcome.NOTHING_VALUED);
 		}
 

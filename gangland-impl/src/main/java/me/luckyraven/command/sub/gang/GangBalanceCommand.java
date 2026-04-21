@@ -42,8 +42,8 @@ class GangBalanceCommand extends SubArgument {
 
 			Gang gang = gangManager.getGang(user.getGangId());
 			sender.sendMessage(Messages.GANG_BALANCE.toString()
-													.replace("%balance%", Settings.formatDouble(
-															gang.getEconomy().getBalance())));
+			                                        .replace("%balance%", Settings.formatAmount(
+															gang.getEconomy().getAmount())));
 		};
 	}
 

@@ -6,6 +6,8 @@ import me.luckyraven.data.account.user.User;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
+import java.math.BigDecimal;
+
 @Getter
 public class UserBountyEvent extends BountyEvent {
 
@@ -13,7 +15,7 @@ public class UserBountyEvent extends BountyEvent {
 
 	private final User<?> user;
 
-	public UserBountyEvent(boolean async, User<?> user, double amountApplied) {
+	public UserBountyEvent(boolean async, User<?> user, BigDecimal amountApplied) {
 		super(async, user.getBounty(), amountApplied);
 		this.user = user;
 	}

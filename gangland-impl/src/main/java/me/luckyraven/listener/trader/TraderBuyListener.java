@@ -22,6 +22,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
+import java.math.BigDecimal;
+
 @CustomLog
 @ListenerHandler
 public class TraderBuyListener implements Listener {
@@ -59,7 +61,7 @@ public class TraderBuyListener implements Listener {
 			return;
 		}
 
-		double         price   = event.getFinalPrice();
+		BigDecimal     price   = event.getFinalPrice();
 		int            copies  = event.getQuantity();
 		PaymentHandler payment = adapt(user.getEconomy());
 		PurchaseResult result  = purchaseService.purchase(player, payment, event.getEntry(), price, copies);
@@ -101,23 +103,23 @@ public class TraderBuyListener implements Listener {
 	private PaymentHandler adapt(EconomyHandler economy) {
 		return new PaymentHandler() {
 			@Override
-			public double getBalance() {
-				return economy.getBalance();
+			public BigDecimal getBalance() {
+				return economy.getAmount();
 			}
 
 			@Override
-			public void withdraw(double amount) throws PaymentException {
+			public void withdraw(BigDecimal amount) throws PaymentException {
 				try {
-					economy.withdraw(amount);
+					economy.withdrawAmount(amount);
 				} catch (EconomyException e) {
 					throw new PaymentException(e.getMessage(), e);
 				}
 			}
 
 			@Override
-			public void deposit(double amount) throws PaymentException {
+			public void deposit(BigDecimal amount) throws PaymentException {
 				try {
-					economy.deposit(amount);
+					economy.depositAmount(amount);
 				} catch (EconomyException e) {
 					throw new PaymentException(e.getMessage(), e);
 				}

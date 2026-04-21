@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
+
 @Getter
 @RequiredArgsConstructor
 public final class ShopItemEntry {
@@ -14,7 +16,7 @@ public final class ShopItemEntry {
 	private final ItemStack item;
 
 	@Nullable
-	private final Double price;
+	private final BigDecimal price;
 
 	public boolean hasPrice() {
 		return price != null;

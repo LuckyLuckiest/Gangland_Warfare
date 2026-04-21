@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -170,10 +171,20 @@ public final class SellCategoryItemsAdminView implements BeanLifecycle {
 		session.pendingSubview = true;
 
 		ItemBuilder builder = new ItemBuilder(source);
-		double      currentPrice;
+		BigDecimal  currentPrice;
 		if (builder.hasNBTTag(CategorySellValuator.SELL_PRICE_NBT_KEY)) {
 			Object raw = builder.getTagData(CategorySellValuator.SELL_PRICE_NBT_KEY);
-			currentPrice = raw instanceof Number n ? n.doubleValue() : session.category.getBasePrice();
+			if (raw instanceof Number n) {
+				currentPrice = BigDecimal.valueOf(n.doubleValue());
+			} else if (raw != null) {
+				try {
+					currentPrice = new BigDecimal(String.valueOf(raw).trim());
+				} catch (NumberFormatException ignored) {
+					currentPrice = session.category.getBasePrice();
+				}
+			} else {
+				currentPrice = session.category.getBasePrice();
+			}
 		} else {
 			currentPrice = session.category.getBasePrice();
 		}
@@ -191,7 +202,8 @@ public final class SellCategoryItemsAdminView implements BeanLifecycle {
 			// Write the new price onto the live stack in the slot so commitItems picks it up.
 			ItemStack live = session.handler.getInventory().getItem(slot);
 			if (live != null && live.getType() != Material.AIR) {
-				ItemStack tagged = new ItemBuilder(live).addTag(CategorySellValuator.SELL_PRICE_NBT_KEY, value).build();
+				ItemStack tagged = new ItemBuilder(live)
+						.addTag(CategorySellValuator.SELL_PRICE_NBT_KEY, value.toPlainString()).build();
 				session.handler.getInventory().setItem(slot, tagged);
 			}
 		}, reopen);

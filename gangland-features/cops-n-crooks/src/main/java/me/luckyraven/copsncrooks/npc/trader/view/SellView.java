@@ -28,6 +28,7 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -124,7 +125,7 @@ public final class SellView implements BeanLifecycle {
 	}
 
 	public void recomputeOffer(Session session) {
-		double       total     = 0.0;
+		BigDecimal   total     = BigDecimal.ZERO;
 		List<String> breakdown = new ArrayList<>();
 
 		for (int slot : session.dropzoneSlots) {
@@ -140,8 +141,8 @@ public final class SellView implements BeanLifecycle {
 			                                         session.sellMoodMultiplier);
 			String label = displayResolver.cleanDisplayName(decorated);
 			if (valuation.hasValue()) {
-				double lineTotal = valuation.unitPrice() * decorated.getAmount();
-				total += lineTotal;
+				BigDecimal lineTotal = valuation.unitPrice().multiply(BigDecimal.valueOf(decorated.getAmount()));
+				total = total.add(lineTotal);
 				breakdown.add(
 						"&7" + label + " x" + decorated.getAmount() + " &8→ &6$" + NumberUtil.valueFormat(lineTotal));
 			} else {
@@ -322,11 +323,12 @@ public final class SellView implements BeanLifecycle {
 	}
 
 	private void renderConfirm(Session session) {
-		ItemStack icon = session.offeredTotal > 0 ?
+		boolean hasOffer = session.offeredTotal.signum() > 0;
+		ItemStack icon = hasOffer ?
 		                 material(XMaterial.LIME_WOOL, Material.GREEN_WOOL) :
 		                 material(XMaterial.GRAY_WOOL, Material.GRAY_WOOL);
 		ItemBuilder confirm = new ItemBuilder(icon);
-		confirm.setDisplayName(session.offeredTotal > 0 ?
+		confirm.setDisplayName(hasOffer ?
 		                       "&aCONFIRM — $" + NumberUtil.valueFormat(session.offeredTotal) :
 		                       "&8Nothing to sell")
 		       .setLore("&7Sell for &6$" + NumberUtil.valueFormat(session.offeredTotal) + "&7.");
@@ -348,7 +350,7 @@ public final class SellView implements BeanLifecycle {
 	// ── Helpers ──────────────────────────────────────────────────────────
 
 	private void onConfirm(Player viewer, Session session) {
-		if (session.offeredTotal <= 0) {
+		if (session.offeredTotal.signum() <= 0) {
 			return;
 		}
 
@@ -464,8 +466,8 @@ public final class SellView implements BeanLifecycle {
 		final double                sellMoodMultiplier;
 
 		@Getter
-		double baseOffer = 0.0;
-		double       offeredTotal = 0.0;
+		BigDecimal baseOffer = BigDecimal.ZERO;
+		BigDecimal   offeredTotal = BigDecimal.ZERO;
 		List<String> breakdown    = new ArrayList<>();
 
 		boolean pendingSubview     = false;

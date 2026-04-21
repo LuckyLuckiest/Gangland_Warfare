@@ -64,7 +64,7 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 		Bank bank = user.getBank();
 		if (bank == null) {
 			return new BankerSnapshot(false,
-			                          Currency.of(user.getEconomy().getBalance()),
+			                          user.getEconomy().getAmount(),
 			                          Currency.ZERO, Currency.ZERO, Currency.ZERO, 0D,
 			                          null, null, null);
 		}
@@ -79,7 +79,7 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 		double interestRate = current == null ? 0D : current.interestRate();
 
 		return new BankerSnapshot(true,
-		                          Currency.of(user.getEconomy().getBalance()),
+		                          user.getEconomy().getAmount(),
 		                          bank.getEconomy().getAmount(),
 		                          remainingDep,
 		                          depositLimit,
@@ -97,7 +97,7 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 			                        Currency.of(settings.getInitialBalance()),
 			                        false);
 		}
-		BigDecimal cash    = Currency.of(user.getEconomy().getBalance());
+		BigDecimal cash    = user.getEconomy().getAmount();
 		BigDecimal fee     = Currency.of(settings.getCreateFee());
 		BigDecimal initial = Currency.of(settings.getInitialBalance());
 		boolean    has     = user.hasBank();
@@ -110,10 +110,10 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 		User<Player> user = userManager.getUser(player);
 		BigDecimal   fee  = Currency.of(settings.getRenameFee());
 		if (user == null || !user.hasBank() || user.getBank() == null) {
-			BigDecimal cash = user == null ? Currency.ZERO : Currency.of(user.getEconomy().getBalance());
+			BigDecimal cash = user == null ? Currency.ZERO : user.getEconomy().getAmount();
 			return new RenameInfo(false, null, cash, fee, false);
 		}
-		BigDecimal cash = Currency.of(user.getEconomy().getBalance());
+		BigDecimal cash = user.getEconomy().getAmount();
 		return new RenameInfo(true, user.getBank().getName(), cash, fee, cash.compareTo(fee) >= 0);
 	}
 
@@ -130,7 +130,7 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 		BankTier tier = maintain(bank);
 
 		BigDecimal normalised = Currency.of(amount);
-		BigDecimal cashBal    = Currency.of(user.getEconomy().getBalance());
+		BigDecimal cashBal    = user.getEconomy().getAmount();
 		if (cashBal.compareTo(normalised) < 0) return Result.INSUFFICIENT_CASH;
 
 		boolean bypass = player.hasPermission(BankCommand.BYPASS_CAP_PERMISSION);
@@ -222,7 +222,7 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 		if (user.hasBank()) return Result.ALREADY_HAS_ACCOUNT;
 
 		BigDecimal fee = Currency.of(settings.getCreateFee());
-		if (Currency.of(user.getEconomy().getBalance()).compareTo(fee) < 0) return Result.CANNOT_AFFORD_CREATION;
+		if (user.getEconomy().getAmount().compareTo(fee) < 0) return Result.CANNOT_AFFORD_CREATION;
 
 		Bank bank = new Bank(user.getUser().getUniqueId(), accountName);
 		bank.getEconomy().setUser(user);
@@ -262,7 +262,7 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 		if (trimmed.equals(bank.getName())) return Result.NAME_UNCHANGED;
 
 		BigDecimal fee = Currency.of(settings.getRenameFee());
-		if (Currency.of(user.getEconomy().getBalance()).compareTo(fee) < 0) return Result.CANNOT_AFFORD_RENAME;
+		if (user.getEconomy().getAmount().compareTo(fee) < 0) return Result.CANNOT_AFFORD_RENAME;
 
 		try {
 			if (fee.signum() > 0) user.getEconomy().withdrawAmount(fee);

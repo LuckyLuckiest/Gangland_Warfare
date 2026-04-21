@@ -43,8 +43,9 @@ public class GangTable extends Table<Gang> {
 	@Override
 	public Object[] getData(Gang data) {
 		return new Object[]{data.getId(), data.getName(), data.getDisplayName(), data.getDescription(), data.getColor(),
-							data.getEconomy().getBalance(), data.getLevel().getLevelValue(),
-							data.getLevel().getExperience(), data.getBounty().getAmount(), data.getCreated()};
+		                    data.getEconomy().getAmount().doubleValue(), data.getLevel().getLevelValue(),
+		                    data.getLevel().getExperience(), data.getBounty().getAmount().doubleValue(),
+		                    data.getCreated()};
 	}
 
 	@Override

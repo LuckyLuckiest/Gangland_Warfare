@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserFactory;
 import me.luckyraven.database.tables.player.UserTable;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.component.Table;
@@ -59,11 +60,11 @@ public class UserRepository extends AbstractRepository<User<? extends OfflinePla
 			user.setKills(kills);
 			user.setDeaths(deaths);
 			user.setMobKills(mobKills);
-			user.getEconomy().setBalance(balance);
+			user.getEconomy().setAmount(Currency.of(balance));
 			user.getWanted().setLevel(wanted);
 			user.getLevel().setLevelValue(level);
 			user.getLevel().setExperience(experience);
-			user.getBounty().setAmount(bounty);
+			user.getBounty().setAmount(Currency.of(bounty));
 
 			users.put(uuid, user);
 		}

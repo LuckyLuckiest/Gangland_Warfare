@@ -6,6 +6,7 @@ import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
 import me.luckyraven.economy.bank.Bank;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.economy.bank.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
@@ -121,7 +122,7 @@ public class PlayerDeathListener implements Listener {
 
 	private boolean handleCommandExecution(User<Player> user, Player player) {
 		EconomyHandler economy = user.getEconomy();
-		if (economy.getBalance() <= Settings.getDeathThreshold()) return true;
+		if (economy.getAmount().doubleValue() <= Settings.getDeathThreshold()) return true;
 
 		if (Settings.isDeathMoneyCommandEnabled()) {
 			for (String executable : Settings.getDeathMoneyCommandExecutables()) {
@@ -153,10 +154,10 @@ public class PlayerDeathListener implements Listener {
 
 		if (Settings.isDeathLoseMoney()) {
 			type = "&c&l-";
-			economy.withdraw(deduct);
+			economy.withdrawAmount(Currency.of(deduct));
 		} else {
 			type = "&a&l+";
-			economy.deposit(deduct);
+			economy.depositAmount(Currency.of(deduct));
 		}
 
 		// inform the player
@@ -243,10 +244,10 @@ public class PlayerDeathListener implements Listener {
 	private double amountDeduction(User<Player> user) {
 		Map<String, Double> variables = new HashMap<>();
 
-		variables.put("balance", user.getEconomy().getBalance());
+		variables.put("balance", user.getEconomy().getAmount().doubleValue());
 		variables.put("level", (double) user.getLevel().getLevelValue());
 		variables.put("experience", user.getLevel().getExperience());
-		variables.put("bounty", user.getBounty().getAmount());
+		variables.put("bounty", user.getBounty().getAmount().doubleValue());
 		variables.put("wanted", (double) user.getWanted().getLevel());
 
 		String formula = Settings.getDeathLoseMoneyFormula();

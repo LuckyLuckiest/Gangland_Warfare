@@ -65,7 +65,7 @@ public final class ShopYamlWriter {
 			map.put("Item", entry.getItem());
 
 			if (entry.hasPrice()) {
-				map.put("Price", entry.getPrice());
+				map.put("Price", entry.getPrice().toPlainString());
 			}
 
 			out.add(map);
@@ -81,7 +81,7 @@ public final class ShopYamlWriter {
 			Map<String, Object> map = new LinkedHashMap<>();
 			map.put("Id", category.getId());
 			map.put("Display_Name", category.getDisplayName());
-			map.put("Base_Price", category.getBasePrice());
+			map.put("Base_Price", category.getBasePrice().toPlainString());
 
 			List<ItemStack> items = new ArrayList<>(category.getItems());
 			map.put("Items", items);
@@ -99,7 +99,7 @@ public final class ShopYamlWriter {
 			Map<String, Object> map = new LinkedHashMap<>();
 			map.put("Id", category.getId());
 			map.put("Display_Name", category.getDisplayName());
-			map.put("Base_Price", category.getBasePrice());
+			map.put("Base_Price", category.getBasePrice().toPlainString());
 
 			List<ItemStack> items = new ArrayList<>(category.getItems());
 			map.put("Items", items);

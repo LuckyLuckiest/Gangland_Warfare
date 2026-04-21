@@ -10,6 +10,7 @@ import me.luckyraven.data.account.Level;
 import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.economy.bank.Bank;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.economy.bank.EconomyException;
 import me.luckyraven.economy.bank.EconomyHandler;
 import me.luckyraven.economy.bank.EconomyOwner;
@@ -25,6 +26,7 @@ import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -109,16 +111,17 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 	}
 
 	@Override
-	public double withdraw(double requestedAmount) {
+	public BigDecimal withdraw(BigDecimal requestedAmount) {
+		BigDecimal normalised = Currency.of(requestedAmount);
 		try {
-			economy.withdraw(requestedAmount);
-			return requestedAmount;
+			economy.withdrawAmount(normalised);
+			return normalised;
 		} catch (EconomyException ignored) {
-			double balance = economy.getBalance();
+			BigDecimal balance = economy.getAmount();
 			try {
-				economy.withdraw(balance);
+				economy.withdrawAmount(balance);
 			} catch (EconomyException ignored2) {
-				return 0;
+				return Currency.ZERO;
 			}
 			return balance;
 		}
@@ -241,8 +244,9 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 
 	@Override
 	public String toString() {
-		return String.format("User{data=%s,kd=%.2f,balance=%.2f,level=%d,bounty=%.2f,gangId=%d,permissions=%s}", user,
-		                     getKillDeathRatio(), economy.getBalance(), level.getLevelValue(), bounty.getAmount(),
+		return String.format("User{data=%s,kd=%.2f,balance=%s,level=%d,bounty=%s,gangId=%d,permissions=%s}", user,
+		                     getKillDeathRatio(), economy.getAmount().toPlainString(), level.getLevelValue(),
+		                     bounty.getAmount().toPlainString(),
 		                     gangId, permissionAttachment != null ?
 		                             permissionAttachment.getPermissions().keySet()
 									 .stream().toList() :

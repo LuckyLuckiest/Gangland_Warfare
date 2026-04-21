@@ -1,5 +1,7 @@
 package me.luckyraven.copsncrooks.wanted;
 
+import java.math.BigDecimal;
+
 /**
  * Provides wanted-timer configuration values to {@link WantedExecutor}.
  * <p>
@@ -27,7 +29,7 @@ public interface WantedSettings {
 	/**
 	 * Base money amount taken from the player per timer tick.
 	 */
-	double getTakeMoneyAmount();
+	BigDecimal getTakeMoneyAmount();
 
 	/**
 	 * Multiplier for money taken: {@code base * multiplier ^ level}.
@@ -43,5 +45,5 @@ public interface WantedSettings {
 	 * Returns a fully formatted money-loss notification string (e.g. {@code "&c&l-$5.00"}). Color codes should use the
 	 * {@code &} notation; the caller's {@code sendMessage} is expected to translate them.
 	 */
-	String formatMoneyLoss(double amount);
+	String formatMoneyLoss(BigDecimal amount);
 }

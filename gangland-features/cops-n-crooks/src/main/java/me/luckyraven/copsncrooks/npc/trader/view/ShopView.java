@@ -21,6 +21,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -78,10 +79,13 @@ public final class ShopView {
 			int entryIndex = base + i;
 			if (entryIndex >= entries.size()) break;
 
-			ShopItemEntry entry      = entries.get(entryIndex);
-			double        finalPrice = entry.hasPrice() ? Objects.requireNonNull(entry.getPrice()) * multiplier : 0D;
-			ItemBuilder   display    = buildDisplay(entry, finalPrice);
-			int           slot       = INTERIOR_SLOTS[i];
+			ShopItemEntry entry = entries.get(entryIndex);
+			BigDecimal finalPrice = entry.hasPrice()
+			                        ? Objects.requireNonNull(entry.getPrice())
+			                                 .multiply(BigDecimal.valueOf(multiplier))
+			                        : BigDecimal.ZERO;
+			ItemBuilder display = buildDisplay(entry, finalPrice);
+			int         slot    = INTERIOR_SLOTS[i];
 
 			handler.setItem(slot, display, false, (clicker, inv, builder) -> {
 				clicker.closeInventory();
@@ -133,7 +137,7 @@ public final class ShopView {
 		}
 	}
 
-	private ItemBuilder buildDisplay(ShopItemEntry entry, double finalPrice) {
+	private ItemBuilder buildDisplay(ShopItemEntry entry, BigDecimal finalPrice) {
 		ItemStack   copy    = entry.getItem().clone();
 		ItemBuilder builder = new ItemBuilder(copy);
 		builder.setDisplayName(displayResolver.cleanDisplayName(copy));

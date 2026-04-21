@@ -114,7 +114,7 @@ class BankWithdrawCommand extends SubArgument {
 			if (bank == null) return null;
 
 			EconomyHandler economy = bank.getEconomy();
-			double         balance = economy.getBalance();
+			double         balance = economy.getAmount().doubleValue();
 
 			if (balance <= 0D) return List.of("<amount>");
 

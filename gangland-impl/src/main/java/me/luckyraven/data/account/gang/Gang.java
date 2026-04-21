@@ -179,9 +179,10 @@ public class Gang {
 	@Override
 	public String toString() {
 		return String.format(
-				"Gang{id=%d,name=%s,description=%s,members=%s,created=%s,balance=%.2f,level=%.2f,bounty=%,.2f,allies=%s}",
-				getId(), name, description, getMembers(), getDateCreatedString(), economy.getBalance(),
-				level.getExperience(), bounty.getAmount(), getAllyListString());
+				"Gang{id=%d,name=%s,description=%s,members=%s,created=%s,balance=%s,level=%.2f,bounty=%s,allies=%s}",
+				getId(), name, description, getMembers(), getDateCreatedString(),
+				economy.getAmount().toPlainString(),
+				level.getExperience(), bounty.getAmount().toPlainString(), getAllyListString());
 	}
 
 	public enum State {

@@ -141,7 +141,7 @@ class BankDepositCommand extends SubArgument {
 			if (user == null || !user.hasBank()) return null;
 
 			EconomyHandler economy = user.getEconomy();
-			double         balance = economy.getBalance();
+			double         balance = economy.getAmount().doubleValue();
 
 			if (balance <= 0D) return List.of("<amount>");
 

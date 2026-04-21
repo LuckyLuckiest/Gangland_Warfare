@@ -2,6 +2,8 @@ package me.luckyraven.copsncrooks.npc.trader.config;
 
 import me.luckyraven.shop.config.ShopUiSettings;
 
+import java.math.BigDecimal;
+
 public interface TraderSettings extends ShopUiSettings {
 
 	int getRespawnCooldownSeconds();
@@ -14,6 +16,6 @@ public interface TraderSettings extends ShopUiSettings {
 
 	double getMoodPerSale();
 
-	double getTipAmount();
+	BigDecimal getTipAmount();
 
 }

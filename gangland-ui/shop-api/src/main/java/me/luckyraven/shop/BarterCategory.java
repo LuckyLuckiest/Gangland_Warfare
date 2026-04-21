@@ -5,6 +5,7 @@ import lombok.Setter;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,9 +17,9 @@ public final class BarterCategory {
 	@Setter
 	private       String          displayName;
 	@Setter
-	private       double          basePrice;
+	private       BigDecimal      basePrice;
 
-	public BarterCategory(String id, String displayName, double basePrice, List<ItemStack> items) {
+	public BarterCategory(String id, String displayName, BigDecimal basePrice, List<ItemStack> items) {
 		this.id          = id;
 		this.displayName = displayName;
 		this.basePrice   = basePrice;
@@ -26,7 +27,7 @@ public final class BarterCategory {
 	}
 
 	public static BarterCategory empty(String id) {
-		return new BarterCategory(id, id, 0.0, new ArrayList<>());
+		return new BarterCategory(id, id, BigDecimal.ZERO, new ArrayList<>());
 	}
 
 	public boolean matches(ItemStack stack) {

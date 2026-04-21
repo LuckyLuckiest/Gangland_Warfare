@@ -2,18 +2,20 @@ package me.luckyraven.shop.transaction;
 
 import org.jetbrains.annotations.Nullable;
 
-public record SellResult(SellOutcome outcome, double totalPaid, int itemsSold, @Nullable String errorDetail) {
+import java.math.BigDecimal;
 
-	public static SellResult success(double totalPaid, int itemsSold) {
+public record SellResult(SellOutcome outcome, BigDecimal totalPaid, int itemsSold, @Nullable String errorDetail) {
+
+	public static SellResult success(BigDecimal totalPaid, int itemsSold) {
 		return new SellResult(SellOutcome.SUCCESS, totalPaid, itemsSold, null);
 	}
 
 	public static SellResult of(SellOutcome outcome) {
-		return new SellResult(outcome, 0D, 0, null);
+		return new SellResult(outcome, BigDecimal.ZERO, 0, null);
 	}
 
 	public static SellResult economyError(String detail) {
-		return new SellResult(SellOutcome.ECONOMY_ERROR, 0D, 0, detail);
+		return new SellResult(SellOutcome.ECONOMY_ERROR, BigDecimal.ZERO, 0, detail);
 	}
 
 }

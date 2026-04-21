@@ -1,5 +1,7 @@
 package me.luckyraven.copsncrooks.bounty;
 
+import java.math.BigDecimal;
+
 /**
  * Provides bounty-timer configuration values to {@link BountyExecutor}.
  * <p>
@@ -16,7 +18,7 @@ public interface BountySettings {
 	/**
 	 * Base bounty value awarded per kill. Used as the seed value when the current bounty is zero.
 	 */
-	double getEachKillValue();
+	BigDecimal getEachKillValue();
 
 	/**
 	 * Multiplier applied each timer tick to grow the bounty exponentially.

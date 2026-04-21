@@ -3,6 +3,8 @@ package me.luckyraven.shop.transaction;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
+
 /**
  * Typed result of a {@link ShopPurchaseService#purchase} invocation. Integrations switch on {@link #outcome()} and
  * resolve each case to their preferred Messages key. {@link #delivery()} and {@link #pricePaid()} are only populated on
@@ -11,19 +13,19 @@ import org.jetbrains.annotations.Nullable;
  */
 public record PurchaseResult(PurchaseOutcome outcome,
                              @Nullable ItemStack delivery,
-                             double pricePaid,
+                             BigDecimal pricePaid,
                              @Nullable String errorDetail) {
 
-	public static PurchaseResult success(ItemStack delivery, double pricePaid) {
+	public static PurchaseResult success(ItemStack delivery, BigDecimal pricePaid) {
 		return new PurchaseResult(PurchaseOutcome.SUCCESS, delivery, pricePaid, null);
 	}
 
 	public static PurchaseResult of(PurchaseOutcome outcome) {
-		return new PurchaseResult(outcome, null, 0D, null);
+		return new PurchaseResult(outcome, null, BigDecimal.ZERO, null);
 	}
 
 	public static PurchaseResult economyError(String detail) {
-		return new PurchaseResult(PurchaseOutcome.ECONOMY_ERROR, null, 0D, detail);
+		return new PurchaseResult(PurchaseOutcome.ECONOMY_ERROR, null, BigDecimal.ZERO, detail);
 	}
 
 }

@@ -25,12 +25,13 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 @RequiredArgsConstructor
 public final class ShopAdminView {
 
-	private static final double DEFAULT_NEW_ENTRY_PRICE = 100D;
+	private static final BigDecimal DEFAULT_NEW_ENTRY_PRICE = BigDecimal.valueOf(100);
 
 	private static final int   INVENTORY_SIZE   = 54;
 	private static final int[] INTERIOR_SLOTS   = {
@@ -350,8 +351,8 @@ public final class ShopAdminView {
 		}
 
 		ShopItemEntry entry    = session.buyEntries.get(entryIndex);
-		Double        current  = entry.getPrice();
-		double        original = current != null ? current : DEFAULT_NEW_ENTRY_PRICE;
+		BigDecimal    current  = entry.getPrice();
+		BigDecimal    original = current != null ? current : DEFAULT_NEW_ENTRY_PRICE;
 
 		session.pendingSubview = true;
 
@@ -673,7 +674,7 @@ public final class ShopAdminView {
 			return (int) Math.ceil(count / (double) ENTRIES_PER_PAGE);
 		}
 
-		public void updatePrice(int entryIndex, double newPrice) {
+		public void updatePrice(int entryIndex, BigDecimal newPrice) {
 			if (entryIndex < 0 || entryIndex >= buyEntries.size()) {
 				return;
 			}
@@ -692,7 +693,7 @@ public final class ShopAdminView {
 			return buyEntries.get(entryIndex);
 		}
 
-		public Double getEffectivePrice(int entryIndex) {
+		public BigDecimal getEffectivePrice(int entryIndex) {
 			ShopItemEntry entry = getEntry(entryIndex);
 			return entry != null ? entry.getPrice() : null;
 		}
@@ -701,7 +702,7 @@ public final class ShopAdminView {
 			List<ShopItemEntry> out = new ArrayList<>(buyEntries.size());
 			for (int i = 0; i < buyEntries.size(); i++) {
 				ShopItemEntry source = buyEntries.get(i);
-				Double        price  = source.getPrice();
+				BigDecimal    price  = source.getPrice();
 				ItemStack     raw    = refresherRegistry.refresh(source.getItem(), null);
 				if (price == null) {
 					price = DEFAULT_NEW_ENTRY_PRICE;

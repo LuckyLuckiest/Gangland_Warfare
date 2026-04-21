@@ -1,5 +1,7 @@
 package me.luckyraven.shop.message;
 
+import java.math.BigDecimal;
+
 /**
  * Message contract for the shop framework. Integrations provide an implementation that maps each call to their
  * preferred {@code Messages} enum value + placeholder substitution. Keeps shop-api decoupled from the gangland-impl
@@ -7,11 +9,11 @@ package me.luckyraven.shop.message;
  */
 public interface ShopMessageContract {
 
-	String purchaseSuccess(String displayName, double pricePaid);
+	String purchaseSuccess(String displayName, BigDecimal pricePaid);
 
-	String purchaseStackSuccess(String displayName, int quantity, double totalPaid);
+	String purchaseStackSuccess(String displayName, int quantity, BigDecimal totalPaid);
 
-	String purchaseInsufficientFunds(double price);
+	String purchaseInsufficientFunds(BigDecimal price);
 
 	String purchaseEconomyError(String detail);
 
@@ -19,7 +21,7 @@ public interface ShopMessageContract {
 
 	String barterMissingItems();
 
-	String barterInsufficientValue(double askingValue, double offeredValue);
+	String barterInsufficientValue(BigDecimal askingValue, BigDecimal offeredValue);
 
 	String barterNotAllowed();
 
@@ -31,7 +33,7 @@ public interface ShopMessageContract {
 
 	String shopAdminEntryRemoved(int index);
 
-	String sellSuccess(double totalPaid, int itemCount);
+	String sellSuccess(BigDecimal totalPaid, int itemCount);
 
 	String sellNothingValued();
 

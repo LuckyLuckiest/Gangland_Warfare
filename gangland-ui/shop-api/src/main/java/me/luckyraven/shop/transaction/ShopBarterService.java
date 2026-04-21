@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,12 +27,12 @@ public final class ShopBarterService {
 
 	private final ItemRefresherRegistry refresherRegistry;
 
-	public BarterResult barter(Player player, ShopItemEntry entry, double askingValue, double offeredValue,
+	public BarterResult barter(Player player, ShopItemEntry entry, BigDecimal askingValue, BigDecimal offeredValue,
 	                           List<ItemStack> offered) {
 		if (offered == null || offered.isEmpty()) {
 			return BarterResult.of(BarterOutcome.NOT_BARTERABLE, askingValue, offeredValue);
 		}
-		if (offeredValue < askingValue) {
+		if (offeredValue.compareTo(askingValue) < 0) {
 			return BarterResult.of(BarterOutcome.INSUFFICIENT_VALUE, askingValue, offeredValue);
 		}
 

@@ -1,10 +1,13 @@
 package me.luckyraven.copsncrooks.bounty;
 
 import me.luckyraven.copsncrooks.events.bounty.BountyEvent;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.util.feature.Executor;
 import me.luckyraven.util.timer.Timer;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.math.BigDecimal;
 
 /**
  * Drives the periodic bounty-increase cycle for a single entity.
@@ -40,26 +43,32 @@ public class BountyExecutor extends Executor {
 
 		if (hasBounty(timer, bounty)) return;
 
-		double oldAmount = bounty.getAmount();
+		BigDecimal oldAmount = bounty.getAmount();
 
-		double currentBounty = oldAmount == 0D ? settings.getEachKillValue() / settings.getTimerMultiple() : oldAmount;
+		BigDecimal currentBounty;
+		if (oldAmount.signum() == 0) {
+			double multiple = settings.getTimerMultiple();
+			currentBounty = settings.getEachKillValue()
+			                        .divide(BigDecimal.valueOf(multiple), Currency.SCALE, Currency.ROUNDING_MODE);
+		} else {
+			currentBounty = oldAmount;
+		}
 
-		if (oldAmount >= settings.getTimerMax()) {
+		if (oldAmount.compareTo(BigDecimal.valueOf(settings.getTimerMax())) >= 0) {
 			timer.stop();
 			return;
 		}
 
-		double baseIncrease   = currentBounty * settings.getTimerMultiple();
-		double scaledIncrease = bounty.calculateLevelScaledBounty(baseIncrease, context.getUserLevel());
-		double amount         = currentBounty + (scaledIncrease - currentBounty);
+		BigDecimal baseIncrease   = Currency.multiply(currentBounty, settings.getTimerMultiple());
+		BigDecimal scaledIncrease = bounty.calculateLevelScaledBounty(baseIncrease, context.getUserLevel());
 
-		event.setAmountApplied(amount - currentBounty);
+		event.setAmountApplied(scaledIncrease.subtract(currentBounty));
 
 		Bukkit.getPluginManager().callEvent(event);
 
 		if (event.isCancelled()) return;
 
-		bounty.setAmount(amount);
+		bounty.setAmount(scaledIncrease);
 
 		hasBounty(timer, bounty);
 	}

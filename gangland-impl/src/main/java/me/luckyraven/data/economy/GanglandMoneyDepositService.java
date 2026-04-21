@@ -13,6 +13,8 @@ import me.luckyraven.util.utilities.ChatUtil;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
+
 /**
  * Gangland-impl implementation of the {@link MoneyDepositService} contract: looks up the {@link User} for the picking
  * player, deposits via {@code EconomyHandler}, and emits both a chat line and an action-bar flash using the templates
@@ -40,7 +42,7 @@ public class GanglandMoneyDepositService implements MoneyDepositService {
 	}
 
 	@Override
-	public void deposit(Player player, java.math.BigDecimal amount, String variationId) {
+	public void deposit(Player player, BigDecimal amount, String variationId) {
 		if (player == null || amount == null || amount.signum() <= 0) return;
 
 		User<Player> user = userManager.getUser(player);
@@ -74,11 +76,11 @@ public class GanglandMoneyDepositService implements MoneyDepositService {
 		if (player == null) return 0;
 		User<Player> user = userManager.getUser(player);
 		if (user == null) return 0;
-		return user.getEconomy().getBalance();
+		return user.getEconomy().getAmount().doubleValue();
 	}
 
 	@Override
-	public java.math.BigDecimal getBalanceAsAmount(Player player) {
+	public BigDecimal getBalanceAsAmount(Player player) {
 		if (player == null) return Currency.ZERO;
 		User<Player> user = userManager.getUser(player);
 		if (user == null) return Currency.ZERO;

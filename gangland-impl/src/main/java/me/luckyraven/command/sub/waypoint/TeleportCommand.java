@@ -10,6 +10,7 @@ import me.luckyraven.data.teleportation.IllegalTeleportException;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.data.teleportation.WaypointTeleport;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.GanglandChatUtil;
@@ -21,6 +22,7 @@ import me.luckyraven.util.utilities.TimeUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 @CommandHandler
@@ -137,7 +139,7 @@ public final class TeleportCommand extends Command {
 			user.sendMessage(GanglandChatUtil.commandMessage(teleportationCost));
 			user.sendMessage(GanglandChatUtil.color(confirmationMessage));
 		} else {
-			if (user.getEconomy().getBalance() < waypoint.getCost()) {
+			if (user.getEconomy().getAmount().compareTo(Currency.of(waypoint.getCost())) < 0) {
 				user.sendMessage(Messages.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 			} else {
 				reconfirm.remove(player);
@@ -176,10 +178,11 @@ public final class TeleportCommand extends Command {
 
 				if (teleportResult.success()) {
 					if (waypoint1.getCost() != 0D) {
-						user1.getEconomy().withdraw(waypoint1.getCost());
+						BigDecimal cost = Currency.of(waypoint1.getCost());
+						user1.getEconomy().withdrawAmount(cost);
 
 						String string  = Messages.WITHDRAW_MONEY_PLAYER.toString();
-						String replace = string.replace("%amount%", Settings.formatDouble(waypoint1.getCost()));
+						String replace = string.replace("%amount%", Settings.formatAmount(cost));
 
 						user.sendMessage(replace);
 					}

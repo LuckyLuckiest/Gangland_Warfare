@@ -3,6 +3,7 @@ package me.luckyraven.shop.transaction;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
@@ -14,24 +15,24 @@ import java.util.List;
 public record BarterResult(BarterOutcome outcome,
                            @Nullable ItemStack delivery,
                            List<ItemStack> consumed,
-                           double askingValue,
-                           double offeredValue) {
+                           BigDecimal askingValue,
+                           BigDecimal offeredValue) {
 
 	public BarterResult {
 		consumed = consumed == null ? Collections.emptyList() : List.copyOf(consumed);
 	}
 
 	public static BarterResult success(ItemStack delivery, List<ItemStack> consumed,
-	                                   double askingValue, double offeredValue) {
+	                                   BigDecimal askingValue, BigDecimal offeredValue) {
 		return new BarterResult(BarterOutcome.SUCCESS, delivery, consumed, askingValue, offeredValue);
 	}
 
-	public static BarterResult of(BarterOutcome outcome, double askingValue, double offeredValue) {
+	public static BarterResult of(BarterOutcome outcome, BigDecimal askingValue, BigDecimal offeredValue) {
 		return new BarterResult(outcome, null, Collections.emptyList(), askingValue, offeredValue);
 	}
 
 	public static BarterResult of(BarterOutcome outcome) {
-		return new BarterResult(outcome, null, Collections.emptyList(), 0.0, 0.0);
+		return new BarterResult(outcome, null, Collections.emptyList(), BigDecimal.ZERO, BigDecimal.ZERO);
 	}
 
 }

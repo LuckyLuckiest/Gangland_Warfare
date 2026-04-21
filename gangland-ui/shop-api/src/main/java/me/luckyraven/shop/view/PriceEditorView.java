@@ -16,11 +16,12 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.function.DoubleConsumer;
+import java.util.function.Consumer;
 
 @RequiredArgsConstructor
 public final class PriceEditorView {
@@ -55,14 +56,14 @@ public final class PriceEditorView {
 	}
 
 	public void open(Player admin, ShopAdminView.Session parentSession, int editedSlot, ItemStack item,
-	                 double originalPrice, Runnable reopenCallback) {
-		DoubleConsumer commit = value -> parentSession.updatePrice(editedSlot, value);
-		String         title  = "&8Price Editor — Slot " + editedSlot;
+	                 BigDecimal originalPrice, Runnable reopenCallback) {
+		Consumer<BigDecimal> commit = value -> parentSession.updatePrice(editedSlot, value);
+		String               title  = "&8Price Editor — Slot " + editedSlot;
 		openInternal(admin, item, originalPrice, commit, reopenCallback, title);
 	}
 
-	public void openGeneric(Player admin, ItemStack displayItem, double originalPrice, String titleSuffix,
-	                        DoubleConsumer commit, Runnable reopenCallback) {
+	public void openGeneric(Player admin, ItemStack displayItem, BigDecimal originalPrice, String titleSuffix,
+	                        Consumer<BigDecimal> commit, Runnable reopenCallback) {
 		String title = "&8Price Editor — " + titleSuffix;
 		openInternal(admin, displayItem, originalPrice, commit, reopenCallback, title);
 	}
@@ -89,7 +90,7 @@ public final class PriceEditorView {
 		}
 	}
 
-	private void openInternal(Player admin, ItemStack item, double originalPrice, DoubleConsumer commit,
+	private void openInternal(Player admin, ItemStack item, BigDecimal originalPrice, Consumer<BigDecimal> commit,
 	                          Runnable reopenCallback, String title) {
 		PriceEditorSession session = new PriceEditorSession(commit, item.clone(), originalPrice, reopenCallback);
 		session.handler = new InventoryHandler(plugin, title, INVENTORY_SIZE, admin);
@@ -149,7 +150,7 @@ public final class PriceEditorView {
 			final int greenDelta = greenStep;
 			session.handler.setItem(GREEN_SLOTS[i], green, false, (p, inv, b) -> {
 				SOUND_ADD.playSound(p);
-				adjustPrice(session, +greenDelta);
+				adjustPrice(session, BigDecimal.valueOf(greenDelta));
 			});
 
 			// Mirror the green row around the preview: largest step nearest the item, smallest at the edge.
@@ -162,7 +163,7 @@ public final class PriceEditorView {
 			final int redDelta = redStep;
 			session.handler.setItem(RED_SLOTS[i], red, false, (p, inv, b) -> {
 				SOUND_SUB.playSound(p);
-				adjustPrice(session, -redDelta);
+				adjustPrice(session, BigDecimal.valueOf(-redDelta));
 			});
 		}
 	}
@@ -221,8 +222,9 @@ public final class PriceEditorView {
 
 	// ── Actions ──────────────────────────────────────────────────────────
 
-	private void adjustPrice(PriceEditorSession session, double delta) {
-		session.stagedPrice = Math.max(0D, session.stagedPrice + delta);
+	private void adjustPrice(PriceEditorSession session, BigDecimal delta) {
+		BigDecimal next = session.stagedPrice.add(delta);
+		session.stagedPrice = next.signum() < 0 ? BigDecimal.ZERO : next;
 		renderInfo(session);
 		renderItemPreview(session);
 		renderCustomPriceButton(session);
@@ -259,14 +261,14 @@ public final class PriceEditorView {
 		builder.plugin(plugin)
 		       .title("Set Price")
 		       .itemLeft(material(XMaterial.PAPER, Material.PAPER))
-		       .text(String.valueOf(session.stagedPrice))
+		       .text(session.stagedPrice.toPlainString())
 		       .onClick((slot, state) -> {
 				   if (slot != AnvilGUI.Slot.OUTPUT) return Collections.emptyList();
 
 				   String raw = state.getText() == null ? "" : state.getText().trim();
 				   try {
-					   double value = Double.parseDouble(raw);
-					   if (value < 0) {
+					   BigDecimal value = new BigDecimal(raw);
+					   if (value.signum() < 0) {
 						   admin.sendMessage(ChatUtil.color("&cPrice cannot be negative."));
 						   return Collections.emptyList();
 					   }
@@ -327,18 +329,19 @@ public final class PriceEditorView {
 	// ── Session ──────────────────────────────────────────────────────────
 
 	public static final class PriceEditorSession {
-		final DoubleConsumer onSave;
-		final ItemStack      item;
-		final double         originalPrice;
-		final Runnable       reopenCallback;
+		final Consumer<BigDecimal> onSave;
+		final ItemStack            item;
+		final BigDecimal           originalPrice;
+		final Runnable             reopenCallback;
 
 		InventoryHandler handler;
-		double           stagedPrice;
+		BigDecimal       stagedPrice;
 		int              mode             = 1;
 		boolean          expectingSubview = false;
 		boolean          committed        = false;
 
-		PriceEditorSession(DoubleConsumer onSave, ItemStack item, double originalPrice, Runnable reopenCallback) {
+		PriceEditorSession(Consumer<BigDecimal> onSave, ItemStack item, BigDecimal originalPrice,
+		                   Runnable reopenCallback) {
 			this.onSave         = onSave;
 			this.item           = item;
 			this.originalPrice  = originalPrice;

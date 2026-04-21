@@ -1,10 +1,13 @@
 package me.luckyraven.copsncrooks.wanted;
 
 import me.luckyraven.copsncrooks.events.wanted.WantedEvent;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.util.feature.Executor;
 import me.luckyraven.util.timer.Timer;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.math.BigDecimal;
 
 /**
  * Drives the periodic wanted-level decrease cycle for a single player.
@@ -48,18 +51,19 @@ public class WantedExecutor extends Executor {
 
 		if (isWanted(timer, wanted)) return;
 
-		double takeAmount = settings.getTakeMoneyAmount();
-		double moneyTaken = 0;
+		BigDecimal takeAmount = settings.getTakeMoneyAmount();
+		BigDecimal moneyTaken = Currency.ZERO;
 
-		if (takeAmount > 0) {
-			moneyTaken = takeAmount * Math.pow(settings.getTakeMoneyMultiplier(), wanted.getLevel());
+		if (takeAmount.signum() > 0) {
+			double factor = Math.pow(settings.getTakeMoneyMultiplier(), wanted.getLevel());
+			moneyTaken = Currency.multiply(takeAmount, factor);
 		}
 
 		Bukkit.getPluginManager().callEvent(event);
 
 		if (event.isCancelled()) return;
 
-		if (moneyTaken != 0) {
+		if (moneyTaken.signum() != 0) {
 			moneyTaken = context.withdraw(moneyTaken);
 		}
 
@@ -76,7 +80,7 @@ public class WantedExecutor extends Executor {
 
 		context.sendMessage(message);
 
-		if (moneyTaken != 0) {
+		if (moneyTaken.signum() != 0) {
 			context.sendMessage(settings.formatMoneyLoss(moneyTaken));
 		}
 

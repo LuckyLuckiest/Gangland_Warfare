@@ -8,6 +8,8 @@ import me.luckyraven.copsncrooks.bounty.Bounty;
 import me.luckyraven.copsncrooks.events.bounty.BountyEvent;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.economy.bank.Currency;
+import me.luckyraven.economy.bank.EconomyException;
 import me.luckyraven.events.user.UserBountyEvent;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
@@ -18,6 +20,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 class BountySetCommand extends SubArgument {
@@ -70,10 +73,10 @@ class BountySetCommand extends SubArgument {
 				return;
 			}
 
-			String amountStr = args[3];
-			double value;
+			String     amountStr = args[3];
+			BigDecimal value;
 			try {
-				value = Double.parseDouble(amountStr);
+				value = Currency.parse(amountStr);
 			} catch (NumberFormatException exception) {
 				String string1 = Messages.MUST_BE_NUMBERS.toString();
 				String replace = string1.replace("%command%", amountStr);
@@ -97,17 +100,23 @@ class BountySetCommand extends SubArgument {
 
 				if (userSender == null) return;
 
-				if (userSender.getEconomy().getBalance() == 0D) {
+				BigDecimal senderBalance = userSender.getEconomy().getAmount();
+				if (senderBalance.signum() == 0) {
 					senderPlayer.sendMessage(Messages.CANNOT_TAKE_LESS_THAN_ZERO.toString());
 					return;
-				} else if (userSender.getEconomy().getBalance() < value) {
+				} else if (senderBalance.compareTo(value) < 0) {
 					senderPlayer.sendMessage(Messages.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 					return;
 				} else {
-					userSender.getEconomy().withdraw(value);
+					try {
+						userSender.getEconomy().withdrawAmount(value);
+					} catch (EconomyException ignored) {
+						senderPlayer.sendMessage(Messages.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
+						return;
+					}
 
 					String string1 = Messages.WITHDRAW_MONEY_PLAYER.toString();
-					String replace = string1.replace("%amount%", Settings.formatDouble(value));
+					String replace = string1.replace("%amount%", Settings.formatAmount(value));
 
 					senderPlayer.sendMessage(replace);
 				}

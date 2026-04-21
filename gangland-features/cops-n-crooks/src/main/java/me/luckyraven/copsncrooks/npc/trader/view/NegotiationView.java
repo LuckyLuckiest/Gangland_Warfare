@@ -28,6 +28,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -82,7 +83,7 @@ public final class NegotiationView implements BeanLifecycle {
 
 	public void open(Player viewer, TraderNpc trader, ShopDefinition definition, ShopItemEntry entry,
 	                 TraderTraitDefinition trait, Runnable backToShopView) {
-		double basePrice = entry.hasPrice() ? entry.getPrice() : 0D;
+		BigDecimal basePrice = entry.hasPrice() ? entry.getPrice() : BigDecimal.ZERO;
 		double moodMultiplier = moodService.priceMultiplier(trader.getData().getId(), viewer.getUniqueId(),
 		                                                    trait.profile());
 
@@ -108,8 +109,8 @@ public final class NegotiationView implements BeanLifecycle {
 		session.handler.open(viewer);
 	}
 
-	public double currentPrice(NegotiationSession session) {
-		return session.basePrice * session.moodMultiplier;
+	public BigDecimal currentPrice(NegotiationSession session) {
+		return session.basePrice.multiply(BigDecimal.valueOf(session.moodMultiplier));
 	}
 
 	// ── Rendering ────────────────────────────────────────────────────────
@@ -135,7 +136,7 @@ public final class NegotiationView implements BeanLifecycle {
 	// ── Actions ──────────────────────────────────────────────────────────
 
 	private void render(NegotiationSession session) {
-		double        price = currentPrice(session);
+		BigDecimal    price = currentPrice(session);
 		ShopItemEntry entry = session.entry;
 
 		ItemStack   previewStack = entry.getItem().clone();
@@ -166,7 +167,7 @@ public final class NegotiationView implements BeanLifecycle {
 			session.handler.setItem(SLOT_BUY_AMOUNT, bulk, false, (p, inv, b) -> onBuyAmount(p, session));
 		}
 
-		double      tipAmount = settings.getTipAmount();
+		BigDecimal  tipAmount = settings.getTipAmount();
 		ItemBuilder tip       = new ItemBuilder(material(XMaterial.GOLD_NUGGET, Material.GOLD_NUGGET));
 		tip.setDisplayName("&6TIP &e$" + NumberUtil.valueFormat(tipAmount))
 		   .setLore("&7Raise trader's mood for a better future price.");
@@ -188,7 +189,7 @@ public final class NegotiationView implements BeanLifecycle {
 
 	private void onBuy(Player viewer, NegotiationSession session) {
 		SOUND_BUY.playSound(viewer);
-		double finalPrice = currentPrice(session);
+		BigDecimal finalPrice = currentPrice(session);
 
 		TraderBuyRequestEvent event = new TraderBuyRequestEvent(viewer, session.trader, session.entry, finalPrice);
 		Bukkit.getPluginManager().callEvent(event);
@@ -203,7 +204,7 @@ public final class NegotiationView implements BeanLifecycle {
 		viewer.closeInventory();
 	}
 
-	private void onTip(Player viewer, NegotiationSession session, double amount) {
+	private void onTip(Player viewer, NegotiationSession session, BigDecimal amount) {
 		TraderEconomyContract.TipResult result = economy.tryTip(viewer, amount);
 		switch (result) {
 			case SUCCESS -> {
@@ -232,8 +233,8 @@ public final class NegotiationView implements BeanLifecycle {
 		if (quantitySelectorView == null) return;
 		if (session.entry.getItem().getMaxStackSize() <= 1) return;
 
-		double unitPrice = currentPrice(session);
-		int    maxCopies = 999;
+		BigDecimal unitPrice = currentPrice(session);
+		int        maxCopies = 999;
 
 		session.pendingSubview = true;
 		String title = "&8Buy Amount&r &8&l[&b&l" + session.trait.displayName() + "&8&l]";
@@ -244,7 +245,7 @@ public final class NegotiationView implements BeanLifecycle {
 
 	private void onBuyAmountConfirmed(Player viewer, NegotiationSession session, int copies) {
 		SOUND_BUY.playSound(viewer);
-		double total = currentPrice(session) * copies;
+		BigDecimal total = currentPrice(session).multiply(BigDecimal.valueOf(copies));
 
 		TraderBuyRequestEvent event = new TraderBuyRequestEvent(viewer, session.trader, session.entry, total, copies);
 		Bukkit.getPluginManager().callEvent(event);
@@ -294,14 +295,14 @@ public final class NegotiationView implements BeanLifecycle {
 		final TraderTraitDefinition trait;
 		final Runnable              backToShopView;
 		@Getter
-		final double                basePrice;
+		final BigDecimal            basePrice;
 		InventoryHandler handler;
 		double           moodMultiplier;
 		boolean          pendingSubview = false;
 		boolean          returnHome     = true;
 
 		NegotiationSession(TraderNpc trader, ShopDefinition definition, ShopItemEntry entry,
-		                   TraderTraitDefinition trait, Runnable backToShopView, double basePrice,
+		                   TraderTraitDefinition trait, Runnable backToShopView, BigDecimal basePrice,
 		                   double moodMultiplier) {
 			this.trader         = trader;
 			this.definition     = definition;

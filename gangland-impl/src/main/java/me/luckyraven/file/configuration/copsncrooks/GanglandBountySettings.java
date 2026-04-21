@@ -3,6 +3,8 @@ package me.luckyraven.file.configuration.copsncrooks;
 import me.luckyraven.copsncrooks.bounty.BountySettings;
 import me.luckyraven.file.configuration.Settings;
 
+import java.math.BigDecimal;
+
 /**
  * {@link BountySettings} implementation backed by {@link Settings}.
  */
@@ -14,7 +16,7 @@ public class GanglandBountySettings implements BountySettings {
 	}
 
 	@Override
-	public double getEachKillValue() {
+	public BigDecimal getEachKillValue() {
 		return Settings.getBountyEachKillValue();
 	}
 

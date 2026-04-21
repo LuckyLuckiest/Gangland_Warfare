@@ -15,6 +15,8 @@ import me.luckyraven.shop.transaction.PaymentHandler;
 import me.luckyraven.shop.transaction.SellResult;
 import me.luckyraven.shop.transaction.ShopSellService;
 import me.luckyraven.util.autowire.bean.Qualifier;
+
+import java.math.BigDecimal;
 import me.luckyraven.util.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -90,23 +92,23 @@ public class TraderSellListener implements Listener {
 	private PaymentHandler adapt(EconomyHandler economy) {
 		return new PaymentHandler() {
 			@Override
-			public double getBalance() {
-				return economy.getBalance();
+			public BigDecimal getBalance() {
+				return economy.getAmount();
 			}
 
 			@Override
-			public void withdraw(double amount) throws PaymentException {
+			public void withdraw(BigDecimal amount) throws PaymentException {
 				try {
-					economy.withdraw(amount);
+					economy.withdrawAmount(amount);
 				} catch (EconomyException e) {
 					throw new PaymentException(e.getMessage(), e);
 				}
 			}
 
 			@Override
-			public void deposit(double amount) throws PaymentException {
+			public void deposit(BigDecimal amount) throws PaymentException {
 				try {
-					economy.deposit(amount);
+					economy.depositAmount(amount);
 				} catch (EconomyException e) {
 					throw new PaymentException(e.getMessage(), e);
 				}

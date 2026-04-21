@@ -14,6 +14,7 @@ import me.luckyraven.copsncrooks.wanted.WantedExecutor;
 import me.luckyraven.copsncrooks.wanted.WantedSettings;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.events.user.UserBountyEvent;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
@@ -34,6 +35,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @ListenerHandler
@@ -127,13 +129,13 @@ public class EntityDamageListener implements Listener {
 		Bounty bounty = deadUser.getBounty();
 
 		if (bounty.hasBounty()) {
-			double amount = bounty.getAmount();
+			BigDecimal amount = bounty.getAmount();
 
-			damagerUser.getEconomy().deposit(amount);
+			damagerUser.getEconomy().depositAmount(amount);
 			bounty.resetBounty();
 
 			String message = Messages.BANK_MONEY_DEPOSIT_PLAYER.toString();
-			String replace = message.replace("%amount%", Settings.formatDouble(amount));
+			String replace = message.replace("%amount%", Settings.formatAmount(amount));
 
 			damagerUser.sendMessage(replace);
 
@@ -231,14 +233,15 @@ public class EntityDamageListener implements Listener {
 		int wantedLevel = wanted.getLevel();
 		int userLevel   = damagerUser.getLevel().getLevelValue();
 
-		Bounty bounty     = damagerUser.getBounty();
-		double autoBounty = bounty.getAutoBountyIncrease(userLevel, wantedLevel);
+		Bounty     bounty     = damagerUser.getBounty();
+		BigDecimal autoBounty = bounty.getAutoBountyIncrease(userLevel, wantedLevel);
 
-		bounty.setAmount(bounty.getAmount() + autoBounty);
+		bounty.setAmount(bounty.getAmount().add(autoBounty));
 
 		// Start bounty timer if enabled
 		BountyEvent bountyEvent = new UserBountyEvent(true, damagerUser);
-		if (Settings.isBountyTimerEnabled() && bounty.getAmount() < Settings.getBountyTimerMax()) {
+		if (Settings.isBountyTimerEnabled()
+		    && bounty.getAmount().compareTo(BigDecimal.valueOf(Settings.getBountyTimerMax())) < 0) {
 			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser, bountySettings);
 			Timer    timer    = executor.createTimer();
 
@@ -246,21 +249,23 @@ public class EntityDamageListener implements Listener {
 		}
 
 		// Notify player with kill combo information
-		String format = String.format("&c&lWANTED LEVEL: &c%s &7(Bounty: &b+%s%.2f)", wanted.getLevelStars(),
-		                              Settings.getMoneySymbol(), autoBounty);
+		String format = String.format("&c&lWANTED LEVEL: &c%s &7(Bounty: &b+%s%s)", wanted.getLevelStars(),
+		                              Settings.getMoneySymbol(), Settings.formatAmount(autoBounty));
 		String message = ChatUtil.color(format);
 
 		damagerUser.sendMessage(message);
 	}
 
 	private void handleBounty(User<Player> damagerUser) {
-		Bounty userBounty   = damagerUser.getBounty();
-		double eachKill     = Settings.getBountyEachKillValue();
-		double scaledBounty = userBounty.calculateLevelScaledBounty(eachKill, damagerUser.getLevel().getLevelValue());
+		Bounty     userBounty = damagerUser.getBounty();
+		BigDecimal eachKill   = Settings.getBountyEachKillValue();
+		BigDecimal scaledBounty = userBounty.calculateLevelScaledBounty(eachKill,
+		                                                                damagerUser.getLevel().getLevelValue());
 
 		BountyEvent bountyEvent = new UserBountyEvent(true, damagerUser, scaledBounty);
 
-		if (Settings.isBountyTimerEnabled() && userBounty.getAmount() < Settings.getBountyTimerMax()) {
+		if (Settings.isBountyTimerEnabled()
+		    && userBounty.getAmount().compareTo(BigDecimal.valueOf(Settings.getBountyTimerMax())) < 0) {
 			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser, bountySettings);
 			Timer    timer    = executor.createTimer();
 
@@ -269,9 +274,9 @@ public class EntityDamageListener implements Listener {
 			return;
 		}
 
-		double amount = eachKill + userBounty.getAmount();
+		BigDecimal amount = Currency.of(eachKill.add(userBounty.getAmount()));
 
-		if (amount > Settings.getBountyMaxKill()) return;
+		if (amount.compareTo(Settings.getBountyMaxKill()) > 0) return;
 
 		bountyEvent.setAmountApplied(scaledBounty);
 

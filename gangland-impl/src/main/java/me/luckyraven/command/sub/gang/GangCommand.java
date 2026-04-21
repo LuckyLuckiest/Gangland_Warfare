@@ -15,6 +15,7 @@ import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.multi.MultiInventory;
@@ -34,6 +35,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -158,17 +160,16 @@ public final class GangCommand extends Command {
 	}
 
 	private Material itemToBalance(Gang gang) {
-		double balance    = gang.getEconomy().getBalance();
-		double maxBalance = Settings.getGangMaxBalance();
+		BigDecimal balance    = gang.getEconomy().getAmount();
+		BigDecimal maxBalance = Settings.getGangMaxBalance();
 
-		// 1 max balance
-		if (balance >= maxBalance) return XMaterial.EMERALD_BLOCK.get();
-			// 3/4 max balance
-		else if (balance >= (double) 3 / 4 * maxBalance) return XMaterial.DIAMOND_BLOCK.get();
-			// 1/2 max balance
-		else if (balance >= (double) 1 / 2 * maxBalance) return XMaterial.GOLD_BLOCK.get();
+		BigDecimal threeQuarters = Currency.multiply(maxBalance, 0.75);
+		BigDecimal half          = Currency.multiply(maxBalance, 0.5);
 
-		// 1/4 max balance
+		if (balance.compareTo(maxBalance) >= 0) return XMaterial.EMERALD_BLOCK.get();
+		else if (balance.compareTo(threeQuarters) >= 0) return XMaterial.DIAMOND_BLOCK.get();
+		else if (balance.compareTo(half) >= 0) return XMaterial.GOLD_BLOCK.get();
+
 		return XMaterial.IRON_BLOCK.get();
 	}
 
@@ -184,7 +185,7 @@ public final class GangCommand extends Command {
 
 		gui.setItem(11, material, "&bBalance", new ArrayList<>(
 				List.of(String.format("&e%s%s", Settings.getMoneySymbol(),
-				                      Settings.formatDouble(gang.getEconomy().getBalance())))), true, false);
+				                      Settings.formatAmount(gang.getEconomy().getAmount())))), true, false);
 
 		// id
 		gui.setItem(13, XMaterial.CRAFTING_TABLE.get(), "&bID", new ArrayList<>(List.of("&e" + gang.getId())), false,
@@ -250,7 +251,7 @@ public final class GangCommand extends Command {
 		// bounty
 		gui.setItem(22, XMaterial.BLAZE_ROD.get(), "&bBounty", new ArrayList<>(
 				List.of(String.format("&e%s%s", Settings.getMoneySymbol(),
-				                      Settings.formatDouble(gang.getBounty().getAmount())))), true, false);
+				                      Settings.formatAmount(gang.getBounty().getAmount())))), true, false);
 
 		// ally
 		gui.setItem(25, XMaterial.REDSTONE.get(), "&bAlly", List.of("&e" + gang.getAllies().size()), false, false,

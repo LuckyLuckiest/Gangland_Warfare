@@ -1,5 +1,7 @@
 package me.luckyraven.copsncrooks.npc.trader.message;
 
+import java.math.BigDecimal;
+
 /**
  * Trader-scoped message contract. Covers the flows that are specific to the trader NPC feature (tipping, trait
  * validation). Integrations (gangland-impl) implement this interface by routing each call to their preferred
@@ -9,9 +11,9 @@ package me.luckyraven.copsncrooks.npc.trader.message;
  */
 public interface TraderMessageContract {
 
-	String tipSuccess(double amount);
+	String tipSuccess(BigDecimal amount);
 
-	String tipInsufficientFunds(double amount);
+	String tipInsufficientFunds(BigDecimal amount);
 
 	String traitInvalid();
 

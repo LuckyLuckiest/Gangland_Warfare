@@ -126,7 +126,7 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 			user.setKills(kills);
 			user.setDeaths(deaths);
 			user.setMobKills(mobKills);
-			user.getEconomy().setBalance(balance);
+			user.getEconomy().setAmount(Currency.of(balance));
 			user.getWanted().setLevel(wanted);
 
 			// get the gang id from the member manager
@@ -187,14 +187,14 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 			// set the bounty value of the user
 			Bounty userBounty = user.getBounty();
 
-			userBounty.setAmount(bounty);
+			userBounty.setAmount(Currency.of(bounty));
 
 			if (!user.getUser().isOnline()) return;
 
 			if (userBounty.hasBounty() && Settings.isBountyTimerEnabled()) {
 				BountyEvent bountyEvent = new UserBountyEvent(true, user);
 
-				if (userBounty.getAmount() < Settings.getBountyTimerMax()) {
+				if (userBounty.getAmount().compareTo(BigDecimal.valueOf(Settings.getBountyTimerMax())) < 0) {
 					Executor executor = new BountyExecutor(gangland, bountyEvent, user, bountySettings);
 					Timer    timer    = executor.createTimer();
 

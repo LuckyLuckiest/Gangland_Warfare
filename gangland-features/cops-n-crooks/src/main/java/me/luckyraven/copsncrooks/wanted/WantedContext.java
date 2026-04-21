@@ -1,5 +1,7 @@
 package me.luckyraven.copsncrooks.wanted;
 
+import java.math.BigDecimal;
+
 /**
  * Provides the data a {@link WantedExecutor} needs from its owning entity.
  * <p>
@@ -23,7 +25,7 @@ public interface WantedContext {
 	 *
 	 * @return the actual amount withdrawn (may be less than requested; 0 if nothing was withdrawn)
 	 */
-	double withdraw(double requestedAmount);
+	BigDecimal withdraw(BigDecimal requestedAmount);
 
 	/**
 	 * Sends a message to the entity. Implementations may apply color codes and placeholder replacement before

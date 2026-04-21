@@ -25,6 +25,7 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -95,7 +96,8 @@ public final class BarterView implements BeanLifecycle {
 		}
 	}
 
-	public void open(Player viewer, NegotiationView.NegotiationSession parent, ShopDefinition def, double askingValue,
+	public void open(Player viewer, NegotiationView.NegotiationSession parent, ShopDefinition def,
+	                 BigDecimal askingValue,
 	                 Consumer<Player> onClose) {
 		double mood = moodService.priceMultiplier(parent.getTrader().getData().getId(), viewer.getUniqueId(),
 		                                          parent.getTrait().profile());
@@ -243,12 +245,12 @@ public final class BarterView implements BeanLifecycle {
 	private void renderOffer(Session session) {
 		recomputeOffer(session);
 
-		boolean ready  = session.offeredValue >= session.askingValue;
-		double  needed = Math.max(0.0, session.askingValue - session.offeredValue);
-		double  excess = Math.max(0.0, session.offeredValue - session.askingValue);
+		boolean    ready  = session.offeredValue.compareTo(session.askingValue) >= 0;
+		BigDecimal needed = session.askingValue.subtract(session.offeredValue).max(BigDecimal.ZERO);
+		BigDecimal excess = session.offeredValue.subtract(session.askingValue).max(BigDecimal.ZERO);
 
 		ItemStack icon;
-		if (session.offeredValue <= 0.0) {
+		if (session.offeredValue.signum() <= 0) {
 			icon = material(XMaterial.GOLD_NUGGET, Material.GOLD_NUGGET);
 		} else if (!ready) {
 			icon = material(XMaterial.GOLD_INGOT, Material.GOLD_INGOT);
@@ -258,7 +260,7 @@ public final class BarterView implements BeanLifecycle {
 
 		ItemBuilder  offer = new ItemBuilder(icon).setDisplayName("&6&lBARTER OFFER");
 		List<String> lore  = new ArrayList<>();
-		if (session.offeredValue <= 0.0) {
+		if (session.offeredValue.signum() <= 0) {
 			lore.add("&7Drop barter items on the left.");
 		} else if (!ready) {
 			lore.add("&7Asking:   &6$" + NumberUtil.valueFormat(session.askingValue));
@@ -268,7 +270,7 @@ public final class BarterView implements BeanLifecycle {
 			lore.add("&7Asking:   &6$" + NumberUtil.valueFormat(session.askingValue));
 			lore.add("&aOffered:  &a$" + NumberUtil.valueFormat(session.offeredValue));
 			lore.add("&7Status:   &a&lREADY TO TRADE");
-			if (excess > 0.0) {
+			if (excess.signum() > 0) {
 				lore.add("&8(overpay $" + NumberUtil.valueFormat(excess) + " forfeited)");
 			}
 		}
@@ -301,7 +303,7 @@ public final class BarterView implements BeanLifecycle {
 	}
 
 	private void renderConfirm(Session session) {
-		boolean ready = session.offeredValue >= session.askingValue && session.offeredValue > 0.0;
+		boolean ready = session.offeredValue.compareTo(session.askingValue) >= 0 && session.offeredValue.signum() > 0;
 
 		ItemStack icon = ready ? material(XMaterial.LIME_WOOL, Material.GREEN_WOOL)
 		                       : material(XMaterial.GRAY_WOOL, Material.GRAY_WOOL);
@@ -316,7 +318,7 @@ public final class BarterView implements BeanLifecycle {
 	}
 
 	private void recomputeOffer(Session session) {
-		double       offered   = 0.0;
+		BigDecimal   offered   = BigDecimal.ZERO;
 		List<String> breakdown = new ArrayList<>();
 
 		for (int slot : session.dropzoneSlots) {
@@ -330,8 +332,8 @@ public final class BarterView implements BeanLifecycle {
 			                                         session.barterMoodMultiplier);
 			String label = displayResolver.cleanDisplayName(decorated);
 			if (valuation.hasValue()) {
-				double lineTotal = valuation.unitPrice() * decorated.getAmount();
-				offered += lineTotal;
+				BigDecimal lineTotal = valuation.unitPrice().multiply(BigDecimal.valueOf(decorated.getAmount()));
+				offered = offered.add(lineTotal);
 				breakdown.add(
 						"&7" + label + " x" + decorated.getAmount() + " &8→ &a$" + NumberUtil.valueFormat(lineTotal));
 			} else {
@@ -364,7 +366,7 @@ public final class BarterView implements BeanLifecycle {
 	}
 
 	private void onConfirm(Player viewer, Session session) {
-		if (session.offeredValue < session.askingValue || session.offeredValue <= 0.0) {
+		if (session.offeredValue.compareTo(session.askingValue) < 0 || session.offeredValue.signum() <= 0) {
 			return;
 		}
 
@@ -461,20 +463,20 @@ public final class BarterView implements BeanLifecycle {
 		final NegotiationView.NegotiationSession parent;
 		final ShopDefinition                     definition;
 		final ShopItemEntry                      entry;
-		final double                             askingValue;
+		final BigDecimal                         askingValue;
 		final InventoryHandler                   handler;
 		final int[]                              dropzoneSlots;
 		final double                             barterMoodMultiplier;
 		final Consumer<Player>                   onClose;
 
-		double       offeredValue = 0.0;
+		BigDecimal   offeredValue = BigDecimal.ZERO;
 		List<String> breakdown    = new ArrayList<>();
 
 		boolean committed           = false;
 		boolean returnToNegotiation = true;
 
 		Session(Player viewer, NegotiationView.NegotiationSession parent, ShopDefinition definition,
-		        ShopItemEntry entry, double askingValue, InventoryHandler handler, int[] dropzoneSlots,
+		        ShopItemEntry entry, BigDecimal askingValue, InventoryHandler handler, int[] dropzoneSlots,
 		        double barterMoodMultiplier, Consumer<Player> onClose) {
 			this.viewer               = viewer;
 			this.parent               = parent;

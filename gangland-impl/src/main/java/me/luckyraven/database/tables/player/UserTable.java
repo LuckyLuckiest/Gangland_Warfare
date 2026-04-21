@@ -46,15 +46,16 @@ public class UserTable extends Table<User<? extends OfflinePlayer>> {
 
 	@Override
 	public Object[] getData(User<? extends OfflinePlayer> data) {
-		return new Object[]{data.getUser().getUniqueId().toString(), data.getEconomy().getBalance(), data.getKills(),
-							data.getDeaths(), data.getMobKills(), data.getBounty().getAmount(),
-							data.getLevel().getLevelValue(), data.getLevel().getExperience(),
-							data.getWanted().getLevel()};
+		return new Object[]{data.getUser().getUniqueId().toString(), data.getEconomy().getAmount().doubleValue(),
+		                    data.getKills(),
+		                    data.getDeaths(), data.getMobKills(), data.getBounty().getAmount().doubleValue(),
+		                    data.getLevel().getLevelValue(), data.getLevel().getExperience(),
+		                    data.getWanted().getLevel()};
 	}
 
 	@Override
 	public Map<String, Object> searchCriteria(User<? extends OfflinePlayer> data) {
 		return createSearchCriteria("uuid = ?", new Object[]{data.getUser().getUniqueId().toString()},
-									new int[]{Types.CHAR}, new int[]{0});
+		                            new int[]{Types.CHAR}, new int[]{0});
 	}
 }

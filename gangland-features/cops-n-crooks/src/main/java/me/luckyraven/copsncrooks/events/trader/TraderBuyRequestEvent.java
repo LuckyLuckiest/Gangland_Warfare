@@ -9,13 +9,15 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
+import java.math.BigDecimal;
+
 @Getter
 public class TraderBuyRequestEvent extends TraderEvent implements Cancellable {
 
 	private static final HandlerList HANDLERS = new HandlerList();
 
 	private final ShopItemEntry entry;
-	private final double        finalPrice;
+	private final BigDecimal    finalPrice;
 	private final int           quantity;
 
 	@Setter
@@ -23,11 +25,11 @@ public class TraderBuyRequestEvent extends TraderEvent implements Cancellable {
 	@Setter
 	private String  reason;
 
-	public TraderBuyRequestEvent(Player player, TraderNpc trader, ShopItemEntry entry, double finalPrice) {
+	public TraderBuyRequestEvent(Player player, TraderNpc trader, ShopItemEntry entry, BigDecimal finalPrice) {
 		this(player, trader, entry, finalPrice, 1);
 	}
 
-	public TraderBuyRequestEvent(Player player, TraderNpc trader, ShopItemEntry entry, double finalPrice,
+	public TraderBuyRequestEvent(Player player, TraderNpc trader, ShopItemEntry entry, BigDecimal finalPrice,
 	                             int quantity) {
 		super(player, trader);
 		this.entry      = entry;

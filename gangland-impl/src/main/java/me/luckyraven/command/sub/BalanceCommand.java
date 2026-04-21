@@ -60,7 +60,7 @@ public final class BalanceCommand extends Command {
 
 			user.sendMessage(GanglandChatUtil.color("&6" + player.getName() + "&7 balance:"));
 			user.sendMessage(GanglandChatUtil.color(
-					"&a" + Settings.getMoneySymbol() + Settings.formatDouble(user.getEconomy().getBalance())));
+					"&a" + Settings.getMoneySymbol() + Settings.formatAmount(user.getEconomy().getAmount())));
 		} else {
 			commandSender.sendMessage(Messages.BALANCE_REGISTERED_ONLY.toString());
 		}
@@ -76,8 +76,8 @@ public final class BalanceCommand extends Command {
 			if (user != null) {
 				sender.sendMessage(Messages.BALANCE_TARGET.toString()
 				                                          .replace("%target%", target)
-				                                          .replace("%balance%", Settings.formatDouble(
-																  user.getEconomy().getBalance())));
+				                                          .replace("%balance%", Settings.formatAmount(
+																  user.getEconomy().getAmount())));
 				return;
 			}
 

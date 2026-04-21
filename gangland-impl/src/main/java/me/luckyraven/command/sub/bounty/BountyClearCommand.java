@@ -16,6 +16,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.math.BigDecimal;
+
 class BountyClearCommand extends SubArgument {
 
 	private final Gangland            gangland;
@@ -68,13 +70,13 @@ class BountyClearCommand extends SubArgument {
 				return;
 			}
 
-			double amount = userBounty.getSetAmount(sender);
+			BigDecimal amount = userBounty.getSetAmount(sender);
 
 			// remove the user
 			userBounty.removeBounty(sender);
 
 			String string = Messages.BOUNTY_PLAYER_LIFT.toString();
-			String replace = string.replace("%amount%", Settings.formatDouble(amount))
+			String replace = string.replace("%amount%", Settings.formatAmount(amount))
 			                       .replace("%player%", playerStr);
 
 			sender.sendMessage(replace);
@@ -84,20 +86,20 @@ class BountyClearCommand extends SubArgument {
 
 				if (userSender == null) return;
 
-				userSender.getEconomy().deposit(amount);
+				userSender.getEconomy().depositAmount(amount);
 
 				String string1  = Messages.DEPOSIT_MONEY_PLAYER.toString();
-				String replace1 = string1.replace("%amount%", Settings.formatDouble(amount));
+				String replace1 = string1.replace("%amount%", Settings.formatAmount(amount));
 
 				senderPlayer.sendMessage(replace1);
 			}
 
-			if (userBounty.getAmount() == 0D) {
+			if (userBounty.getAmount().signum() == 0) {
 				user.sendMessage(Messages.BOUNTY_CLEAR.toString());
 			} else {
 				String string1 = Messages.BOUNTY_LIFTED.toString();
-				String replace1 = string1.replace("%amount%", Settings.formatDouble(amount))
-				                         .replace("%bounty%", Settings.formatDouble(userBounty.getAmount()));
+				String replace1 = string1.replace("%amount%", Settings.formatAmount(amount))
+				                         .replace("%bounty%", Settings.formatAmount(userBounty.getAmount()));
 
 				user.sendMessage(replace1);
 			}

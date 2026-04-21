@@ -3,8 +3,11 @@ package me.luckyraven.copsncrooks.events.bounty;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.copsncrooks.bounty.Bounty;
+import me.luckyraven.economy.bank.Currency;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
+
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -12,14 +15,14 @@ public abstract class BountyEvent extends Event implements Cancellable {
 
 	private final Bounty bounty;
 
-	private double  amountApplied;
-	private boolean cancelled;
+	private BigDecimal amountApplied;
+	private boolean    cancelled;
 
-	public BountyEvent(boolean async, Bounty bounty, double amountApplied) {
+	public BountyEvent(boolean async, Bounty bounty, BigDecimal amountApplied) {
 		super(async);
 
 		this.bounty        = bounty;
-		this.amountApplied = amountApplied;
+		this.amountApplied = Currency.of(amountApplied);
 		this.cancelled     = false;
 	}
 
