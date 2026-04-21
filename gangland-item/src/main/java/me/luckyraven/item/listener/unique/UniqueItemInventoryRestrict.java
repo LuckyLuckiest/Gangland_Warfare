@@ -3,7 +3,7 @@ package me.luckyraven.item.listener.unique;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.core.bean.autowire.AutowireTarget;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.item.contract.UniqueItemRegistry;
 import me.luckyraven.item.unique.UniqueItemUtil;
 import org.bukkit.GameRule;

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.npc.trader.ShopViewOpener;
 import me.luckyraven.copsncrooks.npc.trader.TraderManager;
 import me.luckyraven.copsncrooks.npc.trader.TraderNpc;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;

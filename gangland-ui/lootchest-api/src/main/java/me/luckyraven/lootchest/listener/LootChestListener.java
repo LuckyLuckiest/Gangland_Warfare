@@ -2,8 +2,8 @@ package me.luckyraven.lootchest.listener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.core.configuration.SoundConfiguration;
-import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.core.utilities.TimeUtil;
 import me.luckyraven.core.utilities.messages.TimeMessagesProvider;

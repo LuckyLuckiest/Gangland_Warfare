@@ -3,7 +3,7 @@ package me.luckyraven.copsncrooks.listener.trader;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.npc.trader.TraderManager;
 import me.luckyraven.copsncrooks.npc.trader.TraderNpc;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;

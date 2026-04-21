@@ -7,7 +7,7 @@ import me.luckyraven.core.bean.Bean;
 import me.luckyraven.core.bean.Configuration;
 import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.bean.autowire.DependencyContainer;
-import me.luckyraven.core.listener.ListenerPriority;
+import me.luckyraven.core.bean.listener.ListenerPriority;
 import me.luckyraven.core.placeholder.replacer.Replacer;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.member.MemberManager;

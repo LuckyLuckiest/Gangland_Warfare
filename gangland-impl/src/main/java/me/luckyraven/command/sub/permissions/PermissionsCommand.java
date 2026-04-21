@@ -4,7 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
-import me.luckyraven.core.command.CommandHandler;
+import me.luckyraven.core.bean.command.CommandHandler;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;

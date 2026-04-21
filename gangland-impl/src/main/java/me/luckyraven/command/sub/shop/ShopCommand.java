@@ -3,7 +3,7 @@ package me.luckyraven.command.sub.shop;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.core.command.CommandHandler;
+import me.luckyraven.core.bean.command.CommandHandler;
 import me.luckyraven.shop.ShopRegistry;
 import me.luckyraven.shop.view.ShopAdminView;
 import org.bukkit.command.CommandSender;

@@ -2,7 +2,7 @@ package me.luckyraven.listener.loot;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.Gangland;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.inventory.part.Fill;

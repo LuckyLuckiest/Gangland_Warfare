@@ -1,8 +1,8 @@
 package me.luckyraven.gadget.listener.car;
 
 import me.luckyraven.core.bean.autowire.AutowireTarget;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.core.downed.DownedPlayerRegistry;
-import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.gadget.car.CarService;
 import me.luckyraven.gadget.car.vehicle.VehicleSession;
 import org.bukkit.Bukkit;

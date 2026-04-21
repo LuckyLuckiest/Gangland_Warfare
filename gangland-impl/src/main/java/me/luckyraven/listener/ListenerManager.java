@@ -1,7 +1,7 @@
 package me.luckyraven.listener;
 
 import me.luckyraven.core.bean.autowire.DependencyContainer;
-import me.luckyraven.core.listener.ListenerService;
+import me.luckyraven.core.bean.listener.ListenerService;
 import me.luckyraven.file.configuration.Settings;
 import org.bukkit.plugin.java.JavaPlugin;
 

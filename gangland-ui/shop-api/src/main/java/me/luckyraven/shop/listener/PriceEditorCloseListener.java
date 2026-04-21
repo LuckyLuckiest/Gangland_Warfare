@@ -1,7 +1,7 @@
 package me.luckyraven.shop.listener;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.shop.view.PriceEditorView;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

@@ -1,7 +1,7 @@
 package me.luckyraven.sign.listener;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.sign.aspect.AspectResult;
 import me.luckyraven.sign.bulk.BulkActionManager;
 import me.luckyraven.sign.bulk.BulkActionPreview;

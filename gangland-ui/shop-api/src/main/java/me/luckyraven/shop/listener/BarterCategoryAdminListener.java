@@ -1,8 +1,8 @@
 package me.luckyraven.shop.listener;
 
 import lombok.RequiredArgsConstructor;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.shop.view.BarterCategoryItemsAdminView;
-import me.luckyraven.core.listener.ListenerHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

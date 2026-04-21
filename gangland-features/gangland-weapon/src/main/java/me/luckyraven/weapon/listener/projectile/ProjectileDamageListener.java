@@ -1,7 +1,7 @@
 package me.luckyraven.weapon.listener.projectile;
 
 import me.luckyraven.core.bean.autowire.AutowireTarget;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.raytrace.WeaponVisualSpawner;
 import org.bukkit.entity.Projectile;

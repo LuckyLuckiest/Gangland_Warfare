@@ -2,8 +2,8 @@ package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.core.bean.Qualifier;
-import me.luckyraven.core.listener.ListenerHandler;
-import me.luckyraven.core.listener.ListenerPriority;
+import me.luckyraven.core.bean.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerPriority;
 import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;

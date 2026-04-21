@@ -1,4 +1,4 @@
-package me.luckyraven.core.command;
+package me.luckyraven.core.bean.command;
 
 import lombok.CustomLog;
 import me.luckyraven.core.utilities.ReflectionUtil;

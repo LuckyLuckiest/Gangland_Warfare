@@ -2,8 +2,8 @@ package me.luckyraven.gadget.listener.jetpack;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.core.bean.autowire.AutowireTarget;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.core.downed.PlayerUndownedEvent;
-import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.gadget.jetpack.JetpackService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

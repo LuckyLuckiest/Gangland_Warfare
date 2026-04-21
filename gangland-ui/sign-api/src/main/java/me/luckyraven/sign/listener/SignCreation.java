@@ -1,7 +1,7 @@
 package me.luckyraven.sign.listener;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.sign.service.SignInformation;
 import me.luckyraven.sign.service.SignInteractionService;
 import me.luckyraven.sign.validation.SignValidationException;

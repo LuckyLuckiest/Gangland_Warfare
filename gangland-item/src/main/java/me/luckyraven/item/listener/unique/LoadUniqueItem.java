@@ -1,10 +1,10 @@
 package me.luckyraven.item.listener.unique;
 
 import me.luckyraven.core.bean.autowire.AutowireTarget;
+import me.luckyraven.core.bean.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerPriority;
 import me.luckyraven.core.downed.PlayerDownedEvent;
 import me.luckyraven.core.downed.PlayerUndownedEvent;
-import me.luckyraven.core.listener.ListenerHandler;
-import me.luckyraven.core.listener.ListenerPriority;
 import me.luckyraven.item.contract.UniqueItemRegistry;
 import me.luckyraven.item.event.PlayerItemInitEvent;
 import me.luckyraven.item.unique.UniqueItem;

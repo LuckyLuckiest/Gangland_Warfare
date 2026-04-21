@@ -1,6 +1,6 @@
 package me.luckyraven.listener.bridge;
 
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.events.user.UserDataInitEvent;
 import me.luckyraven.item.event.PlayerItemInitEvent;
 import org.bukkit.Bukkit;

@@ -1,7 +1,7 @@
 package me.luckyraven.listener.inventory;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.inventory.InventoryDefinitionStore;

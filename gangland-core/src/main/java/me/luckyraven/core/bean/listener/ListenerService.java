@@ -1,4 +1,4 @@
-package me.luckyraven.core.listener;
+package me.luckyraven.core.bean.listener;
 
 import lombok.CustomLog;
 import lombok.Getter;

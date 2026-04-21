@@ -2,7 +2,7 @@ package me.luckyraven.listener.player;
 
 import me.luckyraven.copsncrooks.events.bounty.BountyEvent;
 import me.luckyraven.core.bean.Qualifier;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;

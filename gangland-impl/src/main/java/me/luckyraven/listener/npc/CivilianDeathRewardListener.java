@@ -4,7 +4,7 @@ import me.luckyraven.copsncrooks.events.npc.CivilianDeathEvent;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianState;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
 import me.luckyraven.core.bean.Qualifier;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.data.account.Level;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;

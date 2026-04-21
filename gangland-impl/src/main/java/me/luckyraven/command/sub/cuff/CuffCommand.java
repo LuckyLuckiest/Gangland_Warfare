@@ -5,7 +5,7 @@ import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.copsncrooks.detainment.DetainmentService;
-import me.luckyraven.core.command.CommandHandler;
+import me.luckyraven.core.bean.command.CommandHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.Bukkit;

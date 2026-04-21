@@ -7,7 +7,7 @@ import me.luckyraven.command.sub.item.money.ItemMoneyCommand;
 import me.luckyraven.command.sub.item.unique.ItemUniqueCommand;
 import me.luckyraven.command.sub.item.wearable.ItemWearableCommand;
 import me.luckyraven.core.bean.Qualifier;
-import me.luckyraven.core.command.CommandHandler;
+import me.luckyraven.core.bean.command.CommandHandler;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.gadget.wearable.WearableAddon;
 import me.luckyraven.item.configuration.UniqueItemAddon;

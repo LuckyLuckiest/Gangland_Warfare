@@ -5,7 +5,7 @@ import me.luckyraven.copsncrooks.events.trader.TraderBarterEvent;
 import me.luckyraven.copsncrooks.npc.trader.TraderManager;
 import me.luckyraven.copsncrooks.npc.trader.mood.MoodService;
 import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitDefinition;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.shop.message.ShopDisplayResolver;
 import me.luckyraven.shop.message.ShopMessageContract;
 import me.luckyraven.shop.transaction.BarterResult;

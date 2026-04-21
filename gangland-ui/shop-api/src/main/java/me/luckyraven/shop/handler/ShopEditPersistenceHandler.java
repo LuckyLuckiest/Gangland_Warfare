@@ -2,7 +2,7 @@ package me.luckyraven.shop.handler;
 
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.shop.ShopRegistry;
 import me.luckyraven.shop.event.ShopEditedEvent;
 import me.luckyraven.shop.message.ShopMessageContract;

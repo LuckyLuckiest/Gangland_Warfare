@@ -5,7 +5,7 @@ import me.luckyraven.copsncrooks.npc.entity.EntityMark;
 import me.luckyraven.copsncrooks.npc.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.npc.trader.TraderNpc;
 import me.luckyraven.core.bean.autowire.AutowireTarget;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.event.NPCSpawnEvent;

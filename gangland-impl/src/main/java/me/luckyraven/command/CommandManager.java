@@ -11,7 +11,7 @@ import me.luckyraven.command.sub.debug.ReadNBTCommand;
 import me.luckyraven.command.sub.debug.TimerCommand;
 import me.luckyraven.core.UnhandledError;
 import me.luckyraven.core.bean.autowire.DependencyContainer;
-import me.luckyraven.core.command.CommandService;
+import me.luckyraven.core.bean.command.CommandService;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.GanglandChatUtil;

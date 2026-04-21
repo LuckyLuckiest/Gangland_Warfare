@@ -1,7 +1,7 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.core.bean.Qualifier;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.data.account.Level;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.user.User;

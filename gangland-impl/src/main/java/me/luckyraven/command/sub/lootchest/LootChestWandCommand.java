@@ -3,7 +3,7 @@ package me.luckyraven.command.sub.lootchest;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.core.command.CommandHandler;
+import me.luckyraven.core.bean.command.CommandHandler;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.lootchest.LootChestManager;
 import me.luckyraven.lootchest.LootChestWand;

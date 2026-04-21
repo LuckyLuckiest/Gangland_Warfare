@@ -5,7 +5,7 @@ import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.copsncrooks.npc.police.CopService;
 import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
-import me.luckyraven.core.command.CommandHandler;
+import me.luckyraven.core.bean.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;

@@ -5,7 +5,7 @@ import me.luckyraven.copsncrooks.events.npc.CivilianDeathEvent;
 import me.luckyraven.copsncrooks.npc.civilian.CivilianService;
 import me.luckyraven.copsncrooks.npc.civilian.config.CivilianDropConfig;
 import me.luckyraven.copsncrooks.npc.civilian.npc.CivilianNpc;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.item.ItemParser;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;

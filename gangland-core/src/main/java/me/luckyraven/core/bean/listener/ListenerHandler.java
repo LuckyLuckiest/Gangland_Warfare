@@ -1,4 +1,4 @@
-package me.luckyraven.core.listener;
+package me.luckyraven.core.bean.listener;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

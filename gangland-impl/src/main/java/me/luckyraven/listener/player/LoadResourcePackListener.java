@@ -1,7 +1,7 @@
 package me.luckyraven.listener.player;
 
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.core.configuration.ResourcePackTracker;
-import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.util.GanglandChatUtil;
 import net.md_5.bungee.api.chat.ClickEvent;

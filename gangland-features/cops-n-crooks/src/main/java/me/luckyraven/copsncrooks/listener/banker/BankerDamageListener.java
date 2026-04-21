@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.npc.banker.BankerManager;
 import me.luckyraven.copsncrooks.npc.banker.BankerNpc;
 import me.luckyraven.copsncrooks.npc.banker.config.BankerSettings;
-import me.luckyraven.core.listener.ListenerHandler;
+import me.luckyraven.core.bean.listener.ListenerHandler;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;

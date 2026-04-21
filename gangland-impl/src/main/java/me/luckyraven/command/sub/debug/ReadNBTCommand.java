@@ -4,7 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.core.ItemBuilder;
-import me.luckyraven.core.command.CommandHandler;
+import me.luckyraven.core.bean.command.CommandHandler;
 import me.luckyraven.core.datastructure.JsonFormatter;
 import me.luckyraven.lootchest.LootChestWandTag;
 import me.luckyraven.util.GanglandChatUtil;

@@ -5,8 +5,8 @@ import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.copsncrooks.npc.trader.TraderManager;
 import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitRegistry;
+import me.luckyraven.core.bean.command.CommandHandler;
 import me.luckyraven.shop.ShopRegistry;
-import me.luckyraven.core.command.CommandHandler;
 import org.bukkit.command.CommandSender;
 
 import java.util.Map;
