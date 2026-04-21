@@ -1,4 +1,4 @@
-package me.luckyraven.logger;
+package me.luckyraven.logging;
 
 import org.apache.logging.log4j.LogManager;
 
