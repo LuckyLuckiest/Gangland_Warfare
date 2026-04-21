@@ -1,6 +1,6 @@
 # Cops N Crooks
 
-[← Changelog](../v0.7.3-DEV/CHANGELOG.md) | [Back to Index](../README.md) | [Next: Jail & Detainment →](./jail-detainment.md)
+[← Changelog](../v0.7.5-DEV/CHANGELOG.md) | [Back to Index](../README.md) | [Next: Traders →](./traders.md)
 
 ---
 
@@ -12,6 +12,10 @@ plugin and requires it to function.
 
 The number and strength of cops that respond scales with the player's wanted level — a low-level offender draws a couple
 of rookie officers, while a five-star fugitive faces a military response.
+
+> **Module status (0.7.5-DEV): feature-complete.** Cops N Crooks shipped across three releases:
+> 0.7.3-DEV laid down the cop AI and wanted system, 0.7.4-DEV added civilians and the shared NPC base,
+> and 0.7.5-DEV closes the loop with traders, a banker, and bail. See the **Related Systems** footer.
 
 ---
 
@@ -260,4 +264,16 @@ List<CopSpawner> spawners = spawnerManager.getSpawners();
 
 ---
 
-[← Changelog](../v0.7.3-DEV/CHANGELOG.md) | [Back to Index](../README.md) | [Next: Jail & Detainment →](./jail-detainment.md)
+## Related Systems
+
+Cops N Crooks is the umbrella for several NPC / economy systems that ship in the same module. Each has its own
+feature doc:
+
+- [Traders](./traders.md) — stationary shop NPCs with buy / barter / sell / tip and a per-player mood model.
+- [Bank & Banker](./bank.md) — the Banker NPC and tiered bank-balance ladder.
+- [Jail & Detainment](./jail-detainment.md) — handcuffs, jail, bail, bribery, and sentence timers.
+- [Wanted & Bounty](./wanted-bounty.md) — how players accumulate stars and how bounties are placed and claimed.
+
+---
+
+[← Changelog](../v0.7.5-DEV/CHANGELOG.md) | [Back to Index](../README.md) | [Next: Traders →](./traders.md)

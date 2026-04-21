@@ -7,30 +7,52 @@
 ## Overview
 
 Loot chests are in-world containers that hold randomized rewards. They unlock on a countdown timer and award players
-with a mix of money, XP, weapons, ammo, keys, and other items based on configurable loot tables and rarity tiers. Some
-tiers are locked behind special items that players must obtain before they can open them.
+with a mix of money, XP, weapons, ammo, keys, and other items based on configurable loot tables and drop-chance
+buckets. Chest **tiers** gate which tables a chest can draw from and which unlock item the player needs.
+
+> **Changed in 0.7.5-DEV:** tier gating no longer filters individual items inside a table — per-item `Drop_Chance`
+> buckets do that job. A chest's tier only decides which tables it's allowed to draw from (`Allowed_Tiers`).
 
 ---
 
-## Tiers
+## Drop Chance Buckets
 
-Every item in a loot table belongs to a rarity tier. Higher tiers have lower spawn weights and often require a key or
-minimum player level to unlock.
+Every item in a loot table is tagged with one of five **drop-chance buckets**. The bucket decides how often a roll
+lands on that item.
 
-| Tier      | Color  | Spawn Chance | Unlock Requirement |
-|-----------|--------|--------------|--------------------|
-| Common    | Gray   | 100%         | None               |
-| Uncommon  | Green  | 70%          | None               |
-| Rare      | Blue   | 40%          | Lockpick           |
-| Epic      | Purple | 15%          | Epic Key           |
-| Legendary | Gold   | 5%           | Legendary Key      |
+| Bucket      | Base Chance | Typical Use                        |
+|-------------|-------------|------------------------------------|
+| `COMMON`    | 1.0         | Bulk ammo, consumables.            |
+| `UNCOMMON`  | 0.7         | Side-grade ammo, utility items.    |
+| `RARE`      | 0.4         | Mid-tier weapons, lockpicks.       |
+| `EPIC`      | 0.15        | High-tier weapons, epic keys.      |
+| `LEGENDARY` | 0.05        | Signature weapons, legendary keys. |
 
-- **Common and Uncommon** items drop freely from any chest.
-- **Rare** items require the player to have a **Lockpick** in their inventory. The lockpick is consumed on use.
-- **Epic** items require an **Epic Key**.
-- **Legendary** items require a **Legendary Key**.
+Per-table **`Rarity_Overrides`** can adjust any bucket just for that table — e.g. a legendary-vault table might
+set `legendary: 0.12` to roughly triple the legendary chance compared to the base.
 
-See the [Unique Items guide](./unique-items.md) for how to obtain keys.
+---
+
+## Chest Tiers & Unlock Items
+
+Chest **tiers** control two things:
+
+1. Which **loot tables** a chest of that tier can draw from (`Allowed_Tiers` on each table).
+2. Which **unlock item** the player needs in inventory to open the chest.
+
+| Tier      | Color  | Unlock Requirement | Unlock Item     |
+|-----------|--------|--------------------|-----------------|
+| Common    | Gray   | None               | —               |
+| Uncommon  | Green  | None               | —               |
+| Rare      | Blue   | Lockpick           | `lockpick`      |
+| Epic      | Purple | Key                | `epic_key`      |
+| Legendary | Gold   | Key                | `legendary_key` |
+
+The unlock item (if any) **floats above the chest as a plain in-game item** — no more armor-stand placeholder —
+so resource packs and custom models render exactly as the player expects. The item is consumed when the chest
+opens.
+
+See the [Unique Items guide](./unique-items.md) for how to obtain keys and lockpicks.
 
 ---
 
@@ -56,9 +78,13 @@ Loot tables are configured in `loot_chests.yml`. Item categories that can appear
 
 1. An admin designates a container block as a loot chest using the wand tool.
 2. Once designated, a **countdown timer** begins (default **5 minutes**).
-3. When the timer expires, the chest opens with a sound effect.
-4. Players interact with the chest to claim their randomized rewards.
-5. Rewards include a random money amount, a random XP amount, and items drawn from the assigned loot table.
+3. While the timer ticks down, a **preview** above the chest advertises what it's holding — no more blind clicks.
+   If the tier requires an unlock item, that item hovers over the chest too.
+4. When the timer expires, the chest opens with a sound effect.
+5. Players interact with the chest to claim their randomized rewards. Weapon rolls drop as real weapon items
+   with a floating **name hologram** so players can identify loot at a glance.
+6. Rewards include a random money amount, a random XP amount, and items drawn from the assigned loot table
+   according to the drop-chance buckets above.
 
 ---
 
@@ -113,7 +139,7 @@ Loot_Chest:
          - ""                      # Optional: server commands executed on open
 ```
 
-Tier rarity weights and unlock requirements are configured in `loot/tiers.yml`:
+Tier definitions and base rarity weights live in `loot/tiers.yml`:
 
 ```yaml
 Rarity:
@@ -128,7 +154,7 @@ Tiers:
       Display_Name: "&9Rare"
       Level: 10                   # Minimum player level to access this tier
       Unlock_Requirement: LOCKPICK
-      Unlock_Item: "lockpick"     # Key from unique_items.yml
+      Unlock_Item: "lockpick"     # Id from unique_items.yml
    epic:
       Display_Name: "&5Epic"
       Level: 15
@@ -140,6 +166,36 @@ Tiers:
       Unlock_Requirement: PERMISSION
       Unlock_Item: "legendary_key"
 ```
+
+Per-table item drops and per-table rarity overrides live in `loot/loot_chests.yml`:
+
+```yaml
+Loot_Tables:
+   military_loot:
+      Display_Name: "&2Military Loot"
+      Min_Items: 3
+      Max_Items: 7
+      Allowed_Tiers:                 # Tiers of chest this table can appear in
+         - "rare"
+         - "epic"
+      Rarity_Overrides:              # Table-scoped tweaks to the base Rarity weights
+         epic: 0.25
+      Items:
+         assault_rifle:
+            Item: "weapon:rifle"     # Parsed by the global ItemParser
+            Drop_Chance: RARE        # Bucket: COMMON | UNCOMMON | RARE | EPIC | LEGENDARY
+            Weight: 3.0              # Relative weight within the bucket
+         556_ammo:
+            Item: "ammo:5,56"
+            Drop_Chance: COMMON
+            Min_Amount: 20
+            Max_Amount: 60
+            Weight: 8.0
+```
+
+> **Changed in 0.7.5-DEV:** individual items no longer carry a `Required_Tier` field — use the `Drop_Chance`
+> bucket for item-level rarity and `Allowed_Tiers` at the table level for chest-tier gating. The loot-chest
+> loader rejects unknown keys, so stale `Required_Tier:` lines will be reported on first boot.
 
 ---
 

@@ -1,6 +1,6 @@
 # Jail & Detainment
 
-[← Cops N Crooks](./cops-n-crooks.md) | [Back to Index](../README.md) | [Next: Wearables →](./wearables.md)
+[← Bank & Banker](./bank.md) | [Back to Index](../README.md) | [Next: Wearables →](./wearables.md)
 
 ---
 
@@ -50,13 +50,80 @@ configure the capacity in `settings.yml`.
 
 ---
 
+## Bail
+
+As of 0.7.5-DEV, a jailed player can **pay their way out**. The paperwork view inside the jail exposes a
+**Pay Bail** action that charges the player's cash balance and releases them with their seized inventory intact.
+
+- **Cost** — `Bail.Base_Cost + (wanted_at_arrest × Bail.Per_Wanted_Level)`. A one-star arrest pays base; a
+  five-star fugitive pays a lot more.
+- **Charged from cash** — not from bank balance. If the player's cash is short, bail fails with
+  `INSUFFICIENT_FUNDS` and no money is deducted.
+- **Inventory restoration** — routes through the same `ReleasePipeline` used by sentence-served and admin-release
+  paths, so seized items are returned intact.
+- **Post-jail only** — you cannot bail out of handcuffs. See **Bribery** below for the pre-jail path.
+
+---
+
+## Bribery
+
+Two kinds of bribes run off the same `BribeService` machinery but at different stages of the arrest flow.
+
+### Handcuff Bribe (pre-jail)
+
+While a player is handcuffed but not yet jailed, they can attempt to bribe the arresting cop. This path is **always
+successful if funded** — no dice roll.
+
+- **Cost** — `Handcuff_Bribe.Base_Cost + (wanted × Handcuff_Bribe.Per_Wanted_Level)`.
+- **Effect** — releases the cuffs and clears the wanted level; the cop returns to patrol.
+
+### Jail Bribe (post-jail)
+
+A risky shortcut from inside the cell. Pay the cost and roll against `Success_Chance`:
+
+- **Cost** — `Jail_Bribe.Base_Cost + (wanted × Jail_Bribe.Per_Wanted_Level)`.
+- **On success** — same release path as bail: seized inventory restored.
+- **On failure** — the money is gone **and** your sentence is extended by `Fail_Penalty_Seconds`.
+
+---
+
+## Break Free
+
+Handcuffed (pre-jail) players can attempt to physically break free by tapping a configured key. Requires
+`Break_Free.Taps_Required` inputs within `Break_Free.Reset_Window_Ticks` ticks — 25 taps in 40 ticks by default
+(two seconds).
+
+If they drop below the pace, the counter resets. This is an intentionally narrow window: break-free is meant as
+a skill path, not a reliable escape.
+
+---
+
+## Sentence
+
+If the player does nothing — no bail, no bribe, no break-free — they serve their time and are released
+automatically.
+
+- **Duration** — `Sentence.Base_Seconds + (wanted_at_arrest × Sentence.Per_Wanted_Level_Seconds)`. Default: 3
+  minutes base + 1 minute per wanted star. A five-star fugitive serves 8 minutes.
+- **Completion sound** — `Detainment.Sounds.Sentence_Complete` plays on release.
+- **Released exit waypoint** — falls back to `Detainment.Fallback_Exit_Waypoint` if the jail has no per-jail
+  exit configured.
+
+---
+
 ## Release
 
 Releasing a player removes all restraint effects, clears their detainment record, and returns them to the `NORMAL`
-state. Release can happen:
+state. Release can happen via:
 
-- Via the admin release command.
-- Automatically when the detainment timer expires (if configured).
+- **Bail** — player pays (see above).
+- **Successful bribe** — handcuff bribe (pre-jail) or jail bribe (post-jail, with dice roll).
+- **Break-free** — player wins the tap-race while handcuffed.
+- **Sentence served** — automatic timeout.
+- **Admin release** — `/glw jail release <player>` or `/glw uncuff <player>`.
+
+All paths funnel through a single `ReleasePipeline`, so seized items are restored consistently regardless of how
+the player got out.
 
 ---
 
@@ -82,14 +149,41 @@ state. Release can happen:
 
 ## Configuration
 
-Jail capacity is set in `settings.yml`:
+The full detainment block lives in `settings.yml` under the top-level `Detainment:` key. Every subsection is
+tunable independently.
 
 ```yaml
-detainment:
-   max-jail-capacity: 10     # Maximum number of players per jail at one time
+Detainment:
+   Transit:
+      Delay_Ticks: 400                 # Ticks between handcuff and jail teleport
+      Guard_Radius: 5.0                # Blocks; cops stay within this radius during transit
+   Break_Free:
+      Taps_Required: 25
+      Reset_Window_Ticks: 40
+   Handcuff_Bribe:
+      Base_Cost: 500.0
+      Per_Wanted_Level: 250.0
+   Bail:
+      Base_Cost: 2500.0
+      Per_Wanted_Level: 1000.0
+   Jail_Bribe:
+      Base_Cost: 1000.0
+      Per_Wanted_Level: 500.0
+      Success_Chance: 0.35             # 0.0 – 1.0
+      Fail_Penalty_Seconds: 60         # Sentence extension on a failed bribe
+   Sentence:
+      Base_Seconds: 180
+      Per_Wanted_Level_Seconds: 60
+   Fallback_Exit_Waypoint: "spawn"     # Used when a jail has no specific exit waypoint
+   Sounds:
+      Bail_Success: "BLOCK_NOTE_BLOCK_PLING"
+      Bribe_Success: "ENTITY_VILLAGER_YES"
+      Bribe_Fail: "ENTITY_VILLAGER_NO"
+      Transit_Commit: "BLOCK_IRON_DOOR_CLOSE"
+      Sentence_Complete: "BLOCK_BELL_USE"
 ```
 
-Cuffing behavior (radius, attempts, cooldown) is configured per cop tier in `cops.yml`. See
+Cuffing behavior (cop-side radius, attempts, cooldown) is configured per cop tier in `cops.yml`. See
 the [Cops N Crooks guide](./cops-n-crooks.md#configuration).
 
 ---
@@ -139,6 +233,20 @@ Optional<Jail> jail = jailService.getJail(jailId);
 boolean hasSpace = jailService.hasCapacity(jailId);
 ```
 
+Bail and bribery each have their own typed-result service:
+
+```java
+BailService   bail   = gangland.getContext().get(BailService.class);
+BribeService  bribe  = gangland.getContext().get(BribeService.class);
+
+double cost = bail.computeCost(player);
+BailResult result = bail.tryPayBail(player);
+// SUCCESS | INSUFFICIENT_FUNDS | NOT_JAILED | ECONOMY_ERROR
+```
+
+Every release path — bail, bribe, break-free, sentence-served, admin — funnels through the single
+`ReleasePipeline`.
+
 ---
 
-[← Cops N Crooks](./cops-n-crooks.md) | [Back to Index](../README.md) | [Next: Wearables →](./wearables.md)
+[← Bank & Banker](./bank.md) | [Back to Index](../README.md) | [Next: Wearables →](./wearables.md)

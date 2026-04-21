@@ -8,10 +8,11 @@
 
 ### Version Changelogs
 
-| Version                                 | Status  | Changelog                                 |
-|-----------------------------------------|---------|-------------------------------------------|
-| [v0.7.4-DEV](./v0.7.4-DEV/CHANGELOG.md) | Current | Smarter NPC AI, bug fixes, developer docs |
-| [v0.7.3-DEV](./v0.7.3-DEV/CHANGELOG.md) | Stable  | Cops N Crooks, Wearables                  |
+| Version                                 | Status  | Changelog                                                      |
+|-----------------------------------------|---------|----------------------------------------------------------------|
+| [v0.7.5-DEV](./v0.7.5-DEV/CHANGELOG.md) | Current | Traders, Banker NPC, Bail — **Cops N Crooks feature-complete** |
+| [v0.7.4-DEV](./v0.7.4-DEV/CHANGELOG.md) | Stable  | Civilians, five weapon categories, gadgets (cars + jetpacks)   |
+| [v0.7.3-DEV](./v0.7.3-DEV/CHANGELOG.md) | Stable  | Cops N Crooks, Wearables                                       |
 
 ---
 
@@ -35,8 +36,10 @@ Guides for features that are part of the base plugin and not tied to a specific 
 | 12 | [Database & Setup](./features/database.md)         | MySQL/SQLite config, auto-save, and first-time setup             |
 | 13 | [Inventory System](./features/inventory.md)        | Custom GUI menus, slots, conditions, pagination, and API usage   |
 | 14 | [Cops N Crooks](./features/cops-n-crooks.md)       | Police NPC AI, spawning, pursuit, and arrest                     |
-| 15 | [Jail & Detainment](./features/jail-detainment.md) | Handcuffing, jailing, and player restraint                       |
-| 16 | [Wearables](./features/wearables.md)               | Custom armor pieces, traits, and damage reduction                |
+| 15 | [Traders](./features/traders.md)                   | Trader NPCs — buy, barter, sell, tip; mood and traits            |
+| 16 | [Bank & Banker](./features/bank.md)                | Banker NPC, tier ladder, daily caps, interest, loans             |
+| 17 | [Jail & Detainment](./features/jail-detainment.md) | Handcuffing, jailing, bail, bribery, and sentence timers         |
+| 18 | [Wearables](./features/wearables.md)               | Custom armor pieces, traits, and damage reduction                |
 
 ---
 
@@ -66,15 +69,18 @@ In-depth technical documentation for developers working on the codebase.
 
 ### Quick Reference
 
-| Topic                          | Location                                                                                |
-|--------------------------------|-----------------------------------------------------------------------------------------|
-| First-time server setup        | [Database & Setup → Setup Checklist](./features/database.md#first-time-setup-checklist) |
-| Required dependencies          | [v0.7.3-DEV Changelog → New Requirements](./v0.7.3-DEV/CHANGELOG.md#new-requirements)   |
-| Cop configuration (`cops.yml`) | [Cops N Crooks → Configuration](./features/cops-n-crooks.md#configuration)              |
-| Wearable traits                | [Wearables → Traits](./features/wearables.md#traits)                                    |
-| Trade sign setup               | [Trade Signs → Setting Up a Sign](./features/trade-signs.md#setting-up-a-sign)          |
-| Loot chest tiers               | [Loot Chests → Tiers](./features/loot_chests.md#tiers)                                  |
-| Economy admin commands         | [Economy → Admin Commands](./features/economy.md#admin-economy-commands)                |
+| Topic                          | Location                                                                                        |
+|--------------------------------|-------------------------------------------------------------------------------------------------|
+| First-time server setup        | [Database & Setup → Setup Checklist](./features/database.md#first-time-setup-checklist)         |
+| Required dependencies          | [v0.7.3-DEV Changelog → New Requirements](./v0.7.3-DEV/CHANGELOG.md#new-requirements)           |
+| Cop configuration (`cops.yml`) | [Cops N Crooks → Configuration](./features/cops-n-crooks.md#configuration)                      |
+| Wearable traits                | [Wearables → Traits](./features/wearables.md#traits)                                            |
+| Trade sign setup               | [Trade Signs → Setting Up a Sign](./features/trade-signs.md#setting-up-a-sign)                  |
+| Loot chest tiers               | [Loot Chests → Chest Tiers & Unlock Items](./features/loot_chests.md#chest-tiers--unlock-items) |
+| Trader traits                  | [Traders → Traits](./features/traders.md#traits)                                                |
+| Bank tier ladder               | [Bank & Banker → Tier Ladder](./features/bank.md#tier-ladder)                                   |
+| Bail costs                     | [Jail & Detainment → Bail](./features/jail-detainment.md#bail)                                  |
+| Economy admin commands         | [Economy → Admin Commands](./features/economy.md#admin-economy-commands)                        |
 
 ---
 

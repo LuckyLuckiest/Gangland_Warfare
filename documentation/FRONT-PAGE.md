@@ -18,7 +18,10 @@ Players don't just fight — they:
 - 🎯 Hunt players with bounties and wanted levels
 - 📈 Progress through levels, ranks, and loot
 - 🚔 Survive police pursuit or don a badge and become the law
-- 🚶 Share the streets with civilians — trade with them, rob them, or answer for it
+- 🚶 Share the streets with civilians — rob them, or answer for it
+- 🛒 Trade with stationary **Trader NPCs** — buy, barter, sell, or tip
+- 🏦 Deposit cash with **Banker NPCs** across a four-tier balance ladder
+- 🚔 Get arrested — then pay bail, bribe the cop, or serve your time
 - 🚗 Drive cars, fly jetpacks, and refuel at the pump
 
 ---
@@ -81,23 +84,28 @@ Gangs are the social backbone of the plugin.
 
 ### 3. 💵 Economy & Banking
 
-Every player has two separate money pools, plus a dedicated cash-drop system.
+Every player has two separate money pools — cash on hand and a tiered bank balance — plus a **Banker NPC** that
+serves as the physical deposit counter.
 
-- Personal cash balance — spent on gang creation, teleportation, bounties, and more
-- Personal bank account — higher capacity vault that requires a one-time creation fee
-- 💀 Death penalty: lose a configurable percentage of your carried cash (money in the bank is safe)
-- Configurable death penalty formula — supports custom expressions and command-based execution
-- **Cash pickup items** — drops are now real items players loot, with
-  small / medium / large stack variations configured in `money.yml`
-- **Per-source drop rules** — `Player_Kill`, `Civilian_Kill`, `Cop_Kill`,
-  and more each pick a variation, amount range, and drop chance
-- Custom pickup sound per variation with name validation
-- Master switch: `Money_Drop.Enabled` in `settings.yml` disables the whole
-  system without editing `money.yml`
-- Mob kills reward small random cash amounts
+- Personal cash balance — spent on gang creation, teleportation, bounties, trader buys, and more
+- **Four-tier bank ladder** — Basic / Premium / Elite / Vault, each with its own max balance, daily deposit cap,
+  interest rate, death-loss discount, and weekly / monthly free-loan deposits
+- 🏦 **Banker NPC** — a stationary Citizens NPC that opens the bank UI on right-click; scatter as many as you want
+  without per-NPC configuration
+- 💰 **Rolling-window daily cap** — deposits are rate-limited over a true 24h window, not until midnight
+- 📈 **Continuous interest** — bank balance earns a fraction per 24h, clamped at the tier `Max_Balance`
+- 💀 Death penalty: lose a configurable percentage of your **cash** (bank balance is safe; higher tiers reduce
+  the loss)
+- **BigDecimal money math** — bank arithmetic uses `BigDecimal` so large balances don't drift
+- **Cash pickup items** — drops are real items players loot, with small / medium / large variations in
+  `money.yml`
+- **Per-source drop rules** — `Player_Kill`, `Civilian_Kill`, `Cop_Kill`, etc. each pick a variation, amount
+  range, and drop chance
 - Vault integration support for cross-plugin compatibility
-- Admin economy commands to deposit, withdraw, set, or reset balances for
-  individual players or all online players
+- Optional player targets on every bank command —
+  `/glw bank deposit <amount> [player]`, `/glw bank withdraw <amount> [player]`
+- Admin economy commands to deposit, withdraw, set, or reset balances for individual players or all online
+  players
 
 ---
 
@@ -117,10 +125,11 @@ A risk-vs-reward layer on top of all PvP.
 
 ---
 
-### 5. 🚓 Cops N Crooks
+### 5. 🚓 Cops N Crooks — *Module Complete*
 
 Fully AI-driven police NPCs powered by Citizens, sharing a unified NPC base
-with civilians.
+with civilians. **0.7.5-DEV closes this module** — traders, bankers, and
+bail all land in this release.
 
 - Officers spawn in the world when a player accumulates wanted stars
 - Five cop tiers — Officer, Sergeant, Lieutenant, SWAT, and Military — each
@@ -144,15 +153,16 @@ with civilians.
 
 ### 6. 🚶 Civilians
 
-A new NPC class that shares the cop AI base — wander, flee, trade, or fight.
+A new NPC class that shares the cop AI base — wander, flee, or fight. (Trade moved to dedicated **Trader NPCs**
+— see next section.)
 
 - Civilian types are defined in `civilians.yml` with per-type entity,
   health, wearables, item pool, weapon pool, drops, and AI profile
 - **Friendly civilians** wander and flee from danger; attacking them
   increments your wanted level
 - **Hostile civilians** return fire using weapons from their pool
-- **Trader civilians** open a custom inventory on right-click for sell/buy
-  interactions
+- **Per-type drop chances** — friendly and hostile civilians roll loot
+  with distinct probability buckets
 - Combat difficulty profiles — `EASY` / `NORMAL` / `HARD` / `DEADLY` — scale aim,
   reaction time, and fire rate
 - Groups bind spawn points to a type with population caps, activation
@@ -163,20 +173,44 @@ A new NPC class that shares the cop AI base — wander, flee, trade, or fight.
 
 ---
 
-### 7. 🔒 Jail & Detainment
+### 7. 🛒 Trader NPCs & Shop API
 
-The outcome of a successful arrest.
+Stationary, damageable Citizens NPCs that run full shops.
 
-- Cops that successfully cuff a player initiate the detainment sequence
-- Jailed players are held at a configured jail location for a set duration
-- Admins can handcuff, jail, and release players manually
-- Players cuffed at logout are auto-routed to jail on rejoin
-- Jail creation uses a radius check to prevent stacking duplicate jails
-- Detainment integrates with the wanted system — clearing stars on arrest
+- **Buy, barter, sell, and tip** — four distinct transaction types per trader
+- **Six built-in personality traits** (`easygoing`, `hotheaded`, `stubborn`,
+  `generous`, `shrewd`, `timid`) with configurable mood gain rates, friend
+  discount, barter policy, and max HP — add your own in `trader_traits.yml`
+- **Per-player mood** — positive-only scalar that raises on purchases and
+  tips; trader gives up to `Min_Friend_Discount` off at full mood
+- **Pure-swap barter** — no money changes hands on a barter; items are
+  valued against the trader's trait and the shop's category rates
+- **Killable traders** — `Invulnerable: false` lets players rob a shop
+- **Shop API** — the UI, persistence, and transaction pipeline live in a
+  shared `gangland-ui/shop-api` module for future shop surfaces
+- **In-game admin editing** — spawn, edit shop key, edit trait, rename
+  via anvil GUI, remove — no YAML wrestling day-to-day
 
 ---
 
-### 8. 🛻 Gadgets — Cars & Jetpacks
+### 8. 🔒 Jail & Detainment
+
+The outcome of a successful arrest — with four ways out.
+
+- Cops that successfully cuff a player initiate the detainment sequence
+- Jailed players are held at a configured jail location with seized inventory
+- 💸 **Pay bail** — charges a cost scaling with wanted level; returns seized items
+- 🤝 **Bribe the cop** — handcuff-stage bribe (pre-jail) always succeeds if funded; jail-stage bribe rolls against
+  a configured success chance with a fail-penalty sentence extension
+- 💪 **Break free** — handcuffed players can tap-race their way out (25 taps in 40 ticks)
+- ⏲️ **Serve your time** — automatic release after a wanted-level-scaled sentence
+- Admins can handcuff, jail, and release players manually
+- Players cuffed at logout are auto-routed to jail on rejoin
+- Every release path funnels through a single `ReleasePipeline` — seized inventory restoration is consistent
+
+---
+
+### 9. 🛻 Gadgets — Cars & Jetpacks
 
 A dedicated gadget module for drivable vehicles and deployable equipment.
 
@@ -195,22 +229,28 @@ A dedicated gadget module for drivable vehicles and deployable equipment.
 
 ---
 
-### 9. 📦 Loot Chests & Rewards
+### 10. 📦 Loot Chests & Rewards
 
 Randomized reward containers placed anywhere in the world.
 
 - Admins designate any chest, barrel, or shulker box as a loot chest
 - ⏳ A countdown timer ticks down before the chest becomes openable
+- 🔍 **Item preview above the chest** while it ticks down — no blind clicks
 - Five rarity tiers: Common, Uncommon, Rare, Epic, and Legendary
-- Higher tiers require lockpicks or keys to access
+- Higher tiers require a lockpick or key — which hovers above the chest
+  as a floating in-world item, resource-pack friendly
+- **Drop-chance buckets** — per-item `COMMON` / `UNCOMMON` / `RARE` / `EPIC` / `LEGENDARY`
+  decide how often each item rolls; tier gating controls which tables a chest
+  can draw from (not individual items)
 - Loot tables contain weapons, ammo, unique items, money, and XP
 - Three built-in loot tables: Street Loot, Military Loot, and Supply Cache
+- Weapon drops land as real weapon items under a floating **name hologram**
 - Rewards also include a configurable random money and XP amount
 - Level gating — certain tiers require a minimum player level to access
 
 ---
 
-### 10. 🛡️ Wearables
+### 11. 🛡️ Wearables
 
 Custom armor pieces with specialized damage reduction.
 
@@ -225,7 +265,7 @@ Custom armor pieces with specialized damage reduction.
 
 ---
 
-### 11. 📊 Player Leveling
+### 12. 📊 Player Leveling
 
 An XP-based progression system that gates access to higher rewards.
 
@@ -237,7 +277,7 @@ An XP-based progression system that gates access to higher rewards.
 
 ---
 
-### 12. 🗺️ Waypoints & Teleportation
+### 13. 🗺️ Waypoints & Teleportation
 
 Named teleport destinations placed by admins.
 
@@ -251,7 +291,7 @@ Named teleport destinations placed by admins.
 
 ---
 
-### 13. 🪧 Trade Signs
+### 14. 🪧 Trade Signs
 
 In-world buy and sell signs for weapons and ammunition.
 
@@ -263,7 +303,7 @@ In-world buy and sell signs for weapons and ammunition.
 
 ---
 
-### 14. 📋 Scoreboard
+### 15. 📋 Scoreboard
 
 Live stat display for players.
 
@@ -273,7 +313,7 @@ Live stat display for players.
 
 ---
 
-### 15. 🎒 Unique Items
+### 16. 🎒 Unique Items
 
 Special items with controlled inventory behavior.
 
@@ -284,7 +324,7 @@ Special items with controlled inventory behavior.
 
 ---
 
-### 16. 🖥️ Server Infrastructure
+### 17. 🖥️ Server Infrastructure
 
 Backend features for operators and developers.
 
@@ -292,16 +332,24 @@ Backend features for operators and developers.
 - **Beans-based bootstrap** — phased dependency-injection pipeline
   (KERNEL → FILE → DATABASE → CONFIG → LIFECYCLE → LISTENER → COMMAND) with
   auto-registered `@Bean`, `@ListenerHandler`, and `@CommandHandler` classes
+- **YAML validation layer** — every loader reports unknown keys with file +
+  line number, so stale settings never silently rot between releases
 - **Reload regeneration** — missing config sections are rewritten on
   `/glw reload`; a missing file is recreated from the jar with an init retry
+- **Debug logging block** — per-module `DEBUG` toggle in `settings.yml`,
+  no JVM flags required
+- **Vault permission integration** — soft-dep; falls back to the built-in
+  permission system when Vault is absent
+- `/glw permissions` command for inspecting / granting / revoking permissions
+  in-game
+- `/gangland` alias for `/glw`
 - Batched database queries to reduce individual query overhead
 - Automatic periodic data saving and cache cleanup
-- 🌐 Multi-language message support
+- 🌐 Multi-language message support with jar-bundled fallback
 - Resource pack auto-loading on join
 - Custom scoreboard via FastBoard
-- 🧰 Public developer API with events for weapons, cops, civilians, bounty,
-  and more
-- Permission list available at runtime: `/glw debug perms`
+- 🧰 Public developer API with events for weapons, cops, civilians, traders,
+  bounty, and more
 
 ---
 
@@ -314,7 +362,7 @@ The following systems are actively in development:
 - 🏆 Challenges and Competitive Events
 - 🏍️ More Vehicle Types (motorcycles, boats, aircraft)
 - 🏠 Purchasable Houses and Properties
-- 🤝 Dealer NPCs and Auction House
+- 🏦 Player-to-Player Market / Auction House
 - 📜 Quest and Mission System
 
 ---

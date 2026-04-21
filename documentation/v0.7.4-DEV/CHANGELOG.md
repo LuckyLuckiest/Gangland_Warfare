@@ -6,7 +6,7 @@
 
 ---
 
-[← Back to Documentation Index](../README.md) | [Previous: v0.7.3-DEV →](../v0.7.3-DEV/CHANGELOG.md)
+[← Back to Documentation Index](../README.md) | [← Previous: v0.7.3-DEV](../v0.7.3-DEV/CHANGELOG.md) | [Next: v0.7.5-DEV →](../v0.7.5-DEV/CHANGELOG.md)
 
 ---
 
@@ -611,4 +611,4 @@ No new hard dependencies compared to v0.7.3-DEV.
 
 ---
 
-[← Back to Documentation Index](../README.md) | [Previous: v0.7.3-DEV →](../v0.7.3-DEV/CHANGELOG.md)
+[← Back to Documentation Index](../README.md) | [← Previous: v0.7.3-DEV](../v0.7.3-DEV/CHANGELOG.md) | [Next: v0.7.5-DEV →](../v0.7.5-DEV/CHANGELOG.md)
