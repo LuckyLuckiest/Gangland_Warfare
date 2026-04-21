@@ -17,11 +17,15 @@ public final class Logger {
 	 * True when running inside a live Spigot/Paper server.
 	 *
 	 * <p>Spigot's log4j2 pattern wraps the logger name in brackets automatically, e.g.
-	 * {@code [%logger]}. In that environment the name is stored as {@code "module] [Class"} so the server's outer
-	 * brackets complete the display to {@code [module] [Class]}.
+	 * {@code [%logger]}. In that environment the name is stored as {@code "module.Class"} so the server's outer
+	 * brackets complete the display to {@code [module.Class]}.
 	 *
 	 * <p>Outside Spigot (tests, standalone tools) no outer brackets are added, so they are
-	 * included in the name directly: {@code "[module] [Class]"}.
+	 * included in the name directly: {@code "[module.Class]"}.
+	 *
+	 * <p>The module/class dot separator is deliberate: log4j2's logger hierarchy is dot-delimited, so naming loggers
+	 * {@code module.Class} lets {@code Configurator.setAllLevels(module, ...)} cascade to every class-level logger
+	 * under that module. This is what powers the {@code Debug.Modules} toggle in {@code settings.yml}.
 	 */
 	private static final boolean IN_SPIGOT = detectSpigot();
 
@@ -30,8 +34,8 @@ public final class Logger {
 	public static org.apache.logging.log4j.Logger getLogger(Class<?> clazz) {
 		String moduleName = resolveModuleName(clazz);
 		String loggerName = IN_SPIGOT ?
-							moduleName + "] [" + clazz.getSimpleName() :
-							"[" + moduleName + "] [" + clazz.getSimpleName() + "]";
+		                    moduleName + "." + clazz.getSimpleName() :
+		                    "[" + moduleName + "." + clazz.getSimpleName() + "]";
 		return LogManager.getLogger(loggerName);
 	}
 

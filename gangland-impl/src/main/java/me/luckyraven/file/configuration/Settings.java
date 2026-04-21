@@ -26,6 +26,9 @@ public class Settings implements FileInitializer {
 	private static final @Getter Map<String, Object> settingsMap         = new LinkedHashMap<>();
 	private static final @Getter Map<String, Object> settingsPlaceholder = new LinkedHashMap<>();
 
+	// debug configuration
+	private static @Getter boolean      debugEnabled;
+	private static @Getter List<String> debugModules;
 	// update configuration
 	private static @Getter boolean updaterEnabled, notifyPrivilegedPlayers, updaterAutoUpdate;
 	// language picked
@@ -329,6 +332,11 @@ public class Settings implements FileInitializer {
 	private void init() {
 		ConfigReport report = new ConfigReport();
 		NodeReader   root   = FileHandlerReader.read(fileHandler, report);
+
+		// debug configuration
+		NodeReader debug = section(root, "Debug", report);
+		debugEnabled = bool(debug, "Enabled", false);
+		debugModules = strList(debug, "Modules");
 
 		// update configuration
 		NodeReader updateChecker = section(root, "Update_Checker", report);

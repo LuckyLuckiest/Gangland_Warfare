@@ -27,6 +27,21 @@
 # file.
 Config_Version: '${project.version}'
 
+# +-------+ #
+# | Debug | #
+# +-------+ #
+
+# Enable log.debug(...) output for specific plugin modules at runtime — no log4j config or
+# JVM flags required. Restart the server after changing this section.
+Debug:
+   # Master toggle. When false the Modules list is ignored.
+   Enabled: false
+   # Module names to flip to DEBUG level. Exact match (including spaces). Valid values:
+   #   Gangland, Gangland Core, Gangland Weapons, Cops N Crooks, Inventory API,
+   #   Lootchest API, Scoreboard API, Sign API, Plugin Persistence, Version Handler
+   # Leave the list empty to automatically flip every module discovered on the classpath.
+   Modules: []
+
 # +---------------+ #
 # | Update Config | #
 # +---------------+ #
