@@ -18,7 +18,6 @@ import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.copsncrooks.BankerSettingsImpl;
 import me.luckyraven.file.configuration.copsncrooks.GanglandBankerEconomy;
 import me.luckyraven.file.configuration.copsncrooks.GanglandBankerMessages;
-import me.luckyraven.npc.banker.BankerViewOpenerImpl;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
@@ -137,11 +136,6 @@ public class BankerConfig {
 	public BankerManager bankerManager(BankerSettings settings, RepositoryRegistry repositoryRegistry) {
 		IRepository<BankerData> repo = repositoryRegistry.getRepository(BankerData.class);
 		return new BankerManager(gangland, repo, settings);
-	}
-
-	@Bean
-	public BankerViewOpener bankerViewOpener(BankerMenuView menuView) {
-		return new BankerViewOpenerImpl(menuView);
 	}
 
 }
