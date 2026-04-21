@@ -98,13 +98,17 @@ public class ChatUtil {
 
 		StringBuilder builder = new StringBuilder("&eDid you mean ");
 
-		builder.append("&b\"").append("/").append(command).append(" ");
+		builder.append("&b\"");
 
-		if (args != null) for (String arg : args) builder.append(arg).append(" ");
+		StringBuilder suggestion = new StringBuilder();
+		suggestion.append("/").append(command).append(" ");
 
-		if (minimum != -1) builder.append(suggestions.get(minimum).getFirst());
+		if (args != null) for (String arg : args) suggestion.append(arg).append(" ");
+		if (minimum != -1) suggestion.append(suggestions.get(minimum).getFirst());
 
-		builder.trimToSize();
+		String suggestionString = suggestion.toString().trim();
+
+		builder.append(suggestionString);
 		builder.append("\"&e?");
 
 		return builder.toString();
