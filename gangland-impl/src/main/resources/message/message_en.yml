@@ -339,6 +339,8 @@ Commands:
 
 Errors:
    Prefix: "&4Error&7: "
+   Help:
+      No_Entries: "&cNo help information is available for this command."
    Permissions:
       Command: "&cYou don't have permission to perform this command!"
       Kit: "&cYou don't have permission to use this kit!"

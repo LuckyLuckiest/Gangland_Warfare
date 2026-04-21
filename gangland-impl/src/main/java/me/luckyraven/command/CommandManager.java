@@ -185,7 +185,7 @@ public final class CommandManager extends CommandService<Command> implements Com
 	@Override
 	protected Command createInstance(Class<?> clazz) throws Exception {
 		if (!Command.class.isAssignableFrom(clazz)) {
-			throw new IllegalArgumentException(clazz.getName() + " does not extend CommandHandler");
+			throw new IllegalArgumentException(clazz.getName() + " does not extend " + Command.class.getSimpleName());
 		}
 
 		// Construct via the root container so commands can declare any registered bean as a constructor parameter
@@ -208,8 +208,6 @@ public final class CommandManager extends CommandService<Command> implements Com
 	}
 
 	private void onHelp(Map.Entry<String, Command> entry, CommandSender sender, String[] args) {
-		if (entry.getValue().getHelpInfo().size() == 0) return;
-
 		// Get the page number if it exists
 		int page = 1;
 		int index = IntStream.range(0, args.length - 1)
@@ -218,8 +216,7 @@ public final class CommandManager extends CommandService<Command> implements Com
 		                     .orElse(-1);
 		if (index != -1) try {
 			page = Integer.parseInt(args[index + 1]);
-		} catch (NumberFormatException | ArrayIndexOutOfBoundsException ignored) {
-		}
+		} catch (NumberFormatException | ArrayIndexOutOfBoundsException ignored) { }
 
 		// display the help of the command (if mentioned)
 		try {

@@ -1,6 +1,7 @@
 package me.luckyraven.command;
 
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.command.CommandSender;
 
@@ -67,12 +68,19 @@ public final class HelpInfo {
 	 * @param title The title of the help menu
 	 */
 	public void displayHelp(CommandSender sender, int page, String title) {
+		if (list.isEmpty()) {
+			sender.sendMessage(Messages.COMMAND_HELP_EMPTY.toString());
+			return;
+		}
+
 		int maxPages = getMaxPages();
 		if (page < 1) throw new IllegalArgumentException("Cannot get page less than 1");
 		if (page > maxPages) throw new IllegalArgumentException("Cannot exceed maximum allowed pages");
+
 		String header = GanglandChatUtil.color(
 				"&3Oo&3&m------&r &8&l[&bG&fL&bW&8&l]&7 " + title + " &8[&7" + page + "&5/&7" + maxPages +
 				"&8] &3&m------&3oO");
+
 		sender.sendMessage("");
 		sender.sendMessage(header);
 		sender.sendMessage("");
@@ -80,8 +88,9 @@ public final class HelpInfo {
 		int startIndex = (page - 1) * breaks;
 		int endIndex   = Math.min(startIndex + breaks, size());
 
-		for (int index = startIndex; index < endIndex; index++)
-		     sender.sendMessage(GanglandChatUtil.commandDesign(list.get(index).toString()));
+		for (int index = startIndex; index < endIndex; index++) {
+			sender.sendMessage(GanglandChatUtil.commandDesign(list.get(index).toString()));
+		}
 	}
 
 }

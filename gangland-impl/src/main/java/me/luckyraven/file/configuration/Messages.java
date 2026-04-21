@@ -182,6 +182,9 @@ public enum Messages {
 	WAYPOINT_TELEPORT("Commands.Waypoint.Teleportation.Sent", Type.COMMAND),
 	WAYPOINT_TELEPORT_TIMER("Commands.Waypoint.Teleportation.Timer", Type.COMMAND),
 
+	// errors - help
+	COMMAND_HELP_EMPTY("Errors.Help.No_Entries", Type.ERROR),
+
 	// errors - permissions
 	COMMAND_NO_PERM("Errors.Permissions.Command", Type.ERROR),
 	KIT_NO_PERM("Errors.Permissions.Kit", Type.ERROR),
